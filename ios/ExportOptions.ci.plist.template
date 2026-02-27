@@ -10,7 +10,7 @@
 	<string>manual</string>
 	<key>provisioningProfiles</key>
 	<dict>
-		<key>com.example.oralCollector</key>
+		<key>com.shema.oralCollector</key>
 		<string>__PROV_UUID__</string>
 	</dict>
 	<key>uploadSymbols</key>

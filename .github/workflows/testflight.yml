@@ -51,7 +51,7 @@ jobs:
         run: |
           echo "$PROVISIONING_PROFILE_BASE64" | tr -d '\n' | base64 --decode > profile.mobileprovision
           if [ ! -s profile.mobileprovision ]; then
-            echo "::error::PROVISIONING_PROFILE_BASE64 is missing or invalid. Add the base64-encoded App Store .mobileprovision (for com.example.oralCollector) as repository secret PROVISIONING_PROFILE_BASE64. See docs/testflight-deployment.md"
+            echo "::error::PROVISIONING_PROFILE_BASE64 is missing or invalid. Add the base64-encoded App Store .mobileprovision (for com.shema.oralCollector) as repository secret PROVISIONING_PROFILE_BASE64. See docs/testflight-deployment.md"
             exit 1
           fi
           security cms -D -i profile.mobileprovision -o profile_decoded.plist

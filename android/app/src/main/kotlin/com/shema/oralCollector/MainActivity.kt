@@ -1,4 +1,4 @@
-package com.example.oral_collector
+package com.shema.oralCollector
 
 import io.flutter.embedding.android.FlutterActivity
 

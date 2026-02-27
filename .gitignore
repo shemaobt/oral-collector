@@ -13,6 +13,7 @@
 *.p8
 AuthKey_*.p8
 *.p12
+*.mobileprovision
 
 # Flutter repo-specific
 /bin/cache/
