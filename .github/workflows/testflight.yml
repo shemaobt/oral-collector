@@ -61,11 +61,18 @@ jobs:
           cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/"$PROV_UUID.mobileprovision"
           sed "s/__PROV_UUID__/$PROV_UUID/g" ios/ExportOptions.ci.plist.template > ios/ExportOptions.plist
 
+      - name: Patch Xcode project for manual signing
+        run: |
+          PBXPROJ="ios/Runner.xcodeproj/project.pbxproj"
+          PROV_NAME=$(/usr/libexec/PlistBuddy -c "Print Name" profile_decoded.plist)
+          sed -i '' 's/CODE_SIGN_IDENTITY = "iPhone Developer"/CODE_SIGN_IDENTITY = "Apple Distribution"/g' "$PBXPROJ"
+          sed -i '' 's/CODE_SIGN_IDENTITY\[sdk=iphoneos\*\]" = "iPhone Developer"/CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Distribution"/g' "$PBXPROJ"
+          sed -i '' '/PRODUCT_BUNDLE_IDENTIFIER = com.shema.oralCollector;/a\'$'\n''				CODE_SIGN_STYLE = Manual;'$'\n''				PROVISIONING_PROFILE_SPECIFIER = "'"$PROV_NAME"'";'$'\n''				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Distribution";' "$PBXPROJ"
+
+      - name: Create .env for build
+        run: touch .env
+
       - name: Build IPA
-        env:
-          CODE_SIGN_STYLE: Manual
-          PROVISIONING_PROFILE_SPECIFIER: ${{ env.PROV_UUID }}
-          CODE_SIGN_IDENTITY: "Apple Distribution"
         run: flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
 
       - name: Prepare API key for altool
