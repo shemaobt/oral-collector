@@ -61,19 +61,32 @@ jobs:
           cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/"$PROV_UUID.mobileprovision"
           sed "s/__PROV_UUID__/$PROV_UUID/g" ios/ExportOptions.ci.plist.template > ios/ExportOptions.plist
 
-      - name: Patch Xcode project for manual signing
-        run: |
-          PBXPROJ="ios/Runner.xcodeproj/project.pbxproj"
-          PROV_NAME=$(/usr/libexec/PlistBuddy -c "Print Name" profile_decoded.plist)
-          sed -i '' 's/CODE_SIGN_IDENTITY = "iPhone Developer"/CODE_SIGN_IDENTITY = "Apple Distribution"/g' "$PBXPROJ"
-          sed -i '' 's/CODE_SIGN_IDENTITY\[sdk=iphoneos\*\]" = "iPhone Developer"/CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Distribution"/g' "$PBXPROJ"
-          sed -i '' '/PRODUCT_BUNDLE_IDENTIFIER = com.shema.oralCollector;/a\'$'\n''				CODE_SIGN_STYLE = Manual;'$'\n''				PROVISIONING_PROFILE_SPECIFIER = "'"$PROV_NAME"'";'$'\n''				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Distribution";' "$PBXPROJ"
-
       - name: Create .env for build
         run: touch .env
 
-      - name: Build IPA
-        run: flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
+      - name: Build Flutter without signing
+        run: flutter build ios --release --no-codesign
+
+      - name: Archive with manual signing
+        run: |
+          PROV_NAME=$(/usr/libexec/PlistBuddy -c "Print Name" profile_decoded.plist)
+          xcodebuild -workspace ios/Runner.xcworkspace \
+            -scheme Runner \
+            -sdk iphoneos \
+            -configuration Release \
+            -archivePath build/Runner.xcarchive \
+            archive \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
+            PROVISIONING_PROFILE_SPECIFIER="$PROV_NAME" \
+            DEVELOPMENT_TEAM=55ZKR3YQMJ
+
+      - name: Export IPA
+        run: |
+          xcodebuild -exportArchive \
+            -archivePath build/Runner.xcarchive \
+            -exportOptionsPlist ios/ExportOptions.plist \
+            -exportPath build/ios/ipa
 
       - name: Prepare API key for altool
         env:
