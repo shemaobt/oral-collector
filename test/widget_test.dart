@@ -5,11 +5,7 @@ import 'package:oral_collector/main.dart';
 
 void main() {
   testWidgets('Home screen shows app title', (WidgetTester tester) async {
-    await tester.pumpWidget(
-      const ProviderScope(
-        child: OralCollectorApp(),
-      ),
-    );
+    await tester.pumpWidget(const ProviderScope(child: OralCollectorApp()));
     await tester.pumpAndSettle();
 
     expect(find.text('Oral Collector'), findsOneWidget);

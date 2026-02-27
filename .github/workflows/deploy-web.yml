@@ -1,0 +1,71 @@
+name: Deploy oral-collector web to Cloud Run
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  REGION: us-central1
+  SERVICE: oral-collector-web
+  GAR_REPO: oral-collector
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check required secrets
+        run: |
+          if [ -z "${{ secrets.GCP_PROJECT_ID }}" ]; then echo "::error::GCP_PROJECT_ID is not set. Add it in Settings → Secrets and variables → Actions."; exit 1; fi
+          if [ -z "${{ secrets.GCP_SA_KEY }}" ]; then echo "::error::GCP_SA_KEY is not set. Add the GCP service account key JSON in Settings → Secrets and variables → Actions."; exit 1; fi
+          echo "Required secrets are set."
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.10.3"
+          channel: "stable"
+          cache: true
+
+      - name: Build web
+        run: |
+          flutter pub get
+          flutter build web --release
+
+      - name: Google Auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Setup Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+
+      - name: Configure Docker Auth
+        run: gcloud auth configure-docker us-central1-docker.pkg.dev
+
+      - name: Build and Push image
+        run: |
+          docker build -f docker/Dockerfile.web -t us-central1-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.GAR_REPO }}/web:${{ github.sha }} .
+          docker push us-central1-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.GAR_REPO }}/web:${{ github.sha }}
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy ${{ env.SERVICE }} \
+            --image us-central1-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.GAR_REPO }}/web:${{ github.sha }} \
+            --project ${{ env.PROJECT_ID }} \
+            --region ${{ env.REGION }} \
+            --platform managed \
+            --allow-unauthenticated \
+            --memory=256Mi \
+            --concurrency=80 \
+            --port=8080
