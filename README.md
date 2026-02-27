@@ -50,5 +50,17 @@ See [AGENTS.md](AGENTS.md) for project conventions and agent guidelines.
 
 ## Lint and format
 
-- Analyze: `flutter analyze`
-- Format: `dart format lib/`
+- **Pre-commit hook:** Lint and format run automatically before each commit. Enable hooks (once per clone):
+  ```bash
+  git config core.hooksPath .githooks
+  ```
+- **Full check (manual):** `./scripts/lint.sh` — same as the pre-commit hook.
+- **Analyze only:** `flutter analyze`
+- **Format only:** `dart format lib/ test/`
+
+The same checks run in CI on every push and pull request to `main` (see [.github/workflows/lint.yml](.github/workflows/lint.yml)).
+
+## Deployment
+
+- **iOS (TestFlight):** On push to `main`, [.github/workflows/testflight.yml](.github/workflows/testflight.yml) builds and uploads to TestFlight. See [docs/testflight-deployment.md](docs/testflight-deployment.md) for secrets and setup.
+- **Web (GCP Cloud Run):** On push to `main`, [.github/workflows/deploy-web.yml](.github/workflows/deploy-web.yml) builds the web app, pushes a Docker image to Artifact Registry, and deploys to Cloud Run. See [docs/web-deployment.md](docs/web-deployment.md) for required secrets and one-time GCP setup.
