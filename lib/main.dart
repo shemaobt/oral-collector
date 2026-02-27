@@ -8,11 +8,7 @@ import 'core/theme/app_theme.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: '.env');
-  runApp(
-    const ProviderScope(
-      child: OralCollectorApp(),
-    ),
-  );
+  runApp(const ProviderScope(child: OralCollectorApp()));
 }
 
 class OralCollectorApp extends StatelessWidget {

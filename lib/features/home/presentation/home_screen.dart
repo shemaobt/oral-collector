@@ -6,9 +6,7 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Oral Collector'),
-      ),
+      appBar: AppBar(title: const Text('Oral Collector')),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24),

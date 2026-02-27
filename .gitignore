@@ -10,6 +10,9 @@
 .env
 .idea/
 *.iml
+*.p8
+AuthKey_*.p8
+*.p12
 
 # Flutter repo-specific
 /bin/cache/
