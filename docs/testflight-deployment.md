@@ -8,10 +8,10 @@ The workflow [.github/workflows/testflight.yml](../.github/workflows/testflight.
 
 1. Uses a `macos-14` runner.
 2. Caches Flutter SDK and CocoaPods to speed up builds.
-3. Installs dependencies, imports the distribution certificate from secrets, and runs `flutter build ipa --release`.
+3. Imports the distribution certificate and **provisioning profile** from secrets, then builds the IPA with manual signing (no Apple account needed in CI).
 4. Uploads the IPA to TestFlight using **xcrun altool** with your App Store Connect API key.
 
-You must add the required secrets (and optionally the certificate) to the repo before the workflow can succeed.
+You must add the required secrets (API key, certificate, and **provisioning profile**) to the repo before the workflow can succeed.
 
 ## Create App Store Connect API key (your Apple account)
 
@@ -71,7 +71,33 @@ It then sets the three GitHub secrets: `CERTIFICATES_P12_BASE64`, `CERTIFICATES_
 CERTIFICATES_P12_PASSWORD="your-p12-password" KEYCHAIN_PASSWORD="ci-keychain-password" ./scripts/setup_signing_secrets.sh /path/to/certificate.p12
 ```
 
-After this, the TestFlight workflow will run on every push to `main`. Delete the .p12 file from your Mac when done.
+After this, delete the .p12 file from your Mac when done.
+
+## Provisioning profile (for CI build)
+
+CI has no Apple ID, so Xcode cannot use “automatic” signing. The workflow uses **manual** signing with an **App Store distribution provisioning profile** for the app’s bundle ID (`com.example.oralCollector`).
+
+### Step 1: Create the profile in Apple Developer
+
+1. Go to [Apple Developer → Certificates, Identifiers & Profiles → Profiles](https://developer.apple.com/account/resources/profiles/list).
+2. Click **+** to create a new profile.
+3. Choose **App Store** under Distribution → **Continue**.
+4. Select the **App ID** for this app (`com.example.oralCollector`). Create the App ID first if it does not exist (Identifiers → App IDs).
+5. Select the **distribution certificate** you use for this app (the same one you exported as .p12).
+6. Name the profile (e.g. `Oral Collector App Store`) and **Generate**.
+7. **Download** the `.mobileprovision` file.
+
+### Step 2: Add the profile as a GitHub secret
+
+Encode the profile and add it as a repository secret:
+
+```bash
+base64 -i path/to/your/profile.mobileprovision | pbcopy
+```
+
+Then in the repo: **Settings → Secrets and variables → Actions → New repository secret**. Name: `PROVISIONING_PROFILE_BASE64`, value: paste the base64 string.
+
+After this, the TestFlight workflow can build the IPA on push to `main`. Do not commit the `.mobileprovision` file.
 
 ## Local upload with Xcode CLI (xcrun altool)
 
