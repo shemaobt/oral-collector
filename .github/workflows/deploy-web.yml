@@ -38,7 +38,8 @@ jobs:
       - name: Build web
         run: |
           flutter pub get
-          flutter build web --release
+          touch .env
+          flutter build web --release --no-wasm-dry-run
 
       - name: Google Auth
         uses: google-github-actions/auth@v2
