@@ -4,6 +4,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
 import '../../../../core/config/env.dart';
+import '../../domain/entities/language.dart';
 import '../../domain/entities/project.dart';
 
 class ProjectRepository {
@@ -24,6 +25,23 @@ class ProjectRepository {
       'Content-Type': 'application/json',
       if (token != null) 'Authorization': 'Bearer $token',
     };
+  }
+
+  /// List all available languages.
+  Future<List<Language>> listLanguages() async {
+    final response = await _client.get(
+      Uri.parse('$_baseUrl/api/languages'),
+      headers: await _authHeaders(),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to list languages: ${response.body}');
+    }
+
+    final data = jsonDecode(response.body) as List<dynamic>;
+    return data
+        .map((json) => Language.fromJson(json as Map<String, dynamic>))
+        .toList();
   }
 
   /// List all projects the current user is a member of.
