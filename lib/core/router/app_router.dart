@@ -8,6 +8,7 @@ import '../../features/auth/presentation/signup_screen.dart';
 import '../../features/genre/presentation/genre_detail_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/project/presentation/projects_screen.dart';
+import '../../features/recording/presentation/recording_flow_screen.dart';
 import '../../shared/widgets/app_shell.dart';
 
 // Bridge between Riverpod auth state and GoRouter's refreshListenable.
@@ -71,7 +72,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/record',
-            builder: (context, state) => const _PlaceholderScreen(title: 'Record'),
+            builder: (context, state) => RecordingFlowScreen(
+              genreId: state.uri.queryParameters['genreId'],
+              subcategoryId: state.uri.queryParameters['subcategoryId'],
+            ),
           ),
           GoRoute(
             path: '/recordings',
