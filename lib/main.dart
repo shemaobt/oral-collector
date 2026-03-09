@@ -11,15 +11,17 @@ void main() async {
   runApp(const ProviderScope(child: OralCollectorApp()));
 }
 
-class OralCollectorApp extends StatelessWidget {
+class OralCollectorApp extends ConsumerWidget {
   const OralCollectorApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final router = ref.watch(routerProvider);
+
     return MaterialApp.router(
       title: 'Oral Collector',
       theme: AppTheme.lightTheme,
-      routerConfig: appRouter,
+      routerConfig: router,
     );
   }
 }
