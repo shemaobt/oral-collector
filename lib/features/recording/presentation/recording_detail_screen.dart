@@ -7,7 +7,9 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/widgets/audio_player_widget.dart';
+import '../../../shared/widgets/upload_status_badge.dart';
 import '../../genre/data/providers/genre_provider.dart';
+import '../../sync/data/providers/sync_provider.dart';
 import '../data/providers/local_recording_repository_provider.dart';
 
 class RecordingDetailScreen extends ConsumerStatefulWidget {
@@ -379,32 +381,6 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
   }
 
   Widget _buildUploadStatusRow(ThemeData theme, LocalRecording recording) {
-    final IconData icon;
-    final Color color;
-    final String label;
-
-    switch (recording.uploadStatus) {
-      case 'uploaded':
-        icon = LucideIcons.checkCircle;
-        color = AppColors.success;
-        label = 'Uploaded';
-        break;
-      case 'uploading':
-        icon = LucideIcons.upload;
-        color = AppColors.info;
-        label = 'Uploading';
-        break;
-      case 'failed':
-        icon = LucideIcons.cloudOff;
-        color = AppColors.error;
-        label = 'Failed';
-        break;
-      default:
-        icon = LucideIcons.smartphone;
-        color = AppColors.border;
-        label = 'Local only';
-    }
-
     return Row(
       children: [
         Icon(LucideIcons.cloud, size: 18, color: AppColors.border),
@@ -420,28 +396,13 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
                 ),
               ),
               const SizedBox(height: 2),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(icon, size: 14, color: color),
-                    const SizedBox(width: 4),
-                    Text(
-                      label,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: color,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
+              UploadStatusBadge(
+                status: recording.uploadStatus,
+                onRetry: recording.uploadStatus == 'failed'
+                    ? () => ref
+                        .read(syncNotifierProvider.notifier)
+                        .syncOne(recording.id)
+                    : null,
               ),
             ],
           ),
