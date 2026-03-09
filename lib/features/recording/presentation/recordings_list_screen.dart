@@ -6,6 +6,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/widgets/audio_player_widget.dart';
+import '../../../shared/widgets/upload_status_badge.dart';
 import '../../genre/data/providers/genre_provider.dart';
 import '../../project/data/providers/project_provider.dart';
 import '../data/providers/local_recording_repository_provider.dart';
@@ -321,57 +322,6 @@ class _RecordingCard extends StatelessWidget {
   final String formattedDuration;
   final VoidCallback onTap;
 
-  Widget _buildUploadStatusBadge() {
-    final IconData icon;
-    final Color color;
-    final String label;
-
-    switch (recording.uploadStatus) {
-      case 'uploaded':
-        icon = LucideIcons.checkCircle;
-        color = AppColors.success;
-        label = 'Uploaded';
-        break;
-      case 'uploading':
-        icon = LucideIcons.upload;
-        color = AppColors.info;
-        label = 'Uploading';
-        break;
-      case 'failed':
-        icon = LucideIcons.cloudOff;
-        color = AppColors.error;
-        label = 'Failed';
-        break;
-      default: // 'local'
-        icon = LucideIcons.smartphone;
-        color = AppColors.border;
-        label = 'Local';
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 12, color: color),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              color: color,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -437,7 +387,10 @@ class _RecordingCard extends StatelessWidget {
                     ),
                   ),
                   const Spacer(),
-                  _buildUploadStatusBadge(),
+                  UploadStatusBadge(
+                    status: recording.uploadStatus,
+                    compact: true,
+                  ),
                 ],
               ),
               const SizedBox(height: 8),
