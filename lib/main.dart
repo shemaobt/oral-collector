@@ -4,6 +4,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'features/auth/data/providers/auth_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -11,16 +12,32 @@ void main() async {
   runApp(const ProviderScope(child: OralCollectorApp()));
 }
 
-class OralCollectorApp extends ConsumerWidget {
+class OralCollectorApp extends ConsumerStatefulWidget {
   const OralCollectorApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<OralCollectorApp> createState() => _OralCollectorAppState();
+}
+
+class _OralCollectorAppState extends ConsumerState<OralCollectorApp> {
+  @override
+  void initState() {
+    super.initState();
+    // Check auth state on startup
+    Future.microtask(
+      () => ref.read(authNotifierProvider.notifier).tryAutoLogin(),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
 
     return MaterialApp.router(
       title: 'Oral Collector',
       theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: ThemeMode.system,
       routerConfig: router,
     );
   }
