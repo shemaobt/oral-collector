@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
+import 'core/database/database_provider.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/data/providers/auth_provider.dart';
@@ -23,6 +24,8 @@ class _OralCollectorAppState extends ConsumerState<OralCollectorApp> {
   @override
   void initState() {
     super.initState();
+    // Initialize local database
+    ref.read(appDatabaseProvider);
     // Check auth state on startup
     Future.microtask(
       () => ref.read(authNotifierProvider.notifier).tryAutoLogin(),
