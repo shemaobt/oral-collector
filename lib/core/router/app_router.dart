@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/auth/data/providers/auth_provider.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/signup_screen.dart';
+import '../../features/genre/presentation/genre_detail_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/project/presentation/projects_screen.dart';
 import '../../shared/widgets/app_shell.dart';
@@ -55,8 +56,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       // Genre detail (outside shell — uses its own back navigation)
       GoRoute(
         path: '/genre/:id',
-        builder: (context, state) => _PlaceholderScreen(
-          title: 'Genre: ${state.pathParameters['id']?.substring(0, 8) ?? ''}',
+        builder: (context, state) => GenreDetailScreen(
+          genreId: state.pathParameters['id'] ?? '',
         ),
       ),
 
