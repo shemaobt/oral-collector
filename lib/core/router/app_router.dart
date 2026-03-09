@@ -9,6 +9,7 @@ import '../../features/genre/presentation/genre_detail_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/project/presentation/projects_screen.dart';
 import '../../features/recording/presentation/recording_flow_screen.dart';
+import '../../features/recording/presentation/recordings_list_screen.dart';
 import '../../shared/widgets/app_shell.dart';
 
 // Bridge between Riverpod auth state and GoRouter's refreshListenable.
@@ -62,6 +63,17 @@ final routerProvider = Provider<GoRouter>((ref) {
         ),
       ),
 
+      // Recording detail (outside shell — uses its own back navigation)
+      GoRoute(
+        path: '/recording/:id',
+        builder: (context, state) {
+          final id = state.pathParameters['id'] ?? '';
+          return _PlaceholderScreen(
+            title: 'Recording ${id.length > 8 ? id.substring(0, 8) : id}',
+          );
+        },
+      ),
+
       // Main app routes wrapped in AppShell
       ShellRoute(
         builder: (context, state, child) => AppShell(child: child),
@@ -79,7 +91,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/recordings',
-            builder: (context, state) => const _PlaceholderScreen(title: 'Recordings'),
+            builder: (context, state) => const RecordingsListScreen(),
           ),
           GoRoute(
             path: '/projects',
