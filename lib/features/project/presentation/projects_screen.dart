@@ -6,6 +6,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../core/theme/app_colors.dart';
 import '../data/providers/project_provider.dart';
 import '../domain/entities/project.dart';
+import 'create_project_dialog.dart';
 
 class ProjectsScreen extends ConsumerStatefulWidget {
   const ProjectsScreen({super.key});
@@ -43,9 +44,7 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Projects')),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // US-025 will implement the create project dialog
-        },
+        onPressed: () => _showCreateProjectDialog(),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         child: const Icon(LucideIcons.plus),
@@ -99,6 +98,16 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
         },
       ),
     );
+  }
+
+  Future<void> _showCreateProjectDialog() async {
+    final created = await showDialog<bool>(
+      context: context,
+      builder: (_) => const CreateProjectDialog(),
+    );
+    if (created == true && mounted) {
+      ref.read(projectNotifierProvider.notifier).fetchProjects();
+    }
   }
 
   Future<void> _enterProject(Project project) async {
