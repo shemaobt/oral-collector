@@ -1,16 +1,23 @@
+import 'dart:io';
+
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import '../../../core/database/app_database.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/widgets/record_button.dart';
 import '../../../shared/widgets/waveform_visualizer.dart';
 import '../../genre/data/providers/genre_provider.dart';
 import '../../genre/domain/entities/genre.dart';
+import '../../project/data/providers/project_provider.dart';
+import '../data/providers/local_recording_repository_provider.dart';
 import '../data/providers/recording_provider.dart';
 
 /// Step indices for the recording flow.
-enum _FlowStep { genre, subcategory, recording }
+enum _FlowStep { genre, subcategory, recording, confirmation }
 
 class RecordingFlowScreen extends ConsumerStatefulWidget {
   const RecordingFlowScreen({
@@ -34,6 +41,7 @@ class _RecordingFlowScreenState extends ConsumerState<RecordingFlowScreen> {
   _FlowStep _currentStep = _FlowStep.genre;
   String? _selectedGenreId;
   String? _selectedSubcategoryId;
+  RecordingResult? _recordingResult;
 
   @override
   void initState() {
@@ -78,6 +86,20 @@ class _RecordingFlowScreenState extends ConsumerState<RecordingFlowScreen> {
     });
   }
 
+  void _onRecordingComplete(RecordingResult result) {
+    setState(() {
+      _recordingResult = result;
+      _currentStep = _FlowStep.confirmation;
+    });
+  }
+
+  void _reRecord() {
+    setState(() {
+      _recordingResult = null;
+      _currentStep = _FlowStep.recording;
+    });
+  }
+
   void _goBack() {
     switch (_currentStep) {
       case _FlowStep.genre:
@@ -94,6 +116,9 @@ class _RecordingFlowScreenState extends ConsumerState<RecordingFlowScreen> {
           _selectedSubcategoryId = null;
           _currentStep = _FlowStep.subcategory;
         });
+      case _FlowStep.confirmation:
+        // Back from confirmation goes to recording step (re-record).
+        _reRecord();
     }
   }
 
@@ -142,6 +167,8 @@ class _RecordingFlowScreenState extends ConsumerState<RecordingFlowScreen> {
         return 'Select Subcategory';
       case _FlowStep.recording:
         return 'Record';
+      case _FlowStep.confirmation:
+        return 'Review Recording';
     }
   }
 
@@ -195,6 +222,22 @@ class _RecordingFlowScreenState extends ConsumerState<RecordingFlowScreen> {
           subcategoryId: _selectedSubcategoryId ?? '',
           genreName: genre?.name,
           subcategoryName: subcategory?.name,
+          onRecordingComplete: _onRecordingComplete,
+        );
+      case _FlowStep.confirmation:
+        final genre = genreState.genres
+            .where((g) => g.id == _selectedGenreId)
+            .firstOrNull;
+        final subcategory = genre?.subcategories
+            .where((s) => s.id == _selectedSubcategoryId)
+            .firstOrNull;
+        return _ConfirmationStep(
+          result: _recordingResult!,
+          genreId: _selectedGenreId!,
+          subcategoryId: _selectedSubcategoryId,
+          genreName: genre?.name,
+          subcategoryName: subcategory?.name,
+          onReRecord: _reRecord,
         );
     }
   }
@@ -469,12 +512,14 @@ class _RecordingStep extends ConsumerWidget {
     required this.subcategoryId,
     required this.genreName,
     required this.subcategoryName,
+    required this.onRecordingComplete,
   });
 
   final String genreId;
   final String subcategoryId;
   final String? genreName;
   final String? subcategoryName;
+  final ValueChanged<RecordingResult> onRecordingComplete;
 
   String _formatElapsed(Duration d) {
     final minutes = d.inMinutes.remainder(60).toString().padLeft(2, '0');
@@ -603,7 +648,7 @@ class _RecordingStep extends ConsumerWidget {
                             _ControlButton(
                               icon: LucideIcons.square,
                               label: 'Stop',
-                              onTap: () => notifier.stopRecording(),
+                              onTap: () => _handleStop(notifier),
                             ),
                           ],
                         ),
@@ -625,7 +670,7 @@ class _RecordingStep extends ConsumerWidget {
                             _ControlButton(
                               icon: LucideIcons.square,
                               label: 'Stop',
-                              onTap: () => notifier.stopRecording(),
+                              onTap: () => _handleStop(notifier),
                             ),
                           ],
                         ),
@@ -640,6 +685,13 @@ class _RecordingStep extends ConsumerWidget {
     );
   }
 
+  Future<void> _handleStop(RecordingNotifier notifier) async {
+    final result = await notifier.stopRecording();
+    if (result != null) {
+      onRecordingComplete(result);
+    }
+  }
+
   void _handleRecordTap(
     RecordingNotifier notifier,
     RecordingState recState,
@@ -651,6 +703,287 @@ class _RecordingStep extends ConsumerWidget {
     } else if (recState.isPaused) {
       notifier.resumeRecording();
     }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Step 4: Confirmation (after recording stops)
+// ---------------------------------------------------------------------------
+
+class _ConfirmationStep extends ConsumerStatefulWidget {
+  const _ConfirmationStep({
+    required this.result,
+    required this.genreId,
+    required this.subcategoryId,
+    required this.genreName,
+    required this.subcategoryName,
+    required this.onReRecord,
+  });
+
+  final RecordingResult result;
+  final String genreId;
+  final String? subcategoryId;
+  final String? genreName;
+  final String? subcategoryName;
+  final VoidCallback onReRecord;
+
+  @override
+  ConsumerState<_ConfirmationStep> createState() => _ConfirmationStepState();
+}
+
+class _ConfirmationStepState extends ConsumerState<_ConfirmationStep> {
+  final _titleController = TextEditingController();
+  AudioPlayer? _player;
+  bool _isPlaying = false;
+  bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _player = AudioPlayer();
+    _player!.playerStateStream.listen((playerState) {
+      if (!mounted) return;
+      final playing = playerState.playing;
+      final completed =
+          playerState.processingState == ProcessingState.completed;
+      setState(() {
+        _isPlaying = playing && !completed;
+      });
+      if (completed) {
+        _player!.seek(Duration.zero);
+        _player!.pause();
+      }
+    });
+    _player!.setFilePath(widget.result.filePath);
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _player?.dispose();
+    super.dispose();
+  }
+
+  String _formatDuration(double seconds) {
+    final dur = Duration(milliseconds: (seconds * 1000).round());
+    final m = dur.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final s = dur.inSeconds.remainder(60).toString().padLeft(2, '0');
+    return '$m:$s';
+  }
+
+  Future<void> _togglePlayback() async {
+    if (_player == null) return;
+    if (_isPlaying) {
+      await _player!.pause();
+    } else {
+      await _player!.play();
+    }
+  }
+
+  Future<void> _save() async {
+    setState(() => _isSaving = true);
+
+    final projectState = ref.read(projectNotifierProvider);
+    final projectId = projectState.activeProject?.id ?? '';
+    final repo = ref.read(localRecordingRepositoryProvider);
+
+    // Compute file size.
+    int fileSize = 0;
+    try {
+      final file = File(widget.result.filePath);
+      fileSize = await file.length();
+    } catch (_) {}
+
+    final id =
+        '${DateTime.now().millisecondsSinceEpoch}_${widget.genreId.hashCode}';
+
+    await repo.insertRecording(LocalRecordingsCompanion(
+      id: Value(id),
+      projectId: Value(projectId),
+      genreId: Value(widget.genreId),
+      subcategoryId: widget.subcategoryId != null && widget.subcategoryId!.isNotEmpty
+          ? Value(widget.subcategoryId!)
+          : const Value.absent(),
+      title: _titleController.text.trim().isNotEmpty
+          ? Value(_titleController.text.trim())
+          : const Value.absent(),
+      durationSeconds: Value(widget.result.durationSeconds),
+      fileSizeBytes: Value(fileSize),
+      localFilePath: Value(widget.result.filePath),
+      recordedAt: Value(DateTime.now()),
+    ));
+
+    if (mounted) {
+      Navigator.of(context).maybePop();
+    }
+  }
+
+  Future<void> _discard() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Discard Recording?'),
+        content:
+            const Text('This recording will be permanently deleted.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            child: const Text('Discard'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      // Delete the recorded file.
+      try {
+        final file = File(widget.result.filePath);
+        if (await file.exists()) await file.delete();
+      } catch (_) {}
+
+      if (mounted) Navigator.of(context).maybePop();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    // Build genre/subcategory tag.
+    final tagParts = <String>[];
+    if (widget.genreName != null) tagParts.add(widget.genreName!);
+    if (widget.subcategoryName != null) tagParts.add(widget.subcategoryName!);
+    final tagLabel = tagParts.join(' / ');
+
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          // Genre/subcategory badge
+          if (tagLabel.isNotEmpty)
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                tagLabel,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: AppColors.primary,
+                ),
+              ),
+            ),
+
+          const SizedBox(height: 24),
+
+          // Static waveform display
+          WaveformVisualizer(
+            amplitudes: List.generate(
+                30, (i) => (i % 3 == 0 ? 0.7 : 0.3) * ((i % 5 + 1) / 5)),
+            barColor: AppColors.primary,
+            height: 80,
+          ),
+
+          const SizedBox(height: 12),
+
+          // Duration label
+          Text(
+            _formatDuration(widget.result.durationSeconds),
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w300,
+              fontFeatures: [const FontFeature.tabularFigures()],
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // Play/pause button
+          IconButton.filled(
+            onPressed: _togglePlayback,
+            icon: Icon(
+              _isPlaying ? LucideIcons.pause : LucideIcons.play,
+              size: 28,
+            ),
+            iconSize: 28,
+            style: IconButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              minimumSize: const Size(56, 56),
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // Optional title text field
+          TextField(
+            controller: _titleController,
+            decoration: const InputDecoration(
+              labelText: 'Add a title (optional)',
+              border: OutlineInputBorder(),
+            ),
+            textCapitalization: TextCapitalization.sentences,
+          ),
+
+          const Spacer(),
+
+          // Action buttons
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: ElevatedButton(
+              onPressed: _isSaving ? null : _save,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.success,
+                foregroundColor: Colors.white,
+              ),
+              child: _isSaving
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Text('Save'),
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: OutlinedButton(
+              onPressed: _isSaving
+                  ? null
+                  : () {
+                      _player?.stop();
+                      widget.onReRecord();
+                    },
+              child: const Text('Re-record'),
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: TextButton(
+              onPressed: _isSaving ? null : _discard,
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.error,
+              ),
+              child: const Text('Discard'),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
