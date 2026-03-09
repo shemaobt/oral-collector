@@ -7,6 +7,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../genre/data/providers/genre_provider.dart';
 import '../../genre/domain/entities/genre.dart';
 import '../../project/data/providers/project_provider.dart';
+import '../../project/data/providers/stats_provider.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -25,20 +26,37 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     });
   }
 
+  void _fetchStatsIfNeeded() {
+    final activeProject = ref.read(projectNotifierProvider).activeProject;
+    if (activeProject != null) {
+      ref.read(statsNotifierProvider.notifier).fetchGenreStats(activeProject.id);
+    }
+  }
+
   Future<void> _refresh() async {
     ref.read(genreNotifierProvider.notifier).invalidate();
     await Future.wait([
       ref.read(projectNotifierProvider.notifier).fetchProjects(),
       ref.read(genreNotifierProvider.notifier).fetchGenres(),
     ]);
+    _fetchStatsIfNeeded();
   }
 
   @override
   Widget build(BuildContext context) {
     final projectState = ref.watch(projectNotifierProvider);
     final genreState = ref.watch(genreNotifierProvider);
+    final statsState = ref.watch(statsNotifierProvider);
     final activeProject = projectState.activeProject;
     final theme = Theme.of(context);
+
+    // Fetch stats when active project changes
+    ref.listen(projectNotifierProvider.select((s) => s.activeProject?.id),
+        (prev, next) {
+      if (next != null && next != prev) {
+        ref.read(statsNotifierProvider.notifier).fetchGenreStats(next);
+      }
+    });
 
     return Scaffold(
       appBar: AppBar(
@@ -147,8 +165,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
                       final genre = genreState.genres[index];
+                      final genreStat = statsState.genreStats[genre.id];
                       return _GenreCard(
                         genre: genre,
+                        genreStat: genreStat,
                         onTap: () => context.go('/genre/${genre.id}'),
                       );
                     },
@@ -224,10 +244,19 @@ class _GenreCard extends StatelessWidget {
   const _GenreCard({
     required this.genre,
     required this.onTap,
+    this.genreStat,
   });
 
   final Genre genre;
+  final GenreStat? genreStat;
   final VoidCallback onTap;
+
+  String _formatDuration(double totalSeconds) {
+    final seconds = totalSeconds.round();
+    final hours = seconds ~/ 3600;
+    final minutes = (seconds % 3600) ~/ 60;
+    return '${hours}h ${minutes}m';
+  }
 
   /// Map genre icon name strings to LucideIcons.
   IconData _mapIcon(String? iconName) {
@@ -304,13 +333,13 @@ class _GenreCard extends StatelessWidget {
               ),
               const Spacer(),
 
-              // Duration (placeholder until StatsProvider in US-030)
+              // Duration
               Row(
                 children: [
                   Icon(LucideIcons.clock, size: 14, color: AppColors.border),
                   const SizedBox(width: 4),
                   Text(
-                    '0h 0m',
+                    _formatDuration(genreStat?.totalDurationSeconds ?? 0),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: AppColors.foreground.withValues(alpha: 0.6),
                     ),
@@ -319,13 +348,13 @@ class _GenreCard extends StatelessWidget {
               ),
               const SizedBox(height: 4),
 
-              // Recording count (placeholder until StatsProvider in US-030)
+              // Recording count
               Row(
                 children: [
                   Icon(LucideIcons.mic, size: 14, color: AppColors.border),
                   const SizedBox(width: 4),
                   Text(
-                    '0 recordings',
+                    '${genreStat?.recordingCount ?? 0} recordings',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: AppColors.foreground.withValues(alpha: 0.6),
                     ),
