@@ -52,6 +52,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const SignupScreen(),
       ),
 
+      // Genre detail (outside shell — uses its own back navigation)
+      GoRoute(
+        path: '/genre/:id',
+        builder: (context, state) => _PlaceholderScreen(
+          title: 'Genre: ${state.pathParameters['id']?.substring(0, 8) ?? ''}',
+        ),
+      ),
+
       // Main app routes wrapped in AppShell
       ShellRoute(
         builder: (context, state, child) => AppShell(child: child),
