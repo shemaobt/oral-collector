@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../domain/entities/language.dart';
 import '../../domain/entities/project.dart';
 import '../repositories/project_repository.dart';
 
@@ -8,12 +9,14 @@ import '../repositories/project_repository.dart';
 
 class ProjectState {
   final List<Project> projects;
+  final List<Language> languages;
   final Project? activeProject;
   final bool isLoading;
   final String? error;
 
   const ProjectState({
     this.projects = const [],
+    this.languages = const [],
     this.activeProject,
     this.isLoading = false,
     this.error,
@@ -21,6 +24,7 @@ class ProjectState {
 
   ProjectState copyWith({
     List<Project>? projects,
+    List<Language>? languages,
     Project? activeProject,
     bool? isLoading,
     String? error,
@@ -29,6 +33,7 @@ class ProjectState {
   }) {
     return ProjectState(
       projects: projects ?? this.projects,
+      languages: languages ?? this.languages,
       activeProject:
           clearActiveProject ? null : (activeProject ?? this.activeProject),
       isLoading: isLoading ?? this.isLoading,
@@ -92,6 +97,18 @@ class ProjectNotifier extends Notifier<ProjectState> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_activeProjectIdKey, project.id);
     state = state.copyWith(activeProject: project);
+  }
+
+  /// Fetch available languages for project creation.
+  Future<void> fetchLanguages() async {
+    try {
+      final languages = await _repo.listLanguages();
+      state = state.copyWith(languages: languages);
+    } on Exception catch (e) {
+      state = state.copyWith(
+        error: e.toString().replaceFirst('Exception: ', ''),
+      );
+    }
   }
 
   /// Create a new project and add it to the list.
