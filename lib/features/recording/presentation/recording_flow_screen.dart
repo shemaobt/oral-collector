@@ -3,8 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../shared/widgets/record_button.dart';
+import '../../../shared/widgets/waveform_visualizer.dart';
 import '../../genre/data/providers/genre_provider.dart';
 import '../../genre/domain/entities/genre.dart';
+import '../data/providers/recording_provider.dart';
 
 /// Step indices for the recording flow.
 enum _FlowStep { genre, subcategory, recording }
@@ -181,29 +184,17 @@ class _RecordingFlowScreenState extends ConsumerState<RecordingFlowScreen> {
           parseColor: _parseColor,
         );
       case _FlowStep.recording:
-        // Placeholder for US-039 (recording step).
-        return Center(
-          child: Padding(
-            padding: const EdgeInsets.all(32),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(LucideIcons.mic, size: 64, color: AppColors.primary),
-                const SizedBox(height: 16),
-                Text(
-                  'Recording Step',
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Recording functionality coming soon.',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.foreground.withValues(alpha: 0.6),
-                      ),
-                ),
-              ],
-            ),
-          ),
+        final genre = genreState.genres
+            .where((g) => g.id == _selectedGenreId)
+            .firstOrNull;
+        final subcategory = genre?.subcategories
+            .where((s) => s.id == _selectedSubcategoryId)
+            .firstOrNull;
+        return _RecordingStep(
+          genreId: _selectedGenreId!,
+          subcategoryId: _selectedSubcategoryId ?? '',
+          genreName: genre?.name,
+          subcategoryName: subcategory?.name,
         );
     }
   }
@@ -464,6 +455,245 @@ class _SubcategorySelectionStep extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Step 3: Recording
+// ---------------------------------------------------------------------------
+
+class _RecordingStep extends ConsumerWidget {
+  const _RecordingStep({
+    required this.genreId,
+    required this.subcategoryId,
+    required this.genreName,
+    required this.subcategoryName,
+  });
+
+  final String genreId;
+  final String subcategoryId;
+  final String? genreName;
+  final String? subcategoryName;
+
+  String _formatElapsed(Duration d) {
+    final minutes = d.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final seconds = d.inSeconds.remainder(60).toString().padLeft(2, '0');
+    return '$minutes:$seconds';
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final recState = ref.watch(recordingNotifierProvider);
+    final notifier = ref.read(recordingNotifierProvider.notifier);
+
+    // Derive the button state.
+    RecordButtonState buttonState;
+    if (recState.isRecording && !recState.isPaused) {
+      buttonState = RecordButtonState.recording;
+    } else if (recState.isPaused) {
+      buttonState = RecordButtonState.paused;
+    } else {
+      buttonState = RecordButtonState.ready;
+    }
+
+    // Build the genre/subcategory tag label.
+    final tagParts = <String>[];
+    if (genreName != null) tagParts.add(genreName!);
+    if (subcategoryName != null) tagParts.add(subcategoryName!);
+    final tagLabel = tagParts.join(' / ');
+
+    return Container(
+      color: AppColors.foreground,
+      child: SafeArea(
+        top: false,
+        child: Column(
+          children: [
+            // Genre/subcategory tag at top
+            if (tagLabel.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 16),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    tagLabel,
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: Colors.white.withValues(alpha: 0.8),
+                        ),
+                  ),
+                ),
+              ),
+
+            // Expanded center area
+            Expanded(
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Waveform visualizer (shown when recording or paused)
+                    if (recState.isRecording || recState.isPaused)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 24),
+                        child: recState.isPaused
+                            ? WaveformVisualizer(
+                                amplitudes:
+                                    List.filled(30, 0.0), // frozen waveform
+                                barColor: AppColors.primary,
+                                height: 80,
+                              )
+                            : WaveformVisualizer(
+                                amplitudeStream: recState.amplitudeStream,
+                                barColor: AppColors.primary,
+                                height: 80,
+                              ),
+                      ),
+
+                    // Elapsed time (shown when recording or paused)
+                    if (recState.isRecording || recState.isPaused)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 32),
+                        child: Text(
+                          _formatElapsed(recState.elapsed),
+                          style:
+                              Theme.of(context).textTheme.displaySmall?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w300,
+                                    fontFeatures: [
+                                      const FontFeature.tabularFigures(),
+                                    ],
+                                  ),
+                        ),
+                      ),
+
+                    // Record button
+                    RecordButton(
+                      state: buttonState,
+                      onTap: () => _handleRecordTap(notifier, recState),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Label / controls below button
+                    if (!recState.isRecording && !recState.isPaused)
+                      Text(
+                        'Tap to Record',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: Colors.white.withValues(alpha: 0.7),
+                            ),
+                      ),
+
+                    // Pause + Stop row (shown when recording)
+                    if (recState.isRecording && !recState.isPaused)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 24),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            _ControlButton(
+                              icon: LucideIcons.pause,
+                              label: 'Pause',
+                              onTap: () => notifier.pauseRecording(),
+                            ),
+                            const SizedBox(width: 48),
+                            _ControlButton(
+                              icon: LucideIcons.square,
+                              label: 'Stop',
+                              onTap: () => notifier.stopRecording(),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                    // Resume + Stop row (shown when paused)
+                    if (recState.isPaused)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 24),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            _ControlButton(
+                              icon: LucideIcons.play,
+                              label: 'Resume',
+                              onTap: () => notifier.resumeRecording(),
+                            ),
+                            const SizedBox(width: 48),
+                            _ControlButton(
+                              icon: LucideIcons.square,
+                              label: 'Stop',
+                              onTap: () => notifier.stopRecording(),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _handleRecordTap(
+    RecordingNotifier notifier,
+    RecordingState recState,
+  ) {
+    if (!recState.isRecording && !recState.isPaused) {
+      notifier.startRecording(genreId, subcategoryId);
+    } else if (recState.isRecording && !recState.isPaused) {
+      notifier.pauseRecording();
+    } else if (recState.isPaused) {
+      notifier.resumeRecording();
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Small control button used in the recording step
+// ---------------------------------------------------------------------------
+
+class _ControlButton extends StatelessWidget {
+  const _ControlButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white.withValues(alpha: 0.15),
+            ),
+            child: Icon(icon, color: Colors.white, size: 24),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: Colors.white.withValues(alpha: 0.7),
+                ),
+          ),
+        ],
+      ),
     );
   }
 }
