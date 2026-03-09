@@ -6,6 +6,7 @@ import '../../features/auth/data/providers/auth_provider.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/signup_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
+import '../../features/project/presentation/projects_screen.dart';
 import '../../shared/widgets/app_shell.dart';
 
 // Bridge between Riverpod auth state and GoRouter's refreshListenable.
@@ -69,7 +70,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/projects',
-            builder: (context, state) => const _PlaceholderScreen(title: 'Projects'),
+            builder: (context, state) => const ProjectsScreen(),
           ),
           GoRoute(
             path: '/profile',
