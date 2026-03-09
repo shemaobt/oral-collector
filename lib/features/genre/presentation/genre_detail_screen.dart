@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../project/data/providers/stats_provider.dart';
 import '../data/providers/genre_provider.dart';
 import '../domain/entities/genre.dart';
 
@@ -12,11 +13,20 @@ class GenreDetailScreen extends ConsumerWidget {
 
   final String genreId;
 
+  String _formatDuration(double totalSeconds) {
+    final seconds = totalSeconds.round();
+    final hours = seconds ~/ 3600;
+    final minutes = (seconds % 3600) ~/ 60;
+    return '${hours}h ${minutes}m';
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final genreState = ref.watch(genreNotifierProvider);
+    final statsState = ref.watch(statsNotifierProvider);
     final genre =
         genreState.genres.where((g) => g.id == genreId).firstOrNull;
+    final genreStat = statsState.genreStats[genreId];
     final theme = Theme.of(context);
 
     if (genre == null) {
@@ -48,7 +58,7 @@ class GenreDetailScreen extends ConsumerWidget {
                 Icon(LucideIcons.clock, size: 14, color: AppColors.secondary),
                 const SizedBox(width: 4),
                 Text(
-                  '0h 0m', // Placeholder until StatsProvider (US-030)
+                  _formatDuration(genreStat?.totalDurationSeconds ?? 0),
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: AppColors.secondary,
                     fontWeight: FontWeight.w600,
@@ -89,10 +99,13 @@ class GenreDetailScreen extends ConsumerWidget {
               separatorBuilder: (_, __) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
                 final subcategory = genre.subcategories[index];
+                final subcatStat =
+                    genreStat?.subcategories[subcategory.id];
                 return _SubcategoryCard(
                   subcategory: subcategory,
                   genreId: genreId,
                   genreColor: genre.color,
+                  subcategoryStat: subcatStat,
                 );
               },
             ),
@@ -105,11 +118,13 @@ class _SubcategoryCard extends StatelessWidget {
     required this.subcategory,
     required this.genreId,
     this.genreColor,
+    this.subcategoryStat,
   });
 
   final Subcategory subcategory;
   final String genreId;
   final String? genreColor;
+  final SubcategoryStat? subcategoryStat;
 
   Color _parseColor(String? hex) {
     if (hex == null || hex.length < 7) return AppColors.primary;
@@ -126,14 +141,17 @@ class _SubcategoryCard extends StatelessWidget {
     final theme = Theme.of(context);
     final color = _parseColor(genreColor);
 
-    // Placeholder values until StatsProvider (US-030)
-    const recordingCount = 0;
-    const durationSeconds = 0;
+    final recordingCount = subcategoryStat?.recordingCount ?? 0;
+    final durationSeconds = (subcategoryStat?.totalDurationSeconds ?? 0).round();
     final hours = durationSeconds ~/ 3600;
     final minutes = (durationSeconds % 3600) ~/ 60;
 
-    // Placeholder target progress (0% until stats available)
-    const progress = 0.0;
+    // Target progress (ratio of recorded hours to target hours)
+    final targetHours = subcategoryStat?.targetHours;
+    final recordedHours = (subcategoryStat?.totalDurationSeconds ?? 0) / 3600.0;
+    final progress = (targetHours != null && targetHours > 0)
+        ? (recordedHours / targetHours).clamp(0.0, 1.0)
+        : 0.0;
 
     return Card(
       clipBehavior: Clip.antiAlias,
