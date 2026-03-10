@@ -10,11 +10,24 @@ import '../../project/data/providers/project_provider.dart';
 import '../../sync/data/providers/sync_provider.dart';
 
 /// Profile screen with sync settings section, manual sync trigger, and logout.
-class ProfileScreen extends ConsumerWidget {
+class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      ref.read(inviteNotifierProvider.notifier).fetchInvites();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final authState = ref.watch(authNotifierProvider);
     final syncState = ref.watch(syncNotifierProvider);
     final inviteState = ref.watch(inviteNotifierProvider);

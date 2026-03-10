@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import '../../core/theme/app_colors.dart';
+import '../../features/invite/data/providers/invite_provider.dart';
 import 'sync_status_indicator.dart';
 
 class AppShell extends ConsumerWidget {
@@ -30,10 +32,23 @@ class AppShell extends ConsumerWidget {
     context.go(_tabs[index].path);
   }
 
+  Widget _badgedIcon(IconData icon, int badgeCount) {
+    if (badgeCount <= 0) return Icon(icon);
+    return Badge(
+      label: Text(
+        '$badgeCount',
+        style: const TextStyle(fontSize: 10, color: Colors.white),
+      ),
+      backgroundColor: AppColors.primary,
+      child: Icon(icon),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedIndex = _currentIndex(context);
     final isWide = MediaQuery.of(context).size.width >= 600;
+    final pendingInvites = ref.watch(inviteNotifierProvider).pendingCount;
 
     if (isWide) {
       return Scaffold(
@@ -49,7 +64,9 @@ class AppShell extends ConsumerWidget {
               labelType: NavigationRailLabelType.all,
               destinations: _tabs
                   .map((tab) => NavigationRailDestination(
-                        icon: Icon(tab.icon),
+                        icon: tab.path == '/profile'
+                            ? _badgedIcon(tab.icon, pendingInvites)
+                            : Icon(tab.icon),
                         label: Text(tab.label),
                       ))
                   .toList(),
@@ -73,7 +90,9 @@ class AppShell extends ConsumerWidget {
         type: BottomNavigationBarType.fixed,
         items: _tabs
             .map((tab) => BottomNavigationBarItem(
-                  icon: Icon(tab.icon),
+                  icon: tab.path == '/profile'
+                      ? _badgedIcon(tab.icon, pendingInvites)
+                      : Icon(tab.icon),
                   label: tab.label,
                 ))
             .toList(),
