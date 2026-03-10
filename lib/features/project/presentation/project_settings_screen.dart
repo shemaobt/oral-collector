@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import '../../../core/errors/api_exception.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/widgets/invite_dialog.dart';
 import '../../auth/data/providers/auth_provider.dart';
@@ -140,6 +141,14 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Project updated')),
+      );
+    } on ForbiddenException {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('You do not have permission to update this project'),
+          backgroundColor: Colors.orange,
+        ),
       );
     } on Exception catch (e) {
       if (!mounted) return;

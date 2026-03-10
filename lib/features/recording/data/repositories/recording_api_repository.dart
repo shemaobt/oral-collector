@@ -4,6 +4,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
 import '../../../../core/config/env.dart';
+import '../../../../core/errors/api_exception.dart';
 
 /// Repository for server-side recording operations (DELETE, PATCH).
 class RecordingApiRepository {
@@ -28,11 +29,15 @@ class RecordingApiRepository {
 
   /// Delete a recording from the server.
   /// Returns true if successful (200/204) or recording not found (404).
+  /// Throws [ForbiddenException] on 403.
   Future<bool> deleteRecording(String serverId) async {
     final response = await _client.delete(
       Uri.parse('$_baseUrl/api/oc/recordings/$serverId'),
       headers: await _authHeaders(),
     );
+    if (response.statusCode == 403) {
+      throw const ForbiddenException();
+    }
     return response.statusCode == 200 ||
         response.statusCode == 204 ||
         response.statusCode == 404;
@@ -40,6 +45,7 @@ class RecordingApiRepository {
 
   /// Update a recording's genre/subcategory on the server.
   /// Returns true if successful.
+  /// Throws [ForbiddenException] on 403.
   Future<bool> updateRecording(
     String serverId, {
     String? genreId,
@@ -54,6 +60,9 @@ class RecordingApiRepository {
       headers: await _authHeaders(),
       body: jsonEncode(body),
     );
+    if (response.statusCode == 403) {
+      throw const ForbiddenException();
+    }
     return response.statusCode == 200;
   }
 }

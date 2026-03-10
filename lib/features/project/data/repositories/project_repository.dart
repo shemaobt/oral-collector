@@ -4,6 +4,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
 import '../../../../core/config/env.dart';
+import '../../../../core/errors/api_exception.dart';
 import '../../domain/entities/language.dart';
 import '../../domain/entities/project.dart';
 import '../../domain/entities/project_member.dart';
@@ -19,6 +20,13 @@ class ProjectRepository {
         _storage = storage ?? const FlutterSecureStorage();
 
   String get _baseUrl => Env.backendUrl;
+
+  /// Check response for 403 Forbidden and throw ForbiddenException.
+  void _checkForbidden(http.Response response) {
+    if (response.statusCode == 403) {
+      throw const ForbiddenException();
+    }
+  }
 
   Future<Map<String, String>> _authHeaders() async {
     final token = await _storage.read(key: 'access_token');
@@ -97,6 +105,7 @@ class ProjectRepository {
       body: jsonEncode(body),
     );
 
+    _checkForbidden(response);
     if (response.statusCode != 201) {
       throw Exception('Failed to create project: ${response.body}');
     }
@@ -112,6 +121,7 @@ class ProjectRepository {
       headers: await _authHeaders(),
     );
 
+    _checkForbidden(response);
     if (response.statusCode != 200) {
       throw Exception('Failed to list members: ${response.body}');
     }
@@ -129,6 +139,7 @@ class ProjectRepository {
       headers: await _authHeaders(),
     );
 
+    _checkForbidden(response);
     if (response.statusCode != 200 && response.statusCode != 204) {
       throw Exception('Failed to remove member: ${response.body}');
     }
@@ -149,6 +160,7 @@ class ProjectRepository {
       }),
     );
 
+    _checkForbidden(response);
     if (response.statusCode != 200 && response.statusCode != 201) {
       throw Exception('Failed to send invite: ${response.body}');
     }
@@ -165,6 +177,7 @@ class ProjectRepository {
       body: jsonEncode(data),
     );
 
+    _checkForbidden(response);
     if (response.statusCode != 200) {
       throw Exception('Failed to update project: ${response.body}');
     }

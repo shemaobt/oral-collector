@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../core/database/app_database.dart';
+import '../../../core/errors/api_exception.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/widgets/audio_player_widget.dart';
 import '../../../shared/widgets/upload_status_badge.dart';
@@ -152,6 +153,16 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
       try {
         final apiRepo = ref.read(recordingApiRepositoryProvider);
         await apiRepo.deleteRecording(recording.serverId!);
+      } on ForbiddenException {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('You do not have permission to delete this recording'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        return;
       } catch (_) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -204,6 +215,16 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
           );
           return;
         }
+      } on ForbiddenException {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('You do not have permission to move this recording'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        return;
       } catch (_) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
