@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 
@@ -6,6 +7,7 @@ import 'package:ffmpeg_kit_flutter/ffmpeg_kit.dart';
 import 'package:ffmpeg_kit_flutter/return_code.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:path_provider/path_provider.dart';
@@ -38,6 +40,8 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
   // Generated waveform bars (deterministic from duration)
   List<double> _waveformBars = [];
 
+  StreamSubscription<Duration>? _previewSubscription;
+
   @override
   void initState() {
     super.initState();
@@ -47,6 +51,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
 
   @override
   void dispose() {
+    _previewSubscription?.cancel();
     _player?.dispose();
     super.dispose();
   }
@@ -114,8 +119,9 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
     await _player!.seek(_startTime);
     await _player!.play();
 
-    // Stop at end time
-    _player!.positionStream.listen((position) {
+    // Cancel previous subscription to avoid leaks
+    _previewSubscription?.cancel();
+    _previewSubscription = _player!.positionStream.listen((position) {
       if (position >= _endTime) {
         _player!.pause();
       }
@@ -187,7 +193,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Recording trimmed successfully')),
         );
-        Navigator.of(context).pop(true);
+        context.pop(true);
       }
     } catch (e) {
       if (mounted) {
@@ -229,7 +235,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
         title: const Text('Trim Recording'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () => context.pop(),
             child: Text(
               'Cancel',
               style: TextStyle(color: AppColors.foreground.withValues(alpha: 0.6)),
@@ -336,7 +342,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
                   Expanded(
                     child: OutlinedButton(
                       onPressed:
-                          _isSaving ? null : () => Navigator.of(context).pop(),
+                          _isSaving ? null : () => context.pop(),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppColors.foreground,
                         side: BorderSide(
