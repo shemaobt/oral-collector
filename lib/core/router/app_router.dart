@@ -8,6 +8,7 @@ import '../../features/auth/presentation/signup_screen.dart';
 import '../../features/genre/presentation/genre_detail_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/project/presentation/projects_screen.dart';
+import '../../features/recording/presentation/file_import_screen.dart';
 import '../../features/recording/presentation/recording_detail_screen.dart';
 import '../../features/recording/presentation/recording_flow_screen.dart';
 import '../../features/recording/presentation/recordings_list_screen.dart';
@@ -80,6 +81,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => TrimEditorScreen(
           recordingId: state.pathParameters['id'] ?? '',
         ),
+      ),
+
+      // File import (outside shell — uses its own back navigation)
+      GoRoute(
+        path: '/import-file',
+        builder: (context, state) => const FileImportScreen(),
       ),
 
       // Main app routes wrapped in AppShell

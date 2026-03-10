@@ -159,6 +159,15 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
           ],
         ),
       ),
+      floatingActionButton: activeProject != null
+          ? FloatingActionButton(
+              onPressed: () => context.go('/import-file'),
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              tooltip: 'Import audio file',
+              child: const Icon(LucideIcons.filePlus),
+            )
+          : null,
       body: Column(
         children: [
           // Genre filter dropdown
