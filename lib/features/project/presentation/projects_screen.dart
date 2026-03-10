@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../auth/data/providers/role_provider.dart';
 import '../data/providers/project_provider.dart';
 import '../domain/entities/project.dart';
 import 'create_project_dialog.dart';
@@ -19,14 +20,22 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(
-      () => ref.read(projectNotifierProvider.notifier).fetchProjects(),
-    );
+    Future.microtask(() async {
+      await ref.read(projectNotifierProvider.notifier).fetchProjects();
+      final projects = ref.read(projectNotifierProvider).projects;
+      if (projects.isNotEmpty) {
+        await ref
+            .read(roleNotifierProvider.notifier)
+            .fetchRolesForProjects(projects.map((p) => p.id).toList());
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(projectNotifierProvider);
+    final roleState = ref.watch(roleNotifierProvider);
+    final roleNotifier = ref.read(roleNotifierProvider.notifier);
     final theme = Theme.of(context);
 
     // Show error via SnackBar
@@ -41,19 +50,23 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
       }
     });
 
+    final canCreate = roleNotifier.canCreateProject;
+
     return Scaffold(
       appBar: AppBar(title: const Text('Projects')),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showCreateProjectDialog(),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        child: const Icon(LucideIcons.plus),
-      ),
-      body: _buildBody(state, theme),
+      floatingActionButton: canCreate
+          ? FloatingActionButton(
+              onPressed: () => _showCreateProjectDialog(),
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              child: const Icon(LucideIcons.plus),
+            )
+          : null,
+      body: _buildBody(state, roleNotifier, theme),
     );
   }
 
-  Widget _buildBody(ProjectState state, ThemeData theme) {
+  Widget _buildBody(ProjectState state, RoleNotifier roleNotifier, ThemeData theme) {
     if (state.isLoading && state.projects.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -85,17 +98,28 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
     }
 
     return RefreshIndicator(
-      onRefresh: () =>
-          ref.read(projectNotifierProvider.notifier).fetchProjects(),
+      onRefresh: () async {
+        await ref.read(projectNotifierProvider.notifier).fetchProjects();
+        final projects = ref.read(projectNotifierProvider).projects;
+        if (projects.isNotEmpty) {
+          await ref
+              .read(roleNotifierProvider.notifier)
+              .fetchRolesForProjects(projects.map((p) => p.id).toList());
+        }
+      },
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: state.projects.length,
         itemBuilder: (context, index) {
           final project = state.projects[index];
+          final canManage = roleNotifier.canManageProject(project.id);
           return _ProjectCard(
             project: project,
+            showSettings: canManage,
             onEnter: () => _enterProject(project),
-            onSettings: () => context.push('/project/${project.id}/settings'),
+            onSettings: canManage
+                ? () => context.push('/project/${project.id}/settings')
+                : null,
           );
         },
       ),
@@ -124,12 +148,14 @@ class _ProjectCard extends StatelessWidget {
   const _ProjectCard({
     required this.project,
     required this.onEnter,
-    required this.onSettings,
+    this.onSettings,
+    this.showSettings = true,
   });
 
   final Project project;
   final VoidCallback onEnter;
-  final VoidCallback onSettings;
+  final VoidCallback? onSettings;
+  final bool showSettings;
 
   String _formatDuration(double totalSeconds) {
     final hours = totalSeconds ~/ 3600;
@@ -178,16 +204,18 @@ class _ProjectCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                const SizedBox(width: 4),
-                IconButton(
-                  icon: Icon(
-                    LucideIcons.settings,
-                    size: 20,
-                    color: AppColors.secondary,
+                if (showSettings) ...[
+                  const SizedBox(width: 4),
+                  IconButton(
+                    icon: Icon(
+                      LucideIcons.settings,
+                      size: 20,
+                      color: AppColors.secondary,
+                    ),
+                    onPressed: onSettings,
+                    tooltip: 'Project Settings',
                   ),
-                  onPressed: onSettings,
-                  tooltip: 'Project Settings',
-                ),
+                ],
               ],
             ),
             const SizedBox(height: 12),
