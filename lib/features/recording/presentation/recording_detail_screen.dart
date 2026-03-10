@@ -503,6 +503,26 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
         ),
         const SizedBox(height: 12),
 
+        // Trim recording
+        OutlinedButton.icon(
+          onPressed: () async {
+            final result = await context.push<bool>(
+              '/recording/${widget.recordingId}/trim',
+            );
+            if (result == true) {
+              await _loadRecording();
+            }
+          },
+          icon: const Icon(LucideIcons.scissors, size: 18),
+          label: const Text('Trim Recording'),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: AppColors.primary,
+            side: BorderSide(color: AppColors.primary.withValues(alpha: 0.3)),
+            padding: const EdgeInsets.symmetric(vertical: 14),
+          ),
+        ),
+        const SizedBox(height: 8),
+
         // Mark/Clear Needs Cleaning toggle
         OutlinedButton.icon(
           onPressed: _toggleCleaningStatus,

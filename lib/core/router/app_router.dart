@@ -11,6 +11,7 @@ import '../../features/project/presentation/projects_screen.dart';
 import '../../features/recording/presentation/recording_detail_screen.dart';
 import '../../features/recording/presentation/recording_flow_screen.dart';
 import '../../features/recording/presentation/recordings_list_screen.dart';
+import '../../features/recording/presentation/trim_editor_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../shared/widgets/app_shell.dart';
 
@@ -69,6 +70,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/recording/:id',
         builder: (context, state) => RecordingDetailScreen(
+          recordingId: state.pathParameters['id'] ?? '',
+        ),
+      ),
+
+      // Trim editor (outside shell — uses its own back navigation)
+      GoRoute(
+        path: '/recording/:id/trim',
+        builder: (context, state) => TrimEditorScreen(
           recordingId: state.pathParameters['id'] ?? '',
         ),
       ),
