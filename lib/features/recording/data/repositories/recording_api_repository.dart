@@ -43,17 +43,19 @@ class RecordingApiRepository {
         response.statusCode == 404;
   }
 
-  /// Update a recording's genre/subcategory on the server.
+  /// Update a recording's genre/subcategory/cleaning status on the server.
   /// Returns true if successful.
   /// Throws [ForbiddenException] on 403.
   Future<bool> updateRecording(
     String serverId, {
     String? genreId,
     String? subcategoryId,
+    String? cleaningStatus,
   }) async {
     final body = <String, dynamic>{};
     if (genreId != null) body['genre_id'] = genreId;
     if (subcategoryId != null) body['subcategory_id'] = subcategoryId;
+    if (cleaningStatus != null) body['cleaning_status'] = cleaningStatus;
 
     final response = await _client.patch(
       Uri.parse('$_baseUrl/api/oc/recordings/$serverId'),
