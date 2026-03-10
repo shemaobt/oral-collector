@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import 'sync_status_indicator.dart';
+
 class AppShell extends ConsumerWidget {
   const AppShell({super.key, required this.child});
 
@@ -35,6 +37,10 @@ class AppShell extends ConsumerWidget {
 
     if (isWide) {
       return Scaffold(
+        appBar: AppBar(
+          title: Text(_tabs[selectedIndex].label),
+          actions: const [SyncStatusIndicator()],
+        ),
         body: Row(
           children: [
             NavigationRail(
@@ -56,6 +62,10 @@ class AppShell extends ConsumerWidget {
     }
 
     return Scaffold(
+      appBar: AppBar(
+        title: Text(_tabs[selectedIndex].label),
+        actions: const [SyncStatusIndicator()],
+      ),
       body: child,
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: selectedIndex,
