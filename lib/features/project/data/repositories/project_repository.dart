@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import '../../../../core/config/env.dart';
 import '../../domain/entities/language.dart';
 import '../../domain/entities/project.dart';
+import '../../domain/entities/project_member.dart';
 
 class ProjectRepository {
   final http.Client _client;
@@ -102,6 +103,55 @@ class ProjectRepository {
 
     final data = jsonDecode(response.body) as Map<String, dynamic>;
     return Project.fromJson(data);
+  }
+
+  /// List members of a project.
+  Future<List<ProjectMember>> listMembers(String projectId) async {
+    final response = await _client.get(
+      Uri.parse('$_baseUrl/api/oc/projects/$projectId/members'),
+      headers: await _authHeaders(),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to list members: ${response.body}');
+    }
+
+    final data = jsonDecode(response.body) as List<dynamic>;
+    return data
+        .map((json) => ProjectMember.fromJson(json as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// Remove a member from a project.
+  Future<void> removeMember(String projectId, String userId) async {
+    final response = await _client.delete(
+      Uri.parse('$_baseUrl/api/oc/projects/$projectId/members/$userId'),
+      headers: await _authHeaders(),
+    );
+
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      throw Exception('Failed to remove member: ${response.body}');
+    }
+  }
+
+  /// Invite a user to a project.
+  Future<void> inviteMember({
+    required String projectId,
+    required String email,
+    required String role,
+  }) async {
+    final response = await _client.post(
+      Uri.parse('$_baseUrl/api/oc/projects/$projectId/invites'),
+      headers: await _authHeaders(),
+      body: jsonEncode({
+        'email': email,
+        'role': role,
+      }),
+    );
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw Exception('Failed to send invite: ${response.body}');
+    }
   }
 
   /// Update a project.
