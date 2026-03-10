@@ -6,7 +6,6 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../core/errors/api_exception.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/widgets/invite_dialog.dart';
-import '../../auth/data/providers/auth_provider.dart';
 import '../../auth/data/providers/role_provider.dart';
 import '../data/providers/member_provider.dart';
 import '../data/providers/project_provider.dart';

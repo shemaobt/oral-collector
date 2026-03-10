@@ -34,7 +34,8 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(projectNotifierProvider);
-    final roleState = ref.watch(roleNotifierProvider);
+    // Watch role state to rebuild when roles are fetched
+    ref.watch(roleNotifierProvider);
     final roleNotifier = ref.read(roleNotifierProvider.notifier);
     final theme = Theme.of(context);
 
