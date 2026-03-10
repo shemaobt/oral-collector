@@ -4,6 +4,9 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../auth/data/providers/auth_provider.dart';
+import '../../invite/data/providers/invite_provider.dart';
+import '../../invite/domain/entities/invite.dart';
+import '../../project/data/providers/project_provider.dart';
 import '../../sync/data/providers/sync_provider.dart';
 
 /// Profile screen with sync settings section, manual sync trigger, and logout.
@@ -14,6 +17,7 @@ class ProfileScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authNotifierProvider);
     final syncState = ref.watch(syncNotifierProvider);
+    final inviteState = ref.watch(inviteNotifierProvider);
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -60,6 +64,39 @@ class ProfileScreen extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 24),
+
+        // Invitations section
+        _InvitationsSection(
+          inviteState: inviteState,
+          onAccept: (invite) async {
+            final accepted = await ref
+                .read(inviteNotifierProvider.notifier)
+                .acceptInvite(invite.id);
+            if (accepted && context.mounted) {
+              ref.read(projectNotifierProvider.notifier).fetchProjects();
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'Joined "${invite.projectName}" successfully',
+                  ),
+                ),
+              );
+            }
+          },
+          onDecline: (invite) async {
+            final declined = await ref
+                .read(inviteNotifierProvider.notifier)
+                .declineInvite(invite.id);
+            if (declined && context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Invite declined')),
+              );
+            }
+          },
+          onRefresh: () {
+            ref.read(inviteNotifierProvider.notifier).fetchInvites();
+          },
+        ),
 
         // Sync settings section
         _SectionHeader(title: 'Sync Settings'),
@@ -241,6 +278,179 @@ class _SectionHeader extends StatelessWidget {
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5,
             ),
+      ),
+    );
+  }
+}
+
+class _InvitationsSection extends StatelessWidget {
+  const _InvitationsSection({
+    required this.inviteState,
+    required this.onAccept,
+    required this.onDecline,
+    required this.onRefresh,
+  });
+
+  final InviteState inviteState;
+  final Future<void> Function(Invite invite) onAccept;
+  final Future<void> Function(Invite invite) onDecline;
+  final VoidCallback onRefresh;
+
+  @override
+  Widget build(BuildContext context) {
+    // Always show the section header with refresh button
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Expanded(child: _SectionHeader(title: 'Invitations')),
+            IconButton(
+              icon: Icon(
+                LucideIcons.refreshCw,
+                size: 16,
+                color: AppColors.secondary,
+              ),
+              onPressed: onRefresh,
+              tooltip: 'Refresh invitations',
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        if (inviteState.isLoading)
+          const Card(
+            child: Padding(
+              padding: EdgeInsets.all(24),
+              child: Center(child: CircularProgressIndicator()),
+            ),
+          )
+        else if (inviteState.error != null)
+          Card(
+            child: ListTile(
+              leading: Icon(LucideIcons.alertCircle, color: AppColors.error),
+              title: Text(
+                inviteState.error!,
+                style: TextStyle(color: AppColors.error),
+              ),
+              trailing: TextButton(
+                onPressed: onRefresh,
+                child: const Text('Retry'),
+              ),
+            ),
+          )
+        else if (inviteState.invites.isEmpty)
+          Card(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: const Padding(
+              padding: EdgeInsets.all(20),
+              child: Center(
+                child: Text(
+                  'No pending invitations',
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ),
+            ),
+          )
+        else
+          Card(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              children: [
+                for (var i = 0; i < inviteState.invites.length; i++) ...[
+                  if (i > 0) const Divider(height: 1),
+                  _InviteTile(
+                    invite: inviteState.invites[i],
+                    onAccept: () => onAccept(inviteState.invites[i]),
+                    onDecline: () => onDecline(inviteState.invites[i]),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        const SizedBox(height: 24),
+      ],
+    );
+  }
+}
+
+class _InviteTile extends StatelessWidget {
+  const _InviteTile({
+    required this.invite,
+    required this.onAccept,
+    required this.onDecline,
+  });
+
+  final Invite invite;
+  final VoidCallback onAccept;
+  final VoidCallback onDecline;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 20,
+            backgroundColor: AppColors.info.withValues(alpha: 0.15),
+            child: Icon(
+              LucideIcons.folderOpen,
+              size: 20,
+              color: AppColors.info,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  invite.projectName,
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.copyWith(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Role: ${invite.role == 'project_manager' ? 'Project Manager' : 'User'}',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.secondary,
+                      ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          SizedBox(
+            height: 36,
+            child: OutlinedButton(
+              onPressed: onDecline,
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.error,
+                side: BorderSide(color: AppColors.error.withValues(alpha: 0.5)),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+              ),
+              child: const Text('Decline'),
+            ),
+          ),
+          const SizedBox(width: 8),
+          SizedBox(
+            height: 36,
+            child: FilledButton(
+              onPressed: onAccept,
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+              ),
+              child: const Text('Accept'),
+            ),
+          ),
+        ],
       ),
     );
   }
