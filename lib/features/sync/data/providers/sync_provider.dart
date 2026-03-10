@@ -7,6 +7,7 @@ import '../../../recording/data/providers/local_recording_repository_provider.da
 import '../../../recording/data/repositories/local_recording_repository.dart';
 import '../repositories/connectivity_service.dart';
 import '../repositories/sync_engine.dart';
+import '../services/background_sync_service.dart';
 
 // --- State ---
 
@@ -81,6 +82,10 @@ final syncEngineProvider = Provider<SyncEngine>((ref) {
     connectivity: connectivity,
   );
 });
+
+final backgroundSyncServiceProvider = Provider<BackgroundSyncService>(
+  (_) => BackgroundSyncService(),
+);
 
 final syncNotifierProvider =
     NotifierProvider<SyncNotifier, SyncState>(SyncNotifier.new);
