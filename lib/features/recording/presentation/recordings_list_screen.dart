@@ -101,11 +101,7 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
       case _StatusFilter.needsCleaning:
         list =
             list
-                .where(
-                  (r) =>
-                      r.cleaningStatus == 'none' ||
-                      r.cleaningStatus == 'failed',
-                )
+                .where((r) => r.cleaningStatus == 'needs_cleaning')
                 .toList();
         break;
     }
