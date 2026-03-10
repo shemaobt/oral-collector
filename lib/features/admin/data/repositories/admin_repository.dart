@@ -7,6 +7,7 @@ import '../../../../core/config/env.dart';
 import '../../../../core/errors/api_exception.dart';
 import '../../../genre/domain/entities/genre.dart';
 import '../../../project/domain/entities/project.dart';
+import '../../../recording/domain/entities/recording.dart';
 
 /// System-wide admin stats returned by GET /api/oc/admin/stats.
 class AdminStats {
@@ -207,6 +208,37 @@ class AdminRepository {
     _checkForbidden(response);
     if (response.statusCode != 200 && response.statusCode != 204) {
       throw Exception('Failed to delete subcategory: ${response.body}');
+    }
+  }
+
+  /// Fetch recordings with cleaning_status = 'needs_cleaning' (admin view).
+  Future<List<Recording>> fetchCleaningQueue() async {
+    final response = await _client.get(
+      Uri.parse('$_baseUrl/api/oc/admin/cleaning-queue'),
+      headers: await _authHeaders(),
+    );
+
+    _checkForbidden(response);
+    if (response.statusCode != 200) {
+      throw Exception('Failed to fetch cleaning queue: ${response.body}');
+    }
+
+    final data = jsonDecode(response.body) as List<dynamic>;
+    return data
+        .map((json) => Recording.fromJson(json as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// Trigger cleaning for a single recording.
+  Future<void> triggerClean(String recordingId) async {
+    final response = await _client.post(
+      Uri.parse('$_baseUrl/api/oc/recordings/$recordingId/clean'),
+      headers: await _authHeaders(),
+    );
+
+    _checkForbidden(response);
+    if (response.statusCode != 200 && response.statusCode != 202) {
+      throw Exception('Failed to trigger cleaning: ${response.body}');
     }
   }
 }
