@@ -4,8 +4,11 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../shared/widgets/invite_dialog.dart';
+import '../data/providers/member_provider.dart';
 import '../data/providers/project_provider.dart';
 import '../domain/entities/project.dart';
+import '../domain/entities/project_member.dart';
 
 /// Project settings screen where project managers can view/edit project details.
 class ProjectSettingsScreen extends ConsumerStatefulWidget {
@@ -31,6 +34,11 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
   void initState() {
     super.initState();
     _loadProject();
+    Future.microtask(
+      () => ref
+          .read(memberNotifierProvider.notifier)
+          .fetchMembers(widget.projectId),
+    );
   }
 
   Future<void> _loadProject() async {
@@ -124,6 +132,71 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
       if (mounted) {
         setState(() => _isSaving = false);
       }
+    }
+  }
+
+  Future<void> _confirmRemoveMember(ProjectMember member) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Remove Member'),
+        content: Text(
+          'Remove ${member.displayName ?? member.email} from this project?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    final success = await ref
+        .read(memberNotifierProvider.notifier)
+        .removeMember(widget.projectId, member.userId);
+
+    if (!mounted) return;
+
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Member removed')),
+      );
+    } else {
+      final error = ref.read(memberNotifierProvider).error;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error ?? 'Failed to remove member'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
+  }
+
+  Future<void> _showInviteDialog() async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (_) => InviteDialog(projectId: widget.projectId),
+    );
+
+    if (result == true && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Invite sent successfully')),
+      );
+      // Refresh member list
+      ref
+          .read(memberNotifierProvider.notifier)
+          .fetchMembers(widget.projectId);
     }
   }
 
@@ -302,7 +375,172 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
                 ],
               ),
             ),
+            const SizedBox(height: 24),
+
+            // Members section
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _SectionHeader(title: 'Members'),
+                TextButton.icon(
+                  onPressed: _showInviteDialog,
+                  icon: const Icon(LucideIcons.userPlus, size: 16),
+                  label: const Text('Invite'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.primary,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            _MemberList(
+              projectId: widget.projectId,
+              onRemove: _confirmRemoveMember,
+            ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MemberList extends ConsumerWidget {
+  const _MemberList({
+    required this.projectId,
+    required this.onRemove,
+  });
+
+  final String projectId;
+  final void Function(ProjectMember member) onRemove;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final memberState = ref.watch(memberNotifierProvider);
+
+    if (memberState.isLoading && memberState.members.isEmpty) {
+      return const Card(
+        child: Padding(
+          padding: EdgeInsets.all(24),
+          child: Center(child: CircularProgressIndicator()),
+        ),
+      );
+    }
+
+    if (memberState.members.isEmpty) {
+      return Card(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: const Padding(
+          padding: EdgeInsets.all(24),
+          child: Center(
+            child: Text('No members yet'),
+          ),
+        ),
+      );
+    }
+
+    return Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          for (int i = 0; i < memberState.members.length; i++) ...[
+            if (i > 0) const Divider(height: 1),
+            _MemberTile(
+              member: memberState.members[i],
+              onRemove: () => onRemove(memberState.members[i]),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _MemberTile extends StatelessWidget {
+  const _MemberTile({
+    required this.member,
+    required this.onRemove,
+  });
+
+  final ProjectMember member;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return ListTile(
+      leading: CircleAvatar(
+        backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+        child: Text(
+          (member.displayName ?? member.email)
+              .substring(0, 1)
+              .toUpperCase(),
+          style: TextStyle(
+            color: AppColors.primary,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+      title: Text(
+        member.displayName ?? member.email,
+        style: theme.textTheme.bodyLarge?.copyWith(
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+      subtitle: member.displayName != null
+          ? Text(
+              member.email,
+              style: theme.textTheme.bodySmall,
+            )
+          : null,
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _RoleBadge(role: member.role),
+          const SizedBox(width: 8),
+          IconButton(
+            icon: Icon(
+              LucideIcons.userMinus,
+              size: 18,
+              color: AppColors.error,
+            ),
+            onPressed: onRemove,
+            tooltip: 'Remove member',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RoleBadge extends StatelessWidget {
+  const _RoleBadge({required this.role});
+
+  final String role;
+
+  @override
+  Widget build(BuildContext context) {
+    final isManager = role == 'project_manager';
+    final label = isManager ? 'PM' : 'User';
+    final color = isManager ? AppColors.primary : AppColors.info;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );
