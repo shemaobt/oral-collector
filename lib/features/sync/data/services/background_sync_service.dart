@@ -3,9 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:workmanager/workmanager.dart';
 
-import '../../../recording/data/providers/local_recording_repository_provider.dart';
 import '../repositories/connectivity_service.dart';
-import '../repositories/sync_engine.dart';
 
 /// Unique task name for the periodic background sync job.
 const String backgroundSyncTaskName = 'com.oralcollector.backgroundSync';
@@ -64,13 +62,10 @@ class BackgroundSyncService {
     }
   }
 
-  /// Start periodic background sync via workmanager (mobile platforms).
+  /// Register periodic background sync task via workmanager (mobile platforms).
+  ///
+  /// Workmanager must already be initialized in main() before calling this.
   Future<void> _initializeWorkmanager() async {
-    await Workmanager().initialize(
-      callbackDispatcher,
-      isInDebugMode: kDebugMode,
-    );
-
     // Register periodic task — minimum interval is 15 minutes on both
     // Android and iOS. workmanager handles platform differences:
     // - Android: Uses WorkManager with foreground service capability
