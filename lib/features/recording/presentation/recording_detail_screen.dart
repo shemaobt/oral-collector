@@ -111,6 +111,42 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
 
     final newStatus =
         recording.cleaningStatus == 'none' ? 'needs_cleaning' : 'none';
+
+    // Update on server if uploaded
+    if (recording.uploadStatus == 'uploaded' && recording.serverId != null) {
+      try {
+        final apiRepo = ref.read(recordingApiRepositoryProvider);
+        final success = await apiRepo.updateRecording(
+          recording.serverId!,
+          cleaningStatus: newStatus,
+        );
+        if (!success && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Failed to update cleaning status on server')),
+          );
+          return;
+        }
+      } on ForbiddenException {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('You do not have permission to update this recording'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        return;
+      } catch (_) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Failed to update cleaning status on server')),
+          );
+        }
+        return;
+      }
+    }
+
+    // Update local DB
     final repo = ref.read(localRecordingRepositoryProvider);
     await repo.updateRecording(
       widget.recordingId,
