@@ -5,6 +5,8 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/widgets/invite_dialog.dart';
+import '../../auth/data/providers/auth_provider.dart';
+import '../../auth/data/providers/role_provider.dart';
 import '../data/providers/member_provider.dart';
 import '../data/providers/project_provider.dart';
 import '../domain/entities/project.dart';
@@ -30,15 +32,34 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
   bool _isSaving = false;
   Project? _project;
 
+  /// Whether the current user can manage this project (PM or platform admin).
+  bool get _isManager =>
+      ref.read(roleNotifierProvider.notifier).canManageProject(widget.projectId);
+
   @override
   void initState() {
     super.initState();
     _loadProject();
-    Future.microtask(
-      () => ref
+    Future.microtask(() async {
+      await ref
+          .read(roleNotifierProvider.notifier)
+          .fetchRoleForProject(widget.projectId);
+      if (!mounted) return;
+      // Non-managers cannot access this screen
+      if (!_isManager) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('You do not have permission to manage this project'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        context.pop();
+        return;
+      }
+      ref
           .read(memberNotifierProvider.notifier)
-          .fetchMembers(widget.projectId),
-    );
+          .fetchMembers(widget.projectId);
+    });
   }
 
   Future<void> _loadProject() async {
@@ -251,20 +272,22 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Name field (editable)
+                    // Name field (editable only for managers)
                     TextFormField(
                       controller: _nameController,
                       decoration: const InputDecoration(
                         labelText: 'Project Name',
                         prefixIcon: Icon(LucideIcons.folderOpen),
                       ),
+                      readOnly: !_isManager,
+                      enabled: _isManager,
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
                           return 'Project name is required';
                         }
                         return null;
                       },
-                      onChanged: (_) => _onFieldChanged(),
+                      onChanged: _isManager ? (_) => _onFieldChanged() : null,
                     ),
                     const SizedBox(height: 16),
 
@@ -280,7 +303,7 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Description field (editable)
+                    // Description field (editable only for managers)
                     TextFormField(
                       controller: _descriptionController,
                       decoration: const InputDecoration(
@@ -289,7 +312,9 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
                         alignLabelWithHint: true,
                       ),
                       maxLines: 3,
-                      onChanged: (_) => _onFieldChanged(),
+                      readOnly: !_isManager,
+                      enabled: _isManager,
+                      onChanged: _isManager ? (_) => _onFieldChanged() : null,
                     ),
                   ],
                 ),
@@ -297,8 +322,8 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Save button
-            SizedBox(
+            // Save button (managers only)
+            if (_isManager) SizedBox(
               height: 48,
               child: ElevatedButton.icon(
                 onPressed: _isEdited && !_isSaving ? _save : null,
@@ -320,7 +345,8 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 24),
+            if (_isManager) const SizedBox(height: 24),
+            if (!_isManager) const SizedBox(height: 16),
 
             // Storage section
             _SectionHeader(title: 'Storage'),
@@ -382,20 +408,21 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 _SectionHeader(title: 'Members'),
-                TextButton.icon(
-                  onPressed: _showInviteDialog,
-                  icon: const Icon(LucideIcons.userPlus, size: 16),
-                  label: const Text('Invite'),
-                  style: TextButton.styleFrom(
-                    foregroundColor: AppColors.primary,
+                if (_isManager)
+                  TextButton.icon(
+                    onPressed: _showInviteDialog,
+                    icon: const Icon(LucideIcons.userPlus, size: 16),
+                    label: const Text('Invite'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.primary,
+                    ),
                   ),
-                ),
               ],
             ),
             const SizedBox(height: 8),
             _MemberList(
               projectId: widget.projectId,
-              onRemove: _confirmRemoveMember,
+              onRemove: _isManager ? _confirmRemoveMember : null,
             ),
           ],
         ),
@@ -407,11 +434,11 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
 class _MemberList extends ConsumerWidget {
   const _MemberList({
     required this.projectId,
-    required this.onRemove,
+    this.onRemove,
   });
 
   final String projectId;
-  final void Function(ProjectMember member) onRemove;
+  final void Function(ProjectMember member)? onRemove;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -450,7 +477,9 @@ class _MemberList extends ConsumerWidget {
             if (i > 0) const Divider(height: 1),
             _MemberTile(
               member: memberState.members[i],
-              onRemove: () => onRemove(memberState.members[i]),
+              onRemove: onRemove != null
+                  ? () => onRemove!(memberState.members[i])
+                  : null,
             ),
           ],
         ],
@@ -462,11 +491,11 @@ class _MemberList extends ConsumerWidget {
 class _MemberTile extends StatelessWidget {
   const _MemberTile({
     required this.member,
-    required this.onRemove,
+    this.onRemove,
   });
 
   final ProjectMember member;
-  final VoidCallback onRemove;
+  final VoidCallback? onRemove;
 
   @override
   Widget build(BuildContext context) {
@@ -501,16 +530,18 @@ class _MemberTile extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           _RoleBadge(role: member.role),
-          const SizedBox(width: 8),
-          IconButton(
-            icon: Icon(
-              LucideIcons.userMinus,
-              size: 18,
-              color: AppColors.error,
+          if (onRemove != null) ...[
+            const SizedBox(width: 8),
+            IconButton(
+              icon: Icon(
+                LucideIcons.userMinus,
+                size: 18,
+                color: AppColors.error,
+              ),
+              onPressed: onRemove,
+              tooltip: 'Remove member',
             ),
-            onPressed: onRemove,
-            tooltip: 'Remove member',
-          ),
+          ],
         ],
       ),
     );
