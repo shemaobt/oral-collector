@@ -6,6 +6,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/widgets/audio_player_widget.dart';
+import '../../../shared/widgets/cleaning_status_badge.dart';
 import '../../../shared/widgets/upload_status_badge.dart';
 import '../../genre/data/providers/genre_provider.dart';
 import '../../project/data/providers/project_provider.dart';
@@ -392,6 +393,12 @@ class _RecordingCard extends StatelessWidget {
                     ),
                   ),
                   const Spacer(),
+                  CleaningStatusBadge(
+                    status: recording.cleaningStatus,
+                    compact: true,
+                  ),
+                  if (recording.cleaningStatus != 'none')
+                    const SizedBox(width: 4),
                   UploadStatusBadge(
                     status: recording.uploadStatus,
                     compact: true,
