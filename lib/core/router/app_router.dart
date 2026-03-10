@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/admin/presentation/admin_dashboard_screen.dart';
 import '../../features/auth/data/providers/auth_provider.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/signup_screen.dart';
@@ -96,6 +97,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => ProjectSettingsScreen(
           projectId: state.pathParameters['id'] ?? '',
         ),
+      ),
+
+      // Admin dashboard (outside shell — admin-only, desktop-optimized)
+      GoRoute(
+        path: '/admin',
+        builder: (context, state) => const AdminDashboardScreen(),
       ),
 
       // Main app routes wrapped in AppShell

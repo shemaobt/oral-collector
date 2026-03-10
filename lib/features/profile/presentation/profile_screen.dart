@@ -5,6 +5,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../auth/data/providers/auth_provider.dart';
+import '../../auth/data/providers/role_provider.dart';
 import '../../invite/data/providers/invite_provider.dart';
 import '../../invite/domain/entities/invite.dart';
 import '../../project/data/providers/project_provider.dart';
@@ -317,6 +318,31 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
         ),
         const SizedBox(height: 24),
+
+        // Admin section (visible only to platform admins)
+        if (ref.read(roleNotifierProvider.notifier).isPlatformAdmin) ...[
+          _SectionHeader(title: 'Administration'),
+          const SizedBox(height: 8),
+          Card(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: ListTile(
+              leading: Icon(
+                LucideIcons.layoutDashboard,
+                color: AppColors.primary,
+              ),
+              title: const Text('Admin Dashboard'),
+              subtitle: const Text('System stats, projects & genre management'),
+              trailing: Icon(
+                LucideIcons.chevronRight,
+                color: AppColors.secondary,
+              ),
+              onTap: () => context.push('/admin'),
+            ),
+          ),
+          const SizedBox(height: 24),
+        ],
 
         // Account section
         _SectionHeader(title: 'Account'),
