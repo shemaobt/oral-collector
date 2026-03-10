@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../core/theme/app_colors.dart';
@@ -18,12 +19,29 @@ class ProfileScreen extends ConsumerStatefulWidget {
 }
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
+  int _storageUsedBytes = 0;
+
   @override
   void initState() {
     super.initState();
     Future.microtask(() {
       ref.read(inviteNotifierProvider.notifier).fetchInvites();
+      _loadStorageUsed();
     });
+  }
+
+  Future<void> _loadStorageUsed() async {
+    final bytes =
+        await ref.read(syncNotifierProvider.notifier).getLocalStorageUsed();
+    if (mounted) {
+      setState(() => _storageUsedBytes = bytes);
+    }
+  }
+
+  String _formatBytes(int bytes) {
+    if (bytes < 1024) return '$bytes B stored locally';
+    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB stored locally';
+    return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB stored locally';
   }
 
   @override
@@ -234,6 +252,67 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       );
                 },
               ),
+              const Divider(height: 1),
+
+              // Storage used display
+              ListTile(
+                leading: Icon(
+                  LucideIcons.hardDrive,
+                  color: AppColors.secondary,
+                ),
+                title: const Text('Storage used'),
+                subtitle: Text(_formatBytes(_storageUsedBytes)),
+              ),
+              const Divider(height: 1),
+
+              // Clear local cache button
+              ListTile(
+                leading: Icon(
+                  LucideIcons.eraser,
+                  color: AppColors.error,
+                ),
+                title: Text(
+                  'Clear local cache',
+                  style: TextStyle(color: AppColors.error),
+                ),
+                subtitle: const Text(
+                  'Delete all locally stored recordings',
+                ),
+                onTap: () => _showClearCacheConfirmation(context),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 24),
+
+        // About section
+        _SectionHeader(title: 'About'),
+        const SizedBox(height: 8),
+        Card(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            children: [
+              ListTile(
+                leading: Icon(
+                  LucideIcons.info,
+                  color: AppColors.secondary,
+                ),
+                title: const Text('App version'),
+                trailing: Text(
+                  '1.0.0',
+                  style: TextStyle(color: AppColors.secondary),
+                ),
+              ),
+              const Divider(height: 1),
+              ListTile(
+                leading: Icon(
+                  LucideIcons.heart,
+                  color: AppColors.primary,
+                ),
+                title: const Text('Oral Collector by Shema'),
+              ),
             ],
           ),
         ),
@@ -255,13 +334,52 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               'Log Out',
               style: TextStyle(color: AppColors.error),
             ),
-            onTap: () {
-              ref.read(authNotifierProvider.notifier).logout();
+            onTap: () async {
+              await ref.read(authNotifierProvider.notifier).logout();
+              if (context.mounted) {
+                context.go('/login');
+              }
             },
           ),
         ),
       ],
     );
+  }
+
+  Future<void> _showClearCacheConfirmation(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Clear local cache?'),
+        content: const Text(
+          'This will delete all locally stored recordings. '
+          'Uploaded recordings on the server will not be affected.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.error,
+            ),
+            child: const Text('Clear'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      await ref.read(syncNotifierProvider.notifier).clearLocalCache();
+      await _loadStorageUsed();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Local cache cleared')),
+        );
+      }
+    }
   }
 
   String _formatTime(DateTime time) {
