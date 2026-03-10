@@ -177,10 +177,10 @@ class SyncNotifier extends Notifier<SyncState> {
 
   /// Get total bytes used by local recording files.
   Future<int> getLocalStorageUsed() async {
-    final pending = await _recordingRepo.getPendingUploads();
+    final all = await _recordingRepo.getAllLocalRecordings();
     var totalBytes = 0;
 
-    for (final recording in pending) {
+    for (final recording in all) {
       try {
         final file = File(recording.localFilePath);
         if (await file.exists()) {
@@ -192,6 +192,27 @@ class SyncNotifier extends Notifier<SyncState> {
     }
 
     return totalBytes;
+  }
+
+  /// Clear all local recordings and their files from disk.
+  Future<void> clearLocalCache() async {
+    final all = await _recordingRepo.getAllLocalRecordings();
+
+    // Delete files from disk
+    for (final recording in all) {
+      try {
+        final file = File(recording.localFilePath);
+        if (await file.exists()) {
+          await file.delete();
+        }
+      } on Exception {
+        // Skip files that can't be deleted.
+      }
+    }
+
+    // Delete all DB records
+    await _recordingRepo.deleteAllRecordings();
+    await _refreshPendingCount();
   }
 
   /// Process the upload queue, updating state as uploads progress.

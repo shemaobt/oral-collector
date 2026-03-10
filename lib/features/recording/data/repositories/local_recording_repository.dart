@@ -81,6 +81,20 @@ class LocalRecordingRepository {
     return rows > 0;
   }
 
+  /// Get all local recordings regardless of project or status.
+  Future<List<LocalRecording>> getAllLocalRecordings() async {
+    return (_db.select(_db.localRecordings)
+          ..orderBy([
+            (t) => OrderingTerm.desc(t.recordedAt),
+          ]))
+        .get();
+  }
+
+  /// Delete all local recordings from the database.
+  Future<int> deleteAllRecordings() async {
+    return _db.delete(_db.localRecordings).go();
+  }
+
   /// Mark a recording upload as failed, optionally incrementing the retry count.
   Future<bool> markAsFailed(String id, {bool incrementRetry = true}) async {
     if (incrementRetry) {
