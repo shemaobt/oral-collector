@@ -11,6 +11,7 @@ import '../../features/project/presentation/projects_screen.dart';
 import '../../features/recording/presentation/recording_detail_screen.dart';
 import '../../features/recording/presentation/recording_flow_screen.dart';
 import '../../features/recording/presentation/recordings_list_screen.dart';
+import '../../features/profile/presentation/profile_screen.dart';
 import '../../shared/widgets/app_shell.dart';
 
 // Bridge between Riverpod auth state and GoRouter's refreshListenable.
@@ -97,30 +98,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/profile',
-            builder: (context, state) => const _PlaceholderScreen(title: 'Profile'),
+            builder: (context, state) => const ProfileScreen(),
           ),
         ],
       ),
     ],
   );
 });
-
-/// Temporary placeholder for screens not yet implemented.
-class _PlaceholderScreen extends StatelessWidget {
-  const _PlaceholderScreen({required this.title});
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(title)),
-      body: Center(
-        child: Text(
-          title,
-          style: Theme.of(context).textTheme.headlineMedium,
-        ),
-      ),
-    );
-  }
-}
