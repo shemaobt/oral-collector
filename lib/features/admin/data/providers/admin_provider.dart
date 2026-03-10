@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../genre/domain/entities/genre.dart';
 import '../../../project/domain/entities/project.dart';
+import '../../../recording/domain/entities/recording.dart';
 import '../repositories/admin_repository.dart';
 
 // --- Providers ---
@@ -19,6 +20,7 @@ class AdminState {
   final AdminStats? stats;
   final List<Project> projects;
   final List<Genre> genres;
+  final List<Recording> cleaningQueue;
   final bool isLoading;
   final String? error;
 
@@ -26,6 +28,7 @@ class AdminState {
     this.stats,
     this.projects = const [],
     this.genres = const [],
+    this.cleaningQueue = const [],
     this.isLoading = false,
     this.error,
   });
@@ -34,6 +37,7 @@ class AdminState {
     AdminStats? stats,
     List<Project>? projects,
     List<Genre>? genres,
+    List<Recording>? cleaningQueue,
     bool? isLoading,
     String? error,
     bool clearError = false,
@@ -42,6 +46,7 @@ class AdminState {
       stats: stats ?? this.stats,
       projects: projects ?? this.projects,
       genres: genres ?? this.genres,
+      cleaningQueue: cleaningQueue ?? this.cleaningQueue,
       isLoading: isLoading ?? this.isLoading,
       error: clearError ? null : (error ?? this.error),
     );
@@ -56,7 +61,7 @@ class AdminNotifier extends Notifier<AdminState> {
   @override
   AdminState build() => const AdminState();
 
-  /// Fetch all admin data: stats, projects, and genres.
+  /// Fetch all admin data: stats, projects, genres, and cleaning queue.
   Future<void> fetchAll() async {
     state = state.copyWith(isLoading: true, clearError: true);
 
@@ -65,12 +70,14 @@ class AdminNotifier extends Notifier<AdminState> {
         _repo.fetchStats(),
         _repo.fetchAllProjects(),
         _repo.fetchAllGenres(),
+        _repo.fetchCleaningQueue(),
       ]);
 
       state = AdminState(
         stats: results[0] as AdminStats,
         projects: results[1] as List<Project>,
         genres: results[2] as List<Genre>,
+        cleaningQueue: results[3] as List<Recording>,
         isLoading: false,
       );
     } on Exception catch (e) {
@@ -79,6 +86,47 @@ class AdminNotifier extends Notifier<AdminState> {
         error: e.toString().replaceFirst('Exception: ', ''),
       );
     }
+  }
+
+  /// Refresh only the cleaning queue.
+  Future<void> refreshCleaningQueue() async {
+    try {
+      final queue = await _repo.fetchCleaningQueue();
+      state = state.copyWith(cleaningQueue: queue);
+    } on Exception catch (e) {
+      state = state.copyWith(
+        error: e.toString().replaceFirst('Exception: ', ''),
+      );
+    }
+  }
+
+  /// Trigger cleaning for a single recording.
+  Future<bool> triggerClean(String recordingId) async {
+    try {
+      await _repo.triggerClean(recordingId);
+      await refreshCleaningQueue();
+      return true;
+    } on Exception catch (e) {
+      state = state.copyWith(
+        error: e.toString().replaceFirst('Exception: ', ''),
+      );
+      return false;
+    }
+  }
+
+  /// Trigger cleaning for multiple recordings.
+  Future<int> triggerBatchClean(List<String> recordingIds) async {
+    int successCount = 0;
+    for (final id in recordingIds) {
+      try {
+        await _repo.triggerClean(id);
+        successCount++;
+      } on Exception {
+        // Continue with remaining recordings
+      }
+    }
+    await refreshCleaningQueue();
+    return successCount;
   }
 
   /// Create a new genre and refresh genres list.
