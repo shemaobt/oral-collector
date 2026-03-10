@@ -91,9 +91,11 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
         padding: const EdgeInsets.all(16),
         itemCount: state.projects.length,
         itemBuilder: (context, index) {
+          final project = state.projects[index];
           return _ProjectCard(
-            project: state.projects[index],
-            onEnter: () => _enterProject(state.projects[index]),
+            project: project,
+            onEnter: () => _enterProject(project),
+            onSettings: () => context.push('/project/${project.id}/settings'),
           );
         },
       ),
@@ -122,10 +124,12 @@ class _ProjectCard extends StatelessWidget {
   const _ProjectCard({
     required this.project,
     required this.onEnter,
+    required this.onSettings,
   });
 
   final Project project;
   final VoidCallback onEnter;
+  final VoidCallback onSettings;
 
   String _formatDuration(double totalSeconds) {
     final hours = totalSeconds ~/ 3600;
@@ -174,6 +178,16 @@ class _ProjectCard extends StatelessWidget {
                       ),
                     ),
                   ),
+                const SizedBox(width: 4),
+                IconButton(
+                  icon: Icon(
+                    LucideIcons.settings,
+                    size: 20,
+                    color: AppColors.secondary,
+                  ),
+                  onPressed: onSettings,
+                  tooltip: 'Project Settings',
+                ),
               ],
             ),
             const SizedBox(height: 12),
