@@ -47,6 +47,8 @@ dependencies:
   connectivity_plus: ^6.1.1
   workmanager: ^0.5.2
   flutter_local_notifications: ^18.0.1
+  ffmpeg_kit_flutter: ^6.0.3
+  file_picker: ^8.1.6
 
 dev_dependencies:
   flutter_test:
