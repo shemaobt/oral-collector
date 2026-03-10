@@ -8,9 +8,13 @@ import '../../../core/database/app_database.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/widgets/audio_player_widget.dart';
 import '../../../shared/widgets/upload_status_badge.dart';
+import '../../auth/data/providers/auth_provider.dart';
 import '../../genre/data/providers/genre_provider.dart';
+import '../../project/data/providers/stats_provider.dart';
 import '../../sync/data/providers/sync_provider.dart';
 import '../data/providers/local_recording_repository_provider.dart';
+import '../data/providers/recording_api_repository_provider.dart';
+import 'widgets/move_category_dialog.dart';
 
 class RecordingDetailScreen extends ConsumerStatefulWidget {
   const RecordingDetailScreen({super.key, required this.recordingId});
@@ -27,6 +31,16 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
   bool _isLoading = true;
   bool _isEditingTitle = false;
   late TextEditingController _titleController;
+
+  /// All local recordings are owned by the current user.
+  /// Project Managers (role == 'project_manager') can also edit/delete.
+  bool get _isOwnerOrManager {
+    final user = ref.read(authNotifierProvider).currentUser;
+    if (user == null) return false;
+    // Local recordings are always created by the current user
+    if (user.role == 'project_manager' || user.role == 'admin') return true;
+    return true; // owner — all local recordings belong to current user
+  }
 
   @override
   void initState() {
@@ -89,6 +103,9 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
   }
 
   Future<void> _deleteRecording() async {
+    final recording = _recording;
+    if (recording == null) return;
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -114,11 +131,92 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
 
     if (confirmed != true) return;
 
+    // Delete from server if uploaded
+    if (recording.uploadStatus == 'uploaded' && recording.serverId != null) {
+      try {
+        final apiRepo = ref.read(recordingApiRepositoryProvider);
+        await apiRepo.deleteRecording(recording.serverId!);
+      } catch (_) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Failed to delete from server. Removing locally.'),
+            ),
+          );
+        }
+      }
+    }
+
+    // Delete from local DB
     final repo = ref.read(localRecordingRepositoryProvider);
     await repo.deleteRecording(widget.recordingId);
 
+    // Refresh genre stats
+    ref.read(statsNotifierProvider.notifier).fetchGenreStats(recording.projectId);
+
     if (mounted) {
       context.pop();
+    }
+  }
+
+  Future<void> _moveCategory() async {
+    final recording = _recording;
+    if (recording == null) return;
+
+    final result = await showDialog<MoveCategoryResult>(
+      context: context,
+      builder: (context) => MoveCategoryDialog(
+        currentGenreId: recording.genreId,
+        currentSubcategoryId: recording.subcategoryId,
+      ),
+    );
+
+    if (result == null) return;
+
+    // Update on server if uploaded
+    if (recording.uploadStatus == 'uploaded' && recording.serverId != null) {
+      try {
+        final apiRepo = ref.read(recordingApiRepositoryProvider);
+        final success = await apiRepo.updateRecording(
+          recording.serverId!,
+          genreId: result.genreId,
+          subcategoryId: result.subcategoryId,
+        );
+        if (!success && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Failed to update on server')),
+          );
+          return;
+        }
+      } catch (_) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Failed to update on server')),
+          );
+        }
+        return;
+      }
+    }
+
+    // Update local DB
+    final repo = ref.read(localRecordingRepositoryProvider);
+    await repo.updateRecording(
+      widget.recordingId,
+      LocalRecordingsCompanion(
+        genreId: Value(result.genreId),
+        subcategoryId: Value(result.subcategoryId),
+      ),
+    );
+
+    // Refresh genre stats (covers both old and new categories)
+    ref.read(statsNotifierProvider.notifier).fetchGenreStats(recording.projectId);
+
+    await _loadRecording();
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Recording moved successfully')),
+      );
     }
   }
 
@@ -547,36 +645,33 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
         ),
         const SizedBox(height: 8),
 
-        // Move Category button
-        OutlinedButton.icon(
-          onPressed: () {
-            // TODO: Implement move category flow (US-051)
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Move category coming soon')),
-            );
-          },
-          icon: const Icon(LucideIcons.folderInput, size: 18),
-          label: const Text('Move Category'),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.secondary,
-            side: BorderSide(
-                color: AppColors.secondary.withValues(alpha: 0.3)),
-            padding: const EdgeInsets.symmetric(vertical: 14),
+        // Move Category button (owner-only)
+        if (_isOwnerOrManager)
+          OutlinedButton.icon(
+            onPressed: _moveCategory,
+            icon: const Icon(LucideIcons.folderInput, size: 18),
+            label: const Text('Move Category'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.secondary,
+              side: BorderSide(
+                  color: AppColors.secondary.withValues(alpha: 0.3)),
+              padding: const EdgeInsets.symmetric(vertical: 14),
+            ),
           ),
-        ),
-        const SizedBox(height: 8),
+        if (_isOwnerOrManager) const SizedBox(height: 8),
 
-        // Delete button (red)
-        OutlinedButton.icon(
-          onPressed: _deleteRecording,
-          icon: const Icon(LucideIcons.trash2, size: 18),
-          label: const Text('Delete Recording'),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.error,
-            side: BorderSide(color: AppColors.error.withValues(alpha: 0.3)),
-            padding: const EdgeInsets.symmetric(vertical: 14),
+        // Delete button (owner-only, red)
+        if (_isOwnerOrManager)
+          OutlinedButton.icon(
+            onPressed: _deleteRecording,
+            icon: const Icon(LucideIcons.trash2, size: 18),
+            label: const Text('Delete Recording'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.error,
+              side: BorderSide(color: AppColors.error.withValues(alpha: 0.3)),
+              padding: const EdgeInsets.symmetric(vertical: 14),
+            ),
           ),
-        ),
       ],
     );
   }
