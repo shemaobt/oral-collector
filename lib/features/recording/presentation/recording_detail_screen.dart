@@ -9,6 +9,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../shared/widgets/audio_player_widget.dart';
 import '../../../shared/widgets/upload_status_badge.dart';
 import '../../auth/data/providers/auth_provider.dart';
+import '../../auth/data/providers/role_provider.dart';
 import '../../genre/data/providers/genre_provider.dart';
 import '../../project/data/providers/stats_provider.dart';
 import '../../sync/data/providers/sync_provider.dart';
@@ -32,14 +33,22 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
   bool _isEditingTitle = false;
   late TextEditingController _titleController;
 
-  /// All local recordings are owned by the current user.
-  /// Project Managers (role == 'project_manager') can also edit/delete.
-  bool get _isOwnerOrManager {
+  /// Whether the current user can edit/delete this recording.
+  /// Local recordings are always owned by the current user (owner can edit).
+  /// Project managers and platform admins can also edit/delete any recording.
+  bool get _canEditRecording {
     final user = ref.read(authNotifierProvider).currentUser;
     if (user == null) return false;
-    // Local recordings are always created by the current user
-    if (user.role == 'project_manager' || user.role == 'admin') return true;
-    return true; // owner — all local recordings belong to current user
+    final recording = _recording;
+    if (recording == null) return false;
+    // Platform admins and project managers can always edit
+    if (ref
+        .read(roleNotifierProvider.notifier)
+        .canManageProject(recording.projectId)) {
+      return true;
+    }
+    // Local recordings (no serverId or created locally) belong to current user
+    return true;
   }
 
   @override
@@ -66,6 +75,13 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
           _titleController.text = recording?.title ?? '';
           _isLoading = false;
         });
+        // Fetch role for the recording's project (for edit/delete guards)
+        if (recording != null) {
+          await ref
+              .read(roleNotifierProvider.notifier)
+              .fetchRoleForProject(recording.projectId);
+          if (mounted) setState(() {});
+        }
       }
     } catch (_) {
       if (mounted) setState(() => _isLoading = false);
@@ -646,7 +662,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
         const SizedBox(height: 8),
 
         // Move Category button (owner-only)
-        if (_isOwnerOrManager)
+        if (_canEditRecording)
           OutlinedButton.icon(
             onPressed: _moveCategory,
             icon: const Icon(LucideIcons.folderInput, size: 18),
@@ -658,10 +674,10 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
               padding: const EdgeInsets.symmetric(vertical: 14),
             ),
           ),
-        if (_isOwnerOrManager) const SizedBox(height: 8),
+        if (_canEditRecording) const SizedBox(height: 8),
 
         // Delete button (owner-only, red)
-        if (_isOwnerOrManager)
+        if (_canEditRecording)
           OutlinedButton.icon(
             onPressed: _deleteRecording,
             icon: const Icon(LucideIcons.trash2, size: 18),
