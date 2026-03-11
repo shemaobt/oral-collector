@@ -3,14 +3,6 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../core/theme/app_colors.dart';
 
-/// Badge showing the upload status of a recording.
-///
-/// States:
-/// - `local`     → gray dot, "Not synced"
-/// - `pending`   → areia dot, "Pending"  (alias used by callers; internally same as local)
-/// - `uploading` → animated telha, "Uploading..."
-/// - `uploaded`  → verde-claro check, "Uploaded"
-/// - `failed`    → red dot, "Failed" + optional Retry link
 class UploadStatusBadge extends StatefulWidget {
   const UploadStatusBadge({
     super.key,
@@ -19,13 +11,8 @@ class UploadStatusBadge extends StatefulWidget {
     this.compact = false,
   });
 
-  /// Upload status string: 'local', 'pending', 'uploading', 'uploaded', 'failed'.
   final String status;
-
-  /// Optional callback for the retry action on failed uploads.
   final VoidCallback? onRetry;
-
-  /// When true, uses smaller font/icon sizes (for list cards).
   final bool compact;
 
   @override
@@ -70,6 +57,7 @@ class _UploadStatusBadgeState extends State<UploadStatusBadge>
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     final iconSize = widget.compact ? 12.0 : 14.0;
     final fontSize = widget.compact ? 11.0 : 13.0;
     final hPad = widget.compact ? 6.0 : 8.0;
@@ -82,33 +70,32 @@ class _UploadStatusBadgeState extends State<UploadStatusBadge>
     switch (widget.status) {
       case 'uploaded':
         icon = LucideIcons.checkCircle;
-        color = AppColors.success;
+        color = colors.success;
         label = 'Uploaded';
         break;
       case 'uploading':
         icon = LucideIcons.upload;
-        color = AppColors.primary; // telha
+        color = colors.accent;
         label = 'Uploading...';
         break;
       case 'failed':
         icon = LucideIcons.cloudOff;
-        color = AppColors.error;
+        color = colors.error;
         label = 'Failed';
         break;
       case 'pending':
         icon = LucideIcons.clock;
-        color = AppColors.border; // areia
+        color = colors.border;
         label = 'Pending';
         break;
-      default: // 'local'
+      default:
         icon = LucideIcons.smartphone;
-        color = Colors.grey;
+        color = colors.border;
         label = 'Not synced';
     }
 
     Widget iconWidget = Icon(icon, size: iconSize, color: color);
 
-    // Animate the icon when uploading
     if (widget.status == 'uploading' && _animController != null) {
       iconWidget = RotationTransition(
         turns: _animController!,
@@ -132,7 +119,7 @@ class _UploadStatusBadgeState extends State<UploadStatusBadge>
               const SizedBox(width: 4),
               Text(
                 label,
-                style: TextStyle(
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
                   fontSize: fontSize,
                   color: color,
                   fontWeight: FontWeight.w600,
@@ -142,17 +129,20 @@ class _UploadStatusBadgeState extends State<UploadStatusBadge>
           ),
         ),
         if (widget.status == 'failed' && widget.onRetry != null) ...[
-          const SizedBox(width: 6),
-          GestureDetector(
-            onTap: widget.onRetry,
+          const SizedBox(width: 4),
+          TextButton(
+            onPressed: widget.onRetry,
+            style: TextButton.styleFrom(
+              minimumSize: const Size(44, 36),
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
             child: Text(
               'Retry',
-              style: TextStyle(
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
                 fontSize: fontSize,
-                color: AppColors.primary,
+                color: colors.accent,
                 fontWeight: FontWeight.w600,
-                decoration: TextDecoration.underline,
-                decorationColor: AppColors.primary,
               ),
             ),
           ),

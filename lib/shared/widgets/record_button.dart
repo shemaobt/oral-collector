@@ -3,7 +3,6 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../core/theme/app_colors.dart';
 
-/// Visual state of the record button.
 enum RecordButtonState { ready, recording, paused }
 
 class RecordButton extends StatefulWidget {
@@ -34,7 +33,7 @@ class _RecordButtonState extends State<RecordButton>
       vsync: this,
       duration: const Duration(milliseconds: 1200),
     );
-    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.15).animate(
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.12).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
     _syncAnimation();
@@ -65,7 +64,7 @@ class _RecordButtonState extends State<RecordButton>
 
   @override
   Widget build(BuildContext context) {
-    const double size = 72.0;
+    const double size = 80.0;
 
     return SizedBox(
       width: size,
@@ -76,10 +75,7 @@ class _RecordButtonState extends State<RecordButton>
           final isRecording = widget.state == RecordButtonState.recording;
           final scale = isRecording ? _pulseAnimation.value : 1.0;
 
-          return Transform.scale(
-            scale: scale,
-            child: child,
-          );
+          return Transform.scale(scale: scale, child: child);
         },
         child: _buildButton(size),
       ),
@@ -87,33 +83,54 @@ class _RecordButtonState extends State<RecordButton>
   }
 
   Widget _buildButton(double size) {
+    final colors = AppColors.of(context);
     final isRecording = widget.state == RecordButtonState.recording;
     final isPaused = widget.state == RecordButtonState.paused;
 
-    return GestureDetector(
-      onTap: widget.onTap,
-      onLongPress: widget.onLongPress,
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: AppColors.primary,
-          border: isRecording
-              ? Border.all(color: AppColors.error, width: 3.0)
-              : null,
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.foreground.withValues(alpha: 0.15),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+    final buttonColor = colors.accent;
+
+    final String semanticLabel;
+    if (isRecording) {
+      semanticLabel = 'Recording in progress, tap to pause';
+    } else if (isPaused) {
+      semanticLabel = 'Recording paused, tap to resume';
+    } else {
+      semanticLabel = 'Start recording';
+    }
+
+    return Semantics(
+      label: semanticLabel,
+      button: true,
+      child: Material(
+        color: Colors.transparent,
+        shape: const CircleBorder(),
+        child: InkWell(
+          onTap: widget.onTap,
+          onLongPress: widget.onLongPress,
+          customBorder: const CircleBorder(),
+          child: Container(
+            width: size,
+            height: size,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: buttonColor,
+              border: isRecording
+                  ? Border.all(color: colors.error, width: 3.0)
+                  : null,
+              boxShadow: [
+                BoxShadow(
+                  color: buttonColor.withValues(alpha: 0.3),
+                  blurRadius: 16,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: Center(
-          child: isPaused
-              ? const Icon(LucideIcons.pause, color: Colors.white, size: 32)
-              : const Icon(LucideIcons.mic, color: Colors.white, size: 32),
+            child: Center(
+              child: isPaused
+                  ? const Icon(LucideIcons.pause, color: Colors.white, size: 34)
+                  : const Icon(LucideIcons.mic, color: Colors.white, size: 34),
+            ),
+          ),
         ),
       ),
     );

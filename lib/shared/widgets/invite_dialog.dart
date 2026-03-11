@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../features/project/data/providers/member_provider.dart';
+import '../../features/project/presentation/notifiers/member_notifier.dart';
 
-/// Dialog for inviting a user to a project by email.
 class InviteDialog extends ConsumerStatefulWidget {
   const InviteDialog({super.key, required this.projectId});
 
@@ -31,7 +30,9 @@ class _InviteDialogState extends ConsumerState<InviteDialog> {
 
     setState(() => _isSubmitting = true);
 
-    final success = await ref.read(memberNotifierProvider.notifier).inviteMember(
+    final success = await ref
+        .read(memberNotifierProvider.notifier)
+        .inviteMember(
           projectId: widget.projectId,
           email: _emailController.text.trim(),
           role: _selectedRole,
@@ -44,10 +45,11 @@ class _InviteDialogState extends ConsumerState<InviteDialog> {
     } else {
       setState(() => _isSubmitting = false);
       final error = ref.read(memberNotifierProvider).error;
+      final colors = AppColors.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(error ?? 'Failed to send invite'),
-          backgroundColor: AppColors.error,
+          backgroundColor: colors.error,
         ),
       );
     }
@@ -55,6 +57,7 @@ class _InviteDialogState extends ConsumerState<InviteDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return AlertDialog(
       title: const Text('Invite Member'),
       content: SizedBox(
@@ -85,15 +88,10 @@ class _InviteDialogState extends ConsumerState<InviteDialog> {
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
-                value: _selectedRole,
-                decoration: const InputDecoration(
-                  labelText: 'Role *',
-                ),
+                initialValue: _selectedRole,
+                decoration: const InputDecoration(labelText: 'Role *'),
                 items: const [
-                  DropdownMenuItem(
-                    value: 'user',
-                    child: Text('User'),
-                  ),
+                  DropdownMenuItem(value: 'user', child: Text('User')),
                   DropdownMenuItem(
                     value: 'project_manager',
                     child: Text('Project Manager'),
@@ -117,7 +115,7 @@ class _InviteDialogState extends ConsumerState<InviteDialog> {
         ElevatedButton(
           onPressed: _isSubmitting ? null : _submit,
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
+            backgroundColor: colors.primary,
             foregroundColor: Colors.white,
           ),
           child: _isSubmitting

@@ -3,14 +3,6 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../core/theme/app_colors.dart';
 
-/// Badge showing the cleaning status of a recording.
-///
-/// States:
-/// - `none`            → hidden (returns SizedBox.shrink)
-/// - `needs_cleaning`  → yellow/amber badge, "Needs Cleaning"
-/// - `cleaning`        → animated spinner, "Cleaning..."
-/// - `cleaned`         → green badge, "Cleaned"
-/// - `failed`          → red badge, "Clean Failed"
 class CleaningStatusBadge extends StatefulWidget {
   const CleaningStatusBadge({
     super.key,
@@ -18,10 +10,7 @@ class CleaningStatusBadge extends StatefulWidget {
     this.compact = false,
   });
 
-  /// Cleaning status string: 'none', 'needs_cleaning', 'cleaning', 'cleaned', 'failed'.
   final String status;
-
-  /// When true, uses smaller font/icon sizes (for list cards).
   final bool compact;
 
   @override
@@ -66,7 +55,6 @@ class _CleaningStatusBadgeState extends State<CleaningStatusBadge>
 
   @override
   Widget build(BuildContext context) {
-    // Hidden when status is 'none'
     if (widget.status == 'none') {
       return const SizedBox.shrink();
     }
@@ -107,7 +95,6 @@ class _CleaningStatusBadgeState extends State<CleaningStatusBadge>
 
     Widget iconWidget = Icon(icon, size: iconSize, color: color);
 
-    // Animate the icon when cleaning is in progress
     if (widget.status == 'cleaning' && _animController != null) {
       iconWidget = RotationTransition(
         turns: _animController!,
@@ -128,7 +115,7 @@ class _CleaningStatusBadgeState extends State<CleaningStatusBadge>
           const SizedBox(width: 4),
           Text(
             label,
-            style: TextStyle(
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
               fontSize: fontSize,
               color: color,
               fontWeight: FontWeight.w600,
