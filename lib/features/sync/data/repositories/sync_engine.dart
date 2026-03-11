@@ -1,33 +1,23 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:http/http.dart' as http;
+import 'package:drift/drift.dart' show Value;
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 
-import '../../../../core/config/env.dart';
+import '../../../../core/database/app_database.dart';
+import '../../../../core/network/authenticated_client.dart';
 import '../../../recording/data/repositories/local_recording_repository.dart';
-import 'connectivity_service.dart';
+import '../../domain/repositories/connectivity_service.dart';
+import '../../domain/repositories/sync_engine.dart';
 
-/// Background sync engine that processes the upload queue sequentially.
-///
-/// Flow per recording:
-/// 1. Get pending recordings from LocalRecordingRepository
-/// 2. Mark as uploading
-/// 3. POST /api/oc/recordings/upload-url to get signed URL
-/// 4. PUT file to signed URL
-/// 5. POST confirm-upload
-/// 6. Mark as uploaded
-/// 7. Optionally delete local file
-class SyncEngine {
+class SyncEngineImpl implements SyncEngine {
   final LocalRecordingRepository _recordingRepo;
   final ConnectivityService _connectivity;
-  final http.Client _client;
-  final FlutterSecureStorage _storage;
+  final AuthenticatedClient _client;
 
-  /// Max number of retries per recording before giving up.
   static const int maxRetries = 5;
 
-  /// Backoff durations for retries: 5s, 15s, 30s, 60s (then 60s for any beyond).
   static const List<Duration> _backoffDurations = [
     Duration(seconds: 5),
     Duration(seconds: 15),
@@ -37,33 +27,18 @@ class SyncEngine {
 
   bool _isProcessing = false;
 
-  SyncEngine({
+  SyncEngineImpl({
     required LocalRecordingRepository recordingRepo,
     required ConnectivityService connectivity,
-    http.Client? client,
-    FlutterSecureStorage? storage,
-  })  : _recordingRepo = recordingRepo,
-        _connectivity = connectivity,
-        _client = client ?? http.Client(),
-        _storage = storage ?? const FlutterSecureStorage();
+    required AuthenticatedClient client,
+  }) : _recordingRepo = recordingRepo,
+       _connectivity = connectivity,
+       _client = client;
 
-  String get _baseUrl => Env.backendUrl;
-
-  /// Whether the engine is currently processing the queue.
+  @override
   bool get isProcessing => _isProcessing;
 
-  Future<Map<String, String>> _authHeaders() async {
-    final token = await _storage.read(key: 'access_token');
-    return {
-      'Content-Type': 'application/json',
-      if (token != null) 'Authorization': 'Bearer $token',
-    };
-  }
-
-  /// Process all pending uploads sequentially.
-  ///
-  /// Skips recordings that have exceeded [maxRetries].
-  /// Processes one at a time to avoid battery drain.
+  @override
   Future<void> processQueue({bool deleteAfterUpload = false}) async {
     if (_isProcessing) return;
 
@@ -75,96 +50,156 @@ class SyncEngine {
       final pending = await _recordingRepo.getPendingUploads();
 
       for (final recording in pending) {
-        // Skip if max retries exceeded.
         if (recording.retryCount >= maxRetries) continue;
 
-        // Check connectivity before each upload.
         final stillOnline = await _connectivity.isOnline;
         if (!stillOnline) break;
 
-        // Apply exponential backoff if this is a retry.
         if (recording.retryCount > 0 && recording.lastRetryAt != null) {
-          final backoffIndex = (recording.retryCount - 1)
-              .clamp(0, _backoffDurations.length - 1);
+          final backoffIndex = (recording.retryCount - 1).clamp(
+            0,
+            _backoffDurations.length - 1,
+          );
           final backoff = _backoffDurations[backoffIndex];
           final elapsed = DateTime.now().difference(recording.lastRetryAt!);
           if (elapsed < backoff) continue;
         }
 
-        await _uploadRecording(recording.id, recording.localFilePath,
-            deleteAfterUpload: deleteAfterUpload);
+        await _uploadRecording(
+          recording.id,
+          recording.localFilePath,
+          deleteAfterUpload: deleteAfterUpload,
+        );
       }
     } finally {
       _isProcessing = false;
     }
   }
 
-  /// Upload a single recording through the signed-URL flow.
+  Future<String?> _resolveFilePath(String storedPath) async {
+    final file = File(storedPath);
+    if (await file.exists()) return storedPath;
+
+    final docsDir = await getApplicationDocumentsDirectory();
+    final fileName = p.basename(storedPath);
+
+    final resolved = '${docsDir.path}/$fileName';
+    if (await File(resolved).exists()) return resolved;
+
+    final inSubdir = '${docsDir.path}/recordings/$fileName';
+    if (await File(inSubdir).exists()) return inSubdir;
+
+    return null;
+  }
+
   Future<void> _uploadRecording(
     String id,
     String localFilePath, {
     bool deleteAfterUpload = false,
   }) async {
     try {
-      // Step 1: Mark as uploading.
+      final resolvedPath = await _resolveFilePath(localFilePath);
+      if (resolvedPath == null) {
+        await _recordingRepo.markAsFailed(id, incrementRetry: false);
+        return;
+      }
+      if (resolvedPath != localFilePath) {
+        await _recordingRepo.updateRecording(
+          id,
+          LocalRecordingsCompanion(localFilePath: Value(resolvedPath)),
+        );
+      }
+
+      final recording = await _recordingRepo.getRecordingById(id);
+      if (recording == null) return;
+
       await _recordingRepo.markAsUploading(id);
 
-      // Step 2: Request a signed upload URL from the backend.
+      String serverId;
+
+      if (recording.serverId != null && recording.serverId!.isNotEmpty) {
+        serverId = recording.serverId!;
+      } else {
+        final createResponse = await _client.post(
+          '/api/oc/recordings',
+          body: {
+            'project_id': recording.projectId,
+            'genre_id': recording.genreId,
+            'subcategory_id': recording.subcategoryId,
+            'title': recording.title,
+            'duration_seconds': recording.durationSeconds,
+            'file_size_bytes': recording.fileSizeBytes,
+            'format': recording.format,
+            'recorded_at': recording.recordedAt.toUtc().toIso8601String(),
+          },
+        );
+
+        if (createResponse.statusCode != 201) {
+          throw Exception(
+            'Create failed (${createResponse.statusCode}): ${createResponse.body}',
+          );
+        }
+
+        final createData =
+            jsonDecode(createResponse.body) as Map<String, dynamic>;
+        serverId = createData['id'] as String;
+
+        await _recordingRepo.updateRecording(
+          id,
+          LocalRecordingsCompanion(serverId: Value(serverId)),
+        );
+      }
+
       final uploadUrlResponse = await _client.post(
-        Uri.parse('$_baseUrl/api/oc/recordings/upload-url'),
-        headers: await _authHeaders(),
-        body: jsonEncode({'recording_id': id}),
+        '/api/oc/recordings/upload-url',
+        body: {'recording_id': serverId, 'format': recording.format},
       );
 
       if (uploadUrlResponse.statusCode != 200) {
         throw Exception(
-            'Failed to get upload URL: ${uploadUrlResponse.body}');
+          'Upload URL failed (${uploadUrlResponse.statusCode}): ${uploadUrlResponse.body}',
+        );
       }
 
       final uploadData =
           jsonDecode(uploadUrlResponse.body) as Map<String, dynamic>;
-      final signedUrl = uploadData['upload_url'] as String;
-      final serverId = uploadData['server_id'] as String;
+      final uploadUrl = uploadData['upload_url'] as String;
 
-      // Step 3: PUT the file to the signed URL.
-      final file = File(localFilePath);
+      final file = File(resolvedPath);
       final fileBytes = await file.readAsBytes();
 
-      final putResponse = await _client.put(
-        Uri.parse(signedUrl),
+      final putResponse = await _client.rawClient.put(
+        Uri.parse(uploadUrl),
         headers: {'Content-Type': 'audio/mp4'},
         body: fileBytes,
       );
 
       if (putResponse.statusCode != 200) {
-        throw Exception('Failed to upload file: ${putResponse.statusCode}');
+        throw Exception(
+          'GCS PUT failed (${putResponse.statusCode}): ${putResponse.body}',
+        );
       }
 
-      // Step 4: Confirm the upload with the backend.
       final confirmResponse = await _client.post(
-        Uri.parse('$_baseUrl/api/oc/recordings/confirm-upload'),
-        headers: await _authHeaders(),
-        body: jsonEncode({'recording_id': id, 'server_id': serverId}),
+        '/api/oc/recordings/$serverId/confirm-upload',
       );
 
       if (confirmResponse.statusCode != 200) {
         throw Exception(
-            'Failed to confirm upload: ${confirmResponse.body}');
+          'Confirm failed (${confirmResponse.statusCode}): ${confirmResponse.body}',
+        );
       }
 
       final confirmData =
           jsonDecode(confirmResponse.body) as Map<String, dynamic>;
       final gcsUrl = confirmData['gcs_url'] as String;
 
-      // Step 5: Mark as uploaded in local DB.
       await _recordingRepo.markAsUploaded(id, serverId, gcsUrl);
 
-      // Step 6: Optionally delete the local file.
       if (deleteAfterUpload && await file.exists()) {
         await file.delete();
       }
     } on Exception {
-      // Mark as failed and increment retry count.
       await _recordingRepo.markAsFailed(id);
     }
   }

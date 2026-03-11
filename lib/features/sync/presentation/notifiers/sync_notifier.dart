@@ -3,94 +3,16 @@ import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../recording/data/providers/local_recording_repository_provider.dart';
+import '../../../recording/data/providers.dart';
 import '../../../recording/data/repositories/local_recording_repository.dart';
-import '../repositories/connectivity_service.dart';
-import '../repositories/sync_engine.dart';
-import '../services/background_sync_service.dart';
+import '../../data/providers.dart';
+import '../../domain/repositories/connectivity_service.dart';
+import '../../domain/repositories/sync_engine.dart';
+import 'sync_state.dart';
 
-// --- State ---
-
-class SyncState {
-  final bool isOnline;
-  final int pendingCount;
-  final String? uploadingId;
-  final int syncProgress;
-  final DateTime? lastSyncAt;
-  final bool autoUploadWifiOnly;
-  final bool autoRemoveAfterUpload;
-
-  const SyncState({
-    this.isOnline = false,
-    this.pendingCount = 0,
-    this.uploadingId,
-    this.syncProgress = 0,
-    this.lastSyncAt,
-    this.autoUploadWifiOnly = true,
-    this.autoRemoveAfterUpload = true,
-  });
-
-  SyncState copyWith({
-    bool? isOnline,
-    int? pendingCount,
-    String? uploadingId,
-    int? syncProgress,
-    DateTime? lastSyncAt,
-    bool? autoUploadWifiOnly,
-    bool? autoRemoveAfterUpload,
-    bool clearUploadingId = false,
-    bool clearLastSyncAt = false,
-  }) {
-    return SyncState(
-      isOnline: isOnline ?? this.isOnline,
-      pendingCount: pendingCount ?? this.pendingCount,
-      uploadingId:
-          clearUploadingId ? null : (uploadingId ?? this.uploadingId),
-      syncProgress: syncProgress ?? this.syncProgress,
-      lastSyncAt:
-          clearLastSyncAt ? null : (lastSyncAt ?? this.lastSyncAt),
-      autoUploadWifiOnly: autoUploadWifiOnly ?? this.autoUploadWifiOnly,
-      autoRemoveAfterUpload:
-          autoRemoveAfterUpload ?? this.autoRemoveAfterUpload,
-    );
-  }
-}
-
-// --- Settings ---
-
-class SyncSettings {
-  final bool autoUploadWifiOnly;
-  final bool autoRemoveAfterUpload;
-
-  const SyncSettings({
-    required this.autoUploadWifiOnly,
-    required this.autoRemoveAfterUpload,
-  });
-}
-
-// --- Providers ---
-
-final connectivityServiceProvider = Provider<ConnectivityService>(
-  (_) => ConnectivityService(),
+final syncNotifierProvider = NotifierProvider<SyncNotifier, SyncState>(
+  SyncNotifier.new,
 );
-
-final syncEngineProvider = Provider<SyncEngine>((ref) {
-  final recordingRepo = ref.watch(localRecordingRepositoryProvider);
-  final connectivity = ref.watch(connectivityServiceProvider);
-  return SyncEngine(
-    recordingRepo: recordingRepo,
-    connectivity: connectivity,
-  );
-});
-
-final backgroundSyncServiceProvider = Provider<BackgroundSyncService>(
-  (_) => BackgroundSyncService(),
-);
-
-final syncNotifierProvider =
-    NotifierProvider<SyncNotifier, SyncState>(SyncNotifier.new);
-
-// --- Notifier ---
 
 class SyncNotifier extends Notifier<SyncState> {
   StreamSubscription<bool>? _connectivitySub;
@@ -108,7 +30,6 @@ class SyncNotifier extends Notifier<SyncState> {
     return const SyncState();
   }
 
-  /// Initialize connectivity monitoring and check initial status.
   Future<void> _initConnectivity() async {
     final online = await _connectivity.isOnline;
     state = state.copyWith(isOnline: online);
@@ -120,7 +41,6 @@ class SyncNotifier extends Notifier<SyncState> {
     await _refreshPendingCount();
   }
 
-  /// Handle connectivity changes — auto-trigger sync when coming online.
   void _onConnectivityChanged(bool online) {
     final wasOffline = !state.isOnline;
     state = state.copyWith(isOnline: online);
@@ -130,12 +50,10 @@ class SyncNotifier extends Notifier<SyncState> {
     }
   }
 
-  /// Sync all pending recordings.
   Future<void> syncAll() async {
     await processQueue();
   }
 
-  /// Sync a single recording by ID.
   Future<void> syncOne(String recordingId) async {
     state = state.copyWith(uploadingId: recordingId, syncProgress: 0);
 
@@ -162,12 +80,16 @@ class SyncNotifier extends Notifier<SyncState> {
     await _refreshPendingCount();
   }
 
-  /// Retry all failed recordings.
   Future<void> retryFailed() async {
     await processQueue();
   }
 
-  /// Update sync settings (wifi-only, auto-remove).
+  Future<void> resetAndRetry(String recordingId) async {
+    await _recordingRepo.resetRetryCount(recordingId);
+    await _refreshPendingCount();
+    await syncOne(recordingId);
+  }
+
   void updateSettings(SyncSettings settings) {
     state = state.copyWith(
       autoUploadWifiOnly: settings.autoUploadWifiOnly,
@@ -175,7 +97,6 @@ class SyncNotifier extends Notifier<SyncState> {
     );
   }
 
-  /// Get total bytes used by local recording files.
   Future<int> getLocalStorageUsed() async {
     final all = await _recordingRepo.getAllLocalRecordings();
     var totalBytes = 0;
@@ -187,18 +108,16 @@ class SyncNotifier extends Notifier<SyncState> {
           totalBytes += await file.length();
         }
       } on Exception {
-        // Skip files that can't be accessed.
+        // ignore per-file errors, continue iteration
       }
     }
 
     return totalBytes;
   }
 
-  /// Clear all local recordings and their files from disk.
   Future<void> clearLocalCache() async {
     final all = await _recordingRepo.getAllLocalRecordings();
 
-    // Delete files from disk
     for (final recording in all) {
       try {
         final file = File(recording.localFilePath);
@@ -206,16 +125,14 @@ class SyncNotifier extends Notifier<SyncState> {
           await file.delete();
         }
       } on Exception {
-        // Skip files that can't be deleted.
+        // ignore per-file errors, continue iteration
       }
     }
 
-    // Delete all DB records
     await _recordingRepo.deleteAllRecordings();
     await _refreshPendingCount();
   }
 
-  /// Process the upload queue, updating state as uploads progress.
   Future<void> processQueue() async {
     if (!state.isOnline) return;
 
@@ -223,21 +140,16 @@ class SyncNotifier extends Notifier<SyncState> {
     if (state.pendingCount == 0) return;
 
     final pending = await _recordingRepo.getPendingUploads();
-    final total = pending.length;
 
-    for (var i = 0; i < pending.length; i++) {
-      final recording = pending[i];
-      state = state.copyWith(
-        uploadingId: recording.id,
-        syncProgress: ((i / total) * 100).round(),
-      );
-
-      await _syncEngine.processQueue(
-        deleteAfterUpload: state.autoRemoveAfterUpload,
-      );
-
-      await _refreshPendingCount();
+    if (pending.isNotEmpty) {
+      state = state.copyWith(uploadingId: pending.first.id, syncProgress: 0);
     }
+
+    await _syncEngine.processQueue(
+      deleteAfterUpload: state.autoRemoveAfterUpload,
+    );
+
+    await _refreshPendingCount();
 
     state = state.copyWith(
       clearUploadingId: true,
@@ -246,7 +158,6 @@ class SyncNotifier extends Notifier<SyncState> {
     );
   }
 
-  /// Refresh the pending upload count from the database.
   Future<void> _refreshPendingCount() async {
     final pending = await _recordingRepo.getPendingUploads();
     state = state.copyWith(pendingCount: pending.length);
