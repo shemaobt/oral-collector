@@ -51,9 +51,9 @@ class Genre {
       icon: json['icon'] as String?,
       color: json['color'] as String?,
       sortOrder: (json['sort_order'] as num?)?.toInt() ?? 0,
-      subcategories: (json['subcategories'] as List<dynamic>?)
-              ?.map(
-                  (sub) => Subcategory.fromJson(sub as Map<String, dynamic>))
+      subcategories:
+          (json['subcategories'] as List<dynamic>?)
+              ?.map((sub) => Subcategory.fromJson(sub as Map<String, dynamic>))
               .toList() ??
           [],
     );

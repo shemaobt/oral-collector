@@ -4,8 +4,11 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../core/theme/app_colors.dart';
-import '../../project/data/providers/stats_provider.dart';
-import '../data/providers/genre_provider.dart';
+import '../../../shared/utils/format.dart';
+import '../../../shared/utils/genre_helpers.dart';
+import '../../project/domain/entities/stats.dart';
+import '../../project/presentation/notifiers/stats_notifier.dart';
+import 'notifiers/genre_notifier.dart';
 import '../domain/entities/genre.dart';
 
 class GenreDetailScreen extends ConsumerWidget {
@@ -13,28 +16,18 @@ class GenreDetailScreen extends ConsumerWidget {
 
   final String genreId;
 
-  String _formatDuration(double totalSeconds) {
-    final seconds = totalSeconds.round();
-    final hours = seconds ~/ 3600;
-    final minutes = (seconds % 3600) ~/ 60;
-    return '${hours}h ${minutes}m';
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final colors = AppColors.of(context);
     final genreState = ref.watch(genreNotifierProvider);
     final statsState = ref.watch(statsNotifierProvider);
-    final genre =
-        genreState.genres.where((g) => g.id == genreId).firstOrNull;
+    final genre = genreState.genres.where((g) => g.id == genreId).firstOrNull;
     final genreStat = statsState.genreStats[genreId];
     final theme = Theme.of(context);
 
     if (genre == null) {
       return Scaffold(
-        appBar: AppBar(
-          leading: const BackButton(),
-          title: const Text('Genre'),
-        ),
+        appBar: AppBar(leading: const BackButton(), title: const Text('Genre')),
         body: const Center(child: Text('Genre not found')),
       );
     }
@@ -44,23 +37,22 @@ class GenreDetailScreen extends ConsumerWidget {
         leading: const BackButton(),
         title: Text(genre.name),
         actions: [
-          // Total genre duration badge
           Container(
             margin: const EdgeInsets.only(right: 16),
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: AppColors.info.withValues(alpha: 0.15),
+              color: colors.info.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(LucideIcons.clock, size: 14, color: AppColors.secondary),
+                Icon(LucideIcons.clock, size: 14, color: colors.secondary),
                 const SizedBox(width: 4),
                 Text(
-                  _formatDuration(genreStat?.totalDurationSeconds ?? 0),
+                  formatDurationCompact(genreStat?.totalDurationSeconds ?? 0),
                   style: theme.textTheme.labelSmall?.copyWith(
-                    color: AppColors.secondary,
+                    color: colors.secondary,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -76,17 +68,13 @@ class GenreDetailScreen extends ConsumerWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
-                      LucideIcons.layers,
-                      size: 64,
-                      color: AppColors.border,
-                    ),
+                    Icon(LucideIcons.layers, size: 64, color: colors.border),
                     const SizedBox(height: 16),
                     Text(
                       'No subcategories available',
                       textAlign: TextAlign.center,
                       style: theme.textTheme.bodyLarge?.copyWith(
-                        color: AppColors.foreground.withValues(alpha: 0.6),
+                        color: colors.foreground.withValues(alpha: 0.6),
                       ),
                     ),
                   ],
@@ -96,11 +84,10 @@ class GenreDetailScreen extends ConsumerWidget {
           : ListView.separated(
               padding: const EdgeInsets.all(16),
               itemCount: genre.subcategories.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              separatorBuilder: (_, _) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
                 final subcategory = genre.subcategories[index];
-                final subcatStat =
-                    genreStat?.subcategories[subcategory.id];
+                final subcatStat = genreStat?.subcategories[subcategory.id];
                 return _SubcategoryCard(
                   subcategory: subcategory,
                   genreId: genreId,
@@ -126,127 +113,133 @@ class _SubcategoryCard extends StatelessWidget {
   final String? genreColor;
   final SubcategoryStat? subcategoryStat;
 
-  Color _parseColor(String? hex) {
-    if (hex == null || hex.length < 7) return AppColors.primary;
-    try {
-      final hexValue = hex.replaceFirst('#', '');
-      return Color(int.parse('FF$hexValue', radix: 16));
-    } catch (_) {
-      return AppColors.primary;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final color = _parseColor(genreColor);
+    final colors = AppColors.of(context);
+    final color = parseHexColor(genreColor, colors.primary);
 
     final recordingCount = subcategoryStat?.recordingCount ?? 0;
-    final durationSeconds = (subcategoryStat?.totalDurationSeconds ?? 0).round();
-    final hours = durationSeconds ~/ 3600;
-    final minutes = (durationSeconds % 3600) ~/ 60;
+    final totalDurationSeconds = (subcategoryStat?.totalDurationSeconds ?? 0)
+        .toDouble();
 
-    // Target progress (ratio of recorded hours to target hours)
     final targetHours = subcategoryStat?.targetHours;
     final recordedHours = (subcategoryStat?.totalDurationSeconds ?? 0) / 3600.0;
     final progress = (targetHours != null && targetHours > 0)
         ? (recordedHours / targetHours).clamp(0.0, 1.0)
         : 0.0;
 
+    final percentLabel = (progress * 100).round();
+
     return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () {
-          // Navigate to recordings list filtered by this subcategory
-          context.go('/recordings?genreId=$genreId&subcategoryId=${subcategory.id}');
+          context.go(
+            '/recordings?genreId=$genreId&subcategoryId=${subcategory.id}',
+          );
         },
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: Column(
+          child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Name and record button row
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      subcategory.name,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
+              SizedBox(
+                width: 56,
+                height: 56,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    CircularProgressIndicator(
+                      value: progress,
+                      strokeWidth: 4,
+                      backgroundColor: colors.border.withValues(alpha: 0.3),
+                      valueColor: AlwaysStoppedAnimation<Color>(color),
+                    ),
+                    Text(
+                      '$percentLabel%',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: color,
                       ),
                     ),
-                  ),
-                  // Small record button
-                  SizedBox(
-                    width: 48,
-                    height: 48,
-                    child: IconButton(
-                      onPressed: () {
-                        // Navigate to recording flow pre-assigned to genre/subcategory
-                        context.go(
-                          '/record?genreId=$genreId&subcategoryId=${subcategory.id}',
-                        );
-                      },
-                      icon: Icon(LucideIcons.mic, color: color),
-                      style: IconButton.styleFrom(
-                        backgroundColor: color.withValues(alpha: 0.1),
-                        shape: const CircleBorder(),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              // Description / prompt
-              if (subcategory.description != null &&
-                  subcategory.description!.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Text(
-                  subcategory.description!,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: AppColors.secondary,
-                    fontStyle: FontStyle.italic,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+                  ],
                 ),
-              ],
-
-              const SizedBox(height: 12),
-
-              // Stats row: duration + recording count
-              Row(
-                children: [
-                  Icon(LucideIcons.clock, size: 14, color: AppColors.border),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${hours}h ${minutes}m',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: AppColors.foreground.withValues(alpha: 0.6),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Icon(LucideIcons.mic, size: 14, color: AppColors.border),
-                  const SizedBox(width: 4),
-                  Text(
-                    '$recordingCount recordings',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: AppColors.foreground.withValues(alpha: 0.6),
-                    ),
-                  ),
-                ],
               ),
+              const SizedBox(width: 16),
 
-              const SizedBox(height: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            subcategory.name,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
 
-              // Target progress bar
-              ClipRRect(
-                borderRadius: BorderRadius.circular(4),
-                child: LinearProgressIndicator(
-                  value: progress,
-                  minHeight: 6,
-                  backgroundColor: AppColors.border.withValues(alpha: 0.3),
-                  valueColor: AlwaysStoppedAnimation<Color>(color),
+                        SizedBox(
+                          width: 40,
+                          height: 40,
+                          child: IconButton(
+                            onPressed: () {
+                              context.go(
+                                '/record?genreId=$genreId&subcategoryId=${subcategory.id}',
+                              );
+                            },
+                            icon: Icon(LucideIcons.mic, size: 18, color: color),
+                            style: IconButton.styleFrom(
+                              backgroundColor: color.withValues(alpha: 0.1),
+                              shape: const CircleBorder(),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    if (subcategory.description != null &&
+                        subcategory.description!.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        subcategory.description!,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: colors.secondary,
+                          fontStyle: FontStyle.italic,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+
+                    const SizedBox(height: 8),
+
+                    Row(
+                      children: [
+                        Icon(LucideIcons.clock, size: 14, color: colors.border),
+                        const SizedBox(width: 4),
+                        Text(
+                          formatDurationCompact(totalDurationSeconds),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: colors.foreground.withValues(alpha: 0.6),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Icon(LucideIcons.mic, size: 14, color: colors.border),
+                        const SizedBox(width: 4),
+                        Text(
+                          '$recordingCount recordings',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: colors.foreground.withValues(alpha: 0.6),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ],
