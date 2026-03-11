@@ -4,6 +4,7 @@ class User {
   final String? displayName;
   final String role;
   final DateTime? createdAt;
+  final String? avatarUrl;
 
   const User({
     required this.id,
@@ -11,6 +12,7 @@ class User {
     this.displayName,
     required this.role,
     this.createdAt,
+    this.avatarUrl,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -22,6 +24,7 @@ class User {
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
           : null,
+      avatarUrl: json['avatar_url'] as String?,
     );
   }
 
@@ -32,6 +35,22 @@ class User {
       'display_name': displayName,
       'role': role,
       'created_at': createdAt?.toIso8601String(),
+      'avatar_url': avatarUrl,
     };
+  }
+
+  User copyWith({
+    String? displayName,
+    String? avatarUrl,
+    bool clearAvatar = false,
+  }) {
+    return User(
+      id: id,
+      email: email,
+      displayName: displayName ?? this.displayName,
+      role: role,
+      createdAt: createdAt,
+      avatarUrl: clearAvatar ? null : (avatarUrl ?? this.avatarUrl),
+    );
   }
 }

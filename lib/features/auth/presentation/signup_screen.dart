@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../core/theme/app_colors.dart';
-import '../data/providers/auth_provider.dart';
+import '../../../shared/preview_helpers.dart';
+import '../../../core/auth/auth_notifier.dart';
+import '../../../core/auth/auth_state.dart';
+
+@Preview(name: 'Signup Screen', wrapper: previewWrapper)
+Widget signupScreenPreview() => const SignupScreen();
 
 class SignupScreen extends ConsumerStatefulWidget {
   const SignupScreen({super.key});
@@ -33,7 +39,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   Future<void> _handleSignup() async {
     if (!_formKey.currentState!.validate()) return;
 
-    await ref.read(authNotifierProvider.notifier).signup(
+    await ref
+        .read(authNotifierProvider.notifier)
+        .signup(
           _emailController.text.trim(),
           _passwordController.text,
           displayName: _displayNameController.text.trim().isNotEmpty
@@ -45,69 +53,174 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authNotifierProvider);
+    final screenHeight = MediaQuery.of(context).size.height;
+    final topPadding = MediaQuery.of(context).padding.top;
+    final colors = AppColors.of(context);
     final theme = Theme.of(context);
 
-    // Show error via SnackBar
     ref.listen<AuthState>(authNotifierProvider, (previous, next) {
       if (next.error != null && previous?.error != next.error) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.error!),
-            backgroundColor: AppColors.error,
-          ),
+          SnackBar(content: Text(next.error!), backgroundColor: colors.error),
         );
       }
     });
 
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 400),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Logo
-                    Center(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(20),
-                        child: Image.asset(
-                          'assets/app_icon.png',
-                          width: 96,
-                          height: 96,
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SizedBox(
+              height: screenHeight * 0.38,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  ClipRRect(
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(36),
+                      bottomRight: Radius.circular(36),
+                    ),
+                    child: Image.asset(
+                      'assets/hero_woman.png',
+                      fit: BoxFit.cover,
+                      alignment: Alignment.topCenter,
+                    ),
+                  ),
+
+                  Positioned.fill(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        borderRadius: const BorderRadius.only(
+                          bottomLeft: Radius.circular(36),
+                          bottomRight: Radius.circular(36),
+                        ),
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.black.withValues(alpha: 0.08),
+                            Colors.black.withValues(alpha: 0.55),
+                          ],
+                          stops: const [0.25, 1.0],
                         ),
                       ),
                     ),
-                    const SizedBox(height: 16),
+                  ),
 
-                    // Title
-                    Text(
-                      'Create Account',
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.headlineMedium?.copyWith(
-                        color: AppColors.foreground,
-                        fontWeight: FontWeight.bold,
+                  Positioned(
+                    top: topPadding + 12,
+                    left: 16,
+                    child: IconButton(
+                      onPressed: () => context.go('/login'),
+                      tooltip: 'Back to sign in',
+                      style: IconButton.styleFrom(
+                        backgroundColor: Colors.black.withValues(alpha: 0.3),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        minimumSize: const Size(44, 44),
+                      ),
+                      icon: const Icon(
+                        LucideIcons.arrowLeft,
+                        color: Colors.white,
+                        size: 20,
                       ),
                     ),
-                    const SizedBox(height: 40),
+                  ),
 
-                    // Email field
+                  Positioned(
+                    left: 28,
+                    right: 28,
+                    bottom: 28,
+                    child: Text.rich(
+                      TextSpan(
+                        children: [
+                          TextSpan(
+                            text: 'Create\n',
+                            style: theme.textTheme.displayLarge?.copyWith(
+                              color: Colors.white,
+                              height: 1.15,
+                            ),
+                          ),
+                          TextSpan(
+                            text: 'Account',
+                            style: theme.textTheme.displayLarge?.copyWith(
+                              color: const Color(0xFFFFB380),
+                              height: 1.15,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            Padding(
+              padding: const EdgeInsets.fromLTRB(28, 24, 28, 24),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Join our community of story collectors.',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: colors.secondary,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    Text(
+                      'Name',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: colors.foreground,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      controller: _displayNameController,
+                      textInputAction: TextInputAction.next,
+                      style: theme.textTheme.bodyMedium,
+                      decoration: InputDecoration(
+                        hintText: 'Your full name',
+                        prefixIcon: const Icon(LucideIcons.user, size: 18),
+                        hintStyle: theme.textTheme.bodyMedium?.copyWith(
+                          color: colors.border,
+                        ),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Please enter your display name';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+
+                    Text(
+                      'Email Address',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: colors.foreground,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
                     TextFormField(
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
                       autocorrect: false,
                       textInputAction: TextInputAction.next,
-                      style: const TextStyle(fontSize: 16),
-                      decoration: const InputDecoration(
-                        labelText: 'Email',
-                        hintText: 'you@example.com',
-                        prefixIcon: Icon(Icons.email_outlined),
+                      style: theme.textTheme.bodyMedium,
+                      decoration: InputDecoration(
+                        hintText: 'your@email.com',
+                        prefixIcon: const Icon(LucideIcons.mail, size: 18),
+                        hintStyle: theme.textTheme.bodyMedium?.copyWith(
+                          color: colors.border,
+                        ),
                       ),
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
@@ -121,39 +234,32 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Display name field
-                    TextFormField(
-                      controller: _displayNameController,
-                      textInputAction: TextInputAction.next,
-                      style: const TextStyle(fontSize: 16),
-                      decoration: const InputDecoration(
-                        labelText: 'Display Name',
-                        hintText: 'Your name',
-                        prefixIcon: Icon(Icons.person_outlined),
+                    Text(
+                      'Password',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: colors.foreground,
                       ),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Please enter your display name';
-                        }
-                        return null;
-                      },
                     ),
-                    const SizedBox(height: 16),
-
-                    // Password field
+                    const SizedBox(height: 8),
                     TextFormField(
                       controller: _passwordController,
                       obscureText: _obscurePassword,
                       textInputAction: TextInputAction.next,
-                      style: const TextStyle(fontSize: 16),
+                      style: theme.textTheme.bodyMedium,
                       decoration: InputDecoration(
-                        labelText: 'Password',
-                        prefixIcon: const Icon(Icons.lock_outlined),
+                        hintText: 'At least 6 characters',
+                        prefixIcon: const Icon(LucideIcons.lock, size: 18),
+                        hintStyle: theme.textTheme.bodyMedium?.copyWith(
+                          color: colors.border,
+                        ),
                         suffixIcon: IconButton(
                           icon: Icon(
                             _obscurePassword
-                                ? Icons.visibility_outlined
-                                : Icons.visibility_off_outlined,
+                                ? LucideIcons.eyeOff
+                                : LucideIcons.eye,
+                            color: colors.secondary,
+                            size: 18,
                           ),
                           onPressed: () {
                             setState(() {
@@ -174,20 +280,35 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Confirm password field
+                    Text(
+                      'Confirm Password',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: colors.foreground,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
                     TextFormField(
                       controller: _confirmPasswordController,
                       obscureText: _obscureConfirmPassword,
                       textInputAction: TextInputAction.done,
-                      style: const TextStyle(fontSize: 16),
+                      style: theme.textTheme.bodyMedium,
                       decoration: InputDecoration(
-                        labelText: 'Confirm Password',
-                        prefixIcon: const Icon(Icons.lock_outlined),
+                        hintText: 'Re-enter password',
+                        prefixIcon: const Icon(
+                          LucideIcons.shieldCheck,
+                          size: 18,
+                        ),
+                        hintStyle: theme.textTheme.bodyMedium?.copyWith(
+                          color: colors.border,
+                        ),
                         suffixIcon: IconButton(
                           icon: Icon(
                             _obscureConfirmPassword
-                                ? Icons.visibility_outlined
-                                : Icons.visibility_off_outlined,
+                                ? LucideIcons.eyeOff
+                                : LucideIcons.eye,
+                            color: colors.secondary,
+                            size: 18,
                           ),
                           onPressed: () {
                             setState(() {
@@ -208,19 +329,21 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       },
                       onFieldSubmitted: (_) => _handleSignup(),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 28),
 
-                    // Signup button
                     SizedBox(
-                      height: 48,
+                      width: double.infinity,
+                      height: 54,
                       child: ElevatedButton(
-                        onPressed:
-                            authState.isLoading ? null : _handleSignup,
+                        onPressed: authState.isLoading ? null : _handleSignup,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
+                          backgroundColor: colors.accent,
                           foregroundColor: Colors.white,
-                          disabledBackgroundColor:
-                              AppColors.primary.withValues(alpha: 0.5),
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          textStyle: theme.textTheme.labelLarge,
                         ),
                         child: authState.isLoading
                             ? const SizedBox(
@@ -231,42 +354,42 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                                   color: Colors.white,
                                 ),
                               )
-                            : const Text(
-                                'Sign up',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
+                            : const Text('Continue'),
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 20),
 
-                    // Link back to login
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          'Already have an account? ',
-                          style: theme.textTheme.bodyMedium,
+                          'Have an account? ',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: colors.secondary,
+                          ),
                         ),
-                        GestureDetector(
-                          onTap: () => context.go('/login'),
+                        TextButton(
+                          onPressed: () => context.go('/login'),
+                          style: TextButton.styleFrom(
+                            minimumSize: const Size(44, 44),
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                          ),
                           child: Text(
-                            'Log in',
+                            'Sign In',
                             style: theme.textTheme.bodyMedium?.copyWith(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w600,
+                              fontWeight: FontWeight.w700,
+                              color: colors.accent,
                             ),
                           ),
                         ),
                       ],
                     ),
+                    const SizedBox(height: 16),
                   ],
                 ),
               ),
             ),
-          ),
+          ],
         ),
       ),
     );

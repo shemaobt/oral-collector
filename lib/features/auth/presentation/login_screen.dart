@@ -3,7 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
-import '../data/providers/auth_provider.dart';
+import '../../../shared/preview_helpers.dart';
+import '../../../core/auth/auth_notifier.dart';
+import '../../../core/auth/auth_state.dart';
+import 'widgets/hero_panel.dart';
+import 'widgets/login_mobile_hero.dart';
+import 'widgets/login_form.dart';
+
+@Preview(name: 'Login Screen', wrapper: previewWrapper)
+Widget loginScreenPreview() => const LoginScreen();
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -28,179 +36,159 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
 
-    await ref.read(authNotifierProvider.notifier).login(
-          _emailController.text.trim(),
-          _passwordController.text,
-        );
+    await ref
+        .read(authNotifierProvider.notifier)
+        .login(_emailController.text.trim(), _passwordController.text);
   }
 
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authNotifierProvider);
-    final theme = Theme.of(context);
+    final isWide = MediaQuery.of(context).size.width >= 720;
+    final colors = AppColors.of(context);
 
-    // Show error via SnackBar
     ref.listen<AuthState>(authNotifierProvider, (previous, next) {
       if (next.error != null && previous?.error != next.error) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.error!),
-            backgroundColor: AppColors.error,
-          ),
+          SnackBar(content: Text(next.error!), backgroundColor: colors.error),
         );
       }
     });
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 400),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Logo
-                    Center(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(20),
-                        child: Image.asset(
-                          'assets/app_icon.png',
-                          width: 96,
-                          height: 96,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
+    if (isWide) {
+      return Scaffold(
+        body: Row(
+          children: [
+            Expanded(flex: 5, child: const HeroPanel()),
+            Expanded(flex: 4, child: _buildDesktopForm(authState, colors)),
+          ],
+        ),
+      );
+    }
 
-                    // Title
-                    Text(
-                      'Oral Collector',
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.headlineMedium?.copyWith(
-                        color: AppColors.foreground,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 40),
+    return Scaffold(body: _buildMobileLayout(authState, colors));
+  }
 
-                    // Email field
-                    TextFormField(
-                      controller: _emailController,
-                      keyboardType: TextInputType.emailAddress,
-                      autocorrect: false,
-                      textInputAction: TextInputAction.next,
-                      style: const TextStyle(fontSize: 16),
-                      decoration: const InputDecoration(
-                        labelText: 'Email',
-                        hintText: 'you@example.com',
-                        prefixIcon: Icon(Icons.email_outlined),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Please enter your email';
-                        }
-                        if (!value.contains('@') || !value.contains('.')) {
-                          return 'Please enter a valid email';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
+  Widget _buildMobileLayout(AuthState authState, AppColorSet colors) {
+    final theme = Theme.of(context);
+    final screenHeight = MediaQuery.of(context).size.height;
+    final topPadding = MediaQuery.of(context).padding.top;
 
-                    // Password field
-                    TextFormField(
-                      controller: _passwordController,
-                      obscureText: _obscurePassword,
-                      textInputAction: TextInputAction.done,
-                      style: const TextStyle(fontSize: 16),
-                      decoration: InputDecoration(
-                        labelText: 'Password',
-                        prefixIcon: const Icon(Icons.lock_outlined),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscurePassword
-                                ? Icons.visibility_outlined
-                                : Icons.visibility_off_outlined,
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              _obscurePassword = !_obscurePassword;
-                            });
-                          },
-                        ),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your password';
-                        }
-                        if (value.length < 6) {
-                          return 'Password must be at least 6 characters';
-                        }
-                        return null;
-                      },
-                      onFieldSubmitted: (_) => _handleLogin(),
-                    ),
-                    const SizedBox(height: 24),
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          LoginMobileHero(
+            screenHeight: screenHeight,
+            topPadding: topPadding,
+            theme: theme,
+          ),
 
-                    // Login button
-                    SizedBox(
-                      height: 48,
-                      child: ElevatedButton(
-                        onPressed: authState.isLoading ? null : _handleLogin,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
-                          disabledBackgroundColor:
-                              AppColors.primary.withValues(alpha: 0.5),
-                        ),
-                        child: authState.isLoading
-                            ? const SizedBox(
-                                width: 24,
-                                height: 24,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : const Text(
-                                'Log in',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                      ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(28, 28, 28, 24),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Sign in to continue collecting stories.',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: colors.secondary,
                     ),
-                    const SizedBox(height: 16),
+                  ),
+                  const SizedBox(height: 28),
+                  LoginForm(
+                    emailController: _emailController,
+                    passwordController: _passwordController,
+                    obscurePassword: _obscurePassword,
+                    onToggleObscure: () {
+                      setState(() {
+                        _obscurePassword = !_obscurePassword;
+                      });
+                    },
+                    onLogin: _handleLogin,
+                    isLoading: authState.isLoading,
+                    colors: colors,
+                    theme: theme,
+                    onGoToSignup: () => context.go('/signup'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-                    // Link to signup
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+  Widget _buildDesktopForm(AuthState authState, AppColorSet colors) {
+    final theme = Theme.of(context);
+    return SafeArea(
+      child: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 48),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 400),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Image.asset(
+                      'assets/app_icon.png',
+                      width: 52,
+                      height: 52,
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+
+                  Text.rich(
+                    TextSpan(
                       children: [
-                        Text(
-                          "Don't have an account? ",
-                          style: theme.textTheme.bodyMedium,
+                        TextSpan(
+                          text: 'Welcome ',
+                          style: theme.textTheme.displayLarge?.copyWith(
+                            color: colors.foreground,
+                          ),
                         ),
-                        GestureDetector(
-                          onTap: () => context.go('/signup'),
-                          child: Text(
-                            'Sign up',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w600,
-                            ),
+                        TextSpan(
+                          text: 'Back',
+                          style: theme.textTheme.displayLarge?.copyWith(
+                            color: colors.accent,
                           ),
                         ),
                       ],
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Sign in to continue collecting stories.',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: colors.secondary,
+                    ),
+                  ),
+                  const SizedBox(height: 40),
+
+                  LoginForm(
+                    emailController: _emailController,
+                    passwordController: _passwordController,
+                    obscurePassword: _obscurePassword,
+                    onToggleObscure: () {
+                      setState(() {
+                        _obscurePassword = !_obscurePassword;
+                      });
+                    },
+                    onLogin: _handleLogin,
+                    isLoading: authState.isLoading,
+                    colors: colors,
+                    theme: theme,
+                    onGoToSignup: () => context.go('/signup'),
+                  ),
+                ],
               ),
             ),
           ),
