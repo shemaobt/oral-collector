@@ -1,8 +1,5 @@
-// GENERATED CODE - DO NOT MODIFY BY HAND
-
 part of 'app_database.dart';
 
-// ignore_for_file: type=lint
 class $LocalRecordingsTable extends LocalRecordings
     with TableInfo<$LocalRecordingsTable, LocalRecording> {
   @override
@@ -12,141 +9,211 @@ class $LocalRecordingsTable extends LocalRecordings
   static const VerificationMeta _idMeta = VerificationMeta('id');
   @override
   late final GeneratedColumn<String> id = GeneratedColumn<String>(
-      'id', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _projectIdMeta =
-      VerificationMeta('projectId');
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _projectIdMeta = VerificationMeta('projectId');
   @override
   late final GeneratedColumn<String> projectId = GeneratedColumn<String>(
-      'project_id', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
+    'project_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
   static const VerificationMeta _genreIdMeta = VerificationMeta('genreId');
   @override
   late final GeneratedColumn<String> genreId = GeneratedColumn<String>(
-      'genre_id', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _subcategoryIdMeta =
-      VerificationMeta('subcategoryId');
+    'genre_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _subcategoryIdMeta = VerificationMeta(
+    'subcategoryId',
+  );
   @override
   late final GeneratedColumn<String> subcategoryId = GeneratedColumn<String>(
-      'subcategory_id', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
+    'subcategory_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _titleMeta = VerificationMeta('title');
   @override
   late final GeneratedColumn<String> title = GeneratedColumn<String>(
-      'title', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _durationSecondsMeta =
-      VerificationMeta('durationSeconds');
+    'title',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _durationSecondsMeta = VerificationMeta(
+    'durationSeconds',
+  );
   @override
-  late final GeneratedColumn<double> durationSeconds =
-      GeneratedColumn<double>('duration_seconds', aliasedName, false,
-          type: DriftSqlType.double,
-          requiredDuringInsert: false,
-          defaultValue: const Constant(0.0));
-  static const VerificationMeta _fileSizeBytesMeta =
-      VerificationMeta('fileSizeBytes');
+  late final GeneratedColumn<double> durationSeconds = GeneratedColumn<double>(
+    'duration_seconds',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0.0),
+  );
+  static const VerificationMeta _fileSizeBytesMeta = VerificationMeta(
+    'fileSizeBytes',
+  );
   @override
   late final GeneratedColumn<int> fileSizeBytes = GeneratedColumn<int>(
-      'file_size_bytes', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(0));
+    'file_size_bytes',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   static const VerificationMeta _formatMeta = VerificationMeta('format');
   @override
   late final GeneratedColumn<String> format = GeneratedColumn<String>(
-      'format', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      defaultValue: const Constant('m4a'));
-  static const VerificationMeta _localFilePathMeta =
-      VerificationMeta('localFilePath');
+    'format',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('m4a'),
+  );
+  static const VerificationMeta _localFilePathMeta = VerificationMeta(
+    'localFilePath',
+  );
   @override
   late final GeneratedColumn<String> localFilePath = GeneratedColumn<String>(
-      'local_file_path', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _uploadStatusMeta =
-      VerificationMeta('uploadStatus');
+    'local_file_path',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _uploadStatusMeta = VerificationMeta(
+    'uploadStatus',
+  );
   @override
   late final GeneratedColumn<String> uploadStatus = GeneratedColumn<String>(
-      'upload_status', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      defaultValue: const Constant('local'));
+    'upload_status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('local'),
+  );
   static const VerificationMeta _serverIdMeta = VerificationMeta('serverId');
   @override
   late final GeneratedColumn<String> serverId = GeneratedColumn<String>(
-      'server_id', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
+    'server_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _gcsUrlMeta = VerificationMeta('gcsUrl');
   @override
   late final GeneratedColumn<String> gcsUrl = GeneratedColumn<String>(
-      'gcs_url', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _cleaningStatusMeta =
-      VerificationMeta('cleaningStatus');
+    'gcs_url',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _cleaningStatusMeta = VerificationMeta(
+    'cleaningStatus',
+  );
   @override
   late final GeneratedColumn<String> cleaningStatus = GeneratedColumn<String>(
-      'cleaning_status', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      defaultValue: const Constant('none'));
-  static const VerificationMeta _recordedAtMeta =
-      VerificationMeta('recordedAt');
+    'cleaning_status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('none'),
+  );
+  static const VerificationMeta _recordedAtMeta = VerificationMeta(
+    'recordedAt',
+  );
   @override
   late final GeneratedColumn<DateTime> recordedAt = GeneratedColumn<DateTime>(
-      'recorded_at', aliasedName, false,
-      type: DriftSqlType.dateTime, requiredDuringInsert: true);
-  static const VerificationMeta _createdAtMeta =
-      VerificationMeta('createdAt');
+    'recorded_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = VerificationMeta('createdAt');
   @override
   late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-      'created_at', aliasedName, false,
-      type: DriftSqlType.dateTime,
-      requiredDuringInsert: false,
-      defaultValue: currentDateAndTime);
-  static const VerificationMeta _retryCountMeta =
-      VerificationMeta('retryCount');
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _retryCountMeta = VerificationMeta(
+    'retryCount',
+  );
   @override
   late final GeneratedColumn<int> retryCount = GeneratedColumn<int>(
-      'retry_count', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(0));
-  static const VerificationMeta _lastRetryAtMeta =
-      VerificationMeta('lastRetryAt');
+    'retry_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _lastRetryAtMeta = VerificationMeta(
+    'lastRetryAt',
+  );
   @override
-  late final GeneratedColumn<DateTime> lastRetryAt =
-      GeneratedColumn<DateTime>('last_retry_at', aliasedName, true,
-          type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  late final GeneratedColumn<DateTime> lastRetryAt = GeneratedColumn<DateTime>(
+    'last_retry_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
-        id,
-        projectId,
-        genreId,
-        subcategoryId,
-        title,
-        durationSeconds,
-        fileSizeBytes,
-        format,
-        localFilePath,
-        uploadStatus,
-        serverId,
-        gcsUrl,
-        cleaningStatus,
-        recordedAt,
-        createdAt,
-        retryCount,
-        lastRetryAt
-      ];
+    id,
+    projectId,
+    genreId,
+    subcategoryId,
+    title,
+    durationSeconds,
+    fileSizeBytes,
+    format,
+    localFilePath,
+    uploadStatus,
+    serverId,
+    gcsUrl,
+    cleaningStatus,
+    recordedAt,
+    createdAt,
+    retryCount,
+    lastRetryAt,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'local_recordings';
   @override
-  VerificationContext validateIntegrity(Insertable<LocalRecording> instance,
-      {bool isInserting = false}) {
+  VerificationContext validateIntegrity(
+    Insertable<LocalRecording> instance, {
+    bool isInserting = false,
+  }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
@@ -155,94 +222,129 @@ class $LocalRecordingsTable extends LocalRecordings
       context.missing(_idMeta);
     }
     if (data.containsKey('project_id')) {
-      context.handle(_projectIdMeta,
-          projectId.isAcceptableOrUnknown(data['project_id']!, _projectIdMeta));
+      context.handle(
+        _projectIdMeta,
+        projectId.isAcceptableOrUnknown(data['project_id']!, _projectIdMeta),
+      );
     } else if (isInserting) {
       context.missing(_projectIdMeta);
     }
     if (data.containsKey('genre_id')) {
-      context.handle(_genreIdMeta,
-          genreId.isAcceptableOrUnknown(data['genre_id']!, _genreIdMeta));
+      context.handle(
+        _genreIdMeta,
+        genreId.isAcceptableOrUnknown(data['genre_id']!, _genreIdMeta),
+      );
     } else if (isInserting) {
       context.missing(_genreIdMeta);
     }
     if (data.containsKey('subcategory_id')) {
       context.handle(
+        _subcategoryIdMeta,
+        subcategoryId.isAcceptableOrUnknown(
+          data['subcategory_id']!,
           _subcategoryIdMeta,
-          subcategoryId.isAcceptableOrUnknown(
-              data['subcategory_id']!, _subcategoryIdMeta));
+        ),
+      );
     }
     if (data.containsKey('title')) {
       context.handle(
-          _titleMeta, title.isAcceptableOrUnknown(data['title']!, _titleMeta));
+        _titleMeta,
+        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
+      );
     }
     if (data.containsKey('duration_seconds')) {
       context.handle(
+        _durationSecondsMeta,
+        durationSeconds.isAcceptableOrUnknown(
+          data['duration_seconds']!,
           _durationSecondsMeta,
-          durationSeconds.isAcceptableOrUnknown(
-              data['duration_seconds']!, _durationSecondsMeta));
+        ),
+      );
     }
     if (data.containsKey('file_size_bytes')) {
       context.handle(
+        _fileSizeBytesMeta,
+        fileSizeBytes.isAcceptableOrUnknown(
+          data['file_size_bytes']!,
           _fileSizeBytesMeta,
-          fileSizeBytes.isAcceptableOrUnknown(
-              data['file_size_bytes']!, _fileSizeBytesMeta));
+        ),
+      );
     }
     if (data.containsKey('format')) {
-      context.handle(_formatMeta,
-          format.isAcceptableOrUnknown(data['format']!, _formatMeta));
+      context.handle(
+        _formatMeta,
+        format.isAcceptableOrUnknown(data['format']!, _formatMeta),
+      );
     }
     if (data.containsKey('local_file_path')) {
       context.handle(
+        _localFilePathMeta,
+        localFilePath.isAcceptableOrUnknown(
+          data['local_file_path']!,
           _localFilePathMeta,
-          localFilePath.isAcceptableOrUnknown(
-              data['local_file_path']!, _localFilePathMeta));
+        ),
+      );
     } else if (isInserting) {
       context.missing(_localFilePathMeta);
     }
     if (data.containsKey('upload_status')) {
       context.handle(
+        _uploadStatusMeta,
+        uploadStatus.isAcceptableOrUnknown(
+          data['upload_status']!,
           _uploadStatusMeta,
-          uploadStatus.isAcceptableOrUnknown(
-              data['upload_status']!, _uploadStatusMeta));
+        ),
+      );
     }
     if (data.containsKey('server_id')) {
-      context.handle(_serverIdMeta,
-          serverId.isAcceptableOrUnknown(data['server_id']!, _serverIdMeta));
+      context.handle(
+        _serverIdMeta,
+        serverId.isAcceptableOrUnknown(data['server_id']!, _serverIdMeta),
+      );
     }
     if (data.containsKey('gcs_url')) {
-      context.handle(_gcsUrlMeta,
-          gcsUrl.isAcceptableOrUnknown(data['gcs_url']!, _gcsUrlMeta));
+      context.handle(
+        _gcsUrlMeta,
+        gcsUrl.isAcceptableOrUnknown(data['gcs_url']!, _gcsUrlMeta),
+      );
     }
     if (data.containsKey('cleaning_status')) {
       context.handle(
+        _cleaningStatusMeta,
+        cleaningStatus.isAcceptableOrUnknown(
+          data['cleaning_status']!,
           _cleaningStatusMeta,
-          cleaningStatus.isAcceptableOrUnknown(
-              data['cleaning_status']!, _cleaningStatusMeta));
+        ),
+      );
     }
     if (data.containsKey('recorded_at')) {
       context.handle(
-          _recordedAtMeta,
-          recordedAt.isAcceptableOrUnknown(
-              data['recorded_at']!, _recordedAtMeta));
+        _recordedAtMeta,
+        recordedAt.isAcceptableOrUnknown(data['recorded_at']!, _recordedAtMeta),
+      );
     } else if (isInserting) {
       context.missing(_recordedAtMeta);
     }
     if (data.containsKey('created_at')) {
-      context.handle(_createdAtMeta,
-          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
     }
     if (data.containsKey('retry_count')) {
       context.handle(
-          _retryCountMeta,
-          retryCount.isAcceptableOrUnknown(
-              data['retry_count']!, _retryCountMeta));
+        _retryCountMeta,
+        retryCount.isAcceptableOrUnknown(data['retry_count']!, _retryCountMeta),
+      );
     }
     if (data.containsKey('last_retry_at')) {
       context.handle(
+        _lastRetryAtMeta,
+        lastRetryAt.isAcceptableOrUnknown(
+          data['last_retry_at']!,
           _lastRetryAtMeta,
-          lastRetryAt.isAcceptableOrUnknown(
-              data['last_retry_at']!, _lastRetryAtMeta));
+        ),
+      );
     }
     return context;
   }
@@ -253,40 +355,74 @@ class $LocalRecordingsTable extends LocalRecordings
   LocalRecording map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return LocalRecording(
-      id: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
-      projectId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}project_id'])!,
-      genreId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}genre_id'])!,
-      subcategoryId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}subcategory_id']),
-      title: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}title']),
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      projectId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}project_id'],
+      )!,
+      genreId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}genre_id'],
+      )!,
+      subcategoryId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}subcategory_id'],
+      ),
+      title: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}title'],
+      ),
       durationSeconds: attachedDatabase.typeMapping.read(
-          DriftSqlType.double, data['${effectivePrefix}duration_seconds'])!,
-      fileSizeBytes: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}file_size_bytes'])!,
-      format: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}format'])!,
+        DriftSqlType.double,
+        data['${effectivePrefix}duration_seconds'],
+      )!,
+      fileSizeBytes: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}file_size_bytes'],
+      )!,
+      format: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}format'],
+      )!,
       localFilePath: attachedDatabase.typeMapping.read(
-          DriftSqlType.string, data['${effectivePrefix}local_file_path'])!,
-      uploadStatus: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}upload_status'])!,
-      serverId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}server_id']),
-      gcsUrl: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}gcs_url']),
+        DriftSqlType.string,
+        data['${effectivePrefix}local_file_path'],
+      )!,
+      uploadStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}upload_status'],
+      )!,
+      serverId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}server_id'],
+      ),
+      gcsUrl: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}gcs_url'],
+      ),
       cleaningStatus: attachedDatabase.typeMapping.read(
-          DriftSqlType.string, data['${effectivePrefix}cleaning_status'])!,
-      recordedAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}recorded_at'])!,
-      createdAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
-      retryCount: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}retry_count'])!,
+        DriftSqlType.string,
+        data['${effectivePrefix}cleaning_status'],
+      )!,
+      recordedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}recorded_at'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      retryCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}retry_count'],
+      )!,
       lastRetryAt: attachedDatabase.typeMapping.read(
-          DriftSqlType.dateTime, data['${effectivePrefix}last_retry_at']),
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_retry_at'],
+      ),
     );
   }
 
@@ -314,24 +450,25 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
   final DateTime createdAt;
   final int retryCount;
   final DateTime? lastRetryAt;
-  const LocalRecording(
-      {required this.id,
-      required this.projectId,
-      required this.genreId,
-      this.subcategoryId,
-      this.title,
-      required this.durationSeconds,
-      required this.fileSizeBytes,
-      required this.format,
-      required this.localFilePath,
-      required this.uploadStatus,
-      this.serverId,
-      this.gcsUrl,
-      required this.cleaningStatus,
-      required this.recordedAt,
-      required this.createdAt,
-      required this.retryCount,
-      this.lastRetryAt});
+  const LocalRecording({
+    required this.id,
+    required this.projectId,
+    required this.genreId,
+    this.subcategoryId,
+    this.title,
+    required this.durationSeconds,
+    required this.fileSizeBytes,
+    required this.format,
+    required this.localFilePath,
+    required this.uploadStatus,
+    this.serverId,
+    this.gcsUrl,
+    required this.cleaningStatus,
+    required this.recordedAt,
+    required this.createdAt,
+    required this.retryCount,
+    this.lastRetryAt,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -373,8 +510,9 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
       subcategoryId: subcategoryId == null && nullToAbsent
           ? const Value.absent()
           : Value(subcategoryId),
-      title:
-          title == null && nullToAbsent ? const Value.absent() : Value(title),
+      title: title == null && nullToAbsent
+          ? const Value.absent()
+          : Value(title),
       durationSeconds: Value(durationSeconds),
       fileSizeBytes: Value(fileSizeBytes),
       format: Value(format),
@@ -383,8 +521,9 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
       serverId: serverId == null && nullToAbsent
           ? const Value.absent()
           : Value(serverId),
-      gcsUrl:
-          gcsUrl == null && nullToAbsent ? const Value.absent() : Value(gcsUrl),
+      gcsUrl: gcsUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(gcsUrl),
       cleaningStatus: Value(cleaningStatus),
       recordedAt: Value(recordedAt),
       createdAt: Value(createdAt),
@@ -395,8 +534,10 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
     );
   }
 
-  factory LocalRecording.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory LocalRecording.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return LocalRecording(
       id: serializer.fromJson<String>(json['id']),
@@ -442,44 +583,45 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
     };
   }
 
-  LocalRecording copyWith(
-          {String? id,
-          String? projectId,
-          String? genreId,
-          Value<String?> subcategoryId = const Value.absent(),
-          Value<String?> title = const Value.absent(),
-          double? durationSeconds,
-          int? fileSizeBytes,
-          String? format,
-          String? localFilePath,
-          String? uploadStatus,
-          Value<String?> serverId = const Value.absent(),
-          Value<String?> gcsUrl = const Value.absent(),
-          String? cleaningStatus,
-          DateTime? recordedAt,
-          DateTime? createdAt,
-          int? retryCount,
-          Value<DateTime?> lastRetryAt = const Value.absent()}) =>
-      LocalRecording(
-        id: id ?? this.id,
-        projectId: projectId ?? this.projectId,
-        genreId: genreId ?? this.genreId,
-        subcategoryId:
-            subcategoryId.present ? subcategoryId.value : this.subcategoryId,
-        title: title.present ? title.value : this.title,
-        durationSeconds: durationSeconds ?? this.durationSeconds,
-        fileSizeBytes: fileSizeBytes ?? this.fileSizeBytes,
-        format: format ?? this.format,
-        localFilePath: localFilePath ?? this.localFilePath,
-        uploadStatus: uploadStatus ?? this.uploadStatus,
-        serverId: serverId.present ? serverId.value : this.serverId,
-        gcsUrl: gcsUrl.present ? gcsUrl.value : this.gcsUrl,
-        cleaningStatus: cleaningStatus ?? this.cleaningStatus,
-        recordedAt: recordedAt ?? this.recordedAt,
-        createdAt: createdAt ?? this.createdAt,
-        retryCount: retryCount ?? this.retryCount,
-        lastRetryAt: lastRetryAt.present ? lastRetryAt.value : this.lastRetryAt,
-      );
+  LocalRecording copyWith({
+    String? id,
+    String? projectId,
+    String? genreId,
+    Value<String?> subcategoryId = const Value.absent(),
+    Value<String?> title = const Value.absent(),
+    double? durationSeconds,
+    int? fileSizeBytes,
+    String? format,
+    String? localFilePath,
+    String? uploadStatus,
+    Value<String?> serverId = const Value.absent(),
+    Value<String?> gcsUrl = const Value.absent(),
+    String? cleaningStatus,
+    DateTime? recordedAt,
+    DateTime? createdAt,
+    int? retryCount,
+    Value<DateTime?> lastRetryAt = const Value.absent(),
+  }) => LocalRecording(
+    id: id ?? this.id,
+    projectId: projectId ?? this.projectId,
+    genreId: genreId ?? this.genreId,
+    subcategoryId: subcategoryId.present
+        ? subcategoryId.value
+        : this.subcategoryId,
+    title: title.present ? title.value : this.title,
+    durationSeconds: durationSeconds ?? this.durationSeconds,
+    fileSizeBytes: fileSizeBytes ?? this.fileSizeBytes,
+    format: format ?? this.format,
+    localFilePath: localFilePath ?? this.localFilePath,
+    uploadStatus: uploadStatus ?? this.uploadStatus,
+    serverId: serverId.present ? serverId.value : this.serverId,
+    gcsUrl: gcsUrl.present ? gcsUrl.value : this.gcsUrl,
+    cleaningStatus: cleaningStatus ?? this.cleaningStatus,
+    recordedAt: recordedAt ?? this.recordedAt,
+    createdAt: createdAt ?? this.createdAt,
+    retryCount: retryCount ?? this.retryCount,
+    lastRetryAt: lastRetryAt.present ? lastRetryAt.value : this.lastRetryAt,
+  );
   @override
   String toString() {
     return (StringBuffer('LocalRecording(')
@@ -506,23 +648,24 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
 
   @override
   int get hashCode => Object.hash(
-      id,
-      projectId,
-      genreId,
-      subcategoryId,
-      title,
-      durationSeconds,
-      fileSizeBytes,
-      format,
-      localFilePath,
-      uploadStatus,
-      serverId,
-      gcsUrl,
-      cleaningStatus,
-      recordedAt,
-      createdAt,
-      retryCount,
-      lastRetryAt);
+    id,
+    projectId,
+    genreId,
+    subcategoryId,
+    title,
+    durationSeconds,
+    fileSizeBytes,
+    format,
+    localFilePath,
+    uploadStatus,
+    serverId,
+    gcsUrl,
+    cleaningStatus,
+    recordedAt,
+    createdAt,
+    retryCount,
+    lastRetryAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -604,11 +747,11 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
     this.retryCount = const Value.absent(),
     this.lastRetryAt = const Value.absent(),
     this.rowid = const Value.absent(),
-  })  : id = Value(id),
-        projectId = Value(projectId),
-        genreId = Value(genreId),
-        localFilePath = Value(localFilePath),
-        recordedAt = Value(recordedAt);
+  }) : id = Value(id),
+       projectId = Value(projectId),
+       genreId = Value(genreId),
+       localFilePath = Value(localFilePath),
+       recordedAt = Value(recordedAt);
   static Insertable<LocalRecording> custom({
     Expression<String>? id,
     Expression<String>? projectId,
@@ -651,25 +794,26 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
     });
   }
 
-  LocalRecordingsCompanion copyWith(
-      {Value<String>? id,
-      Value<String>? projectId,
-      Value<String>? genreId,
-      Value<String?>? subcategoryId,
-      Value<String?>? title,
-      Value<double>? durationSeconds,
-      Value<int>? fileSizeBytes,
-      Value<String>? format,
-      Value<String>? localFilePath,
-      Value<String>? uploadStatus,
-      Value<String?>? serverId,
-      Value<String?>? gcsUrl,
-      Value<String>? cleaningStatus,
-      Value<DateTime>? recordedAt,
-      Value<DateTime>? createdAt,
-      Value<int>? retryCount,
-      Value<DateTime?>? lastRetryAt,
-      Value<int>? rowid}) {
+  LocalRecordingsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? projectId,
+    Value<String>? genreId,
+    Value<String?>? subcategoryId,
+    Value<String?>? title,
+    Value<double>? durationSeconds,
+    Value<int>? fileSizeBytes,
+    Value<String>? format,
+    Value<String>? localFilePath,
+    Value<String>? uploadStatus,
+    Value<String?>? serverId,
+    Value<String?>? gcsUrl,
+    Value<String>? cleaningStatus,
+    Value<DateTime>? recordedAt,
+    Value<DateTime>? createdAt,
+    Value<int>? retryCount,
+    Value<DateTime?>? lastRetryAt,
+    Value<int>? rowid,
+  }) {
     return LocalRecordingsCompanion(
       id: id ?? this.id,
       projectId: projectId ?? this.projectId,
@@ -787,48 +931,79 @@ class $LocalGenresTable extends LocalGenres
   static const VerificationMeta _idMeta = VerificationMeta('id');
   @override
   late final GeneratedColumn<String> id = GeneratedColumn<String>(
-      'id', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
   static const VerificationMeta _nameMeta = VerificationMeta('name');
   @override
   late final GeneratedColumn<String> name = GeneratedColumn<String>(
-      'name', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _descriptionMeta =
-      VerificationMeta('description');
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _descriptionMeta = VerificationMeta(
+    'description',
+  );
   @override
   late final GeneratedColumn<String> description = GeneratedColumn<String>(
-      'description', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
+    'description',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _iconMeta = VerificationMeta('icon');
   @override
   late final GeneratedColumn<String> icon = GeneratedColumn<String>(
-      'icon', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
+    'icon',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _colorMeta = VerificationMeta('color');
   @override
   late final GeneratedColumn<String> color = GeneratedColumn<String>(
-      'color', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _sortOrderMeta =
-      VerificationMeta('sortOrder');
+    'color',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _sortOrderMeta = VerificationMeta('sortOrder');
   @override
   late final GeneratedColumn<int> sortOrder = GeneratedColumn<int>(
-      'sort_order', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(0));
+    'sort_order',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   @override
-  List<GeneratedColumn> get $columns =>
-      [id, name, description, icon, color, sortOrder];
+  List<GeneratedColumn> get $columns => [
+    id,
+    name,
+    description,
+    icon,
+    color,
+    sortOrder,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'local_genres';
   @override
-  VerificationContext validateIntegrity(Insertable<LocalGenre> instance,
-      {bool isInserting = false}) {
+  VerificationContext validateIntegrity(
+    Insertable<LocalGenre> instance, {
+    bool isInserting = false,
+  }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
@@ -838,25 +1013,38 @@ class $LocalGenresTable extends LocalGenres
     }
     if (data.containsKey('name')) {
       context.handle(
-          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
     } else if (isInserting) {
       context.missing(_nameMeta);
     }
     if (data.containsKey('description')) {
-      context.handle(_descriptionMeta,
-          description.isAcceptableOrUnknown(data['description']!, _descriptionMeta));
+      context.handle(
+        _descriptionMeta,
+        description.isAcceptableOrUnknown(
+          data['description']!,
+          _descriptionMeta,
+        ),
+      );
     }
     if (data.containsKey('icon')) {
       context.handle(
-          _iconMeta, icon.isAcceptableOrUnknown(data['icon']!, _iconMeta));
+        _iconMeta,
+        icon.isAcceptableOrUnknown(data['icon']!, _iconMeta),
+      );
     }
     if (data.containsKey('color')) {
       context.handle(
-          _colorMeta, color.isAcceptableOrUnknown(data['color']!, _colorMeta));
+        _colorMeta,
+        color.isAcceptableOrUnknown(data['color']!, _colorMeta),
+      );
     }
     if (data.containsKey('sort_order')) {
-      context.handle(_sortOrderMeta,
-          sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta));
+      context.handle(
+        _sortOrderMeta,
+        sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta),
+      );
     }
     return context;
   }
@@ -867,18 +1055,30 @@ class $LocalGenresTable extends LocalGenres
   LocalGenre map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return LocalGenre(
-      id: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
-      name: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
-      description: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}description']),
-      icon: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}icon']),
-      color: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}color']),
-      sortOrder: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}sort_order'])!,
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      description: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}description'],
+      ),
+      icon: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}icon'],
+      ),
+      color: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}color'],
+      ),
+      sortOrder: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sort_order'],
+      )!,
     );
   }
 
@@ -895,13 +1095,14 @@ class LocalGenre extends DataClass implements Insertable<LocalGenre> {
   final String? icon;
   final String? color;
   final int sortOrder;
-  const LocalGenre(
-      {required this.id,
-      required this.name,
-      this.description,
-      this.icon,
-      this.color,
-      required this.sortOrder});
+  const LocalGenre({
+    required this.id,
+    required this.name,
+    this.description,
+    this.icon,
+    this.color,
+    required this.sortOrder,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -928,14 +1129,17 @@ class LocalGenre extends DataClass implements Insertable<LocalGenre> {
           ? const Value.absent()
           : Value(description),
       icon: icon == null && nullToAbsent ? const Value.absent() : Value(icon),
-      color:
-          color == null && nullToAbsent ? const Value.absent() : Value(color),
+      color: color == null && nullToAbsent
+          ? const Value.absent()
+          : Value(color),
       sortOrder: Value(sortOrder),
     );
   }
 
-  factory LocalGenre.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory LocalGenre.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return LocalGenre(
       id: serializer.fromJson<String>(json['id']),
@@ -959,21 +1163,21 @@ class LocalGenre extends DataClass implements Insertable<LocalGenre> {
     };
   }
 
-  LocalGenre copyWith(
-          {String? id,
-          String? name,
-          Value<String?> description = const Value.absent(),
-          Value<String?> icon = const Value.absent(),
-          Value<String?> color = const Value.absent(),
-          int? sortOrder}) =>
-      LocalGenre(
-        id: id ?? this.id,
-        name: name ?? this.name,
-        description: description.present ? description.value : this.description,
-        icon: icon.present ? icon.value : this.icon,
-        color: color.present ? color.value : this.color,
-        sortOrder: sortOrder ?? this.sortOrder,
-      );
+  LocalGenre copyWith({
+    String? id,
+    String? name,
+    Value<String?> description = const Value.absent(),
+    Value<String?> icon = const Value.absent(),
+    Value<String?> color = const Value.absent(),
+    int? sortOrder,
+  }) => LocalGenre(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    description: description.present ? description.value : this.description,
+    icon: icon.present ? icon.value : this.icon,
+    color: color.present ? color.value : this.color,
+    sortOrder: sortOrder ?? this.sortOrder,
+  );
   @override
   String toString() {
     return (StringBuffer('LocalGenre(')
@@ -988,7 +1192,8 @@ class LocalGenre extends DataClass implements Insertable<LocalGenre> {
   }
 
   @override
-  int get hashCode => Object.hash(id, name, description, icon, color, sortOrder);
+  int get hashCode =>
+      Object.hash(id, name, description, icon, color, sortOrder);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1026,8 +1231,8 @@ class LocalGenresCompanion extends UpdateCompanion<LocalGenre> {
     this.color = const Value.absent(),
     this.sortOrder = const Value.absent(),
     this.rowid = const Value.absent(),
-  })  : id = Value(id),
-        name = Value(name);
+  }) : id = Value(id),
+       name = Value(name);
   static Insertable<LocalGenre> custom({
     Expression<String>? id,
     Expression<String>? name,
@@ -1048,14 +1253,15 @@ class LocalGenresCompanion extends UpdateCompanion<LocalGenre> {
     });
   }
 
-  LocalGenresCompanion copyWith(
-      {Value<String>? id,
-      Value<String>? name,
-      Value<String?>? description,
-      Value<String?>? icon,
-      Value<String?>? color,
-      Value<int>? sortOrder,
-      Value<int>? rowid}) {
+  LocalGenresCompanion copyWith({
+    Value<String>? id,
+    Value<String>? name,
+    Value<String?>? description,
+    Value<String?>? icon,
+    Value<String?>? color,
+    Value<int>? sortOrder,
+    Value<int>? rowid,
+  }) {
     return LocalGenresCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
@@ -1118,35 +1324,59 @@ class $LocalSubcategoriesTable extends LocalSubcategories
   static const VerificationMeta _idMeta = VerificationMeta('id');
   @override
   late final GeneratedColumn<String> id = GeneratedColumn<String>(
-      'id', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
   static const VerificationMeta _genreIdMeta = VerificationMeta('genreId');
   @override
   late final GeneratedColumn<String> genreId = GeneratedColumn<String>(
-      'genre_id', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
+    'genre_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
   static const VerificationMeta _nameMeta = VerificationMeta('name');
   @override
   late final GeneratedColumn<String> name = GeneratedColumn<String>(
-      'name', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _descriptionMeta =
-      VerificationMeta('description');
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _descriptionMeta = VerificationMeta(
+    'description',
+  );
   @override
   late final GeneratedColumn<String> description = GeneratedColumn<String>(
-      'description', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _sortOrderMeta =
-      VerificationMeta('sortOrder');
+    'description',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _sortOrderMeta = VerificationMeta('sortOrder');
   @override
   late final GeneratedColumn<int> sortOrder = GeneratedColumn<int>(
-      'sort_order', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(0));
+    'sort_order',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   @override
-  List<GeneratedColumn> get $columns =>
-      [id, genreId, name, description, sortOrder];
+  List<GeneratedColumn> get $columns => [
+    id,
+    genreId,
+    name,
+    description,
+    sortOrder,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -1154,8 +1384,9 @@ class $LocalSubcategoriesTable extends LocalSubcategories
   static const String $name = 'local_subcategories';
   @override
   VerificationContext validateIntegrity(
-      Insertable<LocalSubcategory> instance,
-      {bool isInserting = false}) {
+    Insertable<LocalSubcategory> instance, {
+    bool isInserting = false,
+  }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
@@ -1164,24 +1395,35 @@ class $LocalSubcategoriesTable extends LocalSubcategories
       context.missing(_idMeta);
     }
     if (data.containsKey('genre_id')) {
-      context.handle(_genreIdMeta,
-          genreId.isAcceptableOrUnknown(data['genre_id']!, _genreIdMeta));
+      context.handle(
+        _genreIdMeta,
+        genreId.isAcceptableOrUnknown(data['genre_id']!, _genreIdMeta),
+      );
     } else if (isInserting) {
       context.missing(_genreIdMeta);
     }
     if (data.containsKey('name')) {
       context.handle(
-          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
     } else if (isInserting) {
       context.missing(_nameMeta);
     }
     if (data.containsKey('description')) {
-      context.handle(_descriptionMeta,
-          description.isAcceptableOrUnknown(data['description']!, _descriptionMeta));
+      context.handle(
+        _descriptionMeta,
+        description.isAcceptableOrUnknown(
+          data['description']!,
+          _descriptionMeta,
+        ),
+      );
     }
     if (data.containsKey('sort_order')) {
-      context.handle(_sortOrderMeta,
-          sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta));
+      context.handle(
+        _sortOrderMeta,
+        sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta),
+      );
     }
     return context;
   }
@@ -1192,16 +1434,26 @@ class $LocalSubcategoriesTable extends LocalSubcategories
   LocalSubcategory map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return LocalSubcategory(
-      id: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
-      genreId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}genre_id'])!,
-      name: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
-      description: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}description']),
-      sortOrder: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}sort_order'])!,
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      genreId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}genre_id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      description: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}description'],
+      ),
+      sortOrder: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sort_order'],
+      )!,
     );
   }
 
@@ -1218,12 +1470,13 @@ class LocalSubcategory extends DataClass
   final String name;
   final String? description;
   final int sortOrder;
-  const LocalSubcategory(
-      {required this.id,
-      required this.genreId,
-      required this.name,
-      this.description,
-      required this.sortOrder});
+  const LocalSubcategory({
+    required this.id,
+    required this.genreId,
+    required this.name,
+    this.description,
+    required this.sortOrder,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -1249,8 +1502,10 @@ class LocalSubcategory extends DataClass
     );
   }
 
-  factory LocalSubcategory.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory LocalSubcategory.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return LocalSubcategory(
       id: serializer.fromJson<String>(json['id']),
@@ -1272,19 +1527,19 @@ class LocalSubcategory extends DataClass
     };
   }
 
-  LocalSubcategory copyWith(
-          {String? id,
-          String? genreId,
-          String? name,
-          Value<String?> description = const Value.absent(),
-          int? sortOrder}) =>
-      LocalSubcategory(
-        id: id ?? this.id,
-        genreId: genreId ?? this.genreId,
-        name: name ?? this.name,
-        description: description.present ? description.value : this.description,
-        sortOrder: sortOrder ?? this.sortOrder,
-      );
+  LocalSubcategory copyWith({
+    String? id,
+    String? genreId,
+    String? name,
+    Value<String?> description = const Value.absent(),
+    int? sortOrder,
+  }) => LocalSubcategory(
+    id: id ?? this.id,
+    genreId: genreId ?? this.genreId,
+    name: name ?? this.name,
+    description: description.present ? description.value : this.description,
+    sortOrder: sortOrder ?? this.sortOrder,
+  );
   @override
   String toString() {
     return (StringBuffer('LocalSubcategory(')
@@ -1332,9 +1587,9 @@ class LocalSubcategoriesCompanion extends UpdateCompanion<LocalSubcategory> {
     this.description = const Value.absent(),
     this.sortOrder = const Value.absent(),
     this.rowid = const Value.absent(),
-  })  : id = Value(id),
-        genreId = Value(genreId),
-        name = Value(name);
+  }) : id = Value(id),
+       genreId = Value(genreId),
+       name = Value(name);
   static Insertable<LocalSubcategory> custom({
     Expression<String>? id,
     Expression<String>? genreId,
@@ -1353,13 +1608,14 @@ class LocalSubcategoriesCompanion extends UpdateCompanion<LocalSubcategory> {
     });
   }
 
-  LocalSubcategoriesCompanion copyWith(
-      {Value<String>? id,
-      Value<String>? genreId,
-      Value<String>? name,
-      Value<String?>? description,
-      Value<int>? sortOrder,
-      Value<int>? rowid}) {
+  LocalSubcategoriesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? genreId,
+    Value<String>? name,
+    Value<String?>? description,
+    Value<int>? sortOrder,
+    Value<int>? rowid,
+  }) {
     return LocalSubcategoriesCompanion(
       id: id ?? this.id,
       genreId: genreId ?? this.genreId,
@@ -1418,6 +1674,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
-  List<DatabaseSchemaEntity> get allSchemaEntities =>
-      [localRecordings, localGenres, localSubcategories];
+  List<DatabaseSchemaEntity> get allSchemaEntities => [
+    localRecordings,
+    localGenres,
+    localSubcategories,
+  ];
 }

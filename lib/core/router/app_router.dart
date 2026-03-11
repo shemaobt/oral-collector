@@ -1,9 +1,11 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/admin/presentation/admin_dashboard_screen.dart';
-import '../../features/auth/data/providers/auth_provider.dart';
+import '../auth/auth_notifier.dart';
+import '../auth/auth_state.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/signup_screen.dart';
 import '../../features/genre/presentation/genre_detail_screen.dart';
@@ -18,10 +20,9 @@ import '../../features/recording/presentation/trim_editor_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../shared/widgets/app_shell.dart';
 
-// Bridge between Riverpod auth state and GoRouter's refreshListenable.
 class _RouterNotifier extends ChangeNotifier {
   _RouterNotifier(this._ref) {
-    _ref.listen<AuthState>(authNotifierProvider, (_, __) {
+    _ref.listen<AuthState>(authNotifierProvider, (_, _) {
       notifyListeners();
     });
   }
@@ -51,25 +52,18 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
-      // Auth routes (outside shell — no bottom nav)
-      GoRoute(
-        path: '/login',
-        builder: (context, state) => const LoginScreen(),
-      ),
+      GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(
         path: '/signup',
         builder: (context, state) => const SignupScreen(),
       ),
 
-      // Genre detail (outside shell — uses its own back navigation)
       GoRoute(
         path: '/genre/:id',
-        builder: (context, state) => GenreDetailScreen(
-          genreId: state.pathParameters['id'] ?? '',
-        ),
+        builder: (context, state) =>
+            GenreDetailScreen(genreId: state.pathParameters['id'] ?? ''),
       ),
 
-      // Recording detail (outside shell — uses its own back navigation)
       GoRoute(
         path: '/recording/:id',
         builder: (context, state) => RecordingDetailScreen(
@@ -77,35 +71,29 @@ final routerProvider = Provider<GoRouter>((ref) {
         ),
       ),
 
-      // Trim editor (outside shell — uses its own back navigation)
       GoRoute(
         path: '/recording/:id/trim',
-        builder: (context, state) => TrimEditorScreen(
-          recordingId: state.pathParameters['id'] ?? '',
-        ),
+        builder: (context, state) =>
+            TrimEditorScreen(recordingId: state.pathParameters['id'] ?? ''),
       ),
 
-      // File import (outside shell — uses its own back navigation)
       GoRoute(
         path: '/import-file',
         builder: (context, state) => const FileImportScreen(),
       ),
 
-      // Project settings (outside shell — uses its own back navigation)
       GoRoute(
         path: '/project/:id/settings',
-        builder: (context, state) => ProjectSettingsScreen(
-          projectId: state.pathParameters['id'] ?? '',
-        ),
+        builder: (context, state) =>
+            ProjectSettingsScreen(projectId: state.pathParameters['id'] ?? ''),
       ),
 
-      // Admin dashboard (outside shell — admin-only, desktop-optimized)
       GoRoute(
         path: '/admin',
+        redirect: (context, state) => kIsWeb ? null : '/profile',
         builder: (context, state) => const AdminDashboardScreen(),
       ),
 
-      // Main app routes wrapped in AppShell
       ShellRoute(
         builder: (context, state, child) => AppShell(child: child),
         routes: [
