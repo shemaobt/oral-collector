@@ -1,22 +1,29 @@
+import 'dart:io';
+
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:http/http.dart' as http;
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../../../core/database/app_database.dart';
 import '../../../core/errors/api_exception.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../shared/widgets/audio_player_widget.dart';
-import '../../../shared/widgets/upload_status_badge.dart';
-import '../../auth/data/providers/auth_provider.dart';
+import '../../../core/auth/auth_notifier.dart';
 import '../../auth/data/providers/role_provider.dart';
-import '../../genre/data/providers/genre_provider.dart';
-import '../../project/data/providers/stats_provider.dart';
-import '../../sync/data/providers/sync_provider.dart';
-import '../data/providers/local_recording_repository_provider.dart';
-import '../data/providers/recording_api_repository_provider.dart';
+import '../../genre/presentation/notifiers/genre_notifier.dart';
+import '../../project/presentation/notifiers/stats_notifier.dart';
+import '../../sync/presentation/notifiers/sync_notifier.dart';
+import '../../../shared/utils/format.dart';
+import '../data/providers.dart';
 import 'widgets/move_category_dialog.dart';
+import 'widgets/recording_hero_player.dart';
+import 'widgets/recording_info_grid.dart';
+import 'widgets/recording_quick_actions.dart';
+import 'widgets/recording_status_section.dart';
+import 'widgets/recording_title_section.dart';
 
 class RecordingDetailScreen extends ConsumerStatefulWidget {
   const RecordingDetailScreen({super.key, required this.recordingId});
@@ -34,21 +41,16 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
   bool _isEditingTitle = false;
   late TextEditingController _titleController;
 
-  /// Whether the current user can edit/delete this recording.
-  /// Local recordings are always owned by the current user (owner can edit).
-  /// Project managers and platform admins can also edit/delete any recording.
   bool get _canEditRecording {
     final user = ref.read(authNotifierProvider).currentUser;
     if (user == null) return false;
     final recording = _recording;
     if (recording == null) return false;
-    // Platform admins and project managers can always edit
     if (ref
         .read(roleNotifierProvider.notifier)
         .canManageProject(recording.projectId)) {
       return true;
     }
-    // Local recordings (no serverId or created locally) belong to current user
     return true;
   }
 
@@ -68,15 +70,42 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
   Future<void> _loadRecording() async {
     setState(() => _isLoading = true);
     try {
-      final repo = ref.read(localRecordingRepositoryProvider);
-      final recording = await repo.getRecordingById(widget.recordingId);
+      final localRepo = ref.read(localRecordingRepositoryProvider);
+
+      var recording = await localRepo.getRecordingById(widget.recordingId);
+      recording ??= await localRepo.getRecordingByServerId(widget.recordingId);
+
+      if (recording == null) {
+        try {
+          final apiRepo = ref.read(recordingApiRepositoryProvider);
+          final server = await apiRepo.getRecording(widget.recordingId);
+          recording = LocalRecording(
+            id: server.id,
+            projectId: server.projectId,
+            genreId: server.genreId,
+            subcategoryId: server.subcategoryId,
+            title: server.title,
+            durationSeconds: server.durationSeconds,
+            fileSizeBytes: server.fileSizeBytes,
+            format: server.format,
+            localFilePath: '',
+            uploadStatus: server.uploadStatus,
+            serverId: server.id,
+            gcsUrl: server.gcsUrl,
+            cleaningStatus: server.cleaningStatus,
+            recordedAt: server.recordedAt,
+            createdAt: server.recordedAt,
+            retryCount: 0,
+          );
+        } catch (_) {}
+      }
+
       if (mounted) {
         setState(() {
           _recording = recording;
           _titleController.text = recording?.title ?? '';
           _isLoading = false;
         });
-        // Fetch role for the recording's project (for edit/delete guards)
         if (recording != null) {
           await ref
               .read(roleNotifierProvider.notifier)
@@ -109,10 +138,10 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     final recording = _recording;
     if (recording == null) return;
 
-    final newStatus =
-        recording.cleaningStatus == 'none' ? 'needs_cleaning' : 'none';
+    final newStatus = recording.cleaningStatus == 'none'
+        ? 'needs_cleaning'
+        : 'none';
 
-    // Update on server if uploaded
     if (recording.uploadStatus == 'uploaded' && recording.serverId != null) {
       try {
         final apiRepo = ref.read(recordingApiRepositoryProvider);
@@ -122,7 +151,9 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
         );
         if (!success && mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed to update cleaning status on server')),
+            const SnackBar(
+              content: Text('Failed to update cleaning status on server'),
+            ),
           );
           return;
         }
@@ -130,7 +161,9 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('You do not have permission to update this recording'),
+              content: Text(
+                'You do not have permission to update this recording',
+              ),
               backgroundColor: Colors.orange,
             ),
           );
@@ -139,14 +172,15 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
       } catch (_) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed to update cleaning status on server')),
+            const SnackBar(
+              content: Text('Failed to update cleaning status on server'),
+            ),
           );
         }
         return;
       }
     }
 
-    // Update local DB
     final repo = ref.read(localRecordingRepositoryProvider);
     await repo.updateRecording(
       widget.recordingId,
@@ -159,6 +193,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     final recording = _recording;
     if (recording == null) return;
 
+    final colors = AppColors.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -175,7 +210,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            style: TextButton.styleFrom(foregroundColor: colors.error),
             child: const Text('Delete'),
           ),
         ],
@@ -184,7 +219,6 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
 
     if (confirmed != true) return;
 
-    // Delete from server if uploaded
     if (recording.uploadStatus == 'uploaded' && recording.serverId != null) {
       try {
         final apiRepo = ref.read(recordingApiRepositoryProvider);
@@ -193,7 +227,9 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('You do not have permission to delete this recording'),
+              content: Text(
+                'You do not have permission to delete this recording',
+              ),
               backgroundColor: Colors.orange,
             ),
           );
@@ -210,15 +246,115 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
       }
     }
 
-    // Delete from local DB
     final repo = ref.read(localRecordingRepositoryProvider);
     await repo.deleteRecording(widget.recordingId);
 
-    // Refresh genre stats
-    ref.read(statsNotifierProvider.notifier).fetchGenreStats(recording.projectId);
+    ref
+        .read(statsNotifierProvider.notifier)
+        .fetchGenreStats(recording.projectId);
 
     if (mounted) {
       context.pop();
+    }
+  }
+
+  Future<void> _handleTrim() async {
+    final recording = _recording;
+    if (recording == null) return;
+
+    bool hasLocalFile =
+        recording.localFilePath.isNotEmpty &&
+        await File(recording.localFilePath).exists();
+
+    if (!mounted) return;
+
+    if (!hasLocalFile && recording.gcsUrl != null) {
+      final shouldDownload = await showDialog<bool>(
+        context: context,
+        builder: (context) {
+          final colors = AppColors.of(context);
+          return AlertDialog(
+            title: const Text('Download Audio'),
+            content: const Text(
+              'The audio file is not stored on this device. '
+              'Would you like to download it to trim?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Cancel'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                style: FilledButton.styleFrom(backgroundColor: colors.accent),
+                child: const Text('Download'),
+              ),
+            ],
+          );
+        },
+      );
+
+      if (shouldDownload != true || !mounted) return;
+
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const PopScope(
+          canPop: false,
+          child: Center(child: CircularProgressIndicator()),
+        ),
+      );
+
+      try {
+        final response = await http.get(Uri.parse(recording.gcsUrl!));
+        if (response.statusCode != 200) {
+          throw Exception('Download failed (${response.statusCode})');
+        }
+
+        final docsDir = await getApplicationDocumentsDirectory();
+        final ext = recording.format.isNotEmpty ? recording.format : 'm4a';
+        final fileName =
+            'recording_${DateTime.now().millisecondsSinceEpoch}.$ext';
+        final filePath = '${docsDir.path}/$fileName';
+        await File(filePath).writeAsBytes(response.bodyBytes);
+
+        final repo = ref.read(localRecordingRepositoryProvider);
+        await repo.updateRecording(
+          recording.id,
+          LocalRecordingsCompanion(localFilePath: Value(filePath)),
+        );
+
+        await _loadRecording();
+        hasLocalFile = true;
+      } catch (e) {
+        if (mounted) {
+          Navigator.of(context).pop();
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Failed to download: $e')));
+        }
+        return;
+      }
+
+      if (mounted) Navigator.of(context).pop();
+    }
+
+    if (!hasLocalFile) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Audio file not available')),
+        );
+      }
+      return;
+    }
+
+    if (!mounted) return;
+    final result = await context.push<bool>(
+      '/recording/${widget.recordingId}/trim',
+    );
+    if (result == true) {
+      if (mounted) context.pop(true);
     }
   }
 
@@ -236,7 +372,6 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
 
     if (result == null) return;
 
-    // Update on server if uploaded
     if (recording.uploadStatus == 'uploaded' && recording.serverId != null) {
       try {
         final apiRepo = ref.read(recordingApiRepositoryProvider);
@@ -255,7 +390,9 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('You do not have permission to move this recording'),
+              content: Text(
+                'You do not have permission to move this recording',
+              ),
               backgroundColor: Colors.orange,
             ),
           );
@@ -271,7 +408,6 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
       }
     }
 
-    // Update local DB
     final repo = ref.read(localRecordingRepositoryProvider);
     await repo.updateRecording(
       widget.recordingId,
@@ -281,8 +417,9 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
       ),
     );
 
-    // Refresh genre stats (covers both old and new categories)
-    ref.read(statsNotifierProvider.notifier).fetchGenreStats(recording.projectId);
+    ref
+        .read(statsNotifierProvider.notifier)
+        .fetchGenreStats(recording.projectId);
 
     await _loadRecording();
 
@@ -293,43 +430,14 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     }
   }
 
-  String _formatDuration(double totalSeconds) {
-    final seconds = totalSeconds.round();
-    final h = seconds ~/ 3600;
-    final m = (seconds % 3600) ~/ 60;
-    final s = seconds % 60;
-    if (h > 0) {
-      return '${h}h ${m}m ${s}s';
-    }
-    return '${m}m ${s}s';
-  }
-
-  String _formatFileSize(int bytes) {
-    if (bytes < 1024) return '$bytes B';
-    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
-    return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
-  }
-
-  String _formatDate(DateTime date) {
-    final months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-    ];
-    return '${months[date.month - 1]} ${date.day}, ${date.year} '
-        'at ${date.hour.toString().padLeft(2, '0')}:'
-        '${date.minute.toString().padLeft(2, '0')}';
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colors = AppColors.of(context);
 
     if (_isLoading) {
       return Scaffold(
-        appBar: AppBar(
-          leading: const BackButton(),
-          title: const Text('Recording'),
-        ),
+        appBar: AppBar(leading: const BackButton()),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
@@ -337,10 +445,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     final recording = _recording;
     if (recording == null) {
       return Scaffold(
-        appBar: AppBar(
-          leading: const BackButton(),
-          title: const Text('Recording'),
-        ),
+        appBar: AppBar(leading: const BackButton()),
         body: const Center(child: Text('Recording not found')),
       );
     }
@@ -350,402 +455,192 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     final subcategoryName = recording.subcategoryId != null
         ? genreNotifier.getSubcategoryName(recording.subcategoryId!)
         : null;
-    final breadcrumb = genreName != null
-        ? subcategoryName != null
-            ? '$genreName > $subcategoryName'
-            : genreName
-        : 'Unknown genre';
 
     return Scaffold(
-      appBar: AppBar(
-        leading: const BackButton(),
-        title: Text(recording.title ?? 'Untitled'),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Audio player (full size)
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: AudioPlayerWidget(
-                  filePath: recording.localFilePath,
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 260,
+            pinned: true,
+            leading: Padding(
+              padding: const EdgeInsets.all(6),
+              child: Material(
+                color: colors.card.withValues(alpha: 0.6),
+                shape: const CircleBorder(),
+                clipBehavior: Clip.antiAlias,
+                child: BackButton(color: colors.foreground),
+              ),
+            ),
+            actions: [
+              if (_canEditRecording)
+                Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: Material(
+                    color: colors.card.withValues(alpha: 0.6),
+                    shape: const CircleBorder(),
+                    clipBehavior: Clip.antiAlias,
+                    child: PopupMenuButton<String>(
+                      icon: Icon(
+                        LucideIcons.moreVertical,
+                        color: colors.foreground,
+                      ),
+                      onSelected: (value) {
+                        switch (value) {
+                          case 'trim':
+                            _handleTrim();
+                            break;
+                          case 'move':
+                            _moveCategory();
+                            break;
+                          case 'delete':
+                            _deleteRecording();
+                            break;
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        const PopupMenuItem(
+                          value: 'trim',
+                          child: Row(
+                            children: [
+                              Icon(LucideIcons.scissors, size: 18),
+                              SizedBox(width: 12),
+                              Text('Split Recording'),
+                            ],
+                          ),
+                        ),
+                        const PopupMenuItem(
+                          value: 'move',
+                          child: Row(
+                            children: [
+                              Icon(LucideIcons.folderInput, size: 18),
+                              SizedBox(width: 12),
+                              Text('Move Category'),
+                            ],
+                          ),
+                        ),
+                        PopupMenuItem(
+                          value: 'delete',
+                          child: Row(
+                            children: [
+                              Icon(
+                                LucideIcons.trash2,
+                                size: 18,
+                                color: colors.error,
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                'Delete',
+                                style: TextStyle(color: colors.error),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
+            ],
+            flexibleSpace: FlexibleSpaceBar(
+              background: RecordingHeroPlayer(
+                recording: recording,
+                colors: colors,
+                theme: theme,
               ),
             ),
-            const SizedBox(height: 16),
-
-            // Metadata card
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Title (editable inline)
-                    _buildTitleRow(theme, recording),
-                    const Divider(height: 24),
-
-                    // Genre > Subcategory
-                    _buildMetadataRow(
-                      theme,
-                      icon: LucideIcons.layers,
-                      label: 'Category',
-                      value: breadcrumb,
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Duration
-                    _buildMetadataRow(
-                      theme,
-                      icon: LucideIcons.clock,
-                      label: 'Duration',
-                      value: _formatDuration(recording.durationSeconds),
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Recorded date
-                    _buildMetadataRow(
-                      theme,
-                      icon: LucideIcons.calendar,
-                      label: 'Recorded',
-                      value: _formatDate(recording.recordedAt),
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Upload status
-                    _buildUploadStatusRow(theme, recording),
-                    const SizedBox(height: 12),
-
-                    // Cleaning status
-                    _buildCleaningStatusRow(theme, recording),
-                    const SizedBox(height: 12),
-
-                    // File size
-                    _buildMetadataRow(
-                      theme,
-                      icon: LucideIcons.hardDrive,
-                      label: 'File Size',
-                      value: _formatFileSize(recording.fileSizeBytes),
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Format
-                    _buildMetadataRow(
-                      theme,
-                      icon: LucideIcons.fileAudio,
-                      label: 'Format',
-                      value: recording.format.toUpperCase(),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Action buttons
-            _buildActionButtons(theme),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTitleRow(ThemeData theme, LocalRecording recording) {
-    if (_isEditingTitle) {
-      return Row(
-        children: [
-          Expanded(
-            child: TextField(
-              controller: _titleController,
-              autofocus: true,
-              decoration: const InputDecoration(
-                labelText: 'Title',
-                isDense: true,
-              ),
-              onSubmitted: _saveTitle,
-            ),
           ),
-          const SizedBox(width: 8),
-          IconButton(
-            icon: Icon(LucideIcons.check, color: AppColors.success),
-            onPressed: () => _saveTitle(_titleController.text),
-          ),
-          IconButton(
-            icon: Icon(LucideIcons.x, color: AppColors.error),
-            onPressed: () => setState(() {
-              _isEditingTitle = false;
-              _titleController.text = recording.title ?? '';
-            }),
-          ),
-        ],
-      );
-    }
 
-    return InkWell(
-      onTap: () => setState(() => _isEditingTitle = true),
-      borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        child: Row(
-          children: [
-            Icon(LucideIcons.type, size: 18, color: AppColors.border),
-            const SizedBox(width: 12),
-            Expanded(
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Title',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: AppColors.foreground.withValues(alpha: 0.5),
-                    ),
+                  RecordingTitleSection(
+                    theme: theme,
+                    colors: colors,
+                    recording: recording,
+                    isEditingTitle: _isEditingTitle,
+                    titleController: _titleController,
+                    onSave: _saveTitle,
+                    onCancel: () => setState(() {
+                      _isEditingTitle = false;
+                      _titleController.text = recording.title ?? '';
+                    }),
+                    onStartEdit: () => setState(() => _isEditingTitle = true),
                   ),
-                  Text(
-                    recording.title ?? 'Untitled',
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                  const SizedBox(height: 6),
+
+                  Row(
+                    children: [
+                      Icon(LucideIcons.layers, size: 14, color: colors.accent),
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: Text(
+                          genreName != null
+                              ? subcategoryName != null
+                                    ? '$genreName > $subcategoryName'
+                                    : genreName
+                              : 'Unknown genre',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: colors.accent,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
+                  const SizedBox(height: 24),
+
+                  RecordingInfoGrid(
+                    recording: recording,
+                    colors: colors,
+                    theme: theme,
+                    formattedDuration: formatDurationLong(
+                      recording.durationSeconds,
+                    ),
+                    formattedDate: formatDateFull(recording.recordedAt),
+                    formattedSize: formatFileSize(recording.fileSizeBytes),
+                  ),
+                  const SizedBox(height: 24),
+
+                  RecordingStatusSection(
+                    recording: recording,
+                    colors: colors,
+                    theme: theme,
+                    onToggleCleaning: _toggleCleaningStatus,
+                    onRetryUpload:
+                        recording.uploadStatus == 'failed' ||
+                            recording.uploadStatus == 'uploading' ||
+                            (recording.uploadStatus == 'local' &&
+                                recording.retryCount > 0)
+                        ? () async {
+                            await ref
+                                .read(syncNotifierProvider.notifier)
+                                .resetAndRetry(recording.id);
+                            await _loadRecording();
+                          }
+                        : null,
+                  ),
+                  const SizedBox(height: 24),
+
+                  RecordingQuickActions(
+                    recording: recording,
+                    colors: colors,
+                    theme: theme,
+                    canEdit: _canEditRecording,
+                    onTrim: _handleTrim,
+                    onToggleCleaning: _toggleCleaningStatus,
+                    onMoveCategory: _moveCategory,
+                    onDelete: _deleteRecording,
+                  ),
+
+                  const SizedBox(height: 80),
                 ],
               ),
             ),
-            Icon(
-              LucideIcons.pencil,
-              size: 16,
-              color: AppColors.foreground.withValues(alpha: 0.4),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
-    );
-  }
-
-  Widget _buildMetadataRow(
-    ThemeData theme, {
-    required IconData icon,
-    required String label,
-    required String value,
-  }) {
-    return Row(
-      children: [
-        Icon(icon, size: 18, color: AppColors.border),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: AppColors.foreground.withValues(alpha: 0.5),
-                ),
-              ),
-              Text(value, style: theme.textTheme.bodyMedium),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildUploadStatusRow(ThemeData theme, LocalRecording recording) {
-    return Row(
-      children: [
-        Icon(LucideIcons.cloud, size: 18, color: AppColors.border),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Upload Status',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: AppColors.foreground.withValues(alpha: 0.5),
-                ),
-              ),
-              const SizedBox(height: 2),
-              UploadStatusBadge(
-                status: recording.uploadStatus,
-                onRetry: recording.uploadStatus == 'failed'
-                    ? () => ref
-                        .read(syncNotifierProvider.notifier)
-                        .syncOne(recording.id)
-                    : null,
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCleaningStatusRow(ThemeData theme, LocalRecording recording) {
-    final bool needsCleaning = recording.cleaningStatus != 'none' &&
-        recording.cleaningStatus != 'cleaned';
-    final String label;
-    final Color color;
-    final IconData icon;
-
-    switch (recording.cleaningStatus) {
-      case 'cleaned':
-        label = 'Cleaned';
-        color = AppColors.success;
-        icon = LucideIcons.sparkles;
-        break;
-      case 'cleaning':
-        label = 'Cleaning...';
-        color = AppColors.info;
-        icon = LucideIcons.loader;
-        break;
-      case 'needs_cleaning':
-        label = 'Needs Cleaning';
-        color = AppColors.primary;
-        icon = LucideIcons.alertCircle;
-        break;
-      case 'failed':
-        label = 'Cleaning Failed';
-        color = AppColors.error;
-        icon = LucideIcons.alertTriangle;
-        break;
-      default: // 'none'
-        label = 'Not flagged';
-        color = AppColors.border;
-        icon = LucideIcons.minus;
-    }
-
-    return Row(
-      children: [
-        Icon(LucideIcons.sparkles, size: 18, color: AppColors.border),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Cleaning Status',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: AppColors.foreground.withValues(alpha: 0.5),
-                ),
-              ),
-              const SizedBox(height: 2),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(icon, size: 14, color: color),
-                    const SizedBox(width: 4),
-                    Text(
-                      label,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: color,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildActionButtons(ThemeData theme) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(
-          'Actions',
-          style: theme.textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: AppColors.foreground.withValues(alpha: 0.7),
-          ),
-        ),
-        const SizedBox(height: 12),
-
-        // Trim recording
-        OutlinedButton.icon(
-          onPressed: () async {
-            final result = await context.push<bool>(
-              '/recording/${widget.recordingId}/trim',
-            );
-            if (result == true) {
-              await _loadRecording();
-            }
-          },
-          icon: const Icon(LucideIcons.scissors, size: 18),
-          label: const Text('Trim Recording'),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.primary,
-            side: BorderSide(color: AppColors.primary.withValues(alpha: 0.3)),
-            padding: const EdgeInsets.symmetric(vertical: 14),
-          ),
-        ),
-        const SizedBox(height: 8),
-
-        // Mark/Clear Needs Cleaning toggle
-        OutlinedButton.icon(
-          onPressed: _toggleCleaningStatus,
-          icon: Icon(
-            _recording?.cleaningStatus == 'none' ||
-                    _recording?.cleaningStatus == 'cleaned'
-                ? LucideIcons.alertCircle
-                : LucideIcons.checkCircle,
-            size: 18,
-          ),
-          label: Text(
-            _recording?.cleaningStatus == 'none' ||
-                    _recording?.cleaningStatus == 'cleaned'
-                ? 'Mark as Needs Cleaning'
-                : 'Clear Cleaning Flag',
-          ),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.primary,
-            side: BorderSide(color: AppColors.primary.withValues(alpha: 0.3)),
-            padding: const EdgeInsets.symmetric(vertical: 14),
-          ),
-        ),
-        const SizedBox(height: 8),
-
-        // Move Category button (owner-only)
-        if (_canEditRecording)
-          OutlinedButton.icon(
-            onPressed: _moveCategory,
-            icon: const Icon(LucideIcons.folderInput, size: 18),
-            label: const Text('Move Category'),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.secondary,
-              side: BorderSide(
-                  color: AppColors.secondary.withValues(alpha: 0.3)),
-              padding: const EdgeInsets.symmetric(vertical: 14),
-            ),
-          ),
-        if (_canEditRecording) const SizedBox(height: 8),
-
-        // Delete button (owner-only, red)
-        if (_canEditRecording)
-          OutlinedButton.icon(
-            onPressed: _deleteRecording,
-            icon: const Icon(LucideIcons.trash2, size: 18),
-            label: const Text('Delete Recording'),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.error,
-              side: BorderSide(color: AppColors.error.withValues(alpha: 0.3)),
-              padding: const EdgeInsets.symmetric(vertical: 14),
-            ),
-          ),
-      ],
     );
   }
 }

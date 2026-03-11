@@ -7,114 +7,144 @@ class LocalRecordingRepository {
 
   LocalRecordingRepository(this._db);
 
-  /// Insert a new recording into the local database.
   Future<void> insertRecording(LocalRecordingsCompanion data) async {
     await _db.into(_db.localRecordings).insert(data);
   }
 
-  /// Get all recordings for a given project, ordered by recordedAt descending.
   Future<List<LocalRecording>> getAllRecordings(String projectId) async {
     return (_db.select(_db.localRecordings)
           ..where((t) => t.projectId.equals(projectId))
-          ..orderBy([
-            (t) => OrderingTerm.desc(t.recordedAt),
-          ]))
+          ..orderBy([(t) => OrderingTerm.desc(t.recordedAt)]))
         .get();
   }
 
-  /// Get a single recording by its ID, or null if not found.
   Future<LocalRecording?> getRecordingById(String id) async {
-    return (_db.select(_db.localRecordings)
-          ..where((t) => t.id.equals(id)))
-        .getSingleOrNull();
+    return (_db.select(
+      _db.localRecordings,
+    )..where((t) => t.id.equals(id))).getSingleOrNull();
   }
 
-  /// Update a recording by ID with the given companion data.
-  Future<bool> updateRecording(
-      String id, LocalRecordingsCompanion data) async {
-    final rows = await (_db.update(_db.localRecordings)
-          ..where((t) => t.id.equals(id)))
-        .write(data);
+  Future<LocalRecording?> getRecordingByServerId(String serverId) async {
+    return (_db.select(
+      _db.localRecordings,
+    )..where((t) => t.serverId.equals(serverId))).getSingleOrNull();
+  }
+
+  Future<bool> updateRecording(String id, LocalRecordingsCompanion data) async {
+    final rows = await (_db.update(
+      _db.localRecordings,
+    )..where((t) => t.id.equals(id))).write(data);
     return rows > 0;
   }
 
-  /// Delete a recording by ID.
   Future<bool> deleteRecording(String id) async {
-    final rows = await (_db.delete(_db.localRecordings)
-          ..where((t) => t.id.equals(id)))
-        .go();
+    final rows = await (_db.delete(
+      _db.localRecordings,
+    )..where((t) => t.id.equals(id))).go();
     return rows > 0;
   }
 
-  /// Get all recordings with upload status 'local' or 'failed' (pending upload).
   Future<List<LocalRecording>> getPendingUploads() async {
     return (_db.select(_db.localRecordings)
-          ..where((t) =>
-              t.uploadStatus.equals('local') |
-              t.uploadStatus.equals('failed'))
-          ..orderBy([
-            (t) => OrderingTerm.asc(t.recordedAt),
-          ]))
+          ..where(
+            (t) =>
+                t.uploadStatus.equals('local') |
+                t.uploadStatus.equals('failed') |
+                t.uploadStatus.equals('uploading'),
+          )
+          ..orderBy([(t) => OrderingTerm.asc(t.recordedAt)]))
         .get();
   }
 
-  /// Mark a recording as currently uploading.
   Future<bool> markAsUploading(String id) async {
-    final rows = await (_db.update(_db.localRecordings)
-          ..where((t) => t.id.equals(id)))
-        .write(const LocalRecordingsCompanion(
-      uploadStatus: Value('uploading'),
-    ));
+    final rows =
+        await (_db.update(
+          _db.localRecordings,
+        )..where((t) => t.id.equals(id))).write(
+          const LocalRecordingsCompanion(uploadStatus: Value('uploading')),
+        );
     return rows > 0;
   }
 
-  /// Mark a recording as successfully uploaded with server ID and GCS URL.
-  Future<bool> markAsUploaded(
-      String id, String serverId, String gcsUrl) async {
-    final rows = await (_db.update(_db.localRecordings)
-          ..where((t) => t.id.equals(id)))
-        .write(LocalRecordingsCompanion(
-      uploadStatus: const Value('uploaded'),
-      serverId: Value(serverId),
-      gcsUrl: Value(gcsUrl),
-    ));
+  Future<bool> markAsUploaded(String id, String serverId, String gcsUrl) async {
+    final rows =
+        await (_db.update(
+          _db.localRecordings,
+        )..where((t) => t.id.equals(id))).write(
+          LocalRecordingsCompanion(
+            uploadStatus: const Value('uploaded'),
+            serverId: Value(serverId),
+            gcsUrl: Value(gcsUrl),
+          ),
+        );
     return rows > 0;
   }
 
-  /// Get all local recordings regardless of project or status.
   Future<List<LocalRecording>> getAllLocalRecordings() async {
-    return (_db.select(_db.localRecordings)
-          ..orderBy([
-            (t) => OrderingTerm.desc(t.recordedAt),
-          ]))
-        .get();
+    return (_db.select(
+      _db.localRecordings,
+    )..orderBy([(t) => OrderingTerm.desc(t.recordedAt)])).get();
   }
 
-  /// Delete all local recordings from the database.
+  Future<int> countRecordings(String projectId) async {
+    final count = _db.localRecordings.id.count();
+    final query = _db.selectOnly(_db.localRecordings)
+      ..addColumns([count])
+      ..where(_db.localRecordings.projectId.equals(projectId));
+    final result = await query.getSingle();
+    return result.read(count) ?? 0;
+  }
+
+  Future<double> totalDuration(String projectId) async {
+    final sum = _db.localRecordings.durationSeconds.sum();
+    final query = _db.selectOnly(_db.localRecordings)
+      ..addColumns([sum])
+      ..where(_db.localRecordings.projectId.equals(projectId));
+    final result = await query.getSingle();
+    return result.read(sum) ?? 0.0;
+  }
+
   Future<int> deleteAllRecordings() async {
     return _db.delete(_db.localRecordings).go();
   }
 
-  /// Mark a recording upload as failed, optionally incrementing the retry count.
+  Future<bool> resetRetryCount(String id) async {
+    final rows =
+        await (_db.update(
+          _db.localRecordings,
+        )..where((t) => t.id.equals(id))).write(
+          const LocalRecordingsCompanion(
+            uploadStatus: Value('local'),
+            retryCount: Value(0),
+            lastRetryAt: Value(null),
+          ),
+        );
+    return rows > 0;
+  }
+
   Future<bool> markAsFailed(String id, {bool incrementRetry = true}) async {
     if (incrementRetry) {
       final recording = await getRecordingById(id);
       if (recording == null) return false;
 
-      final rows = await (_db.update(_db.localRecordings)
-            ..where((t) => t.id.equals(id)))
-          .write(LocalRecordingsCompanion(
-        uploadStatus: const Value('failed'),
-        retryCount: Value(recording.retryCount + 1),
-        lastRetryAt: Value(DateTime.now()),
-      ));
+      final rows =
+          await (_db.update(
+            _db.localRecordings,
+          )..where((t) => t.id.equals(id))).write(
+            LocalRecordingsCompanion(
+              uploadStatus: const Value('failed'),
+              retryCount: Value(recording.retryCount + 1),
+              lastRetryAt: Value(DateTime.now()),
+            ),
+          );
       return rows > 0;
     } else {
-      final rows = await (_db.update(_db.localRecordings)
-            ..where((t) => t.id.equals(id)))
-          .write(const LocalRecordingsCompanion(
-        uploadStatus: Value('failed'),
-      ));
+      final rows =
+          await (_db.update(
+            _db.localRecordings,
+          )..where((t) => t.id.equals(id))).write(
+            const LocalRecordingsCompanion(uploadStatus: Value('failed')),
+          );
       return rows > 0;
     }
   }

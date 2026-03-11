@@ -3,9 +3,10 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:drift/drift.dart' show Value;
-import 'package:ffmpeg_kit_flutter/ffmpeg_kit.dart';
-import 'package:ffmpeg_kit_flutter/return_code.dart';
+import 'package:ffmpeg_kit_flutter_new_min/ffmpeg_kit.dart';
+import 'package:ffmpeg_kit_flutter_new_min/return_code.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:just_audio/just_audio.dart';
@@ -14,7 +15,9 @@ import 'package:path_provider/path_provider.dart';
 
 import '../../../core/database/app_database.dart';
 import '../../../core/theme/app_colors.dart';
-import '../data/providers/local_recording_repository_provider.dart';
+import '../data/providers.dart';
+import 'widgets/segment_card.dart';
+import 'widgets/trim_waveform_panel.dart';
 
 class TrimEditorScreen extends ConsumerStatefulWidget {
   const TrimEditorScreen({super.key, required this.recordingId});
@@ -29,18 +32,46 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
   LocalRecording? _recording;
   bool _isLoading = true;
   bool _isSaving = false;
+  String? _errorMessage;
 
   AudioPlayer? _player;
   Duration _totalDuration = Duration.zero;
 
-  // Trim range as fraction 0.0–1.0
-  double _startFraction = 0.0;
-  double _endFraction = 1.0;
+  List<double> _splitPoints = [];
 
-  // Generated waveform bars (deterministic from duration)
+  Set<int> _excludedSegments = {};
+
+  int? _playingSegment;
+
   List<double> _waveformBars = [];
 
-  StreamSubscription<Duration>? _previewSubscription;
+  StreamSubscription<Duration>? _previewSub;
+
+  List<double> get _sortedSplits => [..._splitPoints]..sort();
+
+  List<double> get _boundaries {
+    final s = _sortedSplits;
+    return [0.0, ...s, 1.0];
+  }
+
+  int get _segmentCount => _boundaries.length - 1;
+
+  int get _keptCount => _segmentCount - _excludedSegments.length;
+
+  Duration _segmentStart(int i) {
+    return Duration(
+      milliseconds: (_boundaries[i] * _totalDuration.inMilliseconds).round(),
+    );
+  }
+
+  Duration _segmentEnd(int i) {
+    return Duration(
+      milliseconds: (_boundaries[i + 1] * _totalDuration.inMilliseconds)
+          .round(),
+    );
+  }
+
+  Duration _segmentDuration(int i) => _segmentEnd(i) - _segmentStart(i);
 
   @override
   void initState() {
@@ -51,28 +82,74 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
 
   @override
   void dispose() {
-    _previewSubscription?.cancel();
+    _previewSub?.cancel();
     _player?.dispose();
     super.dispose();
   }
 
   Future<void> _loadRecording() async {
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
     try {
-      final repo = ref.read(localRecordingRepositoryProvider);
-      final recording = await repo.getRecordingById(widget.recordingId);
+      final localRepo = ref.read(localRecordingRepositoryProvider);
+
+      var recording = await localRepo.getRecordingById(widget.recordingId);
+      recording ??= await localRepo.getRecordingByServerId(widget.recordingId);
+
+      if (recording == null) {
+        try {
+          final apiRepo = ref.read(recordingApiRepositoryProvider);
+          final server = await apiRepo.getRecording(widget.recordingId);
+          recording = LocalRecording(
+            id: server.id,
+            projectId: server.projectId,
+            genreId: server.genreId,
+            subcategoryId: server.subcategoryId,
+            title: server.title,
+            durationSeconds: server.durationSeconds,
+            fileSizeBytes: server.fileSizeBytes,
+            format: server.format,
+            localFilePath: '',
+            uploadStatus: server.uploadStatus,
+            serverId: server.id,
+            gcsUrl: server.gcsUrl,
+            cleaningStatus: server.cleaningStatus,
+            recordedAt: server.recordedAt,
+            createdAt: server.recordedAt,
+            retryCount: 0,
+          );
+        } catch (_) {}
+      }
+
       if (recording == null || !mounted) {
         if (mounted) setState(() => _isLoading = false);
+        return;
+      }
+
+      if (recording.localFilePath.isEmpty ||
+          !await File(recording.localFilePath).exists()) {
+        if (mounted) {
+          setState(() {
+            _recording = recording;
+            _isLoading = false;
+            _errorMessage =
+                'Local audio file not available. Download the recording first.';
+          });
+        }
         return;
       }
 
       await _player!.setFilePath(recording.localFilePath);
       final duration = _player!.duration ?? Duration.zero;
 
-      // Generate deterministic waveform bars based on file path hash
       final rng = Random(recording.localFilePath.hashCode);
-      final barCount = 60;
-      final bars = List.generate(barCount, (_) => 0.2 + rng.nextDouble() * 0.8);
+      const barCount = 70;
+      final bars = List.generate(
+        barCount,
+        (_) => 0.15 + rng.nextDouble() * 0.85,
+      );
 
       if (mounted) {
         setState(() {
@@ -87,122 +164,187 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
     }
   }
 
-  Duration get _startTime =>
-      Duration(milliseconds: (_startFraction * _totalDuration.inMilliseconds).round());
-
-  Duration get _endTime =>
-      Duration(milliseconds: (_endFraction * _totalDuration.inMilliseconds).round());
-
-  Duration get _newDuration => _endTime - _startTime;
-
-  String _formatDuration(Duration duration) {
-    final minutes = duration.inMinutes.remainder(60).toString().padLeft(2, '0');
-    final seconds = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
-    if (duration.inHours > 0) {
-      final hours = duration.inHours.toString();
-      return '$hours:$minutes:$seconds';
-    }
-    return '$minutes:$seconds';
-  }
-
-  String _formatDurationPrecise(Duration duration) {
-    final minutes = duration.inMinutes.remainder(60).toString().padLeft(2, '0');
-    final seconds = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
-    final millis = (duration.inMilliseconds.remainder(1000) ~/ 10)
-        .toString()
-        .padLeft(2, '0');
-    return '$minutes:$seconds.$millis';
-  }
-
-  Future<void> _previewSelectedRegion() async {
-    if (_player == null) return;
-    await _player!.seek(_startTime);
-    await _player!.play();
-
-    // Cancel previous subscription to avoid leaks
-    _previewSubscription?.cancel();
-    _previewSubscription = _player!.positionStream.listen((position) {
-      if (position >= _endTime) {
-        _player!.pause();
-      }
+  void _onSplitPointsChanged(List<double> pts) {
+    final newSegCount = pts.length + 1;
+    final pruned = _excludedSegments.where((i) => i < newSegCount).toSet();
+    setState(() {
+      _splitPoints = pts;
+      _excludedSegments = pruned;
     });
   }
 
-  Future<void> _stopPreview() async {
-    await _player?.pause();
+  void _toggleExclude(int index) {
+    HapticFeedback.lightImpact();
+    setState(() {
+      final updated = Set<int>.from(_excludedSegments);
+      if (updated.contains(index)) {
+        updated.remove(index);
+      } else {
+        if (updated.length >= _segmentCount - 1) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('At least one segment must be kept')),
+          );
+          return;
+        }
+        updated.add(index);
+      }
+      _excludedSegments = updated;
+    });
   }
 
-  Future<void> _saveTrimmedAudio() async {
+  Future<void> _previewSegment(int index) async {
+    if (_player == null) return;
+
+    final wasPlaying = _playingSegment == index && _player!.playing;
+
+    await _stopPreview();
+
+    if (wasPlaying) return;
+
+    final startTime = _segmentStart(index);
+    final endTime = _segmentEnd(index);
+
+    await _player!.seek(startTime);
+
+    setState(() => _playingSegment = index);
+
+    _previewSub = _player!.positionStream.listen((position) {
+      if (position < startTime - const Duration(milliseconds: 100)) return;
+      if (position >= endTime) {
+        _player!.pause();
+        if (mounted) setState(() => _playingSegment = null);
+      }
+    });
+
+    await _player!.play();
+  }
+
+  Future<void> _stopPreview() async {
+    _previewSub?.cancel();
+    _previewSub = null;
+    await _player?.pause();
+    if (mounted) setState(() => _playingSegment = null);
+  }
+
+  Future<void> _saveSplit() async {
     final recording = _recording;
-    if (recording == null) return;
+    if (recording == null || _splitPoints.isEmpty) return;
+    if (_keptCount == 0) return;
 
     setState(() => _isSaving = true);
 
     try {
-      // Stop any playback
+      await _stopPreview();
       await _player?.stop();
 
-      final startSeconds = _startTime.inMilliseconds / 1000.0;
-      final endSeconds = _endTime.inMilliseconds / 1000.0;
-
-      // Create temporary output file
       final dir = await getApplicationDocumentsDirectory();
-      final outputPath =
-          '${dir.path}/trimmed_${DateTime.now().millisecondsSinceEpoch}.m4a';
+      final repo = ref.read(localRecordingRepositoryProvider);
+      final now = DateTime.now();
+      final originalTitle = recording.title ?? 'Recording';
 
-      // FFmpeg command to trim audio
-      final command =
-          '-i "${recording.localFilePath}" -ss $startSeconds -to $endSeconds -c copy "$outputPath"';
+      final keptSegments = <int>[];
+      for (var i = 0; i < _segmentCount; i++) {
+        if (!_excludedSegments.contains(i)) keptSegments.add(i);
+      }
+      final keptTotal = keptSegments.length;
 
-      final session = await FFmpegKit.execute(command);
-      final returnCode = await session.getReturnCode();
+      for (var k = 0; k < keptTotal; k++) {
+        final i = keptSegments[k];
+        final startSec = _segmentStart(i).inMilliseconds / 1000.0;
+        final endSec = _segmentEnd(i).inMilliseconds / 1000.0;
+        final segDuration = endSec - startSec;
 
-      if (!ReturnCode.isSuccess(returnCode)) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed to trim audio')),
-          );
-          setState(() => _isSaving = false);
+        final outputPath =
+            '${dir.path}/split_${now.millisecondsSinceEpoch}_$k.m4a';
+
+        final command =
+            '-i "${recording.localFilePath}" -ss $startSec -to $endSec -c copy "$outputPath"';
+
+        final session = await FFmpegKit.execute(command);
+        final returnCode = await session.getReturnCode();
+
+        if (!ReturnCode.isSuccess(returnCode)) {
+          throw Exception('FFmpeg failed on segment ${k + 1}');
         }
-        return;
+
+        final file = File(outputPath);
+        final fileSize = await file.length();
+
+        final id =
+            '${now.millisecondsSinceEpoch}_${k}_${recording.genreId.hashCode}';
+
+        await repo.insertRecording(
+          LocalRecordingsCompanion(
+            id: Value(id),
+            projectId: Value(recording.projectId),
+            genreId: Value(recording.genreId),
+            subcategoryId:
+                recording.subcategoryId != null &&
+                    recording.subcategoryId!.isNotEmpty
+                ? Value(recording.subcategoryId!)
+                : const Value.absent(),
+            title: Value(
+              keptTotal == 1
+                  ? originalTitle
+                  : '$originalTitle (${k + 1}/$keptTotal)',
+            ),
+            durationSeconds: Value(segDuration),
+            fileSizeBytes: Value(fileSize),
+            format: const Value('m4a'),
+            localFilePath: Value(outputPath),
+            recordedAt: Value(recording.recordedAt),
+          ),
+        );
       }
 
-      // Replace original file with trimmed version
       final originalFile = File(recording.localFilePath);
-      final trimmedFile = File(outputPath);
+      if (await originalFile.exists()) {
+        await originalFile.delete();
+      }
+      await repo.deleteRecording(recording.id);
 
-      await originalFile.delete();
-      await trimmedFile.rename(recording.localFilePath);
-
-      // Get new file size
-      final newFile = File(recording.localFilePath);
-      final newSize = await newFile.length();
-      final newDurationSeconds = _newDuration.inMilliseconds / 1000.0;
-
-      // Update local DB
-      final repo = ref.read(localRecordingRepositoryProvider);
-      await repo.updateRecording(
-        widget.recordingId,
-        LocalRecordingsCompanion(
-          durationSeconds: Value(newDurationSeconds),
-          fileSizeBytes: Value(newSize),
-        ),
-      );
+      final serverId = recording.serverId;
+      if (serverId != null && serverId.isNotEmpty) {
+        try {
+          final apiRepo = ref.read(recordingApiRepositoryProvider);
+          await apiRepo.deleteRecording(serverId);
+        } catch (_) {}
+      }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Recording trimmed successfully')),
-        );
+        HapticFeedback.mediumImpact();
+        final msg = _excludedSegments.isNotEmpty
+            ? 'Saved $keptTotal segment${keptTotal > 1 ? 's' : ''}, removed ${_excludedSegments.length}'
+            : 'Split into $keptTotal recordings';
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(msg)));
         context.pop(true);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error trimming audio: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error splitting: $e')));
         setState(() => _isSaving = false);
       }
     }
+  }
+
+  String _fmt(Duration d) {
+    final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
+    final ms = (d.inMilliseconds.remainder(1000) ~/ 10).toString().padLeft(
+      2,
+      '0',
+    );
+    return '$m:$s.$ms';
+  }
+
+  String _fmtShort(Duration d) {
+    final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
+    return '$m:$s';
   }
 
   @override
@@ -213,7 +355,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
       return Scaffold(
         appBar: AppBar(
           leading: const BackButton(),
-          title: const Text('Trim Recording'),
+          title: const Text('Split Recording'),
         ),
         body: const Center(child: CircularProgressIndicator()),
       );
@@ -223,22 +365,58 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
       return Scaffold(
         appBar: AppBar(
           leading: const BackButton(),
-          title: const Text('Trim Recording'),
+          title: const Text('Split Recording'),
         ),
         body: const Center(child: Text('Recording not found')),
       );
     }
 
+    if (_errorMessage != null) {
+      return Scaffold(
+        appBar: AppBar(
+          leading: const BackButton(),
+          title: const Text('Split Recording'),
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  LucideIcons.downloadCloud,
+                  size: 48,
+                  color: theme.colorScheme.secondary,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  _errorMessage!,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyMedium,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    final colors = AppColors.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final hasSplits = _splitPoints.isNotEmpty;
+
     return Scaffold(
       appBar: AppBar(
         leading: const BackButton(),
-        title: const Text('Trim Recording'),
+        title: const Text('Split Recording'),
         actions: [
           TextButton(
             onPressed: () => context.pop(),
             child: Text(
               'Cancel',
-              style: TextStyle(color: AppColors.foreground.withValues(alpha: 0.6)),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colors.foreground.withValues(alpha: 0.6),
+              ),
             ),
           ),
         ],
@@ -247,92 +425,120 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
         children: [
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Waveform with trim handles
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Drag handles to select region',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: AppColors.foreground.withValues(alpha: 0.5),
+                  TrimWaveformPanel(
+                    waveformBars: _waveformBars,
+                    splitPoints: _splitPoints,
+                    onSplitPointsChanged: _onSplitPointsChanged,
+                    playingSegment: _playingSegment,
+                    excludedSegments: _excludedSegments,
+                    hasSplits: hasSplits,
+                    keptCount: _keptCount,
+                    segmentCount: _segmentCount,
+                    totalDurationLabel: _fmt(_totalDuration),
+                    totalDurationShortLabel: _fmtShort(_totalDuration),
+                    onClearAll: () => setState(() {
+                      _splitPoints = [];
+                      _excludedSegments = {};
+                    }),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  if (hasSplits) ...[
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Segments',
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
-                          const SizedBox(height: 12),
-                          _TrimWaveform(
-                            bars: _waveformBars,
-                            startFraction: _startFraction,
-                            endFraction: _endFraction,
-                            onStartChanged: (v) =>
-                                setState(() => _startFraction = v),
-                            onEndChanged: (v) =>
-                                setState(() => _endFraction = v),
+                        ),
+                        if (_excludedSegments.isNotEmpty)
+                          GestureDetector(
+                            onTap: () {
+                              HapticFeedback.lightImpact();
+                              setState(() => _excludedSegments = {});
+                            },
+                            child: Text(
+                              'Restore all',
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: colors.accent,
+                              ),
+                            ),
                           ),
-                        ],
-                      ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Time labels
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
+                    const SizedBox(height: 10),
+                    ...List.generate(_segmentCount, (i) {
+                      final isPlaying = _playingSegment == i;
+                      final isExcluded = _excludedSegments.contains(i);
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: SegmentCard(
+                          index: i,
+                          total: _segmentCount,
+                          start: _fmt(_segmentStart(i)),
+                          end: _fmt(_segmentEnd(i)),
+                          duration: _fmtShort(_segmentDuration(i)),
+                          isPlaying: isPlaying,
+                          isExcluded: isExcluded,
+                          onPlayPause: () => _previewSegment(i),
+                          onToggleExclude: () => _toggleExclude(i),
+                          colors: colors,
+                          isDark: isDark,
+                        ),
+                      );
+                    }),
+                  ] else ...[
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 32,
+                      ),
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: colors.border.withValues(alpha: 0.2),
+                        ),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                       child: Column(
                         children: [
-                          _buildTimeRow(
-                            theme,
-                            label: 'Start',
-                            value: _formatDurationPrecise(_startTime),
-                            icon: LucideIcons.skipBack,
+                          Icon(
+                            LucideIcons.splitSquareHorizontal,
+                            size: 36,
+                            color: colors.foreground.withValues(alpha: 0.2),
                           ),
                           const SizedBox(height: 12),
-                          _buildTimeRow(
-                            theme,
-                            label: 'End',
-                            value: _formatDurationPrecise(_endTime),
-                            icon: LucideIcons.skipForward,
-                          ),
-                          const Divider(height: 24),
-                          _buildTimeRow(
-                            theme,
-                            label: 'New Duration',
-                            value: _formatDuration(_newDuration),
-                            icon: LucideIcons.clock,
-                            bold: true,
+                          Text(
+                            'Tap on the waveform above to place\nsplit markers and divide this recording',
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: colors.foreground.withValues(alpha: 0.4),
+                              height: 1.5,
+                            ),
                           ),
                         ],
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Preview button
-                  _PreviewButton(
-                    player: _player!,
-                    onPlay: _previewSelectedRegion,
-                    onStop: _stopPreview,
-                  ),
+                  ],
                 ],
               ),
             ),
           ),
 
-          // Bottom save/cancel bar
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
             decoration: BoxDecoration(
-              color: AppColors.card,
+              color: colors.card,
               border: Border(
-                top: BorderSide(
-                  color: AppColors.border.withValues(alpha: 0.3),
-                ),
+                top: BorderSide(color: colors.border.withValues(alpha: 0.15)),
               ),
             ),
             child: SafeArea(
@@ -341,37 +547,62 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
                 children: [
                   Expanded(
                     child: OutlinedButton(
-                      onPressed:
-                          _isSaving ? null : () => context.pop(),
+                      onPressed: _isSaving ? null : () => context.pop(),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.foreground,
+                        foregroundColor: colors.foreground.withValues(
+                          alpha: isDark ? 0.8 : 0.7,
+                        ),
                         side: BorderSide(
-                          color: AppColors.border.withValues(alpha: 0.5),
+                          color: colors.border.withValues(
+                            alpha: isDark ? 0.4 : 0.35,
+                          ),
                         ),
                         padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                       child: const Text('Cancel'),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: ElevatedButton(
-                      onPressed: _isSaving ? null : _saveTrimmedAudio,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                      ),
-                      child: _isSaving
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
+                    child: ElevatedButton.icon(
+                      onPressed: (_isSaving || !hasSplits || _keptCount == 0)
+                          ? null
+                          : _saveSplit,
+                      icon: _isSaving
+                          ? SizedBox(
+                              width: 18,
+                              height: 18,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                color: Colors.white,
+                                color: isDark ? Colors.black : Colors.white,
                               ),
                             )
-                          : const Text('Save'),
+                          : const Icon(LucideIcons.scissors, size: 16),
+                      label: Text(
+                        _isSaving
+                            ? 'Splitting...'
+                            : hasSplits
+                            ? 'Save $_keptCount segment${_keptCount != 1 ? 's' : ''}'
+                            : 'Add splits first',
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: colors.accent,
+                        foregroundColor: isDark ? Colors.black : Colors.white,
+                        disabledBackgroundColor: colors.accent.withValues(
+                          alpha: 0.25,
+                        ),
+                        disabledForegroundColor: isDark
+                            ? Colors.black.withValues(alpha: 0.3)
+                            : Colors.white.withValues(alpha: 0.4),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
+                      ),
                     ),
                   ),
                 ],
@@ -381,303 +612,5 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
         ],
       ),
     );
-  }
-
-  Widget _buildTimeRow(
-    ThemeData theme, {
-    required String label,
-    required String value,
-    required IconData icon,
-    bool bold = false,
-  }) {
-    return Row(
-      children: [
-        Icon(icon, size: 18, color: AppColors.border),
-        const SizedBox(width: 12),
-        Text(
-          label,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: AppColors.foreground.withValues(alpha: 0.6),
-          ),
-        ),
-        const Spacer(),
-        Text(
-          value,
-          style: theme.textTheme.bodyLarge?.copyWith(
-            fontWeight: bold ? FontWeight.bold : FontWeight.w500,
-            fontFeatures: const [FontFeature.tabularFigures()],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Preview button with play/stop state
-// ---------------------------------------------------------------------------
-
-class _PreviewButton extends StatefulWidget {
-  const _PreviewButton({
-    required this.player,
-    required this.onPlay,
-    required this.onStop,
-  });
-
-  final AudioPlayer player;
-  final VoidCallback onPlay;
-  final VoidCallback onStop;
-
-  @override
-  State<_PreviewButton> createState() => _PreviewButtonState();
-}
-
-class _PreviewButtonState extends State<_PreviewButton> {
-  bool _isPlaying = false;
-
-  @override
-  void initState() {
-    super.initState();
-    widget.player.playerStateStream.listen((state) {
-      if (!mounted) return;
-      setState(() {
-        _isPlaying = state.playing;
-      });
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: OutlinedButton.icon(
-        onPressed: _isPlaying ? widget.onStop : widget.onPlay,
-        icon: Icon(
-          _isPlaying ? LucideIcons.square : LucideIcons.play,
-          size: 18,
-        ),
-        label: Text(_isPlaying ? 'Stop Preview' : 'Preview Selection'),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.primary,
-          side: BorderSide(color: AppColors.primary.withValues(alpha: 0.3)),
-          padding: const EdgeInsets.symmetric(vertical: 14),
-        ),
-      ),
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Trim waveform with draggable start/end handles
-// ---------------------------------------------------------------------------
-
-class _TrimWaveform extends StatefulWidget {
-  const _TrimWaveform({
-    required this.bars,
-    required this.startFraction,
-    required this.endFraction,
-    required this.onStartChanged,
-    required this.onEndChanged,
-  });
-
-  final List<double> bars;
-  final double startFraction;
-  final double endFraction;
-  final ValueChanged<double> onStartChanged;
-  final ValueChanged<double> onEndChanged;
-
-  @override
-  State<_TrimWaveform> createState() => _TrimWaveformState();
-}
-
-class _TrimWaveformState extends State<_TrimWaveform> {
-  static const double _handleWidth = 16.0;
-  static const double _waveformHeight = 120.0;
-  static const double _minSelectionFraction = 0.02; // minimum 2% selection
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final totalWidth = constraints.maxWidth;
-
-        return SizedBox(
-          height: _waveformHeight + 24, // extra for handle knobs
-          child: Stack(
-            children: [
-              // Waveform bars
-              Positioned(
-                left: 0,
-                right: 0,
-                top: 12,
-                height: _waveformHeight,
-                child: CustomPaint(
-                  size: Size(totalWidth, _waveformHeight),
-                  painter: _TrimWaveformPainter(
-                    bars: widget.bars,
-                    startFraction: widget.startFraction,
-                    endFraction: widget.endFraction,
-                  ),
-                ),
-              ),
-
-              // Start handle
-              Positioned(
-                left: widget.startFraction * totalWidth - _handleWidth / 2,
-                top: 0,
-                child: GestureDetector(
-                  onHorizontalDragUpdate: (details) {
-                    final newPos =
-                        (widget.startFraction * totalWidth + details.delta.dx) /
-                            totalWidth;
-                    final clamped = newPos.clamp(
-                      0.0,
-                      widget.endFraction - _minSelectionFraction,
-                    );
-                    widget.onStartChanged(clamped);
-                  },
-                  child: _buildHandle(isStart: true),
-                ),
-              ),
-
-              // End handle
-              Positioned(
-                left: widget.endFraction * totalWidth - _handleWidth / 2,
-                top: 0,
-                child: GestureDetector(
-                  onHorizontalDragUpdate: (details) {
-                    final newPos =
-                        (widget.endFraction * totalWidth + details.delta.dx) /
-                            totalWidth;
-                    final clamped = newPos.clamp(
-                      widget.startFraction + _minSelectionFraction,
-                      1.0,
-                    );
-                    widget.onEndChanged(clamped);
-                  },
-                  child: _buildHandle(isStart: false),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildHandle({required bool isStart}) {
-    return SizedBox(
-      width: _handleWidth,
-      height: _waveformHeight + 24,
-      child: Column(
-        children: [
-          // Top knob
-          Container(
-            width: _handleWidth,
-            height: 12,
-            decoration: BoxDecoration(
-              color: AppColors.primary,
-              borderRadius: BorderRadius.vertical(
-                top: const Radius.circular(4),
-              ),
-            ),
-          ),
-          // Vertical line
-          Expanded(
-            child: Center(
-              child: Container(
-                width: 2,
-                color: AppColors.primary,
-              ),
-            ),
-          ),
-          // Bottom knob
-          Container(
-            width: _handleWidth,
-            height: 12,
-            decoration: BoxDecoration(
-              color: AppColors.primary,
-              borderRadius: BorderRadius.vertical(
-                bottom: const Radius.circular(4),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Custom painter for the waveform with highlighted selection region
-// ---------------------------------------------------------------------------
-
-class _TrimWaveformPainter extends CustomPainter {
-  _TrimWaveformPainter({
-    required this.bars,
-    required this.startFraction,
-    required this.endFraction,
-  });
-
-  final List<double> bars;
-  final double startFraction;
-  final double endFraction;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (bars.isEmpty) return;
-
-    final barCount = bars.length;
-    final barWidth = size.width / barCount * 0.7;
-    final barSpacing = size.width / barCount * 0.3;
-    final stepWidth = barWidth + barSpacing;
-    final centerY = size.height / 2;
-    const minBarHeight = 2.0;
-
-    // Draw selection highlight
-    final selectionPaint = Paint()
-      ..color = AppColors.primary.withValues(alpha: 0.2)
-      ..style = PaintingStyle.fill;
-
-    final selStartX = startFraction * size.width;
-    final selEndX = endFraction * size.width;
-    canvas.drawRect(
-      Rect.fromLTRB(selStartX, 0, selEndX, size.height),
-      selectionPaint,
-    );
-
-    // Draw bars
-    final selectedBarPaint = Paint()
-      ..color = AppColors.primary
-      ..style = PaintingStyle.fill;
-
-    final unselectedBarPaint = Paint()
-      ..color = AppColors.border
-      ..style = PaintingStyle.fill;
-
-    for (var i = 0; i < barCount; i++) {
-      final amplitude = bars[i].clamp(0.0, 1.0);
-      final barHeight =
-          minBarHeight + amplitude * (size.height - minBarHeight);
-      final x = i * stepWidth;
-      final top = centerY - barHeight / 2;
-
-      final barCenter = (x + barWidth / 2) / size.width;
-      final isSelected =
-          barCenter >= startFraction && barCenter <= endFraction;
-
-      final rect = RRect.fromRectAndRadius(
-        Rect.fromLTWH(x, top, barWidth, barHeight),
-        Radius.circular(barWidth / 2),
-      );
-      canvas.drawRRect(rect, isSelected ? selectedBarPaint : unselectedBarPaint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _TrimWaveformPainter oldDelegate) {
-    return oldDelegate.bars != bars ||
-        oldDelegate.startFraction != startFraction ||
-        oldDelegate.endFraction != endFraction;
   }
 }
