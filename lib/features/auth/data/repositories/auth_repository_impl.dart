@@ -1,17 +1,21 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
+import 'package:path/path.dart' as p;
 
+import '../../../../core/auth/auth_repository.dart';
 import '../../../../core/config/env.dart';
 import '../../domain/entities/user.dart';
 
-class AuthRepository {
+class AuthRepositoryImpl implements AuthRepository {
   final http.Client _client;
 
-  AuthRepository({http.Client? client}) : _client = client ?? http.Client();
+  AuthRepositoryImpl({http.Client? client}) : _client = client ?? http.Client();
 
   String get _baseUrl => Env.backendUrl;
 
+  @override
   Future<({User user, String accessToken, String refreshToken})> login(
     String email,
     String password,
@@ -34,15 +38,13 @@ class AuthRepository {
     );
   }
 
+  @override
   Future<({User user, String accessToken, String refreshToken})> signup(
     String email,
     String password,
     String? displayName,
   ) async {
-    final body = <String, dynamic>{
-      'email': email,
-      'password': password,
-    };
+    final body = <String, dynamic>{'email': email, 'password': password};
     if (displayName != null) {
       body['display_name'] = displayName;
     }
@@ -65,6 +67,7 @@ class AuthRepository {
     );
   }
 
+  @override
   Future<({String accessToken, String refreshToken})> refreshToken(
     String token,
   ) async {
@@ -85,6 +88,7 @@ class AuthRepository {
     );
   }
 
+  @override
   Future<User> getMe(String accessToken) async {
     final response = await _client.get(
       Uri.parse('$_baseUrl/api/auth/me'),
@@ -100,5 +104,70 @@ class AuthRepository {
 
     final data = jsonDecode(response.body) as Map<String, dynamic>;
     return User.fromJson(data);
+  }
+
+  @override
+  Future<User> updateMe(
+    String accessToken, {
+    String? displayName,
+    String? avatarUrl,
+  }) async {
+    final body = <String, dynamic>{};
+    if (displayName != null) body['display_name'] = displayName;
+    if (avatarUrl != null) body['avatar_url'] = avatarUrl;
+
+    final response = await _client.patch(
+      Uri.parse('$_baseUrl/api/auth/me'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $accessToken',
+      },
+      body: jsonEncode(body),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to update profile: ${response.body}');
+    }
+
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    return User.fromJson(data);
+  }
+
+  @override
+  Future<String> uploadImage(
+    String accessToken,
+    String filePath, {
+    String folder = 'avatars',
+  }) async {
+    final request = http.MultipartRequest(
+      'POST',
+      Uri.parse('$_baseUrl/api/uploads/image?folder=$folder'),
+    );
+    request.headers['Authorization'] = 'Bearer $accessToken';
+
+    final ext = p.extension(filePath).toLowerCase();
+    final mimeType = switch (ext) {
+      '.png' => MediaType('image', 'png'),
+      '.webp' => MediaType('image', 'webp'),
+      _ => MediaType('image', 'jpeg'),
+    };
+
+    request.files.add(
+      await http.MultipartFile.fromPath(
+        'file',
+        filePath,
+        contentType: mimeType,
+      ),
+    );
+
+    final streamed = await request.send();
+    final response = await http.Response.fromStream(streamed);
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to upload image: ${response.body}');
+    }
+
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    return data['url'] as String;
   }
 }

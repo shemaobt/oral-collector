@@ -1,54 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-import '../../domain/entities/user.dart';
-import '../repositories/auth_repository.dart';
-
-// --- State ---
-
-class AuthState {
-  final User? currentUser;
-  final bool isLoading;
-  final String? error;
-
-  const AuthState({
-    this.currentUser,
-    this.isLoading = false,
-    this.error,
-  });
-
-  bool get isAuthenticated => currentUser != null;
-
-  AuthState copyWith({
-    User? currentUser,
-    bool? isLoading,
-    String? error,
-    bool clearUser = false,
-    bool clearError = false,
-  }) {
-    return AuthState(
-      currentUser: clearUser ? null : (currentUser ?? this.currentUser),
-      isLoading: isLoading ?? this.isLoading,
-      error: clearError ? null : (error ?? this.error),
-    );
-  }
-}
-
-// --- Providers ---
-
-final secureStorageProvider = Provider<FlutterSecureStorage>(
-  (_) => const FlutterSecureStorage(),
-);
-
-final authRepositoryProvider = Provider<AuthRepository>(
-  (_) => AuthRepository(),
-);
+import '../providers/secure_storage_provider.dart';
+import 'auth_repository.dart';
+import 'auth_state.dart';
+import 'providers.dart';
 
 final authNotifierProvider = NotifierProvider<AuthNotifier, AuthState>(
   AuthNotifier.new,
 );
-
-// --- Notifier ---
 
 class AuthNotifier extends Notifier<AuthState> {
   static const _accessTokenKey = 'access_token';
@@ -62,7 +22,6 @@ class AuthNotifier extends Notifier<AuthState> {
     return const AuthState();
   }
 
-  /// Check for stored token and auto-login on app start.
   Future<void> tryAutoLogin() async {
     final accessToken = await _storage.read(key: _accessTokenKey);
     if (accessToken == null) return;
@@ -72,8 +31,7 @@ class AuthNotifier extends Notifier<AuthState> {
     try {
       final user = await _repo.getMe(accessToken);
       state = state.copyWith(currentUser: user, isLoading: false);
-    } on Exception catch (e) {
-      // Token may be expired — try refresh
+    } on Exception {
       final refreshed = await _tryRefresh();
       if (!refreshed) {
         await _clearTokens();
@@ -116,12 +74,55 @@ class AuthNotifier extends Notifier<AuthState> {
     }
   }
 
+  Future<void> updateProfile({String? displayName}) async {
+    state = state.copyWith(isLoading: true, clearError: true);
+
+    try {
+      final accessToken = await _storage.read(key: _accessTokenKey);
+      if (accessToken == null) throw Exception('Not authenticated');
+
+      final user = await _repo.updateMe(accessToken, displayName: displayName);
+      state = state.copyWith(currentUser: user, isLoading: false);
+    } on Exception catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString().replaceFirst('Exception: ', ''),
+      );
+    }
+  }
+
+  Future<void> uploadAvatar(String filePath) async {
+    state = state.copyWith(isLoading: true, clearError: true);
+
+    try {
+      final accessToken = await _storage.read(key: _accessTokenKey);
+      if (accessToken == null) throw Exception('Not authenticated');
+
+      final imageUrl = await _repo.uploadImage(accessToken, filePath);
+      final user = await _repo.updateMe(accessToken, avatarUrl: imageUrl);
+      state = state.copyWith(currentUser: user, isLoading: false);
+    } on Exception catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString().replaceFirst('Exception: ', ''),
+      );
+      rethrow;
+    }
+  }
+
+  Future<bool> handleUnauthorized() async {
+    final refreshed = await _tryRefresh();
+    if (!refreshed) {
+      await _clearTokens();
+      state = const AuthState();
+    }
+    return refreshed;
+  }
+
   Future<void> logout() async {
     await _clearTokens();
     state = const AuthState();
   }
-
-  // --- Private helpers ---
 
   Future<void> _storeTokens(String accessToken, String refreshToken) async {
     await _storage.write(key: _accessTokenKey, value: accessToken);
