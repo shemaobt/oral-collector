@@ -1,57 +1,17 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../../core/auth/auth_notifier.dart';
+import '../../../../core/errors/api_exception.dart';
+import '../../data/providers.dart';
 import '../../domain/entities/language.dart';
 import '../../domain/entities/project.dart';
-import '../repositories/project_repository.dart';
+import '../../domain/repositories/project_repository.dart';
+import 'project_state.dart';
 
-// --- State ---
-
-class ProjectState {
-  final List<Project> projects;
-  final List<Language> languages;
-  final Project? activeProject;
-  final bool isLoading;
-  final String? error;
-
-  const ProjectState({
-    this.projects = const [],
-    this.languages = const [],
-    this.activeProject,
-    this.isLoading = false,
-    this.error,
-  });
-
-  ProjectState copyWith({
-    List<Project>? projects,
-    List<Language>? languages,
-    Project? activeProject,
-    bool? isLoading,
-    String? error,
-    bool clearActiveProject = false,
-    bool clearError = false,
-  }) {
-    return ProjectState(
-      projects: projects ?? this.projects,
-      languages: languages ?? this.languages,
-      activeProject:
-          clearActiveProject ? null : (activeProject ?? this.activeProject),
-      isLoading: isLoading ?? this.isLoading,
-      error: clearError ? null : (error ?? this.error),
-    );
-  }
-}
-
-// --- Providers ---
-
-final projectRepositoryProvider = Provider<ProjectRepository>(
-  (_) => ProjectRepository(),
+final projectNotifierProvider = NotifierProvider<ProjectNotifier, ProjectState>(
+  ProjectNotifier.new,
 );
-
-final projectNotifierProvider =
-    NotifierProvider<ProjectNotifier, ProjectState>(ProjectNotifier.new);
-
-// --- Notifier ---
 
 class ProjectNotifier extends Notifier<ProjectState> {
   static const _activeProjectIdKey = 'active_project_id';
@@ -59,31 +19,32 @@ class ProjectNotifier extends Notifier<ProjectState> {
   ProjectRepository get _repo => ref.read(projectRepositoryProvider);
 
   @override
-  ProjectState build() {
-    return const ProjectState();
-  }
+  ProjectState build() => const ProjectState();
 
-  /// Fetch all projects the user belongs to, and restore the active project.
   Future<void> fetchProjects() async {
     state = state.copyWith(isLoading: true, clearError: true);
 
     try {
-      final projects = await _repo.listProjects();
+      final results = await Future.wait([
+        _repo.listProjects(),
+        _repo.listLanguages(),
+      ]);
+      final projects = results[0] as List<Project>;
+      final languages = results[1] as List<Language>;
 
-      // Restore persisted active project
-      final prefs = await SharedPreferences.getInstance();
-      final savedId = prefs.getString(_activeProjectIdKey);
-      Project? active;
-      if (savedId != null) {
-        active = projects.where((p) => p.id == savedId).firstOrNull;
-      }
+      final enriched = _enrichWithLanguageNames(projects, languages);
+      final active = await _restoreActiveProject(enriched);
 
       state = state.copyWith(
-        projects: projects,
+        projects: enriched,
+        languages: languages,
         activeProject: active,
         isLoading: false,
         clearActiveProject: active == null,
       );
+    } on UnauthorizedException {
+      state = state.copyWith(isLoading: false);
+      ref.read(authNotifierProvider.notifier).handleUnauthorized();
     } on Exception catch (e) {
       state = state.copyWith(
         isLoading: false,
@@ -92,14 +53,16 @@ class ProjectNotifier extends Notifier<ProjectState> {
     }
   }
 
-  /// Set the active project and persist its ID.
   Future<void> setActiveProject(Project project) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_activeProjectIdKey, project.id);
     state = state.copyWith(activeProject: project);
   }
 
-  /// Fetch available languages for project creation.
+  void setLanguages(List<Language> languages) {
+    state = state.copyWith(languages: languages);
+  }
+
   Future<void> fetchLanguages() async {
     try {
       final languages = await _repo.listLanguages();
@@ -111,7 +74,6 @@ class ProjectNotifier extends Notifier<ProjectState> {
     }
   }
 
-  /// Create a new project and add it to the list.
   Future<void> createProject({
     required String name,
     required String languageId,
@@ -137,11 +99,7 @@ class ProjectNotifier extends Notifier<ProjectState> {
     }
   }
 
-  /// Update a project by ID and refresh it in the list.
-  Future<void> updateProject(
-    String id,
-    Map<String, dynamic> data,
-  ) async {
+  Future<void> updateProject(String id, Map<String, dynamic> data) async {
     state = state.copyWith(isLoading: true, clearError: true);
 
     try {
@@ -150,9 +108,9 @@ class ProjectNotifier extends Notifier<ProjectState> {
         return p.id == id ? updated : p;
       }).toList();
 
-      // Also update activeProject if it was the one modified
-      final activeUpdated =
-          state.activeProject?.id == id ? updated : state.activeProject;
+      final activeUpdated = state.activeProject?.id == id
+          ? updated
+          : state.activeProject;
 
       state = state.copyWith(
         projects: updatedList,
@@ -165,5 +123,44 @@ class ProjectNotifier extends Notifier<ProjectState> {
         error: e.toString().replaceFirst('Exception: ', ''),
       );
     }
+  }
+
+  List<Project> _enrichWithLanguageNames(
+    List<Project> projects,
+    List<Language> languages,
+  ) {
+    final langMap = {for (final l in languages) l.id: l};
+    return projects.map((p) {
+      final lang = langMap[p.languageId];
+      if (lang != null && p.languageName == null) {
+        return Project(
+          id: p.id,
+          name: p.name,
+          languageId: p.languageId,
+          languageName: lang.name,
+          languageCode: lang.code,
+          description: p.description,
+          memberCount: p.memberCount,
+          recordingCount: p.recordingCount,
+          totalDurationSeconds: p.totalDurationSeconds,
+          createdAt: p.createdAt,
+        );
+      }
+      return p;
+    }).toList();
+  }
+
+  Future<Project?> _restoreActiveProject(List<Project> projects) async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedId = prefs.getString(_activeProjectIdKey);
+    Project? active;
+    if (savedId != null) {
+      active = projects.where((p) => p.id == savedId).firstOrNull;
+    }
+    if (active == null && projects.isNotEmpty) {
+      active = projects.first;
+      await prefs.setString(_activeProjectIdKey, active.id);
+    }
+    return active;
   }
 }

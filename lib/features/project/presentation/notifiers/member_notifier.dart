@@ -1,52 +1,19 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../domain/entities/project_member.dart';
-import '../repositories/project_repository.dart';
-import 'project_provider.dart';
+import '../../data/providers.dart';
+import '../../domain/repositories/project_repository.dart';
+import 'member_state.dart';
 
-// --- State ---
-
-class MemberState {
-  final List<ProjectMember> members;
-  final bool isLoading;
-  final String? error;
-
-  const MemberState({
-    this.members = const [],
-    this.isLoading = false,
-    this.error,
-  });
-
-  MemberState copyWith({
-    List<ProjectMember>? members,
-    bool? isLoading,
-    String? error,
-    bool clearError = false,
-  }) {
-    return MemberState(
-      members: members ?? this.members,
-      isLoading: isLoading ?? this.isLoading,
-      error: clearError ? null : (error ?? this.error),
-    );
-  }
-}
-
-// --- Provider ---
-
-final memberNotifierProvider =
-    NotifierProvider<MemberNotifier, MemberState>(MemberNotifier.new);
-
-// --- Notifier ---
+final memberNotifierProvider = NotifierProvider<MemberNotifier, MemberState>(
+  MemberNotifier.new,
+);
 
 class MemberNotifier extends Notifier<MemberState> {
   ProjectRepository get _repo => ref.read(projectRepositoryProvider);
 
   @override
-  MemberState build() {
-    return const MemberState();
-  }
+  MemberState build() => const MemberState();
 
-  /// Fetch members for a project.
   Future<void> fetchMembers(String projectId) async {
     state = state.copyWith(isLoading: true, clearError: true);
 
@@ -61,7 +28,6 @@ class MemberNotifier extends Notifier<MemberState> {
     }
   }
 
-  /// Remove a member from the project.
   Future<bool> removeMember(String projectId, String userId) async {
     state = state.copyWith(clearError: true);
 
@@ -79,7 +45,6 @@ class MemberNotifier extends Notifier<MemberState> {
     }
   }
 
-  /// Invite a user to the project.
   Future<bool> inviteMember({
     required String projectId,
     required String email,
@@ -88,11 +53,7 @@ class MemberNotifier extends Notifier<MemberState> {
     state = state.copyWith(clearError: true);
 
     try {
-      await _repo.inviteMember(
-        projectId: projectId,
-        email: email,
-        role: role,
-      );
+      await _repo.inviteMember(projectId: projectId, email: email, role: role);
       return true;
     } on Exception catch (e) {
       state = state.copyWith(
