@@ -1,17 +1,30 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../core/theme/app_colors.dart';
-import '../../auth/data/providers/auth_provider.dart';
+import '../../../shared/preview_helpers.dart';
+import '../../../shared/utils/format.dart';
+import '../../../shared/widgets/app_shell.dart';
+import '../../../shared/widgets/icon_box.dart';
+import '../../../shared/widgets/section_header.dart';
+import '../../../core/auth/auth_notifier.dart';
 import '../../auth/data/providers/role_provider.dart';
-import '../../invite/data/providers/invite_provider.dart';
-import '../../invite/domain/entities/invite.dart';
-import '../../project/data/providers/project_provider.dart';
-import '../../sync/data/providers/sync_provider.dart';
+import '../../invite/presentation/notifiers/invite_notifier.dart';
+import '../../project/presentation/notifiers/project_notifier.dart';
+import '../../sync/presentation/notifiers/sync_notifier.dart';
+import '../../sync/presentation/notifiers/sync_state.dart';
+import 'notifiers/profile_notifier.dart';
+import 'widgets/invitations_section.dart';
+import 'widgets/profile_header.dart';
+import 'widgets/quick_stats_row.dart';
+import 'widgets/sync_settings_card.dart';
 
-/// Profile screen with sync settings section, manual sync trigger, and logout.
+@Preview(name: 'Profile Screen', wrapper: previewWrapper)
+Widget profileScreenPreview() => const ProfileScreen();
+
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
 
@@ -20,29 +33,80 @@ class ProfileScreen extends ConsumerStatefulWidget {
 }
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
-  int _storageUsedBytes = 0;
-
   @override
   void initState() {
     super.initState();
     Future.microtask(() {
       ref.read(inviteNotifierProvider.notifier).fetchInvites();
-      _loadStorageUsed();
+      ref.read(profileNotifierProvider.notifier).loadStorageUsed();
     });
   }
 
-  Future<void> _loadStorageUsed() async {
-    final bytes =
-        await ref.read(syncNotifierProvider.notifier).getLocalStorageUsed();
-    if (mounted) {
-      setState(() => _storageUsedBytes = bytes);
+  Future<void> _pickAndUploadAvatar() async {
+    try {
+      final success = await ref
+          .read(profileNotifierProvider.notifier)
+          .pickAndUploadAvatar();
+      if (success && mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Profile photo updated')));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update photo: $e'),
+            backgroundColor: AppColors.of(context).error,
+          ),
+        );
+      }
     }
   }
 
-  String _formatBytes(int bytes) {
-    if (bytes < 1024) return '$bytes B stored locally';
-    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB stored locally';
-    return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB stored locally';
+  Future<void> _showEditNameDialog() async {
+    final user = ref.read(authNotifierProvider).currentUser;
+    final controller = TextEditingController(text: user?.displayName ?? '');
+    final colors = AppColors.of(context);
+
+    final newName = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Edit display name'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          textCapitalization: TextCapitalization.words,
+          decoration: const InputDecoration(
+            hintText: 'Your name',
+            border: OutlineInputBorder(),
+          ),
+          onSubmitted: (value) => Navigator.of(ctx).pop(value.trim()),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(controller.text.trim()),
+            style: FilledButton.styleFrom(backgroundColor: colors.accent),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+
+    if (newName != null && newName.isNotEmpty && mounted) {
+      await ref
+          .read(profileNotifierProvider.notifier)
+          .updateDisplayName(newName);
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Name updated')));
+      }
+    }
   }
 
   @override
@@ -50,332 +114,244 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final authState = ref.watch(authNotifierProvider);
     final syncState = ref.watch(syncNotifierProvider);
     final inviteState = ref.watch(inviteNotifierProvider);
+    final profileState = ref.watch(profileNotifierProvider);
 
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        // User info card
-        Card(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+    final theme = Theme.of(context);
+    final colors = AppColors.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final user = authState.currentUser;
+
+    return Scaffold(
+      body: CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(
+            child: SizedBox(height: MediaQuery.of(context).padding.top + 8),
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 28,
-                  backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-                  child: Icon(
-                    LucideIcons.user,
-                    size: 28,
-                    color: AppColors.primary,
+
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+              child: Column(
+                children: [
+                  ProfileHeader(
+                    user: user,
+                    isUploadingAvatar: profileState.isUploadingAvatar,
+                    colors: colors,
+                    theme: theme,
+                    onPickAvatar: _pickAndUploadAvatar,
+                    onEditName: _showEditNameDialog,
                   ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        authState.currentUser?.displayName ?? 'User',
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.w600),
-                      ),
-                      if (authState.currentUser?.email != null)
-                        Text(
-                          authState.currentUser!.email,
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(color: AppColors.secondary),
+
+                  const SizedBox(height: 24),
+
+                  QuickStatsRow(
+                    storageLabel: formatFileSize(
+                      ref.read(profileNotifierProvider).storageUsedBytes,
+                    ),
+                    isOnline: syncState.isOnline,
+                    pendingCount: syncState.pendingCount,
+                    colors: colors,
+                    theme: theme,
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          SliverPadding(
+            padding: EdgeInsets.fromLTRB(
+              16,
+              28,
+              16,
+              AppShell.scrollBottomPadding,
+            ),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                InvitationsSection(
+                  inviteState: inviteState,
+                  onAccept: (invite) async {
+                    final accepted = await ref
+                        .read(inviteNotifierProvider.notifier)
+                        .acceptInvite(invite.id);
+                    if (accepted && context.mounted) {
+                      ref
+                          .read(projectNotifierProvider.notifier)
+                          .fetchProjects();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Joined "${invite.projectName}" successfully',
+                          ),
                         ),
+                      );
+                    }
+                  },
+                  onDecline: (invite) async {
+                    final declined = await ref
+                        .read(inviteNotifierProvider.notifier)
+                        .declineInvite(invite.id);
+                    if (declined && context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Invite declined')),
+                      );
+                    }
+                  },
+                  onRefresh: () {
+                    ref.read(inviteNotifierProvider.notifier).fetchInvites();
+                  },
+                ),
+
+                const SectionHeader(title: 'Sync & Storage'),
+                const SizedBox(height: 8),
+                SyncSettingsCard(
+                  syncState: syncState,
+                  theme: theme,
+                  colors: colors,
+                  onSyncNow: () {
+                    ref.read(syncNotifierProvider.notifier).syncAll();
+                  },
+                  onWifiOnlyChanged: (value) {
+                    ref
+                        .read(syncNotifierProvider.notifier)
+                        .updateSettings(
+                          SyncSettings(
+                            autoUploadWifiOnly: value,
+                            autoRemoveAfterUpload:
+                                syncState.autoRemoveAfterUpload,
+                          ),
+                        );
+                  },
+                  onAutoRemoveChanged: (value) {
+                    ref
+                        .read(syncNotifierProvider.notifier)
+                        .updateSettings(
+                          SyncSettings(
+                            autoUploadWifiOnly: syncState.autoUploadWifiOnly,
+                            autoRemoveAfterUpload: value,
+                          ),
+                        );
+                  },
+                  onClearCache: () => _showClearCacheConfirmation(context),
+                ),
+                const SizedBox(height: 24),
+
+                const SectionHeader(title: 'About'),
+                const SizedBox(height: 8),
+                Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
+                    children: [
+                      ListTile(
+                        leading: IconBox(
+                          icon: LucideIcons.info,
+                          color: colors.info,
+                        ),
+                        title: const Text('App version'),
+                        trailing: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: colors.foreground.withValues(
+                              alpha: isDark ? 0.1 : 0.06,
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            '1.0.0',
+                            style: theme.textTheme.labelMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const Divider(height: 1),
+                      ListTile(
+                        leading: IconBox(
+                          icon: LucideIcons.heart,
+                          color: colors.accent,
+                        ),
+                        title: const Text('Oral Collector by Shema'),
+                      ),
                     ],
                   ),
                 ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 24),
+                const SizedBox(height: 24),
 
-        // Invitations section
-        _InvitationsSection(
-          inviteState: inviteState,
-          onAccept: (invite) async {
-            final accepted = await ref
-                .read(inviteNotifierProvider.notifier)
-                .acceptInvite(invite.id);
-            if (accepted && context.mounted) {
-              ref.read(projectNotifierProvider.notifier).fetchProjects();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'Joined "${invite.projectName}" successfully',
+                if (kIsWeb &&
+                    ref
+                        .read(roleNotifierProvider.notifier)
+                        .isPlatformAdmin) ...[
+                  const SectionHeader(title: 'Administration'),
+                  const SizedBox(height: 8),
+                  Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: ListTile(
+                      leading: IconBox(
+                        icon: LucideIcons.layoutDashboard,
+                        color: colors.primary,
+                      ),
+                      title: const Text('Admin Dashboard'),
+                      subtitle: const Text(
+                        'System stats, projects & genre management',
+                      ),
+                      trailing: Icon(
+                        LucideIcons.chevronRight,
+                        size: 18,
+                        color: colors.secondary,
+                      ),
+                      onTap: () => context.push('/admin'),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                ],
+
+                const SectionHeader(title: 'Account'),
+                const SizedBox(height: 8),
+                Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: ListTile(
+                    leading: IconBox(
+                      icon: LucideIcons.logOut,
+                      color: colors.error,
+                      alpha: 0.1,
+                    ),
+                    title: Text(
+                      'Log Out',
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: colors.error,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    onTap: () async {
+                      await ref.read(authNotifierProvider.notifier).logout();
+                      if (context.mounted) {
+                        context.go('/login');
+                      }
+                    },
                   ),
                 ),
-              );
-            }
-          },
-          onDecline: (invite) async {
-            final declined = await ref
-                .read(inviteNotifierProvider.notifier)
-                .declineInvite(invite.id);
-            if (declined && context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Invite declined')),
-              );
-            }
-          },
-          onRefresh: () {
-            ref.read(inviteNotifierProvider.notifier).fetchInvites();
-          },
-        ),
-
-        // Sync settings section
-        _SectionHeader(title: 'Sync Settings'),
-        const SizedBox(height: 8),
-        Card(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Column(
-            children: [
-              // Sync status row
-              ListTile(
-                leading: Icon(
-                  syncState.isOnline
-                      ? LucideIcons.wifi
-                      : LucideIcons.wifiOff,
-                  color: syncState.isOnline
-                      ? AppColors.success
-                      : AppColors.error,
-                ),
-                title: Text(
-                  syncState.isOnline ? 'Online' : 'Offline',
-                ),
-                subtitle: syncState.lastSyncAt != null
-                    ? Text(
-                        'Last sync: ${_formatTime(syncState.lastSyncAt!)}',
-                      )
-                    : const Text('Never synced'),
-                trailing: syncState.pendingCount > 0
-                    ? Chip(
-                        label: Text('${syncState.pendingCount} pending'),
-                        backgroundColor:
-                            AppColors.primary.withValues(alpha: 0.1),
-                        labelStyle: TextStyle(
-                          fontSize: 12,
-                          color: AppColors.primary,
-                        ),
-                      )
-                    : null,
-              ),
-              const Divider(height: 1),
-
-              // Sync Now button
-              ListTile(
-                leading: syncState.uploadingId != null
-                    ? SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: AppColors.primary,
-                        ),
-                      )
-                    : Icon(
-                        LucideIcons.refreshCw,
-                        color: AppColors.primary,
-                      ),
-                title: Text(
-                  syncState.uploadingId != null
-                      ? 'Syncing... ${syncState.syncProgress}%'
-                      : 'Sync Now',
-                ),
-                subtitle: syncState.uploadingId != null
-                    ? LinearProgressIndicator(
-                        value: syncState.syncProgress / 100,
-                        backgroundColor:
-                            AppColors.border.withValues(alpha: 0.3),
-                        color: AppColors.primary,
-                      )
-                    : null,
-                enabled: syncState.isOnline &&
-                    syncState.uploadingId == null &&
-                    syncState.pendingCount > 0,
-                onTap: () {
-                  ref.read(syncNotifierProvider.notifier).syncAll();
-                },
-              ),
-              const Divider(height: 1),
-
-              // Wi-Fi only toggle
-              SwitchListTile(
-                secondary: Icon(
-                  LucideIcons.signal,
-                  color: AppColors.secondary,
-                ),
-                title: const Text('Upload on Wi-Fi only'),
-                subtitle: const Text(
-                  'Prevent uploads over cellular data',
-                ),
-                value: syncState.autoUploadWifiOnly,
-                activeColor: AppColors.primary,
-                onChanged: (value) {
-                  ref.read(syncNotifierProvider.notifier).updateSettings(
-                        SyncSettings(
-                          autoUploadWifiOnly: value,
-                          autoRemoveAfterUpload:
-                              syncState.autoRemoveAfterUpload,
-                        ),
-                      );
-                },
-              ),
-              const Divider(height: 1),
-
-              // Auto-remove after upload toggle
-              SwitchListTile(
-                secondary: Icon(
-                  LucideIcons.trash2,
-                  color: AppColors.secondary,
-                ),
-                title: const Text('Auto-remove after upload'),
-                subtitle: const Text(
-                  'Delete local files after successful upload',
-                ),
-                value: syncState.autoRemoveAfterUpload,
-                activeColor: AppColors.primary,
-                onChanged: (value) {
-                  ref.read(syncNotifierProvider.notifier).updateSettings(
-                        SyncSettings(
-                          autoUploadWifiOnly: syncState.autoUploadWifiOnly,
-                          autoRemoveAfterUpload: value,
-                        ),
-                      );
-                },
-              ),
-              const Divider(height: 1),
-
-              // Storage used display
-              ListTile(
-                leading: Icon(
-                  LucideIcons.hardDrive,
-                  color: AppColors.secondary,
-                ),
-                title: const Text('Storage used'),
-                subtitle: Text(_formatBytes(_storageUsedBytes)),
-              ),
-              const Divider(height: 1),
-
-              // Clear local cache button
-              ListTile(
-                leading: Icon(
-                  LucideIcons.eraser,
-                  color: AppColors.error,
-                ),
-                title: Text(
-                  'Clear local cache',
-                  style: TextStyle(color: AppColors.error),
-                ),
-                subtitle: const Text(
-                  'Delete all locally stored recordings',
-                ),
-                onTap: () => _showClearCacheConfirmation(context),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 24),
-
-        // About section
-        _SectionHeader(title: 'About'),
-        const SizedBox(height: 8),
-        Card(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Column(
-            children: [
-              ListTile(
-                leading: Icon(
-                  LucideIcons.info,
-                  color: AppColors.secondary,
-                ),
-                title: const Text('App version'),
-                trailing: Text(
-                  '1.0.0',
-                  style: TextStyle(color: AppColors.secondary),
-                ),
-              ),
-              const Divider(height: 1),
-              ListTile(
-                leading: Icon(
-                  LucideIcons.heart,
-                  color: AppColors.primary,
-                ),
-                title: const Text('Oral Collector by Shema'),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 24),
-
-        // Admin section (visible only to platform admins)
-        if (ref.read(roleNotifierProvider.notifier).isPlatformAdmin) ...[
-          _SectionHeader(title: 'Administration'),
-          const SizedBox(height: 8),
-          Card(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: ListTile(
-              leading: Icon(
-                LucideIcons.layoutDashboard,
-                color: AppColors.primary,
-              ),
-              title: const Text('Admin Dashboard'),
-              subtitle: const Text('System stats, projects & genre management'),
-              trailing: Icon(
-                LucideIcons.chevronRight,
-                color: AppColors.secondary,
-              ),
-              onTap: () => context.push('/admin'),
+              ]),
             ),
           ),
-          const SizedBox(height: 24),
         ],
-
-        // Account section
-        _SectionHeader(title: 'Account'),
-        const SizedBox(height: 8),
-        Card(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: ListTile(
-            leading: Icon(
-              LucideIcons.logOut,
-              color: AppColors.error,
-            ),
-            title: Text(
-              'Log Out',
-              style: TextStyle(color: AppColors.error),
-            ),
-            onTap: () async {
-              await ref.read(authNotifierProvider.notifier).logout();
-              if (context.mounted) {
-                context.go('/login');
-              }
-            },
-          ),
-        ),
-      ],
+      ),
     );
   }
 
   Future<void> _showClearCacheConfirmation(BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context);
+
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (ctx) => AlertDialog(
         title: const Text('Clear local cache?'),
         content: const Text(
           'This will delete all locally stored recordings. '
@@ -383,13 +359,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
+            onPressed: () => Navigator.of(ctx).pop(false),
             child: const Text('Cancel'),
           ),
           FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
+            onPressed: () => Navigator.of(ctx).pop(true),
             style: FilledButton.styleFrom(
-              backgroundColor: AppColors.error,
+              backgroundColor: AppColors.of(context).error,
             ),
             child: const Text('Clear'),
           ),
@@ -398,217 +374,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
 
     if (confirmed == true && mounted) {
-      await ref.read(syncNotifierProvider.notifier).clearLocalCache();
-      await _loadStorageUsed();
+      await ref.read(profileNotifierProvider.notifier).clearCacheAndRefresh();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           const SnackBar(content: Text('Local cache cleared')),
         );
       }
     }
-  }
-
-  String _formatTime(DateTime time) {
-    final now = DateTime.now();
-    final diff = now.difference(time);
-
-    if (diff.inMinutes < 1) return 'Just now';
-    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-    if (diff.inHours < 24) return '${diff.inHours}h ago';
-    return '${diff.inDays}d ago';
-  }
-}
-
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.title});
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 4),
-      child: Text(
-        title,
-        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              color: AppColors.secondary,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.5,
-            ),
-      ),
-    );
-  }
-}
-
-class _InvitationsSection extends StatelessWidget {
-  const _InvitationsSection({
-    required this.inviteState,
-    required this.onAccept,
-    required this.onDecline,
-    required this.onRefresh,
-  });
-
-  final InviteState inviteState;
-  final Future<void> Function(Invite invite) onAccept;
-  final Future<void> Function(Invite invite) onDecline;
-  final VoidCallback onRefresh;
-
-  @override
-  Widget build(BuildContext context) {
-    // Always show the section header with refresh button
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            const Expanded(child: _SectionHeader(title: 'Invitations')),
-            IconButton(
-              icon: Icon(
-                LucideIcons.refreshCw,
-                size: 16,
-                color: AppColors.secondary,
-              ),
-              onPressed: onRefresh,
-              tooltip: 'Refresh invitations',
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        if (inviteState.isLoading)
-          const Card(
-            child: Padding(
-              padding: EdgeInsets.all(24),
-              child: Center(child: CircularProgressIndicator()),
-            ),
-          )
-        else if (inviteState.error != null)
-          Card(
-            child: ListTile(
-              leading: Icon(LucideIcons.alertCircle, color: AppColors.error),
-              title: Text(
-                inviteState.error!,
-                style: TextStyle(color: AppColors.error),
-              ),
-              trailing: TextButton(
-                onPressed: onRefresh,
-                child: const Text('Retry'),
-              ),
-            ),
-          )
-        else if (inviteState.invites.isEmpty)
-          Card(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: const Padding(
-              padding: EdgeInsets.all(20),
-              child: Center(
-                child: Text(
-                  'No pending invitations',
-                  style: TextStyle(color: Colors.grey),
-                ),
-              ),
-            ),
-          )
-        else
-          Card(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              children: [
-                for (var i = 0; i < inviteState.invites.length; i++) ...[
-                  if (i > 0) const Divider(height: 1),
-                  _InviteTile(
-                    invite: inviteState.invites[i],
-                    onAccept: () => onAccept(inviteState.invites[i]),
-                    onDecline: () => onDecline(inviteState.invites[i]),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        const SizedBox(height: 24),
-      ],
-    );
-  }
-}
-
-class _InviteTile extends StatelessWidget {
-  const _InviteTile({
-    required this.invite,
-    required this.onAccept,
-    required this.onDecline,
-  });
-
-  final Invite invite;
-  final VoidCallback onAccept;
-  final VoidCallback onDecline;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 20,
-            backgroundColor: AppColors.info.withValues(alpha: 0.15),
-            child: Icon(
-              LucideIcons.folderOpen,
-              size: 20,
-              color: AppColors.info,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  invite.projectName,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium
-                      ?.copyWith(fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Role: ${invite.role == 'project_manager' ? 'Project Manager' : 'User'}',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.secondary,
-                      ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          SizedBox(
-            height: 36,
-            child: OutlinedButton(
-              onPressed: onDecline,
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.error,
-                side: BorderSide(color: AppColors.error.withValues(alpha: 0.5)),
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-              ),
-              child: const Text('Decline'),
-            ),
-          ),
-          const SizedBox(width: 8),
-          SizedBox(
-            height: 36,
-            child: FilledButton(
-              onPressed: onAccept,
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-              ),
-              child: const Text('Accept'),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }

@@ -4,10 +4,24 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../core/theme/app_colors.dart';
-import '../../genre/data/providers/genre_provider.dart';
-import '../../genre/domain/entities/genre.dart';
-import '../../project/data/providers/project_provider.dart';
-import '../../project/data/providers/stats_provider.dart';
+import '../../../shared/preview_helpers.dart';
+import '../../../shared/widgets/app_shell.dart';
+import '../../../shared/widgets/sync_status_indicator.dart';
+import '../../../shared/widgets/user_avatar.dart';
+import '../../../core/auth/auth_notifier.dart';
+import '../../genre/presentation/notifiers/genre_notifier.dart';
+import '../../project/presentation/notifiers/project_notifier.dart';
+import '../../project/presentation/notifiers/stats_notifier.dart';
+import 'notifiers/home_notifier.dart';
+import 'widgets/genre_card.dart';
+import 'widgets/hero_genre_card.dart';
+import 'widgets/no_project_card.dart';
+import 'widgets/record_fab.dart';
+import 'widgets/project_switcher_sheet.dart';
+import 'widgets/stats_strip.dart';
+
+@Preview(name: 'Home Screen', wrapper: previewWrapper)
+Widget homeScreenPreview() => const HomeScreen();
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -23,13 +37,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     Future.microtask(() {
       ref.read(projectNotifierProvider.notifier).fetchProjects();
       ref.read(genreNotifierProvider.notifier).fetchGenres();
+      ref.read(homeNotifierProvider.notifier).refreshAll();
     });
   }
 
   void _fetchStatsIfNeeded() {
     final activeProject = ref.read(projectNotifierProvider).activeProject;
     if (activeProject != null) {
-      ref.read(statsNotifierProvider.notifier).fetchGenreStats(activeProject.id);
+      ref
+          .read(statsNotifierProvider.notifier)
+          .fetchGenreStats(activeProject.id);
     }
   }
 
@@ -38,8 +55,40 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     await Future.wait([
       ref.read(projectNotifierProvider.notifier).fetchProjects(),
       ref.read(genreNotifierProvider.notifier).fetchGenres(),
+      ref.read(homeNotifierProvider.notifier).refreshAll(),
     ]);
     _fetchStatsIfNeeded();
+  }
+
+  void _showProjectSwitcher(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = AppColors.of(context);
+    final projectState = ref.read(projectNotifierProvider);
+    final projects = projectState.projects;
+    final activeId = projectState.activeProject?.id;
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return ProjectSwitcherSheet(
+          projects: projects,
+          activeProjectId: activeId,
+          onProjectSelected: (project) {
+            Navigator.pop(ctx);
+            if (project.id != activeId) {
+              ref
+                  .read(projectNotifierProvider.notifier)
+                  .setActiveProject(project);
+            }
+          },
+          colors: colors,
+          theme: theme,
+        );
+      },
+    );
   }
 
   @override
@@ -47,322 +96,289 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final projectState = ref.watch(projectNotifierProvider);
     final genreState = ref.watch(genreNotifierProvider);
     final statsState = ref.watch(statsNotifierProvider);
+    final authState = ref.watch(authNotifierProvider);
+    final homeState = ref.watch(homeNotifierProvider);
     final activeProject = projectState.activeProject;
     final theme = Theme.of(context);
+    final colors = AppColors.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    // Fetch stats when active project changes
-    ref.listen(projectNotifierProvider.select((s) => s.activeProject?.id),
-        (prev, next) {
+    ref.listen(projectNotifierProvider.select((s) => s.activeProject?.id), (
+      prev,
+      next,
+    ) {
       if (next != null && next != prev) {
         ref.read(statsNotifierProvider.notifier).fetchGenreStats(next);
+        ref.read(homeNotifierProvider.notifier).refreshAll();
       }
     });
 
+    final totalRecordings = homeState.totalRecordings;
+    final totalDuration = homeState.totalDuration;
+
+    final user = authState.currentUser;
+    final homeNotifier = ref.read(homeNotifierProvider.notifier);
+    final greeting = homeNotifier.greetingFor(user?.displayName);
+
+    final fabOffset = AppShell.fabBottomOffset(context);
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Home'),
-        centerTitle: false,
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => context.go('/record'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        child: const Icon(LucideIcons.mic),
+      floatingActionButton: Padding(
+        padding: EdgeInsets.only(bottom: fabOffset - 70),
+        child: RecordFab(
+          onPressed: () => context.go('/record'),
+          colors: colors,
+        ),
       ),
       body: RefreshIndicator(
         onRefresh: _refresh,
         child: CustomScrollView(
           slivers: [
-            // Project header
             SliverToBoxAdapter(
-              child: _ProjectHeader(
-                projectName: activeProject?.name,
-                languageName: activeProject?.languageName,
+              child: SizedBox(height: MediaQuery.of(context).padding.top + 16),
+            ),
+
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  children: [
+                    UserAvatar(
+                      radius: 21,
+                      avatarUrl: user?.avatarUrl,
+                      displayName: user?.displayName,
+                      email: user?.email,
+                    ),
+                    const Spacer(),
+                    const SyncStatusIndicator(),
+                  ],
+                ),
               ),
             ),
 
-            // Genre grid
-            if (genreState.isLoading && genreState.genres.isEmpty)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(greeting, style: theme.textTheme.headlineLarge),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Let\'s share your stories today',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: colors.secondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            if (activeProject != null) ...[
+              SliverToBoxAdapter(
+                child: Semantics(
+                  label: 'Switch project',
+                  button: projectState.projects.length > 1,
+                  child: InkWell(
+                    onTap: projectState.projects.length > 1
+                        ? () => _showProjectSwitcher(context)
+                        : null,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 22, 20, 0),
+                      child: Row(
+                        children: [
+                          Icon(
+                            LucideIcons.folderOpen,
+                            size: 18,
+                            color: colors.accent,
+                          ),
+                          const SizedBox(width: 10),
+                          Flexible(
+                            child: Text(
+                              activeProject.name,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          if (activeProject.languageName != null) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 3,
+                              ),
+                              decoration: BoxDecoration(
+                                color: colors.primary.withValues(
+                                  alpha: isDark ? 0.2 : 0.1,
+                                ),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                activeProject.languageName!,
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: colors.primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                          if (projectState.projects.length > 1) ...[
+                            const SizedBox(width: 6),
+                            Icon(
+                              LucideIcons.chevronDown,
+                              size: 16,
+                              color: colors.secondary,
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              SliverToBoxAdapter(
+                child: StatsStrip(
+                  totalRecordings: totalRecordings,
+                  totalDuration: totalDuration,
+                  memberCount: activeProject.memberCount,
+                  colors: colors,
+                ),
+              ),
+            ] else if (!projectState.isLoading)
+              SliverToBoxAdapter(
+                child: NoProjectCard(onBrowse: () => context.go('/projects')),
+              ),
+
+            if (projectState.isLoading && activeProject == null)
               const SliverFillRemaining(
-                child: Center(child: CircularProgressIndicator()),
-              )
-            else if (activeProject == null)
-              SliverFillRemaining(
                 child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(32),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          LucideIcons.folderOpen,
-                          size: 64,
-                          color: AppColors.border,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Select a project to get started',
-                          textAlign: TextAlign.center,
-                          style: theme.textTheme.bodyLarge?.copyWith(
-                            color: AppColors.foreground.withValues(alpha: 0.6),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: () => context.go('/projects'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.white,
-                          ),
-                          child: const Text('Browse Projects'),
-                        ),
-                      ],
-                    ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircularProgressIndicator(),
+                      SizedBox(height: 16),
+                      Text('Loading projects...'),
+                    ],
                   ),
                 ),
               )
-            else if (genreState.genres.isEmpty)
-              SliverFillRemaining(
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(32),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          LucideIcons.layoutGrid,
-                          size: 64,
-                          color: AppColors.border,
+            else if (activeProject != null && genreState.genres.isNotEmpty) ...[
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 28, 20, 0),
+                  child: Row(
+                    children: [
+                      Text(
+                        'Genres',
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w800,
                         ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'No genres available',
-                          textAlign: TextAlign.center,
-                          style: theme.textTheme.bodyLarge?.copyWith(
-                            color: AppColors.foreground.withValues(alpha: 0.6),
+                      ),
+                      const Spacer(),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: colors.foreground.withValues(
+                            alpha: isDark ? 0.12 : 0.08,
+                          ),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          '${genreState.genres.length}',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
-              )
-            else
-              SliverPadding(
-                padding: const EdgeInsets.all(16),
-                sliver: SliverGrid(
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount:
-                        MediaQuery.of(context).size.width >= 900
-                            ? 4
-                            : MediaQuery.of(context).size.width >= 600
-                                ? 3
-                                : 2,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                    childAspectRatio: 0.85,
+              ),
+
+              SliverToBoxAdapter(
+                child: HeroGenreCard(
+                  genre: genreState.genres.first,
+                  genreStat: statsState.genreStats[genreState.genres.first.id],
+                  onTap: () =>
+                      context.push('/genre/${genreState.genres.first.id}'),
+                ),
+              ),
+
+              if (genreState.genres.length > 1)
+                SliverPadding(
+                  padding: EdgeInsets.fromLTRB(
+                    16,
+                    0,
+                    16,
+                    AppShell.scrollBottomPadding,
                   ),
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final genre = genreState.genres[index];
-                      final genreStat = statsState.genreStats[genre.id];
-                      return _GenreCard(
+                  sliver: SliverGrid(
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: MediaQuery.of(context).size.width >= 600
+                          ? 3
+                          : 2,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                      childAspectRatio: 0.88,
+                    ),
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final realIndex = index + 1;
+                      final genre = genreState.genres[realIndex];
+                      final stat = statsState.genreStats[genre.id];
+                      return GenreCard(
                         genre: genre,
-                        genreStat: genreStat,
-                        onTap: () => context.go('/genre/${genre.id}'),
+                        genreStat: stat,
+                        colorIndex: realIndex,
+                        onTap: () => context.push('/genre/${genre.id}'),
                       );
-                    },
-                    childCount: genreState.genres.length,
+                    }, childCount: genreState.genres.length - 1),
+                  ),
+                ),
+            ] else if (activeProject != null &&
+                genreState.genres.isEmpty &&
+                !genreState.isLoading)
+              SliverFillRemaining(
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        LucideIcons.layoutGrid,
+                        size: 56,
+                        color: colors.secondary.withValues(alpha: 0.5),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'No genres available yet',
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          color: colors.secondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            else if (genreState.isLoading)
+              const SliverFillRemaining(
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircularProgressIndicator(),
+                      SizedBox(height: 16),
+                      Text('Loading genres...'),
+                    ],
                   ),
                 ),
               ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Header showing active project name, language badge, and sync status.
-class _ProjectHeader extends StatelessWidget {
-  const _ProjectHeader({
-    this.projectName,
-    this.languageName,
-  });
-
-  final String? projectName;
-  final String? languageName;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    if (projectName == null) return const SizedBox.shrink();
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              projectName!,
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          if (languageName != null)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: AppColors.info.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                languageName!,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: AppColors.secondary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          const SizedBox(width: 8),
-          // Sync status indicator (placeholder — will be wired to sync provider)
-          Icon(
-            LucideIcons.cloudOff,
-            size: 18,
-            color: AppColors.border,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// A card displaying a genre with icon, name, duration, and recording count.
-class _GenreCard extends StatelessWidget {
-  const _GenreCard({
-    required this.genre,
-    required this.onTap,
-    this.genreStat,
-  });
-
-  final Genre genre;
-  final GenreStat? genreStat;
-  final VoidCallback onTap;
-
-  String _formatDuration(double totalSeconds) {
-    final seconds = totalSeconds.round();
-    final hours = seconds ~/ 3600;
-    final minutes = (seconds % 3600) ~/ 60;
-    return '${hours}h ${minutes}m';
-  }
-
-  /// Map genre icon name strings to LucideIcons.
-  IconData _mapIcon(String? iconName) {
-    switch (iconName) {
-      case 'book-open':
-        return LucideIcons.bookOpen;
-      case 'message-circle':
-        return LucideIcons.messageCircle;
-      case 'music':
-        return LucideIcons.music;
-      case 'users':
-        return LucideIcons.users;
-      case 'list-ordered':
-        return LucideIcons.listOrdered;
-      case 'heart':
-        return LucideIcons.heart;
-      case 'file-text':
-        return LucideIcons.fileText;
-      case 'megaphone':
-        return LucideIcons.megaphone;
-      case 'mic':
-        return LucideIcons.mic;
-      default:
-        return LucideIcons.layoutGrid;
-    }
-  }
-
-  /// Parse a hex color string like "#BE4A01" into a Color.
-  Color _parseColor(String? hex) {
-    if (hex == null || hex.length < 7) return AppColors.primary;
-    try {
-      final hexValue = hex.replaceFirst('#', '');
-      return Color(int.parse('FF$hexValue', radix: 16));
-    } catch (_) {
-      return AppColors.primary;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final color = _parseColor(genre.color);
-    final icon = _mapIcon(genre.icon);
-
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Icon in colored circle
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.15),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, size: 22, color: color),
-              ),
-              const SizedBox(height: 10),
-
-              // Genre name
-              Text(
-                genre.name,
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const Spacer(),
-
-              // Duration
-              Row(
-                children: [
-                  Icon(LucideIcons.clock, size: 14, color: AppColors.border),
-                  const SizedBox(width: 4),
-                  Text(
-                    _formatDuration(genreStat?.totalDurationSeconds ?? 0),
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: AppColors.foreground.withValues(alpha: 0.6),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
-
-              // Recording count
-              Row(
-                children: [
-                  Icon(LucideIcons.mic, size: 14, color: AppColors.border),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${genreStat?.recordingCount ?? 0} recordings',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: AppColors.foreground.withValues(alpha: 0.6),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
         ),
       ),
     );

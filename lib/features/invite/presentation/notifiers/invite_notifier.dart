@@ -1,60 +1,21 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../domain/entities/invite.dart';
-import '../repositories/invite_repository.dart';
+import '../../data/providers.dart';
+import '../../domain/repositories/invite_repository.dart';
+import 'invite_state.dart';
 
-// --- State ---
-
-class InviteState {
-  final List<Invite> invites;
-  final bool isLoading;
-  final String? error;
-
-  const InviteState({
-    this.invites = const [],
-    this.isLoading = false,
-    this.error,
-  });
-
-  int get pendingCount => invites.length;
-
-  InviteState copyWith({
-    List<Invite>? invites,
-    bool? isLoading,
-    String? error,
-    bool clearError = false,
-  }) {
-    return InviteState(
-      invites: invites ?? this.invites,
-      isLoading: isLoading ?? this.isLoading,
-      error: clearError ? null : (error ?? this.error),
-    );
-  }
-}
-
-// --- Providers ---
-
-final inviteRepositoryProvider = Provider<InviteRepository>(
-  (_) => InviteRepository(),
+final inviteNotifierProvider = NotifierProvider<InviteNotifier, InviteState>(
+  InviteNotifier.new,
 );
-
-final inviteNotifierProvider =
-    NotifierProvider<InviteNotifier, InviteState>(InviteNotifier.new);
-
-// --- Notifier ---
 
 class InviteNotifier extends Notifier<InviteState> {
   InviteRepository get _repo => ref.read(inviteRepositoryProvider);
 
   @override
-  InviteState build() {
-    return const InviteState();
-  }
+  InviteState build() => const InviteState();
 
-  /// Fetch pending invites for the current user.
   Future<void> fetchInvites() async {
     state = state.copyWith(isLoading: true, clearError: true);
-
     try {
       final invites = await _repo.fetchMyInvites();
       state = state.copyWith(invites: invites, isLoading: false);
@@ -66,10 +27,8 @@ class InviteNotifier extends Notifier<InviteState> {
     }
   }
 
-  /// Accept an invite and remove it from the list.
   Future<bool> acceptInvite(String inviteId) async {
     state = state.copyWith(clearError: true);
-
     try {
       await _repo.acceptInvite(inviteId);
       state = state.copyWith(
@@ -84,10 +43,8 @@ class InviteNotifier extends Notifier<InviteState> {
     }
   }
 
-  /// Decline an invite and remove it from the list.
   Future<bool> declineInvite(String inviteId) async {
     state = state.copyWith(clearError: true);
-
     try {
       await _repo.declineInvite(inviteId);
       state = state.copyWith(
