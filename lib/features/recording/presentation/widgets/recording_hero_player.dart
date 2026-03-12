@@ -1,6 +1,7 @@
-import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import '../../../../core/database/app_database.dart';
+import '../../../../core/platform/file_ops.dart' as file_ops;
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/widgets/audio_player_widget.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -18,10 +19,13 @@ class RecordingHeroPlayer extends StatelessWidget {
   final ThemeData theme;
 
   Future<Widget> _resolvePlayer() async {
-    if (recording.localFilePath.isNotEmpty) {
-      final exists = await File(recording.localFilePath).exists();
+    if (!kIsWeb && recording.localFilePath.isNotEmpty) {
+      final exists = await file_ops.fileExists(recording.localFilePath);
       if (exists) {
-        return AudioPlayerWidget(filePath: recording.localFilePath);
+        return AudioPlayerWidget(
+          filePath: recording.localFilePath,
+          url: recording.gcsUrl,
+        );
       }
     }
     if (recording.gcsUrl != null) {

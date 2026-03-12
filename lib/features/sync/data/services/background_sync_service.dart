@@ -1,9 +1,9 @@
 import 'dart:async';
-import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart';
 import 'package:workmanager/workmanager.dart';
 
+import '../../../../core/platform/file_ops.dart' as platform;
 import '../repositories/connectivity_service.dart';
 
 const String backgroundSyncTaskName = 'com.oralcollector.backgroundSync';
@@ -33,7 +33,7 @@ class BackgroundSyncService {
     if (_initialized) return;
     _initialized = true;
 
-    if (!kIsWeb && Platform.isAndroid) {
+    if (!kIsWeb && platform.isAndroidPlatform) {
       try {
         await _initializeWorkmanager();
       } on Exception {
@@ -75,7 +75,7 @@ class BackgroundSyncService {
     _webTimer?.cancel();
     _webTimer = null;
 
-    if (!kIsWeb && Platform.isAndroid) {
+    if (!kIsWeb && platform.isAndroidPlatform) {
       Workmanager().cancelByUniqueName(backgroundSyncTaskName);
     }
 

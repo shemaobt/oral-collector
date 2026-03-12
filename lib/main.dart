@@ -1,5 +1,3 @@
-import 'dart:io' show Platform;
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,6 +5,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:workmanager/workmanager.dart';
 
 import 'core/database/database_provider.dart';
+import 'core/platform/file_ops.dart' as platform;
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/auth/auth_notifier.dart';
@@ -22,7 +21,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: '.env');
 
-  if (!kIsWeb && Platform.isAndroid) {
+  if (!kIsWeb && platform.isAndroidPlatform) {
     await Workmanager().initialize(
       callbackDispatcher,
       isInDebugMode: kDebugMode,
@@ -57,7 +56,7 @@ class _OralCollectorAppState extends ConsumerState<OralCollectorApp> {
     final bgSync = ref.read(backgroundSyncServiceProvider);
     await bgSync.initialize();
 
-    if (kIsWeb || Platform.isIOS) {
+    if (kIsWeb || platform.isIOSPlatform) {
       bgSync.onWebSyncRequested = () {
         ref.read(syncNotifierProvider.notifier).processQueue();
       };

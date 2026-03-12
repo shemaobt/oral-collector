@@ -1,11 +1,11 @@
-import 'dart:io';
-
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
+import '../../core/platform/file_ops.dart' as file_ops;
 import '../../core/theme/app_colors.dart';
 import '../utils/format.dart';
 
@@ -41,34 +41,42 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
   }
 
   Future<String?> _resolveFilePath(String storedPath) async {
-    final file = File(storedPath);
-    if (await file.exists()) return storedPath;
+    if (kIsWeb) return null;
+
+    if (await file_ops.fileExists(storedPath)) return storedPath;
 
     final docsDir = await getApplicationDocumentsDirectory();
     final fileName = p.basename(storedPath);
     final resolved = '${docsDir.path}/$fileName';
-    if (await File(resolved).exists()) return resolved;
+    if (await file_ops.fileExists(resolved)) return resolved;
 
     final inSubdir = '${docsDir.path}/recordings/$fileName';
-    if (await File(inSubdir).exists()) return inSubdir;
+    if (await file_ops.fileExists(inSubdir)) return inSubdir;
 
     return null;
   }
 
   Future<void> _loadAudio() async {
     try {
-      if (widget.filePath != null) {
+      if (widget.url != null && (kIsWeb || widget.filePath == null)) {
+        await _player.setUrl(widget.url!);
+      } else if (widget.filePath != null && !kIsWeb) {
         final resolvedPath = await _resolveFilePath(widget.filePath!);
         if (resolvedPath == null) {
-          if (mounted) {
-            setState(() {
-              _isLoading = false;
-              _error = 'Audio file not found';
-            });
+          if (widget.url != null) {
+            await _player.setUrl(widget.url!);
+          } else {
+            if (mounted) {
+              setState(() {
+                _isLoading = false;
+                _error = 'Audio file not found';
+              });
+            }
+            return;
           }
-          return;
+        } else {
+          await _player.setFilePath(resolvedPath);
         }
-        await _player.setFilePath(resolvedPath);
       } else if (widget.url != null) {
         await _player.setUrl(widget.url!);
       }

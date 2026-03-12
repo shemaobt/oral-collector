@@ -1,6 +1,5 @@
-import 'dart:io';
-
 import 'package:drift/drift.dart' show Value;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,6 +11,7 @@ import '../../../../core/database/app_database.dart';
 import '../../../../shared/utils/format.dart';
 import '../../../../shared/utils/recording_title.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/platform/file_ops.dart' as file_ops;
 import '../../../../shared/widgets/app_shell.dart';
 import '../../../../shared/widgets/waveform_visualizer.dart';
 import '../../../project/presentation/notifiers/project_notifier.dart';
@@ -125,10 +125,11 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
     final repo = ref.read(localRecordingRepositoryProvider);
 
     int fileSize = 0;
-    try {
-      final file = File(widget.result.filePath);
-      fileSize = await file.length();
-    } catch (_) {}
+    if (!kIsWeb) {
+      try {
+        fileSize = await file_ops.fileLength(widget.result.filePath);
+      } catch (_) {}
+    }
 
     final id =
         '${DateTime.now().millisecondsSinceEpoch}_${widget.genreId.hashCode}';
@@ -185,10 +186,11 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
     );
 
     if (confirmed == true) {
-      try {
-        final file = File(widget.result.filePath);
-        if (await file.exists()) await file.delete();
-      } catch (_) {}
+      if (!kIsWeb) {
+        try {
+          await file_ops.deleteFile(widget.result.filePath);
+        } catch (_) {}
+      }
 
       if (mounted) context.go('/genre/${widget.genreId}');
     }

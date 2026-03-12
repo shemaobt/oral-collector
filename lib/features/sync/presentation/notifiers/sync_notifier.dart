@@ -1,8 +1,9 @@
 import 'dart:async';
-import 'dart:io';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/platform/file_ops.dart' as file_ops;
 import '../../../recording/data/providers.dart';
 import '../../../recording/data/repositories/local_recording_repository.dart';
 import '../../data/providers.dart';
@@ -98,14 +99,15 @@ class SyncNotifier extends Notifier<SyncState> {
   }
 
   Future<int> getLocalStorageUsed() async {
+    if (kIsWeb) return 0;
+
     final all = await _recordingRepo.getAllLocalRecordings();
     var totalBytes = 0;
 
     for (final recording in all) {
       try {
-        final file = File(recording.localFilePath);
-        if (await file.exists()) {
-          totalBytes += await file.length();
+        if (await file_ops.fileExists(recording.localFilePath)) {
+          totalBytes += await file_ops.fileLength(recording.localFilePath);
         }
       } on Exception {
         // ignore per-file errors, continue iteration
@@ -116,14 +118,13 @@ class SyncNotifier extends Notifier<SyncState> {
   }
 
   Future<void> clearLocalCache() async {
+    if (kIsWeb) return;
+
     final all = await _recordingRepo.getAllLocalRecordings();
 
     for (final recording in all) {
       try {
-        final file = File(recording.localFilePath);
-        if (await file.exists()) {
-          await file.delete();
-        }
+        await file_ops.deleteFile(recording.localFilePath);
       } on Exception {
         // ignore per-file errors, continue iteration
       }

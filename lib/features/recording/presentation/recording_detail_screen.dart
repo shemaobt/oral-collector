@@ -1,12 +1,13 @@
-import 'dart:io';
-
 import 'package:drift/drift.dart' show Value;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:path_provider/path_provider.dart';
+
+import '../../../core/platform/file_ops.dart' as file_ops;
 
 import '../../../core/database/app_database.dart';
 import '../../../core/errors/api_exception.dart';
@@ -263,10 +264,17 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     if (recording == null) return;
 
     bool hasLocalFile =
+        !kIsWeb &&
         recording.localFilePath.isNotEmpty &&
-        await File(recording.localFilePath).exists();
+        await file_ops.fileExists(recording.localFilePath);
 
     if (!mounted) return;
+
+    if (kIsWeb && recording.serverId != null) {
+      if (!mounted) return;
+      context.push('/recording/${recording.serverId ?? recording.id}/trim');
+      return;
+    }
 
     if (!hasLocalFile && recording.gcsUrl != null) {
       final shouldDownload = await showDialog<bool>(
@@ -317,7 +325,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
         final fileName =
             'recording_${DateTime.now().millisecondsSinceEpoch}.$ext';
         final filePath = '${docsDir.path}/$fileName';
-        await File(filePath).writeAsBytes(response.bodyBytes);
+        await file_ops.writeFileBytes(filePath, response.bodyBytes);
 
         final repo = ref.read(localRecordingRepositoryProvider);
         await repo.updateRecording(

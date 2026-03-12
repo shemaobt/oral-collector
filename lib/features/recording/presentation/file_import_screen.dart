@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:drift/drift.dart' show Value;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -9,6 +7,8 @@ import 'package:just_audio/just_audio.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
+
+import '../../../core/platform/file_ops.dart' as file_ops;
 
 import '../../../core/database/app_database.dart';
 import '../../../shared/utils/recording_title.dart';
@@ -202,18 +202,17 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
 
       if (!kIsWeb) {
         final appDir = await getApplicationDocumentsDirectory();
-        final recordingsDir = Directory('${appDir.path}/recordings');
-        if (!await recordingsDir.exists()) {
-          await recordingsDir.create(recursive: true);
+        final recordingsPath = '${appDir.path}/recordings';
+        if (!await file_ops.dirExists(recordingsPath)) {
+          await file_ops.createDir(recordingsPath);
         }
         final destFileName =
             '${DateTime.now().millisecondsSinceEpoch}_$_fileName';
-        final destPath = '${recordingsDir.path}/$destFileName';
-        await File(_filePath!).copy(destPath);
+        final destPath = '$recordingsPath/$destFileName';
+        await file_ops.copyFile(_filePath!, destPath);
         savedFilePath = destPath;
 
-        final savedFile = File(savedFilePath);
-        _fileSizeBytes = await savedFile.length();
+        _fileSizeBytes = await file_ops.fileLength(savedFilePath);
       }
 
       final id =

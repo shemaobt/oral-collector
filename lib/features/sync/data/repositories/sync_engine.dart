@@ -1,12 +1,13 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:drift/drift.dart' show Value;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import '../../../../core/database/app_database.dart';
 import '../../../../core/network/authenticated_client.dart';
+import '../../../../core/platform/file_ops.dart' as file_ops;
 import '../../../recording/data/repositories/local_recording_repository.dart';
 import '../../domain/repositories/connectivity_service.dart';
 import '../../domain/repositories/sync_engine.dart';
@@ -41,6 +42,7 @@ class SyncEngineImpl implements SyncEngine {
   @override
   Future<void> processQueue({bool deleteAfterUpload = false}) async {
     if (_isProcessing) return;
+    if (kIsWeb) return;
 
     final online = await _connectivity.isOnline;
     if (!online) return;
@@ -77,17 +79,16 @@ class SyncEngineImpl implements SyncEngine {
   }
 
   Future<String?> _resolveFilePath(String storedPath) async {
-    final file = File(storedPath);
-    if (await file.exists()) return storedPath;
+    if (await file_ops.fileExists(storedPath)) return storedPath;
 
     final docsDir = await getApplicationDocumentsDirectory();
     final fileName = p.basename(storedPath);
 
     final resolved = '${docsDir.path}/$fileName';
-    if (await File(resolved).exists()) return resolved;
+    if (await file_ops.fileExists(resolved)) return resolved;
 
     final inSubdir = '${docsDir.path}/recordings/$fileName';
-    if (await File(inSubdir).exists()) return inSubdir;
+    if (await file_ops.fileExists(inSubdir)) return inSubdir;
 
     return null;
   }
@@ -165,8 +166,7 @@ class SyncEngineImpl implements SyncEngine {
           jsonDecode(uploadUrlResponse.body) as Map<String, dynamic>;
       final uploadUrl = uploadData['upload_url'] as String;
 
-      final file = File(resolvedPath);
-      final fileBytes = await file.readAsBytes();
+      final fileBytes = await file_ops.readFileBytes(resolvedPath);
 
       final putResponse = await _client.rawClient.put(
         Uri.parse(uploadUrl),
@@ -196,8 +196,8 @@ class SyncEngineImpl implements SyncEngine {
 
       await _recordingRepo.markAsUploaded(id, serverId, gcsUrl);
 
-      if (deleteAfterUpload && await file.exists()) {
-        await file.delete();
+      if (deleteAfterUpload) {
+        await file_ops.deleteFile(resolvedPath);
       }
     } on Exception {
       await _recordingRepo.markAsFailed(id);
