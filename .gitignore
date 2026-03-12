@@ -126,4 +126,4 @@ app.*.symbols
 
 # Claude
 
-.claude
+.claude.DS_Store
