@@ -73,4 +73,26 @@ class RecordingApiRepositoryImpl implements RecordingApiRepository {
     }
     return response.statusCode == 200;
   }
+
+  @override
+  Future<List<String>> splitRecording({
+    required String serverId,
+    required List<Map<String, double>> segments,
+  }) async {
+    final response = await _client.post(
+      '/api/oc/recordings/$serverId/split',
+      body: {'segments': segments},
+    );
+    guardResponse(response);
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw Exception(
+        'Split failed (${response.statusCode}): ${response.body}',
+      );
+    }
+    final data = jsonDecode(response.body);
+    if (data is Map<String, dynamic> && data.containsKey('recording_ids')) {
+      return (data['recording_ids'] as List<dynamic>).cast<String>();
+    }
+    return [];
+  }
 }

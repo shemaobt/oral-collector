@@ -79,6 +79,7 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       GoRoute(
         path: '/import-file',
+        redirect: (context, state) => kIsWeb ? '/recordings' : null,
         builder: (context, state) => const FileImportScreen(),
       ),
 
@@ -103,6 +104,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/record',
+            redirect: (context, state) => kIsWeb ? '/recordings' : null,
             builder: (context, state) => RecordingFlowScreen(
               genreId: state.uri.queryParameters['genreId'],
               subcategoryId: state.uri.queryParameters['subcategoryId'],

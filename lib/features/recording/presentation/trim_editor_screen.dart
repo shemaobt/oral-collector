@@ -1,10 +1,8 @@
 import 'dart:async';
-import 'dart:io';
 import 'dart:math';
 
 import 'package:drift/drift.dart' show Value;
-import 'package:ffmpeg_kit_flutter_new_min/ffmpeg_kit.dart';
-import 'package:ffmpeg_kit_flutter_new_min/return_code.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,6 +12,8 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../../core/database/app_database.dart';
+import '../../../core/platform/ffmpeg_ops.dart' as ffmpeg;
+import '../../../core/platform/file_ops.dart' as file_ops;
 import '../../../core/theme/app_colors.dart';
 import '../data/providers.dart';
 import 'widgets/segment_card.dart';
@@ -128,23 +128,41 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
         return;
       }
 
-      if (recording.localFilePath.isEmpty ||
-          !await File(recording.localFilePath).exists()) {
-        if (mounted) {
-          setState(() {
-            _recording = recording;
-            _isLoading = false;
-            _errorMessage =
-                'Local audio file not available. Download the recording first.';
-          });
+      if (kIsWeb) {
+        if (recording.gcsUrl == null) {
+          if (mounted) {
+            setState(() {
+              _recording = recording;
+              _isLoading = false;
+              _errorMessage = 'Audio URL not available for this recording.';
+            });
+          }
+          return;
         }
-        return;
+        await _player!.setUrl(recording.gcsUrl!);
+      } else {
+        if (recording.localFilePath.isEmpty ||
+            !await file_ops.fileExists(recording.localFilePath)) {
+          if (mounted) {
+            setState(() {
+              _recording = recording;
+              _isLoading = false;
+              _errorMessage =
+                  'Local audio file not available. Download the recording first.';
+            });
+          }
+          return;
+        }
+        await _player!.setFilePath(recording.localFilePath);
       }
 
-      await _player!.setFilePath(recording.localFilePath);
       final duration = _player!.duration ?? Duration.zero;
 
-      final rng = Random(recording.localFilePath.hashCode);
+      final rng = Random(
+        kIsWeb
+            ? (recording.gcsUrl ?? recording.id).hashCode
+            : recording.localFilePath.hashCode,
+      );
       const barCount = 70;
       final bars = List.generate(
         barCount,
@@ -226,6 +244,13 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
     if (mounted) setState(() => _playingSegment = null);
   }
 
+  List<int> get _keptSegmentIndices {
+    return [
+      for (var i = 0; i < _segmentCount; i++)
+        if (!_excludedSegments.contains(i)) i,
+    ];
+  }
+
   Future<void> _saveSplit() async {
     final recording = _recording;
     if (recording == null || _splitPoints.isEmpty) return;
@@ -237,89 +262,10 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
       await _stopPreview();
       await _player?.stop();
 
-      final dir = await getApplicationDocumentsDirectory();
-      final repo = ref.read(localRecordingRepositoryProvider);
-      final now = DateTime.now();
-      final originalTitle = recording.title ?? 'Recording';
-
-      final keptSegments = <int>[];
-      for (var i = 0; i < _segmentCount; i++) {
-        if (!_excludedSegments.contains(i)) keptSegments.add(i);
-      }
-      final keptTotal = keptSegments.length;
-
-      for (var k = 0; k < keptTotal; k++) {
-        final i = keptSegments[k];
-        final startSec = _segmentStart(i).inMilliseconds / 1000.0;
-        final endSec = _segmentEnd(i).inMilliseconds / 1000.0;
-        final segDuration = endSec - startSec;
-
-        final outputPath =
-            '${dir.path}/split_${now.millisecondsSinceEpoch}_$k.m4a';
-
-        final command =
-            '-i "${recording.localFilePath}" -ss $startSec -to $endSec -c copy "$outputPath"';
-
-        final session = await FFmpegKit.execute(command);
-        final returnCode = await session.getReturnCode();
-
-        if (!ReturnCode.isSuccess(returnCode)) {
-          throw Exception('FFmpeg failed on segment ${k + 1}');
-        }
-
-        final file = File(outputPath);
-        final fileSize = await file.length();
-
-        final id =
-            '${now.millisecondsSinceEpoch}_${k}_${recording.genreId.hashCode}';
-
-        await repo.insertRecording(
-          LocalRecordingsCompanion(
-            id: Value(id),
-            projectId: Value(recording.projectId),
-            genreId: Value(recording.genreId),
-            subcategoryId:
-                recording.subcategoryId != null &&
-                    recording.subcategoryId!.isNotEmpty
-                ? Value(recording.subcategoryId!)
-                : const Value.absent(),
-            title: Value(
-              keptTotal == 1
-                  ? originalTitle
-                  : '$originalTitle (${k + 1}/$keptTotal)',
-            ),
-            durationSeconds: Value(segDuration),
-            fileSizeBytes: Value(fileSize),
-            format: const Value('m4a'),
-            localFilePath: Value(outputPath),
-            recordedAt: Value(recording.recordedAt),
-          ),
-        );
-      }
-
-      final originalFile = File(recording.localFilePath);
-      if (await originalFile.exists()) {
-        await originalFile.delete();
-      }
-      await repo.deleteRecording(recording.id);
-
-      final serverId = recording.serverId;
-      if (serverId != null && serverId.isNotEmpty) {
-        try {
-          final apiRepo = ref.read(recordingApiRepositoryProvider);
-          await apiRepo.deleteRecording(serverId);
-        } catch (_) {}
-      }
-
-      if (mounted) {
-        HapticFeedback.mediumImpact();
-        final msg = _excludedSegments.isNotEmpty
-            ? 'Saved $keptTotal segment${keptTotal > 1 ? 's' : ''}, removed ${_excludedSegments.length}'
-            : 'Split into $keptTotal recordings';
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(msg)));
-        context.pop(true);
+      if (kIsWeb) {
+        await _saveSplitServerSide(recording);
+      } else {
+        await _saveSplitLocally(recording);
       }
     } catch (e) {
       if (mounted) {
@@ -328,6 +274,104 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
         ).showSnackBar(SnackBar(content: Text('Error splitting: $e')));
         setState(() => _isSaving = false);
       }
+    }
+  }
+
+  Future<void> _saveSplitServerSide(LocalRecording recording) async {
+    final serverId = recording.serverId ?? recording.id;
+    final kept = _keptSegmentIndices;
+
+    final segments = kept.map((i) {
+      return {
+        'start_seconds': _segmentStart(i).inMilliseconds / 1000.0,
+        'end_seconds': _segmentEnd(i).inMilliseconds / 1000.0,
+      };
+    }).toList();
+
+    final apiRepo = ref.read(recordingApiRepositoryProvider);
+    await apiRepo.splitRecording(serverId: serverId, segments: segments);
+
+    if (mounted) {
+      final msg = _excludedSegments.isNotEmpty
+          ? 'Saved ${kept.length} segment${kept.length > 1 ? 's' : ''}, removed ${_excludedSegments.length}'
+          : 'Split into ${kept.length} recordings';
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+      context.pop(true);
+    }
+  }
+
+  Future<void> _saveSplitLocally(LocalRecording recording) async {
+    final dir = await getApplicationDocumentsDirectory();
+    final repo = ref.read(localRecordingRepositoryProvider);
+    final now = DateTime.now();
+    final originalTitle = recording.title ?? 'Recording';
+    final kept = _keptSegmentIndices;
+    final keptTotal = kept.length;
+
+    for (var k = 0; k < keptTotal; k++) {
+      final i = kept[k];
+      final startSec = _segmentStart(i).inMilliseconds / 1000.0;
+      final endSec = _segmentEnd(i).inMilliseconds / 1000.0;
+      final segDuration = endSec - startSec;
+
+      final outputPath =
+          '${dir.path}/split_${now.millisecondsSinceEpoch}_$k.m4a';
+
+      final command =
+          '-i "${recording.localFilePath}" -ss $startSec -to $endSec -c copy "$outputPath"';
+
+      final success = await ffmpeg.executeFFmpegCommand(command);
+      if (!success) {
+        throw Exception('FFmpeg failed on segment ${k + 1}');
+      }
+
+      final fileSize = await file_ops.fileLength(outputPath);
+
+      final id =
+          '${now.millisecondsSinceEpoch}_${k}_${recording.genreId.hashCode}';
+
+      await repo.insertRecording(
+        LocalRecordingsCompanion(
+          id: Value(id),
+          projectId: Value(recording.projectId),
+          genreId: Value(recording.genreId),
+          subcategoryId:
+              recording.subcategoryId != null &&
+                  recording.subcategoryId!.isNotEmpty
+              ? Value(recording.subcategoryId!)
+              : const Value.absent(),
+          title: Value(
+            keptTotal == 1
+                ? originalTitle
+                : '$originalTitle (${k + 1}/$keptTotal)',
+          ),
+          durationSeconds: Value(segDuration),
+          fileSizeBytes: Value(fileSize),
+          format: const Value('m4a'),
+          localFilePath: Value(outputPath),
+          recordedAt: Value(recording.recordedAt),
+        ),
+      );
+    }
+
+    await file_ops.deleteFile(recording.localFilePath);
+    await repo.deleteRecording(recording.id);
+
+    final serverId = recording.serverId;
+    if (serverId != null && serverId.isNotEmpty) {
+      try {
+        final apiRepo = ref.read(recordingApiRepositoryProvider);
+        await apiRepo.deleteRecording(serverId);
+      } catch (_) {}
+    }
+
+    if (mounted) {
+      HapticFeedback.mediumImpact();
+      final msg = _excludedSegments.isNotEmpty
+          ? 'Saved $keptTotal segment${keptTotal > 1 ? 's' : ''}, removed ${_excludedSegments.length}'
+          : 'Split into $keptTotal recordings';
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+      context.pop(true);
     }
   }
 
@@ -445,9 +489,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
                       _excludedSegments = {};
                     }),
                   ),
-
                   const SizedBox(height: 20),
-
                   if (hasSplits) ...[
                     Row(
                       children: [
@@ -532,7 +574,6 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
               ),
             ),
           ),
-
           Container(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
             decoration: BoxDecoration(
