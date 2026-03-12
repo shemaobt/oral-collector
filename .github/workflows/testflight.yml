@@ -73,7 +73,7 @@ jobs:
           echo "PROVISIONING_PROFILE_SPECIFIER=$PROV_NAME" >> ios/Flutter/Release.xcconfig
 
       - name: Build IPA
-        run: flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
+        run: flutter build ipa --release --export-options-plist=ios/ExportOptions.plist --build-number=${{ github.run_number }}
 
       - name: Prepare API key for altool
         env:
