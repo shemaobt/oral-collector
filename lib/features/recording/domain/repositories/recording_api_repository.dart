@@ -1,0 +1,18 @@
+import '../entities/server_recording.dart';
+
+abstract class RecordingApiRepository {
+  Future<ServerRecording> getRecording(String serverId);
+  Future<List<ServerRecording>> listRecordings(String projectId);
+  Future<bool> deleteRecording(String serverId);
+  Future<bool> updateRecording(
+    String serverId, {
+    String? genreId,
+    String? subcategoryId,
+    String? cleaningStatus,
+  });
+
+  Future<List<String>> splitRecording({
+    required String serverId,
+    required List<Map<String, double>> segments,
+  });
+}

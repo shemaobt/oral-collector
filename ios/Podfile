@@ -1,5 +1,5 @@
 # Uncomment this line to define a global platform for your project
-# platform :ios, '13.0'
+platform :ios, '16.0'
 
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
@@ -39,5 +39,13 @@ end
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
+  end
+
+  # Fix sqlite3 umbrella header: use angle-bracketed include instead of double-quoted
+  umbrella = File.join(installer.sandbox.root, 'Target Support Files', 'sqlite3', 'sqlite3-umbrella.h')
+  if File.exist?(umbrella)
+    content = File.read(umbrella)
+    fixed = content.gsub(/#import "sqlite3.h"/, '#import <sqlite3.h>')
+    File.write(umbrella, fixed) if content != fixed
   end
 end
