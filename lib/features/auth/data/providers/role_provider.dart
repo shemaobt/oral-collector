@@ -1,22 +1,30 @@
+import 'dart:convert';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/auth/auth_notifier.dart';
+import '../../../../core/network/authenticated_client.dart';
 
 class RoleState {
   final Map<String, String> projectRoles;
+  final bool _fetched;
 
-  const RoleState({this.projectRoles = const {}});
+  const RoleState({this.projectRoles = const {}, bool fetched = false})
+    : _fetched = fetched;
 
   bool isProjectManager(String projectId) {
-    return projectRoles[projectId] == 'project_manager';
+    return projectRoles[projectId] == 'manager';
   }
 
   bool get hasAnyManagerRole {
-    return projectRoles.values.any((r) => r == 'project_manager');
+    return projectRoles.values.any((r) => r == 'manager');
   }
 
-  RoleState copyWith({Map<String, String>? projectRoles}) {
-    return RoleState(projectRoles: projectRoles ?? this.projectRoles);
+  RoleState copyWith({Map<String, String>? projectRoles, bool? fetched}) {
+    return RoleState(
+      projectRoles: projectRoles ?? this.projectRoles,
+      fetched: fetched ?? _fetched,
+    );
   }
 }
 
@@ -30,7 +38,7 @@ class RoleNotifier extends Notifier<RoleState> {
 
   bool get isPlatformAdmin {
     final user = ref.read(authNotifierProvider).currentUser;
-    return user?.role == 'admin';
+    return user?.isPlatformAdmin ?? false;
   }
 
   bool canManageProject(String projectId) {
@@ -39,21 +47,43 @@ class RoleNotifier extends Notifier<RoleState> {
   }
 
   bool get canCreateProject {
-    if (isPlatformAdmin) return true;
-    return state.hasAnyManagerRole;
+    return isPlatformAdmin;
   }
 
   Future<void> fetchRoleForProject(String projectId) async {
-    final user = ref.read(authNotifierProvider).currentUser;
-    if (user == null) return;
-
-    final role = user.role == 'admin' ? 'project_manager' : 'member';
-    state = state.copyWith(
-      projectRoles: {...state.projectRoles, projectId: role},
-    );
+    if (!state._fetched) {
+      await _fetchAllProjectRoles();
+    }
   }
 
   Future<void> fetchRolesForProjects(List<String> projectIds) async {
-    await Future.wait(projectIds.map(fetchRoleForProject));
+    if (!state._fetched) {
+      await _fetchAllProjectRoles();
+    }
+  }
+
+  Future<void> _fetchAllProjectRoles() async {
+    final user = ref.read(authNotifierProvider).currentUser;
+    if (user == null) return;
+
+    try {
+      final client = ref.read(authenticatedClientProvider);
+      final response = await client.get('/api/auth/my-project-roles');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        final rolesMap = data['project_roles'] as Map<String, dynamic>? ?? {};
+        final projectRoles = rolesMap.map(
+          (key, value) => MapEntry(key, value as String),
+        );
+        state = state.copyWith(projectRoles: projectRoles, fetched: true);
+      }
+    } catch (_) {
+      // If the API call fails, fall back to empty roles
+    }
+  }
+
+  void invalidate() {
+    state = const RoleState();
   }
 }
