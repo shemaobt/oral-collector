@@ -20,7 +20,7 @@ class Invite {
       id: json['id'] as String,
       projectId: json['project_id'] as String,
       projectName: json['project_name'] as String? ?? '',
-      role: json['role'] as String? ?? 'user',
+      role: json['role'] as String? ?? 'member',
       status: json['status'] as String? ?? 'pending',
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)

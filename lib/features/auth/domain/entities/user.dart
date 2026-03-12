@@ -2,7 +2,7 @@ class User {
   final String id;
   final String email;
   final String? displayName;
-  final String role;
+  final bool isPlatformAdmin;
   final DateTime? createdAt;
   final String? avatarUrl;
 
@@ -10,7 +10,7 @@ class User {
     required this.id,
     required this.email,
     this.displayName,
-    required this.role,
+    required this.isPlatformAdmin,
     this.createdAt,
     this.avatarUrl,
   });
@@ -20,7 +20,7 @@ class User {
       id: json['id'] as String,
       email: json['email'] as String,
       displayName: json['display_name'] as String?,
-      role: json['is_platform_admin'] == true ? 'admin' : 'user',
+      isPlatformAdmin: json['is_platform_admin'] == true,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
           : null,
@@ -33,7 +33,7 @@ class User {
       'id': id,
       'email': email,
       'display_name': displayName,
-      'role': role,
+      'is_platform_admin': isPlatformAdmin,
       'created_at': createdAt?.toIso8601String(),
       'avatar_url': avatarUrl,
     };
@@ -48,7 +48,7 @@ class User {
       id: id,
       email: email,
       displayName: displayName ?? this.displayName,
-      role: role,
+      isPlatformAdmin: isPlatformAdmin,
       createdAt: createdAt,
       avatarUrl: clearAvatar ? null : (avatarUrl ?? this.avatarUrl),
     );

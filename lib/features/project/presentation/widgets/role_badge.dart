@@ -10,8 +10,8 @@ class RoleBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    final isManager = role == 'project_manager';
-    final label = isManager ? 'PM' : 'User';
+    final isManager = role == 'manager';
+    final label = isManager ? 'Manager' : 'Member';
     final color = isManager ? colors.primary : colors.info;
 
     return Container(
