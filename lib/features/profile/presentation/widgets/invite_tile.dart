@@ -46,7 +46,7 @@ class InviteTile extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Role: ${invite.role == 'project_manager' ? 'Project Manager' : 'User'}',
+                  'Role: ${invite.role == 'manager' ? 'Manager' : 'Member'}',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),

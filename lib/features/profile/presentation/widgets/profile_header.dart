@@ -162,7 +162,7 @@ class ProfileHeader extends StatelessWidget {
               colors: colors,
               theme: theme,
             ),
-            if (user?.role == 'admin') ...[
+            if (user?.isPlatformAdmin ?? false) ...[
               const SizedBox(width: 8),
               InfoBadge(
                 icon: LucideIcons.shield,
