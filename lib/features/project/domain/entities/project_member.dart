@@ -5,6 +5,7 @@ class ProjectMember {
   final String email;
   final String? displayName;
   final String? avatarUrl;
+  final String role;
   final DateTime? grantedAt;
 
   const ProjectMember({
@@ -14,6 +15,7 @@ class ProjectMember {
     required this.email,
     this.displayName,
     this.avatarUrl,
+    this.role = 'member',
     this.grantedAt,
   });
 
@@ -25,6 +27,7 @@ class ProjectMember {
       email: json['email'] as String,
       displayName: json['display_name'] as String?,
       avatarUrl: json['avatar_url'] as String?,
+      role: json['role'] as String? ?? 'member',
       grantedAt: json['granted_at'] != null
           ? DateTime.parse(json['granted_at'] as String)
           : null,
