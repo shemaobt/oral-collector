@@ -19,17 +19,22 @@ class RecordingHeroPlayer extends StatelessWidget {
   final ThemeData theme;
 
   Future<Widget> _resolvePlayer() async {
+    final effectiveGcsUrl =
+        (recording.gcsUrl != null && recording.gcsUrl!.isNotEmpty)
+        ? recording.gcsUrl
+        : null;
+
     if (!kIsWeb && recording.localFilePath.isNotEmpty) {
       final exists = await file_ops.fileExists(recording.localFilePath);
       if (exists) {
         return AudioPlayerWidget(
           filePath: recording.localFilePath,
-          url: recording.gcsUrl,
+          url: effectiveGcsUrl,
         );
       }
     }
-    if (recording.gcsUrl != null) {
-      return AudioPlayerWidget(url: recording.gcsUrl);
+    if (effectiveGcsUrl != null) {
+      return AudioPlayerWidget(url: effectiveGcsUrl);
     }
     return Text(
       'No audio available',
