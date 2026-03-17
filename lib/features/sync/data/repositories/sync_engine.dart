@@ -192,7 +192,7 @@ class SyncEngineImpl implements SyncEngine {
 
       final confirmData =
           jsonDecode(confirmResponse.body) as Map<String, dynamic>;
-      final gcsUrl = confirmData['gcs_url'] as String;
+      final gcsUrl = confirmData['gcs_url'] as String? ?? '';
 
       await _recordingRepo.markAsUploaded(id, serverId, gcsUrl);
 
