@@ -12,6 +12,7 @@ import '../../../shared/widgets/screen_header.dart';
 import '../../../shared/widgets/sync_status_indicator.dart';
 import '../../genre/presentation/notifiers/genre_notifier.dart';
 import '../../project/presentation/notifiers/project_notifier.dart';
+import '../../sync/presentation/notifiers/sync_notifier.dart';
 import 'notifiers/recordings_list_notifier.dart';
 import 'widgets/genre_filter_bar.dart';
 import 'widgets/recording_card.dart';
@@ -28,18 +29,41 @@ class RecordingsListScreen extends ConsumerStatefulWidget {
       _RecordingsListScreenState();
 }
 
-class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen> {
+class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
+    with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() {
-      ref.read(genreNotifierProvider.notifier).fetchGenres();
-      ref.read(recordingsListNotifierProvider.notifier).fetchRecordings();
-    });
+    WidgetsBinding.instance.addObserver(this);
+    Future.microtask(_refreshAll);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _refreshAll();
+    }
+  }
+
+  void _refreshAll() {
+    ref.read(genreNotifierProvider.notifier).fetchGenres();
+    ref.read(recordingsListNotifierProvider.notifier).fetchRecordings();
+    ref.read(syncNotifierProvider.notifier).processQueue();
   }
 
   @override
   Widget build(BuildContext context) {
+    // Refresh list when sync completes (lastSyncAt changes)
+    ref.listen(syncNotifierProvider.select((s) => s.lastSyncAt), (_, _) {
+      ref.read(recordingsListNotifierProvider.notifier).fetchRecordings();
+    });
+
     final theme = Theme.of(context);
     final colors = AppColors.of(context);
     final genreState = ref.watch(genreNotifierProvider);
