@@ -34,9 +34,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() {
-      ref.read(projectNotifierProvider.notifier).fetchProjects();
+    Future.microtask(() async {
+      await ref.read(projectNotifierProvider.notifier).fetchProjects();
       ref.read(genreNotifierProvider.notifier).fetchGenres();
+      _fetchStatsIfNeeded();
       ref.read(homeNotifierProvider.notifier).refreshAll();
     });
   }
@@ -111,6 +112,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ref.read(statsNotifierProvider.notifier).fetchGenreStats(next);
         ref.read(homeNotifierProvider.notifier).refreshAll();
       }
+    });
+
+    ref.listen(statsNotifierProvider.select((s) => s.genreStats), (_, _) {
+      ref.read(homeNotifierProvider.notifier).computeTotals();
     });
 
     final totalRecordings = homeState.totalRecordings;
