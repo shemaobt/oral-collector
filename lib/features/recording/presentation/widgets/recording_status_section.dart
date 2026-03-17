@@ -125,6 +125,7 @@ class RecordingStatusSection extends StatelessWidget {
   IconData _uploadIcon() {
     switch (recording.uploadStatus) {
       case 'uploaded':
+      case 'verified':
         return LucideIcons.checkCircle2;
       case 'uploading':
         return LucideIcons.upload;
@@ -138,6 +139,7 @@ class RecordingStatusSection extends StatelessWidget {
   Color _uploadColor() {
     switch (recording.uploadStatus) {
       case 'uploaded':
+      case 'verified':
         return colors.success;
       case 'uploading':
         return colors.accent;
@@ -151,6 +153,7 @@ class RecordingStatusSection extends StatelessWidget {
   String _uploadLabel() {
     switch (recording.uploadStatus) {
       case 'uploaded':
+      case 'verified':
         return 'Uploaded';
       case 'uploading':
         if (recording.retryCount >= 5) return 'Stuck \u2014 tap Retry';

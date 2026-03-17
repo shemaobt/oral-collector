@@ -76,6 +76,28 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
       var recording = await localRepo.getRecordingById(widget.recordingId);
       recording ??= await localRepo.getRecordingByServerId(widget.recordingId);
 
+      if (recording != null &&
+          (recording.gcsUrl == null || recording.gcsUrl!.isEmpty) &&
+          (recording.uploadStatus == 'uploaded' ||
+              recording.uploadStatus == 'verified') &&
+          recording.serverId != null &&
+          recording.serverId!.isNotEmpty) {
+        try {
+          final apiRepo = ref.read(recordingApiRepositoryProvider);
+          final server = await apiRepo.getRecording(recording.serverId!);
+          if (server.gcsUrl != null && server.gcsUrl!.isNotEmpty) {
+            await localRepo.updateRecording(
+              recording.id,
+              LocalRecordingsCompanion(
+                gcsUrl: Value(server.gcsUrl!),
+                uploadStatus: Value(server.uploadStatus),
+              ),
+            );
+            recording = await localRepo.getRecordingById(recording.id);
+          }
+        } catch (_) {}
+      }
+
       if (recording == null) {
         try {
           final apiRepo = ref.read(recordingApiRepositoryProvider);
@@ -328,10 +350,33 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
         await file_ops.writeFileBytes(filePath, response.bodyBytes);
 
         final repo = ref.read(localRecordingRepositoryProvider);
-        await repo.updateRecording(
+        final updated = await repo.updateRecording(
           recording.id,
           LocalRecordingsCompanion(localFilePath: Value(filePath)),
         );
+        if (!updated) {
+          // Server-only recording — insert into local DB so the file path persists
+          await repo.insertRecording(
+            LocalRecordingsCompanion(
+              id: Value(recording.id),
+              projectId: Value(recording.projectId),
+              genreId: Value(recording.genreId),
+              subcategoryId: recording.subcategoryId != null
+                  ? Value(recording.subcategoryId!)
+                  : const Value.absent(),
+              title: Value(recording.title),
+              durationSeconds: Value(recording.durationSeconds),
+              fileSizeBytes: Value(recording.fileSizeBytes),
+              format: Value(recording.format),
+              localFilePath: Value(filePath),
+              uploadStatus: Value(recording.uploadStatus),
+              serverId: Value(recording.serverId ?? recording.id),
+              gcsUrl: Value(recording.gcsUrl),
+              cleaningStatus: Value(recording.cleaningStatus),
+              recordedAt: Value(recording.recordedAt),
+            ),
+          );
+        }
 
         await _loadRecording();
         hasLocalFile = true;

@@ -25,6 +25,7 @@ class RecordingCard extends StatelessWidget {
   Color _statusAccentColor(AppColorSet colors) {
     switch (recording.uploadStatus) {
       case 'uploaded':
+      case 'verified':
         return colors.success;
       case 'uploading':
         return colors.accent;
@@ -38,6 +39,7 @@ class RecordingCard extends StatelessWidget {
   IconData _statusIcon() {
     switch (recording.uploadStatus) {
       case 'uploaded':
+      case 'verified':
         return LucideIcons.checkCircle2;
       case 'uploading':
         return LucideIcons.upload;
@@ -51,6 +53,7 @@ class RecordingCard extends StatelessWidget {
   String _statusLabel() {
     switch (recording.uploadStatus) {
       case 'uploaded':
+      case 'verified':
         return 'Uploaded';
       case 'uploading':
         return 'Uploading';

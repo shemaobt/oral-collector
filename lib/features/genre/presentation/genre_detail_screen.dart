@@ -27,14 +27,17 @@ class GenreDetailScreen extends ConsumerWidget {
 
     if (genre == null) {
       return Scaffold(
-        appBar: AppBar(leading: const BackButton(), title: const Text('Genre')),
+        appBar: AppBar(
+          leading: BackButton(onPressed: () => context.pop()),
+          title: const Text('Genre'),
+        ),
         body: const Center(child: Text('Genre not found')),
       );
     }
 
     return Scaffold(
       appBar: AppBar(
-        leading: const BackButton(),
+        leading: BackButton(onPressed: () => context.pop()),
         title: Text(genre.name),
         actions: [
           Container(
