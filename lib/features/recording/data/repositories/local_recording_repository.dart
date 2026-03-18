@@ -66,7 +66,11 @@ class LocalRecordingRepository {
     return rows > 0;
   }
 
-  Future<bool> markAsUploaded(String id, String serverId, String gcsUrl) async {
+  Future<bool> markAsUploaded(
+    String id,
+    String serverId,
+    String? gcsUrl,
+  ) async {
     final rows =
         await (_db.update(
           _db.localRecordings,
