@@ -34,6 +34,13 @@
 </head>
 <body>
   <script src="https://cdn.jsdelivr.net/npm/sql.js@1.11.0/dist/sql-wasm.js"></script>
+  <script>
+    // Pre-configure sql.js to load WASM from CDN instead of relative path
+    window.Module = window.Module || {};
+    window.Module.locateFile = function(file) {
+      return 'https://cdn.jsdelivr.net/npm/sql.js@1.11.0/dist/' + file;
+    };
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
