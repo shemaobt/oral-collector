@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../notifiers/recordings_list_state.dart';
 
@@ -20,11 +21,16 @@ class StatusFilterBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final filters = [
-      (StatusFilter.all, 'All', LucideIcons.list),
-      (StatusFilter.pending, 'Pending', LucideIcons.clock),
-      (StatusFilter.uploaded, 'Uploaded', LucideIcons.checkCircle2),
-      (StatusFilter.needsCleaning, 'Needs Cleaning', LucideIcons.sparkles),
+      (StatusFilter.all, l10n.filter_all, LucideIcons.list),
+      (StatusFilter.pending, l10n.filter_pending, LucideIcons.clock),
+      (StatusFilter.uploaded, l10n.filter_uploaded, LucideIcons.checkCircle2),
+      (
+        StatusFilter.needsCleaning,
+        l10n.filter_needsCleaning,
+        LucideIcons.sparkles,
+      ),
     ];
 
     return SizedBox(

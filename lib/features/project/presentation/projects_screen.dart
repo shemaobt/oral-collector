@@ -9,6 +9,7 @@ import '../../../shared/widgets/app_shell.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/screen_header.dart';
 import '../../../shared/widgets/sync_status_indicator.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../auth/data/providers/role_provider.dart';
 import 'notifiers/project_notifier.dart';
 import 'notifiers/project_state.dart';
@@ -58,13 +59,14 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
       }
     });
 
+    final l10n = AppLocalizations.of(context);
     final canCreate = roleNotifier.canCreateProject;
     final fabOffset = AppShell.fabBottomOffset(context);
 
     return Scaffold(
       appBar: ScreenHeader(
-        title: 'Projects',
-        subtitle: 'Manage your collections',
+        title: l10n.project_projects,
+        subtitle: l10n.project_subtitle,
         icon: LucideIcons.folderOpen,
         actions: const [SyncStatusIndicator()],
       ),
@@ -91,11 +93,11 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
     }
 
     if (state.projects.isEmpty) {
-      return const EmptyState(
+      final l10n = AppLocalizations.of(context);
+      return EmptyState(
         icon: LucideIcons.folderPlus,
-        title: 'No projects yet',
-        description:
-            'Create your first project to start collecting oral stories.',
+        title: l10n.project_noProjectsTitle,
+        description: l10n.project_noProjectsSubtitle,
       );
     }
 
@@ -113,7 +115,7 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
       },
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final isTablet = constraints.maxWidth >= 600;
+          final isTablet = constraints.maxWidth >= 500;
 
           if (isTablet) {
             return GridView.builder(
@@ -121,10 +123,10 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                 20,
                 20,
                 20,
-                AppShell.scrollBottomPadding,
+                AppShell.scrollPaddingFor(context),
               ),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
+              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: 340,
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
                 childAspectRatio: 1.6,
@@ -147,7 +149,7 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
               20,
               12,
               20,
-              AppShell.scrollBottomPadding,
+              AppShell.scrollPaddingFor(context),
             ),
             itemCount: state.projects.length,
             itemBuilder: (context, index) {

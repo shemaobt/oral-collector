@@ -1,0 +1,635 @@
+{
+  "@@locale": "en",
+
+  "appTitle": "Oral Collector",
+
+  "nav_home": "Home",
+  "nav_record": "Record",
+  "nav_recordings": "Recordings",
+  "nav_projects": "Projects",
+  "nav_profile": "Profile",
+  "nav_admin": "Admin",
+  "nav_collapse": "Collapse",
+
+  "common_cancel": "Cancel",
+  "common_save": "Save",
+  "common_delete": "Delete",
+  "common_remove": "Remove",
+  "common_create": "Create",
+  "common_continue": "Continue",
+  "common_next": "Next",
+  "common_retry": "Retry",
+  "common_move": "Move",
+  "common_invite": "Invite",
+  "common_download": "Download",
+  "common_clear": "Clear",
+  "common_untitled": "Untitled",
+  "common_loading": "Loading...",
+
+  "auth_oralCollector": "Oral Collector",
+  "auth_byShema": "by Shema",
+  "auth_heroTagline": "Preserve voices.\nShare stories.",
+  "auth_welcomeBack": "Welcome\nBack",
+  "auth_welcome": "Welcome ",
+  "auth_back": "Back",
+  "auth_createWord": "Create ",
+  "auth_createNewline": "Create\n",
+  "auth_account": "Account",
+  "auth_signInSubtitle": "Sign in to continue collecting stories.",
+  "auth_signUpSubtitle": "Join our community of story collectors.",
+  "auth_backToSignIn": "Back to sign in",
+
+  "auth_emailLabel": "Email Address",
+  "auth_emailHint": "your@email.com",
+  "auth_emailRequired": "Please enter your email",
+  "auth_emailInvalid": "Please enter a valid email",
+  "auth_passwordLabel": "Password",
+  "auth_passwordHint": "At least 6 characters",
+  "auth_passwordRequired": "Please enter your password",
+  "auth_passwordTooShort": "Password must be at least 6 characters",
+  "auth_confirmPasswordLabel": "Confirm Password",
+  "auth_confirmPasswordHint": "Re-enter password",
+  "auth_confirmPasswordRequired": "Please confirm your password",
+  "auth_confirmPasswordMismatch": "Passwords do not match",
+  "auth_nameLabel": "Name",
+  "auth_nameHint": "Your full name",
+  "auth_nameRequired": "Please enter your display name",
+
+  "auth_signIn": "Sign In",
+  "auth_signUp": "Sign Up",
+  "auth_noAccount": "Don't have an account? ",
+  "auth_haveAccount": "Have an account? ",
+  "auth_continueButton": "Continue",
+
+  "home_greetingMorning": "Good morning",
+  "home_greetingAfternoon": "Good afternoon",
+  "home_greetingEvening": "Good evening",
+  "home_greetingWithName": "{greeting}, {name}",
+  "@home_greetingWithName": {
+    "placeholders": {
+      "greeting": {"type": "String"},
+      "name": {"type": "String"}
+    }
+  },
+  "home_subtitle": "Let's share your stories today",
+  "home_switchProject": "Switch project",
+  "home_genres": "Genres",
+  "home_loadingProjects": "Loading projects...",
+  "home_loadingGenres": "Loading genres...",
+  "home_noGenres": "No genres available yet",
+  "home_noProjectTitle": "Select a project to get started",
+  "home_browseProjects": "Browse Projects",
+
+  "stats_recordings": "recordings",
+  "stats_recorded": "recorded",
+  "stats_members": "members",
+
+  "project_switchTitle": "Switch Project",
+  "project_projects": "Projects",
+  "project_subtitle": "Manage your collections",
+  "project_noProjectsTitle": "No projects yet",
+  "project_noProjectsSubtitle": "Create your first project to start collecting oral stories.",
+  "project_newProject": "New Project",
+  "project_projectName": "Project Name",
+  "project_projectNameHint": "e.g. Kosrae Bible Translation",
+  "project_projectNameRequired": "Project name is required",
+  "project_description": "Description",
+  "project_descriptionHint": "Optional",
+  "project_language": "Language",
+  "project_selectLanguage": "Select a language",
+  "project_pleaseSelectLanguage": "Please select a language",
+  "project_createProject": "Create Project",
+  "project_selectLanguageTitle": "Select Language",
+  "project_addLanguageTitle": "Add Language",
+  "project_addLanguageSubtitle": "Can't find your language? Add it here.",
+  "project_languageName": "Language Name",
+  "project_languageNameHint": "e.g. Kosraean",
+  "project_languageNameRequired": "Name is required",
+  "project_languageCode": "Language Code",
+  "project_languageCodeHint": "e.g. kos (ISO 639-3)",
+  "project_languageCodeRequired": "Code is required",
+  "project_languageCodeTooLong": "Code must be 1-3 characters",
+  "project_addLanguage": "Add Language",
+  "project_noLanguagesFound": "No languages found",
+  "project_addNewLanguage": "Add new language",
+  "project_addAsNewLanguage": "Add \"{query}\" as a new language",
+  "@project_addAsNewLanguage": {
+    "placeholders": {
+      "query": {"type": "String"}
+    }
+  },
+  "project_searchLanguages": "Search languages...",
+  "project_backToList": "Back to list",
+
+  "projectSettings_title": "Project Settings",
+  "projectSettings_details": "Details",
+  "projectSettings_saving": "Saving...",
+  "projectSettings_saveChanges": "Save Changes",
+  "projectSettings_updated": "Project updated",
+  "projectSettings_noPermission": "You do not have permission to update this project",
+  "projectSettings_team": "Team",
+  "projectSettings_removeMember": "Remove Member",
+  "projectSettings_removeMemberConfirm": "Remove {name} from this project?",
+  "@projectSettings_removeMemberConfirm": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "projectSettings_memberRemoved": "Member removed",
+  "projectSettings_memberRemoveFailed": "Failed to remove member",
+  "projectSettings_inviteSent": "Invite sent successfully",
+  "projectSettings_noMembers": "No members yet",
+
+  "recording_selectGenre": "Select Genre",
+  "recording_selectGenreSubtitle": "Choose a genre for your story",
+  "recording_selectSubcategory": "Select Subcategory",
+  "recording_selectSubcategorySubtitle": "Pick a subcategory",
+  "recording_selectRegister": "Select Register",
+  "recording_selectRegisterSubtitle": "Choose the speech register",
+  "recording_recordingStep": "Recording",
+  "recording_recordingStepSubtitle": "Capture your story",
+  "recording_reviewStep": "Review Recording",
+  "recording_reviewStepSubtitle": "Listen and save",
+  "recording_genreNotFound": "Genre not found",
+  "recording_noGenres": "No genres available",
+  "recording_noSubcategories": "No subcategories available",
+
+  "recording_registerDescription": "Choose the speech register that best describes the tone and formality of this recording.",
+  "recording_titleHint": "Add a title (optional)",
+  "recording_saveRecording": "Save Recording",
+  "recording_recordAgain": "Record Again",
+  "recording_discard": "Discard",
+  "recording_discardTitle": "Discard Recording?",
+  "recording_discardMessage": "This recording will be permanently deleted.",
+  "recording_saved": "Recording saved",
+
+  "recording_notFound": "Recording not found",
+  "recording_unknownGenre": "Unknown genre",
+  "recording_splitRecording": "Split Recording",
+  "recording_moveCategory": "Move Category",
+  "recording_downloadAudio": "Download Audio",
+  "recording_downloadAudioMessage": "The audio file is not stored on this device. Would you like to download it to trim?",
+  "recording_downloadFailed": "Failed to download: {error}",
+  "@recording_downloadFailed": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "recording_audioNotAvailable": "Audio file not available",
+  "recording_deleteTitle": "Delete Recording",
+  "recording_deleteMessage": "This will permanently delete this recording from your device. If it has been uploaded, it will also be removed from the server. This action cannot be undone.",
+  "recording_deleteNoPermission": "You do not have permission to delete this recording",
+  "recording_deleteFailed": "Failed to delete recording",
+  "recording_deleteFailedLocal": "Failed to delete from server. Removing locally.",
+  "recording_cleaningStatusFailed": "Failed to update cleaning status on server",
+  "recording_updateNoPermission": "You do not have permission to update this recording",
+  "recording_moveNoPermission": "You do not have permission to move this recording",
+  "recording_movedSuccess": "Recording moved successfully",
+  "recording_updateFailed": "Failed to update on server",
+
+  "recordings_title": "Recordings",
+  "recordings_subtitle": "Your collected stories",
+  "recordings_importAudio": "Import audio file",
+  "recordings_selectProject": "Select a project",
+  "recordings_selectProjectSubtitle": "Choose a project to view its recordings",
+  "recordings_noRecordings": "No recordings yet",
+  "recordings_noRecordingsSubtitle": "Tap the microphone to record your first story, or import an audio file.",
+  "recordings_count": "{count, plural, =1{1 recording} other{{count} recordings}}",
+  "@recordings_count": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+
+  "recording_statusUploaded": "Uploaded",
+  "recording_statusUploading": "Uploading",
+  "recording_statusFailed": "Failed",
+  "recording_statusLocal": "Local",
+
+  "trim_title": "Split Recording",
+  "trim_notFound": "Recording not found",
+  "trim_audioUrlNotAvailable": "Audio URL not available for this recording.",
+  "trim_localNotAvailable": "Local audio file not available. Download the recording first.",
+  "trim_atLeastOneSegment": "At least one segment must be kept",
+  "trim_segments": "Segments",
+  "trim_restoreAll": "Restore all",
+  "trim_instructions": "Tap on the waveform above to place\nsplit markers and divide this recording",
+  "trim_splitting": "Splitting...",
+  "trim_saveSegments": "{count, plural, =1{Save 1 segment} other{Save {count} segments}}",
+  "@trim_saveSegments": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "trim_addSplitsFirst": "Add splits first",
+  "trim_savedSegments": "Saved {kept} segment{kept, plural, =1{} other{s}}, removed {removed}",
+  "@trim_savedSegments": {
+    "placeholders": {
+      "kept": {"type": "int"},
+      "removed": {"type": "int"}
+    }
+  },
+  "trim_splitInto": "Split into {count} recordings",
+  "@trim_splitInto": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+
+  "import_title": "Import Audio",
+  "import_selectGenre": "Select Genre",
+  "import_selectSubcategory": "Select Subcategory",
+  "import_selectRegister": "Select Register",
+  "import_confirmImport": "Confirm Import",
+  "import_analyzing": "Analyzing audio file...",
+  "import_selectFile": "Select an audio file to import",
+  "import_chooseFile": "Choose File",
+  "import_accessFailed": "Could not access selected file",
+  "import_pickError": "Error picking file: {error}",
+  "@import_pickError": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "import_saveError": "Error saving file: {error}",
+  "@import_saveError": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "import_unknownFile": "Unknown file",
+  "import_importAndSave": "Import & Save",
+
+  "moveCategory_title": "Move Category",
+  "moveCategory_genre": "Genre",
+  "moveCategory_subcategory": "Subcategory",
+  "moveCategory_selectSubcategory": "Select subcategory",
+
+  "cleaning_needsCleaning": "Needs Cleaning",
+  "cleaning_cleaning": "Cleaning...",
+  "cleaning_cleaned": "Cleaned",
+  "cleaning_cleanFailed": "Clean Failed",
+
+  "sync_uploading": "Uploading...",
+  "sync_pending": "{count} pending",
+  "@sync_pending": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+
+  "profile_photoUpdated": "Profile photo updated",
+  "profile_photoFailed": "Failed to update photo: {error}",
+  "@profile_photoFailed": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "profile_editName": "Edit display name",
+  "profile_nameHint": "Your name",
+  "profile_nameUpdated": "Name updated",
+  "profile_syncStorage": "Sync & Storage",
+  "profile_about": "About",
+  "profile_appVersion": "App version",
+  "profile_byShema": "Oral Collector by Shema",
+  "profile_administration": "Administration",
+  "profile_adminDashboard": "Admin Dashboard",
+  "profile_adminSubtitle": "System stats, projects & genre management",
+  "profile_account": "Account",
+  "profile_logOut": "Log Out",
+  "profile_clearCacheTitle": "Clear local cache?",
+  "profile_clearCacheMessage": "This will delete all locally stored recordings. Uploaded recordings on the server will not be affected.",
+  "profile_cacheCleared": "Local cache cleared",
+  "profile_joinedSuccess": "Joined \"{name}\" successfully",
+  "@profile_joinedSuccess": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "profile_inviteDeclined": "Invite declined",
+  "profile_language": "Language",
+
+  "profile_online": "Online",
+  "profile_offline": "Offline",
+  "profile_lastSync": "Last sync: {time}",
+  "@profile_lastSync": {
+    "placeholders": {
+      "time": {"type": "String"}
+    }
+  },
+  "profile_neverSynced": "Never synced",
+  "profile_pendingCount": "{count} pending",
+  "@profile_pendingCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "profile_syncingProgress": "Syncing... {percent}%",
+  "@profile_syncingProgress": {
+    "placeholders": {
+      "percent": {"type": "int"}
+    }
+  },
+  "profile_syncNow": "Sync Now",
+  "profile_wifiOnly": "Upload on Wi-Fi only",
+  "profile_wifiOnlySubtitle": "Prevent uploads over cellular data",
+  "profile_autoRemove": "Auto-remove after upload",
+  "profile_autoRemoveSubtitle": "Delete local files after successful upload",
+  "profile_clearCache": "Clear local cache",
+  "profile_clearCacheSubtitle": "Delete all locally stored recordings",
+
+  "profile_invitations": "Invitations",
+  "profile_refreshInvitations": "Refresh invitations",
+  "profile_noInvitations": "No pending invitations",
+  "profile_roleManager": "Role: Manager",
+  "profile_roleMember": "Role: Member",
+  "profile_decline": "Decline",
+  "profile_accept": "Accept",
+
+  "profile_storage": "Storage",
+  "profile_status": "Status",
+  "profile_pendingLabel": "Pending",
+
+  "admin_title": "Admin Dashboard",
+  "admin_overview": "Overview",
+  "admin_projects": "Projects",
+  "admin_genres": "Genres",
+  "admin_cleaning": "Cleaning",
+  "admin_accessRequired": "Admin access required",
+
+  "admin_totalProjects": "Total Projects",
+  "admin_languages": "Languages",
+  "admin_recordings": "Recordings",
+  "admin_totalHours": "Total Hours",
+  "admin_activeUsers": "Active Users",
+
+  "admin_projectName": "Name",
+  "admin_projectLanguage": "Language",
+  "admin_projectMembers": "Members",
+  "admin_projectRecordings": "Recordings",
+  "admin_projectDuration": "Duration",
+  "admin_projectCreated": "Created",
+  "admin_noProjects": "No projects found",
+  "admin_unknownLanguage": "Unknown language",
+
+  "admin_genresAndSubcategories": "Genres & Subcategories",
+  "admin_addGenre": "Add Genre",
+  "admin_noGenres": "No genres found",
+  "admin_genreName": "Genre Name",
+  "admin_required": "Required",
+  "admin_descriptionOptional": "Description (optional)",
+  "admin_genreCreated": "Genre created",
+  "admin_editGenre": "Edit genre",
+  "admin_deleteGenre": "Delete genre",
+  "admin_addSubcategory": "Add subcategory",
+  "admin_editGenreTitle": "Edit Genre",
+  "admin_genreUpdated": "Genre updated",
+  "admin_deleteGenreTitle": "Delete Genre",
+  "admin_deleteGenreConfirm": "Delete \"{name}\" and all its subcategories?",
+  "@admin_deleteGenreConfirm": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "admin_genreDeleted": "Genre deleted",
+  "admin_addSubcategoryTo": "Add Subcategory to {name}",
+  "@admin_addSubcategoryTo": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "admin_subcategoryName": "Subcategory Name",
+  "admin_subcategoryCreated": "Subcategory created",
+  "admin_deleteSubcategory": "Delete Subcategory",
+  "admin_deleteSubcategoryConfirm": "Delete \"{name}\"?",
+  "@admin_deleteSubcategoryConfirm": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "admin_subcategoryDeleted": "Subcategory deleted",
+
+  "admin_cleaningQueue": "Audio Cleaning Queue",
+  "admin_cleanSelected": "Clean Selected ({count})",
+  "@admin_cleanSelected": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "admin_refreshCleaning": "Refresh cleaning queue",
+  "admin_cleaningWebOnly": "Audio cleaning is a web-only feature. Cleaning processes run on the server.",
+  "admin_noCleaningRecordings": "No recordings flagged for cleaning",
+  "admin_cleaningTitle": "Title",
+  "admin_cleaningDuration": "Duration",
+  "admin_cleaningSize": "Size",
+  "admin_cleaningFormat": "Format",
+  "admin_cleaningRecorded": "Recorded",
+  "admin_cleaningActions": "Actions",
+  "admin_clean": "Clean",
+  "admin_deselectAll": "Deselect All",
+  "admin_selectAll": "Select All",
+  "admin_cleaningTriggered": "Cleaning triggered",
+  "admin_cleaningFailed": "Failed to trigger cleaning",
+  "admin_cleaningPartial": "Cleaning triggered for {success} of {total} recordings",
+  "@admin_cleaningPartial": {
+    "placeholders": {
+      "success": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+
+  "genre_title": "Genre",
+  "genre_notFound": "Genre not found",
+  "genre_recordingCount": "{count, plural, =1{1 recording} other{{count} recordings}}",
+  "@genre_recordingCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+
+  "format_justNow": "just now",
+  "format_minutesAgo": "{count}m ago",
+  "@format_minutesAgo": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "format_hoursAgo": "{count}h ago",
+  "@format_hoursAgo": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "format_daysAgo": "{count}d ago",
+  "@format_daysAgo": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "format_weeksAgo": "{count}w ago",
+  "@format_weeksAgo": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "format_monthsAgo": "{count}mo ago",
+  "@format_monthsAgo": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "format_memberSince": "Member since {date}",
+  "@format_memberSince": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "format_member": "Member",
+  "format_dateAt": "{date} at {time}",
+  "@format_dateAt": {
+    "placeholders": {
+      "date": {"type": "String"},
+      "time": {"type": "String"}
+    }
+  },
+
+  "genre_narrative": "Narrative",
+  "genre_narrativeDesc": "Stories, accounts, and narrative forms of oral tradition",
+  "genre_poeticSong": "Poetic / Song",
+  "genre_poeticSongDesc": "Musical and poetic oral traditions including hymns, laments, and wisdom poetry",
+  "genre_instructional": "Instructional / Regulatory",
+  "genre_instructionalDesc": "Laws, rituals, procedures, and instructional forms",
+  "genre_oralDiscourse": "Oral Discourse",
+  "genre_oralDiscourseDesc": "Speeches, teachings, prayers, and discursive oral forms",
+
+  "sub_historicalNarrative": "Historical Narrative",
+  "sub_personalAccount": "Personal Account / Testimony",
+  "sub_parable": "Parable / Illustrative Story",
+  "sub_originStory": "Origin / Creation Story",
+  "sub_legend": "Legend / Hero Story",
+  "sub_visionNarrative": "Vision or Dream Narrative",
+  "sub_genealogy": "Genealogy",
+  "sub_eventReport": "Recent Event Report",
+  "sub_hymn": "Hymn / Worship Song",
+  "sub_lament": "Lament",
+  "sub_funeralDirge": "Funeral Dirge",
+  "sub_victorySong": "Victory / Celebration Song",
+  "sub_loveSong": "Love Song",
+  "sub_tauntSong": "Mocking / Taunt Song",
+  "sub_blessing": "Blessing",
+  "sub_curse": "Curse",
+  "sub_wisdomPoem": "Wisdom Poem / Proverb",
+  "sub_didacticPoetry": "Didactic Poetry",
+  "sub_legalCode": "Law / Legal Code",
+  "sub_ritual": "Ritual / Liturgy",
+  "sub_procedure": "Procedure / Instruction",
+  "sub_listInventory": "List / Inventory",
+  "sub_propheticOracle": "Prophetic Oracle / Speech",
+  "sub_exhortation": "Exhortation / Sermon",
+  "sub_wisdomTeaching": "Wisdom Teaching",
+  "sub_prayer": "Prayer",
+  "sub_dialogue": "Dialogue",
+  "sub_epistle": "Epistle / Letter",
+  "sub_apocalypticDiscourse": "Apocalyptic Discourse",
+  "sub_ceremonialSpeech": "Ceremonial Speech",
+  "sub_communityMemory": "Community Memory",
+
+  "sub_historicalNarrativeDesc": "Accounts of events, wars, and key moments in history",
+  "sub_personalAccountDesc": "First-person stories of personal experiences and faith",
+  "sub_parableDesc": "Symbolic stories that teach moral or spiritual lessons",
+  "sub_originStoryDesc": "Stories about how things came to be",
+  "sub_legendDesc": "Tales of remarkable people and their great deeds",
+  "sub_visionNarrativeDesc": "Accounts of divine visions and prophetic dreams",
+  "sub_genealogyDesc": "Records of family lines and ancestral lineages",
+  "sub_eventReportDesc": "Reports of recent happenings in the community",
+  "sub_hymnDesc": "Songs of praise and worship to God",
+  "sub_lamentDesc": "Expressions of grief, sorrow, and mourning",
+  "sub_funeralDirgeDesc": "Songs performed during mourning and burial ceremonies",
+  "sub_victorySongDesc": "Songs celebrating triumphs and joyful events",
+  "sub_loveSongDesc": "Songs expressing love and devotion",
+  "sub_tauntSongDesc": "Songs of ridicule aimed at enemies or the unfaithful",
+  "sub_blessingDesc": "Words invoking divine favor and protection",
+  "sub_curseDesc": "Pronouncements of judgment or divine consequence",
+  "sub_wisdomPoemDesc": "Short sayings and poems conveying practical wisdom",
+  "sub_didacticPoetryDesc": "Poetic compositions designed to teach and instruct",
+  "sub_legalCodeDesc": "Rules, statutes, and covenant regulations",
+  "sub_ritualDesc": "Prescribed forms of worship and sacred ceremonies",
+  "sub_procedureDesc": "Step-by-step directions and practical guidelines",
+  "sub_listInventoryDesc": "Catalogs, censuses, and organized records",
+  "sub_propheticOracleDesc": "Messages delivered on behalf of God",
+  "sub_exhortationDesc": "Speeches urging moral and spiritual action",
+  "sub_wisdomTeachingDesc": "Instruction on living wisely and righteously",
+  "sub_prayerDesc": "Words addressed to God in worship or petition",
+  "sub_dialogueDesc": "Conversations and exchanges between people",
+  "sub_epistleDesc": "Written messages addressed to communities or individuals",
+  "sub_apocalypticDiscourseDesc": "Revelations about the end times and God's plan",
+  "sub_ceremonialSpeechDesc": "Formal addresses for official or sacred occasions",
+  "sub_communityMemoryDesc": "Shared recollections that preserve group identity",
+
+  "register_intimate": "Intimate",
+  "register_casual": "Informal / Casual",
+  "register_consultative": "Consultative",
+  "register_formal": "Formal / Official",
+  "register_ceremonial": "Ceremonial",
+  "register_elderAuthority": "Elder / Authority",
+  "register_religiousWorship": "Religious / Worship",
+
+  "locale_english": "English",
+  "locale_portuguese": "Português",
+  "locale_hindi": "हिन्दी",
+  "locale_korean": "한국어",
+  "locale_englishSub": "English",
+  "locale_portugueseSub": "Portuguese",
+  "locale_hindiSub": "Hindi",
+  "locale_koreanSub": "Korean",
+  "locale_selectLanguage": "Choose Your Language",
+  "locale_selectLanguageSubtitle": "You can change this later in your profile settings.",
+
+  "filter_all": "All",
+  "filter_pending": "Pending",
+  "filter_uploaded": "Uploaded",
+  "filter_needsCleaning": "Needs Cleaning",
+  "filter_allGenres": "All genres",
+
+  "detail_duration": "Duration",
+  "detail_size": "Size",
+  "detail_format": "Format",
+  "detail_status": "Status",
+  "detail_upload": "Upload",
+  "detail_uploaded": "Uploaded",
+  "detail_cleaning": "Cleaning",
+  "detail_recorded": "Recorded",
+  "detail_retry": "Retry",
+  "detail_notFlagged": "Not flagged",
+  "detail_uploadStuck": "Stuck — tap Retry",
+  "detail_uploading": "Uploading...",
+  "detail_maxRetries": "Max retries — tap Retry",
+  "detail_uploadFailed": "Upload Failed",
+  "detail_pendingRetried": "Pending (retried)",
+  "detail_notSynced": "Not synced",
+
+  "action_actions": "Actions",
+  "action_split": "Split",
+  "action_flagClean": "Flag Clean",
+  "action_clearFlag": "Clear Flag",
+  "action_move": "Move",
+  "action_delete": "Delete",
+
+  "projectStats_recordings": "Recordings",
+  "projectStats_duration": "Duration",
+  "projectStats_members": "Members",
+
+  "project_active": "Active",
+
+  "recording_paused": "Paused",
+  "recording_recording": "Recording",
+  "recording_tapToRecord": "Tap to Record",
+  "recording_sensitivity": "Sensitivity",
+  "recording_sensitivityLow": "Low",
+  "recording_sensitivityMed": "Med",
+  "recording_sensitivityHigh": "High",
+  "recording_stopRecording": "Stop recording",
+  "recording_stop": "Stop",
+  "recording_resume": "Resume",
+  "recording_pause": "Pause"
+}

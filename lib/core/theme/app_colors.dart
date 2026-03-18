@@ -31,14 +31,14 @@ class AppColorSet {
 abstract class AppColors {
   static const Color primary = Color(0xFF2E2D0C);
   static const Color accent = Color(0xFFD45200);
-  static const Color background = Color(0xFFF6F5EB);
+  static const Color background = Color(0xFFEEEBDD);
   static const Color foreground = Color(0xFF0A0703);
-  static const Color card = Color(0xFFFFFFFF);
-  static const Color surfaceAlt = Color(0xFFEDECE0);
+  static const Color card = Color(0xFFFAF9F3);
+  static const Color surfaceAlt = Color(0xFFD9D5C2);
   static const Color secondary = Color(0xFF46452C);
-  static const Color info = Color(0xFF1A8A78);
-  static const Color success = Color(0xFF477A12);
-  static const Color border = Color(0xFFB0AD86);
+  static const Color info = Color(0xFF178570);
+  static const Color success = Color(0xFF3F6E10);
+  static const Color border = Color(0xFF9A9671);
   static const Color error = Color(0xFFDC2626);
 
   static const Color darkPrimary = Color(0xFFD4D1A8);

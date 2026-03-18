@@ -3,6 +3,7 @@ class Recording {
   final String projectId;
   final String genreId;
   final String subcategoryId;
+  final String? registerId;
   final String userId;
   final String? title;
   final double durationSeconds;
@@ -19,6 +20,7 @@ class Recording {
     required this.projectId,
     required this.genreId,
     required this.subcategoryId,
+    this.registerId,
     required this.userId,
     this.title,
     required this.durationSeconds,
@@ -37,6 +39,7 @@ class Recording {
       projectId: json['project_id'] as String,
       genreId: json['genre_id'] as String,
       subcategoryId: json['subcategory_id'] as String,
+      registerId: json['register_id'] as String?,
       userId: json['user_id'] as String,
       title: json['title'] as String?,
       durationSeconds: (json['duration_seconds'] as num).toDouble(),
@@ -58,6 +61,7 @@ class Recording {
       'project_id': projectId,
       'genre_id': genreId,
       'subcategory_id': subcategoryId,
+      'register_id': registerId,
       'user_id': userId,
       'title': title,
       'duration_seconds': durationSeconds,
@@ -77,6 +81,7 @@ class LocalRecording {
   final String projectId;
   final String genreId;
   final String subcategoryId;
+  final String? registerId;
   final String? title;
   final double durationSeconds;
   final int fileSizeBytes;
@@ -87,6 +92,7 @@ class LocalRecording {
   final String? gcsUrl;
   final String cleaningStatus;
   final DateTime recordedAt;
+  final DateTime? createdAt;
   final int retryCount;
   final DateTime? lastRetryAt;
 
@@ -95,6 +101,7 @@ class LocalRecording {
     required this.projectId,
     required this.genreId,
     required this.subcategoryId,
+    this.registerId,
     this.title,
     required this.durationSeconds,
     required this.fileSizeBytes,
@@ -105,6 +112,7 @@ class LocalRecording {
     this.gcsUrl,
     required this.cleaningStatus,
     required this.recordedAt,
+    this.createdAt,
     this.retryCount = 0,
     this.lastRetryAt,
   });
@@ -115,6 +123,7 @@ class LocalRecording {
       projectId: json['project_id'] as String,
       genreId: json['genre_id'] as String,
       subcategoryId: json['subcategory_id'] as String,
+      registerId: json['register_id'] as String?,
       title: json['title'] as String?,
       durationSeconds: (json['duration_seconds'] as num).toDouble(),
       fileSizeBytes: (json['file_size_bytes'] as num).toInt(),
@@ -138,6 +147,7 @@ class LocalRecording {
       'project_id': projectId,
       'genre_id': genreId,
       'subcategory_id': subcategoryId,
+      'register_id': registerId,
       'title': title,
       'duration_seconds': durationSeconds,
       'file_size_bytes': fileSizeBytes,

@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../shared/utils/format.dart';
 import '../../../../shared/utils/recording_title.dart';
@@ -24,16 +25,20 @@ class ConfirmationStep extends ConsumerStatefulWidget {
     required this.result,
     required this.genreId,
     required this.subcategoryId,
+    this.registerId,
     required this.genreName,
     required this.subcategoryName,
+    this.registerName,
     required this.onReRecord,
   });
 
   final RecordingResult result;
   final String genreId;
   final String? subcategoryId;
+  final String? registerId;
   final String? genreName;
   final String? subcategoryName;
+  final String? registerName;
   final VoidCallback onReRecord;
 
   @override
@@ -143,6 +148,9 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
             widget.subcategoryId != null && widget.subcategoryId!.isNotEmpty
             ? Value(widget.subcategoryId!)
             : const Value.absent(),
+        registerId: widget.registerId != null && widget.registerId!.isNotEmpty
+            ? Value(widget.registerId!)
+            : const Value.absent(),
         title: Value(
           _titleController.text.trim().isNotEmpty
               ? _titleController.text.trim()
@@ -157,29 +165,31 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
 
     if (mounted) {
       HapticFeedback.mediumImpact();
+      final l10n = AppLocalizations.of(context);
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Recording saved')));
+      ).showSnackBar(SnackBar(content: Text(l10n.recording_saved)));
       context.go('/home');
     }
   }
 
   Future<void> _discard() async {
     final colors = AppColors.of(context);
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Discard Recording?'),
-        content: const Text('This recording will be permanently deleted.'),
+        title: Text(l10n.recording_discardTitle),
+        content: Text(l10n.recording_discardMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: Text(l10n.common_cancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: TextButton.styleFrom(foregroundColor: colors.error),
-            child: const Text('Discard'),
+            child: Text(l10n.recording_discard),
           ),
         ],
       ),
@@ -198,12 +208,14 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final colors = AppColors.of(context);
 
     final tagParts = <String>[];
     if (widget.genreName != null) tagParts.add(widget.genreName!);
     if (widget.subcategoryName != null) tagParts.add(widget.subcategoryName!);
+    if (widget.registerName != null) tagParts.add(widget.registerName!);
     final tagLabel = tagParts.join(' / ');
 
     final seed = widget.result.durationSeconds.hashCode;
@@ -315,7 +327,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
                     TextField(
                       controller: _titleController,
                       decoration: InputDecoration(
-                        hintText: 'Add a title (optional)',
+                        hintText: l10n.recording_titleHint,
                         hintStyle: TextStyle(color: colors.secondary),
                         filled: true,
                         fillColor: colors.surfaceAlt,
@@ -367,7 +379,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
                                 ),
                               )
                             : Text(
-                                'Save Recording',
+                                l10n.recording_saveRecording,
                                 style: theme.textTheme.titleSmall?.copyWith(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w600,
@@ -397,7 +409,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
                           ),
                         ),
                         child: Text(
-                          'Record Again',
+                          l10n.recording_recordAgain,
                           style: theme.textTheme.titleSmall?.copyWith(
                             color: colors.foreground,
                             fontWeight: FontWeight.w500,
@@ -413,7 +425,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
                       style: TextButton.styleFrom(
                         foregroundColor: colors.error,
                       ),
-                      child: const Text('Discard'),
+                      child: Text(l10n.recording_discard),
                     ),
                   ],
                 ),

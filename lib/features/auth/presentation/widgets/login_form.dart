@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../../l10n/app_localizations.dart';
 
 class LoginForm extends StatelessWidget {
   const LoginForm({
@@ -29,11 +30,13 @@ class LoginForm extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Email Address',
+          l10n.auth_emailLabel,
           style: theme.textTheme.bodySmall?.copyWith(
             fontWeight: FontWeight.w600,
             color: colors.foreground,
@@ -47,7 +50,7 @@ class LoginForm extends StatelessWidget {
           textInputAction: TextInputAction.next,
           style: theme.textTheme.bodyMedium,
           decoration: InputDecoration(
-            hintText: 'your@email.com',
+            hintText: l10n.auth_emailHint,
             prefixIcon: const Icon(LucideIcons.mail, size: 18),
             hintStyle: theme.textTheme.bodyMedium?.copyWith(
               color: colors.border,
@@ -55,10 +58,10 @@ class LoginForm extends StatelessWidget {
           ),
           validator: (value) {
             if (value == null || value.trim().isEmpty) {
-              return 'Please enter your email';
+              return l10n.auth_emailRequired;
             }
             if (!value.contains('@') || !value.contains('.')) {
-              return 'Please enter a valid email';
+              return l10n.auth_emailInvalid;
             }
             return null;
           },
@@ -66,7 +69,7 @@ class LoginForm extends StatelessWidget {
         const SizedBox(height: 20),
 
         Text(
-          'Password',
+          l10n.auth_passwordLabel,
           style: theme.textTheme.bodySmall?.copyWith(
             fontWeight: FontWeight.w600,
             color: colors.foreground,
@@ -95,10 +98,10 @@ class LoginForm extends StatelessWidget {
           ),
           validator: (value) {
             if (value == null || value.isEmpty) {
-              return 'Please enter your password';
+              return l10n.auth_passwordRequired;
             }
             if (value.length < 6) {
-              return 'Password must be at least 6 characters';
+              return l10n.auth_passwordTooShort;
             }
             return null;
           },
@@ -129,7 +132,7 @@ class LoginForm extends StatelessWidget {
                       color: Colors.white,
                     ),
                   )
-                : const Text('Sign In'),
+                : Text(l10n.auth_signIn),
           ),
         ),
         const SizedBox(height: 24),
@@ -138,7 +141,7 @@ class LoginForm extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              "Don't have an account? ",
+              l10n.auth_noAccount,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: colors.secondary,
               ),
@@ -150,7 +153,7 @@ class LoginForm extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 8),
               ),
               child: Text(
-                'Sign Up',
+                l10n.auth_signUp,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w700,
                   color: colors.accent,

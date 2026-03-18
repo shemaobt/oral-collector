@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../../l10n/app_localizations.dart';
+
 class LoginMobileHero extends StatelessWidget {
   const LoginMobileHero({
     super.key,
@@ -14,6 +16,8 @@ class LoginMobileHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return SizedBox(
       height: screenHeight * 0.48,
       child: Stack(
@@ -62,7 +66,7 @@ class LoginMobileHero extends StatelessWidget {
                 ),
                 const SizedBox(width: 10),
                 Text(
-                  'Oral Collector',
+                  l10n.auth_oralCollector,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     fontWeight: FontWeight.w700,
                     color: Colors.white.withValues(alpha: 0.9),
@@ -80,16 +84,9 @@ class LoginMobileHero extends StatelessWidget {
               TextSpan(
                 children: [
                   TextSpan(
-                    text: 'Welcome\n',
+                    text: l10n.auth_welcomeBack,
                     style: theme.textTheme.displayLarge?.copyWith(
                       color: Colors.white,
-                      height: 1.15,
-                    ),
-                  ),
-                  TextSpan(
-                    text: 'Back',
-                    style: theme.textTheme.displayLarge?.copyWith(
-                      color: const Color(0xFFFFB380),
                       height: 1.15,
                     ),
                   ),

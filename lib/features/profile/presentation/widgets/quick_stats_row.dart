@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import 'stat_item.dart';
 
@@ -22,6 +23,7 @@ class QuickStatsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
       decoration: BoxDecoration(
@@ -34,7 +36,7 @@ class QuickStatsRow extends StatelessWidget {
           StatItem(
             icon: LucideIcons.hardDrive,
             value: storageLabel,
-            label: 'Storage',
+            label: l10n.profile_storage,
             color: colors.info,
             colors: colors,
             theme: theme,
@@ -42,8 +44,8 @@ class QuickStatsRow extends StatelessWidget {
           _buildStatDivider(),
           StatItem(
             icon: isOnline ? LucideIcons.wifi : LucideIcons.wifiOff,
-            value: isOnline ? 'Online' : 'Offline',
-            label: 'Status',
+            value: isOnline ? l10n.profile_online : l10n.profile_offline,
+            label: l10n.profile_status,
             color: isOnline ? colors.success : colors.error,
             colors: colors,
             theme: theme,
@@ -52,7 +54,7 @@ class QuickStatsRow extends StatelessWidget {
           StatItem(
             icon: LucideIcons.upload,
             value: '$pendingCount',
-            label: 'Pending',
+            label: l10n.profile_pendingLabel,
             color: pendingCount > 0 ? colors.accent : colors.secondary,
             colors: colors,
             theme: theme,

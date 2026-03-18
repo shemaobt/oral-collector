@@ -21,6 +21,10 @@ IconData mapGenreIcon(String? iconName) {
       return LucideIcons.fileText;
     case 'megaphone':
       return LucideIcons.megaphone;
+    case 'clipboard-list':
+      return LucideIcons.clipboardList;
+    case 'lightbulb':
+      return LucideIcons.lightbulb;
     case 'mic':
       return LucideIcons.mic;
     default:

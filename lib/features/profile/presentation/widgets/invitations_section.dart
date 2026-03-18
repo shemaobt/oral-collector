@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/widgets/section_header.dart';
 import '../../../invite/presentation/notifiers/invite_state.dart';
@@ -24,13 +25,14 @@ class InvitationsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            const Expanded(child: SectionHeader(title: 'Invitations')),
+            Expanded(child: SectionHeader(title: l10n.profile_invitations)),
             IconButton(
               icon: Icon(
                 LucideIcons.refreshCw,
@@ -38,7 +40,7 @@ class InvitationsSection extends StatelessWidget {
                 color: theme.colorScheme.onSurfaceVariant,
               ),
               onPressed: onRefresh,
-              tooltip: 'Refresh invitations',
+              tooltip: l10n.profile_refreshInvitations,
             ),
           ],
         ),
@@ -65,7 +67,7 @@ class InvitationsSection extends StatelessWidget {
               ),
               trailing: TextButton(
                 onPressed: onRefresh,
-                child: const Text('Retry'),
+                child: Text(l10n.common_retry),
               ),
             ),
           )
@@ -78,7 +80,7 @@ class InvitationsSection extends StatelessWidget {
               padding: const EdgeInsets.all(20),
               child: Center(
                 child: Text(
-                  'No pending invitations',
+                  l10n.profile_noInvitations,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: theme.colorScheme.outline,
                   ),

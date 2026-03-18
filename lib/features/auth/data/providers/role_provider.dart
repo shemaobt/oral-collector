@@ -78,9 +78,7 @@ class RoleNotifier extends Notifier<RoleState> {
         );
         state = state.copyWith(projectRoles: projectRoles, fetched: true);
       }
-    } catch (_) {
-      // If the API call fails, fall back to empty roles
-    }
+    } catch (_) {}
   }
 
   void invalidate() {

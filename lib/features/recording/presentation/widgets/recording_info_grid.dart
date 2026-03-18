@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+
+import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../core/theme/app_colors.dart';
 
@@ -23,12 +25,13 @@ class RecordingInfoGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Row(
       children: [
         Expanded(
           child: InfoTile(
             icon: LucideIcons.clock,
-            label: 'Duration',
+            label: l10n.detail_duration,
             value: formattedDuration,
             colors: colors,
             theme: theme,
@@ -38,7 +41,7 @@ class RecordingInfoGrid extends StatelessWidget {
         Expanded(
           child: InfoTile(
             icon: LucideIcons.hardDrive,
-            label: 'Size',
+            label: l10n.detail_size,
             value: formattedSize,
             colors: colors,
             theme: theme,
@@ -48,7 +51,7 @@ class RecordingInfoGrid extends StatelessWidget {
         Expanded(
           child: InfoTile(
             icon: LucideIcons.fileAudio,
-            label: 'Format',
+            label: l10n.detail_format,
             value: recording.format.toUpperCase(),
             colors: colors,
             theme: theme,

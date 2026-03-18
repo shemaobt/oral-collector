@@ -1,7 +1,9 @@
+enum GreetingPeriod { morning, afternoon, evening }
+
 class HomeState {
   final int localPendingCount;
   final double localPendingDuration;
-  final String greeting;
+  final GreetingPeriod greeting;
   final bool isRefreshing;
   final int totalRecordings;
   final double totalDuration;
@@ -9,7 +11,7 @@ class HomeState {
   const HomeState({
     this.localPendingCount = 0,
     this.localPendingDuration = 0,
-    this.greeting = 'Hello',
+    this.greeting = GreetingPeriod.morning,
     this.isRefreshing = false,
     this.totalRecordings = 0,
     this.totalDuration = 0.0,
@@ -18,7 +20,7 @@ class HomeState {
   HomeState copyWith({
     int? localPendingCount,
     double? localPendingDuration,
-    String? greeting,
+    GreetingPeriod? greeting,
     bool? isRefreshing,
     int? totalRecordings,
     double? totalDuration,

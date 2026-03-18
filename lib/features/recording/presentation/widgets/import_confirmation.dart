@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/utils/format.dart';
 
@@ -12,6 +13,7 @@ class ImportConfirmation extends StatelessWidget {
     required this.fileSizeBytes,
     required this.genreName,
     required this.subcategoryName,
+    this.registerName,
     required this.titleController,
     required this.isSaving,
     required this.onSave,
@@ -24,6 +26,7 @@ class ImportConfirmation extends StatelessWidget {
   final int fileSizeBytes;
   final String? genreName;
   final String? subcategoryName;
+  final String? registerName;
   final TextEditingController titleController;
   final bool isSaving;
   final VoidCallback onSave;
@@ -31,12 +34,14 @@ class ImportConfirmation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final colors = AppColors.of(context);
 
     final tagParts = <String>[];
     if (genreName != null) tagParts.add(genreName!);
     if (subcategoryName != null) tagParts.add(subcategoryName!);
+    if (registerName != null) tagParts.add(registerName!);
     final tagLabel = tagParts.join(' / ');
 
     return Padding(
@@ -56,7 +61,7 @@ class ImportConfirmation extends StatelessWidget {
                 Icon(LucideIcons.fileAudio, size: 48, color: colors.info),
                 const SizedBox(height: 12),
                 Text(
-                  fileName ?? 'Unknown file',
+                  fileName ?? l10n.import_unknownFile,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
@@ -96,9 +101,9 @@ class ImportConfirmation extends StatelessWidget {
 
           TextField(
             controller: titleController,
-            decoration: const InputDecoration(
-              labelText: 'Add a title (optional)',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: l10n.recording_titleHint,
+              border: const OutlineInputBorder(),
             ),
             textCapitalization: TextCapitalization.sentences,
           ),
@@ -120,7 +125,7 @@ class ImportConfirmation extends StatelessWidget {
                       ),
                     )
                   : const Icon(LucideIcons.download),
-              label: const Text('Import & Save'),
+              label: Text(l10n.import_importAndSave),
               style: ElevatedButton.styleFrom(
                 backgroundColor: colors.success,
                 foregroundColor: Colors.white,
@@ -133,7 +138,7 @@ class ImportConfirmation extends StatelessWidget {
             height: 48,
             child: OutlinedButton(
               onPressed: isSaving ? null : onCancel,
-              child: const Text('Cancel'),
+              child: Text(l10n.common_cancel),
             ),
           ),
         ],

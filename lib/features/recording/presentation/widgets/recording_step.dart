@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/utils/format.dart';
 import '../../../../shared/widgets/record_button.dart';
@@ -18,6 +19,7 @@ class RecordingStep extends ConsumerStatefulWidget {
     required this.subcategoryId,
     required this.genreName,
     required this.subcategoryName,
+    this.registerName,
     required this.onRecordingComplete,
   });
 
@@ -25,6 +27,7 @@ class RecordingStep extends ConsumerStatefulWidget {
   final String subcategoryId;
   final String? genreName;
   final String? subcategoryName;
+  final String? registerName;
   final ValueChanged<RecordingResult> onRecordingComplete;
 
   @override
@@ -52,6 +55,7 @@ class _RecordingStepState extends ConsumerState<RecordingStep> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final colors = AppColors.of(context);
     final theme = Theme.of(context);
     final recState = ref.watch(recordingSessionNotifierProvider);
@@ -63,6 +67,7 @@ class _RecordingStepState extends ConsumerState<RecordingStep> {
     final tagParts = <String>[];
     if (widget.genreName != null) tagParts.add(widget.genreName!);
     if (widget.subcategoryName != null) tagParts.add(widget.subcategoryName!);
+    if (widget.registerName != null) tagParts.add(widget.registerName!);
     final tagLabel = tagParts.join(' / ');
 
     return SizedBox.expand(
@@ -96,7 +101,9 @@ class _RecordingStepState extends ConsumerState<RecordingStep> {
                           child: _PulsingDot(color: colors.accent),
                         ),
                       Text(
-                        recState.isPaused ? 'Paused' : 'Recording',
+                        recState.isPaused
+                            ? l10n.recording_paused
+                            : l10n.recording_recording,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: colors.secondary,
                           letterSpacing: 1.2,
@@ -139,7 +146,7 @@ class _RecordingStepState extends ConsumerState<RecordingStep> {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 40),
                   child: Text(
-                    'Tap to Record',
+                    l10n.recording_tapToRecord,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: colors.secondary,
                     ),
@@ -209,15 +216,30 @@ class _RecordingStepState extends ConsumerState<RecordingStep> {
         Icon(LucideIcons.mic, size: 14, color: colors.secondary),
         const SizedBox(width: 6),
         Text(
-          'Sensitivity',
+          AppLocalizations.of(context).recording_sensitivity,
           style: theme.textTheme.labelSmall?.copyWith(color: colors.secondary),
         ),
         const SizedBox(width: 10),
-        _sensitivityChip(colors, NoiseSensitivity.low, current, 'Low'),
+        _sensitivityChip(
+          colors,
+          NoiseSensitivity.low,
+          current,
+          AppLocalizations.of(context).recording_sensitivityLow,
+        ),
         const SizedBox(width: 4),
-        _sensitivityChip(colors, NoiseSensitivity.medium, current, 'Med'),
+        _sensitivityChip(
+          colors,
+          NoiseSensitivity.medium,
+          current,
+          AppLocalizations.of(context).recording_sensitivityMed,
+        ),
         const SizedBox(width: 4),
-        _sensitivityChip(colors, NoiseSensitivity.high, current, 'High'),
+        _sensitivityChip(
+          colors,
+          NoiseSensitivity.high,
+          current,
+          AppLocalizations.of(context).recording_sensitivityHigh,
+        ),
       ],
     );
   }
@@ -276,7 +298,9 @@ class _RecordingStepState extends ConsumerState<RecordingStep> {
         children: [
           ControlButton(
             icon: recState.isPaused ? LucideIcons.play : LucideIcons.pause,
-            label: recState.isPaused ? 'Resume' : 'Pause',
+            label: recState.isPaused
+                ? AppLocalizations.of(context).recording_resume
+                : AppLocalizations.of(context).recording_pause,
             onTap: () => recState.isPaused
                 ? notifier.resumeRecording()
                 : notifier.pauseRecording(),
@@ -291,7 +315,7 @@ class _RecordingStepState extends ConsumerState<RecordingStep> {
 
   Widget _buildStopButton(AppColorSet colors, VoidCallback onTap) {
     return Semantics(
-      label: 'Stop recording',
+      label: AppLocalizations.of(context).recording_stopRecording,
       button: true,
       child: GestureDetector(
         onTap: () {
@@ -328,7 +352,7 @@ class _RecordingStepState extends ConsumerState<RecordingStep> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Stop',
+              AppLocalizations.of(context).recording_stop,
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
                 color: colors.secondary,
                 fontWeight: FontWeight.w500,

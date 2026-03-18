@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../invite/domain/entities/invite.dart';
 
@@ -20,6 +21,7 @@ class InviteTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = AppColors.of(context);
+    final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
@@ -46,7 +48,9 @@ class InviteTile extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Role: ${invite.role == 'manager' ? 'Manager' : 'Member'}',
+                  invite.role == 'manager'
+                      ? l10n.profile_roleManager
+                      : l10n.profile_roleMember,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -64,7 +68,7 @@ class InviteTile extends StatelessWidget {
                 side: BorderSide(color: colors.error.withValues(alpha: 0.5)),
                 padding: const EdgeInsets.symmetric(horizontal: 12),
               ),
-              child: const Text('Decline'),
+              child: Text(l10n.profile_decline),
             ),
           ),
           const SizedBox(width: 8),
@@ -76,7 +80,7 @@ class InviteTile extends StatelessWidget {
                 backgroundColor: theme.colorScheme.primary,
                 padding: const EdgeInsets.symmetric(horizontal: 12),
               ),
-              child: const Text('Accept'),
+              child: Text(l10n.profile_accept),
             ),
           ),
         ],

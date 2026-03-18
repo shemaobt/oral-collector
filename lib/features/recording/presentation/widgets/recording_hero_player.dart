@@ -44,62 +44,125 @@ class RecordingHeroPlayer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isWide = MediaQuery.of(context).size.width >= 700;
+
     return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [colors.accent.withValues(alpha: 0.15), colors.background],
-        ),
-      ),
+      decoration: isWide
+          ? null
+          : BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  colors.accent.withValues(alpha: 0.15),
+                  colors.background,
+                ],
+              ),
+            ),
       child: SafeArea(
         bottom: false,
+        top: !isWide,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 60, 20, 20),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Container(
-                width: 72,
-                height: 72,
-                decoration: BoxDecoration(
-                  color: colors.accent.withValues(alpha: 0.12),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  LucideIcons.activity,
-                  size: 32,
-                  color: colors.accent,
-                ),
-              ),
-              const SizedBox(height: 20),
-              FutureBuilder<Widget>(
-                future: _resolvePlayer(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return SizedBox(
-                      height: 72,
-                      child: Center(
-                        child: SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: colors.primary,
-                          ),
-                        ),
+          padding: isWide
+              ? const EdgeInsets.symmetric(horizontal: 24, vertical: 12)
+              : const EdgeInsets.fromLTRB(20, 60, 20, 20),
+          child: isWide
+              ? Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: colors.accent.withValues(alpha: 0.12),
+                        shape: BoxShape.circle,
                       ),
-                    );
-                  }
-                  return snapshot.data ??
-                      Text(
-                        'No audio available',
-                        style: TextStyle(color: colors.secondary, fontSize: 14),
-                      );
-                },
-              ),
-            ],
-          ),
+                      child: Icon(
+                        LucideIcons.activity,
+                        size: 22,
+                        color: colors.accent,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: FutureBuilder<Widget>(
+                        future: _resolvePlayer(),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const SizedBox(
+                              height: 48,
+                              child: Center(
+                                child: SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                ),
+                              ),
+                            );
+                          }
+                          return snapshot.data ??
+                              Text(
+                                'No audio available',
+                                style: TextStyle(
+                                  color: colors.secondary,
+                                  fontSize: 14,
+                                ),
+                              );
+                        },
+                      ),
+                    ),
+                  ],
+                )
+              : Column(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Container(
+                      width: 72,
+                      height: 72,
+                      decoration: BoxDecoration(
+                        color: colors.accent.withValues(alpha: 0.12),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        LucideIcons.activity,
+                        size: 32,
+                        color: colors.accent,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    FutureBuilder<Widget>(
+                      future: _resolvePlayer(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return SizedBox(
+                            height: 72,
+                            child: Center(
+                              child: SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: colors.primary,
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+                        return snapshot.data ??
+                            Text(
+                              'No audio available',
+                              style: TextStyle(
+                                color: colors.secondary,
+                                fontSize: 14,
+                              ),
+                            );
+                      },
+                    ),
+                  ],
+                ),
         ),
       ),
     );
