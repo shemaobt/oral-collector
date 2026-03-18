@@ -58,42 +58,39 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const SignupScreen(),
       ),
 
-      GoRoute(
-        path: '/genre/:id',
-        builder: (context, state) =>
-            GenreDetailScreen(genreId: state.pathParameters['id'] ?? ''),
-      ),
-
-      GoRoute(
-        path: '/recording/:id',
-        builder: (context, state) => RecordingDetailScreen(
-          recordingId: state.pathParameters['id'] ?? '',
+      if (!kIsWeb) ...[
+        GoRoute(
+          path: '/genre/:id',
+          builder: (context, state) =>
+              GenreDetailScreen(genreId: state.pathParameters['id'] ?? ''),
         ),
-      ),
-
-      GoRoute(
-        path: '/recording/:id/trim',
-        builder: (context, state) =>
-            TrimEditorScreen(recordingId: state.pathParameters['id'] ?? ''),
-      ),
-
-      GoRoute(
-        path: '/import-file',
-        redirect: (context, state) => kIsWeb ? '/recordings' : null,
-        builder: (context, state) => const FileImportScreen(),
-      ),
-
-      GoRoute(
-        path: '/project/:id/settings',
-        builder: (context, state) =>
-            ProjectSettingsScreen(projectId: state.pathParameters['id'] ?? ''),
-      ),
-
-      GoRoute(
-        path: '/admin',
-        redirect: (context, state) => kIsWeb ? null : '/profile',
-        builder: (context, state) => const AdminDashboardScreen(),
-      ),
+        GoRoute(
+          path: '/recording/:id',
+          builder: (context, state) => RecordingDetailScreen(
+            recordingId: state.pathParameters['id'] ?? '',
+          ),
+        ),
+        GoRoute(
+          path: '/recording/:id/trim',
+          builder: (context, state) =>
+              TrimEditorScreen(recordingId: state.pathParameters['id'] ?? ''),
+        ),
+        GoRoute(
+          path: '/import-file',
+          builder: (context, state) => const FileImportScreen(),
+        ),
+        GoRoute(
+          path: '/project/:id/settings',
+          builder: (context, state) => ProjectSettingsScreen(
+            projectId: state.pathParameters['id'] ?? '',
+          ),
+        ),
+        GoRoute(
+          path: '/admin',
+          redirect: (context, state) => '/profile',
+          builder: (context, state) => const AdminDashboardScreen(),
+        ),
+      ],
 
       ShellRoute(
         builder: (context, state, child) => AppShell(child: child),
@@ -122,6 +119,36 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/profile',
             builder: (context, state) => const ProfileScreen(),
           ),
+
+          if (kIsWeb) ...[
+            GoRoute(
+              path: '/genre/:id',
+              builder: (context, state) =>
+                  GenreDetailScreen(genreId: state.pathParameters['id'] ?? ''),
+            ),
+            GoRoute(
+              path: '/recording/:id',
+              builder: (context, state) => RecordingDetailScreen(
+                recordingId: state.pathParameters['id'] ?? '',
+              ),
+            ),
+            GoRoute(
+              path: '/recording/:id/trim',
+              builder: (context, state) => TrimEditorScreen(
+                recordingId: state.pathParameters['id'] ?? '',
+              ),
+            ),
+            GoRoute(
+              path: '/project/:id/settings',
+              builder: (context, state) => ProjectSettingsScreen(
+                projectId: state.pathParameters['id'] ?? '',
+              ),
+            ),
+            GoRoute(
+              path: '/admin',
+              builder: (context, state) => const AdminDashboardScreen(),
+            ),
+          ],
         ],
       ),
     ],
