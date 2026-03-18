@@ -17,6 +17,7 @@ class LocalRecordings extends Table {
   TextColumn get uploadStatus => text().withDefault(const Constant('local'))();
   TextColumn get serverId => text().nullable()();
   TextColumn get gcsUrl => text().nullable()();
+  TextColumn get registerId => text().nullable()();
   TextColumn get cleaningStatus => text().withDefault(const Constant('none'))();
   DateTimeColumn get recordedAt => dateTime()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
@@ -57,5 +58,15 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    onCreate: (m) => m.createAll(),
+    onUpgrade: (m, from, to) async {
+      if (from < 2) {
+        await m.addColumn(localRecordings, localRecordings.registerId);
+      }
+    },
+  );
 }

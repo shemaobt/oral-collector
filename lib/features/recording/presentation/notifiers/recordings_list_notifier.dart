@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/database/app_database.dart';
@@ -30,6 +31,19 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
     }
 
     state = state.copyWith(isLoading: true);
+
+    if (kIsWeb) {
+      try {
+        final serverRecordings = await _apiRepo.listRecordings(projectId);
+        final recordings = _convertServerRecordings(serverRecordings);
+        recordings.sort((a, b) => b.recordedAt.compareTo(a.recordedAt));
+        state = state.copyWith(recordings: recordings, isLoading: false);
+      } catch (_) {
+        state = state.copyWith(isLoading: false);
+      }
+      return;
+    }
+
     try {
       final merged = await _fetchAndMerge(projectId);
       state = state.copyWith(recordings: merged, isLoading: false);
@@ -66,6 +80,7 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
             projectId: s.projectId,
             genreId: s.genreId,
             subcategoryId: s.subcategoryId,
+            registerId: s.registerId,
             title: s.title,
             durationSeconds: s.durationSeconds,
             fileSizeBytes: s.fileSizeBytes,
