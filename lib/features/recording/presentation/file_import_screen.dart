@@ -14,6 +14,7 @@ import '../../../core/database/app_database.dart';
 import '../../../shared/utils/recording_title.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../genre/presentation/notifiers/genre_notifier.dart';
+import '../../sync/presentation/notifiers/sync_notifier.dart';
 import '../../genre/presentation/notifiers/genre_state.dart';
 import '../../genre/domain/entities/genre.dart';
 import '../../project/presentation/notifiers/project_notifier.dart';
@@ -52,7 +53,9 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
   void initState() {
     super.initState();
     Future.microtask(() {
-      ref.read(genreNotifierProvider.notifier).fetchGenres();
+      if (ref.read(syncNotifierProvider).isOnline) {
+        ref.read(genreNotifierProvider.notifier).fetchGenres();
+      }
       _pickFile();
     });
   }

@@ -4,6 +4,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../shared/widgets/screen_header.dart';
 import '../../genre/presentation/notifiers/genre_notifier.dart';
+import '../../sync/presentation/notifiers/sync_notifier.dart';
 import '../../genre/presentation/notifiers/genre_state.dart';
 import '../../genre/domain/entities/genre.dart';
 import 'notifiers/recording_session_state.dart';
@@ -35,7 +36,9 @@ class _RecordingFlowScreenState extends ConsumerState<RecordingFlowScreen> {
   void initState() {
     super.initState();
     Future.microtask(() {
-      ref.read(genreNotifierProvider.notifier).fetchGenres();
+      if (ref.read(syncNotifierProvider).isOnline) {
+        ref.read(genreNotifierProvider.notifier).fetchGenres();
+      }
     });
 
     if (widget.genreId != null && widget.subcategoryId != null) {

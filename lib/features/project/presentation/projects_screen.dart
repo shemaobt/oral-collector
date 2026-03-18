@@ -6,10 +6,12 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/preview_helpers.dart';
 import '../../../shared/widgets/app_shell.dart';
+import '../../../shared/widgets/error_snack_bar.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/screen_header.dart';
 import '../../../shared/widgets/sync_status_indicator.dart';
 import '../../auth/data/providers/role_provider.dart';
+import '../../sync/presentation/notifiers/sync_notifier.dart';
 import 'notifiers/project_notifier.dart';
 import 'notifiers/project_state.dart';
 import 'create_project_dialog.dart';
@@ -30,17 +32,20 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() async {
-      if (!mounted) return;
-      await ref.read(projectNotifierProvider.notifier).fetchProjects();
-      if (!mounted) return;
-      final projects = ref.read(projectNotifierProvider).projects;
-      if (projects.isNotEmpty) {
-        await ref
-            .read(roleNotifierProvider.notifier)
-            .fetchRolesForProjects(projects.map((p) => p.id).toList());
-      }
-    });
+    Future.microtask(_fetchRemoteData);
+  }
+
+  Future<void> _fetchRemoteData() async {
+    if (!ref.read(syncNotifierProvider).isOnline) return;
+    if (!mounted) return;
+    await ref.read(projectNotifierProvider.notifier).fetchProjects();
+    if (!mounted) return;
+    final projects = ref.read(projectNotifierProvider).projects;
+    if (projects.isNotEmpty) {
+      await ref
+          .read(roleNotifierProvider.notifier)
+          .fetchRolesForProjects(projects.map((p) => p.id).toList());
+    }
   }
 
   @override
@@ -50,11 +55,13 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
     final roleNotifier = ref.read(roleNotifierProvider.notifier);
     final colors = AppColors.of(context);
 
+    ref.listen(syncNotifierProvider.select((s) => s.isOnline), (prev, next) {
+      if (next && prev == false) _fetchRemoteData();
+    });
+
     ref.listen<ProjectState>(projectNotifierProvider, (previous, next) {
       if (next.error != null && previous?.error != next.error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(next.error!), backgroundColor: colors.error),
-        );
+        showErrorSnackBar(context, next.error!);
       }
     });
 
@@ -102,15 +109,7 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
     final activeId = state.activeProject?.id;
 
     return RefreshIndicator(
-      onRefresh: () async {
-        await ref.read(projectNotifierProvider.notifier).fetchProjects();
-        final projects = ref.read(projectNotifierProvider).projects;
-        if (projects.isNotEmpty) {
-          await ref
-              .read(roleNotifierProvider.notifier)
-              .fetchRolesForProjects(projects.map((p) => p.id).toList());
-        }
-      },
+      onRefresh: _fetchRemoteData,
       child: LayoutBuilder(
         builder: (context, constraints) {
           final isTablet = constraints.maxWidth >= 600;

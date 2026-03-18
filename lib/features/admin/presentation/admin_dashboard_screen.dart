@@ -5,7 +5,9 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/preview_helpers.dart';
+import '../../../shared/widgets/error_snack_bar.dart';
 import '../../auth/data/providers/role_provider.dart';
+import '../../sync/presentation/notifiers/sync_notifier.dart';
 import 'notifiers/admin_notifier.dart';
 import 'widgets/cleaning_section.dart';
 import 'widgets/genres_section.dart';
@@ -33,17 +35,14 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
       final isAdmin = ref.read(roleNotifierProvider.notifier).isPlatformAdmin;
       if (!isAdmin) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Admin access required'),
-              backgroundColor: Colors.orange,
-            ),
-          );
+          showErrorSnackBar(context, 'Admin access required');
           context.pop();
         }
         return;
       }
-      ref.read(adminNotifierProvider.notifier).fetchAll();
+      if (ref.read(syncNotifierProvider).isOnline) {
+        ref.read(adminNotifierProvider.notifier).fetchAll();
+      }
     });
   }
 
@@ -53,14 +52,18 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
     final adminState = ref.watch(adminNotifierProvider);
     final isWide = MediaQuery.of(context).size.width >= 800;
 
+    ref.listen(syncNotifierProvider.select((s) => s.isOnline), (prev, next) {
+      if (next && prev == false) {
+        ref.read(adminNotifierProvider.notifier).fetchAll();
+      }
+    });
+
     ref.listen<String?>(adminNotifierProvider.select((s) => s.error), (
       prev,
       next,
     ) {
       if (next != null && next != prev) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(next), backgroundColor: colors.error),
-        );
+        showErrorSnackBar(context, next);
       }
     });
 
@@ -122,8 +125,10 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
             const VerticalDivider(thickness: 1, width: 1),
             Expanded(
               child: RefreshIndicator(
-                onRefresh: () =>
-                    ref.read(adminNotifierProvider.notifier).fetchAll(),
+                onRefresh: () async {
+                  if (!ref.read(syncNotifierProvider).isOnline) return;
+                  await ref.read(adminNotifierProvider.notifier).fetchAll();
+                },
                 child: SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   padding: const EdgeInsets.all(24),

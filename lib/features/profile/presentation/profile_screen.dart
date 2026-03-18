@@ -7,6 +7,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/preview_helpers.dart';
 import '../../../shared/utils/format.dart';
+import '../../../shared/widgets/error_snack_bar.dart';
 import '../../../shared/widgets/app_shell.dart';
 import '../../../shared/widgets/icon_box.dart';
 import '../../../shared/widgets/section_header.dart';
@@ -37,8 +38,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   void initState() {
     super.initState();
     Future.microtask(() {
-      ref.read(inviteNotifierProvider.notifier).fetchInvites();
       ref.read(profileNotifierProvider.notifier).loadStorageUsed();
+      if (ref.read(syncNotifierProvider).isOnline) {
+        ref.read(inviteNotifierProvider.notifier).fetchInvites();
+      }
     });
   }
 
@@ -54,12 +57,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to update photo: $e'),
-            backgroundColor: AppColors.of(context).error,
-          ),
-        );
+        showErrorSnackBar(context, 'Failed to update photo: $e');
       }
     }
   }
@@ -115,6 +113,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final syncState = ref.watch(syncNotifierProvider);
     final inviteState = ref.watch(inviteNotifierProvider);
     final profileState = ref.watch(profileNotifierProvider);
+
+    ref.listen(syncNotifierProvider.select((s) => s.isOnline), (prev, next) {
+      if (next && prev == false) {
+        ref.read(inviteNotifierProvider.notifier).fetchInvites();
+      }
+    });
 
     final theme = Theme.of(context);
     final colors = AppColors.of(context);
