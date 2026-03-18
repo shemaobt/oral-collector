@@ -8,6 +8,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../core/network/authenticated_client.dart';
 import '../../core/theme/app_colors.dart';
 import '../../features/project/presentation/notifiers/member_notifier.dart';
+import 'error_snack_bar.dart';
 import 'user_avatar.dart';
 
 class _SearchResult {
@@ -130,13 +131,7 @@ class _InviteDialogState extends ConsumerState<InviteDialog> {
     } else {
       setState(() => _isSubmitting = false);
       final error = ref.read(memberNotifierProvider).error;
-      final colors = AppColors.of(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(error ?? 'Failed to send invite'),
-          backgroundColor: colors.error,
-        ),
-      );
+      showErrorSnackBar(context, error ?? 'Failed to send invite');
     }
   }
 

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
-import '../../../../core/theme/app_colors.dart';
+import '../../../../shared/utils/error_helpers.dart';
 import '../../../../shared/widgets/section_header.dart';
 import '../../../invite/presentation/notifiers/invite_state.dart';
 import '../../../invite/domain/entities/invite.dart';
@@ -51,23 +51,9 @@ class InvitationsSection extends StatelessWidget {
             ),
           )
         else if (inviteState.error != null)
-          Card(
-            child: ListTile(
-              leading: Icon(
-                LucideIcons.alertCircle,
-                color: AppColors.of(context).error,
-              ),
-              title: Text(
-                inviteState.error!,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.of(context).error,
-                ),
-              ),
-              trailing: TextButton(
-                onPressed: onRefresh,
-                child: const Text('Retry'),
-              ),
-            ),
+          _ErrorCard(
+            message: friendlyErrorMessage(inviteState.error!),
+            onRetry: onRefresh,
           )
         else if (inviteState.invites.isEmpty)
           Card(
@@ -106,6 +92,59 @@ class InvitationsSection extends StatelessWidget {
           ),
         const SizedBox(height: 24),
       ],
+    );
+  }
+}
+
+class _ErrorCard extends StatelessWidget {
+  const _ErrorCard({required this.message, required this.onRetry});
+
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final errorColor = theme.colorScheme.error;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: errorColor.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: errorColor.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: errorColor.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(LucideIcons.wifiOff, size: 18, color: errorColor),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              message,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                height: 1.4,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          TextButton(
+            onPressed: onRetry,
+            style: TextButton.styleFrom(
+              foregroundColor: errorColor,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+            ),
+            child: const Text('Retry'),
+          ),
+        ],
+      ),
     );
   }
 }
