@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../../l10n/app_localizations.dart';
 import '../../../../shared/utils/format.dart';
 import '../../../../shared/widgets/user_avatar.dart';
 import '../../../auth/domain/entities/user.dart';
@@ -158,7 +159,10 @@ class ProfileHeader extends StatelessWidget {
           children: [
             InfoBadge(
               icon: LucideIcons.calendar,
-              label: formatMemberSince(user?.createdAt),
+              label: formatMemberSince(
+                user?.createdAt,
+                AppLocalizations.of(context),
+              ),
               colors: colors,
               theme: theme,
             ),
