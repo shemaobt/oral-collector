@@ -63,10 +63,14 @@ class SyncNotifier extends Notifier<SyncState> {
       if (recording == null) return;
 
       await _recordingRepo.markAsUploading(recordingId);
-      state = state.copyWith(syncProgress: 50);
 
       await _syncEngine.processQueue(
         deleteAfterUpload: state.autoRemoveAfterUpload,
+        onProgress: (sent, total) {
+          if (total > 0) {
+            state = state.copyWith(syncProgress: (sent * 100 ~/ total));
+          }
+        },
       );
 
       state = state.copyWith(
@@ -148,6 +152,11 @@ class SyncNotifier extends Notifier<SyncState> {
 
     await _syncEngine.processQueue(
       deleteAfterUpload: state.autoRemoveAfterUpload,
+      onProgress: (sent, total) {
+        if (total > 0) {
+          state = state.copyWith(syncProgress: (sent * 100 ~/ total));
+        }
+      },
     );
 
     await _refreshPendingCount();

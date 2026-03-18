@@ -1,7 +1,10 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
@@ -12,12 +15,20 @@ import '../../../recording/data/repositories/local_recording_repository.dart';
 import '../../domain/repositories/connectivity_service.dart';
 import '../../domain/repositories/sync_engine.dart';
 
+class _NonRetryableUploadException implements Exception {
+  final String message;
+  _NonRetryableUploadException(this.message);
+  @override
+  String toString() => message;
+}
+
 class SyncEngineImpl implements SyncEngine {
   final LocalRecordingRepository _recordingRepo;
   final ConnectivityService _connectivity;
   final AuthenticatedClient _client;
 
   static const int maxRetries = 5;
+  static const Duration _apiTimeout = Duration(seconds: 30);
 
   static const List<Duration> _backoffDurations = [
     Duration(seconds: 5),
@@ -39,8 +50,23 @@ class SyncEngineImpl implements SyncEngine {
   @override
   bool get isProcessing => _isProcessing;
 
+  static String _contentTypeForFormat(String format) {
+    const mapping = {
+      'm4a': 'audio/mp4',
+      'aac': 'audio/aac',
+      'mp3': 'audio/mpeg',
+      'wav': 'audio/wav',
+      'ogg': 'audio/ogg',
+      'webm': 'audio/webm',
+    };
+    return mapping[format.toLowerCase()] ?? 'application/octet-stream';
+  }
+
   @override
-  Future<void> processQueue({bool deleteAfterUpload = false}) async {
+  Future<void> processQueue({
+    bool deleteAfterUpload = false,
+    void Function(int bytesSent, int totalBytes)? onProgress,
+  }) async {
     if (_isProcessing) return;
     if (kIsWeb) return;
 
@@ -71,6 +97,7 @@ class SyncEngineImpl implements SyncEngine {
           recording.id,
           recording.localFilePath,
           deleteAfterUpload: deleteAfterUpload,
+          onProgress: onProgress,
         );
       }
     } finally {
@@ -97,6 +124,7 @@ class SyncEngineImpl implements SyncEngine {
     String id,
     String localFilePath, {
     bool deleteAfterUpload = false,
+    void Function(int bytesSent, int totalBytes)? onProgress,
   }) async {
     try {
       final resolvedPath = await _resolveFilePath(localFilePath);
@@ -134,16 +162,16 @@ class SyncEngineImpl implements SyncEngine {
         if (recording.registerId != null && recording.registerId!.isNotEmpty) {
           createBody['register_id'] = recording.registerId;
         }
-        final createResponse = await _client.post(
-          '/api/oc/recordings',
-          body: createBody,
-        );
+        final createResponse = await _client
+            .post('/api/oc/recordings', body: createBody)
+            .timeout(_apiTimeout);
 
-        if (createResponse.statusCode != 201) {
-          throw Exception(
-            'Create failed (${createResponse.statusCode}): ${createResponse.body}',
-          );
-        }
+        _checkResponse(
+          createResponse.statusCode,
+          createResponse.body,
+          'Create',
+          expected: 201,
+        );
 
         final createData =
             jsonDecode(createResponse.body) as Map<String, dynamic>;
@@ -155,56 +183,117 @@ class SyncEngineImpl implements SyncEngine {
         );
       }
 
-      final uploadUrlResponse = await _client.post(
-        '/api/oc/recordings/upload-url',
-        body: {'recording_id': serverId, 'format': recording.format},
-      );
+      final uploadUrlResponse = await _client
+          .post(
+            '/api/oc/recordings/upload-url',
+            body: {'recording_id': serverId, 'format': recording.format},
+          )
+          .timeout(_apiTimeout);
 
-      if (uploadUrlResponse.statusCode != 200) {
-        throw Exception(
-          'Upload URL failed (${uploadUrlResponse.statusCode}): ${uploadUrlResponse.body}',
-        );
-      }
+      _checkResponse(
+        uploadUrlResponse.statusCode,
+        uploadUrlResponse.body,
+        'Upload URL',
+        expected: 200,
+      );
 
       final uploadData =
           jsonDecode(uploadUrlResponse.body) as Map<String, dynamic>;
       final uploadUrl = uploadData['upload_url'] as String;
+      final contentType =
+          uploadData['content_type'] as String? ??
+          _contentTypeForFormat(recording.format);
 
-      final fileBytes = await file_ops.readFileBytes(resolvedPath);
+      // Streamed upload to avoid loading entire file into memory
+      final file = File(resolvedPath);
+      final fileLength = await file.length();
 
-      final putResponse = await _client.rawClient.put(
-        Uri.parse(uploadUrl),
-        headers: {'Content-Type': 'audio/mp4'},
-        body: fileBytes,
+      final request = http.StreamedRequest('PUT', Uri.parse(uploadUrl));
+      request.headers['Content-Type'] = contentType;
+      request.contentLength = fileLength;
+
+      var bytesSent = 0;
+      file.openRead().listen(
+        (chunk) {
+          request.sink.add(chunk);
+          bytesSent += chunk.length;
+          onProgress?.call(bytesSent, fileLength);
+        },
+        onDone: () => request.sink.close(),
+        onError: (e) => request.sink.addError(e),
       );
 
-      if (putResponse.statusCode != 200) {
-        throw Exception(
-          'GCS PUT failed (${putResponse.statusCode}): ${putResponse.body}',
-        );
-      }
-
-      final confirmResponse = await _client.post(
-        '/api/oc/recordings/$serverId/confirm-upload',
+      // Dynamic timeout: 120s base + 60s per 10MB
+      final uploadTimeout = Duration(
+        seconds: 120 + (fileLength ~/ (10 * 1024 * 1024)) * 60,
       );
 
-      if (confirmResponse.statusCode != 200) {
-        throw Exception(
-          'Confirm failed (${confirmResponse.statusCode}): ${confirmResponse.body}',
-        );
+      final streamedResponse = await _client.rawClient
+          .send(request)
+          .timeout(uploadTimeout);
+
+      final responseBody = await streamedResponse.stream.bytesToString();
+      if (streamedResponse.statusCode != 200) {
+        _checkResponse(streamedResponse.statusCode, responseBody, 'GCS PUT');
       }
+
+      final confirmResponse = await _client
+          .post('/api/oc/recordings/$serverId/confirm-upload')
+          .timeout(_apiTimeout);
+
+      _checkResponse(
+        confirmResponse.statusCode,
+        confirmResponse.body,
+        'Confirm',
+        expected: 200,
+      );
 
       final confirmData =
           jsonDecode(confirmResponse.body) as Map<String, dynamic>;
-      final gcsUrl = confirmData['gcs_url'] as String? ?? '';
+      final gcsUrl = confirmData['gcs_url'] as String?;
 
       await _recordingRepo.markAsUploaded(id, serverId, gcsUrl);
 
       if (deleteAfterUpload) {
         await file_ops.deleteFile(resolvedPath);
       }
+    } on _NonRetryableUploadException {
+      await _recordingRepo.updateRecording(
+        id,
+        LocalRecordingsCompanion(
+          uploadStatus: const Value('failed'),
+          retryCount: const Value(maxRetries),
+          lastRetryAt: Value(DateTime.now()),
+        ),
+      );
+    } on TimeoutException {
+      await _recordingRepo.markAsFailed(id);
+    } on SocketException {
+      await _recordingRepo.markAsFailed(id);
     } on Exception {
       await _recordingRepo.markAsFailed(id);
     }
+  }
+
+  void _checkResponse(
+    int statusCode,
+    String body,
+    String operation, {
+    int? expected,
+  }) {
+    if (expected != null && statusCode == expected) return;
+    if (expected == null && statusCode >= 200 && statusCode < 300) return;
+
+    if (statusCode == 401 || statusCode == 403) {
+      throw _NonRetryableUploadException(
+        '$operation: auth error ($statusCode): $body',
+      );
+    }
+    if (statusCode >= 400 && statusCode < 500) {
+      throw _NonRetryableUploadException(
+        '$operation: client error ($statusCode): $body',
+      );
+    }
+    throw Exception('$operation failed ($statusCode): $body');
   }
 }
