@@ -38,7 +38,7 @@ jobs:
       - name: Build web
         run: |
           flutter pub get
-          touch .env
+          echo 'BACKEND_URL=https://tripod-backend.shemaywam.com' > .env
           flutter build web --release --no-wasm-dry-run
 
       - name: Google Auth
