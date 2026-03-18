@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../../l10n/app_localizations.dart';
 
 class NoProjectCard extends StatelessWidget {
   const NoProjectCard({super.key, required this.onBrowse});
@@ -10,6 +11,7 @@ class NoProjectCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final colors = AppColors.of(context);
 
@@ -31,7 +33,7 @@ class NoProjectCard extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              'Select a project to get started',
+              l10n.home_noProjectTitle,
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyLarge?.copyWith(
                 color: colors.secondary,
@@ -41,7 +43,7 @@ class NoProjectCard extends StatelessWidget {
             FilledButton.icon(
               onPressed: onBrowse,
               icon: const Icon(LucideIcons.search, size: 18),
-              label: const Text('Browse Projects'),
+              label: Text(l10n.home_browseProjects),
               style: FilledButton.styleFrom(
                 backgroundColor: colors.accent,
                 foregroundColor: Colors.white,

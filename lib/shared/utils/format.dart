@@ -1,3 +1,7 @@
+import 'package:intl/intl.dart' as intl;
+
+import '../../l10n/app_localizations.dart';
+
 String formatDurationHMS(double totalSeconds) {
   final seconds = totalSeconds.round();
   final h = seconds ~/ 3600;
@@ -54,55 +58,32 @@ String formatDateISO(DateTime? date) {
   return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
 }
 
-String formatDateFull(DateTime date) {
-  const months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ];
-  return '${months[date.month - 1]} ${date.day}, ${date.year} '
-      'at ${date.hour.toString().padLeft(2, '0')}:'
-      '${date.minute.toString().padLeft(2, '0')}';
+String formatDateFull(DateTime date, {String locale = 'en'}) {
+  final df = intl.DateFormat.yMMMd(locale);
+  final tf = intl.DateFormat.Hm(locale);
+  return '${df.format(date)} ${tf.format(date)}';
 }
 
-String formatMemberSince(DateTime? date) {
-  if (date == null) return 'Member';
-  const months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ];
-  return 'Member since ${months[date.month - 1]} ${date.year}';
+String formatMemberSince(
+  DateTime? date,
+  AppLocalizations l10n, {
+  String locale = 'en',
+}) {
+  if (date == null) return l10n.format_member;
+  final df = intl.DateFormat.yMMM(locale);
+  return l10n.format_memberSince(df.format(date));
 }
 
-String formatTimeAgo(DateTime time) {
+String formatTimeAgo(DateTime time, AppLocalizations l10n) {
   final now = DateTime.now();
   final diff = now.difference(time);
 
-  if (diff.inSeconds < 60) return 'just now';
-  if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-  if (diff.inHours < 24) return '${diff.inHours}h ago';
-  if (diff.inDays < 7) return '${diff.inDays}d ago';
-  if (diff.inDays < 30) return '${diff.inDays ~/ 7}w ago';
-  return '${diff.inDays ~/ 30}mo ago';
+  if (diff.inSeconds < 60) return l10n.format_justNow;
+  if (diff.inMinutes < 60) return l10n.format_minutesAgo(diff.inMinutes);
+  if (diff.inHours < 24) return l10n.format_hoursAgo(diff.inHours);
+  if (diff.inDays < 7) return l10n.format_daysAgo(diff.inDays);
+  if (diff.inDays < 30) return l10n.format_weeksAgo(diff.inDays ~/ 7);
+  return l10n.format_monthsAgo(diff.inDays ~/ 30);
 }
 
 String formatDurationMinSec(double totalSeconds) {

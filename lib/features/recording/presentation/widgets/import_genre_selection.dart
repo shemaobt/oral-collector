@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import '../../../../../l10n/app_localizations.dart';
+import '../../../../core/l10n/content_l10n.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/utils/genre_helpers.dart';
 import '../../../genre/domain/entities/genre.dart';
@@ -19,6 +21,7 @@ class ImportGenreSelection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final colors = AppColors.of(context);
 
     if (genres.isEmpty) {
@@ -31,7 +34,7 @@ class ImportGenreSelection extends StatelessWidget {
               Icon(LucideIcons.layoutGrid, size: 64, color: colors.border),
               const SizedBox(height: 16),
               Text(
-                'No genres available',
+                l10n.recording_noGenres,
                 style: theme.textTheme.bodyLarge?.copyWith(
                   color: colors.foreground.withValues(alpha: 0.6),
                 ),
@@ -45,7 +48,7 @@ class ImportGenreSelection extends StatelessWidget {
     return Column(
       children: [
         fileInfoBanner,
-        Expanded(child: _buildGenreGrid(context, theme, genres)),
+        Expanded(child: _buildGenreGrid(context, theme, l10n, genres)),
       ],
     );
   }
@@ -53,6 +56,7 @@ class ImportGenreSelection extends StatelessWidget {
   Widget _buildGenreGrid(
     BuildContext context,
     ThemeData theme,
+    AppLocalizations l10n,
     List<Genre> genres,
   ) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -96,7 +100,7 @@ class ImportGenreSelection extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    genre.name,
+                    localizedGenreName(l10n, genre.name),
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),

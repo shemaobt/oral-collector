@@ -3,16 +3,22 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import '../../../core/l10n/locale_provider.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../shared/preview_helpers.dart';
 import '../../../shared/widgets/app_shell.dart';
+import '../../../shared/widgets/locale_picker_sheet.dart';
+import '../../../shared/widgets/status_banner.dart';
 import '../../../shared/widgets/sync_status_indicator.dart';
 import '../../../shared/widgets/user_avatar.dart';
 import '../../../core/auth/auth_notifier.dart';
 import '../../genre/presentation/notifiers/genre_notifier.dart';
 import '../../project/presentation/notifiers/project_notifier.dart';
 import '../../project/presentation/notifiers/stats_notifier.dart';
+import '../../sync/presentation/notifiers/sync_notifier.dart';
 import 'notifiers/home_notifier.dart';
+import 'notifiers/home_state.dart';
 import 'widgets/genre_card.dart';
 import 'widgets/hero_genre_card.dart';
 import 'widgets/no_project_card.dart';
@@ -35,13 +41,41 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void initState() {
     super.initState();
     Future.microtask(() {
-      ref.read(projectNotifierProvider.notifier).fetchProjects();
-      ref.read(genreNotifierProvider.notifier).fetchGenres();
       ref.read(homeNotifierProvider.notifier).refreshAll();
+      _fetchRemoteData();
     });
   }
 
+  void _fetchRemoteData() {
+    if (!ref.read(syncNotifierProvider).isOnline) return;
+    ref.read(projectNotifierProvider.notifier).fetchProjects().then((_) {
+      ref.read(genreNotifierProvider.notifier).fetchGenres();
+      _fetchStatsIfNeeded();
+      _checkFirstLoginLocale();
+    });
+  }
+
+  void _checkFirstLoginLocale() {
+    if (!mounted) return;
+    final hasPreference = ref.read(localeProvider.notifier).hasLocalePreference;
+    if (!hasPreference) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        showModalBottomSheet(
+          context: context,
+          isDismissible: false,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          constraints: const BoxConstraints(maxWidth: 600),
+          builder: (_) => const LocalePickerSheet(),
+        );
+      });
+    }
+  }
+
   void _fetchStatsIfNeeded() {
+    if (!ref.read(syncNotifierProvider).isOnline) return;
     final activeProject = ref.read(projectNotifierProvider).activeProject;
     if (activeProject != null) {
       ref
@@ -51,11 +85,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Future<void> _refresh() async {
+    await ref.read(homeNotifierProvider.notifier).refreshAll();
+    if (!ref.read(syncNotifierProvider).isOnline) return;
     ref.read(genreNotifierProvider.notifier).invalidate();
     await Future.wait([
       ref.read(projectNotifierProvider.notifier).fetchProjects(),
       ref.read(genreNotifierProvider.notifier).fetchGenres(),
-      ref.read(homeNotifierProvider.notifier).refreshAll(),
     ]);
     _fetchStatsIfNeeded();
   }
@@ -72,6 +107,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
+      constraints: const BoxConstraints(maxWidth: 600),
       builder: (ctx) {
         return ProjectSwitcherSheet(
           projects: projects,
@@ -91,34 +127,69 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
+  String _resolveGreeting(AppLocalizations l10n, GreetingPeriod period) {
+    switch (period) {
+      case GreetingPeriod.morning:
+        return l10n.home_greetingMorning;
+      case GreetingPeriod.afternoon:
+        return l10n.home_greetingAfternoon;
+      case GreetingPeriod.evening:
+        return l10n.home_greetingEvening;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final projectState = ref.watch(projectNotifierProvider);
     final genreState = ref.watch(genreNotifierProvider);
     final statsState = ref.watch(statsNotifierProvider);
     final authState = ref.watch(authNotifierProvider);
     final homeState = ref.watch(homeNotifierProvider);
+    final syncState = ref.watch(syncNotifierProvider);
     final activeProject = projectState.activeProject;
+    final isOffline = !syncState.isOnline;
+    final hasNoProjects =
+        !projectState.isLoading && projectState.projects.isEmpty;
     final theme = Theme.of(context);
     final colors = AppColors.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    // Re-fetch remote data when connectivity is restored
+    ref.listen(syncNotifierProvider.select((s) => s.isOnline), (prev, next) {
+      if (next && prev == false) {
+        _fetchRemoteData();
+      }
+    });
 
     ref.listen(projectNotifierProvider.select((s) => s.activeProject?.id), (
       prev,
       next,
     ) {
       if (next != null && next != prev) {
-        ref.read(statsNotifierProvider.notifier).fetchGenreStats(next);
+        if (ref.read(syncNotifierProvider).isOnline) {
+          ref.read(statsNotifierProvider.notifier).fetchGenreStats(next);
+        }
         ref.read(homeNotifierProvider.notifier).refreshAll();
       }
+    });
+
+    ref.listen(statsNotifierProvider.select((s) => s.genreStats), (_, _) {
+      ref.read(homeNotifierProvider.notifier).computeTotals();
     });
 
     final totalRecordings = homeState.totalRecordings;
     final totalDuration = homeState.totalDuration;
 
     final user = authState.currentUser;
-    final homeNotifier = ref.read(homeNotifierProvider.notifier);
-    final greeting = homeNotifier.greetingFor(user?.displayName);
+    final greetingText = _resolveGreeting(l10n, homeState.greeting);
+    final greeting =
+        (user?.displayName != null && user!.displayName!.isNotEmpty)
+        ? l10n.home_greetingWithName(
+            greetingText,
+            user.displayName!.split(' ').first,
+          )
+        : greetingText;
 
     final fabOffset = AppShell.fabBottomOffset(context);
 
@@ -165,7 +236,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     Text(greeting, style: theme.textTheme.headlineLarge),
                     const SizedBox(height: 4),
                     Text(
-                      'Let\'s share your stories today',
+                      l10n.home_subtitle,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: colors.secondary,
                       ),
@@ -175,10 +246,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
 
+            if (isOffline)
+              const SliverToBoxAdapter(child: StatusBanner.offline()),
+
+            if (hasNoProjects)
+              const SliverToBoxAdapter(child: StatusBanner.noProject()),
+
             if (activeProject != null) ...[
               SliverToBoxAdapter(
                 child: Semantics(
-                  label: 'Switch project',
+                  label: l10n.home_switchProject,
                   button: projectState.projects.length > 1,
                   child: InkWell(
                     onTap: projectState.projects.length > 1
@@ -254,14 +331,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
 
             if (projectState.isLoading && activeProject == null)
-              const SliverFillRemaining(
+              SliverFillRemaining(
                 child: Center(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      CircularProgressIndicator(),
-                      SizedBox(height: 16),
-                      Text('Loading projects...'),
+                      const CircularProgressIndicator(),
+                      const SizedBox(height: 16),
+                      Text(l10n.home_loadingProjects),
                     ],
                   ),
                 ),
@@ -273,7 +350,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   child: Row(
                     children: [
                       Text(
-                        'Genres',
+                        l10n.home_genres,
                         style: theme.textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.w800,
                         ),
@@ -317,17 +394,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     16,
                     0,
                     16,
-                    AppShell.scrollBottomPadding,
+                    AppShell.scrollPaddingFor(context),
                   ),
                   sliver: SliverGrid(
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: MediaQuery.of(context).size.width >= 600
-                          ? 3
-                          : 2,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                      childAspectRatio: 0.88,
-                    ),
+                    gridDelegate:
+                        const SliverGridDelegateWithMaxCrossAxisExtent(
+                          maxCrossAxisExtent: 220,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                          childAspectRatio: 0.88,
+                        ),
                     delegate: SliverChildBuilderDelegate((context, index) {
                       final realIndex = index + 1;
                       final genre = genreState.genres[realIndex];
@@ -356,7 +432,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'No genres available yet',
+                        l10n.home_noGenres,
                         style: theme.textTheme.bodyLarge?.copyWith(
                           color: colors.secondary,
                         ),
@@ -366,14 +442,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               )
             else if (genreState.isLoading)
-              const SliverFillRemaining(
+              SliverFillRemaining(
                 child: Center(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      CircularProgressIndicator(),
-                      SizedBox(height: 16),
-                      Text('Loading genres...'),
+                      const CircularProgressIndicator(),
+                      const SizedBox(height: 16),
+                      Text(l10n.home_loadingGenres),
                     ],
                   ),
                 ),

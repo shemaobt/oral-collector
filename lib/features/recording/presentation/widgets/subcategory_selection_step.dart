@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import '../../../../../l10n/app_localizations.dart';
+import '../../../../core/l10n/content_l10n.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/utils/genre_helpers.dart';
 import '../../../../shared/widgets/app_shell.dart';
@@ -22,6 +24,7 @@ class SubcategorySelectionStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final colors = AppColors.of(context);
     final color = parseHexColor(genre.color);
@@ -44,7 +47,7 @@ class SubcategorySelectionStep extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  genre.name,
+                  localizedGenreName(l10n, genre.name),
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -59,7 +62,7 @@ class SubcategorySelectionStep extends StatelessWidget {
           child: genre.subcategories.isEmpty
               ? Center(
                   child: Text(
-                    'No subcategories available',
+                    l10n.recording_noSubcategories,
                     style: theme.textTheme.bodyLarge?.copyWith(
                       color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
@@ -93,19 +96,23 @@ class SubcategorySelectionStep extends StatelessWidget {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      subcategory.name,
+                                      localizedSubcategoryName(
+                                        l10n,
+                                        subcategory.name,
+                                      ),
                                       style: theme.textTheme.titleSmall
                                           ?.copyWith(
                                             fontWeight: FontWeight.bold,
                                           ),
                                     ),
-                                    if (subcategory.description != null &&
-                                        subcategory
-                                            .description!
-                                            .isNotEmpty) ...[
+                                    if (localizedSubcategoryDescription(
+                                          l10n,
+                                          subcategory.name,
+                                        )
+                                        case final desc?) ...[
                                       const SizedBox(height: 4),
                                       Text(
-                                        subcategory.description!,
+                                        desc,
                                         style: theme.textTheme.bodySmall
                                             ?.copyWith(
                                               color: theme.colorScheme.onSurface
@@ -155,7 +162,7 @@ class SubcategorySelectionStep extends StatelessWidget {
                   alpha: 0.4,
                 ),
               ),
-              child: const Text('Continue'),
+              child: Text(l10n.common_continue),
             ),
           ),
         ),

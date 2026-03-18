@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart' as intl;
 import 'package:lucide_icons/lucide_icons.dart';
+
+import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../core/theme/app_colors.dart';
 
@@ -21,6 +24,8 @@ class RecordingStatusSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final locale = Localizations.localeOf(context).languageCode;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -32,7 +37,7 @@ class RecordingStatusSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Status',
+            l10n.detail_status,
             style: theme.textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.w700,
             ),
@@ -41,8 +46,8 @@ class RecordingStatusSection extends StatelessWidget {
           StatusRow(
             icon: _uploadIcon(),
             iconColor: _uploadColor(),
-            label: 'Upload',
-            value: _uploadLabel(),
+            label: l10n.detail_upload,
+            value: _uploadLabel(l10n),
             valueColor: _uploadColor(),
             trailing: onRetryUpload != null
                 ? TextButton(
@@ -56,7 +61,7 @@ class RecordingStatusSection extends StatelessWidget {
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
                     child: Text(
-                      'Retry',
+                      l10n.detail_retry,
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: colors.accent,
                         fontWeight: FontWeight.w700,
@@ -77,8 +82,8 @@ class RecordingStatusSection extends StatelessWidget {
           StatusRow(
             icon: _cleaningIcon(),
             iconColor: _cleaningColor(),
-            label: 'Cleaning',
-            value: _cleaningLabel(),
+            label: l10n.detail_cleaning,
+            value: _cleaningLabel(l10n),
             valueColor: _cleaningColor(),
             colors: colors,
             theme: theme,
@@ -93,8 +98,8 @@ class RecordingStatusSection extends StatelessWidget {
           StatusRow(
             icon: LucideIcons.calendar,
             iconColor: colors.secondary,
-            label: 'Recorded',
-            value: _formatShortDate(recording.recordedAt),
+            label: l10n.detail_recorded,
+            value: _formatShortDate(recording.recordedAt, locale),
             valueColor: colors.foreground,
             colors: colors,
             theme: theme,
@@ -104,27 +109,14 @@ class RecordingStatusSection extends StatelessWidget {
     );
   }
 
-  String _formatShortDate(DateTime date) {
-    final months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-    return '${months[date.month - 1]} ${date.day}, ${date.year}';
+  String _formatShortDate(DateTime date, String locale) {
+    return intl.DateFormat.yMMMd(locale).format(date);
   }
 
   IconData _uploadIcon() {
     switch (recording.uploadStatus) {
       case 'uploaded':
+      case 'verified':
         return LucideIcons.checkCircle2;
       case 'uploading':
         return LucideIcons.upload;
@@ -138,6 +130,7 @@ class RecordingStatusSection extends StatelessWidget {
   Color _uploadColor() {
     switch (recording.uploadStatus) {
       case 'uploaded':
+      case 'verified':
         return colors.success;
       case 'uploading':
         return colors.accent;
@@ -148,19 +141,20 @@ class RecordingStatusSection extends StatelessWidget {
     }
   }
 
-  String _uploadLabel() {
+  String _uploadLabel(AppLocalizations l10n) {
     switch (recording.uploadStatus) {
       case 'uploaded':
-        return 'Uploaded';
+      case 'verified':
+        return l10n.detail_uploaded;
       case 'uploading':
-        if (recording.retryCount >= 5) return 'Stuck \u2014 tap Retry';
-        return 'Uploading...';
+        if (recording.retryCount >= 5) return l10n.detail_uploadStuck;
+        return l10n.detail_uploading;
       case 'failed':
-        if (recording.retryCount >= 5) return 'Max retries \u2014 tap Retry';
-        return 'Upload Failed';
+        if (recording.retryCount >= 5) return l10n.detail_maxRetries;
+        return l10n.detail_uploadFailed;
       default:
-        if (recording.retryCount > 0) return 'Pending (retried)';
-        return 'Not synced';
+        if (recording.retryCount > 0) return l10n.detail_pendingRetried;
+        return l10n.detail_notSynced;
     }
   }
 
@@ -194,18 +188,18 @@ class RecordingStatusSection extends StatelessWidget {
     }
   }
 
-  String _cleaningLabel() {
+  String _cleaningLabel(AppLocalizations l10n) {
     switch (recording.cleaningStatus) {
       case 'cleaned':
-        return 'Cleaned';
+        return l10n.cleaning_cleaned;
       case 'cleaning':
-        return 'Cleaning...';
+        return l10n.cleaning_cleaning;
       case 'needs_cleaning':
-        return 'Needs Cleaning';
+        return l10n.cleaning_needsCleaning;
       case 'failed':
-        return 'Cleaning Failed';
+        return l10n.cleaning_cleanFailed;
       default:
-        return 'Not flagged';
+        return l10n.detail_notFlagged;
     }
   }
 }

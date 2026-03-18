@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../../l10n/app_localizations.dart';
+import '../../../../core/l10n/content_l10n.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../genre/domain/entities/genre.dart';
 import 'genre_filter_chip.dart';
@@ -22,6 +24,7 @@ class GenreFilterBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return SizedBox(
       height: 40,
       child: ListView(
@@ -29,7 +32,7 @@ class GenreFilterBar extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16),
         children: [
           GenreFilterChip(
-            label: 'All genres',
+            label: l10n.filter_allGenres,
             isSelected: selectedGenreId == null,
             colors: colors,
             theme: theme,
@@ -39,7 +42,7 @@ class GenreFilterBar extends StatelessWidget {
             (g) => Padding(
               padding: const EdgeInsets.only(left: 6),
               child: GenreFilterChip(
-                label: g.name,
+                label: localizedGenreName(l10n, g.name),
                 isSelected: selectedGenreId == g.id,
                 colors: colors,
                 theme: theme,

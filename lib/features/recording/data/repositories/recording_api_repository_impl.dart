@@ -54,13 +54,17 @@ class RecordingApiRepositoryImpl implements RecordingApiRepository {
   @override
   Future<bool> updateRecording(
     String serverId, {
+    String? title,
     String? genreId,
     String? subcategoryId,
+    String? registerId,
     String? cleaningStatus,
   }) async {
     final body = <String, dynamic>{};
+    if (title != null) body['title'] = title;
     if (genreId != null) body['genre_id'] = genreId;
     if (subcategoryId != null) body['subcategory_id'] = subcategoryId;
+    if (registerId != null) body['register_id'] = registerId;
     if (cleaningStatus != null) body['cleaning_status'] = cleaningStatus;
 
     final response = await _client.patch(
@@ -84,7 +88,9 @@ class RecordingApiRepositoryImpl implements RecordingApiRepository {
       body: {'segments': segments},
     );
     guardResponse(response);
-    if (response.statusCode != 200 && response.statusCode != 201) {
+    if (response.statusCode != 200 &&
+        response.statusCode != 201 &&
+        response.statusCode != 202) {
       throw Exception(
         'Split failed (${response.statusCode}): ${response.body}',
       );

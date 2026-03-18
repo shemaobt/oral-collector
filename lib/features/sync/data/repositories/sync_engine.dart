@@ -121,18 +121,22 @@ class SyncEngineImpl implements SyncEngine {
       if (recording.serverId != null && recording.serverId!.isNotEmpty) {
         serverId = recording.serverId!;
       } else {
+        final createBody = <String, dynamic>{
+          'project_id': recording.projectId,
+          'genre_id': recording.genreId,
+          'subcategory_id': recording.subcategoryId,
+          'title': recording.title,
+          'duration_seconds': recording.durationSeconds,
+          'file_size_bytes': recording.fileSizeBytes,
+          'format': recording.format,
+          'recorded_at': recording.recordedAt.toUtc().toIso8601String(),
+        };
+        if (recording.registerId != null && recording.registerId!.isNotEmpty) {
+          createBody['register_id'] = recording.registerId;
+        }
         final createResponse = await _client.post(
           '/api/oc/recordings',
-          body: {
-            'project_id': recording.projectId,
-            'genre_id': recording.genreId,
-            'subcategory_id': recording.subcategoryId,
-            'title': recording.title,
-            'duration_seconds': recording.durationSeconds,
-            'file_size_bytes': recording.fileSizeBytes,
-            'format': recording.format,
-            'recorded_at': recording.recordedAt.toUtc().toIso8601String(),
-          },
+          body: createBody,
         );
 
         if (createResponse.statusCode != 201) {
@@ -192,7 +196,7 @@ class SyncEngineImpl implements SyncEngine {
 
       final confirmData =
           jsonDecode(confirmResponse.body) as Map<String, dynamic>;
-      final gcsUrl = confirmData['gcs_url'] as String;
+      final gcsUrl = confirmData['gcs_url'] as String? ?? '';
 
       await _recordingRepo.markAsUploaded(id, serverId, gcsUrl);
 

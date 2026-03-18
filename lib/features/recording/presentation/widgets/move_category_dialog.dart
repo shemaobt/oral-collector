@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import '../../../../../l10n/app_localizations.dart';
+import '../../../../core/l10n/content_l10n.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../genre/presentation/notifiers/genre_notifier.dart';
 
@@ -39,9 +41,16 @@ class _MoveCategoryDialogState extends ConsumerState<MoveCategoryDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final colors = AppColors.of(context);
     final genreState = ref.watch(genreNotifierProvider);
     final genres = genreState.genres;
+
+    final genreExists = genres.any((g) => g.id == _selectedGenreId);
+    if (!genreExists && genres.isNotEmpty) {
+      _selectedGenreId = genres.first.id;
+      _selectedSubcategoryId = null;
+    }
 
     final selectedGenre = genres
         .where((g) => g.id == _selectedGenreId)
@@ -57,7 +66,7 @@ class _MoveCategoryDialogState extends ConsumerState<MoveCategoryDialog> {
         children: [
           Icon(LucideIcons.folderInput, size: 20, color: colors.secondary),
           const SizedBox(width: 8),
-          const Text('Move Category'),
+          Text(l10n.moveCategory_title),
         ],
       ),
       content: SizedBox(
@@ -67,7 +76,7 @@ class _MoveCategoryDialogState extends ConsumerState<MoveCategoryDialog> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Genre',
+              l10n.moveCategory_genre,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: colors.foreground.withValues(alpha: 0.6),
                 fontWeight: FontWeight.w600,
@@ -75,7 +84,9 @@ class _MoveCategoryDialogState extends ConsumerState<MoveCategoryDialog> {
             ),
             const SizedBox(height: 4),
             DropdownButtonFormField<String>(
-              initialValue: _selectedGenreId,
+              initialValue: genreExists
+                  ? _selectedGenreId
+                  : (genres.isNotEmpty ? genres.first.id : null),
               decoration: const InputDecoration(
                 isDense: true,
                 contentPadding: EdgeInsets.symmetric(
@@ -85,14 +96,16 @@ class _MoveCategoryDialogState extends ConsumerState<MoveCategoryDialog> {
               ),
               items: genres
                   .map(
-                    (g) => DropdownMenuItem(value: g.id, child: Text(g.name)),
+                    (g) => DropdownMenuItem(
+                      value: g.id,
+                      child: Text(localizedGenreName(l10n, g.name)),
+                    ),
                   )
                   .toList(),
               onChanged: (value) {
                 if (value == null) return;
                 setState(() {
                   _selectedGenreId = value;
-
                   _selectedSubcategoryId = null;
                 });
               },
@@ -101,7 +114,7 @@ class _MoveCategoryDialogState extends ConsumerState<MoveCategoryDialog> {
 
             if (subcategories.isNotEmpty) ...[
               Text(
-                'Subcategory',
+                l10n.moveCategory_subcategory,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: colors.foreground.withValues(alpha: 0.6),
                   fontWeight: FontWeight.w600,
@@ -120,10 +133,13 @@ class _MoveCategoryDialogState extends ConsumerState<MoveCategoryDialog> {
                     vertical: 10,
                   ),
                 ),
-                hint: const Text('Select subcategory'),
+                hint: Text(l10n.moveCategory_selectSubcategory),
                 items: subcategories
                     .map(
-                      (s) => DropdownMenuItem(value: s.id, child: Text(s.name)),
+                      (s) => DropdownMenuItem(
+                        value: s.id,
+                        child: Text(localizedSubcategoryName(l10n, s.name)),
+                      ),
                     )
                     .toList(),
                 onChanged: (value) {
@@ -139,7 +155,7 @@ class _MoveCategoryDialogState extends ConsumerState<MoveCategoryDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(null),
-          child: const Text('Cancel'),
+          child: Text(l10n.common_cancel),
         ),
         TextButton(
           onPressed: hasChanged
@@ -150,7 +166,7 @@ class _MoveCategoryDialogState extends ConsumerState<MoveCategoryDialog> {
                   ),
                 )
               : null,
-          child: const Text('Move'),
+          child: Text(l10n.common_move),
         ),
       ],
     );

@@ -6,10 +6,13 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/preview_helpers.dart';
 import '../../../shared/widgets/app_shell.dart';
+import '../../../shared/widgets/error_snack_bar.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/screen_header.dart';
 import '../../../shared/widgets/sync_status_indicator.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../auth/data/providers/role_provider.dart';
+import '../../sync/presentation/notifiers/sync_notifier.dart';
 import 'notifiers/project_notifier.dart';
 import 'notifiers/project_state.dart';
 import 'create_project_dialog.dart';
@@ -30,17 +33,20 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() async {
-      if (!mounted) return;
-      await ref.read(projectNotifierProvider.notifier).fetchProjects();
-      if (!mounted) return;
-      final projects = ref.read(projectNotifierProvider).projects;
-      if (projects.isNotEmpty) {
-        await ref
-            .read(roleNotifierProvider.notifier)
-            .fetchRolesForProjects(projects.map((p) => p.id).toList());
-      }
-    });
+    Future.microtask(_fetchRemoteData);
+  }
+
+  Future<void> _fetchRemoteData() async {
+    if (!ref.read(syncNotifierProvider).isOnline) return;
+    if (!mounted) return;
+    await ref.read(projectNotifierProvider.notifier).fetchProjects();
+    if (!mounted) return;
+    final projects = ref.read(projectNotifierProvider).projects;
+    if (projects.isNotEmpty) {
+      await ref
+          .read(roleNotifierProvider.notifier)
+          .fetchRolesForProjects(projects.map((p) => p.id).toList());
+    }
   }
 
   @override
@@ -50,21 +56,24 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
     final roleNotifier = ref.read(roleNotifierProvider.notifier);
     final colors = AppColors.of(context);
 
+    ref.listen(syncNotifierProvider.select((s) => s.isOnline), (prev, next) {
+      if (next && prev == false) _fetchRemoteData();
+    });
+
     ref.listen<ProjectState>(projectNotifierProvider, (previous, next) {
       if (next.error != null && previous?.error != next.error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(next.error!), backgroundColor: colors.error),
-        );
+        showErrorSnackBar(context, next.error!);
       }
     });
 
+    final l10n = AppLocalizations.of(context);
     final canCreate = roleNotifier.canCreateProject;
     final fabOffset = AppShell.fabBottomOffset(context);
 
     return Scaffold(
       appBar: ScreenHeader(
-        title: 'Projects',
-        subtitle: 'Manage your collections',
+        title: l10n.project_projects,
+        subtitle: l10n.project_subtitle,
         icon: LucideIcons.folderOpen,
         actions: const [SyncStatusIndicator()],
       ),
@@ -91,29 +100,21 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
     }
 
     if (state.projects.isEmpty) {
-      return const EmptyState(
+      final l10n = AppLocalizations.of(context);
+      return EmptyState(
         icon: LucideIcons.folderPlus,
-        title: 'No projects yet',
-        description:
-            'Create your first project to start collecting oral stories.',
+        title: l10n.project_noProjectsTitle,
+        description: l10n.project_noProjectsSubtitle,
       );
     }
 
     final activeId = state.activeProject?.id;
 
     return RefreshIndicator(
-      onRefresh: () async {
-        await ref.read(projectNotifierProvider.notifier).fetchProjects();
-        final projects = ref.read(projectNotifierProvider).projects;
-        if (projects.isNotEmpty) {
-          await ref
-              .read(roleNotifierProvider.notifier)
-              .fetchRolesForProjects(projects.map((p) => p.id).toList());
-        }
-      },
+      onRefresh: _fetchRemoteData,
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final isTablet = constraints.maxWidth >= 600;
+          final isTablet = constraints.maxWidth >= 500;
 
           if (isTablet) {
             return GridView.builder(
@@ -121,10 +122,10 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                 20,
                 20,
                 20,
-                AppShell.scrollBottomPadding,
+                AppShell.scrollPaddingFor(context),
               ),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
+              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: 340,
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
                 childAspectRatio: 1.6,
@@ -147,7 +148,7 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
               20,
               12,
               20,
-              AppShell.scrollBottomPadding,
+              AppShell.scrollPaddingFor(context),
             ),
             itemCount: state.projects.length,
             itemBuilder: (context, index) {

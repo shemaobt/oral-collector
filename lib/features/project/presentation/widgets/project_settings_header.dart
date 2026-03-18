@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/utils/format.dart';
 import '../../domain/entities/project.dart';
@@ -133,6 +134,7 @@ class ProjectSettingsStatsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final colors = AppColors.of(context);
 
@@ -141,7 +143,7 @@ class ProjectSettingsStatsRow extends StatelessWidget {
         ProjectSettingsStatChip(
           icon: LucideIcons.mic,
           value: '${project.recordingCount}',
-          label: 'Recordings',
+          label: l10n.projectStats_recordings,
           color: colors.accent,
           colors: colors,
           theme: theme,
@@ -150,7 +152,7 @@ class ProjectSettingsStatsRow extends StatelessWidget {
         ProjectSettingsStatChip(
           icon: LucideIcons.clock,
           value: formatDurationCompact(project.totalDurationSeconds),
-          label: 'Duration',
+          label: l10n.projectStats_duration,
           color: colors.info,
           colors: colors,
           theme: theme,
@@ -159,7 +161,7 @@ class ProjectSettingsStatsRow extends StatelessWidget {
         ProjectSettingsStatChip(
           icon: LucideIcons.users,
           value: '$memberCount',
-          label: 'Members',
+          label: l10n.projectStats_members,
           color: colors.success,
           colors: colors,
           theme: theme,

@@ -1,10 +1,13 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:workmanager/workmanager.dart';
 
 import 'core/database/database_provider.dart';
+import 'core/l10n/locale_provider.dart';
+import 'core/l10n/supported_locales.dart';
 import 'core/platform/file_ops.dart' as platform;
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
@@ -13,6 +16,8 @@ import 'features/sync/data/providers.dart';
 import 'features/sync/data/services/background_sync_service.dart';
 import 'features/sync/presentation/notifiers/sync_notifier.dart';
 import 'shared/preview_helpers.dart';
+
+import 'l10n/app_localizations.dart';
 
 @Preview(name: 'Oral Collector App', wrapper: previewWrapper)
 Widget oralCollectorPreview() => const OralCollectorApp();
@@ -66,12 +71,21 @@ class _OralCollectorAppState extends ConsumerState<OralCollectorApp> {
   @override
   Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
+    final locale = ref.watch(localeProvider);
 
     return MaterialApp.router(
       title: 'Oral Collector',
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system,
+      locale: locale,
+      supportedLocales: supportedLocales,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
       routerConfig: router,
     );
   }

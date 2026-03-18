@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../l10n/app_localizations.dart';
 
 class CleaningStatusBadge extends StatefulWidget {
   const CleaningStatusBadge({
@@ -59,6 +60,7 @@ class _CleaningStatusBadgeState extends State<CleaningStatusBadge>
       return const SizedBox.shrink();
     }
 
+    final l10n = AppLocalizations.of(context);
     final iconSize = widget.compact ? 12.0 : 14.0;
     final fontSize = widget.compact ? 11.0 : 13.0;
     final hPad = widget.compact ? 6.0 : 8.0;
@@ -72,22 +74,22 @@ class _CleaningStatusBadgeState extends State<CleaningStatusBadge>
       case 'needs_cleaning':
         icon = LucideIcons.alertCircle;
         color = Colors.amber.shade700;
-        label = 'Needs Cleaning';
+        label = l10n.cleaning_needsCleaning;
         break;
       case 'cleaning':
         icon = LucideIcons.loader;
         color = AppColors.info;
-        label = 'Cleaning...';
+        label = l10n.cleaning_cleaning;
         break;
       case 'cleaned':
         icon = LucideIcons.sparkles;
         color = AppColors.success;
-        label = 'Cleaned';
+        label = l10n.cleaning_cleaned;
         break;
       case 'failed':
         icon = LucideIcons.alertTriangle;
         color = AppColors.error;
-        label = 'Clean Failed';
+        label = l10n.cleaning_cleanFailed;
         break;
       default:
         return const SizedBox.shrink();

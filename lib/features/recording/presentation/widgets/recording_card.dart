@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../core/theme/app_colors.dart';
 
@@ -13,11 +14,13 @@ class RecordingCard extends StatelessWidget {
     required this.formattedDuration,
     required this.onTap,
     this.subcategoryName,
+    this.registerName,
   });
 
   final LocalRecording recording;
   final String? genreName;
   final String? subcategoryName;
+  final String? registerName;
   final String relativeDate;
   final String formattedDuration;
   final VoidCallback onTap;
@@ -25,6 +28,7 @@ class RecordingCard extends StatelessWidget {
   Color _statusAccentColor(AppColorSet colors) {
     switch (recording.uploadStatus) {
       case 'uploaded':
+      case 'verified':
         return colors.success;
       case 'uploading':
         return colors.accent;
@@ -38,6 +42,7 @@ class RecordingCard extends StatelessWidget {
   IconData _statusIcon() {
     switch (recording.uploadStatus) {
       case 'uploaded':
+      case 'verified':
         return LucideIcons.checkCircle2;
       case 'uploading':
         return LucideIcons.upload;
@@ -48,28 +53,31 @@ class RecordingCard extends StatelessWidget {
     }
   }
 
-  String _statusLabel() {
+  String _statusLabel(AppLocalizations l10n) {
     switch (recording.uploadStatus) {
       case 'uploaded':
-        return 'Uploaded';
+      case 'verified':
+        return l10n.recording_statusUploaded;
       case 'uploading':
-        return 'Uploading';
+        return l10n.recording_statusUploading;
       case 'failed':
-        return 'Failed';
+        return l10n.recording_statusFailed;
       default:
-        return 'Local';
+        return l10n.recording_statusLocal;
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final colors = AppColors.of(context);
     final statusColor = _statusAccentColor(colors);
-    final breadcrumb = genreName != null
-        ? subcategoryName != null
-              ? '$genreName > $subcategoryName'
-              : genreName!
+    final breadcrumbParts = <String>[];
+    if (genreName != null) breadcrumbParts.add(genreName!);
+    if (subcategoryName != null) breadcrumbParts.add(subcategoryName!);
+    final breadcrumb = breadcrumbParts.isNotEmpty
+        ? breadcrumbParts.join(' > ')
         : 'Unknown genre';
 
     final needsCleaning = recording.cleaningStatus == 'needs_cleaning';
@@ -108,7 +116,7 @@ class RecordingCard extends StatelessWidget {
                       children: [
                         Expanded(
                           child: Text(
-                            recording.title ?? 'Untitled',
+                            recording.title ?? l10n.common_untitled,
                             style: theme.textTheme.titleSmall?.copyWith(
                               fontWeight: FontWeight.w700,
                             ),
@@ -184,7 +192,7 @@ class RecordingCard extends StatelessWidget {
                               Icon(_statusIcon(), size: 11, color: statusColor),
                               const SizedBox(width: 4),
                               Text(
-                                _statusLabel(),
+                                _statusLabel(l10n),
                                 style: theme.textTheme.labelSmall?.copyWith(
                                   color: statusColor,
                                   fontWeight: FontWeight.w600,

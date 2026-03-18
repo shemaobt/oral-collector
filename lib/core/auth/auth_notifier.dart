@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
+import '../../features/sync/data/providers.dart';
 import '../providers/secure_storage_provider.dart';
 import 'auth_repository.dart';
 import 'auth_state.dart';
@@ -25,6 +26,11 @@ class AuthNotifier extends Notifier<AuthState> {
   Future<void> tryAutoLogin() async {
     final accessToken = await _storage.read(key: _accessTokenKey);
     if (accessToken == null) return;
+
+    // Skip network call when offline — tokens stay preserved
+    final connectivity = ref.read(connectivityServiceProvider);
+    final online = await connectivity.isOnline;
+    if (!online) return;
 
     state = state.copyWith(isLoading: true, clearError: true);
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/utils/format.dart';
 import '../../domain/entities/project.dart';
@@ -33,6 +34,7 @@ class ProjectCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final colors = AppColors.of(context);
     final isDark = theme.brightness == Brightness.dark;
@@ -209,7 +211,7 @@ class ProjectCard extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
-                                'Active',
+                                l10n.project_active,
                                 style: theme.textTheme.labelSmall?.copyWith(
                                   color: colors.accent,
                                   fontWeight: FontWeight.w700,

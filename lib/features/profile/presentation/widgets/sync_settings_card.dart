@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/utils/format.dart';
 import '../../../../shared/widgets/icon_box.dart';
@@ -28,6 +29,7 @@ class SyncSettingsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Column(
@@ -37,10 +39,16 @@ class SyncSettingsCard extends StatelessWidget {
               icon: syncState.isOnline ? LucideIcons.wifi : LucideIcons.wifiOff,
               color: syncState.isOnline ? colors.success : colors.error,
             ),
-            title: Text(syncState.isOnline ? 'Online' : 'Offline'),
+            title: Text(
+              syncState.isOnline ? l10n.profile_online : l10n.profile_offline,
+            ),
             subtitle: syncState.lastSyncAt != null
-                ? Text('Last sync: ${formatTimeAgo(syncState.lastSyncAt!)}')
-                : const Text('Never synced'),
+                ? Text(
+                    l10n.profile_lastSync(
+                      formatTimeAgo(syncState.lastSyncAt!, l10n),
+                    ),
+                  )
+                : Text(l10n.profile_neverSynced),
             trailing: syncState.pendingCount > 0
                 ? Container(
                     padding: const EdgeInsets.symmetric(
@@ -52,7 +60,7 @@ class SyncSettingsCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
-                      '${syncState.pendingCount} pending',
+                      l10n.profile_pendingCount(syncState.pendingCount),
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: colors.accent,
                         fontWeight: FontWeight.w700,
@@ -86,8 +94,8 @@ class SyncSettingsCard extends StatelessWidget {
                 : IconBox(icon: LucideIcons.refreshCw, color: colors.accent),
             title: Text(
               syncState.uploadingId != null
-                  ? 'Syncing... ${syncState.syncProgress}%'
-                  : 'Sync Now',
+                  ? l10n.profile_syncingProgress(syncState.syncProgress)
+                  : l10n.profile_syncNow,
             ),
             subtitle: syncState.uploadingId != null
                 ? Padding(
@@ -117,8 +125,8 @@ class SyncSettingsCard extends StatelessWidget {
               color: colors.secondary,
               alpha: 0.1,
             ),
-            title: const Text('Upload on Wi-Fi only'),
-            subtitle: const Text('Prevent uploads over cellular data'),
+            title: Text(l10n.profile_wifiOnly),
+            subtitle: Text(l10n.profile_wifiOnlySubtitle),
             value: syncState.autoUploadWifiOnly,
             onChanged: onWifiOnlyChanged,
           ),
@@ -130,8 +138,8 @@ class SyncSettingsCard extends StatelessWidget {
               color: colors.secondary,
               alpha: 0.1,
             ),
-            title: const Text('Auto-remove after upload'),
-            subtitle: const Text('Delete local files after successful upload'),
+            title: Text(l10n.profile_autoRemove),
+            subtitle: Text(l10n.profile_autoRemoveSubtitle),
             value: syncState.autoRemoveAfterUpload,
             onChanged: onAutoRemoveChanged,
           ),
@@ -144,10 +152,10 @@ class SyncSettingsCard extends StatelessWidget {
               alpha: 0.1,
             ),
             title: Text(
-              'Clear local cache',
+              l10n.profile_clearCache,
               style: theme.textTheme.bodyLarge?.copyWith(color: colors.error),
             ),
-            subtitle: const Text('Delete all locally stored recordings'),
+            subtitle: Text(l10n.profile_clearCacheSubtitle),
             onTap: onClearCache,
           ),
         ],

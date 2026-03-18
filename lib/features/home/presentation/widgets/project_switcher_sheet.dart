@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../../l10n/app_localizations.dart';
 import '../../../project/domain/entities/project.dart';
 
 class ProjectSwitcherSheet extends StatelessWidget {
@@ -22,6 +23,8 @@ class ProjectSwitcherSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 16),
@@ -32,7 +35,7 @@ class ProjectSwitcherSheet extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(24, 4, 24, 16),
               child: Text(
-                'Switch Project',
+                l10n.project_switchTitle,
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
