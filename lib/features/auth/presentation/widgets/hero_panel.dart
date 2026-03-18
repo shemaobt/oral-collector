@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 
+import '../../../../../l10n/app_localizations.dart';
+
 class HeroPanel extends StatelessWidget {
   const HeroPanel({super.key});
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final l10n = AppLocalizations.of(context);
 
     return Stack(
       fit: StackFit.expand,
@@ -48,7 +51,7 @@ class HeroPanel extends StatelessWidget {
                   ),
                   const SizedBox(width: 14),
                   Text(
-                    'Oral Collector',
+                    l10n.auth_oralCollector,
                     style: textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                       color: Colors.white.withValues(alpha: 0.9),
@@ -58,7 +61,7 @@ class HeroPanel extends StatelessWidget {
               ),
               const SizedBox(height: 20),
               Text(
-                'Preserve voices.\nShare stories.',
+                l10n.auth_heroTagline,
                 style: textTheme.headlineLarge?.copyWith(
                   color: Colors.white,
                   height: 1.2,
@@ -66,7 +69,7 @@ class HeroPanel extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'by Shema',
+                l10n.auth_byShema,
                 style: textTheme.bodySmall?.copyWith(
                   color: Colors.white.withValues(alpha: 0.6),
                 ),
