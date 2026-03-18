@@ -21,27 +21,29 @@ class AdminNotifier extends Notifier<AdminState> {
   Future<void> fetchAll() async {
     state = state.copyWith(isLoading: true, clearError: true);
 
-    try {
-      final results = await Future.wait([
-        _repo.fetchStats(),
-        _repo.fetchAllProjects(),
-        _repo.fetchAllGenres(),
-        _repo.fetchCleaningQueue(),
-      ]);
+    final results = await Future.wait([
+      _repo.fetchStats().then<AdminStats?>((v) => v).catchError((_) => null),
+      _repo
+          .fetchAllProjects()
+          .then<List<Project>?>((v) => v)
+          .catchError((_) => null),
+      _repo
+          .fetchAllGenres()
+          .then<List<Genre>?>((v) => v)
+          .catchError((_) => null),
+      _repo
+          .fetchCleaningQueue()
+          .then<List<Recording>?>((v) => v)
+          .catchError((_) => null),
+    ]);
 
-      state = AdminState(
-        stats: results[0] as AdminStats,
-        projects: results[1] as List<Project>,
-        genres: results[2] as List<Genre>,
-        cleaningQueue: results[3] as List<Recording>,
-        isLoading: false,
-      );
-    } on Exception catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString().replaceFirst('Exception: ', ''),
-      );
-    }
+    state = AdminState(
+      stats: results[0] as AdminStats? ?? state.stats,
+      projects: results[1] as List<Project>? ?? state.projects,
+      genres: results[2] as List<Genre>? ?? state.genres,
+      cleaningQueue: results[3] as List<Recording>? ?? state.cleaningQueue,
+      isLoading: false,
+    );
   }
 
   Future<void> refreshCleaningQueue() async {
@@ -74,8 +76,8 @@ class AdminNotifier extends Notifier<AdminState> {
       try {
         await _repo.triggerClean(id);
         successCount++;
-      } on Exception {
-        // ignore individual failure, continue batch
+      } on Exception catch (_) {
+        // skip failed individual clean triggers
       }
     }
     await refreshCleaningQueue();
