@@ -8,8 +8,11 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 
+import '../../../../core/l10n/content_l10n.dart';
+
 import '../../../core/platform/file_ops.dart' as file_ops;
 
+import '../../../../l10n/app_localizations.dart';
 import '../../../core/database/app_database.dart';
 import '../../../shared/utils/recording_title.dart';
 import '../../../core/theme/app_colors.dart';
@@ -18,12 +21,20 @@ import '../../genre/presentation/notifiers/genre_state.dart';
 import '../../genre/domain/entities/genre.dart';
 import '../../project/presentation/notifiers/project_notifier.dart';
 import '../data/providers.dart';
+import '../domain/entities/register.dart';
 import 'widgets/file_info_banner.dart';
 import 'widgets/import_confirmation.dart';
 import 'widgets/import_genre_selection.dart';
 import 'widgets/import_subcategory_selection.dart';
+import 'widgets/register_selection_step.dart';
 
-enum _ImportStep { pickFile, selectGenre, selectSubcategory, confirm }
+enum _ImportStep {
+  pickFile,
+  selectGenre,
+  selectSubcategory,
+  selectRegister,
+  confirm,
+}
 
 class FileImportScreen extends ConsumerStatefulWidget {
   const FileImportScreen({super.key});
@@ -44,6 +55,7 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
 
   String? _selectedGenreId;
   String? _selectedSubcategoryId;
+  String? _selectedRegisterId;
 
   final _titleController = TextEditingController();
   bool _isSaving = false;
@@ -83,9 +95,10 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
 
       if (filePath == null) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Could not access selected file')),
-          );
+          final l10n = AppLocalizations.of(context);
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(l10n.import_accessFailed)));
           Navigator.of(context).maybePop();
         }
         return;
@@ -112,9 +125,10 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isAnalyzing = false);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error picking file: $e')));
+        final l10n = AppLocalizations.of(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.import_pickError(e.toString()))),
+        );
         Navigator.of(context).maybePop();
       }
     }
@@ -137,10 +151,11 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
     setState(() {
       _selectedGenreId = genre.id;
       _selectedSubcategoryId = null;
+      _selectedRegisterId = null;
       if (genre.subcategories.isNotEmpty) {
         _currentStep = _ImportStep.selectSubcategory;
       } else {
-        _currentStep = _ImportStep.confirm;
+        _currentStep = _ImportStep.selectRegister;
       }
     });
   }
@@ -148,6 +163,18 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
   void _selectSubcategory(Subcategory subcategory) {
     setState(() {
       _selectedSubcategoryId = subcategory.id;
+    });
+  }
+
+  void _advanceToRegister() {
+    setState(() {
+      _currentStep = _ImportStep.selectRegister;
+    });
+  }
+
+  void _selectRegister(Register register) {
+    setState(() {
+      _selectedRegisterId = register.id;
     });
   }
 
@@ -167,9 +194,10 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
         setState(() {
           _selectedGenreId = null;
           _selectedSubcategoryId = null;
+          _selectedRegisterId = null;
           _currentStep = _ImportStep.selectGenre;
         });
-      case _ImportStep.confirm:
+      case _ImportStep.selectRegister:
         final genreState = ref.read(genreNotifierProvider);
         final genre = genreState.genres
             .where((g) => g.id == _selectedGenreId)
@@ -177,14 +205,21 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
         if (genre != null && genre.subcategories.isNotEmpty) {
           setState(() {
             _selectedSubcategoryId = null;
+            _selectedRegisterId = null;
             _currentStep = _ImportStep.selectSubcategory;
           });
         } else {
           setState(() {
             _selectedGenreId = null;
+            _selectedRegisterId = null;
             _currentStep = _ImportStep.selectGenre;
           });
         }
+      case _ImportStep.confirm:
+        setState(() {
+          _selectedRegisterId = null;
+          _currentStep = _ImportStep.selectRegister;
+        });
     }
   }
 
@@ -228,6 +263,10 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
                   _selectedSubcategoryId!.isNotEmpty
               ? Value(_selectedSubcategoryId!)
               : const Value.absent(),
+          registerId:
+              _selectedRegisterId != null && _selectedRegisterId!.isNotEmpty
+              ? Value(_selectedRegisterId!)
+              : const Value.absent(),
           title: Value(
             _titleController.text.trim().isNotEmpty
                 ? _titleController.text.trim()
@@ -247,34 +286,38 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isSaving = false);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error saving file: $e')));
+        final l10n = AppLocalizations.of(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.import_saveError(e.toString()))),
+        );
       }
     }
   }
 
-  String get _title {
+  String _title(AppLocalizations l10n) {
     switch (_currentStep) {
       case _ImportStep.pickFile:
-        return 'Import Audio';
+        return l10n.import_title;
       case _ImportStep.selectGenre:
-        return 'Select Genre';
+        return l10n.import_selectGenre;
       case _ImportStep.selectSubcategory:
-        return 'Select Subcategory';
+        return l10n.import_selectSubcategory;
+      case _ImportStep.selectRegister:
+        return l10n.import_selectRegister;
       case _ImportStep.confirm:
-        return 'Confirm Import';
+        return l10n.import_confirmImport;
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final genreState = ref.watch(genreNotifierProvider);
 
     return Scaffold(
       appBar: AppBar(
         leading: BackButton(onPressed: _goBack),
-        title: Text(_title),
+        title: Text(_title(l10n)),
       ),
       body: _currentStep == _ImportStep.pickFile
           ? _buildPickingState()
@@ -285,6 +328,7 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
   }
 
   Widget _buildPickingState() {
+    final l10n = AppLocalizations.of(context);
     final colors = AppColors.of(context);
     return Center(
       child: Column(
@@ -294,7 +338,7 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
             const CircularProgressIndicator(),
             const SizedBox(height: 16),
             Text(
-              'Analyzing audio file...',
+              l10n.import_analyzing,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                 color: colors.foreground.withValues(alpha: 0.6),
               ),
@@ -303,7 +347,7 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
             Icon(LucideIcons.fileAudio, size: 64, color: colors.border),
             const SizedBox(height: 16),
             Text(
-              'Select an audio file to import',
+              l10n.import_selectFile,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                 color: colors.foreground.withValues(alpha: 0.6),
               ),
@@ -312,7 +356,7 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
             ElevatedButton.icon(
               onPressed: _pickFile,
               icon: const Icon(LucideIcons.folderOpen),
-              label: const Text('Choose File'),
+              label: Text(l10n.import_chooseFile),
               style: ElevatedButton.styleFrom(
                 backgroundColor: colors.primary,
                 foregroundColor: Colors.white,
@@ -333,6 +377,7 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
   );
 
   Widget _buildStep(GenreState genreState) {
+    final l10n = AppLocalizations.of(context);
     switch (_currentStep) {
       case _ImportStep.pickFile:
         return _buildPickingState();
@@ -347,32 +392,45 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
             .where((g) => g.id == _selectedGenreId)
             .firstOrNull;
         if (genre == null) {
-          return const Center(child: Text('Genre not found'));
+          final l10n = AppLocalizations.of(context);
+          return Center(child: Text(l10n.recording_genreNotFound));
         }
         return ImportSubcategorySelection(
           genre: genre,
           selectedSubcategoryId: _selectedSubcategoryId,
           onSubcategorySelected: _selectSubcategory,
-          onNext: _advanceToConfirm,
+          onNext: _advanceToRegister,
           fileInfoBanner: _fileInfoBanner(),
         );
+      case _ImportStep.selectRegister:
+        return RegisterSelectionStep(
+          selectedRegisterId: _selectedRegisterId,
+          onSelect: _selectRegister,
+          onNext: _advanceToConfirm,
+        );
       case _ImportStep.confirm:
+        final rawG = genreState.genres
+            .where((g) => g.id == _selectedGenreId)
+            .firstOrNull
+            ?.name;
+        final rawS = genreState.genres
+            .where((g) => g.id == _selectedGenreId)
+            .firstOrNull
+            ?.subcategories
+            .where((s) => s.id == _selectedSubcategoryId)
+            .firstOrNull
+            ?.name;
+        final rawR = getRegisterName(_selectedRegisterId);
         return ImportConfirmation(
           fileName: _fileName,
           format: _format,
           durationSeconds: _durationSeconds,
           fileSizeBytes: _fileSizeBytes,
-          genreName: genreState.genres
-              .where((g) => g.id == _selectedGenreId)
-              .firstOrNull
-              ?.name,
-          subcategoryName: genreState.genres
-              .where((g) => g.id == _selectedGenreId)
-              .firstOrNull
-              ?.subcategories
-              .where((s) => s.id == _selectedSubcategoryId)
-              .firstOrNull
-              ?.name,
+          genreName: rawG != null ? localizedGenreName(l10n, rawG) : null,
+          subcategoryName: rawS != null
+              ? localizedSubcategoryName(l10n, rawS)
+              : null,
+          registerName: rawR != null ? localizedRegisterName(l10n, rawR) : null,
           titleController: _titleController,
           isSaving: _isSaving,
           onSave: _save,

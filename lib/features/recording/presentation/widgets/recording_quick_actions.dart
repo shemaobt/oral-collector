@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+
+import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../core/theme/app_colors.dart';
 
@@ -27,6 +29,7 @@ class RecordingQuickActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final cleaningIsActive =
         recording.cleaningStatus != 'none' &&
         recording.cleaningStatus != 'cleaned';
@@ -35,7 +38,7 @@ class RecordingQuickActions extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Actions',
+          l10n.action_actions,
           style: theme.textTheme.titleSmall?.copyWith(
             fontWeight: FontWeight.w700,
           ),
@@ -47,7 +50,7 @@ class RecordingQuickActions extends StatelessWidget {
           children: [
             ActionTile(
               icon: LucideIcons.scissors,
-              label: 'Split',
+              label: l10n.action_split,
               color: colors.primary,
               colors: colors,
               theme: theme,
@@ -57,7 +60,9 @@ class RecordingQuickActions extends StatelessWidget {
               icon: cleaningIsActive
                   ? LucideIcons.checkCircle
                   : LucideIcons.alertCircle,
-              label: cleaningIsActive ? 'Clear Flag' : 'Flag Clean',
+              label: cleaningIsActive
+                  ? l10n.action_clearFlag
+                  : l10n.action_flagClean,
               color: cleaningIsActive ? colors.success : Colors.amber.shade700,
               colors: colors,
               theme: theme,
@@ -66,7 +71,7 @@ class RecordingQuickActions extends StatelessWidget {
             if (canEdit)
               ActionTile(
                 icon: LucideIcons.folderInput,
-                label: 'Move',
+                label: l10n.action_move,
                 color: colors.info,
                 colors: colors,
                 theme: theme,
@@ -75,7 +80,7 @@ class RecordingQuickActions extends StatelessWidget {
             if (canEdit)
               ActionTile(
                 icon: LucideIcons.trash2,
-                label: 'Delete',
+                label: l10n.action_delete,
                 color: colors.error,
                 colors: colors,
                 theme: theme,
