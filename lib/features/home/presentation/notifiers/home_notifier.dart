@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../recording/data/providers.dart';
@@ -15,19 +16,11 @@ class HomeNotifier extends Notifier<HomeState> {
     return HomeState(greeting: _computeGreeting());
   }
 
-  String _computeGreeting() {
+  GreetingPeriod _computeGreeting() {
     final hour = DateTime.now().hour;
-    if (hour < 12) return 'Good morning';
-    if (hour < 17) return 'Good afternoon';
-    return 'Good evening';
-  }
-
-  String greetingFor(String? displayName) {
-    final base = state.greeting;
-    if (displayName != null && displayName.isNotEmpty) {
-      return '$base, ${displayName.split(' ').first}';
-    }
-    return base;
+    if (hour < 12) return GreetingPeriod.morning;
+    if (hour < 17) return GreetingPeriod.afternoon;
+    return GreetingPeriod.evening;
   }
 
   Future<void> refreshAll() async {
@@ -37,6 +30,11 @@ class HomeNotifier extends Notifier<HomeState> {
   }
 
   Future<void> _loadLocalPending() async {
+    if (kIsWeb) {
+      computeTotals();
+      return;
+    }
+
     final projectId = ref.read(projectNotifierProvider).activeProject?.id;
     if (projectId == null) return;
 

@@ -4,6 +4,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../features/sync/presentation/notifiers/sync_notifier.dart';
+import '../../l10n/app_localizations.dart';
 
 class SyncStatusIndicator extends ConsumerWidget {
   const SyncStatusIndicator({super.key});
@@ -11,6 +12,7 @@ class SyncStatusIndicator extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = AppColors.of(context);
+    final l10n = AppLocalizations.of(context);
     final syncState = ref.watch(syncNotifierProvider);
 
     if (syncState.pendingCount == 0 && syncState.uploadingId == null) {
@@ -19,8 +21,8 @@ class SyncStatusIndicator extends ConsumerWidget {
 
     final isUploading = syncState.uploadingId != null;
     final label = isUploading
-        ? 'Uploading...'
-        : '${syncState.pendingCount} pending';
+        ? l10n.sync_uploading
+        : l10n.sync_pending(syncState.pendingCount);
 
     return Padding(
       padding: const EdgeInsets.only(right: 8),

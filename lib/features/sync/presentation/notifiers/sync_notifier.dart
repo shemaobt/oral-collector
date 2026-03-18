@@ -109,8 +109,8 @@ class SyncNotifier extends Notifier<SyncState> {
         if (await file_ops.fileExists(recording.localFilePath)) {
           totalBytes += await file_ops.fileLength(recording.localFilePath);
         }
-      } on Exception {
-        // ignore per-file errors, continue iteration
+      } on Exception catch (_) {
+        // skip unreadable files
       }
     }
 
@@ -125,8 +125,8 @@ class SyncNotifier extends Notifier<SyncState> {
     for (final recording in all) {
       try {
         await file_ops.deleteFile(recording.localFilePath);
-      } on Exception {
-        // ignore per-file errors, continue iteration
+      } on Exception catch (_) {
+        // skip undeletable files
       }
     }
 

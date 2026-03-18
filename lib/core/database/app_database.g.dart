@@ -6,7 +6,7 @@ class $LocalRecordingsTable extends LocalRecordings
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $LocalRecordingsTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _idMeta = VerificationMeta('id');
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<String> id = GeneratedColumn<String>(
     'id',
@@ -15,7 +15,9 @@ class $LocalRecordingsTable extends LocalRecordings
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _projectIdMeta = VerificationMeta('projectId');
+  static const VerificationMeta _projectIdMeta = const VerificationMeta(
+    'projectId',
+  );
   @override
   late final GeneratedColumn<String> projectId = GeneratedColumn<String>(
     'project_id',
@@ -24,7 +26,9 @@ class $LocalRecordingsTable extends LocalRecordings
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _genreIdMeta = VerificationMeta('genreId');
+  static const VerificationMeta _genreIdMeta = const VerificationMeta(
+    'genreId',
+  );
   @override
   late final GeneratedColumn<String> genreId = GeneratedColumn<String>(
     'genre_id',
@@ -33,7 +37,7 @@ class $LocalRecordingsTable extends LocalRecordings
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _subcategoryIdMeta = VerificationMeta(
+  static const VerificationMeta _subcategoryIdMeta = const VerificationMeta(
     'subcategoryId',
   );
   @override
@@ -44,7 +48,7 @@ class $LocalRecordingsTable extends LocalRecordings
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _titleMeta = VerificationMeta('title');
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
   @override
   late final GeneratedColumn<String> title = GeneratedColumn<String>(
     'title',
@@ -53,7 +57,7 @@ class $LocalRecordingsTable extends LocalRecordings
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _durationSecondsMeta = VerificationMeta(
+  static const VerificationMeta _durationSecondsMeta = const VerificationMeta(
     'durationSeconds',
   );
   @override
@@ -65,7 +69,7 @@ class $LocalRecordingsTable extends LocalRecordings
     requiredDuringInsert: false,
     defaultValue: const Constant(0.0),
   );
-  static const VerificationMeta _fileSizeBytesMeta = VerificationMeta(
+  static const VerificationMeta _fileSizeBytesMeta = const VerificationMeta(
     'fileSizeBytes',
   );
   @override
@@ -77,7 +81,7 @@ class $LocalRecordingsTable extends LocalRecordings
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
-  static const VerificationMeta _formatMeta = VerificationMeta('format');
+  static const VerificationMeta _formatMeta = const VerificationMeta('format');
   @override
   late final GeneratedColumn<String> format = GeneratedColumn<String>(
     'format',
@@ -87,7 +91,7 @@ class $LocalRecordingsTable extends LocalRecordings
     requiredDuringInsert: false,
     defaultValue: const Constant('m4a'),
   );
-  static const VerificationMeta _localFilePathMeta = VerificationMeta(
+  static const VerificationMeta _localFilePathMeta = const VerificationMeta(
     'localFilePath',
   );
   @override
@@ -98,7 +102,7 @@ class $LocalRecordingsTable extends LocalRecordings
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _uploadStatusMeta = VerificationMeta(
+  static const VerificationMeta _uploadStatusMeta = const VerificationMeta(
     'uploadStatus',
   );
   @override
@@ -110,7 +114,9 @@ class $LocalRecordingsTable extends LocalRecordings
     requiredDuringInsert: false,
     defaultValue: const Constant('local'),
   );
-  static const VerificationMeta _serverIdMeta = VerificationMeta('serverId');
+  static const VerificationMeta _serverIdMeta = const VerificationMeta(
+    'serverId',
+  );
   @override
   late final GeneratedColumn<String> serverId = GeneratedColumn<String>(
     'server_id',
@@ -119,7 +125,7 @@ class $LocalRecordingsTable extends LocalRecordings
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _gcsUrlMeta = VerificationMeta('gcsUrl');
+  static const VerificationMeta _gcsUrlMeta = const VerificationMeta('gcsUrl');
   @override
   late final GeneratedColumn<String> gcsUrl = GeneratedColumn<String>(
     'gcs_url',
@@ -128,7 +134,18 @@ class $LocalRecordingsTable extends LocalRecordings
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _cleaningStatusMeta = VerificationMeta(
+  static const VerificationMeta _registerIdMeta = const VerificationMeta(
+    'registerId',
+  );
+  @override
+  late final GeneratedColumn<String> registerId = GeneratedColumn<String>(
+    'register_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _cleaningStatusMeta = const VerificationMeta(
     'cleaningStatus',
   );
   @override
@@ -140,7 +157,7 @@ class $LocalRecordingsTable extends LocalRecordings
     requiredDuringInsert: false,
     defaultValue: const Constant('none'),
   );
-  static const VerificationMeta _recordedAtMeta = VerificationMeta(
+  static const VerificationMeta _recordedAtMeta = const VerificationMeta(
     'recordedAt',
   );
   @override
@@ -151,7 +168,9 @@ class $LocalRecordingsTable extends LocalRecordings
     type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _createdAtMeta = VerificationMeta('createdAt');
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
   @override
   late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
     'created_at',
@@ -161,7 +180,7 @@ class $LocalRecordingsTable extends LocalRecordings
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
   );
-  static const VerificationMeta _retryCountMeta = VerificationMeta(
+  static const VerificationMeta _retryCountMeta = const VerificationMeta(
     'retryCount',
   );
   @override
@@ -173,7 +192,7 @@ class $LocalRecordingsTable extends LocalRecordings
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
-  static const VerificationMeta _lastRetryAtMeta = VerificationMeta(
+  static const VerificationMeta _lastRetryAtMeta = const VerificationMeta(
     'lastRetryAt',
   );
   @override
@@ -198,6 +217,7 @@ class $LocalRecordingsTable extends LocalRecordings
     uploadStatus,
     serverId,
     gcsUrl,
+    registerId,
     cleaningStatus,
     recordedAt,
     createdAt,
@@ -308,6 +328,12 @@ class $LocalRecordingsTable extends LocalRecordings
         gcsUrl.isAcceptableOrUnknown(data['gcs_url']!, _gcsUrlMeta),
       );
     }
+    if (data.containsKey('register_id')) {
+      context.handle(
+        _registerIdMeta,
+        registerId.isAcceptableOrUnknown(data['register_id']!, _registerIdMeta),
+      );
+    }
     if (data.containsKey('cleaning_status')) {
       context.handle(
         _cleaningStatusMeta,
@@ -403,6 +429,10 @@ class $LocalRecordingsTable extends LocalRecordings
         DriftSqlType.string,
         data['${effectivePrefix}gcs_url'],
       ),
+      registerId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}register_id'],
+      ),
       cleaningStatus: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}cleaning_status'],
@@ -445,6 +475,7 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
   final String uploadStatus;
   final String? serverId;
   final String? gcsUrl;
+  final String? registerId;
   final String cleaningStatus;
   final DateTime recordedAt;
   final DateTime createdAt;
@@ -463,6 +494,7 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
     required this.uploadStatus,
     this.serverId,
     this.gcsUrl,
+    this.registerId,
     required this.cleaningStatus,
     required this.recordedAt,
     required this.createdAt,
@@ -491,6 +523,9 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
     }
     if (!nullToAbsent || gcsUrl != null) {
       map['gcs_url'] = Variable<String>(gcsUrl);
+    }
+    if (!nullToAbsent || registerId != null) {
+      map['register_id'] = Variable<String>(registerId);
     }
     map['cleaning_status'] = Variable<String>(cleaningStatus);
     map['recorded_at'] = Variable<DateTime>(recordedAt);
@@ -524,6 +559,9 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
       gcsUrl: gcsUrl == null && nullToAbsent
           ? const Value.absent()
           : Value(gcsUrl),
+      registerId: registerId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(registerId),
       cleaningStatus: Value(cleaningStatus),
       recordedAt: Value(recordedAt),
       createdAt: Value(createdAt),
@@ -552,6 +590,7 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
       uploadStatus: serializer.fromJson<String>(json['uploadStatus']),
       serverId: serializer.fromJson<String?>(json['serverId']),
       gcsUrl: serializer.fromJson<String?>(json['gcsUrl']),
+      registerId: serializer.fromJson<String?>(json['registerId']),
       cleaningStatus: serializer.fromJson<String>(json['cleaningStatus']),
       recordedAt: serializer.fromJson<DateTime>(json['recordedAt']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
@@ -575,6 +614,7 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
       'uploadStatus': serializer.toJson<String>(uploadStatus),
       'serverId': serializer.toJson<String?>(serverId),
       'gcsUrl': serializer.toJson<String?>(gcsUrl),
+      'registerId': serializer.toJson<String?>(registerId),
       'cleaningStatus': serializer.toJson<String>(cleaningStatus),
       'recordedAt': serializer.toJson<DateTime>(recordedAt),
       'createdAt': serializer.toJson<DateTime>(createdAt),
@@ -596,6 +636,7 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
     String? uploadStatus,
     Value<String?> serverId = const Value.absent(),
     Value<String?> gcsUrl = const Value.absent(),
+    Value<String?> registerId = const Value.absent(),
     String? cleaningStatus,
     DateTime? recordedAt,
     DateTime? createdAt,
@@ -616,12 +657,56 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
     uploadStatus: uploadStatus ?? this.uploadStatus,
     serverId: serverId.present ? serverId.value : this.serverId,
     gcsUrl: gcsUrl.present ? gcsUrl.value : this.gcsUrl,
+    registerId: registerId.present ? registerId.value : this.registerId,
     cleaningStatus: cleaningStatus ?? this.cleaningStatus,
     recordedAt: recordedAt ?? this.recordedAt,
     createdAt: createdAt ?? this.createdAt,
     retryCount: retryCount ?? this.retryCount,
     lastRetryAt: lastRetryAt.present ? lastRetryAt.value : this.lastRetryAt,
   );
+  LocalRecording copyWithCompanion(LocalRecordingsCompanion data) {
+    return LocalRecording(
+      id: data.id.present ? data.id.value : this.id,
+      projectId: data.projectId.present ? data.projectId.value : this.projectId,
+      genreId: data.genreId.present ? data.genreId.value : this.genreId,
+      subcategoryId: data.subcategoryId.present
+          ? data.subcategoryId.value
+          : this.subcategoryId,
+      title: data.title.present ? data.title.value : this.title,
+      durationSeconds: data.durationSeconds.present
+          ? data.durationSeconds.value
+          : this.durationSeconds,
+      fileSizeBytes: data.fileSizeBytes.present
+          ? data.fileSizeBytes.value
+          : this.fileSizeBytes,
+      format: data.format.present ? data.format.value : this.format,
+      localFilePath: data.localFilePath.present
+          ? data.localFilePath.value
+          : this.localFilePath,
+      uploadStatus: data.uploadStatus.present
+          ? data.uploadStatus.value
+          : this.uploadStatus,
+      serverId: data.serverId.present ? data.serverId.value : this.serverId,
+      gcsUrl: data.gcsUrl.present ? data.gcsUrl.value : this.gcsUrl,
+      registerId: data.registerId.present
+          ? data.registerId.value
+          : this.registerId,
+      cleaningStatus: data.cleaningStatus.present
+          ? data.cleaningStatus.value
+          : this.cleaningStatus,
+      recordedAt: data.recordedAt.present
+          ? data.recordedAt.value
+          : this.recordedAt,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      retryCount: data.retryCount.present
+          ? data.retryCount.value
+          : this.retryCount,
+      lastRetryAt: data.lastRetryAt.present
+          ? data.lastRetryAt.value
+          : this.lastRetryAt,
+    );
+  }
+
   @override
   String toString() {
     return (StringBuffer('LocalRecording(')
@@ -637,6 +722,7 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
           ..write('uploadStatus: $uploadStatus, ')
           ..write('serverId: $serverId, ')
           ..write('gcsUrl: $gcsUrl, ')
+          ..write('registerId: $registerId, ')
           ..write('cleaningStatus: $cleaningStatus, ')
           ..write('recordedAt: $recordedAt, ')
           ..write('createdAt: $createdAt, ')
@@ -660,6 +746,7 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
     uploadStatus,
     serverId,
     gcsUrl,
+    registerId,
     cleaningStatus,
     recordedAt,
     createdAt,
@@ -682,6 +769,7 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
           other.uploadStatus == this.uploadStatus &&
           other.serverId == this.serverId &&
           other.gcsUrl == this.gcsUrl &&
+          other.registerId == this.registerId &&
           other.cleaningStatus == this.cleaningStatus &&
           other.recordedAt == this.recordedAt &&
           other.createdAt == this.createdAt &&
@@ -702,6 +790,7 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
   final Value<String> uploadStatus;
   final Value<String?> serverId;
   final Value<String?> gcsUrl;
+  final Value<String?> registerId;
   final Value<String> cleaningStatus;
   final Value<DateTime> recordedAt;
   final Value<DateTime> createdAt;
@@ -721,6 +810,7 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
     this.uploadStatus = const Value.absent(),
     this.serverId = const Value.absent(),
     this.gcsUrl = const Value.absent(),
+    this.registerId = const Value.absent(),
     this.cleaningStatus = const Value.absent(),
     this.recordedAt = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -741,6 +831,7 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
     this.uploadStatus = const Value.absent(),
     this.serverId = const Value.absent(),
     this.gcsUrl = const Value.absent(),
+    this.registerId = const Value.absent(),
     this.cleaningStatus = const Value.absent(),
     required DateTime recordedAt,
     this.createdAt = const Value.absent(),
@@ -765,6 +856,7 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
     Expression<String>? uploadStatus,
     Expression<String>? serverId,
     Expression<String>? gcsUrl,
+    Expression<String>? registerId,
     Expression<String>? cleaningStatus,
     Expression<DateTime>? recordedAt,
     Expression<DateTime>? createdAt,
@@ -785,6 +877,7 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
       if (uploadStatus != null) 'upload_status': uploadStatus,
       if (serverId != null) 'server_id': serverId,
       if (gcsUrl != null) 'gcs_url': gcsUrl,
+      if (registerId != null) 'register_id': registerId,
       if (cleaningStatus != null) 'cleaning_status': cleaningStatus,
       if (recordedAt != null) 'recorded_at': recordedAt,
       if (createdAt != null) 'created_at': createdAt,
@@ -807,6 +900,7 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
     Value<String>? uploadStatus,
     Value<String?>? serverId,
     Value<String?>? gcsUrl,
+    Value<String?>? registerId,
     Value<String>? cleaningStatus,
     Value<DateTime>? recordedAt,
     Value<DateTime>? createdAt,
@@ -827,6 +921,7 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
       uploadStatus: uploadStatus ?? this.uploadStatus,
       serverId: serverId ?? this.serverId,
       gcsUrl: gcsUrl ?? this.gcsUrl,
+      registerId: registerId ?? this.registerId,
       cleaningStatus: cleaningStatus ?? this.cleaningStatus,
       recordedAt: recordedAt ?? this.recordedAt,
       createdAt: createdAt ?? this.createdAt,
@@ -875,6 +970,9 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
     if (gcsUrl.present) {
       map['gcs_url'] = Variable<String>(gcsUrl.value);
     }
+    if (registerId.present) {
+      map['register_id'] = Variable<String>(registerId.value);
+    }
     if (cleaningStatus.present) {
       map['cleaning_status'] = Variable<String>(cleaningStatus.value);
     }
@@ -911,6 +1009,7 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
           ..write('uploadStatus: $uploadStatus, ')
           ..write('serverId: $serverId, ')
           ..write('gcsUrl: $gcsUrl, ')
+          ..write('registerId: $registerId, ')
           ..write('cleaningStatus: $cleaningStatus, ')
           ..write('recordedAt: $recordedAt, ')
           ..write('createdAt: $createdAt, ')
@@ -928,7 +1027,7 @@ class $LocalGenresTable extends LocalGenres
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $LocalGenresTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _idMeta = VerificationMeta('id');
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<String> id = GeneratedColumn<String>(
     'id',
@@ -937,7 +1036,7 @@ class $LocalGenresTable extends LocalGenres
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _nameMeta = VerificationMeta('name');
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
   @override
   late final GeneratedColumn<String> name = GeneratedColumn<String>(
     'name',
@@ -946,7 +1045,7 @@ class $LocalGenresTable extends LocalGenres
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _descriptionMeta = VerificationMeta(
+  static const VerificationMeta _descriptionMeta = const VerificationMeta(
     'description',
   );
   @override
@@ -957,7 +1056,7 @@ class $LocalGenresTable extends LocalGenres
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _iconMeta = VerificationMeta('icon');
+  static const VerificationMeta _iconMeta = const VerificationMeta('icon');
   @override
   late final GeneratedColumn<String> icon = GeneratedColumn<String>(
     'icon',
@@ -966,7 +1065,7 @@ class $LocalGenresTable extends LocalGenres
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _colorMeta = VerificationMeta('color');
+  static const VerificationMeta _colorMeta = const VerificationMeta('color');
   @override
   late final GeneratedColumn<String> color = GeneratedColumn<String>(
     'color',
@@ -975,7 +1074,9 @@ class $LocalGenresTable extends LocalGenres
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _sortOrderMeta = VerificationMeta('sortOrder');
+  static const VerificationMeta _sortOrderMeta = const VerificationMeta(
+    'sortOrder',
+  );
   @override
   late final GeneratedColumn<int> sortOrder = GeneratedColumn<int>(
     'sort_order',
@@ -1178,6 +1279,19 @@ class LocalGenre extends DataClass implements Insertable<LocalGenre> {
     color: color.present ? color.value : this.color,
     sortOrder: sortOrder ?? this.sortOrder,
   );
+  LocalGenre copyWithCompanion(LocalGenresCompanion data) {
+    return LocalGenre(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      description: data.description.present
+          ? data.description.value
+          : this.description,
+      icon: data.icon.present ? data.icon.value : this.icon,
+      color: data.color.present ? data.color.value : this.color,
+      sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
+    );
+  }
+
   @override
   String toString() {
     return (StringBuffer('LocalGenre(')
@@ -1321,7 +1435,7 @@ class $LocalSubcategoriesTable extends LocalSubcategories
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $LocalSubcategoriesTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _idMeta = VerificationMeta('id');
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<String> id = GeneratedColumn<String>(
     'id',
@@ -1330,7 +1444,9 @@ class $LocalSubcategoriesTable extends LocalSubcategories
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _genreIdMeta = VerificationMeta('genreId');
+  static const VerificationMeta _genreIdMeta = const VerificationMeta(
+    'genreId',
+  );
   @override
   late final GeneratedColumn<String> genreId = GeneratedColumn<String>(
     'genre_id',
@@ -1339,7 +1455,7 @@ class $LocalSubcategoriesTable extends LocalSubcategories
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _nameMeta = VerificationMeta('name');
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
   @override
   late final GeneratedColumn<String> name = GeneratedColumn<String>(
     'name',
@@ -1348,7 +1464,7 @@ class $LocalSubcategoriesTable extends LocalSubcategories
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _descriptionMeta = VerificationMeta(
+  static const VerificationMeta _descriptionMeta = const VerificationMeta(
     'description',
   );
   @override
@@ -1359,7 +1475,9 @@ class $LocalSubcategoriesTable extends LocalSubcategories
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _sortOrderMeta = VerificationMeta('sortOrder');
+  static const VerificationMeta _sortOrderMeta = const VerificationMeta(
+    'sortOrder',
+  );
   @override
   late final GeneratedColumn<int> sortOrder = GeneratedColumn<int>(
     'sort_order',
@@ -1540,6 +1658,18 @@ class LocalSubcategory extends DataClass
     description: description.present ? description.value : this.description,
     sortOrder: sortOrder ?? this.sortOrder,
   );
+  LocalSubcategory copyWithCompanion(LocalSubcategoriesCompanion data) {
+    return LocalSubcategory(
+      id: data.id.present ? data.id.value : this.id,
+      genreId: data.genreId.present ? data.genreId.value : this.genreId,
+      name: data.name.present ? data.name.value : this.name,
+      description: data.description.present
+          ? data.description.value
+          : this.description,
+      sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
+    );
+  }
+
   @override
   String toString() {
     return (StringBuffer('LocalSubcategory(')
@@ -1666,9 +1796,12 @@ class LocalSubcategoriesCompanion extends UpdateCompanion<LocalSubcategory> {
 
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
-  $LocalRecordingsTable get localRecordings => $LocalRecordingsTable(this);
-  $LocalGenresTable get localGenres => $LocalGenresTable(this);
-  $LocalSubcategoriesTable get localSubcategories =>
+  $AppDatabaseManager get managers => $AppDatabaseManager(this);
+  late final $LocalRecordingsTable localRecordings = $LocalRecordingsTable(
+    this,
+  );
+  late final $LocalGenresTable localGenres = $LocalGenresTable(this);
+  late final $LocalSubcategoriesTable localSubcategories =
       $LocalSubcategoriesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
@@ -1679,4 +1812,925 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     localGenres,
     localSubcategories,
   ];
+}
+
+typedef $$LocalRecordingsTableCreateCompanionBuilder =
+    LocalRecordingsCompanion Function({
+      required String id,
+      required String projectId,
+      required String genreId,
+      Value<String?> subcategoryId,
+      Value<String?> title,
+      Value<double> durationSeconds,
+      Value<int> fileSizeBytes,
+      Value<String> format,
+      required String localFilePath,
+      Value<String> uploadStatus,
+      Value<String?> serverId,
+      Value<String?> gcsUrl,
+      Value<String?> registerId,
+      Value<String> cleaningStatus,
+      required DateTime recordedAt,
+      Value<DateTime> createdAt,
+      Value<int> retryCount,
+      Value<DateTime?> lastRetryAt,
+      Value<int> rowid,
+    });
+typedef $$LocalRecordingsTableUpdateCompanionBuilder =
+    LocalRecordingsCompanion Function({
+      Value<String> id,
+      Value<String> projectId,
+      Value<String> genreId,
+      Value<String?> subcategoryId,
+      Value<String?> title,
+      Value<double> durationSeconds,
+      Value<int> fileSizeBytes,
+      Value<String> format,
+      Value<String> localFilePath,
+      Value<String> uploadStatus,
+      Value<String?> serverId,
+      Value<String?> gcsUrl,
+      Value<String?> registerId,
+      Value<String> cleaningStatus,
+      Value<DateTime> recordedAt,
+      Value<DateTime> createdAt,
+      Value<int> retryCount,
+      Value<DateTime?> lastRetryAt,
+      Value<int> rowid,
+    });
+
+class $$LocalRecordingsTableFilterComposer
+    extends Composer<_$AppDatabase, $LocalRecordingsTable> {
+  $$LocalRecordingsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get projectId => $composableBuilder(
+    column: $table.projectId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get genreId => $composableBuilder(
+    column: $table.genreId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get subcategoryId => $composableBuilder(
+    column: $table.subcategoryId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get durationSeconds => $composableBuilder(
+    column: $table.durationSeconds,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get fileSizeBytes => $composableBuilder(
+    column: $table.fileSizeBytes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get format => $composableBuilder(
+    column: $table.format,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get localFilePath => $composableBuilder(
+    column: $table.localFilePath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get uploadStatus => $composableBuilder(
+    column: $table.uploadStatus,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get serverId => $composableBuilder(
+    column: $table.serverId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get gcsUrl => $composableBuilder(
+    column: $table.gcsUrl,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get registerId => $composableBuilder(
+    column: $table.registerId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get cleaningStatus => $composableBuilder(
+    column: $table.cleaningStatus,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get recordedAt => $composableBuilder(
+    column: $table.recordedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get retryCount => $composableBuilder(
+    column: $table.retryCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lastRetryAt => $composableBuilder(
+    column: $table.lastRetryAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$LocalRecordingsTableOrderingComposer
+    extends Composer<_$AppDatabase, $LocalRecordingsTable> {
+  $$LocalRecordingsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get projectId => $composableBuilder(
+    column: $table.projectId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get genreId => $composableBuilder(
+    column: $table.genreId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get subcategoryId => $composableBuilder(
+    column: $table.subcategoryId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get durationSeconds => $composableBuilder(
+    column: $table.durationSeconds,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get fileSizeBytes => $composableBuilder(
+    column: $table.fileSizeBytes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get format => $composableBuilder(
+    column: $table.format,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get localFilePath => $composableBuilder(
+    column: $table.localFilePath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get uploadStatus => $composableBuilder(
+    column: $table.uploadStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get serverId => $composableBuilder(
+    column: $table.serverId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get gcsUrl => $composableBuilder(
+    column: $table.gcsUrl,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get registerId => $composableBuilder(
+    column: $table.registerId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get cleaningStatus => $composableBuilder(
+    column: $table.cleaningStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get recordedAt => $composableBuilder(
+    column: $table.recordedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get retryCount => $composableBuilder(
+    column: $table.retryCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get lastRetryAt => $composableBuilder(
+    column: $table.lastRetryAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$LocalRecordingsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $LocalRecordingsTable> {
+  $$LocalRecordingsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get projectId =>
+      $composableBuilder(column: $table.projectId, builder: (column) => column);
+
+  GeneratedColumn<String> get genreId =>
+      $composableBuilder(column: $table.genreId, builder: (column) => column);
+
+  GeneratedColumn<String> get subcategoryId => $composableBuilder(
+    column: $table.subcategoryId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<double> get durationSeconds => $composableBuilder(
+    column: $table.durationSeconds,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get fileSizeBytes => $composableBuilder(
+    column: $table.fileSizeBytes,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get format =>
+      $composableBuilder(column: $table.format, builder: (column) => column);
+
+  GeneratedColumn<String> get localFilePath => $composableBuilder(
+    column: $table.localFilePath,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get uploadStatus => $composableBuilder(
+    column: $table.uploadStatus,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get serverId =>
+      $composableBuilder(column: $table.serverId, builder: (column) => column);
+
+  GeneratedColumn<String> get gcsUrl =>
+      $composableBuilder(column: $table.gcsUrl, builder: (column) => column);
+
+  GeneratedColumn<String> get registerId => $composableBuilder(
+    column: $table.registerId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get cleaningStatus => $composableBuilder(
+    column: $table.cleaningStatus,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get recordedAt => $composableBuilder(
+    column: $table.recordedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<int> get retryCount => $composableBuilder(
+    column: $table.retryCount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get lastRetryAt => $composableBuilder(
+    column: $table.lastRetryAt,
+    builder: (column) => column,
+  );
+}
+
+class $$LocalRecordingsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $LocalRecordingsTable,
+          LocalRecording,
+          $$LocalRecordingsTableFilterComposer,
+          $$LocalRecordingsTableOrderingComposer,
+          $$LocalRecordingsTableAnnotationComposer,
+          $$LocalRecordingsTableCreateCompanionBuilder,
+          $$LocalRecordingsTableUpdateCompanionBuilder,
+          (
+            LocalRecording,
+            BaseReferences<
+              _$AppDatabase,
+              $LocalRecordingsTable,
+              LocalRecording
+            >,
+          ),
+          LocalRecording,
+          PrefetchHooks Function()
+        > {
+  $$LocalRecordingsTableTableManager(
+    _$AppDatabase db,
+    $LocalRecordingsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$LocalRecordingsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$LocalRecordingsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$LocalRecordingsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> projectId = const Value.absent(),
+                Value<String> genreId = const Value.absent(),
+                Value<String?> subcategoryId = const Value.absent(),
+                Value<String?> title = const Value.absent(),
+                Value<double> durationSeconds = const Value.absent(),
+                Value<int> fileSizeBytes = const Value.absent(),
+                Value<String> format = const Value.absent(),
+                Value<String> localFilePath = const Value.absent(),
+                Value<String> uploadStatus = const Value.absent(),
+                Value<String?> serverId = const Value.absent(),
+                Value<String?> gcsUrl = const Value.absent(),
+                Value<String?> registerId = const Value.absent(),
+                Value<String> cleaningStatus = const Value.absent(),
+                Value<DateTime> recordedAt = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> retryCount = const Value.absent(),
+                Value<DateTime?> lastRetryAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => LocalRecordingsCompanion(
+                id: id,
+                projectId: projectId,
+                genreId: genreId,
+                subcategoryId: subcategoryId,
+                title: title,
+                durationSeconds: durationSeconds,
+                fileSizeBytes: fileSizeBytes,
+                format: format,
+                localFilePath: localFilePath,
+                uploadStatus: uploadStatus,
+                serverId: serverId,
+                gcsUrl: gcsUrl,
+                registerId: registerId,
+                cleaningStatus: cleaningStatus,
+                recordedAt: recordedAt,
+                createdAt: createdAt,
+                retryCount: retryCount,
+                lastRetryAt: lastRetryAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String projectId,
+                required String genreId,
+                Value<String?> subcategoryId = const Value.absent(),
+                Value<String?> title = const Value.absent(),
+                Value<double> durationSeconds = const Value.absent(),
+                Value<int> fileSizeBytes = const Value.absent(),
+                Value<String> format = const Value.absent(),
+                required String localFilePath,
+                Value<String> uploadStatus = const Value.absent(),
+                Value<String?> serverId = const Value.absent(),
+                Value<String?> gcsUrl = const Value.absent(),
+                Value<String?> registerId = const Value.absent(),
+                Value<String> cleaningStatus = const Value.absent(),
+                required DateTime recordedAt,
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> retryCount = const Value.absent(),
+                Value<DateTime?> lastRetryAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => LocalRecordingsCompanion.insert(
+                id: id,
+                projectId: projectId,
+                genreId: genreId,
+                subcategoryId: subcategoryId,
+                title: title,
+                durationSeconds: durationSeconds,
+                fileSizeBytes: fileSizeBytes,
+                format: format,
+                localFilePath: localFilePath,
+                uploadStatus: uploadStatus,
+                serverId: serverId,
+                gcsUrl: gcsUrl,
+                registerId: registerId,
+                cleaningStatus: cleaningStatus,
+                recordedAt: recordedAt,
+                createdAt: createdAt,
+                retryCount: retryCount,
+                lastRetryAt: lastRetryAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$LocalRecordingsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $LocalRecordingsTable,
+      LocalRecording,
+      $$LocalRecordingsTableFilterComposer,
+      $$LocalRecordingsTableOrderingComposer,
+      $$LocalRecordingsTableAnnotationComposer,
+      $$LocalRecordingsTableCreateCompanionBuilder,
+      $$LocalRecordingsTableUpdateCompanionBuilder,
+      (
+        LocalRecording,
+        BaseReferences<_$AppDatabase, $LocalRecordingsTable, LocalRecording>,
+      ),
+      LocalRecording,
+      PrefetchHooks Function()
+    >;
+typedef $$LocalGenresTableCreateCompanionBuilder =
+    LocalGenresCompanion Function({
+      required String id,
+      required String name,
+      Value<String?> description,
+      Value<String?> icon,
+      Value<String?> color,
+      Value<int> sortOrder,
+      Value<int> rowid,
+    });
+typedef $$LocalGenresTableUpdateCompanionBuilder =
+    LocalGenresCompanion Function({
+      Value<String> id,
+      Value<String> name,
+      Value<String?> description,
+      Value<String?> icon,
+      Value<String?> color,
+      Value<int> sortOrder,
+      Value<int> rowid,
+    });
+
+class $$LocalGenresTableFilterComposer
+    extends Composer<_$AppDatabase, $LocalGenresTable> {
+  $$LocalGenresTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get icon => $composableBuilder(
+    column: $table.icon,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get color => $composableBuilder(
+    column: $table.color,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$LocalGenresTableOrderingComposer
+    extends Composer<_$AppDatabase, $LocalGenresTable> {
+  $$LocalGenresTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get icon => $composableBuilder(
+    column: $table.icon,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get color => $composableBuilder(
+    column: $table.color,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$LocalGenresTableAnnotationComposer
+    extends Composer<_$AppDatabase, $LocalGenresTable> {
+  $$LocalGenresTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get icon =>
+      $composableBuilder(column: $table.icon, builder: (column) => column);
+
+  GeneratedColumn<String> get color =>
+      $composableBuilder(column: $table.color, builder: (column) => column);
+
+  GeneratedColumn<int> get sortOrder =>
+      $composableBuilder(column: $table.sortOrder, builder: (column) => column);
+}
+
+class $$LocalGenresTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $LocalGenresTable,
+          LocalGenre,
+          $$LocalGenresTableFilterComposer,
+          $$LocalGenresTableOrderingComposer,
+          $$LocalGenresTableAnnotationComposer,
+          $$LocalGenresTableCreateCompanionBuilder,
+          $$LocalGenresTableUpdateCompanionBuilder,
+          (
+            LocalGenre,
+            BaseReferences<_$AppDatabase, $LocalGenresTable, LocalGenre>,
+          ),
+          LocalGenre,
+          PrefetchHooks Function()
+        > {
+  $$LocalGenresTableTableManager(_$AppDatabase db, $LocalGenresTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$LocalGenresTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$LocalGenresTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$LocalGenresTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String?> description = const Value.absent(),
+                Value<String?> icon = const Value.absent(),
+                Value<String?> color = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => LocalGenresCompanion(
+                id: id,
+                name: name,
+                description: description,
+                icon: icon,
+                color: color,
+                sortOrder: sortOrder,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String name,
+                Value<String?> description = const Value.absent(),
+                Value<String?> icon = const Value.absent(),
+                Value<String?> color = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => LocalGenresCompanion.insert(
+                id: id,
+                name: name,
+                description: description,
+                icon: icon,
+                color: color,
+                sortOrder: sortOrder,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$LocalGenresTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $LocalGenresTable,
+      LocalGenre,
+      $$LocalGenresTableFilterComposer,
+      $$LocalGenresTableOrderingComposer,
+      $$LocalGenresTableAnnotationComposer,
+      $$LocalGenresTableCreateCompanionBuilder,
+      $$LocalGenresTableUpdateCompanionBuilder,
+      (
+        LocalGenre,
+        BaseReferences<_$AppDatabase, $LocalGenresTable, LocalGenre>,
+      ),
+      LocalGenre,
+      PrefetchHooks Function()
+    >;
+typedef $$LocalSubcategoriesTableCreateCompanionBuilder =
+    LocalSubcategoriesCompanion Function({
+      required String id,
+      required String genreId,
+      required String name,
+      Value<String?> description,
+      Value<int> sortOrder,
+      Value<int> rowid,
+    });
+typedef $$LocalSubcategoriesTableUpdateCompanionBuilder =
+    LocalSubcategoriesCompanion Function({
+      Value<String> id,
+      Value<String> genreId,
+      Value<String> name,
+      Value<String?> description,
+      Value<int> sortOrder,
+      Value<int> rowid,
+    });
+
+class $$LocalSubcategoriesTableFilterComposer
+    extends Composer<_$AppDatabase, $LocalSubcategoriesTable> {
+  $$LocalSubcategoriesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get genreId => $composableBuilder(
+    column: $table.genreId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$LocalSubcategoriesTableOrderingComposer
+    extends Composer<_$AppDatabase, $LocalSubcategoriesTable> {
+  $$LocalSubcategoriesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get genreId => $composableBuilder(
+    column: $table.genreId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$LocalSubcategoriesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $LocalSubcategoriesTable> {
+  $$LocalSubcategoriesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get genreId =>
+      $composableBuilder(column: $table.genreId, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get sortOrder =>
+      $composableBuilder(column: $table.sortOrder, builder: (column) => column);
+}
+
+class $$LocalSubcategoriesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $LocalSubcategoriesTable,
+          LocalSubcategory,
+          $$LocalSubcategoriesTableFilterComposer,
+          $$LocalSubcategoriesTableOrderingComposer,
+          $$LocalSubcategoriesTableAnnotationComposer,
+          $$LocalSubcategoriesTableCreateCompanionBuilder,
+          $$LocalSubcategoriesTableUpdateCompanionBuilder,
+          (
+            LocalSubcategory,
+            BaseReferences<
+              _$AppDatabase,
+              $LocalSubcategoriesTable,
+              LocalSubcategory
+            >,
+          ),
+          LocalSubcategory,
+          PrefetchHooks Function()
+        > {
+  $$LocalSubcategoriesTableTableManager(
+    _$AppDatabase db,
+    $LocalSubcategoriesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$LocalSubcategoriesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$LocalSubcategoriesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$LocalSubcategoriesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> genreId = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String?> description = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => LocalSubcategoriesCompanion(
+                id: id,
+                genreId: genreId,
+                name: name,
+                description: description,
+                sortOrder: sortOrder,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String genreId,
+                required String name,
+                Value<String?> description = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => LocalSubcategoriesCompanion.insert(
+                id: id,
+                genreId: genreId,
+                name: name,
+                description: description,
+                sortOrder: sortOrder,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$LocalSubcategoriesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $LocalSubcategoriesTable,
+      LocalSubcategory,
+      $$LocalSubcategoriesTableFilterComposer,
+      $$LocalSubcategoriesTableOrderingComposer,
+      $$LocalSubcategoriesTableAnnotationComposer,
+      $$LocalSubcategoriesTableCreateCompanionBuilder,
+      $$LocalSubcategoriesTableUpdateCompanionBuilder,
+      (
+        LocalSubcategory,
+        BaseReferences<
+          _$AppDatabase,
+          $LocalSubcategoriesTable,
+          LocalSubcategory
+        >,
+      ),
+      LocalSubcategory,
+      PrefetchHooks Function()
+    >;
+
+class $AppDatabaseManager {
+  final _$AppDatabase _db;
+  $AppDatabaseManager(this._db);
+  $$LocalRecordingsTableTableManager get localRecordings =>
+      $$LocalRecordingsTableTableManager(_db, _db.localRecordings);
+  $$LocalGenresTableTableManager get localGenres =>
+      $$LocalGenresTableTableManager(_db, _db.localGenres);
+  $$LocalSubcategoriesTableTableManager get localSubcategories =>
+      $$LocalSubcategoriesTableTableManager(_db, _db.localSubcategories);
 }

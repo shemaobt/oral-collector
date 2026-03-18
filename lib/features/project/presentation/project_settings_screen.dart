@@ -8,6 +8,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_snack_bar.dart';
 import '../../../shared/widgets/invite_dialog.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../auth/data/providers/role_provider.dart';
 import '../../sync/presentation/notifiers/sync_notifier.dart';
 import '../data/providers.dart';
@@ -164,9 +165,11 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
         });
       }
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Project updated')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context).projectSettings_updated),
+        ),
+      );
     } on ForbiddenException {
       if (!mounted) return;
       showErrorSnackBar(
@@ -184,17 +187,20 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
   }
 
   Future<void> _confirmRemoveMember(ProjectMember member) async {
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Remove Member'),
+        title: Text(l10n.projectSettings_removeMember),
         content: Text(
-          'Remove ${member.displayName ?? member.email} from this project?',
+          l10n.projectSettings_removeMemberConfirm(
+            member.displayName ?? member.email,
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
+            child: Text(l10n.common_cancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(ctx).pop(true),
@@ -202,7 +208,7 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
               backgroundColor: AppColors.of(context).error,
               foregroundColor: Colors.white,
             ),
-            child: const Text('Remove'),
+            child: Text(l10n.common_remove),
           ),
         ],
       ),
@@ -217,9 +223,9 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
     if (!mounted) return;
 
     if (success) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Member removed')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.projectSettings_memberRemoved)),
+      );
     } else {
       final error = ref.read(memberNotifierProvider).error;
       showErrorSnackBar(context, error ?? 'Failed to remove member');
@@ -233,9 +239,13 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
     );
 
     if (result == true && mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Invite sent successfully')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context).projectSettings_inviteSent,
+          ),
+        ),
+      );
       ref.read(memberNotifierProvider.notifier).fetchMembers(widget.projectId);
     }
   }
@@ -244,6 +254,7 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final syncState = ref.watch(syncNotifierProvider);
+    final l10n = AppLocalizations.of(context);
 
     ref.listen(syncNotifierProvider.select((s) => s.isOnline), (prev, next) {
       if (next && prev == false) _fetchAll();
@@ -262,7 +273,7 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
             icon: const Icon(LucideIcons.arrowLeft),
             onPressed: () => context.pop(),
           ),
-          title: const Text('Project Settings'),
+          title: Text(l10n.projectSettings_title),
         ),
         body: isOffline
             ? EmptyState(
@@ -275,6 +286,112 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
       );
     }
 
+    final detailsColumn = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (_isManager) ...[
+          Text(
+            l10n.projectSettings_details,
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.2,
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: _nameController,
+            decoration: InputDecoration(
+              labelText: l10n.project_projectName,
+              prefixIcon: const Icon(LucideIcons.folderOpen, size: 18),
+            ),
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return l10n.project_projectNameRequired;
+              }
+              return null;
+            },
+            onChanged: (_) => _onFieldChanged(),
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: _descriptionController,
+            decoration: InputDecoration(
+              labelText: l10n.project_description,
+              prefixIcon: const Icon(LucideIcons.fileText, size: 18),
+              alignLabelWithHint: true,
+            ),
+            maxLines: 3,
+            onChanged: (_) => _onFieldChanged(),
+          ),
+          const SizedBox(height: 14),
+          AnimatedOpacity(
+            opacity: _isEdited ? 1.0 : 0.0,
+            duration: const Duration(milliseconds: 200),
+            child: SizedBox(
+              height: 44,
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _isEdited && !_isSaving ? _save : null,
+                icon: _isSaving
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Icon(LucideIcons.save, size: 16),
+                label: Text(
+                  _isSaving
+                      ? l10n.projectSettings_saving
+                      : l10n.projectSettings_saveChanges,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+
+    final teamColumn = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              l10n.projectSettings_team,
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.2,
+              ),
+            ),
+            if (_isManager)
+              TextButton.icon(
+                onPressed: _showInviteDialog,
+                icon: const Icon(LucideIcons.userPlus, size: 15),
+                label: Text(l10n.common_invite),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  textStyle: theme.textTheme.labelMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        MemberList(
+          projectId: widget.projectId,
+          onRemove: _isManager ? _confirmRemoveMember : null,
+        ),
+      ],
+    );
+
     return Scaffold(
       body: Form(
         key: _formKey,
@@ -285,110 +402,49 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
               memberCount: memberCount,
               onBack: () => context.pop(),
             ),
-
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
-              sliver: SliverList(
-                delegate: SliverChildListDelegate([
-                  ProjectSettingsStatsRow(
-                    project: _project!,
-                    memberCount: memberCount,
-                  ),
+              sliver: SliverLayoutBuilder(
+                builder: (context, constraints) {
+                  final isWide = constraints.crossAxisExtent >= 700;
 
-                  if (_isManager) ...[
-                    const SizedBox(height: 28),
-                    Text(
-                      'Details',
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.2,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: _nameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Project Name',
-                        prefixIcon: Icon(LucideIcons.folderOpen, size: 18),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Project name is required';
-                        }
-                        return null;
-                      },
-                      onChanged: (_) => _onFieldChanged(),
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: _descriptionController,
-                      decoration: const InputDecoration(
-                        labelText: 'Description',
-                        prefixIcon: Icon(LucideIcons.fileText, size: 18),
-                        alignLabelWithHint: true,
-                      ),
-                      maxLines: 3,
-                      onChanged: (_) => _onFieldChanged(),
-                    ),
-                    const SizedBox(height: 14),
-                    AnimatedOpacity(
-                      opacity: _isEdited ? 1.0 : 0.0,
-                      duration: const Duration(milliseconds: 200),
-                      child: SizedBox(
-                        height: 44,
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          onPressed: _isEdited && !_isSaving ? _save : null,
-                          icon: _isSaving
-                              ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : const Icon(LucideIcons.save, size: 16),
-                          label: Text(_isSaving ? 'Saving...' : 'Save Changes'),
-                        ),
-                      ),
-                    ),
-                  ],
-
-                  const SizedBox(height: 28),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Team',
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.2,
-                        ),
-                      ),
-                      if (_isManager)
-                        TextButton.icon(
-                          onPressed: _showInviteDialog,
-                          icon: const Icon(LucideIcons.userPlus, size: 15),
-                          label: const Text('Invite'),
-                          style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            textStyle: theme.textTheme.labelMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
+                  if (isWide) {
+                    return SliverToBoxAdapter(
+                      child: Column(
+                        children: [
+                          ProjectSettingsStatsRow(
+                            project: _project!,
+                            memberCount: memberCount,
                           ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  MemberList(
-                    projectId: widget.projectId,
-                    onRemove: _isManager ? _confirmRemoveMember : null,
-                  ),
-                ]),
+                          const SizedBox(height: 28),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(child: detailsColumn),
+                              const SizedBox(width: 32),
+                              Expanded(child: teamColumn),
+                            ],
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  return SliverList(
+                    delegate: SliverChildListDelegate([
+                      ProjectSettingsStatsRow(
+                        project: _project!,
+                        memberCount: memberCount,
+                      ),
+                      if (_isManager) ...[
+                        const SizedBox(height: 28),
+                        detailsColumn,
+                      ],
+                      const SizedBox(height: 28),
+                      teamColumn,
+                    ]),
+                  );
+                },
               ),
             ),
           ],

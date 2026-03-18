@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import '../../../../l10n/app_localizations.dart';
+import '../../../../core/l10n/content_l10n.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/preview_helpers.dart';
 import '../../../shared/utils/format.dart';
@@ -13,6 +15,7 @@ import '../../../shared/widgets/status_banner.dart';
 import '../../../shared/widgets/sync_status_indicator.dart';
 import '../../genre/presentation/notifiers/genre_notifier.dart';
 import '../../project/presentation/notifiers/project_notifier.dart';
+import '../domain/entities/register.dart';
 import '../../sync/presentation/notifiers/sync_notifier.dart';
 import 'notifiers/recordings_list_notifier.dart';
 import 'widgets/genre_filter_bar.dart';
@@ -75,6 +78,7 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
       ref.read(recordingsListNotifierProvider.notifier).fetchRecordings();
     });
 
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final colors = AppColors.of(context);
     final genreState = ref.watch(genreNotifierProvider);
@@ -93,7 +97,7 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
           ? Padding(
               padding: EdgeInsets.only(bottom: fabOffset - 70),
               child: Semantics(
-                label: 'Import audio file',
+                label: l10n.recordings_importAudio,
                 button: true,
                 child: Material(
                   color: Colors.transparent,
@@ -143,19 +147,19 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
       body: activeProject == null
           ? EmptyState(
               icon: LucideIcons.folderOpen,
-              title: 'Select a project',
-              description: 'Choose a project to view its recordings',
+              title: l10n.recordings_selectProject,
+              description: l10n.recordings_selectProjectSubtitle,
               action: FilledButton.icon(
                 onPressed: () => context.go('/projects'),
                 icon: const Icon(LucideIcons.folderOpen, size: 18),
-                label: const Text('Browse Projects'),
+                label: Text(l10n.home_browseProjects),
               ),
             )
           : CustomScrollView(
               slivers: [
                 ScreenHeaderSliver(
-                  title: 'Recordings',
-                  subtitle: 'Your collected stories',
+                  title: l10n.recordings_title,
+                  subtitle: l10n.recordings_subtitle,
                   icon: LucideIcons.mic,
                   actions: const [SyncStatusIndicator()],
                   bottom: PreferredSize(
@@ -202,7 +206,7 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                     child: Text(
-                      '${filtered.length} recording${filtered.length == 1 ? '' : 's'}',
+                      l10n.recordings_count(filtered.length),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: colors.secondary,
                         fontWeight: FontWeight.w600,
@@ -217,12 +221,11 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
                         child: Center(child: CircularProgressIndicator()),
                       )
                     : filtered.isEmpty
-                    ? const SliverFillRemaining(
+                    ? SliverFillRemaining(
                         child: EmptyState(
                           icon: LucideIcons.mic,
-                          title: 'No recordings yet',
-                          description:
-                              'Tap the microphone to record your first story, or import an audio file.',
+                          title: l10n.recordings_noRecordings,
+                          description: l10n.recordings_noRecordingsSubtitle,
                         ),
                       )
                     : SliverPadding(
@@ -230,7 +233,7 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
                           16,
                           0,
                           16,
-                          AppShell.scrollBottomPadding,
+                          AppShell.scrollPaddingFor(context),
                         ),
                         sliver: SliverList.separated(
                           itemCount: filtered.length,
@@ -238,19 +241,34 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
                               const SizedBox(height: 10),
                           itemBuilder: (context, index) {
                             final recording = filtered[index];
+                            final rawGenre = ref
+                                .read(genreNotifierProvider.notifier)
+                                .getGenreName(recording.genreId);
+                            final rawSubcat = recording.subcategoryId != null
+                                ? ref
+                                      .read(genreNotifierProvider.notifier)
+                                      .getSubcategoryName(
+                                        recording.subcategoryId!,
+                                      )
+                                : null;
+                            final rawReg = getRegisterName(
+                              recording.registerId,
+                            );
                             return RecordingCard(
                               recording: recording,
-                              genreName: ref
-                                  .read(genreNotifierProvider.notifier)
-                                  .getGenreName(recording.genreId),
-                              subcategoryName: recording.subcategoryId != null
-                                  ? ref
-                                        .read(genreNotifierProvider.notifier)
-                                        .getSubcategoryName(
-                                          recording.subcategoryId!,
-                                        )
+                              genreName: rawGenre != null
+                                  ? localizedGenreName(l10n, rawGenre)
                                   : null,
-                              relativeDate: formatTimeAgo(recording.recordedAt),
+                              subcategoryName: rawSubcat != null
+                                  ? localizedSubcategoryName(l10n, rawSubcat)
+                                  : null,
+                              registerName: rawReg != null
+                                  ? localizedRegisterName(l10n, rawReg)
+                                  : null,
+                              relativeDate: formatTimeAgo(
+                                recording.recordedAt,
+                                l10n,
+                              ),
                               formattedDuration: formatDurationHMS(
                                 recording.durationSeconds,
                               ),

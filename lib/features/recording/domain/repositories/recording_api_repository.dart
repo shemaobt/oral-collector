@@ -6,8 +6,10 @@ abstract class RecordingApiRepository {
   Future<bool> deleteRecording(String serverId);
   Future<bool> updateRecording(
     String serverId, {
+    String? title,
     String? genreId,
     String? subcategoryId,
+    String? registerId,
     String? cleaningStatus,
   });
 

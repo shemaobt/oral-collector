@@ -156,7 +156,7 @@ abstract class AppTheme {
         ),
         shape: Border(
           bottom: BorderSide(
-            color: AppColors.border.withValues(alpha: 0.4),
+            color: AppColors.border.withValues(alpha: 0.5),
             width: 1,
           ),
         ),
@@ -164,7 +164,7 @@ abstract class AppTheme {
       cardTheme: CardThemeData(
         color: AppColors.card,
         elevation: 2,
-        shadowColor: AppColors.border.withValues(alpha: 0.3),
+        shadowColor: AppColors.border.withValues(alpha: 0.45),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -257,7 +257,7 @@ abstract class AppTheme {
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: AppColors.card,
         selectedItemColor: AppColors.accent,
-        unselectedItemColor: AppColors.foreground.withValues(alpha: 0.35),
+        unselectedItemColor: AppColors.foreground.withValues(alpha: 0.45),
         elevation: 8,
         type: BottomNavigationBarType.fixed,
       ),
@@ -276,7 +276,7 @@ abstract class AppTheme {
         indicatorColor: AppColors.accent.withValues(alpha: 0.1),
       ),
       dividerTheme: DividerThemeData(
-        color: AppColors.border.withValues(alpha: 0.3),
+        color: AppColors.border.withValues(alpha: 0.5),
         thickness: 1,
       ),
       listTileTheme: ListTileThemeData(

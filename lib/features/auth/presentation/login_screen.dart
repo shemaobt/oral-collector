@@ -7,6 +7,7 @@ import '../../../shared/preview_helpers.dart';
 import '../../../shared/widgets/error_snack_bar.dart';
 import '../../../core/auth/auth_notifier.dart';
 import '../../../core/auth/auth_state.dart';
+import '../../../../l10n/app_localizations.dart';
 import 'widgets/hero_panel.dart';
 import 'widgets/login_mobile_hero.dart';
 import 'widgets/login_form.dart';
@@ -47,6 +48,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final authState = ref.watch(authNotifierProvider);
     final isWide = MediaQuery.of(context).size.width >= 720;
     final colors = AppColors.of(context);
+    final l10n = AppLocalizations.of(context);
 
     ref.listen<AuthState>(authNotifierProvider, (previous, next) {
       if (next.error != null && previous?.error != next.error) {
@@ -58,17 +60,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       return Scaffold(
         body: Row(
           children: [
-            Expanded(flex: 5, child: const HeroPanel()),
-            Expanded(flex: 4, child: _buildDesktopForm(authState, colors)),
+            Expanded(flex: 4, child: HeroPanel()),
+            Expanded(
+              flex: 5,
+              child: _buildDesktopForm(authState, colors, l10n),
+            ),
           ],
         ),
       );
     }
 
-    return Scaffold(body: _buildMobileLayout(authState, colors));
+    return Scaffold(body: _buildMobileLayout(authState, colors, l10n));
   }
 
-  Widget _buildMobileLayout(AuthState authState, AppColorSet colors) {
+  Widget _buildMobileLayout(
+    AuthState authState,
+    AppColorSet colors,
+    AppLocalizations l10n,
+  ) {
     final theme = Theme.of(context);
     final screenHeight = MediaQuery.of(context).size.height;
     final topPadding = MediaQuery.of(context).padding.top;
@@ -91,7 +100,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Sign in to continue collecting stories.',
+                    l10n.auth_signInSubtitle,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: colors.secondary,
                     ),
@@ -121,14 +130,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 
-  Widget _buildDesktopForm(AuthState authState, AppColorSet colors) {
+  Widget _buildDesktopForm(
+    AuthState authState,
+    AppColorSet colors,
+    AppLocalizations l10n,
+  ) {
     final theme = Theme.of(context);
     return SafeArea(
       child: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 48),
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 400),
+            constraints: const BoxConstraints(maxWidth: 460),
             child: Form(
               key: _formKey,
               child: Column(
@@ -149,13 +162,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     TextSpan(
                       children: [
                         TextSpan(
-                          text: 'Welcome ',
+                          text: l10n.auth_welcome,
                           style: theme.textTheme.displayLarge?.copyWith(
                             color: colors.foreground,
                           ),
                         ),
                         TextSpan(
-                          text: 'Back',
+                          text: l10n.auth_back,
                           style: theme.textTheme.displayLarge?.copyWith(
                             color: colors.accent,
                           ),
@@ -165,7 +178,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Sign in to continue collecting stories.',
+                    l10n.auth_signInSubtitle,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: colors.secondary,
                     ),

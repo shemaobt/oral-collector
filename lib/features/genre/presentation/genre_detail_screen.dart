@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import '../../../core/l10n/content_l10n.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/utils/genre_helpers.dart';
 import '../../../shared/widgets/status_banner.dart';
@@ -21,6 +23,7 @@ class GenreDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = AppColors.of(context);
+    final l10n = AppLocalizations.of(context);
     final genreState = ref.watch(genreNotifierProvider);
     final statsState = ref.watch(statsNotifierProvider);
     final genre = genreState.genres.where((g) => g.id == genreId).firstOrNull;
@@ -33,16 +36,16 @@ class GenreDetailScreen extends ConsumerWidget {
       return Scaffold(
         appBar: AppBar(
           leading: BackButton(onPressed: () => context.pop()),
-          title: const Text('Genre'),
+          title: Text(l10n.genre_title),
         ),
-        body: const Center(child: Text('Genre not found')),
+        body: Center(child: Text(l10n.genre_notFound)),
       );
     }
 
     return Scaffold(
       appBar: AppBar(
         leading: BackButton(onPressed: () => context.pop()),
-        title: Text(genre.name),
+        title: Text(localizedGenreName(l10n, genre.name)),
         actions: [
           Container(
             margin: const EdgeInsets.only(right: 16),
@@ -136,8 +139,10 @@ class _SubcategoryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = AppColors.of(context);
+    final l10n = AppLocalizations.of(context);
     final color = parseHexColor(genreColor, colors.primary);
 
+    final description = localizedSubcategoryDescription(l10n, subcategory.name);
     final recordingCount = subcategoryStat?.recordingCount ?? 0;
     final totalDurationSeconds = (subcategoryStat?.totalDurationSeconds ?? 0)
         .toDouble();
@@ -195,7 +200,7 @@ class _SubcategoryCard extends StatelessWidget {
                       children: [
                         Expanded(
                           child: Text(
-                            subcategory.name,
+                            localizedSubcategoryName(l10n, subcategory.name),
                             style: theme.textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
@@ -221,14 +226,12 @@ class _SubcategoryCard extends StatelessWidget {
                       ],
                     ),
 
-                    if (subcategory.description != null &&
-                        subcategory.description!.isNotEmpty) ...[
+                    if (description != null) ...[
                       const SizedBox(height: 4),
                       Text(
-                        subcategory.description!,
-                        style: theme.textTheme.bodyMedium?.copyWith(
+                        description,
+                        style: theme.textTheme.bodySmall?.copyWith(
                           color: colors.secondary,
-                          fontStyle: FontStyle.italic,
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -251,7 +254,7 @@ class _SubcategoryCard extends StatelessWidget {
                         Icon(LucideIcons.mic, size: 14, color: colors.border),
                         const SizedBox(width: 4),
                         Text(
-                          '$recordingCount recordings',
+                          l10n.genre_recordingCount(recordingCount),
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: colors.foreground.withValues(alpha: 0.6),
                           ),

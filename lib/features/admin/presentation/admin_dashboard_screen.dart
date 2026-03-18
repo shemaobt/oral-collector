@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../shared/preview_helpers.dart';
 import '../../../shared/widgets/error_snack_bar.dart';
 import '../../auth/data/providers/role_provider.dart';
@@ -49,8 +50,10 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final adminState = ref.watch(adminNotifierProvider);
-    final isWide = MediaQuery.of(context).size.width >= 800;
+    final isWide = MediaQuery.of(context).size.width >= 700;
 
     ref.listen(syncNotifierProvider.select((s) => s.isOnline), (prev, next) {
       if (next && prev == false) {
@@ -68,10 +71,10 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
     });
 
     final sections = [
-      const AdminNavItem(icon: LucideIcons.layoutDashboard, label: 'Overview'),
-      const AdminNavItem(icon: LucideIcons.folderOpen, label: 'Projects'),
-      const AdminNavItem(icon: LucideIcons.bookOpen, label: 'Genres'),
-      const AdminNavItem(icon: LucideIcons.sparkles, label: 'Cleaning'),
+      (icon: LucideIcons.layoutDashboard, label: l10n.admin_overview),
+      (icon: LucideIcons.folderOpen, label: l10n.admin_projects),
+      (icon: LucideIcons.bookOpen, label: l10n.admin_genres),
+      (icon: LucideIcons.sparkles, label: l10n.admin_cleaning),
     ];
 
     Widget body;
@@ -142,59 +145,84 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(LucideIcons.arrowLeft),
-          onPressed: () => context.pop(),
-        ),
-        title: const Text('Admin Dashboard'),
-      ),
-      body: RefreshIndicator(
-        onRefresh: () => ref.read(adminNotifierProvider.notifier).fetchAll(),
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(
-                width: double.infinity,
-                child: SegmentedButton<int>(
-                  segments: sections
-                      .asMap()
-                      .entries
-                      .map(
-                        (e) => ButtonSegment<int>(
-                          value: e.key,
-                          label: Text(e.value.label),
-                          icon: Icon(e.value.icon, size: 18),
-                        ),
-                      )
-                      .toList(),
-                  selected: {_selectedSection},
-                  onSelectionChanged: (selection) {
-                    setState(() => _selectedSection = selection.first);
-                  },
-                  style: SegmentedButton.styleFrom(
-                    selectedBackgroundColor: colors.accent.withValues(
-                      alpha: 0.1,
-                    ),
-                    selectedForegroundColor: colors.accent,
-                  ),
-                ),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: EdgeInsets.fromLTRB(
+              24,
+              MediaQuery.of(context).padding.top + 16,
+              24,
+              0,
+            ),
+            child: Text(
+              l10n.admin_title,
+              style: theme.textTheme.headlineMedium?.copyWith(
+                fontWeight: FontWeight.w800,
               ),
-              const SizedBox(height: 16),
-              body,
-            ],
+            ),
           ),
-        ),
+          const SizedBox(height: 16),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Row(
+              children: List.generate(sections.length, (i) {
+                final section = sections[i];
+                final isSelected = i == _selectedSection;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: FilterChip(
+                    selected: isSelected,
+                    label: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          section.icon,
+                          size: 16,
+                          color: isSelected ? colors.accent : colors.secondary,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(section.label),
+                      ],
+                    ),
+                    onSelected: (_) => setState(() => _selectedSection = i),
+                    selectedColor: colors.accent.withValues(alpha: 0.12),
+                    labelStyle: theme.textTheme.bodyMedium?.copyWith(
+                      color: isSelected ? colors.accent : colors.secondary,
+                      fontWeight: isSelected
+                          ? FontWeight.w700
+                          : FontWeight.w500,
+                    ),
+                    showCheckmark: false,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      side: BorderSide(
+                        color: isSelected
+                            ? colors.accent.withValues(alpha: 0.3)
+                            : colors.border.withValues(alpha: 0.2),
+                      ),
+                    ),
+                  ),
+                );
+              }),
+            ),
+          ),
+          const SizedBox(height: 8),
+
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: () =>
+                  ref.read(adminNotifierProvider.notifier).fetchAll(),
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(24),
+                child: body,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
-}
-
-class AdminNavItem {
-  final IconData icon;
-  final String label;
-  const AdminNavItem({required this.icon, required this.label});
 }

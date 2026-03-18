@@ -5,6 +5,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/widgets/app_shell.dart';
 import '../../../shared/widgets/error_snack_bar.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../sync/presentation/notifiers/sync_notifier.dart';
 import '../data/providers.dart';
 import '../domain/repositories/project_repository.dart';
@@ -17,6 +18,7 @@ Future<bool?> showCreateProjectSheet(BuildContext context) {
     isScrollControlled: true,
     useSafeArea: true,
     backgroundColor: Colors.transparent,
+    constraints: const BoxConstraints(maxWidth: 600),
     builder: (_) => const _CreateProjectSheet(),
   );
 }
@@ -61,6 +63,7 @@ class _CreateProjectSheetState extends ConsumerState<_CreateProjectSheet> {
       isScrollControlled: true,
       useSafeArea: true,
       backgroundColor: Colors.transparent,
+      constraints: const BoxConstraints(maxWidth: 600),
       builder: (_) => _LanguagePickerSheet(
         languages: languages,
         selected: _selectedLanguage,
@@ -113,6 +116,7 @@ class _CreateProjectSheetState extends ConsumerState<_CreateProjectSheet> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = AppColors.of(context);
+    final l10n = AppLocalizations.of(context);
     final keyboardInset = MediaQuery.of(context).viewInsets.bottom;
 
     final bottomPadding = keyboardInset > 0
@@ -144,21 +148,21 @@ class _CreateProjectSheetState extends ConsumerState<_CreateProjectSheet> {
                 ),
               ),
 
-              Text('New Project', style: theme.textTheme.titleLarge),
+              Text(l10n.project_newProject, style: theme.textTheme.titleLarge),
               const SizedBox(height: 24),
 
               TextFormField(
                 controller: _nameController,
                 autofocus: true,
-                decoration: const InputDecoration(
-                  labelText: 'Project Name',
-                  hintText: 'e.g. Kosrae Bible Translation',
+                decoration: InputDecoration(
+                  labelText: l10n.project_projectName,
+                  hintText: l10n.project_projectNameHint,
                 ),
                 textCapitalization: TextCapitalization.words,
                 textInputAction: TextInputAction.next,
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'Project name is required';
+                    return l10n.project_projectNameRequired;
                   }
                   return null;
                 },
@@ -169,7 +173,7 @@ class _CreateProjectSheetState extends ConsumerState<_CreateProjectSheet> {
                 onTap: _pickLanguage,
                 child: InputDecorator(
                   decoration: InputDecoration(
-                    labelText: 'Language',
+                    labelText: l10n.project_language,
                     suffixIcon: const Icon(LucideIcons.chevronRight, size: 18),
                     errorText: null,
                     border: OutlineInputBorder(
@@ -206,7 +210,7 @@ class _CreateProjectSheetState extends ConsumerState<_CreateProjectSheet> {
                           ],
                         )
                       : Text(
-                          'Select a language',
+                          l10n.project_selectLanguage,
                           style: theme.textTheme.bodyLarge?.copyWith(
                             color: colors.secondary.withValues(alpha: 0.5),
                           ),
@@ -217,9 +221,9 @@ class _CreateProjectSheetState extends ConsumerState<_CreateProjectSheet> {
 
               TextFormField(
                 controller: _descriptionController,
-                decoration: const InputDecoration(
-                  labelText: 'Description',
-                  hintText: 'Optional',
+                decoration: InputDecoration(
+                  labelText: l10n.project_description,
+                  hintText: l10n.project_descriptionHint,
                 ),
                 maxLines: 2,
                 textCapitalization: TextCapitalization.sentences,
@@ -233,7 +237,7 @@ class _CreateProjectSheetState extends ConsumerState<_CreateProjectSheet> {
                       onPressed: _isSubmitting
                           ? null
                           : () => Navigator.of(context).pop(),
-                      child: const Text('Cancel'),
+                      child: Text(l10n.common_cancel),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -250,7 +254,7 @@ class _CreateProjectSheetState extends ConsumerState<_CreateProjectSheet> {
                                 color: Colors.white,
                               ),
                             )
-                          : const Text('Create Project'),
+                          : Text(l10n.project_createProject),
                     ),
                   ),
                 ],
@@ -331,6 +335,7 @@ class _LanguagePickerSheetState extends State<_LanguagePickerSheet> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = AppColors.of(context);
+    final l10n = AppLocalizations.of(context);
     final filtered = _filtered;
     final keyboardInset = MediaQuery.of(context).viewInsets.bottom;
     final navBarPadding = keyboardInset > 0
@@ -366,7 +371,9 @@ class _LanguagePickerSheetState extends State<_LanguagePickerSheet> {
               children: [
                 Expanded(
                   child: Text(
-                    _isAddingNew ? 'Add Language' : 'Select Language',
+                    _isAddingNew
+                        ? l10n.project_addLanguageTitle
+                        : l10n.project_selectLanguageTitle,
                     style: theme.textTheme.titleLarge,
                   ),
                 ),
@@ -374,7 +381,7 @@ class _LanguagePickerSheetState extends State<_LanguagePickerSheet> {
                   IconButton(
                     onPressed: () => setState(() => _isAddingNew = false),
                     icon: const Icon(LucideIcons.arrowLeft, size: 20),
-                    tooltip: 'Back to list',
+                    tooltip: l10n.project_backToList,
                   ),
               ],
             ),
@@ -390,7 +397,7 @@ class _LanguagePickerSheetState extends State<_LanguagePickerSheet> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      "Can't find your language? Add it here.",
+                      l10n.project_addLanguageSubtitle,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: colors.secondary,
                       ),
@@ -399,15 +406,15 @@ class _LanguagePickerSheetState extends State<_LanguagePickerSheet> {
                     TextFormField(
                       controller: _newNameController,
                       autofocus: true,
-                      decoration: const InputDecoration(
-                        labelText: 'Language Name',
-                        hintText: 'e.g. Kosraean',
+                      decoration: InputDecoration(
+                        labelText: l10n.project_languageName,
+                        hintText: l10n.project_languageNameHint,
                       ),
                       textCapitalization: TextCapitalization.words,
                       textInputAction: TextInputAction.next,
                       validator: (v) {
                         if (v == null || v.trim().isEmpty) {
-                          return 'Name is required';
+                          return l10n.project_languageNameRequired;
                         }
                         return null;
                       },
@@ -415,19 +422,19 @@ class _LanguagePickerSheetState extends State<_LanguagePickerSheet> {
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _newCodeController,
-                      decoration: const InputDecoration(
-                        labelText: 'Language Code',
-                        hintText: 'e.g. kos (ISO 639-3)',
+                      decoration: InputDecoration(
+                        labelText: l10n.project_languageCode,
+                        hintText: l10n.project_languageCodeHint,
                       ),
                       textCapitalization: TextCapitalization.none,
                       textInputAction: TextInputAction.done,
                       onFieldSubmitted: (_) => _createLanguage(),
                       validator: (v) {
                         if (v == null || v.trim().isEmpty) {
-                          return 'Code is required';
+                          return l10n.project_languageCodeRequired;
                         }
                         if (v.trim().length > 3) {
-                          return 'Code must be 1-3 characters';
+                          return l10n.project_languageCodeTooLong;
                         }
                         return null;
                       },
@@ -446,7 +453,7 @@ class _LanguagePickerSheetState extends State<_LanguagePickerSheet> {
                                   color: Colors.white,
                                 ),
                               )
-                            : const Text('Add Language'),
+                            : Text(l10n.project_addLanguage),
                       ),
                     ),
                   ],
@@ -459,7 +466,7 @@ class _LanguagePickerSheetState extends State<_LanguagePickerSheet> {
               child: TextField(
                 controller: _searchController,
                 decoration: InputDecoration(
-                  hintText: 'Search languages...',
+                  hintText: l10n.project_searchLanguages,
                   prefixIcon: const Icon(LucideIcons.search, size: 18),
                   suffixIcon: _query.isNotEmpty
                       ? IconButton(
@@ -495,7 +502,7 @@ class _LanguagePickerSheetState extends State<_LanguagePickerSheet> {
                           ),
                           const SizedBox(height: 12),
                           Text(
-                            'No languages found',
+                            l10n.project_noLanguagesFound,
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: colors.secondary,
                             ),
@@ -507,7 +514,7 @@ class _LanguagePickerSheetState extends State<_LanguagePickerSheet> {
                               setState(() => _isAddingNew = true);
                             },
                             icon: const Icon(LucideIcons.plus, size: 16),
-                            label: Text('Add "$_query" as a new language'),
+                            label: Text(l10n.project_addAsNewLanguage(_query)),
                           ),
                         ],
                       ),
@@ -533,7 +540,7 @@ class _LanguagePickerSheetState extends State<_LanguagePickerSheet> {
                               ),
                             ),
                             title: Text(
-                              'Add new language',
+                              l10n.project_addNewLanguage,
                               style: theme.textTheme.bodyLarge?.copyWith(
                                 color: colors.info,
                                 fontWeight: FontWeight.w600,
