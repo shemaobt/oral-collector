@@ -78,6 +78,8 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     try {
       LocalRecording? recording;
 
+      final isOnline = ref.read(syncNotifierProvider).isOnline;
+
       if (kIsWeb) {
         final apiRepo = ref.read(recordingApiRepositoryProvider);
         final server = await apiRepo.getRecording(widget.recordingId);
@@ -90,7 +92,8 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
           widget.recordingId,
         );
 
-        if (recording != null &&
+        if (isOnline &&
+            recording != null &&
             (recording.gcsUrl == null || recording.gcsUrl!.isEmpty) &&
             (recording.uploadStatus == 'uploaded' ||
                 recording.uploadStatus == 'verified') &&
@@ -112,7 +115,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
           } catch (_) {}
         }
 
-        if (recording == null) {
+        if (isOnline && recording == null) {
           try {
             final apiRepo = ref.read(recordingApiRepositoryProvider);
             final server = await apiRepo.getRecording(widget.recordingId);
@@ -127,7 +130,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
           _titleController.text = recording?.title ?? '';
           _isLoading = false;
         });
-        if (recording != null) {
+        if (isOnline && recording != null) {
           await ref
               .read(roleNotifierProvider.notifier)
               .fetchRoleForProject(recording.projectId);
@@ -304,9 +307,11 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
       await repo.deleteRecording(widget.recordingId);
     }
 
-    ref
-        .read(statsNotifierProvider.notifier)
-        .fetchGenreStats(recording.projectId);
+    if (ref.read(syncNotifierProvider).isOnline) {
+      ref
+          .read(statsNotifierProvider.notifier)
+          .fetchGenreStats(recording.projectId);
+    }
 
     if (mounted) {
       context.pop();
@@ -508,9 +513,11 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
       );
     }
 
-    ref
-        .read(statsNotifierProvider.notifier)
-        .fetchGenreStats(recording.projectId);
+    if (ref.read(syncNotifierProvider).isOnline) {
+      ref
+          .read(statsNotifierProvider.notifier)
+          .fetchGenreStats(recording.projectId);
+    }
 
     await _loadRecording();
 

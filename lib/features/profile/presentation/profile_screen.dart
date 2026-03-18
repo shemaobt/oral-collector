@@ -10,6 +10,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../shared/preview_helpers.dart';
 import '../../../shared/utils/format.dart';
+import '../../../shared/widgets/error_snack_bar.dart';
 import '../../../shared/widgets/app_shell.dart';
 import '../../../shared/widgets/icon_box.dart';
 import '../../../shared/widgets/locale_picker_sheet.dart';
@@ -41,8 +42,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   void initState() {
     super.initState();
     Future.microtask(() {
-      ref.read(inviteNotifierProvider.notifier).fetchInvites();
       ref.read(profileNotifierProvider.notifier).loadStorageUsed();
+      if (ref.read(syncNotifierProvider).isOnline) {
+        ref.read(inviteNotifierProvider.notifier).fetchInvites();
+      }
     });
   }
 
@@ -60,14 +63,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(context).profile_photoFailed(e.toString()),
-            ),
-            backgroundColor: AppColors.of(context).error,
-          ),
-        );
+        showErrorSnackBar(context, 'Failed to update photo: $e');
       }
     }
   }
@@ -126,6 +122,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final syncState = ref.watch(syncNotifierProvider);
     final inviteState = ref.watch(inviteNotifierProvider);
     final profileState = ref.watch(profileNotifierProvider);
+
+    ref.listen(syncNotifierProvider.select((s) => s.isOnline), (prev, next) {
+      if (next && prev == false) {
+        ref.read(inviteNotifierProvider.notifier).fetchInvites();
+      }
+    });
 
     final theme = Theme.of(context);
     final colors = AppColors.of(context);

@@ -11,6 +11,7 @@ import '../../../shared/utils/format.dart';
 import '../../../shared/widgets/app_shell.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/screen_header.dart';
+import '../../../shared/widgets/status_banner.dart';
 import '../../../shared/widgets/sync_status_indicator.dart';
 import '../../genre/presentation/notifiers/genre_notifier.dart';
 import '../../project/presentation/notifiers/project_notifier.dart';
@@ -55,13 +56,24 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
   }
 
   void _refreshAll() {
-    ref.read(genreNotifierProvider.notifier).fetchGenres();
+    final isOnline = ref.read(syncNotifierProvider).isOnline;
+    // Always load recordings — the notifier falls back to local data when offline
     ref.read(recordingsListNotifierProvider.notifier).fetchRecordings();
+    if (!isOnline) return;
+    ref.read(genreNotifierProvider.notifier).fetchGenres();
     ref.read(syncNotifierProvider.notifier).processQueue();
   }
 
   @override
   Widget build(BuildContext context) {
+    // Re-fetch when connectivity is restored
+    ref.listen(syncNotifierProvider.select((s) => s.isOnline), (prev, next) {
+      if (next && prev == false) {
+        _refreshAll();
+      }
+    });
+
+    // Refresh list when sync completes (lastSyncAt changes)
     ref.listen(syncNotifierProvider.select((s) => s.lastSyncAt), (_, _) {
       ref.read(recordingsListNotifierProvider.notifier).fetchRecordings();
     });
@@ -72,6 +84,8 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
     final genreState = ref.watch(genreNotifierProvider);
     final listState = ref.watch(recordingsListNotifierProvider);
     final filtered = listState.filteredRecordings;
+    final syncState = ref.watch(syncNotifierProvider);
+    final isOffline = !syncState.isOnline;
     final activeProject = ref.watch(
       projectNotifierProvider.select((s) => s.activeProject),
     );
@@ -164,6 +178,9 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
                     ),
                   ),
                 ),
+
+                if (isOffline)
+                  const SliverToBoxAdapter(child: StatusBanner.offline()),
 
                 if (genreState.genres.isNotEmpty)
                   SliverToBoxAdapter(

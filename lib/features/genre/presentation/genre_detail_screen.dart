@@ -8,8 +8,10 @@ import '../../../core/theme/app_colors.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/utils/genre_helpers.dart';
+import '../../../shared/widgets/status_banner.dart';
 import '../../project/domain/entities/stats.dart';
 import '../../project/presentation/notifiers/stats_notifier.dart';
+import '../../sync/presentation/notifiers/sync_notifier.dart';
 import 'notifiers/genre_notifier.dart';
 import '../domain/entities/genre.dart';
 
@@ -26,6 +28,8 @@ class GenreDetailScreen extends ConsumerWidget {
     final statsState = ref.watch(statsNotifierProvider);
     final genre = genreState.genres.where((g) => g.id == genreId).firstOrNull;
     final genreStat = statsState.genreStats[genreId];
+    final syncState = ref.watch(syncNotifierProvider);
+    final isOffline = !syncState.isOnline;
     final theme = Theme.of(context);
 
     if (genre == null) {
@@ -67,49 +71,52 @@ class GenreDetailScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 900),
-          child: genre.subcategories.isEmpty
-              ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(32),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          LucideIcons.layers,
-                          size: 64,
-                          color: colors.border,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          l10n.recording_noSubcategories,
-                          textAlign: TextAlign.center,
-                          style: theme.textTheme.bodyLarge?.copyWith(
-                            color: colors.foreground.withValues(alpha: 0.6),
+      body: Column(
+        children: [
+          if (isOffline) const StatusBanner.offline(),
+          Expanded(
+            child: genre.subcategories.isEmpty
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(32),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            LucideIcons.layers,
+                            size: 64,
+                            color: colors.border,
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 16),
+                          Text(
+                            'No subcategories available',
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.bodyLarge?.copyWith(
+                              color: colors.foreground.withValues(alpha: 0.6),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
+                  )
+                : ListView.separated(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: genre.subcategories.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 12),
+                    itemBuilder: (context, index) {
+                      final subcategory = genre.subcategories[index];
+                      final subcatStat =
+                          genreStat?.subcategories[subcategory.id];
+                      return _SubcategoryCard(
+                        subcategory: subcategory,
+                        genreId: genreId,
+                        genreColor: genre.color,
+                        subcategoryStat: subcatStat,
+                      );
+                    },
                   ),
-                )
-              : ListView.separated(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: genre.subcategories.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 12),
-                  itemBuilder: (context, index) {
-                    final subcategory = genre.subcategories[index];
-                    final subcatStat = genreStat?.subcategories[subcategory.id];
-                    return _SubcategoryCard(
-                      subcategory: subcategory,
-                      genreId: genreId,
-                      genreColor: genre.color,
-                      subcategoryStat: subcatStat,
-                    );
-                  },
-                ),
-        ),
+          ),
+        ],
       ),
     );
   }

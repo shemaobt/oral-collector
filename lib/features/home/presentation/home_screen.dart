@@ -9,12 +9,14 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../shared/preview_helpers.dart';
 import '../../../shared/widgets/app_shell.dart';
 import '../../../shared/widgets/locale_picker_sheet.dart';
+import '../../../shared/widgets/status_banner.dart';
 import '../../../shared/widgets/sync_status_indicator.dart';
 import '../../../shared/widgets/user_avatar.dart';
 import '../../../core/auth/auth_notifier.dart';
 import '../../genre/presentation/notifiers/genre_notifier.dart';
 import '../../project/presentation/notifiers/project_notifier.dart';
 import '../../project/presentation/notifiers/stats_notifier.dart';
+import '../../sync/presentation/notifiers/sync_notifier.dart';
 import 'notifiers/home_notifier.dart';
 import 'notifiers/home_state.dart';
 import 'widgets/genre_card.dart';
@@ -38,11 +40,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() async {
-      await ref.read(projectNotifierProvider.notifier).fetchProjects();
+    Future.microtask(() {
+      ref.read(homeNotifierProvider.notifier).refreshAll();
+      _fetchRemoteData();
+    });
+  }
+
+  void _fetchRemoteData() {
+    if (!ref.read(syncNotifierProvider).isOnline) return;
+    ref.read(projectNotifierProvider.notifier).fetchProjects().then((_) {
       ref.read(genreNotifierProvider.notifier).fetchGenres();
       _fetchStatsIfNeeded();
-      ref.read(homeNotifierProvider.notifier).refreshAll();
       _checkFirstLoginLocale();
     });
   }
@@ -67,6 +75,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   void _fetchStatsIfNeeded() {
+    if (!ref.read(syncNotifierProvider).isOnline) return;
     final activeProject = ref.read(projectNotifierProvider).activeProject;
     if (activeProject != null) {
       ref
@@ -76,11 +85,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Future<void> _refresh() async {
+    await ref.read(homeNotifierProvider.notifier).refreshAll();
+    if (!ref.read(syncNotifierProvider).isOnline) return;
     ref.read(genreNotifierProvider.notifier).invalidate();
     await Future.wait([
       ref.read(projectNotifierProvider.notifier).fetchProjects(),
       ref.read(genreNotifierProvider.notifier).fetchGenres(),
-      ref.read(homeNotifierProvider.notifier).refreshAll(),
     ]);
     _fetchStatsIfNeeded();
   }
@@ -136,17 +146,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final statsState = ref.watch(statsNotifierProvider);
     final authState = ref.watch(authNotifierProvider);
     final homeState = ref.watch(homeNotifierProvider);
+    final syncState = ref.watch(syncNotifierProvider);
     final activeProject = projectState.activeProject;
+    final isOffline = !syncState.isOnline;
+    final hasNoProjects =
+        !projectState.isLoading && projectState.projects.isEmpty;
     final theme = Theme.of(context);
     final colors = AppColors.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    // Re-fetch remote data when connectivity is restored
+    ref.listen(syncNotifierProvider.select((s) => s.isOnline), (prev, next) {
+      if (next && prev == false) {
+        _fetchRemoteData();
+      }
+    });
 
     ref.listen(projectNotifierProvider.select((s) => s.activeProject?.id), (
       prev,
       next,
     ) {
       if (next != null && next != prev) {
-        ref.read(statsNotifierProvider.notifier).fetchGenreStats(next);
+        if (ref.read(syncNotifierProvider).isOnline) {
+          ref.read(statsNotifierProvider.notifier).fetchGenreStats(next);
+        }
         ref.read(homeNotifierProvider.notifier).refreshAll();
       }
     });
@@ -222,6 +245,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
             ),
+
+            if (isOffline)
+              const SliverToBoxAdapter(child: StatusBanner.offline()),
+
+            if (hasNoProjects)
+              const SliverToBoxAdapter(child: StatusBanner.noProject()),
 
             if (activeProject != null) ...[
               SliverToBoxAdapter(

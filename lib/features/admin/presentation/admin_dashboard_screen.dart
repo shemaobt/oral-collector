@@ -6,7 +6,9 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../shared/preview_helpers.dart';
+import '../../../shared/widgets/error_snack_bar.dart';
 import '../../auth/data/providers/role_provider.dart';
+import '../../sync/presentation/notifiers/sync_notifier.dart';
 import 'notifiers/admin_notifier.dart';
 import 'widgets/cleaning_section.dart';
 import 'widgets/genres_section.dart';
@@ -34,17 +36,14 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
       final isAdmin = ref.read(roleNotifierProvider.notifier).isPlatformAdmin;
       if (!isAdmin) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(AppLocalizations.of(context).admin_accessRequired),
-              backgroundColor: Colors.orange,
-            ),
-          );
+          showErrorSnackBar(context, 'Admin access required');
           context.pop();
         }
         return;
       }
-      ref.read(adminNotifierProvider.notifier).fetchAll();
+      if (ref.read(syncNotifierProvider).isOnline) {
+        ref.read(adminNotifierProvider.notifier).fetchAll();
+      }
     });
   }
 
@@ -54,15 +53,20 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
     final adminState = ref.watch(adminNotifierProvider);
+    final isWide = MediaQuery.of(context).size.width >= 700;
+
+    ref.listen(syncNotifierProvider.select((s) => s.isOnline), (prev, next) {
+      if (next && prev == false) {
+        ref.read(adminNotifierProvider.notifier).fetchAll();
+      }
+    });
 
     ref.listen<String?>(adminNotifierProvider.select((s) => s.error), (
       prev,
       next,
     ) {
       if (next != null && next != prev) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(next), backgroundColor: colors.error),
-        );
+        showErrorSnackBar(context, next);
       }
     });
 
@@ -93,6 +97,51 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
         default:
           body = const SizedBox.shrink();
       }
+    }
+
+    if (isWide) {
+      return Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(LucideIcons.arrowLeft),
+            onPressed: () => context.pop(),
+          ),
+          title: const Text('Admin Dashboard'),
+        ),
+        body: Row(
+          children: [
+            NavigationRail(
+              selectedIndex: _selectedSection,
+              onDestinationSelected: (index) {
+                setState(() => _selectedSection = index);
+              },
+              labelType: NavigationRailLabelType.all,
+              destinations: sections
+                  .map(
+                    (s) => NavigationRailDestination(
+                      icon: Icon(s.icon),
+                      label: Text(s.label),
+                    ),
+                  )
+                  .toList(),
+            ),
+            const VerticalDivider(thickness: 1, width: 1),
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: () async {
+                  if (!ref.read(syncNotifierProvider).isOnline) return;
+                  await ref.read(adminNotifierProvider.notifier).fetchAll();
+                },
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.all(24),
+                  child: body,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
     }
 
     return Scaffold(

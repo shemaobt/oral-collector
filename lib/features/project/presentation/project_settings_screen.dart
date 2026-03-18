@@ -5,9 +5,12 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../core/errors/api_exception.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../shared/widgets/empty_state.dart';
+import '../../../shared/widgets/error_snack_bar.dart';
 import '../../../shared/widgets/invite_dialog.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../auth/data/providers/role_provider.dart';
+import '../../sync/presentation/notifiers/sync_notifier.dart';
 import '../data/providers.dart';
 import 'notifiers/member_notifier.dart';
 import 'notifiers/project_notifier.dart';
@@ -42,14 +45,21 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
   @override
   void initState() {
     super.initState();
+    Future.microtask(_fetchAll);
+  }
+
+  void _fetchAll() {
+    if (!ref.read(syncNotifierProvider).isOnline) return;
     _loadProject();
-    Future.microtask(() async {
-      await ref
-          .read(roleNotifierProvider.notifier)
-          .fetchRoleForProject(widget.projectId);
-      if (!mounted) return;
-      ref.read(memberNotifierProvider.notifier).fetchMembers(widget.projectId);
-    });
+    ref
+        .read(roleNotifierProvider.notifier)
+        .fetchRoleForProject(widget.projectId)
+        .then((_) {
+          if (!mounted) return;
+          ref
+              .read(memberNotifierProvider.notifier)
+              .fetchMembers(widget.projectId);
+        });
   }
 
   Future<void> _loadProject() async {
@@ -96,12 +106,7 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
       });
     } on Exception catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.toString().replaceFirst('Exception: ', '')),
-          backgroundColor: AppColors.of(context).error,
-        ),
-      );
+      showErrorSnackBar(context, e.toString());
     }
   }
 
@@ -167,22 +172,13 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
       );
     } on ForbiddenException {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            AppLocalizations.of(context).projectSettings_noPermission,
-          ),
-          backgroundColor: Colors.orange,
-        ),
+      showErrorSnackBar(
+        context,
+        'You don\'t have permission to update this project.',
       );
     } on Exception catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.toString().replaceFirst('Exception: ', '')),
-          backgroundColor: AppColors.of(context).error,
-        ),
-      );
+      showErrorSnackBar(context, e.toString());
     } finally {
       if (mounted) {
         setState(() => _isSaving = false);
@@ -232,12 +228,7 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
       );
     } else {
       final error = ref.read(memberNotifierProvider).error;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(error ?? l10n.projectSettings_memberRemoveFailed),
-          backgroundColor: AppColors.of(context).error,
-        ),
-      );
+      showErrorSnackBar(context, error ?? 'Failed to remove member');
     }
   }
 
@@ -262,7 +253,12 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final syncState = ref.watch(syncNotifierProvider);
     final l10n = AppLocalizations.of(context);
+
+    ref.listen(syncNotifierProvider.select((s) => s.isOnline), (prev, next) {
+      if (next && prev == false) _fetchAll();
+    });
 
     final memberState = ref.watch(memberNotifierProvider);
     final memberCount = memberState.members.isNotEmpty
@@ -270,6 +266,7 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
         : _project?.memberCount ?? 0;
 
     if (_project == null) {
+      final isOffline = !syncState.isOnline;
       return Scaffold(
         appBar: AppBar(
           leading: IconButton(
@@ -278,7 +275,14 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
           ),
           title: Text(l10n.projectSettings_title),
         ),
-        body: const Center(child: CircularProgressIndicator()),
+        body: isOffline
+            ? EmptyState(
+                icon: LucideIcons.wifiOff,
+                title: 'You are offline',
+                description:
+                    'Project details can\'t be loaded without an internet connection. They will load automatically when you reconnect.',
+              )
+            : const Center(child: CircularProgressIndicator()),
       );
     }
 

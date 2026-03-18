@@ -4,7 +4,9 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/widgets/app_shell.dart';
+import '../../../shared/widgets/error_snack_bar.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../sync/presentation/notifiers/sync_notifier.dart';
 import '../data/providers.dart';
 import '../domain/repositories/project_repository.dart';
 import 'notifiers/project_notifier.dart';
@@ -40,9 +42,11 @@ class _CreateProjectSheetState extends ConsumerState<_CreateProjectSheet> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(
-      () => ref.read(projectNotifierProvider.notifier).fetchLanguages(),
-    );
+    Future.microtask(() {
+      if (ref.read(syncNotifierProvider).isOnline) {
+        ref.read(projectNotifierProvider.notifier).fetchLanguages();
+      }
+    });
   }
 
   @override
@@ -81,14 +85,7 @@ class _CreateProjectSheetState extends ConsumerState<_CreateProjectSheet> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedLanguage == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            AppLocalizations.of(context).project_pleaseSelectLanguage,
-          ),
-          backgroundColor: AppColors.of(context).error,
-        ),
-      );
+      showErrorSnackBar(context, 'Please select a language');
       return;
     }
 
@@ -109,12 +106,7 @@ class _CreateProjectSheetState extends ConsumerState<_CreateProjectSheet> {
     final error = ref.read(projectNotifierProvider).error;
     if (error != null) {
       setState(() => _isSubmitting = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(error),
-          backgroundColor: AppColors.of(context).error,
-        ),
-      );
+      showErrorSnackBar(context, error);
     } else {
       Navigator.of(context).pop(true);
     }
@@ -335,12 +327,7 @@ class _LanguagePickerSheetState extends State<_LanguagePickerSheet> {
     } on Exception catch (e) {
       if (!mounted) return;
       setState(() => _isCreatingLanguage = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.toString().replaceFirst('Exception: ', '')),
-          backgroundColor: AppColors.of(context).error,
-        ),
-      );
+      showErrorSnackBar(context, e.toString());
     }
   }
 
