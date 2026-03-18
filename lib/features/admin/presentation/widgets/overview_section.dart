@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/admin_stats.dart';
 import 'stat_card.dart';
@@ -13,34 +14,35 @@ class OverviewSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
+    final l10n = AppLocalizations.of(context);
     final items = [
       StatCardData(
         icon: LucideIcons.folderOpen,
-        label: 'Total Projects',
+        label: l10n.admin_totalProjects,
         value: '${stats?.totalProjects ?? 0}',
         color: colors.primary,
       ),
       StatCardData(
         icon: LucideIcons.globe,
-        label: 'Languages',
+        label: l10n.admin_languages,
         value: '${stats?.totalLanguages ?? 0}',
         color: colors.info,
       ),
       StatCardData(
         icon: LucideIcons.mic,
-        label: 'Recordings',
+        label: l10n.admin_recordings,
         value: '${stats?.totalRecordings ?? 0}',
         color: colors.success,
       ),
       StatCardData(
         icon: LucideIcons.clock,
-        label: 'Total Hours',
+        label: l10n.admin_totalHours,
         value: (stats?.totalHours ?? 0).toStringAsFixed(1),
         color: colors.secondary,
       ),
       StatCardData(
         icon: LucideIcons.users,
-        label: 'Active Users',
+        label: l10n.admin_activeUsers,
         value: '${stats?.activeUsers ?? 0}',
         color: colors.primary,
       ),

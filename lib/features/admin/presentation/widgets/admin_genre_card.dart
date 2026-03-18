@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import '../../../../../l10n/app_localizations.dart';
+import '../../../../core/l10n/content_l10n.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../genre/domain/entities/genre.dart';
 import '../notifiers/admin_notifier.dart';
@@ -19,6 +21,7 @@ class AdminGenreCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = AppColors.of(context);
+    final l10n = AppLocalizations.of(context);
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       margin: const EdgeInsets.only(bottom: 12),
@@ -44,14 +47,14 @@ class AdminGenreCard extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        genre.name,
+                        localizedGenreName(l10n, genre.name),
                         style: Theme.of(context).textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                       if (genre.description != null)
                         Text(
-                          genre.description!,
+                          localizedGenreDescription(l10n, genre.description!),
                           style: Theme.of(context).textTheme.bodySmall,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -67,19 +70,19 @@ class AdminGenreCard extends ConsumerWidget {
                     color: colors.secondary,
                   ),
                   onPressed: () => _showEditDialog(context, ref),
-                  tooltip: 'Edit genre',
+                  tooltip: l10n.admin_editGenre,
                 ),
 
                 IconButton(
                   icon: Icon(LucideIcons.trash2, size: 18, color: colors.error),
                   onPressed: () => _confirmDelete(context, ref),
-                  tooltip: 'Delete genre',
+                  tooltip: l10n.admin_deleteGenre,
                 ),
 
                 IconButton(
                   icon: Icon(LucideIcons.plus, size: 18, color: colors.primary),
                   onPressed: () => _showAddSubcategoryDialog(context, ref),
-                  tooltip: 'Add subcategory',
+                  tooltip: l10n.admin_addSubcategory,
                 ),
               ],
             ),
@@ -101,7 +104,7 @@ class AdminGenreCard extends ConsumerWidget {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          sub.name,
+                          localizedSubcategoryName(l10n, sub.name),
                           style: Theme.of(context).textTheme.bodyMedium,
                         ),
                       ),
@@ -115,9 +118,9 @@ class AdminGenreCard extends ConsumerWidget {
                           context,
                           ref,
                           sub.id,
-                          sub.name,
+                          localizedSubcategoryName(l10n, sub.name),
                         ),
-                        tooltip: 'Delete subcategory',
+                        tooltip: l10n.admin_deleteSubcategory,
                         iconSize: 16,
                         constraints: const BoxConstraints(
                           minWidth: 32,
@@ -137,6 +140,7 @@ class AdminGenreCard extends ConsumerWidget {
 
   Future<void> _showEditDialog(BuildContext context, WidgetRef ref) async {
     final colors = AppColors.of(context);
+    final l10n = AppLocalizations.of(context);
     final nameController = TextEditingController(text: genre.name);
     final descController = TextEditingController(text: genre.description ?? '');
     final formKey = GlobalKey<FormState>();
@@ -144,7 +148,7 @@ class AdminGenreCard extends ConsumerWidget {
     final result = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Edit Genre'),
+        title: Text(l10n.admin_editGenreTitle),
         content: Form(
           key: formKey,
           child: Column(
@@ -152,15 +156,16 @@ class AdminGenreCard extends ConsumerWidget {
             children: [
               TextFormField(
                 controller: nameController,
-                decoration: const InputDecoration(labelText: 'Genre Name'),
-                validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? 'Required' : null,
+                decoration: InputDecoration(labelText: l10n.admin_genreName),
+                validator: (v) => (v == null || v.trim().isEmpty)
+                    ? l10n.admin_required
+                    : null,
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: descController,
-                decoration: const InputDecoration(
-                  labelText: 'Description (optional)',
+                decoration: InputDecoration(
+                  labelText: l10n.admin_descriptionOptional,
                 ),
                 maxLines: 2,
               ),
@@ -170,7 +175,7 @@ class AdminGenreCard extends ConsumerWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
+            child: Text(l10n.common_cancel),
           ),
           FilledButton(
             onPressed: () {
@@ -179,7 +184,7 @@ class AdminGenreCard extends ConsumerWidget {
               }
             },
             style: FilledButton.styleFrom(backgroundColor: colors.primary),
-            child: const Text('Save'),
+            child: Text(l10n.common_save),
           ),
         ],
       ),
@@ -202,7 +207,7 @@ class AdminGenreCard extends ConsumerWidget {
         if (success && context.mounted) {
           ScaffoldMessenger.of(
             context,
-          ).showSnackBar(const SnackBar(content: Text('Genre updated')));
+          ).showSnackBar(SnackBar(content: Text(l10n.admin_genreUpdated)));
         }
       }
     }
@@ -213,20 +218,21 @@ class AdminGenreCard extends ConsumerWidget {
 
   Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
     final colors = AppColors.of(context);
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete Genre'),
-        content: Text('Delete "${genre.name}" and all its subcategories?'),
+        title: Text(l10n.admin_deleteGenreTitle),
+        content: Text(l10n.admin_deleteGenreConfirm(genre.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
+            child: Text(l10n.common_cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             style: FilledButton.styleFrom(backgroundColor: colors.error),
-            child: const Text('Delete'),
+            child: Text(l10n.common_delete),
           ),
         ],
       ),
@@ -239,7 +245,7 @@ class AdminGenreCard extends ConsumerWidget {
       if (success && context.mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('Genre deleted')));
+        ).showSnackBar(SnackBar(content: Text(l10n.admin_genreDeleted)));
       }
     }
   }
@@ -248,26 +254,27 @@ class AdminGenreCard extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
   ) async {
+    final l10n = AppLocalizations.of(context);
     final nameController = TextEditingController();
     final formKey = GlobalKey<FormState>();
 
     final result = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Add Subcategory to ${genre.name}'),
+        title: Text(l10n.admin_addSubcategoryTo(genre.name)),
         content: Form(
           key: formKey,
           child: TextFormField(
             controller: nameController,
-            decoration: const InputDecoration(labelText: 'Subcategory Name'),
+            decoration: InputDecoration(labelText: l10n.admin_subcategoryName),
             validator: (v) =>
-                (v == null || v.trim().isEmpty) ? 'Required' : null,
+                (v == null || v.trim().isEmpty) ? l10n.admin_required : null,
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
+            child: Text(l10n.common_cancel),
           ),
           FilledButton(
             onPressed: () {
@@ -278,7 +285,7 @@ class AdminGenreCard extends ConsumerWidget {
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.of(context).primary,
             ),
-            child: const Text('Create'),
+            child: Text(l10n.common_create),
           ),
         ],
       ),
@@ -294,7 +301,7 @@ class AdminGenreCard extends ConsumerWidget {
       if (success && context.mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('Subcategory created')));
+        ).showSnackBar(SnackBar(content: Text(l10n.admin_subcategoryCreated)));
       }
     }
 
@@ -308,20 +315,21 @@ class AdminGenreCard extends ConsumerWidget {
     String subName,
   ) async {
     final colors = AppColors.of(context);
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete Subcategory'),
-        content: Text('Delete "$subName"?'),
+        title: Text(l10n.admin_deleteSubcategory),
+        content: Text(l10n.admin_deleteSubcategoryConfirm(subName)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
+            child: Text(l10n.common_cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             style: FilledButton.styleFrom(backgroundColor: colors.error),
-            child: const Text('Delete'),
+            child: Text(l10n.common_delete),
           ),
         ],
       ),
@@ -334,7 +342,7 @@ class AdminGenreCard extends ConsumerWidget {
       if (success && context.mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('Subcategory deleted')));
+        ).showSnackBar(SnackBar(content: Text(l10n.admin_subcategoryDeleted)));
       }
     }
   }

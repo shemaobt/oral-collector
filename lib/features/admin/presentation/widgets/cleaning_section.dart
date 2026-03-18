@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/utils/format.dart';
 import '../../../recording/domain/entities/recording.dart';
@@ -49,10 +50,11 @@ class _CleaningSectionState extends ConsumerState<CleaningSection> {
         .triggerClean(recordingId);
     if (mounted) {
       final colors = AppColors.of(context);
+      final l10n = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            success ? 'Cleaning triggered' : 'Failed to trigger cleaning',
+            success ? l10n.admin_cleaningTriggered : l10n.admin_cleaningFailed,
           ),
           backgroundColor: success ? colors.success : colors.error,
         ),
@@ -72,11 +74,10 @@ class _CleaningSectionState extends ConsumerState<CleaningSection> {
 
     if (mounted) {
       final colors = AppColors.of(context);
+      final l10n = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            'Cleaning triggered for $count of ${ids.length} recordings',
-          ),
+          content: Text(l10n.admin_cleaningPartial(count, ids.length)),
           backgroundColor: count > 0 ? colors.success : colors.error,
         ),
       );
@@ -90,6 +91,7 @@ class _CleaningSectionState extends ConsumerState<CleaningSection> {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
+    final l10n = AppLocalizations.of(context);
     final isWide = MediaQuery.of(context).size.width >= 800;
 
     return Column(
@@ -99,7 +101,7 @@ class _CleaningSectionState extends ConsumerState<CleaningSection> {
           children: [
             Expanded(
               child: Text(
-                'Audio Cleaning Queue',
+                l10n.admin_cleaningQueue,
                 style: Theme.of(
                   context,
                 ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
@@ -120,7 +122,7 @@ class _CleaningSectionState extends ConsumerState<CleaningSection> {
                           ),
                         )
                       : const Icon(LucideIcons.sparkles, size: 18),
-                  label: Text('Clean Selected (${_selectedIds.length})'),
+                  label: Text(l10n.admin_cleanSelected(_selectedIds.length)),
                   style: FilledButton.styleFrom(
                     backgroundColor: colors.primary,
                     minimumSize: const Size(0, 48),
@@ -132,7 +134,7 @@ class _CleaningSectionState extends ConsumerState<CleaningSection> {
               onPressed: () => ref
                   .read(adminNotifierProvider.notifier)
                   .refreshCleaningQueue(),
-              tooltip: 'Refresh cleaning queue',
+              tooltip: l10n.admin_refreshCleaning,
             ),
           ],
         ),
@@ -152,7 +154,7 @@ class _CleaningSectionState extends ConsumerState<CleaningSection> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Audio cleaning is a web-only feature. Cleaning processes run on the server.',
+                    l10n.admin_cleaningWebOnly,
                     style: Theme.of(
                       context,
                     ).textTheme.bodySmall?.copyWith(color: colors.info),
@@ -169,9 +171,9 @@ class _CleaningSectionState extends ConsumerState<CleaningSection> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
-            child: const Padding(
-              padding: EdgeInsets.all(24),
-              child: Center(child: Text('No recordings flagged for cleaning')),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Center(child: Text(l10n.admin_noCleaningRecordings)),
             ),
           )
         else if (isWide)
@@ -184,6 +186,7 @@ class _CleaningSectionState extends ConsumerState<CleaningSection> {
 
   Widget _buildDesktopTable() {
     final colors = AppColors.of(context);
+    final l10n = AppLocalizations.of(context);
     final allSelected =
         _selectedIds.length == widget.recordings.length &&
         widget.recordings.isNotEmpty;
@@ -202,12 +205,12 @@ class _CleaningSectionState extends ConsumerState<CleaningSection> {
                 activeColor: colors.primary,
               ),
             ),
-            const DataColumn(label: Text('Title')),
-            const DataColumn(label: Text('Duration')),
-            const DataColumn(label: Text('Size')),
-            const DataColumn(label: Text('Format')),
-            const DataColumn(label: Text('Recorded')),
-            const DataColumn(label: Text('Actions')),
+            DataColumn(label: Text(l10n.admin_cleaningTitle)),
+            DataColumn(label: Text(l10n.admin_cleaningDuration)),
+            DataColumn(label: Text(l10n.admin_cleaningSize)),
+            DataColumn(label: Text(l10n.admin_cleaningFormat)),
+            DataColumn(label: Text(l10n.admin_cleaningRecorded)),
+            DataColumn(label: Text(l10n.admin_cleaningActions)),
           ],
           rows: widget.recordings.map((recording) {
             final isSelected = _selectedIds.contains(recording.id);
@@ -223,7 +226,7 @@ class _CleaningSectionState extends ConsumerState<CleaningSection> {
                 ),
                 DataCell(
                   Text(
-                    recording.title ?? 'Untitled',
+                    recording.title ?? l10n.common_untitled,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.w500,
                     ),
@@ -242,7 +245,7 @@ class _CleaningSectionState extends ConsumerState<CleaningSection> {
                       minimumSize: const Size(0, 36),
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                     ),
-                    child: const Text('Clean'),
+                    child: Text(AppLocalizations.of(context).admin_clean),
                   ),
                 ),
               ],
@@ -255,6 +258,7 @@ class _CleaningSectionState extends ConsumerState<CleaningSection> {
 
   Widget _buildMobileList() {
     final colors = AppColors.of(context);
+    final l10n = AppLocalizations.of(context);
     final allSelected =
         _selectedIds.length == widget.recordings.length &&
         widget.recordings.isNotEmpty;
@@ -271,7 +275,7 @@ class _CleaningSectionState extends ConsumerState<CleaningSection> {
                 activeColor: colors.primary,
               ),
               Text(
-                allSelected ? 'Deselect All' : 'Select All',
+                allSelected ? l10n.admin_deselectAll : l10n.admin_selectAll,
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
             ],
@@ -298,7 +302,7 @@ class _CleaningSectionState extends ConsumerState<CleaningSection> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          recording.title ?? 'Untitled',
+                          recording.title ?? l10n.common_untitled,
                           style: Theme.of(context).textTheme.titleSmall
                               ?.copyWith(fontWeight: FontWeight.w600),
                         ),
@@ -327,7 +331,7 @@ class _CleaningSectionState extends ConsumerState<CleaningSection> {
                       minimumSize: const Size(0, 40),
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                     ),
-                    child: const Text('Clean'),
+                    child: Text(AppLocalizations.of(context).admin_clean),
                   ),
                 ],
               ),

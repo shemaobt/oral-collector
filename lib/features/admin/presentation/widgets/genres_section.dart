@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../genre/domain/entities/genre.dart';
 import '../notifiers/admin_notifier.dart';
@@ -20,6 +21,7 @@ class GenresSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = AppColors.of(context);
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -27,7 +29,7 @@ class GenresSection extends ConsumerWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Genres & Subcategories',
+              l10n.admin_genresAndSubcategories,
               style: Theme.of(
                 context,
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
@@ -35,7 +37,7 @@ class GenresSection extends ConsumerWidget {
             FilledButton.icon(
               onPressed: () => _showAddGenreDialog(context, ref),
               icon: const Icon(LucideIcons.plus, size: 18),
-              label: const Text('Add Genre'),
+              label: Text(l10n.admin_addGenre),
               style: FilledButton.styleFrom(
                 backgroundColor: colors.primary,
                 minimumSize: const Size(0, 48),
@@ -49,9 +51,9 @@ class GenresSection extends ConsumerWidget {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
-            child: const Padding(
-              padding: EdgeInsets.all(24),
-              child: Center(child: Text('No genres found')),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Center(child: Text(l10n.admin_noGenres)),
             ),
           )
         else
@@ -64,6 +66,7 @@ class GenresSection extends ConsumerWidget {
 
   Future<void> _showAddGenreDialog(BuildContext context, WidgetRef ref) async {
     final colors = AppColors.of(context);
+    final l10n = AppLocalizations.of(context);
     final nameController = TextEditingController();
     final descController = TextEditingController();
     final formKey = GlobalKey<FormState>();
@@ -71,7 +74,7 @@ class GenresSection extends ConsumerWidget {
     final result = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Add Genre'),
+        title: Text(l10n.admin_addGenre),
         content: Form(
           key: formKey,
           child: Column(
@@ -79,15 +82,16 @@ class GenresSection extends ConsumerWidget {
             children: [
               TextFormField(
                 controller: nameController,
-                decoration: const InputDecoration(labelText: 'Genre Name'),
-                validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? 'Required' : null,
+                decoration: InputDecoration(labelText: l10n.admin_genreName),
+                validator: (v) => (v == null || v.trim().isEmpty)
+                    ? l10n.admin_required
+                    : null,
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: descController,
-                decoration: const InputDecoration(
-                  labelText: 'Description (optional)',
+                decoration: InputDecoration(
+                  labelText: l10n.admin_descriptionOptional,
                 ),
                 maxLines: 2,
               ),
@@ -97,7 +101,7 @@ class GenresSection extends ConsumerWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
+            child: Text(l10n.common_cancel),
           ),
           FilledButton(
             onPressed: () {
@@ -106,7 +110,7 @@ class GenresSection extends ConsumerWidget {
               }
             },
             style: FilledButton.styleFrom(backgroundColor: colors.primary),
-            child: const Text('Create'),
+            child: Text(l10n.common_create),
           ),
         ],
       ),
@@ -124,7 +128,7 @@ class GenresSection extends ConsumerWidget {
       if (success && context.mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('Genre created')));
+        ).showSnackBar(SnackBar(content: Text(l10n.admin_genreCreated)));
       }
     }
 

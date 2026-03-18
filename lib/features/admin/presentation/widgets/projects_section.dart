@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/utils/format.dart';
 import 'admin_mini_stat.dart';
@@ -12,12 +13,13 @@ class ProjectsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     if (projects.isEmpty) {
       return Card(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: const Padding(
-          padding: EdgeInsets.all(24),
-          child: Center(child: Text('No projects found')),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Center(child: Text(l10n.admin_noProjects)),
         ),
       );
     }
@@ -31,13 +33,16 @@ class ProjectsSection extends StatelessWidget {
         child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: DataTable(
-            columns: const [
-              DataColumn(label: Text('Name')),
-              DataColumn(label: Text('Language')),
-              DataColumn(label: Text('Members'), numeric: true),
-              DataColumn(label: Text('Recordings'), numeric: true),
-              DataColumn(label: Text('Duration')),
-              DataColumn(label: Text('Created')),
+            columns: [
+              DataColumn(label: Text(l10n.admin_projectName)),
+              DataColumn(label: Text(l10n.admin_projectLanguage)),
+              DataColumn(label: Text(l10n.admin_projectMembers), numeric: true),
+              DataColumn(
+                label: Text(l10n.admin_projectRecordings),
+                numeric: true,
+              ),
+              DataColumn(label: Text(l10n.admin_projectDuration)),
+              DataColumn(label: Text(l10n.admin_projectCreated)),
             ],
             rows: projects.map((p) {
               return DataRow(
@@ -82,7 +87,7 @@ class ProjectsSection extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  p.languageName ?? 'Unknown language',
+                  p.languageName ?? l10n.admin_unknownLanguage,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: AppColors.of(context).secondary,
                   ),
