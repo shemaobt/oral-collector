@@ -3,6 +3,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/utils/format.dart';
+import '../../../../../l10n/app_localizations.dart';
 
 class StatsStrip extends StatelessWidget {
   const StatsStrip({
@@ -20,6 +21,7 @@ class StatsStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Padding(
@@ -31,35 +33,38 @@ class StatsStrip extends StatelessWidget {
               ? colors.foreground.withValues(alpha: 0.05)
               : colors.surfaceAlt,
           borderRadius: BorderRadius.circular(18),
+          border: isDark
+              ? null
+              : Border.all(color: colors.border.withValues(alpha: 0.25)),
         ),
         child: IntrinsicHeight(
           child: Row(
             children: [
               StatTile(
                 value: '$totalRecordings',
-                label: 'recordings',
+                label: l10n.stats_recordings,
                 icon: LucideIcons.mic,
                 color: colors.accent,
               ),
               VerticalDivider(
                 width: 1,
                 thickness: 1,
-                color: colors.border.withValues(alpha: 0.4),
+                color: colors.border.withValues(alpha: 0.5),
               ),
               StatTile(
                 value: formatDurationCompact(totalDuration),
-                label: 'recorded',
+                label: l10n.stats_recorded,
                 icon: LucideIcons.clock,
                 color: colors.success,
               ),
               VerticalDivider(
                 width: 1,
                 thickness: 1,
-                color: colors.border.withValues(alpha: 0.4),
+                color: colors.border.withValues(alpha: 0.5),
               ),
               StatTile(
                 value: '$memberCount',
-                label: 'members',
+                label: l10n.stats_members,
                 icon: LucideIcons.users,
                 color: colors.info,
               ),
