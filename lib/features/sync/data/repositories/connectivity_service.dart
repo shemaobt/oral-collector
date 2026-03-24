@@ -21,6 +21,14 @@ class ConnectivityServiceImpl implements ConnectivityService {
     return _isOnline(result);
   }
 
+  @override
+  Future<bool> get isOnWifi async {
+    final result = await _connectivity.checkConnectivity();
+    return result.any(
+      (r) => r == ConnectivityResult.wifi || r == ConnectivityResult.ethernet,
+    );
+  }
+
   bool _isOnline(List<ConnectivityResult> results) {
     return results.any((r) => r != ConnectivityResult.none);
   }

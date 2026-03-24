@@ -5,6 +5,7 @@ import 'package:workmanager/workmanager.dart';
 
 import '../../../../core/platform/file_ops.dart' as platform;
 import '../repositories/connectivity_service.dart';
+import 'background_upload_worker.dart';
 
 const String backgroundSyncTaskName = 'com.oralcollector.backgroundSync';
 
@@ -18,7 +19,7 @@ void callbackDispatcher() {
       final online = await connectivity.isOnline;
       if (!online) return Future.value(true);
 
-      return Future.value(true);
+      return runBackgroundUpload();
     } on Exception {
       return Future.value(false);
     }

@@ -93,6 +93,7 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
             recordedAt: s.recordedAt,
             createdAt: s.recordedAt,
             retryCount: 0,
+            uploadedBytes: 0,
           ),
         )
         .toList();

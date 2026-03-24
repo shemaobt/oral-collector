@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:drift/drift.dart' show Value;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -11,6 +13,7 @@ import 'package:path/path.dart' as p;
 import '../../../../core/l10n/content_l10n.dart';
 
 import '../../../core/platform/file_ops.dart' as file_ops;
+import '../../../core/platform/ffmpeg_ops.dart' as ffmpeg_ops;
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/database/app_database.dart';
@@ -28,6 +31,24 @@ import 'widgets/import_confirmation.dart';
 import 'widgets/import_genre_selection.dart';
 import 'widgets/import_subcategory_selection.dart';
 import 'widgets/register_selection_step.dart';
+
+class _PickedFile {
+  final String path;
+  final String name;
+  final int sizeBytes;
+  final String format;
+  final double durationSeconds;
+  final Uint8List? webBytes;
+
+  _PickedFile({
+    required this.path,
+    required this.name,
+    required this.sizeBytes,
+    required this.format,
+    this.durationSeconds = 0.0,
+    this.webBytes,
+  });
+}
 
 enum _ImportStep {
   pickFile,
@@ -47,11 +68,7 @@ class FileImportScreen extends ConsumerStatefulWidget {
 class _FileImportScreenState extends ConsumerState<FileImportScreen> {
   _ImportStep _currentStep = _ImportStep.pickFile;
 
-  String? _filePath;
-  String? _fileName;
-  int _fileSizeBytes = 0;
-  double _durationSeconds = 0.0;
-  String _format = 'm4a';
+  List<_PickedFile> _pickedFiles = [];
   bool _isAnalyzing = false;
 
   String? _selectedGenreId;
@@ -60,6 +77,15 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
 
   final _titleController = TextEditingController();
   bool _isSaving = false;
+  int _saveProgress = 0;
+  bool _compressWav = true;
+
+  bool get _isBatch => _pickedFiles.length > 1;
+
+  bool get _hasWavFiles => _pickedFiles.any((f) => f.format == 'wav');
+
+  int get _totalSizeBytes =>
+      _pickedFiles.fold(0, (sum, f) => sum + f.sizeBytes);
 
   @override
   void initState() {
@@ -83,20 +109,53 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['mp3', 'wav', 'm4a', 'ogg'],
-        allowMultiple: false,
+        allowMultiple: true,
       );
 
       if (result == null || result.files.isEmpty) {
-        if (mounted && _filePath == null) {
+        if (mounted && _pickedFiles.isEmpty) {
           Navigator.of(context).maybePop();
         }
         return;
       }
 
-      final file = result.files.first;
-      final filePath = file.path;
+      setState(() => _isAnalyzing = true);
 
-      if (filePath == null) {
+      final files = <_PickedFile>[];
+
+      for (final file in result.files) {
+        String? filePath = file.path;
+        Uint8List? webBytes;
+
+        if (kIsWeb) {
+          if (file.bytes == null) continue;
+          webBytes = file.bytes;
+          filePath =
+              'web_import_${DateTime.now().millisecondsSinceEpoch}_${file.name}';
+        } else if (filePath == null) {
+          continue;
+        }
+
+        final ext = p.extension(file.name).replaceFirst('.', '').toLowerCase();
+        var duration = 0.0;
+
+        if (!kIsWeb) {
+          duration = await _detectDuration(filePath);
+        }
+
+        files.add(
+          _PickedFile(
+            path: filePath,
+            name: file.name,
+            sizeBytes: file.size,
+            format: ext.isNotEmpty ? ext : 'm4a',
+            durationSeconds: duration,
+            webBytes: webBytes,
+          ),
+        );
+      }
+
+      if (files.isEmpty) {
         if (mounted) {
           final l10n = AppLocalizations.of(context);
           ScaffoldMessenger.of(
@@ -107,20 +166,9 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
         return;
       }
 
-      final ext = p.extension(filePath).replaceFirst('.', '').toLowerCase();
-
-      setState(() {
-        _filePath = filePath;
-        _fileName = file.name;
-        _fileSizeBytes = file.size;
-        _format = ext.isNotEmpty ? ext : 'm4a';
-        _isAnalyzing = true;
-      });
-
-      await _detectDuration(filePath);
-
       if (mounted) {
         setState(() {
+          _pickedFiles = files;
           _isAnalyzing = false;
           _currentStep = _ImportStep.selectGenre;
         });
@@ -137,17 +185,18 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
     }
   }
 
-  Future<void> _detectDuration(String filePath) async {
+  Future<double> _detectDuration(String filePath) async {
     final player = AudioPlayer();
     try {
       final duration = await player.setFilePath(filePath);
       if (duration != null) {
-        _durationSeconds = duration.inMilliseconds / 1000.0;
+        return duration.inMilliseconds / 1000.0;
       }
     } catch (_) {
     } finally {
       await player.dispose();
     }
+    return 0.0;
   }
 
   void _selectGenre(Genre genre) {
@@ -227,61 +276,94 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
   }
 
   Future<void> _save() async {
-    if (_filePath == null) return;
+    if (_pickedFiles.isEmpty) return;
 
-    setState(() => _isSaving = true);
+    setState(() {
+      _isSaving = true;
+      _saveProgress = 0;
+    });
 
     final projectState = ref.read(projectNotifierProvider);
     final projectId = projectState.activeProject?.id ?? '';
     final repo = ref.read(localRecordingRepositoryProvider);
 
     try {
-      String savedFilePath = _filePath!;
+      for (var i = 0; i < _pickedFiles.length; i++) {
+        final file = _pickedFiles[i];
 
-      if (!kIsWeb) {
-        final appDir = await getApplicationDocumentsDirectory();
-        final recordingsPath = '${appDir.path}/recordings';
-        if (!await file_ops.dirExists(recordingsPath)) {
-          await file_ops.createDir(recordingsPath);
+        String savedFilePath = file.path;
+        int fileSizeBytes = file.sizeBytes;
+        String format = file.format;
+
+        if (kIsWeb) {
+          if (file.webBytes != null) {
+            await file_ops.writeFileBytes(savedFilePath, file.webBytes!);
+            fileSizeBytes = file.webBytes!.length;
+          }
+        } else {
+          final appDir = await getApplicationDocumentsDirectory();
+          final recordingsPath = '${appDir.path}/recordings';
+          if (!await file_ops.dirExists(recordingsPath)) {
+            await file_ops.createDir(recordingsPath);
+          }
+          final destFileName =
+              '${DateTime.now().millisecondsSinceEpoch}_${file.name}';
+          final destPath = '$recordingsPath/$destFileName';
+          await file_ops.copyFile(file.path, destPath);
+          savedFilePath = destPath;
+
+          if (_compressWav && format == 'wav') {
+            final m4aPath = destPath.replaceAll(
+              RegExp(r'\.wav$', caseSensitive: false),
+              '.m4a',
+            );
+            final success = await ffmpeg_ops.compressToM4a(destPath, m4aPath);
+            if (success) {
+              await file_ops.deleteFile(destPath);
+              savedFilePath = m4aPath;
+              format = 'm4a';
+            }
+          }
+
+          fileSizeBytes = await file_ops.fileLength(savedFilePath);
         }
-        final destFileName =
-            '${DateTime.now().millisecondsSinceEpoch}_$_fileName';
-        final destPath = '$recordingsPath/$destFileName';
-        await file_ops.copyFile(_filePath!, destPath);
-        savedFilePath = destPath;
 
-        _fileSizeBytes = await file_ops.fileLength(savedFilePath);
-      }
+        final id =
+            '${DateTime.now().millisecondsSinceEpoch}_${_selectedGenreId.hashCode}_$i';
 
-      final id =
-          '${DateTime.now().millisecondsSinceEpoch}_${_selectedGenreId.hashCode}';
+        final title = _isBatch
+            ? file.name.replaceAll(RegExp(r'\.[^.]+$'), '')
+            : (_titleController.text.trim().isNotEmpty
+                  ? _titleController.text.trim()
+                  : defaultRecordingTitle());
 
-      await repo.insertRecording(
-        LocalRecordingsCompanion(
-          id: Value(id),
-          projectId: Value(projectId),
-          genreId: Value(_selectedGenreId!),
-          subcategoryId:
-              _selectedSubcategoryId != null &&
-                  _selectedSubcategoryId!.isNotEmpty
-              ? Value(_selectedSubcategoryId!)
-              : const Value.absent(),
-          registerId:
-              _selectedRegisterId != null && _selectedRegisterId!.isNotEmpty
-              ? Value(_selectedRegisterId!)
-              : const Value.absent(),
-          title: Value(
-            _titleController.text.trim().isNotEmpty
-                ? _titleController.text.trim()
-                : defaultRecordingTitle(),
+        await repo.insertRecording(
+          LocalRecordingsCompanion(
+            id: Value(id),
+            projectId: Value(projectId),
+            genreId: Value(_selectedGenreId!),
+            subcategoryId:
+                _selectedSubcategoryId != null &&
+                    _selectedSubcategoryId!.isNotEmpty
+                ? Value(_selectedSubcategoryId!)
+                : const Value.absent(),
+            registerId:
+                _selectedRegisterId != null && _selectedRegisterId!.isNotEmpty
+                ? Value(_selectedRegisterId!)
+                : const Value.absent(),
+            title: Value(title),
+            durationSeconds: Value(file.durationSeconds),
+            fileSizeBytes: Value(fileSizeBytes),
+            format: Value(format),
+            localFilePath: Value(savedFilePath),
+            recordedAt: Value(DateTime.now()),
           ),
-          durationSeconds: Value(_durationSeconds),
-          fileSizeBytes: Value(_fileSizeBytes),
-          format: Value(_format),
-          localFilePath: Value(savedFilePath),
-          recordedAt: Value(DateTime.now()),
-        ),
-      );
+        );
+
+        if (mounted) {
+          setState(() => _saveProgress = i + 1);
+        }
+      }
 
       if (mounted) {
         Navigator.of(context).maybePop();
@@ -372,12 +454,26 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
     );
   }
 
-  Widget _fileInfoBanner() => FileInfoBanner(
-    fileName: _fileName,
-    format: _format,
-    durationSeconds: _durationSeconds,
-    fileSizeBytes: _fileSizeBytes,
-  );
+  Widget _fileInfoBanner() {
+    if (_isBatch) {
+      return FileInfoBanner(
+        fileName: '${_pickedFiles.length} files',
+        format: _pickedFiles.map((f) => f.format).toSet().join(', '),
+        durationSeconds: _pickedFiles.fold(
+          0.0,
+          (sum, f) => sum + f.durationSeconds,
+        ),
+        fileSizeBytes: _totalSizeBytes,
+      );
+    }
+    final f = _pickedFiles.first;
+    return FileInfoBanner(
+      fileName: f.name,
+      format: f.format,
+      durationSeconds: f.durationSeconds,
+      fileSizeBytes: f.sizeBytes,
+    );
+  }
 
   Widget _buildStep(GenreState genreState) {
     final l10n = AppLocalizations.of(context);
@@ -425,10 +521,18 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
             ?.name;
         final rawR = getRegisterName(_selectedRegisterId);
         return ImportConfirmation(
-          fileName: _fileName,
-          format: _format,
-          durationSeconds: _durationSeconds,
-          fileSizeBytes: _fileSizeBytes,
+          fileName: _isBatch
+              ? '${_pickedFiles.length} files'
+              : _pickedFiles.firstOrNull?.name,
+          format: _isBatch
+              ? _pickedFiles.map((f) => f.format).toSet().join(', ')
+              : (_pickedFiles.firstOrNull?.format ?? 'm4a'),
+          durationSeconds: _isBatch
+              ? _pickedFiles.fold(0.0, (sum, f) => sum + f.durationSeconds)
+              : (_pickedFiles.firstOrNull?.durationSeconds ?? 0.0),
+          fileSizeBytes: _totalSizeBytes,
+          fileCount: _pickedFiles.length,
+          saveProgress: _saveProgress,
           genreName: rawG != null ? localizedGenreName(l10n, rawG) : null,
           subcategoryName: rawS != null
               ? localizedSubcategoryName(l10n, rawS)
@@ -438,6 +542,9 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
           isSaving: _isSaving,
           onSave: _save,
           onCancel: () => Navigator.of(context).maybePop(),
+          hasWavFiles: _hasWavFiles,
+          compressWav: _compressWav,
+          onCompressWavChanged: (v) => setState(() => _compressWav = v),
         );
     }
   }

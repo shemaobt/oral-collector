@@ -6,3 +6,9 @@ Future<bool> executeFFmpegCommand(String command) async {
   final returnCode = await session.getReturnCode();
   return ReturnCode.isSuccess(returnCode);
 }
+
+Future<bool> compressToM4a(String inputPath, String outputPath) async {
+  return executeFFmpegCommand(
+    '-i "$inputPath" -c:a aac -b:a 128k -ar 16000 -ac 1 -y "$outputPath"',
+  );
+}

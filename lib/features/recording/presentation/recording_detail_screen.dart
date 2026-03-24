@@ -161,6 +161,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
       recordedAt: server.recordedAt,
       createdAt: server.recordedAt,
       retryCount: 0,
+      uploadedBytes: 0,
     );
   }
 

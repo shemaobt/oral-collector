@@ -23,6 +23,9 @@ class LocalRecordings extends Table {
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   IntColumn get retryCount => integer().withDefault(const Constant(0))();
   DateTimeColumn get lastRetryAt => dateTime().nullable()();
+  TextColumn get resumableSessionUri => text().nullable()();
+  IntColumn get uploadedBytes => integer().withDefault(const Constant(0))();
+  TextColumn get md5Hash => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -58,7 +61,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -66,6 +69,13 @@ class AppDatabase extends _$AppDatabase {
     onUpgrade: (m, from, to) async {
       if (from < 2) {
         await m.addColumn(localRecordings, localRecordings.registerId);
+      }
+      if (from < 3) {
+        await m.addColumn(localRecordings, localRecordings.resumableSessionUri);
+        await m.addColumn(localRecordings, localRecordings.uploadedBytes);
+      }
+      if (from < 4) {
+        await m.addColumn(localRecordings, localRecordings.md5Hash);
       }
     },
   );
