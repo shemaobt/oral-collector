@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../../l10n/app_localizations.dart';
@@ -11,6 +12,8 @@ class ImportConfirmation extends StatelessWidget {
     required this.format,
     required this.durationSeconds,
     required this.fileSizeBytes,
+    this.fileCount = 1,
+    this.saveProgress = 0,
     required this.genreName,
     required this.subcategoryName,
     this.registerName,
@@ -18,12 +21,17 @@ class ImportConfirmation extends StatelessWidget {
     required this.isSaving,
     required this.onSave,
     required this.onCancel,
+    this.hasWavFiles = false,
+    this.compressWav = true,
+    this.onCompressWavChanged,
   });
 
   final String? fileName;
   final String format;
   final double durationSeconds;
   final int fileSizeBytes;
+  final int fileCount;
+  final int saveProgress;
   final String? genreName;
   final String? subcategoryName;
   final String? registerName;
@@ -31,6 +39,11 @@ class ImportConfirmation extends StatelessWidget {
   final bool isSaving;
   final VoidCallback onSave;
   final VoidCallback onCancel;
+  final bool hasWavFiles;
+  final bool compressWav;
+  final ValueChanged<bool>? onCompressWavChanged;
+
+  bool get _isBatch => fileCount > 1;
 
   @override
   Widget build(BuildContext context) {
@@ -58,7 +71,11 @@ class ImportConfirmation extends StatelessWidget {
             ),
             child: Column(
               children: [
-                Icon(LucideIcons.fileAudio, size: 48, color: colors.info),
+                Icon(
+                  _isBatch ? LucideIcons.files : LucideIcons.fileAudio,
+                  size: 48,
+                  color: colors.info,
+                ),
                 const SizedBox(height: 12),
                 Text(
                   fileName ?? l10n.import_unknownFile,
@@ -71,7 +88,9 @@ class ImportConfirmation extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '${format.toUpperCase()} \u2022 ${formatDurationHMS(durationSeconds)} \u2022 ${formatFileSize(fileSizeBytes)}',
+                  _isBatch
+                      ? '${formatFileSize(fileSizeBytes)} total'
+                      : '${format.toUpperCase()} \u2022 ${formatDurationHMS(durationSeconds)} \u2022 ${formatFileSize(fileSizeBytes)}',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: colors.foreground.withValues(alpha: 0.6),
                   ),
@@ -99,14 +118,51 @@ class ImportConfirmation extends StatelessWidget {
 
           const SizedBox(height: 24),
 
-          TextField(
-            controller: titleController,
-            decoration: InputDecoration(
-              labelText: l10n.recording_titleHint,
-              border: const OutlineInputBorder(),
+          if (!_isBatch)
+            TextField(
+              controller: titleController,
+              decoration: InputDecoration(
+                labelText: l10n.recording_titleHint,
+                border: const OutlineInputBorder(),
+              ),
+              textCapitalization: TextCapitalization.sentences,
             ),
-            textCapitalization: TextCapitalization.sentences,
-          ),
+
+          if (hasWavFiles && !kIsWeb) ...[
+            const SizedBox(height: 16),
+            SwitchListTile.adaptive(
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+              title: Text(
+                'Compress WAV to M4A',
+                style: theme.textTheme.bodyMedium,
+              ),
+              subtitle: Text(
+                '~10x smaller, no quality loss for ML pipeline',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: colors.foreground.withValues(alpha: 0.5),
+                ),
+              ),
+              value: compressWav,
+              onChanged: isSaving ? null : onCompressWavChanged,
+            ),
+          ],
+
+          if (isSaving && _isBatch) ...[
+            const SizedBox(height: 16),
+            LinearProgressIndicator(
+              value: fileCount > 0 ? saveProgress / fileCount : 0,
+              backgroundColor: colors.border.withValues(alpha: 0.2),
+              valueColor: AlwaysStoppedAnimation(colors.success),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '$saveProgress / $fileCount',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: colors.foreground.withValues(alpha: 0.6),
+              ),
+            ),
+          ],
 
           const Spacer(),
 

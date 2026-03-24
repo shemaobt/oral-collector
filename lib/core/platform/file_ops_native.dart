@@ -22,6 +22,16 @@ Future<void> createDir(String path) => Directory(path).create(recursive: true);
 
 Future<bool> dirExists(String path) => Directory(path).exists();
 
+Future<Uint8List> readFileChunk(String path, int offset, int length) async {
+  final raf = await File(path).open(mode: FileMode.read);
+  try {
+    await raf.setPosition(offset);
+    return await raf.read(length);
+  } finally {
+    await raf.close();
+  }
+}
+
 bool get isAndroidPlatform => Platform.isAndroid;
 
 bool get isIOSPlatform => Platform.isIOS;

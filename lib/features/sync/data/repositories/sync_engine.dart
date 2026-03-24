@@ -2,9 +2,9 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:crypto/crypto.dart' as crypto;
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
@@ -14,6 +14,7 @@ import '../../../../core/platform/file_ops.dart' as file_ops;
 import '../../../recording/data/repositories/local_recording_repository.dart';
 import '../../domain/repositories/connectivity_service.dart';
 import '../../domain/repositories/sync_engine.dart';
+import '../services/resumable_upload_service.dart';
 
 class _NonRetryableUploadException implements Exception {
   final String message;
@@ -26,6 +27,7 @@ class SyncEngineImpl implements SyncEngine {
   final LocalRecordingRepository _recordingRepo;
   final ConnectivityService _connectivity;
   final AuthenticatedClient _client;
+  late final ResumableUploadService _uploadService;
 
   static const int maxRetries = 5;
   static const Duration _apiTimeout = Duration(seconds: 30);
@@ -45,43 +47,41 @@ class SyncEngineImpl implements SyncEngine {
     required AuthenticatedClient client,
   }) : _recordingRepo = recordingRepo,
        _connectivity = connectivity,
-       _client = client;
+       _client = client {
+    _uploadService = ResumableUploadService(
+      client: _client,
+      recordingRepo: _recordingRepo,
+    );
+  }
 
   @override
   bool get isProcessing => _isProcessing;
 
-  static String _contentTypeForFormat(String format) {
-    const mapping = {
-      'm4a': 'audio/mp4',
-      'aac': 'audio/aac',
-      'mp3': 'audio/mpeg',
-      'wav': 'audio/wav',
-      'ogg': 'audio/ogg',
-      'webm': 'audio/webm',
-    };
-    return mapping[format.toLowerCase()] ?? 'application/octet-stream';
-  }
-
   @override
   Future<void> processQueue({
     bool deleteAfterUpload = false,
-    void Function(int bytesSent, int totalBytes)? onProgress,
+    bool wifiOnly = false,
+    int maxConcurrency = 1,
+    void Function(String recordingId, int bytesSent, int totalBytes)?
+    onProgress,
   }) async {
     if (_isProcessing) return;
-    if (kIsWeb) return;
 
     final online = await _connectivity.isOnline;
     if (!online) return;
+
+    if (wifiOnly) {
+      final onWifi = await _connectivity.isOnWifi;
+      if (!onWifi) return;
+    }
 
     _isProcessing = true;
     try {
       final pending = await _recordingRepo.getPendingUploads();
 
+      final eligible = <LocalRecording>[];
       for (final recording in pending) {
         if (recording.retryCount >= maxRetries) continue;
-
-        final stillOnline = await _connectivity.isOnline;
-        if (!stillOnline) break;
 
         if (recording.retryCount > 0 && recording.lastRetryAt != null) {
           final backoffIndex = (recording.retryCount - 1).clamp(
@@ -93,19 +93,87 @@ class SyncEngineImpl implements SyncEngine {
           if (elapsed < backoff) continue;
         }
 
-        await _uploadRecording(
-          recording.id,
-          recording.localFilePath,
-          deleteAfterUpload: deleteAfterUpload,
-          onProgress: onProgress,
-        );
+        eligible.add(recording);
+      }
+
+      if (maxConcurrency <= 1) {
+        for (final recording in eligible) {
+          final stillOnline = await _connectivity.isOnline;
+          if (!stillOnline) break;
+
+          if (wifiOnly) {
+            final stillWifi = await _connectivity.isOnWifi;
+            if (!stillWifi) break;
+          }
+
+          await _uploadRecording(
+            recording.id,
+            recording.localFilePath,
+            deleteAfterUpload: deleteAfterUpload,
+            onProgress: onProgress,
+          );
+        }
+      } else {
+        var index = 0;
+        final active = <Future<void>>[];
+
+        while (index < eligible.length || active.isNotEmpty) {
+          while (index < eligible.length && active.length < maxConcurrency) {
+            final stillOnline = await _connectivity.isOnline;
+            if (!stillOnline) break;
+
+            if (wifiOnly) {
+              final stillWifi = await _connectivity.isOnWifi;
+              if (!stillWifi) break;
+            }
+
+            final recording = eligible[index++];
+            late final Future<void> entry;
+            entry = _uploadRecording(
+              recording.id,
+              recording.localFilePath,
+              deleteAfterUpload: deleteAfterUpload,
+              onProgress: onProgress,
+            ).whenComplete(() => active.remove(entry));
+            active.add(entry);
+          }
+
+          if (active.isNotEmpty) {
+            await Future.any(active);
+          } else {
+            break;
+          }
+        }
       }
     } finally {
       _isProcessing = false;
     }
   }
 
+  @override
+  Future<void> uploadSingle(
+    String recordingId, {
+    bool deleteAfterUpload = false,
+    void Function(String recordingId, int bytesSent, int totalBytes)?
+    onProgress,
+  }) async {
+    final recording = await _recordingRepo.getRecordingById(recordingId);
+    if (recording == null) return;
+
+    final online = await _connectivity.isOnline;
+    if (!online) return;
+
+    await _uploadRecording(
+      recording.id,
+      recording.localFilePath,
+      deleteAfterUpload: deleteAfterUpload,
+      onProgress: onProgress,
+    );
+  }
+
   Future<String?> _resolveFilePath(String storedPath) async {
+    if (kIsWeb) return storedPath;
+
     if (await file_ops.fileExists(storedPath)) return storedPath;
 
     final docsDir = await getApplicationDocumentsDirectory();
@@ -124,7 +192,8 @@ class SyncEngineImpl implements SyncEngine {
     String id,
     String localFilePath, {
     bool deleteAfterUpload = false,
-    void Function(int bytesSent, int totalBytes)? onProgress,
+    void Function(String recordingId, int bytesSent, int totalBytes)?
+    onProgress,
   }) async {
     try {
       final resolvedPath = await _resolveFilePath(localFilePath);
@@ -183,62 +252,36 @@ class SyncEngineImpl implements SyncEngine {
         );
       }
 
-      final uploadUrlResponse = await _client
-          .post(
-            '/api/oc/recordings/upload-url',
-            body: {'recording_id': serverId, 'format': recording.format},
-          )
-          .timeout(_apiTimeout);
+      String? md5Hash = recording.md5Hash;
+      if (md5Hash == null || md5Hash.isEmpty) {
+        final fileBytes = await file_ops.readFileBytes(resolvedPath);
+        md5Hash = crypto.md5.convert(fileBytes).toString();
+        await _recordingRepo.updateRecording(
+          id,
+          LocalRecordingsCompanion(md5Hash: Value(md5Hash)),
+        );
+      }
 
-      _checkResponse(
-        uploadUrlResponse.statusCode,
-        uploadUrlResponse.body,
-        'Upload URL',
-        expected: 200,
+      final uploadResult = await _uploadService.upload(
+        recordingId: id,
+        serverId: serverId,
+        localFilePath: resolvedPath,
+        format: recording.format,
+        fileSizeBytes: recording.fileSizeBytes,
+        onProgress: onProgress != null
+            ? (sent, total) => onProgress(id, sent, total)
+            : null,
       );
 
-      final uploadData =
-          jsonDecode(uploadUrlResponse.body) as Map<String, dynamic>;
-      final uploadUrl = uploadData['upload_url'] as String;
-      final contentType =
-          uploadData['content_type'] as String? ??
-          _contentTypeForFormat(recording.format);
-
-      // Streamed upload to avoid loading entire file into memory
-      final file = File(resolvedPath);
-      final fileLength = await file.length();
-
-      final request = http.StreamedRequest('PUT', Uri.parse(uploadUrl));
-      request.headers['Content-Type'] = contentType;
-      request.contentLength = fileLength;
-
-      var bytesSent = 0;
-      file.openRead().listen(
-        (chunk) {
-          request.sink.add(chunk);
-          bytesSent += chunk.length;
-          onProgress?.call(bytesSent, fileLength);
-        },
-        onDone: () => request.sink.close(),
-        onError: (e) => request.sink.addError(e),
-      );
-
-      // Dynamic timeout: 120s base + 60s per 10MB
-      final uploadTimeout = Duration(
-        seconds: 120 + (fileLength ~/ (10 * 1024 * 1024)) * 60,
-      );
-
-      final streamedResponse = await _client.rawClient
-          .send(request)
-          .timeout(uploadTimeout);
-
-      final responseBody = await streamedResponse.stream.bytesToString();
-      if (streamedResponse.statusCode != 200) {
-        _checkResponse(streamedResponse.statusCode, responseBody, 'GCS PUT');
+      if (!uploadResult.success) {
+        throw Exception('Upload failed: ${uploadResult.error}');
       }
 
       final confirmResponse = await _client
-          .post('/api/oc/recordings/$serverId/confirm-upload')
+          .post(
+            '/api/oc/recordings/$serverId/confirm-upload',
+            body: {'md5_hash': md5Hash},
+          )
           .timeout(_apiTimeout);
 
       _checkResponse(
@@ -248,13 +291,24 @@ class SyncEngineImpl implements SyncEngine {
         expected: 200,
       );
 
-      final confirmData =
-          jsonDecode(confirmResponse.body) as Map<String, dynamic>;
-      final gcsUrl = confirmData['gcs_url'] as String?;
+      final verifiedData = await _pollForVerification(serverId);
+
+      if (verifiedData == null) {
+        throw Exception('Verification polling timed out');
+      }
+
+      final gcsUrl = verifiedData['gcs_url'] as String?;
+      final serverStatus = verifiedData['upload_status'] as String?;
+
+      if (serverStatus == 'upload_failed') {
+        final error =
+            verifiedData['upload_error'] as String? ?? 'Verification failed';
+        throw Exception('Server verification failed: $error');
+      }
 
       await _recordingRepo.markAsUploaded(id, serverId, gcsUrl);
 
-      if (deleteAfterUpload) {
+      if (deleteAfterUpload && !kIsWeb && serverStatus == 'verified') {
         await file_ops.deleteFile(resolvedPath);
       }
     } on _NonRetryableUploadException {
@@ -273,6 +327,34 @@ class SyncEngineImpl implements SyncEngine {
     } on Exception {
       await _recordingRepo.markAsFailed(id);
     }
+  }
+
+  static const int _verificationMaxAttempts = 15;
+  static const Duration _verificationInterval = Duration(seconds: 2);
+
+  Future<Map<String, dynamic>?> _pollForVerification(String serverId) async {
+    for (var i = 0; i < _verificationMaxAttempts; i++) {
+      await Future<void>.delayed(_verificationInterval);
+
+      try {
+        final response = await _client
+            .get('/api/oc/recordings/$serverId')
+            .timeout(_apiTimeout);
+
+        if (response.statusCode != 200) continue;
+
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        final status = data['upload_status'] as String?;
+
+        if (status == 'verified' || status == 'upload_failed') {
+          return data;
+        }
+      } on Exception {
+        continue;
+      }
+    }
+
+    return null;
   }
 
   void _checkResponse(
