@@ -117,6 +117,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
           recordedAt: server.recordedAt,
           createdAt: server.recordedAt,
           retryCount: 0,
+          uploadedBytes: 0,
         );
       } else {
         final localRepo = ref.read(localRecordingRepositoryProvider);
@@ -148,6 +149,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
               recordedAt: server.recordedAt,
               createdAt: server.recordedAt,
               retryCount: 0,
+              uploadedBytes: 0,
             );
           } catch (_) {}
         }
