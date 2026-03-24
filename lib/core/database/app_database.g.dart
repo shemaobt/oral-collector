@@ -1,5 +1,8 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND
+
 part of 'app_database.dart';
 
+// ignore_for_file: type=lint
 class $LocalRecordingsTable extends LocalRecordings
     with TableInfo<$LocalRecordingsTable, LocalRecording> {
   @override
@@ -203,6 +206,40 @@ class $LocalRecordingsTable extends LocalRecordings
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _resumableSessionUriMeta =
+      const VerificationMeta('resumableSessionUri');
+  @override
+  late final GeneratedColumn<String> resumableSessionUri =
+      GeneratedColumn<String>(
+        'resumable_session_uri',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _uploadedBytesMeta = const VerificationMeta(
+    'uploadedBytes',
+  );
+  @override
+  late final GeneratedColumn<int> uploadedBytes = GeneratedColumn<int>(
+    'uploaded_bytes',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _md5HashMeta = const VerificationMeta(
+    'md5Hash',
+  );
+  @override
+  late final GeneratedColumn<String> md5Hash = GeneratedColumn<String>(
+    'md5_hash',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -223,6 +260,9 @@ class $LocalRecordingsTable extends LocalRecordings
     createdAt,
     retryCount,
     lastRetryAt,
+    resumableSessionUri,
+    uploadedBytes,
+    md5Hash,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -372,6 +412,30 @@ class $LocalRecordingsTable extends LocalRecordings
         ),
       );
     }
+    if (data.containsKey('resumable_session_uri')) {
+      context.handle(
+        _resumableSessionUriMeta,
+        resumableSessionUri.isAcceptableOrUnknown(
+          data['resumable_session_uri']!,
+          _resumableSessionUriMeta,
+        ),
+      );
+    }
+    if (data.containsKey('uploaded_bytes')) {
+      context.handle(
+        _uploadedBytesMeta,
+        uploadedBytes.isAcceptableOrUnknown(
+          data['uploaded_bytes']!,
+          _uploadedBytesMeta,
+        ),
+      );
+    }
+    if (data.containsKey('md5_hash')) {
+      context.handle(
+        _md5HashMeta,
+        md5Hash.isAcceptableOrUnknown(data['md5_hash']!, _md5HashMeta),
+      );
+    }
     return context;
   }
 
@@ -453,6 +517,18 @@ class $LocalRecordingsTable extends LocalRecordings
         DriftSqlType.dateTime,
         data['${effectivePrefix}last_retry_at'],
       ),
+      resumableSessionUri: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}resumable_session_uri'],
+      ),
+      uploadedBytes: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}uploaded_bytes'],
+      )!,
+      md5Hash: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}md5_hash'],
+      ),
     );
   }
 
@@ -481,6 +557,9 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
   final DateTime createdAt;
   final int retryCount;
   final DateTime? lastRetryAt;
+  final String? resumableSessionUri;
+  final int uploadedBytes;
+  final String? md5Hash;
   const LocalRecording({
     required this.id,
     required this.projectId,
@@ -500,6 +579,9 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
     required this.createdAt,
     required this.retryCount,
     this.lastRetryAt,
+    this.resumableSessionUri,
+    required this.uploadedBytes,
+    this.md5Hash,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -533,6 +615,13 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
     map['retry_count'] = Variable<int>(retryCount);
     if (!nullToAbsent || lastRetryAt != null) {
       map['last_retry_at'] = Variable<DateTime>(lastRetryAt);
+    }
+    if (!nullToAbsent || resumableSessionUri != null) {
+      map['resumable_session_uri'] = Variable<String>(resumableSessionUri);
+    }
+    map['uploaded_bytes'] = Variable<int>(uploadedBytes);
+    if (!nullToAbsent || md5Hash != null) {
+      map['md5_hash'] = Variable<String>(md5Hash);
     }
     return map;
   }
@@ -569,6 +658,13 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
       lastRetryAt: lastRetryAt == null && nullToAbsent
           ? const Value.absent()
           : Value(lastRetryAt),
+      resumableSessionUri: resumableSessionUri == null && nullToAbsent
+          ? const Value.absent()
+          : Value(resumableSessionUri),
+      uploadedBytes: Value(uploadedBytes),
+      md5Hash: md5Hash == null && nullToAbsent
+          ? const Value.absent()
+          : Value(md5Hash),
     );
   }
 
@@ -596,6 +692,11 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       retryCount: serializer.fromJson<int>(json['retryCount']),
       lastRetryAt: serializer.fromJson<DateTime?>(json['lastRetryAt']),
+      resumableSessionUri: serializer.fromJson<String?>(
+        json['resumableSessionUri'],
+      ),
+      uploadedBytes: serializer.fromJson<int>(json['uploadedBytes']),
+      md5Hash: serializer.fromJson<String?>(json['md5Hash']),
     );
   }
   @override
@@ -620,6 +721,9 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'retryCount': serializer.toJson<int>(retryCount),
       'lastRetryAt': serializer.toJson<DateTime?>(lastRetryAt),
+      'resumableSessionUri': serializer.toJson<String?>(resumableSessionUri),
+      'uploadedBytes': serializer.toJson<int>(uploadedBytes),
+      'md5Hash': serializer.toJson<String?>(md5Hash),
     };
   }
 
@@ -642,6 +746,9 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
     DateTime? createdAt,
     int? retryCount,
     Value<DateTime?> lastRetryAt = const Value.absent(),
+    Value<String?> resumableSessionUri = const Value.absent(),
+    int? uploadedBytes,
+    Value<String?> md5Hash = const Value.absent(),
   }) => LocalRecording(
     id: id ?? this.id,
     projectId: projectId ?? this.projectId,
@@ -663,6 +770,11 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
     createdAt: createdAt ?? this.createdAt,
     retryCount: retryCount ?? this.retryCount,
     lastRetryAt: lastRetryAt.present ? lastRetryAt.value : this.lastRetryAt,
+    resumableSessionUri: resumableSessionUri.present
+        ? resumableSessionUri.value
+        : this.resumableSessionUri,
+    uploadedBytes: uploadedBytes ?? this.uploadedBytes,
+    md5Hash: md5Hash.present ? md5Hash.value : this.md5Hash,
   );
   LocalRecording copyWithCompanion(LocalRecordingsCompanion data) {
     return LocalRecording(
@@ -704,6 +816,13 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
       lastRetryAt: data.lastRetryAt.present
           ? data.lastRetryAt.value
           : this.lastRetryAt,
+      resumableSessionUri: data.resumableSessionUri.present
+          ? data.resumableSessionUri.value
+          : this.resumableSessionUri,
+      uploadedBytes: data.uploadedBytes.present
+          ? data.uploadedBytes.value
+          : this.uploadedBytes,
+      md5Hash: data.md5Hash.present ? data.md5Hash.value : this.md5Hash,
     );
   }
 
@@ -727,13 +846,16 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
           ..write('recordedAt: $recordedAt, ')
           ..write('createdAt: $createdAt, ')
           ..write('retryCount: $retryCount, ')
-          ..write('lastRetryAt: $lastRetryAt')
+          ..write('lastRetryAt: $lastRetryAt, ')
+          ..write('resumableSessionUri: $resumableSessionUri, ')
+          ..write('uploadedBytes: $uploadedBytes, ')
+          ..write('md5Hash: $md5Hash')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     id,
     projectId,
     genreId,
@@ -752,7 +874,10 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
     createdAt,
     retryCount,
     lastRetryAt,
-  );
+    resumableSessionUri,
+    uploadedBytes,
+    md5Hash,
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -774,7 +899,10 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
           other.recordedAt == this.recordedAt &&
           other.createdAt == this.createdAt &&
           other.retryCount == this.retryCount &&
-          other.lastRetryAt == this.lastRetryAt);
+          other.lastRetryAt == this.lastRetryAt &&
+          other.resumableSessionUri == this.resumableSessionUri &&
+          other.uploadedBytes == this.uploadedBytes &&
+          other.md5Hash == this.md5Hash);
 }
 
 class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
@@ -796,6 +924,9 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
   final Value<DateTime> createdAt;
   final Value<int> retryCount;
   final Value<DateTime?> lastRetryAt;
+  final Value<String?> resumableSessionUri;
+  final Value<int> uploadedBytes;
+  final Value<String?> md5Hash;
   final Value<int> rowid;
   const LocalRecordingsCompanion({
     this.id = const Value.absent(),
@@ -816,6 +947,9 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
     this.createdAt = const Value.absent(),
     this.retryCount = const Value.absent(),
     this.lastRetryAt = const Value.absent(),
+    this.resumableSessionUri = const Value.absent(),
+    this.uploadedBytes = const Value.absent(),
+    this.md5Hash = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   LocalRecordingsCompanion.insert({
@@ -837,6 +971,9 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
     this.createdAt = const Value.absent(),
     this.retryCount = const Value.absent(),
     this.lastRetryAt = const Value.absent(),
+    this.resumableSessionUri = const Value.absent(),
+    this.uploadedBytes = const Value.absent(),
+    this.md5Hash = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        projectId = Value(projectId),
@@ -862,6 +999,9 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
     Expression<DateTime>? createdAt,
     Expression<int>? retryCount,
     Expression<DateTime>? lastRetryAt,
+    Expression<String>? resumableSessionUri,
+    Expression<int>? uploadedBytes,
+    Expression<String>? md5Hash,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -883,6 +1023,10 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
       if (createdAt != null) 'created_at': createdAt,
       if (retryCount != null) 'retry_count': retryCount,
       if (lastRetryAt != null) 'last_retry_at': lastRetryAt,
+      if (resumableSessionUri != null)
+        'resumable_session_uri': resumableSessionUri,
+      if (uploadedBytes != null) 'uploaded_bytes': uploadedBytes,
+      if (md5Hash != null) 'md5_hash': md5Hash,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -906,6 +1050,9 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
     Value<DateTime>? createdAt,
     Value<int>? retryCount,
     Value<DateTime?>? lastRetryAt,
+    Value<String?>? resumableSessionUri,
+    Value<int>? uploadedBytes,
+    Value<String?>? md5Hash,
     Value<int>? rowid,
   }) {
     return LocalRecordingsCompanion(
@@ -927,6 +1074,9 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
       createdAt: createdAt ?? this.createdAt,
       retryCount: retryCount ?? this.retryCount,
       lastRetryAt: lastRetryAt ?? this.lastRetryAt,
+      resumableSessionUri: resumableSessionUri ?? this.resumableSessionUri,
+      uploadedBytes: uploadedBytes ?? this.uploadedBytes,
+      md5Hash: md5Hash ?? this.md5Hash,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -988,6 +1138,17 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
     if (lastRetryAt.present) {
       map['last_retry_at'] = Variable<DateTime>(lastRetryAt.value);
     }
+    if (resumableSessionUri.present) {
+      map['resumable_session_uri'] = Variable<String>(
+        resumableSessionUri.value,
+      );
+    }
+    if (uploadedBytes.present) {
+      map['uploaded_bytes'] = Variable<int>(uploadedBytes.value);
+    }
+    if (md5Hash.present) {
+      map['md5_hash'] = Variable<String>(md5Hash.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1015,6 +1176,9 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
           ..write('createdAt: $createdAt, ')
           ..write('retryCount: $retryCount, ')
           ..write('lastRetryAt: $lastRetryAt, ')
+          ..write('resumableSessionUri: $resumableSessionUri, ')
+          ..write('uploadedBytes: $uploadedBytes, ')
+          ..write('md5Hash: $md5Hash, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -1834,6 +1998,9 @@ typedef $$LocalRecordingsTableCreateCompanionBuilder =
       Value<DateTime> createdAt,
       Value<int> retryCount,
       Value<DateTime?> lastRetryAt,
+      Value<String?> resumableSessionUri,
+      Value<int> uploadedBytes,
+      Value<String?> md5Hash,
       Value<int> rowid,
     });
 typedef $$LocalRecordingsTableUpdateCompanionBuilder =
@@ -1856,6 +2023,9 @@ typedef $$LocalRecordingsTableUpdateCompanionBuilder =
       Value<DateTime> createdAt,
       Value<int> retryCount,
       Value<DateTime?> lastRetryAt,
+      Value<String?> resumableSessionUri,
+      Value<int> uploadedBytes,
+      Value<String?> md5Hash,
       Value<int> rowid,
     });
 
@@ -1955,6 +2125,21 @@ class $$LocalRecordingsTableFilterComposer
 
   ColumnFilters<DateTime> get lastRetryAt => $composableBuilder(
     column: $table.lastRetryAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get resumableSessionUri => $composableBuilder(
+    column: $table.resumableSessionUri,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get uploadedBytes => $composableBuilder(
+    column: $table.uploadedBytes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get md5Hash => $composableBuilder(
+    column: $table.md5Hash,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -2057,6 +2242,21 @@ class $$LocalRecordingsTableOrderingComposer
     column: $table.lastRetryAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get resumableSessionUri => $composableBuilder(
+    column: $table.resumableSessionUri,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get uploadedBytes => $composableBuilder(
+    column: $table.uploadedBytes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get md5Hash => $composableBuilder(
+    column: $table.md5Hash,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$LocalRecordingsTableAnnotationComposer
@@ -2141,6 +2341,19 @@ class $$LocalRecordingsTableAnnotationComposer
     column: $table.lastRetryAt,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get resumableSessionUri => $composableBuilder(
+    column: $table.resumableSessionUri,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get uploadedBytes => $composableBuilder(
+    column: $table.uploadedBytes,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get md5Hash =>
+      $composableBuilder(column: $table.md5Hash, builder: (column) => column);
 }
 
 class $$LocalRecordingsTableTableManager
@@ -2198,6 +2411,9 @@ class $$LocalRecordingsTableTableManager
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<int> retryCount = const Value.absent(),
                 Value<DateTime?> lastRetryAt = const Value.absent(),
+                Value<String?> resumableSessionUri = const Value.absent(),
+                Value<int> uploadedBytes = const Value.absent(),
+                Value<String?> md5Hash = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => LocalRecordingsCompanion(
                 id: id,
@@ -2218,6 +2434,9 @@ class $$LocalRecordingsTableTableManager
                 createdAt: createdAt,
                 retryCount: retryCount,
                 lastRetryAt: lastRetryAt,
+                resumableSessionUri: resumableSessionUri,
+                uploadedBytes: uploadedBytes,
+                md5Hash: md5Hash,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -2240,6 +2459,9 @@ class $$LocalRecordingsTableTableManager
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<int> retryCount = const Value.absent(),
                 Value<DateTime?> lastRetryAt = const Value.absent(),
+                Value<String?> resumableSessionUri = const Value.absent(),
+                Value<int> uploadedBytes = const Value.absent(),
+                Value<String?> md5Hash = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => LocalRecordingsCompanion.insert(
                 id: id,
@@ -2260,6 +2482,9 @@ class $$LocalRecordingsTableTableManager
                 createdAt: createdAt,
                 retryCount: retryCount,
                 lastRetryAt: lastRetryAt,
+                resumableSessionUri: resumableSessionUri,
+                uploadedBytes: uploadedBytes,
+                md5Hash: md5Hash,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
