@@ -16,12 +16,14 @@ import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/screen_header.dart';
 import '../../../shared/widgets/status_banner.dart';
 import '../../../shared/widgets/sync_status_indicator.dart';
+import '../../../features/auth/data/providers/role_provider.dart';
 import '../../genre/presentation/notifiers/genre_notifier.dart';
 import '../../project/presentation/notifiers/project_notifier.dart';
 import '../data/providers.dart';
 import '../domain/entities/register.dart';
 import '../../sync/presentation/notifiers/sync_notifier.dart';
 import 'notifiers/recordings_list_notifier.dart';
+import 'notifiers/recordings_list_state.dart';
 import 'widgets/genre_filter_bar.dart';
 import 'widgets/recording_card.dart';
 import 'widgets/status_filter_bar.dart';
@@ -121,6 +123,50 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
     if (!isOnline) return;
     ref.read(genreNotifierProvider.notifier).fetchGenres();
     ref.read(syncNotifierProvider.notifier).processQueue();
+  }
+
+  Future<void> _clearStaleRecordings() async {
+    final l10n = AppLocalizations.of(context);
+    final colors = AppColors.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.recordings_clearStale),
+        content: Text(l10n.recordings_clearStaleMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.common_cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: TextButton.styleFrom(foregroundColor: colors.error),
+            child: Text(l10n.recordings_clearStale),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    try {
+      final deleted = await ref
+          .read(recordingsListNotifierProvider.notifier)
+          .clearStaleRecordings();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.recordings_clearedCount(deleted))),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.recordings_clearFailed),
+            backgroundColor: colors.error,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -264,13 +310,44 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                    child: Text(
-                      l10n.recordings_count(filtered.length),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: colors.secondary,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.3,
-                      ),
+                    child: Row(
+                      children: [
+                        Text(
+                          l10n.recordings_count(filtered.length),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: colors.secondary,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.3,
+                          ),
+                        ),
+                        const Spacer(),
+                        if (listState.selectedFilter == StatusFilter.pending &&
+                            filtered.isNotEmpty &&
+                            ref
+                                .watch(roleNotifierProvider.notifier)
+                                .canManageProject(activeProject.id))
+                          TextButton.icon(
+                            onPressed: _clearStaleRecordings,
+                            icon: Icon(
+                              LucideIcons.trash2,
+                              size: 14,
+                              color: colors.error,
+                            ),
+                            label: Text(
+                              l10n.recordings_clearStale,
+                              style: TextStyle(
+                                color: colors.error,
+                                fontSize: 12,
+                              ),
+                            ),
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                              ),
+                              visualDensity: VisualDensity.compact,
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                 ),

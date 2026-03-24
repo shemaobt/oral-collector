@@ -206,6 +206,16 @@
   "recording_statusFailed": "Failed",
   "recording_statusLocal": "Local",
 
+  "recordings_clearStale": "Clear failed",
+  "recordings_clearStaleMessage": "This will permanently delete all recordings with failed or stuck upload status from the server. This cannot be undone.",
+  "recordings_clearedCount": "{count, plural, =0{No stale recordings found} =1{Cleared 1 recording} other{Cleared {count} recordings}}",
+  "@recordings_clearedCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "recordings_clearFailed": "Failed to clear recordings",
+
   "trim_title": "Split Recording",
   "trim_notFound": "Recording not found",
   "trim_audioUrlNotAvailable": "Audio URL not available for this recording.",

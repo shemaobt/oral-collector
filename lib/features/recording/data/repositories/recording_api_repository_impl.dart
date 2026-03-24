@@ -79,6 +79,19 @@ class RecordingApiRepositoryImpl implements RecordingApiRepository {
   }
 
   @override
+  Future<int> clearStaleRecordings(String projectId) async {
+    final response = await _client.post(
+      '/api/oc/recordings/clear-stale?project_id=$projectId',
+    );
+    guardResponse(response);
+    if (response.statusCode != 200) {
+      throw Exception('Failed to clear stale recordings: ${response.body}');
+    }
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    return data['deleted'] as int? ?? 0;
+  }
+
+  @override
   Future<List<String>> splitRecording({
     required String serverId,
     required List<Map<String, double>> segments,
