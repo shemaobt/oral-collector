@@ -180,6 +180,16 @@
   "recording_statusFailed": "Falha",
   "recording_statusLocal": "Local",
 
+  "recordings_clearStale": "Limpar falhas",
+  "recordings_clearStaleMessage": "Isto irá remover permanentemente todas as gravações com upload falhado ou travado do servidor. Esta ação não pode ser desfeita.",
+  "recordings_clearedCount": "{count, plural, =0{Nenhuma gravação encontrada} =1{1 gravação removida} other{{count} gravações removidas}}",
+  "@recordings_clearedCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "recordings_clearFailed": "Falha ao limpar gravações",
+
   "trim_title": "Dividir Gravação",
   "trim_notFound": "Gravação não encontrada",
   "trim_audioUrlNotAvailable": "URL do áudio não disponível para esta gravação.",

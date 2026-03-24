@@ -535,6 +535,28 @@ class AppLocalizationsPt extends AppLocalizations {
   String get recording_statusLocal => 'Local';
 
   @override
+  String get recordings_clearStale => 'Limpar falhas';
+
+  @override
+  String get recordings_clearStaleMessage =>
+      'Isto irá remover permanentemente todas as gravações com upload falhado ou travado do servidor. Esta ação não pode ser desfeita.';
+
+  @override
+  String recordings_clearedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count gravações removidas',
+      one: '1 gravação removida',
+      zero: 'Nenhuma gravação encontrada',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recordings_clearFailed => 'Falha ao limpar gravações';
+
+  @override
   String get trim_title => 'Dividir Gravação';
 
   @override

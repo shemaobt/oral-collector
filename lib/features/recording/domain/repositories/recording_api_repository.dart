@@ -17,4 +17,6 @@ abstract class RecordingApiRepository {
     required String serverId,
     required List<Map<String, double>> segments,
   });
+
+  Future<int> clearStaleRecordings(String projectId);
 }

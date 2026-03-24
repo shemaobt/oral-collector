@@ -110,4 +110,14 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
   void setStatusFilter(StatusFilter filter) {
     state = state.copyWith(selectedFilter: filter);
   }
+
+  Future<int> clearStaleRecordings() async {
+    final projectId = ref.read(projectNotifierProvider).activeProject?.id;
+    if (projectId == null) return 0;
+
+    final serverDeleted = await _apiRepo.clearStaleRecordings(projectId);
+    await _localRepo.deleteStaleRecordings(projectId);
+    await fetchRecordings();
+    return serverDeleted;
+  }
 }

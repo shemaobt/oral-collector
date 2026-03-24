@@ -1098,6 +1098,30 @@ abstract class AppLocalizations {
   /// **'Local'**
   String get recording_statusLocal;
 
+  /// No description provided for @recordings_clearStale.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear failed'**
+  String get recordings_clearStale;
+
+  /// No description provided for @recordings_clearStaleMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This will permanently delete all recordings with failed or stuck upload status from the server. This cannot be undone.'**
+  String get recordings_clearStaleMessage;
+
+  /// No description provided for @recordings_clearedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No stale recordings found} =1{Cleared 1 recording} other{Cleared {count} recordings}}'**
+  String recordings_clearedCount(int count);
+
+  /// No description provided for @recordings_clearFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to clear recordings'**
+  String get recordings_clearFailed;
+
   /// No description provided for @trim_title.
   ///
   /// In en, this message translates to:

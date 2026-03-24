@@ -112,6 +112,16 @@ class LocalRecordingRepository {
     return _db.delete(_db.localRecordings).go();
   }
 
+  Future<int> deleteStaleRecordings(String projectId) async {
+    return (_db.delete(_db.localRecordings)..where(
+          (t) =>
+              t.projectId.equals(projectId) &
+              (t.uploadStatus.equals('failed') |
+                  t.uploadStatus.equals('uploading')),
+        ))
+        .go();
+  }
+
   Future<bool> resetRetryCount(String id) async {
     final rows =
         await (_db.update(
