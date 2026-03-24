@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/database/app_database.dart';
@@ -32,18 +31,6 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
 
     state = state.copyWith(isLoading: true);
 
-    if (kIsWeb) {
-      try {
-        final serverRecordings = await _apiRepo.listRecordings(projectId);
-        final recordings = _convertServerRecordings(serverRecordings);
-        recordings.sort((a, b) => b.recordedAt.compareTo(a.recordedAt));
-        state = state.copyWith(recordings: recordings, isLoading: false);
-      } catch (_) {
-        state = state.copyWith(isLoading: false);
-      }
-      return;
-    }
-
     try {
       final merged = await _fetchAndMerge(projectId);
       state = state.copyWith(recordings: merged, isLoading: false);
@@ -55,12 +42,16 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
   Future<List<LocalRecording>> _fetchAndMerge(String projectId) async {
     final serverRecordings = await _apiRepo.listRecordings(projectId);
     final localRecordings = await _localRepo.getAllRecordings(projectId);
+
+    final serverIds = serverRecordings.map((s) => s.id).toSet();
+
     final localOnly = localRecordings
         .where(
           (r) =>
-              r.uploadStatus == 'local' ||
-              r.uploadStatus == 'uploading' ||
-              r.uploadStatus == 'failed',
+              (r.uploadStatus == 'local' ||
+                  r.uploadStatus == 'uploading' ||
+                  r.uploadStatus == 'failed') &&
+              (r.serverId == null || !serverIds.contains(r.serverId)),
         )
         .toList();
 
