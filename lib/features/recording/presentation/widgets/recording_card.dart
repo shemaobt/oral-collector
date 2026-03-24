@@ -15,6 +15,7 @@ class RecordingCard extends StatelessWidget {
     required this.onTap,
     this.subcategoryName,
     this.registerName,
+    this.onDelete,
   });
 
   final LocalRecording recording;
@@ -24,6 +25,7 @@ class RecordingCard extends StatelessWidget {
   final String relativeDate;
   final String formattedDuration;
   final VoidCallback onTap;
+  final VoidCallback? onDelete;
 
   Color _statusAccentColor(AppColorSet colors) {
     switch (recording.uploadStatus) {
