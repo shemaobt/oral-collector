@@ -17,6 +17,9 @@ final syncNotifierProvider = NotifierProvider<SyncNotifier, SyncState>(
 
 class SyncNotifier extends Notifier<SyncState> {
   StreamSubscription<bool>? _connectivitySub;
+  DateTime? _speedSampleTime;
+  int _speedSampleBytes = 0;
+  final Map<String, int> _fileProgress = {};
 
   ConnectivityService get _connectivity =>
       ref.read(connectivityServiceProvider);
@@ -57,29 +60,40 @@ class SyncNotifier extends Notifier<SyncState> {
 
   Future<void> syncOne(String recordingId) async {
     state = state.copyWith(uploadingId: recordingId, syncProgress: 0);
+    _fileProgress.clear();
 
     try {
       final recording = await _recordingRepo.getRecordingById(recordingId);
       if (recording == null) return;
 
-      await _recordingRepo.markAsUploading(recordingId);
+      state = state.copyWith(
+        currentFileName: recording.title,
+        totalQueueSizeBytes: recording.fileSizeBytes,
+        totalUploadedBytes: 0,
+        uploadSpeedBps: 0,
+      );
 
-      await _syncEngine.processQueue(
+      _speedSampleTime = DateTime.now();
+      _speedSampleBytes = 0;
+
+      await _syncEngine.uploadSingle(
+        recordingId,
         deleteAfterUpload: state.autoRemoveAfterUpload,
-        onProgress: (sent, total) {
-          if (total > 0) {
-            state = state.copyWith(syncProgress: (sent * 100 ~/ total));
-          }
-        },
+        onProgress: _onUploadProgress,
       );
 
       state = state.copyWith(
         syncProgress: 100,
         clearUploadingId: true,
+        clearCurrentFileName: true,
         lastSyncAt: DateTime.now(),
       );
     } on Exception {
-      state = state.copyWith(clearUploadingId: true, syncProgress: 0);
+      state = state.copyWith(
+        clearUploadingId: true,
+        clearCurrentFileName: true,
+        syncProgress: 0,
+      );
     }
 
     await _refreshPendingCount();
@@ -113,9 +127,7 @@ class SyncNotifier extends Notifier<SyncState> {
         if (await file_ops.fileExists(recording.localFilePath)) {
           totalBytes += await file_ops.fileLength(recording.localFilePath);
         }
-      } on Exception catch (_) {
-        // skip unreadable files
-      }
+      } on Exception catch (_) {}
     }
 
     return totalBytes;
@@ -129,9 +141,7 @@ class SyncNotifier extends Notifier<SyncState> {
     for (final recording in all) {
       try {
         await file_ops.deleteFile(recording.localFilePath);
-      } on Exception catch (_) {
-        // skip undeletable files
-      }
+      } on Exception catch (_) {}
     }
 
     await _recordingRepo.deleteAllRecordings();
@@ -145,32 +155,79 @@ class SyncNotifier extends Notifier<SyncState> {
     if (state.pendingCount == 0) return;
 
     final pending = await _recordingRepo.getPendingUploads();
+    final totalBytes = pending.fold(0, (sum, r) => sum + r.fileSizeBytes);
+
+    _fileProgress.clear();
 
     if (pending.isNotEmpty) {
-      state = state.copyWith(uploadingId: pending.first.id, syncProgress: 0);
+      state = state.copyWith(
+        uploadingId: pending.first.id,
+        currentFileName: pending.first.title,
+        syncProgress: 0,
+        totalQueueSizeBytes: totalBytes,
+        totalUploadedBytes: 0,
+        uploadSpeedBps: 0,
+      );
     }
+
+    _speedSampleTime = DateTime.now();
+    _speedSampleBytes = 0;
+
+    final isWifi = await _connectivity.isOnWifi;
+    final concurrency = isWifi ? 3 : 1;
 
     await _syncEngine.processQueue(
       deleteAfterUpload: state.autoRemoveAfterUpload,
-      onProgress: (sent, total) {
-        if (total > 0) {
-          state = state.copyWith(syncProgress: (sent * 100 ~/ total));
-        }
-      },
+      wifiOnly: state.autoUploadWifiOnly,
+      maxConcurrency: concurrency,
+      onProgress: _onUploadProgress,
     );
 
     await _refreshPendingCount();
 
     state = state.copyWith(
       clearUploadingId: true,
+      clearCurrentFileName: true,
       syncProgress: 100,
       lastSyncAt: DateTime.now(),
+      totalUploadedBytes: totalBytes,
+      uploadSpeedBps: 0,
+    );
+  }
+
+  void _onUploadProgress(String recordingId, int bytesSent, int totalBytes) {
+    if (totalBytes <= 0) return;
+
+    _fileProgress[recordingId] = bytesSent;
+    final totalSent = _fileProgress.values.fold(0, (a, b) => a + b);
+
+    final now = DateTime.now();
+    final elapsed = now.difference(_speedSampleTime ?? now);
+
+    if (elapsed.inSeconds >= 2) {
+      final bytesDelta = totalSent - _speedSampleBytes;
+      final speed = bytesDelta / elapsed.inMilliseconds * 1000;
+      state = state.copyWith(uploadSpeedBps: speed > 0 ? speed : 0);
+      _speedSampleTime = now;
+      _speedSampleBytes = totalSent;
+    }
+
+    state = state.copyWith(
+      uploadingId: recordingId,
+      syncProgress: state.totalQueueSizeBytes > 0
+          ? (totalSent * 100 ~/ state.totalQueueSizeBytes)
+          : 0,
+      totalUploadedBytes: totalSent,
     );
   }
 
   Future<void> _refreshPendingCount() async {
     final pending = await _recordingRepo.getPendingUploads();
-    state = state.copyWith(pendingCount: pending.length);
+    final totalBytes = pending.fold(0, (sum, r) => sum + r.fileSizeBytes);
+    state = state.copyWith(
+      pendingCount: pending.length,
+      totalQueueSizeBytes: totalBytes,
+    );
   }
 
   void _cleanup() {
