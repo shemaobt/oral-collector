@@ -5,10 +5,16 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/intl.dart' as intl;
 
+import 'app_localizations_ar.dart';
 import 'app_localizations_en.dart';
+import 'app_localizations_es.dart';
+import 'app_localizations_fr.dart';
 import 'app_localizations_hi.dart';
+import 'app_localizations_id.dart';
 import 'app_localizations_ko.dart';
 import 'app_localizations_pt.dart';
+import 'app_localizations_sw.dart';
+import 'app_localizations_tpi.dart';
 
 // ignore_for_file: type=lint
 
@@ -96,10 +102,16 @@ abstract class AppLocalizations {
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
+    Locale('ar'),
     Locale('en'),
+    Locale('es'),
+    Locale('fr'),
     Locale('hi'),
+    Locale('id'),
     Locale('ko'),
     Locale('pt'),
+    Locale('sw'),
+    Locale('tpi'),
   ];
 
   /// No description provided for @appTitle.
@@ -2460,6 +2472,42 @@ abstract class AppLocalizations {
   /// **'한국어'**
   String get locale_korean;
 
+  /// No description provided for @locale_spanish.
+  ///
+  /// In en, this message translates to:
+  /// **'Español'**
+  String get locale_spanish;
+
+  /// No description provided for @locale_bahasa.
+  ///
+  /// In en, this message translates to:
+  /// **'Bahasa Indonesia'**
+  String get locale_bahasa;
+
+  /// No description provided for @locale_french.
+  ///
+  /// In en, this message translates to:
+  /// **'Français'**
+  String get locale_french;
+
+  /// No description provided for @locale_tokPisin.
+  ///
+  /// In en, this message translates to:
+  /// **'Tok Pisin'**
+  String get locale_tokPisin;
+
+  /// No description provided for @locale_swahili.
+  ///
+  /// In en, this message translates to:
+  /// **'Kiswahili'**
+  String get locale_swahili;
+
+  /// No description provided for @locale_arabic.
+  ///
+  /// In en, this message translates to:
+  /// **'العربية'**
+  String get locale_arabic;
+
   /// No description provided for @locale_englishSub.
   ///
   /// In en, this message translates to:
@@ -2483,6 +2531,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Korean'**
   String get locale_koreanSub;
+
+  /// No description provided for @locale_spanishSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Spanish'**
+  String get locale_spanishSub;
+
+  /// No description provided for @locale_bahasaSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Indonesian'**
+  String get locale_bahasaSub;
+
+  /// No description provided for @locale_frenchSub.
+  ///
+  /// In en, this message translates to:
+  /// **'French'**
+  String get locale_frenchSub;
+
+  /// No description provided for @locale_tokPisinSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Tok Pisin'**
+  String get locale_tokPisinSub;
+
+  /// No description provided for @locale_swahiliSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Swahili'**
+  String get locale_swahiliSub;
+
+  /// No description provided for @locale_arabicSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Arabic'**
+  String get locale_arabicSub;
 
   /// No description provided for @locale_selectLanguage.
   ///
@@ -2759,8 +2843,18 @@ class _AppLocalizationsDelegate
   }
 
   @override
-  bool isSupported(Locale locale) =>
-      <String>['en', 'hi', 'ko', 'pt'].contains(locale.languageCode);
+  bool isSupported(Locale locale) => <String>[
+    'ar',
+    'en',
+    'es',
+    'fr',
+    'hi',
+    'id',
+    'ko',
+    'pt',
+    'sw',
+    'tpi',
+  ].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
@@ -2769,14 +2863,26 @@ class _AppLocalizationsDelegate
 AppLocalizations lookupAppLocalizations(Locale locale) {
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
+    case 'ar':
+      return AppLocalizationsAr();
     case 'en':
       return AppLocalizationsEn();
+    case 'es':
+      return AppLocalizationsEs();
+    case 'fr':
+      return AppLocalizationsFr();
     case 'hi':
       return AppLocalizationsHi();
+    case 'id':
+      return AppLocalizationsId();
     case 'ko':
       return AppLocalizationsKo();
     case 'pt':
       return AppLocalizationsPt();
+    case 'sw':
+      return AppLocalizationsSw();
+    case 'tpi':
+      return AppLocalizationsTpi();
   }
 
   throw FlutterError(

@@ -1318,6 +1318,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get locale_korean => '한국어';
 
   @override
+  String get locale_spanish => 'Español';
+
+  @override
+  String get locale_bahasa => 'Bahasa Indonesia';
+
+  @override
+  String get locale_french => 'Français';
+
+  @override
+  String get locale_tokPisin => 'Tok Pisin';
+
+  @override
+  String get locale_swahili => 'Kiswahili';
+
+  @override
+  String get locale_arabic => 'العربية';
+
+  @override
   String get locale_englishSub => 'English';
 
   @override
@@ -1328,6 +1346,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get locale_koreanSub => 'Korean';
+
+  @override
+  String get locale_spanishSub => 'Spanish';
+
+  @override
+  String get locale_bahasaSub => 'Indonesian';
+
+  @override
+  String get locale_frenchSub => 'French';
+
+  @override
+  String get locale_tokPisinSub => 'Tok Pisin';
+
+  @override
+  String get locale_swahiliSub => 'Swahili';
+
+  @override
+  String get locale_arabicSub => 'Arabic';
 
   @override
   String get locale_selectLanguage => 'Choose Your Language';
