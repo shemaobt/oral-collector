@@ -26,6 +26,7 @@ import '../../genre/domain/entities/genre.dart';
 import '../../project/presentation/notifiers/project_notifier.dart';
 import '../data/providers.dart';
 import '../domain/entities/register.dart';
+import 'notifiers/recordings_list_notifier.dart';
 import 'widgets/file_info_banner.dart';
 import 'widgets/import_confirmation.dart';
 import 'widgets/import_genre_selection.dart';
@@ -110,6 +111,7 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
         type: FileType.custom,
         allowedExtensions: ['mp3', 'wav', 'm4a', 'ogg'],
         allowMultiple: true,
+        withData: kIsWeb,
       );
 
       if (result == null || result.files.isEmpty) {
@@ -124,7 +126,7 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
       final files = <_PickedFile>[];
 
       for (final file in result.files) {
-        String? filePath = file.path;
+        String? filePath;
         Uint8List? webBytes;
 
         if (kIsWeb) {
@@ -132,14 +134,17 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
           webBytes = file.bytes;
           filePath =
               'web_import_${DateTime.now().millisecondsSinceEpoch}_${file.name}';
-        } else if (filePath == null) {
-          continue;
+        } else {
+          filePath = file.path;
+          if (filePath == null) continue;
         }
 
         final ext = p.extension(file.name).replaceFirst('.', '').toLowerCase();
         var duration = 0.0;
 
-        if (!kIsWeb) {
+        if (kIsWeb && webBytes != null) {
+          duration = await _detectDurationFromBytes(webBytes, ext);
+        } else if (!kIsWeb) {
           duration = await _detectDuration(filePath);
         }
 
@@ -189,6 +194,28 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
     final player = AudioPlayer();
     try {
       final duration = await player.setFilePath(filePath);
+      if (duration != null) {
+        return duration.inMilliseconds / 1000.0;
+      }
+    } catch (_) {
+    } finally {
+      await player.dispose();
+    }
+    return 0.0;
+  }
+
+  Future<double> _detectDurationFromBytes(Uint8List bytes, String ext) async {
+    final player = AudioPlayer();
+    try {
+      const mimeTypes = {
+        'm4a': 'audio/mp4',
+        'mp3': 'audio/mpeg',
+        'wav': 'audio/wav',
+        'ogg': 'audio/ogg',
+      };
+      final mime = mimeTypes[ext] ?? 'audio/mpeg';
+      final dataUri = Uri.dataFromBytes(bytes, mimeType: mime).toString();
+      final duration = await player.setUrl(dataUri);
       if (duration != null) {
         return duration.inMilliseconds / 1000.0;
       }
@@ -364,6 +391,9 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
           setState(() => _saveProgress = i + 1);
         }
       }
+
+      ref.read(syncNotifierProvider.notifier).processQueue();
+      ref.read(recordingsListNotifierProvider.notifier).fetchRecordings();
 
       if (mounted) {
         Navigator.of(context).maybePop();

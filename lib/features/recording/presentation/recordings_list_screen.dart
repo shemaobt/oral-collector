@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -5,6 +6,8 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../../core/l10n/content_l10n.dart';
+import '../../../core/database/app_database.dart';
+import '../../../core/errors/api_exception.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/preview_helpers.dart';
 import '../../../shared/utils/format.dart';
@@ -15,6 +18,7 @@ import '../../../shared/widgets/status_banner.dart';
 import '../../../shared/widgets/sync_status_indicator.dart';
 import '../../genre/presentation/notifiers/genre_notifier.dart';
 import '../../project/presentation/notifiers/project_notifier.dart';
+import '../data/providers.dart';
 import '../domain/entities/register.dart';
 import '../../sync/presentation/notifiers/sync_notifier.dart';
 import 'notifiers/recordings_list_notifier.dart';
@@ -55,9 +59,64 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
     }
   }
 
+  Future<void> _deleteRecording(LocalRecording recording) async {
+    final l10n = AppLocalizations.of(context);
+    final colors = AppColors.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.recording_deleteTitle),
+        content: Text(l10n.recording_deleteMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.common_cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: TextButton.styleFrom(foregroundColor: colors.error),
+            child: Text(l10n.common_delete),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    final serverId = recording.serverId ?? recording.id;
+    try {
+      final apiRepo = ref.read(recordingApiRepositoryProvider);
+      await apiRepo.deleteRecording(serverId);
+    } on ForbiddenException {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.recording_deleteNoPermission),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+      return;
+    } catch (_) {
+      if (kIsWeb) {
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(l10n.recording_deleteFailed)));
+        }
+        return;
+      }
+    }
+
+    if (!kIsWeb) {
+      final repo = ref.read(localRecordingRepositoryProvider);
+      await repo.deleteRecording(recording.id);
+    }
+
+    ref.read(recordingsListNotifierProvider.notifier).fetchRecordings();
+  }
+
   void _refreshAll() {
     final isOnline = ref.read(syncNotifierProvider).isOnline;
-    // Always load recordings — the notifier falls back to local data when offline
     ref.read(recordingsListNotifierProvider.notifier).fetchRecordings();
     if (!isOnline) return;
     ref.read(genreNotifierProvider.notifier).fetchGenres();
@@ -254,34 +313,55 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
                             final rawReg = getRegisterName(
                               recording.registerId,
                             );
-                            return RecordingCard(
-                              recording: recording,
-                              genreName: rawGenre != null
-                                  ? localizedGenreName(l10n, rawGenre)
-                                  : null,
-                              subcategoryName: rawSubcat != null
-                                  ? localizedSubcategoryName(l10n, rawSubcat)
-                                  : null,
-                              registerName: rawReg != null
-                                  ? localizedRegisterName(l10n, rawReg)
-                                  : null,
-                              relativeDate: formatTimeAgo(
-                                recording.recordedAt,
-                                l10n,
-                              ),
-                              formattedDuration: formatDurationHMS(
-                                recording.durationSeconds,
-                              ),
-                              onTap: () async {
-                                await context.push(
-                                  '/recording/${recording.id}',
-                                );
-                                ref
-                                    .read(
-                                      recordingsListNotifierProvider.notifier,
-                                    )
-                                    .fetchRecordings();
+                            return Dismissible(
+                              key: ValueKey(recording.id),
+                              direction: DismissDirection.endToStart,
+                              confirmDismiss: (_) async {
+                                await _deleteRecording(recording);
+                                return false;
                               },
+                              background: Container(
+                                alignment: Alignment.centerRight,
+                                padding: const EdgeInsets.only(right: 24),
+                                decoration: BoxDecoration(
+                                  color: colors.error.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Icon(
+                                  LucideIcons.trash2,
+                                  color: colors.error,
+                                ),
+                              ),
+                              child: RecordingCard(
+                                recording: recording,
+                                genreName: rawGenre != null
+                                    ? localizedGenreName(l10n, rawGenre)
+                                    : null,
+                                subcategoryName: rawSubcat != null
+                                    ? localizedSubcategoryName(l10n, rawSubcat)
+                                    : null,
+                                registerName: rawReg != null
+                                    ? localizedRegisterName(l10n, rawReg)
+                                    : null,
+                                relativeDate: formatTimeAgo(
+                                  recording.recordedAt,
+                                  l10n,
+                                ),
+                                formattedDuration: formatDurationHMS(
+                                  recording.durationSeconds,
+                                ),
+                                onDelete: () => _deleteRecording(recording),
+                                onTap: () async {
+                                  await context.push(
+                                    '/recording/${recording.id}',
+                                  );
+                                  ref
+                                      .read(
+                                        recordingsListNotifierProvider.notifier,
+                                      )
+                                      .fetchRecordings();
+                                },
+                              ),
                             );
                           },
                         ),

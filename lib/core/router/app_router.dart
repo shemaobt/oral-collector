@@ -122,6 +122,10 @@ final routerProvider = Provider<GoRouter>((ref) {
 
           if (kIsWeb) ...[
             GoRoute(
+              path: '/import-file',
+              builder: (context, state) => const FileImportScreen(),
+            ),
+            GoRoute(
               path: '/genre/:id',
               builder: (context, state) =>
                   GenreDetailScreen(genreId: state.pathParameters['id'] ?? ''),
