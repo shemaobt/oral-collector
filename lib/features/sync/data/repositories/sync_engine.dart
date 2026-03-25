@@ -291,24 +291,13 @@ class SyncEngineImpl implements SyncEngine {
         expected: 200,
       );
 
-      final verifiedData = await _pollForVerification(serverId);
-
-      if (verifiedData == null) {
-        throw Exception('Verification polling timed out');
-      }
-
-      final gcsUrl = verifiedData['gcs_url'] as String?;
-      final serverStatus = verifiedData['upload_status'] as String?;
-
-      if (serverStatus == 'upload_failed') {
-        final error =
-            verifiedData['upload_error'] as String? ?? 'Verification failed';
-        throw Exception('Server verification failed: $error');
-      }
+      final confirmData =
+          jsonDecode(confirmResponse.body) as Map<String, dynamic>;
+      final gcsUrl = confirmData['gcs_url'] as String?;
 
       await _recordingRepo.markAsUploaded(id, serverId, gcsUrl);
 
-      if (deleteAfterUpload && !kIsWeb && serverStatus == 'verified') {
+      if (deleteAfterUpload && !kIsWeb) {
         await file_ops.deleteFile(resolvedPath);
       }
     } on _NonRetryableUploadException {
@@ -327,34 +316,6 @@ class SyncEngineImpl implements SyncEngine {
     } on Exception {
       await _recordingRepo.markAsFailed(id);
     }
-  }
-
-  static const int _verificationMaxAttempts = 15;
-  static const Duration _verificationInterval = Duration(seconds: 2);
-
-  Future<Map<String, dynamic>?> _pollForVerification(String serverId) async {
-    for (var i = 0; i < _verificationMaxAttempts; i++) {
-      await Future<void>.delayed(_verificationInterval);
-
-      try {
-        final response = await _client
-            .get('/api/oc/recordings/$serverId')
-            .timeout(_apiTimeout);
-
-        if (response.statusCode != 200) continue;
-
-        final data = jsonDecode(response.body) as Map<String, dynamic>;
-        final status = data['upload_status'] as String?;
-
-        if (status == 'verified' || status == 'upload_failed') {
-          return data;
-        }
-      } on Exception {
-        continue;
-      }
-    }
-
-    return null;
   }
 
   void _checkResponse(
