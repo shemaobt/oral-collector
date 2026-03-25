@@ -321,8 +321,13 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
                           ),
                         ),
                         const Spacer(),
-                        if (listState.selectedFilter == StatusFilter.pending &&
-                            filtered.isNotEmpty &&
+                        if ((listState.selectedFilter == StatusFilter.pending ||
+                                listState.selectedFilter == StatusFilter.all) &&
+                            filtered.any(
+                              (r) =>
+                                  r.uploadStatus == 'failed' ||
+                                  r.uploadStatus == 'uploading',
+                            ) &&
                             ref
                                 .watch(roleNotifierProvider.notifier)
                                 .canManageProject(activeProject.id))
