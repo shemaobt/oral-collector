@@ -17,6 +17,7 @@ import '../../../../shared/widgets/app_shell.dart';
 import '../../../../shared/widgets/waveform_visualizer.dart';
 import '../../../project/presentation/notifiers/project_notifier.dart';
 import '../../data/providers.dart';
+import '../../domain/entities/classification.dart';
 import '../notifiers/recording_session_state.dart';
 
 class ConfirmationStep extends ConsumerStatefulWidget {
@@ -202,7 +203,13 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
         } catch (_) {}
       }
 
-      if (mounted) context.go('/genre/${widget.genreId}');
+      if (mounted) {
+        if (widget.genreId == kUnclassifiedGenreId) {
+          context.go('/home');
+        } else {
+          context.go('/genre/${widget.genreId}');
+        }
+      }
     }
   }
 
@@ -246,26 +253,56 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
                 ),
               ),
 
-              if (tagLabel.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(top: 6),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: colors.surfaceAlt,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Text(
-                      tagLabel,
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: colors.secondary,
-                      ),
-                    ),
-                  ),
-                ),
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: widget.genreId == kUnclassifiedGenreId
+                    ? Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.amber.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              LucideIcons.tag,
+                              size: 12,
+                              color: Colors.amber.shade700,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              l10n.quickRecord_classifyLater,
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: Colors.amber.shade700,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : tagLabel.isNotEmpty
+                    ? Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: colors.surfaceAlt,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Text(
+                          tagLabel,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: colors.secondary,
+                          ),
+                        ),
+                      )
+                    : const SizedBox.shrink(),
+              ),
 
               Expanded(
                 child: Padding(
