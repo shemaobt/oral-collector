@@ -24,6 +24,8 @@ import '../../../shared/utils/format.dart';
 import '../data/providers.dart';
 import '../domain/entities/register.dart';
 import '../domain/entities/server_recording.dart';
+import '../domain/entities/classification.dart';
+import 'widgets/classify_recording_dialog.dart';
 import 'widgets/move_category_dialog.dart';
 import 'widgets/recording_hero_player.dart';
 import 'widgets/recording_info_grid.dart';
@@ -530,6 +532,47 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     }
   }
 
+  Future<void> _classifyRecording() async {
+    final recording = _recording;
+    if (recording == null) return;
+
+    final result = await showDialog<ClassifyResult>(
+      context: context,
+      builder: (context) => const ClassifyRecordingDialog(),
+    );
+
+    if (result == null) return;
+
+    if (!kIsWeb) {
+      final repo = ref.read(localRecordingRepositoryProvider);
+      await repo.updateRecording(
+        widget.recordingId,
+        LocalRecordingsCompanion(
+          genreId: Value(result.genreId),
+          subcategoryId: Value(result.subcategoryId),
+          registerId: result.registerId != null
+              ? Value(result.registerId)
+              : const Value.absent(),
+        ),
+      );
+    }
+
+    if (ref.read(syncNotifierProvider).isOnline) {
+      ref
+          .read(statsNotifierProvider.notifier)
+          .fetchGenreStats(recording.projectId);
+    }
+
+    await _loadRecording();
+
+    if (mounted) {
+      final l10n = AppLocalizations.of(context);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.classify_success)));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -568,10 +611,14 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
         ? localizedRegisterName(l10n, rawRegisterName)
         : null;
 
+    final isUnclassified = recording.isUnclassified;
+
     final breadcrumbParts = <String>[];
     if (genreName != null) breadcrumbParts.add(genreName);
     if (subcategoryName != null) breadcrumbParts.add(subcategoryName);
-    final genreBreadcrumb = breadcrumbParts.isNotEmpty
+    final genreBreadcrumb = isUnclassified
+        ? l10n.recording_unclassified
+        : breadcrumbParts.isNotEmpty
         ? breadcrumbParts.join(' > ')
         : l10n.recording_unknownGenre;
 
@@ -595,13 +642,17 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
         const SizedBox(height: 6),
         Row(
           children: [
-            Icon(LucideIcons.layers, size: 14, color: colors.accent),
+            Icon(
+              isUnclassified ? LucideIcons.tag : LucideIcons.layers,
+              size: 14,
+              color: isUnclassified ? Colors.amber.shade700 : colors.accent,
+            ),
             const SizedBox(width: 6),
             Flexible(
               child: Text(
                 genreBreadcrumb,
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: colors.accent,
+                  color: isUnclassified ? Colors.amber.shade700 : colors.accent,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -663,13 +714,72 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
       canEdit: _canEditRecording,
       onTrim: _handleTrim,
       onToggleCleaning: _toggleCleaningStatus,
-      onMoveCategory: _moveCategory,
+      onMoveCategory: isUnclassified ? _classifyRecording : _moveCategory,
       onDelete: _deleteRecording,
+      isUnclassified: isUnclassified,
     );
+
+    final classifyBanner = isUnclassified
+        ? Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: Colors.amber.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: Colors.amber.shade700.withValues(alpha: 0.3),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  LucideIcons.alertCircle,
+                  size: 18,
+                  color: Colors.amber.shade700,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    l10n.classify_banner,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: Colors.amber.shade700,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                FilledButton.tonal(
+                  onPressed: _classifyRecording,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.amber.shade700.withValues(
+                      alpha: 0.15,
+                    ),
+                    foregroundColor: Colors.amber.shade700,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: Text(
+                    l10n.classify_action,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          )
+        : null;
 
     final detailContent = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (classifyBanner != null) ...[
+          classifyBanner,
+          const SizedBox(height: 16),
+        ],
         titleAndGenre,
         const SizedBox(height: 24),
         infoGrid,
@@ -689,6 +799,8 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
                   _handleTrim();
                 case 'move':
                   _moveCategory();
+                case 'classify':
+                  _classifyRecording();
                 case 'delete':
                   _deleteRecording();
               }
@@ -704,16 +816,32 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
                   ],
                 ),
               ),
-              PopupMenuItem(
-                value: 'move',
-                child: Row(
-                  children: [
-                    const Icon(LucideIcons.folderInput, size: 18),
-                    const SizedBox(width: 12),
-                    Text(l10n.recording_moveCategory),
-                  ],
+              if (isUnclassified)
+                PopupMenuItem(
+                  value: 'classify',
+                  child: Row(
+                    children: [
+                      Icon(
+                        LucideIcons.tag,
+                        size: 18,
+                        color: Colors.amber.shade700,
+                      ),
+                      const SizedBox(width: 12),
+                      Text(l10n.classify_action),
+                    ],
+                  ),
+                )
+              else
+                PopupMenuItem(
+                  value: 'move',
+                  child: Row(
+                    children: [
+                      const Icon(LucideIcons.folderInput, size: 18),
+                      const SizedBox(width: 12),
+                      Text(l10n.recording_moveCategory),
+                    ],
+                  ),
                 ),
-              ),
               PopupMenuItem(
                 value: 'delete',
                 child: Row(
