@@ -12,12 +12,14 @@ class StatsStrip extends StatelessWidget {
     required this.totalDuration,
     required this.memberCount,
     required this.colors,
+    this.unclassifiedCount = 0,
   });
 
   final int totalRecordings;
   final double totalDuration;
   final int memberCount;
   final AppColorSet colors;
+  final int unclassifiedCount;
 
   @override
   Widget build(BuildContext context) {
@@ -68,6 +70,19 @@ class StatsStrip extends StatelessWidget {
                 icon: LucideIcons.users,
                 color: colors.info,
               ),
+              if (unclassifiedCount > 0) ...[
+                VerticalDivider(
+                  width: 1,
+                  thickness: 1,
+                  color: colors.border.withValues(alpha: 0.5),
+                ),
+                StatTile(
+                  value: '$unclassifiedCount',
+                  label: l10n.filter_unclassified,
+                  icon: LucideIcons.tag,
+                  color: Colors.amber.shade700,
+                ),
+              ],
             ],
           ),
         ),
