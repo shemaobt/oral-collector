@@ -41,17 +41,31 @@ class RecordingsListScreen extends ConsumerStatefulWidget {
 
 class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
     with WidgetsBindingObserver {
+  final _scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _scrollController.addListener(_onScroll);
     Future.microtask(_refreshAll);
   }
 
   @override
   void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    final maxScroll = _scrollController.position.maxScrollExtent;
+    final currentScroll = _scrollController.offset;
+    if (currentScroll >= maxScroll - 300) {
+      ref.read(recordingsListNotifierProvider.notifier).loadMore();
+    }
   }
 
   @override
@@ -261,6 +275,7 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
               ),
             )
           : CustomScrollView(
+              controller: _scrollController,
               slivers: [
                 ScreenHeaderSliver(
                   title: l10n.recordings_title,
@@ -313,7 +328,9 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
                     child: Row(
                       children: [
                         Text(
-                          l10n.recordings_count(filtered.length),
+                          listState.hasMore
+                              ? '${filtered.length}+'
+                              : l10n.recordings_count(filtered.length),
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: colors.secondary,
                             fontWeight: FontWeight.w600,
@@ -448,6 +465,20 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
                           },
                         ),
                       ),
+
+                if (!listState.isLoading && listState.isLoadingMore)
+                  const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(vertical: 24),
+                      child: Center(
+                        child: SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      ),
+                    ),
+                  ),
               ],
             ),
     );
