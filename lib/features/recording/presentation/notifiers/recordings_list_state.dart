@@ -6,12 +6,16 @@ enum StatusFilter { all, pending, uploaded, needsCleaning, unclassified }
 class RecordingsListState {
   final List<LocalRecording> recordings;
   final bool isLoading;
+  final bool isLoadingMore;
+  final bool hasMore;
   final String? selectedGenreId;
   final StatusFilter selectedFilter;
 
   const RecordingsListState({
     this.recordings = const [],
     this.isLoading = true,
+    this.isLoadingMore = false,
+    this.hasMore = true,
     this.selectedGenreId,
     this.selectedFilter = StatusFilter.all,
   });
@@ -19,6 +23,8 @@ class RecordingsListState {
   RecordingsListState copyWith({
     List<LocalRecording>? recordings,
     bool? isLoading,
+    bool? isLoadingMore,
+    bool? hasMore,
     String? selectedGenreId,
     StatusFilter? selectedFilter,
     bool clearGenreId = false,
@@ -26,6 +32,8 @@ class RecordingsListState {
     return RecordingsListState(
       recordings: recordings ?? this.recordings,
       isLoading: isLoading ?? this.isLoading,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+      hasMore: hasMore ?? this.hasMore,
       selectedGenreId: clearGenreId
           ? null
           : (selectedGenreId ?? this.selectedGenreId),
