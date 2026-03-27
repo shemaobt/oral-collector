@@ -4,6 +4,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../domain/entities/classification.dart';
 
 class RecordingCard extends StatelessWidget {
   const RecordingCard({
@@ -75,10 +76,13 @@ class RecordingCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = AppColors.of(context);
     final statusColor = _statusAccentColor(colors);
+    final isUnclassified = recording.isUnclassified;
     final breadcrumbParts = <String>[];
     if (genreName != null) breadcrumbParts.add(genreName!);
     if (subcategoryName != null) breadcrumbParts.add(subcategoryName!);
-    final breadcrumb = breadcrumbParts.isNotEmpty
+    final breadcrumb = isUnclassified
+        ? l10n.recording_unclassified
+        : breadcrumbParts.isNotEmpty
         ? breadcrumbParts.join(' > ')
         : 'Unknown genre';
 
@@ -139,7 +143,10 @@ class RecordingCard extends StatelessWidget {
                     Text(
                       breadcrumb,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: colors.secondary,
+                        color: isUnclassified
+                            ? Colors.amber.shade700
+                            : colors.secondary,
+                        fontWeight: isUnclassified ? FontWeight.w600 : null,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -203,6 +210,39 @@ class RecordingCard extends StatelessWidget {
                             ],
                           ),
                         ),
+                        if (isUnclassified) ...[
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.amber.shade700.withValues(
+                                alpha: 0.1,
+                              ),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  LucideIcons.tag,
+                                  size: 11,
+                                  color: Colors.amber.shade700,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  l10n.recording_unclassified,
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    color: Colors.amber.shade700,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                         if (needsCleaning || isCleaning || isCleaned) ...[
                           const SizedBox(width: 6),
                           Container(

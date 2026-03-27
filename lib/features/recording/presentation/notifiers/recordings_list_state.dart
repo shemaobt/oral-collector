@@ -1,6 +1,7 @@
 import '../../../../core/database/app_database.dart';
+import '../../domain/entities/classification.dart';
 
-enum StatusFilter { all, pending, uploaded, needsCleaning }
+enum StatusFilter { all, pending, uploaded, needsCleaning, unclassified }
 
 class RecordingsListState {
   final List<LocalRecording> recordings;
@@ -55,6 +56,8 @@ class RecordingsListState {
         list = list.where((r) => r.uploadStatus == 'uploaded').toList();
       case StatusFilter.needsCleaning:
         list = list.where((r) => r.cleaningStatus == 'needs_cleaning').toList();
+      case StatusFilter.unclassified:
+        list = list.where((r) => r.isUnclassified).toList();
     }
 
     return list;

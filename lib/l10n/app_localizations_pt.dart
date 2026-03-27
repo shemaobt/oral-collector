@@ -1415,6 +1415,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get filter_needsCleaning => 'Precisa de Limpeza';
 
   @override
+  String get filter_unclassified => 'Não Classificado';
+
+  @override
   String get filter_allGenres => 'Todos os gêneros';
 
   @override
@@ -1528,4 +1531,41 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get recording_pause => 'Pausar';
+
+  @override
+  String get quickRecord_title => 'Gravação Rápida';
+
+  @override
+  String get quickRecord_subtitle => 'Classificar depois';
+
+  @override
+  String get quickRecord_classifyLater => 'Classificar depois';
+
+  @override
+  String get classify_title => 'Classificar Gravação';
+
+  @override
+  String get classify_action => 'Classificar';
+
+  @override
+  String get classify_banner =>
+      'Esta gravação precisa ser classificada antes de poder ser enviada.';
+
+  @override
+  String get classify_success => 'Gravação classificada';
+
+  @override
+  String get classify_register => 'Registro (opcional)';
+
+  @override
+  String get classify_selectRegister => 'Selecionar registro';
+
+  @override
+  String get recording_unclassified => 'Não Classificado';
+
+  @override
+  String get fab_quickRecord => 'Rápido';
+
+  @override
+  String get fab_normalRecord => 'Gravar';
 }
