@@ -2628,6 +2628,12 @@ abstract class AppLocalizations {
   /// **'Needs Cleaning'**
   String get filter_needsCleaning;
 
+  /// No description provided for @filter_unclassified.
+  ///
+  /// In en, this message translates to:
+  /// **'Unclassified'**
+  String get filter_unclassified;
+
   /// No description provided for @filter_allGenres.
   ///
   /// In en, this message translates to:
@@ -2855,6 +2861,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Pause'**
   String get recording_pause;
+
+  /// No description provided for @quickRecord_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick Record'**
+  String get quickRecord_title;
+
+  /// No description provided for @quickRecord_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Classify later'**
+  String get quickRecord_subtitle;
+
+  /// No description provided for @quickRecord_classifyLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Classify later'**
+  String get quickRecord_classifyLater;
+
+  /// No description provided for @classify_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Classify Recording'**
+  String get classify_title;
+
+  /// No description provided for @classify_action.
+  ///
+  /// In en, this message translates to:
+  /// **'Classify'**
+  String get classify_action;
+
+  /// No description provided for @classify_banner.
+  ///
+  /// In en, this message translates to:
+  /// **'This recording needs classification before it can be uploaded.'**
+  String get classify_banner;
+
+  /// No description provided for @classify_success.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording classified'**
+  String get classify_success;
+
+  /// No description provided for @classify_register.
+  ///
+  /// In en, this message translates to:
+  /// **'Register (optional)'**
+  String get classify_register;
+
+  /// No description provided for @classify_selectRegister.
+  ///
+  /// In en, this message translates to:
+  /// **'Select register'**
+  String get classify_selectRegister;
+
+  /// No description provided for @recording_unclassified.
+  ///
+  /// In en, this message translates to:
+  /// **'Unclassified'**
+  String get recording_unclassified;
+
+  /// No description provided for @fab_quickRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick'**
+  String get fab_quickRecord;
+
+  /// No description provided for @fab_normalRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'Record'**
+  String get fab_normalRecord;
 }
 
 class _AppLocalizationsDelegate

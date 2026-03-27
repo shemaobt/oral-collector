@@ -22,7 +22,7 @@ import 'notifiers/home_state.dart';
 import 'widgets/genre_card.dart';
 import 'widgets/hero_genre_card.dart';
 import 'widgets/no_project_card.dart';
-import 'widgets/record_fab.dart';
+import 'widgets/expandable_record_fab.dart';
 import 'widgets/project_switcher_sheet.dart';
 import 'widgets/stats_strip.dart';
 
@@ -196,8 +196,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Scaffold(
       floatingActionButton: Padding(
         padding: EdgeInsets.only(bottom: fabOffset - 70),
-        child: RecordFab(
-          onPressed: () => context.go('/record'),
+        child: ExpandableRecordFab(
+          onQuickRecord: () => context.go('/quick-record'),
+          onNormalRecord: () => context.go('/record'),
           colors: colors,
         ),
       ),
@@ -323,6 +324,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   totalDuration: totalDuration,
                   memberCount: activeProject.memberCount,
                   colors: colors,
+                  unclassifiedCount: homeState.unclassifiedCount,
                 ),
               ),
             ] else if (!projectState.isLoading)

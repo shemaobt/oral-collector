@@ -8,6 +8,8 @@ import '../../domain/entities/server_recording.dart';
 import '../../domain/repositories/recording_api_repository.dart';
 import 'recordings_list_state.dart';
 
+const _pageSize = 50;
+
 final recordingsListNotifierProvider =
     NotifierProvider<RecordingsListNotifier, RecordingsListState>(
       RecordingsListNotifier.new,
@@ -18,6 +20,10 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
       ref.read(recordingApiRepositoryProvider);
   LocalRecordingRepository get _localRepo =>
       ref.read(localRecordingRepositoryProvider);
+
+  int _serverOffset = 0;
+  List<LocalRecording> _localOnlyRecordings = [];
+  final Set<String> _serverIds = {};
 
   @override
   RecordingsListState build() => const RecordingsListState();
@@ -30,6 +36,9 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
     }
 
     state = state.copyWith(isLoading: true);
+    _serverOffset = 0;
+    _serverIds.clear();
+    _localOnlyRecordings = [];
 
     try {
       final merged = await _fetchAndMerge(projectId);
@@ -39,25 +48,72 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
     }
   }
 
+  Future<void> loadMore() async {
+    if (state.isLoadingMore || !state.hasMore) return;
+
+    final projectId = ref.read(projectNotifierProvider).activeProject?.id;
+    if (projectId == null) return;
+
+    state = state.copyWith(isLoadingMore: true);
+
+    try {
+      final serverPage = await _apiRepo.listRecordings(
+        projectId,
+        offset: _serverOffset,
+        limit: _pageSize,
+      );
+
+      final hasMore = serverPage.length >= _pageSize;
+      _serverOffset += serverPage.length;
+
+      for (final s in serverPage) {
+        _serverIds.add(s.id);
+      }
+
+      final newServerAsLocal = _convertServerRecordings(serverPage);
+      final currentRecordings = List<LocalRecording>.from(state.recordings);
+      currentRecordings.addAll(newServerAsLocal);
+
+      state = state.copyWith(
+        recordings: currentRecordings,
+        isLoadingMore: false,
+        hasMore: hasMore,
+      );
+    } catch (_) {
+      state = state.copyWith(isLoadingMore: false);
+    }
+  }
+
   Future<List<LocalRecording>> _fetchAndMerge(String projectId) async {
-    final serverRecordings = await _apiRepo.listRecordings(projectId);
+    final serverRecordings = await _apiRepo.listRecordings(
+      projectId,
+      offset: 0,
+      limit: _pageSize,
+    );
     final localRecordings = await _localRepo.getAllRecordings(projectId);
 
-    final serverIds = serverRecordings.map((s) => s.id).toSet();
+    final hasMore = serverRecordings.length >= _pageSize;
+    _serverOffset = serverRecordings.length;
 
-    final localOnly = localRecordings
+    for (final s in serverRecordings) {
+      _serverIds.add(s.id);
+    }
+
+    _localOnlyRecordings = localRecordings
         .where(
           (r) =>
               (r.uploadStatus == 'local' ||
                   r.uploadStatus == 'uploading' ||
                   r.uploadStatus == 'failed') &&
-              (r.serverId == null || !serverIds.contains(r.serverId)),
+              (r.serverId == null || !_serverIds.contains(r.serverId)),
         )
         .toList();
 
     final serverAsLocal = _convertServerRecordings(serverRecordings);
-    final merged = [...localOnly, ...serverAsLocal];
+    final merged = [..._localOnlyRecordings, ...serverAsLocal];
     merged.sort((a, b) => b.recordedAt.compareTo(a.recordedAt));
+
+    state = state.copyWith(hasMore: hasMore);
     return merged;
   }
 
@@ -93,9 +149,13 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
   Future<void> _fallbackToLocal(String projectId) async {
     try {
       final recordings = await _localRepo.getAllRecordings(projectId);
-      state = state.copyWith(recordings: recordings, isLoading: false);
+      state = state.copyWith(
+        recordings: recordings,
+        isLoading: false,
+        hasMore: false,
+      );
     } catch (_) {
-      state = state.copyWith(isLoading: false);
+      state = state.copyWith(isLoading: false, hasMore: false);
     }
   }
 

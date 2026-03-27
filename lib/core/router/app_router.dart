@@ -14,6 +14,7 @@ import '../../features/project/presentation/project_settings_screen.dart';
 import '../../features/project/presentation/projects_screen.dart';
 import '../../features/recording/presentation/file_import_screen.dart';
 import '../../features/recording/presentation/recording_detail_screen.dart';
+import '../../features/recording/presentation/quick_recording_screen.dart';
 import '../../features/recording/presentation/recording_flow_screen.dart';
 import '../../features/recording/presentation/recordings_list_screen.dart';
 import '../../features/recording/presentation/trim_editor_screen.dart';
@@ -106,6 +107,11 @@ final routerProvider = Provider<GoRouter>((ref) {
               genreId: state.uri.queryParameters['genreId'],
               subcategoryId: state.uri.queryParameters['subcategoryId'],
             ),
+          ),
+          GoRoute(
+            path: '/quick-record',
+            redirect: (context, state) => kIsWeb ? '/recordings' : null,
+            builder: (context, state) => const QuickRecordingScreen(),
           ),
           GoRoute(
             path: '/recordings',

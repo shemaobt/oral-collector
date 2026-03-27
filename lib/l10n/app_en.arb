@@ -611,6 +611,7 @@
   "filter_pending": "Pending",
   "filter_uploaded": "Uploaded",
   "filter_needsCleaning": "Needs Cleaning",
+  "filter_unclassified": "Unclassified",
   "filter_allGenres": "All genres",
 
   "detail_duration": "Duration",
@@ -653,5 +654,21 @@
   "recording_stopRecording": "Stop recording",
   "recording_stop": "Stop",
   "recording_resume": "Resume",
-  "recording_pause": "Pause"
+  "recording_pause": "Pause",
+
+  "quickRecord_title": "Quick Record",
+  "quickRecord_subtitle": "Classify later",
+  "quickRecord_classifyLater": "Classify later",
+
+  "classify_title": "Classify Recording",
+  "classify_action": "Classify",
+  "classify_banner": "This recording needs classification before it can be uploaded.",
+  "classify_success": "Recording classified",
+  "classify_register": "Register (optional)",
+  "classify_selectRegister": "Select register",
+
+  "recording_unclassified": "Unclassified",
+
+  "fab_quickRecord": "Quick",
+  "fab_normalRecord": "Record"
 }

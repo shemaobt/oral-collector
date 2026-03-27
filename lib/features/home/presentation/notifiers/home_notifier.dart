@@ -42,12 +42,15 @@ class HomeNotifier extends Notifier<HomeState> {
     final pending = await repo.getPendingUploads();
     final forProject = pending.where((r) => r.projectId == projectId);
 
+    final unclassifiedCount = await repo.getUnclassifiedCount(projectId);
+
     state = state.copyWith(
       localPendingCount: forProject.length,
       localPendingDuration: forProject.fold<double>(
         0.0,
         (sum, r) => sum + r.durationSeconds,
       ),
+      unclassifiedCount: unclassifiedCount,
     );
     computeTotals();
   }
