@@ -27,10 +27,7 @@ void main() async {
   await dotenv.load(fileName: '.env');
 
   if (!kIsWeb && platform.isAndroidPlatform) {
-    await Workmanager().initialize(
-      callbackDispatcher,
-      isInDebugMode: kDebugMode,
-    );
+    await Workmanager().initialize(callbackDispatcher);
   }
 
   runApp(const ProviderScope(child: OralCollectorApp()));
