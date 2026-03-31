@@ -16,6 +16,7 @@ class RecordingQuickActions extends StatelessWidget {
     required this.onToggleCleaning,
     required this.onMoveCategory,
     required this.onDelete,
+    this.isUnclassified = false,
   });
 
   final LocalRecording recording;
@@ -26,6 +27,7 @@ class RecordingQuickActions extends StatelessWidget {
   final VoidCallback onToggleCleaning;
   final VoidCallback onMoveCategory;
   final VoidCallback onDelete;
+  final bool isUnclassified;
 
   @override
   Widget build(BuildContext context) {
@@ -70,9 +72,11 @@ class RecordingQuickActions extends StatelessWidget {
             ),
             if (canEdit)
               ActionTile(
-                icon: LucideIcons.folderInput,
-                label: l10n.action_move,
-                color: colors.info,
+                icon: isUnclassified
+                    ? LucideIcons.tag
+                    : LucideIcons.folderInput,
+                label: isUnclassified ? l10n.classify_action : l10n.action_move,
+                color: isUnclassified ? Colors.amber.shade700 : colors.info,
                 colors: colors,
                 theme: theme,
                 onTap: onMoveCategory,

@@ -2,7 +2,11 @@ import '../entities/server_recording.dart';
 
 abstract class RecordingApiRepository {
   Future<ServerRecording> getRecording(String serverId);
-  Future<List<ServerRecording>> listRecordings(String projectId);
+  Future<List<ServerRecording>> listRecordings(
+    String projectId, {
+    int offset = 0,
+    int limit = 50,
+  });
   Future<bool> deleteRecording(String serverId);
   Future<bool> updateRecording(
     String serverId, {

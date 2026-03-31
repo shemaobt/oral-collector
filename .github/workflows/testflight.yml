@@ -62,7 +62,7 @@ jobs:
           sed "s/__PROV_UUID__/$PROV_UUID/g" ios/ExportOptions.ci.plist.template > ios/ExportOptions.plist
 
       - name: Create .env for build
-        run: touch .env
+        run: echo 'BACKEND_URL=https://tripod-backend.shemaywam.com' > .env
 
       - name: Configure manual signing for Runner target
         run: |

@@ -462,6 +462,7 @@
   "filter_pending": "Pendentes",
   "filter_uploaded": "Enviados",
   "filter_needsCleaning": "Precisa de Limpeza",
+  "filter_unclassified": "Não Classificado",
   "filter_allGenres": "Todos os gêneros",
 
   "detail_duration": "Duração",
@@ -504,5 +505,21 @@
   "recording_stopRecording": "Parar gravação",
   "recording_stop": "Parar",
   "recording_resume": "Retomar",
-  "recording_pause": "Pausar"
+  "recording_pause": "Pausar",
+
+  "quickRecord_title": "Gravação Rápida",
+  "quickRecord_subtitle": "Classificar depois",
+  "quickRecord_classifyLater": "Classificar depois",
+
+  "classify_title": "Classificar Gravação",
+  "classify_action": "Classificar",
+  "classify_banner": "Esta gravação precisa ser classificada antes de poder ser enviada.",
+  "classify_success": "Gravação classificada",
+  "classify_register": "Registro (opcional)",
+  "classify_selectRegister": "Selecionar registro",
+
+  "recording_unclassified": "Não Classificado",
+
+  "fab_quickRecord": "Rápido",
+  "fab_normalRecord": "Gravar"
 }

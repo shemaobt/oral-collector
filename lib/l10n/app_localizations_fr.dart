@@ -1425,6 +1425,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get filter_needsCleaning => 'Nécessite un Nettoyage';
 
   @override
+  String get filter_unclassified => 'Unclassified';
+
+  @override
   String get filter_allGenres => 'Tous les genres';
 
   @override
@@ -1537,4 +1540,41 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get recording_pause => 'Pause';
+
+  @override
+  String get quickRecord_title => 'Quick Record';
+
+  @override
+  String get quickRecord_subtitle => 'Classify later';
+
+  @override
+  String get quickRecord_classifyLater => 'Classify later';
+
+  @override
+  String get classify_title => 'Classify Recording';
+
+  @override
+  String get classify_action => 'Classify';
+
+  @override
+  String get classify_banner =>
+      'This recording needs classification before it can be uploaded.';
+
+  @override
+  String get classify_success => 'Recording classified';
+
+  @override
+  String get classify_register => 'Register (optional)';
+
+  @override
+  String get classify_selectRegister => 'Select register';
+
+  @override
+  String get recording_unclassified => 'Unclassified';
+
+  @override
+  String get fab_quickRecord => 'Quick';
+
+  @override
+  String get fab_normalRecord => 'Record';
 }

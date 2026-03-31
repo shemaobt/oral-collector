@@ -7,6 +7,7 @@ class HomeState {
   final bool isRefreshing;
   final int totalRecordings;
   final double totalDuration;
+  final int unclassifiedCount;
 
   const HomeState({
     this.localPendingCount = 0,
@@ -15,6 +16,7 @@ class HomeState {
     this.isRefreshing = false,
     this.totalRecordings = 0,
     this.totalDuration = 0.0,
+    this.unclassifiedCount = 0,
   });
 
   HomeState copyWith({
@@ -24,6 +26,7 @@ class HomeState {
     bool? isRefreshing,
     int? totalRecordings,
     double? totalDuration,
+    int? unclassifiedCount,
   }) {
     return HomeState(
       localPendingCount: localPendingCount ?? this.localPendingCount,
@@ -32,6 +35,7 @@ class HomeState {
       isRefreshing: isRefreshing ?? this.isRefreshing,
       totalRecordings: totalRecordings ?? this.totalRecordings,
       totalDuration: totalDuration ?? this.totalDuration,
+      unclassifiedCount: unclassifiedCount ?? this.unclassifiedCount,
     );
   }
 }
