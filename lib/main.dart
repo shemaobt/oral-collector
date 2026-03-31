@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -22,15 +24,36 @@ import 'l10n/app_localizations.dart';
 @Preview(name: 'Oral Collector App', wrapper: previewWrapper)
 Widget oralCollectorPreview() => const OralCollectorApp();
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: '.env');
+void main() {
+  runZonedGuarded(
+    () async {
+      WidgetsFlutterBinding.ensureInitialized();
 
-  if (!kIsWeb && platform.isAndroidPlatform) {
-    await Workmanager().initialize(callbackDispatcher);
-  }
+      FlutterError.onError = (details) {
+        FlutterError.presentError(details);
+        debugPrint('FlutterError: ${details.exception}');
+      };
 
-  runApp(const ProviderScope(child: OralCollectorApp()));
+      try {
+        await dotenv.load(fileName: '.env');
+      } on Exception {
+        // noop
+      }
+
+      if (!kIsWeb && platform.isAndroidPlatform) {
+        try {
+          await Workmanager().initialize(callbackDispatcher);
+        } on Exception {
+          // noop
+        }
+      }
+
+      runApp(const ProviderScope(child: OralCollectorApp()));
+    },
+    (error, stack) {
+      debugPrint('Uncaught error: $error\n$stack');
+    },
+  );
 }
 
 class OralCollectorApp extends ConsumerStatefulWidget {
