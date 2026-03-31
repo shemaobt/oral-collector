@@ -25,9 +25,13 @@ class RecordingApiRepositoryImpl implements RecordingApiRepository {
   }
 
   @override
-  Future<List<ServerRecording>> listRecordings(String projectId) async {
+  Future<List<ServerRecording>> listRecordings(
+    String projectId, {
+    int offset = 0,
+    int limit = 50,
+  }) async {
     final response = await _client.get(
-      '/api/oc/recordings?project_id=$projectId',
+      '/api/oc/recordings?project_id=$projectId&offset=$offset&limit=$limit',
     );
     guardResponse(response);
     if (response.statusCode != 200) {

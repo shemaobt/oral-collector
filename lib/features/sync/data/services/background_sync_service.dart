@@ -51,7 +51,7 @@ class BackgroundSyncService {
       backgroundSyncTaskName,
       frequency: const Duration(minutes: 15),
       constraints: Constraints(networkType: NetworkType.connected),
-      existingWorkPolicy: ExistingWorkPolicy.keep,
+      existingWorkPolicy: ExistingPeriodicWorkPolicy.keep,
       inputData: <String, dynamic>{
         'notificationTitle': 'Oral Collector',
         'notificationBody': 'Syncing recordings...',

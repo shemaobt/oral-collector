@@ -42,10 +42,7 @@ void main() {
 
       if (!kIsWeb && platform.isAndroidPlatform) {
         try {
-          await Workmanager().initialize(
-            callbackDispatcher,
-            isInDebugMode: kDebugMode,
-          );
+          await Workmanager().initialize(callbackDispatcher);
         } on Exception {
           // noop
         }

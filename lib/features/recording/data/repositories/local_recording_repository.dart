@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 
 import '../../../../core/database/app_database.dart';
+import '../../domain/entities/classification.dart';
 
 class LocalRecordingRepository {
   final AppDatabase _db;
@@ -48,12 +49,25 @@ class LocalRecordingRepository {
     return (_db.select(_db.localRecordings)
           ..where(
             (t) =>
-                t.uploadStatus.equals('local') |
-                t.uploadStatus.equals('failed') |
-                t.uploadStatus.equals('uploading'),
+                (t.uploadStatus.equals('local') |
+                    t.uploadStatus.equals('failed') |
+                    t.uploadStatus.equals('uploading')) &
+                t.genreId.equals(kUnclassifiedGenreId).not(),
           )
           ..orderBy([(t) => OrderingTerm.asc(t.recordedAt)]))
         .get();
+  }
+
+  Future<int> getUnclassifiedCount(String projectId) async {
+    final count = _db.localRecordings.id.count();
+    final query = _db.selectOnly(_db.localRecordings)
+      ..addColumns([count])
+      ..where(
+        _db.localRecordings.projectId.equals(projectId) &
+            _db.localRecordings.genreId.equals(kUnclassifiedGenreId),
+      );
+    final result = await query.getSingle();
+    return result.read(count) ?? 0;
   }
 
   Future<bool> markAsUploading(String id) async {
