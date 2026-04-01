@@ -1581,4 +1581,64 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get fab_normalRecord => 'Rekam';
+
+  @override
+  String get error_network =>
+      'Tidak dapat menghubungi server. Periksa koneksi internet Anda dan coba lagi.';
+
+  @override
+  String get error_secureConnection =>
+      'Koneksi aman tidak dapat dibuat. Silakan coba lagi nanti.';
+
+  @override
+  String get error_timeout =>
+      'Permintaan telah habis waktu. Periksa koneksi Anda dan coba lagi.';
+
+  @override
+  String get error_invalidCredentials =>
+      'Email atau kata sandi salah. Silakan coba lagi.';
+
+  @override
+  String get error_userNotFound =>
+      'Tidak ditemukan akun dengan alamat email tersebut.';
+
+  @override
+  String get error_accountExists => 'Akun dengan email ini sudah ada.';
+
+  @override
+  String get error_emailRequired => 'Silakan masukkan alamat email Anda.';
+
+  @override
+  String get error_passwordRequired => 'Silakan masukkan kata sandi Anda.';
+
+  @override
+  String get error_signupFailed =>
+      'Tidak dapat membuat akun Anda. Periksa detail Anda dan coba lagi.';
+
+  @override
+  String get error_sessionExpired =>
+      'Sesi Anda telah berakhir. Silakan masuk kembali.';
+
+  @override
+  String get error_profileLoadFailed =>
+      'Tidak dapat memuat profil Anda. Silakan coba lagi.';
+
+  @override
+  String get error_profileUpdateFailed =>
+      'Tidak dapat memperbarui profil Anda. Silakan coba lagi.';
+
+  @override
+  String get error_imageUploadFailed =>
+      'Tidak dapat mengunggah gambar. Silakan coba lagi.';
+
+  @override
+  String get error_notAuthenticated =>
+      'Anda belum masuk. Silakan masuk dan coba lagi.';
+
+  @override
+  String get error_noPermission =>
+      'Anda tidak memiliki izin untuk melakukan tindakan ini.';
+
+  @override
+  String get error_generic => 'Terjadi kesalahan. Silakan coba lagi nanti.';
 }

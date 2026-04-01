@@ -1569,4 +1569,65 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get fab_normalRecord => 'Rekodi';
+
+  @override
+  String get error_network =>
+      'Haiwezi kufikia seva. Tafadhali angalia muunganisho wako wa intaneti na ujaribu tena.';
+
+  @override
+  String get error_secureConnection =>
+      'Muunganisho salama haukuweza kuanzishwa. Tafadhali jaribu tena baadaye.';
+
+  @override
+  String get error_timeout =>
+      'Ombi limekwisha muda. Tafadhali angalia muunganisho wako na ujaribu tena.';
+
+  @override
+  String get error_invalidCredentials =>
+      'Barua pepe au nenosiri si sahihi. Tafadhali jaribu tena.';
+
+  @override
+  String get error_userNotFound =>
+      'Hakuna akaunti iliyopatikana na anwani hiyo ya barua pepe.';
+
+  @override
+  String get error_accountExists => 'Akaunti yenye barua pepe hii tayari ipo.';
+
+  @override
+  String get error_emailRequired =>
+      'Tafadhali ingiza anwani yako ya barua pepe.';
+
+  @override
+  String get error_passwordRequired => 'Tafadhali ingiza nenosiri lako.';
+
+  @override
+  String get error_signupFailed =>
+      'Haikuweza kuunda akaunti yako. Tafadhali angalia maelezo yako na ujaribu tena.';
+
+  @override
+  String get error_sessionExpired =>
+      'Kikao chako kimeisha muda. Tafadhali ingia tena.';
+
+  @override
+  String get error_profileLoadFailed =>
+      'Haikuweza kupakia wasifu wako. Tafadhali jaribu tena.';
+
+  @override
+  String get error_profileUpdateFailed =>
+      'Haikuweza kusasisha wasifu wako. Tafadhali jaribu tena.';
+
+  @override
+  String get error_imageUploadFailed =>
+      'Haikuweza kupakia picha. Tafadhali jaribu tena.';
+
+  @override
+  String get error_notAuthenticated =>
+      'Hujaingia. Tafadhali ingia na ujaribu tena.';
+
+  @override
+  String get error_noPermission => 'Huna ruhusa ya kufanya kitendo hiki.';
+
+  @override
+  String get error_generic =>
+      'Kuna tatizo limetokea. Tafadhali jaribu tena baadaye.';
 }

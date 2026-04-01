@@ -1598,4 +1598,65 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get fab_normalRecord => 'Enregistrer';
+
+  @override
+  String get error_network =>
+      'Impossible de joindre le serveur. Vérifiez votre connexion internet et réessayez.';
+
+  @override
+  String get error_secureConnection =>
+      'Impossible d\'établir une connexion sécurisée. Veuillez réessayer plus tard.';
+
+  @override
+  String get error_timeout =>
+      'La requête a expiré. Vérifiez votre connexion et réessayez.';
+
+  @override
+  String get error_invalidCredentials =>
+      'E-mail ou mot de passe incorrect. Veuillez réessayer.';
+
+  @override
+  String get error_userNotFound =>
+      'Aucun compte trouvé avec cette adresse e-mail.';
+
+  @override
+  String get error_accountExists => 'Un compte avec cet e-mail existe déjà.';
+
+  @override
+  String get error_emailRequired => 'Veuillez entrer votre adresse e-mail.';
+
+  @override
+  String get error_passwordRequired => 'Veuillez entrer votre mot de passe.';
+
+  @override
+  String get error_signupFailed =>
+      'Impossible de créer votre compte. Vérifiez vos informations et réessayez.';
+
+  @override
+  String get error_sessionExpired =>
+      'Votre session a expiré. Veuillez vous reconnecter.';
+
+  @override
+  String get error_profileLoadFailed =>
+      'Impossible de charger votre profil. Veuillez réessayer.';
+
+  @override
+  String get error_profileUpdateFailed =>
+      'Impossible de mettre à jour votre profil. Veuillez réessayer.';
+
+  @override
+  String get error_imageUploadFailed =>
+      'Impossible de téléverser l\'image. Veuillez réessayer.';
+
+  @override
+  String get error_notAuthenticated =>
+      'Vous n\'êtes pas connecté. Veuillez vous connecter et réessayer.';
+
+  @override
+  String get error_noPermission =>
+      'Vous n\'avez pas la permission d\'effectuer cette action.';
+
+  @override
+  String get error_generic =>
+      'Une erreur est survenue. Veuillez réessayer plus tard.';
 }

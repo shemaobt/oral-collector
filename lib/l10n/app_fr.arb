@@ -519,5 +519,22 @@
   "classify_selectRegister": "Sélectionner le registre",
   "recording_unclassified": "Non classifié",
   "fab_quickRecord": "Rapide",
-  "fab_normalRecord": "Enregistrer"
+  "fab_normalRecord": "Enregistrer",
+
+  "error_network": "Impossible de joindre le serveur. Vérifiez votre connexion internet et réessayez.",
+  "error_secureConnection": "Impossible d'établir une connexion sécurisée. Veuillez réessayer plus tard.",
+  "error_timeout": "La requête a expiré. Vérifiez votre connexion et réessayez.",
+  "error_invalidCredentials": "E-mail ou mot de passe incorrect. Veuillez réessayer.",
+  "error_userNotFound": "Aucun compte trouvé avec cette adresse e-mail.",
+  "error_accountExists": "Un compte avec cet e-mail existe déjà.",
+  "error_emailRequired": "Veuillez entrer votre adresse e-mail.",
+  "error_passwordRequired": "Veuillez entrer votre mot de passe.",
+  "error_signupFailed": "Impossible de créer votre compte. Vérifiez vos informations et réessayez.",
+  "error_sessionExpired": "Votre session a expiré. Veuillez vous reconnecter.",
+  "error_profileLoadFailed": "Impossible de charger votre profil. Veuillez réessayer.",
+  "error_profileUpdateFailed": "Impossible de mettre à jour votre profil. Veuillez réessayer.",
+  "error_imageUploadFailed": "Impossible de téléverser l'image. Veuillez réessayer.",
+  "error_notAuthenticated": "Vous n'êtes pas connecté. Veuillez vous connecter et réessayer.",
+  "error_noPermission": "Vous n'avez pas la permission d'effectuer cette action.",
+  "error_generic": "Une erreur est survenue. Veuillez réessayer plus tard."
 }

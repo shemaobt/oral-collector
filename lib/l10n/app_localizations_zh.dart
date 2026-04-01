@@ -1523,4 +1523,52 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get fab_normalRecord => '录音';
+
+  @override
+  String get error_network => '无法连接到服务器。请检查您的网络连接并重试。';
+
+  @override
+  String get error_secureConnection => '无法建立安全连接。请稍后重试。';
+
+  @override
+  String get error_timeout => '请求超时。请检查您的网络连接并重试。';
+
+  @override
+  String get error_invalidCredentials => '邮箱或密码不正确。请重试。';
+
+  @override
+  String get error_userNotFound => '未找到与该邮箱关联的账户。';
+
+  @override
+  String get error_accountExists => '该邮箱已注册账户。';
+
+  @override
+  String get error_emailRequired => '请输入您的邮箱地址。';
+
+  @override
+  String get error_passwordRequired => '请输入您的密码。';
+
+  @override
+  String get error_signupFailed => '无法创建您的账户。请检查您的信息并重试。';
+
+  @override
+  String get error_sessionExpired => '您的会话已过期。请重新登录。';
+
+  @override
+  String get error_profileLoadFailed => '无法加载您的个人资料。请重试。';
+
+  @override
+  String get error_profileUpdateFailed => '无法更新您的个人资料。请重试。';
+
+  @override
+  String get error_imageUploadFailed => '无法上传图片。请重试。';
+
+  @override
+  String get error_notAuthenticated => '您尚未登录。请登录后重试。';
+
+  @override
+  String get error_noPermission => '您没有执行此操作的权限。';
+
+  @override
+  String get error_generic => '出了点问题。请稍后重试。';
 }

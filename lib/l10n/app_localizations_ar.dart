@@ -1549,4 +1549,63 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get fab_normalRecord => 'تسجيل';
+
+  @override
+  String get error_network =>
+      'تعذر الوصول إلى الخادم. يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى.';
+
+  @override
+  String get error_secureConnection =>
+      'تعذر إنشاء اتصال آمن. يرجى المحاولة مرة أخرى لاحقاً.';
+
+  @override
+  String get error_timeout =>
+      'انتهت مهلة الطلب. يرجى التحقق من اتصالك والمحاولة مرة أخرى.';
+
+  @override
+  String get error_invalidCredentials =>
+      'البريد الإلكتروني أو كلمة المرور غير صحيحة. يرجى المحاولة مرة أخرى.';
+
+  @override
+  String get error_userNotFound =>
+      'لم يتم العثور على حساب بهذا البريد الإلكتروني.';
+
+  @override
+  String get error_accountExists => 'يوجد حساب بهذا البريد الإلكتروني بالفعل.';
+
+  @override
+  String get error_emailRequired => 'يرجى إدخال بريدك الإلكتروني.';
+
+  @override
+  String get error_passwordRequired => 'يرجى إدخال كلمة المرور.';
+
+  @override
+  String get error_signupFailed =>
+      'تعذر إنشاء حسابك. يرجى التحقق من بياناتك والمحاولة مرة أخرى.';
+
+  @override
+  String get error_sessionExpired =>
+      'انتهت صلاحية جلستك. يرجى تسجيل الدخول مرة أخرى.';
+
+  @override
+  String get error_profileLoadFailed =>
+      'تعذر تحميل ملفك الشخصي. يرجى المحاولة مرة أخرى.';
+
+  @override
+  String get error_profileUpdateFailed =>
+      'تعذر تحديث ملفك الشخصي. يرجى المحاولة مرة أخرى.';
+
+  @override
+  String get error_imageUploadFailed =>
+      'تعذر رفع الصورة. يرجى المحاولة مرة أخرى.';
+
+  @override
+  String get error_notAuthenticated =>
+      'لم تقم بتسجيل الدخول. يرجى تسجيل الدخول والمحاولة مرة أخرى.';
+
+  @override
+  String get error_noPermission => 'ليس لديك صلاحية للقيام بهذا الإجراء.';
+
+  @override
+  String get error_generic => 'حدث خطأ ما. يرجى المحاولة مرة أخرى لاحقاً.';
 }

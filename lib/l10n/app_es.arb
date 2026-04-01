@@ -519,5 +519,22 @@
   "classify_selectRegister": "Seleccionar registro",
   "recording_unclassified": "Sin clasificar",
   "fab_quickRecord": "Rápido",
-  "fab_normalRecord": "Grabar"
+  "fab_normalRecord": "Grabar",
+
+  "error_network": "No se pudo conectar al servidor. Verifica tu conexión a internet e inténtalo de nuevo.",
+  "error_secureConnection": "No se pudo establecer una conexión segura. Inténtalo más tarde.",
+  "error_timeout": "La solicitud ha expirado. Verifica tu conexión e inténtalo de nuevo.",
+  "error_invalidCredentials": "Correo electrónico o contraseña incorrectos. Inténtalo de nuevo.",
+  "error_userNotFound": "No se encontró ninguna cuenta con ese correo electrónico.",
+  "error_accountExists": "Ya existe una cuenta con este correo electrónico.",
+  "error_emailRequired": "Por favor, ingresa tu correo electrónico.",
+  "error_passwordRequired": "Por favor, ingresa tu contraseña.",
+  "error_signupFailed": "No se pudo crear tu cuenta. Verifica tus datos e inténtalo de nuevo.",
+  "error_sessionExpired": "Tu sesión ha expirado. Inicia sesión de nuevo.",
+  "error_profileLoadFailed": "No se pudo cargar tu perfil. Inténtalo de nuevo.",
+  "error_profileUpdateFailed": "No se pudo actualizar tu perfil. Inténtalo de nuevo.",
+  "error_imageUploadFailed": "No se pudo subir la imagen. Inténtalo de nuevo.",
+  "error_notAuthenticated": "No has iniciado sesión. Inicia sesión e inténtalo de nuevo.",
+  "error_noPermission": "No tienes permiso para realizar esta acción.",
+  "error_generic": "Algo salió mal. Inténtalo más tarde."
 }

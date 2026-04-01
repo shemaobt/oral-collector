@@ -1584,4 +1584,63 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get fab_normalRecord => 'रिकॉर्ड';
+
+  @override
+  String get error_network =>
+      'सर्वर तक नहीं पहुँचा जा सका। कृपया अपना इंटरनेट कनेक्शन जाँचें और पुनः प्रयास करें।';
+
+  @override
+  String get error_secureConnection =>
+      'सुरक्षित कनेक्शन स्थापित नहीं हो सका। कृपया बाद में पुनः प्रयास करें।';
+
+  @override
+  String get error_timeout =>
+      'अनुरोध का समय समाप्त हो गया। कृपया अपना कनेक्शन जाँचें और पुनः प्रयास करें।';
+
+  @override
+  String get error_invalidCredentials =>
+      'अमान्य ईमेल या पासवर्ड। कृपया पुनः प्रयास करें।';
+
+  @override
+  String get error_userNotFound => 'इस ईमेल पते से कोई खाता नहीं मिला।';
+
+  @override
+  String get error_accountExists => 'इस ईमेल से पहले से एक खाता मौजूद है।';
+
+  @override
+  String get error_emailRequired => 'कृपया अपना ईमेल पता दर्ज करें।';
+
+  @override
+  String get error_passwordRequired => 'कृपया अपना पासवर्ड दर्ज करें।';
+
+  @override
+  String get error_signupFailed =>
+      'आपका खाता नहीं बनाया जा सका। कृपया अपने विवरण जाँचें और पुनः प्रयास करें।';
+
+  @override
+  String get error_sessionExpired =>
+      'आपका सत्र समाप्त हो गया है। कृपया पुनः साइन इन करें।';
+
+  @override
+  String get error_profileLoadFailed =>
+      'आपकी प्रोफ़ाइल लोड नहीं हो सकी। कृपया पुनः प्रयास करें।';
+
+  @override
+  String get error_profileUpdateFailed =>
+      'आपकी प्रोफ़ाइल अपडेट नहीं हो सकी। कृपया पुनः प्रयास करें।';
+
+  @override
+  String get error_imageUploadFailed =>
+      'छवि अपलोड नहीं हो सकी। कृपया पुनः प्रयास करें।';
+
+  @override
+  String get error_notAuthenticated =>
+      'आप साइन इन नहीं हैं। कृपया लॉग इन करें और पुनः प्रयास करें।';
+
+  @override
+  String get error_noPermission => 'आपको यह कार्य करने की अनुमति नहीं है।';
+
+  @override
+  String get error_generic =>
+      'कुछ गड़बड़ हो गई। कृपया बाद में पुनः प्रयास करें।';
 }
