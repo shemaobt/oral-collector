@@ -1,10 +1,10 @@
 import 'dart:convert';
 
-/// Converts raw technical error strings into user-friendly messages.
-String friendlyErrorMessage(String raw) {
+import '../../../l10n/app_localizations.dart';
+
+String friendlyErrorMessage(String raw, AppLocalizations l10n) {
   final lower = raw.toLowerCase();
 
-  // Strip common prefixes
   var message = raw
       .replaceFirst(RegExp(r'^Exception:\s*', caseSensitive: false), '')
       .replaceFirst(
@@ -13,7 +13,6 @@ String friendlyErrorMessage(String raw) {
       )
       .trim();
 
-  // Network / connectivity errors
   if (lower.contains('socketexception') ||
       lower.contains('socket') && lower.contains('failed') ||
       lower.contains('host lookup') ||
@@ -22,21 +21,20 @@ String friendlyErrorMessage(String raw) {
       lower.contains('network is unreachable') ||
       lower.contains('no address associated') ||
       lower.contains('errno')) {
-    return 'Unable to reach the server. Please check your internet connection and try again.';
+    return l10n.error_network;
   }
 
   if (lower.contains('handshakeexception') ||
       lower.contains('certificate') ||
       lower.contains('ssl') ||
       lower.contains('tls')) {
-    return 'A secure connection could not be established. Please try again later.';
+    return l10n.error_secureConnection;
   }
 
   if (lower.contains('timeout') || lower.contains('timed out')) {
-    return 'The request timed out. Please check your connection and try again.';
+    return l10n.error_timeout;
   }
 
-  // Auth-related: try to parse JSON body from "Login failed: {...}" style
   final jsonMatch = RegExp(
     r'(?:Login|Signup|Token refresh|failed)[^{]*(\{.+\})',
   ).firstMatch(message);
@@ -45,71 +43,67 @@ String friendlyErrorMessage(String raw) {
       final body = jsonDecode(jsonMatch.group(1)!) as Map<String, dynamic>;
       final detail = body['detail'] ?? body['message'] ?? body['error'];
       if (detail is String) {
-        return _humanizeDetail(detail);
+        return _humanizeDetail(detail, l10n);
       }
     } on FormatException {
       // not valid JSON, fall through
     }
   }
 
-  // Specific known error prefixes
   if (lower.contains('login failed')) {
-    return 'Invalid email or password. Please try again.';
+    return l10n.error_invalidCredentials;
   }
   if (lower.contains('signup failed')) {
-    return 'Could not create your account. Please check your details and try again.';
+    return l10n.error_signupFailed;
   }
   if (lower.contains('token refresh failed')) {
-    return 'Your session has expired. Please sign in again.';
+    return l10n.error_sessionExpired;
   }
   if (lower.contains('failed to get user')) {
-    return 'Could not load your profile. Please try again.';
+    return l10n.error_profileLoadFailed;
   }
   if (lower.contains('failed to update profile')) {
-    return 'Could not update your profile. Please try again.';
+    return l10n.error_profileUpdateFailed;
   }
   if (lower.contains('failed to upload image')) {
-    return 'Could not upload the image. Please try again.';
+    return l10n.error_imageUploadFailed;
   }
   if (lower.contains('not authenticated')) {
-    return 'You are not signed in. Please log in and try again.';
+    return l10n.error_notAuthenticated;
   }
   if (lower.contains('permission') || lower.contains('forbidden')) {
-    return 'You don\'t have permission to perform this action.';
+    return l10n.error_noPermission;
   }
 
-  // If it's still a raw-looking technical message, return a generic one
   if (message.contains('Exception') ||
       message.contains('uri=') ||
       message.contains('errno') ||
       message.length > 120) {
-    return 'Something went wrong. Please try again later.';
+    return l10n.error_generic;
   }
 
-  // Otherwise return the cleaned message as-is (it's likely already readable)
   return message;
 }
 
-String _humanizeDetail(String detail) {
+String _humanizeDetail(String detail, AppLocalizations l10n) {
   final lower = detail.toLowerCase();
   if (lower.contains('invalid credentials')) {
-    return 'Invalid email or password. Please try again.';
+    return l10n.error_invalidCredentials;
   }
   if (lower.contains('user not found')) {
-    return 'No account found with that email address.';
+    return l10n.error_userNotFound;
   }
   if (lower.contains('already exists') || lower.contains('duplicate')) {
-    return 'An account with this email already exists.';
+    return l10n.error_accountExists;
   }
   if (lower.contains('email') && lower.contains('required')) {
-    return 'Please enter your email address.';
+    return l10n.error_emailRequired;
   }
   if (lower.contains('password') && lower.contains('required')) {
-    return 'Please enter your password.';
+    return l10n.error_passwordRequired;
   }
-  // Return the server detail as-is if it looks human-readable
   if (detail.length < 100 && !detail.contains('{')) {
     return detail;
   }
-  return 'Something went wrong. Please try again later.';
+  return l10n.error_generic;
 }
