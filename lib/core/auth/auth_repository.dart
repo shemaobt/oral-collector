@@ -29,4 +29,6 @@ abstract class AuthRepository {
     String filePath, {
     String folder,
   });
+
+  Future<void> deleteAccount(String accessToken);
 }

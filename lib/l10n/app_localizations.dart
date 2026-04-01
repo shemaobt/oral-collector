@@ -1422,6 +1422,30 @@ abstract class AppLocalizations {
   /// **'Log Out'**
   String get profile_logOut;
 
+  /// No description provided for @profile_deleteAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Account'**
+  String get profile_deleteAccount;
+
+  /// No description provided for @profile_deleteAccountConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Deletion'**
+  String get profile_deleteAccountConfirm;
+
+  /// No description provided for @profile_deleteAccountWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'This action is permanent and cannot be undone. Your account will be deleted, but your uploaded recordings will be preserved for the language projects.'**
+  String get profile_deleteAccountWarning;
+
+  /// No description provided for @profile_typeDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Type DELETE to confirm account deletion:'**
+  String get profile_typeDelete;
+
   /// No description provided for @profile_clearCacheTitle.
   ///
   /// In en, this message translates to:

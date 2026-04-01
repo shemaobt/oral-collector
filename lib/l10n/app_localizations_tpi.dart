@@ -532,26 +532,26 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get recording_statusLocal => 'Lokal';
 
   @override
-  String get recordings_clearStale => 'Clear failed';
+  String get recordings_clearStale => 'Klinim ol i pundaun';
 
   @override
   String get recordings_clearStaleMessage =>
-      'This will permanently delete all recordings with failed or stuck upload status from the server. This cannot be undone.';
+      'Dispela bai rausim olgeta rekoding we i pundaun o i pas long salim i go antap long seva. Dispela aksen i no inap senisim bek.';
 
   @override
   String recordings_clearedCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Cleared $count recordings',
-      one: 'Cleared 1 recording',
-      zero: 'No stale recordings found',
+      other: 'Klinim $count rekoding',
+      one: 'Klinim 1 rekoding',
+      zero: 'I no painim ol olpela rekoding',
     );
     return '$_temp0';
   }
 
   @override
-  String get recordings_clearFailed => 'Failed to clear recordings';
+  String get recordings_clearFailed => 'No inap klinim ol rekoding';
 
   @override
   String get trim_title => 'Brukim Rekoding';
@@ -726,6 +726,20 @@ class AppLocalizationsTpi extends AppLocalizations {
 
   @override
   String get profile_logOut => 'Lusim';
+
+  @override
+  String get profile_deleteAccount => 'Rausim Akaun';
+
+  @override
+  String get profile_deleteAccountConfirm => 'Orait Long Rausim';
+
+  @override
+  String get profile_deleteAccountWarning =>
+      'Dispela samting i stap oltaim na yu no inap senisim bek. Akaun bilong yu bai lus, tasol ol rekoding yu bin salim bai stap yet long ol projek bilong tok ples.';
+
+  @override
+  String get profile_typeDelete =>
+      'Taitim DELETE bilong orait long rausim akaun:';
 
   @override
   String get profile_clearCacheTitle => 'Klinim lokal kes?';
@@ -1395,7 +1409,7 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get filter_needsCleaning => 'I Nidim Klining';
 
   @override
-  String get filter_unclassified => 'Unclassified';
+  String get filter_unclassified => 'I no makim kain yet';
 
   @override
   String get filter_allGenres => 'Olgeta kain';
@@ -1512,39 +1526,39 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get recording_pause => 'Stopim liklik';
 
   @override
-  String get quickRecord_title => 'Quick Record';
+  String get quickRecord_title => 'Rekodim Hariap';
 
   @override
-  String get quickRecord_subtitle => 'Classify later';
+  String get quickRecord_subtitle => 'Makim kain bihain';
 
   @override
-  String get quickRecord_classifyLater => 'Classify later';
+  String get quickRecord_classifyLater => 'Makim kain bihain';
 
   @override
-  String get classify_title => 'Classify Recording';
+  String get classify_title => 'Makim Kain bilong Rekoding';
 
   @override
-  String get classify_action => 'Classify';
+  String get classify_action => 'Makim Kain';
 
   @override
   String get classify_banner =>
-      'This recording needs classification before it can be uploaded.';
+      'Dispela rekoding i mas gat kain pastaim bilong salim i go antap.';
 
   @override
-  String get classify_success => 'Recording classified';
+  String get classify_success => 'Rekoding i gat kain pinis';
 
   @override
-  String get classify_register => 'Register (optional)';
+  String get classify_register => 'Rejista (sapos yu laik)';
 
   @override
-  String get classify_selectRegister => 'Select register';
+  String get classify_selectRegister => 'Makim rejista';
 
   @override
-  String get recording_unclassified => 'Unclassified';
+  String get recording_unclassified => 'I no makim kain yet';
 
   @override
-  String get fab_quickRecord => 'Quick';
+  String get fab_quickRecord => 'Hariap';
 
   @override
-  String get fab_normalRecord => 'Record';
+  String get fab_normalRecord => 'Rekodim';
 }

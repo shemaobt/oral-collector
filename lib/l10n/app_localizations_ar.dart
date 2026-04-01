@@ -527,26 +527,26 @@ class AppLocalizationsAr extends AppLocalizations {
   String get recording_statusLocal => 'محلي';
 
   @override
-  String get recordings_clearStale => 'Clear failed';
+  String get recordings_clearStale => 'مسح الفاشلة';
 
   @override
   String get recordings_clearStaleMessage =>
-      'This will permanently delete all recordings with failed or stuck upload status from the server. This cannot be undone.';
+      'سيؤدي هذا إلى حذف جميع التسجيلات ذات حالة الرفع الفاشلة أو المعلقة من الخادم نهائياً. لا يمكن التراجع عن هذا الإجراء.';
 
   @override
   String recordings_clearedCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Cleared $count recordings',
-      one: 'Cleared 1 recording',
-      zero: 'No stale recordings found',
+      other: 'تم مسح $count تسجيلات',
+      one: 'تم مسح تسجيل واحد',
+      zero: 'لم يتم العثور على تسجيلات قديمة',
     );
     return '$_temp0';
   }
 
   @override
-  String get recordings_clearFailed => 'Failed to clear recordings';
+  String get recordings_clearFailed => 'فشل في مسح التسجيلات';
 
   @override
   String get trim_title => 'تقسيم التسجيل';
@@ -720,6 +720,19 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get profile_logOut => 'تسجيل الخروج';
+
+  @override
+  String get profile_deleteAccount => 'حذف الحساب';
+
+  @override
+  String get profile_deleteAccountConfirm => 'تأكيد الحذف';
+
+  @override
+  String get profile_deleteAccountWarning =>
+      'هذا الإجراء دائم ولا يمكن التراجع عنه. سيتم حذف حسابك، لكن تسجيلاتك المرفوعة ستبقى محفوظة لمشاريع اللغات.';
+
+  @override
+  String get profile_typeDelete => 'اكتب DELETE لتأكيد حذف الحساب:';
 
   @override
   String get profile_clearCacheTitle => 'مسح الذاكرة المؤقتة المحلية؟';
@@ -1378,7 +1391,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get filter_needsCleaning => 'يحتاج تنظيف';
 
   @override
-  String get filter_unclassified => 'Unclassified';
+  String get filter_unclassified => 'غير مصنف';
 
   @override
   String get filter_allGenres => 'جميع الأنواع';
@@ -1495,39 +1508,39 @@ class AppLocalizationsAr extends AppLocalizations {
   String get recording_pause => 'إيقاف مؤقت';
 
   @override
-  String get quickRecord_title => 'Quick Record';
+  String get quickRecord_title => 'تسجيل سريع';
 
   @override
-  String get quickRecord_subtitle => 'Classify later';
+  String get quickRecord_subtitle => 'تصنيف لاحقاً';
 
   @override
-  String get quickRecord_classifyLater => 'Classify later';
+  String get quickRecord_classifyLater => 'تصنيف لاحقاً';
 
   @override
-  String get classify_title => 'Classify Recording';
+  String get classify_title => 'تصنيف التسجيل';
 
   @override
-  String get classify_action => 'Classify';
+  String get classify_action => 'تصنيف';
 
   @override
   String get classify_banner =>
-      'This recording needs classification before it can be uploaded.';
+      'يحتاج هذا التسجيل إلى التصنيف قبل أن يتم رفعه.';
 
   @override
-  String get classify_success => 'Recording classified';
+  String get classify_success => 'تم تصنيف التسجيل';
 
   @override
-  String get classify_register => 'Register (optional)';
+  String get classify_register => 'السجل (اختياري)';
 
   @override
-  String get classify_selectRegister => 'Select register';
+  String get classify_selectRegister => 'اختر السجل';
 
   @override
-  String get recording_unclassified => 'Unclassified';
+  String get recording_unclassified => 'غير مصنف';
 
   @override
-  String get fab_quickRecord => 'Quick';
+  String get fab_quickRecord => 'سريع';
 
   @override
-  String get fab_normalRecord => 'Record';
+  String get fab_normalRecord => 'تسجيل';
 }

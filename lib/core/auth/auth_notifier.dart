@@ -125,6 +125,24 @@ class AuthNotifier extends Notifier<AuthState> {
     return refreshed;
   }
 
+  Future<void> deleteAccount() async {
+    state = state.copyWith(isLoading: true, clearError: true);
+
+    try {
+      final accessToken = await _storage.read(key: _accessTokenKey);
+      if (accessToken == null) throw Exception('Not authenticated');
+
+      await _repo.deleteAccount(accessToken);
+      await _clearTokens();
+      state = const AuthState();
+    } on Exception catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString().replaceFirst('Exception: ', ''),
+      );
+    }
+  }
+
   Future<void> logout() async {
     await _clearTokens();
     state = const AuthState();

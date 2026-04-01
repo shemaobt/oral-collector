@@ -539,26 +539,26 @@ class AppLocalizationsEs extends AppLocalizations {
   String get recording_statusLocal => 'Local';
 
   @override
-  String get recordings_clearStale => 'Clear failed';
+  String get recordings_clearStale => 'Limpiar fallidos';
 
   @override
   String get recordings_clearStaleMessage =>
-      'This will permanently delete all recordings with failed or stuck upload status from the server. This cannot be undone.';
+      'Esto eliminará permanentemente todas las grabaciones con estado de subida fallido o atascado del servidor. Esta acción no se puede deshacer.';
 
   @override
   String recordings_clearedCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Cleared $count recordings',
-      one: 'Cleared 1 recording',
-      zero: 'No stale recordings found',
+      other: 'Se limpiaron $count grabaciones',
+      one: 'Se limpió 1 grabación',
+      zero: 'No se encontraron grabaciones obsoletas',
     );
     return '$_temp0';
   }
 
   @override
-  String get recordings_clearFailed => 'Failed to clear recordings';
+  String get recordings_clearFailed => 'Error al limpiar grabaciones';
 
   @override
   String get trim_title => 'Dividir Grabación';
@@ -741,6 +741,20 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get profile_logOut => 'Cerrar Sesión';
+
+  @override
+  String get profile_deleteAccount => 'Eliminar Cuenta';
+
+  @override
+  String get profile_deleteAccountConfirm => 'Confirmar Eliminación';
+
+  @override
+  String get profile_deleteAccountWarning =>
+      'Esta acción es permanente y no se puede deshacer. Tu cuenta será eliminada, pero tus grabaciones subidas se conservarán para los proyectos de idiomas.';
+
+  @override
+  String get profile_typeDelete =>
+      'Escribe DELETE para confirmar la eliminación de la cuenta:';
 
   @override
   String get profile_clearCacheTitle => '¿Limpiar caché local?';
@@ -1420,7 +1434,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get filter_needsCleaning => 'Necesita Limpieza';
 
   @override
-  String get filter_unclassified => 'Unclassified';
+  String get filter_unclassified => 'Sin clasificar';
 
   @override
   String get filter_allGenres => 'Todos los géneros';
@@ -1537,39 +1551,39 @@ class AppLocalizationsEs extends AppLocalizations {
   String get recording_pause => 'Pausar';
 
   @override
-  String get quickRecord_title => 'Quick Record';
+  String get quickRecord_title => 'Grabación Rápida';
 
   @override
-  String get quickRecord_subtitle => 'Classify later';
+  String get quickRecord_subtitle => 'Clasificar después';
 
   @override
-  String get quickRecord_classifyLater => 'Classify later';
+  String get quickRecord_classifyLater => 'Clasificar después';
 
   @override
-  String get classify_title => 'Classify Recording';
+  String get classify_title => 'Clasificar Grabación';
 
   @override
-  String get classify_action => 'Classify';
+  String get classify_action => 'Clasificar';
 
   @override
   String get classify_banner =>
-      'This recording needs classification before it can be uploaded.';
+      'Esta grabación necesita ser clasificada antes de poder subirla.';
 
   @override
-  String get classify_success => 'Recording classified';
+  String get classify_success => 'Grabación clasificada';
 
   @override
-  String get classify_register => 'Register (optional)';
+  String get classify_register => 'Registro (opcional)';
 
   @override
-  String get classify_selectRegister => 'Select register';
+  String get classify_selectRegister => 'Seleccionar registro';
 
   @override
-  String get recording_unclassified => 'Unclassified';
+  String get recording_unclassified => 'Sin clasificar';
 
   @override
-  String get fab_quickRecord => 'Quick';
+  String get fab_quickRecord => 'Rápido';
 
   @override
-  String get fab_normalRecord => 'Record';
+  String get fab_normalRecord => 'Grabar';
 }

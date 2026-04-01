@@ -739,6 +739,20 @@ class AppLocalizationsPt extends AppLocalizations {
   String get profile_logOut => 'Sair';
 
   @override
+  String get profile_deleteAccount => 'Excluir Conta';
+
+  @override
+  String get profile_deleteAccountConfirm => 'Confirmar Exclusao';
+
+  @override
+  String get profile_deleteAccountWarning =>
+      'Esta acao e permanente e nao pode ser desfeita. Sua conta sera excluida, mas suas gravacoes enviadas serao preservadas para os projetos de idiomas.';
+
+  @override
+  String get profile_typeDelete =>
+      'Digite DELETE para confirmar a exclusao da conta:';
+
+  @override
   String get profile_clearCacheTitle => 'Limpar cache local?';
 
   @override
