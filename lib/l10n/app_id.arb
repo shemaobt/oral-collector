@@ -545,5 +545,22 @@
   "classify_selectRegister": "Pilih register",
   "recording_unclassified": "Belum diklasifikasi",
   "fab_quickRecord": "Cepat",
-  "fab_normalRecord": "Rekam"
+  "fab_normalRecord": "Rekam",
+
+  "error_network": "Tidak dapat menghubungi server. Periksa koneksi internet Anda dan coba lagi.",
+  "error_secureConnection": "Koneksi aman tidak dapat dibuat. Silakan coba lagi nanti.",
+  "error_timeout": "Permintaan telah habis waktu. Periksa koneksi Anda dan coba lagi.",
+  "error_invalidCredentials": "Email atau kata sandi salah. Silakan coba lagi.",
+  "error_userNotFound": "Tidak ditemukan akun dengan alamat email tersebut.",
+  "error_accountExists": "Akun dengan email ini sudah ada.",
+  "error_emailRequired": "Silakan masukkan alamat email Anda.",
+  "error_passwordRequired": "Silakan masukkan kata sandi Anda.",
+  "error_signupFailed": "Tidak dapat membuat akun Anda. Periksa detail Anda dan coba lagi.",
+  "error_sessionExpired": "Sesi Anda telah berakhir. Silakan masuk kembali.",
+  "error_profileLoadFailed": "Tidak dapat memuat profil Anda. Silakan coba lagi.",
+  "error_profileUpdateFailed": "Tidak dapat memperbarui profil Anda. Silakan coba lagi.",
+  "error_imageUploadFailed": "Tidak dapat mengunggah gambar. Silakan coba lagi.",
+  "error_notAuthenticated": "Anda belum masuk. Silakan masuk dan coba lagi.",
+  "error_noPermission": "Anda tidak memiliki izin untuk melakukan tindakan ini.",
+  "error_generic": "Terjadi kesalahan. Silakan coba lagi nanti."
 }

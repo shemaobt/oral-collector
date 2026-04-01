@@ -545,5 +545,22 @@
   "classify_selectRegister": "اختر السجل",
   "recording_unclassified": "غير مصنف",
   "fab_quickRecord": "سريع",
-  "fab_normalRecord": "تسجيل"
+  "fab_normalRecord": "تسجيل",
+
+  "error_network": "تعذر الوصول إلى الخادم. يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى.",
+  "error_secureConnection": "تعذر إنشاء اتصال آمن. يرجى المحاولة مرة أخرى لاحقاً.",
+  "error_timeout": "انتهت مهلة الطلب. يرجى التحقق من اتصالك والمحاولة مرة أخرى.",
+  "error_invalidCredentials": "البريد الإلكتروني أو كلمة المرور غير صحيحة. يرجى المحاولة مرة أخرى.",
+  "error_userNotFound": "لم يتم العثور على حساب بهذا البريد الإلكتروني.",
+  "error_accountExists": "يوجد حساب بهذا البريد الإلكتروني بالفعل.",
+  "error_emailRequired": "يرجى إدخال بريدك الإلكتروني.",
+  "error_passwordRequired": "يرجى إدخال كلمة المرور.",
+  "error_signupFailed": "تعذر إنشاء حسابك. يرجى التحقق من بياناتك والمحاولة مرة أخرى.",
+  "error_sessionExpired": "انتهت صلاحية جلستك. يرجى تسجيل الدخول مرة أخرى.",
+  "error_profileLoadFailed": "تعذر تحميل ملفك الشخصي. يرجى المحاولة مرة أخرى.",
+  "error_profileUpdateFailed": "تعذر تحديث ملفك الشخصي. يرجى المحاولة مرة أخرى.",
+  "error_imageUploadFailed": "تعذر رفع الصورة. يرجى المحاولة مرة أخرى.",
+  "error_notAuthenticated": "لم تقم بتسجيل الدخول. يرجى تسجيل الدخول والمحاولة مرة أخرى.",
+  "error_noPermission": "ليس لديك صلاحية للقيام بهذا الإجراء.",
+  "error_generic": "حدث خطأ ما. يرجى المحاولة مرة أخرى لاحقاً."
 }

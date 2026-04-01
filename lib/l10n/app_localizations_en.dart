@@ -1640,4 +1640,64 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fab_normalRecord => 'Record';
+
+  @override
+  String get error_network =>
+      'Unable to reach the server. Please check your internet connection and try again.';
+
+  @override
+  String get error_secureConnection =>
+      'A secure connection could not be established. Please try again later.';
+
+  @override
+  String get error_timeout =>
+      'The request timed out. Please check your connection and try again.';
+
+  @override
+  String get error_invalidCredentials =>
+      'Invalid email or password. Please try again.';
+
+  @override
+  String get error_userNotFound => 'No account found with that email address.';
+
+  @override
+  String get error_accountExists =>
+      'An account with this email already exists.';
+
+  @override
+  String get error_emailRequired => 'Please enter your email address.';
+
+  @override
+  String get error_passwordRequired => 'Please enter your password.';
+
+  @override
+  String get error_signupFailed =>
+      'Could not create your account. Please check your details and try again.';
+
+  @override
+  String get error_sessionExpired =>
+      'Your session has expired. Please sign in again.';
+
+  @override
+  String get error_profileLoadFailed =>
+      'Could not load your profile. Please try again.';
+
+  @override
+  String get error_profileUpdateFailed =>
+      'Could not update your profile. Please try again.';
+
+  @override
+  String get error_imageUploadFailed =>
+      'Could not upload the image. Please try again.';
+
+  @override
+  String get error_notAuthenticated =>
+      'You are not signed in. Please log in and try again.';
+
+  @override
+  String get error_noPermission =>
+      'You don\'t have permission to perform this action.';
+
+  @override
+  String get error_generic => 'Something went wrong. Please try again later.';
 }

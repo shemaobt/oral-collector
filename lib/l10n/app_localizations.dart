@@ -3085,6 +3085,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Record'**
   String get fab_normalRecord;
+
+  /// No description provided for @error_network.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to reach the server. Please check your internet connection and try again.'**
+  String get error_network;
+
+  /// No description provided for @error_secureConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'A secure connection could not be established. Please try again later.'**
+  String get error_secureConnection;
+
+  /// No description provided for @error_timeout.
+  ///
+  /// In en, this message translates to:
+  /// **'The request timed out. Please check your connection and try again.'**
+  String get error_timeout;
+
+  /// No description provided for @error_invalidCredentials.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid email or password. Please try again.'**
+  String get error_invalidCredentials;
+
+  /// No description provided for @error_userNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No account found with that email address.'**
+  String get error_userNotFound;
+
+  /// No description provided for @error_accountExists.
+  ///
+  /// In en, this message translates to:
+  /// **'An account with this email already exists.'**
+  String get error_accountExists;
+
+  /// No description provided for @error_emailRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter your email address.'**
+  String get error_emailRequired;
+
+  /// No description provided for @error_passwordRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter your password.'**
+  String get error_passwordRequired;
+
+  /// No description provided for @error_signupFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not create your account. Please check your details and try again.'**
+  String get error_signupFailed;
+
+  /// No description provided for @error_sessionExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Your session has expired. Please sign in again.'**
+  String get error_sessionExpired;
+
+  /// No description provided for @error_profileLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load your profile. Please try again.'**
+  String get error_profileLoadFailed;
+
+  /// No description provided for @error_profileUpdateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not update your profile. Please try again.'**
+  String get error_profileUpdateFailed;
+
+  /// No description provided for @error_imageUploadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not upload the image. Please try again.'**
+  String get error_imageUploadFailed;
+
+  /// No description provided for @error_notAuthenticated.
+  ///
+  /// In en, this message translates to:
+  /// **'You are not signed in. Please log in and try again.'**
+  String get error_notAuthenticated;
+
+  /// No description provided for @error_noPermission.
+  ///
+  /// In en, this message translates to:
+  /// **'You don\'t have permission to perform this action.'**
+  String get error_noPermission;
+
+  /// No description provided for @error_generic.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong. Please try again later.'**
+  String get error_generic;
 }
 
 class _AppLocalizationsDelegate

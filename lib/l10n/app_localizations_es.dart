@@ -1655,4 +1655,65 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get fab_normalRecord => 'Grabar';
+
+  @override
+  String get error_network =>
+      'No se pudo conectar al servidor. Verifica tu conexión a internet e inténtalo de nuevo.';
+
+  @override
+  String get error_secureConnection =>
+      'No se pudo establecer una conexión segura. Inténtalo más tarde.';
+
+  @override
+  String get error_timeout =>
+      'La solicitud ha expirado. Verifica tu conexión e inténtalo de nuevo.';
+
+  @override
+  String get error_invalidCredentials =>
+      'Correo electrónico o contraseña incorrectos. Inténtalo de nuevo.';
+
+  @override
+  String get error_userNotFound =>
+      'No se encontró ninguna cuenta con ese correo electrónico.';
+
+  @override
+  String get error_accountExists =>
+      'Ya existe una cuenta con este correo electrónico.';
+
+  @override
+  String get error_emailRequired => 'Por favor, ingresa tu correo electrónico.';
+
+  @override
+  String get error_passwordRequired => 'Por favor, ingresa tu contraseña.';
+
+  @override
+  String get error_signupFailed =>
+      'No se pudo crear tu cuenta. Verifica tus datos e inténtalo de nuevo.';
+
+  @override
+  String get error_sessionExpired =>
+      'Tu sesión ha expirado. Inicia sesión de nuevo.';
+
+  @override
+  String get error_profileLoadFailed =>
+      'No se pudo cargar tu perfil. Inténtalo de nuevo.';
+
+  @override
+  String get error_profileUpdateFailed =>
+      'No se pudo actualizar tu perfil. Inténtalo de nuevo.';
+
+  @override
+  String get error_imageUploadFailed =>
+      'No se pudo subir la imagen. Inténtalo de nuevo.';
+
+  @override
+  String get error_notAuthenticated =>
+      'No has iniciado sesión. Inicia sesión e inténtalo de nuevo.';
+
+  @override
+  String get error_noPermission =>
+      'No tienes permiso para realizar esta acción.';
+
+  @override
+  String get error_generic => 'Algo salió mal. Inténtalo más tarde.';
 }

@@ -1587,4 +1587,52 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get fab_normalRecord => '녹음';
+
+  @override
+  String get error_network => '서버에 연결할 수 없습니다. 인터넷 연결을 확인하고 다시 시도해 주세요.';
+
+  @override
+  String get error_secureConnection => '보안 연결을 설정할 수 없습니다. 나중에 다시 시도해 주세요.';
+
+  @override
+  String get error_timeout => '요청 시간이 초과되었습니다. 연결을 확인하고 다시 시도해 주세요.';
+
+  @override
+  String get error_invalidCredentials => '이메일 또는 비밀번호가 올바르지 않습니다. 다시 시도해 주세요.';
+
+  @override
+  String get error_userNotFound => '해당 이메일 주소로 등록된 계정이 없습니다.';
+
+  @override
+  String get error_accountExists => '이 이메일로 등록된 계정이 이미 존재합니다.';
+
+  @override
+  String get error_emailRequired => '이메일 주소를 입력해 주세요.';
+
+  @override
+  String get error_passwordRequired => '비밀번호를 입력해 주세요.';
+
+  @override
+  String get error_signupFailed => '계정을 만들 수 없습니다. 정보를 확인하고 다시 시도해 주세요.';
+
+  @override
+  String get error_sessionExpired => '세션이 만료되었습니다. 다시 로그인해 주세요.';
+
+  @override
+  String get error_profileLoadFailed => '프로필을 불러올 수 없습니다. 다시 시도해 주세요.';
+
+  @override
+  String get error_profileUpdateFailed => '프로필을 업데이트할 수 없습니다. 다시 시도해 주세요.';
+
+  @override
+  String get error_imageUploadFailed => '이미지를 업로드할 수 없습니다. 다시 시도해 주세요.';
+
+  @override
+  String get error_notAuthenticated => '로그인되지 않았습니다. 로그인 후 다시 시도해 주세요.';
+
+  @override
+  String get error_noPermission => '이 작업을 수행할 권한이 없습니다.';
+
+  @override
+  String get error_generic => '문제가 발생했습니다. 나중에 다시 시도해 주세요.';
 }

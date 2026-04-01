@@ -1650,4 +1650,64 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get fab_normalRecord => 'Gravar';
+
+  @override
+  String get error_network =>
+      'Não foi possível acessar o servidor. Verifique sua conexão com a internet e tente novamente.';
+
+  @override
+  String get error_secureConnection =>
+      'Não foi possível estabelecer uma conexão segura. Tente novamente mais tarde.';
+
+  @override
+  String get error_timeout =>
+      'A solicitação expirou. Verifique sua conexão e tente novamente.';
+
+  @override
+  String get error_invalidCredentials =>
+      'E-mail ou senha inválidos. Tente novamente.';
+
+  @override
+  String get error_userNotFound =>
+      'Nenhuma conta encontrada com esse endereço de e-mail.';
+
+  @override
+  String get error_accountExists => 'Já existe uma conta com este e-mail.';
+
+  @override
+  String get error_emailRequired => 'Por favor, insira seu endereço de e-mail.';
+
+  @override
+  String get error_passwordRequired => 'Por favor, insira sua senha.';
+
+  @override
+  String get error_signupFailed =>
+      'Não foi possível criar sua conta. Verifique seus dados e tente novamente.';
+
+  @override
+  String get error_sessionExpired =>
+      'Sua sessão expirou. Faça login novamente.';
+
+  @override
+  String get error_profileLoadFailed =>
+      'Não foi possível carregar seu perfil. Tente novamente.';
+
+  @override
+  String get error_profileUpdateFailed =>
+      'Não foi possível atualizar seu perfil. Tente novamente.';
+
+  @override
+  String get error_imageUploadFailed =>
+      'Não foi possível enviar a imagem. Tente novamente.';
+
+  @override
+  String get error_notAuthenticated =>
+      'Você não está conectado. Faça login e tente novamente.';
+
+  @override
+  String get error_noPermission =>
+      'Você não tem permissão para realizar esta ação.';
+
+  @override
+  String get error_generic => 'Algo deu errado. Tente novamente mais tarde.';
 }

@@ -545,5 +545,22 @@
   "classify_selectRegister": "Chagua rejista",
   "recording_unclassified": "Haijainishwa",
   "fab_quickRecord": "Haraka",
-  "fab_normalRecord": "Rekodi"
+  "fab_normalRecord": "Rekodi",
+
+  "error_network": "Haiwezi kufikia seva. Tafadhali angalia muunganisho wako wa intaneti na ujaribu tena.",
+  "error_secureConnection": "Muunganisho salama haukuweza kuanzishwa. Tafadhali jaribu tena baadaye.",
+  "error_timeout": "Ombi limekwisha muda. Tafadhali angalia muunganisho wako na ujaribu tena.",
+  "error_invalidCredentials": "Barua pepe au nenosiri si sahihi. Tafadhali jaribu tena.",
+  "error_userNotFound": "Hakuna akaunti iliyopatikana na anwani hiyo ya barua pepe.",
+  "error_accountExists": "Akaunti yenye barua pepe hii tayari ipo.",
+  "error_emailRequired": "Tafadhali ingiza anwani yako ya barua pepe.",
+  "error_passwordRequired": "Tafadhali ingiza nenosiri lako.",
+  "error_signupFailed": "Haikuweza kuunda akaunti yako. Tafadhali angalia maelezo yako na ujaribu tena.",
+  "error_sessionExpired": "Kikao chako kimeisha muda. Tafadhali ingia tena.",
+  "error_profileLoadFailed": "Haikuweza kupakia wasifu wako. Tafadhali jaribu tena.",
+  "error_profileUpdateFailed": "Haikuweza kusasisha wasifu wako. Tafadhali jaribu tena.",
+  "error_imageUploadFailed": "Haikuweza kupakia picha. Tafadhali jaribu tena.",
+  "error_notAuthenticated": "Hujaingia. Tafadhali ingia na ujaribu tena.",
+  "error_noPermission": "Huna ruhusa ya kufanya kitendo hiki.",
+  "error_generic": "Kuna tatizo limetokea. Tafadhali jaribu tena baadaye."
 }

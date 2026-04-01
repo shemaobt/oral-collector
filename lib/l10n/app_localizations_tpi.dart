@@ -1629,4 +1629,63 @@ class AppLocalizationsTpi extends AppLocalizations {
 
   @override
   String get fab_normalRecord => 'Rekodim';
+
+  @override
+  String get error_network =>
+      'No inap painim seva. Plis sekim intanet koneksen bilong yu na traim gen.';
+
+  @override
+  String get error_secureConnection =>
+      'No inap wokim sekyua koneksen. Plis traim gen bihain.';
+
+  @override
+  String get error_timeout =>
+      'Rikwes i bin taim aut. Plis sekim koneksen bilong yu na traim gen.';
+
+  @override
+  String get error_invalidCredentials =>
+      'Imel o paswod i no stret. Plis traim gen.';
+
+  @override
+  String get error_userNotFound =>
+      'I no gat akaunt wantaim dispela imel adres.';
+
+  @override
+  String get error_accountExists => 'Akaunt wantaim dispela imel i stap pinis.';
+
+  @override
+  String get error_emailRequired => 'Plis putim imel adres bilong yu.';
+
+  @override
+  String get error_passwordRequired => 'Plis putim paswod bilong yu.';
+
+  @override
+  String get error_signupFailed =>
+      'No inap wokim akaunt bilong yu. Plis sekim ol deteil bilong yu na traim gen.';
+
+  @override
+  String get error_sessionExpired => 'Taim bilong yu i pinis. Plis log in gen.';
+
+  @override
+  String get error_profileLoadFailed =>
+      'No inap lodim profail bilong yu. Plis traim gen.';
+
+  @override
+  String get error_profileUpdateFailed =>
+      'No inap apdetim profail bilong yu. Plis traim gen.';
+
+  @override
+  String get error_imageUploadFailed =>
+      'No inap aplodim piksa. Plis traim gen.';
+
+  @override
+  String get error_notAuthenticated =>
+      'Yu no log in. Plis log in na traim gen.';
+
+  @override
+  String get error_noPermission =>
+      'Yu no gat pemisin bilong mekim dispela aksen.';
+
+  @override
+  String get error_generic => 'Samting i go rong. Plis traim gen bihain.';
 }
