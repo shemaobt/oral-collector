@@ -521,26 +521,26 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recording_statusLocal => '로컬';
 
   @override
-  String get recordings_clearStale => 'Clear failed';
+  String get recordings_clearStale => '실패 항목 삭제';
 
   @override
   String get recordings_clearStaleMessage =>
-      'This will permanently delete all recordings with failed or stuck upload status from the server. This cannot be undone.';
+      '서버에서 업로드 실패 또는 멈춘 상태의 모든 녹음을 영구적으로 삭제합니다. 이 작업은 취소할 수 없습니다.';
 
   @override
   String recordings_clearedCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Cleared $count recordings',
-      one: 'Cleared 1 recording',
-      zero: 'No stale recordings found',
+      other: '녹음 $count개 삭제됨',
+      one: '녹음 1개 삭제됨',
+      zero: '오래된 녹음이 없습니다',
     );
     return '$_temp0';
   }
 
   @override
-  String get recordings_clearFailed => 'Failed to clear recordings';
+  String get recordings_clearFailed => '녹음 삭제에 실패했습니다';
 
   @override
   String get trim_title => '녹음 분할';
@@ -711,6 +711,19 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get profile_logOut => '로그아웃';
+
+  @override
+  String get profile_deleteAccount => '계정 삭제';
+
+  @override
+  String get profile_deleteAccountConfirm => '삭제 확인';
+
+  @override
+  String get profile_deleteAccountWarning =>
+      '이 작업은 영구적이며 취소할 수 없습니다. 계정은 삭제되지만 업로드된 녹음은 언어 프로젝트를 위해 보존됩니다.';
+
+  @override
+  String get profile_typeDelete => '계정 삭제를 확인하려면 DELETE를 입력하세요:';
 
   @override
   String get profile_clearCacheTitle => '로컬 캐시를 삭제하시겠습니까?';
@@ -1340,6 +1353,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get locale_arabicSub => '아랍어';
 
   @override
+  String get locale_chinese => '中文';
+
+  @override
+  String get locale_chineseSub => '중국어';
+
+  @override
   String get locale_selectLanguage => '언어를 선택하세요';
 
   @override
@@ -1358,7 +1377,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get filter_needsCleaning => '클리닝 필요';
 
   @override
-  String get filter_unclassified => 'Unclassified';
+  String get filter_unclassified => '미분류';
 
   @override
   String get filter_allGenres => '모든 장르';
@@ -1475,39 +1494,38 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recording_pause => '일시정지';
 
   @override
-  String get quickRecord_title => 'Quick Record';
+  String get quickRecord_title => '빠른 녹음';
 
   @override
-  String get quickRecord_subtitle => 'Classify later';
+  String get quickRecord_subtitle => '나중에 분류';
 
   @override
-  String get quickRecord_classifyLater => 'Classify later';
+  String get quickRecord_classifyLater => '나중에 분류';
 
   @override
-  String get classify_title => 'Classify Recording';
+  String get classify_title => '녹음 분류';
 
   @override
-  String get classify_action => 'Classify';
+  String get classify_action => '분류';
 
   @override
-  String get classify_banner =>
-      'This recording needs classification before it can be uploaded.';
+  String get classify_banner => '이 녹음은 업로드하기 전에 분류해야 합니다.';
 
   @override
-  String get classify_success => 'Recording classified';
+  String get classify_success => '녹음이 분류되었습니다';
 
   @override
-  String get classify_register => 'Register (optional)';
+  String get classify_register => '사용역 (선택 사항)';
 
   @override
-  String get classify_selectRegister => 'Select register';
+  String get classify_selectRegister => '사용역 선택';
 
   @override
-  String get recording_unclassified => 'Unclassified';
+  String get recording_unclassified => '미분류';
 
   @override
-  String get fab_quickRecord => 'Quick';
+  String get fab_quickRecord => '빠른';
 
   @override
-  String get fab_normalRecord => 'Record';
+  String get fab_normalRecord => '녹음';
 }

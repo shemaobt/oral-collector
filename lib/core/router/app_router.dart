@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/admin/presentation/admin_dashboard_screen.dart';
 import '../auth/auth_notifier.dart';
 import '../auth/auth_state.dart';
+import '../../features/project/presentation/notifiers/project_notifier.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/signup_screen.dart';
 import '../../features/genre/presentation/genre_detail_screen.dart';
@@ -78,6 +79,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         ),
         GoRoute(
           path: '/import-file',
+          redirect: (context, state) {
+            final hasProject =
+                ref.read(projectNotifierProvider).activeProject != null;
+            return hasProject ? null : '/home';
+          },
           builder: (context, state) => const FileImportScreen(),
         ),
         GoRoute(
@@ -102,7 +108,12 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/record',
-            redirect: (context, state) => kIsWeb ? '/recordings' : null,
+            redirect: (context, state) {
+              if (kIsWeb) return '/recordings';
+              final hasProject =
+                  ref.read(projectNotifierProvider).activeProject != null;
+              return hasProject ? null : '/home';
+            },
             builder: (context, state) => RecordingFlowScreen(
               genreId: state.uri.queryParameters['genreId'],
               subcategoryId: state.uri.queryParameters['subcategoryId'],
@@ -110,7 +121,12 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/quick-record',
-            redirect: (context, state) => kIsWeb ? '/recordings' : null,
+            redirect: (context, state) {
+              if (kIsWeb) return '/recordings';
+              final hasProject =
+                  ref.read(projectNotifierProvider).activeProject != null;
+              return hasProject ? null : '/home';
+            },
             builder: (context, state) => const QuickRecordingScreen(),
           ),
           GoRoute(

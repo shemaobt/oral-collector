@@ -534,26 +534,26 @@ class AppLocalizationsId extends AppLocalizations {
   String get recording_statusLocal => 'Lokal';
 
   @override
-  String get recordings_clearStale => 'Clear failed';
+  String get recordings_clearStale => 'Bersihkan yang gagal';
 
   @override
   String get recordings_clearStaleMessage =>
-      'This will permanently delete all recordings with failed or stuck upload status from the server. This cannot be undone.';
+      'Ini akan menghapus secara permanen semua rekaman dengan status unggahan gagal atau macet dari server. Tindakan ini tidak dapat dibatalkan.';
 
   @override
   String recordings_clearedCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Cleared $count recordings',
-      one: 'Cleared 1 recording',
-      zero: 'No stale recordings found',
+      other: '$count rekaman dibersihkan',
+      one: '1 rekaman dibersihkan',
+      zero: 'Tidak ada rekaman usang ditemukan',
     );
     return '$_temp0';
   }
 
   @override
-  String get recordings_clearFailed => 'Failed to clear recordings';
+  String get recordings_clearFailed => 'Gagal membersihkan rekaman';
 
   @override
   String get trim_title => 'Bagi Rekaman';
@@ -729,6 +729,20 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get profile_logOut => 'Keluar';
+
+  @override
+  String get profile_deleteAccount => 'Hapus Akun';
+
+  @override
+  String get profile_deleteAccountConfirm => 'Konfirmasi Penghapusan';
+
+  @override
+  String get profile_deleteAccountWarning =>
+      'Tindakan ini bersifat permanen dan tidak dapat dibatalkan. Akun Anda akan dihapus, tetapi rekaman yang telah diunggah akan dipertahankan untuk proyek bahasa.';
+
+  @override
+  String get profile_typeDelete =>
+      'Ketik DELETE untuk mengonfirmasi penghapusan akun:';
 
   @override
   String get profile_clearCacheTitle => 'Bersihkan cache lokal?';
@@ -1390,6 +1404,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get locale_arabicSub => 'Arab';
 
   @override
+  String get locale_chinese => '中文';
+
+  @override
+  String get locale_chineseSub => 'Tionghoa';
+
+  @override
   String get locale_selectLanguage => 'Pilih Bahasa Anda';
 
   @override
@@ -1409,7 +1429,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get filter_needsCleaning => 'Perlu Pembersihan';
 
   @override
-  String get filter_unclassified => 'Unclassified';
+  String get filter_unclassified => 'Belum diklasifikasi';
 
   @override
   String get filter_allGenres => 'Semua genre';
@@ -1526,39 +1546,39 @@ class AppLocalizationsId extends AppLocalizations {
   String get recording_pause => 'Jeda';
 
   @override
-  String get quickRecord_title => 'Quick Record';
+  String get quickRecord_title => 'Rekam Cepat';
 
   @override
-  String get quickRecord_subtitle => 'Classify later';
+  String get quickRecord_subtitle => 'Klasifikasi nanti';
 
   @override
-  String get quickRecord_classifyLater => 'Classify later';
+  String get quickRecord_classifyLater => 'Klasifikasi nanti';
 
   @override
-  String get classify_title => 'Classify Recording';
+  String get classify_title => 'Klasifikasi Rekaman';
 
   @override
-  String get classify_action => 'Classify';
+  String get classify_action => 'Klasifikasi';
 
   @override
   String get classify_banner =>
-      'This recording needs classification before it can be uploaded.';
+      'Rekaman ini perlu diklasifikasi sebelum dapat diunggah.';
 
   @override
-  String get classify_success => 'Recording classified';
+  String get classify_success => 'Rekaman diklasifikasi';
 
   @override
-  String get classify_register => 'Register (optional)';
+  String get classify_register => 'Register (opsional)';
 
   @override
-  String get classify_selectRegister => 'Select register';
+  String get classify_selectRegister => 'Pilih register';
 
   @override
-  String get recording_unclassified => 'Unclassified';
+  String get recording_unclassified => 'Belum diklasifikasi';
 
   @override
-  String get fab_quickRecord => 'Quick';
+  String get fab_quickRecord => 'Cepat';
 
   @override
-  String get fab_normalRecord => 'Record';
+  String get fab_normalRecord => 'Rekam';
 }
