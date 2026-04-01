@@ -170,4 +170,19 @@ class AuthRepositoryImpl implements AuthRepository {
     final data = jsonDecode(response.body) as Map<String, dynamic>;
     return data['url'] as String;
   }
+
+  @override
+  Future<void> deleteAccount(String accessToken) async {
+    final response = await _client.delete(
+      Uri.parse('$_baseUrl/api/auth/me'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $accessToken',
+      },
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to delete account: ${response.body}');
+    }
+  }
 }

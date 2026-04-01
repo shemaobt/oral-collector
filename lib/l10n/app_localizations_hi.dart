@@ -536,26 +536,26 @@ class AppLocalizationsHi extends AppLocalizations {
   String get recording_statusLocal => 'स्थानीय';
 
   @override
-  String get recordings_clearStale => 'Clear failed';
+  String get recordings_clearStale => 'विफल साफ़ करें';
 
   @override
   String get recordings_clearStaleMessage =>
-      'This will permanently delete all recordings with failed or stuck upload status from the server. This cannot be undone.';
+      'यह सर्वर से विफल या अटकी हुई अपलोड स्थिति वाली सभी रिकॉर्डिंग्स को स्थायी रूप से हटा देगा। इसे पूर्ववत नहीं किया जा सकता।';
 
   @override
   String recordings_clearedCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Cleared $count recordings',
-      one: 'Cleared 1 recording',
-      zero: 'No stale recordings found',
+      other: '$count रिकॉर्डिंग्स साफ़ की गईं',
+      one: '1 रिकॉर्डिंग साफ़ की गई',
+      zero: 'कोई पुरानी रिकॉर्डिंग नहीं मिली',
     );
     return '$_temp0';
   }
 
   @override
-  String get recordings_clearFailed => 'Failed to clear recordings';
+  String get recordings_clearFailed => 'रिकॉर्डिंग्स साफ़ करने में विफल';
 
   @override
   String get trim_title => 'रिकॉर्डिंग विभाजित करें';
@@ -742,6 +742,20 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get profile_logOut => 'लॉग आउट';
+
+  @override
+  String get profile_deleteAccount => 'खाता हटाएं';
+
+  @override
+  String get profile_deleteAccountConfirm => 'हटाने की पुष्टि करें';
+
+  @override
+  String get profile_deleteAccountWarning =>
+      'यह क्रिया स्थायी है और इसे पूर्ववत नहीं किया जा सकता। आपका खाता हटा दिया जाएगा, लेकिन आपकी अपलोड की गई रिकॉर्डिंग भाषा परियोजनाओं के लिए संरक्षित रहेंगी।';
+
+  @override
+  String get profile_typeDelete =>
+      'खाता हटाने की पुष्टि के लिए DELETE टाइप करें:';
 
   @override
   String get profile_clearCacheTitle => 'स्थानीय कैश साफ़ करें?';
@@ -1393,6 +1407,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get locale_arabicSub => 'अरबी';
 
   @override
+  String get locale_chinese => '中文';
+
+  @override
+  String get locale_chineseSub => 'चीनी';
+
+  @override
   String get locale_selectLanguage => 'अपनी भाषा चुनें';
 
   @override
@@ -1412,7 +1432,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get filter_needsCleaning => 'सफ़ाई आवश्यक';
 
   @override
-  String get filter_unclassified => 'Unclassified';
+  String get filter_unclassified => 'अवर्गीकृत';
 
   @override
   String get filter_allGenres => 'सभी विधाएँ';
@@ -1529,39 +1549,39 @@ class AppLocalizationsHi extends AppLocalizations {
   String get recording_pause => 'रोकें';
 
   @override
-  String get quickRecord_title => 'Quick Record';
+  String get quickRecord_title => 'त्वरित रिकॉर्ड';
 
   @override
-  String get quickRecord_subtitle => 'Classify later';
+  String get quickRecord_subtitle => 'बाद में वर्गीकृत करें';
 
   @override
-  String get quickRecord_classifyLater => 'Classify later';
+  String get quickRecord_classifyLater => 'बाद में वर्गीकृत करें';
 
   @override
-  String get classify_title => 'Classify Recording';
+  String get classify_title => 'रिकॉर्डिंग वर्गीकृत करें';
 
   @override
-  String get classify_action => 'Classify';
+  String get classify_action => 'वर्गीकृत करें';
 
   @override
   String get classify_banner =>
-      'This recording needs classification before it can be uploaded.';
+      'इस रिकॉर्डिंग को अपलोड करने से पहले वर्गीकृत करना आवश्यक है।';
 
   @override
-  String get classify_success => 'Recording classified';
+  String get classify_success => 'रिकॉर्डिंग वर्गीकृत हो गई';
 
   @override
-  String get classify_register => 'Register (optional)';
+  String get classify_register => 'रजिस्टर (वैकल्पिक)';
 
   @override
-  String get classify_selectRegister => 'Select register';
+  String get classify_selectRegister => 'रजिस्टर चुनें';
 
   @override
-  String get recording_unclassified => 'Unclassified';
+  String get recording_unclassified => 'अवर्गीकृत';
 
   @override
-  String get fab_quickRecord => 'Quick';
+  String get fab_quickRecord => 'त्वरित';
 
   @override
-  String get fab_normalRecord => 'Record';
+  String get fab_normalRecord => 'रिकॉर्ड';
 }

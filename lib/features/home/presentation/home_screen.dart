@@ -194,14 +194,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final fabOffset = AppShell.fabBottomOffset(context);
 
     return Scaffold(
-      floatingActionButton: Padding(
-        padding: EdgeInsets.only(bottom: fabOffset - 70),
-        child: ExpandableRecordFab(
-          onQuickRecord: () => context.go('/quick-record'),
-          onNormalRecord: () => context.go('/record'),
-          colors: colors,
-        ),
-      ),
+      floatingActionButton: activeProject != null
+          ? Padding(
+              padding: EdgeInsets.only(bottom: fabOffset - 70),
+              child: ExpandableRecordFab(
+                onQuickRecord: () => context.go('/quick-record'),
+                onNormalRecord: () => context.go('/record'),
+                colors: colors,
+              ),
+            )
+          : null,
       body: RefreshIndicator(
         onRefresh: _refresh,
         child: CustomScrollView(

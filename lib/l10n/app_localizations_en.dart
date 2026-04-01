@@ -733,6 +733,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profile_logOut => 'Log Out';
 
   @override
+  String get profile_deleteAccount => 'Delete Account';
+
+  @override
+  String get profile_deleteAccountConfirm => 'Confirm Deletion';
+
+  @override
+  String get profile_deleteAccountWarning =>
+      'This action is permanent and cannot be undone. Your account will be deleted, but your uploaded recordings will be preserved for the language projects.';
+
+  @override
+  String get profile_typeDelete => 'Type DELETE to confirm account deletion:';
+
+  @override
   String get profile_clearCacheTitle => 'Clear local cache?';
 
   @override
@@ -1386,6 +1399,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get locale_arabicSub => 'Arabic';
+
+  @override
+  String get locale_chinese => '中文';
+
+  @override
+  String get locale_chineseSub => 'Chinese';
 
   @override
   String get locale_selectLanguage => 'Choose Your Language';

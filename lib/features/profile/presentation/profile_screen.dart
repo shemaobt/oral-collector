@@ -321,23 +321,43 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          child: ListTile(
-            leading: IconBox(
-              icon: LucideIcons.logOut,
-              color: colors.error,
-              alpha: 0.1,
-            ),
-            title: Text(
-              l10n.profile_logOut,
-              style: theme.textTheme.bodyLarge?.copyWith(
-                color: colors.error,
-                fontWeight: FontWeight.w600,
+          child: Column(
+            children: [
+              ListTile(
+                leading: IconBox(
+                  icon: LucideIcons.logOut,
+                  color: colors.error,
+                  alpha: 0.1,
+                ),
+                title: Text(
+                  l10n.profile_logOut,
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: colors.error,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                onTap: () async {
+                  await ref.read(authNotifierProvider.notifier).logout();
+                  if (context.mounted) context.go('/login');
+                },
               ),
-            ),
-            onTap: () async {
-              await ref.read(authNotifierProvider.notifier).logout();
-              if (context.mounted) context.go('/login');
-            },
+              const Divider(height: 1),
+              ListTile(
+                leading: IconBox(
+                  icon: LucideIcons.trash2,
+                  color: colors.error,
+                  alpha: 0.1,
+                ),
+                title: Text(
+                  l10n.profile_deleteAccount,
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: colors.error,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                onTap: () => _showDeleteAccountDialog(context),
+              ),
+            ],
           ),
         ),
       ],
@@ -430,6 +450,78 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         },
       ),
     );
+  }
+
+  Future<void> _showDeleteAccountDialog(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
+    final colors = AppColors.of(context);
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.profile_deleteAccount),
+        content: Text(l10n.profile_deleteAccountWarning),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.common_cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: FilledButton.styleFrom(backgroundColor: colors.error),
+            child: Text(l10n.profile_deleteAccountConfirm),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !context.mounted) return;
+
+    final router = GoRouter.of(context);
+    final controller = TextEditingController();
+    final finalConfirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          title: Text(l10n.profile_deleteAccountConfirm),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(l10n.profile_typeDelete),
+              const SizedBox(height: 12),
+              TextField(
+                controller: controller,
+                autofocus: true,
+                decoration: const InputDecoration(
+                  hintText: 'DELETE',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: Text(l10n.common_cancel),
+            ),
+            FilledButton(
+              onPressed: () {
+                if (controller.text.trim().toUpperCase() == 'DELETE') {
+                  Navigator.of(ctx).pop(true);
+                }
+              },
+              style: FilledButton.styleFrom(backgroundColor: colors.error),
+              child: Text(l10n.common_delete),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (finalConfirm == true && context.mounted) {
+      await ref.read(authNotifierProvider.notifier).deleteAccount();
+      if (context.mounted) router.go('/login');
+    }
   }
 
   Future<void> _showClearCacheConfirmation(BuildContext context) async {

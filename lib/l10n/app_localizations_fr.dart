@@ -541,26 +541,27 @@ class AppLocalizationsFr extends AppLocalizations {
   String get recording_statusLocal => 'Local';
 
   @override
-  String get recordings_clearStale => 'Clear failed';
+  String get recordings_clearStale => 'Supprimer les échecs';
 
   @override
   String get recordings_clearStaleMessage =>
-      'This will permanently delete all recordings with failed or stuck upload status from the server. This cannot be undone.';
+      'Cela supprimera définitivement tous les enregistrements avec un statut de téléversement échoué ou bloqué du serveur. Cette action est irréversible.';
 
   @override
   String recordings_clearedCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Cleared $count recordings',
-      one: 'Cleared 1 recording',
-      zero: 'No stale recordings found',
+      other: '$count enregistrements supprimés',
+      one: '1 enregistrement supprimé',
+      zero: 'Aucun enregistrement obsolète trouvé',
     );
     return '$_temp0';
   }
 
   @override
-  String get recordings_clearFailed => 'Failed to clear recordings';
+  String get recordings_clearFailed =>
+      'Échec de la suppression des enregistrements';
 
   @override
   String get trim_title => 'Diviser l\'Enregistrement';
@@ -742,6 +743,20 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get profile_logOut => 'Se Déconnecter';
+
+  @override
+  String get profile_deleteAccount => 'Supprimer le Compte';
+
+  @override
+  String get profile_deleteAccountConfirm => 'Confirmer la Suppression';
+
+  @override
+  String get profile_deleteAccountWarning =>
+      'Cette action est permanente et irréversible. Votre compte sera supprimé, mais vos enregistrements téléchargés seront conservés pour les projets linguistiques.';
+
+  @override
+  String get profile_typeDelete =>
+      'Tapez DELETE pour confirmer la suppression du compte :';
 
   @override
   String get profile_clearCacheTitle => 'Effacer le cache local ?';
@@ -1406,6 +1421,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get locale_arabicSub => 'Arabe';
 
   @override
+  String get locale_chinese => '中文';
+
+  @override
+  String get locale_chineseSub => 'Chinois';
+
+  @override
   String get locale_selectLanguage => 'Choisissez Votre Langue';
 
   @override
@@ -1425,7 +1446,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get filter_needsCleaning => 'Nécessite un Nettoyage';
 
   @override
-  String get filter_unclassified => 'Unclassified';
+  String get filter_unclassified => 'Non classifié';
 
   @override
   String get filter_allGenres => 'Tous les genres';
@@ -1542,39 +1563,39 @@ class AppLocalizationsFr extends AppLocalizations {
   String get recording_pause => 'Pause';
 
   @override
-  String get quickRecord_title => 'Quick Record';
+  String get quickRecord_title => 'Enregistrement Rapide';
 
   @override
-  String get quickRecord_subtitle => 'Classify later';
+  String get quickRecord_subtitle => 'Classer plus tard';
 
   @override
-  String get quickRecord_classifyLater => 'Classify later';
+  String get quickRecord_classifyLater => 'Classer plus tard';
 
   @override
-  String get classify_title => 'Classify Recording';
+  String get classify_title => 'Classer l\'Enregistrement';
 
   @override
-  String get classify_action => 'Classify';
+  String get classify_action => 'Classer';
 
   @override
   String get classify_banner =>
-      'This recording needs classification before it can be uploaded.';
+      'Cet enregistrement doit être classé avant de pouvoir être téléversé.';
 
   @override
-  String get classify_success => 'Recording classified';
+  String get classify_success => 'Enregistrement classé';
 
   @override
-  String get classify_register => 'Register (optional)';
+  String get classify_register => 'Registre (facultatif)';
 
   @override
-  String get classify_selectRegister => 'Select register';
+  String get classify_selectRegister => 'Sélectionner le registre';
 
   @override
-  String get recording_unclassified => 'Unclassified';
+  String get recording_unclassified => 'Non classifié';
 
   @override
-  String get fab_quickRecord => 'Quick';
+  String get fab_quickRecord => 'Rapide';
 
   @override
-  String get fab_normalRecord => 'Record';
+  String get fab_normalRecord => 'Enregistrer';
 }
