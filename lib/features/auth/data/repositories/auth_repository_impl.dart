@@ -185,4 +185,30 @@ class AuthRepositoryImpl implements AuthRepository {
       throw Exception('Failed to delete account: ${response.body}');
     }
   }
+
+  @override
+  Future<void> requestPasswordReset(String email) async {
+    final response = await _client.post(
+      Uri.parse('$_baseUrl/api/auth/forgot-password'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'email': email, 'app_key': 'oral-collector'}),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Password reset failed: ${response.body}');
+    }
+  }
+
+  @override
+  Future<void> resetPassword(String token, String newPassword) async {
+    final response = await _client.post(
+      Uri.parse('$_baseUrl/api/auth/reset-password'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'token': token, 'password': newPassword}),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Reset password failed: ${response.body}');
+    }
+  }
 }

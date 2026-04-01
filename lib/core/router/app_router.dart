@@ -7,7 +7,9 @@ import '../../features/admin/presentation/admin_dashboard_screen.dart';
 import '../auth/auth_notifier.dart';
 import '../auth/auth_state.dart';
 import '../../features/project/presentation/notifiers/project_notifier.dart';
+import '../../features/auth/presentation/forgot_password_screen.dart';
 import '../../features/auth/presentation/login_screen.dart';
+import '../../features/auth/presentation/reset_password_screen.dart';
 import '../../features/auth/presentation/signup_screen.dart';
 import '../../features/genre/presentation/genre_detail_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
@@ -47,7 +49,11 @@ final routerProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final isLoggedIn = notifier.isAuthenticated;
       final location = state.matchedLocation;
-      final isAuthRoute = location == '/login' || location == '/signup';
+      final isAuthRoute =
+          location == '/login' ||
+          location == '/signup' ||
+          location == '/forgot-password' ||
+          location == '/reset-password';
 
       if (!isLoggedIn && !isAuthRoute) return '/login';
       if (isLoggedIn && isAuthRoute) return '/home';
@@ -58,6 +64,15 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/signup',
         builder: (context, state) => const SignupScreen(),
+      ),
+      GoRoute(
+        path: '/forgot-password',
+        builder: (context, state) => const ForgotPasswordScreen(),
+      ),
+      GoRoute(
+        path: '/reset-password',
+        builder: (context, state) =>
+            ResetPasswordScreen(token: state.uri.queryParameters['token']),
       ),
 
       if (!kIsWeb) ...[

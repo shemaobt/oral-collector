@@ -176,6 +176,69 @@ class AppLocalizationsFr extends AppLocalizations {
   String get auth_continueButton => 'Continuer';
 
   @override
+  String get auth_forgotPassword => 'Mot de passe oublié ?';
+
+  @override
+  String get auth_resetPassword => 'Réinitialiser le Mot de Passe';
+
+  @override
+  String get auth_forgotPasswordSubtitle =>
+      'Entrez votre e-mail et nous vous enverrons un lien de réinitialisation.';
+
+  @override
+  String get auth_sendResetLink => 'Envoyer le Lien';
+
+  @override
+  String get auth_sending => 'Envoi...';
+
+  @override
+  String get auth_checkYourEmail => 'Vérifiez Votre E-mail';
+
+  @override
+  String auth_resetEmailSent(String email) {
+    return 'Nous avons envoyé un lien de réinitialisation à $email. Vérifiez votre boîte de réception et suivez le lien pour créer un nouveau mot de passe.';
+  }
+
+  @override
+  String get auth_openEmailApp => 'Ouvrir l\'E-mail';
+
+  @override
+  String get auth_resendEmail => 'Renvoyer';
+
+  @override
+  String get auth_backToLogin => 'Retour à la Connexion';
+
+  @override
+  String get auth_newPassword => 'Nouveau Mot de Passe';
+
+  @override
+  String get auth_confirmNewPassword => 'Confirmer le Nouveau Mot de Passe';
+
+  @override
+  String get auth_resetPasswordSubtitle =>
+      'Entrez votre nouveau mot de passe ci-dessous.';
+
+  @override
+  String get auth_resetPasswordButton => 'Réinitialiser le Mot de Passe';
+
+  @override
+  String get auth_resetting => 'Réinitialisation...';
+
+  @override
+  String get auth_resetSuccess =>
+      'Mot de passe réinitialisé avec succès ! Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.';
+
+  @override
+  String get auth_invalidResetLink => 'Lien Invalide';
+
+  @override
+  String get auth_invalidResetLinkMessage =>
+      'Ce lien de réinitialisation est invalide ou a expiré.';
+
+  @override
+  String get auth_requestNewLink => 'Demander un Nouveau Lien';
+
+  @override
   String get home_greetingMorning => 'Bonjour';
 
   @override

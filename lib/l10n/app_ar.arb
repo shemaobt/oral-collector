@@ -61,6 +61,32 @@
   "auth_haveAccount": "لديك حساب بالفعل؟ ",
   "auth_continueButton": "متابعة",
 
+  "auth_forgotPassword": "نسيت كلمة المرور؟",
+  "auth_resetPassword": "إعادة تعيين كلمة المرور",
+  "auth_forgotPasswordSubtitle": "أدخل بريدك الإلكتروني وسنرسل لك رابط إعادة التعيين.",
+  "auth_sendResetLink": "إرسال الرابط",
+  "auth_sending": "جارٍ الإرسال...",
+  "auth_checkYourEmail": "تحقق من بريدك الإلكتروني",
+  "auth_resetEmailSent": "أرسلنا رابط إعادة تعيين كلمة المرور إلى {email}. تحقق من صندوق الوارد واتبع الرابط لإنشاء كلمة مرور جديدة.",
+  "@auth_resetEmailSent": {
+    "placeholders": {
+      "email": {"type": "String"}
+    }
+  },
+  "auth_openEmailApp": "فتح البريد الإلكتروني",
+  "auth_resendEmail": "إعادة الإرسال",
+  "auth_backToLogin": "العودة إلى تسجيل الدخول",
+
+  "auth_newPassword": "كلمة المرور الجديدة",
+  "auth_confirmNewPassword": "تأكيد كلمة المرور الجديدة",
+  "auth_resetPasswordSubtitle": "أدخل كلمة المرور الجديدة أدناه.",
+  "auth_resetPasswordButton": "إعادة تعيين كلمة المرور",
+  "auth_resetting": "جارٍ إعادة التعيين...",
+  "auth_resetSuccess": "تم إعادة تعيين كلمة المرور بنجاح! يمكنك الآن تسجيل الدخول بكلمة المرور الجديدة.",
+  "auth_invalidResetLink": "رابط غير صالح",
+  "auth_invalidResetLinkMessage": "رابط إعادة تعيين كلمة المرور هذا غير صالح أو منتهي الصلاحية.",
+  "auth_requestNewLink": "طلب رابط جديد",
+
   "home_greetingMorning": "صباح الخير",
   "home_greetingAfternoon": "مساء الخير",
   "home_greetingEvening": "مساء الخير",

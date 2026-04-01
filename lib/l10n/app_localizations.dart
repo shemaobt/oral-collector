@@ -440,6 +440,120 @@ abstract class AppLocalizations {
   /// **'Continue'**
   String get auth_continueButton;
 
+  /// No description provided for @auth_forgotPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot password?'**
+  String get auth_forgotPassword;
+
+  /// No description provided for @auth_resetPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset Password'**
+  String get auth_resetPassword;
+
+  /// No description provided for @auth_forgotPasswordSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your email and we\'ll send you a reset link.'**
+  String get auth_forgotPasswordSubtitle;
+
+  /// No description provided for @auth_sendResetLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Send Reset Link'**
+  String get auth_sendResetLink;
+
+  /// No description provided for @auth_sending.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending...'**
+  String get auth_sending;
+
+  /// No description provided for @auth_checkYourEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Check Your Email'**
+  String get auth_checkYourEmail;
+
+  /// No description provided for @auth_resetEmailSent.
+  ///
+  /// In en, this message translates to:
+  /// **'We sent a password reset link to {email}. Check your inbox and follow the link to set a new password.'**
+  String auth_resetEmailSent(String email);
+
+  /// No description provided for @auth_openEmailApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Email App'**
+  String get auth_openEmailApp;
+
+  /// No description provided for @auth_resendEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend'**
+  String get auth_resendEmail;
+
+  /// No description provided for @auth_backToLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to Sign In'**
+  String get auth_backToLogin;
+
+  /// No description provided for @auth_newPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'New Password'**
+  String get auth_newPassword;
+
+  /// No description provided for @auth_confirmNewPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm New Password'**
+  String get auth_confirmNewPassword;
+
+  /// No description provided for @auth_resetPasswordSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your new password below.'**
+  String get auth_resetPasswordSubtitle;
+
+  /// No description provided for @auth_resetPasswordButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset Password'**
+  String get auth_resetPasswordButton;
+
+  /// No description provided for @auth_resetting.
+  ///
+  /// In en, this message translates to:
+  /// **'Resetting...'**
+  String get auth_resetting;
+
+  /// No description provided for @auth_resetSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Password reset successfully! You can now sign in with your new password.'**
+  String get auth_resetSuccess;
+
+  /// No description provided for @auth_invalidResetLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid Reset Link'**
+  String get auth_invalidResetLink;
+
+  /// No description provided for @auth_invalidResetLinkMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This password reset link is invalid or has expired.'**
+  String get auth_invalidResetLinkMessage;
+
+  /// No description provided for @auth_requestNewLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Request a New Link'**
+  String get auth_requestNewLink;
+
   /// No description provided for @home_greetingMorning.
   ///
   /// In en, this message translates to:

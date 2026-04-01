@@ -174,6 +174,69 @@ class AppLocalizationsSw extends AppLocalizations {
   String get auth_continueButton => 'Endelea';
 
   @override
+  String get auth_forgotPassword => 'Umesahau nenosiri?';
+
+  @override
+  String get auth_resetPassword => 'Weka Nenosiri Upya';
+
+  @override
+  String get auth_forgotPasswordSubtitle =>
+      'Ingiza barua pepe yako na tutakutumia kiungo cha kuweka upya.';
+
+  @override
+  String get auth_sendResetLink => 'Tuma Kiungo';
+
+  @override
+  String get auth_sending => 'Inatuma...';
+
+  @override
+  String get auth_checkYourEmail => 'Angalia Barua Pepe Yako';
+
+  @override
+  String auth_resetEmailSent(String email) {
+    return 'Tumetuma kiungo cha kuweka upya nenosiri kwa $email. Angalia kikasha chako na ufuate kiungo ili kuweka nenosiri jipya.';
+  }
+
+  @override
+  String get auth_openEmailApp => 'Fungua Barua Pepe';
+
+  @override
+  String get auth_resendEmail => 'Tuma Tena';
+
+  @override
+  String get auth_backToLogin => 'Rudi kwenye Kuingia';
+
+  @override
+  String get auth_newPassword => 'Nenosiri Jipya';
+
+  @override
+  String get auth_confirmNewPassword => 'Thibitisha Nenosiri Jipya';
+
+  @override
+  String get auth_resetPasswordSubtitle =>
+      'Ingiza nenosiri lako jipya hapa chini.';
+
+  @override
+  String get auth_resetPasswordButton => 'Weka Nenosiri Upya';
+
+  @override
+  String get auth_resetting => 'Inaweka upya...';
+
+  @override
+  String get auth_resetSuccess =>
+      'Nenosiri limewekwa upya kwa mafanikio! Sasa unaweza kuingia na nenosiri lako jipya.';
+
+  @override
+  String get auth_invalidResetLink => 'Kiungo si Sahihi';
+
+  @override
+  String get auth_invalidResetLinkMessage =>
+      'Kiungo hiki cha kuweka upya nenosiri si sahihi au kimekwisha muda.';
+
+  @override
+  String get auth_requestNewLink => 'Omba Kiungo Kipya';
+
+  @override
   String get home_greetingMorning => 'Habari za asubuhi';
 
   @override

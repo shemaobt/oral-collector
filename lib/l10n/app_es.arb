@@ -61,6 +61,32 @@
   "auth_haveAccount": "¿Ya tienes una cuenta? ",
   "auth_continueButton": "Continuar",
 
+  "auth_forgotPassword": "¿Olvidaste tu contraseña?",
+  "auth_resetPassword": "Restablecer Contraseña",
+  "auth_forgotPasswordSubtitle": "Ingresa tu correo y te enviaremos un enlace de restablecimiento.",
+  "auth_sendResetLink": "Enviar Enlace",
+  "auth_sending": "Enviando...",
+  "auth_checkYourEmail": "Revisa Tu Correo",
+  "auth_resetEmailSent": "Enviamos un enlace para restablecer tu contraseña a {email}. Revisa tu bandeja de entrada y sigue el enlace para crear una nueva contraseña.",
+  "@auth_resetEmailSent": {
+    "placeholders": {
+      "email": {"type": "String"}
+    }
+  },
+  "auth_openEmailApp": "Abrir Correo",
+  "auth_resendEmail": "Reenviar",
+  "auth_backToLogin": "Volver al Inicio de Sesión",
+
+  "auth_newPassword": "Nueva Contraseña",
+  "auth_confirmNewPassword": "Confirmar Nueva Contraseña",
+  "auth_resetPasswordSubtitle": "Ingresa tu nueva contraseña a continuación.",
+  "auth_resetPasswordButton": "Restablecer Contraseña",
+  "auth_resetting": "Restableciendo...",
+  "auth_resetSuccess": "¡Contraseña restablecida con éxito! Ya puedes iniciar sesión con tu nueva contraseña.",
+  "auth_invalidResetLink": "Enlace Inválido",
+  "auth_invalidResetLinkMessage": "Este enlace de restablecimiento es inválido o ha expirado.",
+  "auth_requestNewLink": "Solicitar Nuevo Enlace",
+
   "home_greetingMorning": "Buenos días",
   "home_greetingAfternoon": "Buenas tardes",
   "home_greetingEvening": "Buenas noches",

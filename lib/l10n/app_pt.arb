@@ -61,6 +61,32 @@
   "auth_haveAccount": "Já tem uma conta? ",
   "auth_continueButton": "Continuar",
 
+  "auth_forgotPassword": "Esqueceu a senha?",
+  "auth_resetPassword": "Redefinir Senha",
+  "auth_forgotPasswordSubtitle": "Insira seu e-mail e enviaremos um link de redefinição.",
+  "auth_sendResetLink": "Enviar Link",
+  "auth_sending": "Enviando...",
+  "auth_checkYourEmail": "Verifique Seu E-mail",
+  "auth_resetEmailSent": "Enviamos um link de redefinição de senha para {email}. Verifique sua caixa de entrada e siga o link para criar uma nova senha.",
+  "@auth_resetEmailSent": {
+    "placeholders": {
+      "email": {"type": "String"}
+    }
+  },
+  "auth_openEmailApp": "Abrir E-mail",
+  "auth_resendEmail": "Reenviar",
+  "auth_backToLogin": "Voltar ao Login",
+
+  "auth_newPassword": "Nova Senha",
+  "auth_confirmNewPassword": "Confirmar Nova Senha",
+  "auth_resetPasswordSubtitle": "Digite sua nova senha abaixo.",
+  "auth_resetPasswordButton": "Redefinir Senha",
+  "auth_resetting": "Redefinindo...",
+  "auth_resetSuccess": "Senha redefinida com sucesso! Agora você pode entrar com sua nova senha.",
+  "auth_invalidResetLink": "Link Inválido",
+  "auth_invalidResetLinkMessage": "Este link de redefinição de senha é inválido ou expirou.",
+  "auth_requestNewLink": "Solicitar Novo Link",
+
   "home_greetingMorning": "Bom dia",
   "home_greetingAfternoon": "Boa tarde",
   "home_greetingEvening": "Boa noite",

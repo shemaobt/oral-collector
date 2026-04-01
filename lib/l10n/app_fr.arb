@@ -61,6 +61,32 @@
   "auth_haveAccount": "Vous avez déjà un compte ? ",
   "auth_continueButton": "Continuer",
 
+  "auth_forgotPassword": "Mot de passe oublié ?",
+  "auth_resetPassword": "Réinitialiser le Mot de Passe",
+  "auth_forgotPasswordSubtitle": "Entrez votre e-mail et nous vous enverrons un lien de réinitialisation.",
+  "auth_sendResetLink": "Envoyer le Lien",
+  "auth_sending": "Envoi...",
+  "auth_checkYourEmail": "Vérifiez Votre E-mail",
+  "auth_resetEmailSent": "Nous avons envoyé un lien de réinitialisation à {email}. Vérifiez votre boîte de réception et suivez le lien pour créer un nouveau mot de passe.",
+  "@auth_resetEmailSent": {
+    "placeholders": {
+      "email": {"type": "String"}
+    }
+  },
+  "auth_openEmailApp": "Ouvrir l'E-mail",
+  "auth_resendEmail": "Renvoyer",
+  "auth_backToLogin": "Retour à la Connexion",
+
+  "auth_newPassword": "Nouveau Mot de Passe",
+  "auth_confirmNewPassword": "Confirmer le Nouveau Mot de Passe",
+  "auth_resetPasswordSubtitle": "Entrez votre nouveau mot de passe ci-dessous.",
+  "auth_resetPasswordButton": "Réinitialiser le Mot de Passe",
+  "auth_resetting": "Réinitialisation...",
+  "auth_resetSuccess": "Mot de passe réinitialisé avec succès ! Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.",
+  "auth_invalidResetLink": "Lien Invalide",
+  "auth_invalidResetLinkMessage": "Ce lien de réinitialisation est invalide ou a expiré.",
+  "auth_requestNewLink": "Demander un Nouveau Lien",
+
   "home_greetingMorning": "Bonjour",
   "home_greetingAfternoon": "Bon après-midi",
   "home_greetingEvening": "Bonsoir",

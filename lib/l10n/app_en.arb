@@ -61,6 +61,32 @@
   "auth_haveAccount": "Have an account? ",
   "auth_continueButton": "Continue",
 
+  "auth_forgotPassword": "Forgot password?",
+  "auth_resetPassword": "Reset Password",
+  "auth_forgotPasswordSubtitle": "Enter your email and we'll send you a reset link.",
+  "auth_sendResetLink": "Send Reset Link",
+  "auth_sending": "Sending...",
+  "auth_checkYourEmail": "Check Your Email",
+  "auth_resetEmailSent": "We sent a password reset link to {email}. Check your inbox and follow the link to set a new password.",
+  "@auth_resetEmailSent": {
+    "placeholders": {
+      "email": {"type": "String"}
+    }
+  },
+  "auth_openEmailApp": "Open Email App",
+  "auth_resendEmail": "Resend",
+  "auth_backToLogin": "Back to Sign In",
+
+  "auth_newPassword": "New Password",
+  "auth_confirmNewPassword": "Confirm New Password",
+  "auth_resetPasswordSubtitle": "Enter your new password below.",
+  "auth_resetPasswordButton": "Reset Password",
+  "auth_resetting": "Resetting...",
+  "auth_resetSuccess": "Password reset successfully! You can now sign in with your new password.",
+  "auth_invalidResetLink": "Invalid Reset Link",
+  "auth_invalidResetLinkMessage": "This password reset link is invalid or has expired.",
+  "auth_requestNewLink": "Request a New Link",
+
   "home_greetingMorning": "Good morning",
   "home_greetingAfternoon": "Good afternoon",
   "home_greetingEvening": "Good evening",

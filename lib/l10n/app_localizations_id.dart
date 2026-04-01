@@ -174,6 +174,69 @@ class AppLocalizationsId extends AppLocalizations {
   String get auth_continueButton => 'Lanjutkan';
 
   @override
+  String get auth_forgotPassword => 'Lupa kata sandi?';
+
+  @override
+  String get auth_resetPassword => 'Atur Ulang Kata Sandi';
+
+  @override
+  String get auth_forgotPasswordSubtitle =>
+      'Masukkan email Anda dan kami akan mengirimkan tautan pengaturan ulang.';
+
+  @override
+  String get auth_sendResetLink => 'Kirim Tautan';
+
+  @override
+  String get auth_sending => 'Mengirim...';
+
+  @override
+  String get auth_checkYourEmail => 'Periksa Email Anda';
+
+  @override
+  String auth_resetEmailSent(String email) {
+    return 'Kami mengirimkan tautan pengaturan ulang kata sandi ke $email. Periksa kotak masuk Anda dan ikuti tautan untuk membuat kata sandi baru.';
+  }
+
+  @override
+  String get auth_openEmailApp => 'Buka Email';
+
+  @override
+  String get auth_resendEmail => 'Kirim Ulang';
+
+  @override
+  String get auth_backToLogin => 'Kembali ke Login';
+
+  @override
+  String get auth_newPassword => 'Kata Sandi Baru';
+
+  @override
+  String get auth_confirmNewPassword => 'Konfirmasi Kata Sandi Baru';
+
+  @override
+  String get auth_resetPasswordSubtitle =>
+      'Masukkan kata sandi baru Anda di bawah.';
+
+  @override
+  String get auth_resetPasswordButton => 'Atur Ulang Kata Sandi';
+
+  @override
+  String get auth_resetting => 'Mengatur ulang...';
+
+  @override
+  String get auth_resetSuccess =>
+      'Kata sandi berhasil diatur ulang! Anda sekarang dapat masuk dengan kata sandi baru.';
+
+  @override
+  String get auth_invalidResetLink => 'Tautan Tidak Valid';
+
+  @override
+  String get auth_invalidResetLinkMessage =>
+      'Tautan pengaturan ulang ini tidak valid atau telah kedaluwarsa.';
+
+  @override
+  String get auth_requestNewLink => 'Minta Tautan Baru';
+
+  @override
   String get home_greetingMorning => 'Selamat pagi';
 
   @override

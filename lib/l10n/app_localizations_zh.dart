@@ -171,6 +171,65 @@ class AppLocalizationsZh extends AppLocalizations {
   String get auth_continueButton => '继续';
 
   @override
+  String get auth_forgotPassword => '忘记密码？';
+
+  @override
+  String get auth_resetPassword => '重置密码';
+
+  @override
+  String get auth_forgotPasswordSubtitle => '输入您的邮箱，我们将向您发送重置链接。';
+
+  @override
+  String get auth_sendResetLink => '发送链接';
+
+  @override
+  String get auth_sending => '发送中...';
+
+  @override
+  String get auth_checkYourEmail => '请查看您的邮箱';
+
+  @override
+  String auth_resetEmailSent(String email) {
+    return '我们已向 $email 发送了密码重置链接。请查看您的收件箱并点击链接设置新密码。';
+  }
+
+  @override
+  String get auth_openEmailApp => '打开邮箱';
+
+  @override
+  String get auth_resendEmail => '重新发送';
+
+  @override
+  String get auth_backToLogin => '返回登录';
+
+  @override
+  String get auth_newPassword => '新密码';
+
+  @override
+  String get auth_confirmNewPassword => '确认新密码';
+
+  @override
+  String get auth_resetPasswordSubtitle => '请在下方输入您的新密码。';
+
+  @override
+  String get auth_resetPasswordButton => '重置密码';
+
+  @override
+  String get auth_resetting => '重置中...';
+
+  @override
+  String get auth_resetSuccess => '密码重置成功！您现在可以使用新密码登录。';
+
+  @override
+  String get auth_invalidResetLink => '无效链接';
+
+  @override
+  String get auth_invalidResetLinkMessage => '此密码重置链接无效或已过期。';
+
+  @override
+  String get auth_requestNewLink => '请求新链接';
+
+  @override
   String get home_greetingMorning => '早上好';
 
   @override

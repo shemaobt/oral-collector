@@ -61,6 +61,32 @@
   "auth_haveAccount": "Yu gat akaun pinis? ",
   "auth_continueButton": "Go het",
 
+  "auth_forgotPassword": "Lusim paswod?",
+  "auth_resetPassword": "Senisim Paswod",
+  "auth_forgotPasswordSubtitle": "Putim imel bilong yu na bai mipela salim wanpela link bilong senisim.",
+  "auth_sendResetLink": "Salim Link",
+  "auth_sending": "I salim...",
+  "auth_checkYourEmail": "Lukim Imel bilong Yu",
+  "auth_resetEmailSent": "Mipela salim link bilong senisim paswod long {email}. Lukim inbox bilong yu na bihainim link bilong wokim nupela paswod.",
+  "@auth_resetEmailSent": {
+    "placeholders": {
+      "email": {"type": "String"}
+    }
+  },
+  "auth_openEmailApp": "Opim Imel",
+  "auth_resendEmail": "Salim Gen",
+  "auth_backToLogin": "Go bek long Log In",
+
+  "auth_newPassword": "Nupela Paswod",
+  "auth_confirmNewPassword": "Konfemim Nupela Paswod",
+  "auth_resetPasswordSubtitle": "Putim nupela paswod bilong yu hia.",
+  "auth_resetPasswordButton": "Senisim Paswod",
+  "auth_resetting": "I senisim...",
+  "auth_resetSuccess": "Paswod i senis pinis! Nau yu ken log in wantaim nupela paswod bilong yu.",
+  "auth_invalidResetLink": "Link i no stret",
+  "auth_invalidResetLinkMessage": "Dispela link bilong senisim paswod i no stret o taim bilong en i pinis.",
+  "auth_requestNewLink": "Askim Nupela Link",
+
   "home_greetingMorning": "Moning tru",
   "home_greetingAfternoon": "Apinun tru",
   "home_greetingEvening": "Gut nait",

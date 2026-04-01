@@ -175,6 +175,68 @@ class AppLocalizationsHi extends AppLocalizations {
   String get auth_continueButton => 'जारी रखें';
 
   @override
+  String get auth_forgotPassword => 'पासवर्ड भूल गए?';
+
+  @override
+  String get auth_resetPassword => 'पासवर्ड रीसेट करें';
+
+  @override
+  String get auth_forgotPasswordSubtitle =>
+      'अपना ईमेल दर्ज करें और हम आपको एक रीसेट लिंक भेजेंगे।';
+
+  @override
+  String get auth_sendResetLink => 'लिंक भेजें';
+
+  @override
+  String get auth_sending => 'भेज रहे हैं...';
+
+  @override
+  String get auth_checkYourEmail => 'अपना ईमेल जाँचें';
+
+  @override
+  String auth_resetEmailSent(String email) {
+    return 'हमने $email पर पासवर्ड रीसेट लिंक भेजा है। अपना इनबॉक्स जाँचें और नया पासवर्ड बनाने के लिए लिंक का अनुसरण करें।';
+  }
+
+  @override
+  String get auth_openEmailApp => 'ईमेल खोलें';
+
+  @override
+  String get auth_resendEmail => 'पुनः भेजें';
+
+  @override
+  String get auth_backToLogin => 'लॉगिन पर वापस जाएँ';
+
+  @override
+  String get auth_newPassword => 'नया पासवर्ड';
+
+  @override
+  String get auth_confirmNewPassword => 'नया पासवर्ड पुष्टि करें';
+
+  @override
+  String get auth_resetPasswordSubtitle => 'नीचे अपना नया पासवर्ड दर्ज करें।';
+
+  @override
+  String get auth_resetPasswordButton => 'पासवर्ड रीसेट करें';
+
+  @override
+  String get auth_resetting => 'रीसेट हो रहा है...';
+
+  @override
+  String get auth_resetSuccess =>
+      'पासवर्ड सफलतापूर्वक रीसेट हो गया! अब आप अपने नए पासवर्ड से साइन इन कर सकते हैं।';
+
+  @override
+  String get auth_invalidResetLink => 'अमान्य लिंक';
+
+  @override
+  String get auth_invalidResetLinkMessage =>
+      'यह पासवर्ड रीसेट लिंक अमान्य है या समाप्त हो गया है।';
+
+  @override
+  String get auth_requestNewLink => 'नया लिंक अनुरोध करें';
+
+  @override
   String get home_greetingMorning => 'सुप्रभात';
 
   @override

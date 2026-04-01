@@ -171,6 +171,68 @@ class AppLocalizationsEn extends AppLocalizations {
   String get auth_continueButton => 'Continue';
 
   @override
+  String get auth_forgotPassword => 'Forgot password?';
+
+  @override
+  String get auth_resetPassword => 'Reset Password';
+
+  @override
+  String get auth_forgotPasswordSubtitle =>
+      'Enter your email and we\'ll send you a reset link.';
+
+  @override
+  String get auth_sendResetLink => 'Send Reset Link';
+
+  @override
+  String get auth_sending => 'Sending...';
+
+  @override
+  String get auth_checkYourEmail => 'Check Your Email';
+
+  @override
+  String auth_resetEmailSent(String email) {
+    return 'We sent a password reset link to $email. Check your inbox and follow the link to set a new password.';
+  }
+
+  @override
+  String get auth_openEmailApp => 'Open Email App';
+
+  @override
+  String get auth_resendEmail => 'Resend';
+
+  @override
+  String get auth_backToLogin => 'Back to Sign In';
+
+  @override
+  String get auth_newPassword => 'New Password';
+
+  @override
+  String get auth_confirmNewPassword => 'Confirm New Password';
+
+  @override
+  String get auth_resetPasswordSubtitle => 'Enter your new password below.';
+
+  @override
+  String get auth_resetPasswordButton => 'Reset Password';
+
+  @override
+  String get auth_resetting => 'Resetting...';
+
+  @override
+  String get auth_resetSuccess =>
+      'Password reset successfully! You can now sign in with your new password.';
+
+  @override
+  String get auth_invalidResetLink => 'Invalid Reset Link';
+
+  @override
+  String get auth_invalidResetLinkMessage =>
+      'This password reset link is invalid or has expired.';
+
+  @override
+  String get auth_requestNewLink => 'Request a New Link';
+
+  @override
   String get home_greetingMorning => 'Good morning';
 
   @override

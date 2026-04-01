@@ -172,6 +172,68 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get auth_continueButton => 'Go het';
 
   @override
+  String get auth_forgotPassword => 'Lusim paswod?';
+
+  @override
+  String get auth_resetPassword => 'Senisim Paswod';
+
+  @override
+  String get auth_forgotPasswordSubtitle =>
+      'Putim imel bilong yu na bai mipela salim wanpela link bilong senisim.';
+
+  @override
+  String get auth_sendResetLink => 'Salim Link';
+
+  @override
+  String get auth_sending => 'I salim...';
+
+  @override
+  String get auth_checkYourEmail => 'Lukim Imel bilong Yu';
+
+  @override
+  String auth_resetEmailSent(String email) {
+    return 'Mipela salim link bilong senisim paswod long $email. Lukim inbox bilong yu na bihainim link bilong wokim nupela paswod.';
+  }
+
+  @override
+  String get auth_openEmailApp => 'Opim Imel';
+
+  @override
+  String get auth_resendEmail => 'Salim Gen';
+
+  @override
+  String get auth_backToLogin => 'Go bek long Log In';
+
+  @override
+  String get auth_newPassword => 'Nupela Paswod';
+
+  @override
+  String get auth_confirmNewPassword => 'Konfemim Nupela Paswod';
+
+  @override
+  String get auth_resetPasswordSubtitle => 'Putim nupela paswod bilong yu hia.';
+
+  @override
+  String get auth_resetPasswordButton => 'Senisim Paswod';
+
+  @override
+  String get auth_resetting => 'I senisim...';
+
+  @override
+  String get auth_resetSuccess =>
+      'Paswod i senis pinis! Nau yu ken log in wantaim nupela paswod bilong yu.';
+
+  @override
+  String get auth_invalidResetLink => 'Link i no stret';
+
+  @override
+  String get auth_invalidResetLinkMessage =>
+      'Dispela link bilong senisim paswod i no stret o taim bilong en i pinis.';
+
+  @override
+  String get auth_requestNewLink => 'Askim Nupela Link';
+
+  @override
   String get home_greetingMorning => 'Moning tru';
 
   @override

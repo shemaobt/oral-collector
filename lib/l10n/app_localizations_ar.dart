@@ -172,6 +172,68 @@ class AppLocalizationsAr extends AppLocalizations {
   String get auth_continueButton => 'متابعة';
 
   @override
+  String get auth_forgotPassword => 'نسيت كلمة المرور؟';
+
+  @override
+  String get auth_resetPassword => 'إعادة تعيين كلمة المرور';
+
+  @override
+  String get auth_forgotPasswordSubtitle =>
+      'أدخل بريدك الإلكتروني وسنرسل لك رابط إعادة التعيين.';
+
+  @override
+  String get auth_sendResetLink => 'إرسال الرابط';
+
+  @override
+  String get auth_sending => 'جارٍ الإرسال...';
+
+  @override
+  String get auth_checkYourEmail => 'تحقق من بريدك الإلكتروني';
+
+  @override
+  String auth_resetEmailSent(String email) {
+    return 'أرسلنا رابط إعادة تعيين كلمة المرور إلى $email. تحقق من صندوق الوارد واتبع الرابط لإنشاء كلمة مرور جديدة.';
+  }
+
+  @override
+  String get auth_openEmailApp => 'فتح البريد الإلكتروني';
+
+  @override
+  String get auth_resendEmail => 'إعادة الإرسال';
+
+  @override
+  String get auth_backToLogin => 'العودة إلى تسجيل الدخول';
+
+  @override
+  String get auth_newPassword => 'كلمة المرور الجديدة';
+
+  @override
+  String get auth_confirmNewPassword => 'تأكيد كلمة المرور الجديدة';
+
+  @override
+  String get auth_resetPasswordSubtitle => 'أدخل كلمة المرور الجديدة أدناه.';
+
+  @override
+  String get auth_resetPasswordButton => 'إعادة تعيين كلمة المرور';
+
+  @override
+  String get auth_resetting => 'جارٍ إعادة التعيين...';
+
+  @override
+  String get auth_resetSuccess =>
+      'تم إعادة تعيين كلمة المرور بنجاح! يمكنك الآن تسجيل الدخول بكلمة المرور الجديدة.';
+
+  @override
+  String get auth_invalidResetLink => 'رابط غير صالح';
+
+  @override
+  String get auth_invalidResetLinkMessage =>
+      'رابط إعادة تعيين كلمة المرور هذا غير صالح أو منتهي الصلاحية.';
+
+  @override
+  String get auth_requestNewLink => 'طلب رابط جديد';
+
+  @override
   String get home_greetingMorning => 'صباح الخير';
 
   @override

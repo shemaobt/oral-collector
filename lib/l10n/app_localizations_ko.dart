@@ -171,6 +171,65 @@ class AppLocalizationsKo extends AppLocalizations {
   String get auth_continueButton => '계속';
 
   @override
+  String get auth_forgotPassword => '비밀번호를 잊으셨나요?';
+
+  @override
+  String get auth_resetPassword => '비밀번호 재설정';
+
+  @override
+  String get auth_forgotPasswordSubtitle => '이메일을 입력하시면 재설정 링크를 보내드립니다.';
+
+  @override
+  String get auth_sendResetLink => '링크 보내기';
+
+  @override
+  String get auth_sending => '전송 중...';
+
+  @override
+  String get auth_checkYourEmail => '이메일을 확인하세요';
+
+  @override
+  String auth_resetEmailSent(String email) {
+    return '$email로 비밀번호 재설정 링크를 보냈습니다. 받은 편지함을 확인하고 링크를 따라 새 비밀번호를 설정하세요.';
+  }
+
+  @override
+  String get auth_openEmailApp => '이메일 열기';
+
+  @override
+  String get auth_resendEmail => '재전송';
+
+  @override
+  String get auth_backToLogin => '로그인으로 돌아가기';
+
+  @override
+  String get auth_newPassword => '새 비밀번호';
+
+  @override
+  String get auth_confirmNewPassword => '새 비밀번호 확인';
+
+  @override
+  String get auth_resetPasswordSubtitle => '아래에 새 비밀번호를 입력하세요.';
+
+  @override
+  String get auth_resetPasswordButton => '비밀번호 재설정';
+
+  @override
+  String get auth_resetting => '재설정 중...';
+
+  @override
+  String get auth_resetSuccess => '비밀번호가 성공적으로 재설정되었습니다! 새 비밀번호로 로그인할 수 있습니다.';
+
+  @override
+  String get auth_invalidResetLink => '유효하지 않은 링크';
+
+  @override
+  String get auth_invalidResetLinkMessage => '이 비밀번호 재설정 링크가 유효하지 않거나 만료되었습니다.';
+
+  @override
+  String get auth_requestNewLink => '새 링크 요청';
+
+  @override
   String get home_greetingMorning => '좋은 아침입니다';
 
   @override

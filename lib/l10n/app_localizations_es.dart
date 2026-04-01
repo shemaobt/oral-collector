@@ -176,6 +176,69 @@ class AppLocalizationsEs extends AppLocalizations {
   String get auth_continueButton => 'Continuar';
 
   @override
+  String get auth_forgotPassword => '¿Olvidaste tu contraseña?';
+
+  @override
+  String get auth_resetPassword => 'Restablecer Contraseña';
+
+  @override
+  String get auth_forgotPasswordSubtitle =>
+      'Ingresa tu correo y te enviaremos un enlace de restablecimiento.';
+
+  @override
+  String get auth_sendResetLink => 'Enviar Enlace';
+
+  @override
+  String get auth_sending => 'Enviando...';
+
+  @override
+  String get auth_checkYourEmail => 'Revisa Tu Correo';
+
+  @override
+  String auth_resetEmailSent(String email) {
+    return 'Enviamos un enlace para restablecer tu contraseña a $email. Revisa tu bandeja de entrada y sigue el enlace para crear una nueva contraseña.';
+  }
+
+  @override
+  String get auth_openEmailApp => 'Abrir Correo';
+
+  @override
+  String get auth_resendEmail => 'Reenviar';
+
+  @override
+  String get auth_backToLogin => 'Volver al Inicio de Sesión';
+
+  @override
+  String get auth_newPassword => 'Nueva Contraseña';
+
+  @override
+  String get auth_confirmNewPassword => 'Confirmar Nueva Contraseña';
+
+  @override
+  String get auth_resetPasswordSubtitle =>
+      'Ingresa tu nueva contraseña a continuación.';
+
+  @override
+  String get auth_resetPasswordButton => 'Restablecer Contraseña';
+
+  @override
+  String get auth_resetting => 'Restableciendo...';
+
+  @override
+  String get auth_resetSuccess =>
+      '¡Contraseña restablecida con éxito! Ya puedes iniciar sesión con tu nueva contraseña.';
+
+  @override
+  String get auth_invalidResetLink => 'Enlace Inválido';
+
+  @override
+  String get auth_invalidResetLinkMessage =>
+      'Este enlace de restablecimiento es inválido o ha expirado.';
+
+  @override
+  String get auth_requestNewLink => 'Solicitar Nuevo Enlace';
+
+  @override
   String get home_greetingMorning => 'Buenos días';
 
   @override

@@ -61,6 +61,32 @@
   "auth_haveAccount": "Sudah punya akun? ",
   "auth_continueButton": "Lanjutkan",
 
+  "auth_forgotPassword": "Lupa kata sandi?",
+  "auth_resetPassword": "Atur Ulang Kata Sandi",
+  "auth_forgotPasswordSubtitle": "Masukkan email Anda dan kami akan mengirimkan tautan pengaturan ulang.",
+  "auth_sendResetLink": "Kirim Tautan",
+  "auth_sending": "Mengirim...",
+  "auth_checkYourEmail": "Periksa Email Anda",
+  "auth_resetEmailSent": "Kami mengirimkan tautan pengaturan ulang kata sandi ke {email}. Periksa kotak masuk Anda dan ikuti tautan untuk membuat kata sandi baru.",
+  "@auth_resetEmailSent": {
+    "placeholders": {
+      "email": {"type": "String"}
+    }
+  },
+  "auth_openEmailApp": "Buka Email",
+  "auth_resendEmail": "Kirim Ulang",
+  "auth_backToLogin": "Kembali ke Login",
+
+  "auth_newPassword": "Kata Sandi Baru",
+  "auth_confirmNewPassword": "Konfirmasi Kata Sandi Baru",
+  "auth_resetPasswordSubtitle": "Masukkan kata sandi baru Anda di bawah.",
+  "auth_resetPasswordButton": "Atur Ulang Kata Sandi",
+  "auth_resetting": "Mengatur ulang...",
+  "auth_resetSuccess": "Kata sandi berhasil diatur ulang! Anda sekarang dapat masuk dengan kata sandi baru.",
+  "auth_invalidResetLink": "Tautan Tidak Valid",
+  "auth_invalidResetLinkMessage": "Tautan pengaturan ulang ini tidak valid atau telah kedaluwarsa.",
+  "auth_requestNewLink": "Minta Tautan Baru",
+
   "home_greetingMorning": "Selamat pagi",
   "home_greetingAfternoon": "Selamat siang",
   "home_greetingEvening": "Selamat malam",

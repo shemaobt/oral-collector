@@ -61,6 +61,32 @@
   "auth_haveAccount": "已有账户？",
   "auth_continueButton": "继续",
 
+  "auth_forgotPassword": "忘记密码？",
+  "auth_resetPassword": "重置密码",
+  "auth_forgotPasswordSubtitle": "输入您的邮箱，我们将向您发送重置链接。",
+  "auth_sendResetLink": "发送链接",
+  "auth_sending": "发送中...",
+  "auth_checkYourEmail": "请查看您的邮箱",
+  "auth_resetEmailSent": "我们已向 {email} 发送了密码重置链接。请查看您的收件箱并点击链接设置新密码。",
+  "@auth_resetEmailSent": {
+    "placeholders": {
+      "email": {"type": "String"}
+    }
+  },
+  "auth_openEmailApp": "打开邮箱",
+  "auth_resendEmail": "重新发送",
+  "auth_backToLogin": "返回登录",
+
+  "auth_newPassword": "新密码",
+  "auth_confirmNewPassword": "确认新密码",
+  "auth_resetPasswordSubtitle": "请在下方输入您的新密码。",
+  "auth_resetPasswordButton": "重置密码",
+  "auth_resetting": "重置中...",
+  "auth_resetSuccess": "密码重置成功！您现在可以使用新密码登录。",
+  "auth_invalidResetLink": "无效链接",
+  "auth_invalidResetLinkMessage": "此密码重置链接无效或已过期。",
+  "auth_requestNewLink": "请求新链接",
+
   "home_greetingMorning": "早上好",
   "home_greetingAfternoon": "下午好",
   "home_greetingEvening": "晚上好",

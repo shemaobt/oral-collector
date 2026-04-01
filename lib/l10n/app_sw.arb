@@ -61,6 +61,32 @@
   "auth_haveAccount": "Una akaunti? ",
   "auth_continueButton": "Endelea",
 
+  "auth_forgotPassword": "Umesahau nenosiri?",
+  "auth_resetPassword": "Weka Nenosiri Upya",
+  "auth_forgotPasswordSubtitle": "Ingiza barua pepe yako na tutakutumia kiungo cha kuweka upya.",
+  "auth_sendResetLink": "Tuma Kiungo",
+  "auth_sending": "Inatuma...",
+  "auth_checkYourEmail": "Angalia Barua Pepe Yako",
+  "auth_resetEmailSent": "Tumetuma kiungo cha kuweka upya nenosiri kwa {email}. Angalia kikasha chako na ufuate kiungo ili kuweka nenosiri jipya.",
+  "@auth_resetEmailSent": {
+    "placeholders": {
+      "email": {"type": "String"}
+    }
+  },
+  "auth_openEmailApp": "Fungua Barua Pepe",
+  "auth_resendEmail": "Tuma Tena",
+  "auth_backToLogin": "Rudi kwenye Kuingia",
+
+  "auth_newPassword": "Nenosiri Jipya",
+  "auth_confirmNewPassword": "Thibitisha Nenosiri Jipya",
+  "auth_resetPasswordSubtitle": "Ingiza nenosiri lako jipya hapa chini.",
+  "auth_resetPasswordButton": "Weka Nenosiri Upya",
+  "auth_resetting": "Inaweka upya...",
+  "auth_resetSuccess": "Nenosiri limewekwa upya kwa mafanikio! Sasa unaweza kuingia na nenosiri lako jipya.",
+  "auth_invalidResetLink": "Kiungo si Sahihi",
+  "auth_invalidResetLinkMessage": "Kiungo hiki cha kuweka upya nenosiri si sahihi au kimekwisha muda.",
+  "auth_requestNewLink": "Omba Kiungo Kipya",
+
   "home_greetingMorning": "Habari za asubuhi",
   "home_greetingAfternoon": "Habari za mchana",
   "home_greetingEvening": "Habari za jioni",

@@ -173,6 +173,68 @@ class AppLocalizationsPt extends AppLocalizations {
   String get auth_continueButton => 'Continuar';
 
   @override
+  String get auth_forgotPassword => 'Esqueceu a senha?';
+
+  @override
+  String get auth_resetPassword => 'Redefinir Senha';
+
+  @override
+  String get auth_forgotPasswordSubtitle =>
+      'Insira seu e-mail e enviaremos um link de redefinição.';
+
+  @override
+  String get auth_sendResetLink => 'Enviar Link';
+
+  @override
+  String get auth_sending => 'Enviando...';
+
+  @override
+  String get auth_checkYourEmail => 'Verifique Seu E-mail';
+
+  @override
+  String auth_resetEmailSent(String email) {
+    return 'Enviamos um link de redefinição de senha para $email. Verifique sua caixa de entrada e siga o link para criar uma nova senha.';
+  }
+
+  @override
+  String get auth_openEmailApp => 'Abrir E-mail';
+
+  @override
+  String get auth_resendEmail => 'Reenviar';
+
+  @override
+  String get auth_backToLogin => 'Voltar ao Login';
+
+  @override
+  String get auth_newPassword => 'Nova Senha';
+
+  @override
+  String get auth_confirmNewPassword => 'Confirmar Nova Senha';
+
+  @override
+  String get auth_resetPasswordSubtitle => 'Digite sua nova senha abaixo.';
+
+  @override
+  String get auth_resetPasswordButton => 'Redefinir Senha';
+
+  @override
+  String get auth_resetting => 'Redefinindo...';
+
+  @override
+  String get auth_resetSuccess =>
+      'Senha redefinida com sucesso! Agora você pode entrar com sua nova senha.';
+
+  @override
+  String get auth_invalidResetLink => 'Link Inválido';
+
+  @override
+  String get auth_invalidResetLinkMessage =>
+      'Este link de redefinição de senha é inválido ou expirou.';
+
+  @override
+  String get auth_requestNewLink => 'Solicitar Novo Link';
+
+  @override
   String get home_greetingMorning => 'Bom dia';
 
   @override
