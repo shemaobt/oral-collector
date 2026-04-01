@@ -449,6 +449,8 @@
   "locale_tokPisinSub": "Tok Pisin",
   "locale_swahiliSub": "Tokples Swahili",
   "locale_arabicSub": "Tokples Arabik",
+  "locale_chinese": "中文",
+  "locale_chineseSub": "Saina",
   "locale_selectLanguage": "Makim Tokples bilong Yu",
   "locale_selectLanguageSubtitle": "Yu ken senisim dispela bihain long profail seting.",
 

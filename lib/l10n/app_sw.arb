@@ -449,6 +449,8 @@
   "locale_tokPisinSub": "Tok Pisin",
   "locale_swahiliSub": "Kiswahili",
   "locale_arabicSub": "Kiarabu",
+  "locale_chinese": "中文",
+  "locale_chineseSub": "Kichina",
   "locale_selectLanguage": "Chagua Lugha Yako",
   "locale_selectLanguageSubtitle": "Unaweza kubadilisha hii baadaye katika mipangilio ya wasifu.",
 

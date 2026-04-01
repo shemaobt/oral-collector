@@ -449,6 +449,8 @@
   "locale_tokPisinSub": "Tok Pisin",
   "locale_swahiliSub": "Swahili",
   "locale_arabicSub": "Arab",
+  "locale_chinese": "中文",
+  "locale_chineseSub": "Tionghoa",
   "locale_selectLanguage": "Pilih Bahasa Anda",
   "locale_selectLanguageSubtitle": "Anda dapat mengubah ini nanti di pengaturan profil.",
 

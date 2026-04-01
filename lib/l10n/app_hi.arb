@@ -449,6 +449,8 @@
   "locale_tokPisinSub": "टोक पिसिन",
   "locale_swahiliSub": "स्वाहिली",
   "locale_arabicSub": "अरबी",
+  "locale_chinese": "中文",
+  "locale_chineseSub": "चीनी",
   "locale_selectLanguage": "अपनी भाषा चुनें",
   "locale_selectLanguageSubtitle": "आप इसे बाद में अपनी प्रोफ़ाइल सेटिंग्स में बदल सकते हैं।",
 

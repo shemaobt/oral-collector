@@ -1392,6 +1392,12 @@ class AppLocalizationsSw extends AppLocalizations {
   String get locale_arabicSub => 'Kiarabu';
 
   @override
+  String get locale_chinese => '中文';
+
+  @override
+  String get locale_chineseSub => 'Kichina';
+
+  @override
   String get locale_selectLanguage => 'Chagua Lugha Yako';
 
   @override

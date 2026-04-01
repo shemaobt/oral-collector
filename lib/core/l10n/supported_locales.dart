@@ -11,6 +11,7 @@ const supportedLocales = [
   Locale('ar'),
   Locale('tpi'),
   Locale('ko'),
+  Locale('zh'),
 ];
 
 const localeNativeNames = {
@@ -24,6 +25,7 @@ const localeNativeNames = {
   'ar': 'العربية',
   'tpi': 'Tok Pisin',
   'ko': '한국어',
+  'zh': '中文',
 };
 
 const localeEnglishNames = {
@@ -37,4 +39,5 @@ const localeEnglishNames = {
   'ar': 'Arabic',
   'tpi': 'Tok Pisin',
   'ko': 'Korean',
+  'zh': 'Chinese',
 };

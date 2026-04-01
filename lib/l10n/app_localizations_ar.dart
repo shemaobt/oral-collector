@@ -1372,6 +1372,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get locale_arabicSub => 'العربية';
 
   @override
+  String get locale_chinese => '中文';
+
+  @override
+  String get locale_chineseSub => 'الصينية';
+
+  @override
   String get locale_selectLanguage => 'اختر لغتك';
 
   @override

@@ -1404,6 +1404,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get locale_arabicSub => 'Arab';
 
   @override
+  String get locale_chinese => '中文';
+
+  @override
+  String get locale_chineseSub => 'Tionghoa';
+
+  @override
   String get locale_selectLanguage => 'Pilih Bahasa Anda';
 
   @override

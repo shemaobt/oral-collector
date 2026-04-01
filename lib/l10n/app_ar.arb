@@ -449,6 +449,8 @@
   "locale_tokPisinSub": "توك بيسين",
   "locale_swahiliSub": "السواحيلية",
   "locale_arabicSub": "العربية",
+  "locale_chinese": "中文",
+  "locale_chineseSub": "الصينية",
   "locale_selectLanguage": "اختر لغتك",
   "locale_selectLanguageSubtitle": "يمكنك تغيير هذا لاحقاً في إعدادات ملفك الشخصي.",
 

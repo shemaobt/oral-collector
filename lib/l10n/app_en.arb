@@ -608,6 +608,8 @@
   "locale_tokPisinSub": "Tok Pisin",
   "locale_swahiliSub": "Swahili",
   "locale_arabicSub": "Arabic",
+  "locale_chinese": "中文",
+  "locale_chineseSub": "Chinese",
   "locale_selectLanguage": "Choose Your Language",
   "locale_selectLanguageSubtitle": "You can change this later in your profile settings.",
 

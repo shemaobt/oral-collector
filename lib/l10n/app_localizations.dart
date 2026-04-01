@@ -15,6 +15,7 @@ import 'app_localizations_ko.dart';
 import 'app_localizations_pt.dart';
 import 'app_localizations_sw.dart';
 import 'app_localizations_tpi.dart';
+import 'app_localizations_zh.dart';
 
 // ignore_for_file: type=lint
 
@@ -112,6 +113,7 @@ abstract class AppLocalizations {
     Locale('pt'),
     Locale('sw'),
     Locale('tpi'),
+    Locale('zh'),
   ];
 
   /// No description provided for @appTitle.
@@ -2616,6 +2618,18 @@ abstract class AppLocalizations {
   /// **'Arabic'**
   String get locale_arabicSub;
 
+  /// No description provided for @locale_chinese.
+  ///
+  /// In en, this message translates to:
+  /// **'中文'**
+  String get locale_chinese;
+
+  /// No description provided for @locale_chineseSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Chinese'**
+  String get locale_chineseSub;
+
   /// No description provided for @locale_selectLanguage.
   ///
   /// In en, this message translates to:
@@ -2980,6 +2994,7 @@ class _AppLocalizationsDelegate
     'pt',
     'sw',
     'tpi',
+    'zh',
   ].contains(locale.languageCode);
 
   @override
@@ -3009,6 +3024,8 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
       return AppLocalizationsSw();
     case 'tpi':
       return AppLocalizationsTpi();
+    case 'zh':
+      return AppLocalizationsZh();
   }
 
   throw FlutterError(

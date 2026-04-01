@@ -1421,6 +1421,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get locale_arabicSub => 'Arabe';
 
   @override
+  String get locale_chinese => '中文';
+
+  @override
+  String get locale_chineseSub => 'Chinois';
+
+  @override
   String get locale_selectLanguage => 'Choisissez Votre Langue';
 
   @override

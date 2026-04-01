@@ -1415,6 +1415,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get locale_arabicSub => 'Árabe';
 
   @override
+  String get locale_chinese => '中文';
+
+  @override
+  String get locale_chineseSub => 'Chino';
+
+  @override
   String get locale_selectLanguage => 'Elige Tu Idioma';
 
   @override

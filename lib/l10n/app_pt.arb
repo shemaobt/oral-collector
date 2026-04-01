@@ -459,6 +459,8 @@
   "locale_tokPisinSub": "Tok Pisin",
   "locale_swahiliSub": "Suaíli",
   "locale_arabicSub": "Árabe",
+  "locale_chinese": "中文",
+  "locale_chineseSub": "Chinês",
   "locale_selectLanguage": "Escolha Seu Idioma",
   "locale_selectLanguageSubtitle": "Você pode alterar isso mais tarde nas configurações do perfil.",
 

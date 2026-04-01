@@ -1390,6 +1390,12 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get locale_arabicSub => 'Tokples Arabik';
 
   @override
+  String get locale_chinese => '中文';
+
+  @override
+  String get locale_chineseSub => 'Saina';
+
+  @override
   String get locale_selectLanguage => 'Makim Tokples bilong Yu';
 
   @override

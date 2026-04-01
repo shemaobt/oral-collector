@@ -1353,6 +1353,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get locale_arabicSub => '아랍어';
 
   @override
+  String get locale_chinese => '中文';
+
+  @override
+  String get locale_chineseSub => '중국어';
+
+  @override
   String get locale_selectLanguage => '언어를 선택하세요';
 
   @override
