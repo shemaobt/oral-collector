@@ -44,7 +44,11 @@ class AuthRepositoryImpl implements AuthRepository {
     String password,
     String? displayName,
   ) async {
-    final body = <String, dynamic>{'email': email, 'password': password};
+    final body = <String, dynamic>{
+      'email': email,
+      'password': password,
+      'app_key': 'oral-collector',
+    };
     if (displayName != null) {
       body['display_name'] = displayName;
     }
