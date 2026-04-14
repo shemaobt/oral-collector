@@ -15,7 +15,11 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/platform/file_ops.dart' as file_ops;
 import '../../../../shared/widgets/app_shell.dart';
 import '../../../../shared/widgets/waveform_visualizer.dart';
+import '../../../auth/data/providers/role_provider.dart';
 import '../../../project/presentation/notifiers/project_notifier.dart';
+import '../../../storyteller/domain/entities/storyteller.dart';
+import '../../../storyteller/presentation/notifiers/project_storytellers_notifier.dart';
+import '../../../storyteller/presentation/widgets/storyteller_picker.dart';
 import '../../data/providers.dart';
 import '../../domain/entities/classification.dart';
 import '../notifiers/recording_session_state.dart';
@@ -55,6 +59,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
   bool _isSaving = false;
   Duration _position = Duration.zero;
   Duration _totalDuration = Duration.zero;
+  Storyteller? _selectedStoryteller;
 
   double get _progress {
     if (_totalDuration.inMilliseconds == 0) return 0.0;
@@ -68,6 +73,16 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
   void initState() {
     super.initState();
     _initPlayer();
+    _prefetchStorytellers();
+  }
+
+  void _prefetchStorytellers() {
+    final projectId = ref.read(projectNotifierProvider).activeProject?.id;
+    if (projectId == null || projectId.isEmpty) return;
+    final state = ref.read(projectStorytellersNotifierProvider);
+    if (state.projectId != projectId || state.storytellers.isEmpty) {
+      ref.read(projectStorytellersNotifierProvider.notifier).fetch(projectId);
+    }
   }
 
   Future<void> _initPlayer() async {
@@ -126,6 +141,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
   }
 
   Future<void> _save() async {
+    if (_selectedStoryteller == null) return;
     setState(() => _isSaving = true);
 
     final projectState = ref.read(projectNotifierProvider);
@@ -154,6 +170,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
         registerId: widget.registerId != null && widget.registerId!.isNotEmpty
             ? Value(widget.registerId!)
             : const Value.absent(),
+        storytellerId: Value(_selectedStoryteller!.id),
         title: Value(defaultRecordingTitle()),
         description: _descriptionController.text.trim().isNotEmpty
             ? Value(_descriptionController.text.trim())
@@ -358,6 +375,37 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
                 ),
                 child: Column(
                   children: [
+                    StorytellerPicker(
+                      projectId:
+                          ref.read(projectNotifierProvider).activeProject?.id ??
+                          '',
+                      selected: _selectedStoryteller,
+                      onChanged: (s) =>
+                          setState(() => _selectedStoryteller = s),
+                      showAddNew: ref
+                          .read(roleNotifierProvider.notifier)
+                          .canManageProject(
+                            ref
+                                    .read(projectNotifierProvider)
+                                    .activeProject
+                                    ?.id ??
+                                '',
+                          ),
+                    ),
+                    if (_selectedStoryteller == null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 6),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            l10n.storyteller_required,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: colors.error,
+                            ),
+                          ),
+                        ),
+                      ),
+                    const SizedBox(height: 12),
                     TextField(
                       controller: _descriptionController,
                       minLines: 2,
@@ -397,7 +445,9 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
                       width: double.infinity,
                       height: 52,
                       child: ElevatedButton(
-                        onPressed: _isSaving ? null : _save,
+                        onPressed: (_isSaving || _selectedStoryteller == null)
+                            ? null
+                            : _save,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: colors.accent,
                           foregroundColor: Colors.white,
