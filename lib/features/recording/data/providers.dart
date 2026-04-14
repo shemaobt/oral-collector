@@ -5,6 +5,7 @@ import '../../../core/network/authenticated_client.dart';
 import '../domain/repositories/recording_api_repository.dart';
 import 'repositories/local_recording_repository.dart';
 import 'repositories/recording_api_repository_impl.dart';
+import 'repositories/recording_session_repository.dart';
 
 final recordingApiRepositoryProvider = Provider<RecordingApiRepository>((ref) {
   return RecordingApiRepositoryImpl(
@@ -18,3 +19,10 @@ final localRecordingRepositoryProvider = Provider<LocalRecordingRepository>((
   final db = ref.watch(appDatabaseProvider);
   return LocalRecordingRepository(db);
 });
+
+final recordingSessionRepositoryProvider = Provider<RecordingSessionRepository>(
+  (ref) {
+    final db = ref.watch(appDatabaseProvider);
+    return RecordingSessionRepository(db);
+  },
+);
