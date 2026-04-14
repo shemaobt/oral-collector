@@ -24,9 +24,10 @@ import '../domain/entities/register.dart';
 import '../../sync/presentation/notifiers/sync_notifier.dart';
 import 'notifiers/recordings_list_notifier.dart';
 import 'notifiers/recordings_list_state.dart';
-import 'widgets/genre_filter_bar.dart';
+import 'widgets/active_filter_chips.dart';
+import 'widgets/filters_icon_button.dart';
 import 'widgets/recording_card.dart';
-import 'widgets/status_filter_bar.dart';
+import 'widgets/recordings_filter_sheet.dart';
 
 @Preview(name: 'Recordings List', wrapper: previewWrapper)
 Widget recordingsListPreview() => const RecordingsListScreen();
@@ -200,7 +201,6 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final colors = AppColors.of(context);
-    final genreState = ref.watch(genreNotifierProvider);
     final listState = ref.watch(recordingsListNotifierProvider);
     final filtered = listState.filteredRecordings;
     final syncState = ref.watch(syncNotifierProvider);
@@ -281,46 +281,25 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
                   title: l10n.recordings_title,
                   subtitle: l10n.recordings_subtitle,
                   icon: LucideIcons.mic,
-                  actions: const [SyncStatusIndicator()],
-                  bottom: PreferredSize(
-                    preferredSize: const Size.fromHeight(48),
-                    child: StatusFilterBar(
-                      colors: colors,
-                      theme: theme,
-                      currentFilter: ref.watch(
-                        recordingsListNotifierProvider.select(
-                          (s) => s.selectedFilter,
-                        ),
+                  actions: [
+                    const SyncStatusIndicator(),
+                    FiltersIconButton(
+                      count: listState.activeFilterCount,
+                      onTap: () => showModalBottomSheet<void>(
+                        context: context,
+                        isScrollControlled: true,
+                        useSafeArea: true,
+                        builder: (_) =>
+                            RecordingsFilterSheet(projectId: activeProject.id),
                       ),
-                      onFilterChanged: (filter) => ref
-                          .read(recordingsListNotifierProvider.notifier)
-                          .setStatusFilter(filter),
                     ),
-                  ),
+                  ],
                 ),
 
                 if (isOffline)
                   const SliverToBoxAdapter(child: StatusBanner.offline()),
 
-                if (genreState.genres.isNotEmpty)
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 12),
-                      child: GenreFilterBar(
-                        colors: colors,
-                        theme: theme,
-                        genres: genreState.genres,
-                        selectedGenreId: ref.watch(
-                          recordingsListNotifierProvider.select(
-                            (s) => s.selectedGenreId,
-                          ),
-                        ),
-                        onGenreSelected: (id) => ref
-                            .read(recordingsListNotifierProvider.notifier)
-                            .setGenreFilter(id),
-                      ),
-                    ),
-                  ),
+                const SliverToBoxAdapter(child: ActiveFilterChips()),
 
                 SliverToBoxAdapter(
                   child: Padding(

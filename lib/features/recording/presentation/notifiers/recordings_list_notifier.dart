@@ -61,6 +61,8 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
         projectId,
         offset: _serverOffset,
         limit: _pageSize,
+        userId: state.selectedUserId,
+        storytellerId: state.selectedStorytellerId,
       );
 
       final hasMore = serverPage.length >= _pageSize;
@@ -89,6 +91,8 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
       projectId,
       offset: 0,
       limit: _pageSize,
+      userId: state.selectedUserId,
+      storytellerId: state.selectedStorytellerId,
     );
     final localRecordings = await _localRepo.getAllRecordings(projectId);
 
@@ -128,6 +132,8 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
             genreId: s.genreId,
             subcategoryId: s.subcategoryId,
             registerId: s.registerId,
+            storytellerId: s.storytellerId,
+            userId: s.userId,
             title: s.title,
             durationSeconds: s.durationSeconds,
             fileSizeBytes: s.fileSizeBytes,
@@ -169,6 +175,34 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
 
   void setStatusFilter(StatusFilter filter) {
     state = state.copyWith(selectedFilter: filter);
+  }
+
+  Future<void> setStorytellerFilter(String? storytellerId) async {
+    if (storytellerId == null) {
+      state = state.copyWith(clearStorytellerId: true);
+    } else {
+      state = state.copyWith(selectedStorytellerId: storytellerId);
+    }
+    await fetchRecordings();
+  }
+
+  Future<void> setUserFilter(String? userId) async {
+    if (userId == null) {
+      state = state.copyWith(clearUserId: true);
+    } else {
+      state = state.copyWith(selectedUserId: userId);
+    }
+    await fetchRecordings();
+  }
+
+  Future<void> clearAllFilters() async {
+    state = state.copyWith(
+      selectedFilter: StatusFilter.all,
+      clearGenreId: true,
+      clearStorytellerId: true,
+      clearUserId: true,
+    );
+    await fetchRecordings();
   }
 
   Future<int> clearStaleRecordings() async {
