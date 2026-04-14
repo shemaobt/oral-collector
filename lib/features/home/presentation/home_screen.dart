@@ -325,6 +325,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   totalRecordings: totalRecordings,
                   totalDuration: totalDuration,
                   memberCount: activeProject.memberCount,
+                  storytellerCount: activeProject.storytellerCount,
                   colors: colors,
                   unclassifiedCount: homeState.unclassifiedCount,
                 ),

@@ -12,6 +12,7 @@ class StatsStrip extends StatelessWidget {
     required this.totalDuration,
     required this.memberCount,
     required this.colors,
+    this.storytellerCount = 0,
     this.unclassifiedCount = 0,
   });
 
@@ -19,6 +20,7 @@ class StatsStrip extends StatelessWidget {
   final double totalDuration;
   final int memberCount;
   final AppColorSet colors;
+  final int storytellerCount;
   final int unclassifiedCount;
 
   @override
@@ -69,6 +71,17 @@ class StatsStrip extends StatelessWidget {
                 label: l10n.stats_members,
                 icon: LucideIcons.users,
                 color: colors.info,
+              ),
+              VerticalDivider(
+                width: 1,
+                thickness: 1,
+                color: colors.border.withValues(alpha: 0.5),
+              ),
+              StatTile(
+                value: '$storytellerCount',
+                label: l10n.storyteller_title,
+                icon: LucideIcons.userCheck,
+                color: colors.secondary,
               ),
               if (unclassifiedCount > 0) ...[
                 VerticalDivider(

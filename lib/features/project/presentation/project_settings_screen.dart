@@ -80,6 +80,9 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
       final totalDuration =
           (stats['total_duration_seconds'] as num?)?.toDouble() ??
           project.totalDurationSeconds;
+      final storytellerCount =
+          (stats['total_storytellers'] as num?)?.toInt() ??
+          project.storytellerCount;
 
       final languages = ref.read(projectNotifierProvider).languages;
       final lang = languages
@@ -96,6 +99,7 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
         memberCount: project.memberCount,
         recordingCount: recordingCount,
         totalDurationSeconds: totalDuration,
+        storytellerCount: storytellerCount,
         createdAt: project.createdAt,
       );
 
@@ -437,6 +441,7 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
                           ProjectSettingsStatsRow(
                             project: _project!,
                             memberCount: memberCount,
+                            storytellerCount: _project!.storytellerCount,
                           ),
                           const SizedBox(height: 28),
                           Row(
@@ -457,6 +462,7 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
                       ProjectSettingsStatsRow(
                         project: _project!,
                         memberCount: memberCount,
+                        storytellerCount: _project!.storytellerCount,
                       ),
                       if (_isManager) ...[
                         const SizedBox(height: 28),

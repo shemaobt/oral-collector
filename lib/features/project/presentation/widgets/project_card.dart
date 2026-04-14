@@ -175,7 +175,10 @@ class ProjectCard extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      Row(
+                      Wrap(
+                        spacing: 10,
+                        runSpacing: 8,
+                        crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
                           ProjectStatChip(
                             icon: LucideIcons.users,
@@ -183,14 +186,12 @@ class ProjectCard extends StatelessWidget {
                             colors: colors,
                             theme: theme,
                           ),
-                          const SizedBox(width: 12),
                           ProjectStatChip(
                             icon: LucideIcons.mic,
                             value: '${project.recordingCount}',
                             colors: colors,
                             theme: theme,
                           ),
-                          const SizedBox(width: 12),
                           ProjectStatChip(
                             icon: LucideIcons.clock,
                             value: formatDurationCompact(
@@ -199,8 +200,13 @@ class ProjectCard extends StatelessWidget {
                             colors: colors,
                             theme: theme,
                           ),
+                          ProjectStatChip(
+                            icon: LucideIcons.userCheck,
+                            value: '${project.storytellerCount}',
+                            colors: colors,
+                            theme: theme,
+                          ),
                           if (isActive) ...[
-                            const Spacer(),
                             Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 10,
