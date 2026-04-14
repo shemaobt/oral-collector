@@ -1,8 +1,6 @@
 {
   "@@locale": "ar",
-
   "appTitle": "Oral Collector",
-
   "nav_home": "الرئيسية",
   "nav_record": "تسجيل",
   "nav_recordings": "التسجيلات",
@@ -10,7 +8,6 @@
   "nav_profile": "الملف الشخصي",
   "nav_admin": "المشرف",
   "nav_collapse": "طي",
-
   "common_cancel": "إلغاء",
   "common_save": "حفظ",
   "common_delete": "حذف",
@@ -25,7 +22,6 @@
   "common_clear": "مسح",
   "common_untitled": "بدون عنوان",
   "common_loading": "جارٍ التحميل...",
-
   "auth_oralCollector": "Oral Collector",
   "auth_byShema": "من Shema",
   "auth_heroTagline": "احفظ الأصوات.\nشارك القصص.",
@@ -38,7 +34,6 @@
   "auth_signInSubtitle": "سجّل الدخول لمتابعة جمع القصص.",
   "auth_signUpSubtitle": "انضم إلى مجتمعنا من جامعي القصص.",
   "auth_backToSignIn": "العودة لتسجيل الدخول",
-
   "auth_emailLabel": "البريد الإلكتروني",
   "auth_emailHint": "بريدك@الإلكتروني.com",
   "auth_emailRequired": "يرجى إدخال بريدك الإلكتروني",
@@ -54,13 +49,11 @@
   "auth_nameLabel": "الاسم",
   "auth_nameHint": "اسمك الكامل",
   "auth_nameRequired": "يرجى إدخال اسم العرض",
-
   "auth_signIn": "تسجيل الدخول",
   "auth_signUp": "إنشاء حساب",
   "auth_noAccount": "ليس لديك حساب؟ ",
   "auth_haveAccount": "لديك حساب بالفعل؟ ",
   "auth_continueButton": "متابعة",
-
   "auth_forgotPassword": "نسيت كلمة المرور؟",
   "auth_resetPassword": "إعادة تعيين كلمة المرور",
   "auth_forgotPasswordSubtitle": "أدخل بريدك الإلكتروني وسنرسل لك رابط إعادة التعيين.",
@@ -70,13 +63,14 @@
   "auth_resetEmailSent": "أرسلنا رابط إعادة تعيين كلمة المرور إلى {email}. تحقق من صندوق الوارد واتبع الرابط لإنشاء كلمة مرور جديدة.",
   "@auth_resetEmailSent": {
     "placeholders": {
-      "email": {"type": "String"}
+      "email": {
+        "type": "String"
+      }
     }
   },
   "auth_openEmailApp": "فتح البريد الإلكتروني",
   "auth_resendEmail": "إعادة الإرسال",
   "auth_backToLogin": "العودة إلى تسجيل الدخول",
-
   "auth_newPassword": "كلمة المرور الجديدة",
   "auth_confirmNewPassword": "تأكيد كلمة المرور الجديدة",
   "auth_resetPasswordSubtitle": "أدخل كلمة المرور الجديدة أدناه.",
@@ -86,7 +80,6 @@
   "auth_invalidResetLink": "رابط غير صالح",
   "auth_invalidResetLinkMessage": "رابط إعادة تعيين كلمة المرور هذا غير صالح أو منتهي الصلاحية.",
   "auth_requestNewLink": "طلب رابط جديد",
-
   "home_greetingMorning": "صباح الخير",
   "home_greetingAfternoon": "مساء الخير",
   "home_greetingEvening": "مساء الخير",
@@ -99,11 +92,9 @@
   "home_noGenres": "لا توجد أنواع متاحة بعد",
   "home_noProjectTitle": "اختر مشروعاً للبدء",
   "home_browseProjects": "تصفح المشاريع",
-
   "stats_recordings": "تسجيلات",
   "stats_recorded": "مسجّل",
   "stats_members": "أعضاء",
-
   "project_switchTitle": "تبديل المشروع",
   "project_projects": "المشاريع",
   "project_subtitle": "إدارة مجموعاتك",
@@ -135,7 +126,6 @@
   "project_addAsNewLanguage": "إضافة \"{query}\" كلغة جديدة",
   "project_searchLanguages": "البحث عن لغات...",
   "project_backToList": "العودة إلى القائمة",
-
   "projectSettings_title": "إعدادات المشروع",
   "projectSettings_details": "التفاصيل",
   "projectSettings_saving": "جارٍ الحفظ...",
@@ -149,7 +139,6 @@
   "projectSettings_memberRemoveFailed": "فشل في إزالة العضو",
   "projectSettings_inviteSent": "تم إرسال الدعوة بنجاح",
   "projectSettings_noMembers": "لا يوجد أعضاء بعد",
-
   "recording_selectGenre": "اختيار النوع",
   "recording_selectGenreSubtitle": "اختر نوعاً لقصتك",
   "recording_selectSubcategory": "اختيار الفئة الفرعية",
@@ -163,7 +152,6 @@
   "recording_genreNotFound": "النوع غير موجود",
   "recording_noGenres": "لا توجد أنواع متاحة",
   "recording_noSubcategories": "لا توجد فئات فرعية متاحة",
-
   "recording_registerDescription": "اختر سجل الكلام الذي يصف أفضل نبرة وشكلية هذا التسجيل.",
   "recording_titleHint": "أضف عنواناً (اختياري)",
   "recording_descriptionHint": "أضف وصفاً قصيراً (اختياري)",
@@ -174,7 +162,6 @@
   "recording_discardTitle": "تجاهل التسجيل؟",
   "recording_discardMessage": "سيتم حذف هذا التسجيل نهائياً.",
   "recording_saved": "تم حفظ التسجيل",
-
   "recording_notFound": "التسجيل غير موجود",
   "recording_unknownGenre": "نوع غير معروف",
   "recording_splitRecording": "تقسيم التسجيل",
@@ -193,7 +180,6 @@
   "recording_moveNoPermission": "ليس لديك صلاحية لنقل هذا التسجيل",
   "recording_movedSuccess": "تم نقل التسجيل بنجاح",
   "recording_updateFailed": "فشل في التحديث على الخادم",
-
   "recordings_title": "التسجيلات",
   "recordings_subtitle": "قصصك المجمّعة",
   "recordings_importAudio": "استيراد ملف صوتي",
@@ -202,12 +188,10 @@
   "recordings_noRecordings": "لا توجد تسجيلات بعد",
   "recordings_noRecordingsSubtitle": "انقر على الميكروفون لتسجيل أول قصة لك، أو استورد ملفاً صوتياً.",
   "recordings_count": "{count, plural, =1{تسجيل واحد} other{{count} تسجيلات}}",
-
   "recording_statusUploaded": "تم الرفع",
   "recording_statusUploading": "جارٍ الرفع",
   "recording_statusFailed": "فشل",
   "recording_statusLocal": "محلي",
-
   "trim_title": "تقسيم التسجيل",
   "trim_notFound": "التسجيل غير موجود",
   "trim_audioUrlNotAvailable": "رابط الصوت غير متاح لهذا التسجيل.",
@@ -221,7 +205,6 @@
   "trim_addSplitsFirst": "أضف تقسيمات أولاً",
   "trim_savedSegments": "تم حفظ {kept} مقطع، وإزالة {removed}",
   "trim_splitInto": "تقسيم إلى {count} تسجيلات",
-
   "import_title": "استيراد الصوت",
   "import_selectGenre": "اختيار النوع",
   "import_selectSubcategory": "اختيار الفئة الفرعية",
@@ -235,20 +218,16 @@
   "import_saveError": "خطأ في حفظ الملف: {error}",
   "import_unknownFile": "ملف غير معروف",
   "import_importAndSave": "استيراد وحفظ",
-
   "moveCategory_title": "نقل الفئة",
   "moveCategory_genre": "النوع",
   "moveCategory_subcategory": "الفئة الفرعية",
   "moveCategory_selectSubcategory": "اختيار الفئة الفرعية",
-
   "cleaning_needsCleaning": "يحتاج تنظيف",
   "cleaning_cleaning": "جارٍ التنظيف...",
   "cleaning_cleaned": "تم التنظيف",
   "cleaning_cleanFailed": "فشل التنظيف",
-
   "sync_uploading": "جارٍ الرفع...",
   "sync_pending": "{count} قيد الانتظار",
-
   "profile_photoUpdated": "تم تحديث صورة الملف الشخصي",
   "profile_photoFailed": "فشل في تحديث الصورة: {error}",
   "profile_editName": "تعديل اسم العرض",
@@ -273,7 +252,6 @@
   "profile_joinedSuccess": "انضممت إلى \"{name}\" بنجاح",
   "profile_inviteDeclined": "تم رفض الدعوة",
   "profile_language": "اللغة",
-
   "profile_online": "متصل",
   "profile_offline": "غير متصل",
   "profile_lastSync": "آخر مزامنة: {time}",
@@ -287,7 +265,6 @@
   "profile_autoRemoveSubtitle": "حذف الملفات المحلية بعد الرفع الناجح",
   "profile_clearCache": "مسح الذاكرة المؤقتة المحلية",
   "profile_clearCacheSubtitle": "حذف جميع التسجيلات المخزنة محلياً",
-
   "profile_invitations": "الدعوات",
   "profile_refreshInvitations": "تحديث الدعوات",
   "profile_noInvitations": "لا توجد دعوات معلقة",
@@ -295,24 +272,20 @@
   "profile_roleMember": "الدور: عضو",
   "profile_decline": "رفض",
   "profile_accept": "قبول",
-
   "profile_storage": "التخزين",
   "profile_status": "الحالة",
   "profile_pendingLabel": "قيد الانتظار",
-
   "admin_title": "لوحة المشرف",
   "admin_overview": "نظرة عامة",
   "admin_projects": "المشاريع",
   "admin_genres": "الأنواع",
   "admin_cleaning": "التنظيف",
   "admin_accessRequired": "مطلوب صلاحية المشرف",
-
   "admin_totalProjects": "إجمالي المشاريع",
   "admin_languages": "اللغات",
   "admin_recordings": "التسجيلات",
   "admin_totalHours": "إجمالي الساعات",
   "admin_activeUsers": "المستخدمون النشطون",
-
   "admin_projectName": "الاسم",
   "admin_projectLanguage": "اللغة",
   "admin_projectMembers": "الأعضاء",
@@ -321,7 +294,6 @@
   "admin_projectCreated": "تاريخ الإنشاء",
   "admin_noProjects": "لم يتم العثور على مشاريع",
   "admin_unknownLanguage": "لغة غير معروفة",
-
   "admin_genresAndSubcategories": "الأنواع والفئات الفرعية",
   "admin_addGenre": "إضافة نوع",
   "admin_noGenres": "لم يتم العثور على أنواع",
@@ -343,7 +315,6 @@
   "admin_deleteSubcategory": "حذف الفئة الفرعية",
   "admin_deleteSubcategoryConfirm": "حذف \"{name}\"؟",
   "admin_subcategoryDeleted": "تم حذف الفئة الفرعية",
-
   "admin_cleaningQueue": "قائمة انتظار تنظيف الصوت",
   "admin_cleanSelected": "تنظيف المحدد ({count})",
   "admin_refreshCleaning": "تحديث قائمة التنظيف",
@@ -361,11 +332,9 @@
   "admin_cleaningTriggered": "تم بدء التنظيف",
   "admin_cleaningFailed": "فشل في بدء التنظيف",
   "admin_cleaningPartial": "تم بدء التنظيف لـ {success} من {total} تسجيلات",
-
   "genre_title": "النوع",
   "genre_notFound": "النوع غير موجود",
   "genre_recordingCount": "{count, plural, =1{تسجيل واحد} other{{count} تسجيلات}}",
-
   "format_justNow": "الآن",
   "format_minutesAgo": "منذ {count} د",
   "format_hoursAgo": "منذ {count} س",
@@ -375,7 +344,6 @@
   "format_memberSince": "عضو منذ {date}",
   "format_member": "عضو",
   "format_dateAt": "{date} الساعة {time}",
-
   "genre_narrative": "سردي",
   "genre_narrativeDesc": "القصص والروايات والأشكال السردية من التراث الشفهي",
   "genre_poeticSong": "شعر / أغنية",
@@ -384,7 +352,6 @@
   "genre_instructionalDesc": "القوانين والطقوس والإجراءات والأشكال التعليمية",
   "genre_oralDiscourse": "الخطاب الشفهي",
   "genre_oralDiscourseDesc": "الخطب والتعاليم والصلوات والأشكال الخطابية الشفهية",
-
   "sub_historicalNarrative": "سرد تاريخي",
   "sub_personalAccount": "رواية شخصية / شهادة",
   "sub_parable": "مثل / قصة توضيحية",
@@ -416,7 +383,6 @@
   "sub_apocalypticDiscourse": "خطاب نهاية الأزمنة",
   "sub_ceremonialSpeech": "خطاب احتفالي",
   "sub_communityMemory": "ذاكرة المجتمع",
-
   "sub_historicalNarrativeDesc": "روايات الأحداث والحروب واللحظات المفصلية في التاريخ",
   "sub_personalAccountDesc": "قصص شخصية عن التجارب الحياتية والإيمان",
   "sub_parableDesc": "قصص رمزية تُعلّم دروساً أخلاقية أو روحية",
@@ -448,7 +414,6 @@
   "sub_apocalypticDiscourseDesc": "إعلانات عن نهاية الأزمنة وخطة الله",
   "sub_ceremonialSpeechDesc": "خطب رسمية للمناسبات الرسمية أو المقدسة",
   "sub_communityMemoryDesc": "ذكريات مشتركة تحفظ هوية المجموعة",
-
   "register_intimate": "حميمي",
   "register_casual": "غير رسمي / عادي",
   "register_consultative": "استشاري",
@@ -456,7 +421,6 @@
   "register_ceremonial": "احتفالي",
   "register_elderAuthority": "كبير / ذو سلطة",
   "register_religiousWorship": "ديني / عبادي",
-
   "locale_english": "English",
   "locale_portuguese": "Português",
   "locale_hindi": "हिन्दी",
@@ -481,13 +445,11 @@
   "locale_chineseSub": "الصينية",
   "locale_selectLanguage": "اختر لغتك",
   "locale_selectLanguageSubtitle": "يمكنك تغيير هذا لاحقاً في إعدادات ملفك الشخصي.",
-
   "filter_all": "الكل",
   "filter_pending": "قيد الانتظار",
   "filter_uploaded": "تم الرفع",
   "filter_needsCleaning": "يحتاج تنظيف",
   "filter_allGenres": "جميع الأنواع",
-
   "detail_duration": "المدة",
   "detail_size": "الحجم",
   "detail_format": "الصيغة",
@@ -504,20 +466,16 @@
   "detail_uploadFailed": "فشل الرفع",
   "detail_pendingRetried": "قيد الانتظار (أُعيدت المحاولة)",
   "detail_notSynced": "غير مُزامن",
-
   "action_actions": "الإجراءات",
   "action_split": "تقسيم",
   "action_flagClean": "تعليم للتنظيف",
   "action_clearFlag": "إزالة التعليم",
   "action_move": "نقل",
   "action_delete": "حذف",
-
   "projectStats_recordings": "التسجيلات",
   "projectStats_duration": "المدة",
   "projectStats_members": "الأعضاء",
-
   "project_active": "نشط",
-
   "recording_paused": "متوقف مؤقتاً",
   "recording_recording": "جارٍ التسجيل",
   "recording_tapToRecord": "انقر للتسجيل",
@@ -529,11 +487,16 @@
   "recording_stop": "إيقاف",
   "recording_resume": "استئناف",
   "recording_pause": "إيقاف مؤقت",
-
   "recordings_clearStale": "مسح الفاشلة",
   "recordings_clearStaleMessage": "سيؤدي هذا إلى حذف جميع التسجيلات ذات حالة الرفع الفاشلة أو المعلقة من الخادم نهائياً. لا يمكن التراجع عن هذا الإجراء.",
   "recordings_clearedCount": "{count, plural, =0{لم يتم العثور على تسجيلات قديمة} =1{تم مسح تسجيل واحد} other{تم مسح {count} تسجيلات}}",
-  "@recordings_clearedCount": {"placeholders": {"count": {"type": "int"}}},
+  "@recordings_clearedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "recordings_clearFailed": "فشل في مسح التسجيلات",
   "filter_unclassified": "غير مصنف",
   "quickRecord_title": "تسجيل سريع",
@@ -548,7 +511,6 @@
   "recording_unclassified": "غير مصنف",
   "fab_quickRecord": "سريع",
   "fab_normalRecord": "تسجيل",
-
   "error_network": "تعذر الوصول إلى الخادم. يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى.",
   "error_secureConnection": "تعذر إنشاء اتصال آمن. يرجى المحاولة مرة أخرى لاحقاً.",
   "error_timeout": "انتهت مهلة الطلب. يرجى التحقق من اتصالك والمحاولة مرة أخرى.",
@@ -564,5 +526,68 @@
   "error_imageUploadFailed": "تعذر رفع الصورة. يرجى المحاولة مرة أخرى.",
   "error_notAuthenticated": "لم تقم بتسجيل الدخول. يرجى تسجيل الدخول والمحاولة مرة أخرى.",
   "error_noPermission": "ليس لديك صلاحية للقيام بهذا الإجراء.",
-  "error_generic": "حدث خطأ ما. يرجى المحاولة مرة أخرى لاحقاً."
+  "error_generic": "حدث خطأ ما. يرجى المحاولة مرة أخرى لاحقاً.",
+  "storyteller_title": "Storytellers",
+  "storyteller_singular": "Storyteller",
+  "storyteller_manageAction": "Manage storytellers",
+  "storyteller_addNew": "Add storyteller",
+  "storyteller_createTitle": "New storyteller",
+  "storyteller_editTitle": "Edit storyteller",
+  "storyteller_speakerName": "Speaker name",
+  "storyteller_sex": "Sex",
+  "storyteller_sexMale": "Male",
+  "storyteller_sexFemale": "Female",
+  "storyteller_age": "Age",
+  "storyteller_location": "Location",
+  "storyteller_dialect": "Dialect",
+  "storyteller_externalAcceptanceTitle": "External acceptance validation",
+  "storyteller_externalAcceptanceDescription": "I confirm that external acceptance validation has been performed for this speaker.",
+  "storyteller_externalAcceptanceInfo": "Before registering a storyteller, the project manager must obtain the speaker's consent outside the app (for example, through a signed release form or recorded verbal agreement). This checkbox records that this step was completed.",
+  "storyteller_createRequiresConnection": "Creating a storyteller requires an internet connection.",
+  "storyteller_deleteTitle": "Delete storyteller?",
+  "storyteller_deleteMessage": "Recordings previously assigned to this storyteller will show as unassigned.",
+  "storyteller_noneAssigned": "No storyteller assigned",
+  "storyteller_unknown": "Unknown storyteller",
+  "storyteller_selectHint": "Pick a storyteller",
+  "storyteller_required": "A storyteller is required",
+  "storyteller_searchPlaceholder": "Search storytellers",
+  "storyteller_empty": "No storytellers yet",
+  "storyteller_emptyDescription": "Create a storyteller for the project to assign to recordings.",
+  "storyteller_offlineNoCache": "Storytellers haven't been synced yet. Connect to the internet to load them.",
+  "storyteller_assign": "Assign",
+  "storyteller_reassign": "Reassign",
+  "storyteller_ageValidator": "Enter an age between 1 and 120",
+  "storyteller_ageYearsShort": "{age}y",
+  "@storyteller_ageYearsShort": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
+  "filters_buttonLabel": "Filters",
+  "filters_sheetTitle": "Filter recordings",
+  "filters_sectionStatus": "Upload status",
+  "filters_sectionGenre": "Genre",
+  "filters_sectionStoryteller": "Storyteller",
+  "filters_sectionUser": "Recorded by",
+  "filter_apply": "Apply",
+  "filter_reset": "Reset",
+  "filter_clearAll": "Clear all",
+  "filter_countActive": "{count, plural, one{1 filter} other{{count} filters}}",
+  "@filter_countActive": {
+    "placeholders": {
+      "count": {
+        "type": "num",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "filter_userAll": "Any user",
+  "filter_storytellerAll": "Any storyteller",
+  "filter_genreAll": "Any genre",
+  "detail_recordedBy": "Recorded by",
+  "detail_storyteller": "Storyteller",
+  "recording_unknownUser": "Unknown user",
+  "common_close": "Close"
 }

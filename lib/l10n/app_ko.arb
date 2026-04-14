@@ -1,8 +1,6 @@
 {
   "@@locale": "ko",
-
   "appTitle": "Oral Collector",
-
   "nav_home": "홈",
   "nav_record": "녹음",
   "nav_recordings": "녹음 목록",
@@ -10,7 +8,6 @@
   "nav_profile": "프로필",
   "nav_admin": "관리",
   "nav_collapse": "접기",
-
   "common_cancel": "취소",
   "common_save": "저장",
   "common_delete": "삭제",
@@ -25,7 +22,6 @@
   "common_clear": "지우기",
   "common_untitled": "제목 없음",
   "common_loading": "로딩 중...",
-
   "auth_oralCollector": "Oral Collector",
   "auth_byShema": "by Shema",
   "auth_heroTagline": "목소리를 보존하고\n이야기를 나누세요.",
@@ -38,7 +34,6 @@
   "auth_signInSubtitle": "이야기를 계속 수집하려면 로그인하세요.",
   "auth_signUpSubtitle": "이야기 수집 커뮤니티에 참여하세요.",
   "auth_backToSignIn": "로그인으로 돌아가기",
-
   "auth_emailLabel": "이메일 주소",
   "auth_emailHint": "your@email.com",
   "auth_emailRequired": "이메일을 입력해 주세요",
@@ -54,13 +49,11 @@
   "auth_nameLabel": "이름",
   "auth_nameHint": "이름을 입력하세요",
   "auth_nameRequired": "표시 이름을 입력해 주세요",
-
   "auth_signIn": "로그인",
   "auth_signUp": "회원가입",
   "auth_noAccount": "계정이 없으신가요? ",
   "auth_haveAccount": "이미 계정이 있으신가요? ",
   "auth_continueButton": "계속",
-
   "auth_forgotPassword": "비밀번호를 잊으셨나요?",
   "auth_resetPassword": "비밀번호 재설정",
   "auth_forgotPasswordSubtitle": "이메일을 입력하시면 재설정 링크를 보내드립니다.",
@@ -70,13 +63,14 @@
   "auth_resetEmailSent": "{email}로 비밀번호 재설정 링크를 보냈습니다. 받은 편지함을 확인하고 링크를 따라 새 비밀번호를 설정하세요.",
   "@auth_resetEmailSent": {
     "placeholders": {
-      "email": {"type": "String"}
+      "email": {
+        "type": "String"
+      }
     }
   },
   "auth_openEmailApp": "이메일 열기",
   "auth_resendEmail": "재전송",
   "auth_backToLogin": "로그인으로 돌아가기",
-
   "auth_newPassword": "새 비밀번호",
   "auth_confirmNewPassword": "새 비밀번호 확인",
   "auth_resetPasswordSubtitle": "아래에 새 비밀번호를 입력하세요.",
@@ -86,7 +80,6 @@
   "auth_invalidResetLink": "유효하지 않은 링크",
   "auth_invalidResetLinkMessage": "이 비밀번호 재설정 링크가 유효하지 않거나 만료되었습니다.",
   "auth_requestNewLink": "새 링크 요청",
-
   "home_greetingMorning": "좋은 아침입니다",
   "home_greetingAfternoon": "좋은 오후입니다",
   "home_greetingEvening": "좋은 저녁입니다",
@@ -99,11 +92,9 @@
   "home_noGenres": "아직 사용 가능한 장르가 없습니다",
   "home_noProjectTitle": "시작하려면 프로젝트를 선택하세요",
   "home_browseProjects": "프로젝트 둘러보기",
-
   "stats_recordings": "녹음",
   "stats_recorded": "녹음됨",
   "stats_members": "구성원",
-
   "project_switchTitle": "프로젝트 전환",
   "project_projects": "프로젝트",
   "project_subtitle": "컬렉션 관리",
@@ -135,7 +126,6 @@
   "project_addAsNewLanguage": "\"{query}\"을(를) 새 언어로 추가",
   "project_searchLanguages": "언어 검색...",
   "project_backToList": "목록으로 돌아가기",
-
   "projectSettings_title": "프로젝트 설정",
   "projectSettings_details": "세부 정보",
   "projectSettings_saving": "저장 중...",
@@ -149,7 +139,6 @@
   "projectSettings_memberRemoveFailed": "구성원 제거에 실패했습니다",
   "projectSettings_inviteSent": "초대가 전송되었습니다",
   "projectSettings_noMembers": "아직 구성원이 없습니다",
-
   "recording_selectGenre": "장르 선택",
   "recording_selectGenreSubtitle": "이야기의 장르를 선택하세요",
   "recording_selectSubcategory": "하위 분류 선택",
@@ -163,7 +152,6 @@
   "recording_genreNotFound": "장르를 찾을 수 없습니다",
   "recording_noGenres": "사용 가능한 장르가 없습니다",
   "recording_noSubcategories": "사용 가능한 하위 분류가 없습니다",
-
   "recording_registerDescription": "이 녹음의 어조와 격식 수준을 가장 잘 나타내는 언어 사용역을 선택하세요.",
   "recording_titleHint": "제목 추가 (선택 사항)",
   "recording_descriptionHint": "짧은 설명 추가 (선택 사항)",
@@ -174,7 +162,6 @@
   "recording_discardTitle": "녹음을 삭제하시겠습니까?",
   "recording_discardMessage": "이 녹음은 영구적으로 삭제됩니다.",
   "recording_saved": "녹음이 저장되었습니다",
-
   "recording_notFound": "녹음을 찾을 수 없습니다",
   "recording_unknownGenre": "알 수 없는 장르",
   "recording_splitRecording": "녹음 분할",
@@ -193,7 +180,6 @@
   "recording_moveNoPermission": "이 녹음을 이동할 권한이 없습니다",
   "recording_movedSuccess": "녹음이 성공적으로 이동되었습니다",
   "recording_updateFailed": "서버에서 업데이트하지 못했습니다",
-
   "recordings_title": "녹음 목록",
   "recordings_subtitle": "수집한 이야기들",
   "recordings_importAudio": "오디오 파일 가져오기",
@@ -202,12 +188,10 @@
   "recordings_noRecordings": "녹음이 아직 없습니다",
   "recordings_noRecordingsSubtitle": "마이크를 탭하여 첫 번째 이야기를 녹음하거나 오디오 파일을 가져오세요.",
   "recordings_count": "{count, plural, =1{녹음 1개} other{녹음 {count}개}}",
-
   "recording_statusUploaded": "업로드됨",
   "recording_statusUploading": "업로드 중",
   "recording_statusFailed": "실패",
   "recording_statusLocal": "로컬",
-
   "trim_title": "녹음 분할",
   "trim_notFound": "녹음을 찾을 수 없습니다",
   "trim_audioUrlNotAvailable": "이 녹음의 오디오 URL을 사용할 수 없습니다.",
@@ -221,7 +205,6 @@
   "trim_addSplitsFirst": "먼저 분할 지점을 추가하세요",
   "trim_savedSegments": "세그먼트 {kept}개 저장, {removed}개 제거",
   "trim_splitInto": "{count}개 녹음으로 분할",
-
   "import_title": "오디오 가져오기",
   "import_selectGenre": "장르 선택",
   "import_selectSubcategory": "하위 분류 선택",
@@ -235,20 +218,16 @@
   "import_saveError": "파일 저장 오류: {error}",
   "import_unknownFile": "알 수 없는 파일",
   "import_importAndSave": "가져오기 및 저장",
-
   "moveCategory_title": "분류 이동",
   "moveCategory_genre": "장르",
   "moveCategory_subcategory": "하위 분류",
   "moveCategory_selectSubcategory": "하위 분류 선택",
-
   "cleaning_needsCleaning": "클리닝 필요",
   "cleaning_cleaning": "클리닝 중...",
   "cleaning_cleaned": "클리닝 완료",
   "cleaning_cleanFailed": "클리닝 실패",
-
   "sync_uploading": "업로드 중...",
   "sync_pending": "{count}개 대기 중",
-
   "profile_photoUpdated": "프로필 사진이 업데이트되었습니다",
   "profile_photoFailed": "사진 업데이트 실패: {error}",
   "profile_editName": "표시 이름 편집",
@@ -273,7 +252,6 @@
   "profile_joinedSuccess": "\"{name}\"에 성공적으로 참여했습니다",
   "profile_inviteDeclined": "초대가 거절되었습니다",
   "profile_language": "언어",
-
   "profile_online": "온라인",
   "profile_offline": "오프라인",
   "profile_lastSync": "마지막 동기화: {time}",
@@ -287,7 +265,6 @@
   "profile_autoRemoveSubtitle": "업로드 성공 후 로컬 파일 삭제",
   "profile_clearCache": "로컬 캐시 삭제",
   "profile_clearCacheSubtitle": "로컬에 저장된 모든 녹음 삭제",
-
   "profile_invitations": "초대",
   "profile_refreshInvitations": "초대 새로고침",
   "profile_noInvitations": "대기 중인 초대가 없습니다",
@@ -295,24 +272,20 @@
   "profile_roleMember": "역할: 구성원",
   "profile_decline": "거절",
   "profile_accept": "수락",
-
   "profile_storage": "저장소",
   "profile_status": "상태",
   "profile_pendingLabel": "대기 중",
-
   "admin_title": "관리자 대시보드",
   "admin_overview": "개요",
   "admin_projects": "프로젝트",
   "admin_genres": "장르",
   "admin_cleaning": "클리닝",
   "admin_accessRequired": "관리자 권한이 필요합니다",
-
   "admin_totalProjects": "총 프로젝트",
   "admin_languages": "언어",
   "admin_recordings": "녹음",
   "admin_totalHours": "총 시간",
   "admin_activeUsers": "활성 사용자",
-
   "admin_projectName": "이름",
   "admin_projectLanguage": "언어",
   "admin_projectMembers": "구성원",
@@ -321,7 +294,6 @@
   "admin_projectCreated": "생성일",
   "admin_noProjects": "프로젝트를 찾을 수 없습니다",
   "admin_unknownLanguage": "알 수 없는 언어",
-
   "admin_genresAndSubcategories": "장르 및 하위 분류",
   "admin_addGenre": "장르 추가",
   "admin_noGenres": "장르를 찾을 수 없습니다",
@@ -343,7 +315,6 @@
   "admin_deleteSubcategory": "하위 분류 삭제",
   "admin_deleteSubcategoryConfirm": "\"{name}\"을(를) 삭제하시겠습니까?",
   "admin_subcategoryDeleted": "하위 분류가 삭제되었습니다",
-
   "admin_cleaningQueue": "오디오 클리닝 대기열",
   "admin_cleanSelected": "선택 항목 클리닝 ({count})",
   "admin_refreshCleaning": "클리닝 대기열 새로고침",
@@ -361,11 +332,9 @@
   "admin_cleaningTriggered": "클리닝이 시작되었습니다",
   "admin_cleaningFailed": "클리닝 시작에 실패했습니다",
   "admin_cleaningPartial": "{total}개 녹음 중 {success}개 클리닝이 시작되었습니다",
-
   "genre_title": "장르",
   "genre_notFound": "장르를 찾을 수 없습니다",
   "genre_recordingCount": "{count, plural, =1{녹음 1개} other{녹음 {count}개}}",
-
   "format_justNow": "방금 전",
   "format_minutesAgo": "{count}분 전",
   "format_hoursAgo": "{count}시간 전",
@@ -375,7 +344,6 @@
   "format_memberSince": "{date}부터 구성원",
   "format_member": "구성원",
   "format_dateAt": "{date} {time}",
-
   "genre_narrative": "서사",
   "genre_narrativeDesc": "구전 전통의 이야기, 기록 및 서사적 형태",
   "genre_poeticSong": "시 / 노래",
@@ -384,7 +352,6 @@
   "genre_instructionalDesc": "법률, 의식, 절차 및 교훈적 형태",
   "genre_oralDiscourse": "구술 담화",
   "genre_oralDiscourseDesc": "연설, 가르침, 기도 및 담론적 구술 형태",
-
   "sub_historicalNarrative": "역사 서사",
   "sub_personalAccount": "개인 기록 / 간증",
   "sub_parable": "비유 / 교훈적 이야기",
@@ -416,7 +383,6 @@
   "sub_apocalypticDiscourse": "묵시적 담화",
   "sub_ceremonialSpeech": "의식 연설",
   "sub_communityMemory": "공동체 기억",
-
   "sub_historicalNarrativeDesc": "역사 속 사건, 전쟁, 주요 순간에 대한 기록",
   "sub_personalAccountDesc": "개인적 경험과 신앙에 대한 1인칭 이야기",
   "sub_parableDesc": "도덕적 또는 영적 교훈을 가르치는 상징적 이야기",
@@ -448,7 +414,6 @@
   "sub_apocalypticDiscourseDesc": "종말과 하나님의 계획에 대한 계시",
   "sub_ceremonialSpeechDesc": "공식적이거나 신성한 행사를 위한 격식 연설",
   "sub_communityMemoryDesc": "집단 정체성을 보존하는 공유된 기억",
-
   "register_intimate": "친밀한",
   "register_casual": "비격식적 / 일상적",
   "register_consultative": "상담적",
@@ -456,7 +421,6 @@
   "register_ceremonial": "의례적",
   "register_elderAuthority": "어른 / 권위적",
   "register_religiousWorship": "종교적 / 예배",
-
   "locale_english": "English",
   "locale_portuguese": "Português",
   "locale_hindi": "हिन्दी",
@@ -481,13 +445,11 @@
   "locale_chineseSub": "중국어",
   "locale_selectLanguage": "언어를 선택하세요",
   "locale_selectLanguageSubtitle": "프로필 설정에서 나중에 변경할 수 있습니다.",
-
   "filter_all": "전체",
   "filter_pending": "대기 중",
   "filter_uploaded": "업로드됨",
   "filter_needsCleaning": "클리닝 필요",
   "filter_allGenres": "모든 장르",
-
   "detail_duration": "길이",
   "detail_size": "크기",
   "detail_format": "형식",
@@ -504,20 +466,16 @@
   "detail_uploadFailed": "업로드 실패",
   "detail_pendingRetried": "대기 중 (재시도됨)",
   "detail_notSynced": "동기화되지 않음",
-
   "action_actions": "작업",
   "action_split": "분할",
   "action_flagClean": "클리닝 표시",
   "action_clearFlag": "표시 해제",
   "action_move": "이동",
   "action_delete": "삭제",
-
   "projectStats_recordings": "녹음",
   "projectStats_duration": "길이",
   "projectStats_members": "구성원",
-
   "project_active": "활성",
-
   "recording_paused": "일시정지됨",
   "recording_recording": "녹음 중",
   "recording_tapToRecord": "탭하여 녹음",
@@ -529,11 +487,16 @@
   "recording_stop": "중지",
   "recording_resume": "재개",
   "recording_pause": "일시정지",
-
   "recordings_clearStale": "실패 항목 삭제",
   "recordings_clearStaleMessage": "서버에서 업로드 실패 또는 멈춘 상태의 모든 녹음을 영구적으로 삭제합니다. 이 작업은 취소할 수 없습니다.",
   "recordings_clearedCount": "{count, plural, =0{오래된 녹음이 없습니다} =1{녹음 1개 삭제됨} other{녹음 {count}개 삭제됨}}",
-  "@recordings_clearedCount": {"placeholders": {"count": {"type": "int"}}},
+  "@recordings_clearedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "recordings_clearFailed": "녹음 삭제에 실패했습니다",
   "filter_unclassified": "미분류",
   "quickRecord_title": "빠른 녹음",
@@ -548,7 +511,6 @@
   "recording_unclassified": "미분류",
   "fab_quickRecord": "빠른",
   "fab_normalRecord": "녹음",
-
   "error_network": "서버에 연결할 수 없습니다. 인터넷 연결을 확인하고 다시 시도해 주세요.",
   "error_secureConnection": "보안 연결을 설정할 수 없습니다. 나중에 다시 시도해 주세요.",
   "error_timeout": "요청 시간이 초과되었습니다. 연결을 확인하고 다시 시도해 주세요.",
@@ -564,5 +526,68 @@
   "error_imageUploadFailed": "이미지를 업로드할 수 없습니다. 다시 시도해 주세요.",
   "error_notAuthenticated": "로그인되지 않았습니다. 로그인 후 다시 시도해 주세요.",
   "error_noPermission": "이 작업을 수행할 권한이 없습니다.",
-  "error_generic": "문제가 발생했습니다. 나중에 다시 시도해 주세요."
+  "error_generic": "문제가 발생했습니다. 나중에 다시 시도해 주세요.",
+  "storyteller_title": "Storytellers",
+  "storyteller_singular": "Storyteller",
+  "storyteller_manageAction": "Manage storytellers",
+  "storyteller_addNew": "Add storyteller",
+  "storyteller_createTitle": "New storyteller",
+  "storyteller_editTitle": "Edit storyteller",
+  "storyteller_speakerName": "Speaker name",
+  "storyteller_sex": "Sex",
+  "storyteller_sexMale": "Male",
+  "storyteller_sexFemale": "Female",
+  "storyteller_age": "Age",
+  "storyteller_location": "Location",
+  "storyteller_dialect": "Dialect",
+  "storyteller_externalAcceptanceTitle": "External acceptance validation",
+  "storyteller_externalAcceptanceDescription": "I confirm that external acceptance validation has been performed for this speaker.",
+  "storyteller_externalAcceptanceInfo": "Before registering a storyteller, the project manager must obtain the speaker's consent outside the app (for example, through a signed release form or recorded verbal agreement). This checkbox records that this step was completed.",
+  "storyteller_createRequiresConnection": "Creating a storyteller requires an internet connection.",
+  "storyteller_deleteTitle": "Delete storyteller?",
+  "storyteller_deleteMessage": "Recordings previously assigned to this storyteller will show as unassigned.",
+  "storyteller_noneAssigned": "No storyteller assigned",
+  "storyteller_unknown": "Unknown storyteller",
+  "storyteller_selectHint": "Pick a storyteller",
+  "storyteller_required": "A storyteller is required",
+  "storyteller_searchPlaceholder": "Search storytellers",
+  "storyteller_empty": "No storytellers yet",
+  "storyteller_emptyDescription": "Create a storyteller for the project to assign to recordings.",
+  "storyteller_offlineNoCache": "Storytellers haven't been synced yet. Connect to the internet to load them.",
+  "storyteller_assign": "Assign",
+  "storyteller_reassign": "Reassign",
+  "storyteller_ageValidator": "Enter an age between 1 and 120",
+  "storyteller_ageYearsShort": "{age}y",
+  "@storyteller_ageYearsShort": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
+  "filters_buttonLabel": "Filters",
+  "filters_sheetTitle": "Filter recordings",
+  "filters_sectionStatus": "Upload status",
+  "filters_sectionGenre": "Genre",
+  "filters_sectionStoryteller": "Storyteller",
+  "filters_sectionUser": "Recorded by",
+  "filter_apply": "Apply",
+  "filter_reset": "Reset",
+  "filter_clearAll": "Clear all",
+  "filter_countActive": "{count, plural, one{1 filter} other{{count} filters}}",
+  "@filter_countActive": {
+    "placeholders": {
+      "count": {
+        "type": "num",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "filter_userAll": "Any user",
+  "filter_storytellerAll": "Any storyteller",
+  "filter_genreAll": "Any genre",
+  "detail_recordedBy": "Recorded by",
+  "detail_storyteller": "Storyteller",
+  "recording_unknownUser": "Unknown user",
+  "common_close": "Close"
 }

@@ -1,8 +1,6 @@
 {
   "@@locale": "es",
-
   "appTitle": "Oral Collector",
-
   "nav_home": "Inicio",
   "nav_record": "Grabar",
   "nav_recordings": "Grabaciones",
@@ -10,7 +8,6 @@
   "nav_profile": "Perfil",
   "nav_admin": "Admin",
   "nav_collapse": "Contraer",
-
   "common_cancel": "Cancelar",
   "common_save": "Guardar",
   "common_delete": "Eliminar",
@@ -25,7 +22,6 @@
   "common_clear": "Limpiar",
   "common_untitled": "Sin título",
   "common_loading": "Cargando...",
-
   "auth_oralCollector": "Oral Collector",
   "auth_byShema": "por Shema",
   "auth_heroTagline": "Preserva voces.\nComparte historias.",
@@ -38,7 +34,6 @@
   "auth_signInSubtitle": "Inicia sesión para seguir recopilando historias.",
   "auth_signUpSubtitle": "Únete a nuestra comunidad de recopiladores de historias.",
   "auth_backToSignIn": "Volver a iniciar sesión",
-
   "auth_emailLabel": "Correo Electrónico",
   "auth_emailHint": "tu@correo.com",
   "auth_emailRequired": "Por favor, ingresa tu correo electrónico",
@@ -54,13 +49,11 @@
   "auth_nameLabel": "Nombre",
   "auth_nameHint": "Tu nombre completo",
   "auth_nameRequired": "Por favor, ingresa tu nombre para mostrar",
-
   "auth_signIn": "Iniciar Sesión",
   "auth_signUp": "Registrarse",
   "auth_noAccount": "¿No tienes una cuenta? ",
   "auth_haveAccount": "¿Ya tienes una cuenta? ",
   "auth_continueButton": "Continuar",
-
   "auth_forgotPassword": "¿Olvidaste tu contraseña?",
   "auth_resetPassword": "Restablecer Contraseña",
   "auth_forgotPasswordSubtitle": "Ingresa tu correo y te enviaremos un enlace de restablecimiento.",
@@ -70,13 +63,14 @@
   "auth_resetEmailSent": "Enviamos un enlace para restablecer tu contraseña a {email}. Revisa tu bandeja de entrada y sigue el enlace para crear una nueva contraseña.",
   "@auth_resetEmailSent": {
     "placeholders": {
-      "email": {"type": "String"}
+      "email": {
+        "type": "String"
+      }
     }
   },
   "auth_openEmailApp": "Abrir Correo",
   "auth_resendEmail": "Reenviar",
   "auth_backToLogin": "Volver al Inicio de Sesión",
-
   "auth_newPassword": "Nueva Contraseña",
   "auth_confirmNewPassword": "Confirmar Nueva Contraseña",
   "auth_resetPasswordSubtitle": "Ingresa tu nueva contraseña a continuación.",
@@ -86,7 +80,6 @@
   "auth_invalidResetLink": "Enlace Inválido",
   "auth_invalidResetLinkMessage": "Este enlace de restablecimiento es inválido o ha expirado.",
   "auth_requestNewLink": "Solicitar Nuevo Enlace",
-
   "home_greetingMorning": "Buenos días",
   "home_greetingAfternoon": "Buenas tardes",
   "home_greetingEvening": "Buenas noches",
@@ -99,11 +92,9 @@
   "home_noGenres": "Aún no hay géneros disponibles",
   "home_noProjectTitle": "Selecciona un proyecto para comenzar",
   "home_browseProjects": "Explorar Proyectos",
-
   "stats_recordings": "grabaciones",
   "stats_recorded": "grabado",
   "stats_members": "miembros",
-
   "project_switchTitle": "Cambiar Proyecto",
   "project_projects": "Proyectos",
   "project_subtitle": "Gestiona tus colecciones",
@@ -135,7 +126,6 @@
   "project_addAsNewLanguage": "Agregar \"{query}\" como nuevo idioma",
   "project_searchLanguages": "Buscar idiomas...",
   "project_backToList": "Volver a la lista",
-
   "projectSettings_title": "Configuración del Proyecto",
   "projectSettings_details": "Detalles",
   "projectSettings_saving": "Guardando...",
@@ -149,7 +139,6 @@
   "projectSettings_memberRemoveFailed": "Error al eliminar miembro",
   "projectSettings_inviteSent": "Invitación enviada con éxito",
   "projectSettings_noMembers": "Aún no hay miembros",
-
   "recording_selectGenre": "Seleccionar Género",
   "recording_selectGenreSubtitle": "Elige un género para tu historia",
   "recording_selectSubcategory": "Seleccionar Subcategoría",
@@ -163,7 +152,6 @@
   "recording_genreNotFound": "Género no encontrado",
   "recording_noGenres": "No hay géneros disponibles",
   "recording_noSubcategories": "No hay subcategorías disponibles",
-
   "recording_registerDescription": "Elige el registro de habla que mejor describa el tono y la formalidad de esta grabación.",
   "recording_titleHint": "Agregar un título (opcional)",
   "recording_descriptionHint": "Agregar una breve descripción (opcional)",
@@ -174,7 +162,6 @@
   "recording_discardTitle": "¿Descartar Grabación?",
   "recording_discardMessage": "Esta grabación será eliminada permanentemente.",
   "recording_saved": "Grabación guardada",
-
   "recording_notFound": "Grabación no encontrada",
   "recording_unknownGenre": "Género desconocido",
   "recording_splitRecording": "Dividir Grabación",
@@ -193,7 +180,6 @@
   "recording_moveNoPermission": "No tienes permiso para mover esta grabación",
   "recording_movedSuccess": "Grabación movida con éxito",
   "recording_updateFailed": "Error al actualizar en el servidor",
-
   "recordings_title": "Grabaciones",
   "recordings_subtitle": "Tus historias recopiladas",
   "recordings_importAudio": "Importar archivo de audio",
@@ -202,12 +188,10 @@
   "recordings_noRecordings": "Aún no hay grabaciones",
   "recordings_noRecordingsSubtitle": "Toca el micrófono para grabar tu primera historia, o importa un archivo de audio.",
   "recordings_count": "{count, plural, =1{1 grabación} other{{count} grabaciones}}",
-
   "recording_statusUploaded": "Subido",
   "recording_statusUploading": "Subiendo",
   "recording_statusFailed": "Fallido",
   "recording_statusLocal": "Local",
-
   "trim_title": "Dividir Grabación",
   "trim_notFound": "Grabación no encontrada",
   "trim_audioUrlNotAvailable": "URL de audio no disponible para esta grabación.",
@@ -221,7 +205,6 @@
   "trim_addSplitsFirst": "Agrega divisiones primero",
   "trim_savedSegments": "Se guardaron {kept} segmento{kept, plural, =1{} other{s}}, se eliminaron {removed}",
   "trim_splitInto": "Dividir en {count} grabaciones",
-
   "import_title": "Importar Audio",
   "import_selectGenre": "Seleccionar Género",
   "import_selectSubcategory": "Seleccionar Subcategoría",
@@ -235,20 +218,16 @@
   "import_saveError": "Error al guardar archivo: {error}",
   "import_unknownFile": "Archivo desconocido",
   "import_importAndSave": "Importar y Guardar",
-
   "moveCategory_title": "Mover Categoría",
   "moveCategory_genre": "Género",
   "moveCategory_subcategory": "Subcategoría",
   "moveCategory_selectSubcategory": "Seleccionar subcategoría",
-
   "cleaning_needsCleaning": "Necesita Limpieza",
   "cleaning_cleaning": "Limpiando...",
   "cleaning_cleaned": "Limpio",
   "cleaning_cleanFailed": "Falló la Limpieza",
-
   "sync_uploading": "Subiendo...",
   "sync_pending": "{count} pendiente(s)",
-
   "profile_photoUpdated": "Foto de perfil actualizada",
   "profile_photoFailed": "Error al actualizar foto: {error}",
   "profile_editName": "Editar nombre para mostrar",
@@ -273,7 +252,6 @@
   "profile_joinedSuccess": "Te uniste a \"{name}\" con éxito",
   "profile_inviteDeclined": "Invitación rechazada",
   "profile_language": "Idioma",
-
   "profile_online": "En línea",
   "profile_offline": "Sin conexión",
   "profile_lastSync": "Última sincronización: {time}",
@@ -287,7 +265,6 @@
   "profile_autoRemoveSubtitle": "Eliminar archivos locales después de subida exitosa",
   "profile_clearCache": "Limpiar caché local",
   "profile_clearCacheSubtitle": "Eliminar todas las grabaciones almacenadas localmente",
-
   "profile_invitations": "Invitaciones",
   "profile_refreshInvitations": "Actualizar invitaciones",
   "profile_noInvitations": "No hay invitaciones pendientes",
@@ -295,24 +272,20 @@
   "profile_roleMember": "Rol: Miembro",
   "profile_decline": "Rechazar",
   "profile_accept": "Aceptar",
-
   "profile_storage": "Almacenamiento",
   "profile_status": "Estado",
   "profile_pendingLabel": "Pendiente",
-
   "admin_title": "Panel de Admin",
   "admin_overview": "Resumen",
   "admin_projects": "Proyectos",
   "admin_genres": "Géneros",
   "admin_cleaning": "Limpieza",
   "admin_accessRequired": "Se requiere acceso de administrador",
-
   "admin_totalProjects": "Total de Proyectos",
   "admin_languages": "Idiomas",
   "admin_recordings": "Grabaciones",
   "admin_totalHours": "Total de Horas",
   "admin_activeUsers": "Usuarios Activos",
-
   "admin_projectName": "Nombre",
   "admin_projectLanguage": "Idioma",
   "admin_projectMembers": "Miembros",
@@ -321,7 +294,6 @@
   "admin_projectCreated": "Creado",
   "admin_noProjects": "No se encontraron proyectos",
   "admin_unknownLanguage": "Idioma desconocido",
-
   "admin_genresAndSubcategories": "Géneros y Subcategorías",
   "admin_addGenre": "Agregar Género",
   "admin_noGenres": "No se encontraron géneros",
@@ -343,7 +315,6 @@
   "admin_deleteSubcategory": "Eliminar Subcategoría",
   "admin_deleteSubcategoryConfirm": "¿Eliminar \"{name}\"?",
   "admin_subcategoryDeleted": "Subcategoría eliminada",
-
   "admin_cleaningQueue": "Cola de Limpieza de Audio",
   "admin_cleanSelected": "Limpiar Seleccionados ({count})",
   "admin_refreshCleaning": "Actualizar cola de limpieza",
@@ -361,11 +332,9 @@
   "admin_cleaningTriggered": "Limpieza iniciada",
   "admin_cleaningFailed": "Error al iniciar limpieza",
   "admin_cleaningPartial": "Limpieza iniciada para {success} de {total} grabaciones",
-
   "genre_title": "Género",
   "genre_notFound": "Género no encontrado",
   "genre_recordingCount": "{count, plural, =1{1 grabación} other{{count} grabaciones}}",
-
   "format_justNow": "justo ahora",
   "format_minutesAgo": "hace {count}min",
   "format_hoursAgo": "hace {count}h",
@@ -375,7 +344,6 @@
   "format_memberSince": "Miembro desde {date}",
   "format_member": "Miembro",
   "format_dateAt": "{date} a las {time}",
-
   "genre_narrative": "Narrativa",
   "genre_narrativeDesc": "Historias, relatos y formas narrativas de la tradición oral",
   "genre_poeticSong": "Poético / Canción",
@@ -384,7 +352,6 @@
   "genre_instructionalDesc": "Leyes, rituales, procedimientos y formas instructivas",
   "genre_oralDiscourse": "Discurso Oral",
   "genre_oralDiscourseDesc": "Discursos, enseñanzas, oraciones y formas discursivas orales",
-
   "sub_historicalNarrative": "Narrativa Histórica",
   "sub_personalAccount": "Relato Personal / Testimonio",
   "sub_parable": "Parábola / Historia Ilustrativa",
@@ -416,7 +383,6 @@
   "sub_apocalypticDiscourse": "Discurso Apocalíptico",
   "sub_ceremonialSpeech": "Discurso Ceremonial",
   "sub_communityMemory": "Memoria Comunitaria",
-
   "sub_historicalNarrativeDesc": "Relatos de acontecimientos, guerras y momentos clave de la historia",
   "sub_personalAccountDesc": "Historias personales de experiencias vividas y de fe",
   "sub_parableDesc": "Historias simbólicas que enseñan lecciones morales o espirituales",
@@ -448,7 +414,6 @@
   "sub_apocalypticDiscourseDesc": "Revelaciones sobre los últimos tiempos y el plan de Dios",
   "sub_ceremonialSpeechDesc": "Discursos formales para ocasiones oficiales o sagradas",
   "sub_communityMemoryDesc": "Recuerdos compartidos que preservan la identidad del grupo",
-
   "register_intimate": "Íntimo",
   "register_casual": "Informal / Casual",
   "register_consultative": "Consultivo",
@@ -456,7 +421,6 @@
   "register_ceremonial": "Ceremonial",
   "register_elderAuthority": "Anciano / Autoridad",
   "register_religiousWorship": "Religioso / Culto",
-
   "locale_english": "English",
   "locale_portuguese": "Português",
   "locale_hindi": "हिन्दी",
@@ -481,13 +445,11 @@
   "locale_chineseSub": "Chino",
   "locale_selectLanguage": "Elige Tu Idioma",
   "locale_selectLanguageSubtitle": "Puedes cambiar esto más tarde en la configuración de tu perfil.",
-
   "filter_all": "Todos",
   "filter_pending": "Pendientes",
   "filter_uploaded": "Subidos",
   "filter_needsCleaning": "Necesita Limpieza",
   "filter_allGenres": "Todos los géneros",
-
   "detail_duration": "Duración",
   "detail_size": "Tamaño",
   "detail_format": "Formato",
@@ -504,20 +466,16 @@
   "detail_uploadFailed": "Subida Fallida",
   "detail_pendingRetried": "Pendiente (reintentado)",
   "detail_notSynced": "No sincronizado",
-
   "action_actions": "Acciones",
   "action_split": "Dividir",
   "action_flagClean": "Marcar Limpieza",
   "action_clearFlag": "Quitar Marca",
   "action_move": "Mover",
   "action_delete": "Eliminar",
-
   "projectStats_recordings": "Grabaciones",
   "projectStats_duration": "Duración",
   "projectStats_members": "Miembros",
-
   "project_active": "Activo",
-
   "recording_paused": "Pausado",
   "recording_recording": "Grabando",
   "recording_tapToRecord": "Toca para Grabar",
@@ -529,11 +487,16 @@
   "recording_stop": "Detener",
   "recording_resume": "Reanudar",
   "recording_pause": "Pausar",
-
   "recordings_clearStale": "Limpiar fallidos",
   "recordings_clearStaleMessage": "Esto eliminará permanentemente todas las grabaciones con estado de subida fallido o atascado del servidor. Esta acción no se puede deshacer.",
   "recordings_clearedCount": "{count, plural, =0{No se encontraron grabaciones obsoletas} =1{Se limpió 1 grabación} other{Se limpiaron {count} grabaciones}}",
-  "@recordings_clearedCount": {"placeholders": {"count": {"type": "int"}}},
+  "@recordings_clearedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "recordings_clearFailed": "Error al limpiar grabaciones",
   "filter_unclassified": "Sin clasificar",
   "quickRecord_title": "Grabación Rápida",
@@ -548,7 +511,6 @@
   "recording_unclassified": "Sin clasificar",
   "fab_quickRecord": "Rápido",
   "fab_normalRecord": "Grabar",
-
   "error_network": "No se pudo conectar al servidor. Verifica tu conexión a internet e inténtalo de nuevo.",
   "error_secureConnection": "No se pudo establecer una conexión segura. Inténtalo más tarde.",
   "error_timeout": "La solicitud ha expirado. Verifica tu conexión e inténtalo de nuevo.",
@@ -564,5 +526,68 @@
   "error_imageUploadFailed": "No se pudo subir la imagen. Inténtalo de nuevo.",
   "error_notAuthenticated": "No has iniciado sesión. Inicia sesión e inténtalo de nuevo.",
   "error_noPermission": "No tienes permiso para realizar esta acción.",
-  "error_generic": "Algo salió mal. Inténtalo más tarde."
+  "error_generic": "Algo salió mal. Inténtalo más tarde.",
+  "storyteller_title": "Storytellers",
+  "storyteller_singular": "Storyteller",
+  "storyteller_manageAction": "Manage storytellers",
+  "storyteller_addNew": "Add storyteller",
+  "storyteller_createTitle": "New storyteller",
+  "storyteller_editTitle": "Edit storyteller",
+  "storyteller_speakerName": "Speaker name",
+  "storyteller_sex": "Sex",
+  "storyteller_sexMale": "Male",
+  "storyteller_sexFemale": "Female",
+  "storyteller_age": "Age",
+  "storyteller_location": "Location",
+  "storyteller_dialect": "Dialect",
+  "storyteller_externalAcceptanceTitle": "External acceptance validation",
+  "storyteller_externalAcceptanceDescription": "I confirm that external acceptance validation has been performed for this speaker.",
+  "storyteller_externalAcceptanceInfo": "Before registering a storyteller, the project manager must obtain the speaker's consent outside the app (for example, through a signed release form or recorded verbal agreement). This checkbox records that this step was completed.",
+  "storyteller_createRequiresConnection": "Creating a storyteller requires an internet connection.",
+  "storyteller_deleteTitle": "Delete storyteller?",
+  "storyteller_deleteMessage": "Recordings previously assigned to this storyteller will show as unassigned.",
+  "storyteller_noneAssigned": "No storyteller assigned",
+  "storyteller_unknown": "Unknown storyteller",
+  "storyteller_selectHint": "Pick a storyteller",
+  "storyteller_required": "A storyteller is required",
+  "storyteller_searchPlaceholder": "Search storytellers",
+  "storyteller_empty": "No storytellers yet",
+  "storyteller_emptyDescription": "Create a storyteller for the project to assign to recordings.",
+  "storyteller_offlineNoCache": "Storytellers haven't been synced yet. Connect to the internet to load them.",
+  "storyteller_assign": "Assign",
+  "storyteller_reassign": "Reassign",
+  "storyteller_ageValidator": "Enter an age between 1 and 120",
+  "storyteller_ageYearsShort": "{age}y",
+  "@storyteller_ageYearsShort": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
+  "filters_buttonLabel": "Filters",
+  "filters_sheetTitle": "Filter recordings",
+  "filters_sectionStatus": "Upload status",
+  "filters_sectionGenre": "Genre",
+  "filters_sectionStoryteller": "Storyteller",
+  "filters_sectionUser": "Recorded by",
+  "filter_apply": "Apply",
+  "filter_reset": "Reset",
+  "filter_clearAll": "Clear all",
+  "filter_countActive": "{count, plural, one{1 filter} other{{count} filters}}",
+  "@filter_countActive": {
+    "placeholders": {
+      "count": {
+        "type": "num",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "filter_userAll": "Any user",
+  "filter_storytellerAll": "Any storyteller",
+  "filter_genreAll": "Any genre",
+  "detail_recordedBy": "Recorded by",
+  "detail_storyteller": "Storyteller",
+  "recording_unknownUser": "Unknown user",
+  "common_close": "Close"
 }

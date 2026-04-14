@@ -1641,4 +1641,169 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get error_generic => '문제가 발생했습니다. 나중에 다시 시도해 주세요.';
+
+  @override
+  String get common_close => 'Close';
+
+  @override
+  String get storyteller_title => 'Storytellers';
+
+  @override
+  String get storyteller_singular => 'Storyteller';
+
+  @override
+  String get storyteller_manageAction => 'Manage storytellers';
+
+  @override
+  String get storyteller_addNew => 'Add storyteller';
+
+  @override
+  String get storyteller_createTitle => 'New storyteller';
+
+  @override
+  String get storyteller_editTitle => 'Edit storyteller';
+
+  @override
+  String get storyteller_speakerName => 'Speaker name';
+
+  @override
+  String get storyteller_sex => 'Sex';
+
+  @override
+  String get storyteller_sexMale => 'Male';
+
+  @override
+  String get storyteller_sexFemale => 'Female';
+
+  @override
+  String get storyteller_age => 'Age';
+
+  @override
+  String get storyteller_location => 'Location';
+
+  @override
+  String get storyteller_dialect => 'Dialect';
+
+  @override
+  String get storyteller_externalAcceptanceTitle =>
+      'External acceptance validation';
+
+  @override
+  String get storyteller_externalAcceptanceDescription =>
+      'I confirm that external acceptance validation has been performed for this speaker.';
+
+  @override
+  String get storyteller_externalAcceptanceInfo =>
+      'Before registering a storyteller, the project manager must obtain the speaker\'s consent outside the app (for example, through a signed release form or recorded verbal agreement). This checkbox records that this step was completed.';
+
+  @override
+  String get storyteller_createRequiresConnection =>
+      'Creating a storyteller requires an internet connection.';
+
+  @override
+  String get storyteller_deleteTitle => 'Delete storyteller?';
+
+  @override
+  String get storyteller_deleteMessage =>
+      'Recordings previously assigned to this storyteller will show as unassigned.';
+
+  @override
+  String get storyteller_noneAssigned => 'No storyteller assigned';
+
+  @override
+  String get storyteller_unknown => 'Unknown storyteller';
+
+  @override
+  String get storyteller_selectHint => 'Pick a storyteller';
+
+  @override
+  String get storyteller_required => 'A storyteller is required';
+
+  @override
+  String get storyteller_searchPlaceholder => 'Search storytellers';
+
+  @override
+  String get storyteller_empty => 'No storytellers yet';
+
+  @override
+  String get storyteller_emptyDescription =>
+      'Create a storyteller for the project to assign to recordings.';
+
+  @override
+  String get storyteller_offlineNoCache =>
+      'Storytellers haven\'t been synced yet. Connect to the internet to load them.';
+
+  @override
+  String get storyteller_assign => 'Assign';
+
+  @override
+  String get storyteller_reassign => 'Reassign';
+
+  @override
+  String get storyteller_ageValidator => 'Enter an age between 1 and 120';
+
+  @override
+  String storyteller_ageYearsShort(int age) {
+    return '${age}y';
+  }
+
+  @override
+  String get filters_buttonLabel => 'Filters';
+
+  @override
+  String get filters_sheetTitle => 'Filter recordings';
+
+  @override
+  String get filters_sectionStatus => 'Upload status';
+
+  @override
+  String get filters_sectionGenre => 'Genre';
+
+  @override
+  String get filters_sectionStoryteller => 'Storyteller';
+
+  @override
+  String get filters_sectionUser => 'Recorded by';
+
+  @override
+  String get filter_apply => 'Apply';
+
+  @override
+  String get filter_reset => 'Reset';
+
+  @override
+  String get filter_clearAll => 'Clear all';
+
+  @override
+  String filter_countActive(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString filters',
+      one: '1 filter',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get filter_userAll => 'Any user';
+
+  @override
+  String get filter_storytellerAll => 'Any storyteller';
+
+  @override
+  String get filter_genreAll => 'Any genre';
+
+  @override
+  String get detail_recordedBy => 'Recorded by';
+
+  @override
+  String get detail_storyteller => 'Storyteller';
+
+  @override
+  String get recording_unknownUser => 'Unknown user';
 }
