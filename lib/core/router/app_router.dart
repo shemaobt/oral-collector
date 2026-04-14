@@ -82,6 +82,18 @@ final routerProvider = Provider<GoRouter>((ref) {
               GenreDetailScreen(genreId: state.pathParameters['id'] ?? ''),
         ),
         GoRoute(
+          path: '/record-flow',
+          redirect: (context, state) {
+            final hasProject =
+                ref.read(projectNotifierProvider).activeProject != null;
+            return hasProject ? null : '/home';
+          },
+          builder: (context, state) => RecordingFlowScreen(
+            genreId: state.uri.queryParameters['genreId'],
+            subcategoryId: state.uri.queryParameters['subcategoryId'],
+          ),
+        ),
+        GoRoute(
           path: '/recording/:id',
           builder: (context, state) => RecordingDetailScreen(
             recordingId: state.pathParameters['id'] ?? '',

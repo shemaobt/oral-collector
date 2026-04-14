@@ -160,7 +160,7 @@ class _SubcategoryCard extends StatelessWidget {
       child: InkWell(
         onTap: () {
           context.push(
-            '/record?genreId=$genreId&subcategoryId=${subcategory.id}',
+            '/record-flow?genreId=$genreId&subcategoryId=${subcategory.id}',
           );
         },
         child: Padding(
@@ -213,7 +213,7 @@ class _SubcategoryCard extends StatelessWidget {
                           child: IconButton(
                             onPressed: () {
                               context.push(
-                                '/record?genreId=$genreId&subcategoryId=${subcategory.id}',
+                                '/record-flow?genreId=$genreId&subcategoryId=${subcategory.id}',
                               );
                             },
                             icon: Icon(LucideIcons.mic, size: 18, color: color),
