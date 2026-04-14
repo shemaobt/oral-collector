@@ -41,52 +41,62 @@ class ProjectSwitcherSheet extends StatelessWidget {
                 ),
               ),
             ),
-            ...projects.map((project) {
-              final isActive = project.id == activeProjectId;
-              return ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 24),
-                leading: Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: isActive
-                        ? colors.accent.withValues(alpha: 0.15)
-                        : colors.surfaceAlt,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    LucideIcons.folderOpen,
-                    size: 20,
-                    color: isActive ? colors.accent : colors.secondary,
-                  ),
-                ),
-                title: Text(
-                  project.name,
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
-                  ),
-                ),
-                subtitle: project.languageName != null
-                    ? Text(project.languageName!)
-                    : null,
-                trailing: isActive
-                    ? Container(
-                        width: 28,
-                        height: 28,
-                        decoration: BoxDecoration(
-                          color: colors.accent.withValues(alpha: 0.15),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          LucideIcons.check,
-                          size: 16,
-                          color: colors.accent,
-                        ),
-                      )
-                    : null,
-                onTap: () => onProjectSelected(project),
-              );
-            }),
+            Flexible(
+              child: ListView.builder(
+                shrinkWrap: true,
+                padding: EdgeInsets.zero,
+                itemCount: projects.length,
+                itemBuilder: (context, index) {
+                  final project = projects[index];
+                  final isActive = project.id == activeProjectId;
+                  return ListTile(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 24),
+                    leading: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: isActive
+                            ? colors.accent.withValues(alpha: 0.15)
+                            : colors.surfaceAlt,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        LucideIcons.folderOpen,
+                        size: 20,
+                        color: isActive ? colors.accent : colors.secondary,
+                      ),
+                    ),
+                    title: Text(
+                      project.name,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        fontWeight: isActive
+                            ? FontWeight.w700
+                            : FontWeight.w500,
+                      ),
+                    ),
+                    subtitle: project.languageName != null
+                        ? Text(project.languageName!)
+                        : null,
+                    trailing: isActive
+                        ? Container(
+                            width: 28,
+                            height: 28,
+                            decoration: BoxDecoration(
+                              color: colors.accent.withValues(alpha: 0.15),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              LucideIcons.check,
+                              size: 16,
+                              color: colors.accent,
+                            ),
+                          )
+                        : null,
+                    onTap: () => onProjectSelected(project),
+                  );
+                },
+              ),
+            ),
           ],
         ),
       ),
