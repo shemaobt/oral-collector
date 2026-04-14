@@ -18,6 +18,7 @@ import '../../data/services/recording_concat_service.dart';
 import '../../data/services/recording_notification.dart';
 import '../../data/services/segmented_recorder.dart';
 import '../../data/services/storage_guard.dart';
+import 'input_device_notifier.dart';
 import 'recording_session_state.dart';
 
 final noiseSensitivityProvider = StateProvider<NoiseSensitivity>(
@@ -132,6 +133,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
     final ok = await recorder.startSession(
       sessionId: sessionId,
       amplitudeMapper: mapper,
+      inputDevice: ref.read(inputDeviceNotifierProvider).selectedDevice,
     );
     if (!ok) {
       await sessionRepo.markDiscarded(sessionId);
@@ -170,8 +172,9 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     _webPendingKey = 'web_record_$timestamp';
 
+    final device = ref.read(inputDeviceNotifierProvider).selectedDevice;
     await recorder.start(
-      const RecordConfig(encoder: AudioEncoder.opus),
+      RecordConfig(encoder: AudioEncoder.opus, device: device),
       path: '',
     );
 

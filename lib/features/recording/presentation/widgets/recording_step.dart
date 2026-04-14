@@ -10,9 +10,11 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/utils/format.dart';
 import '../../../../shared/widgets/record_button.dart';
 import '../../data/services/storage_guard.dart';
+import '../notifiers/input_device_notifier.dart';
 import '../notifiers/recording_session_notifier.dart';
 import '../notifiers/recording_session_state.dart';
 import 'control_button.dart';
+import 'input_device_picker_sheet.dart';
 import 'scrolling_waveform.dart';
 
 class RecordingStep extends ConsumerStatefulWidget {
@@ -47,6 +49,10 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    Future.microtask(() {
+      if (!mounted) return;
+      ref.read(inputDeviceNotifierProvider.notifier).refresh();
+    });
   }
 
   @override
@@ -270,6 +276,8 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
+        _buildInputSourceRow(colors),
+        const SizedBox(height: 12),
         _buildSensitivitySelector(colors, sensitivity),
         const SizedBox(height: 32),
         _buildRecordButtonWithRings(
@@ -277,6 +285,56 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
           () => _handleRecordTap(notifier, recState),
         ),
       ],
+    );
+  }
+
+  Widget _buildInputSourceRow(AppColorSet colors) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final deviceState = ref.watch(inputDeviceNotifierProvider);
+    final selected = deviceState.selectedDevice;
+    final label = selected?.label.isNotEmpty == true
+        ? selected!.label
+        : l10n.recording_builtInMicrophone;
+
+    return InkWell(
+      onTap: () {
+        showModalBottomSheet<void>(
+          context: context,
+          showDragHandle: false,
+          builder: (_) => const InputDevicePickerSheet(),
+        );
+      },
+      borderRadius: BorderRadius.circular(18),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(LucideIcons.mic2, size: 14, color: colors.secondary),
+            const SizedBox(width: 6),
+            Text(
+              l10n.recording_inputSource,
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: colors.secondary,
+              ),
+            ),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: colors.foreground,
+                ),
+              ),
+            ),
+            const SizedBox(width: 4),
+            Icon(LucideIcons.chevronDown, size: 14, color: colors.secondary),
+          ],
+        ),
+      ),
     );
   }
 
