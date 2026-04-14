@@ -60,6 +60,17 @@ class $LocalRecordingsTable extends LocalRecordings
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _descriptionMeta = const VerificationMeta(
+    'description',
+  );
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+    'description',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _durationSecondsMeta = const VerificationMeta(
     'durationSeconds',
   );
@@ -247,6 +258,7 @@ class $LocalRecordingsTable extends LocalRecordings
     genreId,
     subcategoryId,
     title,
+    description,
     durationSeconds,
     fileSizeBytes,
     format,
@@ -310,6 +322,15 @@ class $LocalRecordingsTable extends LocalRecordings
       context.handle(
         _titleMeta,
         title.isAcceptableOrUnknown(data['title']!, _titleMeta),
+      );
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+        _descriptionMeta,
+        description.isAcceptableOrUnknown(
+          data['description']!,
+          _descriptionMeta,
+        ),
       );
     }
     if (data.containsKey('duration_seconds')) {
@@ -465,6 +486,10 @@ class $LocalRecordingsTable extends LocalRecordings
         DriftSqlType.string,
         data['${effectivePrefix}title'],
       ),
+      description: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}description'],
+      ),
       durationSeconds: attachedDatabase.typeMapping.read(
         DriftSqlType.double,
         data['${effectivePrefix}duration_seconds'],
@@ -544,6 +569,7 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
   final String genreId;
   final String? subcategoryId;
   final String? title;
+  final String? description;
   final double durationSeconds;
   final int fileSizeBytes;
   final String format;
@@ -566,6 +592,7 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
     required this.genreId,
     this.subcategoryId,
     this.title,
+    this.description,
     required this.durationSeconds,
     required this.fileSizeBytes,
     required this.format,
@@ -594,6 +621,9 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
     }
     if (!nullToAbsent || title != null) {
       map['title'] = Variable<String>(title);
+    }
+    if (!nullToAbsent || description != null) {
+      map['description'] = Variable<String>(description);
     }
     map['duration_seconds'] = Variable<double>(durationSeconds);
     map['file_size_bytes'] = Variable<int>(fileSizeBytes);
@@ -637,6 +667,9 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
       title: title == null && nullToAbsent
           ? const Value.absent()
           : Value(title),
+      description: description == null && nullToAbsent
+          ? const Value.absent()
+          : Value(description),
       durationSeconds: Value(durationSeconds),
       fileSizeBytes: Value(fileSizeBytes),
       format: Value(format),
@@ -679,6 +712,7 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
       genreId: serializer.fromJson<String>(json['genreId']),
       subcategoryId: serializer.fromJson<String?>(json['subcategoryId']),
       title: serializer.fromJson<String?>(json['title']),
+      description: serializer.fromJson<String?>(json['description']),
       durationSeconds: serializer.fromJson<double>(json['durationSeconds']),
       fileSizeBytes: serializer.fromJson<int>(json['fileSizeBytes']),
       format: serializer.fromJson<String>(json['format']),
@@ -708,6 +742,7 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
       'genreId': serializer.toJson<String>(genreId),
       'subcategoryId': serializer.toJson<String?>(subcategoryId),
       'title': serializer.toJson<String?>(title),
+      'description': serializer.toJson<String?>(description),
       'durationSeconds': serializer.toJson<double>(durationSeconds),
       'fileSizeBytes': serializer.toJson<int>(fileSizeBytes),
       'format': serializer.toJson<String>(format),
@@ -733,6 +768,7 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
     String? genreId,
     Value<String?> subcategoryId = const Value.absent(),
     Value<String?> title = const Value.absent(),
+    Value<String?> description = const Value.absent(),
     double? durationSeconds,
     int? fileSizeBytes,
     String? format,
@@ -757,6 +793,7 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
         ? subcategoryId.value
         : this.subcategoryId,
     title: title.present ? title.value : this.title,
+    description: description.present ? description.value : this.description,
     durationSeconds: durationSeconds ?? this.durationSeconds,
     fileSizeBytes: fileSizeBytes ?? this.fileSizeBytes,
     format: format ?? this.format,
@@ -785,6 +822,9 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
           ? data.subcategoryId.value
           : this.subcategoryId,
       title: data.title.present ? data.title.value : this.title,
+      description: data.description.present
+          ? data.description.value
+          : this.description,
       durationSeconds: data.durationSeconds.present
           ? data.durationSeconds.value
           : this.durationSeconds,
@@ -834,6 +874,7 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
           ..write('genreId: $genreId, ')
           ..write('subcategoryId: $subcategoryId, ')
           ..write('title: $title, ')
+          ..write('description: $description, ')
           ..write('durationSeconds: $durationSeconds, ')
           ..write('fileSizeBytes: $fileSizeBytes, ')
           ..write('format: $format, ')
@@ -861,6 +902,7 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
     genreId,
     subcategoryId,
     title,
+    description,
     durationSeconds,
     fileSizeBytes,
     format,
@@ -887,6 +929,7 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
           other.genreId == this.genreId &&
           other.subcategoryId == this.subcategoryId &&
           other.title == this.title &&
+          other.description == this.description &&
           other.durationSeconds == this.durationSeconds &&
           other.fileSizeBytes == this.fileSizeBytes &&
           other.format == this.format &&
@@ -911,6 +954,7 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
   final Value<String> genreId;
   final Value<String?> subcategoryId;
   final Value<String?> title;
+  final Value<String?> description;
   final Value<double> durationSeconds;
   final Value<int> fileSizeBytes;
   final Value<String> format;
@@ -934,6 +978,7 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
     this.genreId = const Value.absent(),
     this.subcategoryId = const Value.absent(),
     this.title = const Value.absent(),
+    this.description = const Value.absent(),
     this.durationSeconds = const Value.absent(),
     this.fileSizeBytes = const Value.absent(),
     this.format = const Value.absent(),
@@ -958,6 +1003,7 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
     required String genreId,
     this.subcategoryId = const Value.absent(),
     this.title = const Value.absent(),
+    this.description = const Value.absent(),
     this.durationSeconds = const Value.absent(),
     this.fileSizeBytes = const Value.absent(),
     this.format = const Value.absent(),
@@ -986,6 +1032,7 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
     Expression<String>? genreId,
     Expression<String>? subcategoryId,
     Expression<String>? title,
+    Expression<String>? description,
     Expression<double>? durationSeconds,
     Expression<int>? fileSizeBytes,
     Expression<String>? format,
@@ -1010,6 +1057,7 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
       if (genreId != null) 'genre_id': genreId,
       if (subcategoryId != null) 'subcategory_id': subcategoryId,
       if (title != null) 'title': title,
+      if (description != null) 'description': description,
       if (durationSeconds != null) 'duration_seconds': durationSeconds,
       if (fileSizeBytes != null) 'file_size_bytes': fileSizeBytes,
       if (format != null) 'format': format,
@@ -1037,6 +1085,7 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
     Value<String>? genreId,
     Value<String?>? subcategoryId,
     Value<String?>? title,
+    Value<String?>? description,
     Value<double>? durationSeconds,
     Value<int>? fileSizeBytes,
     Value<String>? format,
@@ -1061,6 +1110,7 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
       genreId: genreId ?? this.genreId,
       subcategoryId: subcategoryId ?? this.subcategoryId,
       title: title ?? this.title,
+      description: description ?? this.description,
       durationSeconds: durationSeconds ?? this.durationSeconds,
       fileSizeBytes: fileSizeBytes ?? this.fileSizeBytes,
       format: format ?? this.format,
@@ -1098,6 +1148,9 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
     }
     if (title.present) {
       map['title'] = Variable<String>(title.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
     }
     if (durationSeconds.present) {
       map['duration_seconds'] = Variable<double>(durationSeconds.value);
@@ -1163,6 +1216,7 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
           ..write('genreId: $genreId, ')
           ..write('subcategoryId: $subcategoryId, ')
           ..write('title: $title, ')
+          ..write('description: $description, ')
           ..write('durationSeconds: $durationSeconds, ')
           ..write('fileSizeBytes: $fileSizeBytes, ')
           ..write('format: $format, ')
@@ -1985,6 +2039,7 @@ typedef $$LocalRecordingsTableCreateCompanionBuilder =
       required String genreId,
       Value<String?> subcategoryId,
       Value<String?> title,
+      Value<String?> description,
       Value<double> durationSeconds,
       Value<int> fileSizeBytes,
       Value<String> format,
@@ -2010,6 +2065,7 @@ typedef $$LocalRecordingsTableUpdateCompanionBuilder =
       Value<String> genreId,
       Value<String?> subcategoryId,
       Value<String?> title,
+      Value<String?> description,
       Value<double> durationSeconds,
       Value<int> fileSizeBytes,
       Value<String> format,
@@ -2060,6 +2116,11 @@ class $$LocalRecordingsTableFilterComposer
 
   ColumnFilters<String> get title => $composableBuilder(
     column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get description => $composableBuilder(
+    column: $table.description,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2178,6 +2239,11 @@ class $$LocalRecordingsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<double> get durationSeconds => $composableBuilder(
     column: $table.durationSeconds,
     builder: (column) => ColumnOrderings(column),
@@ -2284,6 +2350,11 @@ class $$LocalRecordingsTableAnnotationComposer
 
   GeneratedColumn<String> get title =>
       $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<double> get durationSeconds => $composableBuilder(
     column: $table.durationSeconds,
@@ -2398,6 +2469,7 @@ class $$LocalRecordingsTableTableManager
                 Value<String> genreId = const Value.absent(),
                 Value<String?> subcategoryId = const Value.absent(),
                 Value<String?> title = const Value.absent(),
+                Value<String?> description = const Value.absent(),
                 Value<double> durationSeconds = const Value.absent(),
                 Value<int> fileSizeBytes = const Value.absent(),
                 Value<String> format = const Value.absent(),
@@ -2421,6 +2493,7 @@ class $$LocalRecordingsTableTableManager
                 genreId: genreId,
                 subcategoryId: subcategoryId,
                 title: title,
+                description: description,
                 durationSeconds: durationSeconds,
                 fileSizeBytes: fileSizeBytes,
                 format: format,
@@ -2446,6 +2519,7 @@ class $$LocalRecordingsTableTableManager
                 required String genreId,
                 Value<String?> subcategoryId = const Value.absent(),
                 Value<String?> title = const Value.absent(),
+                Value<String?> description = const Value.absent(),
                 Value<double> durationSeconds = const Value.absent(),
                 Value<int> fileSizeBytes = const Value.absent(),
                 Value<String> format = const Value.absent(),
@@ -2469,6 +2543,7 @@ class $$LocalRecordingsTableTableManager
                 genreId: genreId,
                 subcategoryId: subcategoryId,
                 title: title,
+                description: description,
                 durationSeconds: durationSeconds,
                 fileSizeBytes: fileSizeBytes,
                 format: format,

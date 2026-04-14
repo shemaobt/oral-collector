@@ -10,6 +10,7 @@ class LocalRecordings extends Table {
   TextColumn get genreId => text()();
   TextColumn get subcategoryId => text().nullable()();
   TextColumn get title => text().nullable()();
+  TextColumn get description => text().nullable()();
   RealColumn get durationSeconds => real().withDefault(const Constant(0.0))();
   IntColumn get fileSizeBytes => integer().withDefault(const Constant(0))();
   TextColumn get format => text().withDefault(const Constant('m4a'))();
@@ -61,7 +62,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -76,6 +77,9 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 4) {
         await m.addColumn(localRecordings, localRecordings.md5Hash);
+      }
+      if (from < 5) {
+        await m.addColumn(localRecordings, localRecordings.description);
       }
     },
   );
