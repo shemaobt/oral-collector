@@ -731,6 +731,76 @@ class AppLocalizationsKo extends AppLocalizations {
   String get import_importAndSave => '가져오기 및 저장';
 
   @override
+  String get import_setForAll => '모든 파일에 설정';
+
+  @override
+  String get import_applyToAll => '모두에 적용';
+
+  @override
+  String get import_fieldRequired => '필수';
+
+  @override
+  String import_validationBanner(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count개 파일에 필수 항목이 누락됨',
+      one: '1개 파일에 필수 항목이 누락됨',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get import_remove => '파일 제거';
+
+  @override
+  String import_supportedFormats(String formats) {
+    return '지원되는 형식: $formats. 지원되지 않거나 읽을 수 없는 파일은 건너뜁니다.';
+  }
+
+  @override
+  String import_rejectedFiles(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '지원되지 않거나 읽을 수 없는 파일 $count개 건너뜀: $names',
+      one: '지원되지 않거나 읽을 수 없는 파일 1개 건너뜀: $names',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String import_countFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count개 파일',
+      one: '1개 파일',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String import_importNFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count개 파일',
+      one: '1개 파일',
+    );
+    return '$_temp0 가져오기';
+  }
+
+  @override
+  String get import_emptyFile => '빈 파일';
+
+  @override
+  String get import_compressWav => 'WAV을 M4A로 압축';
+
+  @override
+  String get import_compressWavHint => '~10x 작음, ML 파이프라인에 품질 손실 없음';
+
+  @override
   String get moveCategory_title => '분류 이동';
 
   @override
@@ -1635,6 +1705,9 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get recording_micPermissionDenied =>
       '마이크 권한이 거부되었습니다. 브라우저 또는 시스템 설정에서 활성화하세요.';
+
+  @override
+  String get recording_micPermissionTitle => 'Microphone access needed';
 
   @override
   String get recording_noDevicesFound => '마이크를 찾을 수 없습니다';

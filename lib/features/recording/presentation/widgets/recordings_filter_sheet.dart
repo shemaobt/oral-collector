@@ -7,6 +7,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../genre/presentation/notifiers/genre_notifier.dart';
 import '../../../project/presentation/notifiers/member_notifier.dart';
+import '../../../project/presentation/widgets/project_member_picker_sheet.dart';
 import '../../../storyteller/presentation/notifiers/project_storytellers_notifier.dart';
 import '../../../storyteller/presentation/widgets/storyteller_picker.dart';
 import '../notifiers/recordings_list_notifier.dart';
@@ -53,9 +54,9 @@ class _RecordingsFilterSheetState extends ConsumerState<RecordingsFilterSheet> {
 
     return DraggableScrollableSheet(
       expand: false,
-      initialChildSize: 0.75,
-      minChildSize: 0.5,
-      maxChildSize: 0.95,
+      initialChildSize: 0.7,
+      minChildSize: 0.45,
+      maxChildSize: 0.9,
       builder: (context, controller) {
         return Column(
           children: [
@@ -179,29 +180,70 @@ class _RecordingsFilterSheetState extends ConsumerState<RecordingsFilterSheet> {
   }
 
   Widget _buildUserPicker(AppLocalizations l10n, AppColorSet colors) {
+    final theme = Theme.of(context);
     final members = ref.watch(memberNotifierProvider).members;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
+    final selected = _userId == null
+        ? null
+        : members.where((m) => m.userId == _userId).firstOrNull;
+    final label = selected == null
+        ? l10n.filter_userAll
+        : (selected.displayName ?? selected.email);
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: () async {
+        final picked = await showProjectMemberPickerSheet(
+          context,
+          projectId: widget.projectId,
+          selected: selected,
+        );
+        if (picked == null) return;
+        setState(() {
+          _userId = picked.userId.isEmpty ? null : picked.userId;
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: colors.surfaceAlt,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: colors.border.withValues(alpha: 0.4)),
+        ),
+        child: Row(
           children: [
-            ChoiceChip(
-              label: Text(l10n.filter_userAll),
-              selected: _userId == null,
-              onSelected: (_) => setState(() => _userId = null),
-            ),
-            ...members.map(
-              (m) => ChoiceChip(
-                label: Text(m.displayName ?? m.email),
-                selected: _userId == m.userId,
-                onSelected: (_) => setState(() => _userId = m.userId),
+            Icon(LucideIcons.mic, size: 18, color: colors.secondary),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.filters_sectionUser,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: colors.foreground.withValues(alpha: 0.6),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    label,
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: _userId == null
+                          ? colors.foreground.withValues(alpha: 0.55)
+                          : colors.foreground,
+                    ),
+                  ),
+                ],
               ),
+            ),
+            Icon(
+              LucideIcons.chevronDown,
+              size: 18,
+              color: colors.foreground.withValues(alpha: 0.5),
             ),
           ],
         ),
-      ],
+      ),
     );
   }
 
@@ -221,32 +263,64 @@ class _RecordingsFilterSheetState extends ConsumerState<RecordingsFilterSheet> {
       child: Row(
         children: [
           Expanded(
-            child: OutlinedButton(
-              onPressed: () {
-                setState(() {
-                  _status = StatusFilter.all;
-                  _genreId = null;
-                  _storytellerId = null;
-                  _userId = null;
-                });
-              },
-              child: Text(l10n.filter_reset),
+            child: SizedBox(
+              height: 48,
+              child: OutlinedButton(
+                onPressed: () {
+                  setState(() {
+                    _status = StatusFilter.all;
+                    _genreId = null;
+                    _storytellerId = null;
+                    _userId = null;
+                  });
+                },
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: colors.foreground,
+                  disabledForegroundColor: colors.foreground.withValues(
+                    alpha: 0.4,
+                  ),
+                  side: BorderSide(color: colors.border.withValues(alpha: 0.5)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  textStyle: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                ),
+                child: Text(l10n.filter_reset),
+              ),
             ),
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: FilledButton(
-              onPressed: () async {
-                final notifier = ref.read(
-                  recordingsListNotifierProvider.notifier,
-                );
-                notifier.setStatusFilter(_status);
-                notifier.setGenreFilter(_genreId);
-                await notifier.setStorytellerFilter(_storytellerId);
-                await notifier.setUserFilter(_userId);
-                if (context.mounted) Navigator.of(context).pop();
-              },
-              child: Text(l10n.filter_apply),
+            child: SizedBox(
+              height: 48,
+              child: ElevatedButton(
+                onPressed: () async {
+                  final notifier = ref.read(
+                    recordingsListNotifierProvider.notifier,
+                  );
+                  notifier.setStatusFilter(_status);
+                  notifier.setGenreFilter(_genreId);
+                  await notifier.setStorytellerFilter(_storytellerId);
+                  await notifier.setUserFilter(_userId);
+                  if (context.mounted) Navigator.of(context).pop();
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: colors.accent,
+                  foregroundColor: Colors.white,
+                  disabledBackgroundColor: colors.accent.withValues(alpha: 0.3),
+                  disabledForegroundColor: Colors.white.withValues(alpha: 0.8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
+                  textStyle: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                ),
+                child: Text(l10n.filter_apply),
+              ),
             ),
           ),
         ],

@@ -749,6 +749,77 @@ class AppLocalizationsSw extends AppLocalizations {
   String get import_importAndSave => 'Ingiza na Uhifadhi';
 
   @override
+  String get import_setForAll => 'Weka kwa faili zote';
+
+  @override
+  String get import_applyToAll => 'Tumia kwa zote';
+
+  @override
+  String get import_fieldRequired => 'Inahitajika';
+
+  @override
+  String import_validationBanner(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Faili $count hazina sehemu zinazohitajika',
+      one: 'Faili 1 haina sehemu zinazohitajika',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get import_remove => 'Ondoa faili';
+
+  @override
+  String import_supportedFormats(String formats) {
+    return 'Miundo inayotumika: $formats. Faili zisizotumika au zisizosomeka zinarukwa.';
+  }
+
+  @override
+  String import_rejectedFiles(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Ziliruka faili $count zisizotumika au zisizosomeka: $names',
+      one: 'Iliruka faili 1 isiyotumika au isiyosomeka: $names',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String import_countFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Faili $count',
+      one: 'Faili 1',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String import_importNFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'faili $count',
+      one: 'faili 1',
+    );
+    return 'Ingiza $_temp0';
+  }
+
+  @override
+  String get import_emptyFile => 'faili tupu';
+
+  @override
+  String get import_compressWav => 'Bana WAV kuwa M4A';
+
+  @override
+  String get import_compressWavHint =>
+      '~10x ndogo, bila kupoteza ubora kwa mfereji wa ML';
+
+  @override
   String get moveCategory_title => 'Hamisha Kategoria';
 
   @override
@@ -1681,6 +1752,9 @@ class AppLocalizationsSw extends AppLocalizations {
   @override
   String get recording_micPermissionDenied =>
       'Ruhusa ya maikrofoni imekataliwa. Iwashe katika mipangilio ya kivinjari au mfumo.';
+
+  @override
+  String get recording_micPermissionTitle => 'Microphone access needed';
 
   @override
   String get recording_noDevicesFound => 'Hakuna maikrofoni iliyopatikana';

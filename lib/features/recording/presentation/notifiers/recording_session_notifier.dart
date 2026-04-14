@@ -11,6 +11,7 @@ import 'package:record/record.dart';
 
 import '../../../../core/database/app_database.dart';
 import '../../../../core/l10n/locale_provider.dart';
+import '../../../../core/platform/ffmpeg_ops.dart' as ffmpeg_ops;
 import '../../../../core/platform/file_ops.dart' as file_ops;
 import '../../../../l10n/app_localizations.dart';
 import '../../../project/presentation/notifiers/project_notifier.dart';
@@ -271,33 +272,53 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
         ? sessionResult.totalDuration
         : fallbackElapsed;
 
+    final dir = await getApplicationDocumentsDirectory();
+    String? sourcePath;
+
     if (sessionResult.segmentPaths.length == 1) {
-      return RecordingResult(
-        filePath: sessionResult.segmentPaths.first,
-        durationSeconds: totalDuration.inMilliseconds / 1000.0,
+      sourcePath = sessionResult.segmentPaths.first;
+    } else {
+      final concat = ref.read(recordingConcatServiceProvider);
+      final firstIsWav = sessionResult.segmentPaths.first
+          .toLowerCase()
+          .endsWith('.wav');
+      final concatExt = firstIsWav ? 'wav' : 'm4a';
+      final concatPath =
+          '${dir.path}/concat_${sessionResult.sessionId}.$concatExt';
+      final concatResult = await concat.concatSegments(
+        segmentPaths: sessionResult.segmentPaths,
+        outputPath: concatPath,
       );
+      if (concatResult != null) {
+        sourcePath = concatResult;
+        for (final p in sessionResult.segmentPaths) {
+          unawaited(_deleteFileSafe(p));
+        }
+      } else {
+        sourcePath = sessionResult.segmentPaths.first;
+      }
     }
 
-    final concat = ref.read(recordingConcatServiceProvider);
-    final dir = await getApplicationDocumentsDirectory();
-    final outputPath = '${dir.path}/recording_${sessionResult.sessionId}.m4a';
-    final concatPath = await concat.concatSegments(
-      segmentPaths: sessionResult.segmentPaths,
-      outputPath: outputPath,
-    );
-
-    if (concatPath != null) {
-      for (final p in sessionResult.segmentPaths) {
-        unawaited(_deleteFileSafe(p));
+    final isWav = sourcePath.toLowerCase().endsWith('.wav');
+    if (isWav) {
+      final m4aPath = '${dir.path}/recording_${sessionResult.sessionId}.m4a';
+      final ok = await ffmpeg_ops.compressToM4a(sourcePath, m4aPath);
+      if (ok) {
+        unawaited(_deleteFileSafe(sourcePath));
+        return RecordingResult(
+          filePath: m4aPath,
+          durationSeconds: totalDuration.inMilliseconds / 1000.0,
+        );
       }
       return RecordingResult(
-        filePath: concatPath,
+        filePath: sourcePath,
         durationSeconds: totalDuration.inMilliseconds / 1000.0,
+        format: 'wav',
       );
     }
 
     return RecordingResult(
-      filePath: sessionResult.segmentPaths.first,
+      filePath: sourcePath,
       durationSeconds: totalDuration.inMilliseconds / 1000.0,
     );
   }

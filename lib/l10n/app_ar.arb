@@ -227,6 +227,33 @@
   "import_saveError": "خطأ في حفظ الملف: {error}",
   "import_unknownFile": "ملف غير معروف",
   "import_importAndSave": "استيراد وحفظ",
+  "import_setForAll": "تعيين لجميع الملفات",
+  "import_applyToAll": "تطبيق على الكل",
+  "import_fieldRequired": "مطلوب",
+  "import_validationBanner": "{count, plural, =1{ملف واحد يفتقد حقول مطلوبة} other{{count} ملفات تفتقد حقول مطلوبة}}",
+  "@import_validationBanner": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "import_remove": "إزالة الملف",
+  "import_supportedFormats": "الصيغ المدعومة: {formats}. يتم تخطي الملفات غير المدعومة أو غير القابلة للقراءة.",
+  "@import_supportedFormats": {
+    "placeholders": { "formats": { "type": "String" } }
+  },
+  "import_rejectedFiles": "{count, plural, =1{تم تخطي ملف واحد غير مدعوم أو غير قابل للقراءة: {names}} other{تم تخطي {count} ملفات غير مدعومة أو غير قابلة للقراءة: {names}}}",
+  "@import_rejectedFiles": {
+    "placeholders": { "count": { "type": "int" }, "names": { "type": "String" } }
+  },
+  "import_countFiles": "{count, plural, =1{ملف واحد} other{{count} ملفات}}",
+  "@import_countFiles": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "import_importNFiles": "استيراد {count, plural, =1{ملف واحد} other{{count} ملفات}}",
+  "@import_importNFiles": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "import_emptyFile": "ملف فارغ",
+  "import_compressWav": "ضغط WAV إلى M4A",
+  "import_compressWavHint": "~10x أصغر، بدون فقدان للجودة لخط أنابيب ML",
   "moveCategory_title": "نقل الفئة",
   "moveCategory_genre": "النوع",
   "moveCategory_subcategory": "الفئة الفرعية",
@@ -524,6 +551,7 @@
   "recording_micPermissionNeeded": "اسمح بالوصول إلى الميكروفون لرؤية أسماء الأجهزة",
   "recording_micPermissionButton": "منح الإذن",
   "recording_micPermissionDenied": "تم رفض إذن الميكروفون. قم بتفعيله من إعدادات المتصفح أو النظام.",
+  "recording_micPermissionTitle": "مطلوب الوصول إلى الميكروفون",
   "recording_noDevicesFound": "لم يتم العثور على ميكروفونات",
   "recording_storageLowWarnTitle": "مساحة تخزين منخفضة",
   "recording_storageLowWarnBody": "يتوفر حوالي {minutes} دقيقة من التسجيل. هل تريد المتابعة؟",

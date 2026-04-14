@@ -321,6 +321,56 @@
   },
   "import_unknownFile": "Unknown file",
   "import_importAndSave": "Import & Save",
+  "import_setForAll": "Set for all files",
+  "import_applyToAll": "Apply to all",
+  "import_fieldRequired": "Required",
+  "import_validationBanner": "{count, plural, =1{1 file is missing required fields} other{{count} files are missing required fields}}",
+  "@import_validationBanner": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "import_remove": "Remove file",
+  "import_supportedFormats": "Supported formats: {formats}. Unsupported or unreadable files are skipped.",
+  "@import_supportedFormats": {
+    "placeholders": {
+      "formats": {
+        "type": "String"
+      }
+    }
+  },
+  "import_rejectedFiles": "{count, plural, =1{Skipped 1 unsupported or unreadable file: {names}} other{Skipped {count} unsupported or unreadable files: {names}}}",
+  "@import_rejectedFiles": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "import_countFiles": "{count, plural, =1{1 file} other{{count} files}}",
+  "@import_countFiles": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "import_importNFiles": "Import {count, plural, =1{1 file} other{{count} files}}",
+  "@import_importNFiles": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "import_emptyFile": "empty file",
+  "import_compressWav": "Compress WAV to M4A",
+  "import_compressWavHint": "~10x smaller, no quality loss for ML pipeline",
   "moveCategory_title": "Move Category",
   "moveCategory_genre": "Genre",
   "moveCategory_subcategory": "Subcategory",
@@ -746,6 +796,7 @@
   "recording_micPermissionNeeded": "Allow microphone access to see device names",
   "recording_micPermissionButton": "Grant permission",
   "recording_micPermissionDenied": "Microphone permission denied. Enable it in your browser or system settings.",
+  "recording_micPermissionTitle": "Microphone access needed",
   "recording_noDevicesFound": "No microphones found",
   "recording_storageLowWarnTitle": "Low storage",
   "recording_storageLowWarnBody": "About {minutes} min of recording available. Continue?",

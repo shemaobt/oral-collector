@@ -753,6 +753,77 @@ class AppLocalizationsEn extends AppLocalizations {
   String get import_importAndSave => 'Import & Save';
 
   @override
+  String get import_setForAll => 'Set for all files';
+
+  @override
+  String get import_applyToAll => 'Apply to all';
+
+  @override
+  String get import_fieldRequired => 'Required';
+
+  @override
+  String import_validationBanner(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count files are missing required fields',
+      one: '1 file is missing required fields',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get import_remove => 'Remove file';
+
+  @override
+  String import_supportedFormats(String formats) {
+    return 'Supported formats: $formats. Unsupported or unreadable files are skipped.';
+  }
+
+  @override
+  String import_rejectedFiles(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Skipped $count unsupported or unreadable files: $names',
+      one: 'Skipped 1 unsupported or unreadable file: $names',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String import_countFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count files',
+      one: '1 file',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String import_importNFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count files',
+      one: '1 file',
+    );
+    return 'Import $_temp0';
+  }
+
+  @override
+  String get import_emptyFile => 'empty file';
+
+  @override
+  String get import_compressWav => 'Compress WAV to M4A';
+
+  @override
+  String get import_compressWavHint =>
+      '~10x smaller, no quality loss for ML pipeline';
+
+  @override
   String get moveCategory_title => 'Move Category';
 
   @override
@@ -1689,6 +1760,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get recording_micPermissionDenied =>
       'Microphone permission denied. Enable it in your browser or system settings.';
+
+  @override
+  String get recording_micPermissionTitle => 'Microphone access needed';
 
   @override
   String get recording_noDevicesFound => 'No microphones found';

@@ -748,6 +748,77 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get import_importAndSave => 'Importim na Sevim';
 
   @override
+  String get import_setForAll => 'Makim long olgeta fail';
+
+  @override
+  String get import_applyToAll => 'Yusim long olgeta';
+
+  @override
+  String get import_fieldRequired => 'Mas i gat';
+
+  @override
+  String import_validationBanner(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count fail i nogat ol samting i mas stap',
+      one: '1 fail i nogat ol samting i mas stap',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get import_remove => 'Rausim fail';
+
+  @override
+  String import_supportedFormats(String formats) {
+    return 'Ol gutpela kain fail: $formats. Ol fail ol i no save kisim o i no redim em i lusim.';
+  }
+
+  @override
+  String import_rejectedFiles(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Lusim $count fail i no orait o i no redim: $names',
+      one: 'Lusim 1 fail i no orait o i no redim: $names',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String import_countFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count fail',
+      one: '1 fail',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String import_importNFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count fail',
+      one: '1 fail',
+    );
+    return 'Importim $_temp0';
+  }
+
+  @override
+  String get import_emptyFile => 'fail i emti';
+
+  @override
+  String get import_compressWav => 'Mekim WAV i kamap M4A';
+
+  @override
+  String get import_compressWavHint =>
+      '~10x liklik moa, i no lusim gutpela sait long ML pipeline';
+
+  @override
   String get moveCategory_title => 'Muvim Kategori';
 
   @override
@@ -1678,6 +1749,9 @@ class AppLocalizationsTpi extends AppLocalizations {
   @override
   String get recording_micPermissionDenied =>
       'Larim bilong maikrofon i tambu. Statim long ol setting bilong brausa o sistem.';
+
+  @override
+  String get recording_micPermissionTitle => 'Microphone access needed';
 
   @override
   String get recording_noDevicesFound => 'I no gat maikrofon';

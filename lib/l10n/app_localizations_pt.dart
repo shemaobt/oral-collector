@@ -760,6 +760,77 @@ class AppLocalizationsPt extends AppLocalizations {
   String get import_importAndSave => 'Importar e Salvar';
 
   @override
+  String get import_setForAll => 'Definir para todos os arquivos';
+
+  @override
+  String get import_applyToAll => 'Aplicar a todos';
+
+  @override
+  String get import_fieldRequired => 'Obrigatório';
+
+  @override
+  String import_validationBanner(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count arquivos estão sem campos obrigatórios',
+      one: '1 arquivo está sem campos obrigatórios',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get import_remove => 'Remover arquivo';
+
+  @override
+  String import_supportedFormats(String formats) {
+    return 'Formatos suportados: $formats. Arquivos não suportados ou ilegíveis são ignorados.';
+  }
+
+  @override
+  String import_rejectedFiles(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Ignorados $count arquivos não suportados ou ilegíveis: $names',
+      one: 'Ignorado 1 arquivo não suportado ou ilegível: $names',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String import_countFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count arquivos',
+      one: '1 arquivo',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String import_importNFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count arquivos',
+      one: '1 arquivo',
+    );
+    return 'Importar $_temp0';
+  }
+
+  @override
+  String get import_emptyFile => 'arquivo vazio';
+
+  @override
+  String get import_compressWav => 'Comprimir WAV para M4A';
+
+  @override
+  String get import_compressWavHint =>
+      '~10x menor, sem perda de qualidade para pipeline de ML';
+
+  @override
   String get moveCategory_title => 'Mover Categoria';
 
   @override
@@ -1700,6 +1771,9 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get recording_micPermissionDenied =>
       'Permissão de microfone negada. Ative-a nas configurações do navegador ou do sistema.';
+
+  @override
+  String get recording_micPermissionTitle => 'Acesso ao microfone necessário';
 
   @override
   String get recording_noDevicesFound => 'Nenhum microfone encontrado';

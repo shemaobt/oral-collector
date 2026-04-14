@@ -227,6 +227,33 @@
   "import_saveError": "Hevi long sevim fail: {error}",
   "import_unknownFile": "Fail i no save",
   "import_importAndSave": "Importim na Sevim",
+  "import_setForAll": "Makim long olgeta fail",
+  "import_applyToAll": "Yusim long olgeta",
+  "import_fieldRequired": "Mas i gat",
+  "import_validationBanner": "{count, plural, =1{1 fail i nogat ol samting i mas stap} other{{count} fail i nogat ol samting i mas stap}}",
+  "@import_validationBanner": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "import_remove": "Rausim fail",
+  "import_supportedFormats": "Ol gutpela kain fail: {formats}. Ol fail ol i no save kisim o i no redim em i lusim.",
+  "@import_supportedFormats": {
+    "placeholders": { "formats": { "type": "String" } }
+  },
+  "import_rejectedFiles": "{count, plural, =1{Lusim 1 fail i no orait o i no redim: {names}} other{Lusim {count} fail i no orait o i no redim: {names}}}",
+  "@import_rejectedFiles": {
+    "placeholders": { "count": { "type": "int" }, "names": { "type": "String" } }
+  },
+  "import_countFiles": "{count, plural, =1{1 fail} other{{count} fail}}",
+  "@import_countFiles": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "import_importNFiles": "Importim {count, plural, =1{1 fail} other{{count} fail}}",
+  "@import_importNFiles": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "import_emptyFile": "fail i emti",
+  "import_compressWav": "Mekim WAV i kamap M4A",
+  "import_compressWavHint": "~10x liklik moa, i no lusim gutpela sait long ML pipeline",
   "moveCategory_title": "Muvim Kategori",
   "moveCategory_genre": "Kain",
   "moveCategory_subcategory": "Sabkategori",

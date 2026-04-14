@@ -227,6 +227,33 @@
   "import_saveError": "Error al guardar archivo: {error}",
   "import_unknownFile": "Archivo desconocido",
   "import_importAndSave": "Importar y Guardar",
+  "import_setForAll": "Establecer para todos los archivos",
+  "import_applyToAll": "Aplicar a todos",
+  "import_fieldRequired": "Obligatorio",
+  "import_validationBanner": "{count, plural, =1{1 archivo no tiene campos obligatorios} other{{count} archivos no tienen campos obligatorios}}",
+  "@import_validationBanner": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "import_remove": "Eliminar archivo",
+  "import_supportedFormats": "Formatos compatibles: {formats}. Los archivos no compatibles o ilegibles se omiten.",
+  "@import_supportedFormats": {
+    "placeholders": { "formats": { "type": "String" } }
+  },
+  "import_rejectedFiles": "{count, plural, =1{Se omitió 1 archivo no compatible o ilegible: {names}} other{Se omitieron {count} archivos no compatibles o ilegibles: {names}}}",
+  "@import_rejectedFiles": {
+    "placeholders": { "count": { "type": "int" }, "names": { "type": "String" } }
+  },
+  "import_countFiles": "{count, plural, =1{1 archivo} other{{count} archivos}}",
+  "@import_countFiles": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "import_importNFiles": "Importar {count, plural, =1{1 archivo} other{{count} archivos}}",
+  "@import_importNFiles": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "import_emptyFile": "archivo vacío",
+  "import_compressWav": "Comprimir WAV a M4A",
+  "import_compressWavHint": "~10x más pequeño, sin pérdida de calidad para pipeline de ML",
   "moveCategory_title": "Mover Categoría",
   "moveCategory_genre": "Género",
   "moveCategory_subcategory": "Subcategoría",
@@ -524,6 +551,7 @@
   "recording_micPermissionNeeded": "Permite el acceso al micrófono para ver los nombres de los dispositivos",
   "recording_micPermissionButton": "Conceder permiso",
   "recording_micPermissionDenied": "Permiso de micrófono denegado. Actívalo en los ajustes del navegador o del sistema.",
+  "recording_micPermissionTitle": "Acceso al micrófono necesario",
   "recording_noDevicesFound": "No se encontraron micrófonos",
   "recording_storageLowWarnTitle": "Poco almacenamiento",
   "recording_storageLowWarnBody": "Aproximadamente {minutes} min de grabación disponibles. ¿Continuar?",

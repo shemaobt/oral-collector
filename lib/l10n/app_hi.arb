@@ -227,6 +227,33 @@
   "import_saveError": "फ़ाइल सहेजने में त्रुटि: {error}",
   "import_unknownFile": "अज्ञात फ़ाइल",
   "import_importAndSave": "आयात करें और सहेजें",
+  "import_setForAll": "सभी फ़ाइलों के लिए सेट करें",
+  "import_applyToAll": "सभी पर लागू करें",
+  "import_fieldRequired": "आवश्यक",
+  "import_validationBanner": "{count, plural, =1{1 फ़ाइल में आवश्यक फ़ील्ड गुम हैं} other{{count} फ़ाइलों में आवश्यक फ़ील्ड गुम हैं}}",
+  "@import_validationBanner": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "import_remove": "फ़ाइल हटाएँ",
+  "import_supportedFormats": "समर्थित प्रारूप: {formats}. असमर्थित या पठन न योग्य फ़ाइलें छोड़ दी गई हैं।",
+  "@import_supportedFormats": {
+    "placeholders": { "formats": { "type": "String" } }
+  },
+  "import_rejectedFiles": "{count, plural, =1{1 असमर्थित या पठन न योग्य फ़ाइल छोड़ दी: {names}} other{{count} असमर्थित या पठन न योग्य फ़ाइलें छोड़ दी गईं: {names}}}",
+  "@import_rejectedFiles": {
+    "placeholders": { "count": { "type": "int" }, "names": { "type": "String" } }
+  },
+  "import_countFiles": "{count, plural, =1{1 फ़ाइल} other{{count} फ़ाइलें}}",
+  "@import_countFiles": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "import_importNFiles": "{count, plural, =1{1 फ़ाइल} other{{count} फ़ाइलें}} आयात करें",
+  "@import_importNFiles": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "import_emptyFile": "खाली फ़ाइल",
+  "import_compressWav": "WAV को M4A में कम्प्रेस करें",
+  "import_compressWavHint": "~10x छोटा, ML पाइपलाइन के लिए गुणवत्ता हानि नहीं",
   "moveCategory_title": "श्रेणी बदलें",
   "moveCategory_genre": "विधा",
   "moveCategory_subcategory": "उपश्रेणी",
@@ -524,6 +551,7 @@
   "recording_micPermissionNeeded": "डिवाइस के नाम देखने के लिए माइक्रोफ़ोन एक्सेस की अनुमति दें",
   "recording_micPermissionButton": "अनुमति दें",
   "recording_micPermissionDenied": "माइक्रोफ़ोन की अनुमति अस्वीकृत है। ब्राउज़र या सिस्टम सेटिंग्स में सक्षम करें।",
+  "recording_micPermissionTitle": "माइक्रोफ़ोन एक्सेस आवश्यक",
   "recording_noDevicesFound": "कोई माइक्रोफ़ोन नहीं मिला",
   "recording_storageLowWarnTitle": "कम स्टोरेज",
   "recording_storageLowWarnBody": "लगभग {minutes} मिनट की रिकॉर्डिंग उपलब्ध है। जारी रखें?",

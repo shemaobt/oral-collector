@@ -227,6 +227,33 @@
   "import_saveError": "Erreur de sauvegarde du fichier : {error}",
   "import_unknownFile": "Fichier inconnu",
   "import_importAndSave": "Importer et Sauvegarder",
+  "import_setForAll": "Définir pour tous les fichiers",
+  "import_applyToAll": "Appliquer à tous",
+  "import_fieldRequired": "Obligatoire",
+  "import_validationBanner": "{count, plural, =1{1 fichier manque de champs obligatoires} other{{count} fichiers manquent de champs obligatoires}}",
+  "@import_validationBanner": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "import_remove": "Supprimer le fichier",
+  "import_supportedFormats": "Formats pris en charge : {formats}. Les fichiers non pris en charge ou illisibles sont ignorés.",
+  "@import_supportedFormats": {
+    "placeholders": { "formats": { "type": "String" } }
+  },
+  "import_rejectedFiles": "{count, plural, =1{1 fichier non pris en charge ou illisible a été ignoré : {names}} other{{count} fichiers non pris en charge ou illisibles ont été ignorés : {names}}}",
+  "@import_rejectedFiles": {
+    "placeholders": { "count": { "type": "int" }, "names": { "type": "String" } }
+  },
+  "import_countFiles": "{count, plural, =1{1 fichier} other{{count} fichiers}}",
+  "@import_countFiles": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "import_importNFiles": "Importer {count, plural, =1{1 fichier} other{{count} fichiers}}",
+  "@import_importNFiles": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "import_emptyFile": "fichier vide",
+  "import_compressWav": "Compresser WAV en M4A",
+  "import_compressWavHint": "~10x plus petit, aucune perte de qualité pour le pipeline ML",
   "moveCategory_title": "Déplacer la Catégorie",
   "moveCategory_genre": "Genre",
   "moveCategory_subcategory": "Sous-catégorie",
@@ -524,6 +551,7 @@
   "recording_micPermissionNeeded": "Autorisez l'accès au microphone pour voir le nom des appareils",
   "recording_micPermissionButton": "Accorder l'autorisation",
   "recording_micPermissionDenied": "Autorisation du microphone refusée. Activez-la dans les paramètres du navigateur ou du système.",
+  "recording_micPermissionTitle": "Accès au microphone requis",
   "recording_noDevicesFound": "Aucun microphone trouvé",
   "recording_storageLowWarnTitle": "Stockage faible",
   "recording_storageLowWarnBody": "Environ {minutes} min d'enregistrement disponibles. Continuer ?",

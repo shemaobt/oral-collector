@@ -728,6 +728,76 @@ class AppLocalizationsZh extends AppLocalizations {
   String get import_importAndSave => '导入并保存';
 
   @override
+  String get import_setForAll => '为所有文件设置';
+
+  @override
+  String get import_applyToAll => '应用到全部';
+
+  @override
+  String get import_fieldRequired => '必填';
+
+  @override
+  String import_validationBanner(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '有 $count 个文件缺少必填字段',
+      one: '有 1 个文件缺少必填字段',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get import_remove => '移除文件';
+
+  @override
+  String import_supportedFormats(String formats) {
+    return '支持的格式：$formats。不支持或无法读取的文件将被跳过。';
+  }
+
+  @override
+  String import_rejectedFiles(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '已跳过 $count 个不支持或无法读取的文件：$names',
+      one: '已跳过 1 个不支持或无法读取的文件：$names',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String import_countFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 个文件',
+      one: '1 个文件',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String import_importNFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 个文件',
+      one: '1 个文件',
+    );
+    return '导入 $_temp0';
+  }
+
+  @override
+  String get import_emptyFile => '空文件';
+
+  @override
+  String get import_compressWav => '将 WAV 压缩为 M4A';
+
+  @override
+  String get import_compressWavHint => '~10x 更小，对 ML 流水线无质量损失';
+
+  @override
   String get moveCategory_title => '移动分类';
 
   @override
@@ -1629,6 +1699,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get recording_micPermissionDenied => '麦克风权限被拒绝。请在浏览器或系统设置中启用。';
+
+  @override
+  String get recording_micPermissionTitle => 'Microphone access needed';
 
   @override
   String get recording_noDevicesFound => '未找到麦克风';

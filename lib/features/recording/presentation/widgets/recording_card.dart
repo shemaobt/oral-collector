@@ -86,7 +86,11 @@ class RecordingCard extends StatelessWidget {
         : 'Unknown genre';
 
     final locale = Localizations.localeOf(context).languageCode;
-    final recordedDate = formatRecordingDate(recording.recordedAt, locale);
+    final recordedDate = formatRecordingDate(
+      recording.recordedAt,
+      locale,
+      l10n: l10n,
+    );
 
     return Material(
       color: colors.card,

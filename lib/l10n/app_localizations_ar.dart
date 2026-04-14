@@ -742,6 +742,77 @@ class AppLocalizationsAr extends AppLocalizations {
   String get import_importAndSave => 'استيراد وحفظ';
 
   @override
+  String get import_setForAll => 'تعيين لجميع الملفات';
+
+  @override
+  String get import_applyToAll => 'تطبيق على الكل';
+
+  @override
+  String get import_fieldRequired => 'مطلوب';
+
+  @override
+  String import_validationBanner(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ملفات تفتقد حقول مطلوبة',
+      one: 'ملف واحد يفتقد حقول مطلوبة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get import_remove => 'إزالة الملف';
+
+  @override
+  String import_supportedFormats(String formats) {
+    return 'الصيغ المدعومة: $formats. يتم تخطي الملفات غير المدعومة أو غير القابلة للقراءة.';
+  }
+
+  @override
+  String import_rejectedFiles(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'تم تخطي $count ملفات غير مدعومة أو غير قابلة للقراءة: $names',
+      one: 'تم تخطي ملف واحد غير مدعوم أو غير قابل للقراءة: $names',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String import_countFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ملفات',
+      one: 'ملف واحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String import_importNFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ملفات',
+      one: 'ملف واحد',
+    );
+    return 'استيراد $_temp0';
+  }
+
+  @override
+  String get import_emptyFile => 'ملف فارغ';
+
+  @override
+  String get import_compressWav => 'ضغط WAV إلى M4A';
+
+  @override
+  String get import_compressWavHint =>
+      '~10x أصغر، بدون فقدان للجودة لخط أنابيب ML';
+
+  @override
   String get moveCategory_title => 'نقل الفئة';
 
   @override
@@ -1660,6 +1731,9 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get recording_micPermissionDenied =>
       'تم رفض إذن الميكروفون. قم بتفعيله من إعدادات المتصفح أو النظام.';
+
+  @override
+  String get recording_micPermissionTitle => 'مطلوب الوصول إلى الميكروفون';
 
   @override
   String get recording_noDevicesFound => 'لم يتم العثور على ميكروفونات';

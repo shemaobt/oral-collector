@@ -289,6 +289,13 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
                         context: context,
                         isScrollControlled: true,
                         useSafeArea: true,
+                        useRootNavigator: true,
+                        backgroundColor: Theme.of(context).colorScheme.surface,
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.vertical(
+                            top: Radius.circular(20),
+                          ),
+                        ),
                         builder: (_) =>
                             RecordingsFilterSheet(projectId: activeProject.id),
                       ),
@@ -421,7 +428,7 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
                                 registerName: rawReg != null
                                     ? localizedRegisterName(l10n, rawReg)
                                     : null,
-                                formattedDuration: formatDurationHMS(
+                                formattedDuration: formatDurationLong(
                                   recording.durationSeconds,
                                 ),
                                 onDelete: () => _deleteRecording(recording),

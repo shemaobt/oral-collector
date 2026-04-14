@@ -114,7 +114,7 @@ class RecordingApiRepositoryImpl implements RecordingApiRepository {
   @override
   Future<List<String>> splitRecording({
     required String serverId,
-    required List<Map<String, double>> segments,
+    required List<Map<String, dynamic>> segments,
   }) async {
     final response = await _client.post(
       '/api/oc/recordings/$serverId/split',

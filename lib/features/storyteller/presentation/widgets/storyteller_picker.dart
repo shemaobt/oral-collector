@@ -146,10 +146,13 @@ class _StorytellerPickerSheetState
     final isOnline = ref.watch(syncNotifierProvider).isOnline;
     final colors = AppColors.of(context);
 
+    final scoped = state.storytellers
+        .where((s) => s.projectId == widget.projectId)
+        .toList();
     final q = _query.toLowerCase().trim();
     final list = q.isEmpty
-        ? state.storytellers
-        : state.storytellers.where((s) {
+        ? scoped
+        : scoped.where((s) {
             return s.name.toLowerCase().contains(q) ||
                 (s.location ?? '').toLowerCase().contains(q) ||
                 (s.dialect ?? '').toLowerCase().contains(q);

@@ -113,13 +113,27 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
     try {
       if (kIsWeb) {
         final bytes = await file_ops.readFileBytes(widget.result.filePath);
+        if (bytes.isEmpty) {
+          debugPrint('Recording file is empty at ${widget.result.filePath}');
+          return;
+        }
         final mime = _mimeForFormat(widget.result.format);
         final dataUri = Uri.dataFromBytes(bytes, mimeType: mime).toString();
         await _player!.setUrl(dataUri);
       } else {
+        final fileSize = await file_ops.fileLength(widget.result.filePath);
+        if (fileSize <= 0) {
+          debugPrint(
+            'Recording file is 0 bytes at ${widget.result.filePath} — '
+            'microphone likely did not capture audio.',
+          );
+          return;
+        }
         await _player!.setFilePath(widget.result.filePath);
       }
-    } catch (_) {}
+    } catch (e, st) {
+      debugPrint('Player load failed: $e\n$st');
+    }
   }
 
   String _mimeForFormat(String format) {
@@ -354,9 +368,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
                     children: [
                       const SizedBox(height: 12),
                       _buildWaveformPlayer(colors, amplitudes),
-
                       const SizedBox(height: 6),
-
                       Text(
                         '${formatPositionMS(_position)} / ${formatDurationMinSec(widget.result.durationSeconds)}',
                         style: theme.textTheme.bodySmall?.copyWith(
@@ -364,34 +376,34 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
                           fontFeatures: [const FontFeature.tabularFigures()],
                         ),
                       ),
-
-                      const SizedBox(height: 16),
-
-                      GestureDetector(
-                        onTap: _togglePlayback,
-                        child: Container(
-                          width: 56,
-                          height: 56,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: colors.accent,
-                            boxShadow: [
-                              BoxShadow(
-                                color: colors.accent.withValues(alpha: 0.3),
-                                blurRadius: 16,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Icon(
-                            _isPlaying ? LucideIcons.pause : LucideIcons.play,
-                            color: Colors.white,
-                            size: 24,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
                     ],
+                  ),
+                ),
+              ),
+
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: GestureDetector(
+                  onTap: _togglePlayback,
+                  child: Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: colors.accent,
+                      boxShadow: [
+                        BoxShadow(
+                          color: colors.accent.withValues(alpha: 0.3),
+                          blurRadius: 16,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      _isPlaying ? LucideIcons.pause : LucideIcons.play,
+                      color: Colors.white,
+                      size: 24,
+                    ),
                   ),
                 ),
               ),

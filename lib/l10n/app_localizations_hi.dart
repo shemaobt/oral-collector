@@ -764,6 +764,77 @@ class AppLocalizationsHi extends AppLocalizations {
   String get import_importAndSave => 'आयात करें और सहेजें';
 
   @override
+  String get import_setForAll => 'सभी फ़ाइलों के लिए सेट करें';
+
+  @override
+  String get import_applyToAll => 'सभी पर लागू करें';
+
+  @override
+  String get import_fieldRequired => 'आवश्यक';
+
+  @override
+  String import_validationBanner(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count फ़ाइलों में आवश्यक फ़ील्ड गुम हैं',
+      one: '1 फ़ाइल में आवश्यक फ़ील्ड गुम हैं',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get import_remove => 'फ़ाइल हटाएँ';
+
+  @override
+  String import_supportedFormats(String formats) {
+    return 'समर्थित प्रारूप: $formats. असमर्थित या पठन न योग्य फ़ाइलें छोड़ दी गई हैं।';
+  }
+
+  @override
+  String import_rejectedFiles(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count असमर्थित या पठन न योग्य फ़ाइलें छोड़ दी गईं: $names',
+      one: '1 असमर्थित या पठन न योग्य फ़ाइल छोड़ दी: $names',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String import_countFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count फ़ाइलें',
+      one: '1 फ़ाइल',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String import_importNFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count फ़ाइलें',
+      one: '1 फ़ाइल',
+    );
+    return '$_temp0 आयात करें';
+  }
+
+  @override
+  String get import_emptyFile => 'खाली फ़ाइल';
+
+  @override
+  String get import_compressWav => 'WAV को M4A में कम्प्रेस करें';
+
+  @override
+  String get import_compressWavHint =>
+      '~10x छोटा, ML पाइपलाइन के लिए गुणवत्ता हानि नहीं';
+
+  @override
   String get moveCategory_title => 'श्रेणी बदलें';
 
   @override
@@ -1695,6 +1766,9 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get recording_micPermissionDenied =>
       'माइक्रोफ़ोन की अनुमति अस्वीकृत है। ब्राउज़र या सिस्टम सेटिंग्स में सक्षम करें।';
+
+  @override
+  String get recording_micPermissionTitle => 'माइक्रोफ़ोन एक्सेस आवश्यक';
 
   @override
   String get recording_noDevicesFound => 'कोई माइक्रोफ़ोन नहीं मिला';

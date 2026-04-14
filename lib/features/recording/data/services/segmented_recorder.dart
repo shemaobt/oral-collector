@@ -1,5 +1,8 @@
 import 'dart:async';
+import 'dart:io';
 
+import 'package:audio_session/audio_session.dart';
+import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 
@@ -80,6 +83,32 @@ class SegmentedRecorder {
       return false;
     }
 
+    if (!kIsWeb) {
+      try {
+        final audioSession = await AudioSession.instance;
+        await audioSession.configure(
+          AudioSessionConfiguration(
+            avAudioSessionCategory: AVAudioSessionCategory.playAndRecord,
+            avAudioSessionCategoryOptions:
+                AVAudioSessionCategoryOptions.defaultToSpeaker |
+                AVAudioSessionCategoryOptions.allowBluetooth |
+                AVAudioSessionCategoryOptions.allowBluetoothA2dp,
+            avAudioSessionMode: AVAudioSessionMode.defaultMode,
+            avAudioSessionRouteSharingPolicy:
+                AVAudioSessionRouteSharingPolicy.defaultPolicy,
+            avAudioSessionSetActiveOptions: AVAudioSessionSetActiveOptions.none,
+          ),
+        );
+        final activated = await audioSession.setActive(true);
+        debugPrint(
+          'SegmentedRecorder: AudioSession configured '
+          '(activated=$activated)',
+        );
+      } on Exception catch (e) {
+        debugPrint('SegmentedRecorder: AudioSession setup failed: $e');
+      }
+    }
+
     _amplitudeController = StreamController<double>.broadcast();
 
     await _startNextSegment();
@@ -91,18 +120,38 @@ class SegmentedRecorder {
     _segIdx++;
     final dir = await getApplicationDocumentsDirectory();
     final idxStr = _segIdx.toString().padLeft(3, '0');
-    final path = '${dir.path}/rec_${_sessionId}_$idxStr.m4a';
+    final path = '${dir.path}/rec_${_sessionId}_$idxStr.wav';
 
-    await _recorder!.start(
-      RecordConfig(
-        encoder: AudioEncoder.aacLc,
-        sampleRate: 16000,
-        numChannels: 1,
-        bitRate: 128000,
-        device: _inputDevice,
-      ),
-      path: path,
-    );
+    try {
+      await _recorder!.start(
+        RecordConfig(
+          encoder: AudioEncoder.wav,
+          sampleRate: 16000,
+          numChannels: 1,
+          bitRate: 128000,
+          device: _inputDevice,
+          iosConfig: const IosRecordConfig(
+            // ignore: deprecated_member_use
+            manageAudioSession: false,
+            categoryOptions: [
+              IosAudioCategoryOption.defaultToSpeaker,
+              IosAudioCategoryOption.allowBluetooth,
+              IosAudioCategoryOption.allowBluetoothA2DP,
+            ],
+          ),
+        ),
+        path: path,
+      );
+      debugPrint(
+        'SegmentedRecorder: started segment $idxStr at $path '
+        '(device=${_inputDevice?.id ?? "default"})',
+      );
+    } catch (e, st) {
+      debugPrint(
+        'SegmentedRecorder: start FAILED for segment $idxStr: $e\n$st',
+      );
+      rethrow;
+    }
 
     _currentSegmentStartedAt = DateTime.now();
     _subscribeToAmplitude();
@@ -112,15 +161,29 @@ class SegmentedRecorder {
     _amplitudeSub?.cancel();
     final recorder = _recorder;
     if (recorder == null) return;
+    var tick = 0;
     _amplitudeSub = recorder
         .onAmplitudeChanged(const Duration(milliseconds: 100))
-        .listen((amp) {
-          if (_amplitudeController == null || _amplitudeController!.isClosed) {
-            return;
-          }
-          final mapped = _amplitudeMapper?.call(amp.current) ?? 0.0;
-          _amplitudeController!.add(mapped);
-        });
+        .listen(
+          (amp) {
+            if (_amplitudeController == null ||
+                _amplitudeController!.isClosed) {
+              return;
+            }
+            if (tick % 10 == 0) {
+              debugPrint(
+                'SegmentedRecorder: amplitude current=${amp.current} '
+                'max=${amp.max}',
+              );
+            }
+            tick++;
+            final mapped = _amplitudeMapper?.call(amp.current) ?? 0.0;
+            _amplitudeController!.add(mapped);
+          },
+          onError: (Object e) {
+            debugPrint('SegmentedRecorder: amplitude stream error: $e');
+          },
+        );
   }
 
   void _armRotateTimer() {
@@ -209,12 +272,22 @@ class SegmentedRecorder {
     final segStartedAt = _currentSegmentStartedAt;
     if (segStartedAt != null && closedPath != null && closedPath.isNotEmpty) {
       final segDuration = DateTime.now().difference(segStartedAt);
+      final segFile = File(closedPath);
+      final fileSize = await segFile.exists() ? await segFile.length() : -1;
+      debugPrint(
+        'SegmentedRecorder: finished segment at $closedPath '
+        'duration=${segDuration.inMilliseconds}ms size=${fileSize}bytes',
+      );
       _paths.add(closedPath);
       _cumulativeFinalized += segDuration;
       await _sessionRepo.appendSegment(
         sessionId,
         closedPath,
         segDuration.inMilliseconds / 1000.0,
+      );
+    } else {
+      debugPrint(
+        'SegmentedRecorder: finish called but no closedPath (path=$closedPath)',
       );
     }
 

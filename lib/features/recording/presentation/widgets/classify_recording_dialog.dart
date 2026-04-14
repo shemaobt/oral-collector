@@ -47,7 +47,7 @@ class _ClassifyRecordingDialogState
         .firstOrNull;
     final subcategories = selectedGenre?.subcategories ?? [];
 
-    final isValid = _selectedGenreId != null;
+    final isValid = _selectedGenreId != null && _selectedRegisterId != null;
 
     return AlertDialog(
       title: Row(
@@ -72,6 +72,7 @@ class _ClassifyRecordingDialogState
             ),
             const SizedBox(height: 4),
             DropdownButtonFormField<String>(
+              isExpanded: true,
               initialValue: _selectedGenreId,
               decoration: const InputDecoration(
                 isDense: true,
@@ -109,6 +110,7 @@ class _ClassifyRecordingDialogState
               ),
               const SizedBox(height: 4),
               DropdownButtonFormField<String>(
+                isExpanded: true,
                 initialValue:
                     subcategories.any((s) => s.id == _selectedSubcategoryId)
                     ? _selectedSubcategoryId
@@ -147,6 +149,7 @@ class _ClassifyRecordingDialogState
             ),
             const SizedBox(height: 4),
             DropdownButtonFormField<String>(
+              isExpanded: true,
               initialValue: _selectedRegisterId,
               decoration: const InputDecoration(
                 isDense: true,

@@ -179,7 +179,7 @@ class ProjectSettingsStatsRow extends StatelessWidget {
       children: [
         for (var i = 0; i < chips.length; i++) ...[
           if (i > 0) const SizedBox(width: 8),
-          Expanded(child: chips[i]),
+          chips[i],
         ],
       ],
     );

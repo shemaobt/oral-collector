@@ -238,6 +238,33 @@
   "import_saveError": "Erro ao salvar arquivo: {error}",
   "import_unknownFile": "Arquivo desconhecido",
   "import_importAndSave": "Importar e Salvar",
+  "import_setForAll": "Definir para todos os arquivos",
+  "import_applyToAll": "Aplicar a todos",
+  "import_fieldRequired": "Obrigatório",
+  "import_validationBanner": "{count, plural, =1{1 arquivo está sem campos obrigatórios} other{{count} arquivos estão sem campos obrigatórios}}",
+  "@import_validationBanner": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "import_remove": "Remover arquivo",
+  "import_supportedFormats": "Formatos suportados: {formats}. Arquivos não suportados ou ilegíveis são ignorados.",
+  "@import_supportedFormats": {
+    "placeholders": { "formats": { "type": "String" } }
+  },
+  "import_rejectedFiles": "{count, plural, =1{Ignorado 1 arquivo não suportado ou ilegível: {names}} other{Ignorados {count} arquivos não suportados ou ilegíveis: {names}}}",
+  "@import_rejectedFiles": {
+    "placeholders": { "count": { "type": "int" }, "names": { "type": "String" } }
+  },
+  "import_countFiles": "{count, plural, =1{1 arquivo} other{{count} arquivos}}",
+  "@import_countFiles": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "import_importNFiles": "Importar {count, plural, =1{1 arquivo} other{{count} arquivos}}",
+  "@import_importNFiles": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "import_emptyFile": "arquivo vazio",
+  "import_compressWav": "Comprimir WAV para M4A",
+  "import_compressWavHint": "~10x menor, sem perda de qualidade para pipeline de ML",
   "moveCategory_title": "Mover Categoria",
   "moveCategory_genre": "Gênero",
   "moveCategory_subcategory": "Subcategoria",
@@ -524,6 +551,7 @@
   "recording_micPermissionNeeded": "Conceda acesso ao microfone para ver os nomes dos dispositivos",
   "recording_micPermissionButton": "Conceder permissão",
   "recording_micPermissionDenied": "Permissão de microfone negada. Ative-a nas configurações do navegador ou do sistema.",
+  "recording_micPermissionTitle": "Acesso ao microfone necessário",
   "recording_noDevicesFound": "Nenhum microfone encontrado",
   "recording_storageLowWarnTitle": "Pouco armazenamento",
   "recording_storageLowWarnBody": "Cerca de {minutes} min de gravação disponíveis. Continuar?",

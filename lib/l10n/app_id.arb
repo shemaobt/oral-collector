@@ -227,6 +227,33 @@
   "import_saveError": "Kesalahan menyimpan file: {error}",
   "import_unknownFile": "File tidak dikenal",
   "import_importAndSave": "Impor dan Simpan",
+  "import_setForAll": "Tetapkan untuk semua file",
+  "import_applyToAll": "Terapkan ke semua",
+  "import_fieldRequired": "Wajib",
+  "import_validationBanner": "{count, plural, =1{1 file kehilangan bidang wajib} other{{count} file kehilangan bidang wajib}}",
+  "@import_validationBanner": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "import_remove": "Hapus file",
+  "import_supportedFormats": "Format yang didukung: {formats}. File yang tidak didukung atau tidak dapat dibaca akan dilewati.",
+  "@import_supportedFormats": {
+    "placeholders": { "formats": { "type": "String" } }
+  },
+  "import_rejectedFiles": "{count, plural, =1{Melewati 1 file yang tidak didukung atau tidak dapat dibaca: {names}} other{Melewati {count} file yang tidak didukung atau tidak dapat dibaca: {names}}}",
+  "@import_rejectedFiles": {
+    "placeholders": { "count": { "type": "int" }, "names": { "type": "String" } }
+  },
+  "import_countFiles": "{count, plural, =1{1 file} other{{count} file}}",
+  "@import_countFiles": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "import_importNFiles": "Impor {count, plural, =1{1 file} other{{count} file}}",
+  "@import_importNFiles": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "import_emptyFile": "file kosong",
+  "import_compressWav": "Kompres WAV ke M4A",
+  "import_compressWavHint": "~10x lebih kecil, tanpa kehilangan kualitas untuk pipeline ML",
   "moveCategory_title": "Pindah Kategori",
   "moveCategory_genre": "Genre",
   "moveCategory_subcategory": "Subkategori",
@@ -524,6 +551,7 @@
   "recording_micPermissionNeeded": "Izinkan akses mikrofon untuk melihat nama perangkat",
   "recording_micPermissionButton": "Berikan izin",
   "recording_micPermissionDenied": "Izin mikrofon ditolak. Aktifkan di pengaturan browser atau sistem.",
+  "recording_micPermissionTitle": "Akses mikrofon diperlukan",
   "recording_noDevicesFound": "Tidak ada mikrofon ditemukan",
   "recording_storageLowWarnTitle": "Penyimpanan rendah",
   "recording_storageLowWarnBody": "Sekitar {minutes} menit perekaman tersedia. Lanjutkan?",

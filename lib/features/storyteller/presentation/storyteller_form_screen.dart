@@ -257,18 +257,37 @@ class _StorytellerFormScreenState extends ConsumerState<StorytellerFormScreen> {
             const SizedBox(height: 24),
             if (!widget.isEdit) _buildAcceptanceBlock(context, l10n),
             const SizedBox(height: 32),
-            FilledButton(
-              onPressed: _canSubmit ? _submit : null,
-              style: FilledButton.styleFrom(
-                minimumSize: const Size.fromHeight(52),
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: ElevatedButton(
+                onPressed: _canSubmit ? _submit : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: colors.accent,
+                  foregroundColor: Colors.white,
+                  disabledBackgroundColor: colors.accent.withValues(alpha: 0.3),
+                  disabledForegroundColor: Colors.white.withValues(alpha: 0.8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  elevation: 0,
+                  textStyle: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                ),
+                child: _isSaving
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : Text(
+                        widget.isEdit ? l10n.common_save : l10n.common_create,
+                      ),
               ),
-              child: _isSaving
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Text(widget.isEdit ? l10n.common_save : l10n.common_create),
             ),
           ],
         ),

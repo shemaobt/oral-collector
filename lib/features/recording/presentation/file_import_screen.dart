@@ -10,54 +10,22 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 
-import '../../../../core/l10n/content_l10n.dart';
-
 import '../../../core/platform/file_ops.dart' as file_ops;
 import '../../../core/platform/ffmpeg_ops.dart' as ffmpeg_ops;
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/database/app_database.dart';
-import '../../../shared/utils/recording_title.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../genre/presentation/notifiers/genre_notifier.dart';
 import '../../sync/presentation/notifiers/sync_notifier.dart';
-import '../../genre/presentation/notifiers/genre_state.dart';
-import '../../genre/domain/entities/genre.dart';
 import '../../project/presentation/notifiers/project_notifier.dart';
+import '../../storyteller/domain/entities/storyteller.dart';
 import '../data/providers.dart';
-import '../domain/entities/register.dart';
+import '../data/supported_audio_formats.dart';
+import 'file_import_entry.dart';
 import 'notifiers/recordings_list_notifier.dart';
-import 'widgets/file_info_banner.dart';
-import 'widgets/import_confirmation.dart';
-import 'widgets/import_genre_selection.dart';
-import 'widgets/import_subcategory_selection.dart';
-import 'widgets/register_selection_step.dart';
-
-class _PickedFile {
-  final String path;
-  final String name;
-  final int sizeBytes;
-  final String format;
-  final double durationSeconds;
-  final Uint8List? webBytes;
-
-  _PickedFile({
-    required this.path,
-    required this.name,
-    required this.sizeBytes,
-    required this.format,
-    this.durationSeconds = 0.0,
-    this.webBytes,
-  });
-}
-
-enum _ImportStep {
-  pickFile,
-  selectGenre,
-  selectSubcategory,
-  selectRegister,
-  confirm,
-}
+import 'widgets/file_metadata_editor.dart';
+import 'widgets/supported_formats_banner.dart';
 
 class FileImportScreen extends ConsumerStatefulWidget {
   const FileImportScreen({super.key});
@@ -66,27 +34,30 @@ class FileImportScreen extends ConsumerStatefulWidget {
   ConsumerState<FileImportScreen> createState() => _FileImportScreenState();
 }
 
+class _RejectedFile {
+  const _RejectedFile(this.name, this.reason);
+  final String name;
+  final String reason;
+}
+
 class _FileImportScreenState extends ConsumerState<FileImportScreen> {
-  _ImportStep _currentStep = _ImportStep.pickFile;
-
-  List<_PickedFile> _pickedFiles = [];
+  final List<FileImportEntry> _entries = [];
   bool _isAnalyzing = false;
-
-  String? _selectedGenreId;
-  String? _selectedSubcategoryId;
-  String? _selectedRegisterId;
-
-  final _titleController = TextEditingController();
   bool _isSaving = false;
   int _saveProgress = 0;
   bool _compressWav = true;
+  bool _formatsBannerDismissed = false;
 
-  bool get _isBatch => _pickedFiles.length > 1;
+  String? _bulkGenreId;
+  String? _bulkSubcategoryId;
+  String? _bulkRegisterId;
+  Storyteller? _bulkStoryteller;
 
-  bool get _hasWavFiles => _pickedFiles.any((f) => f.format == 'wav');
+  final Set<String> _errorEntryIds = {};
+  final Map<String, GlobalKey> _errorKeys = {};
+  final ScrollController _scrollController = ScrollController();
 
-  int get _totalSizeBytes =>
-      _pickedFiles.fold(0, (sum, f) => sum + f.sizeBytes);
+  bool get _hasWavFiles => _entries.any((f) => f.format == 'wav');
 
   @override
   void initState() {
@@ -101,7 +72,10 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
 
   @override
   void dispose() {
-    _titleController.dispose();
+    for (final e in _entries) {
+      e.dispose();
+    }
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -109,74 +83,98 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
     try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
-        allowedExtensions: ['mp3', 'wav', 'm4a', 'ogg'],
+        allowedExtensions: kSupportedAudioExtensions.toList(),
         allowMultiple: true,
         withData: kIsWeb,
       );
 
       if (result == null || result.files.isEmpty) {
-        if (mounted && _pickedFiles.isEmpty) {
+        if (mounted && _entries.isEmpty) {
           Navigator.of(context).maybePop();
         }
         return;
       }
 
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context);
       setState(() => _isAnalyzing = true);
 
-      final files = <_PickedFile>[];
+      final newEntries = <FileImportEntry>[];
+      final rejected = <_RejectedFile>[];
 
-      for (final file in result.files) {
-        String? filePath;
+      for (var i = 0; i < result.files.length; i++) {
+        final file = result.files[i];
+        final ext = p.extension(file.name).replaceFirst('.', '').toLowerCase();
+
+        if (ext.isEmpty || !kSupportedAudioExtensions.contains(ext)) {
+          rejected.add(_RejectedFile(file.name, 'unsupported'));
+          continue;
+        }
+        if (file.size <= 0) {
+          rejected.add(_RejectedFile(file.name, l10n.import_emptyFile));
+          continue;
+        }
+
+        String filePath;
         Uint8List? webBytes;
-
         if (kIsWeb) {
-          if (file.bytes == null) continue;
+          if (file.bytes == null) {
+            rejected.add(_RejectedFile(file.name, 'unreadable'));
+            continue;
+          }
           webBytes = file.bytes;
           filePath =
-              'web_import_${DateTime.now().millisecondsSinceEpoch}_${file.name}';
+              'web_import_${DateTime.now().microsecondsSinceEpoch}_$i'
+              '_${file.name}';
         } else {
-          filePath = file.path;
-          if (filePath == null) continue;
+          final path = file.path;
+          if (path == null) {
+            rejected.add(_RejectedFile(file.name, 'unreadable'));
+            continue;
+          }
+          filePath = path;
         }
 
-        final ext = p.extension(file.name).replaceFirst('.', '').toLowerCase();
-        var duration = 0.0;
+        final duration = kIsWeb
+            ? await _detectDurationFromBytes(webBytes!, ext)
+            : await _detectDuration(filePath);
 
-        if (kIsWeb && webBytes != null) {
-          duration = await _detectDurationFromBytes(webBytes, ext);
-        } else if (!kIsWeb) {
-          duration = await _detectDuration(filePath);
+        if (duration <= 0) {
+          rejected.add(_RejectedFile(file.name, 'unreadable'));
+          continue;
         }
 
-        files.add(
-          _PickedFile(
+        newEntries.add(
+          FileImportEntry(
+            id: '${DateTime.now().microsecondsSinceEpoch}_$i',
             path: filePath,
-            name: file.name,
+            fileName: file.name,
             sizeBytes: file.size,
-            format: ext.isNotEmpty ? ext : 'm4a',
+            format: ext,
             durationSeconds: duration,
             webBytes: webBytes,
           ),
         );
       }
 
-      if (files.isEmpty) {
+      if (newEntries.isEmpty) {
         if (mounted) {
-          final l10n = AppLocalizations.of(context);
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(l10n.import_accessFailed)));
-          Navigator.of(context).maybePop();
+          _showRejectedSnack(rejected);
+          if (_entries.isEmpty) {
+            Navigator.of(context).maybePop();
+          } else {
+            setState(() => _isAnalyzing = false);
+          }
         }
         return;
       }
 
       if (mounted) {
         setState(() {
-          _pickedFiles = files;
+          _entries.addAll(newEntries);
           _isAnalyzing = false;
-          _currentStep = _ImportStep.selectGenre;
         });
+        if (rejected.isNotEmpty) _showRejectedSnack(rejected);
       }
     } catch (e) {
       if (mounted) {
@@ -185,9 +183,26 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(l10n.import_pickError(e.toString()))),
         );
-        Navigator.of(context).maybePop();
+        if (_entries.isEmpty) {
+          Navigator.of(context).maybePop();
+        }
       }
     }
+  }
+
+  void _showRejectedSnack(List<_RejectedFile> rejected) {
+    if (rejected.isEmpty) return;
+    final l10n = AppLocalizations.of(context);
+    final names = rejected.take(5).map((r) => r.name).join(', ');
+    final suffix = rejected.length > 5 ? '…' : '';
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          l10n.import_rejectedFiles(rejected.length, '$names$suffix'),
+        ),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   Future<double> _detectDuration(String filePath) async {
@@ -198,6 +213,7 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
         return duration.inMilliseconds / 1000.0;
       }
     } catch (_) {
+      return 0.0;
     } finally {
       await player.dispose();
     }
@@ -207,103 +223,168 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
   Future<double> _detectDurationFromBytes(Uint8List bytes, String ext) async {
     final player = AudioPlayer();
     try {
-      const mimeTypes = {
-        'm4a': 'audio/mp4',
-        'mp3': 'audio/mpeg',
-        'wav': 'audio/wav',
-        'ogg': 'audio/ogg',
-      };
-      final mime = mimeTypes[ext] ?? 'audio/mpeg';
+      final mime = kSupportedAudioMimeTypes[ext] ?? 'audio/mpeg';
       final dataUri = Uri.dataFromBytes(bytes, mimeType: mime).toString();
       final duration = await player.setUrl(dataUri);
       if (duration != null) {
         return duration.inMilliseconds / 1000.0;
       }
     } catch (_) {
+      return 0.0;
     } finally {
       await player.dispose();
     }
     return 0.0;
   }
 
-  void _selectGenre(Genre genre) {
-    setState(() {
-      _selectedGenreId = genre.id;
-      _selectedSubcategoryId = null;
-      _selectedRegisterId = null;
-      if (genre.subcategories.isNotEmpty) {
-        _currentStep = _ImportStep.selectSubcategory;
-      } else {
-        _currentStep = _ImportStep.selectRegister;
-      }
-    });
+  bool _isEntryValid(FileImportEntry e) {
+    if (e.genreId == null || e.genreId!.isEmpty) return false;
+    if (e.registerId == null || e.registerId!.isEmpty) return false;
+    final genres = ref.read(genreNotifierProvider).genres;
+    final genre = genres.where((g) => g.id == e.genreId).firstOrNull;
+    if (genre != null && genre.subcategories.isNotEmpty) {
+      if (e.subcategoryId == null || e.subcategoryId!.isEmpty) return false;
+    }
+    return true;
   }
 
-  void _selectSubcategory(Subcategory subcategory) {
-    setState(() {
-      _selectedSubcategoryId = subcategory.id;
-    });
-  }
-
-  void _advanceToRegister() {
-    setState(() {
-      _currentStep = _ImportStep.selectRegister;
-    });
-  }
-
-  void _selectRegister(Register register) {
-    setState(() {
-      _selectedRegisterId = register.id;
-    });
-  }
-
-  void _advanceToConfirm() {
-    setState(() {
-      _currentStep = _ImportStep.confirm;
-    });
-  }
-
-  void _goBack() {
-    switch (_currentStep) {
-      case _ImportStep.pickFile:
-        if (context.mounted) Navigator.of(context).maybePop();
-      case _ImportStep.selectGenre:
-        _pickFile();
-      case _ImportStep.selectSubcategory:
-        setState(() {
-          _selectedGenreId = null;
-          _selectedSubcategoryId = null;
-          _selectedRegisterId = null;
-          _currentStep = _ImportStep.selectGenre;
-        });
-      case _ImportStep.selectRegister:
-        final genreState = ref.read(genreNotifierProvider);
-        final genre = genreState.genres
-            .where((g) => g.id == _selectedGenreId)
-            .firstOrNull;
-        if (genre != null && genre.subcategories.isNotEmpty) {
-          setState(() {
-            _selectedSubcategoryId = null;
-            _selectedRegisterId = null;
-            _currentStep = _ImportStep.selectSubcategory;
-          });
-        } else {
-          setState(() {
-            _selectedGenreId = null;
-            _selectedRegisterId = null;
-            _currentStep = _ImportStep.selectGenre;
-          });
-        }
-      case _ImportStep.confirm:
-        setState(() {
-          _selectedRegisterId = null;
-          _currentStep = _ImportStep.selectRegister;
-        });
+  void _clearErrorIfResolved(FileImportEntry e) {
+    if (!_errorEntryIds.contains(e.id)) return;
+    if (_isEntryValid(e)) {
+      _errorEntryIds.remove(e.id);
     }
   }
 
+  void _updateEntryGenre(String id, String? value) {
+    setState(() {
+      final e = _entries.firstWhere((x) => x.id == id);
+      e.genreId = value;
+      e.subcategoryId = null;
+      _clearErrorIfResolved(e);
+    });
+  }
+
+  void _updateEntrySubcategory(String id, String? value) {
+    setState(() {
+      final e = _entries.firstWhere((x) => x.id == id);
+      e.subcategoryId = value;
+      _clearErrorIfResolved(e);
+    });
+  }
+
+  void _updateEntryRegister(String id, String? value) {
+    setState(() {
+      final e = _entries.firstWhere((x) => x.id == id);
+      e.registerId = value;
+      _clearErrorIfResolved(e);
+    });
+  }
+
+  void _updateEntryStoryteller(String id, Storyteller? value) {
+    setState(() {
+      final e = _entries.firstWhere((x) => x.id == id);
+      e.storyteller = value;
+    });
+  }
+
+  void _removeEntry(String id) {
+    setState(() {
+      final idx = _entries.indexWhere((x) => x.id == id);
+      if (idx == -1) return;
+      _entries[idx].dispose();
+      _entries.removeAt(idx);
+      _errorEntryIds.remove(id);
+      _errorKeys.remove(id);
+    });
+    if (_entries.isEmpty && mounted) {
+      Navigator.of(context).maybePop();
+    }
+  }
+
+  void _applyBulkToAll() {
+    if (_bulkGenreId == null &&
+        _bulkSubcategoryId == null &&
+        _bulkRegisterId == null &&
+        _bulkStoryteller == null) {
+      return;
+    }
+    setState(() {
+      final genres = ref.read(genreNotifierProvider).genres;
+      for (final e in _entries) {
+        if (_bulkGenreId != null) {
+          e.genreId = _bulkGenreId;
+          if (_bulkSubcategoryId != null) {
+            final g = genres.where((g) => g.id == _bulkGenreId).firstOrNull;
+            final valid =
+                g?.subcategories.any((s) => s.id == _bulkSubcategoryId) ??
+                false;
+            e.subcategoryId = valid ? _bulkSubcategoryId : null;
+          } else {
+            e.subcategoryId = null;
+          }
+        } else if (_bulkSubcategoryId != null) {
+          final g = genres.where((g) => g.id == e.genreId).firstOrNull;
+          final valid =
+              g?.subcategories.any((s) => s.id == _bulkSubcategoryId) ?? false;
+          if (valid) e.subcategoryId = _bulkSubcategoryId;
+        }
+        if (_bulkRegisterId != null) {
+          e.registerId = _bulkRegisterId;
+        }
+        if (_bulkStoryteller != null) {
+          e.storyteller = _bulkStoryteller;
+        }
+        _clearErrorIfResolved(e);
+      }
+      _bulkGenreId = null;
+      _bulkSubcategoryId = null;
+      _bulkRegisterId = null;
+      _bulkStoryteller = null;
+    });
+  }
+
+  Future<void> _onSavePressed() async {
+    final invalid = _entries.where((e) => !_isEntryValid(e)).toList();
+    if (invalid.isNotEmpty) {
+      setState(() {
+        _errorEntryIds
+          ..clear()
+          ..addAll(invalid.map((e) => e.id));
+        for (final e in invalid) {
+          _errorKeys.putIfAbsent(e.id, () => GlobalKey());
+        }
+      });
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final firstKey = _errorKeys[invalid.first.id];
+        final ctx = firstKey?.currentContext;
+        if (ctx != null) {
+          Scrollable.ensureVisible(
+            ctx,
+            duration: const Duration(milliseconds: 300),
+            alignment: 0.1,
+            alignmentPolicy: ScrollPositionAlignmentPolicy.explicit,
+          );
+        }
+      });
+
+      if (mounted) {
+        final l10n = AppLocalizations.of(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.import_validationBanner(invalid.length)),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+      return;
+    }
+
+    await _save();
+  }
+
   Future<void> _save() async {
-    if (_pickedFiles.isEmpty) return;
+    if (_entries.isEmpty) return;
 
     setState(() {
       _isSaving = true;
@@ -315,17 +396,17 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
     final repo = ref.read(localRecordingRepositoryProvider);
 
     try {
-      for (var i = 0; i < _pickedFiles.length; i++) {
-        final file = _pickedFiles[i];
+      for (var i = 0; i < _entries.length; i++) {
+        final entry = _entries[i];
 
-        String savedFilePath = file.path;
-        int fileSizeBytes = file.sizeBytes;
-        String format = file.format;
+        String savedFilePath = entry.path;
+        int fileSizeBytes = entry.sizeBytes;
+        String format = entry.format;
 
         if (kIsWeb) {
-          if (file.webBytes != null) {
-            await file_ops.writeFileBytes(savedFilePath, file.webBytes!);
-            fileSizeBytes = file.webBytes!.length;
+          if (entry.webBytes != null) {
+            await file_ops.writeFileBytes(savedFilePath, entry.webBytes!);
+            fileSizeBytes = entry.webBytes!.length;
           }
         } else {
           final appDir = await getApplicationDocumentsDirectory();
@@ -334,9 +415,9 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
             await file_ops.createDir(recordingsPath);
           }
           final destFileName =
-              '${DateTime.now().millisecondsSinceEpoch}_${file.name}';
+              '${DateTime.now().millisecondsSinceEpoch}_${entry.fileName}';
           final destPath = '$recordingsPath/$destFileName';
-          await file_ops.copyFile(file.path, destPath);
+          await file_ops.copyFile(entry.path, destPath);
           savedFilePath = destPath;
 
           if (_compressWav && format == 'wav') {
@@ -355,31 +436,30 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
           fileSizeBytes = await file_ops.fileLength(savedFilePath);
         }
 
-        final id =
-            '${DateTime.now().millisecondsSinceEpoch}_${_selectedGenreId.hashCode}_$i';
-
-        final title = _isBatch
-            ? file.name.replaceAll(RegExp(r'\.[^.]+$'), '')
-            : (_titleController.text.trim().isNotEmpty
-                  ? _titleController.text.trim()
-                  : defaultRecordingTitle());
+        final id = '${DateTime.now().microsecondsSinceEpoch}_$i';
+        final title = entry.fileName.replaceAll(RegExp(r'\.[^.]+$'), '');
+        final description = entry.descriptionController.text.trim();
 
         await repo.insertRecording(
           LocalRecordingsCompanion(
             id: Value(id),
             projectId: Value(projectId),
-            genreId: Value(_selectedGenreId!),
+            genreId: Value(entry.genreId!),
             subcategoryId:
-                _selectedSubcategoryId != null &&
-                    _selectedSubcategoryId!.isNotEmpty
-                ? Value(_selectedSubcategoryId!)
+                entry.subcategoryId != null && entry.subcategoryId!.isNotEmpty
+                ? Value(entry.subcategoryId!)
                 : const Value.absent(),
-            registerId:
-                _selectedRegisterId != null && _selectedRegisterId!.isNotEmpty
-                ? Value(_selectedRegisterId!)
+            registerId: entry.registerId != null && entry.registerId!.isNotEmpty
+                ? Value(entry.registerId!)
+                : const Value.absent(),
+            storytellerId: entry.storytellerId != null
+                ? Value(entry.storytellerId!)
                 : const Value.absent(),
             title: Value(title),
-            durationSeconds: Value(file.durationSeconds),
+            description: description.isNotEmpty
+                ? Value(description)
+                : const Value.absent(),
+            durationSeconds: Value(entry.durationSeconds),
             fileSizeBytes: Value(fileSizeBytes),
             format: Value(format),
             localFilePath: Value(savedFilePath),
@@ -409,21 +489,6 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
     }
   }
 
-  String _title(AppLocalizations l10n) {
-    switch (_currentStep) {
-      case _ImportStep.pickFile:
-        return l10n.import_title;
-      case _ImportStep.selectGenre:
-        return l10n.import_selectGenre;
-      case _ImportStep.selectSubcategory:
-        return l10n.import_selectSubcategory;
-      case _ImportStep.selectRegister:
-        return l10n.import_selectRegister;
-      case _ImportStep.confirm:
-        return l10n.import_confirmImport;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -431,14 +496,49 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        leading: BackButton(onPressed: _goBack),
-        title: Text(_title(l10n)),
+        leading: BackButton(onPressed: () => Navigator.of(context).maybePop()),
+        title: Text(l10n.import_title),
       ),
-      body: _currentStep == _ImportStep.pickFile
+      body: _entries.isEmpty || _isAnalyzing
           ? _buildPickingState()
-          : genreState.isLoading && genreState.genres.isEmpty
-          ? const Center(child: CircularProgressIndicator())
-          : _buildStep(genreState),
+          : FileMetadataEditor(
+              entries: _entries,
+              projectId:
+                  ref.read(projectNotifierProvider).activeProject?.id ?? '',
+              genres: genreState.genres,
+              genresLoading: genreState.isLoading,
+              errorEntryIds: _errorEntryIds,
+              errorKeys: _errorKeys,
+              bulkGenreId: _bulkGenreId,
+              bulkSubcategoryId: _bulkSubcategoryId,
+              bulkRegisterId: _bulkRegisterId,
+              bulkStoryteller: _bulkStoryteller,
+              onBulkGenreChanged: (v) => setState(() {
+                _bulkGenreId = v;
+                _bulkSubcategoryId = null;
+              }),
+              onBulkSubcategoryChanged: (v) =>
+                  setState(() => _bulkSubcategoryId = v),
+              onBulkRegisterChanged: (v) => setState(() => _bulkRegisterId = v),
+              onBulkStorytellerChanged: (v) =>
+                  setState(() => _bulkStoryteller = v),
+              onApplyBulk: _applyBulkToAll,
+              onEntryGenreChanged: _updateEntryGenre,
+              onEntrySubcategoryChanged: _updateEntrySubcategory,
+              onEntryRegisterChanged: _updateEntryRegister,
+              onEntryStorytellerChanged: _updateEntryStoryteller,
+              onRemoveEntry: _removeEntry,
+              isSaving: _isSaving,
+              saveProgress: _saveProgress,
+              hasWavFiles: _hasWavFiles,
+              compressWav: _compressWav,
+              onCompressWavChanged: (v) => setState(() => _compressWav = v),
+              onCancel: () => Navigator.of(context).maybePop(),
+              onSave: _onSavePressed,
+              showFormatsBanner: !_formatsBannerDismissed,
+              onDismissFormatsBanner: () =>
+                  setState(() => _formatsBannerDismissed = true),
+            ),
     );
   }
 
@@ -446,136 +546,50 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
     final l10n = AppLocalizations.of(context);
     final colors = AppColors.of(context);
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          if (_isAnalyzing) ...[
-            const CircularProgressIndicator(),
-            const SizedBox(height: 16),
-            Text(
-              l10n.import_analyzing,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: colors.foreground.withValues(alpha: 0.6),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (_isAnalyzing) ...[
+              const CircularProgressIndicator(),
+              const SizedBox(height: 16),
+              Text(
+                l10n.import_analyzing,
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: colors.foreground.withValues(alpha: 0.6),
+                ),
               ),
-            ),
-          ] else ...[
-            Icon(LucideIcons.fileAudio, size: 64, color: colors.border),
-            const SizedBox(height: 16),
-            Text(
-              l10n.import_selectFile,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: colors.foreground.withValues(alpha: 0.6),
+            ] else ...[
+              Icon(LucideIcons.fileAudio, size: 64, color: colors.border),
+              const SizedBox(height: 16),
+              Text(
+                l10n.import_selectFile,
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: colors.foreground.withValues(alpha: 0.6),
+                ),
               ),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: _pickFile,
-              icon: const Icon(LucideIcons.folderOpen),
-              label: Text(l10n.import_chooseFile),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: colors.primary,
-                foregroundColor: Colors.white,
-                minimumSize: const Size(160, 48),
+              const SizedBox(height: 20),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 420),
+                child: const SupportedFormatsBanner(),
               ),
-            ),
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: _pickFile,
+                icon: const Icon(LucideIcons.folderOpen),
+                label: Text(l10n.import_chooseFile),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: colors.primary,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(160, 48),
+                ),
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
-  }
-
-  Widget _fileInfoBanner() {
-    if (_isBatch) {
-      return FileInfoBanner(
-        fileName: '${_pickedFiles.length} files',
-        format: _pickedFiles.map((f) => f.format).toSet().join(', '),
-        durationSeconds: _pickedFiles.fold(
-          0.0,
-          (sum, f) => sum + f.durationSeconds,
-        ),
-        fileSizeBytes: _totalSizeBytes,
-      );
-    }
-    final f = _pickedFiles.first;
-    return FileInfoBanner(
-      fileName: f.name,
-      format: f.format,
-      durationSeconds: f.durationSeconds,
-      fileSizeBytes: f.sizeBytes,
-    );
-  }
-
-  Widget _buildStep(GenreState genreState) {
-    final l10n = AppLocalizations.of(context);
-    switch (_currentStep) {
-      case _ImportStep.pickFile:
-        return _buildPickingState();
-      case _ImportStep.selectGenre:
-        return ImportGenreSelection(
-          genres: genreState.genres,
-          onGenreSelected: _selectGenre,
-          fileInfoBanner: _fileInfoBanner(),
-        );
-      case _ImportStep.selectSubcategory:
-        final genre = genreState.genres
-            .where((g) => g.id == _selectedGenreId)
-            .firstOrNull;
-        if (genre == null) {
-          final l10n = AppLocalizations.of(context);
-          return Center(child: Text(l10n.recording_genreNotFound));
-        }
-        return ImportSubcategorySelection(
-          genre: genre,
-          selectedSubcategoryId: _selectedSubcategoryId,
-          onSubcategorySelected: _selectSubcategory,
-          onNext: _advanceToRegister,
-          fileInfoBanner: _fileInfoBanner(),
-        );
-      case _ImportStep.selectRegister:
-        return RegisterSelectionStep(
-          selectedRegisterId: _selectedRegisterId,
-          onSelect: _selectRegister,
-          onNext: _advanceToConfirm,
-        );
-      case _ImportStep.confirm:
-        final rawG = genreState.genres
-            .where((g) => g.id == _selectedGenreId)
-            .firstOrNull
-            ?.name;
-        final rawS = genreState.genres
-            .where((g) => g.id == _selectedGenreId)
-            .firstOrNull
-            ?.subcategories
-            .where((s) => s.id == _selectedSubcategoryId)
-            .firstOrNull
-            ?.name;
-        final rawR = getRegisterName(_selectedRegisterId);
-        return ImportConfirmation(
-          fileName: _isBatch
-              ? '${_pickedFiles.length} files'
-              : _pickedFiles.firstOrNull?.name,
-          format: _isBatch
-              ? _pickedFiles.map((f) => f.format).toSet().join(', ')
-              : (_pickedFiles.firstOrNull?.format ?? 'm4a'),
-          durationSeconds: _isBatch
-              ? _pickedFiles.fold(0.0, (sum, f) => sum + f.durationSeconds)
-              : (_pickedFiles.firstOrNull?.durationSeconds ?? 0.0),
-          fileSizeBytes: _totalSizeBytes,
-          fileCount: _pickedFiles.length,
-          saveProgress: _saveProgress,
-          genreName: rawG != null ? localizedGenreName(l10n, rawG) : null,
-          subcategoryName: rawS != null
-              ? localizedSubcategoryName(l10n, rawS)
-              : null,
-          registerName: rawR != null ? localizedRegisterName(l10n, rawR) : null,
-          titleController: _titleController,
-          isSaving: _isSaving,
-          onSave: _save,
-          onCancel: () => Navigator.of(context).maybePop(),
-          hasWavFiles: _hasWavFiles,
-          compressWav: _compressWav,
-          onCompressWavChanged: (v) => setState(() => _compressWav = v),
-        );
-    }
   }
 }

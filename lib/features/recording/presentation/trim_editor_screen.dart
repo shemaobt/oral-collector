@@ -16,8 +16,16 @@ import '../../../core/database/app_database.dart';
 import '../../../core/platform/ffmpeg_ops.dart' as ffmpeg;
 import '../../../core/platform/file_ops.dart' as file_ops;
 import '../../../core/theme/app_colors.dart';
+import '../../genre/presentation/notifiers/genre_notifier.dart';
 import '../data/providers.dart';
+import '../data/services/recording_trash.dart';
+import '../data/services/waveform_extractor.dart';
+import '../domain/entities/register.dart';
+import '../../../core/l10n/content_l10n.dart';
+import 'widgets/edit_transport_bar.dart';
+import 'widgets/edit_volume_control.dart';
 import 'widgets/segment_card.dart';
+import 'widgets/segment_taxonomy_sheet.dart';
 import 'widgets/trim_waveform_panel.dart';
 
 class TrimEditorScreen extends ConsumerStatefulWidget {
@@ -47,6 +55,86 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
   List<double> _waveformBars = [];
 
   StreamSubscription<Duration>? _previewSub;
+  StreamSubscription<Duration>? _transportPositionSub;
+  StreamSubscription<PlayerState>? _transportStateSub;
+
+  bool _isTransportPlaying = false;
+  Duration _transportPosition = Duration.zero;
+  final Stopwatch _playheadThrottle = Stopwatch()..start();
+  final Stopwatch _sinceLocalSeek = Stopwatch();
+
+  double _zoom = 1.0;
+  double _panFraction = 0.0;
+
+  double _gainDb = 0.0;
+
+  Map<String, String?> _segGenreBySig = {};
+  Map<String, String?> _segSubcatBySig = {};
+  Map<String, String?> _segRegisterBySig = {};
+
+  String _sigAt(double midpointFraction) {
+    return midpointFraction.toStringAsFixed(3);
+  }
+
+  String _sigForSegment(int i) {
+    final mid = (_boundaries[i] + _boundaries[i + 1]) / 2.0;
+    return _sigAt(mid);
+  }
+
+  String _effectiveGenre(int i) {
+    final sig = _sigForSegment(i);
+    final v = _segGenreBySig.containsKey(sig)
+        ? _segGenreBySig[sig]
+        : _recording?.genreId;
+    return v ?? _recording?.genreId ?? '';
+  }
+
+  String? _effectiveSubcategory(int i) {
+    final sig = _sigForSegment(i);
+    return _segSubcatBySig.containsKey(sig)
+        ? _segSubcatBySig[sig]
+        : _recording?.subcategoryId;
+  }
+
+  String? _effectiveRegister(int i) {
+    final sig = _sigForSegment(i);
+    return _segRegisterBySig.containsKey(sig)
+        ? _segRegisterBySig[sig]
+        : _recording?.registerId;
+  }
+
+  Map<String, String?> _remapBySig(
+    Map<String, String?> previous,
+    List<double> previousBoundaries,
+    List<double> newBoundaries,
+  ) {
+    final result = <String, String?>{};
+    final previousSegCount = previousBoundaries.length - 1;
+    final newSegCount = newBoundaries.length - 1;
+    final previousMids = <double>[
+      for (var i = 0; i < previousSegCount; i++)
+        (previousBoundaries[i] + previousBoundaries[i + 1]) / 2.0,
+    ];
+
+    for (var j = 0; j < newSegCount; j++) {
+      final newMid = (newBoundaries[j] + newBoundaries[j + 1]) / 2.0;
+      double bestDist = double.infinity;
+      int? bestIdx;
+      for (var i = 0; i < previousMids.length; i++) {
+        final d = (newMid - previousMids[i]).abs();
+        if (d < bestDist) {
+          bestDist = d;
+          bestIdx = i;
+        }
+      }
+      if (bestIdx == null || bestDist > 0.02) continue;
+      final oldSig = _sigAt(previousMids[bestIdx]);
+      if (!previous.containsKey(oldSig)) continue;
+      final newSig = _sigAt(newMid);
+      result[newSig] = previous[oldSig];
+    }
+    return result;
+  }
 
   List<double> get _sortedSplits => [..._splitPoints]..sort();
 
@@ -84,8 +172,244 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
   @override
   void dispose() {
     _previewSub?.cancel();
+    _transportPositionSub?.cancel();
+    _transportStateSub?.cancel();
     _player?.dispose();
     super.dispose();
+  }
+
+  void _attachTransportListeners() {
+    final player = _player;
+    if (player == null) return;
+
+    _transportPositionSub?.cancel();
+    _transportPositionSub = player.positionStream.listen((pos) {
+      if (!mounted) return;
+      if (_playingSegment != null) return;
+      if (_sinceLocalSeek.isRunning &&
+          _sinceLocalSeek.elapsedMilliseconds < 250) {
+        return;
+      }
+      if (_playheadThrottle.elapsedMilliseconds < 33) return;
+      _playheadThrottle.reset();
+      setState(() => _transportPosition = pos);
+    });
+
+    _transportStateSub?.cancel();
+    _transportStateSub = player.playerStateStream.listen((state) {
+      if (!mounted) return;
+      final playing = state.playing && _playingSegment == null;
+      if (playing != _isTransportPlaying) {
+        setState(() => _isTransportPlaying = playing);
+      }
+      if (state.processingState == ProcessingState.completed) {
+        player.pause();
+        player.seek(Duration.zero);
+        if (mounted) {
+          setState(() {
+            _isTransportPlaying = false;
+            _transportPosition = Duration.zero;
+          });
+        }
+      }
+    });
+  }
+
+  String? _subcategoryNameFor(
+    AppLocalizations l10n,
+    String? subcategoryId,
+    String? genreId,
+  ) {
+    if (subcategoryId == null || subcategoryId.isEmpty) return null;
+    final genres = ref.read(genreNotifierProvider).genres;
+    final genre = genres
+        .where((g) => g.id == (genreId ?? _recording?.genreId))
+        .firstOrNull;
+    final sub = genre?.subcategories
+        .where((s) => s.id == subcategoryId)
+        .firstOrNull;
+    if (sub == null) return null;
+    return localizedSubcategoryName(l10n, sub.name);
+  }
+
+  String? _genreNameFor(AppLocalizations l10n, String? genreId) {
+    if (genreId == null || genreId.isEmpty) return null;
+    final genres = ref.read(genreNotifierProvider).genres;
+    final genre = genres.where((g) => g.id == genreId).firstOrNull;
+    if (genre == null) return null;
+    return localizedGenreName(l10n, genre.name);
+  }
+
+  String? _registerNameFor(AppLocalizations l10n, String? registerId) {
+    if (registerId == null || registerId.isEmpty) return null;
+    final reg = kRegisters.where((r) => r.id == registerId).firstOrNull;
+    if (reg == null) return null;
+    return localizedRegisterName(l10n, reg.name);
+  }
+
+  Future<void> _openTaxonomySheet(int index) async {
+    final recording = _recording;
+    if (recording == null) return;
+
+    final sig = _sigForSegment(index);
+    final initialGenre = _segGenreBySig.containsKey(sig)
+        ? _segGenreBySig[sig]
+        : null;
+    final initialSub = _segSubcatBySig.containsKey(sig)
+        ? _segSubcatBySig[sig]
+        : recording.subcategoryId;
+    final initialReg = _segRegisterBySig.containsKey(sig)
+        ? _segRegisterBySig[sig]
+        : recording.registerId;
+
+    final result = await showModalBottomSheet<SegmentTaxonomyResult>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: false,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SegmentTaxonomySheet(
+        parentGenreId: recording.genreId,
+        initialGenreId: initialGenre,
+        initialSubcategoryId: initialSub,
+        initialRegisterId: initialReg,
+      ),
+    );
+
+    if (result == null || !mounted) return;
+
+    setState(() {
+      if (result.applyToAll) {
+        _segGenreBySig = {
+          for (var i = 0; i < _segmentCount; i++)
+            _sigForSegment(i): result.genreId,
+        };
+        _segSubcatBySig = {
+          for (var i = 0; i < _segmentCount; i++)
+            _sigForSegment(i): result.subcategoryId,
+        };
+        _segRegisterBySig = {
+          for (var i = 0; i < _segmentCount; i++)
+            _sigForSegment(i): result.registerId,
+        };
+      } else {
+        _segGenreBySig = {..._segGenreBySig, sig: result.genreId};
+        _segSubcatBySig = {..._segSubcatBySig, sig: result.subcategoryId};
+        _segRegisterBySig = {..._segRegisterBySig, sig: result.registerId};
+      }
+    });
+  }
+
+  void _copyFromPrevious(int index) {
+    if (index <= 0) return;
+    final previousSig = _sigForSegment(index - 1);
+    final currentSig = _sigForSegment(index);
+
+    final prevGenre = _segGenreBySig.containsKey(previousSig)
+        ? _segGenreBySig[previousSig]
+        : null;
+    final prevSub = _segSubcatBySig.containsKey(previousSig)
+        ? _segSubcatBySig[previousSig]
+        : _recording?.subcategoryId;
+    final prevReg = _segRegisterBySig.containsKey(previousSig)
+        ? _segRegisterBySig[previousSig]
+        : _recording?.registerId;
+
+    HapticFeedback.lightImpact();
+    setState(() {
+      _segGenreBySig = {..._segGenreBySig, currentSig: prevGenre};
+      _segSubcatBySig = {..._segSubcatBySig, currentSig: prevSub};
+      _segRegisterBySig = {..._segRegisterBySig, currentSig: prevReg};
+    });
+  }
+
+  void _seekPlayheadTo(double fraction) {
+    final player = _player;
+    if (player == null) return;
+    final totalMs = _totalDuration.inMilliseconds;
+    if (totalMs <= 0) return;
+    final target = Duration(
+      milliseconds: (fraction.clamp(0.0, 1.0) * totalMs).round(),
+    );
+
+    if (_playingSegment != null) {
+      _previewSub?.cancel();
+      _previewSub = null;
+    }
+    if (mounted) {
+      setState(() {
+        _transportPosition = target;
+        _playingSegment = null;
+      });
+    }
+    _sinceLocalSeek
+      ..reset()
+      ..start();
+
+    player.seek(target);
+  }
+
+  void _seekAndPlay(double fraction) {
+    final player = _player;
+    if (player == null) return;
+
+    _seekPlayheadTo(fraction);
+
+    if (!player.playing) {
+      _applyPreviewVolume();
+      player.play();
+    }
+  }
+
+  Future<void> _toggleTransport() async {
+    final player = _player;
+    if (player == null) return;
+
+    if (_playingSegment != null) {
+      await _stopPreview();
+    }
+
+    if (player.playing) {
+      await player.pause();
+      if (mounted) {
+        setState(() => _transportPosition = player.position);
+      }
+    } else {
+      await _applyPreviewVolume();
+      await player.play();
+    }
+  }
+
+  Future<void> _applyPreviewVolume() async {
+    final player = _player;
+    if (player == null) return;
+    final clamped = _gainDb.clamp(-12.0, 0.0);
+    final multiplier = pow(10, clamped / 20).toDouble();
+    try {
+      await player.setVolume(multiplier.clamp(0.0, 1.0));
+    } on Exception {
+      // ignore
+    }
+  }
+
+  double _visiblePeak() {
+    if (_waveformBars.isEmpty) return 0.0;
+    final viewportStart = _panFraction;
+    final viewportEnd = _panFraction + 1.0 / _zoom;
+    final first = (viewportStart * _waveformBars.length).floor().clamp(
+      0,
+      _waveformBars.length - 1,
+    );
+    final last = (viewportEnd * _waveformBars.length).ceil().clamp(
+      first,
+      _waveformBars.length,
+    );
+    var peak = 0.0;
+    for (var i = first; i < last; i++) {
+      if (_waveformBars[i] > peak) peak = _waveformBars[i];
+    }
+    return peak;
   }
 
   Future<void> _loadRecording() async {
@@ -198,16 +522,24 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
         );
       }
 
-      final rng = Random(
-        kIsWeb
-            ? (recording.gcsUrl ?? recording.id).hashCode
-            : recording.localFilePath.hashCode,
-      );
-      const barCount = 70;
-      final bars = List.generate(
-        barCount,
-        (_) => 0.15 + rng.nextDouble() * 0.85,
-      );
+      const barCount = 2000;
+      List<double> bars;
+
+      if (!kIsWeb && recording.localFilePath.isNotEmpty) {
+        final peaks = await WaveformExtractor.extractPeaks(
+          recording.localFilePath,
+          targetCount: barCount,
+        );
+        if (peaks.isEmpty) {
+          final rng = Random(recording.localFilePath.hashCode);
+          bars = List.generate(barCount, (_) => 0.15 + rng.nextDouble() * 0.85);
+        } else {
+          bars = peaks.peaks;
+        }
+      } else {
+        final rng = Random((recording.gcsUrl ?? recording.id).hashCode);
+        bars = List.generate(barCount, (_) => 0.15 + rng.nextDouble() * 0.85);
+      }
 
       if (mounted) {
         setState(() {
@@ -216,18 +548,70 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
           _waveformBars = bars;
           _isLoading = false;
         });
+        _attachTransportListeners();
       }
     } catch (_) {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
+  void _addSplitAtPlayhead() {
+    final totalMs = _totalDuration.inMilliseconds;
+    if (totalMs <= 0) return;
+    final fraction = (_transportPosition.inMilliseconds / totalMs).clamp(
+      0.0,
+      1.0,
+    );
+    const minGap = 0.03;
+    if (fraction <= minGap || fraction >= 1.0 - minGap) return;
+    for (final p in _splitPoints) {
+      if ((fraction - p).abs() < minGap) return;
+    }
+    HapticFeedback.lightImpact();
+    _onSplitPointsChanged([..._splitPoints, fraction]);
+  }
+
+  bool get _canSplitAtPlayhead {
+    final totalMs = _totalDuration.inMilliseconds;
+    if (totalMs <= 0) return false;
+    final fraction = _transportPosition.inMilliseconds / totalMs;
+    const minGap = 0.03;
+    if (fraction <= minGap || fraction >= 1.0 - minGap) return false;
+    for (final p in _splitPoints) {
+      if ((fraction - p).abs() < minGap) return false;
+    }
+    return true;
+  }
+
   void _onSplitPointsChanged(List<double> pts) {
     final newSegCount = pts.length + 1;
     final pruned = _excludedSegments.where((i) => i < newSegCount).toSet();
+
+    final previousBoundaries = [..._boundaries];
+    final sortedNew = [...pts]..sort();
+    final newBoundaries = [0.0, ...sortedNew, 1.0];
+    final remappedGenre = _remapBySig(
+      _segGenreBySig,
+      previousBoundaries,
+      newBoundaries,
+    );
+    final remappedSubcat = _remapBySig(
+      _segSubcatBySig,
+      previousBoundaries,
+      newBoundaries,
+    );
+    final remappedReg = _remapBySig(
+      _segRegisterBySig,
+      previousBoundaries,
+      newBoundaries,
+    );
+
     setState(() {
       _splitPoints = pts;
       _excludedSegments = pruned;
+      _segGenreBySig = remappedGenre;
+      _segSubcatBySig = remappedSubcat;
+      _segRegisterBySig = remappedReg;
     });
   }
 
@@ -260,9 +644,15 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
 
     if (wasPlaying) return;
 
+    if (_isTransportPlaying) {
+      await _player!.pause();
+      if (mounted) setState(() => _isTransportPlaying = false);
+    }
+
     final startTime = _segmentStart(index);
     final endTime = _segmentEnd(index);
 
+    await _applyPreviewVolume();
     await _player!.seek(startTime);
 
     setState(() => _playingSegment = index);
@@ -297,6 +687,26 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
     if (recording == null || _splitPoints.isEmpty) return;
     if (_keptCount == 0) return;
 
+    final l10n = AppLocalizations.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.trim_saveConfirmTitle),
+        content: Text(l10n.trim_saveConfirmBody(_keptCount)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.common_cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(l10n.common_save),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
     setState(() => _isSaving = true);
 
     try {
@@ -323,14 +733,26 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
     final kept = _keptSegmentIndices;
 
     final segments = kept.map((i) {
+      final effGenre = _effectiveGenre(i);
+      final effSubcat = _effectiveSubcategory(i);
+      final effRegister = _effectiveRegister(i);
       return {
         'start_seconds': _segmentStart(i).inMilliseconds / 1000.0,
         'end_seconds': _segmentEnd(i).inMilliseconds / 1000.0,
+        if (effGenre.isNotEmpty && effGenre != recording.genreId)
+          'genre_id': effGenre,
+        if (effSubcat != null && effSubcat.isNotEmpty)
+          'subcategory_id': effSubcat,
+        if (effRegister != null && effRegister.isNotEmpty)
+          'register_id': effRegister,
       };
     }).toList();
 
     final apiRepo = ref.read(recordingApiRepositoryProvider);
-    await apiRepo.splitRecording(serverId: serverId, segments: segments);
+    final payloadSegments = _gainDb.abs() > 0.01
+        ? segments.map((s) => {...s, 'gain_db': _gainDb}).toList()
+        : segments;
+    await apiRepo.splitRecording(serverId: serverId, segments: payloadSegments);
 
     if (mounted) {
       final l10n = AppLocalizations.of(context);
@@ -363,8 +785,13 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
       final outputPath =
           '${dir.path}/split_${now.millisecondsSinceEpoch}_$k.m4a';
 
-      final command =
-          '-i "${recording.localFilePath}" -ss $startSec -to $endSec -c copy "$outputPath"';
+      final needReencode = _gainDb.abs() > 0.01;
+      final command = needReencode
+          ? '-y -i "${recording.localFilePath}" -ss $startSec -to $endSec '
+                '-af "volume=${_gainDb.toStringAsFixed(2)}dB" '
+                '-c:a aac -b:a 128k "$outputPath"'
+          : '-y -i "${recording.localFilePath}" -ss $startSec -to $endSec '
+                '-c copy "$outputPath"';
 
       final success = await ffmpeg.executeFFmpegCommand(command);
       if (!success) {
@@ -376,19 +803,19 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
       final id =
           '${now.millisecondsSinceEpoch}_${k}_${recording.genreId.hashCode}';
 
+      final effGenre = _effectiveGenre(i);
+      final effSubcat = _effectiveSubcategory(i);
+      final effRegister = _effectiveRegister(i);
       await repo.insertRecording(
         LocalRecordingsCompanion(
           id: Value(id),
           projectId: Value(recording.projectId),
-          genreId: Value(recording.genreId),
-          subcategoryId:
-              recording.subcategoryId != null &&
-                  recording.subcategoryId!.isNotEmpty
-              ? Value(recording.subcategoryId!)
+          genreId: Value(effGenre.isNotEmpty ? effGenre : recording.genreId),
+          subcategoryId: (effSubcat != null && effSubcat.isNotEmpty)
+              ? Value(effSubcat)
               : const Value.absent(),
-          registerId:
-              recording.registerId != null && recording.registerId!.isNotEmpty
-              ? Value(recording.registerId!)
+          registerId: (effRegister != null && effRegister.isNotEmpty)
+              ? Value(effRegister)
               : const Value.absent(),
           title: Value(
             keptTotal == 1
@@ -404,7 +831,23 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
       );
     }
 
-    await file_ops.deleteFile(recording.localFilePath);
+    await RecordingTrash.putInTrash(
+      sourcePath: recording.localFilePath,
+      metadata: {
+        'id': recording.id,
+        'title': recording.title,
+        'projectId': recording.projectId,
+        'genreId': recording.genreId,
+        'subcategoryId': recording.subcategoryId,
+        'registerId': recording.registerId,
+        'durationSeconds': recording.durationSeconds,
+        'fileSizeBytes': recording.fileSizeBytes,
+        'format': recording.format,
+        'serverId': recording.serverId,
+        'gcsUrl': recording.gcsUrl,
+        'recordedAt': recording.recordedAt.toIso8601String(),
+      },
+    );
     await repo.deleteRecording(recording.id);
 
     final serverId = recording.serverId;
@@ -505,21 +948,70 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
     final isDark = theme.brightness == Brightness.dark;
     final hasSplits = _splitPoints.isNotEmpty;
 
-    final waveformPanel = TrimWaveformPanel(
-      waveformBars: _waveformBars,
-      splitPoints: _splitPoints,
-      onSplitPointsChanged: _onSplitPointsChanged,
-      playingSegment: _playingSegment,
-      excludedSegments: _excludedSegments,
-      hasSplits: hasSplits,
-      keptCount: _keptCount,
-      segmentCount: _segmentCount,
-      totalDurationLabel: _fmt(_totalDuration),
-      totalDurationShortLabel: _fmtShort(_totalDuration),
-      onClearAll: () => setState(() {
-        _splitPoints = [];
-        _excludedSegments = {};
-      }),
+    final totalMs = _totalDuration.inMilliseconds;
+    final hasPosition =
+        _transportPosition > Duration.zero || _isTransportPlaying;
+    final double? playheadFraction = (hasPosition && totalMs > 0)
+        ? (_transportPosition.inMilliseconds / totalMs).clamp(0.0, 1.0)
+        : null;
+
+    final waveformPanel = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        EditTransportBar(
+          isPlaying: _isTransportPlaying,
+          position: _transportPosition,
+          duration: _totalDuration,
+          onPlayPause: _toggleTransport,
+          canSplitAtPosition: _canSplitAtPlayhead,
+          onSplitAtPosition: _addSplitAtPlayhead,
+        ),
+        const SizedBox(height: 10),
+        if (!kIsWeb)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: EditVolumeControl(
+              gainDb: _gainDb,
+              peakAmplitude: _visiblePeak(),
+              volumeLabel: l10n.trim_volume,
+              clippingLabel: l10n.trim_peakClip,
+              boostOnSaveLabel: l10n.trim_boostOnSave,
+              onChanged: (v) {
+                setState(() => _gainDb = v);
+                _applyPreviewVolume();
+              },
+            ),
+          ),
+        TrimWaveformPanel(
+          waveformBars: _waveformBars,
+          splitPoints: _splitPoints,
+          onSplitPointsChanged: _onSplitPointsChanged,
+          playingSegment: _playingSegment,
+          excludedSegments: _excludedSegments,
+          hasSplits: hasSplits,
+          keptCount: _keptCount,
+          segmentCount: _segmentCount,
+          totalDurationLabel: _fmt(_totalDuration),
+          totalDurationShortLabel: _fmtShort(_totalDuration),
+          playheadFraction: playheadFraction,
+          onPlayheadSeek: _seekPlayheadTo,
+          onSeekAndPlay: _seekAndPlay,
+          zoom: _zoom,
+          panFraction: _panFraction,
+          onZoomPanChanged: (v) => setState(() {
+            _zoom = v.zoom;
+            _panFraction = v.panFraction;
+          }),
+          onResetZoom: () => setState(() {
+            _zoom = 1.0;
+            _panFraction = 0.0;
+          }),
+          onClearAll: () => setState(() {
+            _splitPoints = [];
+            _excludedSegments = {};
+          }),
+        ),
+      ],
     );
 
     final segmentsList = Column(
@@ -555,6 +1047,23 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
           ...List.generate(_segmentCount, (i) {
             final isPlaying = _playingSegment == i;
             final isExcluded = _excludedSegments.contains(i);
+            final effGenre = _effectiveGenre(i);
+            final effSubcat = _effectiveSubcategory(i);
+            final effRegister = _effectiveRegister(i);
+            final subName = _subcategoryNameFor(l10n, effSubcat, effGenre);
+            final regName = _registerNameFor(l10n, effRegister);
+            final sig = _sigForSegment(i);
+            final hasSubcatOverride = _segSubcatBySig.containsKey(sig);
+            final hasRegOverride = _segRegisterBySig.containsKey(sig);
+            final hasGenreOverride = _segGenreBySig.containsKey(sig);
+            final genreName = hasGenreOverride
+                ? _genreNameFor(l10n, effGenre)
+                : null;
+            final subDisplay = genreName != null
+                ? (subName != null
+                      ? '$genreName · $subName'
+                      : '$genreName · ${l10n.trim_inheritLabel}')
+                : subName;
             return Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: SegmentCard(
@@ -569,6 +1078,15 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
                 onToggleExclude: () => _toggleExclude(i),
                 colors: colors,
                 isDark: isDark,
+                subcategoryLabel: subDisplay,
+                registerLabel: regName,
+                inheritLabel: l10n.trim_inheritLabel,
+                copyFromPreviousLabel: l10n.trim_copyFromPrevious,
+                hasSubcategoryOverride: hasSubcatOverride || hasGenreOverride,
+                hasRegisterOverride: hasRegOverride,
+                canCopyFromPrevious: i > 0,
+                onClassify: () => _openTaxonomySheet(i),
+                onCopyFromPrevious: i > 0 ? () => _copyFromPrevious(i) : null,
               ),
             );
           }),
@@ -634,7 +1152,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
               children: [
                 Expanded(
                   flex: 3,
-                  child: Padding(
+                  child: SingleChildScrollView(
                     padding: const EdgeInsets.all(24),
                     child: waveformPanel,
                   ),

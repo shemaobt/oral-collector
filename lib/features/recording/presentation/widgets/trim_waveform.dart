@@ -11,6 +11,13 @@ class TrimWaveform extends StatefulWidget {
     required this.onSplitPointsChanged,
     this.playingSegment,
     this.excludedSegments = const {},
+    this.playheadFraction,
+    this.onPlayheadSeek,
+    this.onSeekAndPlay,
+    this.zoom = 1.0,
+    this.panFraction = 0.0,
+    this.onZoomPanChanged,
+    this.maxZoom = 16.0,
   });
 
   final List<double> bars;
@@ -18,6 +25,13 @@ class TrimWaveform extends StatefulWidget {
   final ValueChanged<List<double>> onSplitPointsChanged;
   final int? playingSegment;
   final Set<int> excludedSegments;
+  final double? playheadFraction;
+  final ValueChanged<double>? onPlayheadSeek;
+  final ValueChanged<double>? onSeekAndPlay;
+  final double zoom;
+  final double panFraction;
+  final ValueChanged<({double zoom, double panFraction})>? onZoomPanChanged;
+  final double maxZoom;
 
   @override
   State<TrimWaveform> createState() => _TrimWaveformState();
@@ -30,16 +44,39 @@ class _TrimWaveformState extends State<TrimWaveform> {
   static const double _minSplitGap = 0.03;
 
   int? _draggingIndex;
+  bool _draggingPlayhead = false;
+  double? _dragFocalStartX;
+  double _initialPanFraction = 0.0;
+  double _initialZoom = 1.0;
 
   List<double> get _sorted => [...widget.splitPoints]..sort();
 
-  int? _hitTestMarker(double x, double totalWidth) {
+  double _localToFull(double localX, double width) {
+    return widget.panFraction + (localX / width) / widget.zoom;
+  }
+
+  double _fullToLocal(double fullFraction, double width) {
+    return (fullFraction - widget.panFraction) * widget.zoom * width;
+  }
+
+  int? _hitTestMarker(double localX, double width) {
     final sorted = _sorted;
     for (var i = 0; i < sorted.length; i++) {
-      final markerX = sorted[i] * totalWidth;
-      if ((x - markerX).abs() <= _handleRadius + _handleHitSlop) return i;
+      final markerX = _fullToLocal(sorted[i], width);
+      if (markerX < -_handleHitSlop || markerX > width + _handleHitSlop) {
+        continue;
+      }
+      if ((localX - markerX).abs() <= _handleRadius + _handleHitSlop) return i;
     }
     return null;
+  }
+
+  bool _hitTestPlayhead(double localX, double width) {
+    final f = widget.playheadFraction;
+    if (f == null) return false;
+    final phX = _fullToLocal(f, width);
+    if (phX < -16 || phX > width + 16) return false;
+    return (localX - phX).abs() <= 16;
   }
 
   void _addSplitAt(double fraction) {
@@ -79,6 +116,12 @@ class _TrimWaveformState extends State<TrimWaveform> {
     widget.onSplitPointsChanged(updated);
   }
 
+  void _emitZoomPan(double zoom, double panFraction) {
+    final maxPan = (1.0 - 1.0 / zoom).clamp(0.0, 1.0);
+    final clampedPan = panFraction.clamp(0.0, maxPan);
+    widget.onZoomPanChanged?.call((zoom: zoom, panFraction: clampedPan));
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
@@ -87,7 +130,7 @@ class _TrimWaveformState extends State<TrimWaveform> {
 
     return Semantics(
       label:
-          'Split waveform. Tap to add split markers. Drag to reposition. Long-press to remove.',
+          'Split waveform. Tap to add split markers. Drag to reposition. Pinch to zoom. Long-press to remove.',
       child: LayoutBuilder(
         builder: (context, constraints) {
           final totalWidth = constraints.maxWidth;
@@ -97,25 +140,84 @@ class _TrimWaveformState extends State<TrimWaveform> {
             onTapUp: (details) {
               final x = details.localPosition.dx;
               if (_hitTestMarker(x, totalWidth) != null) return;
-              _addSplitAt(x / totalWidth);
+              final fraction = _localToFull(x, totalWidth).clamp(0.0, 1.0);
+              if (widget.onSeekAndPlay != null) {
+                widget.onSeekAndPlay!(fraction);
+              } else if (widget.onPlayheadSeek != null) {
+                widget.onPlayheadSeek!(fraction);
+              }
             },
-            onHorizontalDragStart: (details) {
-              final x = details.localPosition.dx;
-              _draggingIndex = _hitTestMarker(x, totalWidth);
-              if (_draggingIndex != null) HapticFeedback.selectionClick();
-            },
-            onHorizontalDragUpdate: (details) {
-              if (_draggingIndex == null) return;
-              final fraction =
-                  details.localPosition.dx.clamp(0.0, totalWidth) / totalWidth;
-              _moveSplit(_draggingIndex!, fraction);
-            },
-            onHorizontalDragEnd: (_) => _draggingIndex = null,
-            onHorizontalDragCancel: () => _draggingIndex = null,
             onLongPressStart: (details) {
               final x = details.localPosition.dx;
               final hit = _hitTestMarker(x, totalWidth);
-              if (hit != null) _removeSplit(hit);
+              if (hit != null) {
+                _removeSplit(hit);
+              } else {
+                _addSplitAt(_localToFull(x, totalWidth));
+              }
+            },
+            onScaleStart: (details) {
+              _dragFocalStartX = details.localFocalPoint.dx;
+              _initialPanFraction = widget.panFraction;
+              _initialZoom = widget.zoom;
+              if (details.pointerCount == 1) {
+                _draggingIndex = _hitTestMarker(
+                  details.localFocalPoint.dx,
+                  totalWidth,
+                );
+                if (_draggingIndex != null) {
+                  HapticFeedback.selectionClick();
+                } else if (widget.onPlayheadSeek != null &&
+                    _hitTestPlayhead(details.localFocalPoint.dx, totalWidth)) {
+                  _draggingPlayhead = true;
+                  HapticFeedback.selectionClick();
+                }
+              } else {
+                _draggingIndex = null;
+                _draggingPlayhead = false;
+              }
+            },
+            onScaleUpdate: (details) {
+              if (details.pointerCount >= 2) {
+                final newZoom = (_initialZoom * details.scale).clamp(
+                  1.0,
+                  widget.maxZoom,
+                );
+                final focalX = details.localFocalPoint.dx / totalWidth;
+                final fullAtFocal = _initialPanFraction + focalX / _initialZoom;
+                final newPan = fullAtFocal - focalX / newZoom;
+                _emitZoomPan(newZoom, newPan);
+                return;
+              }
+
+              if (_draggingIndex != null) {
+                final fullFraction = _localToFull(
+                  details.localFocalPoint.dx.clamp(0.0, totalWidth),
+                  totalWidth,
+                );
+                _moveSplit(_draggingIndex!, fullFraction.clamp(0.0, 1.0));
+                return;
+              }
+
+              if (_draggingPlayhead && widget.onPlayheadSeek != null) {
+                final fullFraction = _localToFull(
+                  details.localFocalPoint.dx.clamp(0.0, totalWidth),
+                  totalWidth,
+                );
+                widget.onPlayheadSeek!(fullFraction.clamp(0.0, 1.0));
+                return;
+              }
+
+              if (widget.zoom > 1.0 && _dragFocalStartX != null) {
+                final dx = details.localFocalPoint.dx - _dragFocalStartX!;
+                final panDelta = -dx / (totalWidth * _initialZoom);
+                _emitZoomPan(_initialZoom, _initialPanFraction + panDelta);
+              }
+            },
+            onScaleEnd: (_) {
+              _draggingIndex = null;
+              _draggingPlayhead = false;
+              _dragFocalStartX = null;
             },
             child: SizedBox(
               height: totalHeight,
@@ -127,6 +229,9 @@ class _TrimWaveformState extends State<TrimWaveform> {
                   splitPoints: _sorted,
                   playingSegment: widget.playingSegment,
                   excludedSegments: widget.excludedSegments,
+                  playheadFraction: widget.playheadFraction,
+                  zoom: widget.zoom,
+                  panFraction: widget.panFraction,
                   accentColor: colors.accent,
                   barColor: isDark
                       ? colors.foreground.withValues(alpha: 0.18)
@@ -153,6 +258,9 @@ class _SplitWaveformPainter extends CustomPainter {
     required this.splitPoints,
     required this.playingSegment,
     required this.excludedSegments,
+    required this.playheadFraction,
+    required this.zoom,
+    required this.panFraction,
     required this.accentColor,
     required this.barColor,
     required this.selectedBarColor,
@@ -167,6 +275,9 @@ class _SplitWaveformPainter extends CustomPainter {
   final List<double> splitPoints;
   final int? playingSegment;
   final Set<int> excludedSegments;
+  final double? playheadFraction;
+  final double zoom;
+  final double panFraction;
   final Color accentColor;
   final Color barColor;
   final Color selectedBarColor;
@@ -175,6 +286,10 @@ class _SplitWaveformPainter extends CustomPainter {
   final double waveformHeight;
   final bool isDark;
   final Color foreground;
+
+  double _fullToLocal(double fullFraction, double width) {
+    return (fullFraction - panFraction) * zoom * width;
+  }
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -199,8 +314,9 @@ class _SplitWaveformPainter extends CustomPainter {
     canvas.drawRect(Rect.fromLTRB(0, waveTop, size.width, waveBottom), bgPaint);
 
     for (var i = 0; i < segmentCount; i++) {
-      final left = boundaries[i] * size.width;
-      final right = boundaries[i + 1] * size.width;
+      final left = _fullToLocal(boundaries[i], size.width);
+      final right = _fullToLocal(boundaries[i + 1], size.width);
+      if (right < 0 || left > size.width) continue;
 
       final isExcluded = excludedSegments.contains(i);
       final isPlaying = playingSegment == i;
@@ -229,8 +345,9 @@ class _SplitWaveformPainter extends CustomPainter {
 
     for (var i = 0; i < segmentCount; i++) {
       if (!excludedSegments.contains(i)) continue;
-      final left = boundaries[i] * size.width;
-      final right = boundaries[i + 1] * size.width;
+      final left = _fullToLocal(boundaries[i], size.width);
+      final right = _fullToLocal(boundaries[i + 1], size.width);
+      if (right < 0 || left > size.width) continue;
 
       final crossPaint = Paint()
         ..color = errorColor.withValues(alpha: isDark ? 0.2 : 0.12)
@@ -252,16 +369,26 @@ class _SplitWaveformPainter extends CustomPainter {
     }
 
     for (var i = 0; i < splitPoints.length; i++) {
-      final x = splitPoints[i] * size.width;
+      final x = _fullToLocal(splitPoints[i], size.width);
+      if (x < -handleRadius || x > size.width + handleRadius) continue;
       _drawSplitMarker(canvas, x, waveTop, waveBottom);
+    }
+
+    final ph = playheadFraction;
+    if (ph != null && ph >= 0 && ph <= 1) {
+      final x = _fullToLocal(ph, size.width);
+      if (x >= -2 && x <= size.width + 2) {
+        _drawPlayhead(canvas, x, waveTop, waveBottom);
+      }
     }
 
     if (splitPoints.isNotEmpty) {
       for (var i = 0; i < segmentCount; i++) {
-        final left = boundaries[i] * size.width;
-        final right = boundaries[i + 1] * size.width;
+        final left = _fullToLocal(boundaries[i], size.width);
+        final right = _fullToLocal(boundaries[i + 1], size.width);
         final segWidth = right - left;
         if (segWidth < 28) continue;
+        if (right < 0 || left > size.width) continue;
 
         final isExcluded = excludedSegments.contains(i);
 
@@ -283,9 +410,13 @@ class _SplitWaveformPainter extends CustomPainter {
           textDirection: TextDirection.ltr,
         )..layout();
 
+        final centerX = left + (segWidth - tp.width) / 2;
         tp.paint(
           canvas,
-          Offset(left + (segWidth - tp.width) / 2, waveBottom - tp.height - 6),
+          Offset(
+            centerX.clamp(4.0, size.width - tp.width - 4),
+            waveBottom - tp.height - 6,
+          ),
         );
       }
     }
@@ -300,23 +431,34 @@ class _SplitWaveformPainter extends CustomPainter {
     int segmentCount,
   ) {
     final barCount = bars.length;
-    final barWidth = size.width / barCount * 0.6;
-    final stepWidth = size.width / barCount;
+    if (barCount == 0) return;
+
+    final viewportStart = panFraction;
+    final viewportEnd = panFraction + 1.0 / zoom;
+    final firstBar = (viewportStart * barCount).floor().clamp(0, barCount - 1);
+    final lastBar = (viewportEnd * barCount).ceil().clamp(0, barCount - 1);
+
+    final visibleSpan = viewportEnd - viewportStart;
+    if (visibleSpan <= 0) return;
+    final stepWidth =
+        size.width / ((lastBar - firstBar + 1).clamp(1, barCount));
+    final barWidth = stepWidth * 0.6;
+
     final centerY = waveTop + waveformHeight / 2;
     const minBarHeight = 3.0;
     final maxBarHeight = waveformHeight - 12;
 
-    for (var i = 0; i < barCount; i++) {
+    for (var i = firstBar; i <= lastBar; i++) {
       final amplitude = bars[i].clamp(0.0, 1.0);
       final barHeight = minBarHeight + amplitude * maxBarHeight;
-      final x = i * stepWidth + (stepWidth - barWidth) / 2;
+      final fractional = (i + 0.5) / barCount;
+      final cx = _fullToLocal(fractional, size.width);
+      final x = cx - barWidth / 2;
       final top = centerY - barHeight / 2;
-
-      final barCenter = (x + barWidth / 2) / size.width;
 
       int? segIndex;
       for (var s = 0; s < segmentCount; s++) {
-        if (barCenter >= boundaries[s] && barCenter <= boundaries[s + 1]) {
+        if (fractional >= boundaries[s] && fractional <= boundaries[s + 1]) {
           segIndex = s;
           break;
         }
@@ -388,12 +530,39 @@ class _SplitWaveformPainter extends CustomPainter {
     );
   }
 
+  void _drawPlayhead(
+    Canvas canvas,
+    double x,
+    double waveTop,
+    double waveBottom,
+  ) {
+    final linePaint = Paint()
+      ..color = foreground.withValues(alpha: 0.9)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+    canvas.drawLine(Offset(x, waveTop - 2), Offset(x, waveBottom), linePaint);
+
+    final handleFill = Paint()
+      ..color = foreground.withValues(alpha: 0.95)
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(Offset(x, waveTop - 6), 5, handleFill);
+
+    final handleStroke = Paint()
+      ..color = (isDark ? Colors.black : Colors.white).withValues(alpha: 0.9)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+    canvas.drawCircle(Offset(x, waveTop - 6), 5, handleStroke);
+  }
+
   @override
   bool shouldRepaint(covariant _SplitWaveformPainter oldDelegate) {
     return oldDelegate.bars != bars ||
         oldDelegate.splitPoints != splitPoints ||
         oldDelegate.playingSegment != playingSegment ||
         oldDelegate.excludedSegments != excludedSegments ||
+        oldDelegate.playheadFraction != playheadFraction ||
+        oldDelegate.zoom != zoom ||
+        oldDelegate.panFraction != panFraction ||
         oldDelegate.accentColor != accentColor ||
         oldDelegate.isDark != isDark;
   }

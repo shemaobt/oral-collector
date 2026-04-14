@@ -314,6 +314,33 @@
   },
   "import_unknownFile": "未知文件",
   "import_importAndSave": "导入并保存",
+  "import_setForAll": "为所有文件设置",
+  "import_applyToAll": "应用到全部",
+  "import_fieldRequired": "必填",
+  "import_validationBanner": "{count, plural, =1{有 1 个文件缺少必填字段} other{有 {count} 个文件缺少必填字段}}",
+  "@import_validationBanner": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "import_remove": "移除文件",
+  "import_supportedFormats": "支持的格式：{formats}。不支持或无法读取的文件将被跳过。",
+  "@import_supportedFormats": {
+    "placeholders": { "formats": { "type": "String" } }
+  },
+  "import_rejectedFiles": "{count, plural, =1{已跳过 1 个不支持或无法读取的文件：{names}} other{已跳过 {count} 个不支持或无法读取的文件：{names}}}",
+  "@import_rejectedFiles": {
+    "placeholders": { "count": { "type": "int" }, "names": { "type": "String" } }
+  },
+  "import_countFiles": "{count, plural, =1{1 个文件} other{{count} 个文件}}",
+  "@import_countFiles": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "import_importNFiles": "导入 {count, plural, =1{1 个文件} other{{count} 个文件}}",
+  "@import_importNFiles": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "import_emptyFile": "空文件",
+  "import_compressWav": "将 WAV 压缩为 M4A",
+  "import_compressWavHint": "~10x 更小，对 ML 流水线无质量损失",
   "moveCategory_title": "移动分类",
   "moveCategory_genre": "体裁",
   "moveCategory_subcategory": "子类别",

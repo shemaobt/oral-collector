@@ -227,6 +227,33 @@
   "import_saveError": "파일 저장 오류: {error}",
   "import_unknownFile": "알 수 없는 파일",
   "import_importAndSave": "가져오기 및 저장",
+  "import_setForAll": "모든 파일에 설정",
+  "import_applyToAll": "모두에 적용",
+  "import_fieldRequired": "필수",
+  "import_validationBanner": "{count, plural, =1{1개 파일에 필수 항목이 누락됨} other{{count}개 파일에 필수 항목이 누락됨}}",
+  "@import_validationBanner": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "import_remove": "파일 제거",
+  "import_supportedFormats": "지원되는 형식: {formats}. 지원되지 않거나 읽을 수 없는 파일은 건너뜁니다.",
+  "@import_supportedFormats": {
+    "placeholders": { "formats": { "type": "String" } }
+  },
+  "import_rejectedFiles": "{count, plural, =1{지원되지 않거나 읽을 수 없는 파일 1개 건너뜀: {names}} other{지원되지 않거나 읽을 수 없는 파일 {count}개 건너뜀: {names}}}",
+  "@import_rejectedFiles": {
+    "placeholders": { "count": { "type": "int" }, "names": { "type": "String" } }
+  },
+  "import_countFiles": "{count, plural, =1{1개 파일} other{{count}개 파일}}",
+  "@import_countFiles": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "import_importNFiles": "{count, plural, =1{1개 파일} other{{count}개 파일}} 가져오기",
+  "@import_importNFiles": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "import_emptyFile": "빈 파일",
+  "import_compressWav": "WAV을 M4A로 압축",
+  "import_compressWavHint": "~10x 작음, ML 파이프라인에 품질 손실 없음",
   "moveCategory_title": "분류 이동",
   "moveCategory_genre": "장르",
   "moveCategory_subcategory": "하위 분류",

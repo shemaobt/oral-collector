@@ -752,6 +752,79 @@ class AppLocalizationsId extends AppLocalizations {
   String get import_importAndSave => 'Impor dan Simpan';
 
   @override
+  String get import_setForAll => 'Tetapkan untuk semua file';
+
+  @override
+  String get import_applyToAll => 'Terapkan ke semua';
+
+  @override
+  String get import_fieldRequired => 'Wajib';
+
+  @override
+  String import_validationBanner(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count file kehilangan bidang wajib',
+      one: '1 file kehilangan bidang wajib',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get import_remove => 'Hapus file';
+
+  @override
+  String import_supportedFormats(String formats) {
+    return 'Format yang didukung: $formats. File yang tidak didukung atau tidak dapat dibaca akan dilewati.';
+  }
+
+  @override
+  String import_rejectedFiles(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Melewati $count file yang tidak didukung atau tidak dapat dibaca: $names',
+      one:
+          'Melewati 1 file yang tidak didukung atau tidak dapat dibaca: $names',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String import_countFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count file',
+      one: '1 file',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String import_importNFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count file',
+      one: '1 file',
+    );
+    return 'Impor $_temp0';
+  }
+
+  @override
+  String get import_emptyFile => 'file kosong';
+
+  @override
+  String get import_compressWav => 'Kompres WAV ke M4A';
+
+  @override
+  String get import_compressWavHint =>
+      '~10x lebih kecil, tanpa kehilangan kualitas untuk pipeline ML';
+
+  @override
   String get moveCategory_title => 'Pindah Kategori';
 
   @override
@@ -1693,6 +1766,9 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get recording_micPermissionDenied =>
       'Izin mikrofon ditolak. Aktifkan di pengaturan browser atau sistem.';
+
+  @override
+  String get recording_micPermissionTitle => 'Akses mikrofon diperlukan';
 
   @override
   String get recording_noDevicesFound => 'Tidak ada mikrofon ditemukan';

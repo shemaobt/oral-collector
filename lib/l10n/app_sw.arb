@@ -227,6 +227,33 @@
   "import_saveError": "Hitilafu ya kuhifadhi faili: {error}",
   "import_unknownFile": "Faili isiyojulikana",
   "import_importAndSave": "Ingiza na Uhifadhi",
+  "import_setForAll": "Weka kwa faili zote",
+  "import_applyToAll": "Tumia kwa zote",
+  "import_fieldRequired": "Inahitajika",
+  "import_validationBanner": "{count, plural, =1{Faili 1 haina sehemu zinazohitajika} other{Faili {count} hazina sehemu zinazohitajika}}",
+  "@import_validationBanner": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "import_remove": "Ondoa faili",
+  "import_supportedFormats": "Miundo inayotumika: {formats}. Faili zisizotumika au zisizosomeka zinarukwa.",
+  "@import_supportedFormats": {
+    "placeholders": { "formats": { "type": "String" } }
+  },
+  "import_rejectedFiles": "{count, plural, =1{Iliruka faili 1 isiyotumika au isiyosomeka: {names}} other{Ziliruka faili {count} zisizotumika au zisizosomeka: {names}}}",
+  "@import_rejectedFiles": {
+    "placeholders": { "count": { "type": "int" }, "names": { "type": "String" } }
+  },
+  "import_countFiles": "{count, plural, =1{Faili 1} other{Faili {count}}}",
+  "@import_countFiles": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "import_importNFiles": "Ingiza {count, plural, =1{faili 1} other{faili {count}}}",
+  "@import_importNFiles": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "import_emptyFile": "faili tupu",
+  "import_compressWav": "Bana WAV kuwa M4A",
+  "import_compressWavHint": "~10x ndogo, bila kupoteza ubora kwa mfereji wa ML",
   "moveCategory_title": "Hamisha Kategoria",
   "moveCategory_genre": "Aina",
   "moveCategory_subcategory": "Aina Ndogo",

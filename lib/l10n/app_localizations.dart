@@ -1460,6 +1460,78 @@ abstract class AppLocalizations {
   /// **'Import & Save'**
   String get import_importAndSave;
 
+  /// No description provided for @import_setForAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Set for all files'**
+  String get import_setForAll;
+
+  /// No description provided for @import_applyToAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply to all'**
+  String get import_applyToAll;
+
+  /// No description provided for @import_fieldRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Required'**
+  String get import_fieldRequired;
+
+  /// No description provided for @import_validationBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 file is missing required fields} other{{count} files are missing required fields}}'**
+  String import_validationBanner(int count);
+
+  /// No description provided for @import_remove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove file'**
+  String get import_remove;
+
+  /// No description provided for @import_supportedFormats.
+  ///
+  /// In en, this message translates to:
+  /// **'Supported formats: {formats}. Unsupported or unreadable files are skipped.'**
+  String import_supportedFormats(String formats);
+
+  /// No description provided for @import_rejectedFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Skipped 1 unsupported or unreadable file: {names}} other{Skipped {count} unsupported or unreadable files: {names}}}'**
+  String import_rejectedFiles(int count, String names);
+
+  /// No description provided for @import_countFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 file} other{{count} files}}'**
+  String import_countFiles(int count);
+
+  /// No description provided for @import_importNFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Import {count, plural, =1{1 file} other{{count} files}}'**
+  String import_importNFiles(int count);
+
+  /// No description provided for @import_emptyFile.
+  ///
+  /// In en, this message translates to:
+  /// **'empty file'**
+  String get import_emptyFile;
+
+  /// No description provided for @import_compressWav.
+  ///
+  /// In en, this message translates to:
+  /// **'Compress WAV to M4A'**
+  String get import_compressWav;
+
+  /// No description provided for @import_compressWavHint.
+  ///
+  /// In en, this message translates to:
+  /// **'~10x smaller, no quality loss for ML pipeline'**
+  String get import_compressWavHint;
+
   /// No description provided for @moveCategory_title.
   ///
   /// In en, this message translates to:
@@ -3175,6 +3247,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Microphone permission denied. Enable it in your browser or system settings.'**
   String get recording_micPermissionDenied;
+
+  /// No description provided for @recording_micPermissionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone access needed'**
+  String get recording_micPermissionTitle;
 
   /// No description provided for @recording_noDevicesFound.
   ///
