@@ -14,7 +14,7 @@ import '../../features/recording/presentation/widgets/crash_recovery_dialog.dart
 import '../../l10n/app_localizations.dart';
 import 'user_avatar.dart';
 
-class AppShell extends ConsumerWidget {
+class AppShell extends ConsumerStatefulWidget {
   const AppShell({super.key, required this.child});
 
   final Widget child;
@@ -52,18 +52,41 @@ class AppShell extends ConsumerWidget {
   static List<_TabItem> _mobileTabs(AppLocalizations l10n) => _allTabs(l10n);
   static List<_TabItem> _webBaseTabs(AppLocalizations l10n) => _allTabs(l10n);
 
-  int _currentIndexFrom(BuildContext context, List<_TabItem> tabs) {
-    final location = GoRouterState.of(context).uri.path;
-    for (var i = 0; i < tabs.length; i++) {
-      if (location == tabs[i].path || location.startsWith('${tabs[i].path}/')) {
-        return i;
-      }
+  @override
+  ConsumerState<AppShell> createState() => _AppShellState();
+}
+
+int _currentIndexFrom(BuildContext context, List<_TabItem> tabs) {
+  final location = GoRouterState.of(context).uri.path;
+  for (var i = 0; i < tabs.length; i++) {
+    if (location == tabs[i].path || location.startsWith('${tabs[i].path}/')) {
+      return i;
     }
-    return 0;
+  }
+  return 0;
+}
+
+class _AppShellState extends ConsumerState<AppShell> {
+  bool _recoveryPromptShown = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _maybeShowRecoveryPrompt(ref.read(pendingRecoveryProvider));
+    });
   }
 
-  List<_TabItem> _buildWebTabs(WidgetRef ref, AppLocalizations l10n) {
-    final tabs = List<_TabItem>.from(_webBaseTabs(l10n));
+  void _maybeShowRecoveryPrompt(RecoveryPrompt? prompt) {
+    if (prompt == null) return;
+    if (_recoveryPromptShown) return;
+    if (!mounted) return;
+    _recoveryPromptShown = true;
+    showCrashRecoveryDialog(context, ref, prompt);
+  }
+
+  List<_TabItem> _buildWebTabs(AppLocalizations l10n) {
+    final tabs = List<_TabItem>.from(AppShell._webBaseTabs(l10n));
     if (ref.read(roleNotifierProvider.notifier).isPlatformAdmin) {
       tabs.add(
         _TabItem(
@@ -77,7 +100,7 @@ class AppShell extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final l10n = AppLocalizations.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
@@ -88,15 +111,13 @@ class AppShell extends ConsumerWidget {
     ref.watch(roleNotifierProvider);
 
     ref.listen<RecoveryPrompt?>(pendingRecoveryProvider, (_, next) {
-      if (next == null) return;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!context.mounted) return;
-        showCrashRecoveryDialog(context, ref, next);
+        _maybeShowRecoveryPrompt(next);
       });
     });
 
-    final mobileTabs = _mobileTabs(l10n);
-    final tabs = isWide ? _buildWebTabs(ref, l10n) : mobileTabs;
+    final mobileTabs = AppShell._mobileTabs(l10n);
+    final tabs = isWide ? _buildWebTabs(l10n) : mobileTabs;
     final selectedIndex = _currentIndexFrom(context, tabs);
 
     if (isWide) {
@@ -110,7 +131,7 @@ class AppShell extends ConsumerWidget {
               pendingInvites: pendingInvites,
               startExpanded: isDesktop,
             ),
-            Expanded(child: child),
+            Expanded(child: widget.child),
           ],
         ),
       );
@@ -118,7 +139,7 @@ class AppShell extends ConsumerWidget {
 
     return Scaffold(
       extendBody: true,
-      body: child,
+      body: widget.child,
       bottomNavigationBar: _FloatingNavBar(
         tabs: mobileTabs,
         selectedIndex: _currentIndexFrom(context, mobileTabs),

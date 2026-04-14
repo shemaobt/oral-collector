@@ -159,6 +159,17 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
     final recState = ref.watch(recordingSessionNotifierProvider);
     final notifier = ref.read(recordingSessionNotifierProvider.notifier);
 
+    ref.listen<RecordingState>(recordingSessionNotifierProvider, (prev, next) {
+      final result = next.autoStoppedResult;
+      if (result == null) return;
+      if (prev?.autoStoppedResult == result) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        notifier.acknowledgeAutoStop();
+        widget.onRecordingComplete(result);
+      });
+    });
+
     final isReady = !recState.isRecording && !recState.isPaused;
     final isActive = recState.isRecording;
 
@@ -297,15 +308,16 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
         ? selected!.label
         : l10n.recording_builtInMicrophone;
 
-    return InkWell(
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: () {
+        HapticFeedback.selectionClick();
         showModalBottomSheet<void>(
           context: context,
           showDragHandle: false,
           builder: (_) => const InputDevicePickerSheet(),
         );
       },
-      borderRadius: BorderRadius.circular(18),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         child: Row(

@@ -10,6 +10,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 
 import '../../../../core/database/app_database.dart';
+import '../../../../core/l10n/locale_provider.dart';
 import '../../../../core/platform/file_ops.dart' as file_ops;
 import '../../../../l10n/app_localizations.dart';
 import '../../../project/presentation/notifiers/project_notifier.dart';
@@ -53,6 +54,12 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
 
   Future<StorageCheck<PreStartSeverity>> checkStorageBeforeStart() {
     return ref.read(storageGuardProvider).checkBeforeStart();
+  }
+
+  void acknowledgeAutoStop() {
+    if (state.autoStoppedResult != null) {
+      state = state.copyWith(clearAutoStoppedResult: true);
+    }
   }
 
   Future<bool> startRecording(
@@ -126,7 +133,10 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
         storageBannerSeverity: StorageBannerSeverity.forceStopped,
       );
       scheduleMicrotask(() async {
-        await stopRecording();
+        final result = await stopRecording();
+        if (result != null) {
+          state = state.copyWith(autoStoppedResult: result);
+        }
       });
     };
 
@@ -356,7 +366,9 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
   }
 
   Future<AppLocalizations> _resolveLocalizations() async {
-    final locale = WidgetsBinding.instance.platformDispatcher.locale;
+    final selected = ref.read(localeProvider);
+    final locale =
+        selected ?? WidgetsBinding.instance.platformDispatcher.locale;
     return AppLocalizations.delegate.load(locale);
   }
 

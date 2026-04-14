@@ -11,6 +11,7 @@ class RecordingState {
   final Duration? lastCheckpointAt;
   final bool showCheckpointToast;
   final StorageBannerSeverity storageBannerSeverity;
+  final RecordingResult? autoStoppedResult;
 
   const RecordingState({
     this.isRecording = false,
@@ -23,6 +24,7 @@ class RecordingState {
     this.lastCheckpointAt,
     this.showCheckpointToast = false,
     this.storageBannerSeverity = StorageBannerSeverity.none,
+    this.autoStoppedResult,
   });
 
   RecordingState copyWith({
@@ -36,11 +38,13 @@ class RecordingState {
     Duration? lastCheckpointAt,
     bool? showCheckpointToast,
     StorageBannerSeverity? storageBannerSeverity,
+    RecordingResult? autoStoppedResult,
     bool clearGenreId = false,
     bool clearSubcategoryId = false,
     bool clearAmplitudeStream = false,
     bool clearSessionId = false,
     bool clearLastCheckpoint = false,
+    bool clearAutoStoppedResult = false,
   }) {
     return RecordingState(
       isRecording: isRecording ?? this.isRecording,
@@ -62,6 +66,9 @@ class RecordingState {
       showCheckpointToast: showCheckpointToast ?? this.showCheckpointToast,
       storageBannerSeverity:
           storageBannerSeverity ?? this.storageBannerSeverity,
+      autoStoppedResult: clearAutoStoppedResult
+          ? null
+          : (autoStoppedResult ?? this.autoStoppedResult),
     );
   }
 }
