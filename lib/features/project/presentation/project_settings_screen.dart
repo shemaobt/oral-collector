@@ -395,6 +395,16 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
           projectId: widget.projectId,
           onRemove: _isManager ? _confirmRemoveMember : null,
         ),
+        const SizedBox(height: 16),
+        OutlinedButton.icon(
+          onPressed: () =>
+              context.push('/project/${widget.projectId}/storytellers'),
+          icon: const Icon(LucideIcons.users, size: 16),
+          label: Text(l10n.storyteller_manageAction),
+          style: OutlinedButton.styleFrom(
+            minimumSize: const Size.fromHeight(44),
+          ),
+        ),
       ],
     );
 
