@@ -159,8 +159,8 @@ class _SubcategoryCard extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () {
-          context.go(
-            '/recordings?genreId=$genreId&subcategoryId=${subcategory.id}',
+          context.push(
+            '/record?genreId=$genreId&subcategoryId=${subcategory.id}',
           );
         },
         child: Padding(
@@ -212,7 +212,7 @@ class _SubcategoryCard extends StatelessWidget {
                           height: 40,
                           child: IconButton(
                             onPressed: () {
-                              context.go(
+                              context.push(
                                 '/record?genreId=$genreId&subcategoryId=${subcategory.id}',
                               );
                             },
