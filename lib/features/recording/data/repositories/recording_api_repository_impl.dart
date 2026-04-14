@@ -29,10 +29,22 @@ class RecordingApiRepositoryImpl implements RecordingApiRepository {
     String projectId, {
     int offset = 0,
     int limit = 50,
+    String? userId,
+    String? storytellerId,
+    String? uploadStatus,
   }) async {
-    final response = await _client.get(
-      '/api/oc/recordings?project_id=$projectId&offset=$offset&limit=$limit',
-    );
+    final params = <String, String>{
+      'project_id': projectId,
+      'offset': '$offset',
+      'limit': '$limit',
+      if (userId != null && userId.isNotEmpty) 'user_id': userId,
+      if (storytellerId != null && storytellerId.isNotEmpty)
+        'storyteller_id': storytellerId,
+      if (uploadStatus != null && uploadStatus.isNotEmpty)
+        'upload_status': uploadStatus,
+    };
+    final query = params.entries.map((e) => '${e.key}=${e.value}').join('&');
+    final response = await _client.get('/api/oc/recordings?$query');
     guardResponse(response);
     if (response.statusCode != 200) {
       throw Exception('Failed to list recordings: ${response.body}');
@@ -63,6 +75,7 @@ class RecordingApiRepositoryImpl implements RecordingApiRepository {
     String? genreId,
     String? subcategoryId,
     String? registerId,
+    String? storytellerId,
     String? cleaningStatus,
   }) async {
     final body = <String, dynamic>{};
@@ -71,6 +84,7 @@ class RecordingApiRepositoryImpl implements RecordingApiRepository {
     if (genreId != null) body['genre_id'] = genreId;
     if (subcategoryId != null) body['subcategory_id'] = subcategoryId;
     if (registerId != null) body['register_id'] = registerId;
+    if (storytellerId != null) body['storyteller_id'] = storytellerId;
     if (cleaningStatus != null) body['cleaning_status'] = cleaningStatus;
 
     final response = await _client.patch(

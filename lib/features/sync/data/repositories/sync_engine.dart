@@ -232,6 +232,10 @@ class SyncEngineImpl implements SyncEngine {
         if (recording.registerId != null && recording.registerId!.isNotEmpty) {
           createBody['register_id'] = recording.registerId;
         }
+        if (recording.storytellerId != null &&
+            recording.storytellerId!.isNotEmpty) {
+          createBody['storyteller_id'] = recording.storytellerId;
+        }
         final createResponse = await _client
             .post('/api/oc/recordings', body: createBody)
             .timeout(_apiTimeout);

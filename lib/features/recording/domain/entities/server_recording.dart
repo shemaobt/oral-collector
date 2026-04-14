@@ -4,6 +4,8 @@ class ServerRecording {
   final String genreId;
   final String? subcategoryId;
   final String? registerId;
+  final String? storytellerId;
+  final String? userId;
   final String? title;
   final double durationSeconds;
   final int fileSizeBytes;
@@ -20,6 +22,8 @@ class ServerRecording {
     required this.genreId,
     this.subcategoryId,
     this.registerId,
+    this.storytellerId,
+    this.userId,
     this.title,
     required this.durationSeconds,
     required this.fileSizeBytes,
@@ -38,6 +42,8 @@ class ServerRecording {
       genreId: json['genre_id'] as String,
       subcategoryId: json['subcategory_id'] as String?,
       registerId: json['register_id'] as String?,
+      storytellerId: json['storyteller_id'] as String?,
+      userId: json['user_id'] as String?,
       title: json['title'] as String?,
       durationSeconds: (json['duration_seconds'] as num).toDouble(),
       fileSizeBytes: json['file_size_bytes'] as int,

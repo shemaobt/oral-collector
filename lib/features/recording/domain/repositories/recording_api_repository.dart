@@ -6,6 +6,9 @@ abstract class RecordingApiRepository {
     String projectId, {
     int offset = 0,
     int limit = 50,
+    String? userId,
+    String? storytellerId,
+    String? uploadStatus,
   });
   Future<bool> deleteRecording(String serverId);
   Future<bool> updateRecording(
@@ -15,6 +18,7 @@ abstract class RecordingApiRepository {
     String? genreId,
     String? subcategoryId,
     String? registerId,
+    String? storytellerId,
     String? cleaningStatus,
   });
 
