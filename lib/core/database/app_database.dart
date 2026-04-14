@@ -19,6 +19,8 @@ class LocalRecordings extends Table {
   TextColumn get serverId => text().nullable()();
   TextColumn get gcsUrl => text().nullable()();
   TextColumn get registerId => text().nullable()();
+  TextColumn get storytellerId => text().nullable()();
+  TextColumn get userId => text().nullable()();
   TextColumn get cleaningStatus => text().withDefault(const Constant('none'))();
   DateTimeColumn get recordedAt => dateTime()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
@@ -55,14 +57,33 @@ class LocalSubcategories extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-@DriftDatabase(tables: [LocalRecordings, LocalGenres, LocalSubcategories])
+class LocalStorytellers extends Table {
+  TextColumn get id => text()();
+  TextColumn get projectId => text()();
+  TextColumn get name => text()();
+  TextColumn get sex => text()();
+  IntColumn get age => integer().nullable()();
+  TextColumn get location => text().nullable()();
+  TextColumn get dialect => text().nullable()();
+  BoolColumn get externalAcceptanceConfirmed =>
+      boolean().withDefault(const Constant(false))();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+@DriftDatabase(
+  tables: [LocalRecordings, LocalGenres, LocalSubcategories, LocalStorytellers],
+)
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(openConnection());
 
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -80,6 +101,11 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 5) {
         await m.addColumn(localRecordings, localRecordings.description);
+      }
+      if (from < 6) {
+        await m.addColumn(localRecordings, localRecordings.storytellerId);
+        await m.addColumn(localRecordings, localRecordings.userId);
+        await m.createTable(localStorytellers);
       }
     },
   );

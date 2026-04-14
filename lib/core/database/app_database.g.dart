@@ -159,6 +159,26 @@ class $LocalRecordingsTable extends LocalRecordings
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _storytellerIdMeta = const VerificationMeta(
+    'storytellerId',
+  );
+  @override
+  late final GeneratedColumn<String> storytellerId = GeneratedColumn<String>(
+    'storyteller_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
+    'user_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _cleaningStatusMeta = const VerificationMeta(
     'cleaningStatus',
   );
@@ -267,6 +287,8 @@ class $LocalRecordingsTable extends LocalRecordings
     serverId,
     gcsUrl,
     registerId,
+    storytellerId,
+    userId,
     cleaningStatus,
     recordedAt,
     createdAt,
@@ -393,6 +415,21 @@ class $LocalRecordingsTable extends LocalRecordings
       context.handle(
         _registerIdMeta,
         registerId.isAcceptableOrUnknown(data['register_id']!, _registerIdMeta),
+      );
+    }
+    if (data.containsKey('storyteller_id')) {
+      context.handle(
+        _storytellerIdMeta,
+        storytellerId.isAcceptableOrUnknown(
+          data['storyteller_id']!,
+          _storytellerIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('user_id')) {
+      context.handle(
+        _userIdMeta,
+        userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta),
       );
     }
     if (data.containsKey('cleaning_status')) {
@@ -522,6 +559,14 @@ class $LocalRecordingsTable extends LocalRecordings
         DriftSqlType.string,
         data['${effectivePrefix}register_id'],
       ),
+      storytellerId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}storyteller_id'],
+      ),
+      userId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}user_id'],
+      ),
       cleaningStatus: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}cleaning_status'],
@@ -578,6 +623,8 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
   final String? serverId;
   final String? gcsUrl;
   final String? registerId;
+  final String? storytellerId;
+  final String? userId;
   final String cleaningStatus;
   final DateTime recordedAt;
   final DateTime createdAt;
@@ -601,6 +648,8 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
     this.serverId,
     this.gcsUrl,
     this.registerId,
+    this.storytellerId,
+    this.userId,
     required this.cleaningStatus,
     required this.recordedAt,
     required this.createdAt,
@@ -638,6 +687,12 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
     }
     if (!nullToAbsent || registerId != null) {
       map['register_id'] = Variable<String>(registerId);
+    }
+    if (!nullToAbsent || storytellerId != null) {
+      map['storyteller_id'] = Variable<String>(storytellerId);
+    }
+    if (!nullToAbsent || userId != null) {
+      map['user_id'] = Variable<String>(userId);
     }
     map['cleaning_status'] = Variable<String>(cleaningStatus);
     map['recorded_at'] = Variable<DateTime>(recordedAt);
@@ -684,6 +739,12 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
       registerId: registerId == null && nullToAbsent
           ? const Value.absent()
           : Value(registerId),
+      storytellerId: storytellerId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(storytellerId),
+      userId: userId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(userId),
       cleaningStatus: Value(cleaningStatus),
       recordedAt: Value(recordedAt),
       createdAt: Value(createdAt),
@@ -721,6 +782,8 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
       serverId: serializer.fromJson<String?>(json['serverId']),
       gcsUrl: serializer.fromJson<String?>(json['gcsUrl']),
       registerId: serializer.fromJson<String?>(json['registerId']),
+      storytellerId: serializer.fromJson<String?>(json['storytellerId']),
+      userId: serializer.fromJson<String?>(json['userId']),
       cleaningStatus: serializer.fromJson<String>(json['cleaningStatus']),
       recordedAt: serializer.fromJson<DateTime>(json['recordedAt']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
@@ -751,6 +814,8 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
       'serverId': serializer.toJson<String?>(serverId),
       'gcsUrl': serializer.toJson<String?>(gcsUrl),
       'registerId': serializer.toJson<String?>(registerId),
+      'storytellerId': serializer.toJson<String?>(storytellerId),
+      'userId': serializer.toJson<String?>(userId),
       'cleaningStatus': serializer.toJson<String>(cleaningStatus),
       'recordedAt': serializer.toJson<DateTime>(recordedAt),
       'createdAt': serializer.toJson<DateTime>(createdAt),
@@ -777,6 +842,8 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
     Value<String?> serverId = const Value.absent(),
     Value<String?> gcsUrl = const Value.absent(),
     Value<String?> registerId = const Value.absent(),
+    Value<String?> storytellerId = const Value.absent(),
+    Value<String?> userId = const Value.absent(),
     String? cleaningStatus,
     DateTime? recordedAt,
     DateTime? createdAt,
@@ -802,6 +869,10 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
     serverId: serverId.present ? serverId.value : this.serverId,
     gcsUrl: gcsUrl.present ? gcsUrl.value : this.gcsUrl,
     registerId: registerId.present ? registerId.value : this.registerId,
+    storytellerId: storytellerId.present
+        ? storytellerId.value
+        : this.storytellerId,
+    userId: userId.present ? userId.value : this.userId,
     cleaningStatus: cleaningStatus ?? this.cleaningStatus,
     recordedAt: recordedAt ?? this.recordedAt,
     createdAt: createdAt ?? this.createdAt,
@@ -843,6 +914,10 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
       registerId: data.registerId.present
           ? data.registerId.value
           : this.registerId,
+      storytellerId: data.storytellerId.present
+          ? data.storytellerId.value
+          : this.storytellerId,
+      userId: data.userId.present ? data.userId.value : this.userId,
       cleaningStatus: data.cleaningStatus.present
           ? data.cleaningStatus.value
           : this.cleaningStatus,
@@ -883,6 +958,8 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
           ..write('serverId: $serverId, ')
           ..write('gcsUrl: $gcsUrl, ')
           ..write('registerId: $registerId, ')
+          ..write('storytellerId: $storytellerId, ')
+          ..write('userId: $userId, ')
           ..write('cleaningStatus: $cleaningStatus, ')
           ..write('recordedAt: $recordedAt, ')
           ..write('createdAt: $createdAt, ')
@@ -911,6 +988,8 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
     serverId,
     gcsUrl,
     registerId,
+    storytellerId,
+    userId,
     cleaningStatus,
     recordedAt,
     createdAt,
@@ -938,6 +1017,8 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
           other.serverId == this.serverId &&
           other.gcsUrl == this.gcsUrl &&
           other.registerId == this.registerId &&
+          other.storytellerId == this.storytellerId &&
+          other.userId == this.userId &&
           other.cleaningStatus == this.cleaningStatus &&
           other.recordedAt == this.recordedAt &&
           other.createdAt == this.createdAt &&
@@ -963,6 +1044,8 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
   final Value<String?> serverId;
   final Value<String?> gcsUrl;
   final Value<String?> registerId;
+  final Value<String?> storytellerId;
+  final Value<String?> userId;
   final Value<String> cleaningStatus;
   final Value<DateTime> recordedAt;
   final Value<DateTime> createdAt;
@@ -987,6 +1070,8 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
     this.serverId = const Value.absent(),
     this.gcsUrl = const Value.absent(),
     this.registerId = const Value.absent(),
+    this.storytellerId = const Value.absent(),
+    this.userId = const Value.absent(),
     this.cleaningStatus = const Value.absent(),
     this.recordedAt = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -1012,6 +1097,8 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
     this.serverId = const Value.absent(),
     this.gcsUrl = const Value.absent(),
     this.registerId = const Value.absent(),
+    this.storytellerId = const Value.absent(),
+    this.userId = const Value.absent(),
     this.cleaningStatus = const Value.absent(),
     required DateTime recordedAt,
     this.createdAt = const Value.absent(),
@@ -1041,6 +1128,8 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
     Expression<String>? serverId,
     Expression<String>? gcsUrl,
     Expression<String>? registerId,
+    Expression<String>? storytellerId,
+    Expression<String>? userId,
     Expression<String>? cleaningStatus,
     Expression<DateTime>? recordedAt,
     Expression<DateTime>? createdAt,
@@ -1066,6 +1155,8 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
       if (serverId != null) 'server_id': serverId,
       if (gcsUrl != null) 'gcs_url': gcsUrl,
       if (registerId != null) 'register_id': registerId,
+      if (storytellerId != null) 'storyteller_id': storytellerId,
+      if (userId != null) 'user_id': userId,
       if (cleaningStatus != null) 'cleaning_status': cleaningStatus,
       if (recordedAt != null) 'recorded_at': recordedAt,
       if (createdAt != null) 'created_at': createdAt,
@@ -1094,6 +1185,8 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
     Value<String?>? serverId,
     Value<String?>? gcsUrl,
     Value<String?>? registerId,
+    Value<String?>? storytellerId,
+    Value<String?>? userId,
     Value<String>? cleaningStatus,
     Value<DateTime>? recordedAt,
     Value<DateTime>? createdAt,
@@ -1119,6 +1212,8 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
       serverId: serverId ?? this.serverId,
       gcsUrl: gcsUrl ?? this.gcsUrl,
       registerId: registerId ?? this.registerId,
+      storytellerId: storytellerId ?? this.storytellerId,
+      userId: userId ?? this.userId,
       cleaningStatus: cleaningStatus ?? this.cleaningStatus,
       recordedAt: recordedAt ?? this.recordedAt,
       createdAt: createdAt ?? this.createdAt,
@@ -1176,6 +1271,12 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
     if (registerId.present) {
       map['register_id'] = Variable<String>(registerId.value);
     }
+    if (storytellerId.present) {
+      map['storyteller_id'] = Variable<String>(storytellerId.value);
+    }
+    if (userId.present) {
+      map['user_id'] = Variable<String>(userId.value);
+    }
     if (cleaningStatus.present) {
       map['cleaning_status'] = Variable<String>(cleaningStatus.value);
     }
@@ -1225,6 +1326,8 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
           ..write('serverId: $serverId, ')
           ..write('gcsUrl: $gcsUrl, ')
           ..write('registerId: $registerId, ')
+          ..write('storytellerId: $storytellerId, ')
+          ..write('userId: $userId, ')
           ..write('cleaningStatus: $cleaningStatus, ')
           ..write('recordedAt: $recordedAt, ')
           ..write('createdAt: $createdAt, ')
@@ -2012,6 +2115,627 @@ class LocalSubcategoriesCompanion extends UpdateCompanion<LocalSubcategory> {
   }
 }
 
+class $LocalStorytellersTable extends LocalStorytellers
+    with TableInfo<$LocalStorytellersTable, LocalStoryteller> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $LocalStorytellersTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _projectIdMeta = const VerificationMeta(
+    'projectId',
+  );
+  @override
+  late final GeneratedColumn<String> projectId = GeneratedColumn<String>(
+    'project_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sexMeta = const VerificationMeta('sex');
+  @override
+  late final GeneratedColumn<String> sex = GeneratedColumn<String>(
+    'sex',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _ageMeta = const VerificationMeta('age');
+  @override
+  late final GeneratedColumn<int> age = GeneratedColumn<int>(
+    'age',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _locationMeta = const VerificationMeta(
+    'location',
+  );
+  @override
+  late final GeneratedColumn<String> location = GeneratedColumn<String>(
+    'location',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _dialectMeta = const VerificationMeta(
+    'dialect',
+  );
+  @override
+  late final GeneratedColumn<String> dialect = GeneratedColumn<String>(
+    'dialect',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _externalAcceptanceConfirmedMeta =
+      const VerificationMeta('externalAcceptanceConfirmed');
+  @override
+  late final GeneratedColumn<bool> externalAcceptanceConfirmed =
+      GeneratedColumn<bool>(
+        'external_acceptance_confirmed',
+        aliasedName,
+        false,
+        type: DriftSqlType.bool,
+        requiredDuringInsert: false,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("external_acceptance_confirmed" IN (0, 1))',
+        ),
+        defaultValue: const Constant(false),
+      );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    projectId,
+    name,
+    sex,
+    age,
+    location,
+    dialect,
+    externalAcceptanceConfirmed,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'local_storytellers';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<LocalStoryteller> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('project_id')) {
+      context.handle(
+        _projectIdMeta,
+        projectId.isAcceptableOrUnknown(data['project_id']!, _projectIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_projectIdMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('sex')) {
+      context.handle(
+        _sexMeta,
+        sex.isAcceptableOrUnknown(data['sex']!, _sexMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_sexMeta);
+    }
+    if (data.containsKey('age')) {
+      context.handle(
+        _ageMeta,
+        age.isAcceptableOrUnknown(data['age']!, _ageMeta),
+      );
+    }
+    if (data.containsKey('location')) {
+      context.handle(
+        _locationMeta,
+        location.isAcceptableOrUnknown(data['location']!, _locationMeta),
+      );
+    }
+    if (data.containsKey('dialect')) {
+      context.handle(
+        _dialectMeta,
+        dialect.isAcceptableOrUnknown(data['dialect']!, _dialectMeta),
+      );
+    }
+    if (data.containsKey('external_acceptance_confirmed')) {
+      context.handle(
+        _externalAcceptanceConfirmedMeta,
+        externalAcceptanceConfirmed.isAcceptableOrUnknown(
+          data['external_acceptance_confirmed']!,
+          _externalAcceptanceConfirmedMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  LocalStoryteller map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return LocalStoryteller(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      projectId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}project_id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      sex: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sex'],
+      )!,
+      age: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}age'],
+      ),
+      location: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}location'],
+      ),
+      dialect: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}dialect'],
+      ),
+      externalAcceptanceConfirmed: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}external_acceptance_confirmed'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      ),
+    );
+  }
+
+  @override
+  $LocalStorytellersTable createAlias(String alias) {
+    return $LocalStorytellersTable(attachedDatabase, alias);
+  }
+}
+
+class LocalStoryteller extends DataClass
+    implements Insertable<LocalStoryteller> {
+  final String id;
+  final String projectId;
+  final String name;
+  final String sex;
+  final int? age;
+  final String? location;
+  final String? dialect;
+  final bool externalAcceptanceConfirmed;
+  final DateTime createdAt;
+  final DateTime? updatedAt;
+  const LocalStoryteller({
+    required this.id,
+    required this.projectId,
+    required this.name,
+    required this.sex,
+    this.age,
+    this.location,
+    this.dialect,
+    required this.externalAcceptanceConfirmed,
+    required this.createdAt,
+    this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['project_id'] = Variable<String>(projectId);
+    map['name'] = Variable<String>(name);
+    map['sex'] = Variable<String>(sex);
+    if (!nullToAbsent || age != null) {
+      map['age'] = Variable<int>(age);
+    }
+    if (!nullToAbsent || location != null) {
+      map['location'] = Variable<String>(location);
+    }
+    if (!nullToAbsent || dialect != null) {
+      map['dialect'] = Variable<String>(dialect);
+    }
+    map['external_acceptance_confirmed'] = Variable<bool>(
+      externalAcceptanceConfirmed,
+    );
+    map['created_at'] = Variable<DateTime>(createdAt);
+    if (!nullToAbsent || updatedAt != null) {
+      map['updated_at'] = Variable<DateTime>(updatedAt);
+    }
+    return map;
+  }
+
+  LocalStorytellersCompanion toCompanion(bool nullToAbsent) {
+    return LocalStorytellersCompanion(
+      id: Value(id),
+      projectId: Value(projectId),
+      name: Value(name),
+      sex: Value(sex),
+      age: age == null && nullToAbsent ? const Value.absent() : Value(age),
+      location: location == null && nullToAbsent
+          ? const Value.absent()
+          : Value(location),
+      dialect: dialect == null && nullToAbsent
+          ? const Value.absent()
+          : Value(dialect),
+      externalAcceptanceConfirmed: Value(externalAcceptanceConfirmed),
+      createdAt: Value(createdAt),
+      updatedAt: updatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(updatedAt),
+    );
+  }
+
+  factory LocalStoryteller.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return LocalStoryteller(
+      id: serializer.fromJson<String>(json['id']),
+      projectId: serializer.fromJson<String>(json['projectId']),
+      name: serializer.fromJson<String>(json['name']),
+      sex: serializer.fromJson<String>(json['sex']),
+      age: serializer.fromJson<int?>(json['age']),
+      location: serializer.fromJson<String?>(json['location']),
+      dialect: serializer.fromJson<String?>(json['dialect']),
+      externalAcceptanceConfirmed: serializer.fromJson<bool>(
+        json['externalAcceptanceConfirmed'],
+      ),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime?>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'projectId': serializer.toJson<String>(projectId),
+      'name': serializer.toJson<String>(name),
+      'sex': serializer.toJson<String>(sex),
+      'age': serializer.toJson<int?>(age),
+      'location': serializer.toJson<String?>(location),
+      'dialect': serializer.toJson<String?>(dialect),
+      'externalAcceptanceConfirmed': serializer.toJson<bool>(
+        externalAcceptanceConfirmed,
+      ),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime?>(updatedAt),
+    };
+  }
+
+  LocalStoryteller copyWith({
+    String? id,
+    String? projectId,
+    String? name,
+    String? sex,
+    Value<int?> age = const Value.absent(),
+    Value<String?> location = const Value.absent(),
+    Value<String?> dialect = const Value.absent(),
+    bool? externalAcceptanceConfirmed,
+    DateTime? createdAt,
+    Value<DateTime?> updatedAt = const Value.absent(),
+  }) => LocalStoryteller(
+    id: id ?? this.id,
+    projectId: projectId ?? this.projectId,
+    name: name ?? this.name,
+    sex: sex ?? this.sex,
+    age: age.present ? age.value : this.age,
+    location: location.present ? location.value : this.location,
+    dialect: dialect.present ? dialect.value : this.dialect,
+    externalAcceptanceConfirmed:
+        externalAcceptanceConfirmed ?? this.externalAcceptanceConfirmed,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
+  );
+  LocalStoryteller copyWithCompanion(LocalStorytellersCompanion data) {
+    return LocalStoryteller(
+      id: data.id.present ? data.id.value : this.id,
+      projectId: data.projectId.present ? data.projectId.value : this.projectId,
+      name: data.name.present ? data.name.value : this.name,
+      sex: data.sex.present ? data.sex.value : this.sex,
+      age: data.age.present ? data.age.value : this.age,
+      location: data.location.present ? data.location.value : this.location,
+      dialect: data.dialect.present ? data.dialect.value : this.dialect,
+      externalAcceptanceConfirmed: data.externalAcceptanceConfirmed.present
+          ? data.externalAcceptanceConfirmed.value
+          : this.externalAcceptanceConfirmed,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LocalStoryteller(')
+          ..write('id: $id, ')
+          ..write('projectId: $projectId, ')
+          ..write('name: $name, ')
+          ..write('sex: $sex, ')
+          ..write('age: $age, ')
+          ..write('location: $location, ')
+          ..write('dialect: $dialect, ')
+          ..write('externalAcceptanceConfirmed: $externalAcceptanceConfirmed, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    projectId,
+    name,
+    sex,
+    age,
+    location,
+    dialect,
+    externalAcceptanceConfirmed,
+    createdAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is LocalStoryteller &&
+          other.id == this.id &&
+          other.projectId == this.projectId &&
+          other.name == this.name &&
+          other.sex == this.sex &&
+          other.age == this.age &&
+          other.location == this.location &&
+          other.dialect == this.dialect &&
+          other.externalAcceptanceConfirmed ==
+              this.externalAcceptanceConfirmed &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class LocalStorytellersCompanion extends UpdateCompanion<LocalStoryteller> {
+  final Value<String> id;
+  final Value<String> projectId;
+  final Value<String> name;
+  final Value<String> sex;
+  final Value<int?> age;
+  final Value<String?> location;
+  final Value<String?> dialect;
+  final Value<bool> externalAcceptanceConfirmed;
+  final Value<DateTime> createdAt;
+  final Value<DateTime?> updatedAt;
+  final Value<int> rowid;
+  const LocalStorytellersCompanion({
+    this.id = const Value.absent(),
+    this.projectId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.sex = const Value.absent(),
+    this.age = const Value.absent(),
+    this.location = const Value.absent(),
+    this.dialect = const Value.absent(),
+    this.externalAcceptanceConfirmed = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  LocalStorytellersCompanion.insert({
+    required String id,
+    required String projectId,
+    required String name,
+    required String sex,
+    this.age = const Value.absent(),
+    this.location = const Value.absent(),
+    this.dialect = const Value.absent(),
+    this.externalAcceptanceConfirmed = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       projectId = Value(projectId),
+       name = Value(name),
+       sex = Value(sex);
+  static Insertable<LocalStoryteller> custom({
+    Expression<String>? id,
+    Expression<String>? projectId,
+    Expression<String>? name,
+    Expression<String>? sex,
+    Expression<int>? age,
+    Expression<String>? location,
+    Expression<String>? dialect,
+    Expression<bool>? externalAcceptanceConfirmed,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (projectId != null) 'project_id': projectId,
+      if (name != null) 'name': name,
+      if (sex != null) 'sex': sex,
+      if (age != null) 'age': age,
+      if (location != null) 'location': location,
+      if (dialect != null) 'dialect': dialect,
+      if (externalAcceptanceConfirmed != null)
+        'external_acceptance_confirmed': externalAcceptanceConfirmed,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  LocalStorytellersCompanion copyWith({
+    Value<String>? id,
+    Value<String>? projectId,
+    Value<String>? name,
+    Value<String>? sex,
+    Value<int?>? age,
+    Value<String?>? location,
+    Value<String?>? dialect,
+    Value<bool>? externalAcceptanceConfirmed,
+    Value<DateTime>? createdAt,
+    Value<DateTime?>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return LocalStorytellersCompanion(
+      id: id ?? this.id,
+      projectId: projectId ?? this.projectId,
+      name: name ?? this.name,
+      sex: sex ?? this.sex,
+      age: age ?? this.age,
+      location: location ?? this.location,
+      dialect: dialect ?? this.dialect,
+      externalAcceptanceConfirmed:
+          externalAcceptanceConfirmed ?? this.externalAcceptanceConfirmed,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (projectId.present) {
+      map['project_id'] = Variable<String>(projectId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (sex.present) {
+      map['sex'] = Variable<String>(sex.value);
+    }
+    if (age.present) {
+      map['age'] = Variable<int>(age.value);
+    }
+    if (location.present) {
+      map['location'] = Variable<String>(location.value);
+    }
+    if (dialect.present) {
+      map['dialect'] = Variable<String>(dialect.value);
+    }
+    if (externalAcceptanceConfirmed.present) {
+      map['external_acceptance_confirmed'] = Variable<bool>(
+        externalAcceptanceConfirmed.value,
+      );
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LocalStorytellersCompanion(')
+          ..write('id: $id, ')
+          ..write('projectId: $projectId, ')
+          ..write('name: $name, ')
+          ..write('sex: $sex, ')
+          ..write('age: $age, ')
+          ..write('location: $location, ')
+          ..write('dialect: $dialect, ')
+          ..write('externalAcceptanceConfirmed: $externalAcceptanceConfirmed, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -2021,6 +2745,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $LocalGenresTable localGenres = $LocalGenresTable(this);
   late final $LocalSubcategoriesTable localSubcategories =
       $LocalSubcategoriesTable(this);
+  late final $LocalStorytellersTable localStorytellers =
+      $LocalStorytellersTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2029,6 +2755,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     localRecordings,
     localGenres,
     localSubcategories,
+    localStorytellers,
   ];
 }
 
@@ -2048,6 +2775,8 @@ typedef $$LocalRecordingsTableCreateCompanionBuilder =
       Value<String?> serverId,
       Value<String?> gcsUrl,
       Value<String?> registerId,
+      Value<String?> storytellerId,
+      Value<String?> userId,
       Value<String> cleaningStatus,
       required DateTime recordedAt,
       Value<DateTime> createdAt,
@@ -2074,6 +2803,8 @@ typedef $$LocalRecordingsTableUpdateCompanionBuilder =
       Value<String?> serverId,
       Value<String?> gcsUrl,
       Value<String?> registerId,
+      Value<String?> storytellerId,
+      Value<String?> userId,
       Value<String> cleaningStatus,
       Value<DateTime> recordedAt,
       Value<DateTime> createdAt,
@@ -2161,6 +2892,16 @@ class $$LocalRecordingsTableFilterComposer
 
   ColumnFilters<String> get registerId => $composableBuilder(
     column: $table.registerId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get storytellerId => $composableBuilder(
+    column: $table.storytellerId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get userId => $composableBuilder(
+    column: $table.userId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2284,6 +3025,16 @@ class $$LocalRecordingsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get storytellerId => $composableBuilder(
+    column: $table.storytellerId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get cleaningStatus => $composableBuilder(
     column: $table.cleaningStatus,
     builder: (column) => ColumnOrderings(column),
@@ -2390,6 +3141,14 @@ class $$LocalRecordingsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get storytellerId => $composableBuilder(
+    column: $table.storytellerId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get userId =>
+      $composableBuilder(column: $table.userId, builder: (column) => column);
+
   GeneratedColumn<String> get cleaningStatus => $composableBuilder(
     column: $table.cleaningStatus,
     builder: (column) => column,
@@ -2478,6 +3237,8 @@ class $$LocalRecordingsTableTableManager
                 Value<String?> serverId = const Value.absent(),
                 Value<String?> gcsUrl = const Value.absent(),
                 Value<String?> registerId = const Value.absent(),
+                Value<String?> storytellerId = const Value.absent(),
+                Value<String?> userId = const Value.absent(),
                 Value<String> cleaningStatus = const Value.absent(),
                 Value<DateTime> recordedAt = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
@@ -2502,6 +3263,8 @@ class $$LocalRecordingsTableTableManager
                 serverId: serverId,
                 gcsUrl: gcsUrl,
                 registerId: registerId,
+                storytellerId: storytellerId,
+                userId: userId,
                 cleaningStatus: cleaningStatus,
                 recordedAt: recordedAt,
                 createdAt: createdAt,
@@ -2528,6 +3291,8 @@ class $$LocalRecordingsTableTableManager
                 Value<String?> serverId = const Value.absent(),
                 Value<String?> gcsUrl = const Value.absent(),
                 Value<String?> registerId = const Value.absent(),
+                Value<String?> storytellerId = const Value.absent(),
+                Value<String?> userId = const Value.absent(),
                 Value<String> cleaningStatus = const Value.absent(),
                 required DateTime recordedAt,
                 Value<DateTime> createdAt = const Value.absent(),
@@ -2552,6 +3317,8 @@ class $$LocalRecordingsTableTableManager
                 serverId: serverId,
                 gcsUrl: gcsUrl,
                 registerId: registerId,
+                storytellerId: storytellerId,
+                userId: userId,
                 cleaningStatus: cleaningStatus,
                 recordedAt: recordedAt,
                 createdAt: createdAt,
@@ -3023,6 +3790,316 @@ typedef $$LocalSubcategoriesTableProcessedTableManager =
       LocalSubcategory,
       PrefetchHooks Function()
     >;
+typedef $$LocalStorytellersTableCreateCompanionBuilder =
+    LocalStorytellersCompanion Function({
+      required String id,
+      required String projectId,
+      required String name,
+      required String sex,
+      Value<int?> age,
+      Value<String?> location,
+      Value<String?> dialect,
+      Value<bool> externalAcceptanceConfirmed,
+      Value<DateTime> createdAt,
+      Value<DateTime?> updatedAt,
+      Value<int> rowid,
+    });
+typedef $$LocalStorytellersTableUpdateCompanionBuilder =
+    LocalStorytellersCompanion Function({
+      Value<String> id,
+      Value<String> projectId,
+      Value<String> name,
+      Value<String> sex,
+      Value<int?> age,
+      Value<String?> location,
+      Value<String?> dialect,
+      Value<bool> externalAcceptanceConfirmed,
+      Value<DateTime> createdAt,
+      Value<DateTime?> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$LocalStorytellersTableFilterComposer
+    extends Composer<_$AppDatabase, $LocalStorytellersTable> {
+  $$LocalStorytellersTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get projectId => $composableBuilder(
+    column: $table.projectId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sex => $composableBuilder(
+    column: $table.sex,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get age => $composableBuilder(
+    column: $table.age,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get location => $composableBuilder(
+    column: $table.location,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get dialect => $composableBuilder(
+    column: $table.dialect,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get externalAcceptanceConfirmed => $composableBuilder(
+    column: $table.externalAcceptanceConfirmed,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$LocalStorytellersTableOrderingComposer
+    extends Composer<_$AppDatabase, $LocalStorytellersTable> {
+  $$LocalStorytellersTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get projectId => $composableBuilder(
+    column: $table.projectId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sex => $composableBuilder(
+    column: $table.sex,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get age => $composableBuilder(
+    column: $table.age,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get location => $composableBuilder(
+    column: $table.location,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get dialect => $composableBuilder(
+    column: $table.dialect,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get externalAcceptanceConfirmed => $composableBuilder(
+    column: $table.externalAcceptanceConfirmed,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$LocalStorytellersTableAnnotationComposer
+    extends Composer<_$AppDatabase, $LocalStorytellersTable> {
+  $$LocalStorytellersTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get projectId =>
+      $composableBuilder(column: $table.projectId, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get sex =>
+      $composableBuilder(column: $table.sex, builder: (column) => column);
+
+  GeneratedColumn<int> get age =>
+      $composableBuilder(column: $table.age, builder: (column) => column);
+
+  GeneratedColumn<String> get location =>
+      $composableBuilder(column: $table.location, builder: (column) => column);
+
+  GeneratedColumn<String> get dialect =>
+      $composableBuilder(column: $table.dialect, builder: (column) => column);
+
+  GeneratedColumn<bool> get externalAcceptanceConfirmed => $composableBuilder(
+    column: $table.externalAcceptanceConfirmed,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$LocalStorytellersTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $LocalStorytellersTable,
+          LocalStoryteller,
+          $$LocalStorytellersTableFilterComposer,
+          $$LocalStorytellersTableOrderingComposer,
+          $$LocalStorytellersTableAnnotationComposer,
+          $$LocalStorytellersTableCreateCompanionBuilder,
+          $$LocalStorytellersTableUpdateCompanionBuilder,
+          (
+            LocalStoryteller,
+            BaseReferences<
+              _$AppDatabase,
+              $LocalStorytellersTable,
+              LocalStoryteller
+            >,
+          ),
+          LocalStoryteller,
+          PrefetchHooks Function()
+        > {
+  $$LocalStorytellersTableTableManager(
+    _$AppDatabase db,
+    $LocalStorytellersTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$LocalStorytellersTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$LocalStorytellersTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$LocalStorytellersTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> projectId = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> sex = const Value.absent(),
+                Value<int?> age = const Value.absent(),
+                Value<String?> location = const Value.absent(),
+                Value<String?> dialect = const Value.absent(),
+                Value<bool> externalAcceptanceConfirmed = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => LocalStorytellersCompanion(
+                id: id,
+                projectId: projectId,
+                name: name,
+                sex: sex,
+                age: age,
+                location: location,
+                dialect: dialect,
+                externalAcceptanceConfirmed: externalAcceptanceConfirmed,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String projectId,
+                required String name,
+                required String sex,
+                Value<int?> age = const Value.absent(),
+                Value<String?> location = const Value.absent(),
+                Value<String?> dialect = const Value.absent(),
+                Value<bool> externalAcceptanceConfirmed = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => LocalStorytellersCompanion.insert(
+                id: id,
+                projectId: projectId,
+                name: name,
+                sex: sex,
+                age: age,
+                location: location,
+                dialect: dialect,
+                externalAcceptanceConfirmed: externalAcceptanceConfirmed,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$LocalStorytellersTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $LocalStorytellersTable,
+      LocalStoryteller,
+      $$LocalStorytellersTableFilterComposer,
+      $$LocalStorytellersTableOrderingComposer,
+      $$LocalStorytellersTableAnnotationComposer,
+      $$LocalStorytellersTableCreateCompanionBuilder,
+      $$LocalStorytellersTableUpdateCompanionBuilder,
+      (
+        LocalStoryteller,
+        BaseReferences<
+          _$AppDatabase,
+          $LocalStorytellersTable,
+          LocalStoryteller
+        >,
+      ),
+      LocalStoryteller,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -3033,4 +4110,6 @@ class $AppDatabaseManager {
       $$LocalGenresTableTableManager(_db, _db.localGenres);
   $$LocalSubcategoriesTableTableManager get localSubcategories =>
       $$LocalSubcategoriesTableTableManager(_db, _db.localSubcategories);
+  $$LocalStorytellersTableTableManager get localStorytellers =>
+      $$LocalStorytellersTableTableManager(_db, _db.localStorytellers);
 }
