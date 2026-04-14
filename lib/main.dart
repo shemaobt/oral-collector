@@ -15,6 +15,7 @@ import 'core/theme/app_theme.dart';
 import 'core/auth/auth_notifier.dart';
 import 'features/recording/data/services/recording_notification.dart';
 import 'features/recording/data/services/recording_trash.dart';
+import 'features/recording/data/services/recovery_coordinator.dart';
 import 'features/sync/data/providers.dart';
 import 'features/sync/data/services/background_sync_service.dart';
 import 'features/sync/presentation/notifiers/sync_notifier.dart';
@@ -78,13 +79,14 @@ class _OralCollectorAppState extends ConsumerState<OralCollectorApp> {
 
     ref.read(appDatabaseProvider);
 
-    Future.microtask(() {
+    Future.microtask(() async {
       ref.read(authNotifierProvider.notifier).tryAutoLogin();
 
       _initBackgroundSync();
 
       if (!kIsWeb) {
         RecordingTrash.pruneOldTrash(maxAgeHours: 24);
+        await ref.read(recoveryCoordinatorProvider).scanOnStartup();
       }
     });
   }

@@ -9,6 +9,8 @@ import '../../core/auth/auth_notifier.dart';
 import '../../core/theme/app_colors.dart';
 import '../../features/auth/data/providers/role_provider.dart';
 import '../../features/invite/presentation/notifiers/invite_notifier.dart';
+import '../../features/recording/data/services/recovery_coordinator.dart';
+import '../../features/recording/presentation/widgets/crash_recovery_dialog.dart';
 import '../../l10n/app_localizations.dart';
 import 'user_avatar.dart';
 
@@ -85,6 +87,14 @@ class AppShell extends ConsumerWidget {
     final pendingInvites = ref.watch(inviteNotifierProvider).pendingCount;
 
     ref.watch(roleNotifierProvider);
+
+    ref.listen<RecoveryPrompt?>(pendingRecoveryProvider, (_, next) {
+      if (next == null) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!context.mounted) return;
+        showCrashRecoveryDialog(context, ref, next);
+      });
+    });
 
     final mobileTabs = _mobileTabs(l10n);
     final tabs = isWide ? _buildWebTabs(ref, l10n) : mobileTabs;

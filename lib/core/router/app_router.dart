@@ -20,6 +20,7 @@ import '../../features/recording/presentation/recording_detail_screen.dart';
 import '../../features/recording/presentation/quick_recording_screen.dart';
 import '../../features/recording/presentation/recording_flow_screen.dart';
 import '../../features/recording/presentation/recordings_list_screen.dart';
+import '../../features/recording/presentation/recovery_screen.dart';
 import '../../features/recording/presentation/trim_editor_screen.dart';
 import '../../features/storyteller/presentation/storyteller_form_screen.dart';
 import '../../features/storyteller/presentation/storytellers_list_screen.dart';
@@ -144,6 +145,12 @@ final routerProvider = Provider<GoRouter>((ref) {
           path: '/admin',
           redirect: (context, state) => '/profile',
           builder: (context, state) => const AdminDashboardScreen(),
+        ),
+        GoRoute(
+          path: '/recover/:sessionId',
+          builder: (context, state) => RecoveryScreen(
+            sessionId: state.pathParameters['sessionId'] ?? '',
+          ),
         ),
       ],
 
