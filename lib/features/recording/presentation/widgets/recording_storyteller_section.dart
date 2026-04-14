@@ -193,26 +193,11 @@ class RecordingStorytellerSection extends ConsumerWidget {
   Future<void> _openPicker(BuildContext context, WidgetRef ref) async {
     final callback = onStorytellerChanged;
     if (callback == null) return;
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      builder: (sheetContext) {
-        return StatefulBuilder(
-          builder: (_, _) => Padding(
-            padding: const EdgeInsets.all(16),
-            child: StorytellerPicker(
-              projectId: projectId,
-              selected: resolvedStoryteller,
-              onChanged: (s) {
-                Navigator.of(sheetContext).pop();
-                callback(s);
-              },
-              showAddNew: false,
-            ),
-          ),
-        );
-      },
+    final picked = await showStorytellerPickerSheet(
+      context,
+      projectId: projectId,
+      showAddNew: false,
     );
+    if (picked != null) callback(picked);
   }
 }

@@ -10,6 +10,24 @@ import '../../domain/entities/storyteller.dart';
 import '../notifiers/project_storytellers_notifier.dart';
 import 'storyteller_tile.dart';
 
+Future<Storyteller?> showStorytellerPickerSheet(
+  BuildContext context, {
+  required String projectId,
+  bool showAddNew = false,
+}) {
+  return showModalBottomSheet<Storyteller?>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    backgroundColor: Theme.of(context).colorScheme.surface,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (_) =>
+        _StorytellerPickerSheet(projectId: projectId, showAddNew: showAddNew),
+  );
+}
+
 class StorytellerPicker extends ConsumerWidget {
   final String projectId;
   final Storyteller? selected;
@@ -25,12 +43,10 @@ class StorytellerPicker extends ConsumerWidget {
   });
 
   Future<void> _open(BuildContext context, WidgetRef ref) async {
-    final result = await showModalBottomSheet<Storyteller?>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      builder: (_) =>
-          _StorytellerPickerSheet(projectId: projectId, showAddNew: showAddNew),
+    final result = await showStorytellerPickerSheet(
+      context,
+      projectId: projectId,
+      showAddNew: showAddNew,
     );
     if (result != null) {
       onChanged(result);
@@ -141,9 +157,9 @@ class _StorytellerPickerSheetState
 
     return DraggableScrollableSheet(
       expand: false,
-      initialChildSize: 0.7,
+      initialChildSize: 0.6,
       minChildSize: 0.4,
-      maxChildSize: 0.95,
+      maxChildSize: 0.9,
       builder: (context, controller) {
         return Column(
           children: [
