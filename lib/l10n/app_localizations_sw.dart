@@ -1663,103 +1663,103 @@ class AppLocalizationsSw extends AppLocalizations {
   String get recording_unclassified => 'Haijainishwa';
 
   @override
-  String get recording_inputSource => 'Input';
+  String get recording_inputSource => 'Ingizo';
 
   @override
-  String get recording_selectMicrophone => 'Select microphone';
+  String get recording_selectMicrophone => 'Chagua maikrofoni';
 
   @override
-  String get recording_builtInMicrophone => 'System default';
+  String get recording_builtInMicrophone => 'Chaguomsingi cha mfumo';
 
   @override
   String get recording_micPermissionNeeded =>
-      'Allow microphone access to see device names';
+      'Ruhusu ufikiaji wa maikrofoni ili kuona majina ya vifaa';
 
   @override
-  String get recording_micPermissionButton => 'Grant permission';
+  String get recording_micPermissionButton => 'Toa ruhusa';
 
   @override
   String get recording_micPermissionDenied =>
-      'Microphone permission denied. Enable it in your browser or system settings.';
+      'Ruhusa ya maikrofoni imekataliwa. Iwashe katika mipangilio ya kivinjari au mfumo.';
 
   @override
-  String get recording_noDevicesFound => 'No microphones found';
+  String get recording_noDevicesFound => 'Hakuna maikrofoni iliyopatikana';
 
   @override
-  String get recording_storageLowWarnTitle => 'Low storage';
+  String get recording_storageLowWarnTitle => 'Hifadhi imepungua';
 
   @override
   String recording_storageLowWarnBody(int minutes) {
-    return 'About $minutes min of recording available. Continue?';
+    return 'Takriban dakika $minutes za kurekodi zinapatikana. Endelea?';
   }
 
   @override
-  String get recording_storageRefuseTitle => 'Not enough storage';
+  String get recording_storageRefuseTitle => 'Hifadhi haitoshi';
 
   @override
   String get recording_storageRefuseBody =>
-      'Free up space on this device before recording.';
+      'Toa nafasi kwenye kifaa hiki kabla ya kurekodi.';
 
   @override
   String recording_storageCriticalBanner(int minutes) {
-    return 'Storage critical — about $minutes min remaining. Consider stopping soon.';
+    return 'Hifadhi muhimu — takriban dakika $minutes zimebaki. Fikiria kusimamisha hivi karibuni.';
   }
 
   @override
   String get recording_storageForceStopped =>
-      'Recording stopped due to critically low storage. Your progress has been saved.';
+      'Kurekodi kumesimamishwa kwa sababu ya hifadhi. Maendeleo yako yamehifadhiwa.';
 
   @override
   String recording_savedAt(String time) {
-    return 'Saved at $time';
+    return 'Imehifadhiwa saa $time';
   }
 
   @override
-  String get recording_continuedInBackground =>
-      'Recording continued in background';
+  String get recording_continuedInBackground => 'Kurekodi kuliendelea nyuma';
 
   @override
-  String get recording_continue => 'Continue';
+  String get recording_continue => 'Endelea';
 
   @override
-  String get recording_cancel => 'Cancel';
+  String get recording_cancel => 'Ghairi';
 
   @override
-  String get recording_recoverTitle => 'Recover interrupted recording?';
+  String get recording_recoverTitle => 'Rejesha kurekodi kulikoingiliwa?';
 
   @override
   String recording_recoverBody(int minutes) {
-    return 'We found about $minutes min of audio from an earlier session.';
+    return 'Tulipata takriban dakika $minutes za sauti kutoka kipindi cha awali.';
   }
 
   @override
-  String get recording_recoverButton => 'Recover';
+  String get recording_recoverButton => 'Rejesha';
 
   @override
-  String get recording_recoverDiscard => 'Discard';
+  String get recording_recoverDiscard => 'Tupa';
 
   @override
   String get recording_recoverFailedLastSegment =>
-      'Some audio near the end could not be read and was skipped.';
+      'Sauti fulani karibu na mwisho haikuweza kusomwa na ikarukwa.';
 
   @override
-  String get recording_inProgressNotificationTitle => 'Recording in progress';
+  String get recording_inProgressNotificationTitle => 'Inarekodi';
 
   @override
-  String get recording_inProgressNotificationBody => 'Tap to return to the app';
+  String get recording_inProgressNotificationBody =>
+      'Bofya kurudi kwenye programu';
 
   @override
-  String get profile_defaultMicrophone => 'Default microphone';
+  String get profile_defaultMicrophone => 'Maikrofoni chaguomsingi';
 
   @override
-  String get profile_systemDefault => 'System default';
+  String get profile_systemDefault => 'Chaguomsingi cha mfumo';
 
   @override
-  String get settings_deviceStorageTitle => 'Device storage';
+  String get settings_deviceStorageTitle => 'Hifadhi ya kifaa';
 
   @override
   String settings_deviceStorageSubtitle(String used, String free) {
-    return 'Used $used · Free $free';
+    return 'Imetumika $used · Ipo $free';
   }
 
   @override

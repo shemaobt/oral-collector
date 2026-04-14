@@ -1660,103 +1660,103 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get recording_unclassified => 'I no makim kain yet';
 
   @override
-  String get recording_inputSource => 'Input';
+  String get recording_inputSource => 'Insait';
 
   @override
-  String get recording_selectMicrophone => 'Select microphone';
+  String get recording_selectMicrophone => 'Makim maikrofon';
 
   @override
-  String get recording_builtInMicrophone => 'System default';
+  String get recording_builtInMicrophone => 'Defolt bilong sistem';
 
   @override
   String get recording_micPermissionNeeded =>
-      'Allow microphone access to see device names';
+      'Larim maikrofon i ken wok bai yu lukim ol nem bilong divais';
 
   @override
-  String get recording_micPermissionButton => 'Grant permission';
+  String get recording_micPermissionButton => 'Givim larim';
 
   @override
   String get recording_micPermissionDenied =>
-      'Microphone permission denied. Enable it in your browser or system settings.';
+      'Larim bilong maikrofon i tambu. Statim long ol setting bilong brausa o sistem.';
 
   @override
-  String get recording_noDevicesFound => 'No microphones found';
+  String get recording_noDevicesFound => 'I no gat maikrofon';
 
   @override
-  String get recording_storageLowWarnTitle => 'Low storage';
+  String get recording_storageLowWarnTitle => 'Spes i sot';
 
   @override
   String recording_storageLowWarnBody(int minutes) {
-    return 'About $minutes min of recording available. Continue?';
+    return 'Klostu $minutes minit bilong rekodim i stap. Yu laik kontiniu?';
   }
 
   @override
-  String get recording_storageRefuseTitle => 'Not enough storage';
+  String get recording_storageRefuseTitle => 'Spes i no inap';
 
   @override
   String get recording_storageRefuseBody =>
-      'Free up space on this device before recording.';
+      'Klinim sampela samting long divais bipo long rekodim.';
 
   @override
   String recording_storageCriticalBanner(int minutes) {
-    return 'Storage critical — about $minutes min remaining. Consider stopping soon.';
+    return 'Spes i klostu pinis — klostu $minutes minit i stap. Tingim long stop sotpela taim.';
   }
 
   @override
   String get recording_storageForceStopped =>
-      'Recording stopped due to critically low storage. Your progress has been saved.';
+      'Rekodim i stap pinis bikos spes i pinis. Wok bilong yu i sef pinis.';
 
   @override
   String recording_savedAt(String time) {
-    return 'Saved at $time';
+    return 'Sef long $time';
   }
 
   @override
-  String get recording_continuedInBackground =>
-      'Recording continued in background';
+  String get recording_continuedInBackground => 'Rekodim i go yet long bek';
 
   @override
-  String get recording_continue => 'Continue';
+  String get recording_continue => 'Kontiniu';
 
   @override
-  String get recording_cancel => 'Cancel';
+  String get recording_cancel => 'Kanselim';
 
   @override
-  String get recording_recoverTitle => 'Recover interrupted recording?';
+  String get recording_recoverTitle => 'Bringim bek rekodim i stop?';
 
   @override
   String recording_recoverBody(int minutes) {
-    return 'We found about $minutes min of audio from an earlier session.';
+    return 'Mipela painim klostu $minutes minit bilong audio long bipo sesin.';
   }
 
   @override
-  String get recording_recoverButton => 'Recover';
+  String get recording_recoverButton => 'Bringim bek';
 
   @override
-  String get recording_recoverDiscard => 'Discard';
+  String get recording_recoverDiscard => 'Rausim';
 
   @override
   String get recording_recoverFailedLastSegment =>
-      'Some audio near the end could not be read and was skipped.';
+      'Sampela audio klostu long pinis ino inap rid na mipela skipim.';
 
   @override
-  String get recording_inProgressNotificationTitle => 'Recording in progress';
+  String get recording_inProgressNotificationTitle => 'Rekodim i wok';
 
   @override
-  String get recording_inProgressNotificationBody => 'Tap to return to the app';
+  String get recording_inProgressNotificationBody =>
+      'Tasim bilong go bek long ap';
 
   @override
-  String get profile_defaultMicrophone => 'Default microphone';
+  String get profile_defaultMicrophone => 'Defolt maikrofon';
 
   @override
-  String get profile_systemDefault => 'System default';
+  String get profile_systemDefault => 'Defolt bilong sistem';
 
   @override
-  String get settings_deviceStorageTitle => 'Device storage';
+  String get settings_deviceStorageTitle => 'Spes bilong divais';
 
   @override
   String settings_deviceStorageSubtitle(String used, String free) {
-    return 'Used $used · Free $free';
+    return 'Yusim $used · Spes i stap $free';
   }
 
   @override

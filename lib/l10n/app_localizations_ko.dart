@@ -1618,103 +1618,100 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recording_unclassified => '미분류';
 
   @override
-  String get recording_inputSource => 'Input';
+  String get recording_inputSource => '입력';
 
   @override
-  String get recording_selectMicrophone => 'Select microphone';
+  String get recording_selectMicrophone => '마이크 선택';
 
   @override
-  String get recording_builtInMicrophone => 'System default';
+  String get recording_builtInMicrophone => '시스템 기본값';
 
   @override
-  String get recording_micPermissionNeeded =>
-      'Allow microphone access to see device names';
+  String get recording_micPermissionNeeded => '장치 이름을 보려면 마이크 액세스를 허용하세요';
 
   @override
-  String get recording_micPermissionButton => 'Grant permission';
+  String get recording_micPermissionButton => '권한 부여';
 
   @override
   String get recording_micPermissionDenied =>
-      'Microphone permission denied. Enable it in your browser or system settings.';
+      '마이크 권한이 거부되었습니다. 브라우저 또는 시스템 설정에서 활성화하세요.';
 
   @override
-  String get recording_noDevicesFound => 'No microphones found';
+  String get recording_noDevicesFound => '마이크를 찾을 수 없습니다';
 
   @override
-  String get recording_storageLowWarnTitle => 'Low storage';
+  String get recording_storageLowWarnTitle => '저장 공간 부족';
 
   @override
   String recording_storageLowWarnBody(int minutes) {
-    return 'About $minutes min of recording available. Continue?';
+    return '약 $minutes분의 녹음이 가능합니다. 계속하시겠습니까?';
   }
 
   @override
-  String get recording_storageRefuseTitle => 'Not enough storage';
+  String get recording_storageRefuseTitle => '저장 공간이 충분하지 않습니다';
 
   @override
-  String get recording_storageRefuseBody =>
-      'Free up space on this device before recording.';
+  String get recording_storageRefuseBody => '녹음 전에 이 기기의 공간을 확보하세요.';
 
   @override
   String recording_storageCriticalBanner(int minutes) {
-    return 'Storage critical — about $minutes min remaining. Consider stopping soon.';
+    return '저장 공간이 위험합니다 — 약 $minutes분 남았습니다. 곧 중지하세요.';
   }
 
   @override
   String get recording_storageForceStopped =>
-      'Recording stopped due to critically low storage. Your progress has been saved.';
+      '저장 공간이 부족하여 녹음이 중지되었습니다. 진행 상황이 저장되었습니다.';
 
   @override
   String recording_savedAt(String time) {
-    return 'Saved at $time';
+    return '$time에 저장됨';
   }
 
   @override
-  String get recording_continuedInBackground =>
-      'Recording continued in background';
+  String get recording_continuedInBackground => '녹음이 백그라운드에서 계속되었습니다';
 
   @override
-  String get recording_continue => 'Continue';
+  String get recording_continue => '계속';
 
   @override
-  String get recording_cancel => 'Cancel';
+  String get recording_cancel => '취소';
 
   @override
-  String get recording_recoverTitle => 'Recover interrupted recording?';
+  String get recording_recoverTitle => '중단된 녹음을 복구하시겠습니까?';
 
   @override
   String recording_recoverBody(int minutes) {
-    return 'We found about $minutes min of audio from an earlier session.';
+    return '이전 세션에서 약 $minutes분의 오디오를 발견했습니다.';
   }
 
   @override
-  String get recording_recoverButton => 'Recover';
+  String get recording_recoverButton => '복구';
 
   @override
-  String get recording_recoverDiscard => 'Discard';
+  String get recording_recoverDiscard => '버리기';
 
   @override
   String get recording_recoverFailedLastSegment =>
-      'Some audio near the end could not be read and was skipped.';
+      '끝부분의 일부 오디오를 읽을 수 없어 건너뛰었습니다.';
 
   @override
-  String get recording_inProgressNotificationTitle => 'Recording in progress';
+  String get recording_inProgressNotificationTitle => '녹음 중';
 
   @override
-  String get recording_inProgressNotificationBody => 'Tap to return to the app';
+  String get recording_inProgressNotificationBody => '탭하여 앱으로 돌아가기';
 
   @override
-  String get profile_defaultMicrophone => 'Default microphone';
+  String get profile_defaultMicrophone => '기본 마이크';
 
   @override
-  String get profile_systemDefault => 'System default';
+  String get profile_systemDefault => '시스템 기본값';
 
   @override
-  String get settings_deviceStorageTitle => 'Device storage';
+  String get settings_deviceStorageTitle => '기기 저장 공간';
 
   @override
   String settings_deviceStorageSubtitle(String used, String free) {
-    return 'Used $used · Free $free';
+    return '사용 $used · 여유 $free';
   }
 
   @override

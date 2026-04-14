@@ -1642,103 +1642,102 @@ class AppLocalizationsAr extends AppLocalizations {
   String get recording_unclassified => 'غير مصنف';
 
   @override
-  String get recording_inputSource => 'Input';
+  String get recording_inputSource => 'الإدخال';
 
   @override
-  String get recording_selectMicrophone => 'Select microphone';
+  String get recording_selectMicrophone => 'اختر الميكروفون';
 
   @override
-  String get recording_builtInMicrophone => 'System default';
+  String get recording_builtInMicrophone => 'الافتراضي للنظام';
 
   @override
   String get recording_micPermissionNeeded =>
-      'Allow microphone access to see device names';
+      'اسمح بالوصول إلى الميكروفون لرؤية أسماء الأجهزة';
 
   @override
-  String get recording_micPermissionButton => 'Grant permission';
+  String get recording_micPermissionButton => 'منح الإذن';
 
   @override
   String get recording_micPermissionDenied =>
-      'Microphone permission denied. Enable it in your browser or system settings.';
+      'تم رفض إذن الميكروفون. قم بتفعيله من إعدادات المتصفح أو النظام.';
 
   @override
-  String get recording_noDevicesFound => 'No microphones found';
+  String get recording_noDevicesFound => 'لم يتم العثور على ميكروفونات';
 
   @override
-  String get recording_storageLowWarnTitle => 'Low storage';
+  String get recording_storageLowWarnTitle => 'مساحة تخزين منخفضة';
 
   @override
   String recording_storageLowWarnBody(int minutes) {
-    return 'About $minutes min of recording available. Continue?';
+    return 'يتوفر حوالي $minutes دقيقة من التسجيل. هل تريد المتابعة؟';
   }
 
   @override
-  String get recording_storageRefuseTitle => 'Not enough storage';
+  String get recording_storageRefuseTitle => 'مساحة التخزين غير كافية';
 
   @override
   String get recording_storageRefuseBody =>
-      'Free up space on this device before recording.';
+      'حرر مساحة على هذا الجهاز قبل التسجيل.';
 
   @override
   String recording_storageCriticalBanner(int minutes) {
-    return 'Storage critical — about $minutes min remaining. Consider stopping soon.';
+    return 'التخزين حرج — يتبقى حوالي $minutes دقيقة. فكر في التوقف قريبًا.';
   }
 
   @override
   String get recording_storageForceStopped =>
-      'Recording stopped due to critically low storage. Your progress has been saved.';
+      'تم إيقاف التسجيل بسبب نفاد مساحة التخزين. تم حفظ تقدمك.';
 
   @override
   String recording_savedAt(String time) {
-    return 'Saved at $time';
+    return 'تم الحفظ في $time';
   }
 
   @override
-  String get recording_continuedInBackground =>
-      'Recording continued in background';
+  String get recording_continuedInBackground => 'استمر التسجيل في الخلفية';
 
   @override
-  String get recording_continue => 'Continue';
+  String get recording_continue => 'متابعة';
 
   @override
-  String get recording_cancel => 'Cancel';
+  String get recording_cancel => 'إلغاء';
 
   @override
-  String get recording_recoverTitle => 'Recover interrupted recording?';
+  String get recording_recoverTitle => 'هل تريد استعادة التسجيل المتوقف؟';
 
   @override
   String recording_recoverBody(int minutes) {
-    return 'We found about $minutes min of audio from an earlier session.';
+    return 'وجدنا حوالي $minutes دقيقة من الصوت من جلسة سابقة.';
   }
 
   @override
-  String get recording_recoverButton => 'Recover';
+  String get recording_recoverButton => 'استعادة';
 
   @override
-  String get recording_recoverDiscard => 'Discard';
+  String get recording_recoverDiscard => 'تجاهل';
 
   @override
   String get recording_recoverFailedLastSegment =>
-      'Some audio near the end could not be read and was skipped.';
+      'تعذرت قراءة بعض الصوت قرب النهاية وتم تخطيه.';
 
   @override
-  String get recording_inProgressNotificationTitle => 'Recording in progress';
+  String get recording_inProgressNotificationTitle => 'جاري التسجيل';
 
   @override
-  String get recording_inProgressNotificationBody => 'Tap to return to the app';
+  String get recording_inProgressNotificationBody => 'اضغط للعودة إلى التطبيق';
 
   @override
-  String get profile_defaultMicrophone => 'Default microphone';
+  String get profile_defaultMicrophone => 'الميكروفون الافتراضي';
 
   @override
-  String get profile_systemDefault => 'System default';
+  String get profile_systemDefault => 'الافتراضي للنظام';
 
   @override
-  String get settings_deviceStorageTitle => 'Device storage';
+  String get settings_deviceStorageTitle => 'مساحة تخزين الجهاز';
 
   @override
   String settings_deviceStorageSubtitle(String used, String free) {
-    return 'Used $used · Free $free';
+    return 'المستخدم $used · المتاح $free';
   }
 
   @override

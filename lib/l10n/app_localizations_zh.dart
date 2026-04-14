@@ -1613,103 +1613,97 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recording_unclassified => '未分类';
 
   @override
-  String get recording_inputSource => 'Input';
+  String get recording_inputSource => '输入';
 
   @override
-  String get recording_selectMicrophone => 'Select microphone';
+  String get recording_selectMicrophone => '选择麦克风';
 
   @override
-  String get recording_builtInMicrophone => 'System default';
+  String get recording_builtInMicrophone => '系统默认';
 
   @override
-  String get recording_micPermissionNeeded =>
-      'Allow microphone access to see device names';
+  String get recording_micPermissionNeeded => '请允许访问麦克风以查看设备名称';
 
   @override
-  String get recording_micPermissionButton => 'Grant permission';
+  String get recording_micPermissionButton => '授予权限';
 
   @override
-  String get recording_micPermissionDenied =>
-      'Microphone permission denied. Enable it in your browser or system settings.';
+  String get recording_micPermissionDenied => '麦克风权限被拒绝。请在浏览器或系统设置中启用。';
 
   @override
-  String get recording_noDevicesFound => 'No microphones found';
+  String get recording_noDevicesFound => '未找到麦克风';
 
   @override
-  String get recording_storageLowWarnTitle => 'Low storage';
+  String get recording_storageLowWarnTitle => '存储空间不足';
 
   @override
   String recording_storageLowWarnBody(int minutes) {
-    return 'About $minutes min of recording available. Continue?';
+    return '约可录制 $minutes 分钟。是否继续？';
   }
 
   @override
-  String get recording_storageRefuseTitle => 'Not enough storage';
+  String get recording_storageRefuseTitle => '存储空间不足';
 
   @override
-  String get recording_storageRefuseBody =>
-      'Free up space on this device before recording.';
+  String get recording_storageRefuseBody => '录音前请释放此设备上的空间。';
 
   @override
   String recording_storageCriticalBanner(int minutes) {
-    return 'Storage critical — about $minutes min remaining. Consider stopping soon.';
+    return '存储空间紧张 — 约剩 $minutes 分钟。请尽快停止。';
   }
 
   @override
-  String get recording_storageForceStopped =>
-      'Recording stopped due to critically low storage. Your progress has been saved.';
+  String get recording_storageForceStopped => '因存储空间不足停止录音。您的进度已保存。';
 
   @override
   String recording_savedAt(String time) {
-    return 'Saved at $time';
+    return '已保存于 $time';
   }
 
   @override
-  String get recording_continuedInBackground =>
-      'Recording continued in background';
+  String get recording_continuedInBackground => '录音在后台继续';
 
   @override
-  String get recording_continue => 'Continue';
+  String get recording_continue => '继续';
 
   @override
-  String get recording_cancel => 'Cancel';
+  String get recording_cancel => '取消';
 
   @override
-  String get recording_recoverTitle => 'Recover interrupted recording?';
+  String get recording_recoverTitle => '恢复中断的录音？';
 
   @override
   String recording_recoverBody(int minutes) {
-    return 'We found about $minutes min of audio from an earlier session.';
+    return '我们发现了上次会话中约 $minutes 分钟的音频。';
   }
 
   @override
-  String get recording_recoverButton => 'Recover';
+  String get recording_recoverButton => '恢复';
 
   @override
-  String get recording_recoverDiscard => 'Discard';
+  String get recording_recoverDiscard => '放弃';
 
   @override
-  String get recording_recoverFailedLastSegment =>
-      'Some audio near the end could not be read and was skipped.';
+  String get recording_recoverFailedLastSegment => '末尾附近的部分音频无法读取并已跳过。';
 
   @override
-  String get recording_inProgressNotificationTitle => 'Recording in progress';
+  String get recording_inProgressNotificationTitle => '正在录音';
 
   @override
-  String get recording_inProgressNotificationBody => 'Tap to return to the app';
+  String get recording_inProgressNotificationBody => '点击返回应用';
 
   @override
-  String get profile_defaultMicrophone => 'Default microphone';
+  String get profile_defaultMicrophone => '默认麦克风';
 
   @override
-  String get profile_systemDefault => 'System default';
+  String get profile_systemDefault => '系统默认';
 
   @override
-  String get settings_deviceStorageTitle => 'Device storage';
+  String get settings_deviceStorageTitle => '设备存储';
 
   @override
   String settings_deviceStorageSubtitle(String used, String free) {
-    return 'Used $used · Free $free';
+    return '已用 $used · 可用 $free';
   }
 
   @override

@@ -1693,103 +1693,105 @@ class AppLocalizationsFr extends AppLocalizations {
   String get recording_unclassified => 'Non classifié';
 
   @override
-  String get recording_inputSource => 'Input';
+  String get recording_inputSource => 'Entrée';
 
   @override
-  String get recording_selectMicrophone => 'Select microphone';
+  String get recording_selectMicrophone => 'Sélectionner le microphone';
 
   @override
-  String get recording_builtInMicrophone => 'System default';
+  String get recording_builtInMicrophone => 'Par défaut du système';
 
   @override
   String get recording_micPermissionNeeded =>
-      'Allow microphone access to see device names';
+      'Autorisez l\'accès au microphone pour voir le nom des appareils';
 
   @override
-  String get recording_micPermissionButton => 'Grant permission';
+  String get recording_micPermissionButton => 'Accorder l\'autorisation';
 
   @override
   String get recording_micPermissionDenied =>
-      'Microphone permission denied. Enable it in your browser or system settings.';
+      'Autorisation du microphone refusée. Activez-la dans les paramètres du navigateur ou du système.';
 
   @override
-  String get recording_noDevicesFound => 'No microphones found';
+  String get recording_noDevicesFound => 'Aucun microphone trouvé';
 
   @override
-  String get recording_storageLowWarnTitle => 'Low storage';
+  String get recording_storageLowWarnTitle => 'Stockage faible';
 
   @override
   String recording_storageLowWarnBody(int minutes) {
-    return 'About $minutes min of recording available. Continue?';
+    return 'Environ $minutes min d\'enregistrement disponibles. Continuer ?';
   }
 
   @override
-  String get recording_storageRefuseTitle => 'Not enough storage';
+  String get recording_storageRefuseTitle => 'Stockage insuffisant';
 
   @override
   String get recording_storageRefuseBody =>
-      'Free up space on this device before recording.';
+      'Libérez de l\'espace sur cet appareil avant d\'enregistrer.';
 
   @override
   String recording_storageCriticalBanner(int minutes) {
-    return 'Storage critical — about $minutes min remaining. Consider stopping soon.';
+    return 'Stockage critique — environ $minutes min restantes. Pensez à arrêter bientôt.';
   }
 
   @override
   String get recording_storageForceStopped =>
-      'Recording stopped due to critically low storage. Your progress has been saved.';
+      'Enregistrement arrêté faute de stockage. Votre progression a été enregistrée.';
 
   @override
   String recording_savedAt(String time) {
-    return 'Saved at $time';
+    return 'Enregistré à $time';
   }
 
   @override
   String get recording_continuedInBackground =>
-      'Recording continued in background';
+      'L\'enregistrement a continué en arrière-plan';
 
   @override
-  String get recording_continue => 'Continue';
+  String get recording_continue => 'Continuer';
 
   @override
-  String get recording_cancel => 'Cancel';
+  String get recording_cancel => 'Annuler';
 
   @override
-  String get recording_recoverTitle => 'Recover interrupted recording?';
+  String get recording_recoverTitle =>
+      'Récupérer l\'enregistrement interrompu ?';
 
   @override
   String recording_recoverBody(int minutes) {
-    return 'We found about $minutes min of audio from an earlier session.';
+    return 'Nous avons trouvé environ $minutes min d\'audio d\'une session précédente.';
   }
 
   @override
-  String get recording_recoverButton => 'Recover';
+  String get recording_recoverButton => 'Récupérer';
 
   @override
-  String get recording_recoverDiscard => 'Discard';
+  String get recording_recoverDiscard => 'Ignorer';
 
   @override
   String get recording_recoverFailedLastSegment =>
-      'Some audio near the end could not be read and was skipped.';
+      'Une partie de l\'audio près de la fin n\'a pas pu être lue et a été ignorée.';
 
   @override
-  String get recording_inProgressNotificationTitle => 'Recording in progress';
+  String get recording_inProgressNotificationTitle => 'Enregistrement en cours';
 
   @override
-  String get recording_inProgressNotificationBody => 'Tap to return to the app';
+  String get recording_inProgressNotificationBody =>
+      'Touchez pour revenir à l\'application';
 
   @override
-  String get profile_defaultMicrophone => 'Default microphone';
+  String get profile_defaultMicrophone => 'Microphone par défaut';
 
   @override
-  String get profile_systemDefault => 'System default';
+  String get profile_systemDefault => 'Par défaut du système';
 
   @override
-  String get settings_deviceStorageTitle => 'Device storage';
+  String get settings_deviceStorageTitle => 'Stockage de l\'appareil';
 
   @override
   String settings_deviceStorageSubtitle(String used, String free) {
-    return 'Used $used · Free $free';
+    return 'Utilisé $used · Libre $free';
   }
 
   @override
