@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,6 +9,7 @@ import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/utils/format.dart';
 import '../../../../shared/widgets/record_button.dart';
+import '../../data/services/storage_guard.dart';
 import '../notifiers/recording_session_notifier.dart';
 import '../notifiers/recording_session_state.dart';
 import 'control_button.dart';
@@ -34,23 +37,112 @@ class RecordingStep extends ConsumerStatefulWidget {
   ConsumerState<RecordingStep> createState() => _RecordingStepState();
 }
 
-class _RecordingStepState extends ConsumerState<RecordingStep> {
+class _RecordingStepState extends ConsumerState<RecordingStep>
+    with WidgetsBindingObserver {
+  AppLifecycleState? _lastLifecycleState;
+  bool _showBackgroundResumeBanner = false;
+  Timer? _backgroundBannerTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    _backgroundBannerTimer?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final previous = _lastLifecycleState;
+    _lastLifecycleState = state;
+    final isRecording = ref.read(recordingSessionNotifierProvider).isRecording;
+    if (state == AppLifecycleState.resumed &&
+        previous == AppLifecycleState.paused &&
+        isRecording) {
+      if (!mounted) return;
+      setState(() => _showBackgroundResumeBanner = true);
+      _backgroundBannerTimer?.cancel();
+      _backgroundBannerTimer = Timer(const Duration(seconds: 3), () {
+        if (!mounted) return;
+        setState(() => _showBackgroundResumeBanner = false);
+      });
+    }
+  }
+
   Future<void> _handleStop(RecordingSessionNotifier notifier) async {
     HapticFeedback.heavyImpact();
     final result = await notifier.stopRecording();
+    if (!mounted) return;
     if (result != null) {
       widget.onRecordingComplete(result);
     }
   }
 
-  void _handleRecordTap(
+  Future<void> _handleRecordTap(
     RecordingSessionNotifier notifier,
     RecordingState recState,
-  ) {
-    if (!recState.isRecording && !recState.isPaused) {
-      HapticFeedback.mediumImpact();
-      notifier.startRecording(widget.genreId, widget.subcategoryId);
+  ) async {
+    if (recState.isRecording || recState.isPaused) return;
+
+    final check = await notifier.checkStorageBeforeStart();
+    if (!mounted) return;
+
+    if (check.severity == PreStartSeverity.refuse) {
+      await _showRefuseDialog();
+      return;
     }
+
+    if (check.severity == PreStartSeverity.warn) {
+      final proceed = await _showWarnDialog(check.estimatedSeconds);
+      if (!mounted || proceed != true) return;
+    }
+
+    HapticFeedback.mediumImpact();
+    await notifier.startRecording(widget.genreId, widget.subcategoryId);
+  }
+
+  Future<void> _showRefuseDialog() async {
+    final l10n = AppLocalizations.of(context);
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.recording_storageRefuseTitle),
+        content: Text(l10n.recording_storageRefuseBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(l10n.recording_cancel),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<bool?> _showWarnDialog(int estimatedSeconds) async {
+    final l10n = AppLocalizations.of(context);
+    final minutes = (estimatedSeconds / 60).floor();
+    return showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.recording_storageLowWarnTitle),
+        content: Text(l10n.recording_storageLowWarnBody(minutes)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.recording_cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(l10n.recording_continue),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -76,6 +168,16 @@ class _RecordingStepState extends ConsumerState<RecordingStep> {
         child: SafeArea(
           child: Column(
             children: [
+              if (isActive &&
+                  recState.storageBannerSeverity ==
+                      StorageBannerSeverity.critical)
+                _StorageBanner(
+                  message: l10n.recording_storageCriticalBanner(
+                    ((recState.lastCheckpointAt?.inSeconds ?? 0) / 60).floor(),
+                  ),
+                ),
+              if (isActive && _showBackgroundResumeBanner)
+                _InfoBanner(message: l10n.recording_continuedInBackground),
               Padding(
                 padding: const EdgeInsets.only(top: 24),
                 child: Text(
@@ -137,7 +239,7 @@ class _RecordingStepState extends ConsumerState<RecordingStep> {
               Expanded(
                 child: isReady
                     ? _buildReadyContent(colors, notifier, recState)
-                    : _buildRecordingContent(colors, recState),
+                    : _buildRecordingContent(colors, recState, l10n),
               ),
 
               if (isActive) _buildBottomControls(colors, notifier, recState),
@@ -274,15 +376,36 @@ class _RecordingStepState extends ConsumerState<RecordingStep> {
     );
   }
 
-  Widget _buildRecordingContent(AppColorSet colors, RecordingState recState) {
-    return Center(
-      child: ScrollingWaveform(
-        amplitudeStream: recState.amplitudeStream,
-        isPaused: recState.isPaused,
-        height: 200,
-        barColor: colors.foreground,
-        cursorColor: colors.accent,
-      ),
+  Widget _buildRecordingContent(
+    AppColorSet colors,
+    RecordingState recState,
+    AppLocalizations l10n,
+  ) {
+    final checkpoint = recState.lastCheckpointAt;
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        Center(
+          child: ScrollingWaveform(
+            amplitudeStream: recState.amplitudeStream,
+            isPaused: recState.isPaused,
+            height: 200,
+            barColor: colors.foreground,
+            cursorColor: colors.accent,
+          ),
+        ),
+        if (checkpoint != null)
+          Positioned(
+            bottom: 16,
+            child: AnimatedOpacity(
+              opacity: recState.showCheckpointToast ? 1.0 : 0.0,
+              duration: const Duration(milliseconds: 250),
+              child: _CheckpointChip(
+                label: l10n.recording_savedAt(formatElapsed(checkpoint)),
+              ),
+            ),
+          ),
+      ],
     );
   }
 
@@ -360,6 +483,102 @@ class _RecordingStepState extends ConsumerState<RecordingStep> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _StorageBanner extends StatelessWidget {
+  const _StorageBanner({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      color: const Color(0xFFFFEDCC),
+      child: Row(
+        children: [
+          const Icon(
+            LucideIcons.alertTriangle,
+            size: 16,
+            color: Color(0xFF8A5A00),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              message,
+              style: const TextStyle(
+                color: Color(0xFF8A5A00),
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InfoBanner extends StatelessWidget {
+  const _InfoBanner({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      color: colors.surfaceAlt,
+      child: Row(
+        children: [
+          Icon(LucideIcons.info, size: 16, color: colors.secondary),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              message,
+              style: TextStyle(color: colors.secondary, fontSize: 12),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CheckpointChip extends StatelessWidget {
+  const _CheckpointChip({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: colors.foreground.withValues(alpha: 0.92),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(LucideIcons.checkCircle2, size: 12, color: colors.background),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(
+              color: colors.background,
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
       ),
     );
   }

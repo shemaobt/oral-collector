@@ -500,7 +500,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get recording_unknownGenre => 'अज्ञात विधा';
 
   @override
-  String get recording_splitRecording => 'रिकॉर्डिंग विभाजित करें';
+  String get recording_splitRecording => 'रिकॉर्डिंग संपादित करें';
 
   @override
   String get recording_moveCategory => 'श्रेणी बदलें';
@@ -626,7 +626,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get recordings_clearFailed => 'रिकॉर्डिंग्स साफ़ करने में विफल';
 
   @override
-  String get trim_title => 'रिकॉर्डिंग विभाजित करें';
+  String get trim_title => 'रिकॉर्डिंग संपादित करें';
 
   @override
   String get trim_notFound => 'रिकॉर्डिंग नहीं मिली';
@@ -690,6 +690,35 @@ class AppLocalizationsHi extends AppLocalizations {
   String trim_splitInto(int count) {
     return '$count रिकॉर्डिंग्स में विभाजित करें';
   }
+
+  @override
+  String get trim_saveConfirmTitle => 'परिवर्तन सहेजें?';
+
+  @override
+  String trim_saveConfirmBody(int count) {
+    return 'यह मूल रिकॉर्डिंग को $count खंड से बदल देगा। इसे पूर्ववत नहीं किया जा सकता।';
+  }
+
+  @override
+  String get trim_inheritLabel => 'विरासत';
+
+  @override
+  String get trim_applyToAll => 'सभी पर लागू करें';
+
+  @override
+  String get trim_copyFromPrevious => 'पिछले से कॉपी करें';
+
+  @override
+  String get trim_classifySegment => 'खंड वर्गीकृत करें';
+
+  @override
+  String get trim_volume => 'आवाज़';
+
+  @override
+  String get trim_peakClip => 'क्लिपिंग';
+
+  @override
+  String get trim_boostOnSave => 'सहेजते समय बूस्ट लागू';
 
   @override
   String get import_title => 'ऑडियो आयात';
@@ -1557,7 +1586,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get action_actions => 'कार्रवाइयाँ';
 
   @override
-  String get action_split => 'विभाजित करें';
+  String get action_split => 'संपादित करें';
 
   @override
   String get action_flagClean => 'सफ़ाई चिह्नित करें';
@@ -1639,13 +1668,113 @@ class AppLocalizationsHi extends AppLocalizations {
   String get classify_success => 'रिकॉर्डिंग वर्गीकृत हो गई';
 
   @override
-  String get classify_register => 'रजिस्टर (वैकल्पिक)';
+  String get classify_register => 'रजिस्टर';
 
   @override
   String get classify_selectRegister => 'रजिस्टर चुनें';
 
   @override
   String get recording_unclassified => 'अवर्गीकृत';
+
+  @override
+  String get recording_inputSource => 'Input';
+
+  @override
+  String get recording_selectMicrophone => 'Select microphone';
+
+  @override
+  String get recording_builtInMicrophone => 'System default';
+
+  @override
+  String get recording_micPermissionNeeded =>
+      'Allow microphone access to see device names';
+
+  @override
+  String get recording_micPermissionButton => 'Grant permission';
+
+  @override
+  String get recording_micPermissionDenied =>
+      'Microphone permission denied. Enable it in your browser or system settings.';
+
+  @override
+  String get recording_noDevicesFound => 'No microphones found';
+
+  @override
+  String get recording_storageLowWarnTitle => 'Low storage';
+
+  @override
+  String recording_storageLowWarnBody(int minutes) {
+    return 'About $minutes min of recording available. Continue?';
+  }
+
+  @override
+  String get recording_storageRefuseTitle => 'Not enough storage';
+
+  @override
+  String get recording_storageRefuseBody =>
+      'Free up space on this device before recording.';
+
+  @override
+  String recording_storageCriticalBanner(int minutes) {
+    return 'Storage critical — about $minutes min remaining. Consider stopping soon.';
+  }
+
+  @override
+  String get recording_storageForceStopped =>
+      'Recording stopped due to critically low storage. Your progress has been saved.';
+
+  @override
+  String recording_savedAt(String time) {
+    return 'Saved at $time';
+  }
+
+  @override
+  String get recording_continuedInBackground =>
+      'Recording continued in background';
+
+  @override
+  String get recording_continue => 'Continue';
+
+  @override
+  String get recording_cancel => 'Cancel';
+
+  @override
+  String get recording_recoverTitle => 'Recover interrupted recording?';
+
+  @override
+  String recording_recoverBody(int minutes) {
+    return 'We found about $minutes min of audio from an earlier session.';
+  }
+
+  @override
+  String get recording_recoverButton => 'Recover';
+
+  @override
+  String get recording_recoverDiscard => 'Discard';
+
+  @override
+  String get recording_recoverFailedLastSegment =>
+      'Some audio near the end could not be read and was skipped.';
+
+  @override
+  String get recording_inProgressNotificationTitle => 'Recording in progress';
+
+  @override
+  String get recording_inProgressNotificationBody => 'Tap to return to the app';
+
+  @override
+  String get profile_defaultMicrophone => 'Default microphone';
+
+  @override
+  String get profile_systemDefault => 'System default';
+
+  @override
+  String get settings_deviceStorageTitle => 'Device storage';
+
+  @override
+  String settings_deviceStorageSubtitle(String used, String free) {
+    return 'Used $used · Free $free';
+  }
 
   @override
   String get fab_quickRecord => 'त्वरित';

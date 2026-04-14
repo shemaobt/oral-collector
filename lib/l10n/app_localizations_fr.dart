@@ -507,7 +507,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get recording_unknownGenre => 'Genre inconnu';
 
   @override
-  String get recording_splitRecording => 'Diviser l\'Enregistrement';
+  String get recording_splitRecording => 'Modifier l\'Enregistrement';
 
   @override
   String get recording_moveCategory => 'Déplacer la Catégorie';
@@ -634,7 +634,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Échec de la suppression des enregistrements';
 
   @override
-  String get trim_title => 'Diviser l\'Enregistrement';
+  String get trim_title => 'Modifier l\'Enregistrement';
 
   @override
   String get trim_notFound => 'Enregistrement introuvable';
@@ -692,6 +692,35 @@ class AppLocalizationsFr extends AppLocalizations {
   String trim_splitInto(int count) {
     return 'Diviser en $count enregistrements';
   }
+
+  @override
+  String get trim_saveConfirmTitle => 'Enregistrer les modifications ?';
+
+  @override
+  String trim_saveConfirmBody(int count) {
+    return 'Ceci remplace l\'enregistrement original par $count segment(s). Cette action est irréversible.';
+  }
+
+  @override
+  String get trim_inheritLabel => 'Hériter';
+
+  @override
+  String get trim_applyToAll => 'Appliquer à tous';
+
+  @override
+  String get trim_copyFromPrevious => 'Copier du précédent';
+
+  @override
+  String get trim_classifySegment => 'Classer le segment';
+
+  @override
+  String get trim_volume => 'Volume';
+
+  @override
+  String get trim_peakClip => 'Saturation';
+
+  @override
+  String get trim_boostOnSave => 'Gain appliqué à l\'enregistrement';
 
   @override
   String get import_title => 'Importer l\'Audio';
@@ -1573,7 +1602,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get action_actions => 'Actions';
 
   @override
-  String get action_split => 'Diviser';
+  String get action_split => 'Modifier';
 
   @override
   String get action_flagClean => 'Signaler Nettoyage';
@@ -1655,13 +1684,113 @@ class AppLocalizationsFr extends AppLocalizations {
   String get classify_success => 'Enregistrement classé';
 
   @override
-  String get classify_register => 'Registre (facultatif)';
+  String get classify_register => 'Registre';
 
   @override
   String get classify_selectRegister => 'Sélectionner le registre';
 
   @override
   String get recording_unclassified => 'Non classifié';
+
+  @override
+  String get recording_inputSource => 'Input';
+
+  @override
+  String get recording_selectMicrophone => 'Select microphone';
+
+  @override
+  String get recording_builtInMicrophone => 'System default';
+
+  @override
+  String get recording_micPermissionNeeded =>
+      'Allow microphone access to see device names';
+
+  @override
+  String get recording_micPermissionButton => 'Grant permission';
+
+  @override
+  String get recording_micPermissionDenied =>
+      'Microphone permission denied. Enable it in your browser or system settings.';
+
+  @override
+  String get recording_noDevicesFound => 'No microphones found';
+
+  @override
+  String get recording_storageLowWarnTitle => 'Low storage';
+
+  @override
+  String recording_storageLowWarnBody(int minutes) {
+    return 'About $minutes min of recording available. Continue?';
+  }
+
+  @override
+  String get recording_storageRefuseTitle => 'Not enough storage';
+
+  @override
+  String get recording_storageRefuseBody =>
+      'Free up space on this device before recording.';
+
+  @override
+  String recording_storageCriticalBanner(int minutes) {
+    return 'Storage critical — about $minutes min remaining. Consider stopping soon.';
+  }
+
+  @override
+  String get recording_storageForceStopped =>
+      'Recording stopped due to critically low storage. Your progress has been saved.';
+
+  @override
+  String recording_savedAt(String time) {
+    return 'Saved at $time';
+  }
+
+  @override
+  String get recording_continuedInBackground =>
+      'Recording continued in background';
+
+  @override
+  String get recording_continue => 'Continue';
+
+  @override
+  String get recording_cancel => 'Cancel';
+
+  @override
+  String get recording_recoverTitle => 'Recover interrupted recording?';
+
+  @override
+  String recording_recoverBody(int minutes) {
+    return 'We found about $minutes min of audio from an earlier session.';
+  }
+
+  @override
+  String get recording_recoverButton => 'Recover';
+
+  @override
+  String get recording_recoverDiscard => 'Discard';
+
+  @override
+  String get recording_recoverFailedLastSegment =>
+      'Some audio near the end could not be read and was skipped.';
+
+  @override
+  String get recording_inProgressNotificationTitle => 'Recording in progress';
+
+  @override
+  String get recording_inProgressNotificationBody => 'Tap to return to the app';
+
+  @override
+  String get profile_defaultMicrophone => 'Default microphone';
+
+  @override
+  String get profile_systemDefault => 'System default';
+
+  @override
+  String get settings_deviceStorageTitle => 'Device storage';
+
+  @override
+  String settings_deviceStorageSubtitle(String used, String free) {
+    return 'Used $used · Free $free';
+  }
 
   @override
   String get fab_quickRecord => 'Rapide';

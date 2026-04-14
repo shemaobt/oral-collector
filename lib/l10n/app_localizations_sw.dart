@@ -499,7 +499,7 @@ class AppLocalizationsSw extends AppLocalizations {
   String get recording_unknownGenre => 'Aina isiyojulikana';
 
   @override
-  String get recording_splitRecording => 'Gawa Rekodi';
+  String get recording_splitRecording => 'Hariri Rekodi';
 
   @override
   String get recording_moveCategory => 'Hamisha Kategoria';
@@ -623,7 +623,7 @@ class AppLocalizationsSw extends AppLocalizations {
   String get recordings_clearFailed => 'Imeshindwa kufuta rekodi';
 
   @override
-  String get trim_title => 'Gawa Rekodi';
+  String get trim_title => 'Hariri Rekodi';
 
   @override
   String get trim_notFound => 'Rekodi haikupatikana';
@@ -675,6 +675,35 @@ class AppLocalizationsSw extends AppLocalizations {
   String trim_splitInto(int count) {
     return 'Gawa kuwa rekodi $count';
   }
+
+  @override
+  String get trim_saveConfirmTitle => 'Hifadhi mabadiliko?';
+
+  @override
+  String trim_saveConfirmBody(int count) {
+    return 'Hii itabadilisha rekodi ya awali na sehemu $count. Kitendo hiki hakiwezi kubatilishwa.';
+  }
+
+  @override
+  String get trim_inheritLabel => 'Rithi';
+
+  @override
+  String get trim_applyToAll => 'Tumia kwa yote';
+
+  @override
+  String get trim_copyFromPrevious => 'Nakili kutoka iliyotangulia';
+
+  @override
+  String get trim_classifySegment => 'Ainisha sehemu';
+
+  @override
+  String get trim_volume => 'Sauti';
+
+  @override
+  String get trim_peakClip => 'Kukata';
+
+  @override
+  String get trim_boostOnSave => 'Nguvu itawekwa wakati wa kuhifadhi';
 
   @override
   String get import_title => 'Ingiza Sauti';
@@ -1543,7 +1572,7 @@ class AppLocalizationsSw extends AppLocalizations {
   String get action_actions => 'Vitendo';
 
   @override
-  String get action_split => 'Gawa';
+  String get action_split => 'Hariri';
 
   @override
   String get action_flagClean => 'Weka Alama Usafishaji';
@@ -1625,13 +1654,113 @@ class AppLocalizationsSw extends AppLocalizations {
   String get classify_success => 'Rekodi imeainishwa';
 
   @override
-  String get classify_register => 'Rejista (si lazima)';
+  String get classify_register => 'Rejista';
 
   @override
   String get classify_selectRegister => 'Chagua rejista';
 
   @override
   String get recording_unclassified => 'Haijainishwa';
+
+  @override
+  String get recording_inputSource => 'Input';
+
+  @override
+  String get recording_selectMicrophone => 'Select microphone';
+
+  @override
+  String get recording_builtInMicrophone => 'System default';
+
+  @override
+  String get recording_micPermissionNeeded =>
+      'Allow microphone access to see device names';
+
+  @override
+  String get recording_micPermissionButton => 'Grant permission';
+
+  @override
+  String get recording_micPermissionDenied =>
+      'Microphone permission denied. Enable it in your browser or system settings.';
+
+  @override
+  String get recording_noDevicesFound => 'No microphones found';
+
+  @override
+  String get recording_storageLowWarnTitle => 'Low storage';
+
+  @override
+  String recording_storageLowWarnBody(int minutes) {
+    return 'About $minutes min of recording available. Continue?';
+  }
+
+  @override
+  String get recording_storageRefuseTitle => 'Not enough storage';
+
+  @override
+  String get recording_storageRefuseBody =>
+      'Free up space on this device before recording.';
+
+  @override
+  String recording_storageCriticalBanner(int minutes) {
+    return 'Storage critical — about $minutes min remaining. Consider stopping soon.';
+  }
+
+  @override
+  String get recording_storageForceStopped =>
+      'Recording stopped due to critically low storage. Your progress has been saved.';
+
+  @override
+  String recording_savedAt(String time) {
+    return 'Saved at $time';
+  }
+
+  @override
+  String get recording_continuedInBackground =>
+      'Recording continued in background';
+
+  @override
+  String get recording_continue => 'Continue';
+
+  @override
+  String get recording_cancel => 'Cancel';
+
+  @override
+  String get recording_recoverTitle => 'Recover interrupted recording?';
+
+  @override
+  String recording_recoverBody(int minutes) {
+    return 'We found about $minutes min of audio from an earlier session.';
+  }
+
+  @override
+  String get recording_recoverButton => 'Recover';
+
+  @override
+  String get recording_recoverDiscard => 'Discard';
+
+  @override
+  String get recording_recoverFailedLastSegment =>
+      'Some audio near the end could not be read and was skipped.';
+
+  @override
+  String get recording_inProgressNotificationTitle => 'Recording in progress';
+
+  @override
+  String get recording_inProgressNotificationBody => 'Tap to return to the app';
+
+  @override
+  String get profile_defaultMicrophone => 'Default microphone';
+
+  @override
+  String get profile_systemDefault => 'System default';
+
+  @override
+  String get settings_deviceStorageTitle => 'Device storage';
+
+  @override
+  String settings_deviceStorageSubtitle(String used, String free) {
+    return 'Used $used · Free $free';
+  }
 
   @override
   String get fab_quickRecord => 'Haraka';

@@ -1061,7 +1061,7 @@ abstract class AppLocalizations {
   /// No description provided for @recording_splitRecording.
   ///
   /// In en, this message translates to:
-  /// **'Split Recording'**
+  /// **'Edit Recording'**
   String get recording_splitRecording;
 
   /// No description provided for @recording_moveCategory.
@@ -1253,7 +1253,7 @@ abstract class AppLocalizations {
   /// No description provided for @trim_title.
   ///
   /// In en, this message translates to:
-  /// **'Split Recording'**
+  /// **'Edit Recording'**
   String get trim_title;
 
   /// No description provided for @trim_notFound.
@@ -1327,6 +1327,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Split into {count} recordings'**
   String trim_splitInto(int count);
+
+  /// No description provided for @trim_saveConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Save changes?'**
+  String get trim_saveConfirmTitle;
+
+  /// No description provided for @trim_saveConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This replaces the original recording with {count} segment(s). This can\'t be undone.'**
+  String trim_saveConfirmBody(int count);
+
+  /// No description provided for @trim_inheritLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Inherit'**
+  String get trim_inheritLabel;
+
+  /// No description provided for @trim_applyToAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply to all'**
+  String get trim_applyToAll;
+
+  /// No description provided for @trim_copyFromPrevious.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy from previous'**
+  String get trim_copyFromPrevious;
+
+  /// No description provided for @trim_classifySegment.
+  ///
+  /// In en, this message translates to:
+  /// **'Classify segment'**
+  String get trim_classifySegment;
+
+  /// No description provided for @trim_volume.
+  ///
+  /// In en, this message translates to:
+  /// **'Volume'**
+  String get trim_volume;
+
+  /// No description provided for @trim_peakClip.
+  ///
+  /// In en, this message translates to:
+  /// **'Clipping'**
+  String get trim_peakClip;
+
+  /// No description provided for @trim_boostOnSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Boost applied on save'**
+  String get trim_boostOnSave;
 
   /// No description provided for @import_title.
   ///
@@ -2909,7 +2963,7 @@ abstract class AppLocalizations {
   /// No description provided for @action_split.
   ///
   /// In en, this message translates to:
-  /// **'Split'**
+  /// **'Edit'**
   String get action_split;
 
   /// No description provided for @action_flagClean.
@@ -3071,7 +3125,7 @@ abstract class AppLocalizations {
   /// No description provided for @classify_register.
   ///
   /// In en, this message translates to:
-  /// **'Register (optional)'**
+  /// **'Register'**
   String get classify_register;
 
   /// No description provided for @classify_selectRegister.
@@ -3085,6 +3139,174 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unclassified'**
   String get recording_unclassified;
+
+  /// No description provided for @recording_inputSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Input'**
+  String get recording_inputSource;
+
+  /// No description provided for @recording_selectMicrophone.
+  ///
+  /// In en, this message translates to:
+  /// **'Select microphone'**
+  String get recording_selectMicrophone;
+
+  /// No description provided for @recording_builtInMicrophone.
+  ///
+  /// In en, this message translates to:
+  /// **'System default'**
+  String get recording_builtInMicrophone;
+
+  /// No description provided for @recording_micPermissionNeeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow microphone access to see device names'**
+  String get recording_micPermissionNeeded;
+
+  /// No description provided for @recording_micPermissionButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Grant permission'**
+  String get recording_micPermissionButton;
+
+  /// No description provided for @recording_micPermissionDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone permission denied. Enable it in your browser or system settings.'**
+  String get recording_micPermissionDenied;
+
+  /// No description provided for @recording_noDevicesFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No microphones found'**
+  String get recording_noDevicesFound;
+
+  /// No description provided for @recording_storageLowWarnTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Low storage'**
+  String get recording_storageLowWarnTitle;
+
+  /// No description provided for @recording_storageLowWarnBody.
+  ///
+  /// In en, this message translates to:
+  /// **'About {minutes} min of recording available. Continue?'**
+  String recording_storageLowWarnBody(int minutes);
+
+  /// No description provided for @recording_storageRefuseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough storage'**
+  String get recording_storageRefuseTitle;
+
+  /// No description provided for @recording_storageRefuseBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Free up space on this device before recording.'**
+  String get recording_storageRefuseBody;
+
+  /// No description provided for @recording_storageCriticalBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage critical — about {minutes} min remaining. Consider stopping soon.'**
+  String recording_storageCriticalBanner(int minutes);
+
+  /// No description provided for @recording_storageForceStopped.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording stopped due to critically low storage. Your progress has been saved.'**
+  String get recording_storageForceStopped;
+
+  /// No description provided for @recording_savedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved at {time}'**
+  String recording_savedAt(String time);
+
+  /// No description provided for @recording_continuedInBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording continued in background'**
+  String get recording_continuedInBackground;
+
+  /// No description provided for @recording_continue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get recording_continue;
+
+  /// No description provided for @recording_cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get recording_cancel;
+
+  /// No description provided for @recording_recoverTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recover interrupted recording?'**
+  String get recording_recoverTitle;
+
+  /// No description provided for @recording_recoverBody.
+  ///
+  /// In en, this message translates to:
+  /// **'We found about {minutes} min of audio from an earlier session.'**
+  String recording_recoverBody(int minutes);
+
+  /// No description provided for @recording_recoverButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Recover'**
+  String get recording_recoverButton;
+
+  /// No description provided for @recording_recoverDiscard.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get recording_recoverDiscard;
+
+  /// No description provided for @recording_recoverFailedLastSegment.
+  ///
+  /// In en, this message translates to:
+  /// **'Some audio near the end could not be read and was skipped.'**
+  String get recording_recoverFailedLastSegment;
+
+  /// No description provided for @recording_inProgressNotificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording in progress'**
+  String get recording_inProgressNotificationTitle;
+
+  /// No description provided for @recording_inProgressNotificationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to return to the app'**
+  String get recording_inProgressNotificationBody;
+
+  /// No description provided for @profile_defaultMicrophone.
+  ///
+  /// In en, this message translates to:
+  /// **'Default microphone'**
+  String get profile_defaultMicrophone;
+
+  /// No description provided for @profile_systemDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'System default'**
+  String get profile_systemDefault;
+
+  /// No description provided for @settings_deviceStorageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Device storage'**
+  String get settings_deviceStorageTitle;
+
+  /// No description provided for @settings_deviceStorageSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Used {used} · Free {free}'**
+  String settings_deviceStorageSubtitle(String used, String free);
 
   /// No description provided for @fab_quickRecord.
   ///

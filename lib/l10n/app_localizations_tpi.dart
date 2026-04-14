@@ -497,7 +497,7 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get recording_unknownGenre => 'Kain i no save';
 
   @override
-  String get recording_splitRecording => 'Brukim Rekoding';
+  String get recording_splitRecording => 'Stretim Rekoding';
 
   @override
   String get recording_moveCategory => 'Muvim Kategori';
@@ -622,7 +622,7 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get recordings_clearFailed => 'No inap klinim ol rekoding';
 
   @override
-  String get trim_title => 'Brukim Rekoding';
+  String get trim_title => 'Stretim Rekoding';
 
   @override
   String get trim_notFound => 'Rekoding i no stap';
@@ -674,6 +674,35 @@ class AppLocalizationsTpi extends AppLocalizations {
   String trim_splitInto(int count) {
     return 'Brukim i go long $count rekoding';
   }
+
+  @override
+  String get trim_saveConfirmTitle => 'Sevim senis?';
+
+  @override
+  String trim_saveConfirmBody(int count) {
+    return 'Dispela bai senisim orijinel rekoding wantaim $count hap. Yu no inap tanim bek.';
+  }
+
+  @override
+  String get trim_inheritLabel => 'Kisim bek';
+
+  @override
+  String get trim_applyToAll => 'Putim long olgeta';
+
+  @override
+  String get trim_copyFromPrevious => 'Kopim long paslain';
+
+  @override
+  String get trim_classifySegment => 'Klasifaiim segment';
+
+  @override
+  String get trim_volume => 'Volium';
+
+  @override
+  String get trim_peakClip => 'Klip';
+
+  @override
+  String get trim_boostOnSave => 'Strongim bai kam long sevim';
 
   @override
   String get import_title => 'Importim Audio';
@@ -1540,7 +1569,7 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get action_actions => 'Ol Aksen';
 
   @override
-  String get action_split => 'Brukim';
+  String get action_split => 'Stretim';
 
   @override
   String get action_flagClean => 'Makim Klinim';
@@ -1622,13 +1651,113 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get classify_success => 'Rekoding i gat kain pinis';
 
   @override
-  String get classify_register => 'Rejista (sapos yu laik)';
+  String get classify_register => 'Rejista';
 
   @override
   String get classify_selectRegister => 'Makim rejista';
 
   @override
   String get recording_unclassified => 'I no makim kain yet';
+
+  @override
+  String get recording_inputSource => 'Input';
+
+  @override
+  String get recording_selectMicrophone => 'Select microphone';
+
+  @override
+  String get recording_builtInMicrophone => 'System default';
+
+  @override
+  String get recording_micPermissionNeeded =>
+      'Allow microphone access to see device names';
+
+  @override
+  String get recording_micPermissionButton => 'Grant permission';
+
+  @override
+  String get recording_micPermissionDenied =>
+      'Microphone permission denied. Enable it in your browser or system settings.';
+
+  @override
+  String get recording_noDevicesFound => 'No microphones found';
+
+  @override
+  String get recording_storageLowWarnTitle => 'Low storage';
+
+  @override
+  String recording_storageLowWarnBody(int minutes) {
+    return 'About $minutes min of recording available. Continue?';
+  }
+
+  @override
+  String get recording_storageRefuseTitle => 'Not enough storage';
+
+  @override
+  String get recording_storageRefuseBody =>
+      'Free up space on this device before recording.';
+
+  @override
+  String recording_storageCriticalBanner(int minutes) {
+    return 'Storage critical — about $minutes min remaining. Consider stopping soon.';
+  }
+
+  @override
+  String get recording_storageForceStopped =>
+      'Recording stopped due to critically low storage. Your progress has been saved.';
+
+  @override
+  String recording_savedAt(String time) {
+    return 'Saved at $time';
+  }
+
+  @override
+  String get recording_continuedInBackground =>
+      'Recording continued in background';
+
+  @override
+  String get recording_continue => 'Continue';
+
+  @override
+  String get recording_cancel => 'Cancel';
+
+  @override
+  String get recording_recoverTitle => 'Recover interrupted recording?';
+
+  @override
+  String recording_recoverBody(int minutes) {
+    return 'We found about $minutes min of audio from an earlier session.';
+  }
+
+  @override
+  String get recording_recoverButton => 'Recover';
+
+  @override
+  String get recording_recoverDiscard => 'Discard';
+
+  @override
+  String get recording_recoverFailedLastSegment =>
+      'Some audio near the end could not be read and was skipped.';
+
+  @override
+  String get recording_inProgressNotificationTitle => 'Recording in progress';
+
+  @override
+  String get recording_inProgressNotificationBody => 'Tap to return to the app';
+
+  @override
+  String get profile_defaultMicrophone => 'Default microphone';
+
+  @override
+  String get profile_systemDefault => 'System default';
+
+  @override
+  String get settings_deviceStorageTitle => 'Device storage';
+
+  @override
+  String settings_deviceStorageSubtitle(String used, String free) {
+    return 'Used $used · Free $free';
+  }
 
   @override
   String get fab_quickRecord => 'Hariap';
