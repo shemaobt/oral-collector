@@ -25,6 +25,7 @@ import 'notifiers/profile_notifier.dart';
 import 'widgets/invitations_section.dart';
 import 'widgets/profile_header.dart';
 import 'widgets/quick_stats_row.dart';
+import 'widgets/recording_settings_card.dart';
 import 'widgets/sync_settings_card.dart';
 
 @Preview(name: 'Profile Screen', wrapper: previewWrapper)
@@ -141,23 +142,31 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         final accepted = await ref
             .read(inviteNotifierProvider.notifier)
             .acceptInvite(invite.id);
-        if (accepted && context.mounted) {
+        if (!context.mounted) return;
+        if (accepted) {
           ref.read(projectNotifierProvider.notifier).fetchProjects();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(l10n.profile_joinedSuccess(invite.projectName)),
             ),
           );
+        } else {
+          final err = ref.read(inviteNotifierProvider).error;
+          showErrorSnackBar(context, err ?? 'Failed to accept invite');
         }
       },
       onDecline: (invite) async {
         final declined = await ref
             .read(inviteNotifierProvider.notifier)
             .declineInvite(invite.id);
-        if (declined && context.mounted) {
+        if (!context.mounted) return;
+        if (declined) {
           ScaffoldMessenger.of(
             context,
           ).showSnackBar(SnackBar(content: Text(l10n.profile_inviteDeclined)));
+        } else {
+          final err = ref.read(inviteNotifierProvider).error;
+          showErrorSnackBar(context, err ?? 'Failed to decline invite');
         }
       },
       onRefresh: () {
@@ -198,6 +207,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             },
           ),
         ),
+      ],
+    );
+
+    final recordingSettingsSection = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SectionHeader(title: l10n.recording_recordingStep),
+        const SizedBox(height: 8),
+        RecordingSettingsCard(theme: theme, colors: colors),
       ],
     );
 
@@ -410,6 +428,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           Expanded(
                             child: Column(
                               children: [
+                                recordingSettingsSection,
+                                const SizedBox(height: 24),
                                 syncSection,
                                 const SizedBox(height: 24),
                                 if (adminSection != null) ...[
@@ -432,6 +452,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         ],
                       ),
                     ] else ...[
+                      recordingSettingsSection,
+                      const SizedBox(height: 24),
                       syncSection,
                       const SizedBox(height: 24),
                       aboutSection,

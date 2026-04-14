@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
@@ -15,6 +13,9 @@ import 'core/platform/file_ops.dart' as platform;
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/auth/auth_notifier.dart';
+import 'features/recording/data/services/recording_notification.dart';
+import 'features/recording/data/services/recording_trash.dart';
+import 'features/recording/data/services/recovery_coordinator.dart';
 import 'features/sync/data/providers.dart';
 import 'features/sync/data/services/background_sync_service.dart';
 import 'features/sync/presentation/notifiers/sync_notifier.dart';
@@ -25,37 +26,43 @@ import 'l10n/app_localizations.dart';
 @Preview(name: 'Oral Collector App', wrapper: previewWrapper)
 Widget oralCollectorPreview() => const OralCollectorApp();
 
-void main() {
-  runZonedGuarded(
-    () async {
-      WidgetsFlutterBinding.ensureInitialized();
-      usePathUrlStrategy();
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  usePathUrlStrategy();
 
-      FlutterError.onError = (details) {
-        FlutterError.presentError(details);
-        debugPrint('FlutterError: ${details.exception}');
-      };
+  FlutterError.onError = (details) {
+    FlutterError.presentError(details);
+    debugPrint('FlutterError: ${details.exception}');
+  };
 
-      try {
-        await dotenv.load(fileName: '.env');
-      } on Exception {
-        // noop
-      }
+  PlatformDispatcher.instance.onError = (error, stack) {
+    debugPrint('Uncaught error: $error\n$stack');
+    return true;
+  };
 
-      if (!kIsWeb && platform.isAndroidPlatform) {
-        try {
-          await Workmanager().initialize(callbackDispatcher);
-        } on Exception {
-          // noop
-        }
-      }
+  try {
+    await dotenv.load(fileName: '.env');
+  } on Exception {
+    // noop
+  }
 
-      runApp(const ProviderScope(child: OralCollectorApp()));
-    },
-    (error, stack) {
-      debugPrint('Uncaught error: $error\n$stack');
-    },
-  );
+  if (!kIsWeb && platform.isAndroidPlatform) {
+    try {
+      await Workmanager().initialize(callbackDispatcher);
+    } on Exception {
+      // noop
+    }
+  }
+
+  if (!kIsWeb) {
+    try {
+      await RecordingNotification.instance.init();
+    } on Exception {
+      // noop
+    }
+  }
+
+  runApp(const ProviderScope(child: OralCollectorApp()));
 }
 
 class OralCollectorApp extends ConsumerStatefulWidget {
@@ -72,10 +79,15 @@ class _OralCollectorAppState extends ConsumerState<OralCollectorApp> {
 
     ref.read(appDatabaseProvider);
 
-    Future.microtask(() {
+    Future.microtask(() async {
       ref.read(authNotifierProvider.notifier).tryAutoLogin();
 
       _initBackgroundSync();
+
+      if (!kIsWeb) {
+        RecordingTrash.pruneOldTrash(maxAgeHours: 24);
+        await ref.read(recoveryCoordinatorProvider).scanOnStartup();
+      }
     });
   }
 
@@ -100,6 +112,7 @@ class _OralCollectorAppState extends ConsumerState<OralCollectorApp> {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system,
+      themeAnimationDuration: Duration.zero,
       locale: locale,
       supportedLocales: supportedLocales,
       localizationsDelegates: const [

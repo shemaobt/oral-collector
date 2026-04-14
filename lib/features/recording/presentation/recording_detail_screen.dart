@@ -18,7 +18,10 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/auth/auth_notifier.dart';
 import '../../auth/data/providers/role_provider.dart';
 import '../../genre/presentation/notifiers/genre_notifier.dart';
+import '../../project/presentation/notifiers/member_notifier.dart';
 import '../../project/presentation/notifiers/stats_notifier.dart';
+import '../../storyteller/data/providers.dart' as storyteller_providers;
+import '../../storyteller/domain/entities/storyteller.dart';
 import '../../sync/presentation/notifiers/sync_notifier.dart';
 import '../../../shared/utils/format.dart';
 import '../data/providers.dart';
@@ -31,7 +34,8 @@ import 'widgets/recording_hero_player.dart';
 import 'widgets/recording_info_grid.dart';
 import 'widgets/recording_quick_actions.dart';
 import 'widgets/recording_status_section.dart';
-import 'widgets/recording_title_section.dart';
+import 'widgets/recording_description_section.dart';
+import 'widgets/recording_storyteller_section.dart';
 
 class RecordingDetailScreen extends ConsumerStatefulWidget {
   const RecordingDetailScreen({super.key, required this.recordingId});
@@ -46,8 +50,9 @@ class RecordingDetailScreen extends ConsumerStatefulWidget {
 class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
   LocalRecording? _recording;
   bool _isLoading = true;
-  bool _isEditingTitle = false;
-  late TextEditingController _titleController;
+  bool _isEditingDescription = false;
+  Storyteller? _resolvedStoryteller;
+  late TextEditingController _descriptionController;
 
   bool get _canEditRecording {
     final user = ref.read(authNotifierProvider).currentUser;
@@ -65,13 +70,13 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
   @override
   void initState() {
     super.initState();
-    _titleController = TextEditingController();
+    _descriptionController = TextEditingController();
     Future.microtask(_loadRecording);
   }
 
   @override
   void dispose() {
-    _titleController.dispose();
+    _descriptionController.dispose();
     super.dispose();
   }
 
@@ -129,7 +134,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
       if (mounted) {
         setState(() {
           _recording = recording;
-          _titleController.text = recording?.title ?? '';
+          _descriptionController.text = recording?.description ?? '';
           _isLoading = false;
         });
         if (isOnline && recording != null) {
@@ -138,10 +143,72 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
               .fetchRoleForProject(recording.projectId);
           if (mounted) setState(() {});
         }
+        if (recording != null) {
+          await _resolveStoryteller(recording);
+          await _ensureMembersLoaded(recording.projectId);
+        }
       }
     } catch (_) {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  Future<void> _resolveStoryteller(LocalRecording recording) async {
+    final id = recording.storytellerId;
+    if (id == null || id.isEmpty) {
+      if (mounted) setState(() => _resolvedStoryteller = null);
+      return;
+    }
+    final localRepo = ref.read(
+      storyteller_providers.localStorytellerRepositoryProvider,
+    );
+    final cached = await localRepo.getById(id);
+    if (mounted && cached != null) {
+      setState(() => _resolvedStoryteller = cached);
+    }
+    if (!ref.read(syncNotifierProvider).isOnline) return;
+    try {
+      final apiRepo = ref.read(
+        storyteller_providers.storytellerApiRepositoryProvider,
+      );
+      final remote = await apiRepo.get(id);
+      if (mounted) setState(() => _resolvedStoryteller = remote);
+    } catch (_) {
+      if (mounted && cached == null) {
+        setState(() => _resolvedStoryteller = null);
+      }
+    }
+  }
+
+  Future<void> _ensureMembersLoaded(String projectId) async {
+    if (ref.read(memberNotifierProvider).members.isEmpty &&
+        ref.read(syncNotifierProvider).isOnline) {
+      await ref.read(memberNotifierProvider.notifier).fetchMembers(projectId);
+      if (mounted) setState(() {});
+    }
+  }
+
+  Future<void> _onStorytellerChanged(Storyteller? storyteller) async {
+    final recording = _recording;
+    if (recording == null) return;
+    final serverId = recording.serverId ?? recording.id;
+    try {
+      await ref
+          .read(recordingApiRepositoryProvider)
+          .updateRecording(serverId, storytellerId: storyteller?.id ?? '');
+    } on Exception catch (_) {}
+    if (!kIsWeb) {
+      final repo = ref.read(localRecordingRepositoryProvider);
+      await repo.updateRecording(
+        recording.id,
+        LocalRecordingsCompanion(
+          storytellerId: storyteller == null
+              ? const Value(null)
+              : Value(storyteller.id),
+        ),
+      );
+    }
+    await _loadRecording();
   }
 
   static LocalRecording _serverToLocal(ServerRecording server) {
@@ -151,6 +218,8 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
       genreId: server.genreId,
       subcategoryId: server.subcategoryId,
       registerId: server.registerId,
+      storytellerId: server.storytellerId,
+      userId: server.userId,
       title: server.title,
       durationSeconds: server.durationSeconds,
       fileSizeBytes: server.fileSizeBytes,
@@ -167,10 +236,10 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     );
   }
 
-  Future<void> _saveTitle(String newTitle) async {
-    final trimmed = newTitle.trim();
-    if (trimmed.isEmpty || trimmed == _recording?.title) {
-      setState(() => _isEditingTitle = false);
+  Future<void> _saveDescription(String newDescription) async {
+    final trimmed = newDescription.trim();
+    if (trimmed == (_recording?.description ?? '')) {
+      setState(() => _isEditingDescription = false);
       return;
     }
 
@@ -178,16 +247,16 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
       final serverId = _recording?.serverId ?? widget.recordingId;
       await ref
           .read(recordingApiRepositoryProvider)
-          .updateRecording(serverId, title: trimmed);
+          .updateRecording(serverId, description: trimmed);
     } else {
       final repo = ref.read(localRecordingRepositoryProvider);
       await repo.updateRecording(
         widget.recordingId,
-        LocalRecordingsCompanion(title: Value(trimmed)),
+        LocalRecordingsCompanion(description: Value(trimmed)),
       );
     }
     await _loadRecording();
-    setState(() => _isEditingTitle = false);
+    setState(() => _isEditingDescription = false);
   }
 
   Future<void> _toggleCleaningStatus() async {
@@ -317,7 +386,11 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     }
 
     if (mounted) {
-      context.pop();
+      if (context.canPop()) {
+        context.pop();
+      } else {
+        context.go('/recordings');
+      }
     }
   }
 
@@ -451,7 +524,13 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
       '/recording/${widget.recordingId}/trim',
     );
     if (result == true) {
-      if (mounted) context.pop(true);
+      if (mounted) {
+        if (context.canPop()) {
+          context.pop(true);
+        } else {
+          context.go('/recordings');
+        }
+      }
     }
   }
 
@@ -626,18 +705,18 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        RecordingTitleSection(
+        RecordingDescriptionSection(
           theme: theme,
           colors: colors,
-          recording: recording,
-          isEditingTitle: _isEditingTitle,
-          titleController: _titleController,
-          onSave: _saveTitle,
+          description: recording.description,
+          isEditing: _isEditingDescription,
+          controller: _descriptionController,
+          onSave: _saveDescription,
           onCancel: () => setState(() {
-            _isEditingTitle = false;
-            _titleController.text = recording.title ?? '';
+            _isEditingDescription = false;
+            _descriptionController.text = recording.description ?? '';
           }),
-          onStartEdit: () => setState(() => _isEditingTitle = true),
+          onStartEdit: () => setState(() => _isEditingDescription = true),
         ),
         const SizedBox(height: 6),
         Row(
@@ -773,6 +852,15 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
           )
         : null;
 
+    final storytellerSection = RecordingStorytellerSection(
+      projectId: recording.projectId,
+      storytellerId: recording.storytellerId,
+      userId: recording.userId,
+      resolvedStoryteller: _resolvedStoryteller,
+      canEdit: _canEditRecording,
+      onStorytellerChanged: _canEditRecording ? _onStorytellerChanged : null,
+    );
+
     final detailContent = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -781,6 +869,8 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
           const SizedBox(height: 16),
         ],
         titleAndGenre,
+        const SizedBox(height: 20),
+        storytellerSection,
         const SizedBox(height: 24),
         infoGrid,
         const SizedBox(height: 24),

@@ -37,7 +37,11 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
       if (!isAdmin) {
         if (mounted) {
           showErrorSnackBar(context, 'Admin access required');
-          context.pop();
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            context.go('/profile');
+          }
         }
         return;
       }
@@ -104,7 +108,13 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
         appBar: AppBar(
           leading: IconButton(
             icon: const Icon(LucideIcons.arrowLeft),
-            onPressed: () => context.pop(),
+            onPressed: () {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/profile');
+              }
+            },
           ),
           title: const Text('Admin Dashboard'),
         ),

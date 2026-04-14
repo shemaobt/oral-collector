@@ -1,8 +1,6 @@
 {
   "@@locale": "en",
-
   "appTitle": "Oral Collector",
-
   "nav_home": "Home",
   "nav_record": "Record",
   "nav_recordings": "Recordings",
@@ -10,7 +8,6 @@
   "nav_profile": "Profile",
   "nav_admin": "Admin",
   "nav_collapse": "Collapse",
-
   "common_cancel": "Cancel",
   "common_save": "Save",
   "common_delete": "Delete",
@@ -25,7 +22,6 @@
   "common_clear": "Clear",
   "common_untitled": "Untitled",
   "common_loading": "Loading...",
-
   "auth_oralCollector": "Oral Collector",
   "auth_byShema": "by Shema",
   "auth_heroTagline": "Preserve voices.\nShare stories.",
@@ -38,7 +34,6 @@
   "auth_signInSubtitle": "Sign in to continue collecting stories.",
   "auth_signUpSubtitle": "Join our community of story collectors.",
   "auth_backToSignIn": "Back to sign in",
-
   "auth_emailLabel": "Email Address",
   "auth_emailHint": "your@email.com",
   "auth_emailRequired": "Please enter your email",
@@ -54,13 +49,11 @@
   "auth_nameLabel": "Name",
   "auth_nameHint": "Your full name",
   "auth_nameRequired": "Please enter your display name",
-
   "auth_signIn": "Sign In",
   "auth_signUp": "Sign Up",
   "auth_noAccount": "Don't have an account? ",
   "auth_haveAccount": "Have an account? ",
   "auth_continueButton": "Continue",
-
   "auth_forgotPassword": "Forgot password?",
   "auth_resetPassword": "Reset Password",
   "auth_forgotPasswordSubtitle": "Enter your email and we'll send you a reset link.",
@@ -70,13 +63,14 @@
   "auth_resetEmailSent": "We sent a password reset link to {email}. Check your inbox and follow the link to set a new password.",
   "@auth_resetEmailSent": {
     "placeholders": {
-      "email": {"type": "String"}
+      "email": {
+        "type": "String"
+      }
     }
   },
   "auth_openEmailApp": "Open Email App",
   "auth_resendEmail": "Resend",
   "auth_backToLogin": "Back to Sign In",
-
   "auth_newPassword": "New Password",
   "auth_confirmNewPassword": "Confirm New Password",
   "auth_resetPasswordSubtitle": "Enter your new password below.",
@@ -86,15 +80,18 @@
   "auth_invalidResetLink": "Invalid Reset Link",
   "auth_invalidResetLinkMessage": "This password reset link is invalid or has expired.",
   "auth_requestNewLink": "Request a New Link",
-
   "home_greetingMorning": "Good morning",
   "home_greetingAfternoon": "Good afternoon",
   "home_greetingEvening": "Good evening",
   "home_greetingWithName": "{greeting}, {name}",
   "@home_greetingWithName": {
     "placeholders": {
-      "greeting": {"type": "String"},
-      "name": {"type": "String"}
+      "greeting": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
     }
   },
   "home_subtitle": "Let's share your stories today",
@@ -105,11 +102,9 @@
   "home_noGenres": "No genres available yet",
   "home_noProjectTitle": "Select a project to get started",
   "home_browseProjects": "Browse Projects",
-
   "stats_recordings": "recordings",
   "stats_recorded": "recorded",
   "stats_members": "members",
-
   "project_switchTitle": "Switch Project",
   "project_projects": "Projects",
   "project_subtitle": "Manage your collections",
@@ -141,12 +136,13 @@
   "project_addAsNewLanguage": "Add \"{query}\" as a new language",
   "@project_addAsNewLanguage": {
     "placeholders": {
-      "query": {"type": "String"}
+      "query": {
+        "type": "String"
+      }
     }
   },
   "project_searchLanguages": "Search languages...",
   "project_backToList": "Back to list",
-
   "projectSettings_title": "Project Settings",
   "projectSettings_details": "Details",
   "projectSettings_saving": "Saving...",
@@ -158,14 +154,15 @@
   "projectSettings_removeMemberConfirm": "Remove {name} from this project?",
   "@projectSettings_removeMemberConfirm": {
     "placeholders": {
-      "name": {"type": "String"}
+      "name": {
+        "type": "String"
+      }
     }
   },
   "projectSettings_memberRemoved": "Member removed",
   "projectSettings_memberRemoveFailed": "Failed to remove member",
   "projectSettings_inviteSent": "Invite sent successfully",
   "projectSettings_noMembers": "No members yet",
-
   "recording_selectGenre": "Select Genre",
   "recording_selectGenreSubtitle": "Choose a genre for your story",
   "recording_selectSubcategory": "Select Subcategory",
@@ -179,26 +176,28 @@
   "recording_genreNotFound": "Genre not found",
   "recording_noGenres": "No genres available",
   "recording_noSubcategories": "No subcategories available",
-
   "recording_registerDescription": "Choose the speech register that best describes the tone and formality of this recording.",
   "recording_titleHint": "Add a title (optional)",
+  "recording_descriptionHint": "Add a short description (optional)",
+  "recording_descriptionEmpty": "Add description",
   "recording_saveRecording": "Save Recording",
   "recording_recordAgain": "Record Again",
   "recording_discard": "Discard",
   "recording_discardTitle": "Discard Recording?",
   "recording_discardMessage": "This recording will be permanently deleted.",
   "recording_saved": "Recording saved",
-
   "recording_notFound": "Recording not found",
   "recording_unknownGenre": "Unknown genre",
-  "recording_splitRecording": "Split Recording",
+  "recording_splitRecording": "Edit Recording",
   "recording_moveCategory": "Move Category",
   "recording_downloadAudio": "Download Audio",
   "recording_downloadAudioMessage": "The audio file is not stored on this device. Would you like to download it to trim?",
   "recording_downloadFailed": "Failed to download: {error}",
   "@recording_downloadFailed": {
     "placeholders": {
-      "error": {"type": "String"}
+      "error": {
+        "type": "String"
+      }
     }
   },
   "recording_audioNotAvailable": "Audio file not available",
@@ -212,7 +211,6 @@
   "recording_moveNoPermission": "You do not have permission to move this recording",
   "recording_movedSuccess": "Recording moved successfully",
   "recording_updateFailed": "Failed to update on server",
-
   "recordings_title": "Recordings",
   "recordings_subtitle": "Your collected stories",
   "recordings_importAudio": "Import audio file",
@@ -223,26 +221,27 @@
   "recordings_count": "{count, plural, =1{1 recording} other{{count} recordings}}",
   "@recordings_count": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
-
   "recording_statusUploaded": "Uploaded",
   "recording_statusUploading": "Uploading",
   "recording_statusFailed": "Failed",
   "recording_statusLocal": "Local",
-
   "recordings_clearStale": "Clear failed",
   "recordings_clearStaleMessage": "This will permanently delete all recordings with failed or stuck upload status from the server. This cannot be undone.",
   "recordings_clearedCount": "{count, plural, =0{No stale recordings found} =1{Cleared 1 recording} other{Cleared {count} recordings}}",
   "@recordings_clearedCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "recordings_clearFailed": "Failed to clear recordings",
-
-  "trim_title": "Split Recording",
+  "trim_title": "Edit Recording",
   "trim_notFound": "Recording not found",
   "trim_audioUrlNotAvailable": "Audio URL not available for this recording.",
   "trim_localNotAvailable": "Local audio file not available. Download the recording first.",
@@ -254,24 +253,47 @@
   "trim_saveSegments": "{count, plural, =1{Save 1 segment} other{Save {count} segments}}",
   "@trim_saveSegments": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "trim_addSplitsFirst": "Add splits first",
   "trim_savedSegments": "Saved {kept} segment{kept, plural, =1{} other{s}}, removed {removed}",
   "@trim_savedSegments": {
     "placeholders": {
-      "kept": {"type": "int"},
-      "removed": {"type": "int"}
+      "kept": {
+        "type": "int"
+      },
+      "removed": {
+        "type": "int"
+      }
     }
   },
   "trim_splitInto": "Split into {count} recordings",
   "@trim_splitInto": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
-
+  "trim_saveConfirmTitle": "Save changes?",
+  "trim_saveConfirmBody": "This replaces the original recording with {count} segment(s). This can't be undone.",
+  "@trim_saveConfirmBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "trim_inheritLabel": "Inherit",
+  "trim_applyToAll": "Apply to all",
+  "trim_copyFromPrevious": "Copy from previous",
+  "trim_classifySegment": "Classify segment",
+  "trim_volume": "Volume",
+  "trim_peakClip": "Clipping",
+  "trim_boostOnSave": "Boost applied on save",
   "import_title": "Import Audio",
   "import_selectGenre": "Select Genre",
   "import_selectSubcategory": "Select Subcategory",
@@ -284,41 +306,95 @@
   "import_pickError": "Error picking file: {error}",
   "@import_pickError": {
     "placeholders": {
-      "error": {"type": "String"}
+      "error": {
+        "type": "String"
+      }
     }
   },
   "import_saveError": "Error saving file: {error}",
   "@import_saveError": {
     "placeholders": {
-      "error": {"type": "String"}
+      "error": {
+        "type": "String"
+      }
     }
   },
   "import_unknownFile": "Unknown file",
   "import_importAndSave": "Import & Save",
-
+  "import_setForAll": "Set for all files",
+  "import_applyToAll": "Apply to all",
+  "import_fieldRequired": "Required",
+  "import_validationBanner": "{count, plural, =1{1 file is missing required fields} other{{count} files are missing required fields}}",
+  "@import_validationBanner": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "import_remove": "Remove file",
+  "import_supportedFormats": "Supported formats: {formats}. Unsupported or unreadable files are skipped.",
+  "@import_supportedFormats": {
+    "placeholders": {
+      "formats": {
+        "type": "String"
+      }
+    }
+  },
+  "import_rejectedFiles": "{count, plural, =1{Skipped 1 unsupported or unreadable file: {names}} other{Skipped {count} unsupported or unreadable files: {names}}}",
+  "@import_rejectedFiles": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "import_countFiles": "{count, plural, =1{1 file} other{{count} files}}",
+  "@import_countFiles": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "import_importNFiles": "Import {count, plural, =1{1 file} other{{count} files}}",
+  "@import_importNFiles": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "import_emptyFile": "empty file",
+  "import_compressWav": "Compress WAV to M4A",
+  "import_compressWavHint": "~10x smaller, no quality loss for ML pipeline",
   "moveCategory_title": "Move Category",
   "moveCategory_genre": "Genre",
   "moveCategory_subcategory": "Subcategory",
   "moveCategory_selectSubcategory": "Select subcategory",
-
   "cleaning_needsCleaning": "Needs Cleaning",
   "cleaning_cleaning": "Cleaning...",
   "cleaning_cleaned": "Cleaned",
   "cleaning_cleanFailed": "Clean Failed",
-
   "sync_uploading": "Uploading...",
   "sync_pending": "{count} pending",
   "@sync_pending": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
-
   "profile_photoUpdated": "Profile photo updated",
   "profile_photoFailed": "Failed to update photo: {error}",
   "@profile_photoFailed": {
     "placeholders": {
-      "error": {"type": "String"}
+      "error": {
+        "type": "String"
+      }
     }
   },
   "profile_editName": "Edit display name",
@@ -343,31 +419,38 @@
   "profile_joinedSuccess": "Joined \"{name}\" successfully",
   "@profile_joinedSuccess": {
     "placeholders": {
-      "name": {"type": "String"}
+      "name": {
+        "type": "String"
+      }
     }
   },
   "profile_inviteDeclined": "Invite declined",
   "profile_language": "Language",
-
   "profile_online": "Online",
   "profile_offline": "Offline",
   "profile_lastSync": "Last sync: {time}",
   "@profile_lastSync": {
     "placeholders": {
-      "time": {"type": "String"}
+      "time": {
+        "type": "String"
+      }
     }
   },
   "profile_neverSynced": "Never synced",
   "profile_pendingCount": "{count} pending",
   "@profile_pendingCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "profile_syncingProgress": "Syncing... {percent}%",
   "@profile_syncingProgress": {
     "placeholders": {
-      "percent": {"type": "int"}
+      "percent": {
+        "type": "int"
+      }
     }
   },
   "profile_syncNow": "Sync Now",
@@ -377,7 +460,6 @@
   "profile_autoRemoveSubtitle": "Delete local files after successful upload",
   "profile_clearCache": "Clear local cache",
   "profile_clearCacheSubtitle": "Delete all locally stored recordings",
-
   "profile_invitations": "Invitations",
   "profile_refreshInvitations": "Refresh invitations",
   "profile_noInvitations": "No pending invitations",
@@ -385,24 +467,20 @@
   "profile_roleMember": "Role: Member",
   "profile_decline": "Decline",
   "profile_accept": "Accept",
-
   "profile_storage": "Storage",
   "profile_status": "Status",
   "profile_pendingLabel": "Pending",
-
   "admin_title": "Admin Dashboard",
   "admin_overview": "Overview",
   "admin_projects": "Projects",
   "admin_genres": "Genres",
   "admin_cleaning": "Cleaning",
   "admin_accessRequired": "Admin access required",
-
   "admin_totalProjects": "Total Projects",
   "admin_languages": "Languages",
   "admin_recordings": "Recordings",
   "admin_totalHours": "Total Hours",
   "admin_activeUsers": "Active Users",
-
   "admin_projectName": "Name",
   "admin_projectLanguage": "Language",
   "admin_projectMembers": "Members",
@@ -411,7 +489,6 @@
   "admin_projectCreated": "Created",
   "admin_noProjects": "No projects found",
   "admin_unknownLanguage": "Unknown language",
-
   "admin_genresAndSubcategories": "Genres & Subcategories",
   "admin_addGenre": "Add Genre",
   "admin_noGenres": "No genres found",
@@ -428,14 +505,18 @@
   "admin_deleteGenreConfirm": "Delete \"{name}\" and all its subcategories?",
   "@admin_deleteGenreConfirm": {
     "placeholders": {
-      "name": {"type": "String"}
+      "name": {
+        "type": "String"
+      }
     }
   },
   "admin_genreDeleted": "Genre deleted",
   "admin_addSubcategoryTo": "Add Subcategory to {name}",
   "@admin_addSubcategoryTo": {
     "placeholders": {
-      "name": {"type": "String"}
+      "name": {
+        "type": "String"
+      }
     }
   },
   "admin_subcategoryName": "Subcategory Name",
@@ -444,16 +525,19 @@
   "admin_deleteSubcategoryConfirm": "Delete \"{name}\"?",
   "@admin_deleteSubcategoryConfirm": {
     "placeholders": {
-      "name": {"type": "String"}
+      "name": {
+        "type": "String"
+      }
     }
   },
   "admin_subcategoryDeleted": "Subcategory deleted",
-
   "admin_cleaningQueue": "Audio Cleaning Queue",
   "admin_cleanSelected": "Clean Selected ({count})",
   "@admin_cleanSelected": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "admin_refreshCleaning": "Refresh cleaning queue",
@@ -473,66 +557,85 @@
   "admin_cleaningPartial": "Cleaning triggered for {success} of {total} recordings",
   "@admin_cleaningPartial": {
     "placeholders": {
-      "success": {"type": "int"},
-      "total": {"type": "int"}
+      "success": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
-
   "genre_title": "Genre",
   "genre_notFound": "Genre not found",
   "genre_recordingCount": "{count, plural, =1{1 recording} other{{count} recordings}}",
   "@genre_recordingCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
-
   "format_justNow": "just now",
   "format_minutesAgo": "{count}m ago",
   "@format_minutesAgo": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "format_hoursAgo": "{count}h ago",
   "@format_hoursAgo": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "format_daysAgo": "{count}d ago",
   "@format_daysAgo": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "format_weeksAgo": "{count}w ago",
   "@format_weeksAgo": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "format_monthsAgo": "{count}mo ago",
   "@format_monthsAgo": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "format_memberSince": "Member since {date}",
   "@format_memberSince": {
     "placeholders": {
-      "date": {"type": "String"}
+      "date": {
+        "type": "String"
+      }
     }
   },
   "format_member": "Member",
   "format_dateAt": "{date} at {time}",
   "@format_dateAt": {
     "placeholders": {
-      "date": {"type": "String"},
-      "time": {"type": "String"}
+      "date": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
     }
   },
-
   "genre_narrative": "Narrative",
   "genre_narrativeDesc": "Stories, accounts, and narrative forms of oral tradition",
   "genre_poeticSong": "Poetic / Song",
@@ -541,7 +644,6 @@
   "genre_instructionalDesc": "Laws, rituals, procedures, and instructional forms",
   "genre_oralDiscourse": "Oral Discourse",
   "genre_oralDiscourseDesc": "Speeches, teachings, prayers, and discursive oral forms",
-
   "sub_historicalNarrative": "Historical Narrative",
   "sub_personalAccount": "Personal Account / Testimony",
   "sub_parable": "Parable / Illustrative Story",
@@ -573,7 +675,6 @@
   "sub_apocalypticDiscourse": "Apocalyptic Discourse",
   "sub_ceremonialSpeech": "Ceremonial Speech",
   "sub_communityMemory": "Community Memory",
-
   "sub_historicalNarrativeDesc": "Accounts of events, wars, and key moments in history",
   "sub_personalAccountDesc": "First-person stories of personal experiences and faith",
   "sub_parableDesc": "Symbolic stories that teach moral or spiritual lessons",
@@ -605,7 +706,6 @@
   "sub_apocalypticDiscourseDesc": "Revelations about the end times and God's plan",
   "sub_ceremonialSpeechDesc": "Formal addresses for official or sacred occasions",
   "sub_communityMemoryDesc": "Shared recollections that preserve group identity",
-
   "register_intimate": "Intimate",
   "register_casual": "Informal / Casual",
   "register_consultative": "Consultative",
@@ -613,7 +713,6 @@
   "register_ceremonial": "Ceremonial",
   "register_elderAuthority": "Elder / Authority",
   "register_religiousWorship": "Religious / Worship",
-
   "locale_english": "English",
   "locale_portuguese": "Português",
   "locale_hindi": "हिन्दी",
@@ -638,14 +737,12 @@
   "locale_chineseSub": "Chinese",
   "locale_selectLanguage": "Choose Your Language",
   "locale_selectLanguageSubtitle": "You can change this later in your profile settings.",
-
   "filter_all": "All",
   "filter_pending": "Pending",
   "filter_uploaded": "Uploaded",
   "filter_needsCleaning": "Needs Cleaning",
   "filter_unclassified": "Unclassified",
   "filter_allGenres": "All genres",
-
   "detail_duration": "Duration",
   "detail_size": "Size",
   "detail_format": "Format",
@@ -662,20 +759,16 @@
   "detail_uploadFailed": "Upload Failed",
   "detail_pendingRetried": "Pending (retried)",
   "detail_notSynced": "Not synced",
-
   "action_actions": "Actions",
-  "action_split": "Split",
+  "action_split": "Edit",
   "action_flagClean": "Flag Clean",
   "action_clearFlag": "Clear Flag",
   "action_move": "Move",
   "action_delete": "Delete",
-
   "projectStats_recordings": "Recordings",
   "projectStats_duration": "Duration",
   "projectStats_members": "Members",
-
   "project_active": "Active",
-
   "recording_paused": "Paused",
   "recording_recording": "Recording",
   "recording_tapToRecord": "Tap to Record",
@@ -687,23 +780,73 @@
   "recording_stop": "Stop",
   "recording_resume": "Resume",
   "recording_pause": "Pause",
-
   "quickRecord_title": "Quick Record",
   "quickRecord_subtitle": "Classify later",
   "quickRecord_classifyLater": "Classify later",
-
   "classify_title": "Classify Recording",
   "classify_action": "Classify",
   "classify_banner": "This recording needs classification before it can be uploaded.",
   "classify_success": "Recording classified",
-  "classify_register": "Register (optional)",
+  "classify_register": "Register",
   "classify_selectRegister": "Select register",
-
   "recording_unclassified": "Unclassified",
-
+  "recording_inputSource": "Input",
+  "recording_selectMicrophone": "Select microphone",
+  "recording_builtInMicrophone": "System default",
+  "recording_micPermissionNeeded": "Allow microphone access to see device names",
+  "recording_micPermissionButton": "Grant permission",
+  "recording_micPermissionDenied": "Microphone permission denied. Enable it in your browser or system settings.",
+  "recording_micPermissionTitle": "Microphone access needed",
+  "recording_noDevicesFound": "No microphones found",
+  "recording_storageLowWarnTitle": "Low storage",
+  "recording_storageLowWarnBody": "About {minutes} min of recording available. Continue?",
+  "@recording_storageLowWarnBody": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+  "recording_storageRefuseTitle": "Not enough storage",
+  "recording_storageRefuseBody": "Free up space on this device before recording.",
+  "recording_storageCriticalBanner": "Storage critical \u2014 about {minutes} min remaining. Consider stopping soon.",
+  "@recording_storageCriticalBanner": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+  "recording_storageForceStopped": "Recording stopped due to critically low storage. Your progress has been saved.",
+  "recording_savedAt": "Saved at {time}",
+  "@recording_savedAt": {
+    "placeholders": {
+      "time": { "type": "String" }
+    }
+  },
+  "recording_continuedInBackground": "Recording continued in background",
+  "recording_continue": "Continue",
+  "recording_cancel": "Cancel",
+  "recording_recoverTitle": "Recover interrupted recording?",
+  "recording_recoverBody": "We found about {minutes} min of audio from an earlier session.",
+  "@recording_recoverBody": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+  "recording_recoverButton": "Recover",
+  "recording_recoverDiscard": "Discard",
+  "recording_recoverFailedLastSegment": "Some audio near the end could not be read and was skipped.",
+  "recording_inProgressNotificationTitle": "Recording in progress",
+  "recording_inProgressNotificationBody": "Tap to return to the app",
+  "profile_defaultMicrophone": "Default microphone",
+  "profile_systemDefault": "System default",
+  "settings_deviceStorageTitle": "Device storage",
+  "settings_deviceStorageSubtitle": "Used {used} \u00b7 Free {free}",
+  "@settings_deviceStorageSubtitle": {
+    "placeholders": {
+      "used": { "type": "String" },
+      "free": { "type": "String" }
+    }
+  },
   "fab_quickRecord": "Quick",
   "fab_normalRecord": "Record",
-
   "error_network": "Unable to reach the server. Please check your internet connection and try again.",
   "error_secureConnection": "A secure connection could not be established. Please try again later.",
   "error_timeout": "The request timed out. Please check your connection and try again.",
@@ -719,5 +862,68 @@
   "error_imageUploadFailed": "Could not upload the image. Please try again.",
   "error_notAuthenticated": "You are not signed in. Please log in and try again.",
   "error_noPermission": "You don't have permission to perform this action.",
-  "error_generic": "Something went wrong. Please try again later."
+  "error_generic": "Something went wrong. Please try again later.",
+  "common_close": "Close",
+  "storyteller_title": "Storytellers",
+  "storyteller_singular": "Storyteller",
+  "storyteller_manageAction": "Manage storytellers",
+  "storyteller_addNew": "Add storyteller",
+  "storyteller_createTitle": "New storyteller",
+  "storyteller_editTitle": "Edit storyteller",
+  "storyteller_speakerName": "Speaker name",
+  "storyteller_sex": "Sex",
+  "storyteller_sexMale": "Male",
+  "storyteller_sexFemale": "Female",
+  "storyteller_age": "Age",
+  "storyteller_location": "Location",
+  "storyteller_dialect": "Dialect",
+  "storyteller_externalAcceptanceTitle": "External acceptance validation",
+  "storyteller_externalAcceptanceDescription": "I confirm that external acceptance validation has been performed for this speaker.",
+  "storyteller_externalAcceptanceInfo": "Before registering a storyteller, the project manager must obtain the speaker's consent outside the app (for example, through a signed release form or recorded verbal agreement). This checkbox records that this step was completed.",
+  "storyteller_createRequiresConnection": "Creating a storyteller requires an internet connection.",
+  "storyteller_deleteTitle": "Delete storyteller?",
+  "storyteller_deleteMessage": "Recordings previously assigned to this storyteller will show as unassigned.",
+  "storyteller_noneAssigned": "No storyteller assigned",
+  "storyteller_unknown": "Unknown storyteller",
+  "storyteller_selectHint": "Pick a storyteller",
+  "storyteller_required": "A storyteller is required",
+  "storyteller_searchPlaceholder": "Search storytellers",
+  "storyteller_empty": "No storytellers yet",
+  "storyteller_emptyDescription": "Create a storyteller for the project to assign to recordings.",
+  "storyteller_offlineNoCache": "Storytellers haven't been synced yet. Connect to the internet to load them.",
+  "storyteller_assign": "Assign",
+  "storyteller_reassign": "Reassign",
+  "storyteller_ageValidator": "Enter an age between 1 and 120",
+  "storyteller_ageYearsShort": "{age}y",
+  "@storyteller_ageYearsShort": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
+  "filters_buttonLabel": "Filters",
+  "filters_sheetTitle": "Filter recordings",
+  "filters_sectionStatus": "Upload status",
+  "filters_sectionGenre": "Genre",
+  "filters_sectionStoryteller": "Storyteller",
+  "filters_sectionUser": "Recorded by",
+  "filter_apply": "Apply",
+  "filter_reset": "Reset",
+  "filter_clearAll": "Clear all",
+  "filter_countActive": "{count, plural, one{1 filter} other{{count} filters}}",
+  "@filter_countActive": {
+    "placeholders": {
+      "count": {
+        "type": "num",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "filter_userAll": "Any user",
+  "filter_storytellerAll": "Any storyteller",
+  "filter_genreAll": "Any genre",
+  "detail_recordedBy": "Recorded by",
+  "detail_storyteller": "Storyteller",
+  "recording_unknownUser": "Unknown user"
 }

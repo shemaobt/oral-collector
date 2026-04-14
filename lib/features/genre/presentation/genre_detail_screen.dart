@@ -35,7 +35,15 @@ class GenreDetailScreen extends ConsumerWidget {
     if (genre == null) {
       return Scaffold(
         appBar: AppBar(
-          leading: BackButton(onPressed: () => context.pop()),
+          leading: BackButton(
+            onPressed: () {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/home');
+              }
+            },
+          ),
           title: Text(l10n.genre_title),
         ),
         body: Center(child: Text(l10n.genre_notFound)),
@@ -44,7 +52,15 @@ class GenreDetailScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        leading: BackButton(onPressed: () => context.pop()),
+        leading: BackButton(
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/home');
+            }
+          },
+        ),
         title: Text(localizedGenreName(l10n, genre.name)),
         actions: [
           Container(
@@ -159,8 +175,8 @@ class _SubcategoryCard extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () {
-          context.go(
-            '/recordings?genreId=$genreId&subcategoryId=${subcategory.id}',
+          context.push(
+            '/record-flow?genreId=$genreId&subcategoryId=${subcategory.id}',
           );
         },
         child: Padding(
@@ -212,8 +228,8 @@ class _SubcategoryCard extends StatelessWidget {
                           height: 40,
                           child: IconButton(
                             onPressed: () {
-                              context.go(
-                                '/record?genreId=$genreId&subcategoryId=${subcategory.id}',
+                              context.push(
+                                '/record-flow?genreId=$genreId&subcategoryId=${subcategory.id}',
                               );
                             },
                             icon: Icon(LucideIcons.mic, size: 18, color: color),

@@ -52,7 +52,8 @@ class LocalRecordingRepository {
                 (t.uploadStatus.equals('local') |
                     t.uploadStatus.equals('failed') |
                     t.uploadStatus.equals('uploading')) &
-                t.genreId.equals(kUnclassifiedGenreId).not(),
+                t.genreId.equals(kUnclassifiedGenreId).not() &
+                t.registerId.isNotNull(),
           )
           ..orderBy([(t) => OrderingTerm.asc(t.recordedAt)]))
         .get();
@@ -64,7 +65,8 @@ class LocalRecordingRepository {
       ..addColumns([count])
       ..where(
         _db.localRecordings.projectId.equals(projectId) &
-            _db.localRecordings.genreId.equals(kUnclassifiedGenreId),
+            (_db.localRecordings.genreId.equals(kUnclassifiedGenreId) |
+                _db.localRecordings.registerId.isNull()),
       );
     final result = await query.getSingle();
     return result.read(count) ?? 0;

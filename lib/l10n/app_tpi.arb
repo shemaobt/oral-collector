@@ -1,8 +1,6 @@
 {
   "@@locale": "tpi",
-
   "appTitle": "Oral Collector",
-
   "nav_home": "Haus",
   "nav_record": "Rekodim",
   "nav_recordings": "Ol Rekoding",
@@ -10,7 +8,6 @@
   "nav_profile": "Profail",
   "nav_admin": "Admin",
   "nav_collapse": "Pasim",
-
   "common_cancel": "Lusim",
   "common_save": "Sevim",
   "common_delete": "Rausim",
@@ -25,7 +22,6 @@
   "common_clear": "Klinim",
   "common_untitled": "I no gat nem",
   "common_loading": "Lodim...",
-
   "auth_oralCollector": "Oral Collector",
   "auth_byShema": "long Shema",
   "auth_heroTagline": "Lukautim ol vois.\nSerim ol stori.",
@@ -38,7 +34,6 @@
   "auth_signInSubtitle": "Sainim in bilong kisim moa stori.",
   "auth_signUpSubtitle": "Joinim komuniti bilong ol man i bungim stori.",
   "auth_backToSignIn": "Go bek long sain in",
-
   "auth_emailLabel": "Imel Adres",
   "auth_emailHint": "yu@imel.com",
   "auth_emailRequired": "Plis putim imel bilong yu",
@@ -54,13 +49,11 @@
   "auth_nameLabel": "Nem",
   "auth_nameHint": "Ful nem bilong yu",
   "auth_nameRequired": "Plis putim nem bilong yu",
-
   "auth_signIn": "Sain In",
   "auth_signUp": "Rejista",
   "auth_noAccount": "Yu no gat akaun? ",
   "auth_haveAccount": "Yu gat akaun pinis? ",
   "auth_continueButton": "Go het",
-
   "auth_forgotPassword": "Lusim paswod?",
   "auth_resetPassword": "Senisim Paswod",
   "auth_forgotPasswordSubtitle": "Putim imel bilong yu na bai mipela salim wanpela link bilong senisim.",
@@ -70,13 +63,14 @@
   "auth_resetEmailSent": "Mipela salim link bilong senisim paswod long {email}. Lukim inbox bilong yu na bihainim link bilong wokim nupela paswod.",
   "@auth_resetEmailSent": {
     "placeholders": {
-      "email": {"type": "String"}
+      "email": {
+        "type": "String"
+      }
     }
   },
   "auth_openEmailApp": "Opim Imel",
   "auth_resendEmail": "Salim Gen",
   "auth_backToLogin": "Go bek long Log In",
-
   "auth_newPassword": "Nupela Paswod",
   "auth_confirmNewPassword": "Konfemim Nupela Paswod",
   "auth_resetPasswordSubtitle": "Putim nupela paswod bilong yu hia.",
@@ -86,7 +80,6 @@
   "auth_invalidResetLink": "Link i no stret",
   "auth_invalidResetLinkMessage": "Dispela link bilong senisim paswod i no stret o taim bilong en i pinis.",
   "auth_requestNewLink": "Askim Nupela Link",
-
   "home_greetingMorning": "Moning tru",
   "home_greetingAfternoon": "Apinun tru",
   "home_greetingEvening": "Gut nait",
@@ -99,11 +92,9 @@
   "home_noGenres": "I no gat kain i stap yet",
   "home_noProjectTitle": "Makim wanpela projek bilong stat",
   "home_browseProjects": "Lukim Ol Projek",
-
   "stats_recordings": "ol rekoding",
   "stats_recorded": "rekodim pinis",
   "stats_members": "ol memba",
-
   "project_switchTitle": "Senisim Projek",
   "project_projects": "Ol Projek",
   "project_subtitle": "Lukautim ol koleksen bilong yu",
@@ -135,7 +126,6 @@
   "project_addAsNewLanguage": "Putim \"{query}\" olsem nupela tokples",
   "project_searchLanguages": "Painim ol tokples...",
   "project_backToList": "Go bek long lis",
-
   "projectSettings_title": "Seting bilong Projek",
   "projectSettings_details": "Ol Deteil",
   "projectSettings_saving": "Sevim...",
@@ -149,7 +139,6 @@
   "projectSettings_memberRemoveFailed": "No inap rausim memba",
   "projectSettings_inviteSent": "Invitesen i salim pinis",
   "projectSettings_noMembers": "I no gat memba yet",
-
   "recording_selectGenre": "Makim Kain",
   "recording_selectGenreSubtitle": "Makim wanpela kain bilong stori bilong yu",
   "recording_selectSubcategory": "Makim Sabkategori",
@@ -163,19 +152,19 @@
   "recording_genreNotFound": "Kain i no stap",
   "recording_noGenres": "I no gat kain i stap",
   "recording_noSubcategories": "I no gat sabkategori i stap",
-
   "recording_registerDescription": "Makim pasin bilong toktok we i stret long ton na fomol bilong dispela rekoding.",
   "recording_titleHint": "Putim nem (sapos yu laik)",
+  "recording_descriptionHint": "Raitim liklik stori (sapos yu laik)",
+  "recording_descriptionEmpty": "Raitim stori",
   "recording_saveRecording": "Sevim Rekoding",
   "recording_recordAgain": "Rekodim Gen",
   "recording_discard": "Tromoi",
   "recording_discardTitle": "Tromoi Rekoding?",
   "recording_discardMessage": "Dispela rekoding bai lus olgeta.",
   "recording_saved": "Rekoding i sev pinis",
-
   "recording_notFound": "Rekoding i no stap",
   "recording_unknownGenre": "Kain i no save",
-  "recording_splitRecording": "Brukim Rekoding",
+  "recording_splitRecording": "Stretim Rekoding",
   "recording_moveCategory": "Muvim Kategori",
   "recording_downloadAudio": "Kisim Audio i Kam Daun",
   "recording_downloadAudioMessage": "Audio fail i no stap long dispela divais. Yu laik kisim i kam daun bilong katim?",
@@ -191,7 +180,6 @@
   "recording_moveNoPermission": "Yu no gat pemisin bilong muvim dispela rekoding",
   "recording_movedSuccess": "Rekoding i muv pinis",
   "recording_updateFailed": "No inap apdet long seva",
-
   "recordings_title": "Ol Rekoding",
   "recordings_subtitle": "Ol stori yu bungim",
   "recordings_importAudio": "Importim audio fail",
@@ -200,13 +188,11 @@
   "recordings_noRecordings": "I no gat rekoding yet",
   "recordings_noRecordingsSubtitle": "Presim maikorofon bilong rekodim fes stori bilong yu, o importim wanpela audio fail.",
   "recordings_count": "{count, plural, =1{1 rekoding} other{{count} rekoding}}",
-
   "recording_statusUploaded": "Go antap pinis",
   "recording_statusUploading": "I go antap",
   "recording_statusFailed": "No inap",
   "recording_statusLocal": "Lokal",
-
-  "trim_title": "Brukim Rekoding",
+  "trim_title": "Stretim Rekoding",
   "trim_notFound": "Rekoding i no stap",
   "trim_audioUrlNotAvailable": "Audio URL i no stap bilong dispela rekoding.",
   "trim_localNotAvailable": "Lokal audio fail i no stap. Kisim rekoding i kam daun pastaim.",
@@ -219,7 +205,15 @@
   "trim_addSplitsFirst": "Putim ol brukim pastaim",
   "trim_savedSegments": "Sevim {kept} segment, rausim {removed}",
   "trim_splitInto": "Brukim i go long {count} rekoding",
-
+  "trim_saveConfirmTitle": "Sevim senis?",
+  "trim_saveConfirmBody": "Dispela bai senisim orijinel rekoding wantaim {count} hap. Yu no inap tanim bek.",
+  "trim_inheritLabel": "Kisim bek",
+  "trim_applyToAll": "Putim long olgeta",
+  "trim_copyFromPrevious": "Kopim long paslain",
+  "trim_classifySegment": "Klasifaiim segment",
+  "trim_volume": "Volium",
+  "trim_peakClip": "Klip",
+  "trim_boostOnSave": "Strongim bai kam long sevim",
   "import_title": "Importim Audio",
   "import_selectGenre": "Makim Kain",
   "import_selectSubcategory": "Makim Sabkategori",
@@ -233,20 +227,43 @@
   "import_saveError": "Hevi long sevim fail: {error}",
   "import_unknownFile": "Fail i no save",
   "import_importAndSave": "Importim na Sevim",
-
+  "import_setForAll": "Makim long olgeta fail",
+  "import_applyToAll": "Yusim long olgeta",
+  "import_fieldRequired": "Mas i gat",
+  "import_validationBanner": "{count, plural, =1{1 fail i nogat ol samting i mas stap} other{{count} fail i nogat ol samting i mas stap}}",
+  "@import_validationBanner": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "import_remove": "Rausim fail",
+  "import_supportedFormats": "Ol gutpela kain fail: {formats}. Ol fail ol i no save kisim o i no redim em i lusim.",
+  "@import_supportedFormats": {
+    "placeholders": { "formats": { "type": "String" } }
+  },
+  "import_rejectedFiles": "{count, plural, =1{Lusim 1 fail i no orait o i no redim: {names}} other{Lusim {count} fail i no orait o i no redim: {names}}}",
+  "@import_rejectedFiles": {
+    "placeholders": { "count": { "type": "int" }, "names": { "type": "String" } }
+  },
+  "import_countFiles": "{count, plural, =1{1 fail} other{{count} fail}}",
+  "@import_countFiles": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "import_importNFiles": "Importim {count, plural, =1{1 fail} other{{count} fail}}",
+  "@import_importNFiles": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "import_emptyFile": "fail i emti",
+  "import_compressWav": "Mekim WAV i kamap M4A",
+  "import_compressWavHint": "~10x liklik moa, i no lusim gutpela sait long ML pipeline",
   "moveCategory_title": "Muvim Kategori",
   "moveCategory_genre": "Kain",
   "moveCategory_subcategory": "Sabkategori",
   "moveCategory_selectSubcategory": "Makim sabkategori",
-
   "cleaning_needsCleaning": "I Nidim Klining",
   "cleaning_cleaning": "Klinim...",
   "cleaning_cleaned": "Klin pinis",
   "cleaning_cleanFailed": "Klining i pundaun",
-
   "sync_uploading": "I go antap...",
   "sync_pending": "{count} i wet",
-
   "profile_photoUpdated": "Profail foto i apdet pinis",
   "profile_photoFailed": "No inap apdet foto: {error}",
   "profile_editName": "Senisim nem bilong yu",
@@ -271,7 +288,6 @@
   "profile_joinedSuccess": "Join long \"{name}\" pinis",
   "profile_inviteDeclined": "Invitesen i no orait",
   "profile_language": "Tokples",
-
   "profile_online": "Onlain",
   "profile_offline": "Oflain",
   "profile_lastSync": "Las singk: {time}",
@@ -285,7 +301,6 @@
   "profile_autoRemoveSubtitle": "Rausim lokal fail bihain long i go antap pinis",
   "profile_clearCache": "Klinim lokal kes",
   "profile_clearCacheSubtitle": "Rausim olgeta lokal rekoding",
-
   "profile_invitations": "Ol Invitesen",
   "profile_refreshInvitations": "Rifresim ol invitesen",
   "profile_noInvitations": "I no gat invitesen i wet",
@@ -293,24 +308,20 @@
   "profile_roleMember": "Rol: Memba",
   "profile_decline": "No laik",
   "profile_accept": "Orait",
-
   "profile_storage": "Storis",
   "profile_status": "Stetas",
   "profile_pendingLabel": "I wet",
-
   "admin_title": "Admin Dasbot",
   "admin_overview": "Ova Viu",
   "admin_projects": "Ol Projek",
   "admin_genres": "Ol Kain",
   "admin_cleaning": "Klining",
   "admin_accessRequired": "Admin akses i nidim",
-
   "admin_totalProjects": "Olgeta Projek",
   "admin_languages": "Ol Tokples",
   "admin_recordings": "Ol Rekoding",
   "admin_totalHours": "Olgeta Aua",
   "admin_activeUsers": "Ol Aktiv Yusa",
-
   "admin_projectName": "Nem",
   "admin_projectLanguage": "Tokples",
   "admin_projectMembers": "Ol Memba",
@@ -319,7 +330,6 @@
   "admin_projectCreated": "Wokim long",
   "admin_noProjects": "I no painim projek",
   "admin_unknownLanguage": "Tokples i no save",
-
   "admin_genresAndSubcategories": "Ol Kain na Sabkategori",
   "admin_addGenre": "Putim Kain",
   "admin_noGenres": "I no painim kain",
@@ -341,7 +351,6 @@
   "admin_deleteSubcategory": "Rausim Sabkategori",
   "admin_deleteSubcategoryConfirm": "Rausim \"{name}\"?",
   "admin_subcategoryDeleted": "Sabkategori i raus pinis",
-
   "admin_cleaningQueue": "Klu bilong Klinim Audio",
   "admin_cleanSelected": "Klinim Ol i Makim ({count})",
   "admin_refreshCleaning": "Rifresim klu bilong klining",
@@ -359,11 +368,9 @@
   "admin_cleaningTriggered": "Klining i stat",
   "admin_cleaningFailed": "Klining i no inap stat",
   "admin_cleaningPartial": "Klining i stat long {success} bilong {total} rekoding",
-
   "genre_title": "Kain",
   "genre_notFound": "Kain i no stap",
   "genre_recordingCount": "{count, plural, =1{1 rekoding} other{{count} rekoding}}",
-
   "format_justNow": "nau tasol",
   "format_minutesAgo": "{count}m i go pinis",
   "format_hoursAgo": "{count}h i go pinis",
@@ -373,7 +380,6 @@
   "format_memberSince": "Memba stat long {date}",
   "format_member": "Memba",
   "format_dateAt": "{date} long {time}",
-
   "genre_narrative": "Stori",
   "genre_narrativeDesc": "Ol stori, tok save, na ol pasin bilong tokim stori long maus",
   "genre_poeticSong": "Poem / Singsing",
@@ -382,7 +388,6 @@
   "genre_instructionalDesc": "Ol lo, pasin bilong lotu, wei bilong mekim, na ol skulim",
   "genre_oralDiscourse": "Tok bilong Maus",
   "genre_oralDiscourseDesc": "Ol toktok, skulim, beten, na ol kain tok bilong maus",
-
   "sub_historicalNarrative": "Stori bilong Bipo",
   "sub_personalAccount": "Stori bilong Mi Yet / Witnes",
   "sub_parable": "Tok Piksa / Stori bilong Skulim",
@@ -414,7 +419,6 @@
   "sub_apocalypticDiscourse": "Tok bilong Las De",
   "sub_ceremonialSpeech": "Tok bilong Seremoni",
   "sub_communityMemory": "Tingting bilong Komuniti",
-
   "sub_historicalNarrativeDesc": "Ol stori bilong ol samting i kamap bipo, ol pait, na ol bikpela taim",
   "sub_personalAccountDesc": "Ol stori bilong laip bilong mi yet na bilip",
   "sub_parableDesc": "Ol tok piksa bilong skulim gutpela pasin",
@@ -446,7 +450,6 @@
   "sub_apocalypticDiscourseDesc": "Ol tok i soim las taim na plen bilong God",
   "sub_ceremonialSpeechDesc": "Ol bikpela tok bilong ol seremoni",
   "sub_communityMemoryDesc": "Ol tingting bilong komuniti i lukautim hu ol i stap",
-
   "register_intimate": "Klostu tru",
   "register_casual": "Nating nating",
   "register_consultative": "Askim tingting",
@@ -454,7 +457,6 @@
   "register_ceremonial": "Bilong Seremoni",
   "register_elderAuthority": "Bikman / Hetman",
   "register_religiousWorship": "Bilong Lotu",
-
   "locale_english": "English",
   "locale_portuguese": "Português",
   "locale_hindi": "हिन्दी",
@@ -479,13 +481,11 @@
   "locale_chineseSub": "Saina",
   "locale_selectLanguage": "Makim Tokples bilong Yu",
   "locale_selectLanguageSubtitle": "Yu ken senisim dispela bihain long profail seting.",
-
   "filter_all": "Olgeta",
   "filter_pending": "I wet",
   "filter_uploaded": "Go antap pinis",
   "filter_needsCleaning": "I Nidim Klining",
   "filter_allGenres": "Olgeta kain",
-
   "detail_duration": "Hamas longpela taim",
   "detail_size": "Sais",
   "detail_format": "Fomet",
@@ -502,20 +502,16 @@
   "detail_uploadFailed": "Salim i go antap i pundaun",
   "detail_pendingRetried": "I wet (traim gen pinis)",
   "detail_notSynced": "I no singk yet",
-
   "action_actions": "Ol Aksen",
-  "action_split": "Brukim",
+  "action_split": "Stretim",
   "action_flagClean": "Makim Klinim",
   "action_clearFlag": "Rausim Makim",
   "action_move": "Muvim",
   "action_delete": "Rausim",
-
   "projectStats_recordings": "Ol Rekoding",
   "projectStats_duration": "Hamas longpela taim",
   "projectStats_members": "Ol Memba",
-
   "project_active": "Aktiv",
-
   "recording_paused": "I stop",
   "recording_recording": "Rekodim",
   "recording_tapToRecord": "Presim bilong Rekodim",
@@ -527,11 +523,16 @@
   "recording_stop": "Stop",
   "recording_resume": "Stat gen",
   "recording_pause": "Stopim liklik",
-
   "recordings_clearStale": "Klinim ol i pundaun",
   "recordings_clearStaleMessage": "Dispela bai rausim olgeta rekoding we i pundaun o i pas long salim i go antap long seva. Dispela aksen i no inap senisim bek.",
   "recordings_clearedCount": "{count, plural, =0{I no painim ol olpela rekoding} =1{Klinim 1 rekoding} other{Klinim {count} rekoding}}",
-  "@recordings_clearedCount": {"placeholders": {"count": {"type": "int"}}},
+  "@recordings_clearedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "recordings_clearFailed": "No inap klinim ol rekoding",
   "filter_unclassified": "I no makim kain yet",
   "quickRecord_title": "Rekodim Hariap",
@@ -541,12 +542,44 @@
   "classify_action": "Makim Kain",
   "classify_banner": "Dispela rekoding i mas gat kain pastaim bilong salim i go antap.",
   "classify_success": "Rekoding i gat kain pinis",
-  "classify_register": "Rejista (sapos yu laik)",
+  "classify_register": "Rejista",
   "classify_selectRegister": "Makim rejista",
   "recording_unclassified": "I no makim kain yet",
+  "recording_inputSource": "Insait",
+  "recording_selectMicrophone": "Makim maikrofon",
+  "recording_builtInMicrophone": "Defolt bilong sistem",
+  "recording_micPermissionNeeded": "Larim maikrofon i ken wok bai yu lukim ol nem bilong divais",
+  "recording_micPermissionButton": "Givim larim",
+  "recording_micPermissionDenied": "Larim bilong maikrofon i tambu. Statim long ol setting bilong brausa o sistem.",
+  "recording_noDevicesFound": "I no gat maikrofon",
+  "recording_storageLowWarnTitle": "Spes i sot",
+  "recording_storageLowWarnBody": "Klostu {minutes} minit bilong rekodim i stap. Yu laik kontiniu?",
+  "@recording_storageLowWarnBody": { "placeholders": { "minutes": { "type": "int" } } },
+  "recording_storageRefuseTitle": "Spes i no inap",
+  "recording_storageRefuseBody": "Klinim sampela samting long divais bipo long rekodim.",
+  "recording_storageCriticalBanner": "Spes i klostu pinis \u2014 klostu {minutes} minit i stap. Tingim long stop sotpela taim.",
+  "@recording_storageCriticalBanner": { "placeholders": { "minutes": { "type": "int" } } },
+  "recording_storageForceStopped": "Rekodim i stap pinis bikos spes i pinis. Wok bilong yu i sef pinis.",
+  "recording_savedAt": "Sef long {time}",
+  "@recording_savedAt": { "placeholders": { "time": { "type": "String" } } },
+  "recording_continuedInBackground": "Rekodim i go yet long bek",
+  "recording_continue": "Kontiniu",
+  "recording_cancel": "Kanselim",
+  "recording_recoverTitle": "Bringim bek rekodim i stop?",
+  "recording_recoverBody": "Mipela painim klostu {minutes} minit bilong audio long bipo sesin.",
+  "@recording_recoverBody": { "placeholders": { "minutes": { "type": "int" } } },
+  "recording_recoverButton": "Bringim bek",
+  "recording_recoverDiscard": "Rausim",
+  "recording_recoverFailedLastSegment": "Sampela audio klostu long pinis ino inap rid na mipela skipim.",
+  "recording_inProgressNotificationTitle": "Rekodim i wok",
+  "recording_inProgressNotificationBody": "Tasim bilong go bek long ap",
+  "profile_defaultMicrophone": "Defolt maikrofon",
+  "profile_systemDefault": "Defolt bilong sistem",
+  "settings_deviceStorageTitle": "Spes bilong divais",
+  "settings_deviceStorageSubtitle": "Yusim {used} \u00b7 Spes i stap {free}",
+  "@settings_deviceStorageSubtitle": { "placeholders": { "used": { "type": "String" }, "free": { "type": "String" } } },
   "fab_quickRecord": "Hariap",
   "fab_normalRecord": "Rekodim",
-
   "error_network": "No inap painim seva. Plis sekim intanet koneksen bilong yu na traim gen.",
   "error_secureConnection": "No inap wokim sekyua koneksen. Plis traim gen bihain.",
   "error_timeout": "Rikwes i bin taim aut. Plis sekim koneksen bilong yu na traim gen.",
@@ -562,5 +595,68 @@
   "error_imageUploadFailed": "No inap aplodim piksa. Plis traim gen.",
   "error_notAuthenticated": "Yu no log in. Plis log in na traim gen.",
   "error_noPermission": "Yu no gat pemisin bilong mekim dispela aksen.",
-  "error_generic": "Samting i go rong. Plis traim gen bihain."
+  "error_generic": "Samting i go rong. Plis traim gen bihain.",
+  "storyteller_title": "Storytellers",
+  "storyteller_singular": "Storyteller",
+  "storyteller_manageAction": "Manage storytellers",
+  "storyteller_addNew": "Add storyteller",
+  "storyteller_createTitle": "New storyteller",
+  "storyteller_editTitle": "Edit storyteller",
+  "storyteller_speakerName": "Speaker name",
+  "storyteller_sex": "Sex",
+  "storyteller_sexMale": "Male",
+  "storyteller_sexFemale": "Female",
+  "storyteller_age": "Age",
+  "storyteller_location": "Location",
+  "storyteller_dialect": "Dialect",
+  "storyteller_externalAcceptanceTitle": "External acceptance validation",
+  "storyteller_externalAcceptanceDescription": "I confirm that external acceptance validation has been performed for this speaker.",
+  "storyteller_externalAcceptanceInfo": "Before registering a storyteller, the project manager must obtain the speaker's consent outside the app (for example, through a signed release form or recorded verbal agreement). This checkbox records that this step was completed.",
+  "storyteller_createRequiresConnection": "Creating a storyteller requires an internet connection.",
+  "storyteller_deleteTitle": "Delete storyteller?",
+  "storyteller_deleteMessage": "Recordings previously assigned to this storyteller will show as unassigned.",
+  "storyteller_noneAssigned": "No storyteller assigned",
+  "storyteller_unknown": "Unknown storyteller",
+  "storyteller_selectHint": "Pick a storyteller",
+  "storyteller_required": "A storyteller is required",
+  "storyteller_searchPlaceholder": "Search storytellers",
+  "storyteller_empty": "No storytellers yet",
+  "storyteller_emptyDescription": "Create a storyteller for the project to assign to recordings.",
+  "storyteller_offlineNoCache": "Storytellers haven't been synced yet. Connect to the internet to load them.",
+  "storyteller_assign": "Assign",
+  "storyteller_reassign": "Reassign",
+  "storyteller_ageValidator": "Enter an age between 1 and 120",
+  "storyteller_ageYearsShort": "{age}y",
+  "@storyteller_ageYearsShort": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
+  "filters_buttonLabel": "Filters",
+  "filters_sheetTitle": "Filter recordings",
+  "filters_sectionStatus": "Upload status",
+  "filters_sectionGenre": "Genre",
+  "filters_sectionStoryteller": "Storyteller",
+  "filters_sectionUser": "Recorded by",
+  "filter_apply": "Apply",
+  "filter_reset": "Reset",
+  "filter_clearAll": "Clear all",
+  "filter_countActive": "{count, plural, one{1 filter} other{{count} filters}}",
+  "@filter_countActive": {
+    "placeholders": {
+      "count": {
+        "type": "num",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "filter_userAll": "Any user",
+  "filter_storytellerAll": "Any storyteller",
+  "filter_genreAll": "Any genre",
+  "detail_recordedBy": "Recorded by",
+  "detail_storyteller": "Storyteller",
+  "recording_unknownUser": "Unknown user",
+  "common_close": "Close"
 }

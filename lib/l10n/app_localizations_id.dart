@@ -469,6 +469,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get recording_titleHint => 'Tambah judul (opsional)';
 
   @override
+  String get recording_descriptionHint => 'Tambah deskripsi singkat (opsional)';
+
+  @override
+  String get recording_descriptionEmpty => 'Tambah deskripsi';
+
+  @override
   String get recording_saveRecording => 'Simpan Rekaman';
 
   @override
@@ -494,7 +500,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get recording_unknownGenre => 'Genre tidak dikenal';
 
   @override
-  String get recording_splitRecording => 'Bagi Rekaman';
+  String get recording_splitRecording => 'Edit Rekaman';
 
   @override
   String get recording_moveCategory => 'Pindah Kategori';
@@ -619,7 +625,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get recordings_clearFailed => 'Gagal membersihkan rekaman';
 
   @override
-  String get trim_title => 'Bagi Rekaman';
+  String get trim_title => 'Edit Rekaman';
 
   @override
   String get trim_notFound => 'Rekaman tidak ditemukan';
@@ -674,6 +680,35 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
+  String get trim_saveConfirmTitle => 'Simpan perubahan?';
+
+  @override
+  String trim_saveConfirmBody(int count) {
+    return 'Ini akan menggantikan rekaman asli dengan $count segmen. Tindakan ini tidak dapat dibatalkan.';
+  }
+
+  @override
+  String get trim_inheritLabel => 'Warisi';
+
+  @override
+  String get trim_applyToAll => 'Terapkan ke semua';
+
+  @override
+  String get trim_copyFromPrevious => 'Salin dari sebelumnya';
+
+  @override
+  String get trim_classifySegment => 'Klasifikasikan segmen';
+
+  @override
+  String get trim_volume => 'Volume';
+
+  @override
+  String get trim_peakClip => 'Klip';
+
+  @override
+  String get trim_boostOnSave => 'Penguat diterapkan saat menyimpan';
+
+  @override
   String get import_title => 'Impor Audio';
 
   @override
@@ -715,6 +750,79 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get import_importAndSave => 'Impor dan Simpan';
+
+  @override
+  String get import_setForAll => 'Tetapkan untuk semua file';
+
+  @override
+  String get import_applyToAll => 'Terapkan ke semua';
+
+  @override
+  String get import_fieldRequired => 'Wajib';
+
+  @override
+  String import_validationBanner(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count file kehilangan bidang wajib',
+      one: '1 file kehilangan bidang wajib',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get import_remove => 'Hapus file';
+
+  @override
+  String import_supportedFormats(String formats) {
+    return 'Format yang didukung: $formats. File yang tidak didukung atau tidak dapat dibaca akan dilewati.';
+  }
+
+  @override
+  String import_rejectedFiles(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Melewati $count file yang tidak didukung atau tidak dapat dibaca: $names',
+      one:
+          'Melewati 1 file yang tidak didukung atau tidak dapat dibaca: $names',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String import_countFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count file',
+      one: '1 file',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String import_importNFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count file',
+      one: '1 file',
+    );
+    return 'Impor $_temp0';
+  }
+
+  @override
+  String get import_emptyFile => 'file kosong';
+
+  @override
+  String get import_compressWav => 'Kompres WAV ke M4A';
+
+  @override
+  String get import_compressWavHint =>
+      '~10x lebih kecil, tanpa kehilangan kualitas untuk pipeline ML';
 
   @override
   String get moveCategory_title => 'Pindah Kategori';
@@ -1549,7 +1657,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get action_actions => 'Tindakan';
 
   @override
-  String get action_split => 'Bagi';
+  String get action_split => 'Edit';
 
   @override
   String get action_flagClean => 'Tandai Bersihkan';
@@ -1631,13 +1739,117 @@ class AppLocalizationsId extends AppLocalizations {
   String get classify_success => 'Rekaman diklasifikasi';
 
   @override
-  String get classify_register => 'Register (opsional)';
+  String get classify_register => 'Register';
 
   @override
   String get classify_selectRegister => 'Pilih register';
 
   @override
   String get recording_unclassified => 'Belum diklasifikasi';
+
+  @override
+  String get recording_inputSource => 'Input';
+
+  @override
+  String get recording_selectMicrophone => 'Pilih mikrofon';
+
+  @override
+  String get recording_builtInMicrophone => 'Default sistem';
+
+  @override
+  String get recording_micPermissionNeeded =>
+      'Izinkan akses mikrofon untuk melihat nama perangkat';
+
+  @override
+  String get recording_micPermissionButton => 'Berikan izin';
+
+  @override
+  String get recording_micPermissionDenied =>
+      'Izin mikrofon ditolak. Aktifkan di pengaturan browser atau sistem.';
+
+  @override
+  String get recording_micPermissionTitle => 'Akses mikrofon diperlukan';
+
+  @override
+  String get recording_noDevicesFound => 'Tidak ada mikrofon ditemukan';
+
+  @override
+  String get recording_storageLowWarnTitle => 'Penyimpanan rendah';
+
+  @override
+  String recording_storageLowWarnBody(int minutes) {
+    return 'Sekitar $minutes menit perekaman tersedia. Lanjutkan?';
+  }
+
+  @override
+  String get recording_storageRefuseTitle => 'Penyimpanan tidak cukup';
+
+  @override
+  String get recording_storageRefuseBody =>
+      'Bebaskan ruang di perangkat ini sebelum merekam.';
+
+  @override
+  String recording_storageCriticalBanner(int minutes) {
+    return 'Penyimpanan kritis — sekitar $minutes menit tersisa. Pertimbangkan untuk berhenti.';
+  }
+
+  @override
+  String get recording_storageForceStopped =>
+      'Perekaman berhenti karena penyimpanan habis. Kemajuan Anda telah disimpan.';
+
+  @override
+  String recording_savedAt(String time) {
+    return 'Disimpan pada $time';
+  }
+
+  @override
+  String get recording_continuedInBackground =>
+      'Perekaman berlanjut di latar belakang';
+
+  @override
+  String get recording_continue => 'Lanjutkan';
+
+  @override
+  String get recording_cancel => 'Batal';
+
+  @override
+  String get recording_recoverTitle => 'Pulihkan rekaman yang terputus?';
+
+  @override
+  String recording_recoverBody(int minutes) {
+    return 'Kami menemukan sekitar $minutes menit audio dari sesi sebelumnya.';
+  }
+
+  @override
+  String get recording_recoverButton => 'Pulihkan';
+
+  @override
+  String get recording_recoverDiscard => 'Buang';
+
+  @override
+  String get recording_recoverFailedLastSegment =>
+      'Sebagian audio di dekat akhir tidak dapat dibaca dan dilewati.';
+
+  @override
+  String get recording_inProgressNotificationTitle => 'Perekaman berlangsung';
+
+  @override
+  String get recording_inProgressNotificationBody =>
+      'Ketuk untuk kembali ke aplikasi';
+
+  @override
+  String get profile_defaultMicrophone => 'Mikrofon default';
+
+  @override
+  String get profile_systemDefault => 'Default sistem';
+
+  @override
+  String get settings_deviceStorageTitle => 'Penyimpanan perangkat';
+
+  @override
+  String settings_deviceStorageSubtitle(String used, String free) {
+    return 'Terpakai $used · Bebas $free';
+  }
 
   @override
   String get fab_quickRecord => 'Cepat';
@@ -1704,4 +1916,169 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get error_generic => 'Terjadi kesalahan. Silakan coba lagi nanti.';
+
+  @override
+  String get common_close => 'Close';
+
+  @override
+  String get storyteller_title => 'Storytellers';
+
+  @override
+  String get storyteller_singular => 'Storyteller';
+
+  @override
+  String get storyteller_manageAction => 'Manage storytellers';
+
+  @override
+  String get storyteller_addNew => 'Add storyteller';
+
+  @override
+  String get storyteller_createTitle => 'New storyteller';
+
+  @override
+  String get storyteller_editTitle => 'Edit storyteller';
+
+  @override
+  String get storyteller_speakerName => 'Speaker name';
+
+  @override
+  String get storyteller_sex => 'Sex';
+
+  @override
+  String get storyteller_sexMale => 'Male';
+
+  @override
+  String get storyteller_sexFemale => 'Female';
+
+  @override
+  String get storyteller_age => 'Age';
+
+  @override
+  String get storyteller_location => 'Location';
+
+  @override
+  String get storyteller_dialect => 'Dialect';
+
+  @override
+  String get storyteller_externalAcceptanceTitle =>
+      'External acceptance validation';
+
+  @override
+  String get storyteller_externalAcceptanceDescription =>
+      'I confirm that external acceptance validation has been performed for this speaker.';
+
+  @override
+  String get storyteller_externalAcceptanceInfo =>
+      'Before registering a storyteller, the project manager must obtain the speaker\'s consent outside the app (for example, through a signed release form or recorded verbal agreement). This checkbox records that this step was completed.';
+
+  @override
+  String get storyteller_createRequiresConnection =>
+      'Creating a storyteller requires an internet connection.';
+
+  @override
+  String get storyteller_deleteTitle => 'Delete storyteller?';
+
+  @override
+  String get storyteller_deleteMessage =>
+      'Recordings previously assigned to this storyteller will show as unassigned.';
+
+  @override
+  String get storyteller_noneAssigned => 'No storyteller assigned';
+
+  @override
+  String get storyteller_unknown => 'Unknown storyteller';
+
+  @override
+  String get storyteller_selectHint => 'Pick a storyteller';
+
+  @override
+  String get storyteller_required => 'A storyteller is required';
+
+  @override
+  String get storyteller_searchPlaceholder => 'Search storytellers';
+
+  @override
+  String get storyteller_empty => 'No storytellers yet';
+
+  @override
+  String get storyteller_emptyDescription =>
+      'Create a storyteller for the project to assign to recordings.';
+
+  @override
+  String get storyteller_offlineNoCache =>
+      'Storytellers haven\'t been synced yet. Connect to the internet to load them.';
+
+  @override
+  String get storyteller_assign => 'Assign';
+
+  @override
+  String get storyteller_reassign => 'Reassign';
+
+  @override
+  String get storyteller_ageValidator => 'Enter an age between 1 and 120';
+
+  @override
+  String storyteller_ageYearsShort(int age) {
+    return '${age}y';
+  }
+
+  @override
+  String get filters_buttonLabel => 'Filters';
+
+  @override
+  String get filters_sheetTitle => 'Filter recordings';
+
+  @override
+  String get filters_sectionStatus => 'Upload status';
+
+  @override
+  String get filters_sectionGenre => 'Genre';
+
+  @override
+  String get filters_sectionStoryteller => 'Storyteller';
+
+  @override
+  String get filters_sectionUser => 'Recorded by';
+
+  @override
+  String get filter_apply => 'Apply';
+
+  @override
+  String get filter_reset => 'Reset';
+
+  @override
+  String get filter_clearAll => 'Clear all';
+
+  @override
+  String filter_countActive(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString filters',
+      one: '1 filter',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get filter_userAll => 'Any user';
+
+  @override
+  String get filter_storytellerAll => 'Any storyteller';
+
+  @override
+  String get filter_genreAll => 'Any genre';
+
+  @override
+  String get detail_recordedBy => 'Recorded by';
+
+  @override
+  String get detail_storyteller => 'Storyteller';
+
+  @override
+  String get recording_unknownUser => 'Unknown user';
 }

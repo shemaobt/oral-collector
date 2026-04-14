@@ -20,7 +20,10 @@ import '../../features/recording/presentation/recording_detail_screen.dart';
 import '../../features/recording/presentation/quick_recording_screen.dart';
 import '../../features/recording/presentation/recording_flow_screen.dart';
 import '../../features/recording/presentation/recordings_list_screen.dart';
+import '../../features/recording/presentation/recovery_screen.dart';
 import '../../features/recording/presentation/trim_editor_screen.dart';
+import '../../features/storyteller/presentation/storyteller_form_screen.dart';
+import '../../features/storyteller/presentation/storytellers_list_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../shared/widgets/app_shell.dart';
 
@@ -82,6 +85,18 @@ final routerProvider = Provider<GoRouter>((ref) {
               GenreDetailScreen(genreId: state.pathParameters['id'] ?? ''),
         ),
         GoRoute(
+          path: '/record-flow',
+          redirect: (context, state) {
+            final hasProject =
+                ref.read(projectNotifierProvider).activeProject != null;
+            return hasProject ? null : '/home';
+          },
+          builder: (context, state) => RecordingFlowScreen(
+            genreId: state.uri.queryParameters['genreId'],
+            subcategoryId: state.uri.queryParameters['subcategoryId'],
+          ),
+        ),
+        GoRoute(
           path: '/recording/:id',
           builder: (context, state) => RecordingDetailScreen(
             recordingId: state.pathParameters['id'] ?? '',
@@ -108,9 +123,34 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
         ),
         GoRoute(
+          path: '/project/:projectId/storytellers',
+          builder: (context, state) => StorytellersListScreen(
+            projectId: state.pathParameters['projectId'] ?? '',
+          ),
+        ),
+        GoRoute(
+          path: '/project/:projectId/storytellers/new',
+          builder: (context, state) => StorytellerFormScreen(
+            projectId: state.pathParameters['projectId'] ?? '',
+          ),
+        ),
+        GoRoute(
+          path: '/project/:projectId/storytellers/:storytellerId/edit',
+          builder: (context, state) => StorytellerFormScreen(
+            projectId: state.pathParameters['projectId'] ?? '',
+            storytellerId: state.pathParameters['storytellerId'],
+          ),
+        ),
+        GoRoute(
           path: '/admin',
           redirect: (context, state) => '/profile',
           builder: (context, state) => const AdminDashboardScreen(),
+        ),
+        GoRoute(
+          path: '/recover/:sessionId',
+          builder: (context, state) => RecoveryScreen(
+            sessionId: state.pathParameters['sessionId'] ?? '',
+          ),
         ),
       ],
 
@@ -124,7 +164,6 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/record',
             redirect: (context, state) {
-              if (kIsWeb) return '/recordings';
               final hasProject =
                   ref.read(projectNotifierProvider).activeProject != null;
               return hasProject ? null : '/home';
@@ -137,7 +176,6 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/quick-record',
             redirect: (context, state) {
-              if (kIsWeb) return '/recordings';
               final hasProject =
                   ref.read(projectNotifierProvider).activeProject != null;
               return hasProject ? null : '/home';
@@ -183,6 +221,25 @@ final routerProvider = Provider<GoRouter>((ref) {
               path: '/project/:id/settings',
               builder: (context, state) => ProjectSettingsScreen(
                 projectId: state.pathParameters['id'] ?? '',
+              ),
+            ),
+            GoRoute(
+              path: '/project/:projectId/storytellers',
+              builder: (context, state) => StorytellersListScreen(
+                projectId: state.pathParameters['projectId'] ?? '',
+              ),
+            ),
+            GoRoute(
+              path: '/project/:projectId/storytellers/new',
+              builder: (context, state) => StorytellerFormScreen(
+                projectId: state.pathParameters['projectId'] ?? '',
+              ),
+            ),
+            GoRoute(
+              path: '/project/:projectId/storytellers/:storytellerId/edit',
+              builder: (context, state) => StorytellerFormScreen(
+                projectId: state.pathParameters['projectId'] ?? '',
+                storytellerId: state.pathParameters['storytellerId'],
               ),
             ),
             GoRoute(

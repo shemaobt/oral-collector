@@ -9,6 +9,8 @@ class RecordingsListState {
   final bool isLoadingMore;
   final bool hasMore;
   final String? selectedGenreId;
+  final String? selectedStorytellerId;
+  final String? selectedUserId;
   final StatusFilter selectedFilter;
 
   const RecordingsListState({
@@ -17,6 +19,8 @@ class RecordingsListState {
     this.isLoadingMore = false,
     this.hasMore = true,
     this.selectedGenreId,
+    this.selectedStorytellerId,
+    this.selectedUserId,
     this.selectedFilter = StatusFilter.all,
   });
 
@@ -26,8 +30,12 @@ class RecordingsListState {
     bool? isLoadingMore,
     bool? hasMore,
     String? selectedGenreId,
+    String? selectedStorytellerId,
+    String? selectedUserId,
     StatusFilter? selectedFilter,
     bool clearGenreId = false,
+    bool clearStorytellerId = false,
+    bool clearUserId = false,
   }) {
     return RecordingsListState(
       recordings: recordings ?? this.recordings,
@@ -37,8 +45,23 @@ class RecordingsListState {
       selectedGenreId: clearGenreId
           ? null
           : (selectedGenreId ?? this.selectedGenreId),
+      selectedStorytellerId: clearStorytellerId
+          ? null
+          : (selectedStorytellerId ?? this.selectedStorytellerId),
+      selectedUserId: clearUserId
+          ? null
+          : (selectedUserId ?? this.selectedUserId),
       selectedFilter: selectedFilter ?? this.selectedFilter,
     );
+  }
+
+  int get activeFilterCount {
+    var count = 0;
+    if (selectedFilter != StatusFilter.all) count++;
+    if (selectedGenreId != null) count++;
+    if (selectedStorytellerId != null) count++;
+    if (selectedUserId != null) count++;
+    return count;
   }
 
   List<LocalRecording> get filteredRecordings {
@@ -46,6 +69,16 @@ class RecordingsListState {
 
     if (selectedGenreId != null) {
       list = list.where((r) => r.genreId == selectedGenreId).toList();
+    }
+
+    if (selectedStorytellerId != null) {
+      list = list
+          .where((r) => r.storytellerId == selectedStorytellerId)
+          .toList();
+    }
+
+    if (selectedUserId != null) {
+      list = list.where((r) => r.userId == selectedUserId).toList();
     }
 
     switch (selectedFilter) {

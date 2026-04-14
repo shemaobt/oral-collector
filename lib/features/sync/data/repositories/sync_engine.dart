@@ -223,6 +223,7 @@ class SyncEngineImpl implements SyncEngine {
           'genre_id': recording.genreId,
           'subcategory_id': recording.subcategoryId,
           'title': recording.title,
+          'description': recording.description,
           'duration_seconds': recording.durationSeconds,
           'file_size_bytes': recording.fileSizeBytes,
           'format': recording.format,
@@ -230,6 +231,10 @@ class SyncEngineImpl implements SyncEngine {
         };
         if (recording.registerId != null && recording.registerId!.isNotEmpty) {
           createBody['register_id'] = recording.registerId;
+        }
+        if (recording.storytellerId != null &&
+            recording.storytellerId!.isNotEmpty) {
+          createBody['storyteller_id'] = recording.storytellerId;
         }
         final createResponse = await _client
             .post('/api/oc/recordings', body: createBody)

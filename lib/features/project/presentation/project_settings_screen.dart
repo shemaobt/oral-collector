@@ -80,6 +80,9 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
       final totalDuration =
           (stats['total_duration_seconds'] as num?)?.toDouble() ??
           project.totalDurationSeconds;
+      final storytellerCount =
+          (stats['total_storytellers'] as num?)?.toInt() ??
+          project.storytellerCount;
 
       final languages = ref.read(projectNotifierProvider).languages;
       final lang = languages
@@ -96,6 +99,7 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
         memberCount: project.memberCount,
         recordingCount: recordingCount,
         totalDurationSeconds: totalDuration,
+        storytellerCount: storytellerCount,
         createdAt: project.createdAt,
       );
 
@@ -271,7 +275,13 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
         appBar: AppBar(
           leading: IconButton(
             icon: const Icon(LucideIcons.arrowLeft),
-            onPressed: () => context.pop(),
+            onPressed: () {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/projects');
+              }
+            },
           ),
           title: Text(l10n.projectSettings_title),
         ),
@@ -389,6 +399,16 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
           projectId: widget.projectId,
           onRemove: _isManager ? _confirmRemoveMember : null,
         ),
+        const SizedBox(height: 16),
+        OutlinedButton.icon(
+          onPressed: () =>
+              context.push('/project/${widget.projectId}/storytellers'),
+          icon: const Icon(LucideIcons.users, size: 16),
+          label: Text(l10n.storyteller_manageAction),
+          style: OutlinedButton.styleFrom(
+            minimumSize: const Size.fromHeight(44),
+          ),
+        ),
       ],
     );
 
@@ -400,7 +420,13 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
             ProjectSettingsHeader(
               project: _project!,
               memberCount: memberCount,
-              onBack: () => context.pop(),
+              onBack: () {
+                if (context.canPop()) {
+                  context.pop();
+                } else {
+                  context.go('/projects');
+                }
+              },
             ),
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
@@ -415,6 +441,7 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
                           ProjectSettingsStatsRow(
                             project: _project!,
                             memberCount: memberCount,
+                            storytellerCount: _project!.storytellerCount,
                           ),
                           const SizedBox(height: 28),
                           Row(
@@ -435,6 +462,7 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
                       ProjectSettingsStatsRow(
                         project: _project!,
                         memberCount: memberCount,
+                        storytellerCount: _project!.storytellerCount,
                       ),
                       if (_isManager) ...[
                         const SizedBox(height: 28),

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
@@ -23,8 +24,13 @@ class ScrollingWaveform extends StatefulWidget {
 }
 
 class _ScrollingWaveformState extends State<ScrollingWaveform> {
-  final List<double> _amplitudes = [];
+  static const int _bufferCapacity = 6000;
+
+  final _AmplitudeRingBuffer _amplitudes = _AmplitudeRingBuffer(
+    _bufferCapacity,
+  );
   StreamSubscription<double>? _subscription;
+  int _revision = 0;
 
   @override
   void initState() {
@@ -51,6 +57,7 @@ class _ScrollingWaveformState extends State<ScrollingWaveform> {
       if (!mounted || widget.isPaused) return;
       setState(() {
         _amplitudes.add(amp.clamp(0.0, 1.0));
+        _revision++;
       });
     });
   }
@@ -71,6 +78,7 @@ class _ScrollingWaveformState extends State<ScrollingWaveform> {
             size: Size(constraints.maxWidth, widget.height),
             painter: _ScrollingWaveformPainter(
               amplitudes: _amplitudes,
+              revision: _revision,
               barColor: widget.barColor ?? Colors.black,
               cursorColor: widget.cursorColor ?? const Color(0xFFD45200),
             ),
@@ -81,14 +89,43 @@ class _ScrollingWaveformState extends State<ScrollingWaveform> {
   }
 }
 
+class _AmplitudeRingBuffer {
+  _AmplitudeRingBuffer(this.capacity) : _buf = Float64List(capacity);
+
+  final int capacity;
+  final Float64List _buf;
+  int _head = 0;
+  int _count = 0;
+
+  void add(double v) {
+    _buf[_head] = v;
+    _head = (_head + 1) % capacity;
+    if (_count < capacity) _count++;
+  }
+
+  void clear() {
+    _head = 0;
+    _count = 0;
+  }
+
+  int get length => _count;
+
+  double operator [](int logicalIndex) {
+    if (_count < capacity) return _buf[logicalIndex];
+    return _buf[(_head + logicalIndex) % capacity];
+  }
+}
+
 class _ScrollingWaveformPainter extends CustomPainter {
   _ScrollingWaveformPainter({
     required this.amplitudes,
+    required this.revision,
     required this.barColor,
     required this.cursorColor,
   });
 
-  final List<double> amplitudes;
+  final _AmplitudeRingBuffer amplitudes;
+  final int revision;
   final Color barColor;
   final Color cursorColor;
 
@@ -128,15 +165,15 @@ class _ScrollingWaveformPainter extends CustomPainter {
     final startIdx = amplitudes.length > maxBars
         ? amplitudes.length - maxBars
         : 0;
-    final visible = amplitudes.sublist(startIdx);
+    final visibleCount = amplitudes.length - startIdx;
     final fadeZone = size.width * 0.12;
 
-    for (var i = 0; i < visible.length; i++) {
-      final amp = visible[i];
-      final x = centerX - (visible.length - i) * slotWidth;
+    for (var i = 0; i < visibleCount; i++) {
+      final amp = amplitudes[startIdx + i];
+      final x = centerX - (visibleCount - i) * slotWidth;
       if (x < -barWidth) continue;
 
-      final recency = visible.length > 1 ? i / (visible.length - 1) : 1.0;
+      final recency = visibleCount > 1 ? i / (visibleCount - 1) : 1.0;
       double fade = 1.0;
       if (x < fadeZone) fade = (x / fadeZone).clamp(0.0, 1.0);
       final alpha = ((0.35 + 0.65 * recency) * fade).clamp(0.0, 1.0);
@@ -193,7 +230,7 @@ class _ScrollingWaveformPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _ScrollingWaveformPainter old) {
-    return old.amplitudes.length != amplitudes.length ||
+    return old.revision != revision ||
         old.barColor != barColor ||
         old.cursorColor != cursorColor;
   }

@@ -1,8 +1,6 @@
 {
   "@@locale": "zh",
-
   "appTitle": "Oral Collector",
-
   "nav_home": "首页",
   "nav_record": "录音",
   "nav_recordings": "录音列表",
@@ -10,7 +8,6 @@
   "nav_profile": "个人资料",
   "nav_admin": "管理",
   "nav_collapse": "折叠",
-
   "common_cancel": "取消",
   "common_save": "保存",
   "common_delete": "删除",
@@ -25,7 +22,6 @@
   "common_clear": "清除",
   "common_untitled": "无标题",
   "common_loading": "加载中...",
-
   "auth_oralCollector": "Oral Collector",
   "auth_byShema": "由 Shema 提供",
   "auth_heroTagline": "保存声音。\n分享故事。",
@@ -38,7 +34,6 @@
   "auth_signInSubtitle": "登录以继续收集故事。",
   "auth_signUpSubtitle": "加入我们的故事收集者社区。",
   "auth_backToSignIn": "返回登录",
-
   "auth_emailLabel": "电子邮箱",
   "auth_emailHint": "your@email.com",
   "auth_emailRequired": "请输入您的电子邮箱",
@@ -54,13 +49,11 @@
   "auth_nameLabel": "姓名",
   "auth_nameHint": "您的全名",
   "auth_nameRequired": "请输入您的显示名称",
-
   "auth_signIn": "登录",
   "auth_signUp": "注册",
   "auth_noAccount": "还没有账户？",
   "auth_haveAccount": "已有账户？",
   "auth_continueButton": "继续",
-
   "auth_forgotPassword": "忘记密码？",
   "auth_resetPassword": "重置密码",
   "auth_forgotPasswordSubtitle": "输入您的邮箱，我们将向您发送重置链接。",
@@ -70,13 +63,14 @@
   "auth_resetEmailSent": "我们已向 {email} 发送了密码重置链接。请查看您的收件箱并点击链接设置新密码。",
   "@auth_resetEmailSent": {
     "placeholders": {
-      "email": {"type": "String"}
+      "email": {
+        "type": "String"
+      }
     }
   },
   "auth_openEmailApp": "打开邮箱",
   "auth_resendEmail": "重新发送",
   "auth_backToLogin": "返回登录",
-
   "auth_newPassword": "新密码",
   "auth_confirmNewPassword": "确认新密码",
   "auth_resetPasswordSubtitle": "请在下方输入您的新密码。",
@@ -86,15 +80,18 @@
   "auth_invalidResetLink": "无效链接",
   "auth_invalidResetLinkMessage": "此密码重置链接无效或已过期。",
   "auth_requestNewLink": "请求新链接",
-
   "home_greetingMorning": "早上好",
   "home_greetingAfternoon": "下午好",
   "home_greetingEvening": "晚上好",
   "home_greetingWithName": "{greeting}，{name}",
   "@home_greetingWithName": {
     "placeholders": {
-      "greeting": {"type": "String"},
-      "name": {"type": "String"}
+      "greeting": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
     }
   },
   "home_subtitle": "今天来分享您的故事吧",
@@ -105,11 +102,9 @@
   "home_noGenres": "暂无可用体裁",
   "home_noProjectTitle": "选择一个项目以开始",
   "home_browseProjects": "浏览项目",
-
   "stats_recordings": "录音",
   "stats_recorded": "已录制",
   "stats_members": "成员",
-
   "project_switchTitle": "切换项目",
   "project_projects": "项目",
   "project_subtitle": "管理您的收藏",
@@ -141,12 +136,13 @@
   "project_addAsNewLanguage": "将\"{query}\"添加为新语言",
   "@project_addAsNewLanguage": {
     "placeholders": {
-      "query": {"type": "String"}
+      "query": {
+        "type": "String"
+      }
     }
   },
   "project_searchLanguages": "搜索语言...",
   "project_backToList": "返回列表",
-
   "projectSettings_title": "项目设置",
   "projectSettings_details": "详情",
   "projectSettings_saving": "保存中...",
@@ -158,14 +154,15 @@
   "projectSettings_removeMemberConfirm": "确定要将 {name} 从此项目中移除吗？",
   "@projectSettings_removeMemberConfirm": {
     "placeholders": {
-      "name": {"type": "String"}
+      "name": {
+        "type": "String"
+      }
     }
   },
   "projectSettings_memberRemoved": "成员已移除",
   "projectSettings_memberRemoveFailed": "移除成员失败",
   "projectSettings_inviteSent": "邀请已成功发送",
   "projectSettings_noMembers": "暂无成员",
-
   "recording_selectGenre": "选择体裁",
   "recording_selectGenreSubtitle": "为您的故事选择一个体裁",
   "recording_selectSubcategory": "选择子类别",
@@ -179,26 +176,28 @@
   "recording_genreNotFound": "未找到体裁",
   "recording_noGenres": "暂无可用体裁",
   "recording_noSubcategories": "暂无可用子类别",
-
   "recording_registerDescription": "选择最能描述此录音语气和正式程度的语域。",
   "recording_titleHint": "添加标题（选填）",
+  "recording_descriptionHint": "添加简短描述（选填）",
+  "recording_descriptionEmpty": "添加描述",
   "recording_saveRecording": "保存录音",
   "recording_recordAgain": "重新录音",
   "recording_discard": "丢弃",
   "recording_discardTitle": "丢弃录音？",
   "recording_discardMessage": "此录音将被永久删除。",
   "recording_saved": "录音已保存",
-
   "recording_notFound": "未找到录音",
   "recording_unknownGenre": "未知体裁",
-  "recording_splitRecording": "拆分录音",
+  "recording_splitRecording": "编辑录音",
   "recording_moveCategory": "移动分类",
   "recording_downloadAudio": "下载音频",
   "recording_downloadAudioMessage": "音频文件未存储在此设备上。是否要下载以进行剪辑？",
   "recording_downloadFailed": "下载失败：{error}",
   "@recording_downloadFailed": {
     "placeholders": {
-      "error": {"type": "String"}
+      "error": {
+        "type": "String"
+      }
     }
   },
   "recording_audioNotAvailable": "音频文件不可用",
@@ -212,7 +211,6 @@
   "recording_moveNoPermission": "您没有权限移动此录音",
   "recording_movedSuccess": "录音移动成功",
   "recording_updateFailed": "更新服务器失败",
-
   "recordings_title": "录音列表",
   "recordings_subtitle": "您收集的故事",
   "recordings_importAudio": "导入音频文件",
@@ -223,26 +221,27 @@
   "recordings_count": "{count, plural, =1{1 条录音} other{{count} 条录音}}",
   "@recordings_count": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
-
   "recording_statusUploaded": "已上传",
   "recording_statusUploading": "上传中",
   "recording_statusFailed": "失败",
   "recording_statusLocal": "本地",
-
   "recordings_clearStale": "清除失败项",
   "recordings_clearStaleMessage": "此操作将永久删除服务器上所有上传失败或卡住的录音。此操作无法撤消。",
   "recordings_clearedCount": "{count, plural, =0{未找到过期录音} =1{已清除 1 条录音} other{已清除 {count} 条录音}}",
   "@recordings_clearedCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "recordings_clearFailed": "清除录音失败",
-
-  "trim_title": "拆分录音",
+  "trim_title": "编辑录音",
   "trim_notFound": "未找到录音",
   "trim_audioUrlNotAvailable": "此录音的音频 URL 不可用。",
   "trim_localNotAvailable": "本地音频文件不可用。请先下载录音。",
@@ -254,24 +253,40 @@
   "trim_saveSegments": "{count, plural, =1{保存 1 个片段} other{保存 {count} 个片段}}",
   "@trim_saveSegments": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "trim_addSplitsFirst": "请先添加分割点",
   "trim_savedSegments": "已保存 {kept} 个片段，移除了 {removed} 个",
   "@trim_savedSegments": {
     "placeholders": {
-      "kept": {"type": "int"},
-      "removed": {"type": "int"}
+      "kept": {
+        "type": "int"
+      },
+      "removed": {
+        "type": "int"
+      }
     }
   },
   "trim_splitInto": "拆分为 {count} 条录音",
   "@trim_splitInto": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
-
+  "trim_saveConfirmTitle": "保存更改？",
+  "trim_saveConfirmBody": "这将用 {count} 个片段替换原始录音。此操作无法撤消。",
+  "trim_inheritLabel": "继承",
+  "trim_applyToAll": "应用于所有",
+  "trim_copyFromPrevious": "从上一个复制",
+  "trim_classifySegment": "分类片段",
+  "trim_volume": "音量",
+  "trim_peakClip": "削波",
+  "trim_boostOnSave": "保存时应用增益",
   "import_title": "导入音频",
   "import_selectGenre": "选择体裁",
   "import_selectSubcategory": "选择子类别",
@@ -284,41 +299,72 @@
   "import_pickError": "选择文件出错：{error}",
   "@import_pickError": {
     "placeholders": {
-      "error": {"type": "String"}
+      "error": {
+        "type": "String"
+      }
     }
   },
   "import_saveError": "保存文件出错：{error}",
   "@import_saveError": {
     "placeholders": {
-      "error": {"type": "String"}
+      "error": {
+        "type": "String"
+      }
     }
   },
   "import_unknownFile": "未知文件",
   "import_importAndSave": "导入并保存",
-
+  "import_setForAll": "为所有文件设置",
+  "import_applyToAll": "应用到全部",
+  "import_fieldRequired": "必填",
+  "import_validationBanner": "{count, plural, =1{有 1 个文件缺少必填字段} other{有 {count} 个文件缺少必填字段}}",
+  "@import_validationBanner": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "import_remove": "移除文件",
+  "import_supportedFormats": "支持的格式：{formats}。不支持或无法读取的文件将被跳过。",
+  "@import_supportedFormats": {
+    "placeholders": { "formats": { "type": "String" } }
+  },
+  "import_rejectedFiles": "{count, plural, =1{已跳过 1 个不支持或无法读取的文件：{names}} other{已跳过 {count} 个不支持或无法读取的文件：{names}}}",
+  "@import_rejectedFiles": {
+    "placeholders": { "count": { "type": "int" }, "names": { "type": "String" } }
+  },
+  "import_countFiles": "{count, plural, =1{1 个文件} other{{count} 个文件}}",
+  "@import_countFiles": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "import_importNFiles": "导入 {count, plural, =1{1 个文件} other{{count} 个文件}}",
+  "@import_importNFiles": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "import_emptyFile": "空文件",
+  "import_compressWav": "将 WAV 压缩为 M4A",
+  "import_compressWavHint": "~10x 更小，对 ML 流水线无质量损失",
   "moveCategory_title": "移动分类",
   "moveCategory_genre": "体裁",
   "moveCategory_subcategory": "子类别",
   "moveCategory_selectSubcategory": "选择子类别",
-
   "cleaning_needsCleaning": "需要清理",
   "cleaning_cleaning": "清理中...",
   "cleaning_cleaned": "已清理",
   "cleaning_cleanFailed": "清理失败",
-
   "sync_uploading": "上传中...",
   "sync_pending": "{count} 待处理",
   "@sync_pending": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
-
   "profile_photoUpdated": "头像已更新",
   "profile_photoFailed": "更新头像失败：{error}",
   "@profile_photoFailed": {
     "placeholders": {
-      "error": {"type": "String"}
+      "error": {
+        "type": "String"
+      }
     }
   },
   "profile_editName": "编辑显示名称",
@@ -343,31 +389,38 @@
   "profile_joinedSuccess": "已成功加入\"{name}\"",
   "@profile_joinedSuccess": {
     "placeholders": {
-      "name": {"type": "String"}
+      "name": {
+        "type": "String"
+      }
     }
   },
   "profile_inviteDeclined": "邀请已拒绝",
   "profile_language": "语言",
-
   "profile_online": "在线",
   "profile_offline": "离线",
   "profile_lastSync": "上次同步：{time}",
   "@profile_lastSync": {
     "placeholders": {
-      "time": {"type": "String"}
+      "time": {
+        "type": "String"
+      }
     }
   },
   "profile_neverSynced": "从未同步",
   "profile_pendingCount": "{count} 待处理",
   "@profile_pendingCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "profile_syncingProgress": "同步中... {percent}%",
   "@profile_syncingProgress": {
     "placeholders": {
-      "percent": {"type": "int"}
+      "percent": {
+        "type": "int"
+      }
     }
   },
   "profile_syncNow": "立即同步",
@@ -377,7 +430,6 @@
   "profile_autoRemoveSubtitle": "上传成功后删除本地文件",
   "profile_clearCache": "清除本地缓存",
   "profile_clearCacheSubtitle": "删除所有本地存储的录音",
-
   "profile_invitations": "邀请",
   "profile_refreshInvitations": "刷新邀请",
   "profile_noInvitations": "暂无待处理的邀请",
@@ -385,24 +437,20 @@
   "profile_roleMember": "角色：成员",
   "profile_decline": "拒绝",
   "profile_accept": "接受",
-
   "profile_storage": "存储",
   "profile_status": "状态",
   "profile_pendingLabel": "待处理",
-
   "admin_title": "管理面板",
   "admin_overview": "概览",
   "admin_projects": "项目",
   "admin_genres": "体裁",
   "admin_cleaning": "清理",
   "admin_accessRequired": "需要管理员权限",
-
   "admin_totalProjects": "项目总数",
   "admin_languages": "语言",
   "admin_recordings": "录音",
   "admin_totalHours": "总时长",
   "admin_activeUsers": "活跃用户",
-
   "admin_projectName": "名称",
   "admin_projectLanguage": "语言",
   "admin_projectMembers": "成员",
@@ -411,7 +459,6 @@
   "admin_projectCreated": "创建时间",
   "admin_noProjects": "未找到项目",
   "admin_unknownLanguage": "未知语言",
-
   "admin_genresAndSubcategories": "体裁与子类别",
   "admin_addGenre": "添加体裁",
   "admin_noGenres": "未找到体裁",
@@ -428,14 +475,18 @@
   "admin_deleteGenreConfirm": "确定要删除\"{name}\"及其所有子类别吗？",
   "@admin_deleteGenreConfirm": {
     "placeholders": {
-      "name": {"type": "String"}
+      "name": {
+        "type": "String"
+      }
     }
   },
   "admin_genreDeleted": "体裁已删除",
   "admin_addSubcategoryTo": "向 {name} 添加子类别",
   "@admin_addSubcategoryTo": {
     "placeholders": {
-      "name": {"type": "String"}
+      "name": {
+        "type": "String"
+      }
     }
   },
   "admin_subcategoryName": "子类别名称",
@@ -444,16 +495,19 @@
   "admin_deleteSubcategoryConfirm": "确定要删除\"{name}\"吗？",
   "@admin_deleteSubcategoryConfirm": {
     "placeholders": {
-      "name": {"type": "String"}
+      "name": {
+        "type": "String"
+      }
     }
   },
   "admin_subcategoryDeleted": "子类别已删除",
-
   "admin_cleaningQueue": "音频清理队列",
   "admin_cleanSelected": "清理所选 ({count})",
   "@admin_cleanSelected": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "admin_refreshCleaning": "刷新清理队列",
@@ -473,66 +527,85 @@
   "admin_cleaningPartial": "已触发 {total} 条录音中 {success} 条的清理",
   "@admin_cleaningPartial": {
     "placeholders": {
-      "success": {"type": "int"},
-      "total": {"type": "int"}
+      "success": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
-
   "genre_title": "体裁",
   "genre_notFound": "未找到体裁",
   "genre_recordingCount": "{count, plural, =1{1 条录音} other{{count} 条录音}}",
   "@genre_recordingCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
-
   "format_justNow": "刚刚",
   "format_minutesAgo": "{count}分钟前",
   "@format_minutesAgo": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "format_hoursAgo": "{count}小时前",
   "@format_hoursAgo": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "format_daysAgo": "{count}天前",
   "@format_daysAgo": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "format_weeksAgo": "{count}周前",
   "@format_weeksAgo": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "format_monthsAgo": "{count}个月前",
   "@format_monthsAgo": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "format_memberSince": "加入于 {date}",
   "@format_memberSince": {
     "placeholders": {
-      "date": {"type": "String"}
+      "date": {
+        "type": "String"
+      }
     }
   },
   "format_member": "成员",
   "format_dateAt": "{date} {time}",
   "@format_dateAt": {
     "placeholders": {
-      "date": {"type": "String"},
-      "time": {"type": "String"}
+      "date": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
     }
   },
-
   "genre_narrative": "叙事",
   "genre_narrativeDesc": "故事、记述及口头传统的叙事形式",
   "genre_poeticSong": "诗歌 / 歌曲",
@@ -541,7 +614,6 @@
   "genre_instructionalDesc": "律法、仪式、程序和教导形式",
   "genre_oralDiscourse": "口头论述",
   "genre_oralDiscourseDesc": "演讲、教导、祷告和口头论述形式",
-
   "sub_historicalNarrative": "历史叙事",
   "sub_personalAccount": "个人经历 / 见证",
   "sub_parable": "比喻 / 寓言故事",
@@ -573,7 +645,6 @@
   "sub_apocalypticDiscourse": "启示论述",
   "sub_ceremonialSpeech": "典礼致辞",
   "sub_communityMemory": "社区记忆",
-
   "sub_historicalNarrativeDesc": "关于事件、战争和历史关键时刻的记述",
   "sub_personalAccountDesc": "第一人称讲述的个人经历和信仰故事",
   "sub_parableDesc": "传达道德或属灵教训的象征性故事",
@@ -605,7 +676,6 @@
   "sub_apocalypticDiscourseDesc": "关于末世和上帝计划的启示",
   "sub_ceremonialSpeechDesc": "用于正式或神圣场合的致辞",
   "sub_communityMemoryDesc": "保存群体认同的共同回忆",
-
   "register_intimate": "亲密",
   "register_casual": "非正式 / 随意",
   "register_consultative": "咨询式",
@@ -613,7 +683,6 @@
   "register_ceremonial": "典礼式",
   "register_elderAuthority": "长辈 / 权威",
   "register_religiousWorship": "宗教 / 敬拜",
-
   "locale_english": "English",
   "locale_portuguese": "Português",
   "locale_hindi": "हिन्दी",
@@ -638,14 +707,12 @@
   "locale_chineseSub": "中文",
   "locale_selectLanguage": "选择您的语言",
   "locale_selectLanguageSubtitle": "您可以稍后在个人资料设置中更改。",
-
   "filter_all": "全部",
   "filter_pending": "待处理",
   "filter_uploaded": "已上传",
   "filter_needsCleaning": "需要清理",
   "filter_unclassified": "未分类",
   "filter_allGenres": "所有体裁",
-
   "detail_duration": "时长",
   "detail_size": "大小",
   "detail_format": "格式",
@@ -662,20 +729,16 @@
   "detail_uploadFailed": "上传失败",
   "detail_pendingRetried": "待处理（已重试）",
   "detail_notSynced": "未同步",
-
   "action_actions": "操作",
-  "action_split": "拆分",
+  "action_split": "编辑",
   "action_flagClean": "标记清理",
   "action_clearFlag": "清除标记",
   "action_move": "移动",
   "action_delete": "删除",
-
   "projectStats_recordings": "录音",
   "projectStats_duration": "时长",
   "projectStats_members": "成员",
-
   "project_active": "活跃",
-
   "recording_paused": "已暂停",
   "recording_recording": "录音中",
   "recording_tapToRecord": "点击录音",
@@ -687,23 +750,51 @@
   "recording_stop": "停止",
   "recording_resume": "继续",
   "recording_pause": "暂停",
-
   "quickRecord_title": "快速录音",
   "quickRecord_subtitle": "稍后分类",
   "quickRecord_classifyLater": "稍后分类",
-
   "classify_title": "分类录音",
   "classify_action": "分类",
   "classify_banner": "此录音需要分类后才能上传。",
   "classify_success": "录音已分类",
-  "classify_register": "语域（选填）",
+  "classify_register": "语域",
   "classify_selectRegister": "选择语域",
-
   "recording_unclassified": "未分类",
-
+  "recording_inputSource": "输入",
+  "recording_selectMicrophone": "选择麦克风",
+  "recording_builtInMicrophone": "系统默认",
+  "recording_micPermissionNeeded": "请允许访问麦克风以查看设备名称",
+  "recording_micPermissionButton": "授予权限",
+  "recording_micPermissionDenied": "麦克风权限被拒绝。请在浏览器或系统设置中启用。",
+  "recording_noDevicesFound": "未找到麦克风",
+  "recording_storageLowWarnTitle": "存储空间不足",
+  "recording_storageLowWarnBody": "约可录制 {minutes} 分钟。是否继续？",
+  "@recording_storageLowWarnBody": { "placeholders": { "minutes": { "type": "int" } } },
+  "recording_storageRefuseTitle": "存储空间不足",
+  "recording_storageRefuseBody": "录音前请释放此设备上的空间。",
+  "recording_storageCriticalBanner": "存储空间紧张 \u2014 约剩 {minutes} 分钟。请尽快停止。",
+  "@recording_storageCriticalBanner": { "placeholders": { "minutes": { "type": "int" } } },
+  "recording_storageForceStopped": "因存储空间不足停止录音。您的进度已保存。",
+  "recording_savedAt": "已保存于 {time}",
+  "@recording_savedAt": { "placeholders": { "time": { "type": "String" } } },
+  "recording_continuedInBackground": "录音在后台继续",
+  "recording_continue": "继续",
+  "recording_cancel": "取消",
+  "recording_recoverTitle": "恢复中断的录音？",
+  "recording_recoverBody": "我们发现了上次会话中约 {minutes} 分钟的音频。",
+  "@recording_recoverBody": { "placeholders": { "minutes": { "type": "int" } } },
+  "recording_recoverButton": "恢复",
+  "recording_recoverDiscard": "放弃",
+  "recording_recoverFailedLastSegment": "末尾附近的部分音频无法读取并已跳过。",
+  "recording_inProgressNotificationTitle": "正在录音",
+  "recording_inProgressNotificationBody": "点击返回应用",
+  "profile_defaultMicrophone": "默认麦克风",
+  "profile_systemDefault": "系统默认",
+  "settings_deviceStorageTitle": "设备存储",
+  "settings_deviceStorageSubtitle": "已用 {used} \u00b7 可用 {free}",
+  "@settings_deviceStorageSubtitle": { "placeholders": { "used": { "type": "String" }, "free": { "type": "String" } } },
   "fab_quickRecord": "快速",
   "fab_normalRecord": "录音",
-
   "error_network": "无法连接到服务器。请检查您的网络连接并重试。",
   "error_secureConnection": "无法建立安全连接。请稍后重试。",
   "error_timeout": "请求超时。请检查您的网络连接并重试。",
@@ -719,5 +810,68 @@
   "error_imageUploadFailed": "无法上传图片。请重试。",
   "error_notAuthenticated": "您尚未登录。请登录后重试。",
   "error_noPermission": "您没有执行此操作的权限。",
-  "error_generic": "出了点问题。请稍后重试。"
+  "error_generic": "出了点问题。请稍后重试。",
+  "storyteller_title": "Storytellers",
+  "storyteller_singular": "Storyteller",
+  "storyteller_manageAction": "Manage storytellers",
+  "storyteller_addNew": "Add storyteller",
+  "storyteller_createTitle": "New storyteller",
+  "storyteller_editTitle": "Edit storyteller",
+  "storyteller_speakerName": "Speaker name",
+  "storyteller_sex": "Sex",
+  "storyteller_sexMale": "Male",
+  "storyteller_sexFemale": "Female",
+  "storyteller_age": "Age",
+  "storyteller_location": "Location",
+  "storyteller_dialect": "Dialect",
+  "storyteller_externalAcceptanceTitle": "External acceptance validation",
+  "storyteller_externalAcceptanceDescription": "I confirm that external acceptance validation has been performed for this speaker.",
+  "storyteller_externalAcceptanceInfo": "Before registering a storyteller, the project manager must obtain the speaker's consent outside the app (for example, through a signed release form or recorded verbal agreement). This checkbox records that this step was completed.",
+  "storyteller_createRequiresConnection": "Creating a storyteller requires an internet connection.",
+  "storyteller_deleteTitle": "Delete storyteller?",
+  "storyteller_deleteMessage": "Recordings previously assigned to this storyteller will show as unassigned.",
+  "storyteller_noneAssigned": "No storyteller assigned",
+  "storyteller_unknown": "Unknown storyteller",
+  "storyteller_selectHint": "Pick a storyteller",
+  "storyteller_required": "A storyteller is required",
+  "storyteller_searchPlaceholder": "Search storytellers",
+  "storyteller_empty": "No storytellers yet",
+  "storyteller_emptyDescription": "Create a storyteller for the project to assign to recordings.",
+  "storyteller_offlineNoCache": "Storytellers haven't been synced yet. Connect to the internet to load them.",
+  "storyteller_assign": "Assign",
+  "storyteller_reassign": "Reassign",
+  "storyteller_ageValidator": "Enter an age between 1 and 120",
+  "storyteller_ageYearsShort": "{age}y",
+  "@storyteller_ageYearsShort": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
+  "filters_buttonLabel": "Filters",
+  "filters_sheetTitle": "Filter recordings",
+  "filters_sectionStatus": "Upload status",
+  "filters_sectionGenre": "Genre",
+  "filters_sectionStoryteller": "Storyteller",
+  "filters_sectionUser": "Recorded by",
+  "filter_apply": "Apply",
+  "filter_reset": "Reset",
+  "filter_clearAll": "Clear all",
+  "filter_countActive": "{count, plural, one{1 filter} other{{count} filters}}",
+  "@filter_countActive": {
+    "placeholders": {
+      "count": {
+        "type": "num",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "filter_userAll": "Any user",
+  "filter_storytellerAll": "Any storyteller",
+  "filter_genreAll": "Any genre",
+  "detail_recordedBy": "Recorded by",
+  "detail_storyteller": "Storyteller",
+  "recording_unknownUser": "Unknown user",
+  "common_close": "Close"
 }

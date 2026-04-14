@@ -1,3 +1,5 @@
+enum StorageBannerSeverity { none, critical, forceStopped }
+
 class RecordingState {
   final bool isRecording;
   final bool isPaused;
@@ -5,6 +7,11 @@ class RecordingState {
   final String? currentGenreId;
   final String? currentSubcategoryId;
   final Stream<double>? amplitudeStream;
+  final String? sessionId;
+  final Duration? lastCheckpointAt;
+  final bool showCheckpointToast;
+  final StorageBannerSeverity storageBannerSeverity;
+  final RecordingResult? autoStoppedResult;
 
   const RecordingState({
     this.isRecording = false,
@@ -13,6 +20,11 @@ class RecordingState {
     this.currentGenreId,
     this.currentSubcategoryId,
     this.amplitudeStream,
+    this.sessionId,
+    this.lastCheckpointAt,
+    this.showCheckpointToast = false,
+    this.storageBannerSeverity = StorageBannerSeverity.none,
+    this.autoStoppedResult,
   });
 
   RecordingState copyWith({
@@ -22,9 +34,17 @@ class RecordingState {
     String? currentGenreId,
     String? currentSubcategoryId,
     Stream<double>? amplitudeStream,
+    String? sessionId,
+    Duration? lastCheckpointAt,
+    bool? showCheckpointToast,
+    StorageBannerSeverity? storageBannerSeverity,
+    RecordingResult? autoStoppedResult,
     bool clearGenreId = false,
     bool clearSubcategoryId = false,
     bool clearAmplitudeStream = false,
+    bool clearSessionId = false,
+    bool clearLastCheckpoint = false,
+    bool clearAutoStoppedResult = false,
   }) {
     return RecordingState(
       isRecording: isRecording ?? this.isRecording,
@@ -39,6 +59,16 @@ class RecordingState {
       amplitudeStream: clearAmplitudeStream
           ? null
           : (amplitudeStream ?? this.amplitudeStream),
+      sessionId: clearSessionId ? null : (sessionId ?? this.sessionId),
+      lastCheckpointAt: clearLastCheckpoint
+          ? null
+          : (lastCheckpointAt ?? this.lastCheckpointAt),
+      showCheckpointToast: showCheckpointToast ?? this.showCheckpointToast,
+      storageBannerSeverity:
+          storageBannerSeverity ?? this.storageBannerSeverity,
+      autoStoppedResult: clearAutoStoppedResult
+          ? null
+          : (autoStoppedResult ?? this.autoStoppedResult),
     );
   }
 }
@@ -46,10 +76,12 @@ class RecordingState {
 class RecordingResult {
   final String filePath;
   final double durationSeconds;
+  final String format;
 
   const RecordingResult({
     required this.filePath,
     required this.durationSeconds,
+    this.format = 'm4a',
   });
 }
 

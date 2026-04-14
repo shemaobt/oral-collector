@@ -474,6 +474,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get recording_titleHint => 'Agregar un título (opcional)';
 
   @override
+  String get recording_descriptionHint =>
+      'Agregar una breve descripción (opcional)';
+
+  @override
+  String get recording_descriptionEmpty => 'Agregar descripción';
+
+  @override
   String get recording_saveRecording => 'Guardar Grabación';
 
   @override
@@ -499,7 +506,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get recording_unknownGenre => 'Género desconocido';
 
   @override
-  String get recording_splitRecording => 'Dividir Grabación';
+  String get recording_splitRecording => 'Editar Grabación';
 
   @override
   String get recording_moveCategory => 'Mover Categoría';
@@ -624,7 +631,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get recordings_clearFailed => 'Error al limpiar grabaciones';
 
   @override
-  String get trim_title => 'Dividir Grabación';
+  String get trim_title => 'Editar Grabación';
 
   @override
   String get trim_notFound => 'Grabación no encontrada';
@@ -684,6 +691,35 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get trim_saveConfirmTitle => '¿Guardar cambios?';
+
+  @override
+  String trim_saveConfirmBody(int count) {
+    return 'Esto reemplaza la grabación original con $count segmento(s). Esta acción no se puede deshacer.';
+  }
+
+  @override
+  String get trim_inheritLabel => 'Heredar';
+
+  @override
+  String get trim_applyToAll => 'Aplicar a todos';
+
+  @override
+  String get trim_copyFromPrevious => 'Copiar del anterior';
+
+  @override
+  String get trim_classifySegment => 'Clasificar segmento';
+
+  @override
+  String get trim_volume => 'Volumen';
+
+  @override
+  String get trim_peakClip => 'Saturación';
+
+  @override
+  String get trim_boostOnSave => 'Aumento aplicado al guardar';
+
+  @override
   String get import_title => 'Importar Audio';
 
   @override
@@ -727,6 +763,77 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get import_importAndSave => 'Importar y Guardar';
+
+  @override
+  String get import_setForAll => 'Establecer para todos los archivos';
+
+  @override
+  String get import_applyToAll => 'Aplicar a todos';
+
+  @override
+  String get import_fieldRequired => 'Obligatorio';
+
+  @override
+  String import_validationBanner(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count archivos no tienen campos obligatorios',
+      one: '1 archivo no tiene campos obligatorios',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get import_remove => 'Eliminar archivo';
+
+  @override
+  String import_supportedFormats(String formats) {
+    return 'Formatos compatibles: $formats. Los archivos no compatibles o ilegibles se omiten.';
+  }
+
+  @override
+  String import_rejectedFiles(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Se omitieron $count archivos no compatibles o ilegibles: $names',
+      one: 'Se omitió 1 archivo no compatible o ilegible: $names',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String import_countFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count archivos',
+      one: '1 archivo',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String import_importNFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count archivos',
+      one: '1 archivo',
+    );
+    return 'Importar $_temp0';
+  }
+
+  @override
+  String get import_emptyFile => 'archivo vacío';
+
+  @override
+  String get import_compressWav => 'Comprimir WAV a M4A';
+
+  @override
+  String get import_compressWavHint =>
+      '~10x más pequeño, sin pérdida de calidad para pipeline de ML';
 
   @override
   String get moveCategory_title => 'Mover Categoría';
@@ -1560,7 +1667,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get action_actions => 'Acciones';
 
   @override
-  String get action_split => 'Dividir';
+  String get action_split => 'Editar';
 
   @override
   String get action_flagClean => 'Marcar Limpieza';
@@ -1642,13 +1749,117 @@ class AppLocalizationsEs extends AppLocalizations {
   String get classify_success => 'Grabación clasificada';
 
   @override
-  String get classify_register => 'Registro (opcional)';
+  String get classify_register => 'Registro';
 
   @override
   String get classify_selectRegister => 'Seleccionar registro';
 
   @override
   String get recording_unclassified => 'Sin clasificar';
+
+  @override
+  String get recording_inputSource => 'Entrada';
+
+  @override
+  String get recording_selectMicrophone => 'Seleccionar micrófono';
+
+  @override
+  String get recording_builtInMicrophone => 'Predeterminado del sistema';
+
+  @override
+  String get recording_micPermissionNeeded =>
+      'Permite el acceso al micrófono para ver los nombres de los dispositivos';
+
+  @override
+  String get recording_micPermissionButton => 'Conceder permiso';
+
+  @override
+  String get recording_micPermissionDenied =>
+      'Permiso de micrófono denegado. Actívalo en los ajustes del navegador o del sistema.';
+
+  @override
+  String get recording_micPermissionTitle => 'Acceso al micrófono necesario';
+
+  @override
+  String get recording_noDevicesFound => 'No se encontraron micrófonos';
+
+  @override
+  String get recording_storageLowWarnTitle => 'Poco almacenamiento';
+
+  @override
+  String recording_storageLowWarnBody(int minutes) {
+    return 'Aproximadamente $minutes min de grabación disponibles. ¿Continuar?';
+  }
+
+  @override
+  String get recording_storageRefuseTitle => 'No hay suficiente almacenamiento';
+
+  @override
+  String get recording_storageRefuseBody =>
+      'Libera espacio en este dispositivo antes de grabar.';
+
+  @override
+  String recording_storageCriticalBanner(int minutes) {
+    return 'Almacenamiento crítico — alrededor de $minutes min restantes. Considera detener pronto.';
+  }
+
+  @override
+  String get recording_storageForceStopped =>
+      'Grabación detenida por falta de almacenamiento. Tu progreso ha sido guardado.';
+
+  @override
+  String recording_savedAt(String time) {
+    return 'Guardado a las $time';
+  }
+
+  @override
+  String get recording_continuedInBackground =>
+      'La grabación continuó en segundo plano';
+
+  @override
+  String get recording_continue => 'Continuar';
+
+  @override
+  String get recording_cancel => 'Cancelar';
+
+  @override
+  String get recording_recoverTitle => '¿Recuperar grabación interrumpida?';
+
+  @override
+  String recording_recoverBody(int minutes) {
+    return 'Encontramos alrededor de $minutes min de audio de una sesión anterior.';
+  }
+
+  @override
+  String get recording_recoverButton => 'Recuperar';
+
+  @override
+  String get recording_recoverDiscard => 'Descartar';
+
+  @override
+  String get recording_recoverFailedLastSegment =>
+      'Parte del audio cerca del final no se pudo leer y fue omitido.';
+
+  @override
+  String get recording_inProgressNotificationTitle => 'Grabación en curso';
+
+  @override
+  String get recording_inProgressNotificationBody =>
+      'Toca para volver a la app';
+
+  @override
+  String get profile_defaultMicrophone => 'Micrófono predeterminado';
+
+  @override
+  String get profile_systemDefault => 'Predeterminado del sistema';
+
+  @override
+  String get settings_deviceStorageTitle => 'Almacenamiento del dispositivo';
+
+  @override
+  String settings_deviceStorageSubtitle(String used, String free) {
+    return 'Usado $used · Libre $free';
+  }
 
   @override
   String get fab_quickRecord => 'Rápido';
@@ -1716,4 +1927,169 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get error_generic => 'Algo salió mal. Inténtalo más tarde.';
+
+  @override
+  String get common_close => 'Close';
+
+  @override
+  String get storyteller_title => 'Storytellers';
+
+  @override
+  String get storyteller_singular => 'Storyteller';
+
+  @override
+  String get storyteller_manageAction => 'Manage storytellers';
+
+  @override
+  String get storyteller_addNew => 'Add storyteller';
+
+  @override
+  String get storyteller_createTitle => 'New storyteller';
+
+  @override
+  String get storyteller_editTitle => 'Edit storyteller';
+
+  @override
+  String get storyteller_speakerName => 'Speaker name';
+
+  @override
+  String get storyteller_sex => 'Sex';
+
+  @override
+  String get storyteller_sexMale => 'Male';
+
+  @override
+  String get storyteller_sexFemale => 'Female';
+
+  @override
+  String get storyteller_age => 'Age';
+
+  @override
+  String get storyteller_location => 'Location';
+
+  @override
+  String get storyteller_dialect => 'Dialect';
+
+  @override
+  String get storyteller_externalAcceptanceTitle =>
+      'External acceptance validation';
+
+  @override
+  String get storyteller_externalAcceptanceDescription =>
+      'I confirm that external acceptance validation has been performed for this speaker.';
+
+  @override
+  String get storyteller_externalAcceptanceInfo =>
+      'Before registering a storyteller, the project manager must obtain the speaker\'s consent outside the app (for example, through a signed release form or recorded verbal agreement). This checkbox records that this step was completed.';
+
+  @override
+  String get storyteller_createRequiresConnection =>
+      'Creating a storyteller requires an internet connection.';
+
+  @override
+  String get storyteller_deleteTitle => 'Delete storyteller?';
+
+  @override
+  String get storyteller_deleteMessage =>
+      'Recordings previously assigned to this storyteller will show as unassigned.';
+
+  @override
+  String get storyteller_noneAssigned => 'No storyteller assigned';
+
+  @override
+  String get storyteller_unknown => 'Unknown storyteller';
+
+  @override
+  String get storyteller_selectHint => 'Pick a storyteller';
+
+  @override
+  String get storyteller_required => 'A storyteller is required';
+
+  @override
+  String get storyteller_searchPlaceholder => 'Search storytellers';
+
+  @override
+  String get storyteller_empty => 'No storytellers yet';
+
+  @override
+  String get storyteller_emptyDescription =>
+      'Create a storyteller for the project to assign to recordings.';
+
+  @override
+  String get storyteller_offlineNoCache =>
+      'Storytellers haven\'t been synced yet. Connect to the internet to load them.';
+
+  @override
+  String get storyteller_assign => 'Assign';
+
+  @override
+  String get storyteller_reassign => 'Reassign';
+
+  @override
+  String get storyteller_ageValidator => 'Enter an age between 1 and 120';
+
+  @override
+  String storyteller_ageYearsShort(int age) {
+    return '${age}y';
+  }
+
+  @override
+  String get filters_buttonLabel => 'Filters';
+
+  @override
+  String get filters_sheetTitle => 'Filter recordings';
+
+  @override
+  String get filters_sectionStatus => 'Upload status';
+
+  @override
+  String get filters_sectionGenre => 'Genre';
+
+  @override
+  String get filters_sectionStoryteller => 'Storyteller';
+
+  @override
+  String get filters_sectionUser => 'Recorded by';
+
+  @override
+  String get filter_apply => 'Apply';
+
+  @override
+  String get filter_reset => 'Reset';
+
+  @override
+  String get filter_clearAll => 'Clear all';
+
+  @override
+  String filter_countActive(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString filters',
+      one: '1 filter',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get filter_userAll => 'Any user';
+
+  @override
+  String get filter_storytellerAll => 'Any storyteller';
+
+  @override
+  String get filter_genreAll => 'Any genre';
+
+  @override
+  String get detail_recordedBy => 'Recorded by';
+
+  @override
+  String get detail_storyteller => 'Storyteller';
+
+  @override
+  String get recording_unknownUser => 'Unknown user';
 }
