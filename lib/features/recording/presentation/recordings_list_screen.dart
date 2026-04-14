@@ -442,10 +442,6 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
                                 registerName: rawReg != null
                                     ? localizedRegisterName(l10n, rawReg)
                                     : null,
-                                relativeDate: formatTimeAgo(
-                                  recording.recordedAt,
-                                  l10n,
-                                ),
                                 formattedDuration: formatDurationHMS(
                                   recording.durationSeconds,
                                 ),

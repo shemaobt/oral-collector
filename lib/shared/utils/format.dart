@@ -74,6 +74,15 @@ String formatMemberSince(
   return l10n.format_memberSince(df.format(date));
 }
 
+String formatRecordingDate(DateTime date, String locale) {
+  final now = DateTime.now();
+  final isToday =
+      now.year == date.year && now.month == date.month && now.day == date.day;
+  if (isToday) return intl.DateFormat.Hm(locale).format(date);
+  if (now.year == date.year) return intl.DateFormat.MMMd(locale).format(date);
+  return intl.DateFormat.yMMMd(locale).format(date);
+}
+
 String formatTimeAgo(DateTime time, AppLocalizations l10n) {
   final now = DateTime.now();
   final diff = now.difference(time);

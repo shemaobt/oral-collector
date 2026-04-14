@@ -4,6 +4,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../shared/utils/format.dart';
 import '../../domain/entities/classification.dart';
 
 class RecordingCard extends StatelessWidget {
@@ -11,7 +12,6 @@ class RecordingCard extends StatelessWidget {
     super.key,
     required this.recording,
     required this.genreName,
-    required this.relativeDate,
     required this.formattedDuration,
     required this.onTap,
     this.subcategoryName,
@@ -23,7 +23,6 @@ class RecordingCard extends StatelessWidget {
   final String? genreName;
   final String? subcategoryName;
   final String? registerName;
-  final String relativeDate;
   final String formattedDuration;
   final VoidCallback onTap;
   final VoidCallback? onDelete;
@@ -86,9 +85,8 @@ class RecordingCard extends StatelessWidget {
         ? breadcrumbParts.join(' > ')
         : 'Unknown genre';
 
-    final needsCleaning = recording.cleaningStatus == 'needs_cleaning';
-    final isCleaning = recording.cleaningStatus == 'cleaning';
-    final isCleaned = recording.cleaningStatus == 'cleaned';
+    final locale = Localizations.localeOf(context).languageCode;
+    final recordedDate = formatRecordingDate(recording.recordedAt, locale);
 
     return Material(
       color: colors.card,
@@ -122,9 +120,12 @@ class RecordingCard extends StatelessWidget {
                       children: [
                         Expanded(
                           child: Text(
-                            recording.title ?? l10n.common_untitled,
+                            breadcrumb,
                             style: theme.textTheme.titleSmall?.copyWith(
                               fontWeight: FontWeight.w700,
+                              color: isUnclassified
+                                  ? Colors.amber.shade700
+                                  : null,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -132,24 +133,12 @@ class RecordingCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          relativeDate,
+                          recordedDate,
                           style: theme.textTheme.labelSmall?.copyWith(
                             color: colors.secondary.withValues(alpha: 0.7),
                           ),
                         ),
                       ],
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      breadcrumb,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: isUnclassified
-                            ? Colors.amber.shade700
-                            : colors.secondary,
-                        fontWeight: isUnclassified ? FontWeight.w600 : null,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 8),
                     Row(
@@ -240,38 +229,6 @@ class RecordingCard extends StatelessWidget {
                                   ),
                                 ),
                               ],
-                            ),
-                          ),
-                        ],
-                        if (needsCleaning || isCleaning || isCleaned) ...[
-                          const SizedBox(width: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 3,
-                            ),
-                            decoration: BoxDecoration(
-                              color:
-                                  (needsCleaning
-                                          ? Colors.amber.shade700
-                                          : isCleaning
-                                          ? colors.info
-                                          : colors.success)
-                                      .withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Icon(
-                              needsCleaning
-                                  ? LucideIcons.alertCircle
-                                  : isCleaning
-                                  ? LucideIcons.loader
-                                  : LucideIcons.sparkles,
-                              size: 11,
-                              color: needsCleaning
-                                  ? Colors.amber.shade700
-                                  : isCleaning
-                                  ? colors.info
-                                  : colors.success,
                             ),
                           ),
                         ],
