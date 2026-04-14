@@ -338,7 +338,11 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
           ? l10n.trim_savedSegments(kept.length, _excludedSegments.length)
           : l10n.trim_splitInto(kept.length);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-      context.pop(true);
+      if (context.canPop()) {
+        context.pop(true);
+      } else {
+        context.go('/recordings');
+      }
     }
   }
 
@@ -418,7 +422,11 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
           ? l10n.trim_savedSegments(keptTotal, _excludedSegments.length)
           : l10n.trim_splitInto(keptTotal);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-      context.pop(true);
+      if (context.canPop()) {
+        context.pop(true);
+      } else {
+        context.go('/recordings');
+      }
     }
   }
 
@@ -600,7 +608,13 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
         title: Text(l10n.trim_title),
         actions: [
           TextButton(
-            onPressed: () => context.pop(),
+            onPressed: () {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/recordings');
+              }
+            },
             child: Text(
               l10n.common_cancel,
               style: theme.textTheme.bodyMedium?.copyWith(
@@ -689,7 +703,15 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
           children: [
             Expanded(
               child: OutlinedButton(
-                onPressed: _isSaving ? null : () => context.pop(),
+                onPressed: _isSaving
+                    ? null
+                    : () {
+                        if (context.canPop()) {
+                          context.pop();
+                        } else {
+                          context.go('/recordings');
+                        }
+                      },
                 style: OutlinedButton.styleFrom(
                   foregroundColor: colors.foreground.withValues(
                     alpha: isDark ? 0.8 : 0.7,

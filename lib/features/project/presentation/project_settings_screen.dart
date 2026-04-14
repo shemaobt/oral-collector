@@ -271,7 +271,13 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
         appBar: AppBar(
           leading: IconButton(
             icon: const Icon(LucideIcons.arrowLeft),
-            onPressed: () => context.pop(),
+            onPressed: () {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/projects');
+              }
+            },
           ),
           title: Text(l10n.projectSettings_title),
         ),
@@ -400,7 +406,13 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
             ProjectSettingsHeader(
               project: _project!,
               memberCount: memberCount,
-              onBack: () => context.pop(),
+              onBack: () {
+                if (context.canPop()) {
+                  context.pop();
+                } else {
+                  context.go('/projects');
+                }
+              },
             ),
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),

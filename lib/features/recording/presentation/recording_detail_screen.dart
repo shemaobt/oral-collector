@@ -317,7 +317,11 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     }
 
     if (mounted) {
-      context.pop();
+      if (context.canPop()) {
+        context.pop();
+      } else {
+        context.go('/recordings');
+      }
     }
   }
 
@@ -451,7 +455,13 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
       '/recording/${widget.recordingId}/trim',
     );
     if (result == true) {
-      if (mounted) context.pop(true);
+      if (mounted) {
+        if (context.canPop()) {
+          context.pop(true);
+        } else {
+          context.go('/recordings');
+        }
+      }
     }
   }
 
