@@ -8,6 +8,7 @@ import 'package:just_audio/just_audio.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../../l10n/app_localizations.dart';
+import '../../../../core/auth/auth_notifier.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../shared/utils/format.dart';
 import '../../../../shared/utils/recording_title.dart';
@@ -73,10 +74,11 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
   void initState() {
     super.initState();
     _initPlayer();
-    _prefetchStorytellers();
+    Future.microtask(_prefetchStorytellers);
   }
 
   void _prefetchStorytellers() {
+    if (!mounted) return;
     final projectId = ref.read(projectNotifierProvider).activeProject?.id;
     if (projectId == null || projectId.isEmpty) return;
     final state = ref.read(projectStorytellersNotifierProvider);
@@ -109,8 +111,33 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
       setState(() => _totalDuration = dur);
     });
     try {
-      await _player!.setFilePath(widget.result.filePath);
+      if (kIsWeb) {
+        final bytes = await file_ops.readFileBytes(widget.result.filePath);
+        final mime = _mimeForFormat(widget.result.format);
+        final dataUri = Uri.dataFromBytes(bytes, mimeType: mime).toString();
+        await _player!.setUrl(dataUri);
+      } else {
+        await _player!.setFilePath(widget.result.filePath);
+      }
     } catch (_) {}
+  }
+
+  String _mimeForFormat(String format) {
+    switch (format) {
+      case 'webm':
+        return 'audio/webm';
+      case 'mp4':
+      case 'm4a':
+        return 'audio/mp4';
+      case 'ogg':
+        return 'audio/ogg';
+      case 'mp3':
+        return 'audio/mpeg';
+      case 'wav':
+        return 'audio/wav';
+      default:
+        return 'audio/mp4';
+    }
   }
 
   @override
@@ -146,14 +173,13 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
 
     final projectState = ref.read(projectNotifierProvider);
     final projectId = projectState.activeProject?.id ?? '';
+    final currentUserId = ref.read(authNotifierProvider).currentUser?.id;
     final repo = ref.read(localRecordingRepositoryProvider);
 
     int fileSize = 0;
-    if (!kIsWeb) {
-      try {
-        fileSize = await file_ops.fileLength(widget.result.filePath);
-      } catch (_) {}
-    }
+    try {
+      fileSize = await file_ops.fileLength(widget.result.filePath);
+    } catch (_) {}
 
     final id =
         '${DateTime.now().millisecondsSinceEpoch}_${widget.genreId.hashCode}';
@@ -171,12 +197,16 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
             ? Value(widget.registerId!)
             : const Value.absent(),
         storytellerId: Value(_selectedStoryteller!.id),
+        userId: currentUserId != null
+            ? Value(currentUserId)
+            : const Value.absent(),
         title: Value(defaultRecordingTitle()),
         description: _descriptionController.text.trim().isNotEmpty
             ? Value(_descriptionController.text.trim())
             : const Value.absent(),
         durationSeconds: Value(widget.result.durationSeconds),
         fileSizeBytes: Value(fileSize),
+        format: Value(widget.result.format),
         localFilePath: Value(widget.result.filePath),
         recordedAt: Value(DateTime.now()),
       ),
@@ -215,11 +245,9 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
     );
 
     if (confirmed == true) {
-      if (!kIsWeb) {
-        try {
-          await file_ops.deleteFile(widget.result.filePath);
-        } catch (_) {}
-      }
+      try {
+        await file_ops.deleteFile(widget.result.filePath);
+      } catch (_) {}
 
       if (mounted) {
         widget.onDiscard();
@@ -319,11 +347,12 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
               ),
 
               Expanded(
-                child: Padding(
+                child: SingleChildScrollView(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
+                      const SizedBox(height: 12),
                       _buildWaveformPlayer(colors, amplitudes),
 
                       const SizedBox(height: 6),
@@ -336,13 +365,13 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
                         ),
                       ),
 
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 16),
 
                       GestureDetector(
                         onTap: _togglePlayback,
                         child: Container(
-                          width: 64,
-                          height: 64,
+                          width: 56,
+                          height: 56,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: colors.accent,
@@ -357,10 +386,11 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
                           child: Icon(
                             _isPlaying ? LucideIcons.pause : LucideIcons.play,
                             color: Colors.white,
-                            size: 28,
+                            size: 24,
                           ),
                         ),
                       ),
+                      const SizedBox(height: 12),
                     ],
                   ),
                 ),
