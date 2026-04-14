@@ -13,6 +13,8 @@ import 'core/platform/file_ops.dart' as platform;
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/auth/auth_notifier.dart';
+import 'features/recording/data/services/recording_notification.dart';
+import 'features/recording/data/services/recording_trash.dart';
 import 'features/sync/data/providers.dart';
 import 'features/sync/data/services/background_sync_service.dart';
 import 'features/sync/presentation/notifiers/sync_notifier.dart';
@@ -51,6 +53,14 @@ void main() async {
     }
   }
 
+  if (!kIsWeb) {
+    try {
+      await RecordingNotification.instance.init();
+    } on Exception {
+      // noop
+    }
+  }
+
   runApp(const ProviderScope(child: OralCollectorApp()));
 }
 
@@ -72,6 +82,10 @@ class _OralCollectorAppState extends ConsumerState<OralCollectorApp> {
       ref.read(authNotifierProvider.notifier).tryAutoLogin();
 
       _initBackgroundSync();
+
+      if (!kIsWeb) {
+        RecordingTrash.pruneOldTrash(maxAgeHours: 24);
+      }
     });
   }
 
@@ -96,6 +110,7 @@ class _OralCollectorAppState extends ConsumerState<OralCollectorApp> {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system,
+      themeAnimationDuration: Duration.zero,
       locale: locale,
       supportedLocales: supportedLocales,
       localizationsDelegates: const [

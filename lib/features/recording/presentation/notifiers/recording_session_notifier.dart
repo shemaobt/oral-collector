@@ -3,15 +3,18 @@ import 'dart:math' as math;
 
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 
 import '../../../../core/database/app_database.dart';
 import '../../../../core/platform/file_ops.dart' as file_ops;
+import '../../../../l10n/app_localizations.dart';
 import '../../../project/presentation/notifiers/project_notifier.dart';
 import '../../data/providers.dart';
 import '../../data/services/recording_concat_service.dart';
+import '../../data/services/recording_notification.dart';
 import '../../data/services/segmented_recorder.dart';
 import '../../data/services/storage_guard.dart';
 import 'recording_session_state.dart';
@@ -146,6 +149,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
     );
 
     _startElapsedTimer();
+    await _showRecordingNotification();
     return true;
   }
 
@@ -235,6 +239,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
     final recorder = _segRecorder;
     if (recorder == null) {
       state = const RecordingState();
+      await RecordingNotification.instance.clear();
       return null;
     }
 
@@ -242,6 +247,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
     _segRecorder = null;
 
     state = const RecordingState();
+    await RecordingNotification.instance.clear();
 
     if (sessionResult == null || sessionResult.segmentPaths.isEmpty) {
       return null;
@@ -315,9 +321,24 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
     } else {
       await _segRecorder?.discard();
       _segRecorder = null;
+      await RecordingNotification.instance.clear();
     }
 
     state = const RecordingState();
+  }
+
+  Future<void> _showRecordingNotification() async {
+    if (kIsWeb) return;
+    final l10n = await _resolveLocalizations();
+    await RecordingNotification.instance.showActive(
+      title: l10n.recording_inProgressNotificationTitle,
+      body: l10n.recording_inProgressNotificationBody,
+    );
+  }
+
+  Future<AppLocalizations> _resolveLocalizations() async {
+    final locale = WidgetsBinding.instance.platformDispatcher.locale;
+    return AppLocalizations.delegate.load(locale);
   }
 
   void _startElapsedTimer() {
