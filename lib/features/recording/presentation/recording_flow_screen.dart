@@ -108,6 +108,14 @@ class _RecordingFlowScreenState extends ConsumerState<RecordingFlowScreen> {
     });
   }
 
+  void _resetToRegister() {
+    setState(() {
+      _recordingResult = null;
+      _selectedRegisterId = null;
+      _currentStep = _FlowStep.register;
+    });
+  }
+
   String _title(AppLocalizations l10n) {
     switch (_currentStep) {
       case _FlowStep.genre:
@@ -241,6 +249,7 @@ class _RecordingFlowScreenState extends ConsumerState<RecordingFlowScreen> {
               ? localizedRegisterName(l10n, rawRegName2)
               : null,
           onReRecord: _reRecord,
+          onDiscard: _resetToRegister,
         );
     }
   }

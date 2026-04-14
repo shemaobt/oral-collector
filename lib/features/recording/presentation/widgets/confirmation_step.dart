@@ -31,6 +31,7 @@ class ConfirmationStep extends ConsumerStatefulWidget {
     required this.subcategoryName,
     this.registerName,
     required this.onReRecord,
+    required this.onDiscard,
   });
 
   final RecordingResult result;
@@ -41,6 +42,7 @@ class ConfirmationStep extends ConsumerStatefulWidget {
   final String? subcategoryName;
   final String? registerName;
   final VoidCallback onReRecord;
+  final VoidCallback onDiscard;
 
   @override
   ConsumerState<ConfirmationStep> createState() => _ConfirmationStepState();
@@ -204,11 +206,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
       }
 
       if (mounted) {
-        if (widget.genreId == kUnclassifiedGenreId) {
-          context.go('/home');
-        } else {
-          context.go('/genre/${widget.genreId}');
-        }
+        widget.onDiscard();
       }
     }
   }
