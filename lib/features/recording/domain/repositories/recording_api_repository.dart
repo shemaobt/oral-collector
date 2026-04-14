@@ -11,6 +11,7 @@ abstract class RecordingApiRepository {
   Future<bool> updateRecording(
     String serverId, {
     String? title,
+    String? description,
     String? genreId,
     String? subcategoryId,
     String? registerId,

@@ -59,6 +59,7 @@ class RecordingApiRepositoryImpl implements RecordingApiRepository {
   Future<bool> updateRecording(
     String serverId, {
     String? title,
+    String? description,
     String? genreId,
     String? subcategoryId,
     String? registerId,
@@ -66,6 +67,7 @@ class RecordingApiRepositoryImpl implements RecordingApiRepository {
   }) async {
     final body = <String, dynamic>{};
     if (title != null) body['title'] = title;
+    if (description != null) body['description'] = description;
     if (genreId != null) body['genre_id'] = genreId;
     if (subcategoryId != null) body['subcategory_id'] = subcategoryId;
     if (registerId != null) body['register_id'] = registerId;

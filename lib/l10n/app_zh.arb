@@ -182,6 +182,8 @@
 
   "recording_registerDescription": "选择最能描述此录音语气和正式程度的语域。",
   "recording_titleHint": "添加标题（选填）",
+  "recording_descriptionHint": "添加简短描述（选填）",
+  "recording_descriptionEmpty": "添加描述",
   "recording_saveRecording": "保存录音",
   "recording_recordAgain": "重新录音",
   "recording_discard": "丢弃",

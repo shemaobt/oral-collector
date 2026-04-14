@@ -469,6 +469,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get recording_titleHint => 'Tambah judul (opsional)';
 
   @override
+  String get recording_descriptionHint => 'Tambah deskripsi singkat (opsional)';
+
+  @override
+  String get recording_descriptionEmpty => 'Tambah deskripsi';
+
+  @override
   String get recording_saveRecording => 'Simpan Rekaman';
 
   @override

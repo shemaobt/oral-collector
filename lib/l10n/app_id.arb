@@ -166,6 +166,8 @@
 
   "recording_registerDescription": "Pilih register bicara yang paling menggambarkan nada dan formalitas rekaman ini.",
   "recording_titleHint": "Tambah judul (opsional)",
+  "recording_descriptionHint": "Tambah deskripsi singkat (opsional)",
+  "recording_descriptionEmpty": "Tambah deskripsi",
   "recording_saveRecording": "Simpan Rekaman",
   "recording_recordAgain": "Rekam Ulang",
   "recording_discard": "Buang",

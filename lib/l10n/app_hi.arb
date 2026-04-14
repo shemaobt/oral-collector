@@ -166,6 +166,8 @@
 
   "recording_registerDescription": "वह भाषा शैली चुनें जो इस रिकॉर्डिंग के लहज़े और औपचारिकता का सबसे अच्छा वर्णन करती है।",
   "recording_titleHint": "शीर्षक जोड़ें (वैकल्पिक)",
+  "recording_descriptionHint": "संक्षिप्त विवरण जोड़ें (वैकल्पिक)",
+  "recording_descriptionEmpty": "विवरण जोड़ें",
   "recording_saveRecording": "रिकॉर्डिंग सहेजें",
   "recording_recordAgain": "फिर से रिकॉर्ड करें",
   "recording_discard": "छोड़ दें",

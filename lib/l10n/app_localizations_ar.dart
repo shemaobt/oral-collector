@@ -465,6 +465,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get recording_titleHint => 'أضف عنواناً (اختياري)';
 
   @override
+  String get recording_descriptionHint => 'أضف وصفاً قصيراً (اختياري)';
+
+  @override
+  String get recording_descriptionEmpty => 'أضف وصفاً';
+
+  @override
   String get recording_saveRecording => 'حفظ التسجيل';
 
   @override

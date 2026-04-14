@@ -469,6 +469,13 @@ class AppLocalizationsPt extends AppLocalizations {
   String get recording_titleHint => 'Adicionar um título (opcional)';
 
   @override
+  String get recording_descriptionHint =>
+      'Adicionar uma descrição curta (opcional)';
+
+  @override
+  String get recording_descriptionEmpty => 'Adicionar descrição';
+
+  @override
   String get recording_saveRecording => 'Salvar Gravação';
 
   @override

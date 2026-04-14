@@ -49,7 +49,7 @@ class ConfirmationStep extends ConsumerStatefulWidget {
 }
 
 class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
-  final _titleController = TextEditingController();
+  final _descriptionController = TextEditingController();
   AudioPlayer? _player;
   bool _isPlaying = false;
   bool _isSaving = false;
@@ -100,7 +100,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
 
   @override
   void dispose() {
-    _titleController.dispose();
+    _descriptionController.dispose();
     _player?.dispose();
     super.dispose();
   }
@@ -154,11 +154,10 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
         registerId: widget.registerId != null && widget.registerId!.isNotEmpty
             ? Value(widget.registerId!)
             : const Value.absent(),
-        title: Value(
-          _titleController.text.trim().isNotEmpty
-              ? _titleController.text.trim()
-              : defaultRecordingTitle(),
-        ),
+        title: Value(defaultRecordingTitle()),
+        description: _descriptionController.text.trim().isNotEmpty
+            ? Value(_descriptionController.text.trim())
+            : const Value.absent(),
         durationSeconds: Value(widget.result.durationSeconds),
         fileSizeBytes: Value(fileSize),
         localFilePath: Value(widget.result.filePath),
@@ -360,9 +359,13 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
                 child: Column(
                   children: [
                     TextField(
-                      controller: _titleController,
+                      controller: _descriptionController,
+                      minLines: 2,
+                      maxLines: 4,
+                      keyboardType: TextInputType.multiline,
+                      textCapitalization: TextCapitalization.sentences,
                       decoration: InputDecoration(
-                        hintText: l10n.recording_titleHint,
+                        hintText: l10n.recording_descriptionHint,
                         hintStyle: TextStyle(color: colors.secondary),
                         filled: true,
                         fillColor: colors.surfaceAlt,
@@ -386,7 +389,6 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
                           vertical: 14,
                         ),
                       ),
-                      textCapitalization: TextCapitalization.sentences,
                     ),
 
                     const SizedBox(height: 16),

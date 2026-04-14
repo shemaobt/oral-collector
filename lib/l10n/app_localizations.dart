@@ -998,6 +998,18 @@ abstract class AppLocalizations {
   /// **'Add a title (optional)'**
   String get recording_titleHint;
 
+  /// No description provided for @recording_descriptionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a short description (optional)'**
+  String get recording_descriptionHint;
+
+  /// No description provided for @recording_descriptionEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Add description'**
+  String get recording_descriptionEmpty;
+
   /// No description provided for @recording_saveRecording.
   ///
   /// In en, this message translates to:

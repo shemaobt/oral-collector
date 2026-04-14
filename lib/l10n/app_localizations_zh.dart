@@ -458,6 +458,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recording_titleHint => '添加标题（选填）';
 
   @override
+  String get recording_descriptionHint => '添加简短描述（选填）';
+
+  @override
+  String get recording_descriptionEmpty => '添加描述';
+
+  @override
   String get recording_saveRecording => '保存录音';
 
   @override

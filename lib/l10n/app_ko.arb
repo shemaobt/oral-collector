@@ -166,6 +166,8 @@
 
   "recording_registerDescription": "이 녹음의 어조와 격식 수준을 가장 잘 나타내는 언어 사용역을 선택하세요.",
   "recording_titleHint": "제목 추가 (선택 사항)",
+  "recording_descriptionHint": "짧은 설명 추가 (선택 사항)",
+  "recording_descriptionEmpty": "설명 추가",
   "recording_saveRecording": "녹음 저장",
   "recording_recordAgain": "다시 녹음",
   "recording_discard": "삭제",

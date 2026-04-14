@@ -31,7 +31,7 @@ import 'widgets/recording_hero_player.dart';
 import 'widgets/recording_info_grid.dart';
 import 'widgets/recording_quick_actions.dart';
 import 'widgets/recording_status_section.dart';
-import 'widgets/recording_title_section.dart';
+import 'widgets/recording_description_section.dart';
 
 class RecordingDetailScreen extends ConsumerStatefulWidget {
   const RecordingDetailScreen({super.key, required this.recordingId});
@@ -46,8 +46,8 @@ class RecordingDetailScreen extends ConsumerStatefulWidget {
 class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
   LocalRecording? _recording;
   bool _isLoading = true;
-  bool _isEditingTitle = false;
-  late TextEditingController _titleController;
+  bool _isEditingDescription = false;
+  late TextEditingController _descriptionController;
 
   bool get _canEditRecording {
     final user = ref.read(authNotifierProvider).currentUser;
@@ -65,13 +65,13 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
   @override
   void initState() {
     super.initState();
-    _titleController = TextEditingController();
+    _descriptionController = TextEditingController();
     Future.microtask(_loadRecording);
   }
 
   @override
   void dispose() {
-    _titleController.dispose();
+    _descriptionController.dispose();
     super.dispose();
   }
 
@@ -129,7 +129,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
       if (mounted) {
         setState(() {
           _recording = recording;
-          _titleController.text = recording?.title ?? '';
+          _descriptionController.text = recording?.description ?? '';
           _isLoading = false;
         });
         if (isOnline && recording != null) {
@@ -167,10 +167,10 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     );
   }
 
-  Future<void> _saveTitle(String newTitle) async {
-    final trimmed = newTitle.trim();
-    if (trimmed.isEmpty || trimmed == _recording?.title) {
-      setState(() => _isEditingTitle = false);
+  Future<void> _saveDescription(String newDescription) async {
+    final trimmed = newDescription.trim();
+    if (trimmed == (_recording?.description ?? '')) {
+      setState(() => _isEditingDescription = false);
       return;
     }
 
@@ -178,16 +178,16 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
       final serverId = _recording?.serverId ?? widget.recordingId;
       await ref
           .read(recordingApiRepositoryProvider)
-          .updateRecording(serverId, title: trimmed);
+          .updateRecording(serverId, description: trimmed);
     } else {
       final repo = ref.read(localRecordingRepositoryProvider);
       await repo.updateRecording(
         widget.recordingId,
-        LocalRecordingsCompanion(title: Value(trimmed)),
+        LocalRecordingsCompanion(description: Value(trimmed)),
       );
     }
     await _loadRecording();
-    setState(() => _isEditingTitle = false);
+    setState(() => _isEditingDescription = false);
   }
 
   Future<void> _toggleCleaningStatus() async {
@@ -626,18 +626,18 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        RecordingTitleSection(
+        RecordingDescriptionSection(
           theme: theme,
           colors: colors,
-          recording: recording,
-          isEditingTitle: _isEditingTitle,
-          titleController: _titleController,
-          onSave: _saveTitle,
+          description: recording.description,
+          isEditing: _isEditingDescription,
+          controller: _descriptionController,
+          onSave: _saveDescription,
           onCancel: () => setState(() {
-            _isEditingTitle = false;
-            _titleController.text = recording.title ?? '';
+            _isEditingDescription = false;
+            _descriptionController.text = recording.description ?? '';
           }),
-          onStartEdit: () => setState(() => _isEditingTitle = true),
+          onStartEdit: () => setState(() => _isEditingDescription = true),
         ),
         const SizedBox(height: 6),
         Row(

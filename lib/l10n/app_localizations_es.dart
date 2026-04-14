@@ -474,6 +474,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get recording_titleHint => 'Agregar un título (opcional)';
 
   @override
+  String get recording_descriptionHint =>
+      'Agregar una breve descripción (opcional)';
+
+  @override
+  String get recording_descriptionEmpty => 'Agregar descripción';
+
+  @override
   String get recording_saveRecording => 'Guardar Grabación';
 
   @override

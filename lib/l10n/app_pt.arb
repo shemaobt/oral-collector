@@ -166,6 +166,8 @@
 
   "recording_registerDescription": "Escolha o registro de fala que melhor descreve o tom e a formalidade desta gravação.",
   "recording_titleHint": "Adicionar um título (opcional)",
+  "recording_descriptionHint": "Adicionar uma descrição curta (opcional)",
+  "recording_descriptionEmpty": "Adicionar descrição",
   "recording_saveRecording": "Salvar Gravação",
   "recording_recordAgain": "Gravar Novamente",
   "recording_discard": "Descartar",

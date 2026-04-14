@@ -182,6 +182,8 @@
 
   "recording_registerDescription": "Choose the speech register that best describes the tone and formality of this recording.",
   "recording_titleHint": "Add a title (optional)",
+  "recording_descriptionHint": "Add a short description (optional)",
+  "recording_descriptionEmpty": "Add description",
   "recording_saveRecording": "Save Recording",
   "recording_recordAgain": "Record Again",
   "recording_discard": "Discard",

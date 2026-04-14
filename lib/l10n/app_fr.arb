@@ -166,6 +166,8 @@
 
   "recording_registerDescription": "Choisissez le registre de parole qui décrit le mieux le ton et la formalité de cet enregistrement.",
   "recording_titleHint": "Ajouter un titre (facultatif)",
+  "recording_descriptionHint": "Ajouter une brève description (facultatif)",
+  "recording_descriptionEmpty": "Ajouter une description",
   "recording_saveRecording": "Sauvegarder l'Enregistrement",
   "recording_recordAgain": "Enregistrer à Nouveau",
   "recording_discard": "Abandonner",

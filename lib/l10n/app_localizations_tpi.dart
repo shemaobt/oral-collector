@@ -467,6 +467,12 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get recording_titleHint => 'Putim nem (sapos yu laik)';
 
   @override
+  String get recording_descriptionHint => 'Raitim liklik stori (sapos yu laik)';
+
+  @override
+  String get recording_descriptionEmpty => 'Raitim stori';
+
+  @override
   String get recording_saveRecording => 'Sevim Rekoding';
 
   @override

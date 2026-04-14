@@ -166,6 +166,8 @@
 
   "recording_registerDescription": "Chagua rejista ya usemi inayoelezea vizuri toni na utaratibu wa rekodi hii.",
   "recording_titleHint": "Ongeza kichwa (si lazima)",
+  "recording_descriptionHint": "Ongeza maelezo mafupi (si lazima)",
+  "recording_descriptionEmpty": "Ongeza maelezo",
   "recording_saveRecording": "Hifadhi Rekodi",
   "recording_recordAgain": "Rekodi Tena",
   "recording_discard": "Tupa",

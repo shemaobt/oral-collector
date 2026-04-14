@@ -166,6 +166,8 @@
 
   "recording_registerDescription": "Makim pasin bilong toktok we i stret long ton na fomol bilong dispela rekoding.",
   "recording_titleHint": "Putim nem (sapos yu laik)",
+  "recording_descriptionHint": "Raitim liklik stori (sapos yu laik)",
+  "recording_descriptionEmpty": "Raitim stori",
   "recording_saveRecording": "Sevim Rekoding",
   "recording_recordAgain": "Rekodim Gen",
   "recording_discard": "Tromoi",

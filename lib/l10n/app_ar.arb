@@ -166,6 +166,8 @@
 
   "recording_registerDescription": "اختر سجل الكلام الذي يصف أفضل نبرة وشكلية هذا التسجيل.",
   "recording_titleHint": "أضف عنواناً (اختياري)",
+  "recording_descriptionHint": "أضف وصفاً قصيراً (اختياري)",
+  "recording_descriptionEmpty": "أضف وصفاً",
   "recording_saveRecording": "حفظ التسجيل",
   "recording_recordAgain": "إعادة التسجيل",
   "recording_discard": "تجاهل",

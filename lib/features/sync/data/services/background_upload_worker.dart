@@ -114,6 +114,7 @@ Future<void> _uploadSingleRecording(
       'genre_id': recording.genreId,
       'subcategory_id': recording.subcategoryId,
       'title': recording.title,
+      'description': recording.description,
       'duration_seconds': recording.durationSeconds,
       'file_size_bytes': recording.fileSizeBytes,
       'format': recording.format,

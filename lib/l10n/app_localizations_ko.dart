@@ -459,6 +459,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recording_titleHint => '제목 추가 (선택 사항)';
 
   @override
+  String get recording_descriptionHint => '짧은 설명 추가 (선택 사항)';
+
+  @override
+  String get recording_descriptionEmpty => '설명 추가';
+
+  @override
   String get recording_saveRecording => '녹음 저장';
 
   @override

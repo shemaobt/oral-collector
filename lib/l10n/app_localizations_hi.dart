@@ -469,6 +469,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get recording_titleHint => 'शीर्षक जोड़ें (वैकल्पिक)';
 
   @override
+  String get recording_descriptionHint => 'संक्षिप्त विवरण जोड़ें (वैकल्पिक)';
+
+  @override
+  String get recording_descriptionEmpty => 'विवरण जोड़ें';
+
+  @override
   String get recording_saveRecording => 'रिकॉर्डिंग सहेजें';
 
   @override
