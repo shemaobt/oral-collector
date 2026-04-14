@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
@@ -25,37 +23,35 @@ import 'l10n/app_localizations.dart';
 @Preview(name: 'Oral Collector App', wrapper: previewWrapper)
 Widget oralCollectorPreview() => const OralCollectorApp();
 
-void main() {
-  runZonedGuarded(
-    () async {
-      WidgetsFlutterBinding.ensureInitialized();
-      usePathUrlStrategy();
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  usePathUrlStrategy();
 
-      FlutterError.onError = (details) {
-        FlutterError.presentError(details);
-        debugPrint('FlutterError: ${details.exception}');
-      };
+  FlutterError.onError = (details) {
+    FlutterError.presentError(details);
+    debugPrint('FlutterError: ${details.exception}');
+  };
 
-      try {
-        await dotenv.load(fileName: '.env');
-      } on Exception {
-        // noop
-      }
+  PlatformDispatcher.instance.onError = (error, stack) {
+    debugPrint('Uncaught error: $error\n$stack');
+    return true;
+  };
 
-      if (!kIsWeb && platform.isAndroidPlatform) {
-        try {
-          await Workmanager().initialize(callbackDispatcher);
-        } on Exception {
-          // noop
-        }
-      }
+  try {
+    await dotenv.load(fileName: '.env');
+  } on Exception {
+    // noop
+  }
 
-      runApp(const ProviderScope(child: OralCollectorApp()));
-    },
-    (error, stack) {
-      debugPrint('Uncaught error: $error\n$stack');
-    },
-  );
+  if (!kIsWeb && platform.isAndroidPlatform) {
+    try {
+      await Workmanager().initialize(callbackDispatcher);
+    } on Exception {
+      // noop
+    }
+  }
+
+  runApp(const ProviderScope(child: OralCollectorApp()));
 }
 
 class OralCollectorApp extends ConsumerStatefulWidget {
