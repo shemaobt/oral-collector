@@ -25,6 +25,7 @@ import 'notifiers/profile_notifier.dart';
 import 'widgets/invitations_section.dart';
 import 'widgets/profile_header.dart';
 import 'widgets/quick_stats_row.dart';
+import 'widgets/recording_settings_card.dart';
 import 'widgets/sync_settings_card.dart';
 
 @Preview(name: 'Profile Screen', wrapper: previewWrapper)
@@ -206,6 +207,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             },
           ),
         ),
+      ],
+    );
+
+    final recordingSettingsSection = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SectionHeader(title: l10n.recording_recordingStep),
+        const SizedBox(height: 8),
+        RecordingSettingsCard(theme: theme, colors: colors),
       ],
     );
 
@@ -418,6 +428,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           Expanded(
                             child: Column(
                               children: [
+                                recordingSettingsSection,
+                                const SizedBox(height: 24),
                                 syncSection,
                                 const SizedBox(height: 24),
                                 if (adminSection != null) ...[
@@ -440,6 +452,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         ],
                       ),
                     ] else ...[
+                      recordingSettingsSection,
+                      const SizedBox(height: 24),
                       syncSection,
                       const SizedBox(height: 24),
                       aboutSection,
