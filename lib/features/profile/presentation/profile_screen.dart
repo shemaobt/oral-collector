@@ -141,23 +141,31 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         final accepted = await ref
             .read(inviteNotifierProvider.notifier)
             .acceptInvite(invite.id);
-        if (accepted && context.mounted) {
+        if (!context.mounted) return;
+        if (accepted) {
           ref.read(projectNotifierProvider.notifier).fetchProjects();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(l10n.profile_joinedSuccess(invite.projectName)),
             ),
           );
+        } else {
+          final err = ref.read(inviteNotifierProvider).error;
+          showErrorSnackBar(context, err ?? 'Failed to accept invite');
         }
       },
       onDecline: (invite) async {
         final declined = await ref
             .read(inviteNotifierProvider.notifier)
             .declineInvite(invite.id);
-        if (declined && context.mounted) {
+        if (!context.mounted) return;
+        if (declined) {
           ScaffoldMessenger.of(
             context,
           ).showSnackBar(SnackBar(content: Text(l10n.profile_inviteDeclined)));
+        } else {
+          final err = ref.read(inviteNotifierProvider).error;
+          showErrorSnackBar(context, err ?? 'Failed to decline invite');
         }
       },
       onRefresh: () {
