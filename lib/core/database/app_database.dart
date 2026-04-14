@@ -74,8 +74,35 @@ class LocalStorytellers extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+class RecordingSessions extends Table {
+  TextColumn get id => text()();
+  TextColumn get projectId => text()();
+  TextColumn get genreId => text()();
+  TextColumn get subcategoryId => text().nullable()();
+  TextColumn get registerId => text().nullable()();
+  TextColumn get storytellerId => text().nullable()();
+  TextColumn get userId => text().nullable()();
+  DateTimeColumn get startedAt => dateTime()();
+  DateTimeColumn get lastCheckpointAt => dateTime().nullable()();
+  TextColumn get status => text().withDefault(const Constant('active'))();
+  RealColumn get totalDurationSeconds =>
+      real().withDefault(const Constant(0.0))();
+  TextColumn get segmentPathsJson => text().withDefault(const Constant('[]'))();
+  BoolColumn get isPaused => boolean().withDefault(const Constant(false))();
+  IntColumn get lastSegmentIndex => integer().withDefault(const Constant(-1))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 @DriftDatabase(
-  tables: [LocalRecordings, LocalGenres, LocalSubcategories, LocalStorytellers],
+  tables: [
+    LocalRecordings,
+    LocalGenres,
+    LocalSubcategories,
+    LocalStorytellers,
+    RecordingSessions,
+  ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(openConnection());
@@ -83,7 +110,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -106,6 +133,9 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(localRecordings, localRecordings.storytellerId);
         await m.addColumn(localRecordings, localRecordings.userId);
         await m.createTable(localStorytellers);
+      }
+      if (from < 7) {
+        await m.createTable(recordingSessions);
       }
     },
   );

@@ -2736,6 +2736,847 @@ class LocalStorytellersCompanion extends UpdateCompanion<LocalStoryteller> {
   }
 }
 
+class $RecordingSessionsTable extends RecordingSessions
+    with TableInfo<$RecordingSessionsTable, RecordingSession> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $RecordingSessionsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _projectIdMeta = const VerificationMeta(
+    'projectId',
+  );
+  @override
+  late final GeneratedColumn<String> projectId = GeneratedColumn<String>(
+    'project_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _genreIdMeta = const VerificationMeta(
+    'genreId',
+  );
+  @override
+  late final GeneratedColumn<String> genreId = GeneratedColumn<String>(
+    'genre_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _subcategoryIdMeta = const VerificationMeta(
+    'subcategoryId',
+  );
+  @override
+  late final GeneratedColumn<String> subcategoryId = GeneratedColumn<String>(
+    'subcategory_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _registerIdMeta = const VerificationMeta(
+    'registerId',
+  );
+  @override
+  late final GeneratedColumn<String> registerId = GeneratedColumn<String>(
+    'register_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _storytellerIdMeta = const VerificationMeta(
+    'storytellerId',
+  );
+  @override
+  late final GeneratedColumn<String> storytellerId = GeneratedColumn<String>(
+    'storyteller_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
+    'user_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _startedAtMeta = const VerificationMeta(
+    'startedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> startedAt = GeneratedColumn<DateTime>(
+    'started_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _lastCheckpointAtMeta = const VerificationMeta(
+    'lastCheckpointAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> lastCheckpointAt =
+      GeneratedColumn<DateTime>(
+        'last_checkpoint_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('active'),
+  );
+  static const VerificationMeta _totalDurationSecondsMeta =
+      const VerificationMeta('totalDurationSeconds');
+  @override
+  late final GeneratedColumn<double> totalDurationSeconds =
+      GeneratedColumn<double>(
+        'total_duration_seconds',
+        aliasedName,
+        false,
+        type: DriftSqlType.double,
+        requiredDuringInsert: false,
+        defaultValue: const Constant(0.0),
+      );
+  static const VerificationMeta _segmentPathsJsonMeta = const VerificationMeta(
+    'segmentPathsJson',
+  );
+  @override
+  late final GeneratedColumn<String> segmentPathsJson = GeneratedColumn<String>(
+    'segment_paths_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('[]'),
+  );
+  static const VerificationMeta _isPausedMeta = const VerificationMeta(
+    'isPaused',
+  );
+  @override
+  late final GeneratedColumn<bool> isPaused = GeneratedColumn<bool>(
+    'is_paused',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_paused" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _lastSegmentIndexMeta = const VerificationMeta(
+    'lastSegmentIndex',
+  );
+  @override
+  late final GeneratedColumn<int> lastSegmentIndex = GeneratedColumn<int>(
+    'last_segment_index',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(-1),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    projectId,
+    genreId,
+    subcategoryId,
+    registerId,
+    storytellerId,
+    userId,
+    startedAt,
+    lastCheckpointAt,
+    status,
+    totalDurationSeconds,
+    segmentPathsJson,
+    isPaused,
+    lastSegmentIndex,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'recording_sessions';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<RecordingSession> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('project_id')) {
+      context.handle(
+        _projectIdMeta,
+        projectId.isAcceptableOrUnknown(data['project_id']!, _projectIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_projectIdMeta);
+    }
+    if (data.containsKey('genre_id')) {
+      context.handle(
+        _genreIdMeta,
+        genreId.isAcceptableOrUnknown(data['genre_id']!, _genreIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_genreIdMeta);
+    }
+    if (data.containsKey('subcategory_id')) {
+      context.handle(
+        _subcategoryIdMeta,
+        subcategoryId.isAcceptableOrUnknown(
+          data['subcategory_id']!,
+          _subcategoryIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('register_id')) {
+      context.handle(
+        _registerIdMeta,
+        registerId.isAcceptableOrUnknown(data['register_id']!, _registerIdMeta),
+      );
+    }
+    if (data.containsKey('storyteller_id')) {
+      context.handle(
+        _storytellerIdMeta,
+        storytellerId.isAcceptableOrUnknown(
+          data['storyteller_id']!,
+          _storytellerIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('user_id')) {
+      context.handle(
+        _userIdMeta,
+        userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta),
+      );
+    }
+    if (data.containsKey('started_at')) {
+      context.handle(
+        _startedAtMeta,
+        startedAt.isAcceptableOrUnknown(data['started_at']!, _startedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_startedAtMeta);
+    }
+    if (data.containsKey('last_checkpoint_at')) {
+      context.handle(
+        _lastCheckpointAtMeta,
+        lastCheckpointAt.isAcceptableOrUnknown(
+          data['last_checkpoint_at']!,
+          _lastCheckpointAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('total_duration_seconds')) {
+      context.handle(
+        _totalDurationSecondsMeta,
+        totalDurationSeconds.isAcceptableOrUnknown(
+          data['total_duration_seconds']!,
+          _totalDurationSecondsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('segment_paths_json')) {
+      context.handle(
+        _segmentPathsJsonMeta,
+        segmentPathsJson.isAcceptableOrUnknown(
+          data['segment_paths_json']!,
+          _segmentPathsJsonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_paused')) {
+      context.handle(
+        _isPausedMeta,
+        isPaused.isAcceptableOrUnknown(data['is_paused']!, _isPausedMeta),
+      );
+    }
+    if (data.containsKey('last_segment_index')) {
+      context.handle(
+        _lastSegmentIndexMeta,
+        lastSegmentIndex.isAcceptableOrUnknown(
+          data['last_segment_index']!,
+          _lastSegmentIndexMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  RecordingSession map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return RecordingSession(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      projectId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}project_id'],
+      )!,
+      genreId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}genre_id'],
+      )!,
+      subcategoryId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}subcategory_id'],
+      ),
+      registerId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}register_id'],
+      ),
+      storytellerId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}storyteller_id'],
+      ),
+      userId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}user_id'],
+      ),
+      startedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}started_at'],
+      )!,
+      lastCheckpointAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_checkpoint_at'],
+      ),
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      totalDurationSeconds: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}total_duration_seconds'],
+      )!,
+      segmentPathsJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}segment_paths_json'],
+      )!,
+      isPaused: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_paused'],
+      )!,
+      lastSegmentIndex: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}last_segment_index'],
+      )!,
+    );
+  }
+
+  @override
+  $RecordingSessionsTable createAlias(String alias) {
+    return $RecordingSessionsTable(attachedDatabase, alias);
+  }
+}
+
+class RecordingSession extends DataClass
+    implements Insertable<RecordingSession> {
+  final String id;
+  final String projectId;
+  final String genreId;
+  final String? subcategoryId;
+  final String? registerId;
+  final String? storytellerId;
+  final String? userId;
+  final DateTime startedAt;
+  final DateTime? lastCheckpointAt;
+  final String status;
+  final double totalDurationSeconds;
+  final String segmentPathsJson;
+  final bool isPaused;
+  final int lastSegmentIndex;
+  const RecordingSession({
+    required this.id,
+    required this.projectId,
+    required this.genreId,
+    this.subcategoryId,
+    this.registerId,
+    this.storytellerId,
+    this.userId,
+    required this.startedAt,
+    this.lastCheckpointAt,
+    required this.status,
+    required this.totalDurationSeconds,
+    required this.segmentPathsJson,
+    required this.isPaused,
+    required this.lastSegmentIndex,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['project_id'] = Variable<String>(projectId);
+    map['genre_id'] = Variable<String>(genreId);
+    if (!nullToAbsent || subcategoryId != null) {
+      map['subcategory_id'] = Variable<String>(subcategoryId);
+    }
+    if (!nullToAbsent || registerId != null) {
+      map['register_id'] = Variable<String>(registerId);
+    }
+    if (!nullToAbsent || storytellerId != null) {
+      map['storyteller_id'] = Variable<String>(storytellerId);
+    }
+    if (!nullToAbsent || userId != null) {
+      map['user_id'] = Variable<String>(userId);
+    }
+    map['started_at'] = Variable<DateTime>(startedAt);
+    if (!nullToAbsent || lastCheckpointAt != null) {
+      map['last_checkpoint_at'] = Variable<DateTime>(lastCheckpointAt);
+    }
+    map['status'] = Variable<String>(status);
+    map['total_duration_seconds'] = Variable<double>(totalDurationSeconds);
+    map['segment_paths_json'] = Variable<String>(segmentPathsJson);
+    map['is_paused'] = Variable<bool>(isPaused);
+    map['last_segment_index'] = Variable<int>(lastSegmentIndex);
+    return map;
+  }
+
+  RecordingSessionsCompanion toCompanion(bool nullToAbsent) {
+    return RecordingSessionsCompanion(
+      id: Value(id),
+      projectId: Value(projectId),
+      genreId: Value(genreId),
+      subcategoryId: subcategoryId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(subcategoryId),
+      registerId: registerId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(registerId),
+      storytellerId: storytellerId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(storytellerId),
+      userId: userId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(userId),
+      startedAt: Value(startedAt),
+      lastCheckpointAt: lastCheckpointAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastCheckpointAt),
+      status: Value(status),
+      totalDurationSeconds: Value(totalDurationSeconds),
+      segmentPathsJson: Value(segmentPathsJson),
+      isPaused: Value(isPaused),
+      lastSegmentIndex: Value(lastSegmentIndex),
+    );
+  }
+
+  factory RecordingSession.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return RecordingSession(
+      id: serializer.fromJson<String>(json['id']),
+      projectId: serializer.fromJson<String>(json['projectId']),
+      genreId: serializer.fromJson<String>(json['genreId']),
+      subcategoryId: serializer.fromJson<String?>(json['subcategoryId']),
+      registerId: serializer.fromJson<String?>(json['registerId']),
+      storytellerId: serializer.fromJson<String?>(json['storytellerId']),
+      userId: serializer.fromJson<String?>(json['userId']),
+      startedAt: serializer.fromJson<DateTime>(json['startedAt']),
+      lastCheckpointAt: serializer.fromJson<DateTime?>(
+        json['lastCheckpointAt'],
+      ),
+      status: serializer.fromJson<String>(json['status']),
+      totalDurationSeconds: serializer.fromJson<double>(
+        json['totalDurationSeconds'],
+      ),
+      segmentPathsJson: serializer.fromJson<String>(json['segmentPathsJson']),
+      isPaused: serializer.fromJson<bool>(json['isPaused']),
+      lastSegmentIndex: serializer.fromJson<int>(json['lastSegmentIndex']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'projectId': serializer.toJson<String>(projectId),
+      'genreId': serializer.toJson<String>(genreId),
+      'subcategoryId': serializer.toJson<String?>(subcategoryId),
+      'registerId': serializer.toJson<String?>(registerId),
+      'storytellerId': serializer.toJson<String?>(storytellerId),
+      'userId': serializer.toJson<String?>(userId),
+      'startedAt': serializer.toJson<DateTime>(startedAt),
+      'lastCheckpointAt': serializer.toJson<DateTime?>(lastCheckpointAt),
+      'status': serializer.toJson<String>(status),
+      'totalDurationSeconds': serializer.toJson<double>(totalDurationSeconds),
+      'segmentPathsJson': serializer.toJson<String>(segmentPathsJson),
+      'isPaused': serializer.toJson<bool>(isPaused),
+      'lastSegmentIndex': serializer.toJson<int>(lastSegmentIndex),
+    };
+  }
+
+  RecordingSession copyWith({
+    String? id,
+    String? projectId,
+    String? genreId,
+    Value<String?> subcategoryId = const Value.absent(),
+    Value<String?> registerId = const Value.absent(),
+    Value<String?> storytellerId = const Value.absent(),
+    Value<String?> userId = const Value.absent(),
+    DateTime? startedAt,
+    Value<DateTime?> lastCheckpointAt = const Value.absent(),
+    String? status,
+    double? totalDurationSeconds,
+    String? segmentPathsJson,
+    bool? isPaused,
+    int? lastSegmentIndex,
+  }) => RecordingSession(
+    id: id ?? this.id,
+    projectId: projectId ?? this.projectId,
+    genreId: genreId ?? this.genreId,
+    subcategoryId: subcategoryId.present
+        ? subcategoryId.value
+        : this.subcategoryId,
+    registerId: registerId.present ? registerId.value : this.registerId,
+    storytellerId: storytellerId.present
+        ? storytellerId.value
+        : this.storytellerId,
+    userId: userId.present ? userId.value : this.userId,
+    startedAt: startedAt ?? this.startedAt,
+    lastCheckpointAt: lastCheckpointAt.present
+        ? lastCheckpointAt.value
+        : this.lastCheckpointAt,
+    status: status ?? this.status,
+    totalDurationSeconds: totalDurationSeconds ?? this.totalDurationSeconds,
+    segmentPathsJson: segmentPathsJson ?? this.segmentPathsJson,
+    isPaused: isPaused ?? this.isPaused,
+    lastSegmentIndex: lastSegmentIndex ?? this.lastSegmentIndex,
+  );
+  RecordingSession copyWithCompanion(RecordingSessionsCompanion data) {
+    return RecordingSession(
+      id: data.id.present ? data.id.value : this.id,
+      projectId: data.projectId.present ? data.projectId.value : this.projectId,
+      genreId: data.genreId.present ? data.genreId.value : this.genreId,
+      subcategoryId: data.subcategoryId.present
+          ? data.subcategoryId.value
+          : this.subcategoryId,
+      registerId: data.registerId.present
+          ? data.registerId.value
+          : this.registerId,
+      storytellerId: data.storytellerId.present
+          ? data.storytellerId.value
+          : this.storytellerId,
+      userId: data.userId.present ? data.userId.value : this.userId,
+      startedAt: data.startedAt.present ? data.startedAt.value : this.startedAt,
+      lastCheckpointAt: data.lastCheckpointAt.present
+          ? data.lastCheckpointAt.value
+          : this.lastCheckpointAt,
+      status: data.status.present ? data.status.value : this.status,
+      totalDurationSeconds: data.totalDurationSeconds.present
+          ? data.totalDurationSeconds.value
+          : this.totalDurationSeconds,
+      segmentPathsJson: data.segmentPathsJson.present
+          ? data.segmentPathsJson.value
+          : this.segmentPathsJson,
+      isPaused: data.isPaused.present ? data.isPaused.value : this.isPaused,
+      lastSegmentIndex: data.lastSegmentIndex.present
+          ? data.lastSegmentIndex.value
+          : this.lastSegmentIndex,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RecordingSession(')
+          ..write('id: $id, ')
+          ..write('projectId: $projectId, ')
+          ..write('genreId: $genreId, ')
+          ..write('subcategoryId: $subcategoryId, ')
+          ..write('registerId: $registerId, ')
+          ..write('storytellerId: $storytellerId, ')
+          ..write('userId: $userId, ')
+          ..write('startedAt: $startedAt, ')
+          ..write('lastCheckpointAt: $lastCheckpointAt, ')
+          ..write('status: $status, ')
+          ..write('totalDurationSeconds: $totalDurationSeconds, ')
+          ..write('segmentPathsJson: $segmentPathsJson, ')
+          ..write('isPaused: $isPaused, ')
+          ..write('lastSegmentIndex: $lastSegmentIndex')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    projectId,
+    genreId,
+    subcategoryId,
+    registerId,
+    storytellerId,
+    userId,
+    startedAt,
+    lastCheckpointAt,
+    status,
+    totalDurationSeconds,
+    segmentPathsJson,
+    isPaused,
+    lastSegmentIndex,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is RecordingSession &&
+          other.id == this.id &&
+          other.projectId == this.projectId &&
+          other.genreId == this.genreId &&
+          other.subcategoryId == this.subcategoryId &&
+          other.registerId == this.registerId &&
+          other.storytellerId == this.storytellerId &&
+          other.userId == this.userId &&
+          other.startedAt == this.startedAt &&
+          other.lastCheckpointAt == this.lastCheckpointAt &&
+          other.status == this.status &&
+          other.totalDurationSeconds == this.totalDurationSeconds &&
+          other.segmentPathsJson == this.segmentPathsJson &&
+          other.isPaused == this.isPaused &&
+          other.lastSegmentIndex == this.lastSegmentIndex);
+}
+
+class RecordingSessionsCompanion extends UpdateCompanion<RecordingSession> {
+  final Value<String> id;
+  final Value<String> projectId;
+  final Value<String> genreId;
+  final Value<String?> subcategoryId;
+  final Value<String?> registerId;
+  final Value<String?> storytellerId;
+  final Value<String?> userId;
+  final Value<DateTime> startedAt;
+  final Value<DateTime?> lastCheckpointAt;
+  final Value<String> status;
+  final Value<double> totalDurationSeconds;
+  final Value<String> segmentPathsJson;
+  final Value<bool> isPaused;
+  final Value<int> lastSegmentIndex;
+  final Value<int> rowid;
+  const RecordingSessionsCompanion({
+    this.id = const Value.absent(),
+    this.projectId = const Value.absent(),
+    this.genreId = const Value.absent(),
+    this.subcategoryId = const Value.absent(),
+    this.registerId = const Value.absent(),
+    this.storytellerId = const Value.absent(),
+    this.userId = const Value.absent(),
+    this.startedAt = const Value.absent(),
+    this.lastCheckpointAt = const Value.absent(),
+    this.status = const Value.absent(),
+    this.totalDurationSeconds = const Value.absent(),
+    this.segmentPathsJson = const Value.absent(),
+    this.isPaused = const Value.absent(),
+    this.lastSegmentIndex = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  RecordingSessionsCompanion.insert({
+    required String id,
+    required String projectId,
+    required String genreId,
+    this.subcategoryId = const Value.absent(),
+    this.registerId = const Value.absent(),
+    this.storytellerId = const Value.absent(),
+    this.userId = const Value.absent(),
+    required DateTime startedAt,
+    this.lastCheckpointAt = const Value.absent(),
+    this.status = const Value.absent(),
+    this.totalDurationSeconds = const Value.absent(),
+    this.segmentPathsJson = const Value.absent(),
+    this.isPaused = const Value.absent(),
+    this.lastSegmentIndex = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       projectId = Value(projectId),
+       genreId = Value(genreId),
+       startedAt = Value(startedAt);
+  static Insertable<RecordingSession> custom({
+    Expression<String>? id,
+    Expression<String>? projectId,
+    Expression<String>? genreId,
+    Expression<String>? subcategoryId,
+    Expression<String>? registerId,
+    Expression<String>? storytellerId,
+    Expression<String>? userId,
+    Expression<DateTime>? startedAt,
+    Expression<DateTime>? lastCheckpointAt,
+    Expression<String>? status,
+    Expression<double>? totalDurationSeconds,
+    Expression<String>? segmentPathsJson,
+    Expression<bool>? isPaused,
+    Expression<int>? lastSegmentIndex,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (projectId != null) 'project_id': projectId,
+      if (genreId != null) 'genre_id': genreId,
+      if (subcategoryId != null) 'subcategory_id': subcategoryId,
+      if (registerId != null) 'register_id': registerId,
+      if (storytellerId != null) 'storyteller_id': storytellerId,
+      if (userId != null) 'user_id': userId,
+      if (startedAt != null) 'started_at': startedAt,
+      if (lastCheckpointAt != null) 'last_checkpoint_at': lastCheckpointAt,
+      if (status != null) 'status': status,
+      if (totalDurationSeconds != null)
+        'total_duration_seconds': totalDurationSeconds,
+      if (segmentPathsJson != null) 'segment_paths_json': segmentPathsJson,
+      if (isPaused != null) 'is_paused': isPaused,
+      if (lastSegmentIndex != null) 'last_segment_index': lastSegmentIndex,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  RecordingSessionsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? projectId,
+    Value<String>? genreId,
+    Value<String?>? subcategoryId,
+    Value<String?>? registerId,
+    Value<String?>? storytellerId,
+    Value<String?>? userId,
+    Value<DateTime>? startedAt,
+    Value<DateTime?>? lastCheckpointAt,
+    Value<String>? status,
+    Value<double>? totalDurationSeconds,
+    Value<String>? segmentPathsJson,
+    Value<bool>? isPaused,
+    Value<int>? lastSegmentIndex,
+    Value<int>? rowid,
+  }) {
+    return RecordingSessionsCompanion(
+      id: id ?? this.id,
+      projectId: projectId ?? this.projectId,
+      genreId: genreId ?? this.genreId,
+      subcategoryId: subcategoryId ?? this.subcategoryId,
+      registerId: registerId ?? this.registerId,
+      storytellerId: storytellerId ?? this.storytellerId,
+      userId: userId ?? this.userId,
+      startedAt: startedAt ?? this.startedAt,
+      lastCheckpointAt: lastCheckpointAt ?? this.lastCheckpointAt,
+      status: status ?? this.status,
+      totalDurationSeconds: totalDurationSeconds ?? this.totalDurationSeconds,
+      segmentPathsJson: segmentPathsJson ?? this.segmentPathsJson,
+      isPaused: isPaused ?? this.isPaused,
+      lastSegmentIndex: lastSegmentIndex ?? this.lastSegmentIndex,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (projectId.present) {
+      map['project_id'] = Variable<String>(projectId.value);
+    }
+    if (genreId.present) {
+      map['genre_id'] = Variable<String>(genreId.value);
+    }
+    if (subcategoryId.present) {
+      map['subcategory_id'] = Variable<String>(subcategoryId.value);
+    }
+    if (registerId.present) {
+      map['register_id'] = Variable<String>(registerId.value);
+    }
+    if (storytellerId.present) {
+      map['storyteller_id'] = Variable<String>(storytellerId.value);
+    }
+    if (userId.present) {
+      map['user_id'] = Variable<String>(userId.value);
+    }
+    if (startedAt.present) {
+      map['started_at'] = Variable<DateTime>(startedAt.value);
+    }
+    if (lastCheckpointAt.present) {
+      map['last_checkpoint_at'] = Variable<DateTime>(lastCheckpointAt.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (totalDurationSeconds.present) {
+      map['total_duration_seconds'] = Variable<double>(
+        totalDurationSeconds.value,
+      );
+    }
+    if (segmentPathsJson.present) {
+      map['segment_paths_json'] = Variable<String>(segmentPathsJson.value);
+    }
+    if (isPaused.present) {
+      map['is_paused'] = Variable<bool>(isPaused.value);
+    }
+    if (lastSegmentIndex.present) {
+      map['last_segment_index'] = Variable<int>(lastSegmentIndex.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RecordingSessionsCompanion(')
+          ..write('id: $id, ')
+          ..write('projectId: $projectId, ')
+          ..write('genreId: $genreId, ')
+          ..write('subcategoryId: $subcategoryId, ')
+          ..write('registerId: $registerId, ')
+          ..write('storytellerId: $storytellerId, ')
+          ..write('userId: $userId, ')
+          ..write('startedAt: $startedAt, ')
+          ..write('lastCheckpointAt: $lastCheckpointAt, ')
+          ..write('status: $status, ')
+          ..write('totalDurationSeconds: $totalDurationSeconds, ')
+          ..write('segmentPathsJson: $segmentPathsJson, ')
+          ..write('isPaused: $isPaused, ')
+          ..write('lastSegmentIndex: $lastSegmentIndex, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -2747,6 +3588,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $LocalSubcategoriesTable(this);
   late final $LocalStorytellersTable localStorytellers =
       $LocalStorytellersTable(this);
+  late final $RecordingSessionsTable recordingSessions =
+      $RecordingSessionsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2756,6 +3599,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     localGenres,
     localSubcategories,
     localStorytellers,
+    recordingSessions,
   ];
 }
 
@@ -4100,6 +4944,404 @@ typedef $$LocalStorytellersTableProcessedTableManager =
       LocalStoryteller,
       PrefetchHooks Function()
     >;
+typedef $$RecordingSessionsTableCreateCompanionBuilder =
+    RecordingSessionsCompanion Function({
+      required String id,
+      required String projectId,
+      required String genreId,
+      Value<String?> subcategoryId,
+      Value<String?> registerId,
+      Value<String?> storytellerId,
+      Value<String?> userId,
+      required DateTime startedAt,
+      Value<DateTime?> lastCheckpointAt,
+      Value<String> status,
+      Value<double> totalDurationSeconds,
+      Value<String> segmentPathsJson,
+      Value<bool> isPaused,
+      Value<int> lastSegmentIndex,
+      Value<int> rowid,
+    });
+typedef $$RecordingSessionsTableUpdateCompanionBuilder =
+    RecordingSessionsCompanion Function({
+      Value<String> id,
+      Value<String> projectId,
+      Value<String> genreId,
+      Value<String?> subcategoryId,
+      Value<String?> registerId,
+      Value<String?> storytellerId,
+      Value<String?> userId,
+      Value<DateTime> startedAt,
+      Value<DateTime?> lastCheckpointAt,
+      Value<String> status,
+      Value<double> totalDurationSeconds,
+      Value<String> segmentPathsJson,
+      Value<bool> isPaused,
+      Value<int> lastSegmentIndex,
+      Value<int> rowid,
+    });
+
+class $$RecordingSessionsTableFilterComposer
+    extends Composer<_$AppDatabase, $RecordingSessionsTable> {
+  $$RecordingSessionsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get projectId => $composableBuilder(
+    column: $table.projectId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get genreId => $composableBuilder(
+    column: $table.genreId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get subcategoryId => $composableBuilder(
+    column: $table.subcategoryId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get registerId => $composableBuilder(
+    column: $table.registerId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get storytellerId => $composableBuilder(
+    column: $table.storytellerId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get startedAt => $composableBuilder(
+    column: $table.startedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lastCheckpointAt => $composableBuilder(
+    column: $table.lastCheckpointAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get totalDurationSeconds => $composableBuilder(
+    column: $table.totalDurationSeconds,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get segmentPathsJson => $composableBuilder(
+    column: $table.segmentPathsJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isPaused => $composableBuilder(
+    column: $table.isPaused,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get lastSegmentIndex => $composableBuilder(
+    column: $table.lastSegmentIndex,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$RecordingSessionsTableOrderingComposer
+    extends Composer<_$AppDatabase, $RecordingSessionsTable> {
+  $$RecordingSessionsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get projectId => $composableBuilder(
+    column: $table.projectId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get genreId => $composableBuilder(
+    column: $table.genreId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get subcategoryId => $composableBuilder(
+    column: $table.subcategoryId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get registerId => $composableBuilder(
+    column: $table.registerId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get storytellerId => $composableBuilder(
+    column: $table.storytellerId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get startedAt => $composableBuilder(
+    column: $table.startedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get lastCheckpointAt => $composableBuilder(
+    column: $table.lastCheckpointAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get totalDurationSeconds => $composableBuilder(
+    column: $table.totalDurationSeconds,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get segmentPathsJson => $composableBuilder(
+    column: $table.segmentPathsJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isPaused => $composableBuilder(
+    column: $table.isPaused,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get lastSegmentIndex => $composableBuilder(
+    column: $table.lastSegmentIndex,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$RecordingSessionsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $RecordingSessionsTable> {
+  $$RecordingSessionsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get projectId =>
+      $composableBuilder(column: $table.projectId, builder: (column) => column);
+
+  GeneratedColumn<String> get genreId =>
+      $composableBuilder(column: $table.genreId, builder: (column) => column);
+
+  GeneratedColumn<String> get subcategoryId => $composableBuilder(
+    column: $table.subcategoryId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get registerId => $composableBuilder(
+    column: $table.registerId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get storytellerId => $composableBuilder(
+    column: $table.storytellerId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get userId =>
+      $composableBuilder(column: $table.userId, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get startedAt =>
+      $composableBuilder(column: $table.startedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get lastCheckpointAt => $composableBuilder(
+    column: $table.lastCheckpointAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<double> get totalDurationSeconds => $composableBuilder(
+    column: $table.totalDurationSeconds,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get segmentPathsJson => $composableBuilder(
+    column: $table.segmentPathsJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isPaused =>
+      $composableBuilder(column: $table.isPaused, builder: (column) => column);
+
+  GeneratedColumn<int> get lastSegmentIndex => $composableBuilder(
+    column: $table.lastSegmentIndex,
+    builder: (column) => column,
+  );
+}
+
+class $$RecordingSessionsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $RecordingSessionsTable,
+          RecordingSession,
+          $$RecordingSessionsTableFilterComposer,
+          $$RecordingSessionsTableOrderingComposer,
+          $$RecordingSessionsTableAnnotationComposer,
+          $$RecordingSessionsTableCreateCompanionBuilder,
+          $$RecordingSessionsTableUpdateCompanionBuilder,
+          (
+            RecordingSession,
+            BaseReferences<
+              _$AppDatabase,
+              $RecordingSessionsTable,
+              RecordingSession
+            >,
+          ),
+          RecordingSession,
+          PrefetchHooks Function()
+        > {
+  $$RecordingSessionsTableTableManager(
+    _$AppDatabase db,
+    $RecordingSessionsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$RecordingSessionsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$RecordingSessionsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$RecordingSessionsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> projectId = const Value.absent(),
+                Value<String> genreId = const Value.absent(),
+                Value<String?> subcategoryId = const Value.absent(),
+                Value<String?> registerId = const Value.absent(),
+                Value<String?> storytellerId = const Value.absent(),
+                Value<String?> userId = const Value.absent(),
+                Value<DateTime> startedAt = const Value.absent(),
+                Value<DateTime?> lastCheckpointAt = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<double> totalDurationSeconds = const Value.absent(),
+                Value<String> segmentPathsJson = const Value.absent(),
+                Value<bool> isPaused = const Value.absent(),
+                Value<int> lastSegmentIndex = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => RecordingSessionsCompanion(
+                id: id,
+                projectId: projectId,
+                genreId: genreId,
+                subcategoryId: subcategoryId,
+                registerId: registerId,
+                storytellerId: storytellerId,
+                userId: userId,
+                startedAt: startedAt,
+                lastCheckpointAt: lastCheckpointAt,
+                status: status,
+                totalDurationSeconds: totalDurationSeconds,
+                segmentPathsJson: segmentPathsJson,
+                isPaused: isPaused,
+                lastSegmentIndex: lastSegmentIndex,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String projectId,
+                required String genreId,
+                Value<String?> subcategoryId = const Value.absent(),
+                Value<String?> registerId = const Value.absent(),
+                Value<String?> storytellerId = const Value.absent(),
+                Value<String?> userId = const Value.absent(),
+                required DateTime startedAt,
+                Value<DateTime?> lastCheckpointAt = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<double> totalDurationSeconds = const Value.absent(),
+                Value<String> segmentPathsJson = const Value.absent(),
+                Value<bool> isPaused = const Value.absent(),
+                Value<int> lastSegmentIndex = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => RecordingSessionsCompanion.insert(
+                id: id,
+                projectId: projectId,
+                genreId: genreId,
+                subcategoryId: subcategoryId,
+                registerId: registerId,
+                storytellerId: storytellerId,
+                userId: userId,
+                startedAt: startedAt,
+                lastCheckpointAt: lastCheckpointAt,
+                status: status,
+                totalDurationSeconds: totalDurationSeconds,
+                segmentPathsJson: segmentPathsJson,
+                isPaused: isPaused,
+                lastSegmentIndex: lastSegmentIndex,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$RecordingSessionsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $RecordingSessionsTable,
+      RecordingSession,
+      $$RecordingSessionsTableFilterComposer,
+      $$RecordingSessionsTableOrderingComposer,
+      $$RecordingSessionsTableAnnotationComposer,
+      $$RecordingSessionsTableCreateCompanionBuilder,
+      $$RecordingSessionsTableUpdateCompanionBuilder,
+      (
+        RecordingSession,
+        BaseReferences<
+          _$AppDatabase,
+          $RecordingSessionsTable,
+          RecordingSession
+        >,
+      ),
+      RecordingSession,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -4112,4 +5354,6 @@ class $AppDatabaseManager {
       $$LocalSubcategoriesTableTableManager(_db, _db.localSubcategories);
   $$LocalStorytellersTableTableManager get localStorytellers =>
       $$LocalStorytellersTableTableManager(_db, _db.localStorytellers);
+  $$RecordingSessionsTableTableManager get recordingSessions =>
+      $$RecordingSessionsTableTableManager(_db, _db.recordingSessions);
 }
