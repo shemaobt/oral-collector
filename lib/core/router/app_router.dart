@@ -164,7 +164,6 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/record',
             redirect: (context, state) {
-              if (kIsWeb) return '/recordings';
               final hasProject =
                   ref.read(projectNotifierProvider).activeProject != null;
               return hasProject ? null : '/home';
@@ -177,7 +176,6 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/quick-record',
             redirect: (context, state) {
-              if (kIsWeb) return '/recordings';
               final hasProject =
                   ref.read(projectNotifierProvider).activeProject != null;
               return hasProject ? null : '/home';

@@ -50,8 +50,7 @@ class AppShell extends ConsumerWidget {
   ];
 
   static List<_TabItem> _mobileTabs(AppLocalizations l10n) => _allTabs(l10n);
-  static List<_TabItem> _webBaseTabs(AppLocalizations l10n) =>
-      _allTabs(l10n).where((t) => t.path != '/record').toList();
+  static List<_TabItem> _webBaseTabs(AppLocalizations l10n) => _allTabs(l10n);
 
   int _currentIndexFrom(BuildContext context, List<_TabItem> tabs) {
     final location = GoRouterState.of(context).uri.path;

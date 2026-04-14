@@ -5,6 +5,7 @@ import 'package:drift/drift.dart' show Value;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 
@@ -303,11 +304,26 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
 
     if (url == null || url.isEmpty) return null;
 
-    return RecordingResult(
-      filePath: url,
-      durationSeconds: fallbackElapsed.inMilliseconds / 1000.0,
-      format: 'webm',
-    );
+    try {
+      final bytes = await http.readBytes(Uri.parse(url));
+      final format = _detectWebFormatFromUrl(url);
+      final fullKey = '$pendingKey.$format';
+      await file_ops.writeFileBytes(fullKey, bytes);
+      return RecordingResult(
+        filePath: fullKey,
+        durationSeconds: fallbackElapsed.inMilliseconds / 1000.0,
+        format: format,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  String _detectWebFormatFromUrl(String url) {
+    final lower = url.toLowerCase();
+    if (lower.endsWith('.mp4') || lower.contains('mp4')) return 'mp4';
+    if (lower.endsWith('.ogg') || lower.contains('ogg')) return 'ogg';
+    return 'webm';
   }
 
   Future<void> discardRecording() async {
