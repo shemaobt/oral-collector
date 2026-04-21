@@ -67,6 +67,22 @@ class ActiveFilterChips extends ConsumerWidget {
       );
     }
 
+    if (state.selectedSubcategoryId != null) {
+      final rawSubcat = ref
+          .read(genreNotifierProvider.notifier)
+          .getSubcategoryName(state.selectedSubcategoryId!);
+      final label = rawSubcat != null
+          ? localizedSubcategoryName(l10n, rawSubcat)
+          : l10n.moveCategory_subcategory;
+      chips.add(
+        _buildChip(
+          context,
+          label: label,
+          onRemove: () => notifier.setSubcategoryFilter(null),
+        ),
+      );
+    }
+
     if (state.selectedStorytellerId != null) {
       final storytellers = ref
           .watch(projectStorytellersNotifierProvider)
