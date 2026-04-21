@@ -35,11 +35,13 @@ class _RecoveryScreenState extends ConsumerState<RecoveryScreen> {
     final sessionRepo = ref.read(recordingSessionRepositoryProvider);
     final session = await sessionRepo.getById(widget.sessionId);
     if (!mounted) return;
+    final l10n = AppLocalizations.of(context);
+    final localeTag = Localizations.localeOf(context).toString();
 
     if (session == null) {
       setState(() {
         _status = _Status.failed;
-        _error = 'Session not found';
+        _error = l10n.recording_recoverySessionNotFound;
       });
       return;
     }
@@ -57,7 +59,7 @@ class _RecoveryScreenState extends ConsumerState<RecoveryScreen> {
       if (!mounted) return;
       setState(() {
         _status = _Status.failed;
-        _error = 'No audio to recover';
+        _error = l10n.recording_recoveryNoAudio;
       });
       return;
     }
@@ -79,7 +81,7 @@ class _RecoveryScreenState extends ConsumerState<RecoveryScreen> {
       if (!mounted) return;
       setState(() {
         _status = _Status.failed;
-        _error = 'Concatenation failed';
+        _error = l10n.recording_recoveryConcatFailed;
       });
       return;
     }
@@ -110,7 +112,7 @@ class _RecoveryScreenState extends ConsumerState<RecoveryScreen> {
             ? Value(session.storytellerId!)
             : const Value.absent(),
         userId: userId != null ? Value(userId) : const Value.absent(),
-        title: Value(defaultRecordingTitle()),
+        title: Value(defaultRecordingTitle(locale: localeTag)),
         durationSeconds: Value(duration),
         fileSizeBytes: Value(fileSize),
         localFilePath: Value(finalPath),
@@ -142,12 +144,12 @@ class _RecoveryScreenState extends ConsumerState<RecoveryScreen> {
       appBar: AppBar(title: Text(l10n.recording_recoverTitle)),
       body: Center(
         child: switch (_status) {
-          _Status.working => const Column(
+          _Status.working => Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              CircularProgressIndicator(),
-              SizedBox(height: 16),
-              Text('Recovering…'),
+              const CircularProgressIndicator(),
+              const SizedBox(height: 16),
+              Text(l10n.recording_recoveryInProgress),
             ],
           ),
           _Status.done => const Icon(Icons.check_circle, size: 64),
@@ -158,11 +160,11 @@ class _RecoveryScreenState extends ConsumerState<RecoveryScreen> {
               children: [
                 const Icon(Icons.error_outline, size: 48),
                 const SizedBox(height: 12),
-                Text(_error ?? 'Recovery failed'),
+                Text(_error ?? l10n.recording_recoveryFailed),
                 const SizedBox(height: 16),
                 FilledButton(
                   onPressed: () => context.go('/recordings'),
-                  child: const Text('OK'),
+                  child: Text(l10n.common_ok),
                 ),
               ],
             ),

@@ -288,6 +288,7 @@ class StorytellerFieldCell extends ConsumerWidget {
         projectId: projectId,
         selected: selected,
         onChanged: onChanged,
+        showAddNew: true,
       );
     }
 
@@ -299,6 +300,7 @@ class StorytellerFieldCell extends ConsumerWidget {
         final result = await showStorytellerPickerSheet(
           context,
           projectId: projectId,
+          showAddNew: true,
         );
         if (result != null) onChanged(result);
       },

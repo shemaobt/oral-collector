@@ -7,6 +7,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../project/presentation/notifiers/member_notifier.dart';
 import '../../../storyteller/domain/entities/storyteller.dart';
 import '../../../storyteller/presentation/widgets/storyteller_picker.dart';
+import '../../../user/data/user_lookup_provider.dart';
 
 class RecordingStorytellerSection extends ConsumerWidget {
   final String projectId;
@@ -36,11 +37,17 @@ class RecordingStorytellerSection extends ConsumerWidget {
     final author = userId == null
         ? null
         : memberState.members.where((m) => m.userId == userId).firstOrNull;
+
+    final lookupAsync = (userId != null && author == null)
+        ? ref.watch(userLookupProvider(userId!))
+        : null;
+    final fallbackLookup = lookupAsync?.asData?.value;
+
     final authorLabel = userId == null
         ? l10n.recording_unknownUser
-        : author == null
-        ? l10n.recording_unknownUser
-        : (author.displayName ?? author.email);
+        : author != null
+        ? (author.displayName ?? author.email)
+        : fallbackLookup?.label ?? l10n.recording_unknownUser;
 
     Widget buildStorytellerBody() {
       if (storytellerId == null) {
@@ -196,7 +203,7 @@ class RecordingStorytellerSection extends ConsumerWidget {
     final picked = await showStorytellerPickerSheet(
       context,
       projectId: projectId,
-      showAddNew: false,
+      showAddNew: true,
     );
     if (picked != null) callback(picked);
   }

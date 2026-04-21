@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../l10n/app_localizations.dart';
 import 'trim_waveform.dart';
 
 class TrimWaveformPanel extends StatelessWidget {
@@ -123,7 +124,7 @@ class TrimWaveformPanel extends StatelessWidget {
                   child: Padding(
                     padding: const EdgeInsets.only(left: 8),
                     child: Text(
-                      'Clear all',
+                      AppLocalizations.of(context).filter_clearAll,
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: colors.accent,
                       ),

@@ -10,17 +10,20 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 
+import '../../../core/auth/auth_notifier.dart';
 import '../../../core/platform/file_ops.dart' as file_ops;
 import '../../../core/platform/ffmpeg_ops.dart' as ffmpeg_ops;
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../shared/utils/error_helpers.dart';
 import '../../genre/presentation/notifiers/genre_notifier.dart';
 import '../../sync/presentation/notifiers/sync_notifier.dart';
 import '../../project/presentation/notifiers/project_notifier.dart';
 import '../../storyteller/domain/entities/storyteller.dart';
 import '../data/providers.dart';
+import '../data/services/direct_recording_uploader.dart';
 import '../data/supported_audio_formats.dart';
 import 'file_import_entry.dart';
 import 'notifiers/recordings_list_notifier.dart';
@@ -180,8 +183,9 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
       if (mounted) {
         setState(() => _isAnalyzing = false);
         final l10n = AppLocalizations.of(context);
+        final friendly = friendlyErrorMessage(e.toString(), l10n);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.import_pickError(e.toString()))),
+          SnackBar(content: Text(l10n.import_pickError(friendly))),
         );
         if (_entries.isEmpty) {
           Navigator.of(context).maybePop();
@@ -393,7 +397,9 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
 
     final projectState = ref.read(projectNotifierProvider);
     final projectId = projectState.activeProject?.id ?? '';
+    final currentUserId = ref.read(authNotifierProvider).currentUser?.id;
     final repo = ref.read(localRecordingRepositoryProvider);
+    final uploader = ref.read(directRecordingUploaderProvider);
 
     try {
       for (var i = 0; i < _entries.length; i++) {
@@ -404,37 +410,66 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
         String format = entry.format;
 
         if (kIsWeb) {
-          if (entry.webBytes != null) {
-            await file_ops.writeFileBytes(savedFilePath, entry.webBytes!);
-            fileSizeBytes = entry.webBytes!.length;
-          }
-        } else {
-          final appDir = await getApplicationDocumentsDirectory();
-          final recordingsPath = '${appDir.path}/recordings';
-          if (!await file_ops.dirExists(recordingsPath)) {
-            await file_ops.createDir(recordingsPath);
-          }
-          final destFileName =
-              '${DateTime.now().millisecondsSinceEpoch}_${entry.fileName}';
-          final destPath = '$recordingsPath/$destFileName';
-          await file_ops.copyFile(entry.path, destPath);
-          savedFilePath = destPath;
-
-          if (_compressWav && format == 'wav') {
-            final m4aPath = destPath.replaceAll(
-              RegExp(r'\.wav$', caseSensitive: false),
-              '.m4a',
-            );
-            final success = await ffmpeg_ops.compressToM4a(destPath, m4aPath);
-            if (success) {
-              await file_ops.deleteFile(destPath);
-              savedFilePath = m4aPath;
-              format = 'm4a';
-            }
+          final bytes = entry.webBytes;
+          if (bytes == null || bytes.isEmpty) {
+            throw Exception('Import "${entry.fileName}" has no bytes');
           }
 
-          fileSizeBytes = await file_ops.fileLength(savedFilePath);
+          final title = entry.fileName.replaceAll(RegExp(r'\.[^.]+$'), '');
+          final description = entry.descriptionController.text.trim();
+
+          await uploader.upload(
+            bytes: bytes,
+            meta: DirectUploadMetadata(
+              projectId: projectId,
+              genreId: entry.genreId!,
+              subcategoryId:
+                  entry.subcategoryId != null && entry.subcategoryId!.isNotEmpty
+                  ? entry.subcategoryId!
+                  : 'unclassified',
+              registerId: entry.registerId,
+              storytellerId: entry.storytellerId,
+              userId: currentUserId,
+              title: title,
+              description: description.isEmpty ? null : description,
+              durationSeconds: entry.durationSeconds,
+              fileSizeBytes: bytes.length,
+              format: format,
+              recordedAt: DateTime.now(),
+            ),
+          );
+
+          if (mounted) {
+            setState(() => _saveProgress = i + 1);
+          }
+          continue;
         }
+
+        final appDir = await getApplicationDocumentsDirectory();
+        final recordingsPath = '${appDir.path}/recordings';
+        if (!await file_ops.dirExists(recordingsPath)) {
+          await file_ops.createDir(recordingsPath);
+        }
+        final destFileName =
+            '${DateTime.now().millisecondsSinceEpoch}_${entry.fileName}';
+        final destPath = '$recordingsPath/$destFileName';
+        await file_ops.copyFile(entry.path, destPath);
+        savedFilePath = destPath;
+
+        if (_compressWav && format == 'wav') {
+          final m4aPath = destPath.replaceAll(
+            RegExp(r'\.wav$', caseSensitive: false),
+            '.m4a',
+          );
+          final success = await ffmpeg_ops.compressToM4a(destPath, m4aPath);
+          if (success) {
+            await file_ops.deleteFile(destPath);
+            savedFilePath = m4aPath;
+            format = 'm4a';
+          }
+        }
+
+        fileSizeBytes = await file_ops.fileLength(savedFilePath);
 
         final id = '${DateTime.now().microsecondsSinceEpoch}_$i';
         final title = entry.fileName.replaceAll(RegExp(r'\.[^.]+$'), '');
@@ -455,6 +490,9 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
             storytellerId: entry.storytellerId != null
                 ? Value(entry.storytellerId!)
                 : const Value.absent(),
+            userId: currentUserId != null
+                ? Value(currentUserId)
+                : const Value.absent(),
             title: Value(title),
             description: description.isNotEmpty
                 ? Value(description)
@@ -472,7 +510,9 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
         }
       }
 
-      ref.read(syncNotifierProvider.notifier).processQueue();
+      if (!kIsWeb) {
+        ref.read(syncNotifierProvider.notifier).processQueue();
+      }
       ref.read(recordingsListNotifierProvider.notifier).fetchRecordings();
 
       if (mounted) {
@@ -482,8 +522,9 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
       if (mounted) {
         setState(() => _isSaving = false);
         final l10n = AppLocalizations.of(context);
+        final friendly = friendlyErrorMessage(e.toString(), l10n);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.import_saveError(e.toString()))),
+          SnackBar(content: Text(l10n.import_saveError(friendly))),
         );
       }
     }

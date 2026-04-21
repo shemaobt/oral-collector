@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../l10n/app_localizations.dart';
 
 enum RecordButtonState { ready, recording, paused }
 
@@ -89,13 +90,14 @@ class _RecordButtonState extends State<RecordButton>
 
     final buttonColor = colors.accent;
 
+    final l10n = AppLocalizations.of(context);
     final String semanticLabel;
     if (isRecording) {
-      semanticLabel = 'Recording in progress, tap to pause';
+      semanticLabel = l10n.a11y_recordingInProgress;
     } else if (isPaused) {
-      semanticLabel = 'Recording paused, tap to resume';
+      semanticLabel = l10n.a11y_recordingPaused;
     } else {
-      semanticLabel = 'Start recording';
+      semanticLabel = l10n.a11y_startRecording;
     }
 
     return Semantics(

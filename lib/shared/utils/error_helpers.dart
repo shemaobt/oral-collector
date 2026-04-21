@@ -68,11 +68,55 @@ String friendlyErrorMessage(String raw, AppLocalizations l10n) {
   if (lower.contains('failed to upload image')) {
     return l10n.error_imageUploadFailed;
   }
-  if (lower.contains('not authenticated')) {
+  if (lower.contains('not authenticated') ||
+      lower.contains('session expired')) {
     return l10n.error_notAuthenticated;
   }
   if (lower.contains('permission') || lower.contains('forbidden')) {
     return l10n.error_noPermission;
+  }
+
+  if (lower.contains('has no bytes') ||
+      lower.contains('file is empty') ||
+      lower.contains('file not found') ||
+      lower.contains('recording not found')) {
+    return l10n.error_importNoBytes;
+  }
+
+  if (lower.contains('ffmpeg failed') ||
+      lower.contains('concatenation failed') ||
+      lower.contains('audio processing')) {
+    return l10n.error_ffmpegProcessingFailed;
+  }
+
+  if (lower.contains('download failed')) {
+    return l10n.error_downloadFailed;
+  }
+
+  if (lower.contains('upload failed')) {
+    return l10n.error_imageUploadFailed;
+  }
+
+  if (lower.startsWith('failed to list') ||
+      lower.startsWith('failed to fetch') ||
+      lower.startsWith('failed to load') ||
+      lower.startsWith('failed to create') ||
+      lower.startsWith('failed to recreate') ||
+      lower.startsWith('failed to update') ||
+      lower.startsWith('failed to delete') ||
+      lower.startsWith('failed to remove') ||
+      lower.startsWith('failed to send invite') ||
+      lower.startsWith('failed to accept invite') ||
+      lower.startsWith('failed to decline invite') ||
+      lower.startsWith('failed to trigger cleaning') ||
+      lower.startsWith('failed to clear') ||
+      lower.startsWith('password reset failed') ||
+      lower.startsWith('reset password failed') ||
+      lower.contains('client error') ||
+      lower.contains('server error') ||
+      lower.contains('auth error') ||
+      RegExp(r'\bfailed\s*\(\d{3}\)').hasMatch(lower)) {
+    return l10n.error_serverFailure;
   }
 
   if (message.contains('Exception') ||

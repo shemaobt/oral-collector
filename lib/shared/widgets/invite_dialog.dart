@@ -8,6 +8,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../core/network/authenticated_client.dart';
 import '../../core/theme/app_colors.dart';
 import '../../features/project/presentation/notifiers/member_notifier.dart';
+import '../../l10n/app_localizations.dart';
 import 'error_snack_bar.dart';
 import 'user_avatar.dart';
 
@@ -131,7 +132,8 @@ class _InviteDialogState extends ConsumerState<InviteDialog> {
     } else {
       setState(() => _isSubmitting = false);
       final error = ref.read(memberNotifierProvider).error;
-      showErrorSnackBar(context, error ?? 'Failed to send invite');
+      final l10n = AppLocalizations.of(context);
+      showErrorSnackBar(context, error ?? l10n.invite_sendFailed);
     }
   }
 
@@ -139,9 +141,10 @@ class _InviteDialogState extends ConsumerState<InviteDialog> {
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     return AlertDialog(
-      title: const Text('Invite Member'),
+      title: Text(l10n.invite_title),
       content: SizedBox(
         width: 400,
         child: Column(
@@ -152,8 +155,8 @@ class _InviteDialogState extends ConsumerState<InviteDialog> {
               TextField(
                 controller: _searchController,
                 decoration: InputDecoration(
-                  labelText: 'Search by name or email',
-                  hintText: 'Type at least 2 characters',
+                  labelText: l10n.invite_searchLabel,
+                  hintText: l10n.invite_searchHint,
                   prefixIcon: const Icon(LucideIcons.search, size: 18),
                   suffixIcon: _isSearching
                       ? const Padding(
@@ -209,7 +212,7 @@ class _InviteDialogState extends ConsumerState<InviteDialog> {
                 Padding(
                   padding: const EdgeInsets.only(top: 12),
                   child: Text(
-                    'No users found',
+                    l10n.invite_noUsersFound,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: colors.secondary,
                     ),
@@ -245,17 +248,23 @@ class _InviteDialogState extends ConsumerState<InviteDialog> {
                       color: colors.secondary,
                     ),
                     onPressed: _clearSelection,
-                    tooltip: 'Change user',
+                    tooltip: l10n.invite_changeUser,
                   ),
                 ),
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
                 initialValue: _selectedRole,
-                decoration: const InputDecoration(labelText: 'Role *'),
-                items: const [
-                  DropdownMenuItem(value: 'member', child: Text('Member')),
-                  DropdownMenuItem(value: 'manager', child: Text('Manager')),
+                decoration: InputDecoration(labelText: l10n.invite_roleLabel),
+                items: [
+                  DropdownMenuItem(
+                    value: 'member',
+                    child: Text(l10n.invite_roleMember),
+                  ),
+                  DropdownMenuItem(
+                    value: 'manager',
+                    child: Text(l10n.invite_roleManager),
+                  ),
                 ],
                 onChanged: (value) {
                   if (value != null) {
@@ -270,7 +279,7 @@ class _InviteDialogState extends ConsumerState<InviteDialog> {
       actions: [
         TextButton(
           onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(l10n.common_cancel),
         ),
         ElevatedButton(
           onPressed: _selectedUser != null && !_isSubmitting ? _submit : null,
@@ -287,7 +296,7 @@ class _InviteDialogState extends ConsumerState<InviteDialog> {
                     color: Colors.white,
                   ),
                 )
-              : const Text('Send Invite'),
+              : Text(l10n.invite_sendInvite),
         ),
       ],
     );

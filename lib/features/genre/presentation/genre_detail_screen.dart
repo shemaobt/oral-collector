@@ -89,7 +89,7 @@ class GenreDetailScreen extends ConsumerWidget {
       ),
       body: Column(
         children: [
-          if (isOffline) const StatusBanner.offline(),
+          if (isOffline) StatusBanner.offline(l10n),
           Expanded(
             child: genre.subcategories.isEmpty
                 ? Center(
@@ -105,7 +105,7 @@ class GenreDetailScreen extends ConsumerWidget {
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            'No subcategories available',
+                            l10n.recording_noSubcategories,
                             textAlign: TextAlign.center,
                             style: theme.textTheme.bodyLarge?.copyWith(
                               color: colors.foreground.withValues(alpha: 0.6),
@@ -175,8 +175,8 @@ class _SubcategoryCard extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () {
-          context.push(
-            '/record-flow?genreId=$genreId&subcategoryId=${subcategory.id}',
+          context.go(
+            '/recordings?genreId=$genreId&subcategoryId=${subcategory.id}',
           );
         },
         child: Padding(

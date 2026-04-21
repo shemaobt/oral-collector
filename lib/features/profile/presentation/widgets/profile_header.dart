@@ -126,7 +126,8 @@ class ProfileHeader extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                user?.displayName ?? 'Set your name',
+                user?.displayName ??
+                    AppLocalizations.of(context).profile_setYourName,
                 style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w800,
                   color: user?.displayName != null ? null : colors.secondary,
@@ -170,7 +171,7 @@ class ProfileHeader extends StatelessWidget {
               const SizedBox(width: 8),
               InfoBadge(
                 icon: LucideIcons.shield,
-                label: 'Admin',
+                label: AppLocalizations.of(context).profile_adminBadge,
                 colors: colors,
                 theme: theme,
                 accentColor: colors.accent,

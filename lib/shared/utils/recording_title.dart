@@ -1,15 +1,8 @@
-String defaultRecordingTitle() {
+import 'package:intl/intl.dart' as intl;
+
+String defaultRecordingTitle({String? locale}) {
   final now = DateTime.now();
-  const days = [
-    'Monday',
-    'Tuesday',
-    'Wednesday',
-    'Thursday',
-    'Friday',
-    'Saturday',
-    'Sunday',
-  ];
-  final day = days[now.weekday - 1];
+  final day = intl.DateFormat.EEEE(locale).format(now);
   final h = now.hour.toString().padLeft(2, '0');
   final m = now.minute.toString().padLeft(2, '0');
   final s = now.second.toString().padLeft(2, '0');

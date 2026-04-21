@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../l10n/app_localizations.dart';
 
 class TrimWaveform extends StatefulWidget {
   const TrimWaveform({
@@ -129,8 +130,7 @@ class _TrimWaveformState extends State<TrimWaveform> {
     final totalHeight = _waveformHeight + _handleRadius * 2 + 4;
 
     return Semantics(
-      label:
-          'Split waveform. Tap to add split markers. Drag to reposition. Pinch to zoom. Long-press to remove.',
+      label: AppLocalizations.of(context).a11y_splitWaveform,
       child: LayoutBuilder(
         builder: (context, constraints) {
           final totalWidth = constraints.maxWidth;

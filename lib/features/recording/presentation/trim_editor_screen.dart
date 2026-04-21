@@ -16,6 +16,8 @@ import '../../../core/database/app_database.dart';
 import '../../../core/platform/ffmpeg_ops.dart' as ffmpeg;
 import '../../../core/platform/file_ops.dart' as file_ops;
 import '../../../core/theme/app_colors.dart';
+import '../../../shared/utils/error_helpers.dart';
+import '../../../shared/utils/recording_title.dart';
 import '../../genre/presentation/notifiers/genre_notifier.dart';
 import '../data/providers.dart';
 import '../data/services/recording_trash.dart';
@@ -24,6 +26,7 @@ import '../domain/entities/register.dart';
 import '../../../core/l10n/content_l10n.dart';
 import 'widgets/edit_transport_bar.dart';
 import 'widgets/edit_volume_control.dart';
+import 'widgets/playback_key_handler.dart';
 import 'widgets/segment_card.dart';
 import 'widgets/segment_taxonomy_sheet.dart';
 import 'widgets/trim_waveform_panel.dart';
@@ -347,6 +350,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
       ..reset()
       ..start();
 
+    player.pause();
     player.seek(target);
   }
 
@@ -429,6 +433,9 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
           genreId: server.genreId,
           subcategoryId: server.subcategoryId,
           registerId: server.registerId,
+          secondaryGenreId: server.secondaryGenreId,
+          secondarySubcategoryId: server.secondarySubcategoryId,
+          secondaryRegisterId: server.secondaryRegisterId,
           title: server.title,
           durationSeconds: server.durationSeconds,
           fileSizeBytes: server.fileSizeBytes,
@@ -720,9 +727,11 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
       }
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context);
+        final friendly = friendlyErrorMessage(e.toString(), l10n);
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Error splitting: $e')));
+        ).showSnackBar(SnackBar(content: Text(l10n.trim_splitError(friendly))));
         setState(() => _isSaving = false);
       }
     }
@@ -739,8 +748,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
       return {
         'start_seconds': _segmentStart(i).inMilliseconds / 1000.0,
         'end_seconds': _segmentEnd(i).inMilliseconds / 1000.0,
-        if (effGenre.isNotEmpty && effGenre != recording.genreId)
-          'genre_id': effGenre,
+        if (effGenre.isNotEmpty) 'genre_id': effGenre,
         if (effSubcat != null && effSubcat.isNotEmpty)
           'subcategory_id': effSubcat,
         if (effRegister != null && effRegister.isNotEmpty)
@@ -769,10 +777,12 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
   }
 
   Future<void> _saveSplitLocally(LocalRecording recording) async {
+    final localeTag = Localizations.localeOf(context).toString();
     final dir = await getApplicationDocumentsDirectory();
     final repo = ref.read(localRecordingRepositoryProvider);
     final now = DateTime.now();
-    final originalTitle = recording.title ?? 'Recording';
+    final originalTitle =
+        recording.title ?? defaultRecordingTitle(locale: localeTag);
     final kept = _keptSegmentIndices;
     final keptTotal = kept.length;
 
@@ -967,21 +977,20 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
           onSplitAtPosition: _addSplitAtPlayhead,
         ),
         const SizedBox(height: 10),
-        if (!kIsWeb)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: EditVolumeControl(
-              gainDb: _gainDb,
-              peakAmplitude: _visiblePeak(),
-              volumeLabel: l10n.trim_volume,
-              clippingLabel: l10n.trim_peakClip,
-              boostOnSaveLabel: l10n.trim_boostOnSave,
-              onChanged: (v) {
-                setState(() => _gainDb = v);
-                _applyPreviewVolume();
-              },
-            ),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: EditVolumeControl(
+            gainDb: _gainDb,
+            peakAmplitude: _visiblePeak(),
+            volumeLabel: l10n.trim_volume,
+            clippingLabel: l10n.trim_peakClip,
+            boostOnSaveLabel: l10n.trim_boostOnSave,
+            onChanged: (v) {
+              setState(() => _gainDb = v);
+              _applyPreviewVolume();
+            },
           ),
+        ),
         TrimWaveformPanel(
           waveformBars: _waveformBars,
           splitPoints: _splitPoints,
@@ -1142,61 +1151,64 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
           ),
         ],
       ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final isWide = constraints.maxWidth >= 700;
+      body: PlaybackKeyHandler(
+        onSpace: _toggleTransport,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isWide = constraints.maxWidth >= 700;
 
-          if (isWide) {
-            return Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            if (isWide) {
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(24),
+                      child: waveformPanel,
+                    ),
+                  ),
+                  Expanded(
+                    flex: 2,
+                    child: Column(
+                      children: [
+                        Expanded(
+                          child: SingleChildScrollView(
+                            padding: const EdgeInsets.fromLTRB(0, 24, 24, 16),
+                            child: segmentsList,
+                          ),
+                        ),
+                        _buildActionBar(colors, isDark, hasSplits, l10n),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            }
+
+            return Column(
               children: [
                 Expanded(
-                  flex: 3,
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(24),
-                    child: waveformPanel,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 16,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        waveformPanel,
+                        const SizedBox(height: 20),
+                        segmentsList,
+                      ],
+                    ),
                   ),
                 ),
-                Expanded(
-                  flex: 2,
-                  child: Column(
-                    children: [
-                      Expanded(
-                        child: SingleChildScrollView(
-                          padding: const EdgeInsets.fromLTRB(0, 24, 24, 16),
-                          child: segmentsList,
-                        ),
-                      ),
-                      _buildActionBar(colors, isDark, hasSplits, l10n),
-                    ],
-                  ),
-                ),
+                _buildActionBar(colors, isDark, hasSplits, l10n),
               ],
             );
-          }
-
-          return Column(
-            children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 16,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      waveformPanel,
-                      const SizedBox(height: 20),
-                      segmentsList,
-                    ],
-                  ),
-                ),
-              ),
-              _buildActionBar(colors, isDark, hasSplits, l10n),
-            ],
-          );
-        },
+          },
+        ),
       ),
     );
   }

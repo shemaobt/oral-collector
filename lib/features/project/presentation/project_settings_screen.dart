@@ -232,7 +232,10 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
       );
     } else {
       final error = ref.read(memberNotifierProvider).error;
-      showErrorSnackBar(context, error ?? 'Failed to remove member');
+      showErrorSnackBar(
+        context,
+        error ?? l10n.projectSettings_memberRemoveFailed,
+      );
     }
   }
 
@@ -288,9 +291,8 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
         body: isOffline
             ? EmptyState(
                 icon: LucideIcons.wifiOff,
-                title: 'You are offline',
-                description:
-                    'Project details can\'t be loaded without an internet connection. They will load automatically when you reconnect.',
+                title: l10n.projectSettings_offlineTitle,
+                description: l10n.projectSettings_offlineDescription,
               )
             : const Center(child: CircularProgressIndicator()),
       );
