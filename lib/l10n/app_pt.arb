@@ -162,6 +162,15 @@
   "recording_discardTitle": "Descartar Gravação?",
   "recording_discardMessage": "Esta gravação será excluída permanentemente.",
   "recording_saved": "Gravação salva",
+  "recording_uploading": "Enviando gravação…",
+  "recording_uploadFailed": "Falha no envio: {error}",
+  "@recording_uploadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "recording_notFound": "Gravação não encontrada",
   "recording_unknownGenre": "Gênero desconhecido",
   "recording_splitRecording": "Editar Gravação",
@@ -180,8 +189,31 @@
   "recording_moveNoPermission": "Você não tem permissão para mover esta gravação",
   "recording_movedSuccess": "Gravação movida com sucesso",
   "recording_updateFailed": "Falha ao atualizar no servidor",
+  "recording_exportAudio": "Exportar áudio",
+  "recording_exportShareFailed": "Falha ao compartilhar o arquivo de áudio",
+  "recording_replaceAudio": "Substituir áudio",
+  "recording_replaceTitle": "Substituir áudio?",
+  "recording_replaceMessage": "O áudio atual será movido para uma lixeira de 24 horas e trocado pelo arquivo que você escolher. Apenas arquivos de áudio no mesmo formato do original podem ser usados.",
+  "recording_replaceReuploadNotice": "Esta gravação já foi enviada. O novo arquivo irá sobrescrevê-la no servidor.",
+  "recording_replaceConfirm": "Substituir",
+  "recording_replaceFormatMismatch": "A substituição deve ser um arquivo {expected}, mas é {actual}",
+  "@recording_replaceFormatMismatch": {
+    "placeholders": {
+      "expected": {
+        "type": "String"
+      },
+      "actual": {
+        "type": "String"
+      }
+    }
+  },
+  "recording_replaceInvalidAudio": "Não foi possível ler o arquivo de áudio selecionado",
+  "recording_replaceSuccess": "Áudio substituído",
+  "recording_replaceFailed": "Falha ao substituir o áudio",
+  "recording_replaceNotAvailableWeb": "A substituição de áudio não está disponível no aplicativo web",
   "recordings_title": "Gravações",
   "recordings_subtitle": "Suas histórias coletadas",
+  "recordings_searchHint": "Buscar gravações...",
   "recordings_importAudio": "Importar arquivo de áudio",
   "recordings_selectProject": "Selecione um projeto",
   "recordings_selectProjectSubtitle": "Escolha um projeto para ver suas gravações",
@@ -243,24 +275,47 @@
   "import_fieldRequired": "Obrigatório",
   "import_validationBanner": "{count, plural, =1{1 arquivo está sem campos obrigatórios} other{{count} arquivos estão sem campos obrigatórios}}",
   "@import_validationBanner": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "import_remove": "Remover arquivo",
   "import_supportedFormats": "Formatos suportados: {formats}. Arquivos não suportados ou ilegíveis são ignorados.",
   "@import_supportedFormats": {
-    "placeholders": { "formats": { "type": "String" } }
+    "placeholders": {
+      "formats": {
+        "type": "String"
+      }
+    }
   },
   "import_rejectedFiles": "{count, plural, =1{Ignorado 1 arquivo não suportado ou ilegível: {names}} other{Ignorados {count} arquivos não suportados ou ilegíveis: {names}}}",
   "@import_rejectedFiles": {
-    "placeholders": { "count": { "type": "int" }, "names": { "type": "String" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "names": {
+        "type": "String"
+      }
+    }
   },
   "import_countFiles": "{count, plural, =1{1 arquivo} other{{count} arquivos}}",
   "@import_countFiles": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "import_importNFiles": "Importar {count, plural, =1{1 arquivo} other{{count} arquivos}}",
   "@import_importNFiles": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "import_emptyFile": "arquivo vazio",
   "import_compressWav": "Comprimir WAV para M4A",
@@ -462,7 +517,7 @@
   "sub_ceremonialSpeechDesc": "Discursos formais para ocasiões oficiais ou sagradas",
   "sub_communityMemoryDesc": "Recordações compartilhadas que preservam a identidade do grupo",
   "register_intimate": "Íntimo",
-  "register_casual": "Informal / Casual",
+  "register_casual": "Informal",
   "register_consultative": "Consultivo",
   "register_formal": "Formal / Oficial",
   "register_ceremonial": "Cerimonial",
@@ -540,10 +595,24 @@
   "quickRecord_classifyLater": "Classificar depois",
   "classify_title": "Classificar Gravação",
   "classify_action": "Classificar",
-  "classify_banner": "Esta gravação precisa ser classificada antes de poder ser enviada.",
+  "classify_banner": "Esta gravação está sem classificação. Toque em Classificar para adicionar gênero e registro.",
   "classify_success": "Gravação classificada",
   "classify_register": "Registro",
   "classify_selectRegister": "Selecionar registro",
+  "classify_predominantHeader": "CLASSIFICAÇÃO PREDOMINANTE",
+  "classify_addAlternativeTitle": "Ambíguo? Adicionar classificação alternativa",
+  "classify_secondaryNote": "Apenas a classificação predominante conta para os totais de tempo por gênero.",
+  "classify_secondaryGenre": "Gênero secundário",
+  "classify_secondarySubcategory": "Subcategoria secundária",
+  "classify_secondaryRegister": "Registro secundário",
+  "classify_secondarySameAsPrimary": "O gênero secundário deve ser diferente do predominante.",
+  "classify_clearAlternative": "Limpar alternativa",
+  "recording_alsoClassifiedAs": "Também classificado como",
+  "recording_alsoClassifiedAsTooltip": "Tem classificação alternativa",
+  "recording_addAlternative": "Adicionar classificação alternativa",
+  "recording_removeSecondary": "Remover classificação alternativa",
+  "recording_secondaryRemoved": "Classificação alternativa removida",
+  "recording_secondaryUpdated": "Classificação alternativa atualizada",
   "recording_unclassified": "Não Classificado",
   "recording_inputSource": "Entrada",
   "recording_selectMicrophone": "Selecionar microfone",
@@ -555,20 +624,44 @@
   "recording_noDevicesFound": "Nenhum microfone encontrado",
   "recording_storageLowWarnTitle": "Pouco armazenamento",
   "recording_storageLowWarnBody": "Cerca de {minutes} min de gravação disponíveis. Continuar?",
-  "@recording_storageLowWarnBody": { "placeholders": { "minutes": { "type": "int" } } },
+  "@recording_storageLowWarnBody": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "recording_storageRefuseTitle": "Sem armazenamento suficiente",
   "recording_storageRefuseBody": "Libere espaço neste dispositivo antes de gravar.",
-  "recording_storageCriticalBanner": "Armazenamento crítico \u2014 cerca de {minutes} min restantes. Considere parar em breve.",
-  "@recording_storageCriticalBanner": { "placeholders": { "minutes": { "type": "int" } } },
+  "recording_storageCriticalBanner": "Armazenamento crítico — cerca de {minutes} min restantes. Considere parar em breve.",
+  "@recording_storageCriticalBanner": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "recording_storageForceStopped": "Gravação interrompida por falta de armazenamento. Seu progresso foi salvo.",
   "recording_savedAt": "Salvo em {time}",
-  "@recording_savedAt": { "placeholders": { "time": { "type": "String" } } },
+  "@recording_savedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "recording_continuedInBackground": "Gravação continuou em segundo plano",
   "recording_continue": "Continuar",
   "recording_cancel": "Cancelar",
   "recording_recoverTitle": "Recuperar gravação interrompida?",
   "recording_recoverBody": "Encontramos cerca de {minutes} min de áudio de uma sessão anterior.",
-  "@recording_recoverBody": { "placeholders": { "minutes": { "type": "int" } } },
+  "@recording_recoverBody": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "recording_recoverButton": "Recuperar",
   "recording_recoverDiscard": "Descartar",
   "recording_recoverFailedLastSegment": "Algum áudio próximo ao fim não pôde ser lido e foi ignorado.",
@@ -577,8 +670,17 @@
   "profile_defaultMicrophone": "Microfone padrão",
   "profile_systemDefault": "Padrão do sistema",
   "settings_deviceStorageTitle": "Armazenamento do dispositivo",
-  "settings_deviceStorageSubtitle": "Usado {used} \u00b7 Livre {free}",
-  "@settings_deviceStorageSubtitle": { "placeholders": { "used": { "type": "String" }, "free": { "type": "String" } } },
+  "settings_deviceStorageSubtitle": "Usado {used} · Livre {free}",
+  "@settings_deviceStorageSubtitle": {
+    "placeholders": {
+      "used": {
+        "type": "String"
+      },
+      "free": {
+        "type": "String"
+      }
+    }
+  },
   "fab_quickRecord": "Rápido",
   "fab_normalRecord": "Gravar",
   "error_network": "Não foi possível acessar o servidor. Verifique sua conexão com a internet e tente novamente.",
@@ -597,37 +699,37 @@
   "error_notAuthenticated": "Você não está conectado. Faça login e tente novamente.",
   "error_noPermission": "Você não tem permissão para realizar esta ação.",
   "error_generic": "Algo deu errado. Tente novamente mais tarde.",
-  "storyteller_title": "Storytellers",
-  "storyteller_singular": "Storyteller",
-  "storyteller_manageAction": "Manage storytellers",
-  "storyteller_addNew": "Add storyteller",
-  "storyteller_createTitle": "New storyteller",
-  "storyteller_editTitle": "Edit storyteller",
-  "storyteller_speakerName": "Speaker name",
-  "storyteller_sex": "Sex",
-  "storyteller_sexMale": "Male",
-  "storyteller_sexFemale": "Female",
-  "storyteller_age": "Age",
-  "storyteller_location": "Location",
-  "storyteller_dialect": "Dialect",
-  "storyteller_externalAcceptanceTitle": "External acceptance validation",
-  "storyteller_externalAcceptanceDescription": "I confirm that external acceptance validation has been performed for this speaker.",
-  "storyteller_externalAcceptanceInfo": "Before registering a storyteller, the project manager must obtain the speaker's consent outside the app (for example, through a signed release form or recorded verbal agreement). This checkbox records that this step was completed.",
-  "storyteller_createRequiresConnection": "Creating a storyteller requires an internet connection.",
-  "storyteller_deleteTitle": "Delete storyteller?",
-  "storyteller_deleteMessage": "Recordings previously assigned to this storyteller will show as unassigned.",
-  "storyteller_noneAssigned": "No storyteller assigned",
-  "storyteller_unknown": "Unknown storyteller",
-  "storyteller_selectHint": "Pick a storyteller",
-  "storyteller_required": "A storyteller is required",
-  "storyteller_searchPlaceholder": "Search storytellers",
-  "storyteller_empty": "No storytellers yet",
-  "storyteller_emptyDescription": "Create a storyteller for the project to assign to recordings.",
-  "storyteller_offlineNoCache": "Storytellers haven't been synced yet. Connect to the internet to load them.",
-  "storyteller_assign": "Assign",
-  "storyteller_reassign": "Reassign",
-  "storyteller_ageValidator": "Enter an age between 1 and 120",
-  "storyteller_ageYearsShort": "{age}y",
+  "storyteller_title": "Narradores",
+  "storyteller_singular": "Narrador",
+  "storyteller_manageAction": "Gerenciar narradores",
+  "storyteller_addNew": "Adicionar narrador",
+  "storyteller_createTitle": "Novo narrador",
+  "storyteller_editTitle": "Editar narrador",
+  "storyteller_speakerName": "Nome do orador",
+  "storyteller_sex": "Sexo",
+  "storyteller_sexMale": "Masculino",
+  "storyteller_sexFemale": "Feminino",
+  "storyteller_age": "Idade",
+  "storyteller_location": "Localização",
+  "storyteller_dialect": "Dialeto",
+  "storyteller_externalAcceptanceTitle": "Validação de aceitação externa",
+  "storyteller_externalAcceptanceDescription": "Confirmo que a validação de aceitação externa foi realizada para este orador.",
+  "storyteller_externalAcceptanceInfo": "Antes de registrar um narrador, o gerente do projeto deve obter o consentimento do orador fora do aplicativo (por exemplo, por meio de um termo assinado ou acordo verbal gravado). Esta caixa registra que essa etapa foi concluída.",
+  "storyteller_createRequiresConnection": "Criar um narrador requer conexão com a internet.",
+  "storyteller_deleteTitle": "Excluir narrador?",
+  "storyteller_deleteMessage": "As gravações atribuídas anteriormente a este narrador aparecerão como não atribuídas.",
+  "storyteller_noneAssigned": "Nenhum narrador atribuído",
+  "storyteller_unknown": "Narrador desconhecido",
+  "storyteller_selectHint": "Escolha um narrador",
+  "storyteller_required": "Um narrador é obrigatório",
+  "storyteller_searchPlaceholder": "Buscar narradores",
+  "storyteller_empty": "Nenhum narrador ainda",
+  "storyteller_emptyDescription": "Crie um narrador para o projeto e atribua-o às gravações.",
+  "storyteller_offlineNoCache": "Os narradores ainda não foram sincronizados. Conecte-se à internet para carregá-los.",
+  "storyteller_assign": "Atribuir",
+  "storyteller_reassign": "Reatribuir",
+  "storyteller_ageValidator": "Digite uma idade entre 1 e 120",
+  "storyteller_ageYearsShort": "{age} a",
   "@storyteller_ageYearsShort": {
     "placeholders": {
       "age": {
@@ -635,16 +737,16 @@
       }
     }
   },
-  "filters_buttonLabel": "Filters",
-  "filters_sheetTitle": "Filter recordings",
-  "filters_sectionStatus": "Upload status",
-  "filters_sectionGenre": "Genre",
-  "filters_sectionStoryteller": "Storyteller",
-  "filters_sectionUser": "Recorded by",
-  "filter_apply": "Apply",
-  "filter_reset": "Reset",
-  "filter_clearAll": "Clear all",
-  "filter_countActive": "{count, plural, one{1 filter} other{{count} filters}}",
+  "filters_buttonLabel": "Filtros",
+  "filters_sheetTitle": "Filtrar gravações",
+  "filters_sectionStatus": "Status de envio",
+  "filters_sectionGenre": "Gênero",
+  "filters_sectionStoryteller": "Narrador",
+  "filters_sectionUser": "Gravado por",
+  "filter_apply": "Aplicar",
+  "filter_reset": "Redefinir",
+  "filter_clearAll": "Limpar tudo",
+  "filter_countActive": "{count, plural, one{1 filtro} other{{count} filtros}}",
   "@filter_countActive": {
     "placeholders": {
       "count": {
@@ -653,11 +755,75 @@
       }
     }
   },
-  "filter_userAll": "Any user",
-  "filter_storytellerAll": "Any storyteller",
-  "filter_genreAll": "Any genre",
-  "detail_recordedBy": "Recorded by",
-  "detail_storyteller": "Storyteller",
-  "recording_unknownUser": "Unknown user",
-  "common_close": "Close"
+  "filter_userAll": "Qualquer usuário",
+  "filter_storytellerAll": "Qualquer narrador",
+  "filter_genreAll": "Qualquer gênero",
+  "detail_recordedBy": "Gravado por",
+  "detail_storyteller": "Narrador",
+  "recording_unknownUser": "Usuário desconhecido",
+  "common_close": "Fechar",
+  "common_ok": "OK",
+  "invite_title": "Convidar membro",
+  "invite_searchLabel": "Buscar por nome ou e-mail",
+  "invite_searchHint": "Digite pelo menos 2 caracteres",
+  "invite_noUsersFound": "Nenhum usuário encontrado",
+  "invite_changeUser": "Alterar usuário",
+  "invite_roleLabel": "Função *",
+  "invite_roleMember": "Membro",
+  "invite_roleManager": "Gerente",
+  "invite_sendInvite": "Enviar convite",
+  "invite_sendFailed": "Falha ao enviar convite",
+  "recording_recoveryInProgress": "Recuperando…",
+  "recording_recoveryFailed": "Falha na recuperação",
+  "recording_recoverySessionNotFound": "Sessão não encontrada",
+  "recording_recoveryNoAudio": "Sem áudio para recuperar",
+  "recording_recoveryConcatFailed": "Falha ao unir os segmentos",
+  "a11y_startRecording": "Iniciar gravação",
+  "a11y_createProject": "Criar projeto",
+  "a11y_playAudio": "Reproduzir áudio",
+  "a11y_pauseAudio": "Pausar áudio",
+  "a11y_tabLabel": "Guia {label}",
+  "profile_adminBadge": "Admin",
+  "profile_setYourName": "Defina seu nome",
+  "profile_inviteAcceptFailed": "Falha ao aceitar convite",
+  "profile_inviteDeclineFailed": "Falha ao recusar convite",
+  "profile_typeDeleteWord": "EXCLUIR",
+  "trim_splitError": "Erro ao dividir: {error}",
+  "error_serverFailure": "O servidor não pôde concluir a solicitação. Tente novamente.",
+  "error_importNoBytes": "Este arquivo está vazio e não pode ser importado.",
+  "error_ffmpegProcessingFailed": "Falha no processamento do áudio.",
+  "error_downloadFailed": "Falha no download.",
+  "@a11y_tabLabel": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "@trim_splitError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "a11y_splitWaveform": "Forma de onda de divisão. Toque para adicionar marcadores. Arraste para reposicionar. Aperte para ampliar. Mantenha pressionado para remover.",
+  "projectSettings_offlineTitle": "Você está offline",
+  "projectSettings_offlineDescription": "Os detalhes do projeto não podem ser carregados sem uma conexão com a internet. Serão carregados automaticamente quando você se reconectar.",
+  "recording_noAudioAvailable": "Nenhum áudio disponível",
+  "recording_noPendingUploads": "Sem envios pendentes",
+  "recording_uploadQueue": "Fila de envio",
+  "recording_previewSelection": "Pré-visualizar seleção",
+  "recording_stopPreview": "Parar pré-visualização",
+  "recording_audioLoadFailed": "Falha ao carregar o áudio",
+  "status_offlineSubtitle": "Alguns recursos como sincronização e carregamento de dados requerem conexão com a internet.",
+  "status_noProject": "Nenhum projeto atribuído",
+  "status_noProjectSubtitle": "Você ainda não foi adicionado a nenhum projeto. Contate seu administrador e aguarde a atribuição.",
+  "a11y_recordingInProgress": "Gravação em andamento, toque para pausar",
+  "a11y_recordingPaused": "Gravação pausada, toque para retomar",
+  "recording_audioFileNotFound": "Arquivo de áudio não encontrado",
+  "recording_partOf": "Parte {part} de {total}",
+  "recording_splitFrom": "Dividido de {sourceId}",
+  "trim_segmentRemoved": "Segmento {index} — removido",
+  "trim_segmentOfTotal": "Segmento {index} de {total}"
 }

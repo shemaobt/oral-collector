@@ -85,7 +85,10 @@ class _CreateProjectSheetState extends ConsumerState<_CreateProjectSheet> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedLanguage == null) {
-      showErrorSnackBar(context, 'Please select a language');
+      showErrorSnackBar(
+        context,
+        AppLocalizations.of(context).project_selectLanguage,
+      );
       return;
     }
 

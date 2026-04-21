@@ -111,7 +111,7 @@ class _ExpandableRecordFabState extends State<ExpandableRecordFab>
             bottom: 0,
             right: 0,
             child: Semantics(
-              label: 'Start recording',
+              label: l10n.a11y_startRecording,
               button: true,
               child: Material(
                 color: Colors.transparent,

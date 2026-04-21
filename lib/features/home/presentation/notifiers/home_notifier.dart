@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../recording/data/providers.dart';
+import '../../../recording/domain/entities/classification.dart';
 import '../../../project/presentation/notifiers/project_notifier.dart';
 import '../../../project/presentation/notifiers/stats_notifier.dart';
 import 'home_state.dart';
@@ -11,6 +12,9 @@ final homeNotifierProvider = NotifierProvider<HomeNotifier, HomeState>(
 );
 
 class HomeNotifier extends Notifier<HomeState> {
+  int _localUnclassifiedCount = 0;
+  double _localUnclassifiedDuration = 0;
+
   @override
   HomeState build() {
     return HomeState(greeting: _computeGreeting());
@@ -30,41 +34,50 @@ class HomeNotifier extends Notifier<HomeState> {
   }
 
   Future<void> _loadLocalPending() async {
-    if (kIsWeb) {
-      computeTotals();
-      return;
-    }
-
     final projectId = ref.read(projectNotifierProvider).activeProject?.id;
     if (projectId == null) return;
 
-    final repo = ref.read(localRecordingRepositoryProvider);
-    final pending = await repo.getPendingUploads();
-    final forProject = pending.where((r) => r.projectId == projectId);
+    var localPendingCount = 0;
+    var localPendingDuration = 0.0;
+    _localUnclassifiedCount = 0;
+    _localUnclassifiedDuration = 0;
 
-    final unclassifiedCount = await repo.getUnclassifiedCount(projectId);
-
-    state = state.copyWith(
-      localPendingCount: forProject.length,
-      localPendingDuration: forProject.fold<double>(
+    if (!kIsWeb) {
+      final repo = ref.read(localRecordingRepositoryProvider);
+      final pending = await repo.getPendingUploads();
+      final forProject = pending.where((r) => r.projectId == projectId);
+      localPendingCount = forProject.length;
+      localPendingDuration = forProject.fold<double>(
         0.0,
         (sum, r) => sum + r.durationSeconds,
-      ),
-      unclassifiedCount: unclassifiedCount,
+      );
+
+      final unclassifiedStats = await repo.getLocalUnclassifiedStats(projectId);
+      _localUnclassifiedCount = unclassifiedStats.count;
+      _localUnclassifiedDuration = unclassifiedStats.durationSeconds;
+    }
+
+    state = state.copyWith(
+      localPendingCount: localPendingCount,
+      localPendingDuration: localPendingDuration,
     );
     computeTotals();
   }
 
   void computeTotals() {
-    int recordings = state.localPendingCount;
-    double duration = state.localPendingDuration;
-    for (final stat in ref.read(statsNotifierProvider).genreStats.values) {
+    int recordings = state.localPendingCount + _localUnclassifiedCount;
+    double duration = state.localPendingDuration + _localUnclassifiedDuration;
+    final genreStats = ref.read(statsNotifierProvider).genreStats;
+    for (final stat in genreStats.values) {
       recordings += stat.recordingCount;
       duration += stat.totalDurationSeconds;
     }
+    final serverUnclassified =
+        genreStats[kUnclassifiedGenreId]?.recordingCount ?? 0;
     state = state.copyWith(
       totalRecordings: recordings,
       totalDuration: duration,
+      unclassifiedCount: _localUnclassifiedCount + serverUnclassified,
     );
   }
 }

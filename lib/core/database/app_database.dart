@@ -19,6 +19,9 @@ class LocalRecordings extends Table {
   TextColumn get serverId => text().nullable()();
   TextColumn get gcsUrl => text().nullable()();
   TextColumn get registerId => text().nullable()();
+  TextColumn get secondaryGenreId => text().nullable()();
+  TextColumn get secondarySubcategoryId => text().nullable()();
+  TextColumn get secondaryRegisterId => text().nullable()();
   TextColumn get storytellerId => text().nullable()();
   TextColumn get userId => text().nullable()();
   TextColumn get cleaningStatus => text().withDefault(const Constant('none'))();
@@ -29,6 +32,9 @@ class LocalRecordings extends Table {
   TextColumn get resumableSessionUri => text().nullable()();
   IntColumn get uploadedBytes => integer().withDefault(const Constant(0))();
   TextColumn get md5Hash => text().nullable()();
+  TextColumn get splitFromId => text().nullable()();
+  IntColumn get splitIndex => integer().nullable()();
+  IntColumn get splitSegmentCount => integer().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -110,7 +116,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -136,6 +142,19 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 7) {
         await m.createTable(recordingSessions);
+      }
+      if (from < 8) {
+        await m.addColumn(localRecordings, localRecordings.secondaryGenreId);
+        await m.addColumn(
+          localRecordings,
+          localRecordings.secondarySubcategoryId,
+        );
+        await m.addColumn(localRecordings, localRecordings.secondaryRegisterId);
+      }
+      if (from < 9) {
+        await m.addColumn(localRecordings, localRecordings.splitFromId);
+        await m.addColumn(localRecordings, localRecordings.splitIndex);
+        await m.addColumn(localRecordings, localRecordings.splitSegmentCount);
       }
     },
   );

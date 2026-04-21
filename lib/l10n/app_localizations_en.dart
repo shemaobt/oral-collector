@@ -490,6 +490,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recording_saved => 'Recording saved';
 
   @override
+  String get recording_uploading => 'Uploading recording…';
+
+  @override
+  String recording_uploadFailed(String error) {
+    return 'Upload failed: $error';
+  }
+
+  @override
   String get recording_notFound => 'Recording not found';
 
   @override
@@ -553,10 +561,55 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recording_updateFailed => 'Failed to update on server';
 
   @override
+  String get recording_exportAudio => 'Export audio';
+
+  @override
+  String get recording_exportShareFailed => 'Failed to share audio file';
+
+  @override
+  String get recording_replaceAudio => 'Replace audio';
+
+  @override
+  String get recording_replaceTitle => 'Replace audio?';
+
+  @override
+  String get recording_replaceMessage =>
+      'The current audio will be moved to a 24-hour trash and swapped for the file you pick. Only audio files with the same format as the original can be used.';
+
+  @override
+  String get recording_replaceReuploadNotice =>
+      'This recording has already been uploaded. The new file will overwrite it on the server.';
+
+  @override
+  String get recording_replaceConfirm => 'Replace';
+
+  @override
+  String recording_replaceFormatMismatch(String expected, String actual) {
+    return 'Replacement must be a $expected file, but got $actual';
+  }
+
+  @override
+  String get recording_replaceInvalidAudio =>
+      'Could not read the selected audio file';
+
+  @override
+  String get recording_replaceSuccess => 'Audio replaced';
+
+  @override
+  String get recording_replaceFailed => 'Failed to replace audio';
+
+  @override
+  String get recording_replaceNotAvailableWeb =>
+      'Replacing audio is not available on the web app';
+
+  @override
   String get recordings_title => 'Recordings';
 
   @override
   String get recordings_subtitle => 'Your collected stories';
+
+  @override
+  String get recordings_searchHint => 'Search recordings...';
 
   @override
   String get recordings_importAudio => 'Import audio file';
@@ -1727,7 +1780,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get classify_banner =>
-      'This recording needs classification before it can be uploaded.';
+      'This recording is unclassified. Tap Classify to add a genre and register.';
 
   @override
   String get classify_success => 'Recording classified';
@@ -1737,6 +1790,52 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get classify_selectRegister => 'Select register';
+
+  @override
+  String get classify_predominantHeader => 'PREDOMINANT CLASSIFICATION';
+
+  @override
+  String get classify_addAlternativeTitle =>
+      'Ambiguous? Add alternative classification';
+
+  @override
+  String get classify_secondaryNote =>
+      'Only the predominant classification counts toward genre time totals.';
+
+  @override
+  String get classify_secondaryGenre => 'Secondary genre';
+
+  @override
+  String get classify_secondarySubcategory => 'Secondary subcategory';
+
+  @override
+  String get classify_secondaryRegister => 'Secondary register';
+
+  @override
+  String get classify_secondarySameAsPrimary =>
+      'Secondary genre must differ from the predominant genre.';
+
+  @override
+  String get classify_clearAlternative => 'Clear alternative';
+
+  @override
+  String get recording_alsoClassifiedAs => 'Also classified as';
+
+  @override
+  String get recording_alsoClassifiedAsTooltip =>
+      'Has alternative classification';
+
+  @override
+  String get recording_addAlternative => 'Add alternative classification';
+
+  @override
+  String get recording_removeSecondary => 'Remove alternative classification';
+
+  @override
+  String get recording_secondaryRemoved => 'Alternative classification removed';
+
+  @override
+  String get recording_secondaryUpdated => 'Alternative classification updated';
 
   @override
   String get recording_unclassified => 'Unclassified';
@@ -2074,4 +2173,172 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recording_unknownUser => 'Unknown user';
+
+  @override
+  String get common_ok => 'OK';
+
+  @override
+  String get invite_title => 'Invite Member';
+
+  @override
+  String get invite_searchLabel => 'Search by name or email';
+
+  @override
+  String get invite_searchHint => 'Type at least 2 characters';
+
+  @override
+  String get invite_noUsersFound => 'No users found';
+
+  @override
+  String get invite_changeUser => 'Change user';
+
+  @override
+  String get invite_roleLabel => 'Role *';
+
+  @override
+  String get invite_roleMember => 'Member';
+
+  @override
+  String get invite_roleManager => 'Manager';
+
+  @override
+  String get invite_sendInvite => 'Send Invite';
+
+  @override
+  String get invite_sendFailed => 'Failed to send invite';
+
+  @override
+  String get recording_recoveryInProgress => 'Recovering…';
+
+  @override
+  String get recording_recoveryFailed => 'Recovery failed';
+
+  @override
+  String get recording_recoverySessionNotFound => 'Session not found';
+
+  @override
+  String get recording_recoveryNoAudio => 'No audio to recover';
+
+  @override
+  String get recording_recoveryConcatFailed => 'Concatenation failed';
+
+  @override
+  String get a11y_startRecording => 'Start recording';
+
+  @override
+  String get a11y_createProject => 'Create project';
+
+  @override
+  String get a11y_playAudio => 'Play audio';
+
+  @override
+  String get a11y_pauseAudio => 'Pause audio';
+
+  @override
+  String get a11y_splitWaveform =>
+      'Split waveform. Tap to add split markers. Drag to reposition. Pinch to zoom. Long-press to remove.';
+
+  @override
+  String a11y_tabLabel(String label) {
+    return '$label tab';
+  }
+
+  @override
+  String get profile_adminBadge => 'Admin';
+
+  @override
+  String get profile_setYourName => 'Set your name';
+
+  @override
+  String get profile_inviteAcceptFailed => 'Failed to accept invite';
+
+  @override
+  String get profile_inviteDeclineFailed => 'Failed to decline invite';
+
+  @override
+  String get profile_typeDeleteWord => 'DELETE';
+
+  @override
+  String trim_splitError(String error) {
+    return 'Error splitting: $error';
+  }
+
+  @override
+  String get error_serverFailure =>
+      'The server could not complete the request. Please try again.';
+
+  @override
+  String get error_importNoBytes =>
+      'This file is empty and cannot be imported.';
+
+  @override
+  String get error_ffmpegProcessingFailed => 'Audio processing failed.';
+
+  @override
+  String get error_downloadFailed => 'Download failed.';
+
+  @override
+  String get projectSettings_offlineTitle => 'You are offline';
+
+  @override
+  String get projectSettings_offlineDescription =>
+      'Project details can\'t be loaded without an internet connection. They will load automatically when you reconnect.';
+
+  @override
+  String get recording_noAudioAvailable => 'No audio available';
+
+  @override
+  String get recording_noPendingUploads => 'No pending uploads';
+
+  @override
+  String get recording_uploadQueue => 'Upload Queue';
+
+  @override
+  String get recording_previewSelection => 'Preview Selection';
+
+  @override
+  String get recording_stopPreview => 'Stop Preview';
+
+  @override
+  String get recording_audioLoadFailed => 'Failed to load audio';
+
+  @override
+  String get status_offlineSubtitle =>
+      'Some features like syncing and loading data require an internet connection.';
+
+  @override
+  String get status_noProject => 'No project assigned';
+
+  @override
+  String get status_noProjectSubtitle =>
+      'You haven\'t been added to any project yet. Please contact your administrator and wait to be assigned.';
+
+  @override
+  String get a11y_recordingInProgress => 'Recording in progress, tap to pause';
+
+  @override
+  String get a11y_recordingPaused => 'Recording paused, tap to resume';
+
+  @override
+  String get recording_audioFileNotFound => 'Audio file not found';
+
+  @override
+  String recording_partOf(int part, int total) {
+    return 'Part $part of $total';
+  }
+
+  @override
+  String recording_splitFrom(String sourceId) {
+    return 'Split from $sourceId';
+  }
+
+  @override
+  String trim_segmentRemoved(int index) {
+    return 'Segment $index — removed';
+  }
+
+  @override
+  String trim_segmentOfTotal(int index, int total) {
+    return 'Segment $index of $total';
+  }
 }

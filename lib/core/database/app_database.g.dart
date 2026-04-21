@@ -159,6 +159,39 @@ class $LocalRecordingsTable extends LocalRecordings
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _secondaryGenreIdMeta = const VerificationMeta(
+    'secondaryGenreId',
+  );
+  @override
+  late final GeneratedColumn<String> secondaryGenreId = GeneratedColumn<String>(
+    'secondary_genre_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _secondarySubcategoryIdMeta =
+      const VerificationMeta('secondarySubcategoryId');
+  @override
+  late final GeneratedColumn<String> secondarySubcategoryId =
+      GeneratedColumn<String>(
+        'secondary_subcategory_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _secondaryRegisterIdMeta =
+      const VerificationMeta('secondaryRegisterId');
+  @override
+  late final GeneratedColumn<String> secondaryRegisterId =
+      GeneratedColumn<String>(
+        'secondary_register_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _storytellerIdMeta = const VerificationMeta(
     'storytellerId',
   );
@@ -271,6 +304,39 @@ class $LocalRecordingsTable extends LocalRecordings
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _splitFromIdMeta = const VerificationMeta(
+    'splitFromId',
+  );
+  @override
+  late final GeneratedColumn<String> splitFromId = GeneratedColumn<String>(
+    'split_from_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _splitIndexMeta = const VerificationMeta(
+    'splitIndex',
+  );
+  @override
+  late final GeneratedColumn<int> splitIndex = GeneratedColumn<int>(
+    'split_index',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _splitSegmentCountMeta = const VerificationMeta(
+    'splitSegmentCount',
+  );
+  @override
+  late final GeneratedColumn<int> splitSegmentCount = GeneratedColumn<int>(
+    'split_segment_count',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -287,6 +353,9 @@ class $LocalRecordingsTable extends LocalRecordings
     serverId,
     gcsUrl,
     registerId,
+    secondaryGenreId,
+    secondarySubcategoryId,
+    secondaryRegisterId,
     storytellerId,
     userId,
     cleaningStatus,
@@ -297,6 +366,9 @@ class $LocalRecordingsTable extends LocalRecordings
     resumableSessionUri,
     uploadedBytes,
     md5Hash,
+    splitFromId,
+    splitIndex,
+    splitSegmentCount,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -417,6 +489,33 @@ class $LocalRecordingsTable extends LocalRecordings
         registerId.isAcceptableOrUnknown(data['register_id']!, _registerIdMeta),
       );
     }
+    if (data.containsKey('secondary_genre_id')) {
+      context.handle(
+        _secondaryGenreIdMeta,
+        secondaryGenreId.isAcceptableOrUnknown(
+          data['secondary_genre_id']!,
+          _secondaryGenreIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('secondary_subcategory_id')) {
+      context.handle(
+        _secondarySubcategoryIdMeta,
+        secondarySubcategoryId.isAcceptableOrUnknown(
+          data['secondary_subcategory_id']!,
+          _secondarySubcategoryIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('secondary_register_id')) {
+      context.handle(
+        _secondaryRegisterIdMeta,
+        secondaryRegisterId.isAcceptableOrUnknown(
+          data['secondary_register_id']!,
+          _secondaryRegisterIdMeta,
+        ),
+      );
+    }
     if (data.containsKey('storyteller_id')) {
       context.handle(
         _storytellerIdMeta,
@@ -494,6 +593,30 @@ class $LocalRecordingsTable extends LocalRecordings
         md5Hash.isAcceptableOrUnknown(data['md5_hash']!, _md5HashMeta),
       );
     }
+    if (data.containsKey('split_from_id')) {
+      context.handle(
+        _splitFromIdMeta,
+        splitFromId.isAcceptableOrUnknown(
+          data['split_from_id']!,
+          _splitFromIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('split_index')) {
+      context.handle(
+        _splitIndexMeta,
+        splitIndex.isAcceptableOrUnknown(data['split_index']!, _splitIndexMeta),
+      );
+    }
+    if (data.containsKey('split_segment_count')) {
+      context.handle(
+        _splitSegmentCountMeta,
+        splitSegmentCount.isAcceptableOrUnknown(
+          data['split_segment_count']!,
+          _splitSegmentCountMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -559,6 +682,18 @@ class $LocalRecordingsTable extends LocalRecordings
         DriftSqlType.string,
         data['${effectivePrefix}register_id'],
       ),
+      secondaryGenreId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}secondary_genre_id'],
+      ),
+      secondarySubcategoryId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}secondary_subcategory_id'],
+      ),
+      secondaryRegisterId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}secondary_register_id'],
+      ),
       storytellerId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}storyteller_id'],
@@ -599,6 +734,18 @@ class $LocalRecordingsTable extends LocalRecordings
         DriftSqlType.string,
         data['${effectivePrefix}md5_hash'],
       ),
+      splitFromId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}split_from_id'],
+      ),
+      splitIndex: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}split_index'],
+      ),
+      splitSegmentCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}split_segment_count'],
+      ),
     );
   }
 
@@ -623,6 +770,9 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
   final String? serverId;
   final String? gcsUrl;
   final String? registerId;
+  final String? secondaryGenreId;
+  final String? secondarySubcategoryId;
+  final String? secondaryRegisterId;
   final String? storytellerId;
   final String? userId;
   final String cleaningStatus;
@@ -633,6 +783,9 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
   final String? resumableSessionUri;
   final int uploadedBytes;
   final String? md5Hash;
+  final String? splitFromId;
+  final int? splitIndex;
+  final int? splitSegmentCount;
   const LocalRecording({
     required this.id,
     required this.projectId,
@@ -648,6 +801,9 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
     this.serverId,
     this.gcsUrl,
     this.registerId,
+    this.secondaryGenreId,
+    this.secondarySubcategoryId,
+    this.secondaryRegisterId,
     this.storytellerId,
     this.userId,
     required this.cleaningStatus,
@@ -658,6 +814,9 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
     this.resumableSessionUri,
     required this.uploadedBytes,
     this.md5Hash,
+    this.splitFromId,
+    this.splitIndex,
+    this.splitSegmentCount,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -688,6 +847,17 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
     if (!nullToAbsent || registerId != null) {
       map['register_id'] = Variable<String>(registerId);
     }
+    if (!nullToAbsent || secondaryGenreId != null) {
+      map['secondary_genre_id'] = Variable<String>(secondaryGenreId);
+    }
+    if (!nullToAbsent || secondarySubcategoryId != null) {
+      map['secondary_subcategory_id'] = Variable<String>(
+        secondarySubcategoryId,
+      );
+    }
+    if (!nullToAbsent || secondaryRegisterId != null) {
+      map['secondary_register_id'] = Variable<String>(secondaryRegisterId);
+    }
     if (!nullToAbsent || storytellerId != null) {
       map['storyteller_id'] = Variable<String>(storytellerId);
     }
@@ -707,6 +877,15 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
     map['uploaded_bytes'] = Variable<int>(uploadedBytes);
     if (!nullToAbsent || md5Hash != null) {
       map['md5_hash'] = Variable<String>(md5Hash);
+    }
+    if (!nullToAbsent || splitFromId != null) {
+      map['split_from_id'] = Variable<String>(splitFromId);
+    }
+    if (!nullToAbsent || splitIndex != null) {
+      map['split_index'] = Variable<int>(splitIndex);
+    }
+    if (!nullToAbsent || splitSegmentCount != null) {
+      map['split_segment_count'] = Variable<int>(splitSegmentCount);
     }
     return map;
   }
@@ -739,6 +918,15 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
       registerId: registerId == null && nullToAbsent
           ? const Value.absent()
           : Value(registerId),
+      secondaryGenreId: secondaryGenreId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(secondaryGenreId),
+      secondarySubcategoryId: secondarySubcategoryId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(secondarySubcategoryId),
+      secondaryRegisterId: secondaryRegisterId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(secondaryRegisterId),
       storytellerId: storytellerId == null && nullToAbsent
           ? const Value.absent()
           : Value(storytellerId),
@@ -759,6 +947,15 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
       md5Hash: md5Hash == null && nullToAbsent
           ? const Value.absent()
           : Value(md5Hash),
+      splitFromId: splitFromId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(splitFromId),
+      splitIndex: splitIndex == null && nullToAbsent
+          ? const Value.absent()
+          : Value(splitIndex),
+      splitSegmentCount: splitSegmentCount == null && nullToAbsent
+          ? const Value.absent()
+          : Value(splitSegmentCount),
     );
   }
 
@@ -782,6 +979,13 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
       serverId: serializer.fromJson<String?>(json['serverId']),
       gcsUrl: serializer.fromJson<String?>(json['gcsUrl']),
       registerId: serializer.fromJson<String?>(json['registerId']),
+      secondaryGenreId: serializer.fromJson<String?>(json['secondaryGenreId']),
+      secondarySubcategoryId: serializer.fromJson<String?>(
+        json['secondarySubcategoryId'],
+      ),
+      secondaryRegisterId: serializer.fromJson<String?>(
+        json['secondaryRegisterId'],
+      ),
       storytellerId: serializer.fromJson<String?>(json['storytellerId']),
       userId: serializer.fromJson<String?>(json['userId']),
       cleaningStatus: serializer.fromJson<String>(json['cleaningStatus']),
@@ -794,6 +998,9 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
       ),
       uploadedBytes: serializer.fromJson<int>(json['uploadedBytes']),
       md5Hash: serializer.fromJson<String?>(json['md5Hash']),
+      splitFromId: serializer.fromJson<String?>(json['splitFromId']),
+      splitIndex: serializer.fromJson<int?>(json['splitIndex']),
+      splitSegmentCount: serializer.fromJson<int?>(json['splitSegmentCount']),
     );
   }
   @override
@@ -814,6 +1021,11 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
       'serverId': serializer.toJson<String?>(serverId),
       'gcsUrl': serializer.toJson<String?>(gcsUrl),
       'registerId': serializer.toJson<String?>(registerId),
+      'secondaryGenreId': serializer.toJson<String?>(secondaryGenreId),
+      'secondarySubcategoryId': serializer.toJson<String?>(
+        secondarySubcategoryId,
+      ),
+      'secondaryRegisterId': serializer.toJson<String?>(secondaryRegisterId),
       'storytellerId': serializer.toJson<String?>(storytellerId),
       'userId': serializer.toJson<String?>(userId),
       'cleaningStatus': serializer.toJson<String>(cleaningStatus),
@@ -824,6 +1036,9 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
       'resumableSessionUri': serializer.toJson<String?>(resumableSessionUri),
       'uploadedBytes': serializer.toJson<int>(uploadedBytes),
       'md5Hash': serializer.toJson<String?>(md5Hash),
+      'splitFromId': serializer.toJson<String?>(splitFromId),
+      'splitIndex': serializer.toJson<int?>(splitIndex),
+      'splitSegmentCount': serializer.toJson<int?>(splitSegmentCount),
     };
   }
 
@@ -842,6 +1057,9 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
     Value<String?> serverId = const Value.absent(),
     Value<String?> gcsUrl = const Value.absent(),
     Value<String?> registerId = const Value.absent(),
+    Value<String?> secondaryGenreId = const Value.absent(),
+    Value<String?> secondarySubcategoryId = const Value.absent(),
+    Value<String?> secondaryRegisterId = const Value.absent(),
     Value<String?> storytellerId = const Value.absent(),
     Value<String?> userId = const Value.absent(),
     String? cleaningStatus,
@@ -852,6 +1070,9 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
     Value<String?> resumableSessionUri = const Value.absent(),
     int? uploadedBytes,
     Value<String?> md5Hash = const Value.absent(),
+    Value<String?> splitFromId = const Value.absent(),
+    Value<int?> splitIndex = const Value.absent(),
+    Value<int?> splitSegmentCount = const Value.absent(),
   }) => LocalRecording(
     id: id ?? this.id,
     projectId: projectId ?? this.projectId,
@@ -869,6 +1090,15 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
     serverId: serverId.present ? serverId.value : this.serverId,
     gcsUrl: gcsUrl.present ? gcsUrl.value : this.gcsUrl,
     registerId: registerId.present ? registerId.value : this.registerId,
+    secondaryGenreId: secondaryGenreId.present
+        ? secondaryGenreId.value
+        : this.secondaryGenreId,
+    secondarySubcategoryId: secondarySubcategoryId.present
+        ? secondarySubcategoryId.value
+        : this.secondarySubcategoryId,
+    secondaryRegisterId: secondaryRegisterId.present
+        ? secondaryRegisterId.value
+        : this.secondaryRegisterId,
     storytellerId: storytellerId.present
         ? storytellerId.value
         : this.storytellerId,
@@ -883,6 +1113,11 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
         : this.resumableSessionUri,
     uploadedBytes: uploadedBytes ?? this.uploadedBytes,
     md5Hash: md5Hash.present ? md5Hash.value : this.md5Hash,
+    splitFromId: splitFromId.present ? splitFromId.value : this.splitFromId,
+    splitIndex: splitIndex.present ? splitIndex.value : this.splitIndex,
+    splitSegmentCount: splitSegmentCount.present
+        ? splitSegmentCount.value
+        : this.splitSegmentCount,
   );
   LocalRecording copyWithCompanion(LocalRecordingsCompanion data) {
     return LocalRecording(
@@ -914,6 +1149,15 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
       registerId: data.registerId.present
           ? data.registerId.value
           : this.registerId,
+      secondaryGenreId: data.secondaryGenreId.present
+          ? data.secondaryGenreId.value
+          : this.secondaryGenreId,
+      secondarySubcategoryId: data.secondarySubcategoryId.present
+          ? data.secondarySubcategoryId.value
+          : this.secondarySubcategoryId,
+      secondaryRegisterId: data.secondaryRegisterId.present
+          ? data.secondaryRegisterId.value
+          : this.secondaryRegisterId,
       storytellerId: data.storytellerId.present
           ? data.storytellerId.value
           : this.storytellerId,
@@ -938,6 +1182,15 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
           ? data.uploadedBytes.value
           : this.uploadedBytes,
       md5Hash: data.md5Hash.present ? data.md5Hash.value : this.md5Hash,
+      splitFromId: data.splitFromId.present
+          ? data.splitFromId.value
+          : this.splitFromId,
+      splitIndex: data.splitIndex.present
+          ? data.splitIndex.value
+          : this.splitIndex,
+      splitSegmentCount: data.splitSegmentCount.present
+          ? data.splitSegmentCount.value
+          : this.splitSegmentCount,
     );
   }
 
@@ -958,6 +1211,9 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
           ..write('serverId: $serverId, ')
           ..write('gcsUrl: $gcsUrl, ')
           ..write('registerId: $registerId, ')
+          ..write('secondaryGenreId: $secondaryGenreId, ')
+          ..write('secondarySubcategoryId: $secondarySubcategoryId, ')
+          ..write('secondaryRegisterId: $secondaryRegisterId, ')
           ..write('storytellerId: $storytellerId, ')
           ..write('userId: $userId, ')
           ..write('cleaningStatus: $cleaningStatus, ')
@@ -967,7 +1223,10 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
           ..write('lastRetryAt: $lastRetryAt, ')
           ..write('resumableSessionUri: $resumableSessionUri, ')
           ..write('uploadedBytes: $uploadedBytes, ')
-          ..write('md5Hash: $md5Hash')
+          ..write('md5Hash: $md5Hash, ')
+          ..write('splitFromId: $splitFromId, ')
+          ..write('splitIndex: $splitIndex, ')
+          ..write('splitSegmentCount: $splitSegmentCount')
           ..write(')'))
         .toString();
   }
@@ -988,6 +1247,9 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
     serverId,
     gcsUrl,
     registerId,
+    secondaryGenreId,
+    secondarySubcategoryId,
+    secondaryRegisterId,
     storytellerId,
     userId,
     cleaningStatus,
@@ -998,6 +1260,9 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
     resumableSessionUri,
     uploadedBytes,
     md5Hash,
+    splitFromId,
+    splitIndex,
+    splitSegmentCount,
   ]);
   @override
   bool operator ==(Object other) =>
@@ -1017,6 +1282,9 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
           other.serverId == this.serverId &&
           other.gcsUrl == this.gcsUrl &&
           other.registerId == this.registerId &&
+          other.secondaryGenreId == this.secondaryGenreId &&
+          other.secondarySubcategoryId == this.secondarySubcategoryId &&
+          other.secondaryRegisterId == this.secondaryRegisterId &&
           other.storytellerId == this.storytellerId &&
           other.userId == this.userId &&
           other.cleaningStatus == this.cleaningStatus &&
@@ -1026,7 +1294,10 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
           other.lastRetryAt == this.lastRetryAt &&
           other.resumableSessionUri == this.resumableSessionUri &&
           other.uploadedBytes == this.uploadedBytes &&
-          other.md5Hash == this.md5Hash);
+          other.md5Hash == this.md5Hash &&
+          other.splitFromId == this.splitFromId &&
+          other.splitIndex == this.splitIndex &&
+          other.splitSegmentCount == this.splitSegmentCount);
 }
 
 class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
@@ -1044,6 +1315,9 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
   final Value<String?> serverId;
   final Value<String?> gcsUrl;
   final Value<String?> registerId;
+  final Value<String?> secondaryGenreId;
+  final Value<String?> secondarySubcategoryId;
+  final Value<String?> secondaryRegisterId;
   final Value<String?> storytellerId;
   final Value<String?> userId;
   final Value<String> cleaningStatus;
@@ -1054,6 +1328,9 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
   final Value<String?> resumableSessionUri;
   final Value<int> uploadedBytes;
   final Value<String?> md5Hash;
+  final Value<String?> splitFromId;
+  final Value<int?> splitIndex;
+  final Value<int?> splitSegmentCount;
   final Value<int> rowid;
   const LocalRecordingsCompanion({
     this.id = const Value.absent(),
@@ -1070,6 +1347,9 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
     this.serverId = const Value.absent(),
     this.gcsUrl = const Value.absent(),
     this.registerId = const Value.absent(),
+    this.secondaryGenreId = const Value.absent(),
+    this.secondarySubcategoryId = const Value.absent(),
+    this.secondaryRegisterId = const Value.absent(),
     this.storytellerId = const Value.absent(),
     this.userId = const Value.absent(),
     this.cleaningStatus = const Value.absent(),
@@ -1080,6 +1360,9 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
     this.resumableSessionUri = const Value.absent(),
     this.uploadedBytes = const Value.absent(),
     this.md5Hash = const Value.absent(),
+    this.splitFromId = const Value.absent(),
+    this.splitIndex = const Value.absent(),
+    this.splitSegmentCount = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   LocalRecordingsCompanion.insert({
@@ -1097,6 +1380,9 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
     this.serverId = const Value.absent(),
     this.gcsUrl = const Value.absent(),
     this.registerId = const Value.absent(),
+    this.secondaryGenreId = const Value.absent(),
+    this.secondarySubcategoryId = const Value.absent(),
+    this.secondaryRegisterId = const Value.absent(),
     this.storytellerId = const Value.absent(),
     this.userId = const Value.absent(),
     this.cleaningStatus = const Value.absent(),
@@ -1107,6 +1393,9 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
     this.resumableSessionUri = const Value.absent(),
     this.uploadedBytes = const Value.absent(),
     this.md5Hash = const Value.absent(),
+    this.splitFromId = const Value.absent(),
+    this.splitIndex = const Value.absent(),
+    this.splitSegmentCount = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        projectId = Value(projectId),
@@ -1128,6 +1417,9 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
     Expression<String>? serverId,
     Expression<String>? gcsUrl,
     Expression<String>? registerId,
+    Expression<String>? secondaryGenreId,
+    Expression<String>? secondarySubcategoryId,
+    Expression<String>? secondaryRegisterId,
     Expression<String>? storytellerId,
     Expression<String>? userId,
     Expression<String>? cleaningStatus,
@@ -1138,6 +1430,9 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
     Expression<String>? resumableSessionUri,
     Expression<int>? uploadedBytes,
     Expression<String>? md5Hash,
+    Expression<String>? splitFromId,
+    Expression<int>? splitIndex,
+    Expression<int>? splitSegmentCount,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1155,6 +1450,11 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
       if (serverId != null) 'server_id': serverId,
       if (gcsUrl != null) 'gcs_url': gcsUrl,
       if (registerId != null) 'register_id': registerId,
+      if (secondaryGenreId != null) 'secondary_genre_id': secondaryGenreId,
+      if (secondarySubcategoryId != null)
+        'secondary_subcategory_id': secondarySubcategoryId,
+      if (secondaryRegisterId != null)
+        'secondary_register_id': secondaryRegisterId,
       if (storytellerId != null) 'storyteller_id': storytellerId,
       if (userId != null) 'user_id': userId,
       if (cleaningStatus != null) 'cleaning_status': cleaningStatus,
@@ -1166,6 +1466,9 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
         'resumable_session_uri': resumableSessionUri,
       if (uploadedBytes != null) 'uploaded_bytes': uploadedBytes,
       if (md5Hash != null) 'md5_hash': md5Hash,
+      if (splitFromId != null) 'split_from_id': splitFromId,
+      if (splitIndex != null) 'split_index': splitIndex,
+      if (splitSegmentCount != null) 'split_segment_count': splitSegmentCount,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1185,6 +1488,9 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
     Value<String?>? serverId,
     Value<String?>? gcsUrl,
     Value<String?>? registerId,
+    Value<String?>? secondaryGenreId,
+    Value<String?>? secondarySubcategoryId,
+    Value<String?>? secondaryRegisterId,
     Value<String?>? storytellerId,
     Value<String?>? userId,
     Value<String>? cleaningStatus,
@@ -1195,6 +1501,9 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
     Value<String?>? resumableSessionUri,
     Value<int>? uploadedBytes,
     Value<String?>? md5Hash,
+    Value<String?>? splitFromId,
+    Value<int?>? splitIndex,
+    Value<int?>? splitSegmentCount,
     Value<int>? rowid,
   }) {
     return LocalRecordingsCompanion(
@@ -1212,6 +1521,10 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
       serverId: serverId ?? this.serverId,
       gcsUrl: gcsUrl ?? this.gcsUrl,
       registerId: registerId ?? this.registerId,
+      secondaryGenreId: secondaryGenreId ?? this.secondaryGenreId,
+      secondarySubcategoryId:
+          secondarySubcategoryId ?? this.secondarySubcategoryId,
+      secondaryRegisterId: secondaryRegisterId ?? this.secondaryRegisterId,
       storytellerId: storytellerId ?? this.storytellerId,
       userId: userId ?? this.userId,
       cleaningStatus: cleaningStatus ?? this.cleaningStatus,
@@ -1222,6 +1535,9 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
       resumableSessionUri: resumableSessionUri ?? this.resumableSessionUri,
       uploadedBytes: uploadedBytes ?? this.uploadedBytes,
       md5Hash: md5Hash ?? this.md5Hash,
+      splitFromId: splitFromId ?? this.splitFromId,
+      splitIndex: splitIndex ?? this.splitIndex,
+      splitSegmentCount: splitSegmentCount ?? this.splitSegmentCount,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1271,6 +1587,19 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
     if (registerId.present) {
       map['register_id'] = Variable<String>(registerId.value);
     }
+    if (secondaryGenreId.present) {
+      map['secondary_genre_id'] = Variable<String>(secondaryGenreId.value);
+    }
+    if (secondarySubcategoryId.present) {
+      map['secondary_subcategory_id'] = Variable<String>(
+        secondarySubcategoryId.value,
+      );
+    }
+    if (secondaryRegisterId.present) {
+      map['secondary_register_id'] = Variable<String>(
+        secondaryRegisterId.value,
+      );
+    }
     if (storytellerId.present) {
       map['storyteller_id'] = Variable<String>(storytellerId.value);
     }
@@ -1303,6 +1632,15 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
     if (md5Hash.present) {
       map['md5_hash'] = Variable<String>(md5Hash.value);
     }
+    if (splitFromId.present) {
+      map['split_from_id'] = Variable<String>(splitFromId.value);
+    }
+    if (splitIndex.present) {
+      map['split_index'] = Variable<int>(splitIndex.value);
+    }
+    if (splitSegmentCount.present) {
+      map['split_segment_count'] = Variable<int>(splitSegmentCount.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1326,6 +1664,9 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
           ..write('serverId: $serverId, ')
           ..write('gcsUrl: $gcsUrl, ')
           ..write('registerId: $registerId, ')
+          ..write('secondaryGenreId: $secondaryGenreId, ')
+          ..write('secondarySubcategoryId: $secondarySubcategoryId, ')
+          ..write('secondaryRegisterId: $secondaryRegisterId, ')
           ..write('storytellerId: $storytellerId, ')
           ..write('userId: $userId, ')
           ..write('cleaningStatus: $cleaningStatus, ')
@@ -1336,6 +1677,9 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
           ..write('resumableSessionUri: $resumableSessionUri, ')
           ..write('uploadedBytes: $uploadedBytes, ')
           ..write('md5Hash: $md5Hash, ')
+          ..write('splitFromId: $splitFromId, ')
+          ..write('splitIndex: $splitIndex, ')
+          ..write('splitSegmentCount: $splitSegmentCount, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -3619,6 +3963,9 @@ typedef $$LocalRecordingsTableCreateCompanionBuilder =
       Value<String?> serverId,
       Value<String?> gcsUrl,
       Value<String?> registerId,
+      Value<String?> secondaryGenreId,
+      Value<String?> secondarySubcategoryId,
+      Value<String?> secondaryRegisterId,
       Value<String?> storytellerId,
       Value<String?> userId,
       Value<String> cleaningStatus,
@@ -3629,6 +3976,9 @@ typedef $$LocalRecordingsTableCreateCompanionBuilder =
       Value<String?> resumableSessionUri,
       Value<int> uploadedBytes,
       Value<String?> md5Hash,
+      Value<String?> splitFromId,
+      Value<int?> splitIndex,
+      Value<int?> splitSegmentCount,
       Value<int> rowid,
     });
 typedef $$LocalRecordingsTableUpdateCompanionBuilder =
@@ -3647,6 +3997,9 @@ typedef $$LocalRecordingsTableUpdateCompanionBuilder =
       Value<String?> serverId,
       Value<String?> gcsUrl,
       Value<String?> registerId,
+      Value<String?> secondaryGenreId,
+      Value<String?> secondarySubcategoryId,
+      Value<String?> secondaryRegisterId,
       Value<String?> storytellerId,
       Value<String?> userId,
       Value<String> cleaningStatus,
@@ -3657,6 +4010,9 @@ typedef $$LocalRecordingsTableUpdateCompanionBuilder =
       Value<String?> resumableSessionUri,
       Value<int> uploadedBytes,
       Value<String?> md5Hash,
+      Value<String?> splitFromId,
+      Value<int?> splitIndex,
+      Value<int?> splitSegmentCount,
       Value<int> rowid,
     });
 
@@ -3739,6 +4095,21 @@ class $$LocalRecordingsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get secondaryGenreId => $composableBuilder(
+    column: $table.secondaryGenreId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get secondarySubcategoryId => $composableBuilder(
+    column: $table.secondarySubcategoryId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get secondaryRegisterId => $composableBuilder(
+    column: $table.secondaryRegisterId,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<String> get storytellerId => $composableBuilder(
     column: $table.storytellerId,
     builder: (column) => ColumnFilters(column),
@@ -3786,6 +4157,21 @@ class $$LocalRecordingsTableFilterComposer
 
   ColumnFilters<String> get md5Hash => $composableBuilder(
     column: $table.md5Hash,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get splitFromId => $composableBuilder(
+    column: $table.splitFromId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get splitIndex => $composableBuilder(
+    column: $table.splitIndex,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get splitSegmentCount => $composableBuilder(
+    column: $table.splitSegmentCount,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -3869,6 +4255,21 @@ class $$LocalRecordingsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get secondaryGenreId => $composableBuilder(
+    column: $table.secondaryGenreId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get secondarySubcategoryId => $composableBuilder(
+    column: $table.secondarySubcategoryId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get secondaryRegisterId => $composableBuilder(
+    column: $table.secondaryRegisterId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get storytellerId => $composableBuilder(
     column: $table.storytellerId,
     builder: (column) => ColumnOrderings(column),
@@ -3916,6 +4317,21 @@ class $$LocalRecordingsTableOrderingComposer
 
   ColumnOrderings<String> get md5Hash => $composableBuilder(
     column: $table.md5Hash,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get splitFromId => $composableBuilder(
+    column: $table.splitFromId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get splitIndex => $composableBuilder(
+    column: $table.splitIndex,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get splitSegmentCount => $composableBuilder(
+    column: $table.splitSegmentCount,
     builder: (column) => ColumnOrderings(column),
   );
 }
@@ -3985,6 +4401,21 @@ class $$LocalRecordingsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get secondaryGenreId => $composableBuilder(
+    column: $table.secondaryGenreId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get secondarySubcategoryId => $composableBuilder(
+    column: $table.secondarySubcategoryId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get secondaryRegisterId => $composableBuilder(
+    column: $table.secondaryRegisterId,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get storytellerId => $composableBuilder(
     column: $table.storytellerId,
     builder: (column) => column,
@@ -4028,6 +4459,21 @@ class $$LocalRecordingsTableAnnotationComposer
 
   GeneratedColumn<String> get md5Hash =>
       $composableBuilder(column: $table.md5Hash, builder: (column) => column);
+
+  GeneratedColumn<String> get splitFromId => $composableBuilder(
+    column: $table.splitFromId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get splitIndex => $composableBuilder(
+    column: $table.splitIndex,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get splitSegmentCount => $composableBuilder(
+    column: $table.splitSegmentCount,
+    builder: (column) => column,
+  );
 }
 
 class $$LocalRecordingsTableTableManager
@@ -4081,6 +4527,9 @@ class $$LocalRecordingsTableTableManager
                 Value<String?> serverId = const Value.absent(),
                 Value<String?> gcsUrl = const Value.absent(),
                 Value<String?> registerId = const Value.absent(),
+                Value<String?> secondaryGenreId = const Value.absent(),
+                Value<String?> secondarySubcategoryId = const Value.absent(),
+                Value<String?> secondaryRegisterId = const Value.absent(),
                 Value<String?> storytellerId = const Value.absent(),
                 Value<String?> userId = const Value.absent(),
                 Value<String> cleaningStatus = const Value.absent(),
@@ -4091,6 +4540,9 @@ class $$LocalRecordingsTableTableManager
                 Value<String?> resumableSessionUri = const Value.absent(),
                 Value<int> uploadedBytes = const Value.absent(),
                 Value<String?> md5Hash = const Value.absent(),
+                Value<String?> splitFromId = const Value.absent(),
+                Value<int?> splitIndex = const Value.absent(),
+                Value<int?> splitSegmentCount = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => LocalRecordingsCompanion(
                 id: id,
@@ -4107,6 +4559,9 @@ class $$LocalRecordingsTableTableManager
                 serverId: serverId,
                 gcsUrl: gcsUrl,
                 registerId: registerId,
+                secondaryGenreId: secondaryGenreId,
+                secondarySubcategoryId: secondarySubcategoryId,
+                secondaryRegisterId: secondaryRegisterId,
                 storytellerId: storytellerId,
                 userId: userId,
                 cleaningStatus: cleaningStatus,
@@ -4117,6 +4572,9 @@ class $$LocalRecordingsTableTableManager
                 resumableSessionUri: resumableSessionUri,
                 uploadedBytes: uploadedBytes,
                 md5Hash: md5Hash,
+                splitFromId: splitFromId,
+                splitIndex: splitIndex,
+                splitSegmentCount: splitSegmentCount,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -4135,6 +4593,9 @@ class $$LocalRecordingsTableTableManager
                 Value<String?> serverId = const Value.absent(),
                 Value<String?> gcsUrl = const Value.absent(),
                 Value<String?> registerId = const Value.absent(),
+                Value<String?> secondaryGenreId = const Value.absent(),
+                Value<String?> secondarySubcategoryId = const Value.absent(),
+                Value<String?> secondaryRegisterId = const Value.absent(),
                 Value<String?> storytellerId = const Value.absent(),
                 Value<String?> userId = const Value.absent(),
                 Value<String> cleaningStatus = const Value.absent(),
@@ -4145,6 +4606,9 @@ class $$LocalRecordingsTableTableManager
                 Value<String?> resumableSessionUri = const Value.absent(),
                 Value<int> uploadedBytes = const Value.absent(),
                 Value<String?> md5Hash = const Value.absent(),
+                Value<String?> splitFromId = const Value.absent(),
+                Value<int?> splitIndex = const Value.absent(),
+                Value<int?> splitSegmentCount = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => LocalRecordingsCompanion.insert(
                 id: id,
@@ -4161,6 +4625,9 @@ class $$LocalRecordingsTableTableManager
                 serverId: serverId,
                 gcsUrl: gcsUrl,
                 registerId: registerId,
+                secondaryGenreId: secondaryGenreId,
+                secondarySubcategoryId: secondarySubcategoryId,
+                secondaryRegisterId: secondaryRegisterId,
                 storytellerId: storytellerId,
                 userId: userId,
                 cleaningStatus: cleaningStatus,
@@ -4171,6 +4638,9 @@ class $$LocalRecordingsTableTableManager
                 resumableSessionUri: resumableSessionUri,
                 uploadedBytes: uploadedBytes,
                 md5Hash: md5Hash,
+                splitFromId: splitFromId,
+                splitIndex: splitIndex,
+                splitSegmentCount: splitSegmentCount,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

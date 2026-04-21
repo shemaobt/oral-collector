@@ -4,7 +4,7 @@ import 'dart:io';
 
 import 'package:crypto/crypto.dart' as crypto;
 import 'package:drift/drift.dart' show Value;
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
@@ -218,10 +218,15 @@ class SyncEngineImpl implements SyncEngine {
       if (recording.serverId != null && recording.serverId!.isNotEmpty) {
         serverId = recording.serverId!;
       } else {
+        final subcategoryId =
+            (recording.subcategoryId != null &&
+                recording.subcategoryId!.isNotEmpty)
+            ? recording.subcategoryId
+            : 'unclassified';
         final createBody = <String, dynamic>{
           'project_id': recording.projectId,
           'genre_id': recording.genreId,
-          'subcategory_id': recording.subcategoryId,
+          'subcategory_id': subcategoryId,
           'title': recording.title,
           'description': recording.description,
           'duration_seconds': recording.durationSeconds,
@@ -231,6 +236,19 @@ class SyncEngineImpl implements SyncEngine {
         };
         if (recording.registerId != null && recording.registerId!.isNotEmpty) {
           createBody['register_id'] = recording.registerId;
+        }
+        if (recording.secondaryGenreId != null &&
+            recording.secondaryGenreId!.isNotEmpty) {
+          createBody['secondary_genre_id'] = recording.secondaryGenreId;
+        }
+        if (recording.secondarySubcategoryId != null &&
+            recording.secondarySubcategoryId!.isNotEmpty) {
+          createBody['secondary_subcategory_id'] =
+              recording.secondarySubcategoryId;
+        }
+        if (recording.secondaryRegisterId != null &&
+            recording.secondaryRegisterId!.isNotEmpty) {
+          createBody['secondary_register_id'] = recording.secondaryRegisterId;
         }
         if (recording.storytellerId != null &&
             recording.storytellerId!.isNotEmpty) {
@@ -305,7 +323,8 @@ class SyncEngineImpl implements SyncEngine {
       if (deleteAfterUpload && !kIsWeb) {
         await file_ops.deleteFile(resolvedPath);
       }
-    } on _NonRetryableUploadException {
+    } on _NonRetryableUploadException catch (e) {
+      debugPrint('SyncEngine: non-retryable upload failure for $id: $e');
       await _recordingRepo.updateRecording(
         id,
         LocalRecordingsCompanion(
@@ -314,11 +333,14 @@ class SyncEngineImpl implements SyncEngine {
           lastRetryAt: Value(DateTime.now()),
         ),
       );
-    } on TimeoutException {
+    } on TimeoutException catch (e) {
+      debugPrint('SyncEngine: timeout uploading $id: $e');
       await _recordingRepo.markAsFailed(id);
-    } on SocketException {
+    } on SocketException catch (e) {
+      debugPrint('SyncEngine: socket error uploading $id: $e');
       await _recordingRepo.markAsFailed(id);
-    } on Exception {
+    } on Exception catch (e, st) {
+      debugPrint('SyncEngine: unexpected error uploading $id: $e\n$st');
       await _recordingRepo.markAsFailed(id);
     }
   }

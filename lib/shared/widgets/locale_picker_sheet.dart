@@ -5,14 +5,45 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../core/l10n/locale_provider.dart';
 import '../../core/l10n/supported_locales.dart';
 import '../../core/theme/app_colors.dart';
+import '../../l10n/app_localizations.dart';
 
 class LocalePickerSheet extends ConsumerWidget {
   const LocalePickerSheet({super.key});
+
+  String _localizedSubName(AppLocalizations l10n, String code) {
+    switch (code) {
+      case 'en':
+        return l10n.locale_englishSub;
+      case 'pt':
+        return l10n.locale_portugueseSub;
+      case 'es':
+        return l10n.locale_spanishSub;
+      case 'fr':
+        return l10n.locale_frenchSub;
+      case 'id':
+        return l10n.locale_bahasaSub;
+      case 'hi':
+        return l10n.locale_hindiSub;
+      case 'sw':
+        return l10n.locale_swahiliSub;
+      case 'ar':
+        return l10n.locale_arabicSub;
+      case 'tpi':
+        return l10n.locale_tokPisinSub;
+      case 'ko':
+        return l10n.locale_koreanSub;
+      case 'zh':
+        return l10n.locale_chineseSub;
+      default:
+        return code;
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colors = AppColors.of(context);
+    final l10n = AppLocalizations.of(context);
     final currentLocale = ref.watch(localeProvider);
     final currentCode = currentLocale?.languageCode ?? 'en';
 
@@ -36,10 +67,13 @@ class LocalePickerSheet extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Choose Your Language', style: theme.textTheme.titleLarge),
+                Text(
+                  l10n.locale_selectLanguage,
+                  style: theme.textTheme.titleLarge,
+                ),
                 const SizedBox(height: 4),
                 Text(
-                  'You can change this later in your profile settings.',
+                  l10n.locale_selectLanguageSubtitle,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: colors.secondary,
                   ),
@@ -55,7 +89,7 @@ class LocalePickerSheet extends ConsumerWidget {
               children: supportedLocales.map((locale) {
                 final code = locale.languageCode;
                 final nativeName = localeNativeNames[code] ?? code;
-                final englishName = localeEnglishNames[code] ?? code;
+                final subName = _localizedSubName(l10n, code);
                 final isSelected = code == currentCode;
 
                 return ListTile(
@@ -88,9 +122,9 @@ class LocalePickerSheet extends ConsumerWidget {
                           : FontWeight.w500,
                     ),
                   ),
-                  subtitle: code != 'en'
+                  subtitle: code != currentCode
                       ? Text(
-                          englishName,
+                          subName,
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: colors.secondary,
                           ),

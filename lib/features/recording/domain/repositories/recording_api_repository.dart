@@ -18,8 +18,14 @@ abstract class RecordingApiRepository {
     String? genreId,
     String? subcategoryId,
     String? registerId,
+    String? secondaryGenreId,
+    String? secondarySubcategoryId,
+    String? secondaryRegisterId,
+    bool clearSecondary = false,
     String? storytellerId,
     String? cleaningStatus,
+    double? durationSeconds,
+    int? fileSizeBytes,
   });
 
   Future<List<String>> splitRecording({

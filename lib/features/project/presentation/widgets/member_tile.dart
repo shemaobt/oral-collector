@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/widgets/user_avatar.dart';
 import '../../domain/entities/project_member.dart';
 
@@ -15,6 +16,7 @@ class MemberTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = AppColors.of(context);
+    final l10n = AppLocalizations.of(context);
     final name = member.displayName ?? member.email;
 
     return ListTile(
@@ -40,7 +42,7 @@ class MemberTile extends StatelessWidget {
           ? IconButton(
               icon: Icon(LucideIcons.userMinus, size: 18, color: colors.error),
               onPressed: onRemove,
-              tooltip: 'Remove member',
+              tooltip: l10n.projectSettings_removeMember,
             )
           : null,
     );

@@ -64,7 +64,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       }
     } catch (e) {
       if (mounted) {
-        showErrorSnackBar(context, 'Failed to update photo: $e');
+        showErrorSnackBar(
+          context,
+          AppLocalizations.of(context).profile_photoFailed(e.toString()),
+        );
       }
     }
   }
@@ -152,7 +155,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           );
         } else {
           final err = ref.read(inviteNotifierProvider).error;
-          showErrorSnackBar(context, err ?? 'Failed to accept invite');
+          showErrorSnackBar(context, err ?? l10n.profile_inviteAcceptFailed);
         }
       },
       onDecline: (invite) async {
@@ -166,7 +169,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ).showSnackBar(SnackBar(content: Text(l10n.profile_inviteDeclined)));
         } else {
           final err = ref.read(inviteNotifierProvider).error;
-          showErrorSnackBar(context, err ?? 'Failed to decline invite');
+          showErrorSnackBar(context, err ?? l10n.profile_inviteDeclineFailed);
         }
       },
       onRefresh: () {
@@ -514,9 +517,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               TextField(
                 controller: controller,
                 autofocus: true,
-                decoration: const InputDecoration(
-                  hintText: 'DELETE',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  hintText: l10n.profile_typeDeleteWord,
+                  border: const OutlineInputBorder(),
                 ),
               ),
             ],
@@ -528,7 +531,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ),
             FilledButton(
               onPressed: () {
-                if (controller.text.trim().toUpperCase() == 'DELETE') {
+                final expected = l10n.profile_typeDeleteWord.toUpperCase();
+                if (controller.text.trim().toUpperCase() == expected) {
                   Navigator.of(ctx).pop(true);
                 }
               },

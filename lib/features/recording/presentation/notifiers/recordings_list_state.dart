@@ -9,9 +9,11 @@ class RecordingsListState {
   final bool isLoadingMore;
   final bool hasMore;
   final String? selectedGenreId;
+  final String? selectedSubcategoryId;
   final String? selectedStorytellerId;
   final String? selectedUserId;
   final StatusFilter selectedFilter;
+  final String searchQuery;
 
   const RecordingsListState({
     this.recordings = const [],
@@ -19,9 +21,11 @@ class RecordingsListState {
     this.isLoadingMore = false,
     this.hasMore = true,
     this.selectedGenreId,
+    this.selectedSubcategoryId,
     this.selectedStorytellerId,
     this.selectedUserId,
     this.selectedFilter = StatusFilter.all,
+    this.searchQuery = '',
   });
 
   RecordingsListState copyWith({
@@ -30,10 +34,13 @@ class RecordingsListState {
     bool? isLoadingMore,
     bool? hasMore,
     String? selectedGenreId,
+    String? selectedSubcategoryId,
     String? selectedStorytellerId,
     String? selectedUserId,
     StatusFilter? selectedFilter,
+    String? searchQuery,
     bool clearGenreId = false,
+    bool clearSubcategoryId = false,
     bool clearStorytellerId = false,
     bool clearUserId = false,
   }) {
@@ -45,6 +52,9 @@ class RecordingsListState {
       selectedGenreId: clearGenreId
           ? null
           : (selectedGenreId ?? this.selectedGenreId),
+      selectedSubcategoryId: clearSubcategoryId
+          ? null
+          : (selectedSubcategoryId ?? this.selectedSubcategoryId),
       selectedStorytellerId: clearStorytellerId
           ? null
           : (selectedStorytellerId ?? this.selectedStorytellerId),
@@ -52,6 +62,7 @@ class RecordingsListState {
           ? null
           : (selectedUserId ?? this.selectedUserId),
       selectedFilter: selectedFilter ?? this.selectedFilter,
+      searchQuery: searchQuery ?? this.searchQuery,
     );
   }
 
@@ -59,6 +70,7 @@ class RecordingsListState {
     var count = 0;
     if (selectedFilter != StatusFilter.all) count++;
     if (selectedGenreId != null) count++;
+    if (selectedSubcategoryId != null) count++;
     if (selectedStorytellerId != null) count++;
     if (selectedUserId != null) count++;
     return count;
@@ -67,8 +79,23 @@ class RecordingsListState {
   List<LocalRecording> get filteredRecordings {
     var list = recordings;
 
+    if (searchQuery.isNotEmpty) {
+      final q = searchQuery.toLowerCase();
+      list = list.where((r) {
+        final title = (r.title ?? '').toLowerCase();
+        final desc = (r.description ?? '').toLowerCase();
+        return title.contains(q) || desc.contains(q);
+      }).toList();
+    }
+
     if (selectedGenreId != null) {
       list = list.where((r) => r.genreId == selectedGenreId).toList();
+    }
+
+    if (selectedSubcategoryId != null) {
+      list = list
+          .where((r) => r.subcategoryId == selectedSubcategoryId)
+          .toList();
     }
 
     if (selectedStorytellerId != null) {

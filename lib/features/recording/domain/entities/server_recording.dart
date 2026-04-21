@@ -4,6 +4,9 @@ class ServerRecording {
   final String genreId;
   final String? subcategoryId;
   final String? registerId;
+  final String? secondaryGenreId;
+  final String? secondarySubcategoryId;
+  final String? secondaryRegisterId;
   final String? storytellerId;
   final String? userId;
   final String? title;
@@ -15,6 +18,9 @@ class ServerRecording {
   final String cleaningStatus;
   final DateTime recordedAt;
   final DateTime? uploadedAt;
+  final String? splitFromId;
+  final int? splitIndex;
+  final int? splitSegmentCount;
 
   const ServerRecording({
     required this.id,
@@ -22,6 +28,9 @@ class ServerRecording {
     required this.genreId,
     this.subcategoryId,
     this.registerId,
+    this.secondaryGenreId,
+    this.secondarySubcategoryId,
+    this.secondaryRegisterId,
     this.storytellerId,
     this.userId,
     this.title,
@@ -33,6 +42,9 @@ class ServerRecording {
     required this.cleaningStatus,
     required this.recordedAt,
     this.uploadedAt,
+    this.splitFromId,
+    this.splitIndex,
+    this.splitSegmentCount,
   });
 
   factory ServerRecording.fromJson(Map<String, dynamic> json) {
@@ -42,6 +54,9 @@ class ServerRecording {
       genreId: json['genre_id'] as String,
       subcategoryId: json['subcategory_id'] as String?,
       registerId: json['register_id'] as String?,
+      secondaryGenreId: json['secondary_genre_id'] as String?,
+      secondarySubcategoryId: json['secondary_subcategory_id'] as String?,
+      secondaryRegisterId: json['secondary_register_id'] as String?,
       storytellerId: json['storyteller_id'] as String?,
       userId: json['user_id'] as String?,
       title: json['title'] as String?,
@@ -55,6 +70,9 @@ class ServerRecording {
       uploadedAt: json['uploaded_at'] != null
           ? DateTime.parse(json['uploaded_at'] as String)
           : null,
+      splitFromId: json['split_from_id'] as String?,
+      splitIndex: (json['split_index'] as num?)?.toInt(),
+      splitSegmentCount: (json['split_segment_count'] as num?)?.toInt(),
     );
   }
 }

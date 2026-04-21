@@ -49,27 +49,33 @@ class LocalRecordingRepository {
     return (_db.select(_db.localRecordings)
           ..where(
             (t) =>
-                (t.uploadStatus.equals('local') |
-                    t.uploadStatus.equals('failed') |
-                    t.uploadStatus.equals('uploading')) &
-                t.genreId.equals(kUnclassifiedGenreId).not() &
-                t.registerId.isNotNull(),
+                t.uploadStatus.equals('local') |
+                t.uploadStatus.equals('failed') |
+                t.uploadStatus.equals('uploading'),
           )
           ..orderBy([(t) => OrderingTerm.asc(t.recordedAt)]))
         .get();
   }
 
-  Future<int> getUnclassifiedCount(String projectId) async {
-    final count = _db.localRecordings.id.count();
+  Future<({int count, double durationSeconds})> getLocalUnclassifiedStats(
+    String projectId,
+  ) async {
+    final countExpr = _db.localRecordings.id.count();
+    final durationExpr = _db.localRecordings.durationSeconds.sum();
     final query = _db.selectOnly(_db.localRecordings)
-      ..addColumns([count])
+      ..addColumns([countExpr, durationExpr])
       ..where(
         _db.localRecordings.projectId.equals(projectId) &
             (_db.localRecordings.genreId.equals(kUnclassifiedGenreId) |
-                _db.localRecordings.registerId.isNull()),
+                _db.localRecordings.registerId.isNull()) &
+            _db.localRecordings.uploadStatus.equals('uploaded').not() &
+            _db.localRecordings.uploadStatus.equals('verified').not(),
       );
-    final result = await query.getSingle();
-    return result.read(count) ?? 0;
+    final row = await query.getSingle();
+    return (
+      count: row.read(countExpr) ?? 0,
+      durationSeconds: row.read(durationExpr) ?? 0.0,
+    );
   }
 
   Future<bool> markAsUploading(String id) async {
@@ -147,6 +153,31 @@ class LocalRecordingRepository {
             uploadStatus: Value('local'),
             retryCount: Value(0),
             lastRetryAt: Value(null),
+          ),
+        );
+    return rows > 0;
+  }
+
+  Future<bool> replaceAudio({
+    required String recordingId,
+    required String newFilePath,
+    required double newDurationSeconds,
+    required int newFileSizeBytes,
+  }) async {
+    final rows =
+        await (_db.update(
+          _db.localRecordings,
+        )..where((t) => t.id.equals(recordingId))).write(
+          LocalRecordingsCompanion(
+            localFilePath: Value(newFilePath),
+            durationSeconds: Value(newDurationSeconds),
+            fileSizeBytes: Value(newFileSizeBytes),
+            uploadStatus: const Value('local'),
+            md5Hash: const Value(null),
+            resumableSessionUri: const Value(null),
+            uploadedBytes: const Value(0),
+            retryCount: const Value(0),
+            lastRetryAt: const Value(null),
           ),
         );
     return rows > 0;

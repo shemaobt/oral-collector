@@ -184,7 +184,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/recordings',
-            builder: (context, state) => const RecordingsListScreen(),
+            builder: (context, state) => RecordingsListScreen(
+              initialGenreId: state.uri.queryParameters['genreId'],
+              initialSubcategoryId: state.uri.queryParameters['subcategoryId'],
+            ),
           ),
           GoRoute(
             path: '/projects',

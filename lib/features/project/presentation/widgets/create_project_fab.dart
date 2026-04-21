@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../l10n/app_localizations.dart';
 
 class CreateProjectFab extends StatelessWidget {
   const CreateProjectFab({
@@ -16,7 +17,7 @@ class CreateProjectFab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      label: 'Create project',
+      label: AppLocalizations.of(context).a11y_createProject,
       button: true,
       child: Material(
         color: Colors.transparent,

@@ -146,7 +146,7 @@ class _ErrorCard extends StatelessWidget {
               foregroundColor: errorColor,
               padding: const EdgeInsets.symmetric(horizontal: 12),
             ),
-            child: const Text('Retry'),
+            child: Text(AppLocalizations.of(context).common_retry),
           ),
         ],
       ),

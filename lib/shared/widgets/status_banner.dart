@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../l10n/app_localizations.dart';
 
 enum StatusBannerVariant { warning, info }
 
@@ -19,21 +20,23 @@ class StatusBanner extends StatelessWidget {
   final String? subtitle;
   final StatusBannerVariant variant;
 
-  /// Offline warning banner.
-  const StatusBanner.offline({super.key})
-    : icon = LucideIcons.wifiOff,
-      title = 'You are offline',
-      subtitle =
-          'Some features like syncing and loading data require an internet connection.',
-      variant = StatusBannerVariant.warning;
+  factory StatusBanner.offline(AppLocalizations l10n, {Key? key}) =>
+      StatusBanner(
+        key: key,
+        icon: LucideIcons.wifiOff,
+        title: l10n.projectSettings_offlineTitle,
+        subtitle: l10n.status_offlineSubtitle,
+        variant: StatusBannerVariant.warning,
+      );
 
-  /// No project membership banner.
-  const StatusBanner.noProject({super.key})
-    : icon = LucideIcons.shieldAlert,
-      title = 'No project assigned',
-      subtitle =
-          'You haven\'t been added to any project yet. Please contact your administrator and wait to be assigned.',
-      variant = StatusBannerVariant.info;
+  factory StatusBanner.noProject(AppLocalizations l10n, {Key? key}) =>
+      StatusBanner(
+        key: key,
+        icon: LucideIcons.shieldAlert,
+        title: l10n.status_noProject,
+        subtitle: l10n.status_noProjectSubtitle,
+        variant: StatusBannerVariant.info,
+      );
 
   @override
   Widget build(BuildContext context) {

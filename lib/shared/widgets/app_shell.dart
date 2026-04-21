@@ -320,7 +320,7 @@ class _SidebarNavItem extends StatelessWidget {
         : iconWidget;
 
     return Semantics(
-      label: '$label tab',
+      label: AppLocalizations.of(context).a11y_tabLabel(label),
       selected: isSelected,
       child: Material(
         color: Colors.transparent,
@@ -604,7 +604,9 @@ class _FloatingNavBar extends StatelessWidget {
                           right: i < count - 1 ? spacing : 0,
                         ),
                         child: Semantics(
-                          label: '${tab.label} tab',
+                          label: AppLocalizations.of(
+                            context,
+                          ).a11y_tabLabel(tab.label),
                           selected: isSelected,
                           child: Material(
                             color: Colors.transparent,

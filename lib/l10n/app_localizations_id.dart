@@ -494,6 +494,14 @@ class AppLocalizationsId extends AppLocalizations {
   String get recording_saved => 'Rekaman disimpan';
 
   @override
+  String get recording_uploading => 'Mengunggah rekaman…';
+
+  @override
+  String recording_uploadFailed(String error) {
+    return 'Pengunggahan gagal: $error';
+  }
+
+  @override
   String get recording_notFound => 'Rekaman tidak ditemukan';
 
   @override
@@ -557,10 +565,55 @@ class AppLocalizationsId extends AppLocalizations {
   String get recording_updateFailed => 'Gagal memperbarui di server';
 
   @override
+  String get recording_exportAudio => 'Ekspor audio';
+
+  @override
+  String get recording_exportShareFailed => 'Gagal membagikan file audio';
+
+  @override
+  String get recording_replaceAudio => 'Ganti audio';
+
+  @override
+  String get recording_replaceTitle => 'Ganti audio?';
+
+  @override
+  String get recording_replaceMessage =>
+      'Audio saat ini akan dipindahkan ke tempat sampah 24 jam dan ditukar dengan file yang Anda pilih. Hanya file audio dengan format yang sama dengan aslinya yang dapat digunakan.';
+
+  @override
+  String get recording_replaceReuploadNotice =>
+      'Rekaman ini sudah diunggah. File baru akan menimpanya di server.';
+
+  @override
+  String get recording_replaceConfirm => 'Ganti';
+
+  @override
+  String recording_replaceFormatMismatch(String expected, String actual) {
+    return 'Pengganti harus file $expected, tetapi adalah $actual';
+  }
+
+  @override
+  String get recording_replaceInvalidAudio =>
+      'Tidak dapat membaca file audio yang dipilih';
+
+  @override
+  String get recording_replaceSuccess => 'Audio diganti';
+
+  @override
+  String get recording_replaceFailed => 'Gagal mengganti audio';
+
+  @override
+  String get recording_replaceNotAvailableWeb =>
+      'Penggantian audio tidak tersedia di aplikasi web';
+
+  @override
   String get recordings_title => 'Rekaman';
 
   @override
   String get recordings_subtitle => 'Cerita yang Anda kumpulkan';
+
+  @override
+  String get recordings_searchHint => 'Cari rekaman...';
 
   @override
   String get recordings_importAudio => 'Impor file audio';
@@ -1093,7 +1146,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get admin_genreCreated => 'Genre dibuat';
 
   @override
-  String get admin_editGenre => 'Edit genre';
+  String get admin_editGenre => 'Ubah genre';
 
   @override
   String get admin_deleteGenre => 'Hapus genre';
@@ -1102,7 +1155,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get admin_addSubcategory => 'Tambah subkategori';
 
   @override
-  String get admin_editGenreTitle => 'Edit Genre';
+  String get admin_editGenreTitle => 'Ubah Genre';
 
   @override
   String get admin_genreUpdated => 'Genre diperbarui';
@@ -1733,7 +1786,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get classify_banner =>
-      'Rekaman ini perlu diklasifikasi sebelum dapat diunggah.';
+      'Rekaman ini belum diklasifikasi. Ketuk Klasifikasi untuk menambahkan genre dan register.';
 
   @override
   String get classify_success => 'Rekaman diklasifikasi';
@@ -1743,6 +1796,52 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get classify_selectRegister => 'Pilih register';
+
+  @override
+  String get classify_predominantHeader => 'KLASIFIKASI DOMINAN';
+
+  @override
+  String get classify_addAlternativeTitle =>
+      'Ambigu? Tambah klasifikasi alternatif';
+
+  @override
+  String get classify_secondaryNote =>
+      'Hanya klasifikasi dominan yang dihitung dalam total waktu genre.';
+
+  @override
+  String get classify_secondaryGenre => 'Genre sekunder';
+
+  @override
+  String get classify_secondarySubcategory => 'Subkategori sekunder';
+
+  @override
+  String get classify_secondaryRegister => 'Register sekunder';
+
+  @override
+  String get classify_secondarySameAsPrimary =>
+      'Genre sekunder harus berbeda dari genre dominan.';
+
+  @override
+  String get classify_clearAlternative => 'Bersihkan alternatif';
+
+  @override
+  String get recording_alsoClassifiedAs => 'Juga diklasifikasikan sebagai';
+
+  @override
+  String get recording_alsoClassifiedAsTooltip =>
+      'Memiliki klasifikasi alternatif';
+
+  @override
+  String get recording_addAlternative => 'Tambah klasifikasi alternatif';
+
+  @override
+  String get recording_removeSecondary => 'Hapus klasifikasi alternatif';
+
+  @override
+  String get recording_secondaryRemoved => 'Klasifikasi alternatif dihapus';
+
+  @override
+  String get recording_secondaryUpdated => 'Klasifikasi alternatif diperbarui';
 
   @override
   String get recording_unclassified => 'Belum diklasifikasi';
@@ -1918,136 +2017,136 @@ class AppLocalizationsId extends AppLocalizations {
   String get error_generic => 'Terjadi kesalahan. Silakan coba lagi nanti.';
 
   @override
-  String get common_close => 'Close';
+  String get common_close => 'Tutup';
 
   @override
-  String get storyteller_title => 'Storytellers';
+  String get storyteller_title => 'Pencerita';
 
   @override
-  String get storyteller_singular => 'Storyteller';
+  String get storyteller_singular => 'Pencerita';
 
   @override
-  String get storyteller_manageAction => 'Manage storytellers';
+  String get storyteller_manageAction => 'Kelola pencerita';
 
   @override
-  String get storyteller_addNew => 'Add storyteller';
+  String get storyteller_addNew => 'Tambah pencerita';
 
   @override
-  String get storyteller_createTitle => 'New storyteller';
+  String get storyteller_createTitle => 'Pencerita baru';
 
   @override
-  String get storyteller_editTitle => 'Edit storyteller';
+  String get storyteller_editTitle => 'Ubah pencerita';
 
   @override
-  String get storyteller_speakerName => 'Speaker name';
+  String get storyteller_speakerName => 'Nama pembicara';
 
   @override
-  String get storyteller_sex => 'Sex';
+  String get storyteller_sex => 'Jenis kelamin';
 
   @override
-  String get storyteller_sexMale => 'Male';
+  String get storyteller_sexMale => 'Laki-laki';
 
   @override
-  String get storyteller_sexFemale => 'Female';
+  String get storyteller_sexFemale => 'Perempuan';
 
   @override
-  String get storyteller_age => 'Age';
+  String get storyteller_age => 'Usia';
 
   @override
-  String get storyteller_location => 'Location';
+  String get storyteller_location => 'Lokasi';
 
   @override
-  String get storyteller_dialect => 'Dialect';
+  String get storyteller_dialect => 'Dialek';
 
   @override
   String get storyteller_externalAcceptanceTitle =>
-      'External acceptance validation';
+      'Validasi persetujuan eksternal';
 
   @override
   String get storyteller_externalAcceptanceDescription =>
-      'I confirm that external acceptance validation has been performed for this speaker.';
+      'Saya mengonfirmasi bahwa validasi persetujuan eksternal telah dilakukan untuk pembicara ini.';
 
   @override
   String get storyteller_externalAcceptanceInfo =>
-      'Before registering a storyteller, the project manager must obtain the speaker\'s consent outside the app (for example, through a signed release form or recorded verbal agreement). This checkbox records that this step was completed.';
+      'Sebelum mendaftarkan pencerita, manajer proyek harus memperoleh persetujuan pembicara di luar aplikasi (misalnya, melalui formulir yang ditandatangani atau persetujuan lisan yang direkam). Kotak centang ini mencatat bahwa langkah tersebut telah diselesaikan.';
 
   @override
   String get storyteller_createRequiresConnection =>
-      'Creating a storyteller requires an internet connection.';
+      'Membuat pencerita memerlukan koneksi internet.';
 
   @override
-  String get storyteller_deleteTitle => 'Delete storyteller?';
+  String get storyteller_deleteTitle => 'Hapus pencerita?';
 
   @override
   String get storyteller_deleteMessage =>
-      'Recordings previously assigned to this storyteller will show as unassigned.';
+      'Rekaman yang sebelumnya ditetapkan ke pencerita ini akan ditampilkan sebagai tidak ditetapkan.';
 
   @override
-  String get storyteller_noneAssigned => 'No storyteller assigned';
+  String get storyteller_noneAssigned => 'Tidak ada pencerita yang ditetapkan';
 
   @override
-  String get storyteller_unknown => 'Unknown storyteller';
+  String get storyteller_unknown => 'Pencerita tidak diketahui';
 
   @override
-  String get storyteller_selectHint => 'Pick a storyteller';
+  String get storyteller_selectHint => 'Pilih pencerita';
 
   @override
-  String get storyteller_required => 'A storyteller is required';
+  String get storyteller_required => 'Pencerita wajib diisi';
 
   @override
-  String get storyteller_searchPlaceholder => 'Search storytellers';
+  String get storyteller_searchPlaceholder => 'Cari pencerita';
 
   @override
-  String get storyteller_empty => 'No storytellers yet';
+  String get storyteller_empty => 'Belum ada pencerita';
 
   @override
   String get storyteller_emptyDescription =>
-      'Create a storyteller for the project to assign to recordings.';
+      'Buat pencerita untuk proyek agar dapat ditetapkan ke rekaman.';
 
   @override
   String get storyteller_offlineNoCache =>
-      'Storytellers haven\'t been synced yet. Connect to the internet to load them.';
+      'Pencerita belum disinkronkan. Sambungkan ke internet untuk memuatnya.';
 
   @override
-  String get storyteller_assign => 'Assign';
+  String get storyteller_assign => 'Tetapkan';
 
   @override
-  String get storyteller_reassign => 'Reassign';
+  String get storyteller_reassign => 'Tetapkan ulang';
 
   @override
-  String get storyteller_ageValidator => 'Enter an age between 1 and 120';
+  String get storyteller_ageValidator => 'Masukkan usia antara 1 dan 120';
 
   @override
   String storyteller_ageYearsShort(int age) {
-    return '${age}y';
+    return '$age thn';
   }
 
   @override
-  String get filters_buttonLabel => 'Filters';
+  String get filters_buttonLabel => 'Filter';
 
   @override
-  String get filters_sheetTitle => 'Filter recordings';
+  String get filters_sheetTitle => 'Saring rekaman';
 
   @override
-  String get filters_sectionStatus => 'Upload status';
+  String get filters_sectionStatus => 'Status unggah';
 
   @override
   String get filters_sectionGenre => 'Genre';
 
   @override
-  String get filters_sectionStoryteller => 'Storyteller';
+  String get filters_sectionStoryteller => 'Pencerita';
 
   @override
-  String get filters_sectionUser => 'Recorded by';
+  String get filters_sectionUser => 'Direkam oleh';
 
   @override
-  String get filter_apply => 'Apply';
+  String get filter_apply => 'Terapkan';
 
   @override
-  String get filter_reset => 'Reset';
+  String get filter_reset => 'Atur ulang';
 
   @override
-  String get filter_clearAll => 'Clear all';
+  String get filter_clearAll => 'Hapus semua';
 
   @override
   String filter_countActive(num count) {
@@ -2058,27 +2157,196 @@ class AppLocalizationsId extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString filters',
+      other: '$countString filter',
       one: '1 filter',
     );
     return '$_temp0';
   }
 
   @override
-  String get filter_userAll => 'Any user';
+  String get filter_userAll => 'Semua pengguna';
 
   @override
-  String get filter_storytellerAll => 'Any storyteller';
+  String get filter_storytellerAll => 'Semua pencerita';
 
   @override
-  String get filter_genreAll => 'Any genre';
+  String get filter_genreAll => 'Semua genre';
 
   @override
-  String get detail_recordedBy => 'Recorded by';
+  String get detail_recordedBy => 'Direkam oleh';
 
   @override
-  String get detail_storyteller => 'Storyteller';
+  String get detail_storyteller => 'Pencerita';
 
   @override
-  String get recording_unknownUser => 'Unknown user';
+  String get recording_unknownUser => 'Pengguna tidak dikenal';
+
+  @override
+  String get common_ok => 'OK';
+
+  @override
+  String get invite_title => 'Undang anggota';
+
+  @override
+  String get invite_searchLabel => 'Cari berdasarkan nama atau email';
+
+  @override
+  String get invite_searchHint => 'Ketik minimal 2 karakter';
+
+  @override
+  String get invite_noUsersFound => 'Tidak ada pengguna ditemukan';
+
+  @override
+  String get invite_changeUser => 'Ganti pengguna';
+
+  @override
+  String get invite_roleLabel => 'Peran *';
+
+  @override
+  String get invite_roleMember => 'Anggota';
+
+  @override
+  String get invite_roleManager => 'Manajer';
+
+  @override
+  String get invite_sendInvite => 'Kirim undangan';
+
+  @override
+  String get invite_sendFailed => 'Gagal mengirim undangan';
+
+  @override
+  String get recording_recoveryInProgress => 'Memulihkan…';
+
+  @override
+  String get recording_recoveryFailed => 'Pemulihan gagal';
+
+  @override
+  String get recording_recoverySessionNotFound => 'Sesi tidak ditemukan';
+
+  @override
+  String get recording_recoveryNoAudio => 'Tidak ada audio untuk dipulihkan';
+
+  @override
+  String get recording_recoveryConcatFailed => 'Gagal menggabungkan';
+
+  @override
+  String get a11y_startRecording => 'Mulai rekaman';
+
+  @override
+  String get a11y_createProject => 'Buat proyek';
+
+  @override
+  String get a11y_playAudio => 'Putar audio';
+
+  @override
+  String get a11y_pauseAudio => 'Jeda audio';
+
+  @override
+  String get a11y_splitWaveform =>
+      'Bentuk gelombang pembagi. Ketuk untuk menambahkan penanda. Seret untuk memindahkan. Cubit untuk memperbesar. Tekan lama untuk menghapus.';
+
+  @override
+  String a11y_tabLabel(String label) {
+    return 'Tab $label';
+  }
+
+  @override
+  String get profile_adminBadge => 'Admin';
+
+  @override
+  String get profile_setYourName => 'Tetapkan nama Anda';
+
+  @override
+  String get profile_inviteAcceptFailed => 'Gagal menerima undangan';
+
+  @override
+  String get profile_inviteDeclineFailed => 'Gagal menolak undangan';
+
+  @override
+  String get profile_typeDeleteWord => 'HAPUS';
+
+  @override
+  String trim_splitError(String error) {
+    return 'Kesalahan saat memisahkan: $error';
+  }
+
+  @override
+  String get error_serverFailure =>
+      'Server tidak dapat menyelesaikan permintaan. Silakan coba lagi.';
+
+  @override
+  String get error_importNoBytes => 'File ini kosong dan tidak dapat diimpor.';
+
+  @override
+  String get error_ffmpegProcessingFailed => 'Pemrosesan audio gagal.';
+
+  @override
+  String get error_downloadFailed => 'Unduhan gagal.';
+
+  @override
+  String get projectSettings_offlineTitle => 'Anda sedang offline';
+
+  @override
+  String get projectSettings_offlineDescription =>
+      'Detail proyek tidak dapat dimuat tanpa koneksi internet. Akan dimuat secara otomatis saat Anda terhubung kembali.';
+
+  @override
+  String get recording_noAudioAvailable => 'Tidak ada audio tersedia';
+
+  @override
+  String get recording_noPendingUploads => 'Tidak ada unggahan tertunda';
+
+  @override
+  String get recording_uploadQueue => 'Antrean unggah';
+
+  @override
+  String get recording_previewSelection => 'Pratinjau pilihan';
+
+  @override
+  String get recording_stopPreview => 'Hentikan pratinjau';
+
+  @override
+  String get recording_audioLoadFailed => 'Gagal memuat audio';
+
+  @override
+  String get status_offlineSubtitle =>
+      'Beberapa fitur seperti sinkronisasi dan pemuatan data memerlukan koneksi internet.';
+
+  @override
+  String get status_noProject => 'Tidak ada proyek ditetapkan';
+
+  @override
+  String get status_noProjectSubtitle =>
+      'Anda belum ditambahkan ke proyek mana pun. Hubungi administrator Anda dan tunggu untuk ditetapkan.';
+
+  @override
+  String get a11y_recordingInProgress =>
+      'Perekaman berlangsung, ketuk untuk menjeda';
+
+  @override
+  String get a11y_recordingPaused =>
+      'Perekaman dijeda, ketuk untuk melanjutkan';
+
+  @override
+  String get recording_audioFileNotFound => 'File audio tidak ditemukan';
+
+  @override
+  String recording_partOf(int part, int total) {
+    return 'Bagian $part dari $total';
+  }
+
+  @override
+  String recording_splitFrom(String sourceId) {
+    return 'Dipisahkan dari $sourceId';
+  }
+
+  @override
+  String trim_segmentRemoved(int index) {
+    return 'Segmen $index — dihapus';
+  }
+
+  @override
+  String trim_segmentOfTotal(int index, int total) {
+    return 'Segmen $index dari $total';
+  }
 }

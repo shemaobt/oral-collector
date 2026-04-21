@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../core/platform/file_ops.dart' as file_ops;
 import '../../../../core/theme/app_colors.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/widgets/audio_player_widget.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
@@ -18,7 +19,7 @@ class RecordingHeroPlayer extends StatelessWidget {
   final AppColorSet colors;
   final ThemeData theme;
 
-  Future<Widget> _resolvePlayer() async {
+  Future<Widget> _resolvePlayer(String noAudioLabel) async {
     final effectiveGcsUrl =
         (recording.gcsUrl != null && recording.gcsUrl!.isNotEmpty)
         ? recording.gcsUrl
@@ -37,7 +38,7 @@ class RecordingHeroPlayer extends StatelessWidget {
       return AudioPlayerWidget(url: effectiveGcsUrl);
     }
     return Text(
-      'No audio available',
+      noAudioLabel,
       style: TextStyle(color: colors.secondary, fontSize: 14),
     );
   }
@@ -45,6 +46,9 @@ class RecordingHeroPlayer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isWide = MediaQuery.of(context).size.width >= 700;
+    final noAudioLabel = AppLocalizations.of(
+      context,
+    ).recording_noAudioAvailable;
 
     return Container(
       decoration: isWide
@@ -85,7 +89,7 @@ class RecordingHeroPlayer extends StatelessWidget {
                     const SizedBox(width: 16),
                     Expanded(
                       child: FutureBuilder<Widget>(
-                        future: _resolvePlayer(),
+                        future: _resolvePlayer(noAudioLabel),
                         builder: (context, snapshot) {
                           if (snapshot.connectionState ==
                               ConnectionState.waiting) {
@@ -104,7 +108,7 @@ class RecordingHeroPlayer extends StatelessWidget {
                           }
                           return snapshot.data ??
                               Text(
-                                'No audio available',
+                                noAudioLabel,
                                 style: TextStyle(
                                   color: colors.secondary,
                                   fontSize: 14,
@@ -133,7 +137,7 @@ class RecordingHeroPlayer extends StatelessWidget {
                     ),
                     const SizedBox(height: 20),
                     FutureBuilder<Widget>(
-                      future: _resolvePlayer(),
+                      future: _resolvePlayer(noAudioLabel),
                       builder: (context, snapshot) {
                         if (snapshot.connectionState ==
                             ConnectionState.waiting) {
@@ -153,7 +157,7 @@ class RecordingHeroPlayer extends StatelessWidget {
                         }
                         return snapshot.data ??
                             Text(
-                              'No audio available',
+                              noAudioLabel,
                               style: TextStyle(
                                 color: colors.secondary,
                                 fontSize: 14,

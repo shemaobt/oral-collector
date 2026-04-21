@@ -36,7 +36,10 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
       final isAdmin = ref.read(roleNotifierProvider.notifier).isPlatformAdmin;
       if (!isAdmin) {
         if (mounted) {
-          showErrorSnackBar(context, 'Admin access required');
+          showErrorSnackBar(
+            context,
+            AppLocalizations.of(context).admin_accessRequired,
+          );
           if (context.canPop()) {
             context.pop();
           } else {
@@ -116,7 +119,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
               }
             },
           ),
-          title: const Text('Admin Dashboard'),
+          title: Text(l10n.admin_title),
         ),
         body: Row(
           children: [

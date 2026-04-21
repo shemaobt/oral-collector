@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../l10n/app_localizations.dart';
 
 class SegmentCard extends StatelessWidget {
   const SegmentCard({
@@ -53,6 +54,7 @@ class SegmentCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     final fgAlpha = isExcluded ? 0.35 : 1.0;
 
@@ -81,7 +83,7 @@ class SegmentCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildMainRow(theme, fgAlpha),
+          _buildMainRow(theme, fgAlpha, l10n),
           if (showTaxonomyRow) ...[
             const SizedBox(height: 10),
             _buildTaxonomyRow(theme),
@@ -91,7 +93,7 @@ class SegmentCard extends StatelessWidget {
     );
   }
 
-  Widget _buildMainRow(ThemeData theme, double fgAlpha) {
+  Widget _buildMainRow(ThemeData theme, double fgAlpha, AppLocalizations l10n) {
     return Row(
       children: [
         Container(
@@ -121,8 +123,8 @@ class SegmentCard extends StatelessWidget {
             children: [
               Text(
                 isExcluded
-                    ? 'Segment ${index + 1} — removed'
-                    : 'Segment ${index + 1} of $total',
+                    ? l10n.trim_segmentRemoved(index + 1)
+                    : l10n.trim_segmentOfTotal(index + 1, total),
                 style: theme.textTheme.bodySmall?.copyWith(
                   fontWeight: FontWeight.w600,
                   color: colors.foreground.withValues(alpha: fgAlpha),

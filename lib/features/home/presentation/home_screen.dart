@@ -250,10 +250,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
 
             if (isOffline)
-              const SliverToBoxAdapter(child: StatusBanner.offline()),
+              SliverToBoxAdapter(child: StatusBanner.offline(l10n)),
 
             if (hasNoProjects)
-              const SliverToBoxAdapter(child: StatusBanner.noProject()),
+              SliverToBoxAdapter(child: StatusBanner.noProject(l10n)),
 
             if (activeProject != null) ...[
               SliverToBoxAdapter(

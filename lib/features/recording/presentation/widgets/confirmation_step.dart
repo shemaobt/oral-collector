@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -10,18 +12,20 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/auth/auth_notifier.dart';
 import '../../../../core/database/app_database.dart';
+import '../../../../shared/utils/error_helpers.dart';
 import '../../../../shared/utils/format.dart';
 import '../../../../shared/utils/recording_title.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/platform/file_ops.dart' as file_ops;
 import '../../../../shared/widgets/app_shell.dart';
 import '../../../../shared/widgets/waveform_visualizer.dart';
-import '../../../auth/data/providers/role_provider.dart';
 import '../../../project/presentation/notifiers/project_notifier.dart';
 import '../../../storyteller/domain/entities/storyteller.dart';
 import '../../../storyteller/presentation/notifiers/project_storytellers_notifier.dart';
 import '../../../storyteller/presentation/widgets/storyteller_picker.dart';
+import '../../../sync/presentation/notifiers/sync_notifier.dart';
 import '../../data/providers.dart';
+import '../../data/services/direct_recording_uploader.dart';
 import '../../domain/entities/classification.dart';
 import '../notifiers/recording_session_state.dart';
 
@@ -185,10 +189,19 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
     if (_selectedStoryteller == null) return;
     setState(() => _isSaving = true);
 
+    final localeTag = Localizations.localeOf(context).toString();
     final projectState = ref.read(projectNotifierProvider);
     final projectId = projectState.activeProject?.id ?? '';
     final currentUserId = ref.read(authNotifierProvider).currentUser?.id;
+
+    if (kIsWeb) {
+      await _saveWebDirect(projectId, currentUserId, localeTag);
+      return;
+    }
+
     final repo = ref.read(localRecordingRepositoryProvider);
+    final syncNotifier = ref.read(syncNotifierProvider.notifier);
+    final isOnline = ref.read(syncNotifierProvider).isOnline;
 
     int fileSize = 0;
     try {
@@ -214,7 +227,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
         userId: currentUserId != null
             ? Value(currentUserId)
             : const Value.absent(),
-        title: Value(defaultRecordingTitle()),
+        title: Value(defaultRecordingTitle(locale: localeTag)),
         description: _descriptionController.text.trim().isNotEmpty
             ? Value(_descriptionController.text.trim())
             : const Value.absent(),
@@ -226,6 +239,10 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
       ),
     );
 
+    if (isOnline) {
+      unawaited(syncNotifier.processQueue());
+    }
+
     if (mounted) {
       HapticFeedback.mediumImpact();
       final l10n = AppLocalizations.of(context);
@@ -233,6 +250,97 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
         context,
       ).showSnackBar(SnackBar(content: Text(l10n.recording_saved)));
       context.go('/home');
+    }
+  }
+
+  Future<void> _saveWebDirect(
+    String projectId,
+    String? currentUserId,
+    String localeTag,
+  ) async {
+    final l10n = AppLocalizations.of(context);
+    final uploader = ref.read(directRecordingUploaderProvider);
+    final localRepo = ref.read(localRecordingRepositoryProvider);
+    try {
+      final bytes = await file_ops.readFileBytes(widget.result.filePath);
+      if (bytes.isEmpty) {
+        throw Exception('Recording has no bytes');
+      }
+
+      final subcategoryId =
+          widget.subcategoryId != null && widget.subcategoryId!.isNotEmpty
+          ? widget.subcategoryId!
+          : 'unclassified';
+      final description = _descriptionController.text.trim().isEmpty
+          ? null
+          : _descriptionController.text.trim();
+      final recordedAt = DateTime.now();
+
+      final serverId = await uploader.upload(
+        bytes: bytes,
+        meta: DirectUploadMetadata(
+          projectId: projectId,
+          genreId: widget.genreId,
+          subcategoryId: subcategoryId,
+          registerId: widget.registerId,
+          storytellerId: _selectedStoryteller!.id,
+          userId: currentUserId,
+          title: defaultRecordingTitle(locale: localeTag),
+          description: description,
+          durationSeconds: widget.result.durationSeconds,
+          fileSizeBytes: bytes.length,
+          format: widget.result.format,
+          recordedAt: recordedAt,
+        ),
+      );
+
+      final localId =
+          '${recordedAt.millisecondsSinceEpoch}_${widget.genreId.hashCode}';
+      try {
+        await localRepo.insertRecording(
+          LocalRecordingsCompanion(
+            id: Value(localId),
+            projectId: Value(projectId),
+            genreId: Value(widget.genreId),
+            subcategoryId: Value(subcategoryId),
+            registerId:
+                widget.registerId != null && widget.registerId!.isNotEmpty
+                ? Value(widget.registerId!)
+                : const Value.absent(),
+            storytellerId: Value(_selectedStoryteller!.id),
+            userId: currentUserId != null
+                ? Value(currentUserId)
+                : const Value.absent(),
+            title: Value(defaultRecordingTitle(locale: localeTag)),
+            description: description != null
+                ? Value(description)
+                : const Value.absent(),
+            durationSeconds: Value(widget.result.durationSeconds),
+            fileSizeBytes: Value(bytes.length),
+            format: Value(widget.result.format),
+            localFilePath: const Value(''),
+            uploadStatus: const Value('uploaded'),
+            serverId: Value(serverId),
+            recordedAt: Value(recordedAt),
+          ),
+        );
+      } catch (_) {}
+
+      if (mounted) {
+        HapticFeedback.mediumImpact();
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.recording_saved)));
+        context.go('/home');
+      }
+    } catch (e) {
+      if (mounted) {
+        final friendly = friendlyErrorMessage(e.toString(), l10n);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.recording_uploadFailed(friendly))),
+        );
+        setState(() => _isSaving = false);
+      }
     }
   }
 
@@ -424,15 +532,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
                       selected: _selectedStoryteller,
                       onChanged: (s) =>
                           setState(() => _selectedStoryteller = s),
-                      showAddNew: ref
-                          .read(roleNotifierProvider.notifier)
-                          .canManageProject(
-                            ref
-                                    .read(projectNotifierProvider)
-                                    .activeProject
-                                    ?.id ??
-                                '',
-                          ),
+                      showAddNew: true,
                     ),
                     if (_selectedStoryteller == null)
                       Padding(

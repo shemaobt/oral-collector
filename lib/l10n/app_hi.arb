@@ -162,6 +162,15 @@
   "recording_discardTitle": "रिकॉर्डिंग छोड़ दें?",
   "recording_discardMessage": "यह रिकॉर्डिंग स्थायी रूप से हटा दी जाएगी।",
   "recording_saved": "रिकॉर्डिंग सहेजी गई",
+  "recording_uploading": "रिकॉर्डिंग अपलोड की जा रही है…",
+  "recording_uploadFailed": "अपलोड विफल: {error}",
+  "@recording_uploadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "recording_notFound": "रिकॉर्डिंग नहीं मिली",
   "recording_unknownGenre": "अज्ञात विधा",
   "recording_splitRecording": "रिकॉर्डिंग संपादित करें",
@@ -180,8 +189,31 @@
   "recording_moveNoPermission": "आपको यह रिकॉर्डिंग स्थानांतरित करने की अनुमति नहीं है",
   "recording_movedSuccess": "रिकॉर्डिंग सफलतापूर्वक स्थानांतरित की गई",
   "recording_updateFailed": "सर्वर पर अपडेट करने में विफल",
+  "recording_exportAudio": "ऑडियो निर्यात करें",
+  "recording_exportShareFailed": "ऑडियो फ़ाइल साझा करने में विफल",
+  "recording_replaceAudio": "ऑडियो बदलें",
+  "recording_replaceTitle": "ऑडियो बदलें?",
+  "recording_replaceMessage": "वर्तमान ऑडियो को 24 घंटे के लिए ट्रैश में ले जाया जाएगा और आपके द्वारा चुनी गई फ़ाइल से बदला जाएगा। केवल वही ऑडियो फ़ाइलें उपयोग की जा सकती हैं जिनका प्रारूप मूल से मेल खाता हो।",
+  "recording_replaceReuploadNotice": "यह रिकॉर्डिंग पहले ही अपलोड हो चुकी है। नई फ़ाइल सर्वर पर इसे बदल देगी।",
+  "recording_replaceConfirm": "बदलें",
+  "recording_replaceFormatMismatch": "प्रतिस्थापन {expected} फ़ाइल होनी चाहिए, लेकिन {actual} मिली",
+  "@recording_replaceFormatMismatch": {
+    "placeholders": {
+      "expected": {
+        "type": "String"
+      },
+      "actual": {
+        "type": "String"
+      }
+    }
+  },
+  "recording_replaceInvalidAudio": "चयनित ऑडियो फ़ाइल पढ़ नहीं सके",
+  "recording_replaceSuccess": "ऑडियो बदल दिया गया",
+  "recording_replaceFailed": "ऑडियो बदलने में विफल",
+  "recording_replaceNotAvailableWeb": "ऑडियो बदलने की सुविधा वेब ऐप पर उपलब्ध नहीं है",
   "recordings_title": "रिकॉर्डिंग्स",
   "recordings_subtitle": "आपकी संग्रहीत कहानियाँ",
+  "recordings_searchHint": "रिकॉर्डिंग खोजें...",
   "recordings_importAudio": "ऑडियो फ़ाइल आयात करें",
   "recordings_selectProject": "एक प्रोजेक्ट चुनें",
   "recordings_selectProjectSubtitle": "रिकॉर्डिंग्स देखने के लिए एक प्रोजेक्ट चुनें",
@@ -232,24 +264,47 @@
   "import_fieldRequired": "आवश्यक",
   "import_validationBanner": "{count, plural, =1{1 फ़ाइल में आवश्यक फ़ील्ड गुम हैं} other{{count} फ़ाइलों में आवश्यक फ़ील्ड गुम हैं}}",
   "@import_validationBanner": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "import_remove": "फ़ाइल हटाएँ",
   "import_supportedFormats": "समर्थित प्रारूप: {formats}. असमर्थित या पठन न योग्य फ़ाइलें छोड़ दी गई हैं।",
   "@import_supportedFormats": {
-    "placeholders": { "formats": { "type": "String" } }
+    "placeholders": {
+      "formats": {
+        "type": "String"
+      }
+    }
   },
   "import_rejectedFiles": "{count, plural, =1{1 असमर्थित या पठन न योग्य फ़ाइल छोड़ दी: {names}} other{{count} असमर्थित या पठन न योग्य फ़ाइलें छोड़ दी गईं: {names}}}",
   "@import_rejectedFiles": {
-    "placeholders": { "count": { "type": "int" }, "names": { "type": "String" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "names": {
+        "type": "String"
+      }
+    }
   },
   "import_countFiles": "{count, plural, =1{1 फ़ाइल} other{{count} फ़ाइलें}}",
   "@import_countFiles": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "import_importNFiles": "{count, plural, =1{1 फ़ाइल} other{{count} फ़ाइलें}} आयात करें",
   "@import_importNFiles": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "import_emptyFile": "खाली फ़ाइल",
   "import_compressWav": "WAV को M4A में कम्प्रेस करें",
@@ -540,10 +595,24 @@
   "quickRecord_classifyLater": "बाद में वर्गीकृत करें",
   "classify_title": "रिकॉर्डिंग वर्गीकृत करें",
   "classify_action": "वर्गीकृत करें",
-  "classify_banner": "इस रिकॉर्डिंग को अपलोड करने से पहले वर्गीकृत करना आवश्यक है।",
+  "classify_banner": "यह रिकॉर्डिंग अवर्गीकृत है। शैली और रजिस्टर जोड़ने के लिए वर्गीकृत करें पर टैप करें।",
   "classify_success": "रिकॉर्डिंग वर्गीकृत हो गई",
   "classify_register": "रजिस्टर",
   "classify_selectRegister": "रजिस्टर चुनें",
+  "classify_predominantHeader": "प्रमुख वर्गीकरण",
+  "classify_addAlternativeTitle": "अस्पष्ट है? वैकल्पिक वर्गीकरण जोड़ें",
+  "classify_secondaryNote": "शैली समय योग में केवल प्रमुख वर्गीकरण ही गिना जाता है।",
+  "classify_secondaryGenre": "द्वितीयक शैली",
+  "classify_secondarySubcategory": "द्वितीयक उपश्रेणी",
+  "classify_secondaryRegister": "द्वितीयक रजिस्टर",
+  "classify_secondarySameAsPrimary": "द्वितीयक शैली प्रमुख शैली से भिन्न होनी चाहिए।",
+  "classify_clearAlternative": "वैकल्पिक साफ़ करें",
+  "recording_alsoClassifiedAs": "के रूप में भी वर्गीकृत",
+  "recording_alsoClassifiedAsTooltip": "वैकल्पिक वर्गीकरण है",
+  "recording_addAlternative": "वैकल्पिक वर्गीकरण जोड़ें",
+  "recording_removeSecondary": "वैकल्पिक वर्गीकरण हटाएँ",
+  "recording_secondaryRemoved": "वैकल्पिक वर्गीकरण हटा दिया गया",
+  "recording_secondaryUpdated": "वैकल्पिक वर्गीकरण अद्यतन किया गया",
   "recording_unclassified": "अवर्गीकृत",
   "recording_inputSource": "इनपुट",
   "recording_selectMicrophone": "माइक्रोफ़ोन चुनें",
@@ -555,20 +624,44 @@
   "recording_noDevicesFound": "कोई माइक्रोफ़ोन नहीं मिला",
   "recording_storageLowWarnTitle": "कम स्टोरेज",
   "recording_storageLowWarnBody": "लगभग {minutes} मिनट की रिकॉर्डिंग उपलब्ध है। जारी रखें?",
-  "@recording_storageLowWarnBody": { "placeholders": { "minutes": { "type": "int" } } },
+  "@recording_storageLowWarnBody": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "recording_storageRefuseTitle": "पर्याप्त स्टोरेज नहीं",
   "recording_storageRefuseBody": "रिकॉर्डिंग से पहले इस डिवाइस पर जगह बनाएँ।",
-  "recording_storageCriticalBanner": "स्टोरेज गंभीर \u2014 लगभग {minutes} मिनट शेष। जल्द रोकने पर विचार करें।",
-  "@recording_storageCriticalBanner": { "placeholders": { "minutes": { "type": "int" } } },
+  "recording_storageCriticalBanner": "स्टोरेज गंभीर — लगभग {minutes} मिनट शेष। जल्द रोकने पर विचार करें।",
+  "@recording_storageCriticalBanner": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "recording_storageForceStopped": "स्टोरेज समाप्त होने के कारण रिकॉर्डिंग रुकी। आपकी प्रगति सहेज ली गई है।",
   "recording_savedAt": "{time} पर सहेजा गया",
-  "@recording_savedAt": { "placeholders": { "time": { "type": "String" } } },
+  "@recording_savedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "recording_continuedInBackground": "रिकॉर्डिंग बैकग्राउंड में जारी रही",
   "recording_continue": "जारी रखें",
   "recording_cancel": "रद्द करें",
   "recording_recoverTitle": "बाधित रिकॉर्डिंग पुनर्प्राप्त करें?",
   "recording_recoverBody": "हमें पिछले सत्र से लगभग {minutes} मिनट का ऑडियो मिला।",
-  "@recording_recoverBody": { "placeholders": { "minutes": { "type": "int" } } },
+  "@recording_recoverBody": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "recording_recoverButton": "पुनर्प्राप्त करें",
   "recording_recoverDiscard": "हटाएँ",
   "recording_recoverFailedLastSegment": "अंत के निकट का कुछ ऑडियो पढ़ा नहीं जा सका और छोड़ दिया गया।",
@@ -577,8 +670,17 @@
   "profile_defaultMicrophone": "डिफ़ॉल्ट माइक्रोफ़ोन",
   "profile_systemDefault": "सिस्टम डिफ़ॉल्ट",
   "settings_deviceStorageTitle": "डिवाइस स्टोरेज",
-  "settings_deviceStorageSubtitle": "उपयोग {used} \u00b7 उपलब्ध {free}",
-  "@settings_deviceStorageSubtitle": { "placeholders": { "used": { "type": "String" }, "free": { "type": "String" } } },
+  "settings_deviceStorageSubtitle": "उपयोग {used} · उपलब्ध {free}",
+  "@settings_deviceStorageSubtitle": {
+    "placeholders": {
+      "used": {
+        "type": "String"
+      },
+      "free": {
+        "type": "String"
+      }
+    }
+  },
   "fab_quickRecord": "त्वरित",
   "fab_normalRecord": "रिकॉर्ड",
   "error_network": "सर्वर तक नहीं पहुँचा जा सका। कृपया अपना इंटरनेट कनेक्शन जाँचें और पुनः प्रयास करें।",
@@ -597,37 +699,37 @@
   "error_notAuthenticated": "आप साइन इन नहीं हैं। कृपया लॉग इन करें और पुनः प्रयास करें।",
   "error_noPermission": "आपको यह कार्य करने की अनुमति नहीं है।",
   "error_generic": "कुछ गड़बड़ हो गई। कृपया बाद में पुनः प्रयास करें।",
-  "storyteller_title": "Storytellers",
-  "storyteller_singular": "Storyteller",
-  "storyteller_manageAction": "Manage storytellers",
-  "storyteller_addNew": "Add storyteller",
-  "storyteller_createTitle": "New storyteller",
-  "storyteller_editTitle": "Edit storyteller",
-  "storyteller_speakerName": "Speaker name",
-  "storyteller_sex": "Sex",
-  "storyteller_sexMale": "Male",
-  "storyteller_sexFemale": "Female",
-  "storyteller_age": "Age",
-  "storyteller_location": "Location",
-  "storyteller_dialect": "Dialect",
-  "storyteller_externalAcceptanceTitle": "External acceptance validation",
-  "storyteller_externalAcceptanceDescription": "I confirm that external acceptance validation has been performed for this speaker.",
-  "storyteller_externalAcceptanceInfo": "Before registering a storyteller, the project manager must obtain the speaker's consent outside the app (for example, through a signed release form or recorded verbal agreement). This checkbox records that this step was completed.",
-  "storyteller_createRequiresConnection": "Creating a storyteller requires an internet connection.",
-  "storyteller_deleteTitle": "Delete storyteller?",
-  "storyteller_deleteMessage": "Recordings previously assigned to this storyteller will show as unassigned.",
-  "storyteller_noneAssigned": "No storyteller assigned",
-  "storyteller_unknown": "Unknown storyteller",
-  "storyteller_selectHint": "Pick a storyteller",
-  "storyteller_required": "A storyteller is required",
-  "storyteller_searchPlaceholder": "Search storytellers",
-  "storyteller_empty": "No storytellers yet",
-  "storyteller_emptyDescription": "Create a storyteller for the project to assign to recordings.",
-  "storyteller_offlineNoCache": "Storytellers haven't been synced yet. Connect to the internet to load them.",
-  "storyteller_assign": "Assign",
-  "storyteller_reassign": "Reassign",
-  "storyteller_ageValidator": "Enter an age between 1 and 120",
-  "storyteller_ageYearsShort": "{age}y",
+  "storyteller_title": "कथाकार",
+  "storyteller_singular": "कथाकार",
+  "storyteller_manageAction": "कथाकार प्रबंधित करें",
+  "storyteller_addNew": "कथाकार जोड़ें",
+  "storyteller_createTitle": "नया कथाकार",
+  "storyteller_editTitle": "कथाकार संपादित करें",
+  "storyteller_speakerName": "वक्ता का नाम",
+  "storyteller_sex": "लिंग",
+  "storyteller_sexMale": "पुरुष",
+  "storyteller_sexFemale": "महिला",
+  "storyteller_age": "आयु",
+  "storyteller_location": "स्थान",
+  "storyteller_dialect": "बोली",
+  "storyteller_externalAcceptanceTitle": "बाहरी स्वीकृति सत्यापन",
+  "storyteller_externalAcceptanceDescription": "मैं पुष्टि करता हूँ कि इस वक्ता के लिए बाहरी स्वीकृति सत्यापन किया गया है।",
+  "storyteller_externalAcceptanceInfo": "कथाकार को दर्ज करने से पहले, परियोजना प्रबंधक को ऐप के बाहर (उदाहरण के लिए, हस्ताक्षरित प्रपत्र या रिकॉर्ड की गई मौखिक सहमति के माध्यम से) वक्ता की सहमति प्राप्त करनी चाहिए। यह चेकबॉक्स दर्शाता है कि यह चरण पूरा हो गया है।",
+  "storyteller_createRequiresConnection": "कथाकार बनाने के लिए इंटरनेट कनेक्शन की आवश्यकता है।",
+  "storyteller_deleteTitle": "कथाकार हटाएं?",
+  "storyteller_deleteMessage": "इस कथाकार को पहले सौंपी गई रिकॉर्डिंग अब असाइन न की गई के रूप में दिखेंगी।",
+  "storyteller_noneAssigned": "कोई कथाकार नहीं सौंपा गया",
+  "storyteller_unknown": "अज्ञात कथाकार",
+  "storyteller_selectHint": "कथाकार चुनें",
+  "storyteller_required": "कथाकार आवश्यक है",
+  "storyteller_searchPlaceholder": "कथाकार खोजें",
+  "storyteller_empty": "अभी तक कोई कथाकार नहीं",
+  "storyteller_emptyDescription": "रिकॉर्डिंग को सौंपने के लिए प्रोजेक्ट हेतु एक कथाकार बनाएं।",
+  "storyteller_offlineNoCache": "कथाकार अभी तक सिंक नहीं हुए हैं। इन्हें लोड करने के लिए इंटरनेट से कनेक्ट करें।",
+  "storyteller_assign": "असाइन करें",
+  "storyteller_reassign": "पुनः असाइन करें",
+  "storyteller_ageValidator": "1 और 120 के बीच आयु दर्ज करें",
+  "storyteller_ageYearsShort": "{age} वर्ष",
   "@storyteller_ageYearsShort": {
     "placeholders": {
       "age": {
@@ -635,16 +737,16 @@
       }
     }
   },
-  "filters_buttonLabel": "Filters",
-  "filters_sheetTitle": "Filter recordings",
-  "filters_sectionStatus": "Upload status",
-  "filters_sectionGenre": "Genre",
-  "filters_sectionStoryteller": "Storyteller",
-  "filters_sectionUser": "Recorded by",
-  "filter_apply": "Apply",
-  "filter_reset": "Reset",
-  "filter_clearAll": "Clear all",
-  "filter_countActive": "{count, plural, one{1 filter} other{{count} filters}}",
+  "filters_buttonLabel": "फ़िल्टर",
+  "filters_sheetTitle": "रिकॉर्डिंग फ़िल्टर करें",
+  "filters_sectionStatus": "अपलोड स्थिति",
+  "filters_sectionGenre": "शैली",
+  "filters_sectionStoryteller": "कथाकार",
+  "filters_sectionUser": "द्वारा रिकॉर्ड",
+  "filter_apply": "लागू करें",
+  "filter_reset": "रीसेट करें",
+  "filter_clearAll": "सभी साफ़ करें",
+  "filter_countActive": "{count, plural, one{1 फ़िल्टर} other{{count} फ़िल्टर}}",
   "@filter_countActive": {
     "placeholders": {
       "count": {
@@ -653,11 +755,75 @@
       }
     }
   },
-  "filter_userAll": "Any user",
-  "filter_storytellerAll": "Any storyteller",
-  "filter_genreAll": "Any genre",
-  "detail_recordedBy": "Recorded by",
-  "detail_storyteller": "Storyteller",
-  "recording_unknownUser": "Unknown user",
-  "common_close": "Close"
+  "filter_userAll": "कोई भी उपयोगकर्ता",
+  "filter_storytellerAll": "कोई भी कथाकार",
+  "filter_genreAll": "कोई भी शैली",
+  "detail_recordedBy": "द्वारा रिकॉर्ड",
+  "detail_storyteller": "कथाकार",
+  "recording_unknownUser": "अज्ञात उपयोगकर्ता",
+  "common_close": "बंद करें",
+  "common_ok": "ठीक है",
+  "invite_title": "सदस्य आमंत्रित करें",
+  "invite_searchLabel": "नाम या ईमेल से खोजें",
+  "invite_searchHint": "कम से कम 2 अक्षर लिखें",
+  "invite_noUsersFound": "कोई उपयोगकर्ता नहीं मिला",
+  "invite_changeUser": "उपयोगकर्ता बदलें",
+  "invite_roleLabel": "भूमिका *",
+  "invite_roleMember": "सदस्य",
+  "invite_roleManager": "प्रबंधक",
+  "invite_sendInvite": "आमंत्रण भेजें",
+  "invite_sendFailed": "आमंत्रण भेजने में विफल",
+  "recording_recoveryInProgress": "पुनर्प्राप्त किया जा रहा है…",
+  "recording_recoveryFailed": "पुनर्प्राप्ति विफल",
+  "recording_recoverySessionNotFound": "सत्र नहीं मिला",
+  "recording_recoveryNoAudio": "पुनर्प्राप्त करने के लिए कोई ऑडियो नहीं",
+  "recording_recoveryConcatFailed": "जोड़ने में विफल",
+  "a11y_startRecording": "रिकॉर्डिंग शुरू करें",
+  "a11y_createProject": "प्रोजेक्ट बनाएं",
+  "a11y_playAudio": "ऑडियो चलाएं",
+  "a11y_pauseAudio": "ऑडियो रोकें",
+  "a11y_tabLabel": "{label} टैब",
+  "profile_adminBadge": "व्यवस्थापक",
+  "profile_setYourName": "अपना नाम दर्ज करें",
+  "profile_inviteAcceptFailed": "आमंत्रण स्वीकार करने में विफल",
+  "profile_inviteDeclineFailed": "आमंत्रण अस्वीकार करने में विफल",
+  "profile_typeDeleteWord": "हटाएं",
+  "trim_splitError": "विभाजन में त्रुटि: {error}",
+  "error_serverFailure": "सर्वर अनुरोध पूरा नहीं कर सका। कृपया पुनः प्रयास करें।",
+  "error_importNoBytes": "यह फ़ाइल खाली है और आयात नहीं की जा सकती।",
+  "error_ffmpegProcessingFailed": "ऑडियो प्रोसेसिंग विफल।",
+  "error_downloadFailed": "डाउनलोड विफल।",
+  "@a11y_tabLabel": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "@trim_splitError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "a11y_splitWaveform": "स्प्लिट वेवफ़ॉर्म। स्प्लिट मार्कर जोड़ने के लिए टैप करें। पुनः स्थान बदलने के लिए खींचें। ज़ूम के लिए पिंच करें। हटाने के लिए देर तक दबाएँ।",
+  "projectSettings_offlineTitle": "आप ऑफ़लाइन हैं",
+  "projectSettings_offlineDescription": "इंटरनेट कनेक्शन के बिना प्रोजेक्ट विवरण लोड नहीं हो सकते। पुनः कनेक्ट होने पर वे स्वचालित रूप से लोड हो जाएंगे।",
+  "recording_noAudioAvailable": "कोई ऑडियो उपलब्ध नहीं है",
+  "recording_noPendingUploads": "कोई लंबित अपलोड नहीं",
+  "recording_uploadQueue": "अपलोड कतार",
+  "recording_previewSelection": "चयन का पूर्वावलोकन",
+  "recording_stopPreview": "पूर्वावलोकन रोकें",
+  "recording_audioLoadFailed": "ऑडियो लोड करने में विफल",
+  "status_offlineSubtitle": "कुछ सुविधाओं जैसे सिंक करने और डेटा लोड करने के लिए इंटरनेट कनेक्शन आवश्यक है।",
+  "status_noProject": "कोई प्रोजेक्ट नहीं सौंपा गया",
+  "status_noProjectSubtitle": "आपको अभी तक किसी प्रोजेक्ट में नहीं जोड़ा गया है। कृपया अपने प्रशासक से संपर्क करें और सौंपे जाने की प्रतीक्षा करें।",
+  "a11y_recordingInProgress": "रिकॉर्डिंग जारी है, रोकने के लिए टैप करें",
+  "a11y_recordingPaused": "रिकॉर्डिंग रोकी गई है, जारी रखने के लिए टैप करें",
+  "recording_audioFileNotFound": "ऑडियो फ़ाइल नहीं मिली",
+  "recording_partOf": "{total} में से भाग {part}",
+  "recording_splitFrom": "{sourceId} से विभाजित",
+  "trim_segmentRemoved": "खंड {index} — हटाया गया",
+  "trim_segmentOfTotal": "{total} में से खंड {index}"
 }

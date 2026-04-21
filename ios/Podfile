@@ -48,4 +48,43 @@ post_install do |installer|
     fixed = content.gsub(/#import "sqlite3.h"/, '#import <sqlite3.h>')
     File.write(umbrella, fixed) if content != fixed
   end
+
+  # Patch file_picker at its source (via the .symlinks plugin path, which
+  # resolves to the pub cache). Two fixes:
+  #   1. Rename FileUtils -> FPFileUtils to avoid runtime class collision
+  #      with Apple's private OSAnalytics.framework (which also ships a
+  #      class named "FileUtils").
+  #   2. Silence the plugin's per-UTI NSLog output.
+  file_picker_sources = File.join(
+    File.dirname(__FILE__), '.symlinks', 'plugins', 'file_picker',
+    'ios', 'file_picker', 'Sources', 'file_picker'
+  )
+  if Dir.exist?(file_picker_sources)
+    Dir.glob(File.join(file_picker_sources, '**', '*.{m,h}')).each do |f|
+      content = File.read(f)
+      fixed = content
+        .gsub(/\bFileUtils\b/, 'FPFileUtils')
+        .gsub(/^\s*Log\(@"Custom file type supported:[^\n]*\n/, "\n")
+        .gsub(/^\s*Log\(@"\[Skipping type\][^\n]*\n/, "\n")
+      File.write(f, fixed) if content != fixed
+    end
+    # Umbrella header also references the old filename.
+    umbrella_h = File.join(
+      file_picker_sources, 'include', 'file_picker', 'file_picker-umbrella.h'
+    )
+    if File.exist?(umbrella_h)
+      content = File.read(umbrella_h)
+      fixed = content.gsub(/FileUtils\.h/, 'FPFileUtils.h')
+      File.write(umbrella_h, fixed) if content != fixed
+    end
+    # Rename the .m/.h files themselves so the filenames match the class.
+    [
+      [File.join(file_picker_sources, 'FileUtils.m'),
+       File.join(file_picker_sources, 'FPFileUtils.m')],
+      [File.join(file_picker_sources, 'include', 'file_picker', 'FileUtils.h'),
+       File.join(file_picker_sources, 'include', 'file_picker', 'FPFileUtils.h')],
+    ].each do |src, dst|
+      File.rename(src, dst) if File.exist?(src) && !File.exist?(dst)
+    end
+  end
 end

@@ -33,7 +33,14 @@ import 'widgets/recordings_filter_sheet.dart';
 Widget recordingsListPreview() => const RecordingsListScreen();
 
 class RecordingsListScreen extends ConsumerStatefulWidget {
-  const RecordingsListScreen({super.key});
+  const RecordingsListScreen({
+    super.key,
+    this.initialGenreId,
+    this.initialSubcategoryId,
+  });
+
+  final String? initialGenreId;
+  final String? initialSubcategoryId;
 
   @override
   ConsumerState<RecordingsListScreen> createState() =>
@@ -43,19 +50,29 @@ class RecordingsListScreen extends ConsumerStatefulWidget {
 class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
     with WidgetsBindingObserver {
   final _scrollController = ScrollController();
+  final _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _scrollController.addListener(_onScroll);
-    Future.microtask(_refreshAll);
+    final gid = widget.initialGenreId;
+    final sid = widget.initialSubcategoryId;
+    Future.microtask(() {
+      if (!mounted) return;
+      final notifier = ref.read(recordingsListNotifierProvider.notifier);
+      if (gid != null && gid.isNotEmpty) notifier.setGenreFilter(gid);
+      if (sid != null && sid.isNotEmpty) notifier.setSubcategoryFilter(sid);
+      _refreshAll();
+    });
   }
 
   @override
   void dispose() {
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
+    _searchController.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -304,7 +321,59 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
                 ),
 
                 if (isOffline)
-                  const SliverToBoxAdapter(child: StatusBanner.offline()),
+                  SliverToBoxAdapter(child: StatusBanner.offline(l10n)),
+
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                    child: TextField(
+                      controller: _searchController,
+                      onChanged: (value) => ref
+                          .read(recordingsListNotifierProvider.notifier)
+                          .setSearchQuery(value),
+                      textInputAction: TextInputAction.search,
+                      decoration: InputDecoration(
+                        hintText: l10n.recordings_searchHint,
+                        prefixIcon: const Icon(LucideIcons.search, size: 18),
+                        suffixIcon: listState.searchQuery.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(LucideIcons.x, size: 16),
+                                onPressed: () {
+                                  _searchController.clear();
+                                  ref
+                                      .read(
+                                        recordingsListNotifierProvider.notifier,
+                                      )
+                                      .setSearchQuery('');
+                                },
+                              )
+                            : null,
+                        isDense: true,
+                        filled: true,
+                        fillColor: colors.surfaceAlt,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: colors.accent,
+                            width: 1.5,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
 
                 const SliverToBoxAdapter(child: ActiveFilterChips()),
 
