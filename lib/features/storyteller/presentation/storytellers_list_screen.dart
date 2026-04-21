@@ -7,6 +7,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_snack_bar.dart';
 import '../../auth/data/providers/role_provider.dart';
+import '../../../core/auth/auth_notifier.dart';
 import '../../sync/presentation/notifiers/sync_notifier.dart';
 import '../domain/entities/storyteller.dart';
 import 'notifiers/project_storytellers_notifier.dart';
@@ -27,6 +28,14 @@ class _StorytellersListScreenState
   bool get _isManager => ref
       .read(roleNotifierProvider.notifier)
       .canManageProject(widget.projectId);
+
+  String? get _currentUserId => ref.read(authNotifierProvider).currentUser?.id;
+
+  bool _canEdit(Storyteller st) {
+    if (_isManager) return true;
+    final userId = _currentUserId;
+    return userId != null && st.createdByUserId == userId;
+  }
 
   @override
   void initState() {
@@ -76,7 +85,6 @@ class _StorytellersListScreenState
     final l10n = AppLocalizations.of(context);
     final state = ref.watch(projectStorytellersNotifierProvider);
     final isOnline = ref.watch(syncNotifierProvider).isOnline;
-    final canManage = _isManager;
 
     return Scaffold(
       appBar: AppBar(
@@ -92,27 +100,26 @@ class _StorytellersListScreenState
         ),
         title: Text(l10n.storyteller_title),
         actions: [
-          if (canManage)
-            IconButton(
-              tooltip: l10n.storyteller_addNew,
-              onPressed: isOnline
-                  ? () => context.push(
-                      '/project/${widget.projectId}/storytellers/new',
-                    )
-                  : () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            l10n.storyteller_createRequiresConnection,
-                          ),
+          IconButton(
+            tooltip: l10n.storyteller_addNew,
+            onPressed: isOnline
+                ? () => context.push(
+                    '/project/${widget.projectId}/storytellers/new',
+                  )
+                : () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          l10n.storyteller_createRequiresConnection,
                         ),
-                      );
-                    },
-              icon: const Icon(LucideIcons.plus),
-            ),
+                      ),
+                    );
+                  },
+            icon: const Icon(LucideIcons.plus),
+          ),
         ],
       ),
-      body: _buildBody(context, state, l10n, canManage),
+      body: _buildBody(context, state, l10n),
     );
   }
 
@@ -120,7 +127,6 @@ class _StorytellersListScreenState
     BuildContext context,
     dynamic state,
     AppLocalizations l10n,
-    bool canManage,
   ) {
     if (state.isLoading && state.storytellers.isEmpty) {
       return const Center(child: CircularProgressIndicator());
@@ -143,15 +149,16 @@ class _StorytellersListScreenState
         separatorBuilder: (_, _) => const Divider(height: 1),
         itemBuilder: (_, i) {
           final st = state.storytellers[i] as Storyteller;
+          final canEdit = _canEdit(st);
           final tile = StorytellerTile(
             storyteller: st,
-            onTap: canManage
+            onTap: canEdit
                 ? () => context.push(
                     '/project/${widget.projectId}/storytellers/${st.id}/edit',
                   )
                 : null,
           );
-          if (!canManage) return tile;
+          if (!canEdit) return tile;
           return Dismissible(
             key: ValueKey('storyteller-${st.id}'),
             direction: DismissDirection.endToStart,

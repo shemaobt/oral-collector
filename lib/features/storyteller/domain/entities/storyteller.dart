@@ -25,6 +25,7 @@ class Storyteller {
   final String? location;
   final String? dialect;
   final bool externalAcceptanceConfirmed;
+  final String? createdByUserId;
   final DateTime createdAt;
   final DateTime? updatedAt;
 
@@ -37,6 +38,7 @@ class Storyteller {
     this.location,
     this.dialect,
     required this.externalAcceptanceConfirmed,
+    this.createdByUserId,
     required this.createdAt,
     this.updatedAt,
   });
@@ -52,6 +54,7 @@ class Storyteller {
       dialect: json['dialect'] as String?,
       externalAcceptanceConfirmed:
           json['external_acceptance_confirmed'] as bool? ?? false,
+      createdByUserId: json['created_by_user_id'] as String?,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: json['updated_at'] != null
           ? DateTime.parse(json['updated_at'] as String)
@@ -68,6 +71,7 @@ class Storyteller {
     'location': location,
     'dialect': dialect,
     'external_acceptance_confirmed': externalAcceptanceConfirmed,
+    'created_by_user_id': createdByUserId,
     'created_at': createdAt.toIso8601String(),
     'updated_at': updatedAt?.toIso8601String(),
   };
@@ -88,6 +92,7 @@ class Storyteller {
       location: location ?? this.location,
       dialect: dialect ?? this.dialect,
       externalAcceptanceConfirmed: externalAcceptanceConfirmed,
+      createdByUserId: createdByUserId,
       createdAt: createdAt,
       updatedAt: updatedAt,
     );
