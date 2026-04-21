@@ -162,6 +162,15 @@
   "recording_discardTitle": "تجاهل التسجيل؟",
   "recording_discardMessage": "سيتم حذف هذا التسجيل نهائياً.",
   "recording_saved": "تم حفظ التسجيل",
+  "recording_uploading": "جاري رفع التسجيل…",
+  "recording_uploadFailed": "فشل الرفع: {error}",
+  "@recording_uploadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "recording_notFound": "التسجيل غير موجود",
   "recording_unknownGenre": "نوع غير معروف",
   "recording_splitRecording": "تحرير التسجيل",
@@ -180,8 +189,31 @@
   "recording_moveNoPermission": "ليس لديك صلاحية لنقل هذا التسجيل",
   "recording_movedSuccess": "تم نقل التسجيل بنجاح",
   "recording_updateFailed": "فشل في التحديث على الخادم",
+  "recording_exportAudio": "تصدير الصوت",
+  "recording_exportShareFailed": "فشل مشاركة الملف الصوتي",
+  "recording_replaceAudio": "استبدال الصوت",
+  "recording_replaceTitle": "استبدال الصوت؟",
+  "recording_replaceMessage": "سيتم نقل الصوت الحالي إلى سلة المهملات لمدة 24 ساعة واستبداله بالملف الذي تختاره. يمكن استخدام الملفات الصوتية التي لها نفس صيغة الأصل فقط.",
+  "recording_replaceReuploadNotice": "تم رفع هذا التسجيل بالفعل. سيحل الملف الجديد محله على الخادم.",
+  "recording_replaceConfirm": "استبدال",
+  "recording_replaceFormatMismatch": "يجب أن يكون البديل ملفًا من نوع {expected}، ولكن تم تقديم {actual}",
+  "@recording_replaceFormatMismatch": {
+    "placeholders": {
+      "expected": {
+        "type": "String"
+      },
+      "actual": {
+        "type": "String"
+      }
+    }
+  },
+  "recording_replaceInvalidAudio": "تعذر قراءة الملف الصوتي المحدد",
+  "recording_replaceSuccess": "تم استبدال الصوت",
+  "recording_replaceFailed": "فشل استبدال الصوت",
+  "recording_replaceNotAvailableWeb": "استبدال الصوت غير متاح في تطبيق الويب",
   "recordings_title": "التسجيلات",
   "recordings_subtitle": "قصصك المجمّعة",
+  "recordings_searchHint": "ابحث عن التسجيلات...",
   "recordings_importAudio": "استيراد ملف صوتي",
   "recordings_selectProject": "اختر مشروعاً",
   "recordings_selectProjectSubtitle": "اختر مشروعاً لعرض تسجيلاته",
@@ -232,24 +264,47 @@
   "import_fieldRequired": "مطلوب",
   "import_validationBanner": "{count, plural, =1{ملف واحد يفتقد حقول مطلوبة} other{{count} ملفات تفتقد حقول مطلوبة}}",
   "@import_validationBanner": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "import_remove": "إزالة الملف",
   "import_supportedFormats": "الصيغ المدعومة: {formats}. يتم تخطي الملفات غير المدعومة أو غير القابلة للقراءة.",
   "@import_supportedFormats": {
-    "placeholders": { "formats": { "type": "String" } }
+    "placeholders": {
+      "formats": {
+        "type": "String"
+      }
+    }
   },
   "import_rejectedFiles": "{count, plural, =1{تم تخطي ملف واحد غير مدعوم أو غير قابل للقراءة: {names}} other{تم تخطي {count} ملفات غير مدعومة أو غير قابلة للقراءة: {names}}}",
   "@import_rejectedFiles": {
-    "placeholders": { "count": { "type": "int" }, "names": { "type": "String" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "names": {
+        "type": "String"
+      }
+    }
   },
   "import_countFiles": "{count, plural, =1{ملف واحد} other{{count} ملفات}}",
   "@import_countFiles": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "import_importNFiles": "استيراد {count, plural, =1{ملف واحد} other{{count} ملفات}}",
   "@import_importNFiles": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "import_emptyFile": "ملف فارغ",
   "import_compressWav": "ضغط WAV إلى M4A",
@@ -540,10 +595,24 @@
   "quickRecord_classifyLater": "تصنيف لاحقاً",
   "classify_title": "تصنيف التسجيل",
   "classify_action": "تصنيف",
-  "classify_banner": "يحتاج هذا التسجيل إلى التصنيف قبل أن يتم رفعه.",
+  "classify_banner": "هذا التسجيل غير مصنف. انقر على تصنيف لإضافة نوع وسجل.",
   "classify_success": "تم تصنيف التسجيل",
   "classify_register": "السجل",
   "classify_selectRegister": "اختر السجل",
+  "classify_predominantHeader": "التصنيف السائد",
+  "classify_addAlternativeTitle": "غامض؟ أضف تصنيفًا بديلاً",
+  "classify_secondaryNote": "فقط التصنيف السائد يُحتسب في إجماليات زمن النوع.",
+  "classify_secondaryGenre": "النوع الثانوي",
+  "classify_secondarySubcategory": "الفئة الفرعية الثانوية",
+  "classify_secondaryRegister": "السجل الثانوي",
+  "classify_secondarySameAsPrimary": "يجب أن يختلف النوع الثانوي عن النوع السائد.",
+  "classify_clearAlternative": "مسح البديل",
+  "recording_alsoClassifiedAs": "صُنّف أيضًا كـ",
+  "recording_alsoClassifiedAsTooltip": "يوجد تصنيف بديل",
+  "recording_addAlternative": "إضافة تصنيف بديل",
+  "recording_removeSecondary": "إزالة التصنيف البديل",
+  "recording_secondaryRemoved": "تمت إزالة التصنيف البديل",
+  "recording_secondaryUpdated": "تم تحديث التصنيف البديل",
   "recording_unclassified": "غير مصنف",
   "recording_inputSource": "الإدخال",
   "recording_selectMicrophone": "اختر الميكروفون",
@@ -555,20 +624,44 @@
   "recording_noDevicesFound": "لم يتم العثور على ميكروفونات",
   "recording_storageLowWarnTitle": "مساحة تخزين منخفضة",
   "recording_storageLowWarnBody": "يتوفر حوالي {minutes} دقيقة من التسجيل. هل تريد المتابعة؟",
-  "@recording_storageLowWarnBody": { "placeholders": { "minutes": { "type": "int" } } },
+  "@recording_storageLowWarnBody": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "recording_storageRefuseTitle": "مساحة التخزين غير كافية",
   "recording_storageRefuseBody": "حرر مساحة على هذا الجهاز قبل التسجيل.",
-  "recording_storageCriticalBanner": "التخزين حرج \u2014 يتبقى حوالي {minutes} دقيقة. فكر في التوقف قريبًا.",
-  "@recording_storageCriticalBanner": { "placeholders": { "minutes": { "type": "int" } } },
+  "recording_storageCriticalBanner": "التخزين حرج — يتبقى حوالي {minutes} دقيقة. فكر في التوقف قريبًا.",
+  "@recording_storageCriticalBanner": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "recording_storageForceStopped": "تم إيقاف التسجيل بسبب نفاد مساحة التخزين. تم حفظ تقدمك.",
   "recording_savedAt": "تم الحفظ في {time}",
-  "@recording_savedAt": { "placeholders": { "time": { "type": "String" } } },
+  "@recording_savedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "recording_continuedInBackground": "استمر التسجيل في الخلفية",
   "recording_continue": "متابعة",
   "recording_cancel": "إلغاء",
   "recording_recoverTitle": "هل تريد استعادة التسجيل المتوقف؟",
   "recording_recoverBody": "وجدنا حوالي {minutes} دقيقة من الصوت من جلسة سابقة.",
-  "@recording_recoverBody": { "placeholders": { "minutes": { "type": "int" } } },
+  "@recording_recoverBody": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "recording_recoverButton": "استعادة",
   "recording_recoverDiscard": "تجاهل",
   "recording_recoverFailedLastSegment": "تعذرت قراءة بعض الصوت قرب النهاية وتم تخطيه.",
@@ -577,8 +670,17 @@
   "profile_defaultMicrophone": "الميكروفون الافتراضي",
   "profile_systemDefault": "الافتراضي للنظام",
   "settings_deviceStorageTitle": "مساحة تخزين الجهاز",
-  "settings_deviceStorageSubtitle": "المستخدم {used} \u00b7 المتاح {free}",
-  "@settings_deviceStorageSubtitle": { "placeholders": { "used": { "type": "String" }, "free": { "type": "String" } } },
+  "settings_deviceStorageSubtitle": "المستخدم {used} · المتاح {free}",
+  "@settings_deviceStorageSubtitle": {
+    "placeholders": {
+      "used": {
+        "type": "String"
+      },
+      "free": {
+        "type": "String"
+      }
+    }
+  },
   "fab_quickRecord": "سريع",
   "fab_normalRecord": "تسجيل",
   "error_network": "تعذر الوصول إلى الخادم. يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى.",
@@ -597,37 +699,37 @@
   "error_notAuthenticated": "لم تقم بتسجيل الدخول. يرجى تسجيل الدخول والمحاولة مرة أخرى.",
   "error_noPermission": "ليس لديك صلاحية للقيام بهذا الإجراء.",
   "error_generic": "حدث خطأ ما. يرجى المحاولة مرة أخرى لاحقاً.",
-  "storyteller_title": "Storytellers",
-  "storyteller_singular": "Storyteller",
-  "storyteller_manageAction": "Manage storytellers",
-  "storyteller_addNew": "Add storyteller",
-  "storyteller_createTitle": "New storyteller",
-  "storyteller_editTitle": "Edit storyteller",
-  "storyteller_speakerName": "Speaker name",
-  "storyteller_sex": "Sex",
-  "storyteller_sexMale": "Male",
-  "storyteller_sexFemale": "Female",
-  "storyteller_age": "Age",
-  "storyteller_location": "Location",
-  "storyteller_dialect": "Dialect",
-  "storyteller_externalAcceptanceTitle": "External acceptance validation",
-  "storyteller_externalAcceptanceDescription": "I confirm that external acceptance validation has been performed for this speaker.",
-  "storyteller_externalAcceptanceInfo": "Before registering a storyteller, the project manager must obtain the speaker's consent outside the app (for example, through a signed release form or recorded verbal agreement). This checkbox records that this step was completed.",
-  "storyteller_createRequiresConnection": "Creating a storyteller requires an internet connection.",
-  "storyteller_deleteTitle": "Delete storyteller?",
-  "storyteller_deleteMessage": "Recordings previously assigned to this storyteller will show as unassigned.",
-  "storyteller_noneAssigned": "No storyteller assigned",
-  "storyteller_unknown": "Unknown storyteller",
-  "storyteller_selectHint": "Pick a storyteller",
-  "storyteller_required": "A storyteller is required",
-  "storyteller_searchPlaceholder": "Search storytellers",
-  "storyteller_empty": "No storytellers yet",
-  "storyteller_emptyDescription": "Create a storyteller for the project to assign to recordings.",
-  "storyteller_offlineNoCache": "Storytellers haven't been synced yet. Connect to the internet to load them.",
-  "storyteller_assign": "Assign",
-  "storyteller_reassign": "Reassign",
-  "storyteller_ageValidator": "Enter an age between 1 and 120",
-  "storyteller_ageYearsShort": "{age}y",
+  "storyteller_title": "الرواة",
+  "storyteller_singular": "راوٍ",
+  "storyteller_manageAction": "إدارة الرواة",
+  "storyteller_addNew": "إضافة راوٍ",
+  "storyteller_createTitle": "راوٍ جديد",
+  "storyteller_editTitle": "تعديل الراوي",
+  "storyteller_speakerName": "اسم المتحدث",
+  "storyteller_sex": "الجنس",
+  "storyteller_sexMale": "ذكر",
+  "storyteller_sexFemale": "أنثى",
+  "storyteller_age": "العمر",
+  "storyteller_location": "الموقع",
+  "storyteller_dialect": "اللهجة",
+  "storyteller_externalAcceptanceTitle": "تأكيد الموافقة الخارجية",
+  "storyteller_externalAcceptanceDescription": "أؤكد أنه تم إجراء التحقق من الموافقة الخارجية لهذا المتحدث.",
+  "storyteller_externalAcceptanceInfo": "قبل تسجيل راوٍ، يجب على مدير المشروع الحصول على موافقة المتحدث خارج التطبيق (على سبيل المثال، من خلال نموذج موقّع أو اتفاقية شفهية مسجلة). يسجل هذا المربع أن هذه الخطوة قد اكتملت.",
+  "storyteller_createRequiresConnection": "يتطلب إنشاء راوٍ اتصالًا بالإنترنت.",
+  "storyteller_deleteTitle": "حذف الراوي؟",
+  "storyteller_deleteMessage": "ستظهر التسجيلات التي تم تعيينها سابقًا لهذا الراوي على أنها غير مخصصة.",
+  "storyteller_noneAssigned": "لم يُعيَّن راوٍ",
+  "storyteller_unknown": "راوٍ غير معروف",
+  "storyteller_selectHint": "اختر راويًا",
+  "storyteller_required": "الراوي مطلوب",
+  "storyteller_searchPlaceholder": "ابحث عن الرواة",
+  "storyteller_empty": "لا يوجد رواة بعد",
+  "storyteller_emptyDescription": "أنشئ راويًا للمشروع لتعيينه إلى التسجيلات.",
+  "storyteller_offlineNoCache": "لم تتم مزامنة الرواة بعد. اتصل بالإنترنت لتحميلهم.",
+  "storyteller_assign": "تعيين",
+  "storyteller_reassign": "إعادة التعيين",
+  "storyteller_ageValidator": "أدخل عمرًا بين 1 و 120",
+  "storyteller_ageYearsShort": "{age} سنة",
   "@storyteller_ageYearsShort": {
     "placeholders": {
       "age": {
@@ -635,16 +737,16 @@
       }
     }
   },
-  "filters_buttonLabel": "Filters",
-  "filters_sheetTitle": "Filter recordings",
-  "filters_sectionStatus": "Upload status",
-  "filters_sectionGenre": "Genre",
-  "filters_sectionStoryteller": "Storyteller",
-  "filters_sectionUser": "Recorded by",
-  "filter_apply": "Apply",
-  "filter_reset": "Reset",
-  "filter_clearAll": "Clear all",
-  "filter_countActive": "{count, plural, one{1 filter} other{{count} filters}}",
+  "filters_buttonLabel": "عوامل التصفية",
+  "filters_sheetTitle": "تصفية التسجيلات",
+  "filters_sectionStatus": "حالة الرفع",
+  "filters_sectionGenre": "النوع",
+  "filters_sectionStoryteller": "الراوي",
+  "filters_sectionUser": "مسجل بواسطة",
+  "filter_apply": "تطبيق",
+  "filter_reset": "إعادة تعيين",
+  "filter_clearAll": "مسح الكل",
+  "filter_countActive": "{count, plural, one{مرشح واحد} other{{count} مرشحات}}",
   "@filter_countActive": {
     "placeholders": {
       "count": {
@@ -653,11 +755,75 @@
       }
     }
   },
-  "filter_userAll": "Any user",
-  "filter_storytellerAll": "Any storyteller",
-  "filter_genreAll": "Any genre",
-  "detail_recordedBy": "Recorded by",
-  "detail_storyteller": "Storyteller",
-  "recording_unknownUser": "Unknown user",
-  "common_close": "Close"
+  "filter_userAll": "أي مستخدم",
+  "filter_storytellerAll": "أي راوٍ",
+  "filter_genreAll": "أي نوع",
+  "detail_recordedBy": "سُجل بواسطة",
+  "detail_storyteller": "الراوي",
+  "recording_unknownUser": "مستخدم غير معروف",
+  "common_close": "إغلاق",
+  "common_ok": "موافق",
+  "invite_title": "دعوة عضو",
+  "invite_searchLabel": "ابحث بالاسم أو البريد الإلكتروني",
+  "invite_searchHint": "اكتب حرفين على الأقل",
+  "invite_noUsersFound": "لم يتم العثور على مستخدمين",
+  "invite_changeUser": "تغيير المستخدم",
+  "invite_roleLabel": "الدور *",
+  "invite_roleMember": "عضو",
+  "invite_roleManager": "مدير",
+  "invite_sendInvite": "إرسال الدعوة",
+  "invite_sendFailed": "فشل إرسال الدعوة",
+  "recording_recoveryInProgress": "جاري الاسترداد…",
+  "recording_recoveryFailed": "فشل الاسترداد",
+  "recording_recoverySessionNotFound": "لم يتم العثور على الجلسة",
+  "recording_recoveryNoAudio": "لا يوجد صوت للاسترداد",
+  "recording_recoveryConcatFailed": "فشل دمج المقاطع",
+  "a11y_startRecording": "بدء التسجيل",
+  "a11y_createProject": "إنشاء مشروع",
+  "a11y_playAudio": "تشغيل الصوت",
+  "a11y_pauseAudio": "إيقاف الصوت مؤقتًا",
+  "a11y_tabLabel": "علامة تبويب {label}",
+  "profile_adminBadge": "مشرف",
+  "profile_setYourName": "اكتب اسمك",
+  "profile_inviteAcceptFailed": "فشل قبول الدعوة",
+  "profile_inviteDeclineFailed": "فشل رفض الدعوة",
+  "profile_typeDeleteWord": "حذف",
+  "trim_splitError": "خطأ في التقسيم: {error}",
+  "error_serverFailure": "تعذر على الخادم إكمال الطلب. يرجى المحاولة مرة أخرى.",
+  "error_importNoBytes": "هذا الملف فارغ ولا يمكن استيراده.",
+  "error_ffmpegProcessingFailed": "فشلت معالجة الصوت.",
+  "error_downloadFailed": "فشل التنزيل.",
+  "@a11y_tabLabel": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "@trim_splitError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "a11y_splitWaveform": "مخطط الموجة للتقسيم. انقر لإضافة علامات التقسيم. اسحب لإعادة الترتيب. استخدم أصابعك للتكبير. اضغط مطولاً للإزالة.",
+  "projectSettings_offlineTitle": "أنت غير متصل",
+  "projectSettings_offlineDescription": "لا يمكن تحميل تفاصيل المشروع بدون اتصال بالإنترنت. ستُحمَّل تلقائيًا عند إعادة الاتصال.",
+  "recording_noAudioAvailable": "لا يوجد صوت متاح",
+  "recording_noPendingUploads": "لا توجد عمليات رفع معلقة",
+  "recording_uploadQueue": "قائمة انتظار الرفع",
+  "recording_previewSelection": "معاينة التحديد",
+  "recording_stopPreview": "إيقاف المعاينة",
+  "recording_audioLoadFailed": "فشل تحميل الصوت",
+  "status_offlineSubtitle": "تتطلب بعض الميزات مثل المزامنة وتحميل البيانات اتصالاً بالإنترنت.",
+  "status_noProject": "لم يتم تعيين مشروع",
+  "status_noProjectSubtitle": "لم تتم إضافتك إلى أي مشروع بعد. يرجى التواصل مع مسؤولك وانتظار التعيين.",
+  "a11y_recordingInProgress": "التسجيل قيد التقدم، انقر للإيقاف المؤقت",
+  "a11y_recordingPaused": "التسجيل متوقف مؤقتًا، انقر للاستئناف",
+  "recording_audioFileNotFound": "لم يتم العثور على الملف الصوتي",
+  "recording_partOf": "الجزء {part} من {total}",
+  "recording_splitFrom": "مقسم من {sourceId}",
+  "trim_segmentRemoved": "المقطع {index} — تمت إزالته",
+  "trim_segmentOfTotal": "المقطع {index} من {total}"
 }

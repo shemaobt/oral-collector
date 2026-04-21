@@ -186,6 +186,13 @@
   "recording_discardTitle": "Discard Recording?",
   "recording_discardMessage": "This recording will be permanently deleted.",
   "recording_saved": "Recording saved",
+  "recording_uploading": "Uploading recording…",
+  "recording_uploadFailed": "Upload failed: {error}",
+  "@recording_uploadFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
   "recording_notFound": "Recording not found",
   "recording_unknownGenre": "Unknown genre",
   "recording_splitRecording": "Edit Recording",
@@ -211,8 +218,27 @@
   "recording_moveNoPermission": "You do not have permission to move this recording",
   "recording_movedSuccess": "Recording moved successfully",
   "recording_updateFailed": "Failed to update on server",
+  "recording_exportAudio": "Export audio",
+  "recording_exportShareFailed": "Failed to share audio file",
+  "recording_replaceAudio": "Replace audio",
+  "recording_replaceTitle": "Replace audio?",
+  "recording_replaceMessage": "The current audio will be moved to a 24-hour trash and swapped for the file you pick. Only audio files with the same format as the original can be used.",
+  "recording_replaceReuploadNotice": "This recording has already been uploaded. The new file will overwrite it on the server.",
+  "recording_replaceConfirm": "Replace",
+  "recording_replaceFormatMismatch": "Replacement must be a {expected} file, but got {actual}",
+  "@recording_replaceFormatMismatch": {
+    "placeholders": {
+      "expected": { "type": "String" },
+      "actual": { "type": "String" }
+    }
+  },
+  "recording_replaceInvalidAudio": "Could not read the selected audio file",
+  "recording_replaceSuccess": "Audio replaced",
+  "recording_replaceFailed": "Failed to replace audio",
+  "recording_replaceNotAvailableWeb": "Replacing audio is not available on the web app",
   "recordings_title": "Recordings",
   "recordings_subtitle": "Your collected stories",
+  "recordings_searchHint": "Search recordings...",
   "recordings_importAudio": "Import audio file",
   "recordings_selectProject": "Select a project",
   "recordings_selectProjectSubtitle": "Choose a project to view its recordings",
@@ -785,10 +811,24 @@
   "quickRecord_classifyLater": "Classify later",
   "classify_title": "Classify Recording",
   "classify_action": "Classify",
-  "classify_banner": "This recording needs classification before it can be uploaded.",
+  "classify_banner": "This recording is unclassified. Tap Classify to add a genre and register.",
   "classify_success": "Recording classified",
   "classify_register": "Register",
   "classify_selectRegister": "Select register",
+  "classify_predominantHeader": "PREDOMINANT CLASSIFICATION",
+  "classify_addAlternativeTitle": "Ambiguous? Add alternative classification",
+  "classify_secondaryNote": "Only the predominant classification counts toward genre time totals.",
+  "classify_secondaryGenre": "Secondary genre",
+  "classify_secondarySubcategory": "Secondary subcategory",
+  "classify_secondaryRegister": "Secondary register",
+  "classify_secondarySameAsPrimary": "Secondary genre must differ from the predominant genre.",
+  "classify_clearAlternative": "Clear alternative",
+  "recording_alsoClassifiedAs": "Also classified as",
+  "recording_alsoClassifiedAsTooltip": "Has alternative classification",
+  "recording_addAlternative": "Add alternative classification",
+  "recording_removeSecondary": "Remove alternative classification",
+  "recording_secondaryRemoved": "Alternative classification removed",
+  "recording_secondaryUpdated": "Alternative classification updated",
   "recording_unclassified": "Unclassified",
   "recording_inputSource": "Input",
   "recording_selectMicrophone": "Select microphone",
@@ -925,5 +965,87 @@
   "filter_genreAll": "Any genre",
   "detail_recordedBy": "Recorded by",
   "detail_storyteller": "Storyteller",
-  "recording_unknownUser": "Unknown user"
+  "recording_unknownUser": "Unknown user",
+  "common_ok": "OK",
+  "invite_title": "Invite Member",
+  "invite_searchLabel": "Search by name or email",
+  "invite_searchHint": "Type at least 2 characters",
+  "invite_noUsersFound": "No users found",
+  "invite_changeUser": "Change user",
+  "invite_roleLabel": "Role *",
+  "invite_roleMember": "Member",
+  "invite_roleManager": "Manager",
+  "invite_sendInvite": "Send Invite",
+  "invite_sendFailed": "Failed to send invite",
+  "recording_recoveryInProgress": "Recovering…",
+  "recording_recoveryFailed": "Recovery failed",
+  "recording_recoverySessionNotFound": "Session not found",
+  "recording_recoveryNoAudio": "No audio to recover",
+  "recording_recoveryConcatFailed": "Concatenation failed",
+  "a11y_startRecording": "Start recording",
+  "a11y_createProject": "Create project",
+  "a11y_playAudio": "Play audio",
+  "a11y_pauseAudio": "Pause audio",
+  "a11y_splitWaveform": "Split waveform. Tap to add split markers. Drag to reposition. Pinch to zoom. Long-press to remove.",
+  "a11y_tabLabel": "{label} tab",
+  "@a11y_tabLabel": {
+    "placeholders": {
+      "label": { "type": "String" }
+    }
+  },
+  "profile_adminBadge": "Admin",
+  "profile_setYourName": "Set your name",
+  "profile_inviteAcceptFailed": "Failed to accept invite",
+  "profile_inviteDeclineFailed": "Failed to decline invite",
+  "profile_typeDeleteWord": "DELETE",
+  "trim_splitError": "Error splitting: {error}",
+  "@trim_splitError": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "error_serverFailure": "The server could not complete the request. Please try again.",
+  "error_importNoBytes": "This file is empty and cannot be imported.",
+  "error_ffmpegProcessingFailed": "Audio processing failed.",
+  "error_downloadFailed": "Download failed.",
+  "projectSettings_offlineTitle": "You are offline",
+  "projectSettings_offlineDescription": "Project details can't be loaded without an internet connection. They will load automatically when you reconnect.",
+  "recording_noAudioAvailable": "No audio available",
+  "recording_noPendingUploads": "No pending uploads",
+  "recording_uploadQueue": "Upload Queue",
+  "recording_previewSelection": "Preview Selection",
+  "recording_stopPreview": "Stop Preview",
+  "recording_audioLoadFailed": "Failed to load audio",
+  "status_offlineSubtitle": "Some features like syncing and loading data require an internet connection.",
+  "status_noProject": "No project assigned",
+  "status_noProjectSubtitle": "You haven't been added to any project yet. Please contact your administrator and wait to be assigned.",
+  "a11y_recordingInProgress": "Recording in progress, tap to pause",
+  "a11y_recordingPaused": "Recording paused, tap to resume",
+  "recording_audioFileNotFound": "Audio file not found",
+  "recording_partOf": "Part {part} of {total}",
+  "@recording_partOf": {
+    "placeholders": {
+      "part": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "recording_splitFrom": "Split from {sourceId}",
+  "@recording_splitFrom": {
+    "placeholders": {
+      "sourceId": { "type": "String" }
+    }
+  },
+  "trim_segmentRemoved": "Segment {index} — removed",
+  "@trim_segmentRemoved": {
+    "placeholders": {
+      "index": { "type": "int" }
+    }
+  },
+  "trim_segmentOfTotal": "Segment {index} of {total}",
+  "@trim_segmentOfTotal": {
+    "placeholders": {
+      "index": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  }
 }

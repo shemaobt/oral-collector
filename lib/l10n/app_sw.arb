@@ -162,6 +162,15 @@
   "recording_discardTitle": "Tupa Rekodi?",
   "recording_discardMessage": "Rekodi hii itafutwa kabisa.",
   "recording_saved": "Rekodi imehifadhiwa",
+  "recording_uploading": "Inapakia rekodi…",
+  "recording_uploadFailed": "Kupakia kumeshindikana: {error}",
+  "@recording_uploadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "recording_notFound": "Rekodi haikupatikana",
   "recording_unknownGenre": "Aina isiyojulikana",
   "recording_splitRecording": "Hariri Rekodi",
@@ -180,8 +189,31 @@
   "recording_moveNoPermission": "Huna ruhusa ya kuhamisha rekodi hii",
   "recording_movedSuccess": "Rekodi imehamishwa",
   "recording_updateFailed": "Imeshindwa kusasisha kwenye seva",
+  "recording_exportAudio": "Hamisha sauti",
+  "recording_exportShareFailed": "Imeshindwa kushiriki faili ya sauti",
+  "recording_replaceAudio": "Badilisha sauti",
+  "recording_replaceTitle": "Badilisha sauti?",
+  "recording_replaceMessage": "Sauti ya sasa itahamishiwa kwenye pipa la saa 24 na kubadilishwa na faili uliyochagua. Faili za sauti zenye umbizo sawa na asili pekee zinaweza kutumika.",
+  "recording_replaceReuploadNotice": "Rekodi hii tayari imepakiwa. Faili mpya itaibadilisha kwenye seva.",
+  "recording_replaceConfirm": "Badilisha",
+  "recording_replaceFormatMismatch": "Faili ya kubadilishia lazima iwe ya {expected}, lakini ni {actual}",
+  "@recording_replaceFormatMismatch": {
+    "placeholders": {
+      "expected": {
+        "type": "String"
+      },
+      "actual": {
+        "type": "String"
+      }
+    }
+  },
+  "recording_replaceInvalidAudio": "Haikuweza kusoma faili ya sauti uliyochagua",
+  "recording_replaceSuccess": "Sauti imebadilishwa",
+  "recording_replaceFailed": "Imeshindwa kubadilisha sauti",
+  "recording_replaceNotAvailableWeb": "Kubadilisha sauti hakupatikani kwenye programu ya wavuti",
   "recordings_title": "Rekodi",
   "recordings_subtitle": "Hadithi zako zilizokusanywa",
+  "recordings_searchHint": "Tafuta rekodi...",
   "recordings_importAudio": "Ingiza faili ya sauti",
   "recordings_selectProject": "Chagua mradi",
   "recordings_selectProjectSubtitle": "Chagua mradi ili kuona rekodi zake",
@@ -232,24 +264,47 @@
   "import_fieldRequired": "Inahitajika",
   "import_validationBanner": "{count, plural, =1{Faili 1 haina sehemu zinazohitajika} other{Faili {count} hazina sehemu zinazohitajika}}",
   "@import_validationBanner": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "import_remove": "Ondoa faili",
   "import_supportedFormats": "Miundo inayotumika: {formats}. Faili zisizotumika au zisizosomeka zinarukwa.",
   "@import_supportedFormats": {
-    "placeholders": { "formats": { "type": "String" } }
+    "placeholders": {
+      "formats": {
+        "type": "String"
+      }
+    }
   },
   "import_rejectedFiles": "{count, plural, =1{Iliruka faili 1 isiyotumika au isiyosomeka: {names}} other{Ziliruka faili {count} zisizotumika au zisizosomeka: {names}}}",
   "@import_rejectedFiles": {
-    "placeholders": { "count": { "type": "int" }, "names": { "type": "String" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "names": {
+        "type": "String"
+      }
+    }
   },
   "import_countFiles": "{count, plural, =1{Faili 1} other{Faili {count}}}",
   "@import_countFiles": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "import_importNFiles": "Ingiza {count, plural, =1{faili 1} other{faili {count}}}",
   "@import_importNFiles": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "import_emptyFile": "faili tupu",
   "import_compressWav": "Bana WAV kuwa M4A",
@@ -540,10 +595,24 @@
   "quickRecord_classifyLater": "Ainisha baadaye",
   "classify_title": "Ainisha Rekodi",
   "classify_action": "Ainisha",
-  "classify_banner": "Rekodi hii inahitaji kuainishwa kabla ya kupakiwa.",
+  "classify_banner": "Rekodi hii haijaainishwa. Gusa Ainisha ili kuongeza aina na rejista.",
   "classify_success": "Rekodi imeainishwa",
   "classify_register": "Rejista",
   "classify_selectRegister": "Chagua rejista",
+  "classify_predominantHeader": "AINISHO KUU",
+  "classify_addAlternativeTitle": "Si wazi? Ongeza ainisho mbadala",
+  "classify_secondaryNote": "Ni ainisho kuu pekee inayohesabiwa katika jumla ya muda wa aina.",
+  "classify_secondaryGenre": "Aina ya pili",
+  "classify_secondarySubcategory": "Kitengo kidogo cha pili",
+  "classify_secondaryRegister": "Rejista ya pili",
+  "classify_secondarySameAsPrimary": "Aina ya pili lazima iwe tofauti na aina kuu.",
+  "classify_clearAlternative": "Futa mbadala",
+  "recording_alsoClassifiedAs": "Pia imeainishwa kama",
+  "recording_alsoClassifiedAsTooltip": "Ina ainisho mbadala",
+  "recording_addAlternative": "Ongeza ainisho mbadala",
+  "recording_removeSecondary": "Ondoa ainisho mbadala",
+  "recording_secondaryRemoved": "Ainisho mbadala imeondolewa",
+  "recording_secondaryUpdated": "Ainisho mbadala imesasishwa",
   "recording_unclassified": "Haijainishwa",
   "recording_inputSource": "Ingizo",
   "recording_selectMicrophone": "Chagua maikrofoni",
@@ -551,23 +620,48 @@
   "recording_micPermissionNeeded": "Ruhusu ufikiaji wa maikrofoni ili kuona majina ya vifaa",
   "recording_micPermissionButton": "Toa ruhusa",
   "recording_micPermissionDenied": "Ruhusa ya maikrofoni imekataliwa. Iwashe katika mipangilio ya kivinjari au mfumo.",
+  "recording_micPermissionTitle": "Ufikiaji wa maikrofoni unahitajika",
   "recording_noDevicesFound": "Hakuna maikrofoni iliyopatikana",
   "recording_storageLowWarnTitle": "Hifadhi imepungua",
   "recording_storageLowWarnBody": "Takriban dakika {minutes} za kurekodi zinapatikana. Endelea?",
-  "@recording_storageLowWarnBody": { "placeholders": { "minutes": { "type": "int" } } },
+  "@recording_storageLowWarnBody": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "recording_storageRefuseTitle": "Hifadhi haitoshi",
   "recording_storageRefuseBody": "Toa nafasi kwenye kifaa hiki kabla ya kurekodi.",
-  "recording_storageCriticalBanner": "Hifadhi muhimu \u2014 takriban dakika {minutes} zimebaki. Fikiria kusimamisha hivi karibuni.",
-  "@recording_storageCriticalBanner": { "placeholders": { "minutes": { "type": "int" } } },
+  "recording_storageCriticalBanner": "Hifadhi muhimu — takriban dakika {minutes} zimebaki. Fikiria kusimamisha hivi karibuni.",
+  "@recording_storageCriticalBanner": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "recording_storageForceStopped": "Kurekodi kumesimamishwa kwa sababu ya hifadhi. Maendeleo yako yamehifadhiwa.",
   "recording_savedAt": "Imehifadhiwa saa {time}",
-  "@recording_savedAt": { "placeholders": { "time": { "type": "String" } } },
+  "@recording_savedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "recording_continuedInBackground": "Kurekodi kuliendelea nyuma",
   "recording_continue": "Endelea",
   "recording_cancel": "Ghairi",
   "recording_recoverTitle": "Rejesha kurekodi kulikoingiliwa?",
   "recording_recoverBody": "Tulipata takriban dakika {minutes} za sauti kutoka kipindi cha awali.",
-  "@recording_recoverBody": { "placeholders": { "minutes": { "type": "int" } } },
+  "@recording_recoverBody": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "recording_recoverButton": "Rejesha",
   "recording_recoverDiscard": "Tupa",
   "recording_recoverFailedLastSegment": "Sauti fulani karibu na mwisho haikuweza kusomwa na ikarukwa.",
@@ -576,8 +670,17 @@
   "profile_defaultMicrophone": "Maikrofoni chaguomsingi",
   "profile_systemDefault": "Chaguomsingi cha mfumo",
   "settings_deviceStorageTitle": "Hifadhi ya kifaa",
-  "settings_deviceStorageSubtitle": "Imetumika {used} \u00b7 Ipo {free}",
-  "@settings_deviceStorageSubtitle": { "placeholders": { "used": { "type": "String" }, "free": { "type": "String" } } },
+  "settings_deviceStorageSubtitle": "Imetumika {used} · Ipo {free}",
+  "@settings_deviceStorageSubtitle": {
+    "placeholders": {
+      "used": {
+        "type": "String"
+      },
+      "free": {
+        "type": "String"
+      }
+    }
+  },
   "fab_quickRecord": "Haraka",
   "fab_normalRecord": "Rekodi",
   "error_network": "Haiwezi kufikia seva. Tafadhali angalia muunganisho wako wa intaneti na ujaribu tena.",
@@ -596,37 +699,37 @@
   "error_notAuthenticated": "Hujaingia. Tafadhali ingia na ujaribu tena.",
   "error_noPermission": "Huna ruhusa ya kufanya kitendo hiki.",
   "error_generic": "Kuna tatizo limetokea. Tafadhali jaribu tena baadaye.",
-  "storyteller_title": "Storytellers",
-  "storyteller_singular": "Storyteller",
-  "storyteller_manageAction": "Manage storytellers",
-  "storyteller_addNew": "Add storyteller",
-  "storyteller_createTitle": "New storyteller",
-  "storyteller_editTitle": "Edit storyteller",
-  "storyteller_speakerName": "Speaker name",
-  "storyteller_sex": "Sex",
-  "storyteller_sexMale": "Male",
-  "storyteller_sexFemale": "Female",
-  "storyteller_age": "Age",
-  "storyteller_location": "Location",
-  "storyteller_dialect": "Dialect",
-  "storyteller_externalAcceptanceTitle": "External acceptance validation",
-  "storyteller_externalAcceptanceDescription": "I confirm that external acceptance validation has been performed for this speaker.",
-  "storyteller_externalAcceptanceInfo": "Before registering a storyteller, the project manager must obtain the speaker's consent outside the app (for example, through a signed release form or recorded verbal agreement). This checkbox records that this step was completed.",
-  "storyteller_createRequiresConnection": "Creating a storyteller requires an internet connection.",
-  "storyteller_deleteTitle": "Delete storyteller?",
-  "storyteller_deleteMessage": "Recordings previously assigned to this storyteller will show as unassigned.",
-  "storyteller_noneAssigned": "No storyteller assigned",
-  "storyteller_unknown": "Unknown storyteller",
-  "storyteller_selectHint": "Pick a storyteller",
-  "storyteller_required": "A storyteller is required",
-  "storyteller_searchPlaceholder": "Search storytellers",
-  "storyteller_empty": "No storytellers yet",
-  "storyteller_emptyDescription": "Create a storyteller for the project to assign to recordings.",
-  "storyteller_offlineNoCache": "Storytellers haven't been synced yet. Connect to the internet to load them.",
-  "storyteller_assign": "Assign",
-  "storyteller_reassign": "Reassign",
-  "storyteller_ageValidator": "Enter an age between 1 and 120",
-  "storyteller_ageYearsShort": "{age}y",
+  "storyteller_title": "Wasimulizi",
+  "storyteller_singular": "Msimulizi",
+  "storyteller_manageAction": "Simamia wasimulizi",
+  "storyteller_addNew": "Ongeza msimulizi",
+  "storyteller_createTitle": "Msimulizi mpya",
+  "storyteller_editTitle": "Hariri msimulizi",
+  "storyteller_speakerName": "Jina la msemaji",
+  "storyteller_sex": "Jinsia",
+  "storyteller_sexMale": "Mwanaume",
+  "storyteller_sexFemale": "Mwanamke",
+  "storyteller_age": "Umri",
+  "storyteller_location": "Mahali",
+  "storyteller_dialect": "Lahaja",
+  "storyteller_externalAcceptanceTitle": "Uthibitisho wa kukubaliwa kwa nje",
+  "storyteller_externalAcceptanceDescription": "Ninathibitisha kuwa uthibitisho wa kukubaliwa kwa nje umefanyika kwa msemaji huyu.",
+  "storyteller_externalAcceptanceInfo": "Kabla ya kusajili msimulizi, meneja wa mradi lazima apate idhini ya msemaji nje ya programu (kwa mfano, kupitia fomu iliyosainiwa au makubaliano ya mdomo yaliyorekodiwa). Kisanduku hiki kinarekodi kuwa hatua hiyo imekamilika.",
+  "storyteller_createRequiresConnection": "Kuunda msimulizi kunahitaji muunganisho wa intaneti.",
+  "storyteller_deleteTitle": "Futa msimulizi?",
+  "storyteller_deleteMessage": "Rekodi zilizopangiwa msimulizi huyu hapo awali zitaonekana kama hazijapangwa.",
+  "storyteller_noneAssigned": "Hakuna msimulizi aliyepangwa",
+  "storyteller_unknown": "Msimulizi asiyejulikana",
+  "storyteller_selectHint": "Chagua msimulizi",
+  "storyteller_required": "Msimulizi anahitajika",
+  "storyteller_searchPlaceholder": "Tafuta wasimulizi",
+  "storyteller_empty": "Hakuna wasimulizi bado",
+  "storyteller_emptyDescription": "Unda msimulizi kwa mradi ili kumpangia rekodi.",
+  "storyteller_offlineNoCache": "Wasimulizi hawajasawazishwa bado. Unganisha kwa intaneti ili kuwapakia.",
+  "storyteller_assign": "Mpangie",
+  "storyteller_reassign": "Mpangie upya",
+  "storyteller_ageValidator": "Weka umri kati ya 1 na 120",
+  "storyteller_ageYearsShort": "miaka {age}",
   "@storyteller_ageYearsShort": {
     "placeholders": {
       "age": {
@@ -634,16 +737,16 @@
       }
     }
   },
-  "filters_buttonLabel": "Filters",
-  "filters_sheetTitle": "Filter recordings",
-  "filters_sectionStatus": "Upload status",
-  "filters_sectionGenre": "Genre",
-  "filters_sectionStoryteller": "Storyteller",
-  "filters_sectionUser": "Recorded by",
-  "filter_apply": "Apply",
-  "filter_reset": "Reset",
-  "filter_clearAll": "Clear all",
-  "filter_countActive": "{count, plural, one{1 filter} other{{count} filters}}",
+  "filters_buttonLabel": "Vichujio",
+  "filters_sheetTitle": "Chuja rekodi",
+  "filters_sectionStatus": "Hali ya kupakia",
+  "filters_sectionGenre": "Aina",
+  "filters_sectionStoryteller": "Msimulizi",
+  "filters_sectionUser": "Imerekodiwa na",
+  "filter_apply": "Tumia",
+  "filter_reset": "Weka upya",
+  "filter_clearAll": "Futa zote",
+  "filter_countActive": "{count, plural, one{Kichujio 1} other{Vichujio {count}}}",
   "@filter_countActive": {
     "placeholders": {
       "count": {
@@ -652,11 +755,75 @@
       }
     }
   },
-  "filter_userAll": "Any user",
-  "filter_storytellerAll": "Any storyteller",
-  "filter_genreAll": "Any genre",
-  "detail_recordedBy": "Recorded by",
-  "detail_storyteller": "Storyteller",
-  "recording_unknownUser": "Unknown user",
-  "common_close": "Close"
+  "filter_userAll": "Mtumiaji yeyote",
+  "filter_storytellerAll": "Msimulizi yeyote",
+  "filter_genreAll": "Aina yoyote",
+  "detail_recordedBy": "Imerekodiwa na",
+  "detail_storyteller": "Msimulizi",
+  "recording_unknownUser": "Mtumiaji asiyejulikana",
+  "common_close": "Funga",
+  "common_ok": "Sawa",
+  "invite_title": "Alika mwanachama",
+  "invite_searchLabel": "Tafuta kwa jina au barua pepe",
+  "invite_searchHint": "Andika angalau herufi 2",
+  "invite_noUsersFound": "Hakuna watumiaji waliopatikana",
+  "invite_changeUser": "Badilisha mtumiaji",
+  "invite_roleLabel": "Jukumu *",
+  "invite_roleMember": "Mwanachama",
+  "invite_roleManager": "Meneja",
+  "invite_sendInvite": "Tuma mwaliko",
+  "invite_sendFailed": "Imeshindwa kutuma mwaliko",
+  "recording_recoveryInProgress": "Inarekebisha…",
+  "recording_recoveryFailed": "Urejeshaji umeshindikana",
+  "recording_recoverySessionNotFound": "Kipindi hakipatikani",
+  "recording_recoveryNoAudio": "Hakuna sauti ya kurekebisha",
+  "recording_recoveryConcatFailed": "Imeshindwa kuunganisha",
+  "a11y_startRecording": "Anza kurekodi",
+  "a11y_createProject": "Unda mradi",
+  "a11y_playAudio": "Cheza sauti",
+  "a11y_pauseAudio": "Simamisha sauti",
+  "a11y_tabLabel": "Kichupo cha {label}",
+  "profile_adminBadge": "Msimamizi",
+  "profile_setYourName": "Weka jina lako",
+  "profile_inviteAcceptFailed": "Imeshindwa kukubali mwaliko",
+  "profile_inviteDeclineFailed": "Imeshindwa kukataa mwaliko",
+  "profile_typeDeleteWord": "FUTA",
+  "trim_splitError": "Hitilafu katika kugawanya: {error}",
+  "error_serverFailure": "Seva haikuweza kukamilisha ombi. Tafadhali jaribu tena.",
+  "error_importNoBytes": "Faili hii haina yaliyomo na haiwezi kuagizwa.",
+  "error_ffmpegProcessingFailed": "Usindikaji wa sauti umeshindikana.",
+  "error_downloadFailed": "Upakuaji umeshindikana.",
+  "@a11y_tabLabel": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "@trim_splitError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "a11y_splitWaveform": "Umbo la mawimbi ya kugawanya. Gusa kuweka alama. Buruta kuhamisha. Bana kuzomu. Bonyeza kwa muda ili kuondoa.",
+  "projectSettings_offlineTitle": "Umeunganishwa kwa mtandao",
+  "projectSettings_offlineDescription": "Maelezo ya mradi hayawezi kupakiwa bila muunganisho wa intaneti. Yatapakiwa kiotomatiki utakapounganishwa tena.",
+  "recording_noAudioAvailable": "Hakuna sauti inayopatikana",
+  "recording_noPendingUploads": "Hakuna kupakia kunakosubiri",
+  "recording_uploadQueue": "Foleni ya kupakia",
+  "recording_previewSelection": "Hakiki uteuzi",
+  "recording_stopPreview": "Simamisha hakiki",
+  "recording_audioLoadFailed": "Imeshindwa kupakia sauti",
+  "status_offlineSubtitle": "Baadhi ya vipengele kama vile usawazishaji na upakiaji data vinahitaji muunganisho wa intaneti.",
+  "status_noProject": "Hakuna mradi uliopangwa",
+  "status_noProjectSubtitle": "Bado haujaongezwa kwenye mradi wowote. Tafadhali wasiliana na msimamizi wako na subiri kupangwa.",
+  "a11y_recordingInProgress": "Rekodi inaendelea, gusa kusitisha",
+  "a11y_recordingPaused": "Rekodi imesitishwa, gusa kuendelea",
+  "recording_audioFileNotFound": "Faili ya sauti haijapatikana",
+  "recording_partOf": "Sehemu {part} kati ya {total}",
+  "recording_splitFrom": "Imetenganishwa kutoka {sourceId}",
+  "trim_segmentRemoved": "Sehemu {index} — imeondolewa",
+  "trim_segmentOfTotal": "Sehemu {index} kati ya {total}"
 }

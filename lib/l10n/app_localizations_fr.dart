@@ -501,6 +501,14 @@ class AppLocalizationsFr extends AppLocalizations {
   String get recording_saved => 'Enregistrement sauvegardé';
 
   @override
+  String get recording_uploading => 'Envoi de l\'enregistrement…';
+
+  @override
+  String recording_uploadFailed(String error) {
+    return 'Échec de l\'envoi : $error';
+  }
+
+  @override
   String get recording_notFound => 'Enregistrement introuvable';
 
   @override
@@ -565,10 +573,55 @@ class AppLocalizationsFr extends AppLocalizations {
   String get recording_updateFailed => 'Échec de la mise à jour sur le serveur';
 
   @override
+  String get recording_exportAudio => 'Exporter l\'audio';
+
+  @override
+  String get recording_exportShareFailed => 'Échec du partage du fichier audio';
+
+  @override
+  String get recording_replaceAudio => 'Remplacer l\'audio';
+
+  @override
+  String get recording_replaceTitle => 'Remplacer l\'audio ?';
+
+  @override
+  String get recording_replaceMessage =>
+      'L\'audio actuel sera déplacé dans une corbeille de 24 heures et remplacé par le fichier que vous choisissez. Seuls les fichiers audio au même format que l\'original peuvent être utilisés.';
+
+  @override
+  String get recording_replaceReuploadNotice =>
+      'Cet enregistrement a déjà été envoyé. Le nouveau fichier l\'écrasera sur le serveur.';
+
+  @override
+  String get recording_replaceConfirm => 'Remplacer';
+
+  @override
+  String recording_replaceFormatMismatch(String expected, String actual) {
+    return 'Le remplacement doit être un fichier $expected, mais il est au format $actual';
+  }
+
+  @override
+  String get recording_replaceInvalidAudio =>
+      'Impossible de lire le fichier audio sélectionné';
+
+  @override
+  String get recording_replaceSuccess => 'Audio remplacé';
+
+  @override
+  String get recording_replaceFailed => 'Échec du remplacement de l\'audio';
+
+  @override
+  String get recording_replaceNotAvailableWeb =>
+      'Le remplacement audio n\'est pas disponible dans l\'application web';
+
+  @override
   String get recordings_title => 'Enregistrements';
 
   @override
   String get recordings_subtitle => 'Vos histoires collectées';
+
+  @override
+  String get recordings_searchHint => 'Rechercher des enregistrements...';
 
   @override
   String get recordings_importAudio => 'Importer un fichier audio';
@@ -1750,7 +1803,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get classify_banner =>
-      'Cet enregistrement doit être classé avant de pouvoir être téléversé.';
+      'Cet enregistrement n\'est pas classé. Appuyez sur Classer pour ajouter un genre et un registre.';
 
   @override
   String get classify_success => 'Enregistrement classé';
@@ -1760,6 +1813,56 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get classify_selectRegister => 'Sélectionner le registre';
+
+  @override
+  String get classify_predominantHeader => 'CLASSIFICATION PRÉDOMINANTE';
+
+  @override
+  String get classify_addAlternativeTitle =>
+      'Ambigu ? Ajouter une classification alternative';
+
+  @override
+  String get classify_secondaryNote =>
+      'Seule la classification prédominante compte dans les totaux de temps par genre.';
+
+  @override
+  String get classify_secondaryGenre => 'Genre secondaire';
+
+  @override
+  String get classify_secondarySubcategory => 'Sous-catégorie secondaire';
+
+  @override
+  String get classify_secondaryRegister => 'Registre secondaire';
+
+  @override
+  String get classify_secondarySameAsPrimary =>
+      'Le genre secondaire doit être différent du genre prédominant.';
+
+  @override
+  String get classify_clearAlternative => 'Effacer l\'alternative';
+
+  @override
+  String get recording_alsoClassifiedAs => 'Également classé comme';
+
+  @override
+  String get recording_alsoClassifiedAsTooltip =>
+      'A une classification alternative';
+
+  @override
+  String get recording_addAlternative =>
+      'Ajouter une classification alternative';
+
+  @override
+  String get recording_removeSecondary =>
+      'Supprimer la classification alternative';
+
+  @override
+  String get recording_secondaryRemoved =>
+      'Classification alternative supprimée';
+
+  @override
+  String get recording_secondaryUpdated =>
+      'Classification alternative mise à jour';
 
   @override
   String get recording_unclassified => 'Non classifié';
@@ -1937,136 +2040,136 @@ class AppLocalizationsFr extends AppLocalizations {
       'Une erreur est survenue. Veuillez réessayer plus tard.';
 
   @override
-  String get common_close => 'Close';
+  String get common_close => 'Fermer';
 
   @override
-  String get storyteller_title => 'Storytellers';
+  String get storyteller_title => 'Narrateurs';
 
   @override
-  String get storyteller_singular => 'Storyteller';
+  String get storyteller_singular => 'Narrateur';
 
   @override
-  String get storyteller_manageAction => 'Manage storytellers';
+  String get storyteller_manageAction => 'Gérer les narrateurs';
 
   @override
-  String get storyteller_addNew => 'Add storyteller';
+  String get storyteller_addNew => 'Ajouter un narrateur';
 
   @override
-  String get storyteller_createTitle => 'New storyteller';
+  String get storyteller_createTitle => 'Nouveau narrateur';
 
   @override
-  String get storyteller_editTitle => 'Edit storyteller';
+  String get storyteller_editTitle => 'Modifier le narrateur';
 
   @override
-  String get storyteller_speakerName => 'Speaker name';
+  String get storyteller_speakerName => 'Nom du locuteur';
 
   @override
-  String get storyteller_sex => 'Sex';
+  String get storyteller_sex => 'Sexe';
 
   @override
-  String get storyteller_sexMale => 'Male';
+  String get storyteller_sexMale => 'Masculin';
 
   @override
-  String get storyteller_sexFemale => 'Female';
+  String get storyteller_sexFemale => 'Féminin';
 
   @override
-  String get storyteller_age => 'Age';
+  String get storyteller_age => 'Âge';
 
   @override
-  String get storyteller_location => 'Location';
+  String get storyteller_location => 'Lieu';
 
   @override
-  String get storyteller_dialect => 'Dialect';
+  String get storyteller_dialect => 'Dialecte';
 
   @override
   String get storyteller_externalAcceptanceTitle =>
-      'External acceptance validation';
+      'Validation d’acceptation externe';
 
   @override
   String get storyteller_externalAcceptanceDescription =>
-      'I confirm that external acceptance validation has been performed for this speaker.';
+      'Je confirme que la validation d’acceptation externe a été effectuée pour ce locuteur.';
 
   @override
   String get storyteller_externalAcceptanceInfo =>
-      'Before registering a storyteller, the project manager must obtain the speaker\'s consent outside the app (for example, through a signed release form or recorded verbal agreement). This checkbox records that this step was completed.';
+      'Avant d’enregistrer un narrateur, le gestionnaire du projet doit obtenir le consentement du locuteur en dehors de l’application (par exemple, via un formulaire signé ou un accord verbal enregistré). Cette case indique que cette étape a été effectuée.';
 
   @override
   String get storyteller_createRequiresConnection =>
-      'Creating a storyteller requires an internet connection.';
+      'Créer un narrateur nécessite une connexion Internet.';
 
   @override
-  String get storyteller_deleteTitle => 'Delete storyteller?';
+  String get storyteller_deleteTitle => 'Supprimer le narrateur ?';
 
   @override
   String get storyteller_deleteMessage =>
-      'Recordings previously assigned to this storyteller will show as unassigned.';
+      'Les enregistrements précédemment attribués à ce narrateur apparaîtront comme non attribués.';
 
   @override
-  String get storyteller_noneAssigned => 'No storyteller assigned';
+  String get storyteller_noneAssigned => 'Aucun narrateur attribué';
 
   @override
-  String get storyteller_unknown => 'Unknown storyteller';
+  String get storyteller_unknown => 'Narrateur inconnu';
 
   @override
-  String get storyteller_selectHint => 'Pick a storyteller';
+  String get storyteller_selectHint => 'Choisissez un narrateur';
 
   @override
-  String get storyteller_required => 'A storyteller is required';
+  String get storyteller_required => 'Un narrateur est requis';
 
   @override
-  String get storyteller_searchPlaceholder => 'Search storytellers';
+  String get storyteller_searchPlaceholder => 'Rechercher des narrateurs';
 
   @override
-  String get storyteller_empty => 'No storytellers yet';
+  String get storyteller_empty => 'Aucun narrateur pour le moment';
 
   @override
   String get storyteller_emptyDescription =>
-      'Create a storyteller for the project to assign to recordings.';
+      'Créez un narrateur pour ce projet afin de l’attribuer à des enregistrements.';
 
   @override
   String get storyteller_offlineNoCache =>
-      'Storytellers haven\'t been synced yet. Connect to the internet to load them.';
+      'Les narrateurs n’ont pas encore été synchronisés. Connectez-vous à Internet pour les charger.';
 
   @override
-  String get storyteller_assign => 'Assign';
+  String get storyteller_assign => 'Attribuer';
 
   @override
-  String get storyteller_reassign => 'Reassign';
+  String get storyteller_reassign => 'Réattribuer';
 
   @override
-  String get storyteller_ageValidator => 'Enter an age between 1 and 120';
+  String get storyteller_ageValidator => 'Entrez un âge entre 1 et 120';
 
   @override
   String storyteller_ageYearsShort(int age) {
-    return '${age}y';
+    return '$age a';
   }
 
   @override
-  String get filters_buttonLabel => 'Filters';
+  String get filters_buttonLabel => 'Filtres';
 
   @override
-  String get filters_sheetTitle => 'Filter recordings';
+  String get filters_sheetTitle => 'Filtrer les enregistrements';
 
   @override
-  String get filters_sectionStatus => 'Upload status';
+  String get filters_sectionStatus => 'Statut d\'envoi';
 
   @override
   String get filters_sectionGenre => 'Genre';
 
   @override
-  String get filters_sectionStoryteller => 'Storyteller';
+  String get filters_sectionStoryteller => 'Narrateur';
 
   @override
-  String get filters_sectionUser => 'Recorded by';
+  String get filters_sectionUser => 'Enregistré par';
 
   @override
-  String get filter_apply => 'Apply';
+  String get filter_apply => 'Appliquer';
 
   @override
-  String get filter_reset => 'Reset';
+  String get filter_reset => 'Réinitialiser';
 
   @override
-  String get filter_clearAll => 'Clear all';
+  String get filter_clearAll => 'Tout effacer';
 
   @override
   String filter_countActive(num count) {
@@ -2077,27 +2180,198 @@ class AppLocalizationsFr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString filters',
-      one: '1 filter',
+      other: '$countString filtres',
+      one: '1 filtre',
     );
     return '$_temp0';
   }
 
   @override
-  String get filter_userAll => 'Any user';
+  String get filter_userAll => 'N\'importe quel utilisateur';
 
   @override
-  String get filter_storytellerAll => 'Any storyteller';
+  String get filter_storytellerAll => 'N\'importe quel narrateur';
 
   @override
-  String get filter_genreAll => 'Any genre';
+  String get filter_genreAll => 'N\'importe quel genre';
 
   @override
-  String get detail_recordedBy => 'Recorded by';
+  String get detail_recordedBy => 'Enregistré par';
 
   @override
-  String get detail_storyteller => 'Storyteller';
+  String get detail_storyteller => 'Narrateur';
 
   @override
-  String get recording_unknownUser => 'Unknown user';
+  String get recording_unknownUser => 'Utilisateur inconnu';
+
+  @override
+  String get common_ok => 'OK';
+
+  @override
+  String get invite_title => 'Inviter un membre';
+
+  @override
+  String get invite_searchLabel => 'Rechercher par nom ou e-mail';
+
+  @override
+  String get invite_searchHint => 'Saisissez au moins 2 caractères';
+
+  @override
+  String get invite_noUsersFound => 'Aucun utilisateur trouvé';
+
+  @override
+  String get invite_changeUser => 'Changer d\'utilisateur';
+
+  @override
+  String get invite_roleLabel => 'Rôle *';
+
+  @override
+  String get invite_roleMember => 'Membre';
+
+  @override
+  String get invite_roleManager => 'Gestionnaire';
+
+  @override
+  String get invite_sendInvite => 'Envoyer l\'invitation';
+
+  @override
+  String get invite_sendFailed => 'Échec de l\'envoi de l\'invitation';
+
+  @override
+  String get recording_recoveryInProgress => 'Récupération en cours…';
+
+  @override
+  String get recording_recoveryFailed => 'Échec de la récupération';
+
+  @override
+  String get recording_recoverySessionNotFound => 'Session introuvable';
+
+  @override
+  String get recording_recoveryNoAudio => 'Aucun audio à récupérer';
+
+  @override
+  String get recording_recoveryConcatFailed => 'Échec de la concaténation';
+
+  @override
+  String get a11y_startRecording => 'Démarrer l\'enregistrement';
+
+  @override
+  String get a11y_createProject => 'Créer un projet';
+
+  @override
+  String get a11y_playAudio => 'Lire l\'audio';
+
+  @override
+  String get a11y_pauseAudio => 'Mettre l\'audio en pause';
+
+  @override
+  String get a11y_splitWaveform =>
+      'Forme d\'onde de découpage. Appuyez pour ajouter des marqueurs. Faites glisser pour repositionner. Pincez pour zoomer. Appuyez longuement pour supprimer.';
+
+  @override
+  String a11y_tabLabel(String label) {
+    return 'Onglet $label';
+  }
+
+  @override
+  String get profile_adminBadge => 'Admin';
+
+  @override
+  String get profile_setYourName => 'Définissez votre nom';
+
+  @override
+  String get profile_inviteAcceptFailed =>
+      'Échec de l\'acceptation de l\'invitation';
+
+  @override
+  String get profile_inviteDeclineFailed => 'Échec du refus de l\'invitation';
+
+  @override
+  String get profile_typeDeleteWord => 'SUPPRIMER';
+
+  @override
+  String trim_splitError(String error) {
+    return 'Erreur de découpage : $error';
+  }
+
+  @override
+  String get error_serverFailure =>
+      'Le serveur n\'a pas pu traiter la demande. Veuillez réessayer.';
+
+  @override
+  String get error_importNoBytes =>
+      'Ce fichier est vide et ne peut pas être importé.';
+
+  @override
+  String get error_ffmpegProcessingFailed => 'Échec du traitement audio.';
+
+  @override
+  String get error_downloadFailed => 'Échec du téléchargement.';
+
+  @override
+  String get projectSettings_offlineTitle => 'Vous êtes hors ligne';
+
+  @override
+  String get projectSettings_offlineDescription =>
+      'Les détails du projet ne peuvent pas être chargés sans connexion Internet. Ils se chargeront automatiquement dès que vous serez reconnecté.';
+
+  @override
+  String get recording_noAudioAvailable => 'Aucun audio disponible';
+
+  @override
+  String get recording_noPendingUploads => 'Aucun envoi en attente';
+
+  @override
+  String get recording_uploadQueue => 'File d\'attente d\'envoi';
+
+  @override
+  String get recording_previewSelection => 'Aperçu de la sélection';
+
+  @override
+  String get recording_stopPreview => 'Arrêter l\'aperçu';
+
+  @override
+  String get recording_audioLoadFailed => 'Échec du chargement de l\'audio';
+
+  @override
+  String get status_offlineSubtitle =>
+      'Certaines fonctionnalités comme la synchronisation et le chargement de données nécessitent une connexion Internet.';
+
+  @override
+  String get status_noProject => 'Aucun projet attribué';
+
+  @override
+  String get status_noProjectSubtitle =>
+      'Vous n\'avez pas encore été ajouté à un projet. Veuillez contacter votre administrateur et attendre d\'être assigné.';
+
+  @override
+  String get a11y_recordingInProgress =>
+      'Enregistrement en cours, appuyez pour mettre en pause';
+
+  @override
+  String get a11y_recordingPaused =>
+      'Enregistrement en pause, appuyez pour reprendre';
+
+  @override
+  String get recording_audioFileNotFound => 'Fichier audio introuvable';
+
+  @override
+  String recording_partOf(int part, int total) {
+    return 'Partie $part sur $total';
+  }
+
+  @override
+  String recording_splitFrom(String sourceId) {
+    return 'Divisé de $sourceId';
+  }
+
+  @override
+  String trim_segmentRemoved(int index) {
+    return 'Segment $index — supprimé';
+  }
+
+  @override
+  String trim_segmentOfTotal(int index, int total) {
+    return 'Segment $index sur $total';
+  }
 }
