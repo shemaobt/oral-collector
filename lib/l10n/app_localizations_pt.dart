@@ -635,6 +635,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'Toque no microfone para gravar sua primeira história, ou importe um arquivo de áudio.';
 
   @override
+  String get recordings_dropToImport =>
+      'Dica: arraste arquivos de áudio para esta janela para importar.';
+
+  @override
   String recordings_count(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -883,6 +887,47 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get import_compressWavHint =>
       '~10x menor, sem perda de qualidade para pipeline de ML';
+
+  @override
+  String get import_dropHint => 'Solte arquivos de áudio para importar';
+
+  @override
+  String get import_dropActive => 'Solte para importar';
+
+  @override
+  String import_rejectedTooLarge(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Ignorados $count arquivos maiores que 500 MB: $names',
+      one: 'Ignorado 1 arquivo maior que 500 MB: $names',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String import_rejectedUnsupportedCodec(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Ignorados $count arquivos com codec de áudio não suportado: $names. Reexporte como PCM WAV ou M4A.',
+      one:
+          'Ignorado 1 arquivo com codec de áudio não suportado: $names. Reexporte como PCM WAV ou M4A.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String import_rejectedUnreadable(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Ignorados $count arquivos ilegíveis: $names',
+      one: 'Ignorado 1 arquivo ilegível: $names',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get moveCategory_title => 'Mover Categoria';

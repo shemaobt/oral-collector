@@ -1,3 +1,4 @@
+import 'package:cross_file/cross_file.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -114,7 +115,12 @@ final routerProvider = Provider<GoRouter>((ref) {
                 ref.read(projectNotifierProvider).activeProject != null;
             return hasProject ? null : '/home';
           },
-          builder: (context, state) => const FileImportScreen(),
+          builder: (context, state) {
+            final extra = state.extra;
+            return FileImportScreen(
+              initialFiles: extra is List<XFile> ? extra : null,
+            );
+          },
         ),
         GoRoute(
           path: '/project/:id/settings',
@@ -201,7 +207,12 @@ final routerProvider = Provider<GoRouter>((ref) {
           if (kIsWeb) ...[
             GoRoute(
               path: '/import-file',
-              builder: (context, state) => const FileImportScreen(),
+              builder: (context, state) {
+                final extra = state.extra;
+                return FileImportScreen(
+                  initialFiles: extra is List<XFile> ? extra : null,
+                );
+              },
             ),
             GoRoute(
               path: '/genre/:id',

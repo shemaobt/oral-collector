@@ -1286,6 +1286,12 @@ abstract class AppLocalizations {
   /// **'Tap the microphone to record your first story, or import an audio file.'**
   String get recordings_noRecordingsSubtitle;
 
+  /// No description provided for @recordings_dropToImport.
+  ///
+  /// In en, this message translates to:
+  /// **'Tip: drag audio files onto this window to import.'**
+  String get recordings_dropToImport;
+
   /// No description provided for @recordings_count.
   ///
   /// In en, this message translates to:
@@ -1621,6 +1627,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'~10x smaller, no quality loss for ML pipeline'**
   String get import_compressWavHint;
+
+  /// No description provided for @import_dropHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop audio files to import'**
+  String get import_dropHint;
+
+  /// No description provided for @import_dropActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Release to import'**
+  String get import_dropActive;
+
+  /// No description provided for @import_rejectedTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Skipped 1 file over 500 MB: {names}} other{Skipped {count} files over 500 MB: {names}}}'**
+  String import_rejectedTooLarge(int count, String names);
+
+  /// No description provided for @import_rejectedUnsupportedCodec.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Skipped 1 file with an unsupported audio codec: {names}. Re-export as PCM WAV or M4A.} other{Skipped {count} files with unsupported audio codecs: {names}. Re-export as PCM WAV or M4A.}}'**
+  String import_rejectedUnsupportedCodec(int count, String names);
+
+  /// No description provided for @import_rejectedUnreadable.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Skipped 1 unreadable file: {names}} other{Skipped {count} unreadable files: {names}}}'**
+  String import_rejectedUnreadable(int count, String names);
 
   /// No description provided for @moveCategory_title.
   ///

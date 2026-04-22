@@ -244,6 +244,7 @@
   "recordings_selectProjectSubtitle": "Choose a project to view its recordings",
   "recordings_noRecordings": "No recordings yet",
   "recordings_noRecordingsSubtitle": "Tap the microphone to record your first story, or import an audio file.",
+  "recordings_dropToImport": "Tip: drag audio files onto this window to import.",
   "recordings_count": "{count, plural, =1{1 recording} other{{count} recordings}}",
   "@recordings_count": {
     "placeholders": {
@@ -397,6 +398,41 @@
   "import_emptyFile": "empty file",
   "import_compressWav": "Compress WAV to M4A",
   "import_compressWavHint": "~10x smaller, no quality loss for ML pipeline",
+  "import_dropHint": "Drop audio files to import",
+  "import_dropActive": "Release to import",
+  "import_rejectedTooLarge": "{count, plural, =1{Skipped 1 file over 500 MB: {names}} other{Skipped {count} files over 500 MB: {names}}}",
+  "@import_rejectedTooLarge": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "import_rejectedUnsupportedCodec": "{count, plural, =1{Skipped 1 file with an unsupported audio codec: {names}. Re-export as PCM WAV or M4A.} other{Skipped {count} files with unsupported audio codecs: {names}. Re-export as PCM WAV or M4A.}}",
+  "@import_rejectedUnsupportedCodec": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "import_rejectedUnreadable": "{count, plural, =1{Skipped 1 unreadable file: {names}} other{Skipped {count} unreadable files: {names}}}",
+  "@import_rejectedUnreadable": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "names": {
+        "type": "String"
+      }
+    }
+  },
   "moveCategory_title": "Move Category",
   "moveCategory_genre": "Genre",
   "moveCategory_subcategory": "Subcategory",

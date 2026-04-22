@@ -26,6 +26,7 @@ import 'notifiers/recordings_list_notifier.dart';
 import 'notifiers/recordings_list_state.dart';
 import 'widgets/active_filter_chips.dart';
 import 'widgets/filters_icon_button.dart';
+import 'widgets/import_drop_zone.dart';
 import 'widgets/recording_card.dart';
 import 'widgets/recordings_filter_sheet.dart';
 
@@ -435,10 +436,19 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
                       )
                     : filtered.isEmpty
                     ? SliverFillRemaining(
-                        child: EmptyState(
-                          icon: LucideIcons.mic,
-                          title: l10n.recordings_noRecordings,
-                          description: l10n.recordings_noRecordingsSubtitle,
+                        child: ImportDropZone(
+                          onFilesDropped: (files) {
+                            if (!mounted) return;
+                            context.push<void>('/import-file', extra: files);
+                          },
+                          hoverLabel: l10n.import_dropHint,
+                          child: EmptyState(
+                            icon: LucideIcons.mic,
+                            title: l10n.recordings_noRecordings,
+                            description: ImportDropZone.isSupportedPlatform
+                                ? '${l10n.recordings_noRecordingsSubtitle}\n\n${l10n.recordings_dropToImport}'
+                                : l10n.recordings_noRecordingsSubtitle,
+                          ),
                         ),
                       )
                     : SliverPadding(

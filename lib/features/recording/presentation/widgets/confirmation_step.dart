@@ -17,6 +17,7 @@ import '../../../../shared/utils/format.dart';
 import '../../../../shared/utils/recording_title.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/platform/file_ops.dart' as file_ops;
+import '../../data/services/audio_probe.dart';
 import '../../../../shared/widgets/app_shell.dart';
 import '../../../../shared/widgets/waveform_visualizer.dart';
 import '../../../project/presentation/notifiers/project_notifier.dart';
@@ -60,6 +61,7 @@ class ConfirmationStep extends ConsumerStatefulWidget {
 class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
   final _descriptionController = TextEditingController();
   AudioPlayer? _player;
+  String? _playerBlobUrl;
   bool _isPlaying = false;
   bool _isSaving = false;
   Duration _position = Duration.zero;
@@ -122,8 +124,8 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
           return;
         }
         final mime = _mimeForFormat(widget.result.format);
-        final dataUri = Uri.dataFromBytes(bytes, mimeType: mime).toString();
-        await _player!.setUrl(dataUri);
+        _playerBlobUrl = createPlayableBlobUrl(bytes, mime);
+        await _player!.setUrl(_playerBlobUrl!);
       } else {
         final fileSize = await file_ops.fileLength(widget.result.filePath);
         if (fileSize <= 0) {
@@ -162,6 +164,11 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
   void dispose() {
     _descriptionController.dispose();
     _player?.dispose();
+    final url = _playerBlobUrl;
+    if (url != null) {
+      revokePlayableBlobUrl(url);
+      _playerBlobUrl = null;
+    }
     super.dispose();
   }
 
