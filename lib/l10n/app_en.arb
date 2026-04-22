@@ -9,6 +9,8 @@
   "nav_admin": "Admin",
   "nav_collapse": "Collapse",
   "common_cancel": "Cancel",
+  "common_resume": "Resume",
+  "common_discard": "Discard",
   "common_save": "Save",
   "common_delete": "Delete",
   "common_remove": "Remove",
@@ -429,6 +431,27 @@
         "type": "int"
       },
       "names": {
+        "type": "String"
+      }
+    }
+  },
+  "import_resumePromptTitle": "Resume interrupted upload",
+  "import_resumePromptBody": "\"{name}\" ({size}) was partially uploaded. Select the same file to continue.",
+  "@import_resumePromptBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "import_resumeSizeMismatch": "That file doesn't match the paused upload.",
+  "import_largeFileWarning": "Large file ({size}). Keep this tab open until the upload completes.",
+  "@import_largeFileWarning": {
+    "placeholders": {
+      "size": {
         "type": "String"
       }
     }

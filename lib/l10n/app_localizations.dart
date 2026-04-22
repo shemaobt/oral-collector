@@ -170,6 +170,18 @@ abstract class AppLocalizations {
   /// **'Cancel'**
   String get common_cancel;
 
+  /// No description provided for @common_resume.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get common_resume;
+
+  /// No description provided for @common_discard.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get common_discard;
+
   /// No description provided for @common_save.
   ///
   /// In en, this message translates to:
@@ -1657,6 +1669,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{Skipped 1 unreadable file: {names}} other{Skipped {count} unreadable files: {names}}}'**
   String import_rejectedUnreadable(int count, String names);
+
+  /// No description provided for @import_resumePromptTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume interrupted upload'**
+  String get import_resumePromptTitle;
+
+  /// No description provided for @import_resumePromptBody.
+  ///
+  /// In en, this message translates to:
+  /// **'\"{name}\" ({size}) was partially uploaded. Select the same file to continue.'**
+  String import_resumePromptBody(String name, String size);
+
+  /// No description provided for @import_resumeSizeMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'That file doesn\'t match the paused upload.'**
+  String get import_resumeSizeMismatch;
+
+  /// No description provided for @import_largeFileWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Large file ({size}). Keep this tab open until the upload completes.'**
+  String import_largeFileWarning(String size);
 
   /// No description provided for @moveCategory_title.
   ///
