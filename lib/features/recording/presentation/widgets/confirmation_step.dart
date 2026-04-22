@@ -17,6 +17,7 @@ import '../../../../shared/utils/format.dart';
 import '../../../../shared/utils/recording_title.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/platform/file_ops.dart' as file_ops;
+import '../../../../core/platform/file_source.dart';
 import '../../data/services/audio_probe.dart';
 import '../../../../shared/widgets/app_shell.dart';
 import '../../../../shared/widgets/waveform_visualizer.dart';
@@ -283,8 +284,14 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
           : _descriptionController.text.trim();
       final recordedAt = DateTime.now();
 
+      final source = FileSource.fromBytes(
+        bytes,
+        name: widget.result.filePath,
+        mimeType: _mimeForFormat(widget.result.format),
+      );
+
       final serverId = await uploader.upload(
-        bytes: bytes,
+        source: source,
         meta: DirectUploadMetadata(
           projectId: projectId,
           genreId: widget.genreId,

@@ -11,6 +11,8 @@ import 'package:path/path.dart' as p;
 import '../../../core/auth/auth_notifier.dart';
 import '../../../core/platform/file_ops.dart' as file_ops;
 import '../../../core/platform/ffmpeg_ops.dart' as ffmpeg_ops;
+import '../../../core/platform/file_source.dart';
+import '../../../core/platform/web_file_picker.dart' as web_picker;
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/database/app_database.dart';
@@ -41,11 +43,10 @@ class FileImportScreen extends ConsumerStatefulWidget {
 }
 
 class _Candidate {
-  _Candidate({required this.name, required this.size, this.path, this.bytes});
-  final String name;
-  final int size;
-  final String? path;
-  final Uint8List? bytes;
+  _Candidate({required this.source});
+  final FileSource source;
+  String get name => source.name;
+  int get size => source.length;
 }
 
 class _FileImportScreenState extends ConsumerState<FileImportScreen> {
@@ -53,6 +54,8 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
   bool _isAnalyzing = false;
   bool _isSaving = false;
   int _saveProgress = 0;
+  int _currentFileBytesSent = 0;
+  int _currentFileBytesTotal = 0;
   bool _compressWav = true;
   bool _formatsBannerDismissed = false;
 
@@ -95,30 +98,45 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
 
   Future<void> _pickFile() async {
     try {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: kSupportedAudioExtensions.toList(),
-        allowMultiple: true,
-        withData: kIsWeb,
-      );
+      final candidates = <_Candidate>[];
 
-      if (result == null || result.files.isEmpty) {
-        if (mounted && _entries.isEmpty) {
-          Navigator.of(context).maybePop();
+      if (kIsWeb) {
+        final sources = await web_picker.pickAudioFiles(
+          allowedExtensions: kSupportedAudioExtensions.toList(),
+          multiple: true,
+        );
+        if (sources.isEmpty) {
+          if (mounted && _entries.isEmpty) {
+            Navigator.of(context).maybePop();
+          }
+          return;
         }
-        return;
-      }
-
-      final candidates = result.files
-          .map(
-            (f) => _Candidate(
-              name: f.name,
-              size: f.size,
-              path: kIsWeb ? null : f.path,
-              bytes: kIsWeb ? f.bytes : null,
+        for (final s in sources) {
+          candidates.add(_Candidate(source: s));
+        }
+      } else {
+        final result = await FilePicker.platform.pickFiles(
+          type: FileType.custom,
+          allowedExtensions: kSupportedAudioExtensions.toList(),
+          allowMultiple: true,
+          withData: false,
+        );
+        if (result == null || result.files.isEmpty) {
+          if (mounted && _entries.isEmpty) {
+            Navigator.of(context).maybePop();
+          }
+          return;
+        }
+        for (final f in result.files) {
+          final path = f.path;
+          if (path == null) continue;
+          candidates.add(
+            _Candidate(
+              source: FileSource.fromPath(path, name: f.name, length: f.size),
             ),
-          )
-          .toList();
+          );
+        }
+      }
 
       await _analyzeCandidates(candidates);
     } catch (e, st) {
@@ -143,15 +161,8 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
     try {
       final candidates = <_Candidate>[];
       for (final f in files) {
-        if (kIsWeb) {
-          final bytes = await f.readAsBytes();
-          candidates.add(
-            _Candidate(name: f.name, size: bytes.length, bytes: bytes),
-          );
-        } else {
-          final size = await f.length();
-          candidates.add(_Candidate(name: f.name, size: size, path: f.path));
-        }
+        final source = await FileSource.fromXFile(f);
+        candidates.add(_Candidate(source: source));
       }
       await _analyzeCandidates(candidates);
     } catch (e, st) {
@@ -183,6 +194,7 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
       final ext = p.extension(c.name).replaceFirst('.', '').toLowerCase();
 
       if (ext.isEmpty || !kSupportedAudioExtensions.contains(ext)) {
+        c.source.dispose();
         rejected.add(
           RejectedFile(
             name: c.name,
@@ -192,45 +204,23 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
         continue;
       }
       if (c.size <= 0) {
+        c.source.dispose();
         rejected.add(
           RejectedFile(name: c.name, reason: RejectionReason.emptyFile),
         );
         continue;
       }
-      if (kIsWeb && c.size > kMaxImportFileBytes) {
+      if (kIsWeb && c.size > kMaxImportFileBytesWeb) {
+        c.source.dispose();
         rejected.add(
           RejectedFile(name: c.name, reason: RejectionReason.tooLarge),
         );
         continue;
       }
 
-      String filePath;
-      Uint8List? webBytes;
-      if (kIsWeb) {
-        if (c.bytes == null) {
-          rejected.add(
-            RejectedFile(name: c.name, reason: RejectionReason.missingBytes),
-          );
-          continue;
-        }
-        webBytes = c.bytes;
-        filePath =
-            'web_import_${DateTime.now().microsecondsSinceEpoch}_$i'
-            '_${c.name}';
-      } else {
-        if (c.path == null) {
-          rejected.add(
-            RejectedFile(name: c.name, reason: RejectionReason.missingBytes),
-          );
-          continue;
-        }
-        filePath = c.path!;
-      }
-
       final mime = kSupportedAudioMimeTypes[ext] ?? 'audio/mpeg';
-      final probeResult = await probe.probe(
-        bytes: webBytes,
-        filePath: kIsWeb ? null : filePath,
+      final probeResult = await probe.probeFromSource(
+        source: c.source,
         extension: ext,
         mime: mime,
       );
@@ -243,21 +233,26 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
         final reason = probeResult.codec != null && !probeResult.playable
             ? RejectionReason.unsupportedCodec
             : RejectionReason.unreadableContainer;
+        c.source.dispose();
         rejected.add(
           RejectedFile(name: c.name, reason: reason, codec: probeResult.codec),
         );
         continue;
       }
 
+      final syntheticPath =
+          c.source.filePath ??
+          'web_import_${DateTime.now().microsecondsSinceEpoch}_${i}_${c.name}';
+
       newEntries.add(
         FileImportEntry(
           id: '${DateTime.now().microsecondsSinceEpoch}_$i',
-          path: filePath,
+          path: syntheticPath,
           fileName: c.name,
           sizeBytes: c.size,
           format: ext,
           durationSeconds: probeResult.durationSeconds!,
-          webBytes: webBytes,
+          source: c.source,
         ),
       );
     }
@@ -461,16 +456,23 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
         String format = entry.format;
 
         if (kIsWeb) {
-          final bytes = entry.webBytes;
-          if (bytes == null || bytes.isEmpty) {
-            throw Exception('Import "${entry.fileName}" has no bytes');
+          final source = entry.source;
+          if (source == null || source.length <= 0) {
+            throw Exception('Import "${entry.fileName}" has no source');
           }
 
           final title = entry.fileName.replaceAll(RegExp(r'\.[^.]+$'), '');
           final description = entry.descriptionController.text.trim();
 
+          if (mounted) {
+            setState(() {
+              _currentFileBytesSent = 0;
+              _currentFileBytesTotal = source.length;
+            });
+          }
+
           await uploader.upload(
-            bytes: bytes,
+            source: source,
             meta: DirectUploadMetadata(
               projectId: projectId,
               genreId: entry.genreId!,
@@ -484,14 +486,25 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
               title: title,
               description: description.isEmpty ? null : description,
               durationSeconds: entry.durationSeconds,
-              fileSizeBytes: bytes.length,
+              fileSizeBytes: source.length,
               format: format,
               recordedAt: DateTime.now(),
             ),
+            onProgress: (sent, total) {
+              if (!mounted) return;
+              setState(() {
+                _currentFileBytesSent = sent;
+                _currentFileBytesTotal = total;
+              });
+            },
           );
 
           if (mounted) {
-            setState(() => _saveProgress = i + 1);
+            setState(() {
+              _saveProgress = i + 1;
+              _currentFileBytesSent = 0;
+              _currentFileBytesTotal = 0;
+            });
           }
           continue;
         }
@@ -627,6 +640,8 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
                 onRemoveEntry: _removeEntry,
                 isSaving: _isSaving,
                 saveProgress: _saveProgress,
+                currentFileBytesSent: _currentFileBytesSent,
+                currentFileBytesTotal: _currentFileBytesTotal,
                 hasWavFiles: _hasWavFiles,
                 compressWav: _compressWav,
                 onCompressWavChanged: (v) => setState(() => _compressWav = v),

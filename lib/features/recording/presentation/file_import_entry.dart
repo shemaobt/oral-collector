@@ -1,7 +1,6 @@
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 
+import '../../../core/platform/file_source.dart';
 import '../../storyteller/domain/entities/storyteller.dart';
 
 class FileImportEntry {
@@ -12,7 +11,7 @@ class FileImportEntry {
     required this.sizeBytes,
     required this.format,
     required this.durationSeconds,
-    this.webBytes,
+    this.source,
     this.genreId,
     this.subcategoryId,
     this.registerId,
@@ -30,7 +29,7 @@ class FileImportEntry {
   final int sizeBytes;
   final String format;
   final double durationSeconds;
-  final Uint8List? webBytes;
+  final FileSource? source;
 
   String? genreId;
   String? subcategoryId;
@@ -45,5 +44,6 @@ class FileImportEntry {
   void dispose() {
     titleController.dispose();
     descriptionController.dispose();
+    source?.dispose();
   }
 }

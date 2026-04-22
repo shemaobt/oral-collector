@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/database/database_provider.dart';
 import '../../../core/network/authenticated_client.dart';
+import '../../sync/data/services/resumable_upload_service.dart';
 import '../domain/repositories/recording_api_repository.dart';
 import 'repositories/local_recording_repository.dart';
 import 'repositories/recording_api_repository_impl.dart';
@@ -28,8 +29,19 @@ final recordingSessionRepositoryProvider = Provider<RecordingSessionRepository>(
   },
 );
 
+final resumableUploadServiceProvider = Provider<ResumableUploadService>((ref) {
+  return ResumableUploadService(
+    client: ref.watch(authenticatedClientProvider),
+    recordingRepo: ref.watch(localRecordingRepositoryProvider),
+  );
+});
+
 final directRecordingUploaderProvider = Provider<DirectRecordingUploader>((
   ref,
 ) {
-  return DirectRecordingUploader(ref.watch(authenticatedClientProvider));
+  return DirectRecordingUploader(
+    client: ref.watch(authenticatedClientProvider),
+    resumableUploadService: ref.watch(resumableUploadServiceProvider),
+    recordingRepo: ref.watch(localRecordingRepositoryProvider),
+  );
 });
