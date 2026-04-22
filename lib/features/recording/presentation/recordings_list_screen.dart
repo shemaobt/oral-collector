@@ -27,6 +27,7 @@ import 'notifiers/recordings_list_state.dart';
 import 'widgets/active_filter_chips.dart';
 import 'widgets/filters_icon_button.dart';
 import 'widgets/import_drop_zone.dart';
+import 'widgets/pending_web_uploads_banner.dart';
 import 'widgets/recording_card.dart';
 import 'widgets/recordings_filter_sheet.dart';
 
@@ -323,6 +324,8 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
 
                 if (isOffline)
                   SliverToBoxAdapter(child: StatusBanner.offline(l10n)),
+
+                const SliverToBoxAdapter(child: PendingWebUploadsBanner()),
 
                 SliverToBoxAdapter(
                   child: Padding(

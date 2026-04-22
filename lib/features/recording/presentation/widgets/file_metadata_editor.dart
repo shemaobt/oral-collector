@@ -38,6 +38,8 @@ class FileMetadataEditor extends StatelessWidget {
     required this.onRemoveEntry,
     required this.isSaving,
     required this.saveProgress,
+    this.currentFileBytesSent = 0,
+    this.currentFileBytesTotal = 0,
     required this.hasWavFiles,
     required this.compressWav,
     required this.onCompressWavChanged,
@@ -73,6 +75,8 @@ class FileMetadataEditor extends StatelessWidget {
 
   final bool isSaving;
   final int saveProgress;
+  final int currentFileBytesSent;
+  final int currentFileBytesTotal;
   final bool hasWavFiles;
   final bool compressWav;
   final ValueChanged<bool> onCompressWavChanged;
@@ -420,6 +424,24 @@ class FileMetadataEditor extends StatelessWidget {
                 const SizedBox(height: 6),
                 Text(
                   '$saveProgress / ${entries.length}',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: colors.foreground.withValues(alpha: 0.6),
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ],
+              if (isSaving && currentFileBytesTotal > 0) ...[
+                LinearProgressIndicator(
+                  value: (currentFileBytesSent / currentFileBytesTotal).clamp(
+                    0.0,
+                    1.0,
+                  ),
+                  backgroundColor: colors.border.withValues(alpha: 0.2),
+                  valueColor: AlwaysStoppedAnimation(colors.accent),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  '${formatFileSize(currentFileBytesSent)} / ${formatFileSize(currentFileBytesTotal)}',
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: colors.foreground.withValues(alpha: 0.6),
                   ),

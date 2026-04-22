@@ -9,12 +9,23 @@ import 'package:http/testing.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:oral_collector/core/network/authenticated_client.dart';
+import 'package:oral_collector/core/platform/file_source.dart';
+import 'package:oral_collector/features/recording/data/repositories/local_recording_repository.dart';
 import 'package:oral_collector/features/recording/data/services/direct_recording_uploader.dart';
+import 'package:oral_collector/features/sync/data/services/resumable_upload_service.dart';
 
 class MockSecureStorage extends Mock implements FlutterSecureStorage {}
 
+class MockResumableUploadService extends Mock
+    implements ResumableUploadService {}
+
+class MockLocalRecordingRepository extends Mock
+    implements LocalRecordingRepository {}
+
 void main() {
   late MockSecureStorage storage;
+  late MockResumableUploadService resumable;
+  late MockLocalRecordingRepository repo;
 
   setUpAll(() {
     dotenv.testLoad(fileInput: 'BACKEND_URL=http://localhost:8080');
@@ -25,6 +36,8 @@ void main() {
     when(
       () => storage.read(key: any(named: 'key')),
     ).thenAnswer((_) async => 'test-token');
+    resumable = MockResumableUploadService();
+    repo = MockLocalRecordingRepository();
   });
 
   DirectUploadMetadata sampleMeta() => DirectUploadMetadata(
@@ -41,6 +54,9 @@ void main() {
     format: 'm4a',
     recordedAt: DateTime.utc(2026, 4, 15, 10, 0, 0),
   );
+
+  FileSource sampleSource(Uint8List bytes) =>
+      FileSource.fromBytes(bytes, name: 'test.m4a', mimeType: 'audio/mp4');
 
   test('runs create, upload-url, PUT, and confirm in order', () async {
     final calls = <String>[];
@@ -87,9 +103,16 @@ void main() {
     });
 
     final auth = AuthenticatedClient(client: httpClient, storage: storage);
-    final uploader = DirectRecordingUploader(auth);
+    final uploader = DirectRecordingUploader(
+      client: auth,
+      resumableUploadService: resumable,
+      recordingRepo: repo,
+    );
 
-    final serverId = await uploader.upload(bytes: bytes, meta: sampleMeta());
+    final serverId = await uploader.upload(
+      source: sampleSource(bytes),
+      meta: sampleMeta(),
+    );
     expect(serverId, 'srv-abc');
 
     expect(calls, [
@@ -98,6 +121,7 @@ void main() {
       'PUT https://storage.googleapis.com/bucket/object',
       'POST http://localhost:8080/api/oc/recordings/srv-abc/confirm-upload',
     ]);
+    verifyZeroInteractions(resumable);
   });
 
   test('throws when the create step fails', () async {
@@ -109,10 +133,14 @@ void main() {
       return http.Response('unexpected', 500);
     });
     final auth = AuthenticatedClient(client: httpClient, storage: storage);
-    final uploader = DirectRecordingUploader(auth);
+    final uploader = DirectRecordingUploader(
+      client: auth,
+      resumableUploadService: resumable,
+      recordingRepo: repo,
+    );
 
     expect(
-      () => uploader.upload(bytes: bytes, meta: sampleMeta()),
+      () => uploader.upload(source: sampleSource(bytes), meta: sampleMeta()),
       throwsA(isA<Exception>()),
     );
   });
@@ -138,10 +166,14 @@ void main() {
       return http.Response('unexpected', 500);
     });
     final auth = AuthenticatedClient(client: httpClient, storage: storage);
-    final uploader = DirectRecordingUploader(auth);
+    final uploader = DirectRecordingUploader(
+      client: auth,
+      resumableUploadService: resumable,
+      recordingRepo: repo,
+    );
 
     expect(
-      () => uploader.upload(bytes: bytes, meta: sampleMeta()),
+      () => uploader.upload(source: sampleSource(bytes), meta: sampleMeta()),
       throwsA(isA<Exception>()),
     );
   });

@@ -57,6 +57,13 @@ class LocalRecordingRepository {
         .get();
   }
 
+  Future<List<LocalRecording>> getPendingWebUploads() async {
+    return (_db.select(_db.localRecordings)
+          ..where((t) => t.uploadStatus.equals('web_uploading'))
+          ..orderBy([(t) => OrderingTerm.asc(t.recordedAt)]))
+        .get();
+  }
+
   Future<({int count, double durationSeconds})> getLocalUnclassifiedStats(
     String projectId,
   ) async {

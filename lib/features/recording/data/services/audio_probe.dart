@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 
+import '../../../../core/platform/file_source.dart';
+
 import 'audio_probe_native.dart'
     if (dart.library.js_interop) 'audio_probe_web.dart';
 
@@ -60,6 +62,53 @@ class AudioProbe {
       playerResult = AudioProbeResult(diagnostic: 'player_exception: $e');
     }
 
+    return _merge(headerResult, playerResult);
+  }
+
+  Future<AudioProbeResult> probeFromSource({
+    required FileSource source,
+    required String extension,
+    required String mime,
+  }) async {
+    AudioProbeResult? headerResult;
+    if (extension == 'wav') {
+      try {
+        final head = await source.readHead(64 * 1024);
+        headerResult = _probeWavHeader(head);
+      } catch (e, st) {
+        debugPrint(
+          'AudioProbe: header read failed for ${source.name}: $e\n$st',
+        );
+      }
+    }
+
+    if (headerResult != null &&
+        headerResult.hasDuration &&
+        headerResult.playable) {
+      return headerResult;
+    }
+
+    AudioProbeResult playerResult;
+    try {
+      playerResult = await probeWithPlayerFromSource(
+        source: source,
+        extension: extension,
+        mime: mime,
+      );
+    } catch (e, st) {
+      debugPrint(
+        'AudioProbe: probeWithPlayerFromSource threw for $extension: $e\n$st',
+      );
+      playerResult = AudioProbeResult(diagnostic: 'player_exception: $e');
+    }
+
+    return _merge(headerResult, playerResult);
+  }
+
+  AudioProbeResult _merge(
+    AudioProbeResult? headerResult,
+    AudioProbeResult playerResult,
+  ) {
     final duration =
         playerResult.durationSeconds ?? headerResult?.durationSeconds;
     final codec = headerResult?.codec ?? playerResult.codec;

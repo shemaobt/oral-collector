@@ -36,6 +36,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get common_cancel => 'Cancelar';
 
   @override
+  String get common_resume => 'Resume';
+
+  @override
+  String get common_discard => 'Discard';
+
+  @override
   String get common_save => 'Guardar';
 
   @override
@@ -932,6 +938,23 @@ class AppLocalizationsEs extends AppLocalizations {
       one: 'Skipped 1 unreadable file: $names',
     );
     return '$_temp0';
+  }
+
+  @override
+  String get import_resumePromptTitle => 'Resume interrupted upload';
+
+  @override
+  String import_resumePromptBody(String name, String size) {
+    return '\"$name\" ($size) was partially uploaded. Select the same file to continue.';
+  }
+
+  @override
+  String get import_resumeSizeMismatch =>
+      'That file doesn\'t match the paused upload.';
+
+  @override
+  String import_largeFileWarning(String size) {
+    return 'Large file ($size). Keep this tab open until the upload completes.';
   }
 
   @override

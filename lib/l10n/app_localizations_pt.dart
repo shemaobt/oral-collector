@@ -36,6 +36,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String get common_cancel => 'Cancelar';
 
   @override
+  String get common_resume => 'Retomar';
+
+  @override
+  String get common_discard => 'Descartar';
+
+  @override
   String get common_save => 'Salvar';
 
   @override
@@ -927,6 +933,23 @@ class AppLocalizationsPt extends AppLocalizations {
       one: 'Ignorado 1 arquivo ilegível: $names',
     );
     return '$_temp0';
+  }
+
+  @override
+  String get import_resumePromptTitle => 'Retomar envio interrompido';
+
+  @override
+  String import_resumePromptBody(String name, String size) {
+    return '\"$name\" ($size) foi enviado parcialmente. Selecione o mesmo arquivo para continuar.';
+  }
+
+  @override
+  String get import_resumeSizeMismatch =>
+      'Este arquivo não corresponde ao envio pausado.';
+
+  @override
+  String import_largeFileWarning(String size) {
+    return 'Arquivo grande ($size). Mantenha esta aba aberta até o envio terminar.';
   }
 
   @override

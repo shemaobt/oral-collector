@@ -1,10 +1,16 @@
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart' as crypto;
+import 'package:drift/drift.dart' show Value;
 import 'package:http/http.dart' as http;
 
+import '../../../../core/database/app_database.dart';
 import '../../../../core/network/authenticated_client.dart';
+import '../../../../core/platform/file_source.dart';
+import '../../../sync/data/services/resumable_upload_service.dart';
+import '../repositories/local_recording_repository.dart';
+
+const int _smallFileThreshold = 5 * 1024 * 1024;
 
 class DirectUploadMetadata {
   const DirectUploadMetadata({
@@ -37,15 +43,42 @@ class DirectUploadMetadata {
 }
 
 class DirectRecordingUploader {
-  DirectRecordingUploader(this._client);
+  DirectRecordingUploader({
+    required AuthenticatedClient client,
+    required ResumableUploadService resumableUploadService,
+    required LocalRecordingRepository recordingRepo,
+  }) : _client = client,
+       _resumableUploadService = resumableUploadService,
+       _recordingRepo = recordingRepo;
+
   final AuthenticatedClient _client;
+  final ResumableUploadService _resumableUploadService;
+  final LocalRecordingRepository _recordingRepo;
 
   static const Duration _apiTimeout = Duration(seconds: 30);
 
   Future<String> upload({
-    required Uint8List bytes,
+    required FileSource source,
     required DirectUploadMetadata meta,
+    void Function(int sent, int total)? onProgress,
   }) async {
+    final serverId = await _createMetadata(meta);
+
+    if (source.length < _smallFileThreshold) {
+      await _uploadSingleShot(serverId: serverId, source: source, meta: meta);
+    } else {
+      await _uploadResumable(
+        serverId: serverId,
+        source: source,
+        meta: meta,
+        onProgress: onProgress,
+      );
+    }
+
+    return serverId;
+  }
+
+  Future<String> _createMetadata(DirectUploadMetadata meta) async {
     final createBody = <String, dynamic>{
       'project_id': meta.projectId,
       'genre_id': meta.genreId,
@@ -73,7 +106,15 @@ class DirectRecordingUploader {
       );
     }
     final createData = jsonDecode(createResponse.body) as Map<String, dynamic>;
-    final serverId = createData['id'] as String;
+    return createData['id'] as String;
+  }
+
+  Future<void> _uploadSingleShot({
+    required String serverId,
+    required FileSource source,
+    required DirectUploadMetadata meta,
+  }) async {
+    final bytes = await source.readRange(0, source.length);
 
     final urlResponse = await _client
         .post(
@@ -108,19 +149,83 @@ class DirectRecordingUploader {
     }
 
     final md5Hash = crypto.md5.convert(bytes).toString();
+    await _confirm(serverId, md5Hash: md5Hash);
+  }
+
+  Future<void> _uploadResumable({
+    required String serverId,
+    required FileSource source,
+    required DirectUploadMetadata meta,
+    void Function(int sent, int total)? onProgress,
+  }) async {
+    final shadowId = 'web_$serverId';
+    final synthPath =
+        source.filePath ??
+        'web_import_${DateTime.now().millisecondsSinceEpoch}_$serverId';
+
+    await _recordingRepo.insertRecording(
+      LocalRecordingsCompanion(
+        id: Value(shadowId),
+        projectId: Value(meta.projectId),
+        genreId: Value(meta.genreId),
+        subcategoryId: meta.subcategoryId.isNotEmpty
+            ? Value(meta.subcategoryId)
+            : const Value.absent(),
+        registerId: meta.registerId != null && meta.registerId!.isNotEmpty
+            ? Value(meta.registerId)
+            : const Value.absent(),
+        storytellerId:
+            meta.storytellerId != null && meta.storytellerId!.isNotEmpty
+            ? Value(meta.storytellerId)
+            : const Value.absent(),
+        userId: meta.userId != null ? Value(meta.userId) : const Value.absent(),
+        title: meta.title != null ? Value(meta.title) : const Value.absent(),
+        description: meta.description != null
+            ? Value(meta.description)
+            : const Value.absent(),
+        durationSeconds: Value(meta.durationSeconds),
+        fileSizeBytes: Value(meta.fileSizeBytes),
+        format: Value(meta.format),
+        localFilePath: Value(synthPath),
+        serverId: Value(serverId),
+        uploadStatus: const Value('web_uploading'),
+        recordedAt: Value(meta.recordedAt),
+      ),
+    );
+
+    try {
+      final result = await _resumableUploadService.uploadFromSource(
+        recordingId: shadowId,
+        serverId: serverId,
+        source: source,
+        format: meta.format,
+        onProgress: onProgress,
+      );
+      if (!result.success) {
+        throw _UploaderException(
+          'Resumable upload failed: ${result.error ?? 'unknown'}',
+        );
+      }
+
+      await _confirm(serverId, md5Hash: null);
+      await _recordingRepo.deleteRecording(shadowId);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<void> _confirm(String serverId, {required String? md5Hash}) async {
+    final confirmBody = <String, dynamic>{};
+    if (md5Hash != null) confirmBody['md5_hash'] = md5Hash;
+
     final confirmResponse = await _client
-        .post(
-          '/api/oc/recordings/$serverId/confirm-upload',
-          body: {'md5_hash': md5Hash},
-        )
+        .post('/api/oc/recordings/$serverId/confirm-upload', body: confirmBody)
         .timeout(_apiTimeout);
     if (confirmResponse.statusCode != 200) {
       throw _UploaderException(
         'Confirm failed (${confirmResponse.statusCode}): ${confirmResponse.body}',
       );
     }
-
-    return serverId;
   }
 }
 
