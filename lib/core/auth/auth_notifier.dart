@@ -1,7 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
+import '../../features/auth/domain/entities/user.dart';
 import '../../features/sync/data/providers.dart';
+import '../errors/api_exception.dart';
 import '../providers/secure_storage_provider.dart';
 import 'auth_repository.dart';
 import 'auth_state.dart';
@@ -14,6 +18,7 @@ final authNotifierProvider = NotifierProvider<AuthNotifier, AuthState>(
 class AuthNotifier extends Notifier<AuthState> {
   static const _accessTokenKey = 'access_token';
   static const _refreshTokenKey = 'refresh_token';
+  static const _cachedUserKey = 'cached_user';
 
   FlutterSecureStorage get _storage => ref.read(secureStorageProvider);
   AuthRepository get _repo => ref.read(authRepositoryProvider);
@@ -27,22 +32,30 @@ class AuthNotifier extends Notifier<AuthState> {
     final accessToken = await _storage.read(key: _accessTokenKey);
     if (accessToken == null) return;
 
-    // Skip network call when offline — tokens stay preserved
-    final connectivity = ref.read(connectivityServiceProvider);
-    final online = await connectivity.isOnline;
+    final cached = await _readCachedUser();
+    if (cached != null) {
+      state = state.copyWith(currentUser: cached, clearError: true);
+    }
+
+    final online = await ref.read(connectivityServiceProvider).isOnline;
     if (!online) return;
 
-    state = state.copyWith(isLoading: true, clearError: true);
+    if (cached == null) {
+      state = state.copyWith(isLoading: true, clearError: true);
+    }
 
     try {
       final user = await _repo.getMe(accessToken);
+      await _storeUser(user);
       state = state.copyWith(currentUser: user, isLoading: false);
-    } on Exception {
+    } on UnauthorizedException {
       final refreshed = await _tryRefresh();
       if (!refreshed) {
         await _clearTokens();
         state = const AuthState();
       }
+    } on Exception {
+      state = state.copyWith(isLoading: false);
     }
   }
 
@@ -52,6 +65,7 @@ class AuthNotifier extends Notifier<AuthState> {
     try {
       final result = await _repo.login(email, password);
       await _storeTokens(result.accessToken, result.refreshToken);
+      await _storeUser(result.user);
       state = state.copyWith(currentUser: result.user, isLoading: false);
     } on Exception catch (e) {
       state = state.copyWith(
@@ -71,6 +85,7 @@ class AuthNotifier extends Notifier<AuthState> {
     try {
       final result = await _repo.signup(email, password, displayName);
       await _storeTokens(result.accessToken, result.refreshToken);
+      await _storeUser(result.user);
       state = state.copyWith(currentUser: result.user, isLoading: false);
     } on Exception catch (e) {
       state = state.copyWith(
@@ -88,6 +103,7 @@ class AuthNotifier extends Notifier<AuthState> {
       if (accessToken == null) throw Exception('Not authenticated');
 
       final user = await _repo.updateMe(accessToken, displayName: displayName);
+      await _storeUser(user);
       state = state.copyWith(currentUser: user, isLoading: false);
     } on Exception catch (e) {
       state = state.copyWith(
@@ -106,6 +122,7 @@ class AuthNotifier extends Notifier<AuthState> {
 
       final imageUrl = await _repo.uploadImage(accessToken, filePath);
       final user = await _repo.updateMe(accessToken, avatarUrl: imageUrl);
+      await _storeUser(user);
       state = state.copyWith(currentUser: user, isLoading: false);
     } on Exception catch (e) {
       state = state.copyWith(
@@ -156,6 +173,20 @@ class AuthNotifier extends Notifier<AuthState> {
   Future<void> _clearTokens() async {
     await _storage.delete(key: _accessTokenKey);
     await _storage.delete(key: _refreshTokenKey);
+    await _storage.delete(key: _cachedUserKey);
+  }
+
+  Future<void> _storeUser(User user) =>
+      _storage.write(key: _cachedUserKey, value: jsonEncode(user.toJson()));
+
+  Future<User?> _readCachedUser() async {
+    final raw = await _storage.read(key: _cachedUserKey);
+    if (raw == null) return null;
+    try {
+      return User.fromJson(jsonDecode(raw) as Map<String, dynamic>);
+    } on Exception {
+      return null;
+    }
   }
 
   Future<bool> _tryRefresh() async {
@@ -167,10 +198,13 @@ class AuthNotifier extends Notifier<AuthState> {
       await _storeTokens(tokens.accessToken, tokens.refreshToken);
 
       final user = await _repo.getMe(tokens.accessToken);
+      await _storeUser(user);
       state = state.copyWith(currentUser: user, isLoading: false);
       return true;
-    } on Exception {
+    } on UnauthorizedException {
       return false;
+    } on Exception {
+      return true;
     }
   }
 }
