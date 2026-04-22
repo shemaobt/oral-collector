@@ -6,6 +6,7 @@ import 'package:path/path.dart' as p;
 
 import '../../../../core/auth/auth_repository.dart';
 import '../../../../core/config/env.dart';
+import '../../../../core/network/api_error_handler.dart';
 import '../../domain/entities/user.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
@@ -77,6 +78,7 @@ class AuthRepositoryImpl implements AuthRepository {
       body: jsonEncode({'refresh_token': token}),
     );
 
+    guardResponse(response);
     if (response.statusCode != 200) {
       throw Exception('Token refresh failed: ${response.body}');
     }
@@ -98,6 +100,7 @@ class AuthRepositoryImpl implements AuthRepository {
       },
     );
 
+    guardResponse(response);
     if (response.statusCode != 200) {
       throw Exception('Failed to get user: ${response.body}');
     }
@@ -125,6 +128,7 @@ class AuthRepositoryImpl implements AuthRepository {
       body: jsonEncode(body),
     );
 
+    guardResponse(response);
     if (response.statusCode != 200) {
       throw Exception('Failed to update profile: ${response.body}');
     }
@@ -181,6 +185,7 @@ class AuthRepositoryImpl implements AuthRepository {
       },
     );
 
+    guardResponse(response);
     if (response.statusCode != 200) {
       throw Exception('Failed to delete account: ${response.body}');
     }
