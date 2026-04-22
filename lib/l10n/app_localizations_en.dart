@@ -629,6 +629,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Tap the microphone to record your first story, or import an audio file.';
 
   @override
+  String get recordings_dropToImport =>
+      'Tip: drag audio files onto this window to import.';
+
+  @override
   String recordings_count(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -875,6 +879,47 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get import_compressWavHint =>
       '~10x smaller, no quality loss for ML pipeline';
+
+  @override
+  String get import_dropHint => 'Drop audio files to import';
+
+  @override
+  String get import_dropActive => 'Release to import';
+
+  @override
+  String import_rejectedTooLarge(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Skipped $count files over 500 MB: $names',
+      one: 'Skipped 1 file over 500 MB: $names',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String import_rejectedUnsupportedCodec(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Skipped $count files with unsupported audio codecs: $names. Re-export as PCM WAV or M4A.',
+      one:
+          'Skipped 1 file with an unsupported audio codec: $names. Re-export as PCM WAV or M4A.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String import_rejectedUnreadable(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Skipped $count unreadable files: $names',
+      one: 'Skipped 1 unreadable file: $names',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get moveCategory_title => 'Move Category';
