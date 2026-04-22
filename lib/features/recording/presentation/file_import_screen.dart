@@ -1,11 +1,9 @@
-import 'dart:typed_data';
-
+import 'package:cross_file/cross_file.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:just_audio/just_audio.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
@@ -23,24 +21,31 @@ import '../../sync/presentation/notifiers/sync_notifier.dart';
 import '../../project/presentation/notifiers/project_notifier.dart';
 import '../../storyteller/domain/entities/storyteller.dart';
 import '../data/providers.dart';
+import '../data/services/audio_probe.dart';
 import '../data/services/direct_recording_uploader.dart';
 import '../data/supported_audio_formats.dart';
 import 'file_import_entry.dart';
+import 'file_import_rejection.dart';
 import 'notifiers/recordings_list_notifier.dart';
 import 'widgets/file_metadata_editor.dart';
+import 'widgets/import_drop_zone.dart';
 import 'widgets/supported_formats_banner.dart';
 
 class FileImportScreen extends ConsumerStatefulWidget {
-  const FileImportScreen({super.key});
+  const FileImportScreen({super.key, this.initialFiles});
+
+  final List<XFile>? initialFiles;
 
   @override
   ConsumerState<FileImportScreen> createState() => _FileImportScreenState();
 }
 
-class _RejectedFile {
-  const _RejectedFile(this.name, this.reason);
+class _Candidate {
+  _Candidate({required this.name, required this.size, this.path, this.bytes});
   final String name;
-  final String reason;
+  final int size;
+  final String? path;
+  final Uint8List? bytes;
 }
 
 class _FileImportScreenState extends ConsumerState<FileImportScreen> {
@@ -66,10 +71,16 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
   void initState() {
     super.initState();
     Future.microtask(() {
+      if (!mounted) return;
       if (ref.read(syncNotifierProvider).isOnline) {
         ref.read(genreNotifierProvider.notifier).fetchGenres();
       }
-      _pickFile();
+      final initial = widget.initialFiles;
+      if (initial != null && initial.isNotEmpty) {
+        _handleDrop(initial);
+      } else {
+        _pickFile();
+      }
     });
   }
 
@@ -98,88 +109,20 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
         return;
       }
 
-      if (!mounted) return;
-      final l10n = AppLocalizations.of(context);
-      setState(() => _isAnalyzing = true);
+      final candidates = result.files
+          .map(
+            (f) => _Candidate(
+              name: f.name,
+              size: f.size,
+              path: kIsWeb ? null : f.path,
+              bytes: kIsWeb ? f.bytes : null,
+            ),
+          )
+          .toList();
 
-      final newEntries = <FileImportEntry>[];
-      final rejected = <_RejectedFile>[];
-
-      for (var i = 0; i < result.files.length; i++) {
-        final file = result.files[i];
-        final ext = p.extension(file.name).replaceFirst('.', '').toLowerCase();
-
-        if (ext.isEmpty || !kSupportedAudioExtensions.contains(ext)) {
-          rejected.add(_RejectedFile(file.name, 'unsupported'));
-          continue;
-        }
-        if (file.size <= 0) {
-          rejected.add(_RejectedFile(file.name, l10n.import_emptyFile));
-          continue;
-        }
-
-        String filePath;
-        Uint8List? webBytes;
-        if (kIsWeb) {
-          if (file.bytes == null) {
-            rejected.add(_RejectedFile(file.name, 'unreadable'));
-            continue;
-          }
-          webBytes = file.bytes;
-          filePath =
-              'web_import_${DateTime.now().microsecondsSinceEpoch}_$i'
-              '_${file.name}';
-        } else {
-          final path = file.path;
-          if (path == null) {
-            rejected.add(_RejectedFile(file.name, 'unreadable'));
-            continue;
-          }
-          filePath = path;
-        }
-
-        final duration = kIsWeb
-            ? await _detectDurationFromBytes(webBytes!, ext)
-            : await _detectDuration(filePath);
-
-        if (duration <= 0) {
-          rejected.add(_RejectedFile(file.name, 'unreadable'));
-          continue;
-        }
-
-        newEntries.add(
-          FileImportEntry(
-            id: '${DateTime.now().microsecondsSinceEpoch}_$i',
-            path: filePath,
-            fileName: file.name,
-            sizeBytes: file.size,
-            format: ext,
-            durationSeconds: duration,
-            webBytes: webBytes,
-          ),
-        );
-      }
-
-      if (newEntries.isEmpty) {
-        if (mounted) {
-          _showRejectedSnack(rejected);
-          if (_entries.isEmpty) {
-            Navigator.of(context).maybePop();
-          } else {
-            setState(() => _isAnalyzing = false);
-          }
-        }
-        return;
-      }
-
-      if (mounted) {
-        setState(() {
-          _entries.addAll(newEntries);
-          _isAnalyzing = false;
-        });
-        if (rejected.isNotEmpty) _showRejectedSnack(rejected);
-      }
-    } catch (e) {
+      await _analyzeCandidates(candidates);
+    } catch (e, st) {
+      debugPrint('FileImportScreen._pickFile failed: $e\n$st');
       if (mounted) {
         setState(() => _isAnalyzing = false);
         final l10n = AppLocalizations.of(context);
@@ -194,51 +137,159 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
     }
   }
 
-  void _showRejectedSnack(List<_RejectedFile> rejected) {
+  Future<void> _handleDrop(List<XFile> files) async {
+    if (!mounted || files.isEmpty) return;
+    setState(() => _isAnalyzing = true);
+    try {
+      final candidates = <_Candidate>[];
+      for (final f in files) {
+        if (kIsWeb) {
+          final bytes = await f.readAsBytes();
+          candidates.add(
+            _Candidate(name: f.name, size: bytes.length, bytes: bytes),
+          );
+        } else {
+          final size = await f.length();
+          candidates.add(_Candidate(name: f.name, size: size, path: f.path));
+        }
+      }
+      await _analyzeCandidates(candidates);
+    } catch (e, st) {
+      debugPrint('FileImportScreen._handleDrop failed: $e\n$st');
+      if (mounted) {
+        setState(() => _isAnalyzing = false);
+        final l10n = AppLocalizations.of(context);
+        final friendly = friendlyErrorMessage(e.toString(), l10n);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.import_pickError(friendly))),
+        );
+        if (_entries.isEmpty) {
+          Navigator.of(context).maybePop();
+        }
+      }
+    }
+  }
+
+  Future<void> _analyzeCandidates(List<_Candidate> candidates) async {
+    if (!mounted || candidates.isEmpty) return;
+    setState(() => _isAnalyzing = true);
+
+    final newEntries = <FileImportEntry>[];
+    final rejected = <RejectedFile>[];
+    const probe = AudioProbe();
+
+    for (var i = 0; i < candidates.length; i++) {
+      final c = candidates[i];
+      final ext = p.extension(c.name).replaceFirst('.', '').toLowerCase();
+
+      if (ext.isEmpty || !kSupportedAudioExtensions.contains(ext)) {
+        rejected.add(
+          RejectedFile(
+            name: c.name,
+            reason: RejectionReason.unsupportedExtension,
+          ),
+        );
+        continue;
+      }
+      if (c.size <= 0) {
+        rejected.add(
+          RejectedFile(name: c.name, reason: RejectionReason.emptyFile),
+        );
+        continue;
+      }
+      if (kIsWeb && c.size > kMaxImportFileBytes) {
+        rejected.add(
+          RejectedFile(name: c.name, reason: RejectionReason.tooLarge),
+        );
+        continue;
+      }
+
+      String filePath;
+      Uint8List? webBytes;
+      if (kIsWeb) {
+        if (c.bytes == null) {
+          rejected.add(
+            RejectedFile(name: c.name, reason: RejectionReason.missingBytes),
+          );
+          continue;
+        }
+        webBytes = c.bytes;
+        filePath =
+            'web_import_${DateTime.now().microsecondsSinceEpoch}_$i'
+            '_${c.name}';
+      } else {
+        if (c.path == null) {
+          rejected.add(
+            RejectedFile(name: c.name, reason: RejectionReason.missingBytes),
+          );
+          continue;
+        }
+        filePath = c.path!;
+      }
+
+      final mime = kSupportedAudioMimeTypes[ext] ?? 'audio/mpeg';
+      final probeResult = await probe.probe(
+        bytes: webBytes,
+        filePath: kIsWeb ? null : filePath,
+        extension: ext,
+        mime: mime,
+      );
+
+      if (!probeResult.hasDuration) {
+        debugPrint(
+          'Import rejected ${c.name} (.$ext, ${c.size}B): '
+          '${probeResult.diagnostic ?? "no diagnostic"}',
+        );
+        final reason = probeResult.codec != null && !probeResult.playable
+            ? RejectionReason.unsupportedCodec
+            : RejectionReason.unreadableContainer;
+        rejected.add(
+          RejectedFile(name: c.name, reason: reason, codec: probeResult.codec),
+        );
+        continue;
+      }
+
+      newEntries.add(
+        FileImportEntry(
+          id: '${DateTime.now().microsecondsSinceEpoch}_$i',
+          path: filePath,
+          fileName: c.name,
+          sizeBytes: c.size,
+          format: ext,
+          durationSeconds: probeResult.durationSeconds!,
+          webBytes: webBytes,
+        ),
+      );
+    }
+
+    if (!mounted) return;
+
+    if (newEntries.isEmpty) {
+      _showRejectedSnack(rejected);
+      if (_entries.isEmpty) {
+        Navigator.of(context).maybePop();
+      } else {
+        setState(() => _isAnalyzing = false);
+      }
+      return;
+    }
+
+    setState(() {
+      _entries.addAll(newEntries);
+      _isAnalyzing = false;
+    });
+    if (rejected.isNotEmpty) _showRejectedSnack(rejected);
+  }
+
+  void _showRejectedSnack(List<RejectedFile> rejected) {
     if (rejected.isEmpty) return;
     final l10n = AppLocalizations.of(context);
-    final names = rejected.take(5).map((r) => r.name).join(', ');
-    final suffix = rejected.length > 5 ? '…' : '';
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
-          l10n.import_rejectedFiles(rejected.length, '$names$suffix'),
-        ),
+        content: Text(localizeRejectionGroup(l10n, rejected)),
         behavior: SnackBarBehavior.floating,
       ),
     );
-  }
-
-  Future<double> _detectDuration(String filePath) async {
-    final player = AudioPlayer();
-    try {
-      final duration = await player.setFilePath(filePath);
-      if (duration != null) {
-        return duration.inMilliseconds / 1000.0;
-      }
-    } catch (_) {
-      return 0.0;
-    } finally {
-      await player.dispose();
-    }
-    return 0.0;
-  }
-
-  Future<double> _detectDurationFromBytes(Uint8List bytes, String ext) async {
-    final player = AudioPlayer();
-    try {
-      final mime = kSupportedAudioMimeTypes[ext] ?? 'audio/mpeg';
-      final dataUri = Uri.dataFromBytes(bytes, mimeType: mime).toString();
-      final duration = await player.setUrl(dataUri);
-      if (duration != null) {
-        return duration.inMilliseconds / 1000.0;
-      }
-    } catch (_) {
-      return 0.0;
-    } finally {
-      await player.dispose();
-    }
-    return 0.0;
   }
 
   bool _isEntryValid(FileImportEntry e) {
@@ -540,46 +591,52 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
         leading: BackButton(onPressed: () => Navigator.of(context).maybePop()),
         title: Text(l10n.import_title),
       ),
-      body: _entries.isEmpty || _isAnalyzing
-          ? _buildPickingState()
-          : FileMetadataEditor(
-              entries: _entries,
-              projectId:
-                  ref.read(projectNotifierProvider).activeProject?.id ?? '',
-              genres: genreState.genres,
-              genresLoading: genreState.isLoading,
-              errorEntryIds: _errorEntryIds,
-              errorKeys: _errorKeys,
-              bulkGenreId: _bulkGenreId,
-              bulkSubcategoryId: _bulkSubcategoryId,
-              bulkRegisterId: _bulkRegisterId,
-              bulkStoryteller: _bulkStoryteller,
-              onBulkGenreChanged: (v) => setState(() {
-                _bulkGenreId = v;
-                _bulkSubcategoryId = null;
-              }),
-              onBulkSubcategoryChanged: (v) =>
-                  setState(() => _bulkSubcategoryId = v),
-              onBulkRegisterChanged: (v) => setState(() => _bulkRegisterId = v),
-              onBulkStorytellerChanged: (v) =>
-                  setState(() => _bulkStoryteller = v),
-              onApplyBulk: _applyBulkToAll,
-              onEntryGenreChanged: _updateEntryGenre,
-              onEntrySubcategoryChanged: _updateEntrySubcategory,
-              onEntryRegisterChanged: _updateEntryRegister,
-              onEntryStorytellerChanged: _updateEntryStoryteller,
-              onRemoveEntry: _removeEntry,
-              isSaving: _isSaving,
-              saveProgress: _saveProgress,
-              hasWavFiles: _hasWavFiles,
-              compressWav: _compressWav,
-              onCompressWavChanged: (v) => setState(() => _compressWav = v),
-              onCancel: () => Navigator.of(context).maybePop(),
-              onSave: _onSavePressed,
-              showFormatsBanner: !_formatsBannerDismissed,
-              onDismissFormatsBanner: () =>
-                  setState(() => _formatsBannerDismissed = true),
-            ),
+      body: ImportDropZone(
+        onFilesDropped: _handleDrop,
+        enabled: !_isSaving && !_isAnalyzing,
+        hoverLabel: l10n.import_dropHint,
+        child: _entries.isEmpty || _isAnalyzing
+            ? _buildPickingState()
+            : FileMetadataEditor(
+                entries: _entries,
+                projectId:
+                    ref.read(projectNotifierProvider).activeProject?.id ?? '',
+                genres: genreState.genres,
+                genresLoading: genreState.isLoading,
+                errorEntryIds: _errorEntryIds,
+                errorKeys: _errorKeys,
+                bulkGenreId: _bulkGenreId,
+                bulkSubcategoryId: _bulkSubcategoryId,
+                bulkRegisterId: _bulkRegisterId,
+                bulkStoryteller: _bulkStoryteller,
+                onBulkGenreChanged: (v) => setState(() {
+                  _bulkGenreId = v;
+                  _bulkSubcategoryId = null;
+                }),
+                onBulkSubcategoryChanged: (v) =>
+                    setState(() => _bulkSubcategoryId = v),
+                onBulkRegisterChanged: (v) =>
+                    setState(() => _bulkRegisterId = v),
+                onBulkStorytellerChanged: (v) =>
+                    setState(() => _bulkStoryteller = v),
+                onApplyBulk: _applyBulkToAll,
+                onEntryGenreChanged: _updateEntryGenre,
+                onEntrySubcategoryChanged: _updateEntrySubcategory,
+                onEntryRegisterChanged: _updateEntryRegister,
+                onEntryStorytellerChanged: _updateEntryStoryteller,
+                onRemoveEntry: _removeEntry,
+                isSaving: _isSaving,
+                saveProgress: _saveProgress,
+                hasWavFiles: _hasWavFiles,
+                compressWav: _compressWav,
+                onCompressWavChanged: (v) => setState(() => _compressWav = v),
+                onCancel: () => Navigator.of(context).maybePop(),
+                onSave: _onSavePressed,
+                showFormatsBanner: !_formatsBannerDismissed,
+                onDismissFormatsBanner: () =>
+                    setState(() => _formatsBannerDismissed = true),
+              ),
+      ),
     );
   }
 
