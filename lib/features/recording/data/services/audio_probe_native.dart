@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
 
+import '../../../../core/platform/file_source.dart';
+
 import 'audio_probe.dart';
 
 String createPlayableBlobUrl(Uint8List bytes, String mime) {
@@ -20,6 +22,27 @@ Future<AudioProbeResult> probeWithPlayer({
   if (filePath == null) {
     return const AudioProbeResult(diagnostic: 'native_player: no filePath');
   }
+  return _probePath(filePath: filePath, extension: extension);
+}
+
+Future<AudioProbeResult> probeWithPlayerFromSource({
+  required FileSource source,
+  required String extension,
+  required String mime,
+}) async {
+  final path = source.filePath;
+  if (path == null) {
+    return const AudioProbeResult(
+      diagnostic: 'native_player: source has no filePath',
+    );
+  }
+  return _probePath(filePath: path, extension: extension);
+}
+
+Future<AudioProbeResult> _probePath({
+  required String filePath,
+  required String extension,
+}) async {
   final player = AudioPlayer();
   try {
     final duration = await player.setFilePath(filePath);
