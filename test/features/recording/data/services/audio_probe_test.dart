@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:oral_collector/core/platform/file_source.dart';
 import 'package:oral_collector/features/recording/data/services/audio_probe.dart';
 
 Uint8List buildWavHeader({
@@ -219,6 +220,65 @@ void main() {
         mime: 'audio/wav',
       );
       expect(result.hasDuration, isFalse);
+    });
+  });
+
+  group('AudioProbe.probeFromSource', () {
+    const probe = AudioProbe();
+
+    test(
+      'WAV source returns duration from header without reading the full file',
+      () async {
+        final sampleRate = 16000;
+        final byteRate = sampleRate * 2;
+        final dataSize = byteRate * 7;
+        final header = buildWavHeader(
+          formatTag: 0x0001,
+          channels: 1,
+          sampleRate: sampleRate,
+          bitsPerSample: 16,
+          dataSize: dataSize,
+        );
+        final fakeTail = Uint8List(dataSize);
+        final full = Uint8List.fromList([...header, ...fakeTail]);
+        final source = FileSource.fromBytes(full, name: 'tone.wav');
+
+        final result = await probe.probeFromSource(
+          source: source,
+          extension: 'wav',
+          mime: 'audio/wav',
+        );
+
+        expect(result.hasDuration, isTrue);
+        expect(result.durationSeconds, closeTo(7.0, 1e-6));
+        expect(result.codec, 'pcm');
+        expect(result.playable, isTrue);
+      },
+    );
+
+    test('µ-law WAV source keeps codec info + marks unplayable', () async {
+      final header = buildWavHeader(
+        formatTag: 0x0007,
+        channels: 1,
+        sampleRate: 8000,
+        bitsPerSample: 8,
+        dataSize: 8000 * 4,
+      );
+      final full = Uint8List.fromList([
+        ...header,
+        ...List<int>.filled(8000 * 4, 0),
+      ]);
+      final source = FileSource.fromBytes(full, name: 'voice.wav');
+
+      final result = await probe.probeFromSource(
+        source: source,
+        extension: 'wav',
+        mime: 'audio/wav',
+      );
+
+      expect(result.durationSeconds, closeTo(4.0, 1e-6));
+      expect(result.codec, 'mulaw');
+      expect(result.playable, isFalse);
     });
   });
 }
