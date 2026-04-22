@@ -65,11 +65,11 @@ jobs:
       - name: Build AAB
         run: flutter build appbundle --release --build-number=${{ github.run_number }}
 
-      - name: Upload to Google Play (internal track)
+      - name: Upload to Google Play (closed testing track)
         uses: r0adkll/upload-google-play@v1
         with:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: com.shema.oralCollector
           releaseFiles: build/app/outputs/bundle/release/app-release.aab
-          track: internal
+          track: alpha
           status: completed
