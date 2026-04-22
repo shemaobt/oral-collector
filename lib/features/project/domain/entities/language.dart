@@ -12,4 +12,6 @@ class Language {
       code: json['code'] as String,
     );
   }
+
+  Map<String, dynamic> toJson() => {'id': id, 'name': name, 'code': code};
 }
