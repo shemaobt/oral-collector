@@ -7,5 +7,7 @@ const kSupportedAudioMimeTypes = <String, String>{
   'ogg': 'audio/ogg',
 };
 
+const kMaxImportFileBytes = 500 * 1024 * 1024;
+
 String kSupportedAudioExtensionsDisplay() =>
     kSupportedAudioExtensions.map((e) => e.toUpperCase()).join(', ');
