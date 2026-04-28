@@ -220,7 +220,7 @@
   "recordings_noRecordings": "Nenhuma gravação ainda",
   "recordings_noRecordingsSubtitle": "Toque no microfone para gravar sua primeira história, ou importe um arquivo de áudio.",
   "recordings_dropToImport": "Dica: arraste arquivos de áudio para esta janela para importar.",
-  "recordings_count": "{count, plural, =1{1 gravação} other{{count} gravações}}",
+  "recordings_count": "{count, plural, =0{Nenhuma gravação} =1{1 gravação} other{{count} gravações}}",
   "recording_statusUploaded": "Enviado",
   "recording_statusUploading": "Enviando",
   "recording_statusFailed": "Falha",

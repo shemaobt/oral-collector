@@ -219,7 +219,7 @@
   "recordings_selectProjectSubtitle": "रिकॉर्डिंग्स देखने के लिए एक प्रोजेक्ट चुनें",
   "recordings_noRecordings": "अभी कोई रिकॉर्डिंग नहीं",
   "recordings_noRecordingsSubtitle": "अपनी पहली कहानी रिकॉर्ड करने के लिए माइक्रोफ़ोन पर टैप करें, या एक ऑडियो फ़ाइल आयात करें।",
-  "recordings_count": "{count, plural, =1{1 रिकॉर्डिंग} other{{count} रिकॉर्डिंग्स}}",
+  "recordings_count": "{count, plural, =0{कोई रिकॉर्डिंग नहीं} =1{1 रिकॉर्डिंग} other{{count} रिकॉर्डिंग्स}}",
   "recording_statusUploaded": "अपलोड हो गया",
   "recording_statusUploading": "अपलोड हो रहा है",
   "recording_statusFailed": "विफल",
