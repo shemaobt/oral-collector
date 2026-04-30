@@ -5,6 +5,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../features/sync/presentation/notifiers/sync_notifier.dart';
 import '../../features/recording/data/providers.dart';
+import '../../l10n/app_localizations.dart';
 import '../utils/format.dart';
 
 void showUploadQueueSheet(BuildContext context) {
@@ -33,6 +34,7 @@ class _UploadQueueContent extends ConsumerWidget {
     final syncState = ref.watch(syncNotifierProvider);
     final colors = AppColors.of(context);
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     final overallProgress = syncState.totalQueueSizeBytes > 0
         ? syncState.totalUploadedBytes / syncState.totalQueueSizeBytes
@@ -61,14 +63,14 @@ class _UploadQueueContent extends ConsumerWidget {
                   Icon(LucideIcons.upload, size: 20, color: colors.primary),
                   const SizedBox(width: 8),
                   Text(
-                    'Upload Queue',
+                    l10n.recording_uploadQueue,
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   const Spacer(),
                   Text(
-                    '${syncState.pendingCount} pending',
+                    l10n.sync_pending(syncState.pendingCount),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: colors.foreground.withValues(alpha: 0.6),
                     ),
@@ -172,6 +174,7 @@ class _PendingFilesList extends ConsumerWidget {
     final syncState = ref.watch(syncNotifierProvider);
     final colors = AppColors.of(context);
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     return FutureBuilder(
       future: repo.getPendingUploads(),
@@ -181,7 +184,7 @@ class _PendingFilesList extends ConsumerWidget {
         if (recordings.isEmpty) {
           return Center(
             child: Text(
-              'No pending uploads',
+              l10n.recording_noPendingUploads,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: colors.foreground.withValues(alpha: 0.5),
               ),

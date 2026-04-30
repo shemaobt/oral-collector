@@ -22,6 +22,14 @@ class Subcategory {
       sortOrder: (json['sort_order'] as num?)?.toInt() ?? 0,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'genre_id': genreId,
+    'name': name,
+    'description': description,
+    'sort_order': sortOrder,
+  };
 }
 
 class Genre {
@@ -58,4 +66,14 @@ class Genre {
           [],
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'name': name,
+    'description': description,
+    'icon': icon,
+    'color': color,
+    'sort_order': sortOrder,
+    'subcategories': subcategories.map((s) => s.toJson()).toList(),
+  };
 }

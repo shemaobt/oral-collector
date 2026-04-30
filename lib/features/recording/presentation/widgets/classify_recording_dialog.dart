@@ -7,16 +7,23 @@ import '../../../../core/l10n/content_l10n.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../genre/presentation/notifiers/genre_notifier.dart';
 import '../../domain/entities/register.dart';
+import 'secondary_classification_fields.dart';
 
 class ClassifyResult {
   final String genreId;
   final String? subcategoryId;
   final String? registerId;
+  final String? secondaryGenreId;
+  final String? secondarySubcategoryId;
+  final String? secondaryRegisterId;
 
   const ClassifyResult({
     required this.genreId,
     this.subcategoryId,
     this.registerId,
+    this.secondaryGenreId,
+    this.secondarySubcategoryId,
+    this.secondaryRegisterId,
   });
 }
 
@@ -33,6 +40,8 @@ class _ClassifyRecordingDialogState
   String? _selectedGenreId;
   String? _selectedSubcategoryId;
   String? _selectedRegisterId;
+  bool _showSecondary = false;
+  SecondaryValues? _secondary;
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +56,13 @@ class _ClassifyRecordingDialogState
         .firstOrNull;
     final subcategories = selectedGenre?.subcategories ?? [];
 
-    final isValid = _selectedGenreId != null;
+    final primaryValid =
+        _selectedGenreId != null && _selectedRegisterId != null;
+    final secondaryValid =
+        !_showSecondary ||
+        _secondary == null ||
+        (_secondary!.isValid && _secondary!.genreId != _selectedGenreId);
+    final isValid = primaryValid && secondaryValid;
 
     return AlertDialog(
       title: Row(
@@ -59,49 +74,22 @@ class _ClassifyRecordingDialogState
       ),
       content: SizedBox(
         width: double.maxFinite,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              l10n.moveCategory_genre,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: colors.foreground.withValues(alpha: 0.6),
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 4),
-            DropdownButtonFormField<String>(
-              initialValue: _selectedGenreId,
-              decoration: const InputDecoration(
-                isDense: true,
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 10,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                l10n.classify_predominantHeader,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: colors.foreground.withValues(alpha: 0.5),
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.8,
                 ),
               ),
-              hint: Text(l10n.recording_selectGenre),
-              items: genres
-                  .map(
-                    (g) => DropdownMenuItem(
-                      value: g.id,
-                      child: Text(localizedGenreName(l10n, g.name)),
-                    ),
-                  )
-                  .toList(),
-              onChanged: (value) {
-                if (value == null) return;
-                setState(() {
-                  _selectedGenreId = value;
-                  _selectedSubcategoryId = null;
-                });
-              },
-            ),
-            const SizedBox(height: 16),
-
-            if (subcategories.isNotEmpty) ...[
+              const SizedBox(height: 8),
               Text(
-                l10n.moveCategory_subcategory,
+                l10n.moveCategory_genre,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: colors.foreground.withValues(alpha: 0.6),
                   fontWeight: FontWeight.w600,
@@ -109,10 +97,8 @@ class _ClassifyRecordingDialogState
               ),
               const SizedBox(height: 4),
               DropdownButtonFormField<String>(
-                initialValue:
-                    subcategories.any((s) => s.id == _selectedSubcategoryId)
-                    ? _selectedSubcategoryId
-                    : null,
+                isExpanded: true,
+                initialValue: _selectedGenreId,
                 decoration: const InputDecoration(
                   isDense: true,
                   contentPadding: EdgeInsets.symmetric(
@@ -120,57 +106,140 @@ class _ClassifyRecordingDialogState
                     vertical: 10,
                   ),
                 ),
-                hint: Text(l10n.moveCategory_selectSubcategory),
-                items: subcategories
+                hint: Text(l10n.recording_selectGenre),
+                items: genres
                     .map(
-                      (s) => DropdownMenuItem(
-                        value: s.id,
-                        child: Text(localizedSubcategoryName(l10n, s.name)),
+                      (g) => DropdownMenuItem(
+                        value: g.id,
+                        child: Text(localizedGenreName(l10n, g.name)),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (value) {
+                  if (value == null) return;
+                  setState(() {
+                    _selectedGenreId = value;
+                    _selectedSubcategoryId = null;
+                    if (_secondary?.genreId == value) {
+                      _secondary = null;
+                    }
+                  });
+                },
+              ),
+              const SizedBox(height: 16),
+
+              if (subcategories.isNotEmpty) ...[
+                Text(
+                  l10n.moveCategory_subcategory,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colors.foreground.withValues(alpha: 0.6),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                DropdownButtonFormField<String>(
+                  isExpanded: true,
+                  initialValue:
+                      subcategories.any((s) => s.id == _selectedSubcategoryId)
+                      ? _selectedSubcategoryId
+                      : null,
+                  decoration: const InputDecoration(
+                    isDense: true,
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                  ),
+                  hint: Text(l10n.moveCategory_selectSubcategory),
+                  items: subcategories
+                      .map(
+                        (s) => DropdownMenuItem(
+                          value: s.id,
+                          child: Text(localizedSubcategoryName(l10n, s.name)),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedSubcategoryId = value;
+                    });
+                  },
+                ),
+                const SizedBox(height: 16),
+              ],
+
+              Text(
+                l10n.classify_register,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: colors.foreground.withValues(alpha: 0.6),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 4),
+              DropdownButtonFormField<String>(
+                isExpanded: true,
+                initialValue: _selectedRegisterId,
+                decoration: const InputDecoration(
+                  isDense: true,
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
+                ),
+                hint: Text(l10n.classify_selectRegister),
+                items: kRegisters
+                    .map(
+                      (r) => DropdownMenuItem(
+                        value: r.id,
+                        child: Text(localizedRegisterName(l10n, r.name)),
                       ),
                     )
                     .toList(),
                 onChanged: (value) {
                   setState(() {
-                    _selectedSubcategoryId = value;
+                    _selectedRegisterId = value;
                   });
                 },
               ),
-              const SizedBox(height: 16),
-            ],
-
-            Text(
-              l10n.classify_register,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: colors.foreground.withValues(alpha: 0.6),
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 4),
-            DropdownButtonFormField<String>(
-              initialValue: _selectedRegisterId,
-              decoration: const InputDecoration(
-                isDense: true,
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 10,
+              const SizedBox(height: 12),
+              Theme(
+                data: theme.copyWith(dividerColor: Colors.transparent),
+                child: ExpansionTile(
+                  tilePadding: EdgeInsets.zero,
+                  childrenPadding: const EdgeInsets.only(top: 8),
+                  initiallyExpanded: _showSecondary,
+                  onExpansionChanged: (expanded) {
+                    setState(() {
+                      _showSecondary = expanded;
+                      if (!expanded) _secondary = null;
+                    });
+                  },
+                  leading: Icon(
+                    LucideIcons.layers,
+                    size: 18,
+                    color: colors.secondary,
+                  ),
+                  title: Text(
+                    l10n.classify_addAlternativeTitle,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  children: [
+                    SecondaryClassificationFields(
+                      primaryGenreId: _selectedGenreId,
+                      initial: _secondary,
+                      onChanged: (values) {
+                        setState(() {
+                          _secondary = values;
+                        });
+                      },
+                    ),
+                  ],
                 ),
               ),
-              hint: Text(l10n.classify_selectRegister),
-              items: kRegisters
-                  .map(
-                    (r) => DropdownMenuItem(
-                      value: r.id,
-                      child: Text(localizedRegisterName(l10n, r.name)),
-                    ),
-                  )
-                  .toList(),
-              onChanged: (value) {
-                setState(() {
-                  _selectedRegisterId = value;
-                });
-              },
-            ),
-          ],
+            ],
+          ),
         ),
       ),
       actions: [
@@ -180,13 +249,19 @@ class _ClassifyRecordingDialogState
         ),
         TextButton(
           onPressed: isValid
-              ? () => Navigator.of(context).pop(
-                  ClassifyResult(
-                    genreId: _selectedGenreId!,
-                    subcategoryId: _selectedSubcategoryId,
-                    registerId: _selectedRegisterId,
-                  ),
-                )
+              ? () {
+                  final secondary = _showSecondary ? _secondary : null;
+                  Navigator.of(context).pop(
+                    ClassifyResult(
+                      genreId: _selectedGenreId!,
+                      subcategoryId: _selectedSubcategoryId,
+                      registerId: _selectedRegisterId,
+                      secondaryGenreId: secondary?.genreId,
+                      secondarySubcategoryId: secondary?.subcategoryId,
+                      secondaryRegisterId: secondary?.registerId,
+                    ),
+                  );
+                }
               : null,
           child: Text(l10n.classify_action),
         ),

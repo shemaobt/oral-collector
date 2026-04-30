@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../l10n/app_localizations.dart';
@@ -65,6 +66,7 @@ class _QuickRecordingScreenState extends ConsumerState<QuickRecordingScreen> {
               subcategoryName: null,
               registerName: null,
               onReRecord: _reRecord,
+              onDiscard: () => context.go('/home'),
             ),
     );
   }

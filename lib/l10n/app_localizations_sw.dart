@@ -36,6 +36,12 @@ class AppLocalizationsSw extends AppLocalizations {
   String get common_cancel => 'Ghairi';
 
   @override
+  String get common_resume => 'Resume';
+
+  @override
+  String get common_discard => 'Discard';
+
+  @override
   String get common_save => 'Hifadhi';
 
   @override
@@ -172,6 +178,69 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get auth_continueButton => 'Endelea';
+
+  @override
+  String get auth_forgotPassword => 'Umesahau nenosiri?';
+
+  @override
+  String get auth_resetPassword => 'Weka Nenosiri Upya';
+
+  @override
+  String get auth_forgotPasswordSubtitle =>
+      'Ingiza barua pepe yako na tutakutumia kiungo cha kuweka upya.';
+
+  @override
+  String get auth_sendResetLink => 'Tuma Kiungo';
+
+  @override
+  String get auth_sending => 'Inatuma...';
+
+  @override
+  String get auth_checkYourEmail => 'Angalia Barua Pepe Yako';
+
+  @override
+  String auth_resetEmailSent(String email) {
+    return 'Tumetuma kiungo cha kuweka upya nenosiri kwa $email. Angalia kikasha chako na ufuate kiungo ili kuweka nenosiri jipya.';
+  }
+
+  @override
+  String get auth_openEmailApp => 'Fungua Barua Pepe';
+
+  @override
+  String get auth_resendEmail => 'Tuma Tena';
+
+  @override
+  String get auth_backToLogin => 'Rudi kwenye Kuingia';
+
+  @override
+  String get auth_newPassword => 'Nenosiri Jipya';
+
+  @override
+  String get auth_confirmNewPassword => 'Thibitisha Nenosiri Jipya';
+
+  @override
+  String get auth_resetPasswordSubtitle =>
+      'Ingiza nenosiri lako jipya hapa chini.';
+
+  @override
+  String get auth_resetPasswordButton => 'Weka Nenosiri Upya';
+
+  @override
+  String get auth_resetting => 'Inaweka upya...';
+
+  @override
+  String get auth_resetSuccess =>
+      'Nenosiri limewekwa upya kwa mafanikio! Sasa unaweza kuingia na nenosiri lako jipya.';
+
+  @override
+  String get auth_invalidResetLink => 'Kiungo si Sahihi';
+
+  @override
+  String get auth_invalidResetLinkMessage =>
+      'Kiungo hiki cha kuweka upya nenosiri si sahihi au kimekwisha muda.';
+
+  @override
+  String get auth_requestNewLink => 'Omba Kiungo Kipya';
 
   @override
   String get home_greetingMorning => 'Habari za asubuhi';
@@ -406,6 +475,12 @@ class AppLocalizationsSw extends AppLocalizations {
   String get recording_titleHint => 'Ongeza kichwa (si lazima)';
 
   @override
+  String get recording_descriptionHint => 'Ongeza maelezo mafupi (si lazima)';
+
+  @override
+  String get recording_descriptionEmpty => 'Ongeza maelezo';
+
+  @override
   String get recording_saveRecording => 'Hifadhi Rekodi';
 
   @override
@@ -424,13 +499,21 @@ class AppLocalizationsSw extends AppLocalizations {
   String get recording_saved => 'Rekodi imehifadhiwa';
 
   @override
+  String get recording_uploading => 'Inapakia rekodi…';
+
+  @override
+  String recording_uploadFailed(String error) {
+    return 'Kupakia kumeshindikana: $error';
+  }
+
+  @override
   String get recording_notFound => 'Rekodi haikupatikana';
 
   @override
   String get recording_unknownGenre => 'Aina isiyojulikana';
 
   @override
-  String get recording_splitRecording => 'Gawa Rekodi';
+  String get recording_splitRecording => 'Hariri Rekodi';
 
   @override
   String get recording_moveCategory => 'Hamisha Kategoria';
@@ -486,10 +569,56 @@ class AppLocalizationsSw extends AppLocalizations {
   String get recording_updateFailed => 'Imeshindwa kusasisha kwenye seva';
 
   @override
+  String get recording_exportAudio => 'Hamisha sauti';
+
+  @override
+  String get recording_exportShareFailed =>
+      'Imeshindwa kushiriki faili ya sauti';
+
+  @override
+  String get recording_replaceAudio => 'Badilisha sauti';
+
+  @override
+  String get recording_replaceTitle => 'Badilisha sauti?';
+
+  @override
+  String get recording_replaceMessage =>
+      'Sauti ya sasa itahamishiwa kwenye pipa la saa 24 na kubadilishwa na faili uliyochagua. Faili za sauti zenye umbizo sawa na asili pekee zinaweza kutumika.';
+
+  @override
+  String get recording_replaceReuploadNotice =>
+      'Rekodi hii tayari imepakiwa. Faili mpya itaibadilisha kwenye seva.';
+
+  @override
+  String get recording_replaceConfirm => 'Badilisha';
+
+  @override
+  String recording_replaceFormatMismatch(String expected, String actual) {
+    return 'Faili ya kubadilishia lazima iwe ya $expected, lakini ni $actual';
+  }
+
+  @override
+  String get recording_replaceInvalidAudio =>
+      'Haikuweza kusoma faili ya sauti uliyochagua';
+
+  @override
+  String get recording_replaceSuccess => 'Sauti imebadilishwa';
+
+  @override
+  String get recording_replaceFailed => 'Imeshindwa kubadilisha sauti';
+
+  @override
+  String get recording_replaceNotAvailableWeb =>
+      'Kubadilisha sauti hakupatikani kwenye programu ya wavuti';
+
+  @override
   String get recordings_title => 'Rekodi';
 
   @override
   String get recordings_subtitle => 'Hadithi zako zilizokusanywa';
+
+  @override
+  String get recordings_searchHint => 'Tafuta rekodi...';
 
   @override
   String get recordings_importAudio => 'Ingiza faili ya sauti';
@@ -507,6 +636,10 @@ class AppLocalizationsSw extends AppLocalizations {
   @override
   String get recordings_noRecordingsSubtitle =>
       'Gusa maikrofoni ili kurekodi hadithi yako ya kwanza, au ingiza faili ya sauti.';
+
+  @override
+  String get recordings_dropToImport =>
+      'Tip: drag audio files onto this window to import.';
 
   @override
   String recordings_count(int count) {
@@ -554,7 +687,7 @@ class AppLocalizationsSw extends AppLocalizations {
   String get recordings_clearFailed => 'Imeshindwa kufuta rekodi';
 
   @override
-  String get trim_title => 'Gawa Rekodi';
+  String get trim_title => 'Hariri Rekodi';
 
   @override
   String get trim_notFound => 'Rekodi haikupatikana';
@@ -608,6 +741,35 @@ class AppLocalizationsSw extends AppLocalizations {
   }
 
   @override
+  String get trim_saveConfirmTitle => 'Hifadhi mabadiliko?';
+
+  @override
+  String trim_saveConfirmBody(int count) {
+    return 'Hii itabadilisha rekodi ya awali na sehemu $count. Kitendo hiki hakiwezi kubatilishwa.';
+  }
+
+  @override
+  String get trim_inheritLabel => 'Rithi';
+
+  @override
+  String get trim_applyToAll => 'Tumia kwa yote';
+
+  @override
+  String get trim_copyFromPrevious => 'Nakili kutoka iliyotangulia';
+
+  @override
+  String get trim_classifySegment => 'Ainisha sehemu';
+
+  @override
+  String get trim_volume => 'Sauti';
+
+  @override
+  String get trim_peakClip => 'Kukata';
+
+  @override
+  String get trim_boostOnSave => 'Nguvu itawekwa wakati wa kuhifadhi';
+
+  @override
   String get import_title => 'Ingiza Sauti';
 
   @override
@@ -649,6 +811,135 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get import_importAndSave => 'Ingiza na Uhifadhi';
+
+  @override
+  String get import_setForAll => 'Weka kwa faili zote';
+
+  @override
+  String get import_applyToAll => 'Tumia kwa zote';
+
+  @override
+  String get import_fieldRequired => 'Inahitajika';
+
+  @override
+  String import_validationBanner(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Faili $count hazina sehemu zinazohitajika',
+      one: 'Faili 1 haina sehemu zinazohitajika',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get import_remove => 'Ondoa faili';
+
+  @override
+  String import_supportedFormats(String formats) {
+    return 'Miundo inayotumika: $formats. Faili zisizotumika au zisizosomeka zinarukwa.';
+  }
+
+  @override
+  String import_rejectedFiles(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Ziliruka faili $count zisizotumika au zisizosomeka: $names',
+      one: 'Iliruka faili 1 isiyotumika au isiyosomeka: $names',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String import_countFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Faili $count',
+      one: 'Faili 1',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String import_importNFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'faili $count',
+      one: 'faili 1',
+    );
+    return 'Ingiza $_temp0';
+  }
+
+  @override
+  String get import_emptyFile => 'faili tupu';
+
+  @override
+  String get import_compressWav => 'Bana WAV kuwa M4A';
+
+  @override
+  String get import_compressWavHint =>
+      '~10x ndogo, bila kupoteza ubora kwa mfereji wa ML';
+
+  @override
+  String get import_dropHint => 'Drop audio files to import';
+
+  @override
+  String get import_dropActive => 'Release to import';
+
+  @override
+  String import_rejectedTooLarge(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Skipped $count files over 500 MB: $names',
+      one: 'Skipped 1 file over 500 MB: $names',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String import_rejectedUnsupportedCodec(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Skipped $count files with unsupported audio codecs: $names. Re-export as PCM WAV or M4A.',
+      one:
+          'Skipped 1 file with an unsupported audio codec: $names. Re-export as PCM WAV or M4A.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String import_rejectedUnreadable(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Skipped $count unreadable files: $names',
+      one: 'Skipped 1 unreadable file: $names',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get import_resumePromptTitle => 'Resume interrupted upload';
+
+  @override
+  String import_resumePromptBody(String name, String size) {
+    return '\"$name\" ($size) was partially uploaded. Select the same file to continue.';
+  }
+
+  @override
+  String get import_resumeSizeMismatch =>
+      'That file doesn\'t match the paused upload.';
+
+  @override
+  String import_largeFileWarning(String size) {
+    return 'Large file ($size). Keep this tab open until the upload completes.';
+  }
 
   @override
   String get moveCategory_title => 'Hamisha Kategoria';
@@ -1474,7 +1765,7 @@ class AppLocalizationsSw extends AppLocalizations {
   String get action_actions => 'Vitendo';
 
   @override
-  String get action_split => 'Gawa';
+  String get action_split => 'Hariri';
 
   @override
   String get action_flagClean => 'Weka Alama Usafishaji';
@@ -1550,23 +1841,566 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get classify_banner =>
-      'Rekodi hii inahitaji kuainishwa kabla ya kupakiwa.';
+      'Rekodi hii haijaainishwa. Gusa Ainisha ili kuongeza aina na rejista.';
 
   @override
   String get classify_success => 'Rekodi imeainishwa';
 
   @override
-  String get classify_register => 'Rejista (si lazima)';
+  String get classify_register => 'Rejista';
 
   @override
   String get classify_selectRegister => 'Chagua rejista';
 
   @override
+  String get classify_predominantHeader => 'AINISHO KUU';
+
+  @override
+  String get classify_addAlternativeTitle => 'Si wazi? Ongeza ainisho mbadala';
+
+  @override
+  String get classify_secondaryNote =>
+      'Ni ainisho kuu pekee inayohesabiwa katika jumla ya muda wa aina.';
+
+  @override
+  String get classify_secondaryGenre => 'Aina ya pili';
+
+  @override
+  String get classify_secondarySubcategory => 'Kitengo kidogo cha pili';
+
+  @override
+  String get classify_secondaryRegister => 'Rejista ya pili';
+
+  @override
+  String get classify_secondarySameAsPrimary =>
+      'Aina ya pili lazima iwe tofauti na aina kuu.';
+
+  @override
+  String get classify_clearAlternative => 'Futa mbadala';
+
+  @override
+  String get recording_alsoClassifiedAs => 'Pia imeainishwa kama';
+
+  @override
+  String get recording_alsoClassifiedAsTooltip => 'Ina ainisho mbadala';
+
+  @override
+  String get recording_addAlternative => 'Ongeza ainisho mbadala';
+
+  @override
+  String get recording_removeSecondary => 'Ondoa ainisho mbadala';
+
+  @override
+  String get recording_secondaryRemoved => 'Ainisho mbadala imeondolewa';
+
+  @override
+  String get recording_secondaryUpdated => 'Ainisho mbadala imesasishwa';
+
+  @override
   String get recording_unclassified => 'Haijainishwa';
+
+  @override
+  String get recording_inputSource => 'Ingizo';
+
+  @override
+  String get recording_selectMicrophone => 'Chagua maikrofoni';
+
+  @override
+  String get recording_builtInMicrophone => 'Chaguomsingi cha mfumo';
+
+  @override
+  String get recording_micPermissionNeeded =>
+      'Ruhusu ufikiaji wa maikrofoni ili kuona majina ya vifaa';
+
+  @override
+  String get recording_micPermissionButton => 'Toa ruhusa';
+
+  @override
+  String get recording_micPermissionDenied =>
+      'Ruhusa ya maikrofoni imekataliwa. Iwashe katika mipangilio ya kivinjari au mfumo.';
+
+  @override
+  String get recording_micPermissionTitle =>
+      'Ufikiaji wa maikrofoni unahitajika';
+
+  @override
+  String get recording_noDevicesFound => 'Hakuna maikrofoni iliyopatikana';
+
+  @override
+  String get recording_storageLowWarnTitle => 'Hifadhi imepungua';
+
+  @override
+  String recording_storageLowWarnBody(int minutes) {
+    return 'Takriban dakika $minutes za kurekodi zinapatikana. Endelea?';
+  }
+
+  @override
+  String get recording_storageRefuseTitle => 'Hifadhi haitoshi';
+
+  @override
+  String get recording_storageRefuseBody =>
+      'Toa nafasi kwenye kifaa hiki kabla ya kurekodi.';
+
+  @override
+  String recording_storageCriticalBanner(int minutes) {
+    return 'Hifadhi muhimu — takriban dakika $minutes zimebaki. Fikiria kusimamisha hivi karibuni.';
+  }
+
+  @override
+  String get recording_storageForceStopped =>
+      'Kurekodi kumesimamishwa kwa sababu ya hifadhi. Maendeleo yako yamehifadhiwa.';
+
+  @override
+  String recording_savedAt(String time) {
+    return 'Imehifadhiwa saa $time';
+  }
+
+  @override
+  String get recording_continuedInBackground => 'Kurekodi kuliendelea nyuma';
+
+  @override
+  String get recording_continue => 'Endelea';
+
+  @override
+  String get recording_cancel => 'Ghairi';
+
+  @override
+  String get recording_recoverTitle => 'Rejesha kurekodi kulikoingiliwa?';
+
+  @override
+  String recording_recoverBody(int minutes) {
+    return 'Tulipata takriban dakika $minutes za sauti kutoka kipindi cha awali.';
+  }
+
+  @override
+  String get recording_recoverButton => 'Rejesha';
+
+  @override
+  String get recording_recoverDiscard => 'Tupa';
+
+  @override
+  String get recording_recoverFailedLastSegment =>
+      'Sauti fulani karibu na mwisho haikuweza kusomwa na ikarukwa.';
+
+  @override
+  String get recording_inProgressNotificationTitle => 'Inarekodi';
+
+  @override
+  String get recording_inProgressNotificationBody =>
+      'Bofya kurudi kwenye programu';
+
+  @override
+  String get profile_defaultMicrophone => 'Maikrofoni chaguomsingi';
+
+  @override
+  String get profile_systemDefault => 'Chaguomsingi cha mfumo';
+
+  @override
+  String get settings_deviceStorageTitle => 'Hifadhi ya kifaa';
+
+  @override
+  String settings_deviceStorageSubtitle(String used, String free) {
+    return 'Imetumika $used · Ipo $free';
+  }
 
   @override
   String get fab_quickRecord => 'Haraka';
 
   @override
   String get fab_normalRecord => 'Rekodi';
+
+  @override
+  String get error_network =>
+      'Haiwezi kufikia seva. Tafadhali angalia muunganisho wako wa intaneti na ujaribu tena.';
+
+  @override
+  String get error_secureConnection =>
+      'Muunganisho salama haukuweza kuanzishwa. Tafadhali jaribu tena baadaye.';
+
+  @override
+  String get error_timeout =>
+      'Ombi limekwisha muda. Tafadhali angalia muunganisho wako na ujaribu tena.';
+
+  @override
+  String get error_invalidCredentials =>
+      'Barua pepe au nenosiri si sahihi. Tafadhali jaribu tena.';
+
+  @override
+  String get error_userNotFound =>
+      'Hakuna akaunti iliyopatikana na anwani hiyo ya barua pepe.';
+
+  @override
+  String get error_accountExists => 'Akaunti yenye barua pepe hii tayari ipo.';
+
+  @override
+  String get error_emailRequired =>
+      'Tafadhali ingiza anwani yako ya barua pepe.';
+
+  @override
+  String get error_passwordRequired => 'Tafadhali ingiza nenosiri lako.';
+
+  @override
+  String get error_signupFailed =>
+      'Haikuweza kuunda akaunti yako. Tafadhali angalia maelezo yako na ujaribu tena.';
+
+  @override
+  String get error_sessionExpired =>
+      'Kikao chako kimeisha muda. Tafadhali ingia tena.';
+
+  @override
+  String get error_profileLoadFailed =>
+      'Haikuweza kupakia wasifu wako. Tafadhali jaribu tena.';
+
+  @override
+  String get error_profileUpdateFailed =>
+      'Haikuweza kusasisha wasifu wako. Tafadhali jaribu tena.';
+
+  @override
+  String get error_imageUploadFailed =>
+      'Haikuweza kupakia picha. Tafadhali jaribu tena.';
+
+  @override
+  String get error_notAuthenticated =>
+      'Hujaingia. Tafadhali ingia na ujaribu tena.';
+
+  @override
+  String get error_noPermission => 'Huna ruhusa ya kufanya kitendo hiki.';
+
+  @override
+  String get error_generic =>
+      'Kuna tatizo limetokea. Tafadhali jaribu tena baadaye.';
+
+  @override
+  String get common_close => 'Funga';
+
+  @override
+  String get storyteller_title => 'Wasimulizi';
+
+  @override
+  String get storyteller_singular => 'Msimulizi';
+
+  @override
+  String get storyteller_manageAction => 'Simamia wasimulizi';
+
+  @override
+  String get storyteller_addNew => 'Ongeza msimulizi';
+
+  @override
+  String get storyteller_createTitle => 'Msimulizi mpya';
+
+  @override
+  String get storyteller_editTitle => 'Hariri msimulizi';
+
+  @override
+  String get storyteller_speakerName => 'Jina la msemaji';
+
+  @override
+  String get storyteller_sex => 'Jinsia';
+
+  @override
+  String get storyteller_sexMale => 'Mwanaume';
+
+  @override
+  String get storyteller_sexFemale => 'Mwanamke';
+
+  @override
+  String get storyteller_age => 'Umri';
+
+  @override
+  String get storyteller_location => 'Mahali';
+
+  @override
+  String get storyteller_dialect => 'Lahaja';
+
+  @override
+  String get storyteller_externalAcceptanceTitle =>
+      'Uthibitisho wa kukubaliwa kwa nje';
+
+  @override
+  String get storyteller_externalAcceptanceDescription =>
+      'Ninathibitisha kuwa uthibitisho wa kukubaliwa kwa nje umefanyika kwa msemaji huyu.';
+
+  @override
+  String get storyteller_externalAcceptanceInfo =>
+      'Kabla ya kusajili msimulizi, meneja wa mradi lazima apate idhini ya msemaji nje ya programu (kwa mfano, kupitia fomu iliyosainiwa au makubaliano ya mdomo yaliyorekodiwa). Kisanduku hiki kinarekodi kuwa hatua hiyo imekamilika.';
+
+  @override
+  String get storyteller_createRequiresConnection =>
+      'Kuunda msimulizi kunahitaji muunganisho wa intaneti.';
+
+  @override
+  String get storyteller_deleteTitle => 'Futa msimulizi?';
+
+  @override
+  String get storyteller_deleteMessage =>
+      'Rekodi zilizopangiwa msimulizi huyu hapo awali zitaonekana kama hazijapangwa.';
+
+  @override
+  String get storyteller_noneAssigned => 'Hakuna msimulizi aliyepangwa';
+
+  @override
+  String get storyteller_unknown => 'Msimulizi asiyejulikana';
+
+  @override
+  String get storyteller_selectHint => 'Chagua msimulizi';
+
+  @override
+  String get storyteller_required => 'Msimulizi anahitajika';
+
+  @override
+  String get storyteller_searchPlaceholder => 'Tafuta wasimulizi';
+
+  @override
+  String get storyteller_empty => 'Hakuna wasimulizi bado';
+
+  @override
+  String get storyteller_emptyDescription =>
+      'Unda msimulizi kwa mradi ili kumpangia rekodi.';
+
+  @override
+  String get storyteller_offlineNoCache =>
+      'Wasimulizi hawajasawazishwa bado. Unganisha kwa intaneti ili kuwapakia.';
+
+  @override
+  String get storyteller_assign => 'Mpangie';
+
+  @override
+  String get storyteller_reassign => 'Mpangie upya';
+
+  @override
+  String get storyteller_ageValidator => 'Weka umri kati ya 1 na 120';
+
+  @override
+  String storyteller_ageYearsShort(int age) {
+    return 'miaka $age';
+  }
+
+  @override
+  String get filters_buttonLabel => 'Vichujio';
+
+  @override
+  String get filters_sheetTitle => 'Chuja rekodi';
+
+  @override
+  String get filters_sectionStatus => 'Hali ya kupakia';
+
+  @override
+  String get filters_sectionGenre => 'Aina';
+
+  @override
+  String get filters_sectionStoryteller => 'Msimulizi';
+
+  @override
+  String get filters_sectionUser => 'Imerekodiwa na';
+
+  @override
+  String get filter_apply => 'Tumia';
+
+  @override
+  String get filter_reset => 'Weka upya';
+
+  @override
+  String get filter_clearAll => 'Futa zote';
+
+  @override
+  String filter_countActive(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Vichujio $countString',
+      one: 'Kichujio 1',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get filter_userAll => 'Mtumiaji yeyote';
+
+  @override
+  String get filter_storytellerAll => 'Msimulizi yeyote';
+
+  @override
+  String get filter_genreAll => 'Aina yoyote';
+
+  @override
+  String get detail_recordedBy => 'Imerekodiwa na';
+
+  @override
+  String get detail_storyteller => 'Msimulizi';
+
+  @override
+  String get recording_unknownUser => 'Mtumiaji asiyejulikana';
+
+  @override
+  String get common_ok => 'Sawa';
+
+  @override
+  String get invite_title => 'Alika mwanachama';
+
+  @override
+  String get invite_searchLabel => 'Tafuta kwa jina au barua pepe';
+
+  @override
+  String get invite_searchHint => 'Andika angalau herufi 2';
+
+  @override
+  String get invite_noUsersFound => 'Hakuna watumiaji waliopatikana';
+
+  @override
+  String get invite_changeUser => 'Badilisha mtumiaji';
+
+  @override
+  String get invite_roleLabel => 'Jukumu *';
+
+  @override
+  String get invite_roleMember => 'Mwanachama';
+
+  @override
+  String get invite_roleManager => 'Meneja';
+
+  @override
+  String get invite_sendInvite => 'Tuma mwaliko';
+
+  @override
+  String get invite_sendFailed => 'Imeshindwa kutuma mwaliko';
+
+  @override
+  String get recording_recoveryInProgress => 'Inarekebisha…';
+
+  @override
+  String get recording_recoveryFailed => 'Urejeshaji umeshindikana';
+
+  @override
+  String get recording_recoverySessionNotFound => 'Kipindi hakipatikani';
+
+  @override
+  String get recording_recoveryNoAudio => 'Hakuna sauti ya kurekebisha';
+
+  @override
+  String get recording_recoveryConcatFailed => 'Imeshindwa kuunganisha';
+
+  @override
+  String get a11y_startRecording => 'Anza kurekodi';
+
+  @override
+  String get a11y_createProject => 'Unda mradi';
+
+  @override
+  String get a11y_playAudio => 'Cheza sauti';
+
+  @override
+  String get a11y_pauseAudio => 'Simamisha sauti';
+
+  @override
+  String get a11y_splitWaveform =>
+      'Umbo la mawimbi ya kugawanya. Gusa kuweka alama. Buruta kuhamisha. Bana kuzomu. Bonyeza kwa muda ili kuondoa.';
+
+  @override
+  String a11y_tabLabel(String label) {
+    return 'Kichupo cha $label';
+  }
+
+  @override
+  String get profile_adminBadge => 'Msimamizi';
+
+  @override
+  String get profile_setYourName => 'Weka jina lako';
+
+  @override
+  String get profile_inviteAcceptFailed => 'Imeshindwa kukubali mwaliko';
+
+  @override
+  String get profile_inviteDeclineFailed => 'Imeshindwa kukataa mwaliko';
+
+  @override
+  String get profile_typeDeleteWord => 'FUTA';
+
+  @override
+  String trim_splitError(String error) {
+    return 'Hitilafu katika kugawanya: $error';
+  }
+
+  @override
+  String get error_serverFailure =>
+      'Seva haikuweza kukamilisha ombi. Tafadhali jaribu tena.';
+
+  @override
+  String get error_importNoBytes =>
+      'Faili hii haina yaliyomo na haiwezi kuagizwa.';
+
+  @override
+  String get error_ffmpegProcessingFailed =>
+      'Usindikaji wa sauti umeshindikana.';
+
+  @override
+  String get error_downloadFailed => 'Upakuaji umeshindikana.';
+
+  @override
+  String get projectSettings_offlineTitle => 'Umeunganishwa kwa mtandao';
+
+  @override
+  String get projectSettings_offlineDescription =>
+      'Maelezo ya mradi hayawezi kupakiwa bila muunganisho wa intaneti. Yatapakiwa kiotomatiki utakapounganishwa tena.';
+
+  @override
+  String get recording_noAudioAvailable => 'Hakuna sauti inayopatikana';
+
+  @override
+  String get recording_noPendingUploads => 'Hakuna kupakia kunakosubiri';
+
+  @override
+  String get recording_uploadQueue => 'Foleni ya kupakia';
+
+  @override
+  String get recording_previewSelection => 'Hakiki uteuzi';
+
+  @override
+  String get recording_stopPreview => 'Simamisha hakiki';
+
+  @override
+  String get recording_audioLoadFailed => 'Imeshindwa kupakia sauti';
+
+  @override
+  String get status_offlineSubtitle =>
+      'Baadhi ya vipengele kama vile usawazishaji na upakiaji data vinahitaji muunganisho wa intaneti.';
+
+  @override
+  String get status_noProject => 'Hakuna mradi uliopangwa';
+
+  @override
+  String get status_noProjectSubtitle =>
+      'Bado haujaongezwa kwenye mradi wowote. Tafadhali wasiliana na msimamizi wako na subiri kupangwa.';
+
+  @override
+  String get a11y_recordingInProgress => 'Rekodi inaendelea, gusa kusitisha';
+
+  @override
+  String get a11y_recordingPaused => 'Rekodi imesitishwa, gusa kuendelea';
+
+  @override
+  String get recording_audioFileNotFound => 'Faili ya sauti haijapatikana';
+
+  @override
+  String recording_partOf(int part, int total) {
+    return 'Sehemu $part kati ya $total';
+  }
+
+  @override
+  String recording_splitFrom(String sourceId) {
+    return 'Imetenganishwa kutoka $sourceId';
+  }
+
+  @override
+  String trim_segmentRemoved(int index) {
+    return 'Sehemu $index — imeondolewa';
+  }
+
+  @override
+  String trim_segmentOfTotal(int index, int total) {
+    return 'Sehemu $index kati ya $total';
+  }
 }

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -15,11 +17,61 @@ final projectNotifierProvider = NotifierProvider<ProjectNotifier, ProjectState>(
 
 class ProjectNotifier extends Notifier<ProjectState> {
   static const _activeProjectIdKey = 'active_project_id';
+  static const _cachedProjectsKey = 'cached_projects';
+  static const _cachedLanguagesKey = 'cached_languages';
 
   ProjectRepository get _repo => ref.read(projectRepositoryProvider);
 
   @override
-  ProjectState build() => const ProjectState();
+  ProjectState build() {
+    _hydrateFromCache();
+    return const ProjectState();
+  }
+
+  Future<void> _hydrateFromCache() async {
+    final prefs = await SharedPreferences.getInstance();
+    final rawProjects = prefs.getString(_cachedProjectsKey);
+    if (rawProjects == null) return;
+
+    try {
+      final projects = (jsonDecode(rawProjects) as List<dynamic>)
+          .map((j) => Project.fromJson(j as Map<String, dynamic>))
+          .toList();
+
+      final rawLanguages = prefs.getString(_cachedLanguagesKey);
+      final languages = rawLanguages != null
+          ? (jsonDecode(rawLanguages) as List<dynamic>)
+                .map((j) => Language.fromJson(j as Map<String, dynamic>))
+                .toList()
+          : <Language>[];
+
+      final active = await _restoreActiveProject(projects);
+
+      state = state.copyWith(
+        projects: projects,
+        languages: languages,
+        activeProject: active,
+        clearActiveProject: active == null,
+      );
+    } on Exception {
+      // ignore corrupt cache
+    }
+  }
+
+  Future<void> _persistCache(
+    List<Project> projects,
+    List<Language> languages,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+      _cachedProjectsKey,
+      jsonEncode(projects.map((p) => p.toJson()).toList()),
+    );
+    await prefs.setString(
+      _cachedLanguagesKey,
+      jsonEncode(languages.map((l) => l.toJson()).toList()),
+    );
+  }
 
   Future<void> fetchProjects() async {
     state = state.copyWith(isLoading: true, clearError: true);
@@ -34,6 +86,8 @@ class ProjectNotifier extends Notifier<ProjectState> {
 
       final enriched = _enrichWithLanguageNames(projects, languages);
       final active = await _restoreActiveProject(enriched);
+
+      await _persistCache(enriched, languages);
 
       state = state.copyWith(
         projects: enriched,

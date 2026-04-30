@@ -8,6 +8,7 @@ class Project {
   final int memberCount;
   final int recordingCount;
   final double totalDurationSeconds;
+  final int storytellerCount;
   final DateTime? createdAt;
 
   const Project({
@@ -20,6 +21,7 @@ class Project {
     this.memberCount = 0,
     this.recordingCount = 0,
     this.totalDurationSeconds = 0,
+    this.storytellerCount = 0,
     this.createdAt,
   });
 
@@ -35,6 +37,7 @@ class Project {
       recordingCount: (json['recording_count'] as num?)?.toInt() ?? 0,
       totalDurationSeconds:
           (json['total_duration_seconds'] as num?)?.toDouble() ?? 0,
+      storytellerCount: (json['storyteller_count'] as num?)?.toInt() ?? 0,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
           : null,
@@ -52,6 +55,7 @@ class Project {
       'member_count': memberCount,
       'recording_count': recordingCount,
       'total_duration_seconds': totalDurationSeconds,
+      'storyteller_count': storytellerCount,
       'created_at': createdAt?.toIso8601String(),
     };
   }

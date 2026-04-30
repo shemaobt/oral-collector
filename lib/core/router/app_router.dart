@@ -1,3 +1,4 @@
+import 'package:cross_file/cross_file.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,7 +8,9 @@ import '../../features/admin/presentation/admin_dashboard_screen.dart';
 import '../auth/auth_notifier.dart';
 import '../auth/auth_state.dart';
 import '../../features/project/presentation/notifiers/project_notifier.dart';
+import '../../features/auth/presentation/forgot_password_screen.dart';
 import '../../features/auth/presentation/login_screen.dart';
+import '../../features/auth/presentation/reset_password_screen.dart';
 import '../../features/auth/presentation/signup_screen.dart';
 import '../../features/genre/presentation/genre_detail_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
@@ -18,7 +21,10 @@ import '../../features/recording/presentation/recording_detail_screen.dart';
 import '../../features/recording/presentation/quick_recording_screen.dart';
 import '../../features/recording/presentation/recording_flow_screen.dart';
 import '../../features/recording/presentation/recordings_list_screen.dart';
+import '../../features/recording/presentation/recovery_screen.dart';
 import '../../features/recording/presentation/trim_editor_screen.dart';
+import '../../features/storyteller/presentation/storyteller_form_screen.dart';
+import '../../features/storyteller/presentation/storytellers_list_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../shared/widgets/app_shell.dart';
 
@@ -47,7 +53,11 @@ final routerProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final isLoggedIn = notifier.isAuthenticated;
       final location = state.matchedLocation;
-      final isAuthRoute = location == '/login' || location == '/signup';
+      final isAuthRoute =
+          location == '/login' ||
+          location == '/signup' ||
+          location == '/forgot-password' ||
+          location == '/reset-password';
 
       if (!isLoggedIn && !isAuthRoute) return '/login';
       if (isLoggedIn && isAuthRoute) return '/home';
@@ -59,12 +69,33 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/signup',
         builder: (context, state) => const SignupScreen(),
       ),
+      GoRoute(
+        path: '/forgot-password',
+        builder: (context, state) => const ForgotPasswordScreen(),
+      ),
+      GoRoute(
+        path: '/reset-password',
+        builder: (context, state) =>
+            ResetPasswordScreen(token: state.uri.queryParameters['token']),
+      ),
 
       if (!kIsWeb) ...[
         GoRoute(
           path: '/genre/:id',
           builder: (context, state) =>
               GenreDetailScreen(genreId: state.pathParameters['id'] ?? ''),
+        ),
+        GoRoute(
+          path: '/record-flow',
+          redirect: (context, state) {
+            final hasProject =
+                ref.read(projectNotifierProvider).activeProject != null;
+            return hasProject ? null : '/home';
+          },
+          builder: (context, state) => RecordingFlowScreen(
+            genreId: state.uri.queryParameters['genreId'],
+            subcategoryId: state.uri.queryParameters['subcategoryId'],
+          ),
         ),
         GoRoute(
           path: '/recording/:id',
@@ -84,7 +115,12 @@ final routerProvider = Provider<GoRouter>((ref) {
                 ref.read(projectNotifierProvider).activeProject != null;
             return hasProject ? null : '/home';
           },
-          builder: (context, state) => const FileImportScreen(),
+          builder: (context, state) {
+            final extra = state.extra;
+            return FileImportScreen(
+              initialFiles: extra is List<XFile> ? extra : null,
+            );
+          },
         ),
         GoRoute(
           path: '/project/:id/settings',
@@ -93,9 +129,34 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
         ),
         GoRoute(
+          path: '/project/:projectId/storytellers',
+          builder: (context, state) => StorytellersListScreen(
+            projectId: state.pathParameters['projectId'] ?? '',
+          ),
+        ),
+        GoRoute(
+          path: '/project/:projectId/storytellers/new',
+          builder: (context, state) => StorytellerFormScreen(
+            projectId: state.pathParameters['projectId'] ?? '',
+          ),
+        ),
+        GoRoute(
+          path: '/project/:projectId/storytellers/:storytellerId/edit',
+          builder: (context, state) => StorytellerFormScreen(
+            projectId: state.pathParameters['projectId'] ?? '',
+            storytellerId: state.pathParameters['storytellerId'],
+          ),
+        ),
+        GoRoute(
           path: '/admin',
           redirect: (context, state) => '/profile',
           builder: (context, state) => const AdminDashboardScreen(),
+        ),
+        GoRoute(
+          path: '/recover/:sessionId',
+          builder: (context, state) => RecoveryScreen(
+            sessionId: state.pathParameters['sessionId'] ?? '',
+          ),
         ),
       ],
 
@@ -109,7 +170,6 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/record',
             redirect: (context, state) {
-              if (kIsWeb) return '/recordings';
               final hasProject =
                   ref.read(projectNotifierProvider).activeProject != null;
               return hasProject ? null : '/home';
@@ -122,7 +182,6 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/quick-record',
             redirect: (context, state) {
-              if (kIsWeb) return '/recordings';
               final hasProject =
                   ref.read(projectNotifierProvider).activeProject != null;
               return hasProject ? null : '/home';
@@ -131,7 +190,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/recordings',
-            builder: (context, state) => const RecordingsListScreen(),
+            builder: (context, state) => RecordingsListScreen(
+              initialGenreId: state.uri.queryParameters['genreId'],
+              initialSubcategoryId: state.uri.queryParameters['subcategoryId'],
+            ),
           ),
           GoRoute(
             path: '/projects',
@@ -145,7 +207,12 @@ final routerProvider = Provider<GoRouter>((ref) {
           if (kIsWeb) ...[
             GoRoute(
               path: '/import-file',
-              builder: (context, state) => const FileImportScreen(),
+              builder: (context, state) {
+                final extra = state.extra;
+                return FileImportScreen(
+                  initialFiles: extra is List<XFile> ? extra : null,
+                );
+              },
             ),
             GoRoute(
               path: '/genre/:id',
@@ -168,6 +235,25 @@ final routerProvider = Provider<GoRouter>((ref) {
               path: '/project/:id/settings',
               builder: (context, state) => ProjectSettingsScreen(
                 projectId: state.pathParameters['id'] ?? '',
+              ),
+            ),
+            GoRoute(
+              path: '/project/:projectId/storytellers',
+              builder: (context, state) => StorytellersListScreen(
+                projectId: state.pathParameters['projectId'] ?? '',
+              ),
+            ),
+            GoRoute(
+              path: '/project/:projectId/storytellers/new',
+              builder: (context, state) => StorytellerFormScreen(
+                projectId: state.pathParameters['projectId'] ?? '',
+              ),
+            ),
+            GoRoute(
+              path: '/project/:projectId/storytellers/:storytellerId/edit',
+              builder: (context, state) => StorytellerFormScreen(
+                projectId: state.pathParameters['projectId'] ?? '',
+                storytellerId: state.pathParameters['storytellerId'],
               ),
             ),
             GoRoute(

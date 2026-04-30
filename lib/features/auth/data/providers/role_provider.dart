@@ -47,7 +47,7 @@ class RoleNotifier extends Notifier<RoleState> {
   }
 
   bool get canCreateProject {
-    return isPlatformAdmin;
+    return isPlatformAdmin || state.hasAnyManagerRole;
   }
 
   Future<void> fetchRoleForProject(String projectId) async {

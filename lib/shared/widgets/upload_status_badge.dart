@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../l10n/app_localizations.dart';
 
 class UploadStatusBadge extends StatefulWidget {
   const UploadStatusBadge({
@@ -58,6 +59,7 @@ class _UploadStatusBadgeState extends State<UploadStatusBadge>
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
+    final l10n = AppLocalizations.of(context);
     final iconSize = widget.compact ? 12.0 : 14.0;
     final fontSize = widget.compact ? 11.0 : 13.0;
     final hPad = widget.compact ? 6.0 : 8.0;
@@ -71,27 +73,27 @@ class _UploadStatusBadgeState extends State<UploadStatusBadge>
       case 'uploaded':
         icon = LucideIcons.checkCircle;
         color = colors.success;
-        label = 'Uploaded';
+        label = l10n.recording_statusUploaded;
         break;
       case 'uploading':
         icon = LucideIcons.upload;
         color = colors.accent;
-        label = 'Uploading...';
+        label = l10n.recording_statusUploading;
         break;
       case 'failed':
         icon = LucideIcons.cloudOff;
         color = colors.error;
-        label = 'Failed';
+        label = l10n.recording_statusFailed;
         break;
       case 'pending':
         icon = LucideIcons.clock;
         color = colors.border;
-        label = 'Pending';
+        label = l10n.filter_pending;
         break;
       default:
         icon = LucideIcons.smartphone;
         color = colors.border;
-        label = 'Not synced';
+        label = l10n.detail_notSynced;
     }
 
     Widget iconWidget = Icon(icon, size: iconSize, color: color);
@@ -138,7 +140,7 @@ class _UploadStatusBadgeState extends State<UploadStatusBadge>
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
             child: Text(
-              'Retry',
+              l10n.common_retry,
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
                 fontSize: fontSize,
                 color: colors.accent,

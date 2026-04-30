@@ -1,8 +1,6 @@
 {
   "@@locale": "id",
-
   "appTitle": "Oral Collector",
-
   "nav_home": "Beranda",
   "nav_record": "Rekam",
   "nav_recordings": "Rekaman",
@@ -10,7 +8,6 @@
   "nav_profile": "Profil",
   "nav_admin": "Admin",
   "nav_collapse": "Ciutkan",
-
   "common_cancel": "Batal",
   "common_save": "Simpan",
   "common_delete": "Hapus",
@@ -25,7 +22,6 @@
   "common_clear": "Bersihkan",
   "common_untitled": "Tanpa judul",
   "common_loading": "Memuat...",
-
   "auth_oralCollector": "Oral Collector",
   "auth_byShema": "oleh Shema",
   "auth_heroTagline": "Lestarikan suara.\nBagikan cerita.",
@@ -38,7 +34,6 @@
   "auth_signInSubtitle": "Masuk untuk melanjutkan mengumpulkan cerita.",
   "auth_signUpSubtitle": "Bergabunglah dengan komunitas pengumpul cerita kami.",
   "auth_backToSignIn": "Kembali ke masuk",
-
   "auth_emailLabel": "Alamat Email",
   "auth_emailHint": "email@anda.com",
   "auth_emailRequired": "Silakan masukkan email Anda",
@@ -54,13 +49,37 @@
   "auth_nameLabel": "Nama",
   "auth_nameHint": "Nama lengkap Anda",
   "auth_nameRequired": "Silakan masukkan nama tampilan Anda",
-
   "auth_signIn": "Masuk",
   "auth_signUp": "Daftar",
   "auth_noAccount": "Belum punya akun? ",
   "auth_haveAccount": "Sudah punya akun? ",
   "auth_continueButton": "Lanjutkan",
-
+  "auth_forgotPassword": "Lupa kata sandi?",
+  "auth_resetPassword": "Atur Ulang Kata Sandi",
+  "auth_forgotPasswordSubtitle": "Masukkan email Anda dan kami akan mengirimkan tautan pengaturan ulang.",
+  "auth_sendResetLink": "Kirim Tautan",
+  "auth_sending": "Mengirim...",
+  "auth_checkYourEmail": "Periksa Email Anda",
+  "auth_resetEmailSent": "Kami mengirimkan tautan pengaturan ulang kata sandi ke {email}. Periksa kotak masuk Anda dan ikuti tautan untuk membuat kata sandi baru.",
+  "@auth_resetEmailSent": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "auth_openEmailApp": "Buka Email",
+  "auth_resendEmail": "Kirim Ulang",
+  "auth_backToLogin": "Kembali ke Login",
+  "auth_newPassword": "Kata Sandi Baru",
+  "auth_confirmNewPassword": "Konfirmasi Kata Sandi Baru",
+  "auth_resetPasswordSubtitle": "Masukkan kata sandi baru Anda di bawah.",
+  "auth_resetPasswordButton": "Atur Ulang Kata Sandi",
+  "auth_resetting": "Mengatur ulang...",
+  "auth_resetSuccess": "Kata sandi berhasil diatur ulang! Anda sekarang dapat masuk dengan kata sandi baru.",
+  "auth_invalidResetLink": "Tautan Tidak Valid",
+  "auth_invalidResetLinkMessage": "Tautan pengaturan ulang ini tidak valid atau telah kedaluwarsa.",
+  "auth_requestNewLink": "Minta Tautan Baru",
   "home_greetingMorning": "Selamat pagi",
   "home_greetingAfternoon": "Selamat siang",
   "home_greetingEvening": "Selamat malam",
@@ -73,11 +92,9 @@
   "home_noGenres": "Belum ada genre tersedia",
   "home_noProjectTitle": "Pilih proyek untuk memulai",
   "home_browseProjects": "Jelajahi Proyek",
-
   "stats_recordings": "rekaman",
   "stats_recorded": "direkam",
   "stats_members": "anggota",
-
   "project_switchTitle": "Ganti Proyek",
   "project_projects": "Proyek",
   "project_subtitle": "Kelola koleksi Anda",
@@ -109,7 +126,6 @@
   "project_addAsNewLanguage": "Tambah \"{query}\" sebagai bahasa baru",
   "project_searchLanguages": "Cari bahasa...",
   "project_backToList": "Kembali ke daftar",
-
   "projectSettings_title": "Pengaturan Proyek",
   "projectSettings_details": "Detail",
   "projectSettings_saving": "Menyimpan...",
@@ -123,7 +139,6 @@
   "projectSettings_memberRemoveFailed": "Gagal menghapus anggota",
   "projectSettings_inviteSent": "Undangan berhasil dikirim",
   "projectSettings_noMembers": "Belum ada anggota",
-
   "recording_selectGenre": "Pilih Genre",
   "recording_selectGenreSubtitle": "Pilih genre untuk cerita Anda",
   "recording_selectSubcategory": "Pilih Subkategori",
@@ -137,19 +152,28 @@
   "recording_genreNotFound": "Genre tidak ditemukan",
   "recording_noGenres": "Tidak ada genre tersedia",
   "recording_noSubcategories": "Tidak ada subkategori tersedia",
-
   "recording_registerDescription": "Pilih register bicara yang paling menggambarkan nada dan formalitas rekaman ini.",
   "recording_titleHint": "Tambah judul (opsional)",
+  "recording_descriptionHint": "Tambah deskripsi singkat (opsional)",
+  "recording_descriptionEmpty": "Tambah deskripsi",
   "recording_saveRecording": "Simpan Rekaman",
   "recording_recordAgain": "Rekam Ulang",
   "recording_discard": "Buang",
   "recording_discardTitle": "Buang Rekaman?",
   "recording_discardMessage": "Rekaman ini akan dihapus secara permanen.",
   "recording_saved": "Rekaman disimpan",
-
+  "recording_uploading": "Mengunggah rekaman…",
+  "recording_uploadFailed": "Pengunggahan gagal: {error}",
+  "@recording_uploadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "recording_notFound": "Rekaman tidak ditemukan",
   "recording_unknownGenre": "Genre tidak dikenal",
-  "recording_splitRecording": "Bagi Rekaman",
+  "recording_splitRecording": "Edit Rekaman",
   "recording_moveCategory": "Pindah Kategori",
   "recording_downloadAudio": "Unduh Audio",
   "recording_downloadAudioMessage": "File audio tidak tersimpan di perangkat ini. Apakah Anda ingin mengunduhnya untuk memotong?",
@@ -165,22 +189,42 @@
   "recording_moveNoPermission": "Anda tidak memiliki izin untuk memindahkan rekaman ini",
   "recording_movedSuccess": "Rekaman berhasil dipindahkan",
   "recording_updateFailed": "Gagal memperbarui di server",
-
+  "recording_exportAudio": "Ekspor audio",
+  "recording_exportShareFailed": "Gagal membagikan file audio",
+  "recording_replaceAudio": "Ganti audio",
+  "recording_replaceTitle": "Ganti audio?",
+  "recording_replaceMessage": "Audio saat ini akan dipindahkan ke tempat sampah 24 jam dan ditukar dengan file yang Anda pilih. Hanya file audio dengan format yang sama dengan aslinya yang dapat digunakan.",
+  "recording_replaceReuploadNotice": "Rekaman ini sudah diunggah. File baru akan menimpanya di server.",
+  "recording_replaceConfirm": "Ganti",
+  "recording_replaceFormatMismatch": "Pengganti harus file {expected}, tetapi adalah {actual}",
+  "@recording_replaceFormatMismatch": {
+    "placeholders": {
+      "expected": {
+        "type": "String"
+      },
+      "actual": {
+        "type": "String"
+      }
+    }
+  },
+  "recording_replaceInvalidAudio": "Tidak dapat membaca file audio yang dipilih",
+  "recording_replaceSuccess": "Audio diganti",
+  "recording_replaceFailed": "Gagal mengganti audio",
+  "recording_replaceNotAvailableWeb": "Penggantian audio tidak tersedia di aplikasi web",
   "recordings_title": "Rekaman",
   "recordings_subtitle": "Cerita yang Anda kumpulkan",
+  "recordings_searchHint": "Cari rekaman...",
   "recordings_importAudio": "Impor file audio",
   "recordings_selectProject": "Pilih proyek",
   "recordings_selectProjectSubtitle": "Pilih proyek untuk melihat rekamannya",
   "recordings_noRecordings": "Belum ada rekaman",
   "recordings_noRecordingsSubtitle": "Ketuk mikrofon untuk merekam cerita pertama Anda, atau impor file audio.",
   "recordings_count": "{count, plural, =1{1 rekaman} other{{count} rekaman}}",
-
   "recording_statusUploaded": "Diunggah",
   "recording_statusUploading": "Mengunggah",
   "recording_statusFailed": "Gagal",
   "recording_statusLocal": "Lokal",
-
-  "trim_title": "Bagi Rekaman",
+  "trim_title": "Edit Rekaman",
   "trim_notFound": "Rekaman tidak ditemukan",
   "trim_audioUrlNotAvailable": "URL audio tidak tersedia untuk rekaman ini.",
   "trim_localNotAvailable": "File audio lokal tidak tersedia. Unduh rekaman terlebih dahulu.",
@@ -193,7 +237,15 @@
   "trim_addSplitsFirst": "Tambahkan pembagian terlebih dahulu",
   "trim_savedSegments": "Tersimpan {kept} segmen, dihapus {removed}",
   "trim_splitInto": "Bagi menjadi {count} rekaman",
-
+  "trim_saveConfirmTitle": "Simpan perubahan?",
+  "trim_saveConfirmBody": "Ini akan menggantikan rekaman asli dengan {count} segmen. Tindakan ini tidak dapat dibatalkan.",
+  "trim_inheritLabel": "Warisi",
+  "trim_applyToAll": "Terapkan ke semua",
+  "trim_copyFromPrevious": "Salin dari sebelumnya",
+  "trim_classifySegment": "Klasifikasikan segmen",
+  "trim_volume": "Volume",
+  "trim_peakClip": "Klip",
+  "trim_boostOnSave": "Penguat diterapkan saat menyimpan",
   "import_title": "Impor Audio",
   "import_selectGenre": "Pilih Genre",
   "import_selectSubcategory": "Pilih Subkategori",
@@ -207,20 +259,66 @@
   "import_saveError": "Kesalahan menyimpan file: {error}",
   "import_unknownFile": "File tidak dikenal",
   "import_importAndSave": "Impor dan Simpan",
-
+  "import_setForAll": "Tetapkan untuk semua file",
+  "import_applyToAll": "Terapkan ke semua",
+  "import_fieldRequired": "Wajib",
+  "import_validationBanner": "{count, plural, =1{1 file kehilangan bidang wajib} other{{count} file kehilangan bidang wajib}}",
+  "@import_validationBanner": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "import_remove": "Hapus file",
+  "import_supportedFormats": "Format yang didukung: {formats}. File yang tidak didukung atau tidak dapat dibaca akan dilewati.",
+  "@import_supportedFormats": {
+    "placeholders": {
+      "formats": {
+        "type": "String"
+      }
+    }
+  },
+  "import_rejectedFiles": "{count, plural, =1{Melewati 1 file yang tidak didukung atau tidak dapat dibaca: {names}} other{Melewati {count} file yang tidak didukung atau tidak dapat dibaca: {names}}}",
+  "@import_rejectedFiles": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "import_countFiles": "{count, plural, =1{1 file} other{{count} file}}",
+  "@import_countFiles": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "import_importNFiles": "Impor {count, plural, =1{1 file} other{{count} file}}",
+  "@import_importNFiles": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "import_emptyFile": "file kosong",
+  "import_compressWav": "Kompres WAV ke M4A",
+  "import_compressWavHint": "~10x lebih kecil, tanpa kehilangan kualitas untuk pipeline ML",
   "moveCategory_title": "Pindah Kategori",
   "moveCategory_genre": "Genre",
   "moveCategory_subcategory": "Subkategori",
   "moveCategory_selectSubcategory": "Pilih subkategori",
-
   "cleaning_needsCleaning": "Perlu Pembersihan",
   "cleaning_cleaning": "Membersihkan...",
   "cleaning_cleaned": "Bersih",
   "cleaning_cleanFailed": "Pembersihan Gagal",
-
   "sync_uploading": "Mengunggah...",
   "sync_pending": "{count} tertunda",
-
   "profile_photoUpdated": "Foto profil diperbarui",
   "profile_photoFailed": "Gagal memperbarui foto: {error}",
   "profile_editName": "Edit nama tampilan",
@@ -245,7 +343,6 @@
   "profile_joinedSuccess": "Berhasil bergabung dengan \"{name}\"",
   "profile_inviteDeclined": "Undangan ditolak",
   "profile_language": "Bahasa",
-
   "profile_online": "Online",
   "profile_offline": "Offline",
   "profile_lastSync": "Sinkronisasi terakhir: {time}",
@@ -259,7 +356,6 @@
   "profile_autoRemoveSubtitle": "Hapus file lokal setelah pengunggahan berhasil",
   "profile_clearCache": "Bersihkan cache lokal",
   "profile_clearCacheSubtitle": "Hapus semua rekaman yang tersimpan secara lokal",
-
   "profile_invitations": "Undangan",
   "profile_refreshInvitations": "Perbarui undangan",
   "profile_noInvitations": "Tidak ada undangan tertunda",
@@ -267,24 +363,20 @@
   "profile_roleMember": "Peran: Anggota",
   "profile_decline": "Tolak",
   "profile_accept": "Terima",
-
   "profile_storage": "Penyimpanan",
   "profile_status": "Status",
   "profile_pendingLabel": "Tertunda",
-
   "admin_title": "Dasbor Admin",
   "admin_overview": "Ringkasan",
   "admin_projects": "Proyek",
   "admin_genres": "Genre",
   "admin_cleaning": "Pembersihan",
   "admin_accessRequired": "Diperlukan akses admin",
-
   "admin_totalProjects": "Total Proyek",
   "admin_languages": "Bahasa",
   "admin_recordings": "Rekaman",
   "admin_totalHours": "Total Jam",
   "admin_activeUsers": "Pengguna Aktif",
-
   "admin_projectName": "Nama",
   "admin_projectLanguage": "Bahasa",
   "admin_projectMembers": "Anggota",
@@ -293,7 +385,6 @@
   "admin_projectCreated": "Dibuat",
   "admin_noProjects": "Tidak ada proyek ditemukan",
   "admin_unknownLanguage": "Bahasa tidak dikenal",
-
   "admin_genresAndSubcategories": "Genre & Subkategori",
   "admin_addGenre": "Tambah Genre",
   "admin_noGenres": "Tidak ada genre ditemukan",
@@ -301,10 +392,10 @@
   "admin_required": "Wajib",
   "admin_descriptionOptional": "Deskripsi (opsional)",
   "admin_genreCreated": "Genre dibuat",
-  "admin_editGenre": "Edit genre",
+  "admin_editGenre": "Ubah genre",
   "admin_deleteGenre": "Hapus genre",
   "admin_addSubcategory": "Tambah subkategori",
-  "admin_editGenreTitle": "Edit Genre",
+  "admin_editGenreTitle": "Ubah Genre",
   "admin_genreUpdated": "Genre diperbarui",
   "admin_deleteGenreTitle": "Hapus Genre",
   "admin_deleteGenreConfirm": "Hapus \"{name}\" dan semua subkategorinya?",
@@ -315,7 +406,6 @@
   "admin_deleteSubcategory": "Hapus Subkategori",
   "admin_deleteSubcategoryConfirm": "Hapus \"{name}\"?",
   "admin_subcategoryDeleted": "Subkategori dihapus",
-
   "admin_cleaningQueue": "Antrean Pembersihan Audio",
   "admin_cleanSelected": "Bersihkan Terpilih ({count})",
   "admin_refreshCleaning": "Perbarui antrean pembersihan",
@@ -333,11 +423,9 @@
   "admin_cleaningTriggered": "Pembersihan dimulai",
   "admin_cleaningFailed": "Gagal memulai pembersihan",
   "admin_cleaningPartial": "Pembersihan dimulai untuk {success} dari {total} rekaman",
-
   "genre_title": "Genre",
   "genre_notFound": "Genre tidak ditemukan",
   "genre_recordingCount": "{count, plural, =1{1 rekaman} other{{count} rekaman}}",
-
   "format_justNow": "baru saja",
   "format_minutesAgo": "{count}m lalu",
   "format_hoursAgo": "{count}j lalu",
@@ -347,7 +435,6 @@
   "format_memberSince": "Anggota sejak {date}",
   "format_member": "Anggota",
   "format_dateAt": "{date} pukul {time}",
-
   "genre_narrative": "Naratif",
   "genre_narrativeDesc": "Cerita, kisah, dan bentuk naratif dari tradisi lisan",
   "genre_poeticSong": "Puisi / Lagu",
@@ -356,7 +443,6 @@
   "genre_instructionalDesc": "Hukum, ritual, prosedur, dan bentuk instruksional",
   "genre_oralDiscourse": "Wacana Lisan",
   "genre_oralDiscourseDesc": "Pidato, pengajaran, doa, dan bentuk wacana lisan",
-
   "sub_historicalNarrative": "Narasi Sejarah",
   "sub_personalAccount": "Kisah Pribadi / Kesaksian",
   "sub_parable": "Perumpamaan / Cerita Ilustrasi",
@@ -388,7 +474,6 @@
   "sub_apocalypticDiscourse": "Wacana Apokaliptik",
   "sub_ceremonialSpeech": "Pidato Seremonial",
   "sub_communityMemory": "Memori Komunitas",
-
   "sub_historicalNarrativeDesc": "Kisah peristiwa, perang, dan momen penting dalam sejarah",
   "sub_personalAccountDesc": "Cerita pribadi tentang pengalaman hidup dan iman",
   "sub_parableDesc": "Cerita simbolis yang mengajarkan pelajaran moral atau spiritual",
@@ -420,7 +505,6 @@
   "sub_apocalypticDiscourseDesc": "Wahyu tentang akhir zaman dan rencana Tuhan",
   "sub_ceremonialSpeechDesc": "Pidato formal untuk acara resmi atau sakral",
   "sub_communityMemoryDesc": "Kenangan bersama yang melestarikan identitas kelompok",
-
   "register_intimate": "Intim",
   "register_casual": "Informal / Santai",
   "register_consultative": "Konsultatif",
@@ -428,7 +512,6 @@
   "register_ceremonial": "Seremonial",
   "register_elderAuthority": "Tetua / Otoritas",
   "register_religiousWorship": "Religius / Ibadah",
-
   "locale_english": "English",
   "locale_portuguese": "Português",
   "locale_hindi": "हिन्दी",
@@ -453,13 +536,11 @@
   "locale_chineseSub": "Tionghoa",
   "locale_selectLanguage": "Pilih Bahasa Anda",
   "locale_selectLanguageSubtitle": "Anda dapat mengubah ini nanti di pengaturan profil.",
-
   "filter_all": "Semua",
   "filter_pending": "Tertunda",
   "filter_uploaded": "Diunggah",
   "filter_needsCleaning": "Perlu Pembersihan",
   "filter_allGenres": "Semua genre",
-
   "detail_duration": "Durasi",
   "detail_size": "Ukuran",
   "detail_format": "Format",
@@ -476,20 +557,16 @@
   "detail_uploadFailed": "Unggahan Gagal",
   "detail_pendingRetried": "Tertunda (dicoba lagi)",
   "detail_notSynced": "Belum disinkronkan",
-
   "action_actions": "Tindakan",
-  "action_split": "Bagi",
+  "action_split": "Edit",
   "action_flagClean": "Tandai Bersihkan",
   "action_clearFlag": "Hapus Tanda",
   "action_move": "Pindahkan",
   "action_delete": "Hapus",
-
   "projectStats_recordings": "Rekaman",
   "projectStats_duration": "Durasi",
   "projectStats_members": "Anggota",
-
   "project_active": "Aktif",
-
   "recording_paused": "Dijeda",
   "recording_recording": "Merekam",
   "recording_tapToRecord": "Ketuk untuk Merekam",
@@ -501,11 +578,16 @@
   "recording_stop": "Berhenti",
   "recording_resume": "Lanjutkan",
   "recording_pause": "Jeda",
-
   "recordings_clearStale": "Bersihkan yang gagal",
   "recordings_clearStaleMessage": "Ini akan menghapus secara permanen semua rekaman dengan status unggahan gagal atau macet dari server. Tindakan ini tidak dapat dibatalkan.",
   "recordings_clearedCount": "{count, plural, =0{Tidak ada rekaman usang ditemukan} =1{1 rekaman dibersihkan} other{{count} rekaman dibersihkan}}",
-  "@recordings_clearedCount": {"placeholders": {"count": {"type": "int"}}},
+  "@recordings_clearedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "recordings_clearFailed": "Gagal membersihkan rekaman",
   "filter_unclassified": "Belum diklasifikasi",
   "quickRecord_title": "Rekam Cepat",
@@ -513,11 +595,235 @@
   "quickRecord_classifyLater": "Klasifikasi nanti",
   "classify_title": "Klasifikasi Rekaman",
   "classify_action": "Klasifikasi",
-  "classify_banner": "Rekaman ini perlu diklasifikasi sebelum dapat diunggah.",
+  "classify_banner": "Rekaman ini belum diklasifikasi. Ketuk Klasifikasi untuk menambahkan genre dan register.",
   "classify_success": "Rekaman diklasifikasi",
-  "classify_register": "Register (opsional)",
+  "classify_register": "Register",
   "classify_selectRegister": "Pilih register",
+  "classify_predominantHeader": "KLASIFIKASI DOMINAN",
+  "classify_addAlternativeTitle": "Ambigu? Tambah klasifikasi alternatif",
+  "classify_secondaryNote": "Hanya klasifikasi dominan yang dihitung dalam total waktu genre.",
+  "classify_secondaryGenre": "Genre sekunder",
+  "classify_secondarySubcategory": "Subkategori sekunder",
+  "classify_secondaryRegister": "Register sekunder",
+  "classify_secondarySameAsPrimary": "Genre sekunder harus berbeda dari genre dominan.",
+  "classify_clearAlternative": "Bersihkan alternatif",
+  "recording_alsoClassifiedAs": "Juga diklasifikasikan sebagai",
+  "recording_alsoClassifiedAsTooltip": "Memiliki klasifikasi alternatif",
+  "recording_addAlternative": "Tambah klasifikasi alternatif",
+  "recording_removeSecondary": "Hapus klasifikasi alternatif",
+  "recording_secondaryRemoved": "Klasifikasi alternatif dihapus",
+  "recording_secondaryUpdated": "Klasifikasi alternatif diperbarui",
   "recording_unclassified": "Belum diklasifikasi",
+  "recording_inputSource": "Input",
+  "recording_selectMicrophone": "Pilih mikrofon",
+  "recording_builtInMicrophone": "Default sistem",
+  "recording_micPermissionNeeded": "Izinkan akses mikrofon untuk melihat nama perangkat",
+  "recording_micPermissionButton": "Berikan izin",
+  "recording_micPermissionDenied": "Izin mikrofon ditolak. Aktifkan di pengaturan browser atau sistem.",
+  "recording_micPermissionTitle": "Akses mikrofon diperlukan",
+  "recording_noDevicesFound": "Tidak ada mikrofon ditemukan",
+  "recording_storageLowWarnTitle": "Penyimpanan rendah",
+  "recording_storageLowWarnBody": "Sekitar {minutes} menit perekaman tersedia. Lanjutkan?",
+  "@recording_storageLowWarnBody": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "recording_storageRefuseTitle": "Penyimpanan tidak cukup",
+  "recording_storageRefuseBody": "Bebaskan ruang di perangkat ini sebelum merekam.",
+  "recording_storageCriticalBanner": "Penyimpanan kritis — sekitar {minutes} menit tersisa. Pertimbangkan untuk berhenti.",
+  "@recording_storageCriticalBanner": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "recording_storageForceStopped": "Perekaman berhenti karena penyimpanan habis. Kemajuan Anda telah disimpan.",
+  "recording_savedAt": "Disimpan pada {time}",
+  "@recording_savedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "recording_continuedInBackground": "Perekaman berlanjut di latar belakang",
+  "recording_continue": "Lanjutkan",
+  "recording_cancel": "Batal",
+  "recording_recoverTitle": "Pulihkan rekaman yang terputus?",
+  "recording_recoverBody": "Kami menemukan sekitar {minutes} menit audio dari sesi sebelumnya.",
+  "@recording_recoverBody": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "recording_recoverButton": "Pulihkan",
+  "recording_recoverDiscard": "Buang",
+  "recording_recoverFailedLastSegment": "Sebagian audio di dekat akhir tidak dapat dibaca dan dilewati.",
+  "recording_inProgressNotificationTitle": "Perekaman berlangsung",
+  "recording_inProgressNotificationBody": "Ketuk untuk kembali ke aplikasi",
+  "profile_defaultMicrophone": "Mikrofon default",
+  "profile_systemDefault": "Default sistem",
+  "settings_deviceStorageTitle": "Penyimpanan perangkat",
+  "settings_deviceStorageSubtitle": "Terpakai {used} · Bebas {free}",
+  "@settings_deviceStorageSubtitle": {
+    "placeholders": {
+      "used": {
+        "type": "String"
+      },
+      "free": {
+        "type": "String"
+      }
+    }
+  },
   "fab_quickRecord": "Cepat",
-  "fab_normalRecord": "Rekam"
+  "fab_normalRecord": "Rekam",
+  "error_network": "Tidak dapat menghubungi server. Periksa koneksi internet Anda dan coba lagi.",
+  "error_secureConnection": "Koneksi aman tidak dapat dibuat. Silakan coba lagi nanti.",
+  "error_timeout": "Permintaan telah habis waktu. Periksa koneksi Anda dan coba lagi.",
+  "error_invalidCredentials": "Email atau kata sandi salah. Silakan coba lagi.",
+  "error_userNotFound": "Tidak ditemukan akun dengan alamat email tersebut.",
+  "error_accountExists": "Akun dengan email ini sudah ada.",
+  "error_emailRequired": "Silakan masukkan alamat email Anda.",
+  "error_passwordRequired": "Silakan masukkan kata sandi Anda.",
+  "error_signupFailed": "Tidak dapat membuat akun Anda. Periksa detail Anda dan coba lagi.",
+  "error_sessionExpired": "Sesi Anda telah berakhir. Silakan masuk kembali.",
+  "error_profileLoadFailed": "Tidak dapat memuat profil Anda. Silakan coba lagi.",
+  "error_profileUpdateFailed": "Tidak dapat memperbarui profil Anda. Silakan coba lagi.",
+  "error_imageUploadFailed": "Tidak dapat mengunggah gambar. Silakan coba lagi.",
+  "error_notAuthenticated": "Anda belum masuk. Silakan masuk dan coba lagi.",
+  "error_noPermission": "Anda tidak memiliki izin untuk melakukan tindakan ini.",
+  "error_generic": "Terjadi kesalahan. Silakan coba lagi nanti.",
+  "storyteller_title": "Pencerita",
+  "storyteller_singular": "Pencerita",
+  "storyteller_manageAction": "Kelola pencerita",
+  "storyteller_addNew": "Tambah pencerita",
+  "storyteller_createTitle": "Pencerita baru",
+  "storyteller_editTitle": "Ubah pencerita",
+  "storyteller_speakerName": "Nama pembicara",
+  "storyteller_sex": "Jenis kelamin",
+  "storyteller_sexMale": "Laki-laki",
+  "storyteller_sexFemale": "Perempuan",
+  "storyteller_age": "Usia",
+  "storyteller_location": "Lokasi",
+  "storyteller_dialect": "Dialek",
+  "storyteller_externalAcceptanceTitle": "Validasi persetujuan eksternal",
+  "storyteller_externalAcceptanceDescription": "Saya mengonfirmasi bahwa validasi persetujuan eksternal telah dilakukan untuk pembicara ini.",
+  "storyteller_externalAcceptanceInfo": "Sebelum mendaftarkan pencerita, manajer proyek harus memperoleh persetujuan pembicara di luar aplikasi (misalnya, melalui formulir yang ditandatangani atau persetujuan lisan yang direkam). Kotak centang ini mencatat bahwa langkah tersebut telah diselesaikan.",
+  "storyteller_createRequiresConnection": "Membuat pencerita memerlukan koneksi internet.",
+  "storyteller_deleteTitle": "Hapus pencerita?",
+  "storyteller_deleteMessage": "Rekaman yang sebelumnya ditetapkan ke pencerita ini akan ditampilkan sebagai tidak ditetapkan.",
+  "storyteller_noneAssigned": "Tidak ada pencerita yang ditetapkan",
+  "storyteller_unknown": "Pencerita tidak diketahui",
+  "storyteller_selectHint": "Pilih pencerita",
+  "storyteller_required": "Pencerita wajib diisi",
+  "storyteller_searchPlaceholder": "Cari pencerita",
+  "storyteller_empty": "Belum ada pencerita",
+  "storyteller_emptyDescription": "Buat pencerita untuk proyek agar dapat ditetapkan ke rekaman.",
+  "storyteller_offlineNoCache": "Pencerita belum disinkronkan. Sambungkan ke internet untuk memuatnya.",
+  "storyteller_assign": "Tetapkan",
+  "storyteller_reassign": "Tetapkan ulang",
+  "storyteller_ageValidator": "Masukkan usia antara 1 dan 120",
+  "storyteller_ageYearsShort": "{age} thn",
+  "@storyteller_ageYearsShort": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
+  "filters_buttonLabel": "Filter",
+  "filters_sheetTitle": "Saring rekaman",
+  "filters_sectionStatus": "Status unggah",
+  "filters_sectionGenre": "Genre",
+  "filters_sectionStoryteller": "Pencerita",
+  "filters_sectionUser": "Direkam oleh",
+  "filter_apply": "Terapkan",
+  "filter_reset": "Atur ulang",
+  "filter_clearAll": "Hapus semua",
+  "filter_countActive": "{count, plural, one{1 filter} other{{count} filter}}",
+  "@filter_countActive": {
+    "placeholders": {
+      "count": {
+        "type": "num",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "filter_userAll": "Semua pengguna",
+  "filter_storytellerAll": "Semua pencerita",
+  "filter_genreAll": "Semua genre",
+  "detail_recordedBy": "Direkam oleh",
+  "detail_storyteller": "Pencerita",
+  "recording_unknownUser": "Pengguna tidak dikenal",
+  "common_close": "Tutup",
+  "common_ok": "OK",
+  "invite_title": "Undang anggota",
+  "invite_searchLabel": "Cari berdasarkan nama atau email",
+  "invite_searchHint": "Ketik minimal 2 karakter",
+  "invite_noUsersFound": "Tidak ada pengguna ditemukan",
+  "invite_changeUser": "Ganti pengguna",
+  "invite_roleLabel": "Peran *",
+  "invite_roleMember": "Anggota",
+  "invite_roleManager": "Manajer",
+  "invite_sendInvite": "Kirim undangan",
+  "invite_sendFailed": "Gagal mengirim undangan",
+  "recording_recoveryInProgress": "Memulihkan…",
+  "recording_recoveryFailed": "Pemulihan gagal",
+  "recording_recoverySessionNotFound": "Sesi tidak ditemukan",
+  "recording_recoveryNoAudio": "Tidak ada audio untuk dipulihkan",
+  "recording_recoveryConcatFailed": "Gagal menggabungkan",
+  "a11y_startRecording": "Mulai rekaman",
+  "a11y_createProject": "Buat proyek",
+  "a11y_playAudio": "Putar audio",
+  "a11y_pauseAudio": "Jeda audio",
+  "a11y_tabLabel": "Tab {label}",
+  "profile_adminBadge": "Admin",
+  "profile_setYourName": "Tetapkan nama Anda",
+  "profile_inviteAcceptFailed": "Gagal menerima undangan",
+  "profile_inviteDeclineFailed": "Gagal menolak undangan",
+  "profile_typeDeleteWord": "HAPUS",
+  "trim_splitError": "Kesalahan saat memisahkan: {error}",
+  "error_serverFailure": "Server tidak dapat menyelesaikan permintaan. Silakan coba lagi.",
+  "error_importNoBytes": "File ini kosong dan tidak dapat diimpor.",
+  "error_ffmpegProcessingFailed": "Pemrosesan audio gagal.",
+  "error_downloadFailed": "Unduhan gagal.",
+  "@a11y_tabLabel": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "@trim_splitError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "a11y_splitWaveform": "Bentuk gelombang pembagi. Ketuk untuk menambahkan penanda. Seret untuk memindahkan. Cubit untuk memperbesar. Tekan lama untuk menghapus.",
+  "projectSettings_offlineTitle": "Anda sedang offline",
+  "projectSettings_offlineDescription": "Detail proyek tidak dapat dimuat tanpa koneksi internet. Akan dimuat secara otomatis saat Anda terhubung kembali.",
+  "recording_noAudioAvailable": "Tidak ada audio tersedia",
+  "recording_noPendingUploads": "Tidak ada unggahan tertunda",
+  "recording_uploadQueue": "Antrean unggah",
+  "recording_previewSelection": "Pratinjau pilihan",
+  "recording_stopPreview": "Hentikan pratinjau",
+  "recording_audioLoadFailed": "Gagal memuat audio",
+  "status_offlineSubtitle": "Beberapa fitur seperti sinkronisasi dan pemuatan data memerlukan koneksi internet.",
+  "status_noProject": "Tidak ada proyek ditetapkan",
+  "status_noProjectSubtitle": "Anda belum ditambahkan ke proyek mana pun. Hubungi administrator Anda dan tunggu untuk ditetapkan.",
+  "a11y_recordingInProgress": "Perekaman berlangsung, ketuk untuk menjeda",
+  "a11y_recordingPaused": "Perekaman dijeda, ketuk untuk melanjutkan",
+  "recording_audioFileNotFound": "File audio tidak ditemukan",
+  "recording_partOf": "Bagian {part} dari {total}",
+  "recording_splitFrom": "Dipisahkan dari {sourceId}",
+  "trim_segmentRemoved": "Segmen {index} — dihapus",
+  "trim_segmentOfTotal": "Segmen {index} dari {total}"
 }

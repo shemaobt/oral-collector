@@ -4,6 +4,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../shared/utils/format.dart';
 import '../../domain/entities/classification.dart';
 
 class RecordingCard extends StatelessWidget {
@@ -11,7 +12,6 @@ class RecordingCard extends StatelessWidget {
     super.key,
     required this.recording,
     required this.genreName,
-    required this.relativeDate,
     required this.formattedDuration,
     required this.onTap,
     this.subcategoryName,
@@ -23,7 +23,6 @@ class RecordingCard extends StatelessWidget {
   final String? genreName;
   final String? subcategoryName;
   final String? registerName;
-  final String relativeDate;
   final String formattedDuration;
   final VoidCallback onTap;
   final VoidCallback? onDelete;
@@ -84,11 +83,17 @@ class RecordingCard extends StatelessWidget {
         ? l10n.recording_unclassified
         : breadcrumbParts.isNotEmpty
         ? breadcrumbParts.join(' > ')
-        : 'Unknown genre';
+        : l10n.recording_unknownGenre;
+    final title = (recording.title != null && recording.title!.isNotEmpty)
+        ? recording.title!
+        : l10n.common_untitled;
 
-    final needsCleaning = recording.cleaningStatus == 'needs_cleaning';
-    final isCleaning = recording.cleaningStatus == 'cleaning';
-    final isCleaned = recording.cleaningStatus == 'cleaned';
+    final locale = Localizations.localeOf(context).languageCode;
+    final recordedDate = formatRecordingDate(
+      recording.recordedAt,
+      locale,
+      l10n: l10n,
+    );
 
     return Material(
       color: colors.card,
@@ -96,154 +101,115 @@ class RecordingCard extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
-        child: Row(
-          children: [
-            Container(
-              width: 4,
-              height: 88,
-              decoration: BoxDecoration(
-                color: statusColor,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(16),
-                  bottomLeft: Radius.circular(16),
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Container(
+                width: 4,
+                decoration: BoxDecoration(
+                  color: statusColor,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(16),
+                    bottomLeft: Radius.circular(16),
+                  ),
                 ),
               ),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 12,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            recording.title ?? l10n.common_untitled,
-                            style: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w700,
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              title,
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          relativeDate,
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: colors.secondary.withValues(alpha: 0.7),
+                          const SizedBox(width: 8),
+                          Text(
+                            recordedDate,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: colors.secondary.withValues(alpha: 0.7),
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      breadcrumb,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: isUnclassified
-                            ? Colors.amber.shade700
-                            : colors.secondary,
-                        fontWeight: isUnclassified ? FontWeight.w600 : null,
+                        ],
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 3,
-                          ),
-                          decoration: BoxDecoration(
-                            color: colors.primary.withValues(alpha: 0.08),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                LucideIcons.clock,
-                                size: 11,
-                                color: colors.primary,
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              breadcrumb,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: isUnclassified
+                                    ? Colors.amber.shade700
+                                    : colors.secondary,
+                                fontWeight: FontWeight.w500,
                               ),
-                              const SizedBox(width: 4),
-                              Text(
-                                formattedDuration,
-                                style: theme.textTheme.labelSmall?.copyWith(
-                                  color: colors.primary,
-                                  fontWeight: FontWeight.w600,
-                                  fontFeatures: const [
-                                    FontFeature.tabularFigures(),
-                                  ],
-                                ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          if (recording.hasSecondary) ...[
+                            const SizedBox(width: 6),
+                            Tooltip(
+                              message: l10n.recording_alsoClassifiedAsTooltip,
+                              child: Icon(
+                                LucideIcons.layers,
+                                size: 12,
+                                color: colors.secondary.withValues(alpha: 0.7),
+                                semanticLabel:
+                                    l10n.recording_alsoClassifiedAsTooltip,
                               ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 3,
-                          ),
-                          decoration: BoxDecoration(
-                            color: statusColor.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(_statusIcon(), size: 11, color: statusColor),
-                              const SizedBox(width: 4),
-                              Text(
-                                _statusLabel(l10n),
-                                style: theme.textTheme.labelSmall?.copyWith(
-                                  color: statusColor,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        if (isUnclassified) ...[
-                          const SizedBox(width: 6),
+                            ),
+                          ],
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 8,
                               vertical: 3,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.amber.shade700.withValues(
-                                alpha: 0.1,
-                              ),
+                              color: colors.primary.withValues(alpha: 0.08),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Icon(
-                                  LucideIcons.tag,
+                                  LucideIcons.clock,
                                   size: 11,
-                                  color: Colors.amber.shade700,
+                                  color: colors.primary,
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
-                                  l10n.recording_unclassified,
+                                  formattedDuration,
                                   style: theme.textTheme.labelSmall?.copyWith(
-                                    color: Colors.amber.shade700,
+                                    color: colors.primary,
                                     fontWeight: FontWeight.w600,
+                                    fontFeatures: const [
+                                      FontFeature.tabularFigures(),
+                                    ],
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                        ],
-                        if (needsCleaning || isCleaning || isCleaned) ...[
                           const SizedBox(width: 6),
                           Container(
                             padding: const EdgeInsets.symmetric(
@@ -251,43 +217,75 @@ class RecordingCard extends StatelessWidget {
                               vertical: 3,
                             ),
                             decoration: BoxDecoration(
-                              color:
-                                  (needsCleaning
-                                          ? Colors.amber.shade700
-                                          : isCleaning
-                                          ? colors.info
-                                          : colors.success)
-                                      .withValues(alpha: 0.1),
+                              color: statusColor.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: Icon(
-                              needsCleaning
-                                  ? LucideIcons.alertCircle
-                                  : isCleaning
-                                  ? LucideIcons.loader
-                                  : LucideIcons.sparkles,
-                              size: 11,
-                              color: needsCleaning
-                                  ? Colors.amber.shade700
-                                  : isCleaning
-                                  ? colors.info
-                                  : colors.success,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  _statusIcon(),
+                                  size: 11,
+                                  color: statusColor,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  _statusLabel(l10n),
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    color: statusColor,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
+                          if (isUnclassified) ...[
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 3,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.amber.shade700.withValues(
+                                  alpha: 0.1,
+                                ),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    LucideIcons.tag,
+                                    size: 11,
+                                    color: Colors.amber.shade700,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    l10n.recording_unclassified,
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      color: Colors.amber.shade700,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                          const Spacer(),
+                          Icon(
+                            LucideIcons.chevronRight,
+                            size: 16,
+                            color: colors.border,
+                          ),
                         ],
-                        const Spacer(),
-                        Icon(
-                          LucideIcons.chevronRight,
-                          size: 16,
-                          color: colors.border,
-                        ),
-                      ],
-                    ),
-                  ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

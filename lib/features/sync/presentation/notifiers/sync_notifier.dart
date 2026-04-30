@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/platform/disk_space.dart' as disk_space;
 import '../../../../core/platform/file_ops.dart' as file_ops;
 import '../../../recording/data/providers.dart';
 import '../../../recording/data/repositories/local_recording_repository.dart';
@@ -131,6 +132,14 @@ class SyncNotifier extends Notifier<SyncState> {
     }
 
     return totalBytes;
+  }
+
+  Future<({int usedBytes, int freeBytes, int totalBytes})>
+  getStorageSnapshot() async {
+    final used = await getLocalStorageUsed();
+    final free = await disk_space.getFreeBytes();
+    final total = await disk_space.getTotalBytes();
+    return (usedBytes: used, freeBytes: free, totalBytes: total);
   }
 
   Future<void> clearLocalCache() async {

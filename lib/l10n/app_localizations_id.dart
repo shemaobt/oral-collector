@@ -36,6 +36,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get common_cancel => 'Batal';
 
   @override
+  String get common_resume => 'Resume';
+
+  @override
+  String get common_discard => 'Discard';
+
+  @override
   String get common_save => 'Simpan';
 
   @override
@@ -172,6 +178,69 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get auth_continueButton => 'Lanjutkan';
+
+  @override
+  String get auth_forgotPassword => 'Lupa kata sandi?';
+
+  @override
+  String get auth_resetPassword => 'Atur Ulang Kata Sandi';
+
+  @override
+  String get auth_forgotPasswordSubtitle =>
+      'Masukkan email Anda dan kami akan mengirimkan tautan pengaturan ulang.';
+
+  @override
+  String get auth_sendResetLink => 'Kirim Tautan';
+
+  @override
+  String get auth_sending => 'Mengirim...';
+
+  @override
+  String get auth_checkYourEmail => 'Periksa Email Anda';
+
+  @override
+  String auth_resetEmailSent(String email) {
+    return 'Kami mengirimkan tautan pengaturan ulang kata sandi ke $email. Periksa kotak masuk Anda dan ikuti tautan untuk membuat kata sandi baru.';
+  }
+
+  @override
+  String get auth_openEmailApp => 'Buka Email';
+
+  @override
+  String get auth_resendEmail => 'Kirim Ulang';
+
+  @override
+  String get auth_backToLogin => 'Kembali ke Login';
+
+  @override
+  String get auth_newPassword => 'Kata Sandi Baru';
+
+  @override
+  String get auth_confirmNewPassword => 'Konfirmasi Kata Sandi Baru';
+
+  @override
+  String get auth_resetPasswordSubtitle =>
+      'Masukkan kata sandi baru Anda di bawah.';
+
+  @override
+  String get auth_resetPasswordButton => 'Atur Ulang Kata Sandi';
+
+  @override
+  String get auth_resetting => 'Mengatur ulang...';
+
+  @override
+  String get auth_resetSuccess =>
+      'Kata sandi berhasil diatur ulang! Anda sekarang dapat masuk dengan kata sandi baru.';
+
+  @override
+  String get auth_invalidResetLink => 'Tautan Tidak Valid';
+
+  @override
+  String get auth_invalidResetLinkMessage =>
+      'Tautan pengaturan ulang ini tidak valid atau telah kedaluwarsa.';
+
+  @override
+  String get auth_requestNewLink => 'Minta Tautan Baru';
 
   @override
   String get home_greetingMorning => 'Selamat pagi';
@@ -406,6 +475,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get recording_titleHint => 'Tambah judul (opsional)';
 
   @override
+  String get recording_descriptionHint => 'Tambah deskripsi singkat (opsional)';
+
+  @override
+  String get recording_descriptionEmpty => 'Tambah deskripsi';
+
+  @override
   String get recording_saveRecording => 'Simpan Rekaman';
 
   @override
@@ -425,13 +500,21 @@ class AppLocalizationsId extends AppLocalizations {
   String get recording_saved => 'Rekaman disimpan';
 
   @override
+  String get recording_uploading => 'Mengunggah rekaman…';
+
+  @override
+  String recording_uploadFailed(String error) {
+    return 'Pengunggahan gagal: $error';
+  }
+
+  @override
   String get recording_notFound => 'Rekaman tidak ditemukan';
 
   @override
   String get recording_unknownGenre => 'Genre tidak dikenal';
 
   @override
-  String get recording_splitRecording => 'Bagi Rekaman';
+  String get recording_splitRecording => 'Edit Rekaman';
 
   @override
   String get recording_moveCategory => 'Pindah Kategori';
@@ -488,10 +571,55 @@ class AppLocalizationsId extends AppLocalizations {
   String get recording_updateFailed => 'Gagal memperbarui di server';
 
   @override
+  String get recording_exportAudio => 'Ekspor audio';
+
+  @override
+  String get recording_exportShareFailed => 'Gagal membagikan file audio';
+
+  @override
+  String get recording_replaceAudio => 'Ganti audio';
+
+  @override
+  String get recording_replaceTitle => 'Ganti audio?';
+
+  @override
+  String get recording_replaceMessage =>
+      'Audio saat ini akan dipindahkan ke tempat sampah 24 jam dan ditukar dengan file yang Anda pilih. Hanya file audio dengan format yang sama dengan aslinya yang dapat digunakan.';
+
+  @override
+  String get recording_replaceReuploadNotice =>
+      'Rekaman ini sudah diunggah. File baru akan menimpanya di server.';
+
+  @override
+  String get recording_replaceConfirm => 'Ganti';
+
+  @override
+  String recording_replaceFormatMismatch(String expected, String actual) {
+    return 'Pengganti harus file $expected, tetapi adalah $actual';
+  }
+
+  @override
+  String get recording_replaceInvalidAudio =>
+      'Tidak dapat membaca file audio yang dipilih';
+
+  @override
+  String get recording_replaceSuccess => 'Audio diganti';
+
+  @override
+  String get recording_replaceFailed => 'Gagal mengganti audio';
+
+  @override
+  String get recording_replaceNotAvailableWeb =>
+      'Penggantian audio tidak tersedia di aplikasi web';
+
+  @override
   String get recordings_title => 'Rekaman';
 
   @override
   String get recordings_subtitle => 'Cerita yang Anda kumpulkan';
+
+  @override
+  String get recordings_searchHint => 'Cari rekaman...';
 
   @override
   String get recordings_importAudio => 'Impor file audio';
@@ -509,6 +637,10 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get recordings_noRecordingsSubtitle =>
       'Ketuk mikrofon untuk merekam cerita pertama Anda, atau impor file audio.';
+
+  @override
+  String get recordings_dropToImport =>
+      'Tip: drag audio files onto this window to import.';
 
   @override
   String recordings_count(int count) {
@@ -556,7 +688,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get recordings_clearFailed => 'Gagal membersihkan rekaman';
 
   @override
-  String get trim_title => 'Bagi Rekaman';
+  String get trim_title => 'Edit Rekaman';
 
   @override
   String get trim_notFound => 'Rekaman tidak ditemukan';
@@ -611,6 +743,35 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
+  String get trim_saveConfirmTitle => 'Simpan perubahan?';
+
+  @override
+  String trim_saveConfirmBody(int count) {
+    return 'Ini akan menggantikan rekaman asli dengan $count segmen. Tindakan ini tidak dapat dibatalkan.';
+  }
+
+  @override
+  String get trim_inheritLabel => 'Warisi';
+
+  @override
+  String get trim_applyToAll => 'Terapkan ke semua';
+
+  @override
+  String get trim_copyFromPrevious => 'Salin dari sebelumnya';
+
+  @override
+  String get trim_classifySegment => 'Klasifikasikan segmen';
+
+  @override
+  String get trim_volume => 'Volume';
+
+  @override
+  String get trim_peakClip => 'Klip';
+
+  @override
+  String get trim_boostOnSave => 'Penguat diterapkan saat menyimpan';
+
+  @override
   String get import_title => 'Impor Audio';
 
   @override
@@ -652,6 +813,137 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get import_importAndSave => 'Impor dan Simpan';
+
+  @override
+  String get import_setForAll => 'Tetapkan untuk semua file';
+
+  @override
+  String get import_applyToAll => 'Terapkan ke semua';
+
+  @override
+  String get import_fieldRequired => 'Wajib';
+
+  @override
+  String import_validationBanner(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count file kehilangan bidang wajib',
+      one: '1 file kehilangan bidang wajib',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get import_remove => 'Hapus file';
+
+  @override
+  String import_supportedFormats(String formats) {
+    return 'Format yang didukung: $formats. File yang tidak didukung atau tidak dapat dibaca akan dilewati.';
+  }
+
+  @override
+  String import_rejectedFiles(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Melewati $count file yang tidak didukung atau tidak dapat dibaca: $names',
+      one:
+          'Melewati 1 file yang tidak didukung atau tidak dapat dibaca: $names',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String import_countFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count file',
+      one: '1 file',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String import_importNFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count file',
+      one: '1 file',
+    );
+    return 'Impor $_temp0';
+  }
+
+  @override
+  String get import_emptyFile => 'file kosong';
+
+  @override
+  String get import_compressWav => 'Kompres WAV ke M4A';
+
+  @override
+  String get import_compressWavHint =>
+      '~10x lebih kecil, tanpa kehilangan kualitas untuk pipeline ML';
+
+  @override
+  String get import_dropHint => 'Drop audio files to import';
+
+  @override
+  String get import_dropActive => 'Release to import';
+
+  @override
+  String import_rejectedTooLarge(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Skipped $count files over 500 MB: $names',
+      one: 'Skipped 1 file over 500 MB: $names',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String import_rejectedUnsupportedCodec(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Skipped $count files with unsupported audio codecs: $names. Re-export as PCM WAV or M4A.',
+      one:
+          'Skipped 1 file with an unsupported audio codec: $names. Re-export as PCM WAV or M4A.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String import_rejectedUnreadable(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Skipped $count unreadable files: $names',
+      one: 'Skipped 1 unreadable file: $names',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get import_resumePromptTitle => 'Resume interrupted upload';
+
+  @override
+  String import_resumePromptBody(String name, String size) {
+    return '\"$name\" ($size) was partially uploaded. Select the same file to continue.';
+  }
+
+  @override
+  String get import_resumeSizeMismatch =>
+      'That file doesn\'t match the paused upload.';
+
+  @override
+  String import_largeFileWarning(String size) {
+    return 'Large file ($size). Keep this tab open until the upload completes.';
+  }
 
   @override
   String get moveCategory_title => 'Pindah Kategori';
@@ -922,7 +1214,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get admin_genreCreated => 'Genre dibuat';
 
   @override
-  String get admin_editGenre => 'Edit genre';
+  String get admin_editGenre => 'Ubah genre';
 
   @override
   String get admin_deleteGenre => 'Hapus genre';
@@ -931,7 +1223,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get admin_addSubcategory => 'Tambah subkategori';
 
   @override
-  String get admin_editGenreTitle => 'Edit Genre';
+  String get admin_editGenreTitle => 'Ubah Genre';
 
   @override
   String get admin_genreUpdated => 'Genre diperbarui';
@@ -1486,7 +1778,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get action_actions => 'Tindakan';
 
   @override
-  String get action_split => 'Bagi';
+  String get action_split => 'Edit';
 
   @override
   String get action_flagClean => 'Tandai Bersihkan';
@@ -1562,23 +1854,567 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get classify_banner =>
-      'Rekaman ini perlu diklasifikasi sebelum dapat diunggah.';
+      'Rekaman ini belum diklasifikasi. Ketuk Klasifikasi untuk menambahkan genre dan register.';
 
   @override
   String get classify_success => 'Rekaman diklasifikasi';
 
   @override
-  String get classify_register => 'Register (opsional)';
+  String get classify_register => 'Register';
 
   @override
   String get classify_selectRegister => 'Pilih register';
 
   @override
+  String get classify_predominantHeader => 'KLASIFIKASI DOMINAN';
+
+  @override
+  String get classify_addAlternativeTitle =>
+      'Ambigu? Tambah klasifikasi alternatif';
+
+  @override
+  String get classify_secondaryNote =>
+      'Hanya klasifikasi dominan yang dihitung dalam total waktu genre.';
+
+  @override
+  String get classify_secondaryGenre => 'Genre sekunder';
+
+  @override
+  String get classify_secondarySubcategory => 'Subkategori sekunder';
+
+  @override
+  String get classify_secondaryRegister => 'Register sekunder';
+
+  @override
+  String get classify_secondarySameAsPrimary =>
+      'Genre sekunder harus berbeda dari genre dominan.';
+
+  @override
+  String get classify_clearAlternative => 'Bersihkan alternatif';
+
+  @override
+  String get recording_alsoClassifiedAs => 'Juga diklasifikasikan sebagai';
+
+  @override
+  String get recording_alsoClassifiedAsTooltip =>
+      'Memiliki klasifikasi alternatif';
+
+  @override
+  String get recording_addAlternative => 'Tambah klasifikasi alternatif';
+
+  @override
+  String get recording_removeSecondary => 'Hapus klasifikasi alternatif';
+
+  @override
+  String get recording_secondaryRemoved => 'Klasifikasi alternatif dihapus';
+
+  @override
+  String get recording_secondaryUpdated => 'Klasifikasi alternatif diperbarui';
+
+  @override
   String get recording_unclassified => 'Belum diklasifikasi';
+
+  @override
+  String get recording_inputSource => 'Input';
+
+  @override
+  String get recording_selectMicrophone => 'Pilih mikrofon';
+
+  @override
+  String get recording_builtInMicrophone => 'Default sistem';
+
+  @override
+  String get recording_micPermissionNeeded =>
+      'Izinkan akses mikrofon untuk melihat nama perangkat';
+
+  @override
+  String get recording_micPermissionButton => 'Berikan izin';
+
+  @override
+  String get recording_micPermissionDenied =>
+      'Izin mikrofon ditolak. Aktifkan di pengaturan browser atau sistem.';
+
+  @override
+  String get recording_micPermissionTitle => 'Akses mikrofon diperlukan';
+
+  @override
+  String get recording_noDevicesFound => 'Tidak ada mikrofon ditemukan';
+
+  @override
+  String get recording_storageLowWarnTitle => 'Penyimpanan rendah';
+
+  @override
+  String recording_storageLowWarnBody(int minutes) {
+    return 'Sekitar $minutes menit perekaman tersedia. Lanjutkan?';
+  }
+
+  @override
+  String get recording_storageRefuseTitle => 'Penyimpanan tidak cukup';
+
+  @override
+  String get recording_storageRefuseBody =>
+      'Bebaskan ruang di perangkat ini sebelum merekam.';
+
+  @override
+  String recording_storageCriticalBanner(int minutes) {
+    return 'Penyimpanan kritis — sekitar $minutes menit tersisa. Pertimbangkan untuk berhenti.';
+  }
+
+  @override
+  String get recording_storageForceStopped =>
+      'Perekaman berhenti karena penyimpanan habis. Kemajuan Anda telah disimpan.';
+
+  @override
+  String recording_savedAt(String time) {
+    return 'Disimpan pada $time';
+  }
+
+  @override
+  String get recording_continuedInBackground =>
+      'Perekaman berlanjut di latar belakang';
+
+  @override
+  String get recording_continue => 'Lanjutkan';
+
+  @override
+  String get recording_cancel => 'Batal';
+
+  @override
+  String get recording_recoverTitle => 'Pulihkan rekaman yang terputus?';
+
+  @override
+  String recording_recoverBody(int minutes) {
+    return 'Kami menemukan sekitar $minutes menit audio dari sesi sebelumnya.';
+  }
+
+  @override
+  String get recording_recoverButton => 'Pulihkan';
+
+  @override
+  String get recording_recoverDiscard => 'Buang';
+
+  @override
+  String get recording_recoverFailedLastSegment =>
+      'Sebagian audio di dekat akhir tidak dapat dibaca dan dilewati.';
+
+  @override
+  String get recording_inProgressNotificationTitle => 'Perekaman berlangsung';
+
+  @override
+  String get recording_inProgressNotificationBody =>
+      'Ketuk untuk kembali ke aplikasi';
+
+  @override
+  String get profile_defaultMicrophone => 'Mikrofon default';
+
+  @override
+  String get profile_systemDefault => 'Default sistem';
+
+  @override
+  String get settings_deviceStorageTitle => 'Penyimpanan perangkat';
+
+  @override
+  String settings_deviceStorageSubtitle(String used, String free) {
+    return 'Terpakai $used · Bebas $free';
+  }
 
   @override
   String get fab_quickRecord => 'Cepat';
 
   @override
   String get fab_normalRecord => 'Rekam';
+
+  @override
+  String get error_network =>
+      'Tidak dapat menghubungi server. Periksa koneksi internet Anda dan coba lagi.';
+
+  @override
+  String get error_secureConnection =>
+      'Koneksi aman tidak dapat dibuat. Silakan coba lagi nanti.';
+
+  @override
+  String get error_timeout =>
+      'Permintaan telah habis waktu. Periksa koneksi Anda dan coba lagi.';
+
+  @override
+  String get error_invalidCredentials =>
+      'Email atau kata sandi salah. Silakan coba lagi.';
+
+  @override
+  String get error_userNotFound =>
+      'Tidak ditemukan akun dengan alamat email tersebut.';
+
+  @override
+  String get error_accountExists => 'Akun dengan email ini sudah ada.';
+
+  @override
+  String get error_emailRequired => 'Silakan masukkan alamat email Anda.';
+
+  @override
+  String get error_passwordRequired => 'Silakan masukkan kata sandi Anda.';
+
+  @override
+  String get error_signupFailed =>
+      'Tidak dapat membuat akun Anda. Periksa detail Anda dan coba lagi.';
+
+  @override
+  String get error_sessionExpired =>
+      'Sesi Anda telah berakhir. Silakan masuk kembali.';
+
+  @override
+  String get error_profileLoadFailed =>
+      'Tidak dapat memuat profil Anda. Silakan coba lagi.';
+
+  @override
+  String get error_profileUpdateFailed =>
+      'Tidak dapat memperbarui profil Anda. Silakan coba lagi.';
+
+  @override
+  String get error_imageUploadFailed =>
+      'Tidak dapat mengunggah gambar. Silakan coba lagi.';
+
+  @override
+  String get error_notAuthenticated =>
+      'Anda belum masuk. Silakan masuk dan coba lagi.';
+
+  @override
+  String get error_noPermission =>
+      'Anda tidak memiliki izin untuk melakukan tindakan ini.';
+
+  @override
+  String get error_generic => 'Terjadi kesalahan. Silakan coba lagi nanti.';
+
+  @override
+  String get common_close => 'Tutup';
+
+  @override
+  String get storyteller_title => 'Pencerita';
+
+  @override
+  String get storyteller_singular => 'Pencerita';
+
+  @override
+  String get storyteller_manageAction => 'Kelola pencerita';
+
+  @override
+  String get storyteller_addNew => 'Tambah pencerita';
+
+  @override
+  String get storyteller_createTitle => 'Pencerita baru';
+
+  @override
+  String get storyteller_editTitle => 'Ubah pencerita';
+
+  @override
+  String get storyteller_speakerName => 'Nama pembicara';
+
+  @override
+  String get storyteller_sex => 'Jenis kelamin';
+
+  @override
+  String get storyteller_sexMale => 'Laki-laki';
+
+  @override
+  String get storyteller_sexFemale => 'Perempuan';
+
+  @override
+  String get storyteller_age => 'Usia';
+
+  @override
+  String get storyteller_location => 'Lokasi';
+
+  @override
+  String get storyteller_dialect => 'Dialek';
+
+  @override
+  String get storyteller_externalAcceptanceTitle =>
+      'Validasi persetujuan eksternal';
+
+  @override
+  String get storyteller_externalAcceptanceDescription =>
+      'Saya mengonfirmasi bahwa validasi persetujuan eksternal telah dilakukan untuk pembicara ini.';
+
+  @override
+  String get storyteller_externalAcceptanceInfo =>
+      'Sebelum mendaftarkan pencerita, manajer proyek harus memperoleh persetujuan pembicara di luar aplikasi (misalnya, melalui formulir yang ditandatangani atau persetujuan lisan yang direkam). Kotak centang ini mencatat bahwa langkah tersebut telah diselesaikan.';
+
+  @override
+  String get storyteller_createRequiresConnection =>
+      'Membuat pencerita memerlukan koneksi internet.';
+
+  @override
+  String get storyteller_deleteTitle => 'Hapus pencerita?';
+
+  @override
+  String get storyteller_deleteMessage =>
+      'Rekaman yang sebelumnya ditetapkan ke pencerita ini akan ditampilkan sebagai tidak ditetapkan.';
+
+  @override
+  String get storyteller_noneAssigned => 'Tidak ada pencerita yang ditetapkan';
+
+  @override
+  String get storyteller_unknown => 'Pencerita tidak diketahui';
+
+  @override
+  String get storyteller_selectHint => 'Pilih pencerita';
+
+  @override
+  String get storyteller_required => 'Pencerita wajib diisi';
+
+  @override
+  String get storyteller_searchPlaceholder => 'Cari pencerita';
+
+  @override
+  String get storyteller_empty => 'Belum ada pencerita';
+
+  @override
+  String get storyteller_emptyDescription =>
+      'Buat pencerita untuk proyek agar dapat ditetapkan ke rekaman.';
+
+  @override
+  String get storyteller_offlineNoCache =>
+      'Pencerita belum disinkronkan. Sambungkan ke internet untuk memuatnya.';
+
+  @override
+  String get storyteller_assign => 'Tetapkan';
+
+  @override
+  String get storyteller_reassign => 'Tetapkan ulang';
+
+  @override
+  String get storyteller_ageValidator => 'Masukkan usia antara 1 dan 120';
+
+  @override
+  String storyteller_ageYearsShort(int age) {
+    return '$age thn';
+  }
+
+  @override
+  String get filters_buttonLabel => 'Filter';
+
+  @override
+  String get filters_sheetTitle => 'Saring rekaman';
+
+  @override
+  String get filters_sectionStatus => 'Status unggah';
+
+  @override
+  String get filters_sectionGenre => 'Genre';
+
+  @override
+  String get filters_sectionStoryteller => 'Pencerita';
+
+  @override
+  String get filters_sectionUser => 'Direkam oleh';
+
+  @override
+  String get filter_apply => 'Terapkan';
+
+  @override
+  String get filter_reset => 'Atur ulang';
+
+  @override
+  String get filter_clearAll => 'Hapus semua';
+
+  @override
+  String filter_countActive(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString filter',
+      one: '1 filter',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get filter_userAll => 'Semua pengguna';
+
+  @override
+  String get filter_storytellerAll => 'Semua pencerita';
+
+  @override
+  String get filter_genreAll => 'Semua genre';
+
+  @override
+  String get detail_recordedBy => 'Direkam oleh';
+
+  @override
+  String get detail_storyteller => 'Pencerita';
+
+  @override
+  String get recording_unknownUser => 'Pengguna tidak dikenal';
+
+  @override
+  String get common_ok => 'OK';
+
+  @override
+  String get invite_title => 'Undang anggota';
+
+  @override
+  String get invite_searchLabel => 'Cari berdasarkan nama atau email';
+
+  @override
+  String get invite_searchHint => 'Ketik minimal 2 karakter';
+
+  @override
+  String get invite_noUsersFound => 'Tidak ada pengguna ditemukan';
+
+  @override
+  String get invite_changeUser => 'Ganti pengguna';
+
+  @override
+  String get invite_roleLabel => 'Peran *';
+
+  @override
+  String get invite_roleMember => 'Anggota';
+
+  @override
+  String get invite_roleManager => 'Manajer';
+
+  @override
+  String get invite_sendInvite => 'Kirim undangan';
+
+  @override
+  String get invite_sendFailed => 'Gagal mengirim undangan';
+
+  @override
+  String get recording_recoveryInProgress => 'Memulihkan…';
+
+  @override
+  String get recording_recoveryFailed => 'Pemulihan gagal';
+
+  @override
+  String get recording_recoverySessionNotFound => 'Sesi tidak ditemukan';
+
+  @override
+  String get recording_recoveryNoAudio => 'Tidak ada audio untuk dipulihkan';
+
+  @override
+  String get recording_recoveryConcatFailed => 'Gagal menggabungkan';
+
+  @override
+  String get a11y_startRecording => 'Mulai rekaman';
+
+  @override
+  String get a11y_createProject => 'Buat proyek';
+
+  @override
+  String get a11y_playAudio => 'Putar audio';
+
+  @override
+  String get a11y_pauseAudio => 'Jeda audio';
+
+  @override
+  String get a11y_splitWaveform =>
+      'Bentuk gelombang pembagi. Ketuk untuk menambahkan penanda. Seret untuk memindahkan. Cubit untuk memperbesar. Tekan lama untuk menghapus.';
+
+  @override
+  String a11y_tabLabel(String label) {
+    return 'Tab $label';
+  }
+
+  @override
+  String get profile_adminBadge => 'Admin';
+
+  @override
+  String get profile_setYourName => 'Tetapkan nama Anda';
+
+  @override
+  String get profile_inviteAcceptFailed => 'Gagal menerima undangan';
+
+  @override
+  String get profile_inviteDeclineFailed => 'Gagal menolak undangan';
+
+  @override
+  String get profile_typeDeleteWord => 'HAPUS';
+
+  @override
+  String trim_splitError(String error) {
+    return 'Kesalahan saat memisahkan: $error';
+  }
+
+  @override
+  String get error_serverFailure =>
+      'Server tidak dapat menyelesaikan permintaan. Silakan coba lagi.';
+
+  @override
+  String get error_importNoBytes => 'File ini kosong dan tidak dapat diimpor.';
+
+  @override
+  String get error_ffmpegProcessingFailed => 'Pemrosesan audio gagal.';
+
+  @override
+  String get error_downloadFailed => 'Unduhan gagal.';
+
+  @override
+  String get projectSettings_offlineTitle => 'Anda sedang offline';
+
+  @override
+  String get projectSettings_offlineDescription =>
+      'Detail proyek tidak dapat dimuat tanpa koneksi internet. Akan dimuat secara otomatis saat Anda terhubung kembali.';
+
+  @override
+  String get recording_noAudioAvailable => 'Tidak ada audio tersedia';
+
+  @override
+  String get recording_noPendingUploads => 'Tidak ada unggahan tertunda';
+
+  @override
+  String get recording_uploadQueue => 'Antrean unggah';
+
+  @override
+  String get recording_previewSelection => 'Pratinjau pilihan';
+
+  @override
+  String get recording_stopPreview => 'Hentikan pratinjau';
+
+  @override
+  String get recording_audioLoadFailed => 'Gagal memuat audio';
+
+  @override
+  String get status_offlineSubtitle =>
+      'Beberapa fitur seperti sinkronisasi dan pemuatan data memerlukan koneksi internet.';
+
+  @override
+  String get status_noProject => 'Tidak ada proyek ditetapkan';
+
+  @override
+  String get status_noProjectSubtitle =>
+      'Anda belum ditambahkan ke proyek mana pun. Hubungi administrator Anda dan tunggu untuk ditetapkan.';
+
+  @override
+  String get a11y_recordingInProgress =>
+      'Perekaman berlangsung, ketuk untuk menjeda';
+
+  @override
+  String get a11y_recordingPaused =>
+      'Perekaman dijeda, ketuk untuk melanjutkan';
+
+  @override
+  String get recording_audioFileNotFound => 'File audio tidak ditemukan';
+
+  @override
+  String recording_partOf(int part, int total) {
+    return 'Bagian $part dari $total';
+  }
+
+  @override
+  String recording_splitFrom(String sourceId) {
+    return 'Dipisahkan dari $sourceId';
+  }
+
+  @override
+  String trim_segmentRemoved(int index) {
+    return 'Segmen $index — dihapus';
+  }
+
+  @override
+  String trim_segmentOfTotal(int index, int total) {
+    return 'Segmen $index dari $total';
+  }
 }

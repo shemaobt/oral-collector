@@ -127,10 +127,12 @@ class ProjectSettingsStatsRow extends StatelessWidget {
     super.key,
     required this.project,
     required this.memberCount,
+    this.storytellerCount = 0,
   });
 
   final Project project;
   final int memberCount;
+  final int storytellerCount;
 
   @override
   Widget build(BuildContext context) {
@@ -138,34 +140,47 @@ class ProjectSettingsStatsRow extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = AppColors.of(context);
 
+    final chips = [
+      ProjectSettingsStatChip(
+        icon: LucideIcons.mic,
+        value: '${project.recordingCount}',
+        label: l10n.projectStats_recordings,
+        color: colors.accent,
+        colors: colors,
+        theme: theme,
+      ),
+      ProjectSettingsStatChip(
+        icon: LucideIcons.clock,
+        value: formatDurationCompact(project.totalDurationSeconds),
+        label: l10n.projectStats_duration,
+        color: colors.info,
+        colors: colors,
+        theme: theme,
+      ),
+      ProjectSettingsStatChip(
+        icon: LucideIcons.users,
+        value: '$memberCount',
+        label: l10n.projectStats_members,
+        color: colors.success,
+        colors: colors,
+        theme: theme,
+      ),
+      ProjectSettingsStatChip(
+        icon: LucideIcons.userCheck,
+        value: '$storytellerCount',
+        label: l10n.storyteller_title,
+        color: colors.secondary,
+        colors: colors,
+        theme: theme,
+      ),
+    ];
+
     return Row(
       children: [
-        ProjectSettingsStatChip(
-          icon: LucideIcons.mic,
-          value: '${project.recordingCount}',
-          label: l10n.projectStats_recordings,
-          color: colors.accent,
-          colors: colors,
-          theme: theme,
-        ),
-        const SizedBox(width: 10),
-        ProjectSettingsStatChip(
-          icon: LucideIcons.clock,
-          value: formatDurationCompact(project.totalDurationSeconds),
-          label: l10n.projectStats_duration,
-          color: colors.info,
-          colors: colors,
-          theme: theme,
-        ),
-        const SizedBox(width: 10),
-        ProjectSettingsStatChip(
-          icon: LucideIcons.users,
-          value: '$memberCount',
-          label: l10n.projectStats_members,
-          color: colors.success,
-          colors: colors,
-          theme: theme,
-        ),
+        for (var i = 0; i < chips.length; i++) ...[
+          if (i > 0) const SizedBox(width: 8),
+          chips[i],
+        ],
       ],
     );
   }

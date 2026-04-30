@@ -170,6 +170,18 @@ abstract class AppLocalizations {
   /// **'Cancel'**
   String get common_cancel;
 
+  /// No description provided for @common_resume.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get common_resume;
+
+  /// No description provided for @common_discard.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get common_discard;
+
   /// No description provided for @common_save.
   ///
   /// In en, this message translates to:
@@ -439,6 +451,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Continue'**
   String get auth_continueButton;
+
+  /// No description provided for @auth_forgotPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot password?'**
+  String get auth_forgotPassword;
+
+  /// No description provided for @auth_resetPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset Password'**
+  String get auth_resetPassword;
+
+  /// No description provided for @auth_forgotPasswordSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your email and we\'ll send you a reset link.'**
+  String get auth_forgotPasswordSubtitle;
+
+  /// No description provided for @auth_sendResetLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Send Reset Link'**
+  String get auth_sendResetLink;
+
+  /// No description provided for @auth_sending.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending...'**
+  String get auth_sending;
+
+  /// No description provided for @auth_checkYourEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Check Your Email'**
+  String get auth_checkYourEmail;
+
+  /// No description provided for @auth_resetEmailSent.
+  ///
+  /// In en, this message translates to:
+  /// **'We sent a password reset link to {email}. Check your inbox and follow the link to set a new password.'**
+  String auth_resetEmailSent(String email);
+
+  /// No description provided for @auth_openEmailApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Email App'**
+  String get auth_openEmailApp;
+
+  /// No description provided for @auth_resendEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend'**
+  String get auth_resendEmail;
+
+  /// No description provided for @auth_backToLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to Sign In'**
+  String get auth_backToLogin;
+
+  /// No description provided for @auth_newPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'New Password'**
+  String get auth_newPassword;
+
+  /// No description provided for @auth_confirmNewPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm New Password'**
+  String get auth_confirmNewPassword;
+
+  /// No description provided for @auth_resetPasswordSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your new password below.'**
+  String get auth_resetPasswordSubtitle;
+
+  /// No description provided for @auth_resetPasswordButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset Password'**
+  String get auth_resetPasswordButton;
+
+  /// No description provided for @auth_resetting.
+  ///
+  /// In en, this message translates to:
+  /// **'Resetting...'**
+  String get auth_resetting;
+
+  /// No description provided for @auth_resetSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Password reset successfully! You can now sign in with your new password.'**
+  String get auth_resetSuccess;
+
+  /// No description provided for @auth_invalidResetLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid Reset Link'**
+  String get auth_invalidResetLink;
+
+  /// No description provided for @auth_invalidResetLinkMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This password reset link is invalid or has expired.'**
+  String get auth_invalidResetLinkMessage;
+
+  /// No description provided for @auth_requestNewLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Request a New Link'**
+  String get auth_requestNewLink;
 
   /// No description provided for @home_greetingMorning.
   ///
@@ -884,6 +1010,18 @@ abstract class AppLocalizations {
   /// **'Add a title (optional)'**
   String get recording_titleHint;
 
+  /// No description provided for @recording_descriptionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a short description (optional)'**
+  String get recording_descriptionHint;
+
+  /// No description provided for @recording_descriptionEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Add description'**
+  String get recording_descriptionEmpty;
+
   /// No description provided for @recording_saveRecording.
   ///
   /// In en, this message translates to:
@@ -920,6 +1058,18 @@ abstract class AppLocalizations {
   /// **'Recording saved'**
   String get recording_saved;
 
+  /// No description provided for @recording_uploading.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading recording…'**
+  String get recording_uploading;
+
+  /// No description provided for @recording_uploadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload failed: {error}'**
+  String recording_uploadFailed(String error);
+
   /// No description provided for @recording_notFound.
   ///
   /// In en, this message translates to:
@@ -935,7 +1085,7 @@ abstract class AppLocalizations {
   /// No description provided for @recording_splitRecording.
   ///
   /// In en, this message translates to:
-  /// **'Split Recording'**
+  /// **'Edit Recording'**
   String get recording_splitRecording;
 
   /// No description provided for @recording_moveCategory.
@@ -1028,6 +1178,78 @@ abstract class AppLocalizations {
   /// **'Failed to update on server'**
   String get recording_updateFailed;
 
+  /// No description provided for @recording_exportAudio.
+  ///
+  /// In en, this message translates to:
+  /// **'Export audio'**
+  String get recording_exportAudio;
+
+  /// No description provided for @recording_exportShareFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to share audio file'**
+  String get recording_exportShareFailed;
+
+  /// No description provided for @recording_replaceAudio.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace audio'**
+  String get recording_replaceAudio;
+
+  /// No description provided for @recording_replaceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace audio?'**
+  String get recording_replaceTitle;
+
+  /// No description provided for @recording_replaceMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The current audio will be moved to a 24-hour trash and swapped for the file you pick. Only audio files with the same format as the original can be used.'**
+  String get recording_replaceMessage;
+
+  /// No description provided for @recording_replaceReuploadNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'This recording has already been uploaded. The new file will overwrite it on the server.'**
+  String get recording_replaceReuploadNotice;
+
+  /// No description provided for @recording_replaceConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace'**
+  String get recording_replaceConfirm;
+
+  /// No description provided for @recording_replaceFormatMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Replacement must be a {expected} file, but got {actual}'**
+  String recording_replaceFormatMismatch(String expected, String actual);
+
+  /// No description provided for @recording_replaceInvalidAudio.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not read the selected audio file'**
+  String get recording_replaceInvalidAudio;
+
+  /// No description provided for @recording_replaceSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio replaced'**
+  String get recording_replaceSuccess;
+
+  /// No description provided for @recording_replaceFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to replace audio'**
+  String get recording_replaceFailed;
+
+  /// No description provided for @recording_replaceNotAvailableWeb.
+  ///
+  /// In en, this message translates to:
+  /// **'Replacing audio is not available on the web app'**
+  String get recording_replaceNotAvailableWeb;
+
   /// No description provided for @recordings_title.
   ///
   /// In en, this message translates to:
@@ -1039,6 +1261,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your collected stories'**
   String get recordings_subtitle;
+
+  /// No description provided for @recordings_searchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search recordings...'**
+  String get recordings_searchHint;
 
   /// No description provided for @recordings_importAudio.
   ///
@@ -1069,6 +1297,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tap the microphone to record your first story, or import an audio file.'**
   String get recordings_noRecordingsSubtitle;
+
+  /// No description provided for @recordings_dropToImport.
+  ///
+  /// In en, this message translates to:
+  /// **'Tip: drag audio files onto this window to import.'**
+  String get recordings_dropToImport;
 
   /// No description provided for @recordings_count.
   ///
@@ -1127,7 +1361,7 @@ abstract class AppLocalizations {
   /// No description provided for @trim_title.
   ///
   /// In en, this message translates to:
-  /// **'Split Recording'**
+  /// **'Edit Recording'**
   String get trim_title;
 
   /// No description provided for @trim_notFound.
@@ -1201,6 +1435,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Split into {count} recordings'**
   String trim_splitInto(int count);
+
+  /// No description provided for @trim_saveConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Save changes?'**
+  String get trim_saveConfirmTitle;
+
+  /// No description provided for @trim_saveConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This replaces the original recording with {count} segment(s). This can\'t be undone.'**
+  String trim_saveConfirmBody(int count);
+
+  /// No description provided for @trim_inheritLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Inherit'**
+  String get trim_inheritLabel;
+
+  /// No description provided for @trim_applyToAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply to all'**
+  String get trim_applyToAll;
+
+  /// No description provided for @trim_copyFromPrevious.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy from previous'**
+  String get trim_copyFromPrevious;
+
+  /// No description provided for @trim_classifySegment.
+  ///
+  /// In en, this message translates to:
+  /// **'Classify segment'**
+  String get trim_classifySegment;
+
+  /// No description provided for @trim_volume.
+  ///
+  /// In en, this message translates to:
+  /// **'Volume'**
+  String get trim_volume;
+
+  /// No description provided for @trim_peakClip.
+  ///
+  /// In en, this message translates to:
+  /// **'Clipping'**
+  String get trim_peakClip;
+
+  /// No description provided for @trim_boostOnSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Boost applied on save'**
+  String get trim_boostOnSave;
 
   /// No description provided for @import_title.
   ///
@@ -1279,6 +1567,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Import & Save'**
   String get import_importAndSave;
+
+  /// No description provided for @import_setForAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Set for all files'**
+  String get import_setForAll;
+
+  /// No description provided for @import_applyToAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply to all'**
+  String get import_applyToAll;
+
+  /// No description provided for @import_fieldRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Required'**
+  String get import_fieldRequired;
+
+  /// No description provided for @import_validationBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 file is missing required fields} other{{count} files are missing required fields}}'**
+  String import_validationBanner(int count);
+
+  /// No description provided for @import_remove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove file'**
+  String get import_remove;
+
+  /// No description provided for @import_supportedFormats.
+  ///
+  /// In en, this message translates to:
+  /// **'Supported formats: {formats}. Unsupported or unreadable files are skipped.'**
+  String import_supportedFormats(String formats);
+
+  /// No description provided for @import_rejectedFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Skipped 1 unsupported or unreadable file: {names}} other{Skipped {count} unsupported or unreadable files: {names}}}'**
+  String import_rejectedFiles(int count, String names);
+
+  /// No description provided for @import_countFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 file} other{{count} files}}'**
+  String import_countFiles(int count);
+
+  /// No description provided for @import_importNFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Import {count, plural, =1{1 file} other{{count} files}}'**
+  String import_importNFiles(int count);
+
+  /// No description provided for @import_emptyFile.
+  ///
+  /// In en, this message translates to:
+  /// **'empty file'**
+  String get import_emptyFile;
+
+  /// No description provided for @import_compressWav.
+  ///
+  /// In en, this message translates to:
+  /// **'Compress WAV to M4A'**
+  String get import_compressWav;
+
+  /// No description provided for @import_compressWavHint.
+  ///
+  /// In en, this message translates to:
+  /// **'~10x smaller, no quality loss for ML pipeline'**
+  String get import_compressWavHint;
+
+  /// No description provided for @import_dropHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop audio files to import'**
+  String get import_dropHint;
+
+  /// No description provided for @import_dropActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Release to import'**
+  String get import_dropActive;
+
+  /// No description provided for @import_rejectedTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Skipped 1 file over 500 MB: {names}} other{Skipped {count} files over 500 MB: {names}}}'**
+  String import_rejectedTooLarge(int count, String names);
+
+  /// No description provided for @import_rejectedUnsupportedCodec.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Skipped 1 file with an unsupported audio codec: {names}. Re-export as PCM WAV or M4A.} other{Skipped {count} files with unsupported audio codecs: {names}. Re-export as PCM WAV or M4A.}}'**
+  String import_rejectedUnsupportedCodec(int count, String names);
+
+  /// No description provided for @import_rejectedUnreadable.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Skipped 1 unreadable file: {names}} other{Skipped {count} unreadable files: {names}}}'**
+  String import_rejectedUnreadable(int count, String names);
+
+  /// No description provided for @import_resumePromptTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume interrupted upload'**
+  String get import_resumePromptTitle;
+
+  /// No description provided for @import_resumePromptBody.
+  ///
+  /// In en, this message translates to:
+  /// **'\"{name}\" ({size}) was partially uploaded. Select the same file to continue.'**
+  String import_resumePromptBody(String name, String size);
+
+  /// No description provided for @import_resumeSizeMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'That file doesn\'t match the paused upload.'**
+  String get import_resumeSizeMismatch;
+
+  /// No description provided for @import_largeFileWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Large file ({size}). Keep this tab open until the upload completes.'**
+  String import_largeFileWarning(String size);
 
   /// No description provided for @moveCategory_title.
   ///
@@ -2783,7 +3197,7 @@ abstract class AppLocalizations {
   /// No description provided for @action_split.
   ///
   /// In en, this message translates to:
-  /// **'Split'**
+  /// **'Edit'**
   String get action_split;
 
   /// No description provided for @action_flagClean.
@@ -2933,7 +3347,7 @@ abstract class AppLocalizations {
   /// No description provided for @classify_banner.
   ///
   /// In en, this message translates to:
-  /// **'This recording needs classification before it can be uploaded.'**
+  /// **'This recording is unclassified. Tap Classify to add a genre and register.'**
   String get classify_banner;
 
   /// No description provided for @classify_success.
@@ -2945,7 +3359,7 @@ abstract class AppLocalizations {
   /// No description provided for @classify_register.
   ///
   /// In en, this message translates to:
-  /// **'Register (optional)'**
+  /// **'Register'**
   String get classify_register;
 
   /// No description provided for @classify_selectRegister.
@@ -2954,11 +3368,269 @@ abstract class AppLocalizations {
   /// **'Select register'**
   String get classify_selectRegister;
 
+  /// No description provided for @classify_predominantHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'PREDOMINANT CLASSIFICATION'**
+  String get classify_predominantHeader;
+
+  /// No description provided for @classify_addAlternativeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ambiguous? Add alternative classification'**
+  String get classify_addAlternativeTitle;
+
+  /// No description provided for @classify_secondaryNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Only the predominant classification counts toward genre time totals.'**
+  String get classify_secondaryNote;
+
+  /// No description provided for @classify_secondaryGenre.
+  ///
+  /// In en, this message translates to:
+  /// **'Secondary genre'**
+  String get classify_secondaryGenre;
+
+  /// No description provided for @classify_secondarySubcategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Secondary subcategory'**
+  String get classify_secondarySubcategory;
+
+  /// No description provided for @classify_secondaryRegister.
+  ///
+  /// In en, this message translates to:
+  /// **'Secondary register'**
+  String get classify_secondaryRegister;
+
+  /// No description provided for @classify_secondarySameAsPrimary.
+  ///
+  /// In en, this message translates to:
+  /// **'Secondary genre must differ from the predominant genre.'**
+  String get classify_secondarySameAsPrimary;
+
+  /// No description provided for @classify_clearAlternative.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear alternative'**
+  String get classify_clearAlternative;
+
+  /// No description provided for @recording_alsoClassifiedAs.
+  ///
+  /// In en, this message translates to:
+  /// **'Also classified as'**
+  String get recording_alsoClassifiedAs;
+
+  /// No description provided for @recording_alsoClassifiedAsTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Has alternative classification'**
+  String get recording_alsoClassifiedAsTooltip;
+
+  /// No description provided for @recording_addAlternative.
+  ///
+  /// In en, this message translates to:
+  /// **'Add alternative classification'**
+  String get recording_addAlternative;
+
+  /// No description provided for @recording_removeSecondary.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove alternative classification'**
+  String get recording_removeSecondary;
+
+  /// No description provided for @recording_secondaryRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Alternative classification removed'**
+  String get recording_secondaryRemoved;
+
+  /// No description provided for @recording_secondaryUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Alternative classification updated'**
+  String get recording_secondaryUpdated;
+
   /// No description provided for @recording_unclassified.
   ///
   /// In en, this message translates to:
   /// **'Unclassified'**
   String get recording_unclassified;
+
+  /// No description provided for @recording_inputSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Input'**
+  String get recording_inputSource;
+
+  /// No description provided for @recording_selectMicrophone.
+  ///
+  /// In en, this message translates to:
+  /// **'Select microphone'**
+  String get recording_selectMicrophone;
+
+  /// No description provided for @recording_builtInMicrophone.
+  ///
+  /// In en, this message translates to:
+  /// **'System default'**
+  String get recording_builtInMicrophone;
+
+  /// No description provided for @recording_micPermissionNeeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow microphone access to see device names'**
+  String get recording_micPermissionNeeded;
+
+  /// No description provided for @recording_micPermissionButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Grant permission'**
+  String get recording_micPermissionButton;
+
+  /// No description provided for @recording_micPermissionDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone permission denied. Enable it in your browser or system settings.'**
+  String get recording_micPermissionDenied;
+
+  /// No description provided for @recording_micPermissionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone access needed'**
+  String get recording_micPermissionTitle;
+
+  /// No description provided for @recording_noDevicesFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No microphones found'**
+  String get recording_noDevicesFound;
+
+  /// No description provided for @recording_storageLowWarnTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Low storage'**
+  String get recording_storageLowWarnTitle;
+
+  /// No description provided for @recording_storageLowWarnBody.
+  ///
+  /// In en, this message translates to:
+  /// **'About {minutes} min of recording available. Continue?'**
+  String recording_storageLowWarnBody(int minutes);
+
+  /// No description provided for @recording_storageRefuseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough storage'**
+  String get recording_storageRefuseTitle;
+
+  /// No description provided for @recording_storageRefuseBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Free up space on this device before recording.'**
+  String get recording_storageRefuseBody;
+
+  /// No description provided for @recording_storageCriticalBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage critical — about {minutes} min remaining. Consider stopping soon.'**
+  String recording_storageCriticalBanner(int minutes);
+
+  /// No description provided for @recording_storageForceStopped.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording stopped due to critically low storage. Your progress has been saved.'**
+  String get recording_storageForceStopped;
+
+  /// No description provided for @recording_savedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved at {time}'**
+  String recording_savedAt(String time);
+
+  /// No description provided for @recording_continuedInBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording continued in background'**
+  String get recording_continuedInBackground;
+
+  /// No description provided for @recording_continue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get recording_continue;
+
+  /// No description provided for @recording_cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get recording_cancel;
+
+  /// No description provided for @recording_recoverTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recover interrupted recording?'**
+  String get recording_recoverTitle;
+
+  /// No description provided for @recording_recoverBody.
+  ///
+  /// In en, this message translates to:
+  /// **'We found about {minutes} min of audio from an earlier session.'**
+  String recording_recoverBody(int minutes);
+
+  /// No description provided for @recording_recoverButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Recover'**
+  String get recording_recoverButton;
+
+  /// No description provided for @recording_recoverDiscard.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get recording_recoverDiscard;
+
+  /// No description provided for @recording_recoverFailedLastSegment.
+  ///
+  /// In en, this message translates to:
+  /// **'Some audio near the end could not be read and was skipped.'**
+  String get recording_recoverFailedLastSegment;
+
+  /// No description provided for @recording_inProgressNotificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording in progress'**
+  String get recording_inProgressNotificationTitle;
+
+  /// No description provided for @recording_inProgressNotificationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to return to the app'**
+  String get recording_inProgressNotificationBody;
+
+  /// No description provided for @profile_defaultMicrophone.
+  ///
+  /// In en, this message translates to:
+  /// **'Default microphone'**
+  String get profile_defaultMicrophone;
+
+  /// No description provided for @profile_systemDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'System default'**
+  String get profile_systemDefault;
+
+  /// No description provided for @settings_deviceStorageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Device storage'**
+  String get settings_deviceStorageTitle;
+
+  /// No description provided for @settings_deviceStorageSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Used {used} · Free {free}'**
+  String settings_deviceStorageSubtitle(String used, String free);
 
   /// No description provided for @fab_quickRecord.
   ///
@@ -2971,6 +3643,690 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Record'**
   String get fab_normalRecord;
+
+  /// No description provided for @error_network.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to reach the server. Please check your internet connection and try again.'**
+  String get error_network;
+
+  /// No description provided for @error_secureConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'A secure connection could not be established. Please try again later.'**
+  String get error_secureConnection;
+
+  /// No description provided for @error_timeout.
+  ///
+  /// In en, this message translates to:
+  /// **'The request timed out. Please check your connection and try again.'**
+  String get error_timeout;
+
+  /// No description provided for @error_invalidCredentials.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid email or password. Please try again.'**
+  String get error_invalidCredentials;
+
+  /// No description provided for @error_userNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No account found with that email address.'**
+  String get error_userNotFound;
+
+  /// No description provided for @error_accountExists.
+  ///
+  /// In en, this message translates to:
+  /// **'An account with this email already exists.'**
+  String get error_accountExists;
+
+  /// No description provided for @error_emailRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter your email address.'**
+  String get error_emailRequired;
+
+  /// No description provided for @error_passwordRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter your password.'**
+  String get error_passwordRequired;
+
+  /// No description provided for @error_signupFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not create your account. Please check your details and try again.'**
+  String get error_signupFailed;
+
+  /// No description provided for @error_sessionExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Your session has expired. Please sign in again.'**
+  String get error_sessionExpired;
+
+  /// No description provided for @error_profileLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load your profile. Please try again.'**
+  String get error_profileLoadFailed;
+
+  /// No description provided for @error_profileUpdateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not update your profile. Please try again.'**
+  String get error_profileUpdateFailed;
+
+  /// No description provided for @error_imageUploadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not upload the image. Please try again.'**
+  String get error_imageUploadFailed;
+
+  /// No description provided for @error_notAuthenticated.
+  ///
+  /// In en, this message translates to:
+  /// **'You are not signed in. Please log in and try again.'**
+  String get error_notAuthenticated;
+
+  /// No description provided for @error_noPermission.
+  ///
+  /// In en, this message translates to:
+  /// **'You don\'t have permission to perform this action.'**
+  String get error_noPermission;
+
+  /// No description provided for @error_generic.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong. Please try again later.'**
+  String get error_generic;
+
+  /// No description provided for @common_close.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get common_close;
+
+  /// No description provided for @storyteller_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Storytellers'**
+  String get storyteller_title;
+
+  /// No description provided for @storyteller_singular.
+  ///
+  /// In en, this message translates to:
+  /// **'Storyteller'**
+  String get storyteller_singular;
+
+  /// No description provided for @storyteller_manageAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage storytellers'**
+  String get storyteller_manageAction;
+
+  /// No description provided for @storyteller_addNew.
+  ///
+  /// In en, this message translates to:
+  /// **'Add storyteller'**
+  String get storyteller_addNew;
+
+  /// No description provided for @storyteller_createTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New storyteller'**
+  String get storyteller_createTitle;
+
+  /// No description provided for @storyteller_editTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit storyteller'**
+  String get storyteller_editTitle;
+
+  /// No description provided for @storyteller_speakerName.
+  ///
+  /// In en, this message translates to:
+  /// **'Speaker name'**
+  String get storyteller_speakerName;
+
+  /// No description provided for @storyteller_sex.
+  ///
+  /// In en, this message translates to:
+  /// **'Sex'**
+  String get storyteller_sex;
+
+  /// No description provided for @storyteller_sexMale.
+  ///
+  /// In en, this message translates to:
+  /// **'Male'**
+  String get storyteller_sexMale;
+
+  /// No description provided for @storyteller_sexFemale.
+  ///
+  /// In en, this message translates to:
+  /// **'Female'**
+  String get storyteller_sexFemale;
+
+  /// No description provided for @storyteller_age.
+  ///
+  /// In en, this message translates to:
+  /// **'Age'**
+  String get storyteller_age;
+
+  /// No description provided for @storyteller_location.
+  ///
+  /// In en, this message translates to:
+  /// **'Location'**
+  String get storyteller_location;
+
+  /// No description provided for @storyteller_dialect.
+  ///
+  /// In en, this message translates to:
+  /// **'Dialect'**
+  String get storyteller_dialect;
+
+  /// No description provided for @storyteller_externalAcceptanceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'External acceptance validation'**
+  String get storyteller_externalAcceptanceTitle;
+
+  /// No description provided for @storyteller_externalAcceptanceDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'I confirm that external acceptance validation has been performed for this speaker.'**
+  String get storyteller_externalAcceptanceDescription;
+
+  /// No description provided for @storyteller_externalAcceptanceInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Before registering a storyteller, the project manager must obtain the speaker\'s consent outside the app (for example, through a signed release form or recorded verbal agreement). This checkbox records that this step was completed.'**
+  String get storyteller_externalAcceptanceInfo;
+
+  /// No description provided for @storyteller_createRequiresConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'Creating a storyteller requires an internet connection.'**
+  String get storyteller_createRequiresConnection;
+
+  /// No description provided for @storyteller_deleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete storyteller?'**
+  String get storyteller_deleteTitle;
+
+  /// No description provided for @storyteller_deleteMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Recordings previously assigned to this storyteller will show as unassigned.'**
+  String get storyteller_deleteMessage;
+
+  /// No description provided for @storyteller_noneAssigned.
+  ///
+  /// In en, this message translates to:
+  /// **'No storyteller assigned'**
+  String get storyteller_noneAssigned;
+
+  /// No description provided for @storyteller_unknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown storyteller'**
+  String get storyteller_unknown;
+
+  /// No description provided for @storyteller_selectHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a storyteller'**
+  String get storyteller_selectHint;
+
+  /// No description provided for @storyteller_required.
+  ///
+  /// In en, this message translates to:
+  /// **'A storyteller is required'**
+  String get storyteller_required;
+
+  /// No description provided for @storyteller_searchPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Search storytellers'**
+  String get storyteller_searchPlaceholder;
+
+  /// No description provided for @storyteller_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No storytellers yet'**
+  String get storyteller_empty;
+
+  /// No description provided for @storyteller_emptyDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a storyteller for the project to assign to recordings.'**
+  String get storyteller_emptyDescription;
+
+  /// No description provided for @storyteller_offlineNoCache.
+  ///
+  /// In en, this message translates to:
+  /// **'Storytellers haven\'t been synced yet. Connect to the internet to load them.'**
+  String get storyteller_offlineNoCache;
+
+  /// No description provided for @storyteller_assign.
+  ///
+  /// In en, this message translates to:
+  /// **'Assign'**
+  String get storyteller_assign;
+
+  /// No description provided for @storyteller_reassign.
+  ///
+  /// In en, this message translates to:
+  /// **'Reassign'**
+  String get storyteller_reassign;
+
+  /// No description provided for @storyteller_ageValidator.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an age between 1 and 120'**
+  String get storyteller_ageValidator;
+
+  /// No description provided for @storyteller_ageYearsShort.
+  ///
+  /// In en, this message translates to:
+  /// **'{age}y'**
+  String storyteller_ageYearsShort(int age);
+
+  /// No description provided for @filters_buttonLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters'**
+  String get filters_buttonLabel;
+
+  /// No description provided for @filters_sheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter recordings'**
+  String get filters_sheetTitle;
+
+  /// No description provided for @filters_sectionStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload status'**
+  String get filters_sectionStatus;
+
+  /// No description provided for @filters_sectionGenre.
+  ///
+  /// In en, this message translates to:
+  /// **'Genre'**
+  String get filters_sectionGenre;
+
+  /// No description provided for @filters_sectionStoryteller.
+  ///
+  /// In en, this message translates to:
+  /// **'Storyteller'**
+  String get filters_sectionStoryteller;
+
+  /// No description provided for @filters_sectionUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Recorded by'**
+  String get filters_sectionUser;
+
+  /// No description provided for @filter_apply.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get filter_apply;
+
+  /// No description provided for @filter_reset.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get filter_reset;
+
+  /// No description provided for @filter_clearAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear all'**
+  String get filter_clearAll;
+
+  /// No description provided for @filter_countActive.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 filter} other{{count} filters}}'**
+  String filter_countActive(num count);
+
+  /// No description provided for @filter_userAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Any user'**
+  String get filter_userAll;
+
+  /// No description provided for @filter_storytellerAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Any storyteller'**
+  String get filter_storytellerAll;
+
+  /// No description provided for @filter_genreAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Any genre'**
+  String get filter_genreAll;
+
+  /// No description provided for @detail_recordedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Recorded by'**
+  String get detail_recordedBy;
+
+  /// No description provided for @detail_storyteller.
+  ///
+  /// In en, this message translates to:
+  /// **'Storyteller'**
+  String get detail_storyteller;
+
+  /// No description provided for @recording_unknownUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown user'**
+  String get recording_unknownUser;
+
+  /// No description provided for @common_ok.
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get common_ok;
+
+  /// No description provided for @invite_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite Member'**
+  String get invite_title;
+
+  /// No description provided for @invite_searchLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by name or email'**
+  String get invite_searchLabel;
+
+  /// No description provided for @invite_searchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Type at least 2 characters'**
+  String get invite_searchHint;
+
+  /// No description provided for @invite_noUsersFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No users found'**
+  String get invite_noUsersFound;
+
+  /// No description provided for @invite_changeUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Change user'**
+  String get invite_changeUser;
+
+  /// No description provided for @invite_roleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Role *'**
+  String get invite_roleLabel;
+
+  /// No description provided for @invite_roleMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Member'**
+  String get invite_roleMember;
+
+  /// No description provided for @invite_roleManager.
+  ///
+  /// In en, this message translates to:
+  /// **'Manager'**
+  String get invite_roleManager;
+
+  /// No description provided for @invite_sendInvite.
+  ///
+  /// In en, this message translates to:
+  /// **'Send Invite'**
+  String get invite_sendInvite;
+
+  /// No description provided for @invite_sendFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to send invite'**
+  String get invite_sendFailed;
+
+  /// No description provided for @recording_recoveryInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovering…'**
+  String get recording_recoveryInProgress;
+
+  /// No description provided for @recording_recoveryFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery failed'**
+  String get recording_recoveryFailed;
+
+  /// No description provided for @recording_recoverySessionNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Session not found'**
+  String get recording_recoverySessionNotFound;
+
+  /// No description provided for @recording_recoveryNoAudio.
+  ///
+  /// In en, this message translates to:
+  /// **'No audio to recover'**
+  String get recording_recoveryNoAudio;
+
+  /// No description provided for @recording_recoveryConcatFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Concatenation failed'**
+  String get recording_recoveryConcatFailed;
+
+  /// No description provided for @a11y_startRecording.
+  ///
+  /// In en, this message translates to:
+  /// **'Start recording'**
+  String get a11y_startRecording;
+
+  /// No description provided for @a11y_createProject.
+  ///
+  /// In en, this message translates to:
+  /// **'Create project'**
+  String get a11y_createProject;
+
+  /// No description provided for @a11y_playAudio.
+  ///
+  /// In en, this message translates to:
+  /// **'Play audio'**
+  String get a11y_playAudio;
+
+  /// No description provided for @a11y_pauseAudio.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause audio'**
+  String get a11y_pauseAudio;
+
+  /// No description provided for @a11y_splitWaveform.
+  ///
+  /// In en, this message translates to:
+  /// **'Split waveform. Tap to add split markers. Drag to reposition. Pinch to zoom. Long-press to remove.'**
+  String get a11y_splitWaveform;
+
+  /// No description provided for @a11y_tabLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{label} tab'**
+  String a11y_tabLabel(String label);
+
+  /// No description provided for @profile_adminBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin'**
+  String get profile_adminBadge;
+
+  /// No description provided for @profile_setYourName.
+  ///
+  /// In en, this message translates to:
+  /// **'Set your name'**
+  String get profile_setYourName;
+
+  /// No description provided for @profile_inviteAcceptFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to accept invite'**
+  String get profile_inviteAcceptFailed;
+
+  /// No description provided for @profile_inviteDeclineFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to decline invite'**
+  String get profile_inviteDeclineFailed;
+
+  /// No description provided for @profile_typeDeleteWord.
+  ///
+  /// In en, this message translates to:
+  /// **'DELETE'**
+  String get profile_typeDeleteWord;
+
+  /// No description provided for @trim_splitError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error splitting: {error}'**
+  String trim_splitError(String error);
+
+  /// No description provided for @error_serverFailure.
+  ///
+  /// In en, this message translates to:
+  /// **'The server could not complete the request. Please try again.'**
+  String get error_serverFailure;
+
+  /// No description provided for @error_importNoBytes.
+  ///
+  /// In en, this message translates to:
+  /// **'This file is empty and cannot be imported.'**
+  String get error_importNoBytes;
+
+  /// No description provided for @error_ffmpegProcessingFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio processing failed.'**
+  String get error_ffmpegProcessingFailed;
+
+  /// No description provided for @error_downloadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Download failed.'**
+  String get error_downloadFailed;
+
+  /// No description provided for @projectSettings_offlineTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You are offline'**
+  String get projectSettings_offlineTitle;
+
+  /// No description provided for @projectSettings_offlineDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Project details can\'t be loaded without an internet connection. They will load automatically when you reconnect.'**
+  String get projectSettings_offlineDescription;
+
+  /// No description provided for @recording_noAudioAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No audio available'**
+  String get recording_noAudioAvailable;
+
+  /// No description provided for @recording_noPendingUploads.
+  ///
+  /// In en, this message translates to:
+  /// **'No pending uploads'**
+  String get recording_noPendingUploads;
+
+  /// No description provided for @recording_uploadQueue.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload Queue'**
+  String get recording_uploadQueue;
+
+  /// No description provided for @recording_previewSelection.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview Selection'**
+  String get recording_previewSelection;
+
+  /// No description provided for @recording_stopPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop Preview'**
+  String get recording_stopPreview;
+
+  /// No description provided for @recording_audioLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load audio'**
+  String get recording_audioLoadFailed;
+
+  /// No description provided for @status_offlineSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Some features like syncing and loading data require an internet connection.'**
+  String get status_offlineSubtitle;
+
+  /// No description provided for @status_noProject.
+  ///
+  /// In en, this message translates to:
+  /// **'No project assigned'**
+  String get status_noProject;
+
+  /// No description provided for @status_noProjectSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You haven\'t been added to any project yet. Please contact your administrator and wait to be assigned.'**
+  String get status_noProjectSubtitle;
+
+  /// No description provided for @a11y_recordingInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording in progress, tap to pause'**
+  String get a11y_recordingInProgress;
+
+  /// No description provided for @a11y_recordingPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording paused, tap to resume'**
+  String get a11y_recordingPaused;
+
+  /// No description provided for @recording_audioFileNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio file not found'**
+  String get recording_audioFileNotFound;
+
+  /// No description provided for @recording_partOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Part {part} of {total}'**
+  String recording_partOf(int part, int total);
+
+  /// No description provided for @recording_splitFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'Split from {sourceId}'**
+  String recording_splitFrom(String sourceId);
+
+  /// No description provided for @trim_segmentRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Segment {index} — removed'**
+  String trim_segmentRemoved(int index);
+
+  /// No description provided for @trim_segmentOfTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Segment {index} of {total}'**
+  String trim_segmentOfTotal(int index, int total);
 }
 
 class _AppLocalizationsDelegate

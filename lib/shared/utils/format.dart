@@ -50,7 +50,10 @@ String formatDurationFromDuration(Duration duration) {
 String formatFileSize(int bytes) {
   if (bytes < 1024) return '$bytes B';
   if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
-  return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+  if (bytes < 1024 * 1024 * 1024) {
+    return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+  }
+  return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
 }
 
 String formatDateISO(DateTime? date) {
@@ -72,6 +75,25 @@ String formatMemberSince(
   if (date == null) return l10n.format_member;
   final df = intl.DateFormat.yMMM(locale);
   return l10n.format_memberSince(df.format(date));
+}
+
+String formatRecordingDate(
+  DateTime date,
+  String locale, {
+  AppLocalizations? l10n,
+}) {
+  final now = DateTime.now();
+  final isToday =
+      now.year == date.year && now.month == date.month && now.day == date.day;
+  if (isToday && l10n != null) {
+    final diff = now.difference(date);
+    if (diff.inSeconds < 60) return l10n.format_justNow;
+    if (diff.inMinutes < 60) return l10n.format_minutesAgo(diff.inMinutes);
+    return l10n.format_hoursAgo(diff.inHours);
+  }
+  if (isToday) return intl.DateFormat.Hm(locale).format(date);
+  if (now.year == date.year) return intl.DateFormat.MMMd(locale).format(date);
+  return intl.DateFormat.yMMMd(locale).format(date);
 }
 
 String formatTimeAgo(DateTime time, AppLocalizations l10n) {

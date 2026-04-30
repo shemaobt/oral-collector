@@ -7,6 +7,8 @@ import 'package:path_provider/path_provider.dart';
 
 import '../../core/platform/file_ops.dart' as file_ops;
 import '../../core/theme/app_colors.dart';
+import '../../features/recording/presentation/widgets/playback_key_handler.dart';
+import '../../l10n/app_localizations.dart';
 import '../utils/format.dart';
 
 class AudioPlayerWidget extends StatefulWidget {
@@ -67,9 +69,10 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
             await _player.setUrl(widget.url!);
           } else {
             if (mounted) {
+              final l10n = AppLocalizations.of(context);
               setState(() {
                 _isLoading = false;
-                _error = 'Audio file not found';
+                _error = l10n.recording_audioFileNotFound;
               });
             }
             return;
@@ -85,9 +88,10 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
       }
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context);
         setState(() {
           _isLoading = false;
-          _error = 'Failed to load audio';
+          _error = l10n.recording_audioLoadFailed;
         });
       }
     }
@@ -110,6 +114,18 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
     super.dispose();
   }
 
+  void _togglePlay() {
+    final state = _player.playerState;
+    if (state.processingState == ProcessingState.completed) {
+      _player.seek(Duration.zero);
+      _player.play();
+    } else if (state.playing) {
+      _player.pause();
+    } else {
+      _player.play();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_error != null) {
@@ -120,7 +136,8 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
       return _buildLoading();
     }
 
-    return widget.compact ? _buildCompact() : _buildFull();
+    final content = widget.compact ? _buildCompact() : _buildFull();
+    return PlaybackKeyHandler(onSpace: _togglePlay, child: content);
   }
 
   Widget _buildLoading() {
@@ -218,8 +235,9 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
           showPlay = !playing;
         }
 
+        final l10n = AppLocalizations.of(context);
         return Semantics(
-          label: showPlay ? 'Play audio' : 'Pause audio',
+          label: showPlay ? l10n.a11y_playAudio : l10n.a11y_pauseAudio,
           button: true,
           child: Material(
             color: colors.accent,
@@ -284,6 +302,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
               0,
               maxVal > 0 ? maxVal : 1.0,
             ),
+            onChangeStart: (_) => _player.pause(),
             onChanged: (value) {
               _player.seek(Duration(milliseconds: value.toInt()));
             },

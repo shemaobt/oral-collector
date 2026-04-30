@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../l10n/app_localizations.dart';
 
 class RoleBadge extends StatelessWidget {
   const RoleBadge({super.key, required this.role});
@@ -10,8 +11,9 @@ class RoleBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
+    final l10n = AppLocalizations.of(context);
     final isManager = role == 'manager';
-    final label = isManager ? 'Manager' : 'Member';
+    final label = isManager ? l10n.invite_roleManager : l10n.invite_roleMember;
     final color = isManager ? colors.primary : colors.info;
 
     return Container(

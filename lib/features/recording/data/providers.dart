@@ -2,9 +2,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/database/database_provider.dart';
 import '../../../core/network/authenticated_client.dart';
+import '../../sync/data/services/resumable_upload_service.dart';
 import '../domain/repositories/recording_api_repository.dart';
 import 'repositories/local_recording_repository.dart';
 import 'repositories/recording_api_repository_impl.dart';
+import 'repositories/recording_session_repository.dart';
+import 'services/direct_recording_uploader.dart';
 
 final recordingApiRepositoryProvider = Provider<RecordingApiRepository>((ref) {
   return RecordingApiRepositoryImpl(
@@ -17,4 +20,28 @@ final localRecordingRepositoryProvider = Provider<LocalRecordingRepository>((
 ) {
   final db = ref.watch(appDatabaseProvider);
   return LocalRecordingRepository(db);
+});
+
+final recordingSessionRepositoryProvider = Provider<RecordingSessionRepository>(
+  (ref) {
+    final db = ref.watch(appDatabaseProvider);
+    return RecordingSessionRepository(db);
+  },
+);
+
+final resumableUploadServiceProvider = Provider<ResumableUploadService>((ref) {
+  return ResumableUploadService(
+    client: ref.watch(authenticatedClientProvider),
+    recordingRepo: ref.watch(localRecordingRepositoryProvider),
+  );
+});
+
+final directRecordingUploaderProvider = Provider<DirectRecordingUploader>((
+  ref,
+) {
+  return DirectRecordingUploader(
+    client: ref.watch(authenticatedClientProvider),
+    resumableUploadService: ref.watch(resumableUploadServiceProvider),
+    recordingRepo: ref.watch(localRecordingRepositoryProvider),
+  );
 });

@@ -27,17 +27,3 @@ const localeNativeNames = {
   'ko': '한국어',
   'zh': '中文',
 };
-
-const localeEnglishNames = {
-  'en': 'English',
-  'pt': 'Portuguese',
-  'es': 'Spanish',
-  'fr': 'French',
-  'id': 'Indonesian',
-  'hi': 'Hindi',
-  'sw': 'Swahili',
-  'ar': 'Arabic',
-  'tpi': 'Tok Pisin',
-  'ko': 'Korean',
-  'zh': 'Chinese',
-};

@@ -134,16 +134,21 @@ abstract class AppTheme {
         onError: Colors.white,
         surface: AppColors.background,
         onSurface: AppColors.foreground,
+        onSurfaceVariant: AppColors.secondary,
         tertiary: AppColors.info,
-        onTertiary: Colors.white,
+        onTertiary: AppColors.foreground,
         outline: AppColors.border,
-        surfaceContainerHighest: AppColors.card,
-        surfaceContainerLow: AppColors.surfaceAlt,
+        outlineVariant: AppColors.outlineVariant,
+        surfaceContainerLowest: AppColors.surfaceContainerLowest,
+        surfaceContainerLow: AppColors.surfaceContainerLow,
+        surfaceContainer: AppColors.surfaceContainer,
+        surfaceContainerHigh: AppColors.surfaceContainerHigh,
+        surfaceContainerHighest: AppColors.surfaceContainerHighest,
       ),
       scaffoldBackgroundColor: AppColors.background,
       textTheme: textTheme,
       appBarTheme: AppBarTheme(
-        backgroundColor: AppColors.card,
+        backgroundColor: AppColors.background,
         foregroundColor: AppColors.foreground,
         elevation: 0,
         scrolledUnderElevation: 0,
@@ -163,9 +168,16 @@ abstract class AppTheme {
       ),
       cardTheme: CardThemeData(
         color: AppColors.card,
-        elevation: 2,
-        shadowColor: AppColors.border.withValues(alpha: 0.45),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        elevation: 0,
+        shadowColor: AppColors.brandVerde.withValues(alpha: 0.06),
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(
+            color: AppColors.border.withValues(alpha: 0.55),
+            width: 1,
+          ),
+        ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -233,7 +245,7 @@ abstract class AppTheme {
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(
-            color: AppColors.border.withValues(alpha: 0.6),
+            color: AppColors.border.withValues(alpha: 0.7),
           ),
         ),
         focusedBorder: OutlineInputBorder(
@@ -248,7 +260,7 @@ abstract class AppTheme {
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: AppColors.error, width: 2),
         ),
-        hintStyle: TextStyle(color: AppColors.border),
+        hintStyle: TextStyle(color: AppColors.secondary.withValues(alpha: 0.6)),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 16,
@@ -257,8 +269,8 @@ abstract class AppTheme {
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: AppColors.card,
         selectedItemColor: AppColors.accent,
-        unselectedItemColor: AppColors.foreground.withValues(alpha: 0.45),
-        elevation: 8,
+        unselectedItemColor: AppColors.foreground.withValues(alpha: 0.5),
+        elevation: 0,
         type: BottomNavigationBarType.fixed,
       ),
       navigationRailTheme: NavigationRailThemeData(
@@ -273,10 +285,10 @@ abstract class AppTheme {
         unselectedIconTheme: IconThemeData(
           color: AppColors.secondary.withValues(alpha: 0.6),
         ),
-        indicatorColor: AppColors.accent.withValues(alpha: 0.1),
+        indicatorColor: AppColors.accent.withValues(alpha: 0.12),
       ),
       dividerTheme: DividerThemeData(
-        color: AppColors.border.withValues(alpha: 0.5),
+        color: AppColors.border.withValues(alpha: 0.4),
         thickness: 1,
       ),
       listTileTheme: ListTileThemeData(
@@ -294,15 +306,56 @@ abstract class AppTheme {
         ),
       ),
       chipTheme: ChipThemeData(
-        backgroundColor: AppColors.surfaceAlt,
-        side: BorderSide.none,
+        backgroundColor: AppColors.card,
+        side: BorderSide(color: AppColors.border.withValues(alpha: 0.55)),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       ),
       dialogTheme: DialogThemeData(
         backgroundColor: AppColors.card,
+        surfaceTintColor: Colors.transparent,
+        elevation: 3,
+        shadowColor: AppColors.brandVerde.withValues(alpha: 0.08),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       ),
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: AppColors.card,
+        surfaceTintColor: Colors.transparent,
+        modalBackgroundColor: AppColors.card,
+        elevation: 3,
+        modalElevation: 3,
+        shadowColor: AppColors.brandVerde.withValues(alpha: 0.08),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+      ),
+      menuTheme: MenuThemeData(
+        style: MenuStyle(
+          backgroundColor: WidgetStateProperty.all(AppColors.card),
+          surfaceTintColor: WidgetStateProperty.all(Colors.transparent),
+          elevation: WidgetStateProperty.all(3),
+          shadowColor: WidgetStateProperty.all(
+            AppColors.brandVerde.withValues(alpha: 0.08),
+          ),
+          shape: WidgetStateProperty.all(
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        ),
+      ),
+      popupMenuTheme: PopupMenuThemeData(
+        color: AppColors.card,
+        surfaceTintColor: Colors.transparent,
+        elevation: 3,
+        shadowColor: AppColors.brandVerde.withValues(alpha: 0.08),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
       snackBarTheme: SnackBarThemeData(
+        backgroundColor: AppColors.surfaceContainerHighest,
+        contentTextStyle: TextStyle(
+          fontFamily: _fontFamily,
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+          color: AppColors.foreground,
+        ),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
@@ -323,14 +376,14 @@ abstract class AppTheme {
       ),
       sliderTheme: SliderThemeData(
         activeTrackColor: AppColors.primary,
-        inactiveTrackColor: AppColors.border,
+        inactiveTrackColor: AppColors.border.withValues(alpha: 0.4),
         thumbColor: AppColors.primary,
         overlayColor: AppColors.primary.withValues(alpha: 0.15),
       ),
       switchTheme: SwitchThemeData(
         thumbColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) return AppColors.primary;
-          return AppColors.border;
+          return AppColors.switchThumbUnselected;
         }),
         trackColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
@@ -342,7 +395,10 @@ abstract class AppTheme {
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: AppColors.accent,
         foregroundColor: Colors.white,
-        elevation: 0,
+        elevation: 4,
+        focusElevation: 4,
+        hoverElevation: 6,
+        highlightElevation: 2,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
     );

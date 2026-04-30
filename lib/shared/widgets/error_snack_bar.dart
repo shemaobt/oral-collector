@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import '../../../l10n/app_localizations.dart';
 import '../../core/theme/app_colors.dart';
 import '../utils/error_helpers.dart';
 
-/// Shows a styled error SnackBar with an icon and a friendly message.
 void showErrorSnackBar(BuildContext context, String rawError) {
   final colors = AppColors.of(context);
   final theme = Theme.of(context);
-  final message = friendlyErrorMessage(rawError);
+  final l10n = AppLocalizations.of(context);
+  final message = friendlyErrorMessage(rawError, l10n);
 
   ScaffoldMessenger.of(context)
     ..hideCurrentSnackBar()

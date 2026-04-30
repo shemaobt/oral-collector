@@ -36,6 +36,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get common_cancel => '取消';
 
   @override
+  String get common_resume => 'Resume';
+
+  @override
+  String get common_discard => 'Discard';
+
+  @override
   String get common_save => '保存';
 
   @override
@@ -169,6 +175,65 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get auth_continueButton => '继续';
+
+  @override
+  String get auth_forgotPassword => '忘记密码？';
+
+  @override
+  String get auth_resetPassword => '重置密码';
+
+  @override
+  String get auth_forgotPasswordSubtitle => '输入您的邮箱，我们将向您发送重置链接。';
+
+  @override
+  String get auth_sendResetLink => '发送链接';
+
+  @override
+  String get auth_sending => '发送中...';
+
+  @override
+  String get auth_checkYourEmail => '请查看您的邮箱';
+
+  @override
+  String auth_resetEmailSent(String email) {
+    return '我们已向 $email 发送了密码重置链接。请查看您的收件箱并点击链接设置新密码。';
+  }
+
+  @override
+  String get auth_openEmailApp => '打开邮箱';
+
+  @override
+  String get auth_resendEmail => '重新发送';
+
+  @override
+  String get auth_backToLogin => '返回登录';
+
+  @override
+  String get auth_newPassword => '新密码';
+
+  @override
+  String get auth_confirmNewPassword => '确认新密码';
+
+  @override
+  String get auth_resetPasswordSubtitle => '请在下方输入您的新密码。';
+
+  @override
+  String get auth_resetPasswordButton => '重置密码';
+
+  @override
+  String get auth_resetting => '重置中...';
+
+  @override
+  String get auth_resetSuccess => '密码重置成功！您现在可以使用新密码登录。';
+
+  @override
+  String get auth_invalidResetLink => '无效链接';
+
+  @override
+  String get auth_invalidResetLinkMessage => '此密码重置链接无效或已过期。';
+
+  @override
+  String get auth_requestNewLink => '请求新链接';
 
   @override
   String get home_greetingMorning => '早上好';
@@ -399,6 +464,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recording_titleHint => '添加标题（选填）';
 
   @override
+  String get recording_descriptionHint => '添加简短描述（选填）';
+
+  @override
+  String get recording_descriptionEmpty => '添加描述';
+
+  @override
   String get recording_saveRecording => '保存录音';
 
   @override
@@ -417,13 +488,21 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recording_saved => '录音已保存';
 
   @override
+  String get recording_uploading => '正在上传录音…';
+
+  @override
+  String recording_uploadFailed(String error) {
+    return '上传失败:$error';
+  }
+
+  @override
   String get recording_notFound => '未找到录音';
 
   @override
   String get recording_unknownGenre => '未知体裁';
 
   @override
-  String get recording_splitRecording => '拆分录音';
+  String get recording_splitRecording => '编辑录音';
 
   @override
   String get recording_moveCategory => '移动分类';
@@ -474,10 +553,52 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recording_updateFailed => '更新服务器失败';
 
   @override
+  String get recording_exportAudio => '导出音频';
+
+  @override
+  String get recording_exportShareFailed => '共享音频文件失败';
+
+  @override
+  String get recording_replaceAudio => '替换音频';
+
+  @override
+  String get recording_replaceTitle => '替换音频?';
+
+  @override
+  String get recording_replaceMessage =>
+      '当前音频将被移至 24 小时回收站,并替换为您选择的文件。只能使用与原始文件格式相同的音频文件。';
+
+  @override
+  String get recording_replaceReuploadNotice => '此录音已上传。新文件将在服务器上覆盖它。';
+
+  @override
+  String get recording_replaceConfirm => '替换';
+
+  @override
+  String recording_replaceFormatMismatch(String expected, String actual) {
+    return '替换文件必须是 $expected,但得到的是 $actual';
+  }
+
+  @override
+  String get recording_replaceInvalidAudio => '无法读取所选音频文件';
+
+  @override
+  String get recording_replaceSuccess => '音频已替换';
+
+  @override
+  String get recording_replaceFailed => '替换音频失败';
+
+  @override
+  String get recording_replaceNotAvailableWeb => '网页应用不支持替换音频';
+
+  @override
   String get recordings_title => '录音列表';
 
   @override
   String get recordings_subtitle => '您收集的故事';
+
+  @override
+  String get recordings_searchHint => '搜索录音...';
 
   @override
   String get recordings_importAudio => '导入音频文件';
@@ -493,6 +614,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get recordings_noRecordingsSubtitle => '点击麦克风录制您的第一个故事，或导入音频文件。';
+
+  @override
+  String get recordings_dropToImport =>
+      'Tip: drag audio files onto this window to import.';
 
   @override
   String recordings_count(int count) {
@@ -540,7 +665,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recordings_clearFailed => '清除录音失败';
 
   @override
-  String get trim_title => '拆分录音';
+  String get trim_title => '编辑录音';
 
   @override
   String get trim_notFound => '未找到录音';
@@ -591,6 +716,35 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get trim_saveConfirmTitle => '保存更改？';
+
+  @override
+  String trim_saveConfirmBody(int count) {
+    return '这将用 $count 个片段替换原始录音。此操作无法撤消。';
+  }
+
+  @override
+  String get trim_inheritLabel => '继承';
+
+  @override
+  String get trim_applyToAll => '应用于所有';
+
+  @override
+  String get trim_copyFromPrevious => '从上一个复制';
+
+  @override
+  String get trim_classifySegment => '分类片段';
+
+  @override
+  String get trim_volume => '音量';
+
+  @override
+  String get trim_peakClip => '削波';
+
+  @override
+  String get trim_boostOnSave => '保存时应用增益';
+
+  @override
   String get import_title => '导入音频';
 
   @override
@@ -632,6 +786,134 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get import_importAndSave => '导入并保存';
+
+  @override
+  String get import_setForAll => '为所有文件设置';
+
+  @override
+  String get import_applyToAll => '应用到全部';
+
+  @override
+  String get import_fieldRequired => '必填';
+
+  @override
+  String import_validationBanner(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '有 $count 个文件缺少必填字段',
+      one: '有 1 个文件缺少必填字段',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get import_remove => '移除文件';
+
+  @override
+  String import_supportedFormats(String formats) {
+    return '支持的格式：$formats。不支持或无法读取的文件将被跳过。';
+  }
+
+  @override
+  String import_rejectedFiles(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '已跳过 $count 个不支持或无法读取的文件：$names',
+      one: '已跳过 1 个不支持或无法读取的文件：$names',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String import_countFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 个文件',
+      one: '1 个文件',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String import_importNFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 个文件',
+      one: '1 个文件',
+    );
+    return '导入 $_temp0';
+  }
+
+  @override
+  String get import_emptyFile => '空文件';
+
+  @override
+  String get import_compressWav => '将 WAV 压缩为 M4A';
+
+  @override
+  String get import_compressWavHint => '~10x 更小，对 ML 流水线无质量损失';
+
+  @override
+  String get import_dropHint => 'Drop audio files to import';
+
+  @override
+  String get import_dropActive => 'Release to import';
+
+  @override
+  String import_rejectedTooLarge(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Skipped $count files over 500 MB: $names',
+      one: 'Skipped 1 file over 500 MB: $names',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String import_rejectedUnsupportedCodec(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Skipped $count files with unsupported audio codecs: $names. Re-export as PCM WAV or M4A.',
+      one:
+          'Skipped 1 file with an unsupported audio codec: $names. Re-export as PCM WAV or M4A.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String import_rejectedUnreadable(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Skipped $count unreadable files: $names',
+      one: 'Skipped 1 unreadable file: $names',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get import_resumePromptTitle => 'Resume interrupted upload';
+
+  @override
+  String import_resumePromptBody(String name, String size) {
+    return '\"$name\" ($size) was partially uploaded. Select the same file to continue.';
+  }
+
+  @override
+  String get import_resumeSizeMismatch =>
+      'That file doesn\'t match the paused upload.';
+
+  @override
+  String import_largeFileWarning(String size) {
+    return 'Large file ($size). Keep this tab open until the upload completes.';
+  }
 
   @override
   String get moveCategory_title => '移动分类';
@@ -1429,7 +1711,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get action_actions => '操作';
 
   @override
-  String get action_split => '拆分';
+  String get action_split => '编辑';
 
   @override
   String get action_flagClean => '标记清理';
@@ -1504,23 +1786,532 @@ class AppLocalizationsZh extends AppLocalizations {
   String get classify_action => '分类';
 
   @override
-  String get classify_banner => '此录音需要分类后才能上传。';
+  String get classify_banner => '此录音尚未分类。点击分类以添加类型和语域。';
 
   @override
   String get classify_success => '录音已分类';
 
   @override
-  String get classify_register => '语域（选填）';
+  String get classify_register => '语域';
 
   @override
   String get classify_selectRegister => '选择语域';
 
   @override
+  String get classify_predominantHeader => '主要分类';
+
+  @override
+  String get classify_addAlternativeTitle => '有歧义？添加替代分类';
+
+  @override
+  String get classify_secondaryNote => '仅主要分类计入类型时间总计。';
+
+  @override
+  String get classify_secondaryGenre => '次要类型';
+
+  @override
+  String get classify_secondarySubcategory => '次要子类别';
+
+  @override
+  String get classify_secondaryRegister => '次要语域';
+
+  @override
+  String get classify_secondarySameAsPrimary => '次要类型必须与主要类型不同。';
+
+  @override
+  String get classify_clearAlternative => '清除替代';
+
+  @override
+  String get recording_alsoClassifiedAs => '也归类为';
+
+  @override
+  String get recording_alsoClassifiedAsTooltip => '有替代分类';
+
+  @override
+  String get recording_addAlternative => '添加替代分类';
+
+  @override
+  String get recording_removeSecondary => '移除替代分类';
+
+  @override
+  String get recording_secondaryRemoved => '替代分类已移除';
+
+  @override
+  String get recording_secondaryUpdated => '替代分类已更新';
+
+  @override
   String get recording_unclassified => '未分类';
+
+  @override
+  String get recording_inputSource => '输入';
+
+  @override
+  String get recording_selectMicrophone => '选择麦克风';
+
+  @override
+  String get recording_builtInMicrophone => '系统默认';
+
+  @override
+  String get recording_micPermissionNeeded => '请允许访问麦克风以查看设备名称';
+
+  @override
+  String get recording_micPermissionButton => '授予权限';
+
+  @override
+  String get recording_micPermissionDenied => '麦克风权限被拒绝。请在浏览器或系统设置中启用。';
+
+  @override
+  String get recording_micPermissionTitle => '需要麦克风访问权限';
+
+  @override
+  String get recording_noDevicesFound => '未找到麦克风';
+
+  @override
+  String get recording_storageLowWarnTitle => '存储空间不足';
+
+  @override
+  String recording_storageLowWarnBody(int minutes) {
+    return '约可录制 $minutes 分钟。是否继续？';
+  }
+
+  @override
+  String get recording_storageRefuseTitle => '存储空间不足';
+
+  @override
+  String get recording_storageRefuseBody => '录音前请释放此设备上的空间。';
+
+  @override
+  String recording_storageCriticalBanner(int minutes) {
+    return '存储空间紧张 — 约剩 $minutes 分钟。请尽快停止。';
+  }
+
+  @override
+  String get recording_storageForceStopped => '因存储空间不足停止录音。您的进度已保存。';
+
+  @override
+  String recording_savedAt(String time) {
+    return '已保存于 $time';
+  }
+
+  @override
+  String get recording_continuedInBackground => '录音在后台继续';
+
+  @override
+  String get recording_continue => '继续';
+
+  @override
+  String get recording_cancel => '取消';
+
+  @override
+  String get recording_recoverTitle => '恢复中断的录音？';
+
+  @override
+  String recording_recoverBody(int minutes) {
+    return '我们发现了上次会话中约 $minutes 分钟的音频。';
+  }
+
+  @override
+  String get recording_recoverButton => '恢复';
+
+  @override
+  String get recording_recoverDiscard => '放弃';
+
+  @override
+  String get recording_recoverFailedLastSegment => '末尾附近的部分音频无法读取并已跳过。';
+
+  @override
+  String get recording_inProgressNotificationTitle => '正在录音';
+
+  @override
+  String get recording_inProgressNotificationBody => '点击返回应用';
+
+  @override
+  String get profile_defaultMicrophone => '默认麦克风';
+
+  @override
+  String get profile_systemDefault => '系统默认';
+
+  @override
+  String get settings_deviceStorageTitle => '设备存储';
+
+  @override
+  String settings_deviceStorageSubtitle(String used, String free) {
+    return '已用 $used · 可用 $free';
+  }
 
   @override
   String get fab_quickRecord => '快速';
 
   @override
   String get fab_normalRecord => '录音';
+
+  @override
+  String get error_network => '无法连接到服务器。请检查您的网络连接并重试。';
+
+  @override
+  String get error_secureConnection => '无法建立安全连接。请稍后重试。';
+
+  @override
+  String get error_timeout => '请求超时。请检查您的网络连接并重试。';
+
+  @override
+  String get error_invalidCredentials => '邮箱或密码不正确。请重试。';
+
+  @override
+  String get error_userNotFound => '未找到与该邮箱关联的账户。';
+
+  @override
+  String get error_accountExists => '该邮箱已注册账户。';
+
+  @override
+  String get error_emailRequired => '请输入您的邮箱地址。';
+
+  @override
+  String get error_passwordRequired => '请输入您的密码。';
+
+  @override
+  String get error_signupFailed => '无法创建您的账户。请检查您的信息并重试。';
+
+  @override
+  String get error_sessionExpired => '您的会话已过期。请重新登录。';
+
+  @override
+  String get error_profileLoadFailed => '无法加载您的个人资料。请重试。';
+
+  @override
+  String get error_profileUpdateFailed => '无法更新您的个人资料。请重试。';
+
+  @override
+  String get error_imageUploadFailed => '无法上传图片。请重试。';
+
+  @override
+  String get error_notAuthenticated => '您尚未登录。请登录后重试。';
+
+  @override
+  String get error_noPermission => '您没有执行此操作的权限。';
+
+  @override
+  String get error_generic => '出了点问题。请稍后重试。';
+
+  @override
+  String get common_close => '关闭';
+
+  @override
+  String get storyteller_title => '讲述者';
+
+  @override
+  String get storyteller_singular => '讲述者';
+
+  @override
+  String get storyteller_manageAction => '管理讲述者';
+
+  @override
+  String get storyteller_addNew => '添加讲述者';
+
+  @override
+  String get storyteller_createTitle => '新讲述者';
+
+  @override
+  String get storyteller_editTitle => '编辑讲述者';
+
+  @override
+  String get storyteller_speakerName => '讲述者姓名';
+
+  @override
+  String get storyteller_sex => '性别';
+
+  @override
+  String get storyteller_sexMale => '男';
+
+  @override
+  String get storyteller_sexFemale => '女';
+
+  @override
+  String get storyteller_age => '年龄';
+
+  @override
+  String get storyteller_location => '位置';
+
+  @override
+  String get storyteller_dialect => '方言';
+
+  @override
+  String get storyteller_externalAcceptanceTitle => '外部接受验证';
+
+  @override
+  String get storyteller_externalAcceptanceDescription => '我确认已对此讲述者进行了外部接受验证。';
+
+  @override
+  String get storyteller_externalAcceptanceInfo =>
+      '在注册讲述者之前，项目管理员必须在应用之外获得讲述者的同意（例如，通过签署的同意书或录音的口头协议）。此复选框记录该步骤已完成。';
+
+  @override
+  String get storyteller_createRequiresConnection => '创建讲述者需要联网。';
+
+  @override
+  String get storyteller_deleteTitle => '删除讲述者？';
+
+  @override
+  String get storyteller_deleteMessage => '之前分配给此讲述者的录音将显示为未分配。';
+
+  @override
+  String get storyteller_noneAssigned => '未分配讲述者';
+
+  @override
+  String get storyteller_unknown => '未知讲述者';
+
+  @override
+  String get storyteller_selectHint => '选择讲述者';
+
+  @override
+  String get storyteller_required => '必须有讲述者';
+
+  @override
+  String get storyteller_searchPlaceholder => '搜索讲述者';
+
+  @override
+  String get storyteller_empty => '暂无讲述者';
+
+  @override
+  String get storyteller_emptyDescription => '为项目创建讲述者以分配到录音。';
+
+  @override
+  String get storyteller_offlineNoCache => '讲述者尚未同步。请联网以加载。';
+
+  @override
+  String get storyteller_assign => '分配';
+
+  @override
+  String get storyteller_reassign => '重新分配';
+
+  @override
+  String get storyteller_ageValidator => '请输入 1 至 120 之间的年龄';
+
+  @override
+  String storyteller_ageYearsShort(int age) {
+    return '$age岁';
+  }
+
+  @override
+  String get filters_buttonLabel => '筛选条件';
+
+  @override
+  String get filters_sheetTitle => '筛选录音';
+
+  @override
+  String get filters_sectionStatus => '上传状态';
+
+  @override
+  String get filters_sectionGenre => '类型';
+
+  @override
+  String get filters_sectionStoryteller => '讲述者';
+
+  @override
+  String get filters_sectionUser => '录制者';
+
+  @override
+  String get filter_apply => '应用';
+
+  @override
+  String get filter_reset => '重置';
+
+  @override
+  String get filter_clearAll => '清除全部';
+
+  @override
+  String filter_countActive(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 个筛选条件',
+      one: '1 个筛选条件',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get filter_userAll => '任意用户';
+
+  @override
+  String get filter_storytellerAll => '任意讲述者';
+
+  @override
+  String get filter_genreAll => '任意类型';
+
+  @override
+  String get detail_recordedBy => '录制者';
+
+  @override
+  String get detail_storyteller => '讲述者';
+
+  @override
+  String get recording_unknownUser => '未知用户';
+
+  @override
+  String get common_ok => '确定';
+
+  @override
+  String get invite_title => '邀请成员';
+
+  @override
+  String get invite_searchLabel => '按姓名或电子邮件搜索';
+
+  @override
+  String get invite_searchHint => '请至少输入 2 个字符';
+
+  @override
+  String get invite_noUsersFound => '未找到用户';
+
+  @override
+  String get invite_changeUser => '更改用户';
+
+  @override
+  String get invite_roleLabel => '角色 *';
+
+  @override
+  String get invite_roleMember => '成员';
+
+  @override
+  String get invite_roleManager => '管理员';
+
+  @override
+  String get invite_sendInvite => '发送邀请';
+
+  @override
+  String get invite_sendFailed => '邀请发送失败';
+
+  @override
+  String get recording_recoveryInProgress => '正在恢复…';
+
+  @override
+  String get recording_recoveryFailed => '恢复失败';
+
+  @override
+  String get recording_recoverySessionNotFound => '找不到会话';
+
+  @override
+  String get recording_recoveryNoAudio => '没有音频可恢复';
+
+  @override
+  String get recording_recoveryConcatFailed => '合并失败';
+
+  @override
+  String get a11y_startRecording => '开始录音';
+
+  @override
+  String get a11y_createProject => '创建项目';
+
+  @override
+  String get a11y_playAudio => '播放音频';
+
+  @override
+  String get a11y_pauseAudio => '暂停音频';
+
+  @override
+  String get a11y_splitWaveform => '分割波形。点击添加分割标记。拖动重新定位。捏合缩放。长按移除。';
+
+  @override
+  String a11y_tabLabel(String label) {
+    return '$label 选项卡';
+  }
+
+  @override
+  String get profile_adminBadge => '管理员';
+
+  @override
+  String get profile_setYourName => '设置您的姓名';
+
+  @override
+  String get profile_inviteAcceptFailed => '接受邀请失败';
+
+  @override
+  String get profile_inviteDeclineFailed => '拒绝邀请失败';
+
+  @override
+  String get profile_typeDeleteWord => '删除';
+
+  @override
+  String trim_splitError(String error) {
+    return '拆分错误：$error';
+  }
+
+  @override
+  String get error_serverFailure => '服务器无法完成此请求。请重试。';
+
+  @override
+  String get error_importNoBytes => '此文件为空，无法导入。';
+
+  @override
+  String get error_ffmpegProcessingFailed => '音频处理失败。';
+
+  @override
+  String get error_downloadFailed => '下载失败。';
+
+  @override
+  String get projectSettings_offlineTitle => '您处于离线状态';
+
+  @override
+  String get projectSettings_offlineDescription =>
+      '没有互联网连接无法加载项目详情。重新连接后会自动加载。';
+
+  @override
+  String get recording_noAudioAvailable => '没有可用的音频';
+
+  @override
+  String get recording_noPendingUploads => '没有等待上传的文件';
+
+  @override
+  String get recording_uploadQueue => '上传队列';
+
+  @override
+  String get recording_previewSelection => '预览选区';
+
+  @override
+  String get recording_stopPreview => '停止预览';
+
+  @override
+  String get recording_audioLoadFailed => '加载音频失败';
+
+  @override
+  String get status_offlineSubtitle => '同步和加载数据等某些功能需要互联网连接。';
+
+  @override
+  String get status_noProject => '未分配项目';
+
+  @override
+  String get status_noProjectSubtitle => '您尚未被添加到任何项目中。请联系管理员并等待分配。';
+
+  @override
+  String get a11y_recordingInProgress => '正在录音，点击暂停';
+
+  @override
+  String get a11y_recordingPaused => '录音已暂停，点击继续';
+
+  @override
+  String get recording_audioFileNotFound => '未找到音频文件';
+
+  @override
+  String recording_partOf(int part, int total) {
+    return '第 $part 部分，共 $total 部分';
+  }
+
+  @override
+  String recording_splitFrom(String sourceId) {
+    return '从 $sourceId 拆分';
+  }
+
+  @override
+  String trim_segmentRemoved(int index) {
+    return '片段 $index — 已移除';
+  }
+
+  @override
+  String trim_segmentOfTotal(int index, int total) {
+    return '片段 $index，共 $total 个';
+  }
 }

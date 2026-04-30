@@ -54,7 +54,10 @@ class InvitationsSection extends StatelessWidget {
           )
         else if (inviteState.error != null)
           _ErrorCard(
-            message: friendlyErrorMessage(inviteState.error!),
+            message: friendlyErrorMessage(
+              inviteState.error!,
+              AppLocalizations.of(context),
+            ),
             onRetry: onRefresh,
           )
         else if (inviteState.invites.isEmpty)
@@ -143,7 +146,7 @@ class _ErrorCard extends StatelessWidget {
               foregroundColor: errorColor,
               padding: const EdgeInsets.symmetric(horizontal: 12),
             ),
-            child: const Text('Retry'),
+            child: Text(AppLocalizations.of(context).common_retry),
           ),
         ],
       ),

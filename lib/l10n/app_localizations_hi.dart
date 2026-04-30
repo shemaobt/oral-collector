@@ -36,6 +36,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get common_cancel => 'रद्द करें';
 
   @override
+  String get common_resume => 'Resume';
+
+  @override
+  String get common_discard => 'Discard';
+
+  @override
   String get common_save => 'सहेजें';
 
   @override
@@ -173,6 +179,68 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get auth_continueButton => 'जारी रखें';
+
+  @override
+  String get auth_forgotPassword => 'पासवर्ड भूल गए?';
+
+  @override
+  String get auth_resetPassword => 'पासवर्ड रीसेट करें';
+
+  @override
+  String get auth_forgotPasswordSubtitle =>
+      'अपना ईमेल दर्ज करें और हम आपको एक रीसेट लिंक भेजेंगे।';
+
+  @override
+  String get auth_sendResetLink => 'लिंक भेजें';
+
+  @override
+  String get auth_sending => 'भेज रहे हैं...';
+
+  @override
+  String get auth_checkYourEmail => 'अपना ईमेल जाँचें';
+
+  @override
+  String auth_resetEmailSent(String email) {
+    return 'हमने $email पर पासवर्ड रीसेट लिंक भेजा है। अपना इनबॉक्स जाँचें और नया पासवर्ड बनाने के लिए लिंक का अनुसरण करें।';
+  }
+
+  @override
+  String get auth_openEmailApp => 'ईमेल खोलें';
+
+  @override
+  String get auth_resendEmail => 'पुनः भेजें';
+
+  @override
+  String get auth_backToLogin => 'लॉगिन पर वापस जाएँ';
+
+  @override
+  String get auth_newPassword => 'नया पासवर्ड';
+
+  @override
+  String get auth_confirmNewPassword => 'नया पासवर्ड पुष्टि करें';
+
+  @override
+  String get auth_resetPasswordSubtitle => 'नीचे अपना नया पासवर्ड दर्ज करें।';
+
+  @override
+  String get auth_resetPasswordButton => 'पासवर्ड रीसेट करें';
+
+  @override
+  String get auth_resetting => 'रीसेट हो रहा है...';
+
+  @override
+  String get auth_resetSuccess =>
+      'पासवर्ड सफलतापूर्वक रीसेट हो गया! अब आप अपने नए पासवर्ड से साइन इन कर सकते हैं।';
+
+  @override
+  String get auth_invalidResetLink => 'अमान्य लिंक';
+
+  @override
+  String get auth_invalidResetLinkMessage =>
+      'यह पासवर्ड रीसेट लिंक अमान्य है या समाप्त हो गया है।';
+
+  @override
+  String get auth_requestNewLink => 'नया लिंक अनुरोध करें';
 
   @override
   String get home_greetingMorning => 'सुप्रभात';
@@ -407,6 +475,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get recording_titleHint => 'शीर्षक जोड़ें (वैकल्पिक)';
 
   @override
+  String get recording_descriptionHint => 'संक्षिप्त विवरण जोड़ें (वैकल्पिक)';
+
+  @override
+  String get recording_descriptionEmpty => 'विवरण जोड़ें';
+
+  @override
   String get recording_saveRecording => 'रिकॉर्डिंग सहेजें';
 
   @override
@@ -426,13 +500,21 @@ class AppLocalizationsHi extends AppLocalizations {
   String get recording_saved => 'रिकॉर्डिंग सहेजी गई';
 
   @override
+  String get recording_uploading => 'रिकॉर्डिंग अपलोड की जा रही है…';
+
+  @override
+  String recording_uploadFailed(String error) {
+    return 'अपलोड विफल: $error';
+  }
+
+  @override
   String get recording_notFound => 'रिकॉर्डिंग नहीं मिली';
 
   @override
   String get recording_unknownGenre => 'अज्ञात विधा';
 
   @override
-  String get recording_splitRecording => 'रिकॉर्डिंग विभाजित करें';
+  String get recording_splitRecording => 'रिकॉर्डिंग संपादित करें';
 
   @override
   String get recording_moveCategory => 'श्रेणी बदलें';
@@ -490,10 +572,54 @@ class AppLocalizationsHi extends AppLocalizations {
   String get recording_updateFailed => 'सर्वर पर अपडेट करने में विफल';
 
   @override
+  String get recording_exportAudio => 'ऑडियो निर्यात करें';
+
+  @override
+  String get recording_exportShareFailed => 'ऑडियो फ़ाइल साझा करने में विफल';
+
+  @override
+  String get recording_replaceAudio => 'ऑडियो बदलें';
+
+  @override
+  String get recording_replaceTitle => 'ऑडियो बदलें?';
+
+  @override
+  String get recording_replaceMessage =>
+      'वर्तमान ऑडियो को 24 घंटे के लिए ट्रैश में ले जाया जाएगा और आपके द्वारा चुनी गई फ़ाइल से बदला जाएगा। केवल वही ऑडियो फ़ाइलें उपयोग की जा सकती हैं जिनका प्रारूप मूल से मेल खाता हो।';
+
+  @override
+  String get recording_replaceReuploadNotice =>
+      'यह रिकॉर्डिंग पहले ही अपलोड हो चुकी है। नई फ़ाइल सर्वर पर इसे बदल देगी।';
+
+  @override
+  String get recording_replaceConfirm => 'बदलें';
+
+  @override
+  String recording_replaceFormatMismatch(String expected, String actual) {
+    return 'प्रतिस्थापन $expected फ़ाइल होनी चाहिए, लेकिन $actual मिली';
+  }
+
+  @override
+  String get recording_replaceInvalidAudio => 'चयनित ऑडियो फ़ाइल पढ़ नहीं सके';
+
+  @override
+  String get recording_replaceSuccess => 'ऑडियो बदल दिया गया';
+
+  @override
+  String get recording_replaceFailed => 'ऑडियो बदलने में विफल';
+
+  @override
+  String get recording_replaceNotAvailableWeb =>
+      'ऑडियो बदलने की सुविधा वेब ऐप पर उपलब्ध नहीं है';
+
+  @override
   String get recordings_title => 'रिकॉर्डिंग्स';
 
   @override
   String get recordings_subtitle => 'आपकी संग्रहीत कहानियाँ';
+
+  @override
+  String get recordings_searchHint => 'रिकॉर्डिंग खोजें...';
 
   @override
   String get recordings_importAudio => 'ऑडियो फ़ाइल आयात करें';
@@ -511,6 +637,10 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get recordings_noRecordingsSubtitle =>
       'अपनी पहली कहानी रिकॉर्ड करने के लिए माइक्रोफ़ोन पर टैप करें, या एक ऑडियो फ़ाइल आयात करें।';
+
+  @override
+  String get recordings_dropToImport =>
+      'Tip: drag audio files onto this window to import.';
 
   @override
   String recordings_count(int count) {
@@ -558,7 +688,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get recordings_clearFailed => 'रिकॉर्डिंग्स साफ़ करने में विफल';
 
   @override
-  String get trim_title => 'रिकॉर्डिंग विभाजित करें';
+  String get trim_title => 'रिकॉर्डिंग संपादित करें';
 
   @override
   String get trim_notFound => 'रिकॉर्डिंग नहीं मिली';
@@ -624,6 +754,35 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
+  String get trim_saveConfirmTitle => 'परिवर्तन सहेजें?';
+
+  @override
+  String trim_saveConfirmBody(int count) {
+    return 'यह मूल रिकॉर्डिंग को $count खंड से बदल देगा। इसे पूर्ववत नहीं किया जा सकता।';
+  }
+
+  @override
+  String get trim_inheritLabel => 'विरासत';
+
+  @override
+  String get trim_applyToAll => 'सभी पर लागू करें';
+
+  @override
+  String get trim_copyFromPrevious => 'पिछले से कॉपी करें';
+
+  @override
+  String get trim_classifySegment => 'खंड वर्गीकृत करें';
+
+  @override
+  String get trim_volume => 'आवाज़';
+
+  @override
+  String get trim_peakClip => 'क्लिपिंग';
+
+  @override
+  String get trim_boostOnSave => 'सहेजते समय बूस्ट लागू';
+
+  @override
   String get import_title => 'ऑडियो आयात';
 
   @override
@@ -665,6 +824,135 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get import_importAndSave => 'आयात करें और सहेजें';
+
+  @override
+  String get import_setForAll => 'सभी फ़ाइलों के लिए सेट करें';
+
+  @override
+  String get import_applyToAll => 'सभी पर लागू करें';
+
+  @override
+  String get import_fieldRequired => 'आवश्यक';
+
+  @override
+  String import_validationBanner(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count फ़ाइलों में आवश्यक फ़ील्ड गुम हैं',
+      one: '1 फ़ाइल में आवश्यक फ़ील्ड गुम हैं',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get import_remove => 'फ़ाइल हटाएँ';
+
+  @override
+  String import_supportedFormats(String formats) {
+    return 'समर्थित प्रारूप: $formats. असमर्थित या पठन न योग्य फ़ाइलें छोड़ दी गई हैं।';
+  }
+
+  @override
+  String import_rejectedFiles(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count असमर्थित या पठन न योग्य फ़ाइलें छोड़ दी गईं: $names',
+      one: '1 असमर्थित या पठन न योग्य फ़ाइल छोड़ दी: $names',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String import_countFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count फ़ाइलें',
+      one: '1 फ़ाइल',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String import_importNFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count फ़ाइलें',
+      one: '1 फ़ाइल',
+    );
+    return '$_temp0 आयात करें';
+  }
+
+  @override
+  String get import_emptyFile => 'खाली फ़ाइल';
+
+  @override
+  String get import_compressWav => 'WAV को M4A में कम्प्रेस करें';
+
+  @override
+  String get import_compressWavHint =>
+      '~10x छोटा, ML पाइपलाइन के लिए गुणवत्ता हानि नहीं';
+
+  @override
+  String get import_dropHint => 'Drop audio files to import';
+
+  @override
+  String get import_dropActive => 'Release to import';
+
+  @override
+  String import_rejectedTooLarge(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Skipped $count files over 500 MB: $names',
+      one: 'Skipped 1 file over 500 MB: $names',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String import_rejectedUnsupportedCodec(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Skipped $count files with unsupported audio codecs: $names. Re-export as PCM WAV or M4A.',
+      one:
+          'Skipped 1 file with an unsupported audio codec: $names. Re-export as PCM WAV or M4A.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String import_rejectedUnreadable(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Skipped $count unreadable files: $names',
+      one: 'Skipped 1 unreadable file: $names',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get import_resumePromptTitle => 'Resume interrupted upload';
+
+  @override
+  String import_resumePromptBody(String name, String size) {
+    return '\"$name\" ($size) was partially uploaded. Select the same file to continue.';
+  }
+
+  @override
+  String get import_resumeSizeMismatch =>
+      'That file doesn\'t match the paused upload.';
+
+  @override
+  String import_largeFileWarning(String size) {
+    return 'Large file ($size). Keep this tab open until the upload completes.';
+  }
 
   @override
   String get moveCategory_title => 'श्रेणी बदलें';
@@ -1489,7 +1777,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get action_actions => 'कार्रवाइयाँ';
 
   @override
-  String get action_split => 'विभाजित करें';
+  String get action_split => 'संपादित करें';
 
   @override
   String get action_flagClean => 'सफ़ाई चिह्नित करें';
@@ -1565,23 +1853,565 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get classify_banner =>
-      'इस रिकॉर्डिंग को अपलोड करने से पहले वर्गीकृत करना आवश्यक है।';
+      'यह रिकॉर्डिंग अवर्गीकृत है। शैली और रजिस्टर जोड़ने के लिए वर्गीकृत करें पर टैप करें।';
 
   @override
   String get classify_success => 'रिकॉर्डिंग वर्गीकृत हो गई';
 
   @override
-  String get classify_register => 'रजिस्टर (वैकल्पिक)';
+  String get classify_register => 'रजिस्टर';
 
   @override
   String get classify_selectRegister => 'रजिस्टर चुनें';
 
   @override
+  String get classify_predominantHeader => 'प्रमुख वर्गीकरण';
+
+  @override
+  String get classify_addAlternativeTitle =>
+      'अस्पष्ट है? वैकल्पिक वर्गीकरण जोड़ें';
+
+  @override
+  String get classify_secondaryNote =>
+      'शैली समय योग में केवल प्रमुख वर्गीकरण ही गिना जाता है।';
+
+  @override
+  String get classify_secondaryGenre => 'द्वितीयक शैली';
+
+  @override
+  String get classify_secondarySubcategory => 'द्वितीयक उपश्रेणी';
+
+  @override
+  String get classify_secondaryRegister => 'द्वितीयक रजिस्टर';
+
+  @override
+  String get classify_secondarySameAsPrimary =>
+      'द्वितीयक शैली प्रमुख शैली से भिन्न होनी चाहिए।';
+
+  @override
+  String get classify_clearAlternative => 'वैकल्पिक साफ़ करें';
+
+  @override
+  String get recording_alsoClassifiedAs => 'के रूप में भी वर्गीकृत';
+
+  @override
+  String get recording_alsoClassifiedAsTooltip => 'वैकल्पिक वर्गीकरण है';
+
+  @override
+  String get recording_addAlternative => 'वैकल्पिक वर्गीकरण जोड़ें';
+
+  @override
+  String get recording_removeSecondary => 'वैकल्पिक वर्गीकरण हटाएँ';
+
+  @override
+  String get recording_secondaryRemoved => 'वैकल्पिक वर्गीकरण हटा दिया गया';
+
+  @override
+  String get recording_secondaryUpdated => 'वैकल्पिक वर्गीकरण अद्यतन किया गया';
+
+  @override
   String get recording_unclassified => 'अवर्गीकृत';
+
+  @override
+  String get recording_inputSource => 'इनपुट';
+
+  @override
+  String get recording_selectMicrophone => 'माइक्रोफ़ोन चुनें';
+
+  @override
+  String get recording_builtInMicrophone => 'सिस्टम डिफ़ॉल्ट';
+
+  @override
+  String get recording_micPermissionNeeded =>
+      'डिवाइस के नाम देखने के लिए माइक्रोफ़ोन एक्सेस की अनुमति दें';
+
+  @override
+  String get recording_micPermissionButton => 'अनुमति दें';
+
+  @override
+  String get recording_micPermissionDenied =>
+      'माइक्रोफ़ोन की अनुमति अस्वीकृत है। ब्राउज़र या सिस्टम सेटिंग्स में सक्षम करें।';
+
+  @override
+  String get recording_micPermissionTitle => 'माइक्रोफ़ोन एक्सेस आवश्यक';
+
+  @override
+  String get recording_noDevicesFound => 'कोई माइक्रोफ़ोन नहीं मिला';
+
+  @override
+  String get recording_storageLowWarnTitle => 'कम स्टोरेज';
+
+  @override
+  String recording_storageLowWarnBody(int minutes) {
+    return 'लगभग $minutes मिनट की रिकॉर्डिंग उपलब्ध है। जारी रखें?';
+  }
+
+  @override
+  String get recording_storageRefuseTitle => 'पर्याप्त स्टोरेज नहीं';
+
+  @override
+  String get recording_storageRefuseBody =>
+      'रिकॉर्डिंग से पहले इस डिवाइस पर जगह बनाएँ।';
+
+  @override
+  String recording_storageCriticalBanner(int minutes) {
+    return 'स्टोरेज गंभीर — लगभग $minutes मिनट शेष। जल्द रोकने पर विचार करें।';
+  }
+
+  @override
+  String get recording_storageForceStopped =>
+      'स्टोरेज समाप्त होने के कारण रिकॉर्डिंग रुकी। आपकी प्रगति सहेज ली गई है।';
+
+  @override
+  String recording_savedAt(String time) {
+    return '$time पर सहेजा गया';
+  }
+
+  @override
+  String get recording_continuedInBackground =>
+      'रिकॉर्डिंग बैकग्राउंड में जारी रही';
+
+  @override
+  String get recording_continue => 'जारी रखें';
+
+  @override
+  String get recording_cancel => 'रद्द करें';
+
+  @override
+  String get recording_recoverTitle => 'बाधित रिकॉर्डिंग पुनर्प्राप्त करें?';
+
+  @override
+  String recording_recoverBody(int minutes) {
+    return 'हमें पिछले सत्र से लगभग $minutes मिनट का ऑडियो मिला।';
+  }
+
+  @override
+  String get recording_recoverButton => 'पुनर्प्राप्त करें';
+
+  @override
+  String get recording_recoverDiscard => 'हटाएँ';
+
+  @override
+  String get recording_recoverFailedLastSegment =>
+      'अंत के निकट का कुछ ऑडियो पढ़ा नहीं जा सका और छोड़ दिया गया।';
+
+  @override
+  String get recording_inProgressNotificationTitle => 'रिकॉर्डिंग जारी है';
+
+  @override
+  String get recording_inProgressNotificationBody =>
+      'ऐप पर लौटने के लिए टैप करें';
+
+  @override
+  String get profile_defaultMicrophone => 'डिफ़ॉल्ट माइक्रोफ़ोन';
+
+  @override
+  String get profile_systemDefault => 'सिस्टम डिफ़ॉल्ट';
+
+  @override
+  String get settings_deviceStorageTitle => 'डिवाइस स्टोरेज';
+
+  @override
+  String settings_deviceStorageSubtitle(String used, String free) {
+    return 'उपयोग $used · उपलब्ध $free';
+  }
 
   @override
   String get fab_quickRecord => 'त्वरित';
 
   @override
   String get fab_normalRecord => 'रिकॉर्ड';
+
+  @override
+  String get error_network =>
+      'सर्वर तक नहीं पहुँचा जा सका। कृपया अपना इंटरनेट कनेक्शन जाँचें और पुनः प्रयास करें।';
+
+  @override
+  String get error_secureConnection =>
+      'सुरक्षित कनेक्शन स्थापित नहीं हो सका। कृपया बाद में पुनः प्रयास करें।';
+
+  @override
+  String get error_timeout =>
+      'अनुरोध का समय समाप्त हो गया। कृपया अपना कनेक्शन जाँचें और पुनः प्रयास करें।';
+
+  @override
+  String get error_invalidCredentials =>
+      'अमान्य ईमेल या पासवर्ड। कृपया पुनः प्रयास करें।';
+
+  @override
+  String get error_userNotFound => 'इस ईमेल पते से कोई खाता नहीं मिला।';
+
+  @override
+  String get error_accountExists => 'इस ईमेल से पहले से एक खाता मौजूद है।';
+
+  @override
+  String get error_emailRequired => 'कृपया अपना ईमेल पता दर्ज करें।';
+
+  @override
+  String get error_passwordRequired => 'कृपया अपना पासवर्ड दर्ज करें।';
+
+  @override
+  String get error_signupFailed =>
+      'आपका खाता नहीं बनाया जा सका। कृपया अपने विवरण जाँचें और पुनः प्रयास करें।';
+
+  @override
+  String get error_sessionExpired =>
+      'आपका सत्र समाप्त हो गया है। कृपया पुनः साइन इन करें।';
+
+  @override
+  String get error_profileLoadFailed =>
+      'आपकी प्रोफ़ाइल लोड नहीं हो सकी। कृपया पुनः प्रयास करें।';
+
+  @override
+  String get error_profileUpdateFailed =>
+      'आपकी प्रोफ़ाइल अपडेट नहीं हो सकी। कृपया पुनः प्रयास करें।';
+
+  @override
+  String get error_imageUploadFailed =>
+      'छवि अपलोड नहीं हो सकी। कृपया पुनः प्रयास करें।';
+
+  @override
+  String get error_notAuthenticated =>
+      'आप साइन इन नहीं हैं। कृपया लॉग इन करें और पुनः प्रयास करें।';
+
+  @override
+  String get error_noPermission => 'आपको यह कार्य करने की अनुमति नहीं है।';
+
+  @override
+  String get error_generic =>
+      'कुछ गड़बड़ हो गई। कृपया बाद में पुनः प्रयास करें।';
+
+  @override
+  String get common_close => 'बंद करें';
+
+  @override
+  String get storyteller_title => 'कथाकार';
+
+  @override
+  String get storyteller_singular => 'कथाकार';
+
+  @override
+  String get storyteller_manageAction => 'कथाकार प्रबंधित करें';
+
+  @override
+  String get storyteller_addNew => 'कथाकार जोड़ें';
+
+  @override
+  String get storyteller_createTitle => 'नया कथाकार';
+
+  @override
+  String get storyteller_editTitle => 'कथाकार संपादित करें';
+
+  @override
+  String get storyteller_speakerName => 'वक्ता का नाम';
+
+  @override
+  String get storyteller_sex => 'लिंग';
+
+  @override
+  String get storyteller_sexMale => 'पुरुष';
+
+  @override
+  String get storyteller_sexFemale => 'महिला';
+
+  @override
+  String get storyteller_age => 'आयु';
+
+  @override
+  String get storyteller_location => 'स्थान';
+
+  @override
+  String get storyteller_dialect => 'बोली';
+
+  @override
+  String get storyteller_externalAcceptanceTitle => 'बाहरी स्वीकृति सत्यापन';
+
+  @override
+  String get storyteller_externalAcceptanceDescription =>
+      'मैं पुष्टि करता हूँ कि इस वक्ता के लिए बाहरी स्वीकृति सत्यापन किया गया है।';
+
+  @override
+  String get storyteller_externalAcceptanceInfo =>
+      'कथाकार को दर्ज करने से पहले, परियोजना प्रबंधक को ऐप के बाहर (उदाहरण के लिए, हस्ताक्षरित प्रपत्र या रिकॉर्ड की गई मौखिक सहमति के माध्यम से) वक्ता की सहमति प्राप्त करनी चाहिए। यह चेकबॉक्स दर्शाता है कि यह चरण पूरा हो गया है।';
+
+  @override
+  String get storyteller_createRequiresConnection =>
+      'कथाकार बनाने के लिए इंटरनेट कनेक्शन की आवश्यकता है।';
+
+  @override
+  String get storyteller_deleteTitle => 'कथाकार हटाएं?';
+
+  @override
+  String get storyteller_deleteMessage =>
+      'इस कथाकार को पहले सौंपी गई रिकॉर्डिंग अब असाइन न की गई के रूप में दिखेंगी।';
+
+  @override
+  String get storyteller_noneAssigned => 'कोई कथाकार नहीं सौंपा गया';
+
+  @override
+  String get storyteller_unknown => 'अज्ञात कथाकार';
+
+  @override
+  String get storyteller_selectHint => 'कथाकार चुनें';
+
+  @override
+  String get storyteller_required => 'कथाकार आवश्यक है';
+
+  @override
+  String get storyteller_searchPlaceholder => 'कथाकार खोजें';
+
+  @override
+  String get storyteller_empty => 'अभी तक कोई कथाकार नहीं';
+
+  @override
+  String get storyteller_emptyDescription =>
+      'रिकॉर्डिंग को सौंपने के लिए प्रोजेक्ट हेतु एक कथाकार बनाएं।';
+
+  @override
+  String get storyteller_offlineNoCache =>
+      'कथाकार अभी तक सिंक नहीं हुए हैं। इन्हें लोड करने के लिए इंटरनेट से कनेक्ट करें।';
+
+  @override
+  String get storyteller_assign => 'असाइन करें';
+
+  @override
+  String get storyteller_reassign => 'पुनः असाइन करें';
+
+  @override
+  String get storyteller_ageValidator => '1 और 120 के बीच आयु दर्ज करें';
+
+  @override
+  String storyteller_ageYearsShort(int age) {
+    return '$age वर्ष';
+  }
+
+  @override
+  String get filters_buttonLabel => 'फ़िल्टर';
+
+  @override
+  String get filters_sheetTitle => 'रिकॉर्डिंग फ़िल्टर करें';
+
+  @override
+  String get filters_sectionStatus => 'अपलोड स्थिति';
+
+  @override
+  String get filters_sectionGenre => 'शैली';
+
+  @override
+  String get filters_sectionStoryteller => 'कथाकार';
+
+  @override
+  String get filters_sectionUser => 'द्वारा रिकॉर्ड';
+
+  @override
+  String get filter_apply => 'लागू करें';
+
+  @override
+  String get filter_reset => 'रीसेट करें';
+
+  @override
+  String get filter_clearAll => 'सभी साफ़ करें';
+
+  @override
+  String filter_countActive(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString फ़िल्टर',
+      one: '1 फ़िल्टर',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get filter_userAll => 'कोई भी उपयोगकर्ता';
+
+  @override
+  String get filter_storytellerAll => 'कोई भी कथाकार';
+
+  @override
+  String get filter_genreAll => 'कोई भी शैली';
+
+  @override
+  String get detail_recordedBy => 'द्वारा रिकॉर्ड';
+
+  @override
+  String get detail_storyteller => 'कथाकार';
+
+  @override
+  String get recording_unknownUser => 'अज्ञात उपयोगकर्ता';
+
+  @override
+  String get common_ok => 'ठीक है';
+
+  @override
+  String get invite_title => 'सदस्य आमंत्रित करें';
+
+  @override
+  String get invite_searchLabel => 'नाम या ईमेल से खोजें';
+
+  @override
+  String get invite_searchHint => 'कम से कम 2 अक्षर लिखें';
+
+  @override
+  String get invite_noUsersFound => 'कोई उपयोगकर्ता नहीं मिला';
+
+  @override
+  String get invite_changeUser => 'उपयोगकर्ता बदलें';
+
+  @override
+  String get invite_roleLabel => 'भूमिका *';
+
+  @override
+  String get invite_roleMember => 'सदस्य';
+
+  @override
+  String get invite_roleManager => 'प्रबंधक';
+
+  @override
+  String get invite_sendInvite => 'आमंत्रण भेजें';
+
+  @override
+  String get invite_sendFailed => 'आमंत्रण भेजने में विफल';
+
+  @override
+  String get recording_recoveryInProgress => 'पुनर्प्राप्त किया जा रहा है…';
+
+  @override
+  String get recording_recoveryFailed => 'पुनर्प्राप्ति विफल';
+
+  @override
+  String get recording_recoverySessionNotFound => 'सत्र नहीं मिला';
+
+  @override
+  String get recording_recoveryNoAudio =>
+      'पुनर्प्राप्त करने के लिए कोई ऑडियो नहीं';
+
+  @override
+  String get recording_recoveryConcatFailed => 'जोड़ने में विफल';
+
+  @override
+  String get a11y_startRecording => 'रिकॉर्डिंग शुरू करें';
+
+  @override
+  String get a11y_createProject => 'प्रोजेक्ट बनाएं';
+
+  @override
+  String get a11y_playAudio => 'ऑडियो चलाएं';
+
+  @override
+  String get a11y_pauseAudio => 'ऑडियो रोकें';
+
+  @override
+  String get a11y_splitWaveform =>
+      'स्प्लिट वेवफ़ॉर्म। स्प्लिट मार्कर जोड़ने के लिए टैप करें। पुनः स्थान बदलने के लिए खींचें। ज़ूम के लिए पिंच करें। हटाने के लिए देर तक दबाएँ।';
+
+  @override
+  String a11y_tabLabel(String label) {
+    return '$label टैब';
+  }
+
+  @override
+  String get profile_adminBadge => 'व्यवस्थापक';
+
+  @override
+  String get profile_setYourName => 'अपना नाम दर्ज करें';
+
+  @override
+  String get profile_inviteAcceptFailed => 'आमंत्रण स्वीकार करने में विफल';
+
+  @override
+  String get profile_inviteDeclineFailed => 'आमंत्रण अस्वीकार करने में विफल';
+
+  @override
+  String get profile_typeDeleteWord => 'हटाएं';
+
+  @override
+  String trim_splitError(String error) {
+    return 'विभाजन में त्रुटि: $error';
+  }
+
+  @override
+  String get error_serverFailure =>
+      'सर्वर अनुरोध पूरा नहीं कर सका। कृपया पुनः प्रयास करें।';
+
+  @override
+  String get error_importNoBytes => 'यह फ़ाइल खाली है और आयात नहीं की जा सकती।';
+
+  @override
+  String get error_ffmpegProcessingFailed => 'ऑडियो प्रोसेसिंग विफल।';
+
+  @override
+  String get error_downloadFailed => 'डाउनलोड विफल।';
+
+  @override
+  String get projectSettings_offlineTitle => 'आप ऑफ़लाइन हैं';
+
+  @override
+  String get projectSettings_offlineDescription =>
+      'इंटरनेट कनेक्शन के बिना प्रोजेक्ट विवरण लोड नहीं हो सकते। पुनः कनेक्ट होने पर वे स्वचालित रूप से लोड हो जाएंगे।';
+
+  @override
+  String get recording_noAudioAvailable => 'कोई ऑडियो उपलब्ध नहीं है';
+
+  @override
+  String get recording_noPendingUploads => 'कोई लंबित अपलोड नहीं';
+
+  @override
+  String get recording_uploadQueue => 'अपलोड कतार';
+
+  @override
+  String get recording_previewSelection => 'चयन का पूर्वावलोकन';
+
+  @override
+  String get recording_stopPreview => 'पूर्वावलोकन रोकें';
+
+  @override
+  String get recording_audioLoadFailed => 'ऑडियो लोड करने में विफल';
+
+  @override
+  String get status_offlineSubtitle =>
+      'कुछ सुविधाओं जैसे सिंक करने और डेटा लोड करने के लिए इंटरनेट कनेक्शन आवश्यक है।';
+
+  @override
+  String get status_noProject => 'कोई प्रोजेक्ट नहीं सौंपा गया';
+
+  @override
+  String get status_noProjectSubtitle =>
+      'आपको अभी तक किसी प्रोजेक्ट में नहीं जोड़ा गया है। कृपया अपने प्रशासक से संपर्क करें और सौंपे जाने की प्रतीक्षा करें।';
+
+  @override
+  String get a11y_recordingInProgress =>
+      'रिकॉर्डिंग जारी है, रोकने के लिए टैप करें';
+
+  @override
+  String get a11y_recordingPaused =>
+      'रिकॉर्डिंग रोकी गई है, जारी रखने के लिए टैप करें';
+
+  @override
+  String get recording_audioFileNotFound => 'ऑडियो फ़ाइल नहीं मिली';
+
+  @override
+  String recording_partOf(int part, int total) {
+    return '$total में से भाग $part';
+  }
+
+  @override
+  String recording_splitFrom(String sourceId) {
+    return '$sourceId से विभाजित';
+  }
+
+  @override
+  String trim_segmentRemoved(int index) {
+    return 'खंड $index — हटाया गया';
+  }
+
+  @override
+  String trim_segmentOfTotal(int index, int total) {
+    return '$total में से खंड $index';
+  }
 }

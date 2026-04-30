@@ -61,18 +61,27 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
         projectId,
         offset: _serverOffset,
         limit: _pageSize,
+        userId: state.selectedUserId,
+        storytellerId: state.selectedStorytellerId,
       );
 
       final hasMore = serverPage.length >= _pageSize;
       _serverOffset += serverPage.length;
 
-      for (final s in serverPage) {
-        _serverIds.add(s.id);
+      final newPageIds = serverPage.map((s) => s.id).toSet();
+      for (final id in newPageIds) {
+        _serverIds.add(id);
       }
 
-      final newServerAsLocal = _convertServerRecordings(serverPage);
-      final currentRecordings = List<LocalRecording>.from(state.recordings);
-      currentRecordings.addAll(newServerAsLocal);
+      final existingIds = state.recordings.map((r) => r.id).toSet();
+      final newServerAsLocal = _convertServerRecordings(
+        serverPage,
+      ).where((r) => !existingIds.contains(r.id)).toList();
+      final currentRecordings = List<LocalRecording>.from(state.recordings)
+        ..removeWhere(
+          (r) => r.serverId != null && newPageIds.contains(r.serverId),
+        )
+        ..addAll(newServerAsLocal);
 
       state = state.copyWith(
         recordings: currentRecordings,
@@ -89,6 +98,8 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
       projectId,
       offset: 0,
       limit: _pageSize,
+      userId: state.selectedUserId,
+      storytellerId: state.selectedStorytellerId,
     );
     final localRecordings = await _localRepo.getAllRecordings(projectId);
 
@@ -100,13 +111,7 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
     }
 
     _localOnlyRecordings = localRecordings
-        .where(
-          (r) =>
-              (r.uploadStatus == 'local' ||
-                  r.uploadStatus == 'uploading' ||
-                  r.uploadStatus == 'failed') &&
-              (r.serverId == null || !_serverIds.contains(r.serverId)),
-        )
+        .where((r) => r.serverId == null || !_serverIds.contains(r.serverId))
         .toList();
 
     final serverAsLocal = _convertServerRecordings(serverRecordings);
@@ -128,6 +133,11 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
             genreId: s.genreId,
             subcategoryId: s.subcategoryId,
             registerId: s.registerId,
+            secondaryGenreId: s.secondaryGenreId,
+            secondarySubcategoryId: s.secondarySubcategoryId,
+            secondaryRegisterId: s.secondaryRegisterId,
+            storytellerId: s.storytellerId,
+            userId: s.userId,
             title: s.title,
             durationSeconds: s.durationSeconds,
             fileSizeBytes: s.fileSizeBytes,
@@ -141,6 +151,9 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
             createdAt: s.recordedAt,
             retryCount: 0,
             uploadedBytes: 0,
+            splitFromId: s.splitFromId,
+            splitIndex: s.splitIndex,
+            splitSegmentCount: s.splitSegmentCount,
           ),
         )
         .toList();
@@ -167,8 +180,49 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
     }
   }
 
+  void setSubcategoryFilter(String? subcategoryId) {
+    if (subcategoryId == null || subcategoryId.isEmpty) {
+      state = state.copyWith(clearSubcategoryId: true);
+    } else {
+      state = state.copyWith(selectedSubcategoryId: subcategoryId);
+    }
+  }
+
   void setStatusFilter(StatusFilter filter) {
     state = state.copyWith(selectedFilter: filter);
+  }
+
+  void setSearchQuery(String query) {
+    state = state.copyWith(searchQuery: query);
+  }
+
+  Future<void> setStorytellerFilter(String? storytellerId) async {
+    if (storytellerId == null) {
+      state = state.copyWith(clearStorytellerId: true);
+    } else {
+      state = state.copyWith(selectedStorytellerId: storytellerId);
+    }
+    await fetchRecordings();
+  }
+
+  Future<void> setUserFilter(String? userId) async {
+    if (userId == null) {
+      state = state.copyWith(clearUserId: true);
+    } else {
+      state = state.copyWith(selectedUserId: userId);
+    }
+    await fetchRecordings();
+  }
+
+  Future<void> clearAllFilters() async {
+    state = state.copyWith(
+      selectedFilter: StatusFilter.all,
+      clearGenreId: true,
+      clearSubcategoryId: true,
+      clearStorytellerId: true,
+      clearUserId: true,
+    );
+    await fetchRecordings();
   }
 
   Future<int> clearStaleRecordings() async {

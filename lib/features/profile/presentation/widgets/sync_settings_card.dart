@@ -1,13 +1,21 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/utils/format.dart';
 import '../../../../shared/widgets/icon_box.dart';
+import '../../../sync/presentation/notifiers/sync_notifier.dart';
 import '../../../sync/presentation/notifiers/sync_state.dart';
 
-class SyncSettingsCard extends StatelessWidget {
+final _storageSnapshotProvider =
+    FutureProvider.autoDispose<
+      ({int usedBytes, int freeBytes, int totalBytes})
+    >((ref) => ref.read(syncNotifierProvider.notifier).getStorageSnapshot());
+
+class SyncSettingsCard extends ConsumerWidget {
   const SyncSettingsCard({
     super.key,
     required this.syncState,
@@ -28,7 +36,7 @@ class SyncSettingsCard extends StatelessWidget {
   final VoidCallback onClearCache;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -158,7 +166,71 @@ class SyncSettingsCard extends StatelessWidget {
             subtitle: Text(l10n.profile_clearCacheSubtitle),
             onTap: onClearCache,
           ),
+          if (!kIsWeb) ...[
+            const Divider(height: 1),
+            _DeviceStorageTile(theme: theme, colors: colors),
+          ],
         ],
+      ),
+    );
+  }
+}
+
+class _DeviceStorageTile extends ConsumerWidget {
+  const _DeviceStorageTile({required this.theme, required this.colors});
+
+  final ThemeData theme;
+  final AppColorSet colors;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final snapshot = ref.watch(_storageSnapshotProvider);
+    return ListTile(
+      leading: IconBox(
+        icon: LucideIcons.hardDrive,
+        color: colors.secondary,
+        alpha: 0.1,
+      ),
+      title: Text(l10n.settings_deviceStorageTitle),
+      subtitle: snapshot.when(
+        data: (data) {
+          final used = formatFileSize(data.usedBytes);
+          final free = formatFileSize(data.freeBytes);
+          final fillRatio = data.totalBytes > 0
+              ? ((data.totalBytes - data.freeBytes) / data.totalBytes).clamp(
+                  0.0,
+                  1.0,
+                )
+              : 0.0;
+          return Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(l10n.settings_deviceStorageSubtitle(used, free)),
+                const SizedBox(height: 6),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: fillRatio,
+                    backgroundColor: colors.border.withValues(alpha: 0.2),
+                    color: colors.accent,
+                    minHeight: 4,
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+        loading: () => const Padding(
+          padding: EdgeInsets.only(top: 6),
+          child: SizedBox(height: 4, child: LinearProgressIndicator()),
+        ),
+        error: (_, _) => Text(
+          '\u2014',
+          style: theme.textTheme.bodySmall?.copyWith(color: colors.secondary),
+        ),
       ),
     );
   }

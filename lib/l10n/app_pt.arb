@@ -1,8 +1,6 @@
 {
   "@@locale": "pt",
-
   "appTitle": "Oral Collector",
-
   "nav_home": "Início",
   "nav_record": "Gravar",
   "nav_recordings": "Gravações",
@@ -10,7 +8,6 @@
   "nav_profile": "Perfil",
   "nav_admin": "Admin",
   "nav_collapse": "Recolher",
-
   "common_cancel": "Cancelar",
   "common_save": "Salvar",
   "common_delete": "Excluir",
@@ -25,7 +22,6 @@
   "common_clear": "Limpar",
   "common_untitled": "Sem título",
   "common_loading": "Carregando...",
-
   "auth_oralCollector": "Oral Collector",
   "auth_byShema": "por Shema",
   "auth_heroTagline": "Preserve vozes.\nCompartilhe histórias.",
@@ -38,7 +34,6 @@
   "auth_signInSubtitle": "Faça login para continuar coletando histórias.",
   "auth_signUpSubtitle": "Junte-se à nossa comunidade de coletores de histórias.",
   "auth_backToSignIn": "Voltar para login",
-
   "auth_emailLabel": "Endereço de E-mail",
   "auth_emailHint": "seu@email.com",
   "auth_emailRequired": "Por favor, insira seu e-mail",
@@ -54,13 +49,37 @@
   "auth_nameLabel": "Nome",
   "auth_nameHint": "Seu nome completo",
   "auth_nameRequired": "Por favor, insira seu nome de exibição",
-
   "auth_signIn": "Entrar",
   "auth_signUp": "Cadastrar",
   "auth_noAccount": "Não tem uma conta? ",
   "auth_haveAccount": "Já tem uma conta? ",
   "auth_continueButton": "Continuar",
-
+  "auth_forgotPassword": "Esqueceu a senha?",
+  "auth_resetPassword": "Redefinir Senha",
+  "auth_forgotPasswordSubtitle": "Insira seu e-mail e enviaremos um link de redefinição.",
+  "auth_sendResetLink": "Enviar Link",
+  "auth_sending": "Enviando...",
+  "auth_checkYourEmail": "Verifique Seu E-mail",
+  "auth_resetEmailSent": "Enviamos um link de redefinição de senha para {email}. Verifique sua caixa de entrada e siga o link para criar uma nova senha.",
+  "@auth_resetEmailSent": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "auth_openEmailApp": "Abrir E-mail",
+  "auth_resendEmail": "Reenviar",
+  "auth_backToLogin": "Voltar ao Login",
+  "auth_newPassword": "Nova Senha",
+  "auth_confirmNewPassword": "Confirmar Nova Senha",
+  "auth_resetPasswordSubtitle": "Digite sua nova senha abaixo.",
+  "auth_resetPasswordButton": "Redefinir Senha",
+  "auth_resetting": "Redefinindo...",
+  "auth_resetSuccess": "Senha redefinida com sucesso! Agora você pode entrar com sua nova senha.",
+  "auth_invalidResetLink": "Link Inválido",
+  "auth_invalidResetLinkMessage": "Este link de redefinição de senha é inválido ou expirou.",
+  "auth_requestNewLink": "Solicitar Novo Link",
   "home_greetingMorning": "Bom dia",
   "home_greetingAfternoon": "Boa tarde",
   "home_greetingEvening": "Boa noite",
@@ -73,11 +92,9 @@
   "home_noGenres": "Nenhum gênero disponível ainda",
   "home_noProjectTitle": "Selecione um projeto para começar",
   "home_browseProjects": "Explorar Projetos",
-
   "stats_recordings": "gravações",
   "stats_recorded": "gravado",
   "stats_members": "membros",
-
   "project_switchTitle": "Trocar Projeto",
   "project_projects": "Projetos",
   "project_subtitle": "Gerencie suas coleções",
@@ -109,7 +126,6 @@
   "project_addAsNewLanguage": "Adicionar \"{query}\" como novo idioma",
   "project_searchLanguages": "Buscar idiomas...",
   "project_backToList": "Voltar para lista",
-
   "projectSettings_title": "Configurações do Projeto",
   "projectSettings_details": "Detalhes",
   "projectSettings_saving": "Salvando...",
@@ -123,7 +139,6 @@
   "projectSettings_memberRemoveFailed": "Falha ao remover membro",
   "projectSettings_inviteSent": "Convite enviado com sucesso",
   "projectSettings_noMembers": "Nenhum membro ainda",
-
   "recording_selectGenre": "Selecionar Gênero",
   "recording_selectGenreSubtitle": "Escolha um gênero para sua história",
   "recording_selectSubcategory": "Selecionar Subcategoria",
@@ -137,19 +152,28 @@
   "recording_genreNotFound": "Gênero não encontrado",
   "recording_noGenres": "Nenhum gênero disponível",
   "recording_noSubcategories": "Nenhuma subcategoria disponível",
-
   "recording_registerDescription": "Escolha o registro de fala que melhor descreve o tom e a formalidade desta gravação.",
   "recording_titleHint": "Adicionar um título (opcional)",
+  "recording_descriptionHint": "Adicionar uma descrição curta (opcional)",
+  "recording_descriptionEmpty": "Adicionar descrição",
   "recording_saveRecording": "Salvar Gravação",
   "recording_recordAgain": "Gravar Novamente",
   "recording_discard": "Descartar",
   "recording_discardTitle": "Descartar Gravação?",
   "recording_discardMessage": "Esta gravação será excluída permanentemente.",
   "recording_saved": "Gravação salva",
-
+  "recording_uploading": "Enviando gravação…",
+  "recording_uploadFailed": "Falha no envio: {error}",
+  "@recording_uploadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "recording_notFound": "Gravação não encontrada",
   "recording_unknownGenre": "Gênero desconhecido",
-  "recording_splitRecording": "Dividir Gravação",
+  "recording_splitRecording": "Editar Gravação",
   "recording_moveCategory": "Mover Categoria",
   "recording_downloadAudio": "Baixar Áudio",
   "recording_downloadAudioMessage": "O arquivo de áudio não está armazenado neste dispositivo. Deseja baixá-lo para cortar?",
@@ -165,32 +189,54 @@
   "recording_moveNoPermission": "Você não tem permissão para mover esta gravação",
   "recording_movedSuccess": "Gravação movida com sucesso",
   "recording_updateFailed": "Falha ao atualizar no servidor",
-
+  "recording_exportAudio": "Exportar áudio",
+  "recording_exportShareFailed": "Falha ao compartilhar o arquivo de áudio",
+  "recording_replaceAudio": "Substituir áudio",
+  "recording_replaceTitle": "Substituir áudio?",
+  "recording_replaceMessage": "O áudio atual será movido para uma lixeira de 24 horas e trocado pelo arquivo que você escolher. Apenas arquivos de áudio no mesmo formato do original podem ser usados.",
+  "recording_replaceReuploadNotice": "Esta gravação já foi enviada. O novo arquivo irá sobrescrevê-la no servidor.",
+  "recording_replaceConfirm": "Substituir",
+  "recording_replaceFormatMismatch": "A substituição deve ser um arquivo {expected}, mas é {actual}",
+  "@recording_replaceFormatMismatch": {
+    "placeholders": {
+      "expected": {
+        "type": "String"
+      },
+      "actual": {
+        "type": "String"
+      }
+    }
+  },
+  "recording_replaceInvalidAudio": "Não foi possível ler o arquivo de áudio selecionado",
+  "recording_replaceSuccess": "Áudio substituído",
+  "recording_replaceFailed": "Falha ao substituir o áudio",
+  "recording_replaceNotAvailableWeb": "A substituição de áudio não está disponível no aplicativo web",
   "recordings_title": "Gravações",
   "recordings_subtitle": "Suas histórias coletadas",
+  "recordings_searchHint": "Buscar gravações...",
   "recordings_importAudio": "Importar arquivo de áudio",
   "recordings_selectProject": "Selecione um projeto",
   "recordings_selectProjectSubtitle": "Escolha um projeto para ver suas gravações",
   "recordings_noRecordings": "Nenhuma gravação ainda",
   "recordings_noRecordingsSubtitle": "Toque no microfone para gravar sua primeira história, ou importe um arquivo de áudio.",
+  "recordings_dropToImport": "Dica: arraste arquivos de áudio para esta janela para importar.",
   "recordings_count": "{count, plural, =1{1 gravação} other{{count} gravações}}",
-
   "recording_statusUploaded": "Enviado",
   "recording_statusUploading": "Enviando",
   "recording_statusFailed": "Falha",
   "recording_statusLocal": "Local",
-
   "recordings_clearStale": "Limpar falhas",
   "recordings_clearStaleMessage": "Isto irá remover permanentemente todas as gravações com upload falhado ou travado do servidor. Esta ação não pode ser desfeita.",
   "recordings_clearedCount": "{count, plural, =0{Nenhuma gravação encontrada} =1{1 gravação removida} other{{count} gravações removidas}}",
   "@recordings_clearedCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "recordings_clearFailed": "Falha ao limpar gravações",
-
-  "trim_title": "Dividir Gravação",
+  "trim_title": "Editar Gravação",
   "trim_notFound": "Gravação não encontrada",
   "trim_audioUrlNotAvailable": "URL do áudio não disponível para esta gravação.",
   "trim_localNotAvailable": "Arquivo de áudio local não disponível. Baixe a gravação primeiro.",
@@ -203,7 +249,15 @@
   "trim_addSplitsFirst": "Adicione divisões primeiro",
   "trim_savedSegments": "Salvou {kept} segmento{kept, plural, =1{} other{s}}, removeu {removed}",
   "trim_splitInto": "Dividir em {count} gravações",
-
+  "trim_saveConfirmTitle": "Salvar alterações?",
+  "trim_saveConfirmBody": "Isto substitui a gravação original por {count} segmento(s). Esta ação não pode ser desfeita.",
+  "trim_inheritLabel": "Herdar",
+  "trim_applyToAll": "Aplicar a todos",
+  "trim_copyFromPrevious": "Copiar do anterior",
+  "trim_classifySegment": "Classificar segmento",
+  "trim_volume": "Volume",
+  "trim_peakClip": "Saturação",
+  "trim_boostOnSave": "Reforço aplicado ao salvar",
   "import_title": "Importar Áudio",
   "import_selectGenre": "Selecionar Gênero",
   "import_selectSubcategory": "Selecionar Subcategoria",
@@ -217,20 +271,77 @@
   "import_saveError": "Erro ao salvar arquivo: {error}",
   "import_unknownFile": "Arquivo desconhecido",
   "import_importAndSave": "Importar e Salvar",
-
+  "import_setForAll": "Definir para todos os arquivos",
+  "import_applyToAll": "Aplicar a todos",
+  "import_fieldRequired": "Obrigatório",
+  "import_validationBanner": "{count, plural, =1{1 arquivo está sem campos obrigatórios} other{{count} arquivos estão sem campos obrigatórios}}",
+  "@import_validationBanner": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "import_remove": "Remover arquivo",
+  "import_supportedFormats": "Formatos suportados: {formats}. Arquivos não suportados ou ilegíveis são ignorados.",
+  "@import_supportedFormats": {
+    "placeholders": {
+      "formats": {
+        "type": "String"
+      }
+    }
+  },
+  "import_rejectedFiles": "{count, plural, =1{Ignorado 1 arquivo não suportado ou ilegível: {names}} other{Ignorados {count} arquivos não suportados ou ilegíveis: {names}}}",
+  "@import_rejectedFiles": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "import_countFiles": "{count, plural, =1{1 arquivo} other{{count} arquivos}}",
+  "@import_countFiles": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "import_importNFiles": "Importar {count, plural, =1{1 arquivo} other{{count} arquivos}}",
+  "@import_importNFiles": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "import_emptyFile": "arquivo vazio",
+  "import_compressWav": "Comprimir WAV para M4A",
+  "import_compressWavHint": "~10x menor, sem perda de qualidade para pipeline de ML",
+  "import_dropHint": "Solte arquivos de áudio para importar",
+  "import_dropActive": "Solte para importar",
+  "import_rejectedTooLarge": "{count, plural, =1{Ignorado 1 arquivo maior que 500 MB: {names}} other{Ignorados {count} arquivos maiores que 500 MB: {names}}}",
+  "import_rejectedUnsupportedCodec": "{count, plural, =1{Ignorado 1 arquivo com codec de áudio não suportado: {names}. Reexporte como PCM WAV ou M4A.} other{Ignorados {count} arquivos com codec de áudio não suportado: {names}. Reexporte como PCM WAV ou M4A.}}",
+  "import_rejectedUnreadable": "{count, plural, =1{Ignorado 1 arquivo ilegível: {names}} other{Ignorados {count} arquivos ilegíveis: {names}}}",
+  "import_resumePromptTitle": "Retomar envio interrompido",
+  "import_resumePromptBody": "\"{name}\" ({size}) foi enviado parcialmente. Selecione o mesmo arquivo para continuar.",
+  "import_resumeSizeMismatch": "Este arquivo não corresponde ao envio pausado.",
+  "import_largeFileWarning": "Arquivo grande ({size}). Mantenha esta aba aberta até o envio terminar.",
+  "common_resume": "Retomar",
+  "common_discard": "Descartar",
   "moveCategory_title": "Mover Categoria",
   "moveCategory_genre": "Gênero",
   "moveCategory_subcategory": "Subcategoria",
   "moveCategory_selectSubcategory": "Selecionar subcategoria",
-
   "cleaning_needsCleaning": "Precisa de Limpeza",
   "cleaning_cleaning": "Limpando...",
   "cleaning_cleaned": "Limpo",
   "cleaning_cleanFailed": "Falha na Limpeza",
-
   "sync_uploading": "Enviando...",
   "sync_pending": "{count} pendente(s)",
-
   "profile_photoUpdated": "Foto de perfil atualizada",
   "profile_photoFailed": "Falha ao atualizar foto: {error}",
   "profile_editName": "Editar nome de exibição",
@@ -255,7 +366,6 @@
   "profile_joinedSuccess": "Entrou em \"{name}\" com sucesso",
   "profile_inviteDeclined": "Convite recusado",
   "profile_language": "Idioma",
-
   "profile_online": "Online",
   "profile_offline": "Offline",
   "profile_lastSync": "Última sincronização: {time}",
@@ -269,7 +379,6 @@
   "profile_autoRemoveSubtitle": "Excluir arquivos locais após envio bem-sucedido",
   "profile_clearCache": "Limpar cache local",
   "profile_clearCacheSubtitle": "Excluir todas as gravações armazenadas localmente",
-
   "profile_invitations": "Convites",
   "profile_refreshInvitations": "Atualizar convites",
   "profile_noInvitations": "Nenhum convite pendente",
@@ -277,24 +386,20 @@
   "profile_roleMember": "Função: Membro",
   "profile_decline": "Recusar",
   "profile_accept": "Aceitar",
-
   "profile_storage": "Armazenamento",
   "profile_status": "Status",
   "profile_pendingLabel": "Pendente",
-
   "admin_title": "Painel do Admin",
   "admin_overview": "Visão Geral",
   "admin_projects": "Projetos",
   "admin_genres": "Gêneros",
   "admin_cleaning": "Limpeza",
   "admin_accessRequired": "Acesso de administrador necessário",
-
   "admin_totalProjects": "Total de Projetos",
   "admin_languages": "Idiomas",
   "admin_recordings": "Gravações",
   "admin_totalHours": "Total de Horas",
   "admin_activeUsers": "Usuários Ativos",
-
   "admin_projectName": "Nome",
   "admin_projectLanguage": "Idioma",
   "admin_projectMembers": "Membros",
@@ -303,7 +408,6 @@
   "admin_projectCreated": "Criado em",
   "admin_noProjects": "Nenhum projeto encontrado",
   "admin_unknownLanguage": "Idioma desconhecido",
-
   "admin_genresAndSubcategories": "Gêneros e Subcategorias",
   "admin_addGenre": "Adicionar Gênero",
   "admin_noGenres": "Nenhum gênero encontrado",
@@ -325,7 +429,6 @@
   "admin_deleteSubcategory": "Excluir Subcategoria",
   "admin_deleteSubcategoryConfirm": "Excluir \"{name}\"?",
   "admin_subcategoryDeleted": "Subcategoria excluída",
-
   "admin_cleaningQueue": "Fila de Limpeza de Áudio",
   "admin_cleanSelected": "Limpar Selecionados ({count})",
   "admin_refreshCleaning": "Atualizar fila de limpeza",
@@ -343,11 +446,9 @@
   "admin_cleaningTriggered": "Limpeza iniciada",
   "admin_cleaningFailed": "Falha ao iniciar limpeza",
   "admin_cleaningPartial": "Limpeza iniciada para {success} de {total} gravações",
-
   "genre_title": "Gênero",
   "genre_notFound": "Gênero não encontrado",
   "genre_recordingCount": "{count, plural, =1{1 gravação} other{{count} gravações}}",
-
   "format_justNow": "agora mesmo",
   "format_minutesAgo": "{count}min atrás",
   "format_hoursAgo": "{count}h atrás",
@@ -357,7 +458,6 @@
   "format_memberSince": "Membro desde {date}",
   "format_member": "Membro",
   "format_dateAt": "{date} às {time}",
-
   "genre_narrative": "Narrativa",
   "genre_narrativeDesc": "Histórias, relatos e formas narrativas da tradição oral",
   "genre_poeticSong": "Poético / Canção",
@@ -366,7 +466,6 @@
   "genre_instructionalDesc": "Leis, rituais, procedimentos e formas instrucionais",
   "genre_oralDiscourse": "Discurso Oral",
   "genre_oralDiscourseDesc": "Discursos, ensinamentos, orações e formas discursivas orais",
-
   "sub_historicalNarrative": "Narrativa Histórica",
   "sub_personalAccount": "Relato Pessoal / Testemunho",
   "sub_parable": "Parábola / História Ilustrativa",
@@ -398,7 +497,6 @@
   "sub_apocalypticDiscourse": "Discurso Apocalíptico",
   "sub_ceremonialSpeech": "Discurso Cerimonial",
   "sub_communityMemory": "Memória Comunitária",
-
   "sub_historicalNarrativeDesc": "Relatos de acontecimentos, guerras e momentos-chave da história",
   "sub_personalAccountDesc": "Histórias pessoais de experiências vividas e de fé",
   "sub_parableDesc": "Histórias simbólicas que ensinam lições morais ou espirituais",
@@ -430,15 +528,13 @@
   "sub_apocalypticDiscourseDesc": "Revelações sobre os últimos tempos e o plano de Deus",
   "sub_ceremonialSpeechDesc": "Discursos formais para ocasiões oficiais ou sagradas",
   "sub_communityMemoryDesc": "Recordações compartilhadas que preservam a identidade do grupo",
-
   "register_intimate": "Íntimo",
-  "register_casual": "Informal / Casual",
+  "register_casual": "Informal",
   "register_consultative": "Consultivo",
   "register_formal": "Formal / Oficial",
   "register_ceremonial": "Cerimonial",
   "register_elderAuthority": "Ancião / Autoridade",
   "register_religiousWorship": "Religioso / Culto",
-
   "locale_english": "English",
   "locale_portuguese": "Português",
   "locale_hindi": "हिन्दी",
@@ -463,14 +559,12 @@
   "locale_chineseSub": "Chinês",
   "locale_selectLanguage": "Escolha Seu Idioma",
   "locale_selectLanguageSubtitle": "Você pode alterar isso mais tarde nas configurações do perfil.",
-
   "filter_all": "Todos",
   "filter_pending": "Pendentes",
   "filter_uploaded": "Enviados",
   "filter_needsCleaning": "Precisa de Limpeza",
   "filter_unclassified": "Não Classificado",
   "filter_allGenres": "Todos os gêneros",
-
   "detail_duration": "Duração",
   "detail_size": "Tamanho",
   "detail_format": "Formato",
@@ -487,20 +581,16 @@
   "detail_uploadFailed": "Falha no Envio",
   "detail_pendingRetried": "Pendente (tentado novamente)",
   "detail_notSynced": "Não sincronizado",
-
   "action_actions": "Ações",
-  "action_split": "Dividir",
+  "action_split": "Editar",
   "action_flagClean": "Marcar para Limpeza",
   "action_clearFlag": "Remover Marcação",
   "action_move": "Mover",
   "action_delete": "Excluir",
-
   "projectStats_recordings": "Gravações",
   "projectStats_duration": "Duração",
   "projectStats_members": "Membros",
-
   "project_active": "Ativo",
-
   "recording_paused": "Pausado",
   "recording_recording": "Gravando",
   "recording_tapToRecord": "Toque para Gravar",
@@ -512,20 +602,240 @@
   "recording_stop": "Parar",
   "recording_resume": "Retomar",
   "recording_pause": "Pausar",
-
   "quickRecord_title": "Gravação Rápida",
   "quickRecord_subtitle": "Classificar depois",
   "quickRecord_classifyLater": "Classificar depois",
-
   "classify_title": "Classificar Gravação",
   "classify_action": "Classificar",
-  "classify_banner": "Esta gravação precisa ser classificada antes de poder ser enviada.",
+  "classify_banner": "Esta gravação está sem classificação. Toque em Classificar para adicionar gênero e registro.",
   "classify_success": "Gravação classificada",
-  "classify_register": "Registro (opcional)",
+  "classify_register": "Registro",
   "classify_selectRegister": "Selecionar registro",
-
+  "classify_predominantHeader": "CLASSIFICAÇÃO PREDOMINANTE",
+  "classify_addAlternativeTitle": "Ambíguo? Adicionar classificação alternativa",
+  "classify_secondaryNote": "Apenas a classificação predominante conta para os totais de tempo por gênero.",
+  "classify_secondaryGenre": "Gênero secundário",
+  "classify_secondarySubcategory": "Subcategoria secundária",
+  "classify_secondaryRegister": "Registro secundário",
+  "classify_secondarySameAsPrimary": "O gênero secundário deve ser diferente do predominante.",
+  "classify_clearAlternative": "Limpar alternativa",
+  "recording_alsoClassifiedAs": "Também classificado como",
+  "recording_alsoClassifiedAsTooltip": "Tem classificação alternativa",
+  "recording_addAlternative": "Adicionar classificação alternativa",
+  "recording_removeSecondary": "Remover classificação alternativa",
+  "recording_secondaryRemoved": "Classificação alternativa removida",
+  "recording_secondaryUpdated": "Classificação alternativa atualizada",
   "recording_unclassified": "Não Classificado",
-
+  "recording_inputSource": "Entrada",
+  "recording_selectMicrophone": "Selecionar microfone",
+  "recording_builtInMicrophone": "Padrão do sistema",
+  "recording_micPermissionNeeded": "Conceda acesso ao microfone para ver os nomes dos dispositivos",
+  "recording_micPermissionButton": "Conceder permissão",
+  "recording_micPermissionDenied": "Permissão de microfone negada. Ative-a nas configurações do navegador ou do sistema.",
+  "recording_micPermissionTitle": "Acesso ao microfone necessário",
+  "recording_noDevicesFound": "Nenhum microfone encontrado",
+  "recording_storageLowWarnTitle": "Pouco armazenamento",
+  "recording_storageLowWarnBody": "Cerca de {minutes} min de gravação disponíveis. Continuar?",
+  "@recording_storageLowWarnBody": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "recording_storageRefuseTitle": "Sem armazenamento suficiente",
+  "recording_storageRefuseBody": "Libere espaço neste dispositivo antes de gravar.",
+  "recording_storageCriticalBanner": "Armazenamento crítico — cerca de {minutes} min restantes. Considere parar em breve.",
+  "@recording_storageCriticalBanner": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "recording_storageForceStopped": "Gravação interrompida por falta de armazenamento. Seu progresso foi salvo.",
+  "recording_savedAt": "Salvo em {time}",
+  "@recording_savedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "recording_continuedInBackground": "Gravação continuou em segundo plano",
+  "recording_continue": "Continuar",
+  "recording_cancel": "Cancelar",
+  "recording_recoverTitle": "Recuperar gravação interrompida?",
+  "recording_recoverBody": "Encontramos cerca de {minutes} min de áudio de uma sessão anterior.",
+  "@recording_recoverBody": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "recording_recoverButton": "Recuperar",
+  "recording_recoverDiscard": "Descartar",
+  "recording_recoverFailedLastSegment": "Algum áudio próximo ao fim não pôde ser lido e foi ignorado.",
+  "recording_inProgressNotificationTitle": "Gravação em andamento",
+  "recording_inProgressNotificationBody": "Toque para voltar ao app",
+  "profile_defaultMicrophone": "Microfone padrão",
+  "profile_systemDefault": "Padrão do sistema",
+  "settings_deviceStorageTitle": "Armazenamento do dispositivo",
+  "settings_deviceStorageSubtitle": "Usado {used} · Livre {free}",
+  "@settings_deviceStorageSubtitle": {
+    "placeholders": {
+      "used": {
+        "type": "String"
+      },
+      "free": {
+        "type": "String"
+      }
+    }
+  },
   "fab_quickRecord": "Rápido",
-  "fab_normalRecord": "Gravar"
+  "fab_normalRecord": "Gravar",
+  "error_network": "Não foi possível acessar o servidor. Verifique sua conexão com a internet e tente novamente.",
+  "error_secureConnection": "Não foi possível estabelecer uma conexão segura. Tente novamente mais tarde.",
+  "error_timeout": "A solicitação expirou. Verifique sua conexão e tente novamente.",
+  "error_invalidCredentials": "E-mail ou senha inválidos. Tente novamente.",
+  "error_userNotFound": "Nenhuma conta encontrada com esse endereço de e-mail.",
+  "error_accountExists": "Já existe uma conta com este e-mail.",
+  "error_emailRequired": "Por favor, insira seu endereço de e-mail.",
+  "error_passwordRequired": "Por favor, insira sua senha.",
+  "error_signupFailed": "Não foi possível criar sua conta. Verifique seus dados e tente novamente.",
+  "error_sessionExpired": "Sua sessão expirou. Faça login novamente.",
+  "error_profileLoadFailed": "Não foi possível carregar seu perfil. Tente novamente.",
+  "error_profileUpdateFailed": "Não foi possível atualizar seu perfil. Tente novamente.",
+  "error_imageUploadFailed": "Não foi possível enviar a imagem. Tente novamente.",
+  "error_notAuthenticated": "Você não está conectado. Faça login e tente novamente.",
+  "error_noPermission": "Você não tem permissão para realizar esta ação.",
+  "error_generic": "Algo deu errado. Tente novamente mais tarde.",
+  "storyteller_title": "Narradores",
+  "storyteller_singular": "Narrador",
+  "storyteller_manageAction": "Gerenciar narradores",
+  "storyteller_addNew": "Adicionar narrador",
+  "storyteller_createTitle": "Novo narrador",
+  "storyteller_editTitle": "Editar narrador",
+  "storyteller_speakerName": "Nome do orador",
+  "storyteller_sex": "Sexo",
+  "storyteller_sexMale": "Masculino",
+  "storyteller_sexFemale": "Feminino",
+  "storyteller_age": "Idade",
+  "storyteller_location": "Localização",
+  "storyteller_dialect": "Dialeto",
+  "storyteller_externalAcceptanceTitle": "Validação de aceitação externa",
+  "storyteller_externalAcceptanceDescription": "Confirmo que a validação de aceitação externa foi realizada para este orador.",
+  "storyteller_externalAcceptanceInfo": "Antes de registrar um narrador, o gerente do projeto deve obter o consentimento do orador fora do aplicativo (por exemplo, por meio de um termo assinado ou acordo verbal gravado). Esta caixa registra que essa etapa foi concluída.",
+  "storyteller_createRequiresConnection": "Criar um narrador requer conexão com a internet.",
+  "storyteller_deleteTitle": "Excluir narrador?",
+  "storyteller_deleteMessage": "As gravações atribuídas anteriormente a este narrador aparecerão como não atribuídas.",
+  "storyteller_noneAssigned": "Nenhum narrador atribuído",
+  "storyteller_unknown": "Narrador desconhecido",
+  "storyteller_selectHint": "Escolha um narrador",
+  "storyteller_required": "Um narrador é obrigatório",
+  "storyteller_searchPlaceholder": "Buscar narradores",
+  "storyteller_empty": "Nenhum narrador ainda",
+  "storyteller_emptyDescription": "Crie um narrador para o projeto e atribua-o às gravações.",
+  "storyteller_offlineNoCache": "Os narradores ainda não foram sincronizados. Conecte-se à internet para carregá-los.",
+  "storyteller_assign": "Atribuir",
+  "storyteller_reassign": "Reatribuir",
+  "storyteller_ageValidator": "Digite uma idade entre 1 e 120",
+  "storyteller_ageYearsShort": "{age} a",
+  "@storyteller_ageYearsShort": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
+  "filters_buttonLabel": "Filtros",
+  "filters_sheetTitle": "Filtrar gravações",
+  "filters_sectionStatus": "Status de envio",
+  "filters_sectionGenre": "Gênero",
+  "filters_sectionStoryteller": "Narrador",
+  "filters_sectionUser": "Gravado por",
+  "filter_apply": "Aplicar",
+  "filter_reset": "Redefinir",
+  "filter_clearAll": "Limpar tudo",
+  "filter_countActive": "{count, plural, one{1 filtro} other{{count} filtros}}",
+  "@filter_countActive": {
+    "placeholders": {
+      "count": {
+        "type": "num",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "filter_userAll": "Qualquer usuário",
+  "filter_storytellerAll": "Qualquer narrador",
+  "filter_genreAll": "Qualquer gênero",
+  "detail_recordedBy": "Gravado por",
+  "detail_storyteller": "Narrador",
+  "recording_unknownUser": "Usuário desconhecido",
+  "common_close": "Fechar",
+  "common_ok": "OK",
+  "invite_title": "Convidar membro",
+  "invite_searchLabel": "Buscar por nome ou e-mail",
+  "invite_searchHint": "Digite pelo menos 2 caracteres",
+  "invite_noUsersFound": "Nenhum usuário encontrado",
+  "invite_changeUser": "Alterar usuário",
+  "invite_roleLabel": "Função *",
+  "invite_roleMember": "Membro",
+  "invite_roleManager": "Gerente",
+  "invite_sendInvite": "Enviar convite",
+  "invite_sendFailed": "Falha ao enviar convite",
+  "recording_recoveryInProgress": "Recuperando…",
+  "recording_recoveryFailed": "Falha na recuperação",
+  "recording_recoverySessionNotFound": "Sessão não encontrada",
+  "recording_recoveryNoAudio": "Sem áudio para recuperar",
+  "recording_recoveryConcatFailed": "Falha ao unir os segmentos",
+  "a11y_startRecording": "Iniciar gravação",
+  "a11y_createProject": "Criar projeto",
+  "a11y_playAudio": "Reproduzir áudio",
+  "a11y_pauseAudio": "Pausar áudio",
+  "a11y_tabLabel": "Guia {label}",
+  "profile_adminBadge": "Admin",
+  "profile_setYourName": "Defina seu nome",
+  "profile_inviteAcceptFailed": "Falha ao aceitar convite",
+  "profile_inviteDeclineFailed": "Falha ao recusar convite",
+  "profile_typeDeleteWord": "EXCLUIR",
+  "trim_splitError": "Erro ao dividir: {error}",
+  "error_serverFailure": "O servidor não pôde concluir a solicitação. Tente novamente.",
+  "error_importNoBytes": "Este arquivo está vazio e não pode ser importado.",
+  "error_ffmpegProcessingFailed": "Falha no processamento do áudio.",
+  "error_downloadFailed": "Falha no download.",
+  "@a11y_tabLabel": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "@trim_splitError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "a11y_splitWaveform": "Forma de onda de divisão. Toque para adicionar marcadores. Arraste para reposicionar. Aperte para ampliar. Mantenha pressionado para remover.",
+  "projectSettings_offlineTitle": "Você está offline",
+  "projectSettings_offlineDescription": "Os detalhes do projeto não podem ser carregados sem uma conexão com a internet. Serão carregados automaticamente quando você se reconectar.",
+  "recording_noAudioAvailable": "Nenhum áudio disponível",
+  "recording_noPendingUploads": "Sem envios pendentes",
+  "recording_uploadQueue": "Fila de envio",
+  "recording_previewSelection": "Pré-visualizar seleção",
+  "recording_stopPreview": "Parar pré-visualização",
+  "recording_audioLoadFailed": "Falha ao carregar o áudio",
+  "status_offlineSubtitle": "Alguns recursos como sincronização e carregamento de dados requerem conexão com a internet.",
+  "status_noProject": "Nenhum projeto atribuído",
+  "status_noProjectSubtitle": "Você ainda não foi adicionado a nenhum projeto. Contate seu administrador e aguarde a atribuição.",
+  "a11y_recordingInProgress": "Gravação em andamento, toque para pausar",
+  "a11y_recordingPaused": "Gravação pausada, toque para retomar",
+  "recording_audioFileNotFound": "Arquivo de áudio não encontrado",
+  "recording_partOf": "Parte {part} de {total}",
+  "recording_splitFrom": "Dividido de {sourceId}",
+  "trim_segmentRemoved": "Segmento {index} — removido",
+  "trim_segmentOfTotal": "Segmento {index} de {total}"
 }

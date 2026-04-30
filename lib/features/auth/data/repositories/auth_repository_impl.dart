@@ -6,6 +6,7 @@ import 'package:path/path.dart' as p;
 
 import '../../../../core/auth/auth_repository.dart';
 import '../../../../core/config/env.dart';
+import '../../../../core/network/api_error_handler.dart';
 import '../../domain/entities/user.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
@@ -77,6 +78,7 @@ class AuthRepositoryImpl implements AuthRepository {
       body: jsonEncode({'refresh_token': token}),
     );
 
+    guardResponse(response);
     if (response.statusCode != 200) {
       throw Exception('Token refresh failed: ${response.body}');
     }
@@ -98,6 +100,7 @@ class AuthRepositoryImpl implements AuthRepository {
       },
     );
 
+    guardResponse(response);
     if (response.statusCode != 200) {
       throw Exception('Failed to get user: ${response.body}');
     }
@@ -125,6 +128,7 @@ class AuthRepositoryImpl implements AuthRepository {
       body: jsonEncode(body),
     );
 
+    guardResponse(response);
     if (response.statusCode != 200) {
       throw Exception('Failed to update profile: ${response.body}');
     }
@@ -181,8 +185,35 @@ class AuthRepositoryImpl implements AuthRepository {
       },
     );
 
+    guardResponse(response);
     if (response.statusCode != 200) {
       throw Exception('Failed to delete account: ${response.body}');
+    }
+  }
+
+  @override
+  Future<void> requestPasswordReset(String email) async {
+    final response = await _client.post(
+      Uri.parse('$_baseUrl/api/auth/forgot-password'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'email': email, 'app_key': 'oral-collector'}),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Password reset failed: ${response.body}');
+    }
+  }
+
+  @override
+  Future<void> resetPassword(String token, String newPassword) async {
+    final response = await _client.post(
+      Uri.parse('$_baseUrl/api/auth/reset-password'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'token': token, 'password': newPassword}),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Reset password failed: ${response.body}');
     }
   }
 }

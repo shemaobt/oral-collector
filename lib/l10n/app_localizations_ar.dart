@@ -36,6 +36,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get common_cancel => 'إلغاء';
 
   @override
+  String get common_resume => 'Resume';
+
+  @override
+  String get common_discard => 'Discard';
+
+  @override
   String get common_save => 'حفظ';
 
   @override
@@ -170,6 +176,68 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get auth_continueButton => 'متابعة';
+
+  @override
+  String get auth_forgotPassword => 'نسيت كلمة المرور؟';
+
+  @override
+  String get auth_resetPassword => 'إعادة تعيين كلمة المرور';
+
+  @override
+  String get auth_forgotPasswordSubtitle =>
+      'أدخل بريدك الإلكتروني وسنرسل لك رابط إعادة التعيين.';
+
+  @override
+  String get auth_sendResetLink => 'إرسال الرابط';
+
+  @override
+  String get auth_sending => 'جارٍ الإرسال...';
+
+  @override
+  String get auth_checkYourEmail => 'تحقق من بريدك الإلكتروني';
+
+  @override
+  String auth_resetEmailSent(String email) {
+    return 'أرسلنا رابط إعادة تعيين كلمة المرور إلى $email. تحقق من صندوق الوارد واتبع الرابط لإنشاء كلمة مرور جديدة.';
+  }
+
+  @override
+  String get auth_openEmailApp => 'فتح البريد الإلكتروني';
+
+  @override
+  String get auth_resendEmail => 'إعادة الإرسال';
+
+  @override
+  String get auth_backToLogin => 'العودة إلى تسجيل الدخول';
+
+  @override
+  String get auth_newPassword => 'كلمة المرور الجديدة';
+
+  @override
+  String get auth_confirmNewPassword => 'تأكيد كلمة المرور الجديدة';
+
+  @override
+  String get auth_resetPasswordSubtitle => 'أدخل كلمة المرور الجديدة أدناه.';
+
+  @override
+  String get auth_resetPasswordButton => 'إعادة تعيين كلمة المرور';
+
+  @override
+  String get auth_resetting => 'جارٍ إعادة التعيين...';
+
+  @override
+  String get auth_resetSuccess =>
+      'تم إعادة تعيين كلمة المرور بنجاح! يمكنك الآن تسجيل الدخول بكلمة المرور الجديدة.';
+
+  @override
+  String get auth_invalidResetLink => 'رابط غير صالح';
+
+  @override
+  String get auth_invalidResetLinkMessage =>
+      'رابط إعادة تعيين كلمة المرور هذا غير صالح أو منتهي الصلاحية.';
+
+  @override
+  String get auth_requestNewLink => 'طلب رابط جديد';
 
   @override
   String get home_greetingMorning => 'صباح الخير';
@@ -403,6 +471,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get recording_titleHint => 'أضف عنواناً (اختياري)';
 
   @override
+  String get recording_descriptionHint => 'أضف وصفاً قصيراً (اختياري)';
+
+  @override
+  String get recording_descriptionEmpty => 'أضف وصفاً';
+
+  @override
   String get recording_saveRecording => 'حفظ التسجيل';
 
   @override
@@ -421,13 +495,21 @@ class AppLocalizationsAr extends AppLocalizations {
   String get recording_saved => 'تم حفظ التسجيل';
 
   @override
+  String get recording_uploading => 'جاري رفع التسجيل…';
+
+  @override
+  String recording_uploadFailed(String error) {
+    return 'فشل الرفع: $error';
+  }
+
+  @override
   String get recording_notFound => 'التسجيل غير موجود';
 
   @override
   String get recording_unknownGenre => 'نوع غير معروف';
 
   @override
-  String get recording_splitRecording => 'تقسيم التسجيل';
+  String get recording_splitRecording => 'تحرير التسجيل';
 
   @override
   String get recording_moveCategory => 'نقل الفئة';
@@ -482,10 +564,54 @@ class AppLocalizationsAr extends AppLocalizations {
   String get recording_updateFailed => 'فشل في التحديث على الخادم';
 
   @override
+  String get recording_exportAudio => 'تصدير الصوت';
+
+  @override
+  String get recording_exportShareFailed => 'فشل مشاركة الملف الصوتي';
+
+  @override
+  String get recording_replaceAudio => 'استبدال الصوت';
+
+  @override
+  String get recording_replaceTitle => 'استبدال الصوت؟';
+
+  @override
+  String get recording_replaceMessage =>
+      'سيتم نقل الصوت الحالي إلى سلة المهملات لمدة 24 ساعة واستبداله بالملف الذي تختاره. يمكن استخدام الملفات الصوتية التي لها نفس صيغة الأصل فقط.';
+
+  @override
+  String get recording_replaceReuploadNotice =>
+      'تم رفع هذا التسجيل بالفعل. سيحل الملف الجديد محله على الخادم.';
+
+  @override
+  String get recording_replaceConfirm => 'استبدال';
+
+  @override
+  String recording_replaceFormatMismatch(String expected, String actual) {
+    return 'يجب أن يكون البديل ملفًا من نوع $expected، ولكن تم تقديم $actual';
+  }
+
+  @override
+  String get recording_replaceInvalidAudio => 'تعذر قراءة الملف الصوتي المحدد';
+
+  @override
+  String get recording_replaceSuccess => 'تم استبدال الصوت';
+
+  @override
+  String get recording_replaceFailed => 'فشل استبدال الصوت';
+
+  @override
+  String get recording_replaceNotAvailableWeb =>
+      'استبدال الصوت غير متاح في تطبيق الويب';
+
+  @override
   String get recordings_title => 'التسجيلات';
 
   @override
   String get recordings_subtitle => 'قصصك المجمّعة';
+
+  @override
+  String get recordings_searchHint => 'ابحث عن التسجيلات...';
 
   @override
   String get recordings_importAudio => 'استيراد ملف صوتي';
@@ -502,6 +628,10 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get recordings_noRecordingsSubtitle =>
       'انقر على الميكروفون لتسجيل أول قصة لك، أو استورد ملفاً صوتياً.';
+
+  @override
+  String get recordings_dropToImport =>
+      'Tip: drag audio files onto this window to import.';
 
   @override
   String recordings_count(int count) {
@@ -549,7 +679,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get recordings_clearFailed => 'فشل في مسح التسجيلات';
 
   @override
-  String get trim_title => 'تقسيم التسجيل';
+  String get trim_title => 'تحرير التسجيل';
 
   @override
   String get trim_notFound => 'التسجيل غير موجود';
@@ -602,6 +732,35 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get trim_saveConfirmTitle => 'حفظ التغييرات؟';
+
+  @override
+  String trim_saveConfirmBody(int count) {
+    return 'سيؤدي هذا إلى استبدال التسجيل الأصلي بـ $count مقطع. لا يمكن التراجع عن هذا الإجراء.';
+  }
+
+  @override
+  String get trim_inheritLabel => 'وراثة';
+
+  @override
+  String get trim_applyToAll => 'تطبيق على الكل';
+
+  @override
+  String get trim_copyFromPrevious => 'نسخ من السابق';
+
+  @override
+  String get trim_classifySegment => 'تصنيف المقطع';
+
+  @override
+  String get trim_volume => 'مستوى الصوت';
+
+  @override
+  String get trim_peakClip => 'تشبع';
+
+  @override
+  String get trim_boostOnSave => 'يُطبَّق التضخيم عند الحفظ';
+
+  @override
   String get import_title => 'استيراد الصوت';
 
   @override
@@ -643,6 +802,135 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get import_importAndSave => 'استيراد وحفظ';
+
+  @override
+  String get import_setForAll => 'تعيين لجميع الملفات';
+
+  @override
+  String get import_applyToAll => 'تطبيق على الكل';
+
+  @override
+  String get import_fieldRequired => 'مطلوب';
+
+  @override
+  String import_validationBanner(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ملفات تفتقد حقول مطلوبة',
+      one: 'ملف واحد يفتقد حقول مطلوبة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get import_remove => 'إزالة الملف';
+
+  @override
+  String import_supportedFormats(String formats) {
+    return 'الصيغ المدعومة: $formats. يتم تخطي الملفات غير المدعومة أو غير القابلة للقراءة.';
+  }
+
+  @override
+  String import_rejectedFiles(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'تم تخطي $count ملفات غير مدعومة أو غير قابلة للقراءة: $names',
+      one: 'تم تخطي ملف واحد غير مدعوم أو غير قابل للقراءة: $names',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String import_countFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ملفات',
+      one: 'ملف واحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String import_importNFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ملفات',
+      one: 'ملف واحد',
+    );
+    return 'استيراد $_temp0';
+  }
+
+  @override
+  String get import_emptyFile => 'ملف فارغ';
+
+  @override
+  String get import_compressWav => 'ضغط WAV إلى M4A';
+
+  @override
+  String get import_compressWavHint =>
+      '~10x أصغر، بدون فقدان للجودة لخط أنابيب ML';
+
+  @override
+  String get import_dropHint => 'Drop audio files to import';
+
+  @override
+  String get import_dropActive => 'Release to import';
+
+  @override
+  String import_rejectedTooLarge(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Skipped $count files over 500 MB: $names',
+      one: 'Skipped 1 file over 500 MB: $names',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String import_rejectedUnsupportedCodec(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Skipped $count files with unsupported audio codecs: $names. Re-export as PCM WAV or M4A.',
+      one:
+          'Skipped 1 file with an unsupported audio codec: $names. Re-export as PCM WAV or M4A.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String import_rejectedUnreadable(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Skipped $count unreadable files: $names',
+      one: 'Skipped 1 unreadable file: $names',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get import_resumePromptTitle => 'Resume interrupted upload';
+
+  @override
+  String import_resumePromptBody(String name, String size) {
+    return '\"$name\" ($size) was partially uploaded. Select the same file to continue.';
+  }
+
+  @override
+  String get import_resumeSizeMismatch =>
+      'That file doesn\'t match the paused upload.';
+
+  @override
+  String import_largeFileWarning(String size) {
+    return 'Large file ($size). Keep this tab open until the upload completes.';
+  }
 
   @override
   String get moveCategory_title => 'نقل الفئة';
@@ -1454,7 +1742,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get action_actions => 'الإجراءات';
 
   @override
-  String get action_split => 'تقسيم';
+  String get action_split => 'تحرير';
 
   @override
   String get action_flagClean => 'تعليم للتنظيف';
@@ -1530,23 +1818,560 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get classify_banner =>
-      'يحتاج هذا التسجيل إلى التصنيف قبل أن يتم رفعه.';
+      'هذا التسجيل غير مصنف. انقر على تصنيف لإضافة نوع وسجل.';
 
   @override
   String get classify_success => 'تم تصنيف التسجيل';
 
   @override
-  String get classify_register => 'السجل (اختياري)';
+  String get classify_register => 'السجل';
 
   @override
   String get classify_selectRegister => 'اختر السجل';
 
   @override
+  String get classify_predominantHeader => 'التصنيف السائد';
+
+  @override
+  String get classify_addAlternativeTitle => 'غامض؟ أضف تصنيفًا بديلاً';
+
+  @override
+  String get classify_secondaryNote =>
+      'فقط التصنيف السائد يُحتسب في إجماليات زمن النوع.';
+
+  @override
+  String get classify_secondaryGenre => 'النوع الثانوي';
+
+  @override
+  String get classify_secondarySubcategory => 'الفئة الفرعية الثانوية';
+
+  @override
+  String get classify_secondaryRegister => 'السجل الثانوي';
+
+  @override
+  String get classify_secondarySameAsPrimary =>
+      'يجب أن يختلف النوع الثانوي عن النوع السائد.';
+
+  @override
+  String get classify_clearAlternative => 'مسح البديل';
+
+  @override
+  String get recording_alsoClassifiedAs => 'صُنّف أيضًا كـ';
+
+  @override
+  String get recording_alsoClassifiedAsTooltip => 'يوجد تصنيف بديل';
+
+  @override
+  String get recording_addAlternative => 'إضافة تصنيف بديل';
+
+  @override
+  String get recording_removeSecondary => 'إزالة التصنيف البديل';
+
+  @override
+  String get recording_secondaryRemoved => 'تمت إزالة التصنيف البديل';
+
+  @override
+  String get recording_secondaryUpdated => 'تم تحديث التصنيف البديل';
+
+  @override
   String get recording_unclassified => 'غير مصنف';
+
+  @override
+  String get recording_inputSource => 'الإدخال';
+
+  @override
+  String get recording_selectMicrophone => 'اختر الميكروفون';
+
+  @override
+  String get recording_builtInMicrophone => 'الافتراضي للنظام';
+
+  @override
+  String get recording_micPermissionNeeded =>
+      'اسمح بالوصول إلى الميكروفون لرؤية أسماء الأجهزة';
+
+  @override
+  String get recording_micPermissionButton => 'منح الإذن';
+
+  @override
+  String get recording_micPermissionDenied =>
+      'تم رفض إذن الميكروفون. قم بتفعيله من إعدادات المتصفح أو النظام.';
+
+  @override
+  String get recording_micPermissionTitle => 'مطلوب الوصول إلى الميكروفون';
+
+  @override
+  String get recording_noDevicesFound => 'لم يتم العثور على ميكروفونات';
+
+  @override
+  String get recording_storageLowWarnTitle => 'مساحة تخزين منخفضة';
+
+  @override
+  String recording_storageLowWarnBody(int minutes) {
+    return 'يتوفر حوالي $minutes دقيقة من التسجيل. هل تريد المتابعة؟';
+  }
+
+  @override
+  String get recording_storageRefuseTitle => 'مساحة التخزين غير كافية';
+
+  @override
+  String get recording_storageRefuseBody =>
+      'حرر مساحة على هذا الجهاز قبل التسجيل.';
+
+  @override
+  String recording_storageCriticalBanner(int minutes) {
+    return 'التخزين حرج — يتبقى حوالي $minutes دقيقة. فكر في التوقف قريبًا.';
+  }
+
+  @override
+  String get recording_storageForceStopped =>
+      'تم إيقاف التسجيل بسبب نفاد مساحة التخزين. تم حفظ تقدمك.';
+
+  @override
+  String recording_savedAt(String time) {
+    return 'تم الحفظ في $time';
+  }
+
+  @override
+  String get recording_continuedInBackground => 'استمر التسجيل في الخلفية';
+
+  @override
+  String get recording_continue => 'متابعة';
+
+  @override
+  String get recording_cancel => 'إلغاء';
+
+  @override
+  String get recording_recoverTitle => 'هل تريد استعادة التسجيل المتوقف؟';
+
+  @override
+  String recording_recoverBody(int minutes) {
+    return 'وجدنا حوالي $minutes دقيقة من الصوت من جلسة سابقة.';
+  }
+
+  @override
+  String get recording_recoverButton => 'استعادة';
+
+  @override
+  String get recording_recoverDiscard => 'تجاهل';
+
+  @override
+  String get recording_recoverFailedLastSegment =>
+      'تعذرت قراءة بعض الصوت قرب النهاية وتم تخطيه.';
+
+  @override
+  String get recording_inProgressNotificationTitle => 'جاري التسجيل';
+
+  @override
+  String get recording_inProgressNotificationBody => 'اضغط للعودة إلى التطبيق';
+
+  @override
+  String get profile_defaultMicrophone => 'الميكروفون الافتراضي';
+
+  @override
+  String get profile_systemDefault => 'الافتراضي للنظام';
+
+  @override
+  String get settings_deviceStorageTitle => 'مساحة تخزين الجهاز';
+
+  @override
+  String settings_deviceStorageSubtitle(String used, String free) {
+    return 'المستخدم $used · المتاح $free';
+  }
 
   @override
   String get fab_quickRecord => 'سريع';
 
   @override
   String get fab_normalRecord => 'تسجيل';
+
+  @override
+  String get error_network =>
+      'تعذر الوصول إلى الخادم. يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى.';
+
+  @override
+  String get error_secureConnection =>
+      'تعذر إنشاء اتصال آمن. يرجى المحاولة مرة أخرى لاحقاً.';
+
+  @override
+  String get error_timeout =>
+      'انتهت مهلة الطلب. يرجى التحقق من اتصالك والمحاولة مرة أخرى.';
+
+  @override
+  String get error_invalidCredentials =>
+      'البريد الإلكتروني أو كلمة المرور غير صحيحة. يرجى المحاولة مرة أخرى.';
+
+  @override
+  String get error_userNotFound =>
+      'لم يتم العثور على حساب بهذا البريد الإلكتروني.';
+
+  @override
+  String get error_accountExists => 'يوجد حساب بهذا البريد الإلكتروني بالفعل.';
+
+  @override
+  String get error_emailRequired => 'يرجى إدخال بريدك الإلكتروني.';
+
+  @override
+  String get error_passwordRequired => 'يرجى إدخال كلمة المرور.';
+
+  @override
+  String get error_signupFailed =>
+      'تعذر إنشاء حسابك. يرجى التحقق من بياناتك والمحاولة مرة أخرى.';
+
+  @override
+  String get error_sessionExpired =>
+      'انتهت صلاحية جلستك. يرجى تسجيل الدخول مرة أخرى.';
+
+  @override
+  String get error_profileLoadFailed =>
+      'تعذر تحميل ملفك الشخصي. يرجى المحاولة مرة أخرى.';
+
+  @override
+  String get error_profileUpdateFailed =>
+      'تعذر تحديث ملفك الشخصي. يرجى المحاولة مرة أخرى.';
+
+  @override
+  String get error_imageUploadFailed =>
+      'تعذر رفع الصورة. يرجى المحاولة مرة أخرى.';
+
+  @override
+  String get error_notAuthenticated =>
+      'لم تقم بتسجيل الدخول. يرجى تسجيل الدخول والمحاولة مرة أخرى.';
+
+  @override
+  String get error_noPermission => 'ليس لديك صلاحية للقيام بهذا الإجراء.';
+
+  @override
+  String get error_generic => 'حدث خطأ ما. يرجى المحاولة مرة أخرى لاحقاً.';
+
+  @override
+  String get common_close => 'إغلاق';
+
+  @override
+  String get storyteller_title => 'الرواة';
+
+  @override
+  String get storyteller_singular => 'راوٍ';
+
+  @override
+  String get storyteller_manageAction => 'إدارة الرواة';
+
+  @override
+  String get storyteller_addNew => 'إضافة راوٍ';
+
+  @override
+  String get storyteller_createTitle => 'راوٍ جديد';
+
+  @override
+  String get storyteller_editTitle => 'تعديل الراوي';
+
+  @override
+  String get storyteller_speakerName => 'اسم المتحدث';
+
+  @override
+  String get storyteller_sex => 'الجنس';
+
+  @override
+  String get storyteller_sexMale => 'ذكر';
+
+  @override
+  String get storyteller_sexFemale => 'أنثى';
+
+  @override
+  String get storyteller_age => 'العمر';
+
+  @override
+  String get storyteller_location => 'الموقع';
+
+  @override
+  String get storyteller_dialect => 'اللهجة';
+
+  @override
+  String get storyteller_externalAcceptanceTitle => 'تأكيد الموافقة الخارجية';
+
+  @override
+  String get storyteller_externalAcceptanceDescription =>
+      'أؤكد أنه تم إجراء التحقق من الموافقة الخارجية لهذا المتحدث.';
+
+  @override
+  String get storyteller_externalAcceptanceInfo =>
+      'قبل تسجيل راوٍ، يجب على مدير المشروع الحصول على موافقة المتحدث خارج التطبيق (على سبيل المثال، من خلال نموذج موقّع أو اتفاقية شفهية مسجلة). يسجل هذا المربع أن هذه الخطوة قد اكتملت.';
+
+  @override
+  String get storyteller_createRequiresConnection =>
+      'يتطلب إنشاء راوٍ اتصالًا بالإنترنت.';
+
+  @override
+  String get storyteller_deleteTitle => 'حذف الراوي؟';
+
+  @override
+  String get storyteller_deleteMessage =>
+      'ستظهر التسجيلات التي تم تعيينها سابقًا لهذا الراوي على أنها غير مخصصة.';
+
+  @override
+  String get storyteller_noneAssigned => 'لم يُعيَّن راوٍ';
+
+  @override
+  String get storyteller_unknown => 'راوٍ غير معروف';
+
+  @override
+  String get storyteller_selectHint => 'اختر راويًا';
+
+  @override
+  String get storyteller_required => 'الراوي مطلوب';
+
+  @override
+  String get storyteller_searchPlaceholder => 'ابحث عن الرواة';
+
+  @override
+  String get storyteller_empty => 'لا يوجد رواة بعد';
+
+  @override
+  String get storyteller_emptyDescription =>
+      'أنشئ راويًا للمشروع لتعيينه إلى التسجيلات.';
+
+  @override
+  String get storyteller_offlineNoCache =>
+      'لم تتم مزامنة الرواة بعد. اتصل بالإنترنت لتحميلهم.';
+
+  @override
+  String get storyteller_assign => 'تعيين';
+
+  @override
+  String get storyteller_reassign => 'إعادة التعيين';
+
+  @override
+  String get storyteller_ageValidator => 'أدخل عمرًا بين 1 و 120';
+
+  @override
+  String storyteller_ageYearsShort(int age) {
+    return '$age سنة';
+  }
+
+  @override
+  String get filters_buttonLabel => 'عوامل التصفية';
+
+  @override
+  String get filters_sheetTitle => 'تصفية التسجيلات';
+
+  @override
+  String get filters_sectionStatus => 'حالة الرفع';
+
+  @override
+  String get filters_sectionGenre => 'النوع';
+
+  @override
+  String get filters_sectionStoryteller => 'الراوي';
+
+  @override
+  String get filters_sectionUser => 'مسجل بواسطة';
+
+  @override
+  String get filter_apply => 'تطبيق';
+
+  @override
+  String get filter_reset => 'إعادة تعيين';
+
+  @override
+  String get filter_clearAll => 'مسح الكل';
+
+  @override
+  String filter_countActive(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString مرشحات',
+      one: 'مرشح واحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get filter_userAll => 'أي مستخدم';
+
+  @override
+  String get filter_storytellerAll => 'أي راوٍ';
+
+  @override
+  String get filter_genreAll => 'أي نوع';
+
+  @override
+  String get detail_recordedBy => 'سُجل بواسطة';
+
+  @override
+  String get detail_storyteller => 'الراوي';
+
+  @override
+  String get recording_unknownUser => 'مستخدم غير معروف';
+
+  @override
+  String get common_ok => 'موافق';
+
+  @override
+  String get invite_title => 'دعوة عضو';
+
+  @override
+  String get invite_searchLabel => 'ابحث بالاسم أو البريد الإلكتروني';
+
+  @override
+  String get invite_searchHint => 'اكتب حرفين على الأقل';
+
+  @override
+  String get invite_noUsersFound => 'لم يتم العثور على مستخدمين';
+
+  @override
+  String get invite_changeUser => 'تغيير المستخدم';
+
+  @override
+  String get invite_roleLabel => 'الدور *';
+
+  @override
+  String get invite_roleMember => 'عضو';
+
+  @override
+  String get invite_roleManager => 'مدير';
+
+  @override
+  String get invite_sendInvite => 'إرسال الدعوة';
+
+  @override
+  String get invite_sendFailed => 'فشل إرسال الدعوة';
+
+  @override
+  String get recording_recoveryInProgress => 'جاري الاسترداد…';
+
+  @override
+  String get recording_recoveryFailed => 'فشل الاسترداد';
+
+  @override
+  String get recording_recoverySessionNotFound => 'لم يتم العثور على الجلسة';
+
+  @override
+  String get recording_recoveryNoAudio => 'لا يوجد صوت للاسترداد';
+
+  @override
+  String get recording_recoveryConcatFailed => 'فشل دمج المقاطع';
+
+  @override
+  String get a11y_startRecording => 'بدء التسجيل';
+
+  @override
+  String get a11y_createProject => 'إنشاء مشروع';
+
+  @override
+  String get a11y_playAudio => 'تشغيل الصوت';
+
+  @override
+  String get a11y_pauseAudio => 'إيقاف الصوت مؤقتًا';
+
+  @override
+  String get a11y_splitWaveform =>
+      'مخطط الموجة للتقسيم. انقر لإضافة علامات التقسيم. اسحب لإعادة الترتيب. استخدم أصابعك للتكبير. اضغط مطولاً للإزالة.';
+
+  @override
+  String a11y_tabLabel(String label) {
+    return 'علامة تبويب $label';
+  }
+
+  @override
+  String get profile_adminBadge => 'مشرف';
+
+  @override
+  String get profile_setYourName => 'اكتب اسمك';
+
+  @override
+  String get profile_inviteAcceptFailed => 'فشل قبول الدعوة';
+
+  @override
+  String get profile_inviteDeclineFailed => 'فشل رفض الدعوة';
+
+  @override
+  String get profile_typeDeleteWord => 'حذف';
+
+  @override
+  String trim_splitError(String error) {
+    return 'خطأ في التقسيم: $error';
+  }
+
+  @override
+  String get error_serverFailure =>
+      'تعذر على الخادم إكمال الطلب. يرجى المحاولة مرة أخرى.';
+
+  @override
+  String get error_importNoBytes => 'هذا الملف فارغ ولا يمكن استيراده.';
+
+  @override
+  String get error_ffmpegProcessingFailed => 'فشلت معالجة الصوت.';
+
+  @override
+  String get error_downloadFailed => 'فشل التنزيل.';
+
+  @override
+  String get projectSettings_offlineTitle => 'أنت غير متصل';
+
+  @override
+  String get projectSettings_offlineDescription =>
+      'لا يمكن تحميل تفاصيل المشروع بدون اتصال بالإنترنت. ستُحمَّل تلقائيًا عند إعادة الاتصال.';
+
+  @override
+  String get recording_noAudioAvailable => 'لا يوجد صوت متاح';
+
+  @override
+  String get recording_noPendingUploads => 'لا توجد عمليات رفع معلقة';
+
+  @override
+  String get recording_uploadQueue => 'قائمة انتظار الرفع';
+
+  @override
+  String get recording_previewSelection => 'معاينة التحديد';
+
+  @override
+  String get recording_stopPreview => 'إيقاف المعاينة';
+
+  @override
+  String get recording_audioLoadFailed => 'فشل تحميل الصوت';
+
+  @override
+  String get status_offlineSubtitle =>
+      'تتطلب بعض الميزات مثل المزامنة وتحميل البيانات اتصالاً بالإنترنت.';
+
+  @override
+  String get status_noProject => 'لم يتم تعيين مشروع';
+
+  @override
+  String get status_noProjectSubtitle =>
+      'لم تتم إضافتك إلى أي مشروع بعد. يرجى التواصل مع مسؤولك وانتظار التعيين.';
+
+  @override
+  String get a11y_recordingInProgress =>
+      'التسجيل قيد التقدم، انقر للإيقاف المؤقت';
+
+  @override
+  String get a11y_recordingPaused => 'التسجيل متوقف مؤقتًا، انقر للاستئناف';
+
+  @override
+  String get recording_audioFileNotFound => 'لم يتم العثور على الملف الصوتي';
+
+  @override
+  String recording_partOf(int part, int total) {
+    return 'الجزء $part من $total';
+  }
+
+  @override
+  String recording_splitFrom(String sourceId) {
+    return 'مقسم من $sourceId';
+  }
+
+  @override
+  String trim_segmentRemoved(int index) {
+    return 'المقطع $index — تمت إزالته';
+  }
+
+  @override
+  String trim_segmentOfTotal(int index, int total) {
+    return 'المقطع $index من $total';
+  }
 }

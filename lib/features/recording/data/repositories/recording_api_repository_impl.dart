@@ -29,10 +29,22 @@ class RecordingApiRepositoryImpl implements RecordingApiRepository {
     String projectId, {
     int offset = 0,
     int limit = 50,
+    String? userId,
+    String? storytellerId,
+    String? uploadStatus,
   }) async {
-    final response = await _client.get(
-      '/api/oc/recordings?project_id=$projectId&offset=$offset&limit=$limit',
-    );
+    final params = <String, String>{
+      'project_id': projectId,
+      'offset': '$offset',
+      'limit': '$limit',
+      if (userId != null && userId.isNotEmpty) 'user_id': userId,
+      if (storytellerId != null && storytellerId.isNotEmpty)
+        'storyteller_id': storytellerId,
+      if (uploadStatus != null && uploadStatus.isNotEmpty)
+        'upload_status': uploadStatus,
+    };
+    final query = params.entries.map((e) => '${e.key}=${e.value}').join('&');
+    final response = await _client.get('/api/oc/recordings?$query');
     guardResponse(response);
     if (response.statusCode != 200) {
       throw Exception('Failed to list recordings: ${response.body}');
@@ -59,17 +71,44 @@ class RecordingApiRepositoryImpl implements RecordingApiRepository {
   Future<bool> updateRecording(
     String serverId, {
     String? title,
+    String? description,
     String? genreId,
     String? subcategoryId,
     String? registerId,
+    String? secondaryGenreId,
+    String? secondarySubcategoryId,
+    String? secondaryRegisterId,
+    bool clearSecondary = false,
+    String? storytellerId,
     String? cleaningStatus,
+    double? durationSeconds,
+    int? fileSizeBytes,
   }) async {
     final body = <String, dynamic>{};
     if (title != null) body['title'] = title;
+    if (description != null) body['description'] = description;
     if (genreId != null) body['genre_id'] = genreId;
     if (subcategoryId != null) body['subcategory_id'] = subcategoryId;
     if (registerId != null) body['register_id'] = registerId;
+    if (clearSecondary) {
+      body['secondary_genre_id'] = null;
+      body['secondary_subcategory_id'] = null;
+      body['secondary_register_id'] = null;
+    } else {
+      if (secondaryGenreId != null) {
+        body['secondary_genre_id'] = secondaryGenreId;
+      }
+      if (secondarySubcategoryId != null) {
+        body['secondary_subcategory_id'] = secondarySubcategoryId;
+      }
+      if (secondaryRegisterId != null) {
+        body['secondary_register_id'] = secondaryRegisterId;
+      }
+    }
+    if (storytellerId != null) body['storyteller_id'] = storytellerId;
     if (cleaningStatus != null) body['cleaning_status'] = cleaningStatus;
+    if (durationSeconds != null) body['duration_seconds'] = durationSeconds;
+    if (fileSizeBytes != null) body['file_size_bytes'] = fileSizeBytes;
 
     final response = await _client.patch(
       '/api/oc/recordings/$serverId',
@@ -98,7 +137,7 @@ class RecordingApiRepositoryImpl implements RecordingApiRepository {
   @override
   Future<List<String>> splitRecording({
     required String serverId,
-    required List<Map<String, double>> segments,
+    required List<Map<String, dynamic>> segments,
   }) async {
     final response = await _client.post(
       '/api/oc/recordings/$serverId/split',

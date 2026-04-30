@@ -135,7 +135,12 @@ void main() {
       }
 
       if (request.method == 'POST' && path.contains('/confirm-upload')) {
-        return http.Response('', 200);
+        return http.Response(
+          jsonEncode({
+            'gcs_url': 'https://storage.googleapis.com/bucket/file.m4a',
+          }),
+          200,
+        );
       }
 
       if (request.method == 'GET' &&
@@ -501,7 +506,7 @@ void main() {
   });
 
   group('verification polling', () {
-    test('polling returns verified leads to success', () async {
+    test('confirm success marks upload as uploaded', () async {
       final testFile = File('${tempDir.path}/poll_ok.m4a');
       testFile.writeAsBytesSync(Uint8List(1024));
 
@@ -511,7 +516,6 @@ void main() {
       when(() => mockRepo.getPendingUploads()).thenAnswer((_) async => [rec]);
       stubRepoForUpload(testFile.path);
 
-      var pollCount = 0;
       final httpClient = MockClient((request) async {
         final path = request.url.path;
 
@@ -535,20 +539,8 @@ void main() {
         }
 
         if (request.method == 'POST' && path.contains('/confirm-upload')) {
-          return http.Response('', 200);
-        }
-
-        if (request.method == 'GET' && path == '/api/oc/recordings/srv-1') {
-          pollCount++;
-          if (pollCount < 3) {
-            return http.Response(
-              jsonEncode({'upload_status': 'processing'}),
-              200,
-            );
-          }
           return http.Response(
             jsonEncode({
-              'upload_status': 'verified',
               'gcs_url': 'https://storage.googleapis.com/bucket/file.m4a',
             }),
             200,
@@ -563,7 +555,6 @@ void main() {
       await engine.processQueue();
 
       verify(() => mockRepo.markAsUploaded('rec-1', 'srv-1', any())).called(1);
-      expect(pollCount, 3);
       httpClient.close();
     });
 

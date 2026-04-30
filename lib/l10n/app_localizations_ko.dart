@@ -36,6 +36,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get common_cancel => '취소';
 
   @override
+  String get common_resume => 'Resume';
+
+  @override
+  String get common_discard => 'Discard';
+
+  @override
   String get common_save => '저장';
 
   @override
@@ -169,6 +175,65 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get auth_continueButton => '계속';
+
+  @override
+  String get auth_forgotPassword => '비밀번호를 잊으셨나요?';
+
+  @override
+  String get auth_resetPassword => '비밀번호 재설정';
+
+  @override
+  String get auth_forgotPasswordSubtitle => '이메일을 입력하시면 재설정 링크를 보내드립니다.';
+
+  @override
+  String get auth_sendResetLink => '링크 보내기';
+
+  @override
+  String get auth_sending => '전송 중...';
+
+  @override
+  String get auth_checkYourEmail => '이메일을 확인하세요';
+
+  @override
+  String auth_resetEmailSent(String email) {
+    return '$email로 비밀번호 재설정 링크를 보냈습니다. 받은 편지함을 확인하고 링크를 따라 새 비밀번호를 설정하세요.';
+  }
+
+  @override
+  String get auth_openEmailApp => '이메일 열기';
+
+  @override
+  String get auth_resendEmail => '재전송';
+
+  @override
+  String get auth_backToLogin => '로그인으로 돌아가기';
+
+  @override
+  String get auth_newPassword => '새 비밀번호';
+
+  @override
+  String get auth_confirmNewPassword => '새 비밀번호 확인';
+
+  @override
+  String get auth_resetPasswordSubtitle => '아래에 새 비밀번호를 입력하세요.';
+
+  @override
+  String get auth_resetPasswordButton => '비밀번호 재설정';
+
+  @override
+  String get auth_resetting => '재설정 중...';
+
+  @override
+  String get auth_resetSuccess => '비밀번호가 성공적으로 재설정되었습니다! 새 비밀번호로 로그인할 수 있습니다.';
+
+  @override
+  String get auth_invalidResetLink => '유효하지 않은 링크';
+
+  @override
+  String get auth_invalidResetLinkMessage => '이 비밀번호 재설정 링크가 유효하지 않거나 만료되었습니다.';
+
+  @override
+  String get auth_requestNewLink => '새 링크 요청';
 
   @override
   String get home_greetingMorning => '좋은 아침입니다';
@@ -400,6 +465,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recording_titleHint => '제목 추가 (선택 사항)';
 
   @override
+  String get recording_descriptionHint => '짧은 설명 추가 (선택 사항)';
+
+  @override
+  String get recording_descriptionEmpty => '설명 추가';
+
+  @override
   String get recording_saveRecording => '녹음 저장';
 
   @override
@@ -418,13 +489,21 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recording_saved => '녹음이 저장되었습니다';
 
   @override
+  String get recording_uploading => '녹음 업로드 중…';
+
+  @override
+  String recording_uploadFailed(String error) {
+    return '업로드 실패: $error';
+  }
+
+  @override
   String get recording_notFound => '녹음을 찾을 수 없습니다';
 
   @override
   String get recording_unknownGenre => '알 수 없는 장르';
 
   @override
-  String get recording_splitRecording => '녹음 분할';
+  String get recording_splitRecording => '녹음 편집';
 
   @override
   String get recording_moveCategory => '분류 이동';
@@ -476,10 +555,53 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recording_updateFailed => '서버에서 업데이트하지 못했습니다';
 
   @override
+  String get recording_exportAudio => '오디오 내보내기';
+
+  @override
+  String get recording_exportShareFailed => '오디오 파일 공유 실패';
+
+  @override
+  String get recording_replaceAudio => '오디오 교체';
+
+  @override
+  String get recording_replaceTitle => '오디오를 교체하시겠습니까?';
+
+  @override
+  String get recording_replaceMessage =>
+      '현재 오디오는 24시간 동안 임시 보관함으로 이동하고 선택한 파일로 교체됩니다. 원본과 동일한 형식의 오디오 파일만 사용할 수 있습니다.';
+
+  @override
+  String get recording_replaceReuploadNotice =>
+      '이 녹음은 이미 업로드되었습니다. 새 파일이 서버의 기존 파일을 덮어씁니다.';
+
+  @override
+  String get recording_replaceConfirm => '교체';
+
+  @override
+  String recording_replaceFormatMismatch(String expected, String actual) {
+    return '교체 파일은 $expected 형식이어야 하지만 $actual 파일입니다';
+  }
+
+  @override
+  String get recording_replaceInvalidAudio => '선택한 오디오 파일을 읽을 수 없습니다';
+
+  @override
+  String get recording_replaceSuccess => '오디오가 교체되었습니다';
+
+  @override
+  String get recording_replaceFailed => '오디오 교체 실패';
+
+  @override
+  String get recording_replaceNotAvailableWeb => '오디오 교체는 웹 앱에서 지원되지 않습니다';
+
+  @override
   String get recordings_title => '녹음 목록';
 
   @override
   String get recordings_subtitle => '수집한 이야기들';
+
+  @override
+  String get recordings_searchHint => '녹음 검색...';
 
   @override
   String get recordings_importAudio => '오디오 파일 가져오기';
@@ -496,6 +618,10 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get recordings_noRecordingsSubtitle =>
       '마이크를 탭하여 첫 번째 이야기를 녹음하거나 오디오 파일을 가져오세요.';
+
+  @override
+  String get recordings_dropToImport =>
+      'Tip: drag audio files onto this window to import.';
 
   @override
   String recordings_count(int count) {
@@ -543,7 +669,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recordings_clearFailed => '녹음 삭제에 실패했습니다';
 
   @override
-  String get trim_title => '녹음 분할';
+  String get trim_title => '녹음 편집';
 
   @override
   String get trim_notFound => '녹음을 찾을 수 없습니다';
@@ -594,6 +720,35 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get trim_saveConfirmTitle => '변경 사항을 저장하시겠습니까?';
+
+  @override
+  String trim_saveConfirmBody(int count) {
+    return '원본 녹음을 $count개의 세그먼트로 대체합니다. 이 작업은 취소할 수 없습니다.';
+  }
+
+  @override
+  String get trim_inheritLabel => '상속';
+
+  @override
+  String get trim_applyToAll => '모두에 적용';
+
+  @override
+  String get trim_copyFromPrevious => '이전에서 복사';
+
+  @override
+  String get trim_classifySegment => '세그먼트 분류';
+
+  @override
+  String get trim_volume => '볼륨';
+
+  @override
+  String get trim_peakClip => '클리핑';
+
+  @override
+  String get trim_boostOnSave => '저장 시 부스트 적용';
+
+  @override
   String get import_title => '오디오 가져오기';
 
   @override
@@ -635,6 +790,134 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get import_importAndSave => '가져오기 및 저장';
+
+  @override
+  String get import_setForAll => '모든 파일에 설정';
+
+  @override
+  String get import_applyToAll => '모두에 적용';
+
+  @override
+  String get import_fieldRequired => '필수';
+
+  @override
+  String import_validationBanner(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count개 파일에 필수 항목이 누락됨',
+      one: '1개 파일에 필수 항목이 누락됨',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get import_remove => '파일 제거';
+
+  @override
+  String import_supportedFormats(String formats) {
+    return '지원되는 형식: $formats. 지원되지 않거나 읽을 수 없는 파일은 건너뜁니다.';
+  }
+
+  @override
+  String import_rejectedFiles(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '지원되지 않거나 읽을 수 없는 파일 $count개 건너뜀: $names',
+      one: '지원되지 않거나 읽을 수 없는 파일 1개 건너뜀: $names',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String import_countFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count개 파일',
+      one: '1개 파일',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String import_importNFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count개 파일',
+      one: '1개 파일',
+    );
+    return '$_temp0 가져오기';
+  }
+
+  @override
+  String get import_emptyFile => '빈 파일';
+
+  @override
+  String get import_compressWav => 'WAV을 M4A로 압축';
+
+  @override
+  String get import_compressWavHint => '~10x 작음, ML 파이프라인에 품질 손실 없음';
+
+  @override
+  String get import_dropHint => 'Drop audio files to import';
+
+  @override
+  String get import_dropActive => 'Release to import';
+
+  @override
+  String import_rejectedTooLarge(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Skipped $count files over 500 MB: $names',
+      one: 'Skipped 1 file over 500 MB: $names',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String import_rejectedUnsupportedCodec(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Skipped $count files with unsupported audio codecs: $names. Re-export as PCM WAV or M4A.',
+      one:
+          'Skipped 1 file with an unsupported audio codec: $names. Re-export as PCM WAV or M4A.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String import_rejectedUnreadable(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Skipped $count unreadable files: $names',
+      one: 'Skipped 1 unreadable file: $names',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get import_resumePromptTitle => 'Resume interrupted upload';
+
+  @override
+  String import_resumePromptBody(String name, String size) {
+    return '\"$name\" ($size) was partially uploaded. Select the same file to continue.';
+  }
+
+  @override
+  String get import_resumeSizeMismatch =>
+      'That file doesn\'t match the paused upload.';
+
+  @override
+  String import_largeFileWarning(String size) {
+    return 'Large file ($size). Keep this tab open until the upload completes.';
+  }
 
   @override
   String get moveCategory_title => '분류 이동';
@@ -1434,7 +1717,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get action_actions => '작업';
 
   @override
-  String get action_split => '분할';
+  String get action_split => '편집';
 
   @override
   String get action_flagClean => '클리닝 표시';
@@ -1509,23 +1792,539 @@ class AppLocalizationsKo extends AppLocalizations {
   String get classify_action => '분류';
 
   @override
-  String get classify_banner => '이 녹음은 업로드하기 전에 분류해야 합니다.';
+  String get classify_banner => '이 녹음은 분류되지 않았습니다. 분류를 탭하여 장르와 사용역을 추가하세요.';
 
   @override
   String get classify_success => '녹음이 분류되었습니다';
 
   @override
-  String get classify_register => '사용역 (선택 사항)';
+  String get classify_register => '사용역';
 
   @override
   String get classify_selectRegister => '사용역 선택';
 
   @override
+  String get classify_predominantHeader => '주요 분류';
+
+  @override
+  String get classify_addAlternativeTitle => '모호한가요? 대체 분류 추가';
+
+  @override
+  String get classify_secondaryNote => '장르별 시간 합계에는 주요 분류만 포함됩니다.';
+
+  @override
+  String get classify_secondaryGenre => '보조 장르';
+
+  @override
+  String get classify_secondarySubcategory => '보조 하위 카테고리';
+
+  @override
+  String get classify_secondaryRegister => '보조 사용역';
+
+  @override
+  String get classify_secondarySameAsPrimary => '보조 장르는 주요 장르와 달라야 합니다.';
+
+  @override
+  String get classify_clearAlternative => '대체 지우기';
+
+  @override
+  String get recording_alsoClassifiedAs => '다음으로도 분류됨';
+
+  @override
+  String get recording_alsoClassifiedAsTooltip => '대체 분류 있음';
+
+  @override
+  String get recording_addAlternative => '대체 분류 추가';
+
+  @override
+  String get recording_removeSecondary => '대체 분류 제거';
+
+  @override
+  String get recording_secondaryRemoved => '대체 분류가 제거되었습니다';
+
+  @override
+  String get recording_secondaryUpdated => '대체 분류가 업데이트되었습니다';
+
+  @override
   String get recording_unclassified => '미분류';
+
+  @override
+  String get recording_inputSource => '입력';
+
+  @override
+  String get recording_selectMicrophone => '마이크 선택';
+
+  @override
+  String get recording_builtInMicrophone => '시스템 기본값';
+
+  @override
+  String get recording_micPermissionNeeded => '장치 이름을 보려면 마이크 액세스를 허용하세요';
+
+  @override
+  String get recording_micPermissionButton => '권한 부여';
+
+  @override
+  String get recording_micPermissionDenied =>
+      '마이크 권한이 거부되었습니다. 브라우저 또는 시스템 설정에서 활성화하세요.';
+
+  @override
+  String get recording_micPermissionTitle => '마이크 액세스 필요';
+
+  @override
+  String get recording_noDevicesFound => '마이크를 찾을 수 없습니다';
+
+  @override
+  String get recording_storageLowWarnTitle => '저장 공간 부족';
+
+  @override
+  String recording_storageLowWarnBody(int minutes) {
+    return '약 $minutes분의 녹음이 가능합니다. 계속하시겠습니까?';
+  }
+
+  @override
+  String get recording_storageRefuseTitle => '저장 공간이 충분하지 않습니다';
+
+  @override
+  String get recording_storageRefuseBody => '녹음 전에 이 기기의 공간을 확보하세요.';
+
+  @override
+  String recording_storageCriticalBanner(int minutes) {
+    return '저장 공간이 위험합니다 — 약 $minutes분 남았습니다. 곧 중지하세요.';
+  }
+
+  @override
+  String get recording_storageForceStopped =>
+      '저장 공간이 부족하여 녹음이 중지되었습니다. 진행 상황이 저장되었습니다.';
+
+  @override
+  String recording_savedAt(String time) {
+    return '$time에 저장됨';
+  }
+
+  @override
+  String get recording_continuedInBackground => '녹음이 백그라운드에서 계속되었습니다';
+
+  @override
+  String get recording_continue => '계속';
+
+  @override
+  String get recording_cancel => '취소';
+
+  @override
+  String get recording_recoverTitle => '중단된 녹음을 복구하시겠습니까?';
+
+  @override
+  String recording_recoverBody(int minutes) {
+    return '이전 세션에서 약 $minutes분의 오디오를 발견했습니다.';
+  }
+
+  @override
+  String get recording_recoverButton => '복구';
+
+  @override
+  String get recording_recoverDiscard => '버리기';
+
+  @override
+  String get recording_recoverFailedLastSegment =>
+      '끝부분의 일부 오디오를 읽을 수 없어 건너뛰었습니다.';
+
+  @override
+  String get recording_inProgressNotificationTitle => '녹음 중';
+
+  @override
+  String get recording_inProgressNotificationBody => '탭하여 앱으로 돌아가기';
+
+  @override
+  String get profile_defaultMicrophone => '기본 마이크';
+
+  @override
+  String get profile_systemDefault => '시스템 기본값';
+
+  @override
+  String get settings_deviceStorageTitle => '기기 저장 공간';
+
+  @override
+  String settings_deviceStorageSubtitle(String used, String free) {
+    return '사용 $used · 여유 $free';
+  }
 
   @override
   String get fab_quickRecord => '빠른';
 
   @override
   String get fab_normalRecord => '녹음';
+
+  @override
+  String get error_network => '서버에 연결할 수 없습니다. 인터넷 연결을 확인하고 다시 시도해 주세요.';
+
+  @override
+  String get error_secureConnection => '보안 연결을 설정할 수 없습니다. 나중에 다시 시도해 주세요.';
+
+  @override
+  String get error_timeout => '요청 시간이 초과되었습니다. 연결을 확인하고 다시 시도해 주세요.';
+
+  @override
+  String get error_invalidCredentials => '이메일 또는 비밀번호가 올바르지 않습니다. 다시 시도해 주세요.';
+
+  @override
+  String get error_userNotFound => '해당 이메일 주소로 등록된 계정이 없습니다.';
+
+  @override
+  String get error_accountExists => '이 이메일로 등록된 계정이 이미 존재합니다.';
+
+  @override
+  String get error_emailRequired => '이메일 주소를 입력해 주세요.';
+
+  @override
+  String get error_passwordRequired => '비밀번호를 입력해 주세요.';
+
+  @override
+  String get error_signupFailed => '계정을 만들 수 없습니다. 정보를 확인하고 다시 시도해 주세요.';
+
+  @override
+  String get error_sessionExpired => '세션이 만료되었습니다. 다시 로그인해 주세요.';
+
+  @override
+  String get error_profileLoadFailed => '프로필을 불러올 수 없습니다. 다시 시도해 주세요.';
+
+  @override
+  String get error_profileUpdateFailed => '프로필을 업데이트할 수 없습니다. 다시 시도해 주세요.';
+
+  @override
+  String get error_imageUploadFailed => '이미지를 업로드할 수 없습니다. 다시 시도해 주세요.';
+
+  @override
+  String get error_notAuthenticated => '로그인되지 않았습니다. 로그인 후 다시 시도해 주세요.';
+
+  @override
+  String get error_noPermission => '이 작업을 수행할 권한이 없습니다.';
+
+  @override
+  String get error_generic => '문제가 발생했습니다. 나중에 다시 시도해 주세요.';
+
+  @override
+  String get common_close => '닫기';
+
+  @override
+  String get storyteller_title => '화자';
+
+  @override
+  String get storyteller_singular => '화자';
+
+  @override
+  String get storyteller_manageAction => '화자 관리';
+
+  @override
+  String get storyteller_addNew => '화자 추가';
+
+  @override
+  String get storyteller_createTitle => '새 화자';
+
+  @override
+  String get storyteller_editTitle => '화자 편집';
+
+  @override
+  String get storyteller_speakerName => '화자 이름';
+
+  @override
+  String get storyteller_sex => '성별';
+
+  @override
+  String get storyteller_sexMale => '남성';
+
+  @override
+  String get storyteller_sexFemale => '여성';
+
+  @override
+  String get storyteller_age => '나이';
+
+  @override
+  String get storyteller_location => '위치';
+
+  @override
+  String get storyteller_dialect => '방언';
+
+  @override
+  String get storyteller_externalAcceptanceTitle => '외부 수락 확인';
+
+  @override
+  String get storyteller_externalAcceptanceDescription =>
+      '이 화자에 대해 외부 수락 검증이 완료되었음을 확인합니다.';
+
+  @override
+  String get storyteller_externalAcceptanceInfo =>
+      '화자를 등록하기 전에 프로젝트 관리자는 앱 외부에서 화자의 동의를 받아야 합니다(예: 서명된 동의서 또는 녹음된 구두 동의). 이 체크박스는 해당 단계가 완료되었음을 기록합니다.';
+
+  @override
+  String get storyteller_createRequiresConnection => '화자를 생성하려면 인터넷 연결이 필요합니다.';
+
+  @override
+  String get storyteller_deleteTitle => '화자를 삭제하시겠습니까?';
+
+  @override
+  String get storyteller_deleteMessage => '이 화자에게 할당되었던 녹음은 할당되지 않음으로 표시됩니다.';
+
+  @override
+  String get storyteller_noneAssigned => '지정된 화자 없음';
+
+  @override
+  String get storyteller_unknown => '알 수 없는 화자';
+
+  @override
+  String get storyteller_selectHint => '화자를 선택하세요';
+
+  @override
+  String get storyteller_required => '화자가 필요합니다';
+
+  @override
+  String get storyteller_searchPlaceholder => '화자 검색';
+
+  @override
+  String get storyteller_empty => '아직 화자가 없습니다';
+
+  @override
+  String get storyteller_emptyDescription => '프로젝트에 화자를 생성하여 녹음에 할당하세요.';
+
+  @override
+  String get storyteller_offlineNoCache =>
+      '화자가 아직 동기화되지 않았습니다. 인터넷에 연결하여 불러오세요.';
+
+  @override
+  String get storyteller_assign => '지정';
+
+  @override
+  String get storyteller_reassign => '재지정';
+
+  @override
+  String get storyteller_ageValidator => '1에서 120 사이의 나이를 입력하세요';
+
+  @override
+  String storyteller_ageYearsShort(int age) {
+    return '$age살';
+  }
+
+  @override
+  String get filters_buttonLabel => '필터';
+
+  @override
+  String get filters_sheetTitle => '녹음 필터';
+
+  @override
+  String get filters_sectionStatus => '업로드 상태';
+
+  @override
+  String get filters_sectionGenre => '장르';
+
+  @override
+  String get filters_sectionStoryteller => '화자';
+
+  @override
+  String get filters_sectionUser => '녹음자';
+
+  @override
+  String get filter_apply => '적용';
+
+  @override
+  String get filter_reset => '재설정';
+
+  @override
+  String get filter_clearAll => '모두 지우기';
+
+  @override
+  String filter_countActive(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '필터 $countString개',
+      one: '필터 1개',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get filter_userAll => '모든 사용자';
+
+  @override
+  String get filter_storytellerAll => '모든 화자';
+
+  @override
+  String get filter_genreAll => '모든 장르';
+
+  @override
+  String get detail_recordedBy => '녹음자';
+
+  @override
+  String get detail_storyteller => '화자';
+
+  @override
+  String get recording_unknownUser => '알 수 없는 사용자';
+
+  @override
+  String get common_ok => '확인';
+
+  @override
+  String get invite_title => '멤버 초대';
+
+  @override
+  String get invite_searchLabel => '이름 또는 이메일로 검색';
+
+  @override
+  String get invite_searchHint => '2자 이상 입력하세요';
+
+  @override
+  String get invite_noUsersFound => '사용자를 찾을 수 없음';
+
+  @override
+  String get invite_changeUser => '사용자 변경';
+
+  @override
+  String get invite_roleLabel => '역할 *';
+
+  @override
+  String get invite_roleMember => '멤버';
+
+  @override
+  String get invite_roleManager => '관리자';
+
+  @override
+  String get invite_sendInvite => '초대 보내기';
+
+  @override
+  String get invite_sendFailed => '초대 전송 실패';
+
+  @override
+  String get recording_recoveryInProgress => '복구 중…';
+
+  @override
+  String get recording_recoveryFailed => '복구 실패';
+
+  @override
+  String get recording_recoverySessionNotFound => '세션을 찾을 수 없음';
+
+  @override
+  String get recording_recoveryNoAudio => '복구할 오디오가 없음';
+
+  @override
+  String get recording_recoveryConcatFailed => '결합 실패';
+
+  @override
+  String get a11y_startRecording => '녹음 시작';
+
+  @override
+  String get a11y_createProject => '프로젝트 만들기';
+
+  @override
+  String get a11y_playAudio => '오디오 재생';
+
+  @override
+  String get a11y_pauseAudio => '오디오 일시정지';
+
+  @override
+  String get a11y_splitWaveform =>
+      '분할 파형. 탭하여 분할 마커를 추가하세요. 드래그하여 위치를 바꾸고, 핀치하여 확대하며, 길게 눌러 제거합니다.';
+
+  @override
+  String a11y_tabLabel(String label) {
+    return '$label 탭';
+  }
+
+  @override
+  String get profile_adminBadge => '관리자';
+
+  @override
+  String get profile_setYourName => '이름 설정';
+
+  @override
+  String get profile_inviteAcceptFailed => '초대 수락 실패';
+
+  @override
+  String get profile_inviteDeclineFailed => '초대 거절 실패';
+
+  @override
+  String get profile_typeDeleteWord => '삭제';
+
+  @override
+  String trim_splitError(String error) {
+    return '분할 오류: $error';
+  }
+
+  @override
+  String get error_serverFailure => '서버가 요청을 완료할 수 없습니다. 다시 시도해 주세요.';
+
+  @override
+  String get error_importNoBytes => '이 파일은 비어 있어 가져올 수 없습니다.';
+
+  @override
+  String get error_ffmpegProcessingFailed => '오디오 처리 실패.';
+
+  @override
+  String get error_downloadFailed => '다운로드 실패.';
+
+  @override
+  String get projectSettings_offlineTitle => '오프라인 상태입니다';
+
+  @override
+  String get projectSettings_offlineDescription =>
+      '인터넷 연결 없이는 프로젝트 세부 정보를 불러올 수 없습니다. 다시 연결되면 자동으로 불러옵니다.';
+
+  @override
+  String get recording_noAudioAvailable => '사용 가능한 오디오가 없습니다';
+
+  @override
+  String get recording_noPendingUploads => '대기 중인 업로드가 없습니다';
+
+  @override
+  String get recording_uploadQueue => '업로드 대기열';
+
+  @override
+  String get recording_previewSelection => '선택 미리 듣기';
+
+  @override
+  String get recording_stopPreview => '미리 듣기 중지';
+
+  @override
+  String get recording_audioLoadFailed => '오디오 로드 실패';
+
+  @override
+  String get status_offlineSubtitle => '동기화 및 데이터 로드와 같은 일부 기능은 인터넷 연결이 필요합니다.';
+
+  @override
+  String get status_noProject => '할당된 프로젝트 없음';
+
+  @override
+  String get status_noProjectSubtitle =>
+      '아직 어떤 프로젝트에도 추가되지 않았습니다. 관리자에게 문의하고 할당을 기다려주세요.';
+
+  @override
+  String get a11y_recordingInProgress => '녹음 중, 일시정지하려면 탭하세요';
+
+  @override
+  String get a11y_recordingPaused => '녹음 일시정지됨, 다시 시작하려면 탭하세요';
+
+  @override
+  String get recording_audioFileNotFound => '오디오 파일을 찾을 수 없음';
+
+  @override
+  String recording_partOf(int part, int total) {
+    return '$total개 중 $part번째';
+  }
+
+  @override
+  String recording_splitFrom(String sourceId) {
+    return '$sourceId에서 분할됨';
+  }
+
+  @override
+  String trim_segmentRemoved(int index) {
+    return '세그먼트 $index — 제거됨';
+  }
+
+  @override
+  String trim_segmentOfTotal(int index, int total) {
+    return '$total개 중 세그먼트 $index';
+  }
 }

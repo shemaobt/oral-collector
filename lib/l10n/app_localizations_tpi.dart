@@ -36,6 +36,12 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get common_cancel => 'Lusim';
 
   @override
+  String get common_resume => 'Resume';
+
+  @override
+  String get common_discard => 'Discard';
+
+  @override
   String get common_save => 'Sevim';
 
   @override
@@ -170,6 +176,68 @@ class AppLocalizationsTpi extends AppLocalizations {
 
   @override
   String get auth_continueButton => 'Go het';
+
+  @override
+  String get auth_forgotPassword => 'Lusim paswod?';
+
+  @override
+  String get auth_resetPassword => 'Senisim Paswod';
+
+  @override
+  String get auth_forgotPasswordSubtitle =>
+      'Putim imel bilong yu na bai mipela salim wanpela link bilong senisim.';
+
+  @override
+  String get auth_sendResetLink => 'Salim Link';
+
+  @override
+  String get auth_sending => 'I salim...';
+
+  @override
+  String get auth_checkYourEmail => 'Lukim Imel bilong Yu';
+
+  @override
+  String auth_resetEmailSent(String email) {
+    return 'Mipela salim link bilong senisim paswod long $email. Lukim inbox bilong yu na bihainim link bilong wokim nupela paswod.';
+  }
+
+  @override
+  String get auth_openEmailApp => 'Opim Imel';
+
+  @override
+  String get auth_resendEmail => 'Salim Gen';
+
+  @override
+  String get auth_backToLogin => 'Go bek long Log In';
+
+  @override
+  String get auth_newPassword => 'Nupela Paswod';
+
+  @override
+  String get auth_confirmNewPassword => 'Konfemim Nupela Paswod';
+
+  @override
+  String get auth_resetPasswordSubtitle => 'Putim nupela paswod bilong yu hia.';
+
+  @override
+  String get auth_resetPasswordButton => 'Senisim Paswod';
+
+  @override
+  String get auth_resetting => 'I senisim...';
+
+  @override
+  String get auth_resetSuccess =>
+      'Paswod i senis pinis! Nau yu ken log in wantaim nupela paswod bilong yu.';
+
+  @override
+  String get auth_invalidResetLink => 'Link i no stret';
+
+  @override
+  String get auth_invalidResetLinkMessage =>
+      'Dispela link bilong senisim paswod i no stret o taim bilong en i pinis.';
+
+  @override
+  String get auth_requestNewLink => 'Askim Nupela Link';
 
   @override
   String get home_greetingMorning => 'Moning tru';
@@ -405,6 +473,12 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get recording_titleHint => 'Putim nem (sapos yu laik)';
 
   @override
+  String get recording_descriptionHint => 'Raitim liklik stori (sapos yu laik)';
+
+  @override
+  String get recording_descriptionEmpty => 'Raitim stori';
+
+  @override
   String get recording_saveRecording => 'Sevim Rekoding';
 
   @override
@@ -423,13 +497,21 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get recording_saved => 'Rekoding i sev pinis';
 
   @override
+  String get recording_uploading => 'Wok long aplotim rekoding…';
+
+  @override
+  String recording_uploadFailed(String error) {
+    return 'Aplot i bagarap: $error';
+  }
+
+  @override
   String get recording_notFound => 'Rekoding i no stap';
 
   @override
   String get recording_unknownGenre => 'Kain i no save';
 
   @override
-  String get recording_splitRecording => 'Brukim Rekoding';
+  String get recording_splitRecording => 'Stretim Rekoding';
 
   @override
   String get recording_moveCategory => 'Muvim Kategori';
@@ -486,10 +568,55 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get recording_updateFailed => 'No inap apdet long seva';
 
   @override
+  String get recording_exportAudio => 'Eksport sat';
+
+  @override
+  String get recording_exportShareFailed => 'I no inap serim sat fail';
+
+  @override
+  String get recording_replaceAudio => 'Senisim sat';
+
+  @override
+  String get recording_replaceTitle => 'Senisim sat?';
+
+  @override
+  String get recording_replaceMessage =>
+      'Sat yumi gat nau bai i go long 24-aua rabis na senisim long fail yu makim. Tasol sat fail wantaim wanpela kain fomet olsem asua i ken yusim.';
+
+  @override
+  String get recording_replaceReuploadNotice =>
+      'Dispela rekoding i aplot pinis. Nupela fail bai kisim ples long seva.';
+
+  @override
+  String get recording_replaceConfirm => 'Senisim';
+
+  @override
+  String recording_replaceFormatMismatch(String expected, String actual) {
+    return 'Nupela fail i mas kain $expected, tasol em kain $actual';
+  }
+
+  @override
+  String get recording_replaceInvalidAudio =>
+      'I no inap ritim sat fail yu makim';
+
+  @override
+  String get recording_replaceSuccess => 'Sat i senis pinis';
+
+  @override
+  String get recording_replaceFailed => 'I no inap senisim sat';
+
+  @override
+  String get recording_replaceNotAvailableWeb =>
+      'Yu no ken senisim sat long web app';
+
+  @override
   String get recordings_title => 'Ol Rekoding';
 
   @override
   String get recordings_subtitle => 'Ol stori yu bungim';
+
+  @override
+  String get recordings_searchHint => 'Painim ol rekod...';
 
   @override
   String get recordings_importAudio => 'Importim audio fail';
@@ -507,6 +634,10 @@ class AppLocalizationsTpi extends AppLocalizations {
   @override
   String get recordings_noRecordingsSubtitle =>
       'Presim maikorofon bilong rekodim fes stori bilong yu, o importim wanpela audio fail.';
+
+  @override
+  String get recordings_dropToImport =>
+      'Tip: drag audio files onto this window to import.';
 
   @override
   String recordings_count(int count) {
@@ -554,7 +685,7 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get recordings_clearFailed => 'No inap klinim ol rekoding';
 
   @override
-  String get trim_title => 'Brukim Rekoding';
+  String get trim_title => 'Stretim Rekoding';
 
   @override
   String get trim_notFound => 'Rekoding i no stap';
@@ -608,6 +739,35 @@ class AppLocalizationsTpi extends AppLocalizations {
   }
 
   @override
+  String get trim_saveConfirmTitle => 'Sevim senis?';
+
+  @override
+  String trim_saveConfirmBody(int count) {
+    return 'Dispela bai senisim orijinel rekoding wantaim $count hap. Yu no inap tanim bek.';
+  }
+
+  @override
+  String get trim_inheritLabel => 'Kisim bek';
+
+  @override
+  String get trim_applyToAll => 'Putim long olgeta';
+
+  @override
+  String get trim_copyFromPrevious => 'Kopim long paslain';
+
+  @override
+  String get trim_classifySegment => 'Klasifaiim segment';
+
+  @override
+  String get trim_volume => 'Volium';
+
+  @override
+  String get trim_peakClip => 'Klip';
+
+  @override
+  String get trim_boostOnSave => 'Strongim bai kam long sevim';
+
+  @override
   String get import_title => 'Importim Audio';
 
   @override
@@ -649,6 +809,135 @@ class AppLocalizationsTpi extends AppLocalizations {
 
   @override
   String get import_importAndSave => 'Importim na Sevim';
+
+  @override
+  String get import_setForAll => 'Makim long olgeta fail';
+
+  @override
+  String get import_applyToAll => 'Yusim long olgeta';
+
+  @override
+  String get import_fieldRequired => 'Mas i gat';
+
+  @override
+  String import_validationBanner(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count fail i nogat ol samting i mas stap',
+      one: '1 fail i nogat ol samting i mas stap',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get import_remove => 'Rausim fail';
+
+  @override
+  String import_supportedFormats(String formats) {
+    return 'Ol gutpela kain fail: $formats. Ol fail ol i no save kisim o i no redim em i lusim.';
+  }
+
+  @override
+  String import_rejectedFiles(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Lusim $count fail i no orait o i no redim: $names',
+      one: 'Lusim 1 fail i no orait o i no redim: $names',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String import_countFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count fail',
+      one: '1 fail',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String import_importNFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count fail',
+      one: '1 fail',
+    );
+    return 'Importim $_temp0';
+  }
+
+  @override
+  String get import_emptyFile => 'fail i emti';
+
+  @override
+  String get import_compressWav => 'Mekim WAV i kamap M4A';
+
+  @override
+  String get import_compressWavHint =>
+      '~10x liklik moa, i no lusim gutpela sait long ML pipeline';
+
+  @override
+  String get import_dropHint => 'Drop audio files to import';
+
+  @override
+  String get import_dropActive => 'Release to import';
+
+  @override
+  String import_rejectedTooLarge(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Skipped $count files over 500 MB: $names',
+      one: 'Skipped 1 file over 500 MB: $names',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String import_rejectedUnsupportedCodec(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Skipped $count files with unsupported audio codecs: $names. Re-export as PCM WAV or M4A.',
+      one:
+          'Skipped 1 file with an unsupported audio codec: $names. Re-export as PCM WAV or M4A.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String import_rejectedUnreadable(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Skipped $count unreadable files: $names',
+      one: 'Skipped 1 unreadable file: $names',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get import_resumePromptTitle => 'Resume interrupted upload';
+
+  @override
+  String import_resumePromptBody(String name, String size) {
+    return '\"$name\" ($size) was partially uploaded. Select the same file to continue.';
+  }
+
+  @override
+  String get import_resumeSizeMismatch =>
+      'That file doesn\'t match the paused upload.';
+
+  @override
+  String import_largeFileWarning(String size) {
+    return 'Large file ($size). Keep this tab open until the upload completes.';
+  }
 
   @override
   String get moveCategory_title => 'Muvim Kategori';
@@ -1472,7 +1761,7 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get action_actions => 'Ol Aksen';
 
   @override
-  String get action_split => 'Brukim';
+  String get action_split => 'Stretim';
 
   @override
   String get action_flagClean => 'Makim Klinim';
@@ -1548,23 +1837,564 @@ class AppLocalizationsTpi extends AppLocalizations {
 
   @override
   String get classify_banner =>
-      'Dispela rekoding i mas gat kain pastaim bilong salim i go antap.';
+      'Dispela rekoding i no gat kain yet. Paitim Makim Kain bilong putim kain na rejista.';
 
   @override
   String get classify_success => 'Rekoding i gat kain pinis';
 
   @override
-  String get classify_register => 'Rejista (sapos yu laik)';
+  String get classify_register => 'Rejista';
 
   @override
   String get classify_selectRegister => 'Makim rejista';
 
   @override
+  String get classify_predominantHeader => 'NAMBAWAN KLASIFIKESEN';
+
+  @override
+  String get classify_addAlternativeTitle =>
+      'Tupela mining? Putim narapela klasifikesen';
+
+  @override
+  String get classify_secondaryNote =>
+      'Nambawan klasifikesen tasol i kaunim long taim bilong senre.';
+
+  @override
+  String get classify_secondaryGenre => 'Namba tu senre';
+
+  @override
+  String get classify_secondarySubcategory => 'Namba tu liklik klas';
+
+  @override
+  String get classify_secondaryRegister => 'Namba tu rejista';
+
+  @override
+  String get classify_secondarySameAsPrimary =>
+      'Namba tu senre mas i narapela long nambawan senre.';
+
+  @override
+  String get classify_clearAlternative => 'Rausim narapela';
+
+  @override
+  String get recording_alsoClassifiedAs => 'Tu ol i klasifaim olsem';
+
+  @override
+  String get recording_alsoClassifiedAsTooltip => 'I gat narapela klasifikesen';
+
+  @override
+  String get recording_addAlternative => 'Putim narapela klasifikesen';
+
+  @override
+  String get recording_removeSecondary => 'Rausim narapela klasifikesen';
+
+  @override
+  String get recording_secondaryRemoved => 'Rausim pinis narapela klasifikesen';
+
+  @override
+  String get recording_secondaryUpdated => 'Narapela klasifikesen i nupela';
+
+  @override
   String get recording_unclassified => 'I no makim kain yet';
+
+  @override
+  String get recording_inputSource => 'Insait';
+
+  @override
+  String get recording_selectMicrophone => 'Makim maikrofon';
+
+  @override
+  String get recording_builtInMicrophone => 'Defolt bilong sistem';
+
+  @override
+  String get recording_micPermissionNeeded =>
+      'Larim maikrofon i ken wok bai yu lukim ol nem bilong divais';
+
+  @override
+  String get recording_micPermissionButton => 'Givim larim';
+
+  @override
+  String get recording_micPermissionDenied =>
+      'Larim bilong maikrofon i tambu. Statim long ol setting bilong brausa o sistem.';
+
+  @override
+  String get recording_micPermissionTitle =>
+      'Mipela i mas kisim orait long maikrofon';
+
+  @override
+  String get recording_noDevicesFound => 'I no gat maikrofon';
+
+  @override
+  String get recording_storageLowWarnTitle => 'Spes i sot';
+
+  @override
+  String recording_storageLowWarnBody(int minutes) {
+    return 'Klostu $minutes minit bilong rekodim i stap. Yu laik kontiniu?';
+  }
+
+  @override
+  String get recording_storageRefuseTitle => 'Spes i no inap';
+
+  @override
+  String get recording_storageRefuseBody =>
+      'Klinim sampela samting long divais bipo long rekodim.';
+
+  @override
+  String recording_storageCriticalBanner(int minutes) {
+    return 'Spes i klostu pinis — klostu $minutes minit i stap. Tingim long stop sotpela taim.';
+  }
+
+  @override
+  String get recording_storageForceStopped =>
+      'Rekodim i stap pinis bikos spes i pinis. Wok bilong yu i sef pinis.';
+
+  @override
+  String recording_savedAt(String time) {
+    return 'Sef long $time';
+  }
+
+  @override
+  String get recording_continuedInBackground => 'Rekodim i go yet long bek';
+
+  @override
+  String get recording_continue => 'Kontiniu';
+
+  @override
+  String get recording_cancel => 'Kanselim';
+
+  @override
+  String get recording_recoverTitle => 'Bringim bek rekodim i stop?';
+
+  @override
+  String recording_recoverBody(int minutes) {
+    return 'Mipela painim klostu $minutes minit bilong audio long bipo sesin.';
+  }
+
+  @override
+  String get recording_recoverButton => 'Bringim bek';
+
+  @override
+  String get recording_recoverDiscard => 'Rausim';
+
+  @override
+  String get recording_recoverFailedLastSegment =>
+      'Sampela audio klostu long pinis ino inap rid na mipela skipim.';
+
+  @override
+  String get recording_inProgressNotificationTitle => 'Rekodim i wok';
+
+  @override
+  String get recording_inProgressNotificationBody =>
+      'Tasim bilong go bek long ap';
+
+  @override
+  String get profile_defaultMicrophone => 'Defolt maikrofon';
+
+  @override
+  String get profile_systemDefault => 'Defolt bilong sistem';
+
+  @override
+  String get settings_deviceStorageTitle => 'Spes bilong divais';
+
+  @override
+  String settings_deviceStorageSubtitle(String used, String free) {
+    return 'Yusim $used · Spes i stap $free';
+  }
 
   @override
   String get fab_quickRecord => 'Hariap';
 
   @override
   String get fab_normalRecord => 'Rekodim';
+
+  @override
+  String get error_network =>
+      'No inap painim seva. Plis sekim intanet koneksen bilong yu na traim gen.';
+
+  @override
+  String get error_secureConnection =>
+      'No inap wokim sekyua koneksen. Plis traim gen bihain.';
+
+  @override
+  String get error_timeout =>
+      'Rikwes i bin taim aut. Plis sekim koneksen bilong yu na traim gen.';
+
+  @override
+  String get error_invalidCredentials =>
+      'Imel o paswod i no stret. Plis traim gen.';
+
+  @override
+  String get error_userNotFound =>
+      'I no gat akaunt wantaim dispela imel adres.';
+
+  @override
+  String get error_accountExists => 'Akaunt wantaim dispela imel i stap pinis.';
+
+  @override
+  String get error_emailRequired => 'Plis putim imel adres bilong yu.';
+
+  @override
+  String get error_passwordRequired => 'Plis putim paswod bilong yu.';
+
+  @override
+  String get error_signupFailed =>
+      'No inap wokim akaunt bilong yu. Plis sekim ol deteil bilong yu na traim gen.';
+
+  @override
+  String get error_sessionExpired => 'Taim bilong yu i pinis. Plis log in gen.';
+
+  @override
+  String get error_profileLoadFailed =>
+      'No inap lodim profail bilong yu. Plis traim gen.';
+
+  @override
+  String get error_profileUpdateFailed =>
+      'No inap apdetim profail bilong yu. Plis traim gen.';
+
+  @override
+  String get error_imageUploadFailed =>
+      'No inap aplodim piksa. Plis traim gen.';
+
+  @override
+  String get error_notAuthenticated =>
+      'Yu no log in. Plis log in na traim gen.';
+
+  @override
+  String get error_noPermission =>
+      'Yu no gat pemisin bilong mekim dispela aksen.';
+
+  @override
+  String get error_generic => 'Samting i go rong. Plis traim gen bihain.';
+
+  @override
+  String get common_close => 'Pasim';
+
+  @override
+  String get storyteller_title => 'Ol stori man';
+
+  @override
+  String get storyteller_singular => 'Stori man';
+
+  @override
+  String get storyteller_manageAction => 'Lukautim ol stori man';
+
+  @override
+  String get storyteller_addNew => 'Putim stori man';
+
+  @override
+  String get storyteller_createTitle => 'Nupela stori man';
+
+  @override
+  String get storyteller_editTitle => 'Senisim stori man';
+
+  @override
+  String get storyteller_speakerName => 'Nem bilong toktok man';
+
+  @override
+  String get storyteller_sex => 'Man o meri';
+
+  @override
+  String get storyteller_sexMale => 'Man';
+
+  @override
+  String get storyteller_sexFemale => 'Meri';
+
+  @override
+  String get storyteller_age => 'Krismas';
+
+  @override
+  String get storyteller_location => 'Hap';
+
+  @override
+  String get storyteller_dialect => 'Tok ples';
+
+  @override
+  String get storyteller_externalAcceptanceTitle => 'Pruvim tok orait aurait';
+
+  @override
+  String get storyteller_externalAcceptanceDescription =>
+      'Mi tok tru olsem pruvim tok orait aurait i bin kamap long dispela toktok man.';
+
+  @override
+  String get storyteller_externalAcceptanceInfo =>
+      'Paslain long rejistaim wanpela stori man, bosmanmeri bilong projek i mas kisim tok orait bilong toktok man ausait long app (olsem long wanpela fom ol i sainim o tok orait ol i rekotim). Dispela tiktik bokis i makim olsem dispela wok i pinis.';
+
+  @override
+  String get storyteller_createRequiresConnection =>
+      'Wokim stori man i nidim intenet.';
+
+  @override
+  String get storyteller_deleteTitle => 'Rausim stori man?';
+
+  @override
+  String get storyteller_deleteMessage =>
+      'Ol rekoding yumi bin makim long dispela stori man bai kamap olsem i no gat stori man.';
+
+  @override
+  String get storyteller_noneAssigned => 'I no gat stori man i stap';
+
+  @override
+  String get storyteller_unknown => 'Stori man yumi no save';
+
+  @override
+  String get storyteller_selectHint => 'Makim wanpela stori man';
+
+  @override
+  String get storyteller_required => 'I mas gat wanpela stori man';
+
+  @override
+  String get storyteller_searchPlaceholder => 'Painim ol stori man';
+
+  @override
+  String get storyteller_empty => 'I no gat stori man yet';
+
+  @override
+  String get storyteller_emptyDescription =>
+      'Wokim wanpela stori man bilong projek bai yu ken makim em long ol rekoding.';
+
+  @override
+  String get storyteller_offlineNoCache =>
+      'Ol stori man i no bin sinkim yet. Yu mas konek long intenet bai ol i kam.';
+
+  @override
+  String get storyteller_assign => 'Makim';
+
+  @override
+  String get storyteller_reassign => 'Makim gen';
+
+  @override
+  String get storyteller_ageValidator => 'Raitim krismas namel long 1 na 120';
+
+  @override
+  String storyteller_ageYearsShort(int age) {
+    return '$age krismas';
+  }
+
+  @override
+  String get filters_buttonLabel => 'Ol filta';
+
+  @override
+  String get filters_sheetTitle => 'Filta ol rekoding';
+
+  @override
+  String get filters_sectionStatus => 'Stetas bilong aplot';
+
+  @override
+  String get filters_sectionGenre => 'Kain stori';
+
+  @override
+  String get filters_sectionStoryteller => 'Stori man';
+
+  @override
+  String get filters_sectionUser => 'Husat i rekodim';
+
+  @override
+  String get filter_apply => 'Wokim';
+
+  @override
+  String get filter_reset => 'Stretim gen';
+
+  @override
+  String get filter_clearAll => 'Klinim olgeta';
+
+  @override
+  String filter_countActive(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString filta',
+      one: '1 filta',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get filter_userAll => 'Wanem yusa';
+
+  @override
+  String get filter_storytellerAll => 'Wanem stori man';
+
+  @override
+  String get filter_genreAll => 'Wanem kain stori';
+
+  @override
+  String get detail_recordedBy => 'Husat i rekodim';
+
+  @override
+  String get detail_storyteller => 'Stori man';
+
+  @override
+  String get recording_unknownUser => 'Yusa yumi no save';
+
+  @override
+  String get common_ok => 'Orait';
+
+  @override
+  String get invite_title => 'Singautim wanwok';
+
+  @override
+  String get invite_searchLabel => 'Painim long nem o imel';
+
+  @override
+  String get invite_searchHint => 'Raitim 2 leta o moa';
+
+  @override
+  String get invite_noUsersFound => 'I no gat yusa i stap';
+
+  @override
+  String get invite_changeUser => 'Senisim yusa';
+
+  @override
+  String get invite_roleLabel => 'Wok *';
+
+  @override
+  String get invite_roleMember => 'Wanwok';
+
+  @override
+  String get invite_roleManager => 'Bosmanmeri';
+
+  @override
+  String get invite_sendInvite => 'Salim singaut';
+
+  @override
+  String get invite_sendFailed => 'I no inap salim singaut';
+
+  @override
+  String get recording_recoveryInProgress => 'Wok long kamap bek…';
+
+  @override
+  String get recording_recoveryFailed => 'Kamap bek i bagarap';
+
+  @override
+  String get recording_recoverySessionNotFound => 'I no lukim sesen';
+
+  @override
+  String get recording_recoveryNoAudio => 'I no gat sat long kamap bek';
+
+  @override
+  String get recording_recoveryConcatFailed => 'I no inap bungim ol pisis';
+
+  @override
+  String get a11y_startRecording => 'Kirapim rekoding';
+
+  @override
+  String get a11y_createProject => 'Wokim projek';
+
+  @override
+  String get a11y_playAudio => 'Plei sat';
+
+  @override
+  String get a11y_pauseAudio => 'Holim sat';
+
+  @override
+  String get a11y_splitWaveform =>
+      'Wevfom bilong brukim. Klikim bai yu putim mak. Pulim bai yu senisim ples. Rausim pinga bai yu zoom. Holim longpela bai yu rausim.';
+
+  @override
+  String a11y_tabLabel(String label) {
+    return 'Tab $label';
+  }
+
+  @override
+  String get profile_adminBadge => 'Admin';
+
+  @override
+  String get profile_setYourName => 'Raitim nem bilong yu';
+
+  @override
+  String get profile_inviteAcceptFailed => 'I no inap tok yes long singaut';
+
+  @override
+  String get profile_inviteDeclineFailed => 'I no inap tok nogat long singaut';
+
+  @override
+  String get profile_typeDeleteWord => 'REMOVIM';
+
+  @override
+  String trim_splitError(String error) {
+    return 'Rong long brukim: $error';
+  }
+
+  @override
+  String get error_serverFailure =>
+      'Seva i no inap mekim dispela wok. Tray gen.';
+
+  @override
+  String get error_importNoBytes =>
+      'Dispela fail i emti na i no ken kam insait.';
+
+  @override
+  String get error_ffmpegProcessingFailed => 'Wok long sat i bagarap.';
+
+  @override
+  String get error_downloadFailed => 'Daunlot i bagarap.';
+
+  @override
+  String get projectSettings_offlineTitle => 'Yu no gat intenet';
+
+  @override
+  String get projectSettings_offlineDescription =>
+      'Ol detail bilong projek i no inap kamap sapos yu no gat intenet. Em bai kamap wanpela yet taim yu konek gen.';
+
+  @override
+  String get recording_noAudioAvailable => 'I no gat sat i stap';
+
+  @override
+  String get recording_noPendingUploads => 'I no gat aplot i wet';
+
+  @override
+  String get recording_uploadQueue => 'Lain bilong aplot';
+
+  @override
+  String get recording_previewSelection => 'Lukim ol makim pastaim';
+
+  @override
+  String get recording_stopPreview => 'Pinisim lukim pastaim';
+
+  @override
+  String get recording_audioLoadFailed => 'I no inap lodim sat';
+
+  @override
+  String get status_offlineSubtitle =>
+      'Sampela wok olsem sinkim na kisim daata i nidim intenet.';
+
+  @override
+  String get status_noProject => 'I no gat projek';
+
+  @override
+  String get status_noProjectSubtitle =>
+      'Ol i no putim yu long wanpela projek yet. Toktok wantaim bosmanmeri na wet bai ol i putim yu.';
+
+  @override
+  String get a11y_recordingInProgress => 'Rekoding i wok, klikim bai yu holim';
+
+  @override
+  String get a11y_recordingPaused =>
+      'Rekoding i stap holim, klikim bai yu stat gen';
+
+  @override
+  String get recording_audioFileNotFound => 'I no lukim sat fail';
+
+  @override
+  String recording_partOf(int part, int total) {
+    return 'Hap $part bilong $total';
+  }
+
+  @override
+  String recording_splitFrom(String sourceId) {
+    return 'Brukim long $sourceId';
+  }
+
+  @override
+  String trim_segmentRemoved(int index) {
+    return 'Pisis $index — rausim';
+  }
+
+  @override
+  String trim_segmentOfTotal(int index, int total) {
+    return 'Pisis $index bilong $total';
+  }
 }

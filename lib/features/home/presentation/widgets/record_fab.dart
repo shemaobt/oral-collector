@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../l10n/app_localizations.dart';
 
 class RecordFab extends StatelessWidget {
   const RecordFab({super.key, required this.onPressed, required this.colors});
@@ -12,7 +13,7 @@ class RecordFab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      label: 'Start recording',
+      label: AppLocalizations.of(context).a11y_startRecording,
       button: true,
       child: Material(
         color: Colors.transparent,

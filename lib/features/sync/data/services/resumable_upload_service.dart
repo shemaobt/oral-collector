@@ -3,12 +3,11 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:drift/drift.dart' show Value;
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 
 import '../../../../core/database/app_database.dart';
 import '../../../../core/network/authenticated_client.dart';
-import '../../../../core/platform/file_ops.dart' as file_ops;
+import '../../../../core/platform/file_source.dart';
 import '../../../recording/data/repositories/local_recording_repository.dart';
 
 const int _smallFileThreshold = 5 * 1024 * 1024;
@@ -38,35 +37,57 @@ class ResumableUploadService {
     required String format,
     required int fileSizeBytes,
     void Function(int bytesSent, int totalBytes)? onProgress,
-  }) async {
-    if (fileSizeBytes < _smallFileThreshold) {
-      return _singlePutUpload(
-        serverId: serverId,
-        localFilePath: localFilePath,
-        format: format,
-        fileSizeBytes: fileSizeBytes,
-        onProgress: onProgress,
-      );
-    }
-
-    return _resumableUpload(
+  }) {
+    final source = FileSource.fromPath(
+      localFilePath,
+      name: localFilePath,
+      length: fileSizeBytes,
+    );
+    return uploadFromSource(
       recordingId: recordingId,
       serverId: serverId,
-      localFilePath: localFilePath,
+      source: source,
       format: format,
-      fileSizeBytes: fileSizeBytes,
       onProgress: onProgress,
     );
   }
 
-  Future<ResumableUploadResult> _singlePutUpload({
+  Future<ResumableUploadResult> uploadFromSource({
+    required String recordingId,
     required String serverId,
-    required String localFilePath,
+    required FileSource source,
     required String format,
-    required int fileSizeBytes,
     void Function(int bytesSent, int totalBytes)? onProgress,
   }) async {
-    final bytes = await file_ops.readFileBytes(localFilePath);
+    try {
+      if (source.length < _smallFileThreshold) {
+        return _singlePutUpload(
+          serverId: serverId,
+          source: source,
+          format: format,
+          onProgress: onProgress,
+        );
+      }
+
+      return await _resumableUpload(
+        recordingId: recordingId,
+        serverId: serverId,
+        source: source,
+        format: format,
+        onProgress: onProgress,
+      );
+    } finally {
+      source.dispose();
+    }
+  }
+
+  Future<ResumableUploadResult> _singlePutUpload({
+    required String serverId,
+    required FileSource source,
+    required String format,
+    void Function(int bytesSent, int totalBytes)? onProgress,
+  }) async {
+    final bytes = await source.readRange(0, source.length);
     final fileLength = bytes.length;
 
     for (var attempt = 0; attempt < 2; attempt++) {
@@ -131,9 +152,8 @@ class ResumableUploadService {
   Future<ResumableUploadResult> _resumableUpload({
     required String recordingId,
     required String serverId,
-    required String localFilePath,
+    required FileSource source,
     required String format,
-    required int fileSizeBytes,
     void Function(int bytesSent, int totalBytes)? onProgress,
   }) async {
     final recording = await _recordingRepo.getRecordingById(recordingId);
@@ -146,7 +166,7 @@ class ResumableUploadService {
 
     String? sessionUri = recording.resumableSessionUri;
     int startOffset = recording.uploadedBytes;
-    final fileLength = await file_ops.fileLength(localFilePath);
+    final fileLength = source.length;
 
     if (sessionUri != null && sessionUri.isNotEmpty) {
       final queryOffset = await _queryUploadOffset(sessionUri, fileLength);
@@ -180,11 +200,6 @@ class ResumableUploadService {
       );
     }
 
-    Uint8List? fullBytes;
-    if (kIsWeb) {
-      fullBytes = await file_ops.readFileBytes(localFilePath);
-    }
-
     var offset = startOffset;
 
     if (offset > 0) {
@@ -193,15 +208,8 @@ class ResumableUploadService {
 
     while (offset < fileLength) {
       final end = (offset + _defaultChunkSize).clamp(0, fileLength);
-      final chunkSize = end - offset;
 
-      Uint8List chunkBytes;
-      if (fullBytes != null) {
-        chunkBytes = fullBytes.sublist(offset, end);
-      } else {
-        chunkBytes = await _readNativeChunk(localFilePath, offset, chunkSize);
-      }
-
+      final chunkBytes = await source.readRange(offset, end);
       final contentRange = 'bytes $offset-${end - 1}/$fileLength';
 
       final chunkResult = await _uploadChunk(
@@ -253,14 +261,6 @@ class ResumableUploadService {
     );
 
     return const ResumableUploadResult(success: true);
-  }
-
-  Future<Uint8List> _readNativeChunk(
-    String path,
-    int offset,
-    int length,
-  ) async {
-    return file_ops.readFileChunk(path, offset, length);
   }
 
   Future<String?> _requestResumableSession(

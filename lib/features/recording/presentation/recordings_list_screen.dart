@@ -24,15 +24,25 @@ import '../domain/entities/register.dart';
 import '../../sync/presentation/notifiers/sync_notifier.dart';
 import 'notifiers/recordings_list_notifier.dart';
 import 'notifiers/recordings_list_state.dart';
-import 'widgets/genre_filter_bar.dart';
+import 'widgets/active_filter_chips.dart';
+import 'widgets/filters_icon_button.dart';
+import 'widgets/import_drop_zone.dart';
+import 'widgets/pending_web_uploads_banner.dart';
 import 'widgets/recording_card.dart';
-import 'widgets/status_filter_bar.dart';
+import 'widgets/recordings_filter_sheet.dart';
 
 @Preview(name: 'Recordings List', wrapper: previewWrapper)
 Widget recordingsListPreview() => const RecordingsListScreen();
 
 class RecordingsListScreen extends ConsumerStatefulWidget {
-  const RecordingsListScreen({super.key});
+  const RecordingsListScreen({
+    super.key,
+    this.initialGenreId,
+    this.initialSubcategoryId,
+  });
+
+  final String? initialGenreId;
+  final String? initialSubcategoryId;
 
   @override
   ConsumerState<RecordingsListScreen> createState() =>
@@ -42,19 +52,29 @@ class RecordingsListScreen extends ConsumerStatefulWidget {
 class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
     with WidgetsBindingObserver {
   final _scrollController = ScrollController();
+  final _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _scrollController.addListener(_onScroll);
-    Future.microtask(_refreshAll);
+    final gid = widget.initialGenreId;
+    final sid = widget.initialSubcategoryId;
+    Future.microtask(() {
+      if (!mounted) return;
+      final notifier = ref.read(recordingsListNotifierProvider.notifier);
+      if (gid != null && gid.isNotEmpty) notifier.setGenreFilter(gid);
+      if (sid != null && sid.isNotEmpty) notifier.setSubcategoryFilter(sid);
+      _refreshAll();
+    });
   }
 
   @override
   void dispose() {
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
+    _searchController.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -200,7 +220,6 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final colors = AppColors.of(context);
-    final genreState = ref.watch(genreNotifierProvider);
     final listState = ref.watch(recordingsListNotifierProvider);
     final filtered = listState.filteredRecordings;
     final syncState = ref.watch(syncNotifierProvider);
@@ -281,46 +300,86 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
                   title: l10n.recordings_title,
                   subtitle: l10n.recordings_subtitle,
                   icon: LucideIcons.mic,
-                  actions: const [SyncStatusIndicator()],
-                  bottom: PreferredSize(
-                    preferredSize: const Size.fromHeight(48),
-                    child: StatusFilterBar(
-                      colors: colors,
-                      theme: theme,
-                      currentFilter: ref.watch(
-                        recordingsListNotifierProvider.select(
-                          (s) => s.selectedFilter,
+                  actions: [
+                    const SyncStatusIndicator(),
+                    FiltersIconButton(
+                      count: listState.activeFilterCount,
+                      onTap: () => showModalBottomSheet<void>(
+                        context: context,
+                        isScrollControlled: true,
+                        useSafeArea: true,
+                        useRootNavigator: true,
+                        backgroundColor: Theme.of(context).colorScheme.surface,
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.vertical(
+                            top: Radius.circular(20),
+                          ),
+                        ),
+                        builder: (_) =>
+                            RecordingsFilterSheet(projectId: activeProject.id),
+                      ),
+                    ),
+                  ],
+                ),
+
+                if (isOffline)
+                  SliverToBoxAdapter(child: StatusBanner.offline(l10n)),
+
+                const SliverToBoxAdapter(child: PendingWebUploadsBanner()),
+
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                    child: TextField(
+                      controller: _searchController,
+                      onChanged: (value) => ref
+                          .read(recordingsListNotifierProvider.notifier)
+                          .setSearchQuery(value),
+                      textInputAction: TextInputAction.search,
+                      decoration: InputDecoration(
+                        hintText: l10n.recordings_searchHint,
+                        prefixIcon: const Icon(LucideIcons.search, size: 18),
+                        suffixIcon: listState.searchQuery.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(LucideIcons.x, size: 16),
+                                onPressed: () {
+                                  _searchController.clear();
+                                  ref
+                                      .read(
+                                        recordingsListNotifierProvider.notifier,
+                                      )
+                                      .setSearchQuery('');
+                                },
+                              )
+                            : null,
+                        isDense: true,
+                        filled: true,
+                        fillColor: colors.surfaceAlt,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: colors.accent,
+                            width: 1.5,
+                          ),
                         ),
                       ),
-                      onFilterChanged: (filter) => ref
-                          .read(recordingsListNotifierProvider.notifier)
-                          .setStatusFilter(filter),
                     ),
                   ),
                 ),
 
-                if (isOffline)
-                  const SliverToBoxAdapter(child: StatusBanner.offline()),
-
-                if (genreState.genres.isNotEmpty)
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 12),
-                      child: GenreFilterBar(
-                        colors: colors,
-                        theme: theme,
-                        genres: genreState.genres,
-                        selectedGenreId: ref.watch(
-                          recordingsListNotifierProvider.select(
-                            (s) => s.selectedGenreId,
-                          ),
-                        ),
-                        onGenreSelected: (id) => ref
-                            .read(recordingsListNotifierProvider.notifier)
-                            .setGenreFilter(id),
-                      ),
-                    ),
-                  ),
+                const SliverToBoxAdapter(child: ActiveFilterChips()),
 
                 SliverToBoxAdapter(
                   child: Padding(
@@ -380,10 +439,19 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
                       )
                     : filtered.isEmpty
                     ? SliverFillRemaining(
-                        child: EmptyState(
-                          icon: LucideIcons.mic,
-                          title: l10n.recordings_noRecordings,
-                          description: l10n.recordings_noRecordingsSubtitle,
+                        child: ImportDropZone(
+                          onFilesDropped: (files) {
+                            if (!mounted) return;
+                            context.push<void>('/import-file', extra: files);
+                          },
+                          hoverLabel: l10n.import_dropHint,
+                          child: EmptyState(
+                            icon: LucideIcons.mic,
+                            title: l10n.recordings_noRecordings,
+                            description: ImportDropZone.isSupportedPlatform
+                                ? '${l10n.recordings_noRecordingsSubtitle}\n\n${l10n.recordings_dropToImport}'
+                                : l10n.recordings_noRecordingsSubtitle,
+                          ),
                         ),
                       )
                     : SliverPadding(
@@ -442,11 +510,7 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
                                 registerName: rawReg != null
                                     ? localizedRegisterName(l10n, rawReg)
                                     : null,
-                                relativeDate: formatTimeAgo(
-                                  recording.recordedAt,
-                                  l10n,
-                                ),
-                                formattedDuration: formatDurationHMS(
+                                formattedDuration: formatDurationLong(
                                   recording.durationSeconds,
                                 ),
                                 onDelete: () => _deleteRecording(recording),

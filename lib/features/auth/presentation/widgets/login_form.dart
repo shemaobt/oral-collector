@@ -16,6 +16,7 @@ class LoginForm extends StatelessWidget {
     required this.colors,
     required this.theme,
     required this.onGoToSignup,
+    required this.onForgotPassword,
   });
 
   final TextEditingController emailController;
@@ -27,6 +28,7 @@ class LoginForm extends StatelessWidget {
   final AppColorSet colors;
   final ThemeData theme;
   final VoidCallback onGoToSignup;
+  final VoidCallback onForgotPassword;
 
   @override
   Widget build(BuildContext context) {
@@ -107,7 +109,25 @@ class LoginForm extends StatelessWidget {
           },
           onFieldSubmitted: (_) => onLogin(),
         ),
-        const SizedBox(height: 32),
+        const SizedBox(height: 8),
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton(
+            onPressed: onForgotPassword,
+            style: TextButton.styleFrom(
+              minimumSize: const Size(44, 36),
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+            ),
+            child: Text(
+              l10n.auth_forgotPassword,
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: colors.accent,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 20),
 
         SizedBox(
           width: double.infinity,
