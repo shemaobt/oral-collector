@@ -31,6 +31,12 @@ class LocalRecordingRepository {
     )..where((t) => t.serverId.equals(serverId))).getSingleOrNull();
   }
 
+  Stream<LocalRecording?> watchRecordingById(String id) {
+    return (_db.select(
+      _db.localRecordings,
+    )..where((t) => t.id.equals(id))).watchSingleOrNull();
+  }
+
   Future<bool> updateRecording(String id, LocalRecordingsCompanion data) async {
     final rows = await (_db.update(
       _db.localRecordings,

@@ -1130,6 +1130,18 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (!kIsWeb) {
+      ref.listen<AsyncValue<LocalRecording?>>(
+        localRecordingStreamProvider(widget.recordingId),
+        (_, next) {
+          final updated = next.valueOrNull;
+          if (updated == null || !mounted) return;
+          if (_recording == null || identical(_recording, updated)) return;
+          setState(() => _recording = updated);
+        },
+      );
+    }
+
     final theme = Theme.of(context);
     final colors = AppColors.of(context);
     final l10n = AppLocalizations.of(context);
