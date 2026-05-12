@@ -1,13 +1,14 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:drift/drift.dart' show Value;
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import '../../../../core/database/app_database.dart';
 import '../../../../core/network/authenticated_client.dart';
 import '../../../../core/platform/file_source.dart';
+import '../../../../core/util/crc32c.dart';
 import '../../../recording/data/repositories/local_recording_repository.dart';
 
 const int _smallFileThreshold = 5 * 1024 * 1024;
@@ -16,8 +17,15 @@ const int _defaultChunkSize = 8 * 1024 * 1024;
 class ResumableUploadResult {
   final bool success;
   final String? error;
+  final String? clientCrc32c;
+  final String? gcsCrc32c;
 
-  const ResumableUploadResult({required this.success, this.error});
+  const ResumableUploadResult({
+    required this.success,
+    this.error,
+    this.clientCrc32c,
+    this.gcsCrc32c,
+  });
 }
 
 class ResumableUploadService {
@@ -89,6 +97,7 @@ class ResumableUploadService {
   }) async {
     final bytes = await source.readRange(0, source.length);
     final fileLength = bytes.length;
+    final clientCrc = (Crc32c()..add(bytes)).base64BigEndian;
 
     for (var attempt = 0; attempt < 2; attempt++) {
       final uploadUrlResponse = await _client
@@ -126,8 +135,21 @@ class ResumableUploadService {
       final responseBody = await streamedResponse.stream.bytesToString();
 
       if (streamedResponse.statusCode == 200) {
+        final gcsCrc = parseGcsCrc32cHeader(streamedResponse.headers);
+        if (gcsCrc != null && gcsCrc != clientCrc) {
+          return ResumableUploadResult(
+            success: false,
+            error: 'CRC32C mismatch (client=$clientCrc, gcs=$gcsCrc)',
+            clientCrc32c: clientCrc,
+            gcsCrc32c: gcsCrc,
+          );
+        }
         onProgress?.call(fileLength, fileLength);
-        return const ResumableUploadResult(success: true);
+        return ResumableUploadResult(
+          success: true,
+          clientCrc32c: clientCrc,
+          gcsCrc32c: gcsCrc,
+        );
       }
 
       final isExpired =
@@ -202,31 +224,48 @@ class ResumableUploadService {
 
     var offset = startOffset;
 
+    // Skip client-side CRC32C when resuming an interrupted upload — we no
+    // longer have the bytes that were already sent. Server-side metadata still
+    // surfaces CRC32C mismatches as a 4xx on confirm-upload.
+    final crcBuilder = startOffset == 0 ? Crc32c() : null;
+    if (crcBuilder == null) {
+      debugPrint(
+        'ResumableUploadService: resuming from $startOffset, '
+        'skipping client-side CRC32C validation',
+      );
+    }
+
     if (offset > 0) {
       onProgress?.call(offset, fileLength);
     }
+
+    Map<String, String>? finalHeaders;
 
     while (offset < fileLength) {
       final end = (offset + _defaultChunkSize).clamp(0, fileLength);
 
       final chunkBytes = await source.readRange(offset, end);
+      crcBuilder?.add(chunkBytes);
       final contentRange = 'bytes $offset-${end - 1}/$fileLength';
 
-      final chunkResult = await _uploadChunk(
+      final chunkOutcome = await _uploadChunk(
         sessionUri: sessionUri!,
         chunk: chunkBytes,
         contentRange: contentRange,
       );
 
-      if (chunkResult == _ChunkResult.success) {
+      if (chunkOutcome.result == _ChunkResult.success) {
         offset = end;
         onProgress?.call(offset, fileLength);
+        if (chunkOutcome.finalHeaders != null) {
+          finalHeaders = chunkOutcome.finalHeaders;
+        }
 
         await _recordingRepo.updateRecording(
           recordingId,
           LocalRecordingsCompanion(uploadedBytes: Value(offset)),
         );
-      } else if (chunkResult == _ChunkResult.sessionExpired) {
+      } else if (chunkOutcome.result == _ChunkResult.sessionExpired) {
         final newSession = await _requestResumableSession(serverId, format);
         if (newSession == null) {
           return const ResumableUploadResult(
@@ -260,7 +299,23 @@ class ResumableUploadService {
       ),
     );
 
-    return const ResumableUploadResult(success: true);
+    final clientCrc = crcBuilder?.base64BigEndian;
+    final gcsCrc =
+        finalHeaders != null ? parseGcsCrc32cHeader(finalHeaders) : null;
+    if (clientCrc != null && gcsCrc != null && clientCrc != gcsCrc) {
+      return ResumableUploadResult(
+        success: false,
+        error: 'CRC32C mismatch (client=$clientCrc, gcs=$gcsCrc)',
+        clientCrc32c: clientCrc,
+        gcsCrc32c: gcsCrc,
+      );
+    }
+
+    return ResumableUploadResult(
+      success: true,
+      clientCrc32c: clientCrc,
+      gcsCrc32c: gcsCrc,
+    );
   }
 
   Future<String?> _requestResumableSession(
@@ -313,7 +368,7 @@ class ResumableUploadService {
     }
   }
 
-  Future<_ChunkResult> _uploadChunk({
+  Future<_ChunkOutcome> _uploadChunk({
     required String sessionUri,
     required Uint8List chunk,
     required String contentRange,
@@ -332,20 +387,27 @@ class ResumableUploadService {
       await response.stream.drain<void>();
 
       if (response.statusCode == 308) {
-        return _ChunkResult.success;
+        return const _ChunkOutcome(_ChunkResult.success);
       } else if (response.statusCode == 200 || response.statusCode == 201) {
-        return _ChunkResult.success;
+        return _ChunkOutcome(_ChunkResult.success, response.headers);
       } else if (response.statusCode == 410) {
-        return _ChunkResult.sessionExpired;
+        return const _ChunkOutcome(_ChunkResult.sessionExpired);
       } else {
-        return _ChunkResult.failed;
+        return const _ChunkOutcome(_ChunkResult.failed);
       }
     } on TimeoutException {
-      return _ChunkResult.failed;
+      return const _ChunkOutcome(_ChunkResult.failed);
     } on Exception {
-      return _ChunkResult.failed;
+      return const _ChunkOutcome(_ChunkResult.failed);
     }
   }
 }
 
 enum _ChunkResult { success, sessionExpired, failed }
+
+class _ChunkOutcome {
+  final _ChunkResult result;
+  final Map<String, String>? finalHeaders;
+
+  const _ChunkOutcome(this.result, [this.finalHeaders]);
+}
