@@ -71,7 +71,9 @@ void main() {
     });
 
     test('extracts crc32c value from combined header', () {
-      final headers = {'x-goog-hash': 'crc32c=Nks/tw==,md5=kAFQmDzST7DWlj99KOF/cg=='};
+      final headers = {
+        'x-goog-hash': 'crc32c=Nks/tw==,md5=kAFQmDzST7DWlj99KOF/cg==',
+      };
       expect(parseGcsCrc32cHeader(headers), 'Nks/tw==');
     });
 

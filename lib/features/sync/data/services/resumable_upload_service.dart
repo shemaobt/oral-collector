@@ -300,8 +300,9 @@ class ResumableUploadService {
     );
 
     final clientCrc = crcBuilder?.base64BigEndian;
-    final gcsCrc =
-        finalHeaders != null ? parseGcsCrc32cHeader(finalHeaders) : null;
+    final gcsCrc = finalHeaders != null
+        ? parseGcsCrc32cHeader(finalHeaders)
+        : null;
     if (clientCrc != null && gcsCrc != null && clientCrc != gcsCrc) {
       return ResumableUploadResult(
         success: false,
