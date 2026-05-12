@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/database/app_database.dart';
 import '../../../core/database/database_provider.dart';
 import '../../../core/network/authenticated_client.dart';
 import '../../sync/data/services/resumable_upload_service.dart';
@@ -45,3 +46,9 @@ final directRecordingUploaderProvider = Provider<DirectRecordingUploader>((
     recordingRepo: ref.watch(localRecordingRepositoryProvider),
   );
 });
+
+final localRecordingStreamProvider =
+    StreamProvider.family<LocalRecording?, String>((ref, id) {
+      final repo = ref.watch(localRecordingRepositoryProvider);
+      return repo.watchRecordingById(id);
+    });
