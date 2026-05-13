@@ -649,6 +649,7 @@ class AppLocalizationsHi extends AppLocalizations {
       locale: localeName,
       other: '$count रिकॉर्डिंग्स',
       one: '1 रिकॉर्डिंग',
+      zero: 'कोई रिकॉर्डिंग नहीं',
     );
     return '$_temp0';
   }

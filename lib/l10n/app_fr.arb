@@ -219,7 +219,7 @@
   "recordings_selectProjectSubtitle": "Choisissez un projet pour voir ses enregistrements",
   "recordings_noRecordings": "Aucun enregistrement pour le moment",
   "recordings_noRecordingsSubtitle": "Appuyez sur le micro pour enregistrer votre première histoire, ou importez un fichier audio.",
-  "recordings_count": "{count, plural, =1{1 enregistrement} other{{count} enregistrements}}",
+  "recordings_count": "{count, plural, =0{Aucun enregistrement} =1{1 enregistrement} other{{count} enregistrements}}",
   "recording_statusUploaded": "Téléversé",
   "recording_statusUploading": "Téléversement",
   "recording_statusFailed": "Échoué",

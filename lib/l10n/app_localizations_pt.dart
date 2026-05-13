@@ -651,6 +651,7 @@ class AppLocalizationsPt extends AppLocalizations {
       locale: localeName,
       other: '$count gravações',
       one: '1 gravação',
+      zero: 'Nenhuma gravação',
     );
     return '$_temp0';
   }

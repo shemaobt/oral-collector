@@ -657,6 +657,7 @@ class AppLocalizationsFr extends AppLocalizations {
       locale: localeName,
       other: '$count enregistrements',
       one: '1 enregistrement',
+      zero: 'Aucun enregistrement',
     );
     return '$_temp0';
   }
