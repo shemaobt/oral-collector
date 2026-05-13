@@ -813,6 +813,8 @@
   "recording_noAudioAvailable": "No hay audio disponible",
   "recording_noPendingUploads": "No hay cargas pendientes",
   "recording_uploadQueue": "Cola de subida",
+  "recording_uploadSpeed": "{speed}/s",
+  "recording_uploadEtaRemaining": "~{eta} remaining",
   "recording_previewSelection": "Vista previa de la selección",
   "recording_stopPreview": "Detener vista previa",
   "recording_audioLoadFailed": "Error al cargar el audio",

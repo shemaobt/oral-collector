@@ -813,6 +813,8 @@
   "recording_noAudioAvailable": "कोई ऑडियो उपलब्ध नहीं है",
   "recording_noPendingUploads": "कोई लंबित अपलोड नहीं",
   "recording_uploadQueue": "अपलोड कतार",
+  "recording_uploadSpeed": "{speed}/s",
+  "recording_uploadEtaRemaining": "~{eta} remaining",
   "recording_previewSelection": "चयन का पूर्वावलोकन",
   "recording_stopPreview": "पूर्वावलोकन रोकें",
   "recording_audioLoadFailed": "ऑडियो लोड करने में विफल",

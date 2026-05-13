@@ -825,6 +825,8 @@
   "recording_noAudioAvailable": "Nenhum áudio disponível",
   "recording_noPendingUploads": "Sem envios pendentes",
   "recording_uploadQueue": "Fila de envio",
+  "recording_uploadSpeed": "{speed}/s",
+  "recording_uploadEtaRemaining": "~{eta} remaining",
   "recording_previewSelection": "Pré-visualizar seleção",
   "recording_stopPreview": "Parar pré-visualização",
   "recording_audioLoadFailed": "Falha ao carregar o áudio",

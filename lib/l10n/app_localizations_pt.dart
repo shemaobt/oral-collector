@@ -2375,6 +2375,16 @@ class AppLocalizationsPt extends AppLocalizations {
   String get recording_uploadQueue => 'Fila de envio';
 
   @override
+  String recording_uploadSpeed(String speed) {
+    return '$speed/s';
+  }
+
+  @override
+  String recording_uploadEtaRemaining(String eta) {
+    return '~$eta remaining';
+  }
+
+  @override
   String get recording_previewSelection => 'Pré-visualizar seleção';
 
   @override

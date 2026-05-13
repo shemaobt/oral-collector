@@ -2362,6 +2362,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recording_uploadQueue => 'Upload Queue';
 
   @override
+  String recording_uploadSpeed(String speed) {
+    return '$speed/s';
+  }
+
+  @override
+  String recording_uploadEtaRemaining(String eta) {
+    return '~$eta remaining';
+  }
+
+  @override
   String get recording_previewSelection => 'Preview Selection';
 
   @override

@@ -813,6 +813,8 @@
   "recording_noAudioAvailable": "사용 가능한 오디오가 없습니다",
   "recording_noPendingUploads": "대기 중인 업로드가 없습니다",
   "recording_uploadQueue": "업로드 대기열",
+  "recording_uploadSpeed": "{speed}/s",
+  "recording_uploadEtaRemaining": "~{eta} remaining",
   "recording_previewSelection": "선택 미리 듣기",
   "recording_stopPreview": "미리 듣기 중지",
   "recording_audioLoadFailed": "오디오 로드 실패",

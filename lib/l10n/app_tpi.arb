@@ -813,6 +813,8 @@
   "recording_noAudioAvailable": "I no gat sat i stap",
   "recording_noPendingUploads": "I no gat aplot i wet",
   "recording_uploadQueue": "Lain bilong aplot",
+  "recording_uploadSpeed": "{speed}/s",
+  "recording_uploadEtaRemaining": "~{eta} remaining",
   "recording_previewSelection": "Lukim ol makim pastaim",
   "recording_stopPreview": "Pinisim lukim pastaim",
   "recording_audioLoadFailed": "I no inap lodim sat",
