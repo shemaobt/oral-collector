@@ -4250,6 +4250,18 @@ abstract class AppLocalizations {
   /// **'Upload Queue'**
   String get recording_uploadQueue;
 
+  /// No description provided for @recording_uploadSpeed.
+  ///
+  /// In en, this message translates to:
+  /// **'{speed}/s'**
+  String recording_uploadSpeed(String speed);
+
+  /// No description provided for @recording_uploadEtaRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'~{eta} remaining'**
+  String recording_uploadEtaRemaining(String eta);
+
   /// No description provided for @recording_previewSelection.
   ///
   /// In en, this message translates to:

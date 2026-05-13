@@ -2383,6 +2383,16 @@ class AppLocalizationsEs extends AppLocalizations {
   String get recording_uploadQueue => 'Cola de subida';
 
   @override
+  String recording_uploadSpeed(String speed) {
+    return '$speed/s';
+  }
+
+  @override
+  String recording_uploadEtaRemaining(String eta) {
+    return '~$eta remaining';
+  }
+
+  @override
   String get recording_previewSelection => 'Vista previa de la selección';
 
   @override

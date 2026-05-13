@@ -813,6 +813,8 @@
   "recording_noAudioAvailable": "Hakuna sauti inayopatikana",
   "recording_noPendingUploads": "Hakuna kupakia kunakosubiri",
   "recording_uploadQueue": "Foleni ya kupakia",
+  "recording_uploadSpeed": "{speed}/s",
+  "recording_uploadEtaRemaining": "~{eta} remaining",
   "recording_previewSelection": "Hakiki uteuzi",
   "recording_stopPreview": "Simamisha hakiki",
   "recording_audioLoadFailed": "Imeshindwa kupakia sauti",

@@ -813,6 +813,8 @@
   "recording_noAudioAvailable": "Aucun audio disponible",
   "recording_noPendingUploads": "Aucun envoi en attente",
   "recording_uploadQueue": "File d'attente d'envoi",
+  "recording_uploadSpeed": "{speed}/s",
+  "recording_uploadEtaRemaining": "~{eta} remaining",
   "recording_previewSelection": "Aperçu de la sélection",
   "recording_stopPreview": "Arrêter l'aperçu",
   "recording_audioLoadFailed": "Échec du chargement de l'audio",

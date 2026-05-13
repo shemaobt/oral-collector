@@ -45,6 +45,7 @@ import 'widgets/recording_hero_player.dart';
 import 'widgets/recording_info_grid.dart';
 import 'widgets/recording_quick_actions.dart';
 import 'widgets/recording_status_section.dart';
+import 'widgets/recording_upload_progress_section.dart';
 import 'widgets/recording_description_section.dart';
 import 'widgets/recording_storyteller_section.dart';
 import 'widgets/replace_audio_dialog.dart';
@@ -1521,6 +1522,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     final detailContent = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        RecordingUploadProgressSection(recordingId: recording.id),
         if (classifyBanner != null) ...[
           classifyBanner,
           const SizedBox(height: 16),

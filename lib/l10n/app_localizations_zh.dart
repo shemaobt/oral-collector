@@ -2269,6 +2269,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recording_uploadQueue => '上传队列';
 
   @override
+  String recording_uploadSpeed(String speed) {
+    return '$speed/s';
+  }
+
+  @override
+  String recording_uploadEtaRemaining(String eta) {
+    return '~$eta remaining';
+  }
+
+  @override
   String get recording_previewSelection => '预览选区';
 
   @override

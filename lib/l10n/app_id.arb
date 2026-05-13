@@ -813,6 +813,8 @@
   "recording_noAudioAvailable": "Tidak ada audio tersedia",
   "recording_noPendingUploads": "Tidak ada unggahan tertunda",
   "recording_uploadQueue": "Antrean unggah",
+  "recording_uploadSpeed": "{speed}/s",
+  "recording_uploadEtaRemaining": "~{eta} remaining",
   "recording_previewSelection": "Pratinjau pilihan",
   "recording_stopPreview": "Hentikan pratinjau",
   "recording_audioLoadFailed": "Gagal memuat audio",

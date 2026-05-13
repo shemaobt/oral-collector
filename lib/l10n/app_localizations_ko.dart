@@ -2281,6 +2281,16 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recording_uploadQueue => '업로드 대기열';
 
   @override
+  String recording_uploadSpeed(String speed) {
+    return '$speed/s';
+  }
+
+  @override
+  String recording_uploadEtaRemaining(String eta) {
+    return '~$eta remaining';
+  }
+
+  @override
   String get recording_previewSelection => '선택 미리 듣기';
 
   @override

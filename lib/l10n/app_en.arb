@@ -1072,6 +1072,18 @@
   "recording_noAudioAvailable": "No audio available",
   "recording_noPendingUploads": "No pending uploads",
   "recording_uploadQueue": "Upload Queue",
+  "recording_uploadSpeed": "{speed}/s",
+  "@recording_uploadSpeed": {
+    "placeholders": {
+      "speed": { "type": "String" }
+    }
+  },
+  "recording_uploadEtaRemaining": "~{eta} remaining",
+  "@recording_uploadEtaRemaining": {
+    "placeholders": {
+      "eta": { "type": "String" }
+    }
+  },
   "recording_previewSelection": "Preview Selection",
   "recording_stopPreview": "Stop Preview",
   "recording_audioLoadFailed": "Failed to load audio",
