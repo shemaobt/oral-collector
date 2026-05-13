@@ -298,10 +298,7 @@ class RecordingCard extends ConsumerWidget {
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(2),
                                 child: LinearProgressIndicator(
-                                  value: (uploadProgress / 100).clamp(
-                                    0.0,
-                                    1.0,
-                                  ),
+                                  value: (uploadProgress / 100).clamp(0.0, 1.0),
                                   minHeight: 3,
                                   backgroundColor: colors.border.withValues(
                                     alpha: 0.3,

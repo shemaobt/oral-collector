@@ -22,11 +22,7 @@ class SyncStatusIndicator extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: ActionChip(
-        avatar: Icon(
-          LucideIcons.uploadCloud,
-          size: 16,
-          color: colors.accent,
-        ),
+        avatar: Icon(LucideIcons.uploadCloud, size: 16, color: colors.accent),
         label: Text(
           l10n.sync_pending(syncState.pendingCount),
           style: Theme.of(context).textTheme.labelMedium?.copyWith(
