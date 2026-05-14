@@ -4,6 +4,7 @@ import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:workmanager/workmanager.dart';
 
 import 'core/database/database_provider.dart';
@@ -49,6 +50,11 @@ void main() async {
   if (!kIsWeb && platform.isAndroidPlatform) {
     try {
       await Workmanager().initialize(callbackDispatcher);
+    } on Exception {
+      // noop
+    }
+    try {
+      FlutterForegroundTask.initCommunicationPort();
     } on Exception {
       // noop
     }

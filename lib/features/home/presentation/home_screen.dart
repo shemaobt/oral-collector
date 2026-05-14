@@ -16,6 +16,9 @@ import '../../../core/auth/auth_notifier.dart';
 import '../../genre/presentation/notifiers/genre_notifier.dart';
 import '../../project/presentation/notifiers/project_notifier.dart';
 import '../../project/presentation/notifiers/stats_notifier.dart';
+import '../../recording/data/services/recovery_coordinator.dart';
+import '../../recording/presentation/widgets/unsaved_recordings_banner.dart';
+import '../../recording/presentation/widgets/unsaved_recordings_sheet.dart';
 import '../../sync/presentation/notifiers/sync_notifier.dart';
 import 'notifiers/home_notifier.dart';
 import 'notifiers/home_state.dart';
@@ -255,6 +258,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             if (hasNoProjects)
               SliverToBoxAdapter(child: StatusBanner.noProject(l10n)),
 
+            Consumer(
+              builder: (context, ref, _) {
+                final interrupted = ref.watch(interruptedSessionsProvider);
+                if (interrupted.isEmpty) {
+                  return const SliverToBoxAdapter(child: SizedBox.shrink());
+                }
+                return SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                    child: UnsavedRecordingsBanner(
+                      sessions: interrupted,
+                      onReview: () => UnsavedRecordingsSheet.show(
+                        context,
+                        (_) => context.go('/recordings'),
+                        onSessionResumed: () => context.go('/quick-record'),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+
             if (activeProject != null) ...[
               SliverToBoxAdapter(
                 child: Semantics(
@@ -465,3 +490,4 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 }
+

@@ -1070,6 +1070,24 @@ abstract class AppLocalizations {
   /// **'Upload failed: {error}'**
   String recording_uploadFailed(String error);
 
+  /// No description provided for @recording_serviceNotificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording in progress'**
+  String get recording_serviceNotificationTitle;
+
+  /// No description provided for @recording_serviceNotificationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{elapsed} • {genre}'**
+  String recording_serviceNotificationBody(String elapsed, String genre);
+
+  /// No description provided for @recording_serviceNotificationStopAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get recording_serviceNotificationStopAction;
+
   /// No description provided for @recording_notFound.
   ///
   /// In en, this message translates to:
@@ -4339,6 +4357,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Segment {index} of {total}'**
   String trim_segmentOfTotal(int index, int total);
+
+  /// No description provided for @recovery_interruptedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Interrupted recordings'**
+  String get recovery_interruptedTitle;
+
+  /// No description provided for @recovery_startedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Started at {time}'**
+  String recovery_startedAt(String time);
+
+  /// No description provided for @recovery_resume.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get recovery_resume;
+
+  /// No description provided for @recovery_save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get recovery_save;
+
+  /// No description provided for @recovery_discard.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get recovery_discard;
+
+  /// No description provided for @recovery_confirmDiscardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard recording?'**
+  String get recovery_confirmDiscardTitle;
+
+  /// No description provided for @recovery_confirmDiscardBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{duration} of audio will be permanently deleted.'**
+  String recovery_confirmDiscardBody(String duration);
+
+  /// No description provided for @recovery_homeBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 interrupted recording — tap to resume} other{{count} interrupted recordings — tap to resume}}'**
+  String recovery_homeBanner(int count);
+
+  /// No description provided for @recovery_unsavedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 unsaved recording} other{{count} unsaved recordings}}'**
+  String recovery_unsavedCount(int count);
+
+  /// No description provided for @recovery_latestSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Latest · {duration} · {time}'**
+  String recovery_latestSummary(String duration, String time);
+
+  /// No description provided for @recovery_review.
+  ///
+  /// In en, this message translates to:
+  /// **'Review'**
+  String get recovery_review;
+
+  /// No description provided for @recovery_unsavedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsaved recordings'**
+  String get recovery_unsavedTitle;
+
+  /// No description provided for @recovery_unsavedSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 recording to review} other{{count} recordings to review}}'**
+  String recovery_unsavedSubtitle(int count);
+
+  /// No description provided for @recovery_discardAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard all'**
+  String get recovery_discardAll;
+
+  /// No description provided for @recovery_discardAllTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard all recordings?'**
+  String get recovery_discardAllTitle;
+
+  /// No description provided for @recovery_discardAllBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 recording will be permanently deleted.} other{{count} recordings will be permanently deleted.}}'**
+  String recovery_discardAllBody(int count);
+
+  /// No description provided for @recovery_newBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'NEW'**
+  String get recovery_newBadge;
+
+  /// No description provided for @recovery_mostRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'Most recent'**
+  String get recovery_mostRecent;
+
+  /// No description provided for @recovery_recordingNumbered.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording {number}'**
+  String recovery_recordingNumbered(int number);
+
+  /// No description provided for @format_yesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get format_yesterday;
+
+  /// No description provided for @recovery_backToList.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get recovery_backToList;
 }
 
 class _AppLocalizationsDelegate

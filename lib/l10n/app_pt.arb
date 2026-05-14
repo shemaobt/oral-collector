@@ -171,6 +171,19 @@
       }
     }
   },
+  "recording_serviceNotificationTitle": "Gravação em andamento",
+  "recording_serviceNotificationBody": "{elapsed} • {genre}",
+  "@recording_serviceNotificationBody": {
+    "placeholders": {
+      "elapsed": {
+        "type": "String"
+      },
+      "genre": {
+        "type": "String"
+      }
+    }
+  },
+  "recording_serviceNotificationStopAction": "Parar",
   "recording_notFound": "Gravação não encontrada",
   "recording_unknownGenre": "Gênero desconhecido",
   "recording_splitRecording": "Editar Gravação",
@@ -839,5 +852,26 @@
   "recording_partOf": "Parte {part} de {total}",
   "recording_splitFrom": "Dividido de {sourceId}",
   "trim_segmentRemoved": "Segmento {index} — removido",
-  "trim_segmentOfTotal": "Segmento {index} de {total}"
+  "trim_segmentOfTotal": "Segmento {index} de {total}",
+  "recovery_interruptedTitle": "Gravações interrompidas",
+  "recovery_startedAt": "Iniciada às {time}",
+  "recovery_resume": "Continuar",
+  "recovery_save": "Salvar",
+  "recovery_discard": "Descartar",
+  "recovery_confirmDiscardTitle": "Descartar gravação?",
+  "recovery_confirmDiscardBody": "{duration} de áudio serão apagados permanentemente.",
+  "recovery_homeBanner": "{count, plural, =1{1 gravação interrompida — toque para continuar} other{{count} gravações interrompidas — toque para continuar}}",
+  "recovery_unsavedCount": "{count, plural, =1{1 gravação não salva} other{{count} gravações não salvas}}",
+  "recovery_latestSummary": "Última · {duration} · {time}",
+  "recovery_review": "Revisar",
+  "recovery_unsavedTitle": "Gravações não salvas",
+  "recovery_unsavedSubtitle": "{count, plural, =1{1 gravação para revisar} other{{count} gravações para revisar}}",
+  "recovery_discardAll": "Descartar todas",
+  "recovery_discardAllTitle": "Descartar todas as gravações?",
+  "recovery_discardAllBody": "{count, plural, =1{1 gravação será apagada permanentemente.} other{{count} gravações serão apagadas permanentemente.}}",
+  "recovery_newBadge": "NOVO",
+  "recovery_mostRecent": "Mais recente",
+  "recovery_recordingNumbered": "Gravação {number}",
+  "format_yesterday": "Ontem",
+  "recovery_backToList": "Agora não"
 }

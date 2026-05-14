@@ -127,3 +127,6 @@ app.*.symbols
 # Claude
 
 .claude.DS_Store
+
+# FVM
+.fvm/

@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' as intl;
 
 import '../../l10n/app_localizations.dart';
@@ -19,6 +20,50 @@ String formatDurationCompact(double totalSeconds) {
   final m = (sec % 3600) ~/ 60;
   if (h > 0) return '${h}h ${m}m';
   return '${m}m';
+}
+
+String formatDurationCompactWithSeconds(Duration d) {
+  final secs = d.inSeconds;
+  if (secs < 0) return '0s';
+  final h = secs ~/ 3600;
+  final m = (secs % 3600) ~/ 60;
+  final s = secs % 60;
+  if (h > 0) return '${h}h ${m}m';
+  if (m > 0) return '${m}m ${s}s';
+  return '${s}s';
+}
+
+String formatRelativeTime(
+  BuildContext context,
+  DateTime date,
+  String localeTag,
+) {
+  final now = DateTime.now();
+  final isSameDay =
+      now.year == date.year && now.month == date.month && now.day == date.day;
+  if (isSameDay) {
+    return MaterialLocalizations.of(
+      context,
+    ).formatTimeOfDay(TimeOfDay.fromDateTime(date));
+  }
+
+  final yesterday = DateTime(now.year, now.month, now.day - 1);
+  final isYesterday =
+      yesterday.year == date.year &&
+      yesterday.month == date.month &&
+      yesterday.day == date.day;
+  final time = MaterialLocalizations.of(
+    context,
+  ).formatTimeOfDay(TimeOfDay.fromDateTime(date));
+  if (isYesterday) {
+    final l10n = AppLocalizations.of(context);
+    return '${l10n.format_yesterday}, $time';
+  }
+
+  final dateFormat = now.year == date.year
+      ? intl.DateFormat.MMMd(localeTag)
+      : intl.DateFormat.yMMMd(localeTag);
+  return '${dateFormat.format(date)}, $time';
 }
 
 String formatDurationLong(double totalSeconds) {
