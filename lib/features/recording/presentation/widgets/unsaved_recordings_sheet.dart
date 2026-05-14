@@ -65,9 +65,7 @@ class UnsavedRecordingsSheet extends ConsumerWidget {
           child: CustomScrollView(
             controller: scrollController,
             slivers: [
-              SliverToBoxAdapter(
-                child: _Handle(color: colors.border),
-              ),
+              SliverToBoxAdapter(child: _Handle(color: colors.border)),
               SliverToBoxAdapter(
                 child: _SheetHeader(
                   count: sessions.length,
@@ -105,8 +103,7 @@ class UnsavedRecordingsSheet extends ConsumerWidget {
                     localeTag: localeTag,
                     onResume: () => _handleResume(context, ref, session),
                     onSave: () => _handleSave(context, ref, session),
-                    onDiscard: () =>
-                        _handleDiscardOne(context, ref, session),
+                    onDiscard: () => _handleDiscardOne(context, ref, session),
                   );
                 },
               ),
@@ -118,10 +115,8 @@ class UnsavedRecordingsSheet extends ConsumerWidget {
             ],
           ),
         );
-
       },
     );
-
   }
 
   Future<void> _handleResume(
@@ -299,4 +294,3 @@ class _SheetHeader extends StatelessWidget {
     );
   }
 }
-

@@ -27,8 +27,9 @@ class InterruptedSession {
   final int segmentCount;
 }
 
-final interruptedSessionsProvider =
-    StateProvider<List<InterruptedSession>>((_) => const []);
+final interruptedSessionsProvider = StateProvider<List<InterruptedSession>>(
+  (_) => const [],
+);
 
 class RecoveryCoordinator {
   RecoveryCoordinator(this._ref, {WavHeaderRepair? wavRepair})

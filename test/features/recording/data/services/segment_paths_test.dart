@@ -20,17 +20,17 @@ void main() {
     });
 
     test('prefixFor returns the directory + recording prefix', () {
-      expect(
-        SegmentPaths.prefixFor('/dir', 'sess_abc'),
-        '/dir/rec_sess_abc_',
-      );
+      expect(SegmentPaths.prefixFor('/dir', 'sess_abc'), '/dir/rec_sess_abc_');
     });
 
     test('parseIndex extracts the index when the path matches', () {
       final prefix = SegmentPaths.prefixFor('/dir', 'sess_abc');
       expect(SegmentPaths.parseIndex('/dir/rec_sess_abc_000.wav', prefix), 0);
       expect(SegmentPaths.parseIndex('/dir/rec_sess_abc_042.wav', prefix), 42);
-      expect(SegmentPaths.parseIndex('/dir/rec_sess_abc_1234.wav', prefix), 1234);
+      expect(
+        SegmentPaths.parseIndex('/dir/rec_sess_abc_1234.wav', prefix),
+        1234,
+      );
     });
 
     test('parseIndex returns null when path is not a segment file', () {

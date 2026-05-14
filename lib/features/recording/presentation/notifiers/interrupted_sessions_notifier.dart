@@ -54,13 +54,15 @@ class InterruptedSessionsNotifier extends Notifier<void> {
       return null;
     }
 
-    final result = await ref.read(recordingFinalizationServiceProvider).finalize(
-      sessionId: session.id,
-      segmentPaths: validPaths,
-      totalDuration: Duration(
-        milliseconds: (session.totalDurationSeconds * 1000).round(),
-      ),
-    );
+    final result = await ref
+        .read(recordingFinalizationServiceProvider)
+        .finalize(
+          sessionId: session.id,
+          segmentPaths: validPaths,
+          totalDuration: Duration(
+            milliseconds: (session.totalDurationSeconds * 1000).round(),
+          ),
+        );
     await _cleanupOrphanedSegments(session.id, -1);
     await sessionRepo.markRecovered(session.id);
     await ref.read(recoveryCoordinatorProvider).refresh();

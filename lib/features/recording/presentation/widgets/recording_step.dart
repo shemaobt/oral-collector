@@ -74,7 +74,9 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
         previous == AppLifecycleState.paused &&
         isRecording) {
       unawaited(
-        ref.read(recordingSessionNotifierProvider.notifier).reactivateAudioSession(),
+        ref
+            .read(recordingSessionNotifierProvider.notifier)
+            .reactivateAudioSession(),
       );
       if (!mounted) return;
       setState(() => _showBackgroundResumeBanner = true);
@@ -720,11 +722,7 @@ class _BackToListButton extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                LucideIcons.arrowLeft,
-                size: 14,
-                color: colors.secondary,
-              ),
+              Icon(LucideIcons.arrowLeft, size: 14, color: colors.secondary),
               const SizedBox(width: 6),
               Text(
                 label,

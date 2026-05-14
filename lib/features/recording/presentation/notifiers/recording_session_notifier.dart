@@ -42,13 +42,14 @@ final recordingConcatServiceProvider = Provider<RecordingConcatService>(
 
 final recordingFinalizationServiceProvider =
     Provider<RecordingFinalizationService>((ref) {
-  return RecordingFinalizationService(
-    concat: ref.watch(recordingConcatServiceProvider),
-  );
-});
+      return RecordingFinalizationService(
+        concat: ref.watch(recordingConcatServiceProvider),
+      );
+    });
 
-final recordingForegroundServiceProvider =
-    Provider<RecordingForegroundService>((_) => RecordingForegroundService());
+final recordingForegroundServiceProvider = Provider<RecordingForegroundService>(
+  (_) => RecordingForegroundService(),
+);
 
 final recordingSessionNotifierProvider =
     NotifierProvider<RecordingSessionNotifier, RecordingState>(
@@ -350,9 +351,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
   Future<void> resumeRecording() async {
     if (!state.isRecording || !state.isPaused) return;
 
-    if (!kIsWeb &&
-        _segRecorder == null &&
-        _pendingResumeSessionId != null) {
+    if (!kIsWeb && _segRecorder == null && _pendingResumeSessionId != null) {
       final ok = await _startRecorderForResume();
       if (!ok) return;
       state = state.copyWith(isPaused: false);
@@ -523,7 +522,9 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
         ? sessionResult.totalDuration
         : fallbackElapsed;
 
-    return ref.read(recordingFinalizationServiceProvider).finalize(
+    return ref
+        .read(recordingFinalizationServiceProvider)
+        .finalize(
           sessionId: sessionResult.sessionId,
           segmentPaths: sessionResult.segmentPaths,
           totalDuration: totalDuration,
@@ -641,15 +642,15 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
     if (!started) return false;
     _liveActivityActive = true;
     _liveActivityUrlSub?.cancel();
-    _liveActivityUrlSub = RecordingLiveActivity.instance.urlSchemeStream.listen((
-      event,
-    ) {
-      final host = event.host;
-      final path = event.path;
-      if (host == 'stop-recording' || path == '/stop-recording') {
-        scheduleMicrotask(_handleBackgroundStop);
-      }
-    });
+    _liveActivityUrlSub = RecordingLiveActivity.instance.urlSchemeStream.listen(
+      (event) {
+        final host = event.host;
+        final path = event.path;
+        if (host == 'stop-recording' || path == '/stop-recording') {
+          scheduleMicrotask(_handleBackgroundStop);
+        }
+      },
+    );
     return true;
   }
 
@@ -695,7 +696,9 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
     if (kIsWeb || !Platform.isAndroid) return;
     final l10n = _cachedL10n;
     if (l10n == null) return;
-    await ref.read(recordingForegroundServiceProvider).update(
+    await ref
+        .read(recordingForegroundServiceProvider)
+        .update(
           title: l10n.recording_serviceNotificationTitle,
           body: _formatNotificationBody(l10n),
         );

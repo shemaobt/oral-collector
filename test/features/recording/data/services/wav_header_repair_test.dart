@@ -54,28 +54,36 @@ void main() {
     return file;
   }
 
-  test('repair fills in RIFF and data sizes based on actual file size',
-      () async {
-    final file = await writeBrokenWav(
-      name: 'broken',
-      sampleRate: 16000,
-      numChannels: 1,
-      bitsPerSample: 16,
-      pcmByteCount: 32000, // 1 second @ 16kHz mono 16-bit
-    );
+  test(
+    'repair fills in RIFF and data sizes based on actual file size',
+    () async {
+      final file = await writeBrokenWav(
+        name: 'broken',
+        sampleRate: 16000,
+        numChannels: 1,
+        bitsPerSample: 16,
+        pcmByteCount: 32000, // 1 second @ 16kHz mono 16-bit
+      );
 
-    final result = await const WavHeaderRepair().repair(file.path);
+      final result = await const WavHeaderRepair().repair(file.path);
 
-    expect(result, isNotNull);
-    expect(result!.duration, const Duration(milliseconds: 1000));
-    expect(result.fileSize, 44 + 32000);
+      expect(result, isNotNull);
+      expect(result!.duration, const Duration(milliseconds: 1000));
+      expect(result.fileSize, 44 + 32000);
 
-    final bytes = await file.readAsBytes();
-    expect(_readU32le(bytes, 4), bytes.length - 8,
-        reason: 'RIFF chunk size = fileSize - 8');
-    expect(_readU32le(bytes, 40), bytes.length - 44,
-        reason: 'data chunk size = fileSize - 44 (44-byte header)');
-  });
+      final bytes = await file.readAsBytes();
+      expect(
+        _readU32le(bytes, 4),
+        bytes.length - 8,
+        reason: 'RIFF chunk size = fileSize - 8',
+      );
+      expect(
+        _readU32le(bytes, 40),
+        bytes.length - 44,
+        reason: 'data chunk size = fileSize - 44 (44-byte header)',
+      );
+    },
+  );
 
   test('repair survives PCM byte count that is not a whole second', () async {
     final file = await writeBrokenWav(
@@ -115,8 +123,7 @@ void main() {
     expect(result, isNull);
   });
 
-  test('repair is idempotent — running twice gives the same result',
-      () async {
+  test('repair is idempotent — running twice gives the same result', () async {
     final file = await writeBrokenWav(
       name: 'idempotent',
       sampleRate: 16000,
@@ -133,19 +140,21 @@ void main() {
     expect(first?.fileSize, second?.fileSize);
   });
 
-  test('repair returns null when only the header was written (no PCM)',
-      () async {
-    final file = await writeBrokenWav(
-      name: 'header_only',
-      sampleRate: 16000,
-      numChannels: 1,
-      bitsPerSample: 16,
-      pcmByteCount: 0,
-    );
+  test(
+    'repair returns null when only the header was written (no PCM)',
+    () async {
+      final file = await writeBrokenWav(
+        name: 'header_only',
+        sampleRate: 16000,
+        numChannels: 1,
+        bitsPerSample: 16,
+        pcmByteCount: 0,
+      );
 
-    final result = await const WavHeaderRepair().repair(file.path);
-    expect(result, isNull);
-  });
+      final result = await const WavHeaderRepair().repair(file.path);
+      expect(result, isNull);
+    },
+  );
 }
 
 List<int> _ascii(String s) => s.codeUnits;

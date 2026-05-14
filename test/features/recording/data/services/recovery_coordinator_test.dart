@@ -112,41 +112,38 @@ void main() {
       expect(session?.status, 'crashed');
     });
 
-    test(
-      'refresh populates interruptedSessionsProvider with crashed sessions '
-      'having at least one segment',
-      () async {
-        await seedSession(
-          id: 'with-segments',
-          status: 'crashed',
-          startedAt: DateTime(2026, 5, 12),
-          segmentPaths: ['/a.wav', '/b.wav'],
-          totalDurationSeconds: 120.0,
-          lastSegmentIndex: 1,
-        );
-        await seedSession(
-          id: 'no-segments',
-          status: 'crashed',
-          startedAt: DateTime(2026, 5, 11),
-        );
+    test('refresh populates interruptedSessionsProvider with crashed sessions '
+        'having at least one segment', () async {
+      await seedSession(
+        id: 'with-segments',
+        status: 'crashed',
+        startedAt: DateTime(2026, 5, 12),
+        segmentPaths: ['/a.wav', '/b.wav'],
+        totalDurationSeconds: 120.0,
+        lastSegmentIndex: 1,
+      );
+      await seedSession(
+        id: 'no-segments',
+        status: 'crashed',
+        startedAt: DateTime(2026, 5, 11),
+      );
 
-        final coordinator = container.read(recoveryCoordinatorProvider);
-        await coordinator.refresh();
+      final coordinator = container.read(recoveryCoordinatorProvider);
+      await coordinator.refresh();
 
-        final list = container.read(interruptedSessionsProvider);
-        expect(list.length, 1);
-        expect(list.first.sessionId, 'with-segments');
-        expect(list.first.segmentCount, 2);
-        expect(list.first.totalDuration, const Duration(seconds: 120));
+      final list = container.read(interruptedSessionsProvider);
+      expect(list.length, 1);
+      expect(list.first.sessionId, 'with-segments');
+      expect(list.first.segmentCount, 2);
+      expect(list.first.totalDuration, const Duration(seconds: 120));
 
-        final noSegments = await repo.getById('no-segments');
-        expect(
-          noSegments?.status,
-          'discarded',
-          reason: 'zero-segment crashed sessions should be auto-discarded',
-        );
-      },
-    );
+      final noSegments = await repo.getById('no-segments');
+      expect(
+        noSegments?.status,
+        'discarded',
+        reason: 'zero-segment crashed sessions should be auto-discarded',
+      );
+    });
 
     test('refresh sorts sessions by startedAt desc', () async {
       await seedSession(

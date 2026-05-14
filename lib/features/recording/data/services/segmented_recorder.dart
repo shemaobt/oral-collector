@@ -111,28 +111,28 @@ class SegmentedRecorder {
           '(activated=$activated)',
         );
         await _interruptionSub?.cancel();
-        _interruptionSub = audioSession.interruptionEventStream.listen(
-          (event) async {
-            if (event.begin) {
-              debugPrint(
-                'SegmentedRecorder: audio session interruption began '
-                '(type=${event.type})',
-              );
-              return;
-            }
+        _interruptionSub = audioSession.interruptionEventStream.listen((
+          event,
+        ) async {
+          if (event.begin) {
             debugPrint(
-              'SegmentedRecorder: audio session interruption ended '
-              '(type=${event.type}); re-activating',
+              'SegmentedRecorder: audio session interruption began '
+              '(type=${event.type})',
             );
-            try {
-              await audioSession.setActive(true);
-            } on Exception catch (e) {
-              debugPrint(
-                'SegmentedRecorder: re-activate after interruption failed: $e',
-              );
-            }
-          },
-        );
+            return;
+          }
+          debugPrint(
+            'SegmentedRecorder: audio session interruption ended '
+            '(type=${event.type}); re-activating',
+          );
+          try {
+            await audioSession.setActive(true);
+          } on Exception catch (e) {
+            debugPrint(
+              'SegmentedRecorder: re-activate after interruption failed: $e',
+            );
+          }
+        });
       } on Exception catch (e) {
         debugPrint('SegmentedRecorder: AudioSession setup failed: $e');
       }
