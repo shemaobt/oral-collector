@@ -27,8 +27,9 @@ class WavHeaderRepair {
       final riffHeader = await raf.read(12);
       if (riffHeader.length < 12) return null;
       if (String.fromCharCodes(riffHeader.sublist(0, 4)) != 'RIFF') return null;
-      if (String.fromCharCodes(riffHeader.sublist(8, 12)) != 'WAVE')
+      if (String.fromCharCodes(riffHeader.sublist(8, 12)) != 'WAVE') {
         return null;
+      }
 
       int sampleRate = 0;
       int numChannels = 0;
