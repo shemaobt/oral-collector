@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
@@ -8,6 +9,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:oral_collector/core/database/app_database.dart';
 import 'package:oral_collector/core/database/database_provider.dart';
 import 'package:oral_collector/features/recording/data/services/recovery_coordinator.dart';
+import 'package:oral_collector/features/recording/data/services/segment_paths.dart';
+import 'package:oral_collector/features/recording/data/services/wav_header_repair.dart';
 import 'package:oral_collector/features/recording/data/repositories/recording_session_repository.dart';
 
 void main() {
@@ -166,4 +169,198 @@ void main() {
       expect(list.map((s) => s.sessionId).toList(), ['new', 'old']);
     });
   });
+
+  group('RecoveryCoordinator filesystem rescue (ENG-51)', () {
+    late Directory tempDir;
+    late ProviderContainer fsContainer;
+
+    setUp(() async {
+      tempDir = await Directory.systemTemp.createTemp('eng51_recovery_');
+      fsContainer = ProviderContainer(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(db),
+          recoveryCoordinatorProvider.overrideWith(
+            (ref) => RecoveryCoordinator(
+              ref,
+              wavRepair: _FakeWavHeaderRepair(),
+              directoryResolver: () async => tempDir,
+            ),
+          ),
+        ],
+      );
+    });
+
+    tearDown(() async {
+      fsContainer.dispose();
+      if (await tempDir.exists()) {
+        await tempDir.delete(recursive: true);
+      }
+    });
+
+    Future<File> writeSegmentFile(String sessionId, int index) async {
+      final path = SegmentPaths.forSegment(tempDir.path, sessionId, index);
+      final file = File(path);
+      // _FakeWavHeaderRepair only cares about existence + non-zero length.
+      await file.writeAsBytes(List<int>.filled(64, 0));
+      return file;
+    }
+
+    test(
+      'refresh rescues crashed session with empty DB paths but orphan files on disk',
+      () async {
+        // Simulates: _stopNative caught a finish() exception before any
+        // appendSegment landed. DB row has segmentPathsJson=[], but the WAV
+        // segments are still on the filesystem.
+        await seedSession(
+          id: 'sess-empty-with-disk',
+          status: 'crashed',
+          startedAt: DateTime(2026, 5, 15),
+          lastSegmentIndex: -1,
+        );
+        await writeSegmentFile('sess-empty-with-disk', 0);
+        await writeSegmentFile('sess-empty-with-disk', 1);
+
+        final coordinator = fsContainer.read(recoveryCoordinatorProvider);
+        await coordinator.refresh();
+
+        final list = fsContainer.read(interruptedSessionsProvider);
+        expect(list.map((s) => s.sessionId), contains('sess-empty-with-disk'));
+        expect(
+          list
+              .firstWhere((s) => s.sessionId == 'sess-empty-with-disk')
+              .segmentCount,
+          2,
+        );
+
+        final session = await repo.getById('sess-empty-with-disk');
+        expect(
+          session?.status,
+          'crashed',
+          reason: 'rescued session stays crashed so the banner keeps showing',
+        );
+      },
+    );
+
+    test(
+      'refresh still discards crashed sessions when no orphan files exist',
+      () async {
+        await seedSession(
+          id: 'sess-truly-empty',
+          status: 'crashed',
+          startedAt: DateTime(2026, 5, 15),
+        );
+
+        final coordinator = fsContainer.read(recoveryCoordinatorProvider);
+        await coordinator.refresh();
+
+        final list = fsContainer.read(interruptedSessionsProvider);
+        expect(
+          list.map((s) => s.sessionId),
+          isNot(contains('sess-truly-empty')),
+        );
+
+        final session = await repo.getById('sess-truly-empty');
+        expect(session?.status, 'discarded');
+      },
+    );
+
+    test(
+      'scanOnStartup sweep promotes completed-without-localrecording to crashed',
+      () async {
+        // Daniel's scenario: _stopNative returned null, SegmentedRecorder.finish
+        // marked the session completed, no LocalRecording was ever saved, but
+        // 30 segments worth of WAV are still on disk.
+        await seedSession(
+          id: 'sess-orphan-completed',
+          status: 'completed',
+          startedAt: DateTime(2026, 5, 15),
+          lastSegmentIndex: -1,
+        );
+        await writeSegmentFile('sess-orphan-completed', 0);
+        await writeSegmentFile('sess-orphan-completed', 1);
+
+        final coordinator = fsContainer.read(recoveryCoordinatorProvider);
+        await coordinator.scanOnStartup();
+
+        final session = await repo.getById('sess-orphan-completed');
+        expect(
+          session?.status,
+          'crashed',
+          reason: 'session is now eligible for the unsaved-recordings banner',
+        );
+
+        final list = fsContainer.read(interruptedSessionsProvider);
+        expect(list.map((s) => s.sessionId), contains('sess-orphan-completed'));
+      },
+    );
+
+    test(
+      'sweep does NOT promote completed sessions that have a LocalRecording',
+      () async {
+        await seedSession(
+          id: 'sess-saved',
+          status: 'completed',
+          startedAt: DateTime(2026, 5, 15),
+        );
+        await writeSegmentFile('sess-saved', 0);
+
+        // Simulate the user pressed Save: a LocalRecording row exists whose
+        // localFilePath embeds the session id (the finalize output naming
+        // convention used by the recording feature).
+        await db
+            .into(db.localRecordings)
+            .insert(
+              LocalRecordingsCompanion.insert(
+                id: 'rec-1',
+                projectId: 'proj-1',
+                genreId: 'genre-1',
+                localFilePath: '/tmp/recording_sess-saved.m4a',
+                recordedAt: DateTime(2026, 5, 15),
+              ),
+            );
+
+        final coordinator = fsContainer.read(recoveryCoordinatorProvider);
+        await coordinator.scanOnStartup();
+
+        final session = await repo.getById('sess-saved');
+        expect(
+          session?.status,
+          'completed',
+          reason: 'session was successfully saved; sweep must not touch it',
+        );
+      },
+    );
+
+    test(
+      'sweep does NOT promote completed sessions without orphan segments',
+      () async {
+        await seedSession(
+          id: 'sess-clean-completed',
+          status: 'completed',
+          startedAt: DateTime(2026, 5, 15),
+        );
+        // No segment files written.
+
+        final coordinator = fsContainer.read(recoveryCoordinatorProvider);
+        await coordinator.scanOnStartup();
+
+        final session = await repo.getById('sess-clean-completed');
+        expect(session?.status, 'completed');
+      },
+    );
+  });
+}
+
+class _FakeWavHeaderRepair extends WavHeaderRepair {
+  @override
+  Future<WavRepairResult?> repair(String filePath) async {
+    final file = File(filePath);
+    if (!await file.exists()) return null;
+    final size = await file.length();
+    if (size == 0) return null;
+    return WavRepairResult(
+      duration: const Duration(seconds: 30),
+      fileSize: size,
+    );
+  }
 }

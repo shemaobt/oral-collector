@@ -87,6 +87,12 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
     }
   }
 
+  void acknowledgeLastStopError() {
+    if (state.lastStopError != null) {
+      state = state.copyWith(clearLastStopError: true);
+    }
+  }
+
   Future<void> reactivateAudioSession() async {
     if (!state.isRecording || kIsWeb) return;
     try {
@@ -471,6 +477,8 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
 
   Future<RecordingResult?> _stopNative(Duration fallbackElapsed) async {
     final recorder = _segRecorder;
+    final sessionRepo = ref.read(recordingSessionRepositoryProvider);
+
     if (recorder == null) {
       final pendingSessionId = _pendingResumeSessionId;
       final pendingPaths = _pendingResumeSegmentPaths;
@@ -486,16 +494,16 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
         await _stopLiveActivityIfIOS();
         await _stopForegroundServiceIfAndroid();
 
-        final sessionRepo = ref.read(recordingSessionRepositoryProvider);
-        final finalizer = ref.read(recordingFinalizationServiceProvider);
-        final result = await finalizer.finalize(
+        final result = await _finalizeOrCrash(
           sessionId: pendingSessionId,
           segmentPaths: pendingPaths,
           totalDuration: pendingDuration ?? fallbackElapsed,
         );
-        await _cleanupOrphanedSegments(pendingSessionId, -1);
-        await sessionRepo.markRecovered(pendingSessionId);
-        await ref.read(recoveryCoordinatorProvider).refresh();
+        if (result != null) {
+          await _cleanupOrphanedSegments(pendingSessionId, -1);
+          await sessionRepo.markRecovered(pendingSessionId);
+          await ref.read(recoveryCoordinatorProvider).refresh();
+        }
         return result;
       }
 
@@ -506,7 +514,19 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
       return null;
     }
 
-    final sessionResult = await recorder.finish();
+    // Capture session id up-front: SegmentedRecorder.finish() clears its
+    // internal sessionId, and if finish() throws we still need to mark the
+    // session crashed so the unsaved-recordings banner can rescue it.
+    final activeSessionId = recorder.sessionId;
+
+    SegmentedRecordingResult? sessionResult;
+    Object? finishError;
+    try {
+      sessionResult = await recorder.finish();
+    } catch (e, st) {
+      finishError = e;
+      debugPrint('RecordingSessionNotifier: recorder.finish() threw: $e\n$st');
+    }
     _segRecorder = null;
 
     state = const RecordingState();
@@ -514,7 +534,25 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
     await _stopLiveActivityIfIOS();
     await _stopForegroundServiceIfAndroid();
 
-    if (sessionResult == null || sessionResult.segmentPaths.isEmpty) {
+    final hasUsableResult =
+        sessionResult != null && sessionResult.segmentPaths.isNotEmpty;
+    if (!hasUsableResult) {
+      final sessionIdForRecovery = sessionResult?.sessionId ?? activeSessionId;
+      var recoverable = false;
+      if (sessionIdForRecovery != null) {
+        await sessionRepo.markCrashed(sessionIdForRecovery);
+        await ref.read(recoveryCoordinatorProvider).refresh();
+        recoverable = ref
+            .read(interruptedSessionsProvider)
+            .any((s) => s.sessionId == sessionIdForRecovery);
+      }
+      state = state.copyWith(
+        lastStopError: RecordingStopError(
+          kind: RecordingStopErrorKind.finishProducedNoSegments,
+          recoverable: recoverable,
+          technicalMessage: finishError?.toString(),
+        ),
+      );
       return null;
     }
 
@@ -522,13 +560,55 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
         ? sessionResult.totalDuration
         : fallbackElapsed;
 
-    return ref
-        .read(recordingFinalizationServiceProvider)
-        .finalize(
-          sessionId: sessionResult.sessionId,
-          segmentPaths: sessionResult.segmentPaths,
-          totalDuration: totalDuration,
-        );
+    final result = await _finalizeOrCrash(
+      sessionId: sessionResult.sessionId,
+      segmentPaths: sessionResult.segmentPaths,
+      totalDuration: totalDuration,
+    );
+    if (result != null) {
+      await sessionRepo.markCompleted(sessionResult.sessionId);
+    }
+    return result;
+  }
+
+  Future<RecordingResult?> _finalizeOrCrash({
+    required String sessionId,
+    required List<String> segmentPaths,
+    required Duration totalDuration,
+  }) async {
+    final sessionRepo = ref.read(recordingSessionRepositoryProvider);
+    final finalizer = ref.read(recordingFinalizationServiceProvider);
+
+    RecordingResult? result;
+    Object? error;
+    try {
+      result = await finalizer.finalize(
+        sessionId: sessionId,
+        segmentPaths: segmentPaths,
+        totalDuration: totalDuration,
+      );
+    } catch (e, st) {
+      error = e;
+      debugPrint(
+        'RecordingSessionNotifier: finalize failed for $sessionId: $e\n$st',
+      );
+    }
+
+    if (result != null) return result;
+
+    await sessionRepo.markCrashed(sessionId);
+    await ref.read(recoveryCoordinatorProvider).refresh();
+    final recoverable = ref
+        .read(interruptedSessionsProvider)
+        .any((s) => s.sessionId == sessionId);
+    state = state.copyWith(
+      lastStopError: RecordingStopError(
+        kind: RecordingStopErrorKind.finalizationFailed,
+        recoverable: recoverable,
+        technicalMessage: error?.toString(),
+      ),
+    );
+    return null;
   }
 
   Future<RecordingResult?> _stopWeb(Duration fallbackElapsed) async {

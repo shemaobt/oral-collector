@@ -318,8 +318,6 @@ class SegmentedRecorder {
       );
     }
 
-    await _sessionRepo.markCompleted(sessionId);
-
     await _amplitudeController?.close();
     _amplitudeController = null;
     await _recorder?.dispose();

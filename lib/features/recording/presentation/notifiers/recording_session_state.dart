@@ -1,5 +1,19 @@
 enum StorageBannerSeverity { none, critical, forceStopped }
 
+enum RecordingStopErrorKind { finishProducedNoSegments, finalizationFailed }
+
+class RecordingStopError {
+  const RecordingStopError({
+    required this.kind,
+    required this.recoverable,
+    this.technicalMessage,
+  });
+
+  final RecordingStopErrorKind kind;
+  final bool recoverable;
+  final String? technicalMessage;
+}
+
 class RecordingState {
   final bool isRecording;
   final bool isPaused;
@@ -16,6 +30,7 @@ class RecordingState {
   final bool wasResumedSession;
   final String? currentGenreName;
   final String? currentSubcategoryName;
+  final RecordingStopError? lastStopError;
 
   const RecordingState({
     this.isRecording = false,
@@ -33,6 +48,7 @@ class RecordingState {
     this.wasResumedSession = false,
     this.currentGenreName,
     this.currentSubcategoryName,
+    this.lastStopError,
   });
 
   RecordingState copyWith({
@@ -51,12 +67,14 @@ class RecordingState {
     bool? wasResumedSession,
     String? currentGenreName,
     String? currentSubcategoryName,
+    RecordingStopError? lastStopError,
     bool clearGenreId = false,
     bool clearSubcategoryId = false,
     bool clearAmplitudeStream = false,
     bool clearSessionId = false,
     bool clearLastCheckpoint = false,
     bool clearAutoStoppedResult = false,
+    bool clearLastStopError = false,
   }) {
     return RecordingState(
       isRecording: isRecording ?? this.isRecording,
@@ -89,6 +107,9 @@ class RecordingState {
       currentSubcategoryName: clearSubcategoryId
           ? null
           : (currentSubcategoryName ?? this.currentSubcategoryName),
+      lastStopError: clearLastStopError
+          ? null
+          : (lastStopError ?? this.lastStopError),
     );
   }
 }

@@ -197,6 +197,22 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
       });
     });
 
+    ref.listen<RecordingState>(recordingSessionNotifierProvider, (prev, next) {
+      final error = next.lastStopError;
+      if (error == null) return;
+      if (prev?.lastStopError == error) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        notifier.acknowledgeLastStopError();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.recording_recoveryFailed),
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      });
+    });
+
     final isReady = !recState.isRecording && !recState.isPaused;
     final isActive = recState.isRecording;
     final interrupted = ref.watch(interruptedSessionsProvider);
