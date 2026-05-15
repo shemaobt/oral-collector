@@ -127,3 +127,10 @@ app.*.symbols
 # Claude
 
 .claude.DS_Store
+.scratch/
+
+# macOS
+**/.DS_Store
+
+# FVM
+.fvm/

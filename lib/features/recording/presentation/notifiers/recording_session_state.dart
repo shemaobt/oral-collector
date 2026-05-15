@@ -12,6 +12,10 @@ class RecordingState {
   final bool showCheckpointToast;
   final StorageBannerSeverity storageBannerSeverity;
   final RecordingResult? autoStoppedResult;
+  final bool isPendingResume;
+  final bool wasResumedSession;
+  final String? currentGenreName;
+  final String? currentSubcategoryName;
 
   const RecordingState({
     this.isRecording = false,
@@ -25,6 +29,10 @@ class RecordingState {
     this.showCheckpointToast = false,
     this.storageBannerSeverity = StorageBannerSeverity.none,
     this.autoStoppedResult,
+    this.isPendingResume = false,
+    this.wasResumedSession = false,
+    this.currentGenreName,
+    this.currentSubcategoryName,
   });
 
   RecordingState copyWith({
@@ -39,6 +47,10 @@ class RecordingState {
     bool? showCheckpointToast,
     StorageBannerSeverity? storageBannerSeverity,
     RecordingResult? autoStoppedResult,
+    bool? isPendingResume,
+    bool? wasResumedSession,
+    String? currentGenreName,
+    String? currentSubcategoryName,
     bool clearGenreId = false,
     bool clearSubcategoryId = false,
     bool clearAmplitudeStream = false,
@@ -69,6 +81,14 @@ class RecordingState {
       autoStoppedResult: clearAutoStoppedResult
           ? null
           : (autoStoppedResult ?? this.autoStoppedResult),
+      isPendingResume: isPendingResume ?? this.isPendingResume,
+      wasResumedSession: wasResumedSession ?? this.wasResumedSession,
+      currentGenreName: clearGenreId
+          ? null
+          : (currentGenreName ?? this.currentGenreName),
+      currentSubcategoryName: clearSubcategoryId
+          ? null
+          : (currentSubcategoryName ?? this.currentSubcategoryName),
     );
   }
 }

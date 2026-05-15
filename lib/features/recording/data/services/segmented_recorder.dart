@@ -8,6 +8,7 @@ import 'package:record/record.dart';
 
 import '../../../../core/platform/file_ops.dart' as file_ops;
 import '../repositories/recording_session_repository.dart';
+import 'segment_paths.dart';
 import 'storage_guard.dart';
 
 class SegmentedRecordingResult {
@@ -53,6 +54,7 @@ class SegmentedRecorder {
 
   StreamController<double>? _amplitudeController;
   StreamSubscription<Amplitude>? _amplitudeSub;
+  StreamSubscription<AudioInterruptionEvent>? _interruptionSub;
 
   bool get isActive => _sessionId != null;
   Stream<double>? get amplitudeStream => _amplitudeController?.stream;
@@ -64,13 +66,17 @@ class SegmentedRecorder {
     required String sessionId,
     required AmplitudeMapper amplitudeMapper,
     InputDevice? inputDevice,
+    List<String> resumeFromPaths = const [],
+    Duration resumeFromDuration = Duration.zero,
   }) async {
     if (isActive) return false;
 
     _sessionId = sessionId;
-    _paths.clear();
-    _segIdx = -1;
-    _cumulativeFinalized = Duration.zero;
+    _paths
+      ..clear()
+      ..addAll(resumeFromPaths);
+    _segIdx = resumeFromPaths.length - 1;
+    _cumulativeFinalized = resumeFromDuration;
     _amplitudeMapper = amplitudeMapper;
     _inputDevice = inputDevice;
 
@@ -104,6 +110,29 @@ class SegmentedRecorder {
           'SegmentedRecorder: AudioSession configured '
           '(activated=$activated)',
         );
+        await _interruptionSub?.cancel();
+        _interruptionSub = audioSession.interruptionEventStream.listen((
+          event,
+        ) async {
+          if (event.begin) {
+            debugPrint(
+              'SegmentedRecorder: audio session interruption began '
+              '(type=${event.type})',
+            );
+            return;
+          }
+          debugPrint(
+            'SegmentedRecorder: audio session interruption ended '
+            '(type=${event.type}); re-activating',
+          );
+          try {
+            await audioSession.setActive(true);
+          } on Exception catch (e) {
+            debugPrint(
+              'SegmentedRecorder: re-activate after interruption failed: $e',
+            );
+          }
+        });
       } on Exception catch (e) {
         debugPrint('SegmentedRecorder: AudioSession setup failed: $e');
       }
@@ -112,6 +141,7 @@ class SegmentedRecorder {
     _amplitudeController = StreamController<double>.broadcast();
 
     await _startNextSegment();
+    _subscribeToAmplitude();
     _armRotateTimer();
     return true;
   }
@@ -119,8 +149,7 @@ class SegmentedRecorder {
   Future<void> _startNextSegment() async {
     _segIdx++;
     final dir = await getApplicationDocumentsDirectory();
-    final idxStr = _segIdx.toString().padLeft(3, '0');
-    final path = '${dir.path}/rec_${_sessionId}_$idxStr.wav';
+    final path = SegmentPaths.forSegment(dir.path, _sessionId!, _segIdx);
 
     try {
       await _recorder!.start(
@@ -143,18 +172,17 @@ class SegmentedRecorder {
         path: path,
       );
       debugPrint(
-        'SegmentedRecorder: started segment $idxStr at $path '
+        'SegmentedRecorder: started segment $_segIdx at $path '
         '(device=${_inputDevice?.id ?? "default"})',
       );
     } catch (e, st) {
       debugPrint(
-        'SegmentedRecorder: start FAILED for segment $idxStr: $e\n$st',
+        'SegmentedRecorder: start FAILED for segment $_segIdx: $e\n$st',
       );
       rethrow;
     }
 
     _currentSegmentStartedAt = DateTime.now();
-    _subscribeToAmplitude();
   }
 
   void _subscribeToAmplitude() {
@@ -195,9 +223,6 @@ class SegmentedRecorder {
     if (_recorder == null || _sessionId == null) return;
 
     final rotateStart = DateTime.now();
-
-    await _amplitudeSub?.cancel();
-    _amplitudeSub = null;
 
     final closedPath = await _recorder!.stop();
     final segStartedAt = _currentSegmentStartedAt ?? rotateStart;
@@ -267,6 +292,8 @@ class SegmentedRecorder {
     _rotateTimer = null;
     await _amplitudeSub?.cancel();
     _amplitudeSub = null;
+    await _interruptionSub?.cancel();
+    _interruptionSub = null;
 
     final closedPath = await _recorder?.stop();
     final segStartedAt = _currentSegmentStartedAt;
@@ -321,6 +348,8 @@ class SegmentedRecorder {
     _rotateTimer = null;
     await _amplitudeSub?.cancel();
     _amplitudeSub = null;
+    await _interruptionSub?.cancel();
+    _interruptionSub = null;
 
     try {
       await _recorder?.stop();
@@ -349,6 +378,8 @@ class SegmentedRecorder {
   Future<void> dispose() async {
     _rotateTimer?.cancel();
     await _amplitudeSub?.cancel();
+    await _interruptionSub?.cancel();
+    _interruptionSub = null;
     await _amplitudeController?.close();
     await _recorder?.dispose();
     _recorder = null;
