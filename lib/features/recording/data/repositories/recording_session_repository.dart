@@ -32,6 +32,13 @@ class RecordingSessionRepository {
         .get();
   }
 
+  Future<List<RecordingSession>> findCompletedSessions() {
+    return (_db.select(_db.recordingSessions)
+          ..where((t) => t.status.equals('completed'))
+          ..orderBy([(t) => OrderingTerm.desc(t.startedAt)]))
+        .get();
+  }
+
   Future<void> markActive(String sessionId) async {
     await _setStatus(sessionId, 'active');
   }

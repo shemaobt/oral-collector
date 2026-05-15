@@ -31,12 +31,20 @@ final interruptedSessionsProvider = StateProvider<List<InterruptedSession>>(
   (_) => const [],
 );
 
+typedef DirectoryResolver = Future<Directory> Function();
+
 class RecoveryCoordinator {
-  RecoveryCoordinator(this._ref, {WavHeaderRepair? wavRepair})
-    : _wavRepair = wavRepair ?? const WavHeaderRepair();
+  RecoveryCoordinator(
+    this._ref, {
+    WavHeaderRepair? wavRepair,
+    DirectoryResolver? directoryResolver,
+  }) : _wavRepair = wavRepair ?? const WavHeaderRepair(),
+       _directoryResolver =
+           directoryResolver ?? getApplicationDocumentsDirectory;
 
   final Ref _ref;
   final WavHeaderRepair _wavRepair;
+  final DirectoryResolver _directoryResolver;
 
   Future<void> scanOnStartup() async {
     final repo = _ref.read(recordingSessionRepositoryProvider);
@@ -50,13 +58,66 @@ class RecoveryCoordinator {
       await _repairInFlightSegments(session);
       await repo.markCrashed(session.id);
     }
+    await _sweepCompletedWithOrphanSegments();
     await refresh();
+  }
+
+  /// Rescues legacy sessions marked `completed` before the markCompleted
+  /// relocation: those rows can have orphan segment files on disk and no
+  /// matching LocalRecording row, so the recovery banner never surfaces them
+  /// unless we flip them back to `crashed`.
+  Future<void> _sweepCompletedWithOrphanSegments() async {
+    final sessionRepo = _ref.read(recordingSessionRepositoryProvider);
+    final localRepo = _ref.read(localRecordingRepositoryProvider);
+
+    final completed = await sessionRepo.findCompletedSessions();
+    if (completed.isEmpty) return;
+
+    Directory dir;
+    try {
+      dir = await _directoryResolver();
+    } catch (_) {
+      return;
+    }
+
+    final List<FileSystemEntity> entries;
+    try {
+      entries = await dir.list().toList();
+    } catch (_) {
+      return;
+    }
+
+    final localRecordings = await localRepo.getAllLocalRecordings();
+
+    for (final session in completed) {
+      final dot = '_${session.id}.';
+      final under = '_${session.id}_';
+      final saved = localRecordings.any(
+        (lr) =>
+            lr.localFilePath.contains(dot) || lr.localFilePath.contains(under),
+      );
+      if (saved) continue;
+
+      final prefix = SegmentPaths.prefixFor(dir.path, session.id);
+      final hasOrphans = entries.any((e) {
+        if (e is! File) return false;
+        return SegmentPaths.parseIndex(e.path, prefix) != null;
+      });
+      if (!hasOrphans) continue;
+
+      debugPrint(
+        'RecoveryCoordinator: sweep promoting orphan session ${session.id} '
+        'from completed → crashed',
+      );
+      await _repairInFlightSegments(session);
+      await sessionRepo.markCrashed(session.id);
+    }
   }
 
   Future<void> _repairInFlightSegments(RecordingSession session) async {
     Directory dir;
     try {
-      dir = await getApplicationDocumentsDirectory();
+      dir = await _directoryResolver();
     } catch (_) {
       return;
     }
@@ -103,8 +164,22 @@ class RecoveryCoordinator {
     final crashed = await repo.findCrashedSessions();
 
     final result = <InterruptedSession>[];
-    for (final session in crashed) {
-      final segments = repo.decodeSegmentPaths(session);
+    for (final candidate in crashed) {
+      var session = candidate;
+      var segments = repo.decodeSegmentPaths(session);
+
+      if (segments.isEmpty) {
+        // Filesystem may hold orphan segments that never made it into the DB
+        // (e.g. _stopNative caught a finish() exception before appendSegment
+        // ran). Repair + attach before declaring the session lost.
+        await _repairInFlightSegments(session);
+        final reloaded = await repo.getById(session.id);
+        if (reloaded != null) {
+          session = reloaded;
+          segments = repo.decodeSegmentPaths(session);
+        }
+      }
+
       if (segments.isEmpty) {
         await repo.markDiscarded(session.id);
         continue;
