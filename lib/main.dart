@@ -14,6 +14,7 @@ import 'core/platform/file_ops.dart' as platform;
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/auth/auth_notifier.dart';
+import 'features/recording/data/services/recording_live_activity.dart';
 import 'features/recording/data/services/recording_notification.dart';
 import 'features/recording/data/services/recording_trash.dart';
 import 'features/recording/data/services/recovery_coordinator.dart';
@@ -93,6 +94,7 @@ class _OralCollectorAppState extends ConsumerState<OralCollectorApp> {
       if (!kIsWeb) {
         RecordingTrash.pruneOldTrash(maxAgeHours: 24);
         await ref.read(recoveryCoordinatorProvider).scanOnStartup();
+        await RecordingLiveActivity.instance.endAll();
       }
     });
   }

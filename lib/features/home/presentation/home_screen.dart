@@ -52,6 +52,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void _fetchRemoteData() {
     if (!ref.read(syncNotifierProvider).isOnline) return;
     ref.read(projectNotifierProvider.notifier).fetchProjects().then((_) {
+      if (!mounted) return;
       ref.read(genreNotifierProvider.notifier).fetchGenres();
       _fetchStatsIfNeeded();
       _checkFirstLoginLocale();

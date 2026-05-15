@@ -39,14 +39,15 @@ class RecordingLiveActivity {
   }) async {
     if (!await isSupported()) return false;
     try {
-      await _plugin.createActivity(activityId, {
+      final id = await _plugin.createActivity(activityId, {
         'genre': genre,
         'subcategory': subcategory,
         'elapsedLabel': '00:00',
         'startedAtEpoch': DateTime.now().millisecondsSinceEpoch.toString(),
         'isPaused': 'false',
-      });
-      _activityId = activityId;
+      }, removeWhenAppIsKilled: true);
+      if (id == null) return false;
+      _activityId = id;
       return true;
     } on Exception catch (e) {
       debugPrint('RecordingLiveActivity: createActivity failed: $e');
@@ -77,6 +78,17 @@ class RecordingLiveActivity {
       await _plugin.endActivity(id);
     } on Exception catch (e) {
       debugPrint('RecordingLiveActivity: endActivity failed: $e');
+    }
+    _activityId = null;
+  }
+
+  Future<void> endAll() async {
+    if (kIsWeb || !Platform.isIOS) return;
+    try {
+      await _ensureInitialized();
+      await _plugin.endAllActivities();
+    } on Exception catch (e) {
+      debugPrint('RecordingLiveActivity: endAllActivities failed: $e');
     }
     _activityId = null;
   }

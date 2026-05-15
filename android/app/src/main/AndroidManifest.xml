@@ -44,7 +44,8 @@
             android:name="com.pravera.flutter_foreground_task.service.ForegroundService"
             android:foregroundServiceType="microphone"
             android:exported="false"
-            tools:replace="android:foregroundServiceType,android:exported"
+            android:stopWithTask="true"
+            tools:replace="android:foregroundServiceType,android:exported,android:stopWithTask"
             tools:node="merge" />
     </application>
     <!-- Required to query activities that can process text, see:
