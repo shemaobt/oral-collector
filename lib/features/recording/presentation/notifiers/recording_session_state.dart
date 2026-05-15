@@ -1,9 +1,6 @@
 enum StorageBannerSeverity { none, critical, forceStopped }
 
-enum RecordingStopErrorKind {
-  finishProducedNoSegments,
-  finalizationFailed,
-}
+enum RecordingStopErrorKind { finishProducedNoSegments, finalizationFailed }
 
 class RecordingStopError {
   const RecordingStopError({

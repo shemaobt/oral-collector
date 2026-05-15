@@ -226,7 +226,9 @@ void main() {
         final list = fsContainer.read(interruptedSessionsProvider);
         expect(list.map((s) => s.sessionId), contains('sess-empty-with-disk'));
         expect(
-          list.firstWhere((s) => s.sessionId == 'sess-empty-with-disk').segmentCount,
+          list
+              .firstWhere((s) => s.sessionId == 'sess-empty-with-disk')
+              .segmentCount,
           2,
         );
 
@@ -252,7 +254,10 @@ void main() {
         await coordinator.refresh();
 
         final list = fsContainer.read(interruptedSessionsProvider);
-        expect(list.map((s) => s.sessionId), isNot(contains('sess-truly-empty')));
+        expect(
+          list.map((s) => s.sessionId),
+          isNot(contains('sess-truly-empty')),
+        );
 
         final session = await repo.getById('sess-truly-empty');
         expect(session?.status, 'discarded');
@@ -285,10 +290,7 @@ void main() {
         );
 
         final list = fsContainer.read(interruptedSessionsProvider);
-        expect(
-          list.map((s) => s.sessionId),
-          contains('sess-orphan-completed'),
-        );
+        expect(list.map((s) => s.sessionId), contains('sess-orphan-completed'));
       },
     );
 

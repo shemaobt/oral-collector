@@ -525,9 +525,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
       sessionResult = await recorder.finish();
     } catch (e, st) {
       finishError = e;
-      debugPrint(
-        'RecordingSessionNotifier: recorder.finish() threw: $e\n$st',
-      );
+      debugPrint('RecordingSessionNotifier: recorder.finish() threw: $e\n$st');
     }
     _segRecorder = null;
 
@@ -539,8 +537,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
     final hasUsableResult =
         sessionResult != null && sessionResult.segmentPaths.isNotEmpty;
     if (!hasUsableResult) {
-      final sessionIdForRecovery =
-          sessionResult?.sessionId ?? activeSessionId;
+      final sessionIdForRecovery = sessionResult?.sessionId ?? activeSessionId;
       var recoverable = false;
       if (sessionIdForRecovery != null) {
         await sessionRepo.markCrashed(sessionIdForRecovery);
