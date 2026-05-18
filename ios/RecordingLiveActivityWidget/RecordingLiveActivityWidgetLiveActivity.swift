@@ -42,6 +42,15 @@ private struct LiveActivityData {
     let fileName: String
     let progressPercent: Int
 
+    // Localized labels (resolved on the Dart side from AppLocalizations and
+    // passed in via the App Group UserDefaults payload). Fall back to English
+    // so the widget never blanks out if the Dart side forgets a key.
+    let recordingStatusLabel: String
+    let recordingPausedStatusLabel: String
+    let uploadingStatusLabel: String
+    let uploadingRecordingTitleLabel: String
+    let stopActionLabel: String
+
     init(attributes: LiveActivitiesAppAttributes) {
         let defaults = sharedDefaults
         let rawKind = defaults?.string(forKey: attributes.prefixedKey("kind")) ?? "recording"
@@ -56,6 +65,12 @@ private struct LiveActivityData {
         fileName = defaults?.string(forKey: attributes.prefixedKey("fileName")) ?? ""
         let progressRaw = defaults?.string(forKey: attributes.prefixedKey("progressPercent")) ?? "0"
         progressPercent = Int(progressRaw) ?? 0
+
+        recordingStatusLabel = defaults?.string(forKey: attributes.prefixedKey("localizedRecordingStatus")) ?? "Recording"
+        recordingPausedStatusLabel = defaults?.string(forKey: attributes.prefixedKey("localizedRecordingPausedStatus")) ?? "Recording paused"
+        uploadingStatusLabel = defaults?.string(forKey: attributes.prefixedKey("localizedUploadingStatus")) ?? "Uploading"
+        uploadingRecordingTitleLabel = defaults?.string(forKey: attributes.prefixedKey("localizedUploadingRecordingTitle")) ?? "Uploading recording"
+        stopActionLabel = defaults?.string(forKey: attributes.prefixedKey("localizedStopAction")) ?? "Stop"
     }
 
     var detailLine: String {
@@ -70,9 +85,9 @@ private struct LiveActivityData {
     var statusTitle: String {
         switch kind {
         case .upload:
-            return "Uploading"
+            return uploadingStatusLabel
         case .recording:
-            return isPaused ? "Recording paused" : "Recording"
+            return isPaused ? recordingPausedStatusLabel : recordingStatusLabel
         }
     }
 
@@ -87,11 +102,12 @@ private struct LiveActivityData {
 }
 
 private struct StopButton: View {
+    let label: String
     var compact: Bool = false
 
     var body: some View {
         Link(destination: stopURL) {
-            Text("Stop")
+            Text(label)
                 .font(compact ? .subheadline : .headline)
                 .fontWeight(.semibold)
                 .foregroundStyle(.white)
@@ -135,7 +151,7 @@ private struct RecordingLockScreenView: View {
                     .foregroundStyle(.secondary)
             }
             Spacer(minLength: 8)
-            StopButton()
+            StopButton(label: data.stopActionLabel)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
@@ -152,7 +168,7 @@ private struct UploadLockScreenView: View {
                     .font(.system(size: 28, weight: .semibold))
                     .foregroundStyle(Brand.accent)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Uploading recording")
+                    Text(data.uploadingRecordingTitleLabel)
                         .font(.headline)
                         .foregroundStyle(.primary)
                     if !data.fileName.isEmpty {
@@ -228,7 +244,7 @@ struct RecordingLiveActivityWidgetLiveActivity: Widget {
                             .monospacedDigit()
                             .foregroundStyle(Brand.accent)
                     case .recording:
-                        StopButton(compact: true)
+                        StopButton(label: data.stopActionLabel, compact: true)
                     }
                 }
                 DynamicIslandExpandedRegion(.bottom) {

@@ -2556,4 +2556,13 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get upload_failedNotificationTitle => 'अपलोड विफल';
+
+  @override
+  String get liveActivity_recordingStatus => 'रिकॉर्डिंग';
+
+  @override
+  String get liveActivity_recordingPausedStatus => 'रिकॉर्डिंग रोकी गई';
+
+  @override
+  String get liveActivity_uploadingStatus => 'अपलोड हो रहा है';
 }

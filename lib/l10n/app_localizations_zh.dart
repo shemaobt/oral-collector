@@ -2449,4 +2449,13 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get upload_failedNotificationTitle => '上传失败';
+
+  @override
+  String get liveActivity_recordingStatus => '录音中';
+
+  @override
+  String get liveActivity_recordingPausedStatus => '录音已暂停';
+
+  @override
+  String get liveActivity_uploadingStatus => '上传中';
 }

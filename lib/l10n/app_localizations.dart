@@ -4513,6 +4513,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Upload failed'**
   String get upload_failedNotificationTitle;
+
+  /// Live Activity (iOS) lock-screen status while a recording session is active.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording'**
+  String get liveActivity_recordingStatus;
+
+  /// Live Activity (iOS) lock-screen status while a recording session is paused.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording paused'**
+  String get liveActivity_recordingPausedStatus;
+
+  /// Live Activity (iOS) lock-screen and Dynamic Island short status while an upload is running.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading'**
+  String get liveActivity_uploadingStatus;
 }
 
 class _AppLocalizationsDelegate

@@ -2513,4 +2513,13 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get upload_failedNotificationTitle => 'فشل الرفع';
+
+  @override
+  String get liveActivity_recordingStatus => 'تسجيل';
+
+  @override
+  String get liveActivity_recordingPausedStatus => 'إيقاف التسجيل مؤقتًا';
+
+  @override
+  String get liveActivity_uploadingStatus => 'جاري الرفع';
 }

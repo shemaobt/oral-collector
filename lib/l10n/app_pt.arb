@@ -881,5 +881,8 @@
   "upload_inProgressNotificationTitle": "Enviando gravação",
   "upload_inProgressNotificationBody": "Enviando áudio em segundo plano",
   "upload_completeNotificationTitle": "Envio concluído",
-  "upload_failedNotificationTitle": "Falha no envio"
+  "upload_failedNotificationTitle": "Falha no envio",
+  "liveActivity_recordingStatus": "Gravando",
+  "liveActivity_recordingPausedStatus": "Gravação pausada",
+  "liveActivity_uploadingStatus": "Enviando"
 }

@@ -937,5 +937,8 @@
   "upload_failedNotificationTitle": "Upakiaji umeshindwa",
   "upload_inProgressNotificationBody": "Inatuma sauti chinichini",
   "upload_inProgressNotificationTitle": "Inapakia rekodi",
-  "upload_pausedWhileRecording": "Upakiaji umesitishwa wakati wa kurekodi"
+  "upload_pausedWhileRecording": "Upakiaji umesitishwa wakati wa kurekodi",
+  "liveActivity_recordingStatus": "Inarekodi",
+  "liveActivity_recordingPausedStatus": "Rekodi imesimama",
+  "liveActivity_uploadingStatus": "Inapakia"
 }

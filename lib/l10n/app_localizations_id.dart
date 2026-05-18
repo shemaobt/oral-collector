@@ -2557,4 +2557,13 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get upload_failedNotificationTitle => 'Unggahan gagal';
+
+  @override
+  String get liveActivity_recordingStatus => 'Merekam';
+
+  @override
+  String get liveActivity_recordingPausedStatus => 'Rekaman dijeda';
+
+  @override
+  String get liveActivity_uploadingStatus => 'Mengunggah';
 }

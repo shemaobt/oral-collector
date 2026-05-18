@@ -2543,4 +2543,13 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get upload_failedNotificationTitle => 'Upakiaji umeshindwa';
+
+  @override
+  String get liveActivity_recordingStatus => 'Inarekodi';
+
+  @override
+  String get liveActivity_recordingPausedStatus => 'Rekodi imesimama';
+
+  @override
+  String get liveActivity_uploadingStatus => 'Inapakia';
 }

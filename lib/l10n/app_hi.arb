@@ -937,5 +937,8 @@
   "upload_failedNotificationTitle": "अपलोड विफल",
   "upload_inProgressNotificationBody": "पृष्ठभूमि में ऑडियो भेजा जा रहा है",
   "upload_inProgressNotificationTitle": "रिकॉर्डिंग अपलोड हो रही है",
-  "upload_pausedWhileRecording": "रिकॉर्डिंग के दौरान अपलोड रोका गया"
+  "upload_pausedWhileRecording": "रिकॉर्डिंग के दौरान अपलोड रोका गया",
+  "liveActivity_recordingStatus": "रिकॉर्डिंग",
+  "liveActivity_recordingPausedStatus": "रिकॉर्डिंग रोकी गई",
+  "liveActivity_uploadingStatus": "अपलोड हो रहा है"
 }

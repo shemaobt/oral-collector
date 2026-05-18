@@ -41,8 +41,12 @@
 	</array>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
-	<key>NSSupportsLiveActivitiesFrequentUpdates</key>
-	<true/>
+	<!-- NSSupportsLiveActivitiesFrequentUpdates is intentionally OMITTED.
+	     This app uses the `live_activities` Flutter plugin, which carries
+	     state in App Group UserDefaults and ships an EMPTY ActivityKit
+	     ContentState. The frequent-updates entitlement only takes effect
+	     for activities that push real ContentState deltas — claiming it
+	     here would be misleading. -->
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

@@ -36,6 +36,9 @@ class RecordingLiveActivity {
     required String activityId,
     required String genre,
     required String subcategory,
+    required String localizedRecordingStatus,
+    required String localizedRecordingPausedStatus,
+    required String localizedStopAction,
   }) async {
     if (!await isSupported()) return false;
     try {
@@ -45,6 +48,11 @@ class RecordingLiveActivity {
         'elapsedLabel': '00:00',
         'startedAtEpoch': DateTime.now().millisecondsSinceEpoch.toString(),
         'isPaused': 'false',
+        // Localized labels resolved on the Dart side; the SwiftUI widget reads
+        // these from App Group UserDefaults with English fallback.
+        'localizedRecordingStatus': localizedRecordingStatus,
+        'localizedRecordingPausedStatus': localizedRecordingPausedStatus,
+        'localizedStopAction': localizedStopAction,
       }, removeWhenAppIsKilled: true);
       if (id == null) return false;
       _activityId = id;

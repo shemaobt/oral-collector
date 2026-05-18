@@ -937,5 +937,8 @@
   "upload_failedNotificationTitle": "Unggahan gagal",
   "upload_inProgressNotificationBody": "Mengirim audio di latar belakang",
   "upload_inProgressNotificationTitle": "Mengunggah rekaman",
-  "upload_pausedWhileRecording": "Unggahan dijeda saat merekam"
+  "upload_pausedWhileRecording": "Unggahan dijeda saat merekam",
+  "liveActivity_recordingStatus": "Merekam",
+  "liveActivity_recordingPausedStatus": "Rekaman dijeda",
+  "liveActivity_uploadingStatus": "Mengunggah"
 }

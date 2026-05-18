@@ -2571,4 +2571,13 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get upload_failedNotificationTitle => 'Subida fallida';
+
+  @override
+  String get liveActivity_recordingStatus => 'Grabando';
+
+  @override
+  String get liveActivity_recordingPausedStatus => 'Grabación pausada';
+
+  @override
+  String get liveActivity_uploadingStatus => 'Subiendo';
 }

@@ -1152,5 +1152,8 @@
   "upload_failedNotificationTitle": "上传失败",
   "upload_inProgressNotificationBody": "正在后台发送音频",
   "upload_inProgressNotificationTitle": "正在上传录音",
-  "upload_pausedWhileRecording": "录音时暂停上传"
+  "upload_pausedWhileRecording": "录音时暂停上传",
+  "liveActivity_recordingStatus": "录音中",
+  "liveActivity_recordingPausedStatus": "录音已暂停",
+  "liveActivity_uploadingStatus": "上传中"
 }

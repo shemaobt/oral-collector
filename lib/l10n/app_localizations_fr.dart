@@ -2586,4 +2586,13 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get upload_failedNotificationTitle => 'Échec du téléversement';
+
+  @override
+  String get liveActivity_recordingStatus => 'Enregistrement';
+
+  @override
+  String get liveActivity_recordingPausedStatus => 'Enregistrement en pause';
+
+  @override
+  String get liveActivity_uploadingStatus => 'Téléversement';
 }

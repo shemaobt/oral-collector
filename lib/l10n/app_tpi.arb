@@ -937,5 +937,8 @@
   "upload_failedNotificationTitle": "Aplotim i fel",
   "upload_inProgressNotificationBody": "Salim odio long baksait",
   "upload_inProgressNotificationTitle": "Aplotim rekod",
-  "upload_pausedWhileRecording": "Aplotim i wet taim rekodim"
+  "upload_pausedWhileRecording": "Aplotim i wet taim rekodim",
+  "liveActivity_recordingStatus": "Rekodim",
+  "liveActivity_recordingPausedStatus": "Rekodim i wet",
+  "liveActivity_uploadingStatus": "Aplotim"
 }

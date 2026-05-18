@@ -727,10 +727,14 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
     if (kIsWeb || !Platform.isIOS) return false;
     final supported = await RecordingLiveActivity.instance.isSupported();
     if (!supported) return false;
+    final l10n = await _resolveLocalizations();
     final started = await RecordingLiveActivity.instance.start(
       activityId: sessionId,
       genre: state.currentGenreName ?? '',
       subcategory: state.currentSubcategoryName ?? '',
+      localizedRecordingStatus: l10n.liveActivity_recordingStatus,
+      localizedRecordingPausedStatus: l10n.liveActivity_recordingPausedStatus,
+      localizedStopAction: l10n.recording_serviceNotificationStopAction,
     );
     if (!started) return false;
     _liveActivityActive = true;

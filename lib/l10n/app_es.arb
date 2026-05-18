@@ -937,5 +937,8 @@
   "upload_failedNotificationTitle": "Subida fallida",
   "upload_inProgressNotificationBody": "Enviando audio en segundo plano",
   "upload_inProgressNotificationTitle": "Subiendo grabación",
-  "upload_pausedWhileRecording": "Subida pausada durante la grabación"
+  "upload_pausedWhileRecording": "Subida pausada durante la grabación",
+  "liveActivity_recordingStatus": "Grabando",
+  "liveActivity_recordingPausedStatus": "Grabación pausada",
+  "liveActivity_uploadingStatus": "Subiendo"
 }

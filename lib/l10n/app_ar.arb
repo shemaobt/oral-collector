@@ -937,5 +937,8 @@
   "upload_failedNotificationTitle": "فشل الرفع",
   "upload_inProgressNotificationBody": "جاري إرسال الصوت في الخلفية",
   "upload_inProgressNotificationTitle": "جاري رفع التسجيل",
-  "upload_pausedWhileRecording": "تم إيقاف الرفع مؤقتًا أثناء التسجيل"
+  "upload_pausedWhileRecording": "تم إيقاف الرفع مؤقتًا أثناء التسجيل",
+  "liveActivity_recordingStatus": "تسجيل",
+  "liveActivity_recordingPausedStatus": "إيقاف التسجيل مؤقتًا",
+  "liveActivity_uploadingStatus": "جاري الرفع"
 }

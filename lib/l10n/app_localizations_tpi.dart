@@ -2536,4 +2536,13 @@ class AppLocalizationsTpi extends AppLocalizations {
 
   @override
   String get upload_failedNotificationTitle => 'Aplotim i fel';
+
+  @override
+  String get liveActivity_recordingStatus => 'Rekodim';
+
+  @override
+  String get liveActivity_recordingPausedStatus => 'Rekodim i wet';
+
+  @override
+  String get liveActivity_uploadingStatus => 'Aplotim';
 }

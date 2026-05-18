@@ -2463,4 +2463,13 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get upload_failedNotificationTitle => '업로드 실패';
+
+  @override
+  String get liveActivity_recordingStatus => '녹음 중';
+
+  @override
+  String get liveActivity_recordingPausedStatus => '녹음 일시 중지';
+
+  @override
+  String get liveActivity_uploadingStatus => '업로드 중';
 }

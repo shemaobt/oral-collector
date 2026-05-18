@@ -37,6 +37,8 @@ class UploadLiveActivity {
     required String activityId,
     required String fileName,
     required int progressPercent,
+    required String localizedUploadingStatus,
+    required String localizedUploadingRecordingTitle,
   }) async {
     if (!await isSupported()) return false;
     if (!_isAppForeground()) {
@@ -51,6 +53,9 @@ class UploadLiveActivity {
         'fileName': fileName,
         'progressPercent': progressPercent.toString(),
         'startedAtEpoch': DateTime.now().millisecondsSinceEpoch.toString(),
+        // Localized labels resolved from AppLocalizations on the Dart side.
+        'localizedUploadingStatus': localizedUploadingStatus,
+        'localizedUploadingRecordingTitle': localizedUploadingRecordingTitle,
       }, removeWhenAppIsKilled: true);
       if (id == null) return false;
       _activityId = id;

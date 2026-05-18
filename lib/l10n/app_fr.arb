@@ -937,5 +937,8 @@
   "upload_failedNotificationTitle": "Échec du téléversement",
   "upload_inProgressNotificationBody": "Envoi de l'audio en arrière-plan",
   "upload_inProgressNotificationTitle": "Téléversement de l'enregistrement",
-  "upload_pausedWhileRecording": "Téléversement en pause pendant l'enregistrement"
+  "upload_pausedWhileRecording": "Téléversement en pause pendant l'enregistrement",
+  "liveActivity_recordingStatus": "Enregistrement",
+  "liveActivity_recordingPausedStatus": "Enregistrement en pause",
+  "liveActivity_uploadingStatus": "Téléversement"
 }

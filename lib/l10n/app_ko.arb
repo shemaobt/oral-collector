@@ -937,5 +937,8 @@
   "upload_failedNotificationTitle": "업로드 실패",
   "upload_inProgressNotificationBody": "백그라운드에서 오디오 전송 중",
   "upload_inProgressNotificationTitle": "녹음 업로드 중",
-  "upload_pausedWhileRecording": "녹음 중 업로드 일시 중지됨"
+  "upload_pausedWhileRecording": "녹음 중 업로드 일시 중지됨",
+  "liveActivity_recordingStatus": "녹음 중",
+  "liveActivity_recordingPausedStatus": "녹음 일시 중지",
+  "liveActivity_uploadingStatus": "업로드 중"
 }
