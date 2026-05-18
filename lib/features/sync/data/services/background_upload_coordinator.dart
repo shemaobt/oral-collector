@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../recording/presentation/notifiers/recording_session_notifier.dart';
 import '../../../recording/presentation/notifiers/recording_session_state.dart';
 import '../../presentation/notifiers/sync_notifier.dart';
+import '../providers.dart';
 import 'upload_downloader.dart';
 
 typedef ResumeTrigger = Future<void> Function();
@@ -54,7 +55,7 @@ class BackgroundUploadCoordinator {
 final backgroundUploadCoordinatorProvider =
     Provider<BackgroundUploadCoordinator>((ref) {
       return BackgroundUploadCoordinator(
-        downloader: const BackgroundDownloaderUploader(),
+        downloader: ref.watch(uploadDownloaderProvider),
         onResume: () => ref.read(syncNotifierProvider.notifier).processQueue(),
       );
     });

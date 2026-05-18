@@ -29,8 +29,7 @@ class _RecordingHeroPlayerState extends State<RecordingHeroPlayer> {
   late String _cacheKey;
   String _noAudioLabel = '';
 
-  String _keyFor(LocalRecording r) =>
-      '${r.localFilePath}|${r.gcsUrl ?? ''}';
+  String _keyFor(LocalRecording r) => '${r.localFilePath}|${r.gcsUrl ?? ''}';
 
   Future<Widget> _resolvePlayer() async {
     final recording = widget.recording;

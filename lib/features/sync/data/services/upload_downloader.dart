@@ -1,6 +1,9 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:background_downloader/background_downloader.dart';
+import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
 
 class UploadResult {
@@ -30,6 +33,97 @@ abstract class UploadDownloader {
   Future<void> cancel(String taskId);
 
   Future<void> cancelAll();
+}
+
+UploadDownloader defaultUploadDownloader({http.Client? httpClient}) {
+  if (!kIsWeb && Platform.isAndroid) {
+    return HttpInlineUploader(httpClient ?? http.Client());
+  }
+  return const BackgroundDownloaderUploader();
+}
+
+/// In-process HTTP chunk transport. Used on Android so the upload loop dies
+/// together with the Dart isolate when the user swipes the app away, matching
+/// the iOS behaviour (pause on close, resume from offset on next launch).
+class HttpInlineUploader implements UploadDownloader {
+  HttpInlineUploader(this._client);
+
+  final http.Client _client;
+  final Set<String> _cancelledTaskIds = {};
+  bool _cancelAllPending = false;
+
+  @override
+  Future<UploadResult> putChunk({
+    required String taskId,
+    required String url,
+    required String filePath,
+    required int offset,
+    required int end,
+    required Map<String, String> headers,
+  }) async {
+    if (_cancelAllPending || _cancelledTaskIds.contains(taskId)) {
+      return const UploadResult(statusCode: 0, cancelled: true);
+    }
+
+    final file = File(filePath);
+    if (!await file.exists()) {
+      return const UploadResult(statusCode: 0, errorReason: 'file_not_found');
+    }
+
+    final raf = await file.open();
+    Uint8List bytes;
+    try {
+      await raf.setPosition(offset);
+      bytes = await raf.read(end - offset);
+    } finally {
+      await raf.close();
+    }
+
+    if (_cancelAllPending || _cancelledTaskIds.contains(taskId)) {
+      return const UploadResult(statusCode: 0, cancelled: true);
+    }
+
+    final request = http.Request('PUT', Uri.parse(url));
+    headers.forEach((k, v) => request.headers[k] = v);
+    request.bodyBytes = bytes;
+
+    final timeout = Duration(
+      seconds: 60 + (bytes.length ~/ (1024 * 1024)) * 10,
+    );
+
+    try {
+      final response = await _client.send(request).timeout(timeout);
+      final body = await response.stream.bytesToString();
+      if (_cancelAllPending || _cancelledTaskIds.contains(taskId)) {
+        _cancelledTaskIds.remove(taskId);
+        return UploadResult(
+          statusCode: response.statusCode,
+          responseBody: body,
+          cancelled: true,
+        );
+      }
+      return UploadResult(statusCode: response.statusCode, responseBody: body);
+    } on TimeoutException {
+      return const UploadResult(statusCode: 0, errorReason: 'timeout');
+    } on http.ClientException catch (e) {
+      return UploadResult(statusCode: 0, errorReason: e.message);
+    } on SocketException catch (e) {
+      return UploadResult(statusCode: 0, errorReason: e.message);
+    }
+  }
+
+  @override
+  Future<void> cancel(String taskId) async {
+    _cancelledTaskIds.add(taskId);
+  }
+
+  @override
+  Future<void> cancelAll() async {
+    _cancelAllPending = true;
+    Future<void>.delayed(const Duration(seconds: 2), () {
+      _cancelAllPending = false;
+    });
+  }
 }
 
 class BackgroundDownloaderUploader implements UploadDownloader {

@@ -65,6 +65,9 @@ void main() async {
     }
     try {
       await UploadNotification.instance.init();
+      // Drop any orphan upload notification left over from a previous run
+      // that was killed mid-upload (swipe-away on Android).
+      await UploadNotification.instance.clear();
     } on Exception {
       // noop
     }

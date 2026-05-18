@@ -39,7 +39,8 @@ class ResumableUploadService {
     RecordingActiveFlag? recordingFlag,
   }) : _client = client,
        _recordingRepo = recordingRepo,
-       _downloader = downloader ?? const BackgroundDownloaderUploader(),
+       _downloader =
+           downloader ?? defaultUploadDownloader(httpClient: client.rawClient),
        _recordingFlag = recordingFlag ?? const RecordingActiveFlag();
 
   Future<ResumableUploadResult> upload({
