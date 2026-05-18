@@ -1,6 +1,7 @@
 import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart' show AppLifecycleState, WidgetsBinding;
 import 'package:live_activities/live_activities.dart';
 
 import '../../../../core/config/recording_config.dart';
@@ -12,6 +13,11 @@ class UploadLiveActivity {
   final LiveActivities _plugin = LiveActivities();
   bool _initialized = false;
   String? _activityId;
+
+  bool _isAppForeground() {
+    final state = WidgetsBinding.instance.lifecycleState;
+    return state == null || state == AppLifecycleState.resumed;
+  }
 
   Future<bool> isSupported() async {
     if (kIsWeb) return false;
@@ -33,6 +39,12 @@ class UploadLiveActivity {
     required int progressPercent,
   }) async {
     if (!await isSupported()) return false;
+    if (!_isAppForeground()) {
+      // iOS rejects createActivity when the host app is not foreground
+      // ("Target is not foreground"). Skip silently; the caller can retry
+      // when the app comes back to the foreground.
+      return false;
+    }
     try {
       final id = await _plugin.createActivity(activityId, {
         'kind': 'upload',
@@ -48,6 +60,8 @@ class UploadLiveActivity {
       return false;
     }
   }
+
+  bool get hasActivity => _activityId != null;
 
   Future<void> update({required int progressPercent}) async {
     final id = _activityId;

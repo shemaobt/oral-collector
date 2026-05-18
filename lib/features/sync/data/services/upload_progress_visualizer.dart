@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../presentation/notifiers/sync_notifier.dart';
@@ -90,6 +91,20 @@ class UploadProgressVisualizer {
   }
 }
 
+extension on UploadProgressVisualizer {
+  Future<void> retryForegroundLiveActivity(SyncState current) async {
+    if (kIsWeb || !Platform.isIOS) return;
+    final id = current.uploadingId;
+    if (id == null) return;
+    if (_liveActivity.hasActivity) return;
+    await _liveActivity.start(
+      activityId: id,
+      fileName: current.currentFileName ?? 'Recording',
+      progressPercent: current.syncProgress,
+    );
+  }
+}
+
 final uploadProgressVisualizerProvider = Provider<UploadProgressVisualizer>(
   (_) => UploadProgressVisualizer(),
 );
@@ -99,4 +114,12 @@ final uploadProgressVisualizerListenerProvider = Provider<void>((ref) {
   ref.listen<SyncState>(syncNotifierProvider, (previous, next) {
     unawaited(visualizer.onStateChanged(previous, next));
   });
+
+  final lifecycleListener = AppLifecycleListener(
+    onResume: () {
+      final current = ref.read(syncNotifierProvider);
+      unawaited(visualizer.retryForegroundLiveActivity(current));
+    },
+  );
+  ref.onDispose(lifecycleListener.dispose);
 });
