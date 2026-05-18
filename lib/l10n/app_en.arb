@@ -1189,5 +1189,13 @@
     }
   },
   "format_yesterday": "Yesterday",
-  "recovery_backToList": "Not now"
+  "recovery_backToList": "Not now",
+  "upload_pausedWhileRecording": "Upload paused while recording",
+  "@upload_pausedWhileRecording": {
+    "description": "Hint shown on a recording card when the upload is paused because a recording is currently active (ENG-48 §1 mutex)."
+  },
+  "upload_inProgressNotificationTitle": "Uploading recording",
+  "upload_inProgressNotificationBody": "Sending audio in the background",
+  "upload_completeNotificationTitle": "Upload complete",
+  "upload_failedNotificationTitle": "Upload failed"
 }

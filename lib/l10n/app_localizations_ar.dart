@@ -2498,4 +2498,20 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get recovery_backToList => 'Not now';
+
+  @override
+  String get upload_pausedWhileRecording => 'Upload paused while recording';
+
+  @override
+  String get upload_inProgressNotificationTitle => 'Uploading recording';
+
+  @override
+  String get upload_inProgressNotificationBody =>
+      'Sending audio in the background';
+
+  @override
+  String get upload_completeNotificationTitle => 'Upload complete';
+
+  @override
+  String get upload_failedNotificationTitle => 'Upload failed';
 }

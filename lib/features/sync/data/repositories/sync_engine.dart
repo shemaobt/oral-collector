@@ -15,6 +15,7 @@ import '../../../recording/data/repositories/local_recording_repository.dart';
 import '../../domain/repositories/connectivity_service.dart';
 import '../../domain/repositories/sync_engine.dart';
 import '../services/resumable_upload_service.dart';
+import '../services/upload_downloader.dart';
 
 class _NonRetryableUploadException implements Exception {
   final String message;
@@ -45,12 +46,14 @@ class SyncEngineImpl implements SyncEngine {
     required LocalRecordingRepository recordingRepo,
     required ConnectivityService connectivity,
     required AuthenticatedClient client,
+    UploadDownloader? uploadDownloader,
   }) : _recordingRepo = recordingRepo,
        _connectivity = connectivity,
        _client = client {
     _uploadService = ResumableUploadService(
       client: _client,
       recordingRepo: _recordingRepo,
+      downloader: uploadDownloader,
     );
   }
 
@@ -295,6 +298,16 @@ class SyncEngineImpl implements SyncEngine {
             ? (sent, total) => onProgress(id, sent, total)
             : null,
       );
+
+      if (uploadResult.pausedByRecording) {
+        // §1 mutex: recording took priority. Revert status to 'local' (offset
+        // is preserved in Drift) and return without incrementing retryCount.
+        await _recordingRepo.updateRecording(
+          id,
+          const LocalRecordingsCompanion(uploadStatus: Value('local')),
+        );
+        return;
+      }
 
       if (!uploadResult.success) {
         throw Exception('Upload failed: ${uploadResult.error}');

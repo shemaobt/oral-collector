@@ -9,12 +9,36 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:oral_collector/core/database/app_database.dart';
 import 'package:oral_collector/core/network/authenticated_client.dart';
 import 'package:oral_collector/features/recording/data/repositories/local_recording_repository.dart';
 import 'package:oral_collector/features/sync/data/repositories/sync_engine.dart';
+import 'package:oral_collector/features/sync/data/services/upload_downloader.dart';
 import 'package:oral_collector/features/sync/domain/repositories/connectivity_service.dart';
+
+class _AlwaysOkDownloader implements UploadDownloader {
+  const _AlwaysOkDownloader();
+
+  @override
+  Future<UploadResult> putChunk({
+    required String taskId,
+    required String url,
+    required String filePath,
+    required int offset,
+    required int end,
+    required Map<String, String> headers,
+  }) async {
+    return const UploadResult(statusCode: 200);
+  }
+
+  @override
+  Future<void> cancel(String taskId) async {}
+
+  @override
+  Future<void> cancelAll() async {}
+}
 
 class MockRecordingRepo extends Mock implements LocalRecordingRepository {}
 
@@ -74,6 +98,8 @@ LocalRecording makeRecording({
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   late Directory tempDir;
   late MockRecordingRepo mockRepo;
   late MockConnectivity mockConnectivity;
@@ -86,6 +112,7 @@ void main() {
   });
 
   setUp(() {
+    SharedPreferences.setMockInitialValues({});
     tempDir = Directory.systemTemp.createTempSync('sync_engine_test');
     mockRepo = MockRecordingRepo();
     mockConnectivity = MockConnectivity();
@@ -100,7 +127,10 @@ void main() {
     tempDir.deleteSync(recursive: true);
   });
 
-  SyncEngineImpl buildEngine(MockClient httpClient) {
+  SyncEngineImpl buildEngine(
+    MockClient httpClient, {
+    UploadDownloader? downloader,
+  }) {
     final authClient = AuthenticatedClient(
       client: httpClient,
       storage: mockStorage,
@@ -109,6 +139,7 @@ void main() {
       recordingRepo: mockRepo,
       connectivity: mockConnectivity,
       client: authClient,
+      uploadDownloader: downloader ?? const _AlwaysOkDownloader(),
     );
   }
 
@@ -260,6 +291,39 @@ void main() {
       verify(() => mockRepo.markAsUploading('rec-1')).called(1);
       verify(() => mockRepo.markAsUploaded('rec-1', 'srv-1', any())).called(1);
       expect(engine.isProcessing, isFalse);
+      httpClient.close();
+    });
+
+    test('§1 paused_by_recording reverts uploadStatus to local without marking '
+        'as failed and without incrementing retryCount', () async {
+      // Pre-flag the flag so ResumableUploadService returns paused_by_recording
+      // before even touching the downloader.
+      SharedPreferences.setMockInitialValues({
+        'com.shema.oralCollector.is_recording_active': true,
+      });
+      final testFile = File('${tempDir.path}/paused.m4a');
+      testFile.writeAsBytesSync(Uint8List(1024));
+
+      final rec = makeRecording(localFilePath: testFile.path);
+
+      when(() => mockConnectivity.isOnline).thenAnswer((_) async => true);
+      when(() => mockRepo.getPendingUploads()).thenAnswer((_) async => [rec]);
+      stubRepoForUpload(testFile.path);
+
+      final httpClient = buildSuccessClient();
+      final engine = buildEngine(httpClient);
+
+      await engine.processQueue();
+
+      verify(() => mockRepo.markAsUploading('rec-1')).called(1);
+      // No markAsUploaded and no markAsFailed — the row reverts to local.
+      verifyNever(() => mockRepo.markAsUploaded(any(), any(), any()));
+      verifyNever(
+        () => mockRepo.markAsFailed(
+          any(),
+          incrementRetry: any(named: 'incrementRetry'),
+        ),
+      );
       httpClient.close();
     });
   });

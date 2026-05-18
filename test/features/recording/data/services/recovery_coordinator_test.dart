@@ -5,20 +5,26 @@ import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:oral_collector/core/config/recording_config.dart';
 import 'package:oral_collector/core/database/app_database.dart';
 import 'package:oral_collector/core/database/database_provider.dart';
+import 'package:oral_collector/core/platform/recording_active_flag.dart';
 import 'package:oral_collector/features/recording/data/services/recovery_coordinator.dart';
 import 'package:oral_collector/features/recording/data/services/segment_paths.dart';
 import 'package:oral_collector/features/recording/data/services/wav_header_repair.dart';
 import 'package:oral_collector/features/recording/data/repositories/recording_session_repository.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   late AppDatabase db;
   late RecordingSessionRepository repo;
   late ProviderContainer container;
 
   setUp(() {
+    SharedPreferences.setMockInitialValues({});
     db = AppDatabase.forTesting(NativeDatabase.memory());
     repo = RecordingSessionRepository(db);
     container = ProviderContainer(
@@ -114,6 +120,26 @@ void main() {
       final session = await repo.getById('orphaned');
       expect(session?.status, 'crashed');
     });
+
+    test(
+      'scanOnStartup clears the RecordingActiveFlag left over from a crashed run',
+      () async {
+        SharedPreferences.setMockInitialValues({
+          RecordingConfig.recordingActiveFlagKey: true,
+        });
+        await seedSession(
+          id: 'orphaned',
+          status: 'active',
+          startedAt: DateTime(2026, 5, 12),
+          segmentPaths: ['/p.wav'],
+        );
+
+        final coordinator = container.read(recoveryCoordinatorProvider);
+        await coordinator.scanOnStartup();
+
+        expect(await const RecordingActiveFlag().read(), isFalse);
+      },
+    );
 
     test('refresh populates interruptedSessionsProvider with crashed sessions '
         'having at least one segment', () async {

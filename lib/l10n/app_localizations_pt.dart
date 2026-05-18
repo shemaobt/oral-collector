@@ -2548,4 +2548,20 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get recovery_backToList => 'Agora não';
+
+  @override
+  String get upload_pausedWhileRecording => 'Upload pausado durante a gravação';
+
+  @override
+  String get upload_inProgressNotificationTitle => 'Enviando gravação';
+
+  @override
+  String get upload_inProgressNotificationBody =>
+      'Enviando áudio em segundo plano';
+
+  @override
+  String get upload_completeNotificationTitle => 'Envio concluído';
+
+  @override
+  String get upload_failedNotificationTitle => 'Falha no envio';
 }

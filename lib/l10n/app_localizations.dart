@@ -4483,6 +4483,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Not now'**
   String get recovery_backToList;
+
+  /// Hint shown on a recording card when the upload is paused because a recording is currently active (ENG-48 §1 mutex).
+  ///
+  /// In en, this message translates to:
+  /// **'Upload paused while recording'**
+  String get upload_pausedWhileRecording;
+
+  /// No description provided for @upload_inProgressNotificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading recording'**
+  String get upload_inProgressNotificationTitle;
+
+  /// No description provided for @upload_inProgressNotificationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending audio in the background'**
+  String get upload_inProgressNotificationBody;
+
+  /// No description provided for @upload_completeNotificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload complete'**
+  String get upload_completeNotificationTitle;
+
+  /// No description provided for @upload_failedNotificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload failed'**
+  String get upload_failedNotificationTitle;
 }
 
 class _AppLocalizationsDelegate

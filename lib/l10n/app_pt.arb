@@ -873,5 +873,13 @@
   "recovery_mostRecent": "Mais recente",
   "recovery_recordingNumbered": "Gravação {number}",
   "format_yesterday": "Ontem",
-  "recovery_backToList": "Agora não"
+  "recovery_backToList": "Agora não",
+  "upload_pausedWhileRecording": "Upload pausado durante a gravação",
+  "@upload_pausedWhileRecording": {
+    "description": "Hint shown on a recording card when the upload is paused because a recording is currently active (ENG-48 §1 mutex)."
+  },
+  "upload_inProgressNotificationTitle": "Enviando gravação",
+  "upload_inProgressNotificationBody": "Enviando áudio em segundo plano",
+  "upload_completeNotificationTitle": "Envio concluído",
+  "upload_failedNotificationTitle": "Falha no envio"
 }

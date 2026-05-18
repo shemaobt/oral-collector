@@ -4,8 +4,8 @@ import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:background_downloader/background_downloader.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
-import 'package:workmanager/workmanager.dart';
 
 import 'core/database/database_provider.dart';
 import 'core/l10n/locale_provider.dart';
@@ -19,7 +19,8 @@ import 'features/recording/data/services/recording_notification.dart';
 import 'features/recording/data/services/recording_trash.dart';
 import 'features/recording/data/services/recovery_coordinator.dart';
 import 'features/sync/data/providers.dart';
-import 'features/sync/data/services/background_sync_service.dart';
+import 'features/sync/data/services/background_upload_coordinator.dart';
+import 'features/sync/data/services/upload_progress_visualizer.dart';
 import 'features/sync/presentation/notifiers/sync_notifier.dart';
 import 'shared/preview_helpers.dart';
 
@@ -50,11 +51,6 @@ void main() async {
 
   if (!kIsWeb && platform.isAndroidPlatform) {
     try {
-      await Workmanager().initialize(callbackDispatcher);
-    } on Exception {
-      // noop
-    }
-    try {
       FlutterForegroundTask.initCommunicationPort();
     } on Exception {
       // noop
@@ -64,6 +60,29 @@ void main() async {
   if (!kIsWeb) {
     try {
       await RecordingNotification.instance.init();
+    } on Exception {
+      // noop
+    }
+
+    try {
+      // §5 progress UX (Android): determinate progress notification while a
+      // chunk is in flight; dismissed automatically on complete/cancel.
+      // iOS path uses the upload Live Activity instead (§5 iOS).
+      FileDownloader().configureNotification(
+        running: const TaskNotification(
+          'Uploading recording',
+          'Sending audio in the background',
+        ),
+        complete: const TaskNotification(
+          'Upload complete',
+          'Recording saved to the cloud',
+        ),
+        error: const TaskNotification(
+          'Upload failed',
+          'Will retry when the connection improves',
+        ),
+        progressBar: true,
+      );
     } on Exception {
       // noop
     }
@@ -90,6 +109,12 @@ class _OralCollectorAppState extends ConsumerState<OralCollectorApp> {
       ref.read(authNotifierProvider.notifier).tryAutoLogin();
 
       _initBackgroundSync();
+
+      // Wire the recording-state -> upload coordinator listener.
+      ref.read(recordingUploadListenerProvider);
+
+      // Wire sync state -> Upload Live Activity (iOS).
+      ref.read(uploadProgressVisualizerListenerProvider);
 
       if (!kIsWeb) {
         RecordingTrash.pruneOldTrash(maxAgeHours: 24);

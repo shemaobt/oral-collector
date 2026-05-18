@@ -14,6 +14,7 @@ import 'package:record/record.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../core/l10n/locale_provider.dart';
 import '../../../../core/platform/file_ops.dart' as file_ops;
+import '../../../../core/platform/recording_active_flag.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/utils/format.dart' as fmt;
 import '../../../project/presentation/notifiers/project_notifier.dart';
@@ -275,6 +276,8 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
       return false;
     }
 
+    await const RecordingActiveFlag().markActive();
+
     state = RecordingState(
       isRecording: true,
       isPaused: false,
@@ -407,6 +410,8 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
       return false;
     }
 
+    await const RecordingActiveFlag().markActive();
+
     state = state.copyWith(
       amplitudeStream: recorder.amplitudeStream,
       sessionId: sessionId,
@@ -529,6 +534,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
     }
     _segRecorder = null;
 
+    await const RecordingActiveFlag().markInactive();
     state = const RecordingState();
     await RecordingNotification.instance.clear();
     await _stopLiveActivityIfIOS();
@@ -680,6 +686,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
       }
     }
 
+    await const RecordingActiveFlag().markInactive();
     state = const RecordingState();
   }
 
