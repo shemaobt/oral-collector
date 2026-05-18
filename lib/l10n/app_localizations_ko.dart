@@ -36,10 +36,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get common_cancel => '취소';
 
   @override
-  String get common_resume => 'Resume';
+  String get common_resume => '계속';
 
   @override
-  String get common_discard => 'Discard';
+  String get common_discard => '삭제';
 
   @override
   String get common_save => '저장';
@@ -631,8 +631,7 @@ class AppLocalizationsKo extends AppLocalizations {
       '마이크를 탭하여 첫 번째 이야기를 녹음하거나 오디오 파일을 가져오세요.';
 
   @override
-  String get recordings_dropToImport =>
-      'Tip: drag audio files onto this window to import.';
+  String get recordings_dropToImport => '팁: 오디오 파일을 이 창으로 끌어 가져오기 하세요.';
 
   @override
   String recordings_count(int count) {
@@ -873,18 +872,18 @@ class AppLocalizationsKo extends AppLocalizations {
   String get import_compressWavHint => '~10x 작음, ML 파이프라인에 품질 손실 없음';
 
   @override
-  String get import_dropHint => 'Drop audio files to import';
+  String get import_dropHint => '가져올 오디오 파일을 놓으세요';
 
   @override
-  String get import_dropActive => 'Release to import';
+  String get import_dropActive => '가져오려면 놓으세요';
 
   @override
   String import_rejectedTooLarge(int count, String names) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Skipped $count files over 500 MB: $names',
-      one: 'Skipped 1 file over 500 MB: $names',
+      other: '500MB가 넘는 파일 $count개 건너뜀: $names',
+      one: '500MB가 넘는 파일 1개 건너뜀: $names',
     );
     return '$_temp0';
   }
@@ -895,9 +894,8 @@ class AppLocalizationsKo extends AppLocalizations {
       count,
       locale: localeName,
       other:
-          'Skipped $count files with unsupported audio codecs: $names. Re-export as PCM WAV or M4A.',
-      one:
-          'Skipped 1 file with an unsupported audio codec: $names. Re-export as PCM WAV or M4A.',
+          '지원되지 않는 오디오 코덱이 포함된 파일 $count개 건너뜀: $names. PCM WAV 또는 M4A로 다시 내보내세요.',
+      one: '지원되지 않는 오디오 코덱이 포함된 파일 1개 건너뜀: $names. PCM WAV 또는 M4A로 다시 내보내세요.',
     );
     return '$_temp0';
   }
@@ -907,27 +905,26 @@ class AppLocalizationsKo extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Skipped $count unreadable files: $names',
-      one: 'Skipped 1 unreadable file: $names',
+      other: '읽을 수 없는 파일 $count개 건너뜀: $names',
+      one: '읽을 수 없는 파일 1개 건너뜀: $names',
     );
     return '$_temp0';
   }
 
   @override
-  String get import_resumePromptTitle => 'Resume interrupted upload';
+  String get import_resumePromptTitle => '중단된 업로드 재개';
 
   @override
   String import_resumePromptBody(String name, String size) {
-    return '\"$name\" ($size) was partially uploaded. Select the same file to continue.';
+    return '\"$name\"($size)이(가) 부분적으로 업로드되었습니다. 계속하려면 같은 파일을 선택하세요.';
   }
 
   @override
-  String get import_resumeSizeMismatch =>
-      'That file doesn\'t match the paused upload.';
+  String get import_resumeSizeMismatch => '이 파일은 일시 중지된 업로드와 일치하지 않습니다.';
 
   @override
   String import_largeFileWarning(String size) {
-    return 'Large file ($size). Keep this tab open until the upload completes.';
+    return '큰 파일($size). 업로드가 완료될 때까지 이 탭을 열어 두세요.';
   }
 
   @override
@@ -2453,18 +2450,17 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recovery_backToList => 'Not now';
 
   @override
-  String get upload_pausedWhileRecording => 'Upload paused while recording';
+  String get upload_pausedWhileRecording => '녹음 중 업로드 일시 중지됨';
 
   @override
-  String get upload_inProgressNotificationTitle => 'Uploading recording';
+  String get upload_inProgressNotificationTitle => '녹음 업로드 중';
 
   @override
-  String get upload_inProgressNotificationBody =>
-      'Sending audio in the background';
+  String get upload_inProgressNotificationBody => '백그라운드에서 오디오 전송 중';
 
   @override
-  String get upload_completeNotificationTitle => 'Upload complete';
+  String get upload_completeNotificationTitle => '업로드 완료';
 
   @override
-  String get upload_failedNotificationTitle => 'Upload failed';
+  String get upload_failedNotificationTitle => '업로드 실패';
 }

@@ -36,10 +36,10 @@ class AppLocalizationsId extends AppLocalizations {
   String get common_cancel => 'Batal';
 
   @override
-  String get common_resume => 'Resume';
+  String get common_resume => 'Lanjutkan';
 
   @override
-  String get common_discard => 'Discard';
+  String get common_discard => 'Buang';
 
   @override
   String get common_save => 'Simpan';
@@ -651,7 +651,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get recordings_dropToImport =>
-      'Tip: drag audio files onto this window to import.';
+      'Tip: seret berkas audio ke jendela ini untuk mengimpor.';
 
   @override
   String recordings_count(int count) {
@@ -899,18 +899,18 @@ class AppLocalizationsId extends AppLocalizations {
       '~10x lebih kecil, tanpa kehilangan kualitas untuk pipeline ML';
 
   @override
-  String get import_dropHint => 'Drop audio files to import';
+  String get import_dropHint => 'Jatuhkan berkas audio untuk diimpor';
 
   @override
-  String get import_dropActive => 'Release to import';
+  String get import_dropActive => 'Lepaskan untuk mengimpor';
 
   @override
   String import_rejectedTooLarge(int count, String names) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Skipped $count files over 500 MB: $names',
-      one: 'Skipped 1 file over 500 MB: $names',
+      other: '$count berkas di atas 500 MB dilewati: $names',
+      one: '1 berkas di atas 500 MB dilewati: $names',
     );
     return '$_temp0';
   }
@@ -921,9 +921,9 @@ class AppLocalizationsId extends AppLocalizations {
       count,
       locale: localeName,
       other:
-          'Skipped $count files with unsupported audio codecs: $names. Re-export as PCM WAV or M4A.',
+          '$count berkas dengan codec audio tak didukung dilewati: $names. Ekspor ulang sebagai PCM WAV atau M4A.',
       one:
-          'Skipped 1 file with an unsupported audio codec: $names. Re-export as PCM WAV or M4A.',
+          '1 berkas dengan codec audio tak didukung dilewati: $names. Ekspor ulang sebagai PCM WAV atau M4A.',
     );
     return '$_temp0';
   }
@@ -933,27 +933,27 @@ class AppLocalizationsId extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Skipped $count unreadable files: $names',
-      one: 'Skipped 1 unreadable file: $names',
+      other: '$count berkas tak terbaca dilewati: $names',
+      one: '1 berkas tak terbaca dilewati: $names',
     );
     return '$_temp0';
   }
 
   @override
-  String get import_resumePromptTitle => 'Resume interrupted upload';
+  String get import_resumePromptTitle => 'Lanjutkan unggahan yang terhenti';
 
   @override
   String import_resumePromptBody(String name, String size) {
-    return '\"$name\" ($size) was partially uploaded. Select the same file to continue.';
+    return '\"$name\" ($size) terunggah sebagian. Pilih berkas yang sama untuk melanjutkan.';
   }
 
   @override
   String get import_resumeSizeMismatch =>
-      'That file doesn\'t match the paused upload.';
+      'Berkas itu tidak cocok dengan unggahan yang dijeda.';
 
   @override
   String import_largeFileWarning(String size) {
-    return 'Large file ($size). Keep this tab open until the upload completes.';
+    return 'Berkas besar ($size). Biarkan tab ini terbuka hingga unggahan selesai.';
   }
 
   @override
@@ -2543,18 +2543,18 @@ class AppLocalizationsId extends AppLocalizations {
   String get recovery_backToList => 'Not now';
 
   @override
-  String get upload_pausedWhileRecording => 'Upload paused while recording';
+  String get upload_pausedWhileRecording => 'Unggahan dijeda saat merekam';
 
   @override
-  String get upload_inProgressNotificationTitle => 'Uploading recording';
+  String get upload_inProgressNotificationTitle => 'Mengunggah rekaman';
 
   @override
   String get upload_inProgressNotificationBody =>
-      'Sending audio in the background';
+      'Mengirim audio di latar belakang';
 
   @override
-  String get upload_completeNotificationTitle => 'Upload complete';
+  String get upload_completeNotificationTitle => 'Unggahan selesai';
 
   @override
-  String get upload_failedNotificationTitle => 'Upload failed';
+  String get upload_failedNotificationTitle => 'Unggahan gagal';
 }

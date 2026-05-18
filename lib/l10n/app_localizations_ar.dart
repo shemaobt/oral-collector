@@ -36,10 +36,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get common_cancel => 'إلغاء';
 
   @override
-  String get common_resume => 'Resume';
+  String get common_resume => 'استئناف';
 
   @override
-  String get common_discard => 'Discard';
+  String get common_discard => 'تجاهل';
 
   @override
   String get common_save => 'حفظ';
@@ -642,7 +642,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get recordings_dropToImport =>
-      'Tip: drag audio files onto this window to import.';
+      'تلميح: اسحب ملفات الصوت إلى هذه النافذة لاستيرادها.';
 
   @override
   String recordings_count(int count) {
@@ -886,18 +886,18 @@ class AppLocalizationsAr extends AppLocalizations {
       '~10x أصغر، بدون فقدان للجودة لخط أنابيب ML';
 
   @override
-  String get import_dropHint => 'Drop audio files to import';
+  String get import_dropHint => 'أسقط ملفات الصوت للاستيراد';
 
   @override
-  String get import_dropActive => 'Release to import';
+  String get import_dropActive => 'حرر للاستيراد';
 
   @override
   String import_rejectedTooLarge(int count, String names) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Skipped $count files over 500 MB: $names',
-      one: 'Skipped 1 file over 500 MB: $names',
+      other: 'تم تخطي $count ملفات تتجاوز 500 ميغابايت: $names',
+      one: 'تم تخطي ملف واحد يتجاوز 500 ميغابايت: $names',
     );
     return '$_temp0';
   }
@@ -908,9 +908,9 @@ class AppLocalizationsAr extends AppLocalizations {
       count,
       locale: localeName,
       other:
-          'Skipped $count files with unsupported audio codecs: $names. Re-export as PCM WAV or M4A.',
+          'تم تخطي $count ملفات بترميزات صوتية غير مدعومة: $names. أعد تصديرها بصيغة PCM WAV أو M4A.',
       one:
-          'Skipped 1 file with an unsupported audio codec: $names. Re-export as PCM WAV or M4A.',
+          'تم تخطي ملف واحد بترميز صوتي غير مدعوم: $names. أعد تصديره بصيغة PCM WAV أو M4A.',
     );
     return '$_temp0';
   }
@@ -920,27 +920,26 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Skipped $count unreadable files: $names',
-      one: 'Skipped 1 unreadable file: $names',
+      other: 'تم تخطي $count ملفات غير قابلة للقراءة: $names',
+      one: 'تم تخطي ملف واحد غير قابل للقراءة: $names',
     );
     return '$_temp0';
   }
 
   @override
-  String get import_resumePromptTitle => 'Resume interrupted upload';
+  String get import_resumePromptTitle => 'استئناف الرفع المتوقف';
 
   @override
   String import_resumePromptBody(String name, String size) {
-    return '\"$name\" ($size) was partially uploaded. Select the same file to continue.';
+    return 'تم رفع \"$name\" ($size) جزئيًا. اختر الملف نفسه للمتابعة.';
   }
 
   @override
-  String get import_resumeSizeMismatch =>
-      'That file doesn\'t match the paused upload.';
+  String get import_resumeSizeMismatch => 'هذا الملف لا يطابق الرفع المتوقف.';
 
   @override
   String import_largeFileWarning(String size) {
-    return 'Large file ($size). Keep this tab open until the upload completes.';
+    return 'ملف كبير ($size). أبقِ هذه التبويبة مفتوحة حتى ينتهي الرفع.';
   }
 
   @override
@@ -2338,12 +2337,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String recording_uploadSpeed(String speed) {
-    return '$speed/s';
+    return '$speed/ث';
   }
 
   @override
   String recording_uploadEtaRemaining(String eta) {
-    return '~$eta remaining';
+    return 'متبقي ~$eta';
   }
 
   @override
@@ -2500,18 +2499,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get recovery_backToList => 'Not now';
 
   @override
-  String get upload_pausedWhileRecording => 'Upload paused while recording';
+  String get upload_pausedWhileRecording =>
+      'تم إيقاف الرفع مؤقتًا أثناء التسجيل';
 
   @override
-  String get upload_inProgressNotificationTitle => 'Uploading recording';
+  String get upload_inProgressNotificationTitle => 'جاري رفع التسجيل';
 
   @override
-  String get upload_inProgressNotificationBody =>
-      'Sending audio in the background';
+  String get upload_inProgressNotificationBody => 'جاري إرسال الصوت في الخلفية';
 
   @override
-  String get upload_completeNotificationTitle => 'Upload complete';
+  String get upload_completeNotificationTitle => 'اكتمل الرفع';
 
   @override
-  String get upload_failedNotificationTitle => 'Upload failed';
+  String get upload_failedNotificationTitle => 'فشل الرفع';
 }

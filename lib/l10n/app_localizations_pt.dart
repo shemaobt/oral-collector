@@ -2393,7 +2393,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String recording_uploadEtaRemaining(String eta) {
-    return '~$eta remaining';
+    return '~$eta restantes';
   }
 
   @override

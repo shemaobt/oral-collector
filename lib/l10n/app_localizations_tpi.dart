@@ -36,10 +36,10 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get common_cancel => 'Lusim';
 
   @override
-  String get common_resume => 'Resume';
+  String get common_resume => 'Statim gen';
 
   @override
-  String get common_discard => 'Discard';
+  String get common_discard => 'Rausim';
 
   @override
   String get common_save => 'Sevim';
@@ -648,7 +648,7 @@ class AppLocalizationsTpi extends AppLocalizations {
 
   @override
   String get recordings_dropToImport =>
-      'Tip: drag audio files onto this window to import.';
+      'Tip: pulim ol audio fail i go long dispela windo bilong imotim.';
 
   @override
   String recordings_count(int count) {
@@ -893,18 +893,18 @@ class AppLocalizationsTpi extends AppLocalizations {
       '~10x liklik moa, i no lusim gutpela sait long ML pipeline';
 
   @override
-  String get import_dropHint => 'Drop audio files to import';
+  String get import_dropHint => 'Drop ol audio fail bilong imotim';
 
   @override
-  String get import_dropActive => 'Release to import';
+  String get import_dropActive => 'Lusim na imotim';
 
   @override
   String import_rejectedTooLarge(int count, String names) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Skipped $count files over 500 MB: $names',
-      one: 'Skipped 1 file over 500 MB: $names',
+      other: 'Skipim $count fail bikpela tumas long 500 MB: $names',
+      one: 'Skipim 1 fail bikpela tumas long 500 MB: $names',
     );
     return '$_temp0';
   }
@@ -915,9 +915,9 @@ class AppLocalizationsTpi extends AppLocalizations {
       count,
       locale: localeName,
       other:
-          'Skipped $count files with unsupported audio codecs: $names. Re-export as PCM WAV or M4A.',
+          'Skipim $count fail wantaim odio kodek i no inap: $names. Ekspot gen olsem PCM WAV o M4A.',
       one:
-          'Skipped 1 file with an unsupported audio codec: $names. Re-export as PCM WAV or M4A.',
+          'Skipim 1 fail wantaim odio kodek i no inap: $names. Ekspot gen olsem PCM WAV o M4A.',
     );
     return '$_temp0';
   }
@@ -927,27 +927,27 @@ class AppLocalizationsTpi extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Skipped $count unreadable files: $names',
-      one: 'Skipped 1 unreadable file: $names',
+      other: 'Skipim $count fail i no inap kaunim: $names',
+      one: 'Skipim 1 fail i no inap kaunim: $names',
     );
     return '$_temp0';
   }
 
   @override
-  String get import_resumePromptTitle => 'Resume interrupted upload';
+  String get import_resumePromptTitle => 'Statim gen aplotim i no pinis';
 
   @override
   String import_resumePromptBody(String name, String size) {
-    return '\"$name\" ($size) was partially uploaded. Select the same file to continue.';
+    return '\"$name\" ($size) i no go pinis. Makim wankain fail bilong go het.';
   }
 
   @override
   String get import_resumeSizeMismatch =>
-      'That file doesn\'t match the paused upload.';
+      'Dispela fail i no wankain wantaim aplotim i wet.';
 
   @override
   String import_largeFileWarning(String size) {
-    return 'Large file ($size). Keep this tab open until the upload completes.';
+    return 'Bikpela fail ($size). Larim dispela tab i op inap long aplotim i pinis.';
   }
 
   @override
@@ -2523,18 +2523,17 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get recovery_backToList => 'Not now';
 
   @override
-  String get upload_pausedWhileRecording => 'Upload paused while recording';
+  String get upload_pausedWhileRecording => 'Aplotim i wet taim rekodim';
 
   @override
-  String get upload_inProgressNotificationTitle => 'Uploading recording';
+  String get upload_inProgressNotificationTitle => 'Aplotim rekod';
 
   @override
-  String get upload_inProgressNotificationBody =>
-      'Sending audio in the background';
+  String get upload_inProgressNotificationBody => 'Salim odio long baksait';
 
   @override
-  String get upload_completeNotificationTitle => 'Upload complete';
+  String get upload_completeNotificationTitle => 'Aplotim i pinis';
 
   @override
-  String get upload_failedNotificationTitle => 'Upload failed';
+  String get upload_failedNotificationTitle => 'Aplotim i fel';
 }

@@ -36,10 +36,10 @@ class AppLocalizationsSw extends AppLocalizations {
   String get common_cancel => 'Ghairi';
 
   @override
-  String get common_resume => 'Resume';
+  String get common_resume => 'Endelea';
 
   @override
-  String get common_discard => 'Discard';
+  String get common_discard => 'Tupa';
 
   @override
   String get common_save => 'Hifadhi';
@@ -650,7 +650,7 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get recordings_dropToImport =>
-      'Tip: drag audio files onto this window to import.';
+      'Kidokezo: buruta faili za sauti kwenye dirisha hili ili kuingiza.';
 
   @override
   String recordings_count(int count) {
@@ -895,18 +895,18 @@ class AppLocalizationsSw extends AppLocalizations {
       '~10x ndogo, bila kupoteza ubora kwa mfereji wa ML';
 
   @override
-  String get import_dropHint => 'Drop audio files to import';
+  String get import_dropHint => 'Dondosha faili za sauti ili kuingiza';
 
   @override
-  String get import_dropActive => 'Release to import';
+  String get import_dropActive => 'Achia ili kuingiza';
 
   @override
   String import_rejectedTooLarge(int count, String names) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Skipped $count files over 500 MB: $names',
-      one: 'Skipped 1 file over 500 MB: $names',
+      other: 'Imeruka faili $count zenye zaidi ya MB 500: $names',
+      one: 'Imeruka faili 1 yenye zaidi ya MB 500: $names',
     );
     return '$_temp0';
   }
@@ -917,9 +917,9 @@ class AppLocalizationsSw extends AppLocalizations {
       count,
       locale: localeName,
       other:
-          'Skipped $count files with unsupported audio codecs: $names. Re-export as PCM WAV or M4A.',
+          'Imeruka faili $count zenye kodeki za sauti zisizotegemewa: $names. Hamisha tena kama PCM WAV au M4A.',
       one:
-          'Skipped 1 file with an unsupported audio codec: $names. Re-export as PCM WAV or M4A.',
+          'Imeruka faili 1 yenye kodeki ya sauti isiyotegemewa: $names. Hamisha tena kama PCM WAV au M4A.',
     );
     return '$_temp0';
   }
@@ -929,27 +929,27 @@ class AppLocalizationsSw extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Skipped $count unreadable files: $names',
-      one: 'Skipped 1 unreadable file: $names',
+      other: 'Imeruka faili $count zisizoweza kusomeka: $names',
+      one: 'Imeruka faili 1 isiyoweza kusomeka: $names',
     );
     return '$_temp0';
   }
 
   @override
-  String get import_resumePromptTitle => 'Resume interrupted upload';
+  String get import_resumePromptTitle => 'Endelea upakiaji uliokatizwa';
 
   @override
   String import_resumePromptBody(String name, String size) {
-    return '\"$name\" ($size) was partially uploaded. Select the same file to continue.';
+    return '\"$name\" ($size) ilipakiwa kwa sehemu. Chagua faili ileile ili kuendelea.';
   }
 
   @override
   String get import_resumeSizeMismatch =>
-      'That file doesn\'t match the paused upload.';
+      'Faili hiyo hailingani na upakiaji uliosimamishwa.';
 
   @override
   String import_largeFileWarning(String size) {
-    return 'Large file ($size). Keep this tab open until the upload completes.';
+    return 'Faili kubwa ($size). Acha kichupo hiki kifunguliwe hadi upakiaji ukamilike.';
   }
 
   @override
@@ -2529,18 +2529,18 @@ class AppLocalizationsSw extends AppLocalizations {
   String get recovery_backToList => 'Not now';
 
   @override
-  String get upload_pausedWhileRecording => 'Upload paused while recording';
+  String get upload_pausedWhileRecording =>
+      'Upakiaji umesitishwa wakati wa kurekodi';
 
   @override
-  String get upload_inProgressNotificationTitle => 'Uploading recording';
+  String get upload_inProgressNotificationTitle => 'Inapakia rekodi';
 
   @override
-  String get upload_inProgressNotificationBody =>
-      'Sending audio in the background';
+  String get upload_inProgressNotificationBody => 'Inatuma sauti chinichini';
 
   @override
-  String get upload_completeNotificationTitle => 'Upload complete';
+  String get upload_completeNotificationTitle => 'Upakiaji umekamilika';
 
   @override
-  String get upload_failedNotificationTitle => 'Upload failed';
+  String get upload_failedNotificationTitle => 'Upakiaji umeshindwa';
 }

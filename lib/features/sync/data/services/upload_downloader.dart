@@ -203,8 +203,11 @@ class BackgroundDownloaderUploader implements UploadDownloader {
   Future<void> cancel(String taskId) async {
     try {
       await FileDownloader().cancelTaskWithId(taskId);
-    } on Object {
-      // task already finished
+    } on Exception catch (e) {
+      // Most often the task already finished or was never enqueued — those are
+      // benign. Log unexpected Exception subtypes so a misbehaving plugin
+      // doesn't fail silently. Errors (TypeError, StateError) propagate.
+      debugPrint('BackgroundDownloaderUploader.cancel($taskId): $e');
     }
   }
 
@@ -215,8 +218,8 @@ class BackgroundDownloaderUploader implements UploadDownloader {
       for (final task in tasks) {
         await FileDownloader().cancelTaskWithId(task.taskId);
       }
-    } on Object {
-      // best-effort
+    } on Exception catch (e) {
+      debugPrint('BackgroundDownloaderUploader.cancelAll: $e');
     }
   }
 
