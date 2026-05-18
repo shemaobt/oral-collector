@@ -38,6 +38,9 @@ class _AlwaysOkDownloader implements UploadDownloader {
 
   @override
   Future<void> cancelAll() async {}
+
+  @override
+  Future<void> resumeAfterCancel() async {}
 }
 
 class MockRecordingRepo extends Mock implements LocalRecordingRepository {}
@@ -622,63 +625,77 @@ void main() {
       httpClient.close();
     });
 
-    test('polling returns upload_failed marks as failed', () async {
-      final testFile = File('${tempDir.path}/poll_fail.m4a');
-      testFile.writeAsBytesSync(Uint8List(1024));
+    test(
+      'malformed confirm-upload response marks as permanently failed (non-retryable)',
+      () async {
+        // Engine no longer polls a status endpoint; confirm-upload is the
+        // single source of truth. A 200 with an unparseable body indicates a
+        // server-side protocol violation — retrying won't help, so the row
+        // is marked failed with retryCount=maxRetries (H7).
+        final testFile = File('${tempDir.path}/poll_fail.m4a');
+        testFile.writeAsBytesSync(Uint8List(1024));
 
-      final rec = makeRecording(localFilePath: testFile.path);
+        final rec = makeRecording(localFilePath: testFile.path);
 
-      when(() => mockConnectivity.isOnline).thenAnswer((_) async => true);
-      when(() => mockRepo.getPendingUploads()).thenAnswer((_) async => [rec]);
-      stubRepoForUpload(testFile.path);
+        when(() => mockConnectivity.isOnline).thenAnswer((_) async => true);
+        when(() => mockRepo.getPendingUploads()).thenAnswer((_) async => [rec]);
+        stubRepoForUpload(testFile.path);
 
-      final httpClient = MockClient((request) async {
-        final path = request.url.path;
+        final httpClient = MockClient((request) async {
+          final path = request.url.path;
 
-        if (request.method == 'POST' && path == '/api/oc/recordings') {
-          return http.Response(jsonEncode({'id': 'srv-1'}), 201);
-        }
+          if (request.method == 'POST' && path == '/api/oc/recordings') {
+            return http.Response(jsonEncode({'id': 'srv-1'}), 201);
+          }
 
-        if (request.method == 'POST' &&
-            path == '/api/oc/recordings/upload-url') {
-          return http.Response(
-            jsonEncode({
-              'upload_url': 'https://storage.googleapis.com/test',
-              'content_type': 'audio/mp4',
-            }),
-            200,
-          );
-        }
+          if (request.method == 'POST' &&
+              path == '/api/oc/recordings/upload-url') {
+            return http.Response(
+              jsonEncode({
+                'upload_url': 'https://storage.googleapis.com/test',
+                'content_type': 'audio/mp4',
+              }),
+              200,
+            );
+          }
 
-        if (request.url.host == 'storage.googleapis.com') {
-          return http.Response('', 200);
-        }
+          if (request.url.host == 'storage.googleapis.com') {
+            return http.Response('', 200);
+          }
 
-        if (request.method == 'POST' && path.contains('/confirm-upload')) {
-          return http.Response('', 200);
-        }
+          if (request.method == 'POST' && path.contains('/confirm-upload')) {
+            // Malformed body — JSON parsing will fail.
+            return http.Response('', 200);
+          }
 
-        if (request.method == 'GET' && path == '/api/oc/recordings/srv-1') {
-          return http.Response(
-            jsonEncode({
-              'upload_status': 'upload_failed',
-              'upload_error': 'Checksum mismatch',
-            }),
-            200,
-          );
-        }
+          return http.Response('Not Found', 404);
+        });
 
-        return http.Response('Not Found', 404);
-      });
+        final engine = buildEngine(httpClient);
 
-      final engine = buildEngine(httpClient);
+        await engine.processQueue();
 
-      await engine.processQueue();
-
-      verify(() => mockRepo.markAsFailed('rec-1')).called(1);
-      verifyNever(() => mockRepo.markAsUploaded(any(), any(), any()));
-      httpClient.close();
-    });
+        verifyNever(() => mockRepo.markAsUploaded(any(), any(), any()));
+        // Verify the permanently-failed update happened.
+        final captured = verify(
+          () => mockRepo.updateRecording('rec-1', captureAny()),
+        ).captured;
+        final hadPermanentFail = captured.any((c) {
+          final companion = c as LocalRecordingsCompanion;
+          return companion.uploadStatus.present &&
+              companion.uploadStatus.value == 'failed' &&
+              companion.retryCount.present &&
+              companion.retryCount.value == SyncEngineImpl.maxRetries;
+        });
+        expect(
+          hadPermanentFail,
+          isTrue,
+          reason:
+              'malformed confirm-upload must be marked non-retryable failed',
+        );
+        httpClient.close();
+      },
+    );
 
     test('confirm-upload failure marks as failed not uploaded', () async {
       final testFile = File('${tempDir.path}/poll_timeout.m4a');

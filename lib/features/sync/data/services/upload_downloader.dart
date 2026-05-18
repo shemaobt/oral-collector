@@ -33,6 +33,11 @@ abstract class UploadDownloader {
   Future<void> cancel(String taskId);
 
   Future<void> cancelAll();
+
+  /// Re-arms the uploader after a [cancelAll]. The coordinator calls this
+  /// when the recording mutex releases. Implementations without sticky
+  /// cancel state can return immediately.
+  Future<void> resumeAfterCancel();
 }
 
 UploadDownloader defaultUploadDownloader({http.Client? httpClient}) {
@@ -120,9 +125,12 @@ class HttpInlineUploader implements UploadDownloader {
   @override
   Future<void> cancelAll() async {
     _cancelAllPending = true;
-    Future<void>.delayed(const Duration(seconds: 2), () {
-      _cancelAllPending = false;
-    });
+  }
+
+  @override
+  Future<void> resumeAfterCancel() async {
+    _cancelAllPending = false;
+    _cancelledTaskIds.clear();
   }
 }
 
@@ -148,6 +156,11 @@ class BackgroundDownloaderUploader implements UploadDownloader {
       filename: filename,
       httpRequestMethod: 'PUT',
       post: 'binary',
+      // The `Range` header here is the `background_downloader` package's
+      // slicing directive (it tells the native uploader which byte slice to
+      // PUT) — NOT a GCS request header. GCS itself ignores `Range` on PUTs
+      // and uses `Content-Range` (added by the caller). Removing this would
+      // make every chunk upload the whole file from byte 0.
       headers: {...headers, 'Range': 'bytes=$offset-${end - 1}'},
       priority: 0,
       updates: Updates.statusAndProgress,
@@ -205,6 +218,12 @@ class BackgroundDownloaderUploader implements UploadDownloader {
     } on Object {
       // best-effort
     }
+  }
+
+  @override
+  Future<void> resumeAfterCancel() async {
+    // background_downloader holds no sticky cancel state — new UploadTasks
+    // proceed regardless.
   }
 }
 

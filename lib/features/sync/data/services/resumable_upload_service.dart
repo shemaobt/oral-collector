@@ -219,6 +219,15 @@ class ResumableUploadService {
         sessionUri = null;
         startOffset = 0;
       } else if (queryOffset >= fileLength) {
+        // Server already has the whole file. Clear the session bookkeeping
+        // so the next sync run doesn't re-query an exhausted URI.
+        await _recordingRepo.updateRecording(
+          recordingId,
+          const LocalRecordingsCompanion(
+            resumableSessionUri: Value(null),
+            uploadedBytes: Value(0),
+          ),
+        );
         return const ResumableUploadResult(success: true);
       } else {
         startOffset = queryOffset;
@@ -284,13 +293,14 @@ class ResumableUploadService {
       final chunkResult = _classifyChunkStatus(result.statusCode);
 
       if (chunkResult == _ChunkResult.success) {
-        offset = end;
-        onProgress?.call(offset, fileLength);
-
+        // Persist before signalling progress so a crash between the two
+        // doesn't leave the UI ahead of the DB.
         await _recordingRepo.updateRecording(
           recordingId,
-          LocalRecordingsCompanion(uploadedBytes: Value(offset)),
+          LocalRecordingsCompanion(uploadedBytes: Value(end)),
         );
+        offset = end;
+        onProgress?.call(offset, fileLength);
       } else if (chunkResult == _ChunkResult.sessionExpired) {
         final newSession = await _requestResumableSession(serverId, format);
         if (newSession == null) {

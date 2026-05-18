@@ -45,6 +45,11 @@ class BackgroundUploadCoordinator {
 
   Future<void> _resumeAfterRecording() async {
     try {
+      await _downloader.resumeAfterCancel();
+    } on Object catch (e) {
+      debugPrint('BackgroundUploadCoordinator: resumeAfterCancel failed: $e');
+    }
+    try {
       await _onResume();
     } on Object catch (e) {
       debugPrint('BackgroundUploadCoordinator: resume failed: $e');

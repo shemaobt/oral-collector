@@ -158,6 +158,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
       _pendingResumeSessionId = null;
       _pendingResumeSegmentPaths = null;
       _pendingResumeDuration = null;
+      await const RecordingActiveFlag().markInactive();
       state = const RecordingState();
       await ref.read(recoveryCoordinatorProvider).refresh();
       return;
@@ -177,6 +178,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
     final sessionRepo = ref.read(recordingSessionRepositoryProvider);
     await sessionRepo.markCrashed(activeSessionId);
 
+    await const RecordingActiveFlag().markInactive();
     state = const RecordingState();
     await RecordingNotification.instance.clear();
     await _stopLiveActivityIfIOS();
@@ -494,6 +496,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
         _pendingResumeSessionId = null;
         _pendingResumeSegmentPaths = null;
         _pendingResumeDuration = null;
+        await const RecordingActiveFlag().markInactive();
         state = const RecordingState();
         await RecordingNotification.instance.clear();
         await _stopLiveActivityIfIOS();
@@ -512,6 +515,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
         return result;
       }
 
+      await const RecordingActiveFlag().markInactive();
       state = const RecordingState();
       await RecordingNotification.instance.clear();
       await _stopLiveActivityIfIOS();
@@ -621,6 +625,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
     final recorder = _webRecorder;
     final pendingKey = _webPendingKey;
     if (recorder == null || pendingKey == null) {
+      await const RecordingActiveFlag().markInactive();
       state = const RecordingState();
       return null;
     }
@@ -628,6 +633,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
     final url = await recorder.stop();
     await _disposeWebRecorder();
 
+    await const RecordingActiveFlag().markInactive();
     state = const RecordingState();
 
     if (url == null || url.isEmpty) return null;

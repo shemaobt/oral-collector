@@ -49,17 +49,20 @@ class RecoveryCoordinator {
 
   Future<void> scanOnStartup() async {
     final repo = _ref.read(recordingSessionRepositoryProvider);
-    final active = await repo.findActiveSessions();
-    if (active.isNotEmpty) {
-      debugPrint(
-        'RecoveryCoordinator: scanOnStartup found ${active.length} active session(s)',
-      );
+    try {
+      final active = await repo.findActiveSessions();
+      if (active.isNotEmpty) {
+        debugPrint(
+          'RecoveryCoordinator: scanOnStartup found ${active.length} active session(s)',
+        );
+      }
+      for (final session in active) {
+        await _repairInFlightSegments(session);
+        await repo.markCrashed(session.id);
+      }
+    } finally {
+      await const RecordingActiveFlag().markInactive();
     }
-    for (final session in active) {
-      await _repairInFlightSegments(session);
-      await repo.markCrashed(session.id);
-    }
-    await const RecordingActiveFlag().markInactive();
     await _sweepCompletedWithOrphanSegments();
     await refresh();
   }

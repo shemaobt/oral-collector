@@ -141,6 +141,63 @@ void main() {
       },
     );
 
+    test(
+      'scanOnStartup still clears the flag even if segment repair throws',
+      () async {
+        // Regression: previously the flag was cleared after the per-session
+        // loop, so any throw from _repairInFlightSegments or markCrashed left
+        // the flag stuck = true, blocking every subsequent upload silently.
+        SharedPreferences.setMockInitialValues({
+          RecordingConfig.recordingActiveFlagKey: true,
+        });
+        await seedSession(
+          id: 'orphaned-throws',
+          status: 'active',
+          startedAt: DateTime(2026, 5, 12),
+          segmentPaths: ['/p.wav'],
+        );
+
+        final tempDir = await Directory.systemTemp.createTemp(
+          'eng48_scan_throw_',
+        );
+        // Write a segment file so the candidates loop has something to walk.
+        final segPath = SegmentPaths.forSegment(
+          tempDir.path,
+          'orphaned-throws',
+          0,
+        );
+        await File(segPath).writeAsBytes(List<int>.filled(64, 0));
+
+        final throwingContainer = ProviderContainer(
+          overrides: [
+            appDatabaseProvider.overrideWithValue(db),
+            recoveryCoordinatorProvider.overrideWith(
+              (ref) => RecoveryCoordinator(
+                ref,
+                wavRepair: _ThrowingWavHeaderRepair(),
+                directoryResolver: () async => tempDir,
+              ),
+            ),
+          ],
+        );
+        addTearDown(() async {
+          throwingContainer.dispose();
+          if (await tempDir.exists()) {
+            await tempDir.delete(recursive: true);
+          }
+        });
+
+        final coordinator = throwingContainer.read(recoveryCoordinatorProvider);
+        await expectLater(coordinator.scanOnStartup(), throwsA(anything));
+
+        expect(
+          await const RecordingActiveFlag().read(),
+          isFalse,
+          reason: 'flag must clear even when repair throws',
+        );
+      },
+    );
+
     test('refresh populates interruptedSessionsProvider with crashed sessions '
         'having at least one segment', () async {
       await seedSession(
@@ -388,5 +445,12 @@ class _FakeWavHeaderRepair extends WavHeaderRepair {
       duration: const Duration(seconds: 30),
       fileSize: size,
     );
+  }
+}
+
+class _ThrowingWavHeaderRepair extends WavHeaderRepair {
+  @override
+  Future<WavRepairResult?> repair(String filePath) async {
+    throw StateError('simulated repair failure');
   }
 }

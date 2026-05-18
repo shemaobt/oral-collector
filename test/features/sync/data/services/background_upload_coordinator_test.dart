@@ -6,6 +6,7 @@ import 'package:oral_collector/features/sync/data/services/upload_downloader.dar
 
 class _RecordingDownloader implements UploadDownloader {
   int cancelAllCount = 0;
+  int resumeAfterCancelCount = 0;
 
   @override
   Future<UploadResult> putChunk({
@@ -23,6 +24,11 @@ class _RecordingDownloader implements UploadDownloader {
   @override
   Future<void> cancelAll() async {
     cancelAllCount++;
+  }
+
+  @override
+  Future<void> resumeAfterCancel() async {
+    resumeAfterCancelCount++;
   }
 }
 
@@ -97,5 +103,90 @@ void main() {
 
       expect(resumeCalls, 1);
     });
+
+    test('resumeAfterCancel is invoked before onResume so cancel state clears '
+        'before the next processQueue', () async {
+      final downloader = _RecordingDownloader();
+      final callOrder = <String>[];
+      final coordinator = BackgroundUploadCoordinator(
+        downloader: _OrderingDownloader(downloader, callOrder),
+        onResume: () async => callOrder.add('onResume'),
+      );
+
+      await coordinator.onRecordingStateChanged(
+        const RecordingState(isRecording: true),
+      );
+      callOrder.clear();
+      await coordinator.onRecordingStateChanged(const RecordingState());
+
+      expect(callOrder, ['resumeAfterCancel', 'onResume']);
+    });
+
+    test(
+      'rapid true→false→true toggles fire cancelAll twice but resume once',
+      () async {
+        // §1: each new recording transition must cancel any in-flight chunk.
+        // Intermediate idle states fire onResume only if they actually
+        // represent an idle period (edge-triggered). This guards against the
+        // double-toggle race the reviewer flagged.
+        final downloader = _RecordingDownloader();
+        var resumeCalls = 0;
+        final coordinator = BackgroundUploadCoordinator(
+          downloader: downloader,
+          onResume: () async => resumeCalls++,
+        );
+
+        await coordinator.onRecordingStateChanged(
+          const RecordingState(isRecording: true),
+        );
+        await coordinator.onRecordingStateChanged(const RecordingState());
+        await coordinator.onRecordingStateChanged(
+          const RecordingState(isRecording: true),
+        );
+
+        expect(downloader.cancelAllCount, 2);
+        expect(resumeCalls, 1);
+        expect(downloader.resumeAfterCancelCount, 1);
+      },
+    );
   });
+}
+
+class _OrderingDownloader implements UploadDownloader {
+  _OrderingDownloader(this._inner, this._calls);
+
+  final _RecordingDownloader _inner;
+  final List<String> _calls;
+
+  @override
+  Future<UploadResult> putChunk({
+    required String taskId,
+    required String url,
+    required String filePath,
+    required int offset,
+    required int end,
+    required Map<String, String> headers,
+  }) => _inner.putChunk(
+    taskId: taskId,
+    url: url,
+    filePath: filePath,
+    offset: offset,
+    end: end,
+    headers: headers,
+  );
+
+  @override
+  Future<void> cancel(String taskId) => _inner.cancel(taskId);
+
+  @override
+  Future<void> cancelAll() async {
+    _calls.add('cancelAll');
+    await _inner.cancelAll();
+  }
+
+  @override
+  Future<void> resumeAfterCancel() async {
+    _calls.add('resumeAfterCancel');
+    await _inner.resumeAfterCancel();
+  }
 }
