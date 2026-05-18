@@ -66,20 +66,20 @@ void main() async {
 
     try {
       // §5 progress UX (Android): determinate progress notification while a
-      // chunk is in flight; dismissed automatically on complete/cancel.
+      // chunk is in flight; dismissed automatically when the chunk completes.
+      // We deliberately do NOT configure `complete` or `error` notifications:
+      // each chunked GCS upload sends N intermediate PUTs that return 308
+      // ("Resume Incomplete"), which `background_downloader` reports as
+      // `TaskStatus.failed`. Wiring an `error` notification would emit a
+      // bogus "Upload failed" toast for every chunk. The only success the
+      // plugin recognises is the final 200/201 on the last chunk; we surface
+      // the real upload-level completion via the Drift watch in the UI and,
+      // on iOS, via the Upload Live Activity.
       // iOS path uses the upload Live Activity instead (§5 iOS).
       FileDownloader().configureNotification(
         running: const TaskNotification(
           'Uploading recording',
           'Sending audio in the background',
-        ),
-        complete: const TaskNotification(
-          'Upload complete',
-          'Recording saved to the cloud',
-        ),
-        error: const TaskNotification(
-          'Upload failed',
-          'Will retry when the connection improves',
         ),
         progressBar: true,
       );
