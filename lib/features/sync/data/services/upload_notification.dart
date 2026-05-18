@@ -22,7 +22,9 @@ class UploadNotification {
     if (!Platform.isAndroid) return;
     if (_initialized) return;
 
-    const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidInit = AndroidInitializationSettings(
+      'ic_recording_notification',
+    );
     await _plugin.initialize(
       const InitializationSettings(android: androidInit),
     );
@@ -59,15 +61,19 @@ class UploadNotification {
     if (!Platform.isAndroid) return;
     if (!_initialized) await init();
 
+    final clamped = progressPercent.clamp(0, 100);
+    final richBody = body.isEmpty ? '$clamped%' : '$body · $clamped%';
+
     await _plugin.show(
       _notificationId,
       title,
-      body,
+      richBody,
       NotificationDetails(
         android: AndroidNotificationDetails(
           _channelId,
           _channelName,
           channelDescription: _channelDescription,
+          icon: 'ic_recording_notification',
           ongoing: true,
           autoCancel: false,
           importance: Importance.low,
@@ -77,7 +83,7 @@ class UploadNotification {
           category: AndroidNotificationCategory.progress,
           showProgress: true,
           maxProgress: 100,
-          progress: progressPercent.clamp(0, 100),
+          progress: clamped,
         ),
       ),
     );
