@@ -1,13 +1,14 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
+
 import '../../../../core/database/app_database.dart';
 import '../../../../core/platform/file_ops.dart' as file_ops;
 import '../../../../core/theme/app_colors.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/widgets/audio_player_widget.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 
-class RecordingHeroPlayer extends StatelessWidget {
+class RecordingHeroPlayer extends StatefulWidget {
   const RecordingHeroPlayer({
     super.key,
     required this.recording,
@@ -19,7 +20,20 @@ class RecordingHeroPlayer extends StatelessWidget {
   final AppColorSet colors;
   final ThemeData theme;
 
-  Future<Widget> _resolvePlayer(String noAudioLabel) async {
+  @override
+  State<RecordingHeroPlayer> createState() => _RecordingHeroPlayerState();
+}
+
+class _RecordingHeroPlayerState extends State<RecordingHeroPlayer> {
+  late Future<Widget> _playerFuture;
+  late String _cacheKey;
+  String _noAudioLabel = '';
+
+  String _keyFor(LocalRecording r) =>
+      '${r.localFilePath}|${r.gcsUrl ?? ''}';
+
+  Future<Widget> _resolvePlayer() async {
+    final recording = widget.recording;
     final effectiveGcsUrl =
         (recording.gcsUrl != null && recording.gcsUrl!.isNotEmpty)
         ? recording.gcsUrl
@@ -38,17 +52,38 @@ class RecordingHeroPlayer extends StatelessWidget {
       return AudioPlayerWidget(url: effectiveGcsUrl);
     }
     return Text(
-      noAudioLabel,
-      style: TextStyle(color: colors.secondary, fontSize: 14),
+      _noAudioLabel,
+      style: TextStyle(color: widget.colors.secondary, fontSize: 14),
     );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _cacheKey = _keyFor(widget.recording);
+    _playerFuture = _resolvePlayer();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _noAudioLabel = AppLocalizations.of(context).recording_noAudioAvailable;
+  }
+
+  @override
+  void didUpdateWidget(covariant RecordingHeroPlayer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final nextKey = _keyFor(widget.recording);
+    if (nextKey != _cacheKey) {
+      _cacheKey = nextKey;
+      _playerFuture = _resolvePlayer();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final isWide = MediaQuery.of(context).size.width >= 700;
-    final noAudioLabel = AppLocalizations.of(
-      context,
-    ).recording_noAudioAvailable;
+    final colors = widget.colors;
 
     return Container(
       decoration: isWide
@@ -87,36 +122,7 @@ class RecordingHeroPlayer extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 16),
-                    Expanded(
-                      child: FutureBuilder<Widget>(
-                        future: _resolvePlayer(noAudioLabel),
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return const SizedBox(
-                              height: 48,
-                              child: Center(
-                                child: SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                ),
-                              ),
-                            );
-                          }
-                          return snapshot.data ??
-                              Text(
-                                noAudioLabel,
-                                style: TextStyle(
-                                  color: colors.secondary,
-                                  fontSize: 14,
-                                ),
-                              );
-                        },
-                      ),
-                    ),
+                    Expanded(child: _buildPlayer()),
                   ],
                 )
               : Column(
@@ -136,39 +142,40 @@ class RecordingHeroPlayer extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    FutureBuilder<Widget>(
-                      future: _resolvePlayer(noAudioLabel),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return SizedBox(
-                            height: 72,
-                            child: Center(
-                              child: SizedBox(
-                                width: 24,
-                                height: 24,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: colors.primary,
-                                ),
-                              ),
-                            ),
-                          );
-                        }
-                        return snapshot.data ??
-                            Text(
-                              noAudioLabel,
-                              style: TextStyle(
-                                color: colors.secondary,
-                                fontSize: 14,
-                              ),
-                            );
-                      },
-                    ),
+                    _buildPlayer(),
                   ],
                 ),
         ),
       ),
+    );
+  }
+
+  Widget _buildPlayer() {
+    final colors = widget.colors;
+    return FutureBuilder<Widget>(
+      future: _playerFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return SizedBox(
+            height: 72,
+            child: Center(
+              child: SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: colors.primary,
+                ),
+              ),
+            ),
+          );
+        }
+        return snapshot.data ??
+            Text(
+              _noAudioLabel,
+              style: TextStyle(color: colors.secondary, fontSize: 14),
+            );
+      },
     );
   }
 }
