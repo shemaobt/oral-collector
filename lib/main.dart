@@ -4,7 +4,6 @@ import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:background_downloader/background_downloader.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 
 import 'core/database/database_provider.dart';
@@ -20,6 +19,7 @@ import 'features/recording/data/services/recording_trash.dart';
 import 'features/recording/data/services/recovery_coordinator.dart';
 import 'features/sync/data/providers.dart';
 import 'features/sync/data/services/background_upload_coordinator.dart';
+import 'features/sync/data/services/upload_notification.dart';
 import 'features/sync/data/services/upload_progress_visualizer.dart';
 import 'features/sync/presentation/notifiers/sync_notifier.dart';
 import 'shared/preview_helpers.dart';
@@ -63,26 +63,8 @@ void main() async {
     } on Exception {
       // noop
     }
-
     try {
-      // §5 progress UX (Android): determinate progress notification while a
-      // chunk is in flight; dismissed automatically when the chunk completes.
-      // We deliberately do NOT configure `complete` or `error` notifications:
-      // each chunked GCS upload sends N intermediate PUTs that return 308
-      // ("Resume Incomplete"), which `background_downloader` reports as
-      // `TaskStatus.failed`. Wiring an `error` notification would emit a
-      // bogus "Upload failed" toast for every chunk. The only success the
-      // plugin recognises is the final 200/201 on the last chunk; we surface
-      // the real upload-level completion via the Drift watch in the UI and,
-      // on iOS, via the Upload Live Activity.
-      // iOS path uses the upload Live Activity instead (§5 iOS).
-      FileDownloader().configureNotification(
-        running: const TaskNotification(
-          'Uploading recording',
-          'Sending audio in the background',
-        ),
-        progressBar: true,
-      );
+      await UploadNotification.instance.init();
     } on Exception {
       // noop
     }
@@ -110,10 +92,7 @@ class _OralCollectorAppState extends ConsumerState<OralCollectorApp> {
 
       _initBackgroundSync();
 
-      // Wire the recording-state -> upload coordinator listener.
       ref.read(recordingUploadListenerProvider);
-
-      // Wire sync state -> Upload Live Activity (iOS).
       ref.read(uploadProgressVisualizerListenerProvider);
 
       if (!kIsWeb) {

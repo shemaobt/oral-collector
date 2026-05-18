@@ -7,57 +7,85 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../presentation/notifiers/sync_notifier.dart';
 import '../../presentation/notifiers/sync_state.dart';
 import 'upload_live_activity.dart';
+import 'upload_notification.dart';
 
-/// Mirrors SyncState (uploadingId, syncProgress, currentFileName) into the
-/// iOS Upload Live Activity (§5). No-op on Android & web (Android relies on
-/// `background_downloader`'s built-in progress notification configured at
-/// startup).
 class UploadProgressVisualizer {
-  UploadProgressVisualizer({UploadLiveActivity? liveActivity})
-    : _liveActivity = liveActivity ?? UploadLiveActivity.instance;
+  UploadProgressVisualizer({
+    UploadLiveActivity? liveActivity,
+    UploadNotification? notification,
+  }) : _liveActivity = liveActivity ?? UploadLiveActivity.instance,
+       _notification = notification ?? UploadNotification.instance;
 
   final UploadLiveActivity _liveActivity;
+  final UploadNotification _notification;
   String? _activeRecordingId;
 
   Future<void> onStateChanged(SyncState? previous, SyncState next) async {
     if (kIsWeb) return;
-    if (!Platform.isIOS) return;
 
     final previousId = previous?.uploadingId;
     final nextId = next.uploadingId;
+    final fileName = next.currentFileName ?? 'Recording';
 
     if (previousId == null && nextId != null) {
       _activeRecordingId = nextId;
-      await _liveActivity.start(
-        activityId: nextId,
-        fileName: next.currentFileName ?? 'Recording',
-        progressPercent: next.syncProgress,
-      );
+      if (Platform.isIOS) {
+        await _liveActivity.start(
+          activityId: nextId,
+          fileName: fileName,
+          progressPercent: next.syncProgress,
+        );
+      } else if (Platform.isAndroid) {
+        await _notification.showProgress(
+          title: 'Uploading recording',
+          body: fileName,
+          progressPercent: next.syncProgress,
+        );
+      }
       return;
     }
 
     if (previousId != null && nextId == null) {
       _activeRecordingId = null;
-      await _liveActivity.stop();
+      if (Platform.isIOS) {
+        await _liveActivity.stop();
+      } else if (Platform.isAndroid) {
+        await _notification.clear();
+      }
       return;
     }
 
     if (previousId != null && nextId != null && previousId != nextId) {
-      // Different upload took over (rare). Restart LA.
-      await _liveActivity.stop();
       _activeRecordingId = nextId;
-      await _liveActivity.start(
-        activityId: nextId,
-        fileName: next.currentFileName ?? 'Recording',
-        progressPercent: next.syncProgress,
-      );
+      if (Platform.isIOS) {
+        await _liveActivity.stop();
+        await _liveActivity.start(
+          activityId: nextId,
+          fileName: fileName,
+          progressPercent: next.syncProgress,
+        );
+      } else if (Platform.isAndroid) {
+        await _notification.showProgress(
+          title: 'Uploading recording',
+          body: fileName,
+          progressPercent: next.syncProgress,
+        );
+      }
       return;
     }
 
     if (nextId != null &&
         nextId == _activeRecordingId &&
         previous?.syncProgress != next.syncProgress) {
-      await _liveActivity.update(progressPercent: next.syncProgress);
+      if (Platform.isIOS) {
+        await _liveActivity.update(progressPercent: next.syncProgress);
+      } else if (Platform.isAndroid) {
+        await _notification.showProgress(
+          title: 'Uploading recording',
+          body: fileName,
+          progressPercent: next.syncProgress,
+        );
+      }
     }
   }
 }

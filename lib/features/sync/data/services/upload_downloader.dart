@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:background_downloader/background_downloader.dart';
 import 'package:path/path.dart' as p;
 
-/// Result of a single PUT chunk transfer.
 class UploadResult {
   final int statusCode;
   final String? responseBody;
@@ -18,17 +17,7 @@ class UploadResult {
   });
 }
 
-/// Wraps a single-chunk PUT transfer behind an interface so tests can inject a
-/// fake transport in place of `background_downloader`. The implementation
-/// must support PUTs with `Content-Range` headers and a `Range` header that
-/// instructs the underlying plugin to slice the local file client-side.
 abstract class UploadDownloader {
-  /// PUT bytes [offset, end) of [filePath] to [url] with [headers].
-  ///
-  /// Implementations should add a `Range: bytes=$offset-${end - 1}` header
-  /// (only on real `background_downloader` impl; the plugin strips it before
-  /// sending and slices the local file). Other headers (`Content-Range`,
-  /// `Authorization`, `Content-Type`) are forwarded as-is to the server.
   Future<UploadResult> putChunk({
     required String taskId,
     required String url,
@@ -40,9 +29,6 @@ abstract class UploadDownloader {
 
   Future<void> cancel(String taskId);
 
-  /// Cancel every upload task currently in flight, regardless of recording.
-  /// Called when recording starts so the in-flight chunk is aborted and the
-  /// resumable loop can short-circuit via `paused_by_recording` (§1 mutex).
   Future<void> cancelAll();
 }
 
@@ -76,12 +62,6 @@ class BackgroundDownloaderUploader implements UploadDownloader {
 
     final result = await FileDownloader().upload(task);
     final exception = result.exception;
-    // The plugin treats anything outside 200..206 as failed (UploadTaskWorker.kt:63)
-    // and strips responseStatusCode on failure (TaskWorker.kt processStatusUpdate).
-    // The real HTTP code survives only inside TaskHttpException.httpResponseCode,
-    // so we use that as the authoritative status when present. This is critical
-    // for GCS resumable uploads where 308 ("Resume Incomplete") is the expected
-    // success response after every intermediate chunk.
     final effectiveStatus = switch (result.status) {
       TaskStatus.complete => result.responseStatusCode ?? 200,
       _ when exception is TaskHttpException && exception.httpResponseCode > 0 =>
@@ -117,7 +97,7 @@ class BackgroundDownloaderUploader implements UploadDownloader {
     try {
       await FileDownloader().cancelTaskWithId(taskId);
     } on Object {
-      // ignore — task may already be done
+      // task already finished
     }
   }
 
@@ -129,13 +109,11 @@ class BackgroundDownloaderUploader implements UploadDownloader {
         await FileDownloader().cancelTaskWithId(task.taskId);
       }
     } on Object {
-      // best-effort cancel; ignore if plugin already cleared tasks.
+      // best-effort
     }
   }
 }
 
-/// Ensure the file path is reachable by `background_downloader` on iOS where
-/// some apps stage files in a sandboxed tmp dir.
 bool fileIsReadable(String filePath) {
   try {
     final f = File(filePath);

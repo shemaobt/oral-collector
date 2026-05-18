@@ -300,8 +300,6 @@ class SyncEngineImpl implements SyncEngine {
       );
 
       if (uploadResult.pausedByRecording) {
-        // §1 mutex: recording took priority. Revert status to 'local' (offset
-        // is preserved in Drift) and return without incrementing retryCount.
         await _recordingRepo.updateRecording(
           id,
           const LocalRecordingsCompanion(uploadStatus: Value('local')),

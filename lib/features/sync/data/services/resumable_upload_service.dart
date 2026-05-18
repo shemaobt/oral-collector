@@ -60,11 +60,6 @@ class ResumableUploadService {
     );
   }
 
-  /// Legacy entry-point used by direct-uploader (file imports) and the web
-  /// pending-uploads banner. These flows hand in a [FileSource] (possibly
-  /// memory-backed on web) instead of a file path on disk, so they cannot use
-  /// the `background_downloader` transport. Keeps the original chunked-HTTP
-  /// loop intact.
   Future<ResumableUploadResult> uploadFromSource({
     required String recordingId,
     required String serverId,

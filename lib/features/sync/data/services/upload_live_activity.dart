@@ -5,11 +5,6 @@ import 'package:live_activities/live_activities.dart';
 
 import '../../../../core/config/recording_config.dart';
 
-/// Live Activity wrapper for the **upload** kind. Mirrors the structure of
-/// [RecordingLiveActivity] but writes `kind: "upload"` into the App Group
-/// UserDefaults so the SwiftUI widget can pick the upload layout instead of
-/// the recording layout. Recording-LA and upload-LA never coexist (§1 mutex),
-/// so it is safe to reuse the same widget extension target.
 class UploadLiveActivity {
   UploadLiveActivity._();
   static final UploadLiveActivity instance = UploadLiveActivity._();

@@ -8,14 +8,6 @@ import '../../../recording/presentation/notifiers/recording_session_state.dart';
 import '../../presentation/notifiers/sync_notifier.dart';
 import 'upload_downloader.dart';
 
-/// Glue between recording state and the background-upload pipeline:
-///
-/// * When recording starts (§1): cancel every in-flight upload task so the
-///   `paused_by_recording` short-circuit fires inside `ResumableUploadService`
-///   without waiting for the current chunk to finish.
-/// * When recording ends: re-trigger `SyncNotifier.processQueue()` so any
-///   uploads that were paused while recording resume from the persisted
-///   offset (§3).
 typedef ResumeTrigger = Future<void> Function();
 
 class BackgroundUploadCoordinator {
@@ -67,17 +59,12 @@ final backgroundUploadCoordinatorProvider =
       );
     });
 
-/// Side-effect provider: subscribes to RecordingState transitions and forwards
-/// them to the coordinator. Activate once at app startup by reading the
-/// provider (e.g. `ref.read(recordingUploadListenerProvider)`).
 final recordingUploadListenerProvider = Provider<void>((ref) {
   final coordinator = ref.read(backgroundUploadCoordinatorProvider);
   ref.listen<RecordingState>(recordingSessionNotifierProvider, (
     previous,
     next,
   ) {
-    // Fire only when isRecording actually changes; the coordinator does its
-    // own debouncing as a second line of defence.
     if (previous?.isRecording != next.isRecording) {
       unawaited(coordinator.onRecordingStateChanged(next));
     }
