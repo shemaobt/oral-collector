@@ -75,14 +75,26 @@ class BackgroundDownloaderUploader implements UploadDownloader {
     );
 
     final result = await FileDownloader().upload(task);
-    final status = result.responseStatusCode ?? 0;
+    final exception = result.exception;
+    // The plugin treats anything outside 200..206 as failed (UploadTaskWorker.kt:63)
+    // and strips responseStatusCode on failure (TaskWorker.kt processStatusUpdate).
+    // The real HTTP code survives only inside TaskHttpException.httpResponseCode,
+    // so we use that as the authoritative status when present. This is critical
+    // for GCS resumable uploads where 308 ("Resume Incomplete") is the expected
+    // success response after every intermediate chunk.
+    final effectiveStatus = switch (result.status) {
+      TaskStatus.complete => result.responseStatusCode ?? 200,
+      _ when exception is TaskHttpException && exception.httpResponseCode > 0 =>
+        exception.httpResponseCode,
+      _ => result.responseStatusCode ?? 0,
+    };
     final body = result.responseBody;
     switch (result.status) {
       case TaskStatus.complete:
-        return UploadResult(statusCode: status, responseBody: body);
+        return UploadResult(statusCode: effectiveStatus, responseBody: body);
       case TaskStatus.canceled:
         return UploadResult(
-          statusCode: status,
+          statusCode: effectiveStatus,
           responseBody: body,
           cancelled: true,
         );
@@ -92,9 +104,8 @@ class BackgroundDownloaderUploader implements UploadDownloader {
       case TaskStatus.running:
       case TaskStatus.waitingToRetry:
       case TaskStatus.paused:
-        final exception = result.exception;
         return UploadResult(
-          statusCode: status,
+          statusCode: effectiveStatus,
           responseBody: body,
           errorReason: exception?.description ?? result.status.name,
         );

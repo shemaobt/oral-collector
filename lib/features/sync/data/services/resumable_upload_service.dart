@@ -159,7 +159,8 @@ class ResumableUploadService {
           uploadData['content_type'] as String? ?? 'application/octet-stream';
 
       final result = await _downloader.putChunk(
-        taskId: 'single-$recordingId-$attempt',
+        taskId:
+            'single-$recordingId-$attempt-${DateTime.now().microsecondsSinceEpoch}',
         url: uploadUrl,
         filePath: filePath,
         offset: 0,
@@ -265,9 +266,11 @@ class ResumableUploadService {
 
       final end = (offset + _defaultChunkSize).clamp(0, fileLength);
       final contentRange = 'bytes $offset-${end - 1}/$fileLength';
+      final taskId =
+          'chunk-$recordingId-$chunkIndex-${DateTime.now().microsecondsSinceEpoch}';
 
       final result = await _downloader.putChunk(
-        taskId: 'chunk-$recordingId-$chunkIndex',
+        taskId: taskId,
         url: sessionUri!,
         filePath: filePath,
         offset: offset,
