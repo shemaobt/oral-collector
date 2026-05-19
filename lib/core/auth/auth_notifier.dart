@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -68,6 +69,7 @@ class AuthNotifier extends Notifier<AuthState> {
       await _storeUser(result.user);
       state = state.copyWith(currentUser: result.user, isLoading: false);
     } on Exception catch (e) {
+      debugPrint('[auth.login] ${e.runtimeType}: $e');
       state = state.copyWith(
         isLoading: false,
         error: e.toString().replaceFirst('Exception: ', ''),
