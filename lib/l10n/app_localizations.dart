@@ -3650,6 +3650,42 @@ abstract class AppLocalizations {
   /// **'Discard and return'**
   String get recording_discardAndReturn;
 
+  /// Headline shown under the timer while audio is being finalized after stop
+  ///
+  /// In en, this message translates to:
+  /// **'Saving recording…'**
+  String get recording_savingRecording;
+
+  /// Title of the inline status card shown in place of pause/stop controls during finalization
+  ///
+  /// In en, this message translates to:
+  /// **'Processing your audio'**
+  String get recording_processingYourAudio;
+
+  /// Body copy reassuring the user that the save screen will appear automatically
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t close — we\'ll open the save screen next.'**
+  String get recording_dontCloseSaveNext;
+
+  /// Short uppercase tag shown on the right of the inline finalization card
+  ///
+  /// In en, this message translates to:
+  /// **'FINALIZING'**
+  String get recording_stageShortFinalizing;
+
+  /// Short uppercase tag — combining segments stage
+  ///
+  /// In en, this message translates to:
+  /// **'COMBINING'**
+  String get recording_stageShortCombining;
+
+  /// Short uppercase tag — compressing audio stage
+  ///
+  /// In en, this message translates to:
+  /// **'COMPRESSING'**
+  String get recording_stageShortCompressing;
+
   /// No description provided for @profile_defaultMicrophone.
   ///
   /// In en, this message translates to:

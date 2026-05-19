@@ -2051,6 +2051,25 @@ class AppLocalizationsFr extends AppLocalizations {
   String get recording_discardAndReturn => 'Ignorer et revenir';
 
   @override
+  String get recording_savingRecording => 'Saving recording…';
+
+  @override
+  String get recording_processingYourAudio => 'Processing your audio';
+
+  @override
+  String get recording_dontCloseSaveNext =>
+      'Don\'t close — we\'ll open the save screen next.';
+
+  @override
+  String get recording_stageShortFinalizing => 'FINALIZING';
+
+  @override
+  String get recording_stageShortCombining => 'COMBINING';
+
+  @override
+  String get recording_stageShortCompressing => 'COMPRESSING';
+
+  @override
   String get profile_defaultMicrophone => 'Microphone par défaut';
 
   @override

@@ -8,7 +8,10 @@ import 'package:oral_collector/features/recording/presentation/notifiers/input_d
 import 'package:oral_collector/features/recording/presentation/notifiers/recording_session_notifier.dart';
 import 'package:oral_collector/features/recording/presentation/notifiers/recording_session_state.dart';
 import 'package:oral_collector/features/recording/presentation/widgets/finalizing_overlay.dart';
+import 'package:oral_collector/features/recording/presentation/widgets/finalizing_status_card.dart';
+import 'package:oral_collector/features/recording/presentation/widgets/finalizing_waveform.dart';
 import 'package:oral_collector/features/recording/presentation/widgets/recording_step.dart';
+import 'package:oral_collector/features/recording/presentation/widgets/saving_recording_label.dart';
 import 'package:oral_collector/l10n/app_localizations.dart';
 
 class _MutableRecordingSessionNotifier extends RecordingSessionNotifier {
@@ -68,22 +71,16 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  /// Pump enough frames for the listener-triggered showDialog to mount the
-  /// overlay, without using pumpAndSettle (which hangs on the spinner anim).
-  Future<void> settleOverlay(WidgetTester tester) async {
-    await tester.pump(); // build
-    await tester.pump(); // post-frame callback / showDialog
-    await tester.pump(const Duration(milliseconds: 250)); // dialog transition
-    await tester.pump(const Duration(milliseconds: 250));
-  }
-
-  testWidgets('does not show overlay when stage is idle', (tester) async {
+  testWidgets('does not show finalization UI in idle state', (tester) async {
     await tester.pumpWidget(_wrap(state: const RecordingState()));
-    await settleOverlay(tester);
+    await tester.pump();
+    expect(find.byType(SavingRecordingLabel), findsNothing);
+    expect(find.byType(FinalizingStatusCard), findsNothing);
+    expect(find.byType(FinalizingWaveform), findsNothing);
     expect(find.byType(FinalizingOverlay), findsNothing);
   });
 
-  testWidgets('shows FinalizingOverlay when initial stage is finalizing', (
+  testWidgets('shows inline finalization UI when state is finalizing', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -93,12 +90,17 @@ void main() {
         ),
       ),
     );
-    await settleOverlay(tester);
-    expect(find.byType(FinalizingOverlay), findsOneWidget);
-    expect(find.text('Finalizing recording…'), findsOneWidget);
+    await tester.pump();
+    expect(find.byType(SavingRecordingLabel), findsOneWidget);
+    expect(find.byType(FinalizingWaveform), findsOneWidget);
+    expect(find.byType(FinalizingStatusCard), findsOneWidget);
+    // Error overlay should NOT be shown during normal finalization.
+    expect(find.byType(FinalizingOverlay), findsNothing);
   });
 
-  testWidgets('shows FinalizingOverlay with combining text', (tester) async {
+  testWidgets('shows "Saving recording…" label while finalizing', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       _wrap(
         state: const RecordingState(
@@ -106,39 +108,89 @@ void main() {
         ),
       ),
     );
-    await settleOverlay(tester);
-    expect(find.text('Combining segments…'), findsOneWidget);
+    await tester.pump();
+    expect(find.text('Saving recording…'), findsOneWidget);
   });
 
-  testWidgets('shows error variant when finalizationError is set', (
+  testWidgets('status card shows the current stage tag', (tester) async {
+    await tester.pumpWidget(
+      _wrap(
+        state: const RecordingState(
+          finalizationStage: FinalizationStage.compressingAudio,
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(find.text('COMPRESSING'), findsOneWidget);
+    expect(find.text('Processing your audio'), findsOneWidget);
+  });
+
+  testWidgets('status card shows reassurance copy', (tester) async {
+    await tester.pumpWidget(
+      _wrap(
+        state: const RecordingState(
+          finalizationStage: FinalizationStage.finalizing,
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(
+      find.text("Don't close — we'll open the save screen next."),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('status card swaps to degraded hint when recovery happened', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _wrap(
+        state: const RecordingState(
+          finalizationStage: FinalizationStage.finalizing,
+          finalizationDegraded: true,
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(find.text('Audio quality may be reduced.'), findsOneWidget);
+    expect(
+      find.text("Don't close — we'll open the save screen next."),
+      findsNothing,
+    );
+  });
+
+  testWidgets('shows error overlay when finalizationError is set', (
     tester,
   ) async {
     await tester.pumpWidget(
       _wrap(state: const RecordingState(finalizationError: 'No segments')),
     );
-    await settleOverlay(tester);
+    await tester.pump();
     expect(find.byType(FinalizingOverlay), findsOneWidget);
     expect(find.text("Couldn't save this recording"), findsOneWidget);
+    // Inline finalization widgets should NOT render in error state.
+    expect(find.byType(SavingRecordingLabel), findsNothing);
+    expect(find.byType(FinalizingStatusCard), findsNothing);
   });
 
-  testWidgets('overlay appears when state transitions idle → finalizing', (
+  testWidgets('inline UI appears when state transitions idle → finalizing', (
     tester,
   ) async {
     final notifier = _MutableRecordingSessionNotifier(const RecordingState());
     await tester.pumpWidget(
       _wrap(state: const RecordingState(), notifier: notifier),
     );
-    await settleOverlay(tester);
-    expect(find.byType(FinalizingOverlay), findsNothing);
+    await tester.pump();
+    expect(find.byType(FinalizingStatusCard), findsNothing);
 
     notifier.setStateForTest(
       const RecordingState(finalizationStage: FinalizationStage.finalizing),
     );
-    await settleOverlay(tester);
-    expect(find.byType(FinalizingOverlay), findsOneWidget);
+    await tester.pump();
+    expect(find.byType(FinalizingStatusCard), findsOneWidget);
   });
 
-  testWidgets('overlay dismisses when state transitions finalizing → idle', (
+  testWidgets('inline UI dismisses when state transitions finalizing → idle', (
     tester,
   ) async {
     final notifier = _MutableRecordingSessionNotifier(
@@ -152,45 +204,15 @@ void main() {
         notifier: notifier,
       ),
     );
-    await settleOverlay(tester);
-    expect(find.byType(FinalizingOverlay), findsOneWidget);
+    await tester.pump();
+    expect(find.byType(FinalizingStatusCard), findsOneWidget);
 
     notifier.setStateForTest(const RecordingState());
-    await settleOverlay(tester);
-    expect(find.byType(FinalizingOverlay), findsNothing);
+    await tester.pump();
+    expect(find.byType(FinalizingStatusCard), findsNothing);
   });
 
-  testWidgets(
-    'overlay updates text when stage changes finalizing → combining',
-    (tester) async {
-      final notifier = _MutableRecordingSessionNotifier(
-        const RecordingState(finalizationStage: FinalizationStage.finalizing),
-      );
-      await tester.pumpWidget(
-        _wrap(
-          state: const RecordingState(
-            finalizationStage: FinalizationStage.finalizing,
-          ),
-          notifier: notifier,
-        ),
-      );
-      await settleOverlay(tester);
-      expect(find.text('Finalizing recording…'), findsOneWidget);
-
-      notifier.setStateForTest(
-        const RecordingState(
-          finalizationStage: FinalizationStage.combiningSegments,
-        ),
-      );
-      await settleOverlay(tester);
-      expect(find.text('Combining segments…'), findsOneWidget);
-      expect(find.text('Finalizing recording…'), findsNothing);
-    },
-  );
-
-  testWidgets('overlay is rendered as a modal route blocking back navigation', (
-    tester,
-  ) async {
+  testWidgets('blocks back navigation while finalizing', (tester) async {
     await tester.pumpWidget(
       _wrap(
         state: const RecordingState(
@@ -198,46 +220,27 @@ void main() {
         ),
       ),
     );
-    await settleOverlay(tester);
+    await tester.pump();
 
-    expect(find.byType(FinalizingOverlay), findsOneWidget);
-
-    // PopScope wrapping the overlay (ancestor) must have canPop:false so the
-    // system back gesture cannot dismiss the dialog.
-    final popScopeAncestor = find.ancestor(
-      of: find.byType(FinalizingOverlay),
-      matching: find.byType(PopScope),
-    );
-    expect(popScopeAncestor, findsAtLeastNWidgets(1));
-    final popScope = tester.widget<PopScope>(popScopeAncestor.first);
+    final popScope = tester.widget<PopScope>(find.byType(PopScope).first);
     expect(popScope.canPop, isFalse);
   });
 
-  testWidgets(
-    'overlay is hosted in a modal route (covers any siblings in stack)',
-    (tester) async {
-      await tester.pumpWidget(
-        _wrap(
-          state: const RecordingState(
-            finalizationStage: FinalizationStage.finalizing,
-          ),
-        ),
-      );
-      await settleOverlay(tester);
+  testWidgets('blocks back navigation while error overlay is up', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _wrap(state: const RecordingState(finalizationError: 'oops')),
+    );
+    await tester.pump();
+    final popScope = tester.widget<PopScope>(find.byType(PopScope).first);
+    expect(popScope.canPop, isFalse);
+  });
 
-      // showDialog inserts a ModalBarrier above the underlying route.
-      // We assert the overlay's ModalRoute differs from the host scaffold's.
-      final overlayElement = tester.element(find.byType(FinalizingOverlay));
-      final scaffoldElement = tester.element(find.byType(Scaffold).first);
-
-      expect(ModalRoute.of(overlayElement), isNotNull);
-      expect(ModalRoute.of(scaffoldElement), isNotNull);
-      expect(
-        ModalRoute.of(overlayElement),
-        isNot(equals(ModalRoute.of(scaffoldElement))),
-        reason:
-            'FinalizingOverlay must be on a dialog route, not the underlying scaffold route',
-      );
-    },
-  );
+  testWidgets('allows back navigation when idle', (tester) async {
+    await tester.pumpWidget(_wrap(state: const RecordingState()));
+    await tester.pump();
+    final popScope = tester.widget<PopScope>(find.byType(PopScope).first);
+    expect(popScope.canPop, isTrue);
+  });
 }

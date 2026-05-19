@@ -2011,27 +2011,47 @@ class AppLocalizationsPt extends AppLocalizations {
   String get recording_inProgressNotificationBody => 'Toque para voltar ao app';
 
   @override
-  String get recording_finalizing => 'Finalizing recording…';
+  String get recording_finalizing => 'Finalizando gravação…';
 
   @override
-  String get recording_combiningSegments => 'Combining segments…';
+  String get recording_combiningSegments => 'Combinando segmentos…';
 
   @override
-  String get recording_compressingAudio => 'Compressing audio…';
+  String get recording_compressingAudio => 'Comprimindo áudio…';
 
   @override
   String get recording_finalizationDegradedHint =>
-      'Audio quality may be reduced.';
+      'A qualidade do áudio pode estar reduzida.';
 
   @override
-  String get recording_finalizationFailed => 'Couldn\'t save this recording';
+  String get recording_finalizationFailed =>
+      'Não foi possível salvar esta gravação';
 
   @override
   String get recording_finalizationFailedBody =>
-      'We tried to recover the audio but no segments were available.';
+      'Tentamos recuperar o áudio, mas nenhum segmento estava disponível.';
 
   @override
-  String get recording_discardAndReturn => 'Discard and return';
+  String get recording_discardAndReturn => 'Descartar e voltar';
+
+  @override
+  String get recording_savingRecording => 'Salvando gravação…';
+
+  @override
+  String get recording_processingYourAudio => 'Processando seu áudio';
+
+  @override
+  String get recording_dontCloseSaveNext =>
+      'Não feche — vamos abrir a tela de salvar em seguida.';
+
+  @override
+  String get recording_stageShortFinalizing => 'FINALIZANDO';
+
+  @override
+  String get recording_stageShortCombining => 'COMBINANDO';
+
+  @override
+  String get recording_stageShortCompressing => 'COMPRIMINDO';
 
   @override
   String get profile_defaultMicrophone => 'Microfone padrão';

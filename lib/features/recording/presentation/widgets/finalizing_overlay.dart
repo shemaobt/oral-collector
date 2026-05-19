@@ -25,27 +25,36 @@ class FinalizingOverlay extends StatelessWidget {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
 
-    return SizedBox.expand(
-      child: ColoredBox(
-        color: colors.background.withValues(alpha: 0.96),
-        child: SafeArea(
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 32),
-              child: error != null
-                  ? _ErrorContent(
-                      colors: colors,
-                      theme: theme,
-                      l10n: l10n,
-                      onDiscard: onDiscard,
-                    )
-                  : _ProgressContent(
-                      colors: colors,
-                      theme: theme,
-                      l10n: l10n,
-                      stage: stage,
-                      degraded: degraded,
-                    ),
+    final semanticsLabel = error != null
+        ? '${l10n.recording_finalizationFailed}. ${l10n.recording_finalizationFailedBody}'
+        : _stageText(l10n, stage);
+
+    return Semantics(
+      container: true,
+      liveRegion: true,
+      label: semanticsLabel,
+      child: SizedBox.expand(
+        child: ColoredBox(
+          color: colors.background,
+          child: SafeArea(
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32),
+                child: error != null
+                    ? _ErrorContent(
+                        colors: colors,
+                        theme: theme,
+                        l10n: l10n,
+                        onDiscard: onDiscard,
+                      )
+                    : _ProgressContent(
+                        colors: colors,
+                        theme: theme,
+                        l10n: l10n,
+                        stage: stage,
+                        degraded: degraded,
+                      ),
+              ),
             ),
           ),
         ),
