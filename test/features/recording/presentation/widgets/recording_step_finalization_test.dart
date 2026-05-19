@@ -188,31 +188,30 @@ void main() {
     },
   );
 
-  testWidgets(
-    'overlay is rendered as a modal route blocking back navigation',
-    (tester) async {
-      await tester.pumpWidget(
-        _wrap(
-          state: const RecordingState(
-            finalizationStage: FinalizationStage.compressingAudio,
-          ),
+  testWidgets('overlay is rendered as a modal route blocking back navigation', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _wrap(
+        state: const RecordingState(
+          finalizationStage: FinalizationStage.compressingAudio,
         ),
-      );
-      await settleOverlay(tester);
+      ),
+    );
+    await settleOverlay(tester);
 
-      expect(find.byType(FinalizingOverlay), findsOneWidget);
+    expect(find.byType(FinalizingOverlay), findsOneWidget);
 
-      // PopScope wrapping the overlay (ancestor) must have canPop:false so the
-      // system back gesture cannot dismiss the dialog.
-      final popScopeAncestor = find.ancestor(
-        of: find.byType(FinalizingOverlay),
-        matching: find.byType(PopScope),
-      );
-      expect(popScopeAncestor, findsAtLeastNWidgets(1));
-      final popScope = tester.widget<PopScope>(popScopeAncestor.first);
-      expect(popScope.canPop, isFalse);
-    },
-  );
+    // PopScope wrapping the overlay (ancestor) must have canPop:false so the
+    // system back gesture cannot dismiss the dialog.
+    final popScopeAncestor = find.ancestor(
+      of: find.byType(FinalizingOverlay),
+      matching: find.byType(PopScope),
+    );
+    expect(popScopeAncestor, findsAtLeastNWidgets(1));
+    final popScope = tester.widget<PopScope>(popScopeAncestor.first);
+    expect(popScope.canPop, isFalse);
+  });
 
   testWidgets(
     'overlay is hosted in a modal route (covers any siblings in stack)',
