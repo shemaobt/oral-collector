@@ -2,6 +2,20 @@ enum StorageBannerSeverity { none, critical, forceStopped }
 
 enum FinalizationStage { idle, finalizing, combiningSegments, compressingAudio }
 
+enum RecordingStopErrorKind { finishProducedNoSegments, finalizationFailed }
+
+class RecordingStopError {
+  const RecordingStopError({
+    required this.kind,
+    required this.recoverable,
+    this.technicalMessage,
+  });
+
+  final RecordingStopErrorKind kind;
+  final bool recoverable;
+  final String? technicalMessage;
+}
+
 class RecordingState {
   final bool isRecording;
   final bool isPaused;
@@ -17,6 +31,11 @@ class RecordingState {
   final FinalizationStage finalizationStage;
   final String? finalizationError;
   final bool finalizationDegraded;
+  final bool isPendingResume;
+  final bool wasResumedSession;
+  final String? currentGenreName;
+  final String? currentSubcategoryName;
+  final RecordingStopError? lastStopError;
 
   const RecordingState({
     this.isRecording = false,
@@ -33,6 +52,11 @@ class RecordingState {
     this.finalizationStage = FinalizationStage.idle,
     this.finalizationError,
     this.finalizationDegraded = false,
+    this.isPendingResume = false,
+    this.wasResumedSession = false,
+    this.currentGenreName,
+    this.currentSubcategoryName,
+    this.lastStopError,
   });
 
   bool get isFinalizing => finalizationStage != FinalizationStage.idle;
@@ -52,6 +76,11 @@ class RecordingState {
     FinalizationStage? finalizationStage,
     String? finalizationError,
     bool? finalizationDegraded,
+    bool? isPendingResume,
+    bool? wasResumedSession,
+    String? currentGenreName,
+    String? currentSubcategoryName,
+    RecordingStopError? lastStopError,
     bool clearGenreId = false,
     bool clearSubcategoryId = false,
     bool clearAmplitudeStream = false,
@@ -59,6 +88,7 @@ class RecordingState {
     bool clearLastCheckpoint = false,
     bool clearAutoStoppedResult = false,
     bool clearFinalizationError = false,
+    bool clearLastStopError = false,
   }) {
     return RecordingState(
       isRecording: isRecording ?? this.isRecording,
@@ -88,6 +118,17 @@ class RecordingState {
           ? null
           : (finalizationError ?? this.finalizationError),
       finalizationDegraded: finalizationDegraded ?? this.finalizationDegraded,
+      isPendingResume: isPendingResume ?? this.isPendingResume,
+      wasResumedSession: wasResumedSession ?? this.wasResumedSession,
+      currentGenreName: clearGenreId
+          ? null
+          : (currentGenreName ?? this.currentGenreName),
+      currentSubcategoryName: clearSubcategoryId
+          ? null
+          : (currentSubcategoryName ?? this.currentSubcategoryName),
+      lastStopError: clearLastStopError
+          ? null
+          : (lastStopError ?? this.lastStopError),
     );
   }
 }

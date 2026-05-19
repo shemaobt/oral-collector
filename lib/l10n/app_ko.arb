@@ -171,6 +171,19 @@
       }
     }
   },
+  "recording_serviceNotificationTitle": "Recording in progress",
+  "recording_serviceNotificationBody": "{elapsed} • {genre}",
+  "@recording_serviceNotificationBody": {
+    "placeholders": {
+      "elapsed": {
+        "type": "String"
+      },
+      "genre": {
+        "type": "String"
+      }
+    }
+  },
+  "recording_serviceNotificationStopAction": "Stop",
   "recording_notFound": "녹음을 찾을 수 없습니다",
   "recording_unknownGenre": "알 수 없는 장르",
   "recording_splitRecording": "녹음 편집",
@@ -826,6 +839,8 @@
   "recording_noAudioAvailable": "사용 가능한 오디오가 없습니다",
   "recording_noPendingUploads": "대기 중인 업로드가 없습니다",
   "recording_uploadQueue": "업로드 대기열",
+  "recording_uploadSpeed": "{speed}/s",
+  "recording_uploadEtaRemaining": "~{eta} remaining",
   "recording_previewSelection": "선택 미리 듣기",
   "recording_stopPreview": "미리 듣기 중지",
   "recording_audioLoadFailed": "오디오 로드 실패",
@@ -838,5 +853,85 @@
   "recording_partOf": "{total}개 중 {part}번째",
   "recording_splitFrom": "{sourceId}에서 분할됨",
   "trim_segmentRemoved": "세그먼트 {index} — 제거됨",
-  "trim_segmentOfTotal": "{total}개 중 세그먼트 {index}"
+  "trim_segmentOfTotal": "{total}개 중 세그먼트 {index}",
+  "recovery_interruptedTitle": "Interrupted recordings",
+  "recovery_startedAt": "Started at {time}",
+  "@recovery_startedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "recovery_resume": "Resume",
+  "recovery_save": "Save",
+  "recovery_discard": "Discard",
+  "recovery_confirmDiscardTitle": "Discard recording?",
+  "recovery_confirmDiscardBody": "{duration} of audio will be permanently deleted.",
+  "@recovery_confirmDiscardBody": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "recovery_homeBanner": "{count, plural, =1{1 interrupted recording — tap to resume} other{{count} interrupted recordings — tap to resume}}",
+  "@recovery_homeBanner": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recovery_unsavedCount": "{count, plural, =1{1 unsaved recording} other{{count} unsaved recordings}}",
+  "@recovery_unsavedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recovery_latestSummary": "Latest · {duration} · {time}",
+  "@recovery_latestSummary": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "recovery_review": "Review",
+  "recovery_unsavedTitle": "Unsaved recordings",
+  "recovery_unsavedSubtitle": "{count, plural, =1{1 recording to review} other{{count} recordings to review}}",
+  "@recovery_unsavedSubtitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recovery_discardAll": "Discard all",
+  "recovery_discardAllTitle": "Discard all recordings?",
+  "recovery_discardAllBody": "{count, plural, =1{1 recording will be permanently deleted.} other{{count} recordings will be permanently deleted.}}",
+  "@recovery_discardAllBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recovery_newBadge": "NEW",
+  "recovery_mostRecent": "Most recent",
+  "recovery_recordingNumbered": "Recording {number}",
+  "@recovery_recordingNumbered": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "format_yesterday": "Yesterday",
+  "recovery_backToList": "Not now"
 }
