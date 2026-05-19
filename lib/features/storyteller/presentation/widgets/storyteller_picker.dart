@@ -146,6 +146,17 @@ class _StorytellerPickerSheetState
     final isOnline = ref.watch(syncNotifierProvider).isOnline;
     final colors = AppColors.of(context);
 
+    ref.listen<bool>(syncNotifierProvider.select((s) => s.isOnline), (
+      prev,
+      next,
+    ) {
+      if (next && prev == false) {
+        ref
+            .read(projectStorytellersNotifierProvider.notifier)
+            .fetch(widget.projectId);
+      }
+    });
+
     final scoped = state.storytellers
         .where((s) => s.projectId == widget.projectId)
         .toList();

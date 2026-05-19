@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/network/api_error_handler.dart';
 import '../../../core/network/authenticated_client.dart';
+import '../../sync/presentation/notifiers/sync_notifier.dart';
 
 class UserLookup {
   final String id;
@@ -36,6 +37,8 @@ final userLookupProvider = FutureProvider.family<UserLookup?, String>((
   userId,
 ) async {
   if (userId.isEmpty) return null;
+  final isOnline = ref.watch(syncNotifierProvider.select((s) => s.isOnline));
+  if (!isOnline) return null;
   final client = ref.watch(authenticatedClientProvider);
   final response = await client.get('/api/users/$userId');
   guardResponse(response);

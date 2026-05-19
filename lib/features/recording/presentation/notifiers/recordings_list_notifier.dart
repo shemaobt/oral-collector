@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/database/app_database.dart';
 import '../../../project/presentation/notifiers/project_notifier.dart';
+import '../../../sync/presentation/notifiers/sync_notifier.dart';
 import '../../data/providers.dart';
 import '../../data/repositories/local_recording_repository.dart';
 import '../../domain/entities/server_recording.dart';
@@ -40,6 +41,11 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
     _serverIds.clear();
     _localOnlyRecordings = [];
 
+    if (!ref.read(syncNotifierProvider).isOnline) {
+      await _fallbackToLocal(projectId);
+      return;
+    }
+
     try {
       final merged = await _fetchAndMerge(projectId);
       state = state.copyWith(recordings: merged, isLoading: false);
@@ -53,6 +59,11 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
 
     final projectId = ref.read(projectNotifierProvider).activeProject?.id;
     if (projectId == null) return;
+
+    if (!ref.read(syncNotifierProvider).isOnline) {
+      state = state.copyWith(isLoadingMore: false);
+      return;
+    }
 
     state = state.copyWith(isLoadingMore: true);
 
@@ -228,6 +239,8 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
   Future<int> clearStaleRecordings() async {
     final projectId = ref.read(projectNotifierProvider).activeProject?.id;
     if (projectId == null) return 0;
+
+    if (!ref.read(syncNotifierProvider).isOnline) return 0;
 
     final serverDeleted = await _apiRepo.clearStaleRecordings(projectId);
     await _localRepo.deleteStaleRecordings(projectId);

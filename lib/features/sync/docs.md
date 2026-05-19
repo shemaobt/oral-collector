@@ -1,0 +1,44 @@
+# Noridoc: sync
+
+Path: @/lib/features/sync
+
+### Overview
+
+- Owns the app's connectivity signal, the upload queue for local recordings, and the offline-aware policy that every other feature is expected to honor.
+- Exposes `syncNotifierProvider` (synchronous `SyncState.isOnline`) as the canonical "are we online?" check used across notifiers, screens, and providers.
+- Hosts the `SyncEngine` that drains the local recordings queue (Drift-backed) to the server, and the platform-specific `BackgroundSyncService` (WorkManager on Android, periodic timer on web).
+
+### How it fits into the larger codebase
+
+- Other features import `syncNotifierProvider` from `@/lib/features/sync/presentation/notifiers/sync_notifier.dart` and gate any API call on `state.isOnline`. See `@/lib/features/home/presentation/home_screen.dart` for the canonical reconnect-listener shape.
+- The `SyncEngine` depends on `@/lib/features/recording/data/repositories/local_recording_repository.dart` (Drift table of pending uploads) and `@/lib/core/network/authenticated_client.dart`. Recordings are created locally first; the engine reconciles them with the server on its own schedule.
+- `BackgroundSyncService` (Android WorkManager) reads credentials from SharedPreferences populated by `@/lib/core/auth/auth_notifier.dart`. The worker runs out-of-process, so it builds its own `AppDatabase` and `http.Client` rather than reusing Riverpod providers.
+- Connectivity flips originate in `connectivity_plus` and flow through `ConnectivityServiceImpl` → `SyncNotifier._onConnectivityChanged`, which triggers `processQueue()` on offline → online. Screens that need to refresh their own data on reconnect register their own `ref.listen` (the sync layer doesn't notify them directly).
+- The global HTTP client at `@/lib/core/providers/http_client_provider.dart` enforces a 15 s connect timeout on native platforms. This is the safety net for the "Wi-Fi connected, no real internet" case that `connectivity_plus` can't detect.
+
+### Core Implementation
+
+- `SyncNotifier.build()` subscribes to the connectivity stream, seeds `SyncState.isOnline` from the initial check, and refreshes the pending-uploads count. The notifier never disposes itself implicitly — it's a root-level `NotifierProvider` held for app lifetime.
+- `SyncState` is intentionally synchronous: `isOnline` is a plain bool so callers can do `ref.read(syncNotifierProvider).isOnline` in `initState` / `fetch*` methods without awaiting. The async `connectivityServiceProvider.isOnline` exists for the one early-boot caller in `@/lib/core/auth/auth_notifier.dart::tryAutoLogin` that runs before Riverpod state has been seeded.
+- `SyncEngine.processQueue` filters the pending Drift rows by `retryCount < maxRetries` and an exponential-backoff window (`5s, 15s, 30s, 60s`), then uploads either serially or with `maxConcurrency: 3` on Wi-Fi. Each upload runs the create → upload-url → PUT → confirm pipeline via `ResumableUploadService`.
+- `_onConnectivityChanged` calls `processQueue()` automatically on offline → online. This handles upload resumption; it does **not** refresh feature read-paths (those are the screen's responsibility via `ref.listen`).
+- Uploads use a per-call `.timeout(_apiTimeout)` (30 s) on create/confirm requests, plus a size-scaled timeout on the PUT to GCS. The 15 s connect timeout on the global HTTP client is independent of these and fires earlier when the TCP handshake never completes.
+
+### Things to Know
+
+- **Online check is interface-level, not reachability-level.** `connectivity_plus` reports only the OS interface state (Wi-Fi / cellular / none). A captive portal or dead AP still reports online. The 15 s connect timeout in `@/lib/core/providers/http_client_provider.dart` is the current mitigation — it fails fast instead of waiting the OS default (~30 s). A real reachability probe (e.g. `internet_connection_checker_plus`) is a deliberate follow-up, not implemented here.
+- **The 15 s connect timeout applies only to TCP handshake, not in-flight bytes.** Long uploads/downloads are unaffected once the connection is established. Web uses the bare `http.Client()` because `dart:io HttpClient` is not available there.
+- **Existing offline-aware notifier flavors** — keep these in mind when adding new ones:
+  - SharedPreferences hydrate-then-fetch: synchronous JSON load in `Notifier.build`, then `_fetchRemoteData` guarded by `isOnline`. See `@/lib/features/project/presentation/notifiers/project_notifier.dart`.
+  - Drift cache-first, network-overwrite: load local rows first, then conditionally call API. See `@/lib/features/storyteller/presentation/notifiers/project_storytellers_notifier.dart` and `@/lib/features/recording/presentation/notifiers/recordings_list_notifier.dart`.
+  - Secure-storage hydrate + async `connectivityServiceProvider`: only used by `tryAutoLogin` because it runs at app boot.
+- **Writes do not queue offline (except recording uploads).** Storyteller create/update/delete, invite accept, and similar mutations hard-fail offline with a snackbar. The `SyncEngine` queue is purpose-built for recording file uploads only; a generic outbox is a future feature.
+- **`clearStaleRecordings` returns 0 when offline.** It does not run the local cleanup either — that prevents the local row set from drifting out of sync with the server's view until reachability is restored.
+- **Checklist for any new screen / notifier that reads from the network:**
+  1. Never call the API in `initState` without checking `syncNotifierProvider.isOnline` first.
+  2. The notifier `fetch*` method MUST self-guard with `isOnline` as defense-in-depth, even if every caller already does.
+  3. First paint renders from cache (Drift / SharedPreferences) or a meaningful empty/loading state — never block on the network.
+  4. Long-lived screens add a reconnect listener: `ref.listen(syncNotifierProvider.select((s) => s.isOnline), ...)` and re-call `fetch*` on offline → online. Mirror the shape in `@/lib/features/home/presentation/home_screen.dart`.
+  5. Network-required writes hard-fail offline with a snackbar; they do not queue.
+
+Created and maintained by Nori.

@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../sync/presentation/notifiers/sync_notifier.dart';
 import '../../data/providers.dart';
 import '../../data/repositories/local_storyteller_repository.dart';
 import '../../domain/entities/storyteller.dart';
@@ -27,8 +28,11 @@ class ProjectStorytellersNotifier extends Notifier<ProjectStorytellersState> {
     );
 
     final cached = await _local.getByProject(projectId);
-    if (cached.isNotEmpty) {
-      state = state.copyWith(storytellers: cached);
+    state = state.copyWith(storytellers: cached);
+
+    if (!ref.read(syncNotifierProvider).isOnline) {
+      state = state.copyWith(isLoading: false);
+      return;
     }
 
     try {

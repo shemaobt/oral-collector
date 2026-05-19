@@ -162,6 +162,17 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
   Future<void> _clearStaleRecordings() async {
     final l10n = AppLocalizations.of(context);
     final colors = AppColors.of(context);
+
+    if (!ref.read(syncNotifierProvider).isOnline) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.error_network),
+          backgroundColor: colors.error,
+        ),
+      );
+      return;
+    }
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
