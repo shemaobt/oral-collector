@@ -52,7 +52,7 @@ class SegmentedRecorder {
   AmplitudeMapper? _amplitudeMapper;
 
   StreamController<double>? _amplitudeController;
-  StreamSubscription<Amplitude>? _amplitudeSub;
+  Timer? _amplitudePollTimer;
 
   bool get isActive => _sessionId != null;
   Stream<double>? get amplitudeStream => _amplitudeController?.stream;
@@ -112,6 +112,7 @@ class SegmentedRecorder {
     _amplitudeController = StreamController<double>.broadcast();
 
     await _startNextSegment();
+    _startAmplitudePolling();
     _armRotateTimer();
     return true;
   }
@@ -154,36 +155,27 @@ class SegmentedRecorder {
     }
 
     _currentSegmentStartedAt = DateTime.now();
-    _subscribeToAmplitude();
   }
 
-  void _subscribeToAmplitude() {
-    _amplitudeSub?.cancel();
-    final recorder = _recorder;
-    if (recorder == null) return;
-    var tick = 0;
-    _amplitudeSub = recorder
-        .onAmplitudeChanged(const Duration(milliseconds: 100))
-        .listen(
-          (amp) {
-            if (_amplitudeController == null ||
-                _amplitudeController!.isClosed) {
-              return;
-            }
-            if (tick % 10 == 0) {
-              debugPrint(
-                'SegmentedRecorder: amplitude current=${amp.current} '
-                'max=${amp.max}',
-              );
-            }
-            tick++;
-            final mapped = _amplitudeMapper?.call(amp.current) ?? 0.0;
-            _amplitudeController!.add(mapped);
-          },
-          onError: (Object e) {
-            debugPrint('SegmentedRecorder: amplitude stream error: $e');
-          },
-        );
+  void _startAmplitudePolling() {
+    _amplitudePollTimer?.cancel();
+    _amplitudePollTimer = Timer.periodic(const Duration(milliseconds: 100), (
+      _,
+    ) async {
+      final recorder = _recorder;
+      final controller = _amplitudeController;
+      if (recorder == null || controller == null || controller.isClosed) {
+        return;
+      }
+      try {
+        final amp = await recorder.getAmplitude();
+        if (controller.isClosed) return;
+        final mapped = _amplitudeMapper?.call(amp.current) ?? 0.0;
+        controller.add(mapped);
+      } on Object catch (e) {
+        debugPrint('SegmentedRecorder: amplitude poll error: $e');
+      }
+    });
   }
 
   void _armRotateTimer() {
@@ -195,9 +187,6 @@ class SegmentedRecorder {
     if (_recorder == null || _sessionId == null) return;
 
     final rotateStart = DateTime.now();
-
-    await _amplitudeSub?.cancel();
-    _amplitudeSub = null;
 
     final closedPath = await _recorder!.stop();
     final segStartedAt = _currentSegmentStartedAt ?? rotateStart;
@@ -265,8 +254,8 @@ class SegmentedRecorder {
 
     _rotateTimer?.cancel();
     _rotateTimer = null;
-    await _amplitudeSub?.cancel();
-    _amplitudeSub = null;
+    _amplitudePollTimer?.cancel();
+    _amplitudePollTimer = null;
 
     final closedPath = await _recorder?.stop();
     final segStartedAt = _currentSegmentStartedAt;
@@ -319,8 +308,8 @@ class SegmentedRecorder {
 
     _rotateTimer?.cancel();
     _rotateTimer = null;
-    await _amplitudeSub?.cancel();
-    _amplitudeSub = null;
+    _amplitudePollTimer?.cancel();
+    _amplitudePollTimer = null;
 
     try {
       await _recorder?.stop();
@@ -348,7 +337,7 @@ class SegmentedRecorder {
 
   Future<void> dispose() async {
     _rotateTimer?.cancel();
-    await _amplitudeSub?.cancel();
+    _amplitudePollTimer?.cancel();
     await _amplitudeController?.close();
     await _recorder?.dispose();
     _recorder = null;
