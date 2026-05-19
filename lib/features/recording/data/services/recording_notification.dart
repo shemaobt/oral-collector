@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
@@ -17,11 +19,12 @@ class RecordingNotification {
 
   Future<void> init() async {
     if (kIsWeb) return;
+    if (Platform.isAndroid) return;
     if (_initialized) return;
 
     const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
     const iosInit = DarwinInitializationSettings(
-      requestAlertPermission: false,
+      requestAlertPermission: true,
       requestBadgePermission: false,
       requestSoundPermission: false,
     );
@@ -54,6 +57,7 @@ class RecordingNotification {
 
   Future<void> showActive({required String title, required String body}) async {
     if (kIsWeb) return;
+    if (Platform.isAndroid) return;
     if (!_initialized) await init();
     await _plugin.show(
       _notificationId,
@@ -78,6 +82,7 @@ class RecordingNotification {
 
   Future<void> clear() async {
     if (kIsWeb) return;
+    if (Platform.isAndroid) return;
     if (!_initialized) return;
     await _plugin.cancel(_notificationId);
   }

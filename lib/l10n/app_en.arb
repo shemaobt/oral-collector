@@ -195,6 +195,15 @@
       "error": { "type": "String" }
     }
   },
+  "recording_serviceNotificationTitle": "Recording in progress",
+  "recording_serviceNotificationBody": "{elapsed} • {genre}",
+  "@recording_serviceNotificationBody": {
+    "placeholders": {
+      "elapsed": { "type": "String" },
+      "genre": { "type": "String" }
+    }
+  },
+  "recording_serviceNotificationStopAction": "Stop",
   "recording_notFound": "Recording not found",
   "recording_unknownGenre": "Unknown genre",
   "recording_splitRecording": "Edit Recording",
@@ -1084,6 +1093,18 @@
   "recording_noAudioAvailable": "No audio available",
   "recording_noPendingUploads": "No pending uploads",
   "recording_uploadQueue": "Upload Queue",
+  "recording_uploadSpeed": "{speed}/s",
+  "@recording_uploadSpeed": {
+    "placeholders": {
+      "speed": { "type": "String" }
+    }
+  },
+  "recording_uploadEtaRemaining": "~{eta} remaining",
+  "@recording_uploadEtaRemaining": {
+    "placeholders": {
+      "eta": { "type": "String" }
+    }
+  },
   "recording_previewSelection": "Preview Selection",
   "recording_stopPreview": "Stop Preview",
   "recording_audioLoadFailed": "Failed to load audio",
@@ -1118,5 +1139,67 @@
       "index": { "type": "int" },
       "total": { "type": "int" }
     }
-  }
+  },
+  "recovery_interruptedTitle": "Interrupted recordings",
+  "recovery_startedAt": "Started at {time}",
+  "@recovery_startedAt": {
+    "placeholders": {
+      "time": { "type": "String" }
+    }
+  },
+  "recovery_resume": "Resume",
+  "recovery_save": "Save",
+  "recovery_discard": "Discard",
+  "recovery_confirmDiscardTitle": "Discard recording?",
+  "recovery_confirmDiscardBody": "{duration} of audio will be permanently deleted.",
+  "@recovery_confirmDiscardBody": {
+    "placeholders": {
+      "duration": { "type": "String" }
+    }
+  },
+  "recovery_homeBanner": "{count, plural, =1{1 interrupted recording — tap to resume} other{{count} interrupted recordings — tap to resume}}",
+  "@recovery_homeBanner": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "recovery_unsavedCount": "{count, plural, =1{1 unsaved recording} other{{count} unsaved recordings}}",
+  "@recovery_unsavedCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "recovery_latestSummary": "Latest · {duration} · {time}",
+  "@recovery_latestSummary": {
+    "placeholders": {
+      "duration": { "type": "String" },
+      "time": { "type": "String" }
+    }
+  },
+  "recovery_review": "Review",
+  "recovery_unsavedTitle": "Unsaved recordings",
+  "recovery_unsavedSubtitle": "{count, plural, =1{1 recording to review} other{{count} recordings to review}}",
+  "@recovery_unsavedSubtitle": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "recovery_discardAll": "Discard all",
+  "recovery_discardAllTitle": "Discard all recordings?",
+  "recovery_discardAllBody": "{count, plural, =1{1 recording will be permanently deleted.} other{{count} recordings will be permanently deleted.}}",
+  "@recovery_discardAllBody": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "recovery_newBadge": "NEW",
+  "recovery_mostRecent": "Most recent",
+  "recovery_recordingNumbered": "Recording {number}",
+  "@recovery_recordingNumbered": {
+    "placeholders": {
+      "number": { "type": "int" }
+    }
+  },
+  "format_yesterday": "Yesterday",
+  "recovery_backToList": "Not now"
 }

@@ -9,8 +9,6 @@ import '../../core/auth/auth_notifier.dart';
 import '../../core/theme/app_colors.dart';
 import '../../features/auth/data/providers/role_provider.dart';
 import '../../features/invite/presentation/notifiers/invite_notifier.dart';
-import '../../features/recording/data/services/recovery_coordinator.dart';
-import '../../features/recording/presentation/widgets/crash_recovery_dialog.dart';
 import '../../features/recording/presentation/widgets/recording_navigation_guard.dart';
 import '../../l10n/app_localizations.dart';
 import 'user_avatar.dart';
@@ -68,24 +66,6 @@ int _currentIndexFrom(BuildContext context, List<_TabItem> tabs) {
 }
 
 class _AppShellState extends ConsumerState<AppShell> {
-  bool _recoveryPromptShown = false;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _maybeShowRecoveryPrompt(ref.read(pendingRecoveryProvider));
-    });
-  }
-
-  void _maybeShowRecoveryPrompt(RecoveryPrompt? prompt) {
-    if (prompt == null) return;
-    if (_recoveryPromptShown) return;
-    if (!mounted) return;
-    _recoveryPromptShown = true;
-    showCrashRecoveryDialog(context, ref, prompt);
-  }
-
   Future<void> _navigateToTab(String targetPath) async {
     final canGo = await confirmRecordingNavigationFromTab(context, ref);
     if (!canGo) return;
@@ -117,12 +97,6 @@ class _AppShellState extends ConsumerState<AppShell> {
     final pendingInvites = ref.watch(inviteNotifierProvider).pendingCount;
 
     ref.watch(roleNotifierProvider);
-
-    ref.listen<RecoveryPrompt?>(pendingRecoveryProvider, (_, next) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _maybeShowRecoveryPrompt(next);
-      });
-    });
 
     final mobileTabs = AppShell._mobileTabs(l10n);
     final tabs = isWide ? _buildWebTabs(l10n) : mobileTabs;

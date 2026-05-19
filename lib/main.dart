@@ -4,6 +4,7 @@ import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:workmanager/workmanager.dart';
 
 import 'core/database/database_provider.dart';
@@ -13,6 +14,7 @@ import 'core/platform/file_ops.dart' as platform;
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/auth/auth_notifier.dart';
+import 'features/recording/data/services/recording_live_activity.dart';
 import 'features/recording/data/services/recording_notification.dart';
 import 'features/recording/data/services/recording_trash.dart';
 import 'features/recording/data/services/recovery_coordinator.dart';
@@ -52,6 +54,11 @@ void main() async {
     } on Exception {
       // noop
     }
+    try {
+      FlutterForegroundTask.initCommunicationPort();
+    } on Exception {
+      // noop
+    }
   }
 
   if (!kIsWeb) {
@@ -87,6 +94,7 @@ class _OralCollectorAppState extends ConsumerState<OralCollectorApp> {
       if (!kIsWeb) {
         RecordingTrash.pruneOldTrash(maxAgeHours: 24);
         await ref.read(recoveryCoordinatorProvider).scanOnStartup();
+        await RecordingLiveActivity.instance.endAll();
       }
     });
   }

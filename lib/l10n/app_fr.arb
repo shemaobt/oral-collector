@@ -171,6 +171,19 @@
       }
     }
   },
+  "recording_serviceNotificationTitle": "Recording in progress",
+  "recording_serviceNotificationBody": "{elapsed} • {genre}",
+  "@recording_serviceNotificationBody": {
+    "placeholders": {
+      "elapsed": {
+        "type": "String"
+      },
+      "genre": {
+        "type": "String"
+      }
+    }
+  },
+  "recording_serviceNotificationStopAction": "Stop",
   "recording_notFound": "Enregistrement introuvable",
   "recording_unknownGenre": "Genre inconnu",
   "recording_splitRecording": "Modifier l'Enregistrement",
@@ -219,7 +232,7 @@
   "recordings_selectProjectSubtitle": "Choisissez un projet pour voir ses enregistrements",
   "recordings_noRecordings": "Aucun enregistrement pour le moment",
   "recordings_noRecordingsSubtitle": "Appuyez sur le micro pour enregistrer votre première histoire, ou importez un fichier audio.",
-  "recordings_count": "{count, plural, =1{1 enregistrement} other{{count} enregistrements}}",
+  "recordings_count": "{count, plural, =0{Aucun enregistrement} =1{1 enregistrement} other{{count} enregistrements}}",
   "recording_statusUploaded": "Téléversé",
   "recording_statusUploading": "Téléversement",
   "recording_statusFailed": "Échoué",
@@ -816,6 +829,8 @@
   "recording_noAudioAvailable": "Aucun audio disponible",
   "recording_noPendingUploads": "Aucun envoi en attente",
   "recording_uploadQueue": "File d'attente d'envoi",
+  "recording_uploadSpeed": "{speed}/s",
+  "recording_uploadEtaRemaining": "~{eta} remaining",
   "recording_previewSelection": "Aperçu de la sélection",
   "recording_stopPreview": "Arrêter l'aperçu",
   "recording_audioLoadFailed": "Échec du chargement de l'audio",
@@ -828,5 +843,85 @@
   "recording_partOf": "Partie {part} sur {total}",
   "recording_splitFrom": "Divisé de {sourceId}",
   "trim_segmentRemoved": "Segment {index} — supprimé",
-  "trim_segmentOfTotal": "Segment {index} sur {total}"
+  "trim_segmentOfTotal": "Segment {index} sur {total}",
+  "recovery_interruptedTitle": "Interrupted recordings",
+  "recovery_startedAt": "Started at {time}",
+  "@recovery_startedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "recovery_resume": "Resume",
+  "recovery_save": "Save",
+  "recovery_discard": "Discard",
+  "recovery_confirmDiscardTitle": "Discard recording?",
+  "recovery_confirmDiscardBody": "{duration} of audio will be permanently deleted.",
+  "@recovery_confirmDiscardBody": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "recovery_homeBanner": "{count, plural, =1{1 interrupted recording — tap to resume} other{{count} interrupted recordings — tap to resume}}",
+  "@recovery_homeBanner": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recovery_unsavedCount": "{count, plural, =1{1 unsaved recording} other{{count} unsaved recordings}}",
+  "@recovery_unsavedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recovery_latestSummary": "Latest · {duration} · {time}",
+  "@recovery_latestSummary": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "recovery_review": "Review",
+  "recovery_unsavedTitle": "Unsaved recordings",
+  "recovery_unsavedSubtitle": "{count, plural, =1{1 recording to review} other{{count} recordings to review}}",
+  "@recovery_unsavedSubtitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recovery_discardAll": "Discard all",
+  "recovery_discardAllTitle": "Discard all recordings?",
+  "recovery_discardAllBody": "{count, plural, =1{1 recording will be permanently deleted.} other{{count} recordings will be permanently deleted.}}",
+  "@recovery_discardAllBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recovery_newBadge": "NEW",
+  "recovery_mostRecent": "Most recent",
+  "recovery_recordingNumbered": "Recording {number}",
+  "@recovery_recordingNumbered": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "format_yesterday": "Yesterday",
+  "recovery_backToList": "Not now"
 }

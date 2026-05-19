@@ -15,30 +15,16 @@ class SyncStatusIndicator extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final syncState = ref.watch(syncNotifierProvider);
 
-    if (syncState.pendingCount == 0 && syncState.uploadingId == null) {
+    if (syncState.uploadingId != null || syncState.pendingCount == 0) {
       return const SizedBox.shrink();
     }
-
-    final isUploading = syncState.uploadingId != null;
-    final label = isUploading
-        ? l10n.sync_uploading
-        : l10n.sync_pending(syncState.pendingCount);
 
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: ActionChip(
-        avatar: isUploading
-            ? SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: colors.accent,
-                ),
-              )
-            : Icon(LucideIcons.uploadCloud, size: 16, color: colors.accent),
+        avatar: Icon(LucideIcons.uploadCloud, size: 16, color: colors.accent),
         label: Text(
-          label,
+          l10n.sync_pending(syncState.pendingCount),
           style: Theme.of(context).textTheme.labelMedium?.copyWith(
             color: colors.foreground,
             fontWeight: FontWeight.w500,
@@ -47,9 +33,7 @@ class SyncStatusIndicator extends ConsumerWidget {
         backgroundColor: colors.accent.withValues(alpha: 0.1),
         side: BorderSide(color: colors.accent.withValues(alpha: 0.2)),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        onPressed: isUploading
-            ? null
-            : () => ref.read(syncNotifierProvider.notifier).syncAll(),
+        onPressed: () => ref.read(syncNotifierProvider.notifier).syncAll(),
       ),
     );
   }

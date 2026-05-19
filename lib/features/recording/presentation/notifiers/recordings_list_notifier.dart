@@ -101,7 +101,12 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
       userId: state.selectedUserId,
       storytellerId: state.selectedStorytellerId,
     );
-    final localRecordings = await _localRepo.getAllRecordings(projectId);
+    List<LocalRecording> localRecordings;
+    try {
+      localRecordings = await _localRepo.getAllRecordings(projectId);
+    } catch (_) {
+      localRecordings = const [];
+    }
 
     final hasMore = serverRecordings.length >= _pageSize;
     _serverOffset = serverRecordings.length;
