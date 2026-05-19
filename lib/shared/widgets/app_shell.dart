@@ -11,6 +11,7 @@ import '../../features/auth/data/providers/role_provider.dart';
 import '../../features/invite/presentation/notifiers/invite_notifier.dart';
 import '../../features/recording/data/services/recovery_coordinator.dart';
 import '../../features/recording/presentation/widgets/crash_recovery_dialog.dart';
+import '../../features/recording/presentation/widgets/recording_navigation_guard.dart';
 import '../../l10n/app_localizations.dart';
 import 'user_avatar.dart';
 
@@ -85,6 +86,13 @@ class _AppShellState extends ConsumerState<AppShell> {
     showCrashRecoveryDialog(context, ref, prompt);
   }
 
+  Future<void> _navigateToTab(String targetPath) async {
+    final canGo = await confirmRecordingNavigationFromTab(context, ref);
+    if (!canGo) return;
+    if (!mounted) return;
+    context.go(targetPath);
+  }
+
   List<_TabItem> _buildWebTabs(AppLocalizations l10n) {
     final tabs = List<_TabItem>.from(AppShell._webBaseTabs(l10n));
     if (ref.read(roleNotifierProvider.notifier).isPlatformAdmin) {
@@ -127,7 +135,7 @@ class _AppShellState extends ConsumerState<AppShell> {
             _WebSidebar(
               tabs: tabs,
               selectedIndex: selectedIndex,
-              onTabTapped: (index) => context.go(tabs[index].path),
+              onTabTapped: (index) => _navigateToTab(tabs[index].path),
               pendingInvites: pendingInvites,
               startExpanded: isDesktop,
             ),
@@ -143,7 +151,7 @@ class _AppShellState extends ConsumerState<AppShell> {
       bottomNavigationBar: _FloatingNavBar(
         tabs: mobileTabs,
         selectedIndex: _currentIndexFrom(context, mobileTabs),
-        onTabTapped: (index) => context.go(mobileTabs[index].path),
+        onTabTapped: (index) => _navigateToTab(mobileTabs[index].path),
         colors: colors,
         pendingInvites: pendingInvites,
         bottomPadding: MediaQuery.of(context).padding.bottom,

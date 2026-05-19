@@ -13,6 +13,8 @@ class RecordingState {
   final StorageBannerSeverity storageBannerSeverity;
   final RecordingResult? autoStoppedResult;
 
+  bool get isInProgress => isRecording || isPaused;
+
   const RecordingState({
     this.isRecording = false,
     this.isPaused = false,

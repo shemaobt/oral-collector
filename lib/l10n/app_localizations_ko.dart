@@ -1929,6 +1929,16 @@ class AppLocalizationsKo extends AppLocalizations {
       '끝부분의 일부 오디오를 읽을 수 없어 건너뛰었습니다.';
 
   @override
+  String get recording_blockNavTitle => 'Recording in progress';
+
+  @override
+  String get recording_blockNavMessage =>
+      'You have a recording in progress. Discarding will permanently delete it.';
+
+  @override
+  String get recording_blockNavDiscardAndLeave => 'Discard and leave';
+
+  @override
   String get recording_inProgressNotificationTitle => '녹음 중';
 
   @override

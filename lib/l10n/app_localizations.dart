@@ -3596,6 +3596,24 @@ abstract class AppLocalizations {
   /// **'Some audio near the end could not be read and was skipped.'**
   String get recording_recoverFailedLastSegment;
 
+  /// Title shown when user tries to navigate away during an active recording
+  ///
+  /// In en, this message translates to:
+  /// **'Recording in progress'**
+  String get recording_blockNavTitle;
+
+  /// Body of the block-nav confirmation dialog
+  ///
+  /// In en, this message translates to:
+  /// **'You have a recording in progress. Discarding will permanently delete it.'**
+  String get recording_blockNavMessage;
+
+  /// Destructive action label that discards the recording and navigates away
+  ///
+  /// In en, this message translates to:
+  /// **'Discard and leave'**
+  String get recording_blockNavDiscardAndLeave;
+
   /// No description provided for @recording_inProgressNotificationTitle.
   ///
   /// In en, this message translates to:

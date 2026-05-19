@@ -2011,6 +2011,16 @@ class AppLocalizationsEs extends AppLocalizations {
       'Parte del audio cerca del final no se pudo leer y fue omitido.';
 
   @override
+  String get recording_blockNavTitle => 'Recording in progress';
+
+  @override
+  String get recording_blockNavMessage =>
+      'You have a recording in progress. Discarding will permanently delete it.';
+
+  @override
+  String get recording_blockNavDiscardAndLeave => 'Discard and leave';
+
+  @override
   String get recording_inProgressNotificationTitle => 'Grabación en curso';
 
   @override

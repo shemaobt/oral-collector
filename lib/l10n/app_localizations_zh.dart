@@ -1920,6 +1920,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recording_recoverFailedLastSegment => '末尾附近的部分音频无法读取并已跳过。';
 
   @override
+  String get recording_blockNavTitle => 'Recording in progress';
+
+  @override
+  String get recording_blockNavMessage =>
+      'You have a recording in progress. Discarding will permanently delete it.';
+
+  @override
+  String get recording_blockNavDiscardAndLeave => 'Discard and leave';
+
+  @override
   String get recording_inProgressNotificationTitle => '正在录音';
 
   @override
