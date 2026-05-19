@@ -45,6 +45,7 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
   AppLifecycleState? _lastLifecycleState;
   bool _showBackgroundResumeBanner = false;
   Timer? _backgroundBannerTimer;
+  bool _isFinalizingDialogOpen = false;
 
   @override
   void initState() {
@@ -54,6 +55,13 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
       if (!mounted) return;
       ref.read(inputDeviceNotifierProvider.notifier).refresh();
     });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final state = ref.read(recordingSessionNotifierProvider);
+      if (_shouldShowFinalizingOverlay(state) && !_isFinalizingDialogOpen) {
+        _showFinalizingDialog();
+      }
+    });
   }
 
   @override
@@ -61,6 +69,50 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
     _backgroundBannerTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  static bool _shouldShowFinalizingOverlay(RecordingState state) =>
+      state.isFinalizing || state.finalizationError != null;
+
+  void _showFinalizingDialog() {
+    _isFinalizingDialogOpen = true;
+    showDialog<void>(
+      context: context,
+      useRootNavigator: true,
+      barrierDismissible: false,
+      barrierColor: Colors.transparent,
+      builder: (ctx) {
+        return Consumer(
+          builder: (ctx, ref, _) {
+            final state = ref.watch(recordingSessionNotifierProvider);
+            return PopScope(
+              canPop: false,
+              child: Material(
+                type: MaterialType.transparency,
+                child: FinalizingOverlay(
+                  stage: state.finalizationStage,
+                  error: state.finalizationError,
+                  degraded: state.finalizationDegraded,
+                  onDiscard: () {
+                    ref
+                        .read(recordingSessionNotifierProvider.notifier)
+                        .dismissFinalizationError();
+                  },
+                ),
+              ),
+            );
+          },
+        );
+      },
+    ).whenComplete(() {
+      _isFinalizingDialogOpen = false;
+    });
+  }
+
+  void _dismissFinalizingDialog() {
+    if (!_isFinalizingDialogOpen) return;
+    final navigator = Navigator.of(context, rootNavigator: true);
+    if (navigator.canPop()) navigator.pop();
   }
 
   @override
@@ -162,19 +214,25 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
 
     ref.listen<RecordingState>(recordingSessionNotifierProvider, (prev, next) {
       final result = next.autoStoppedResult;
-      if (result == null) return;
-      if (prev?.autoStoppedResult == result) return;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        notifier.acknowledgeAutoStop();
-        widget.onRecordingComplete(result);
-      });
+      if (result != null && prev?.autoStoppedResult != result) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          notifier.acknowledgeAutoStop();
+          widget.onRecordingComplete(result);
+        });
+      }
+
+      final wasShowing = prev != null && _shouldShowFinalizingOverlay(prev);
+      final shouldShow = _shouldShowFinalizingOverlay(next);
+      if (!wasShowing && shouldShow && !_isFinalizingDialogOpen) {
+        _showFinalizingDialog();
+      } else if (wasShowing && !shouldShow && _isFinalizingDialogOpen) {
+        _dismissFinalizingDialog();
+      }
     });
 
     final isReady = !recState.isRecording && !recState.isPaused;
     final isActive = recState.isRecording;
-    final showOverlay =
-        recState.isFinalizing || recState.finalizationError != null;
 
     final tagParts = <String>[];
     if (widget.genreName != null) tagParts.add(widget.genreName!);
@@ -182,119 +240,96 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
     if (widget.registerName != null) tagParts.add(widget.registerName!);
     final tagLabel = tagParts.join(' / ');
 
-    return PopScope(
-      canPop: !showOverlay,
-      child: Stack(
-        children: [
-          SizedBox.expand(
-            child: ColoredBox(
-              color: colors.background,
-              child: SafeArea(
-                child: Column(
-                  children: [
-                    if (isActive &&
-                        recState.storageBannerSeverity ==
-                            StorageBannerSeverity.critical)
-                      _StorageBanner(
-                        message: l10n.recording_storageCriticalBanner(
-                          ((recState.lastCheckpointAt?.inSeconds ?? 0) / 60)
-                              .floor(),
-                        ),
-                      ),
-                    if (isActive && _showBackgroundResumeBanner)
-                      _InfoBanner(
-                        message: l10n.recording_continuedInBackground,
-                      ),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 24),
-                      child: Text(
-                        formatElapsed(recState.elapsed),
-                        style: theme.textTheme.displayLarge?.copyWith(
-                          color: colors.foreground,
-                          fontWeight: FontWeight.w200,
-                          fontSize: 56,
-                          fontFeatures: [const FontFeature.tabularFigures()],
-                        ),
-                      ),
-                    ),
-
-                    if (isActive)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 6),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (!recState.isPaused)
-                              Padding(
-                                padding: const EdgeInsets.only(right: 8),
-                                child: _PulsingDot(color: colors.accent),
-                              ),
-                            Text(
-                              recState.isPaused
-                                  ? l10n.recording_paused
-                                  : l10n.recording_recording,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: colors.secondary,
-                                letterSpacing: 1.2,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                    if (!isActive && tagLabel.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 8),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: colors.surfaceAlt,
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Text(
-                            tagLabel,
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: colors.secondary,
-                            ),
-                          ),
-                        ),
-                      ),
-
-                    Expanded(
-                      child: isReady
-                          ? _buildReadyContent(colors, notifier, recState)
-                          : _buildRecordingContent(colors, recState, l10n),
-                    ),
-
-                    if (isActive)
-                      _buildBottomControls(colors, notifier, recState),
-
-                    if (isReady)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 40),
-                        child: Text(
-                          l10n.recording_tapToRecord,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: colors.secondary,
-                          ),
-                        ),
-                      ),
-                  ],
+    return SizedBox.expand(
+      child: ColoredBox(
+        color: colors.background,
+        child: SafeArea(
+          child: Column(
+            children: [
+              if (isActive &&
+                  recState.storageBannerSeverity ==
+                      StorageBannerSeverity.critical)
+                _StorageBanner(
+                  message: l10n.recording_storageCriticalBanner(
+                    ((recState.lastCheckpointAt?.inSeconds ?? 0) / 60).floor(),
+                  ),
+                ),
+              if (isActive && _showBackgroundResumeBanner)
+                _InfoBanner(message: l10n.recording_continuedInBackground),
+              Padding(
+                padding: const EdgeInsets.only(top: 24),
+                child: Text(
+                  formatElapsed(recState.elapsed),
+                  style: theme.textTheme.displayLarge?.copyWith(
+                    color: colors.foreground,
+                    fontWeight: FontWeight.w200,
+                    fontSize: 56,
+                    fontFeatures: [const FontFeature.tabularFigures()],
+                  ),
                 ),
               ),
-            ),
+              if (isActive)
+                Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (!recState.isPaused)
+                        Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: _PulsingDot(color: colors.accent),
+                        ),
+                      Text(
+                        recState.isPaused
+                            ? l10n.recording_paused
+                            : l10n.recording_recording,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colors.secondary,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              if (!isActive && tagLabel.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: colors.surfaceAlt,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Text(
+                      tagLabel,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: colors.secondary,
+                      ),
+                    ),
+                  ),
+                ),
+              Expanded(
+                child: isReady
+                    ? _buildReadyContent(colors, notifier, recState)
+                    : _buildRecordingContent(colors, recState, l10n),
+              ),
+              if (isActive) _buildBottomControls(colors, notifier, recState),
+              if (isReady)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 40),
+                  child: Text(
+                    l10n.recording_tapToRecord,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: colors.secondary,
+                    ),
+                  ),
+                ),
+            ],
           ),
-          if (showOverlay)
-            FinalizingOverlay(
-              stage: recState.finalizationStage,
-              error: recState.finalizationError,
-              degraded: recState.finalizationDegraded,
-              onDiscard: notifier.dismissFinalizationError,
-            ),
-        ],
+        ),
       ),
     );
   }
