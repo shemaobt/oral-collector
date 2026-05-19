@@ -30,6 +30,7 @@ import '../../storyteller/data/providers.dart' as storyteller_providers;
 import '../../storyteller/domain/entities/storyteller.dart';
 import '../../sync/presentation/notifiers/sync_notifier.dart';
 import '../../../shared/utils/format.dart';
+import 'notifiers/recordings_list_notifier.dart';
 import '../data/providers.dart';
 import '../data/services/audio_exporter.dart';
 import '../data/services/recording_trash.dart';
@@ -47,6 +48,8 @@ import 'widgets/recording_quick_actions.dart';
 import 'widgets/recording_status_section.dart';
 import 'widgets/recording_description_section.dart';
 import 'widgets/recording_storyteller_section.dart';
+import 'widgets/recording_title_section.dart';
+import '../data/use_cases/save_recording_title.dart';
 import 'widgets/replace_audio_dialog.dart';
 
 class RecordingDetailScreen extends ConsumerStatefulWidget {
@@ -63,8 +66,10 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
   LocalRecording? _recording;
   bool _isLoading = true;
   bool _isEditingDescription = false;
+  bool _isEditingTitle = false;
   Storyteller? _resolvedStoryteller;
   late TextEditingController _descriptionController;
+  late TextEditingController _titleController;
 
   bool get _canEditRecording {
     final user = ref.read(authNotifierProvider).currentUser;
@@ -83,12 +88,14 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
   void initState() {
     super.initState();
     _descriptionController = TextEditingController();
+    _titleController = TextEditingController();
     Future.microtask(_loadRecording);
   }
 
   @override
   void dispose() {
     _descriptionController.dispose();
+    _titleController.dispose();
     super.dispose();
   }
 
@@ -159,6 +166,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
         setState(() {
           _recording = recording;
           _descriptionController.text = recording?.description ?? '';
+          _titleController.text = recording?.title ?? '';
           _isLoading = false;
         });
         if (isOnline && recording != null) {
@@ -287,6 +295,59 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     }
     await _loadRecording();
     setState(() => _isEditingDescription = false);
+  }
+
+  Future<void> _saveTitle(String newTitle) async {
+    final l10n = AppLocalizations.of(context);
+    final apiRepo = ref.read(recordingApiRepositoryProvider);
+    final localRepo = kIsWeb
+        ? null
+        : ref.read(localRecordingRepositoryProvider);
+    final isOnline = ref.read(syncNotifierProvider).isOnline;
+
+    SaveTitleResult result;
+    try {
+      result = await saveRecordingTitle(
+        recordingId: widget.recordingId,
+        currentTitle: _recording?.title,
+        serverId: _recording?.serverId,
+        newTitle: newTitle,
+        isWeb: kIsWeb,
+        isOnline: isOnline,
+        apiRepo: apiRepo,
+        localRepo: localRepo,
+      );
+    } on ForbiddenException {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.recording_updateNoPermission),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    if (!mounted) return;
+
+    switch (result) {
+      case SaveTitleResult.emptyRejected:
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.recording_titleRequired)));
+        return;
+      case SaveTitleResult.noChange:
+        setState(() => _isEditingTitle = false);
+        return;
+      case SaveTitleResult.saved:
+      case SaveTitleResult.savedLocallyOnly:
+        await _loadRecording();
+        await ref
+            .read(recordingsListNotifierProvider.notifier)
+            .fetchRecordings();
+        if (!mounted) return;
+        setState(() => _isEditingTitle = false);
+    }
   }
 
   Future<void> _toggleCleaningStatus() async {
@@ -1209,6 +1270,23 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
+        RecordingTitleSection(
+          theme: theme,
+          colors: colors,
+          title: recording.title,
+          isEditing: _isEditingTitle,
+          controller: _titleController,
+          onSave: _saveTitle,
+          onCancel: () => setState(() {
+            _isEditingTitle = false;
+            _titleController.text = recording.title ?? '';
+          }),
+          onStartEdit: () {
+            _titleController.text = recording.title ?? '';
+            setState(() => _isEditingTitle = true);
+          },
+        ),
+        const SizedBox(height: 8),
         RecordingDescriptionSection(
           theme: theme,
           colors: colors,

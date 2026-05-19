@@ -472,13 +472,19 @@ class AppLocalizationsHi extends AppLocalizations {
       'वह भाषा शैली चुनें जो इस रिकॉर्डिंग के लहज़े और औपचारिकता का सबसे अच्छा वर्णन करती है।';
 
   @override
-  String get recording_titleHint => 'शीर्षक जोड़ें (वैकल्पिक)';
+  String get recording_titleHint => 'रिकॉर्डिंग का शीर्षक';
 
   @override
   String get recording_descriptionHint => 'संक्षिप्त विवरण जोड़ें (वैकल्पिक)';
 
   @override
   String get recording_descriptionEmpty => 'विवरण जोड़ें';
+
+  @override
+  String get recording_titleEmpty => 'शीर्षक जोड़ें';
+
+  @override
+  String get recording_titleRequired => 'शीर्षक खाली नहीं हो सकता';
 
   @override
   String get recording_saveRecording => 'रिकॉर्डिंग सहेजें';

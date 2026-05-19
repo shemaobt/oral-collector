@@ -1,0 +1,275 @@
+import 'package:drift/drift.dart' show Value;
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
+
+import 'package:oral_collector/core/database/app_database.dart';
+import 'package:oral_collector/core/errors/api_exception.dart';
+import 'package:oral_collector/features/recording/data/repositories/local_recording_repository.dart';
+import 'package:oral_collector/features/recording/data/use_cases/save_recording_title.dart';
+import 'package:oral_collector/features/recording/domain/repositories/recording_api_repository.dart';
+
+class _MockApiRepo extends Mock implements RecordingApiRepository {}
+
+class _MockLocalRepo extends Mock implements LocalRecordingRepository {}
+
+class _FakeCompanion extends Fake implements LocalRecordingsCompanion {}
+
+void main() {
+  setUpAll(() {
+    registerFallbackValue(_FakeCompanion());
+  });
+
+  late _MockApiRepo apiRepo;
+  late _MockLocalRepo localRepo;
+
+  setUp(() {
+    apiRepo = _MockApiRepo();
+    localRepo = _MockLocalRepo();
+    when(
+      () => apiRepo.updateRecording(
+        any(),
+        title: any(named: 'title'),
+        description: any(named: 'description'),
+        genreId: any(named: 'genreId'),
+        subcategoryId: any(named: 'subcategoryId'),
+        registerId: any(named: 'registerId'),
+        secondaryGenreId: any(named: 'secondaryGenreId'),
+        secondarySubcategoryId: any(named: 'secondarySubcategoryId'),
+        secondaryRegisterId: any(named: 'secondaryRegisterId'),
+        clearSecondary: any(named: 'clearSecondary'),
+        storytellerId: any(named: 'storytellerId'),
+        cleaningStatus: any(named: 'cleaningStatus'),
+        durationSeconds: any(named: 'durationSeconds'),
+        fileSizeBytes: any(named: 'fileSizeBytes'),
+      ),
+    ).thenAnswer((_) async => true);
+
+    when(
+      () => localRepo.updateRecording(any(), any()),
+    ).thenAnswer((_) async => true);
+  });
+
+  group('saveRecordingTitle', () {
+    test('returns emptyRejected when title is empty', () async {
+      final result = await saveRecordingTitle(
+        recordingId: 'rec-1',
+        currentTitle: 'Old',
+        serverId: 'srv-1',
+        newTitle: '',
+        isWeb: false,
+        isOnline: true,
+        apiRepo: apiRepo,
+        localRepo: localRepo,
+      );
+
+      expect(result, SaveTitleResult.emptyRejected);
+      verifyNever(() => localRepo.updateRecording(any(), any()));
+      verifyNever(
+        () => apiRepo.updateRecording(any(), title: any(named: 'title')),
+      );
+    });
+
+    test('returns emptyRejected when title is only whitespace', () async {
+      final result = await saveRecordingTitle(
+        recordingId: 'rec-1',
+        currentTitle: 'Old',
+        serverId: 'srv-1',
+        newTitle: '   ',
+        isWeb: false,
+        isOnline: true,
+        apiRepo: apiRepo,
+        localRepo: localRepo,
+      );
+
+      expect(result, SaveTitleResult.emptyRejected);
+      verifyNever(() => localRepo.updateRecording(any(), any()));
+      verifyNever(
+        () => apiRepo.updateRecording(any(), title: any(named: 'title')),
+      );
+    });
+
+    test('returns noChange when trimmed title equals current', () async {
+      final result = await saveRecordingTitle(
+        recordingId: 'rec-1',
+        currentTitle: 'Same',
+        serverId: 'srv-1',
+        newTitle: '  Same  ',
+        isWeb: false,
+        isOnline: true,
+        apiRepo: apiRepo,
+        localRepo: localRepo,
+      );
+
+      expect(result, SaveTitleResult.noChange);
+      verifyNever(() => localRepo.updateRecording(any(), any()));
+      verifyNever(
+        () => apiRepo.updateRecording(any(), title: any(named: 'title')),
+      );
+    });
+
+    test(
+      'on web, calls API with trimmed title and does NOT call local repo',
+      () async {
+        final result = await saveRecordingTitle(
+          recordingId: 'rec-1',
+          currentTitle: 'Old',
+          serverId: 'srv-1',
+          newTitle: '  New Title  ',
+          isWeb: true,
+          isOnline: true,
+          apiRepo: apiRepo,
+          localRepo: null,
+        );
+
+        expect(result, SaveTitleResult.saved);
+        verify(
+          () => apiRepo.updateRecording('srv-1', title: 'New Title'),
+        ).called(1);
+      },
+    );
+
+    test('on web with null serverId, uses recordingId as the API id', () async {
+      final result = await saveRecordingTitle(
+        recordingId: 'rec-1',
+        currentTitle: 'Old',
+        serverId: null,
+        newTitle: 'New',
+        isWeb: true,
+        isOnline: true,
+        apiRepo: apiRepo,
+        localRepo: null,
+      );
+
+      expect(result, SaveTitleResult.saved);
+      verify(() => apiRepo.updateRecording('rec-1', title: 'New')).called(1);
+    });
+
+    test('on mobile online with serverId: calls local repo AND API', () async {
+      final result = await saveRecordingTitle(
+        recordingId: 'rec-1',
+        currentTitle: 'Old',
+        serverId: 'srv-1',
+        newTitle: 'New',
+        isWeb: false,
+        isOnline: true,
+        apiRepo: apiRepo,
+        localRepo: localRepo,
+      );
+
+      expect(result, SaveTitleResult.saved);
+      verify(() => localRepo.updateRecording('rec-1', any())).called(1);
+      verify(() => apiRepo.updateRecording('srv-1', title: 'New')).called(1);
+    });
+
+    test('on mobile offline: calls local repo only, NOT API', () async {
+      final result = await saveRecordingTitle(
+        recordingId: 'rec-1',
+        currentTitle: 'Old',
+        serverId: 'srv-1',
+        newTitle: 'New',
+        isWeb: false,
+        isOnline: false,
+        apiRepo: apiRepo,
+        localRepo: localRepo,
+      );
+
+      expect(result, SaveTitleResult.saved);
+      verify(() => localRepo.updateRecording('rec-1', any())).called(1);
+      verifyNever(
+        () => apiRepo.updateRecording(any(), title: any(named: 'title')),
+      );
+    });
+
+    test(
+      'on mobile with no serverId: calls local repo only, NOT API',
+      () async {
+        final result = await saveRecordingTitle(
+          recordingId: 'rec-1',
+          currentTitle: null,
+          serverId: null,
+          newTitle: 'New',
+          isWeb: false,
+          isOnline: true,
+          apiRepo: apiRepo,
+          localRepo: localRepo,
+        );
+
+        expect(result, SaveTitleResult.saved);
+        verify(() => localRepo.updateRecording('rec-1', any())).called(1);
+        verifyNever(
+          () => apiRepo.updateRecording(any(), title: any(named: 'title')),
+        );
+      },
+    );
+
+    test(
+      'on mobile, when API throws, returns savedLocallyOnly (not failure)',
+      () async {
+        when(
+          () => apiRepo.updateRecording(any(), title: any(named: 'title')),
+        ).thenThrow(Exception('network down'));
+
+        final result = await saveRecordingTitle(
+          recordingId: 'rec-1',
+          currentTitle: 'Old',
+          serverId: 'srv-1',
+          newTitle: 'New',
+          isWeb: false,
+          isOnline: true,
+          apiRepo: apiRepo,
+          localRepo: localRepo,
+        );
+
+        expect(result, SaveTitleResult.savedLocallyOnly);
+        verify(() => localRepo.updateRecording('rec-1', any())).called(1);
+      },
+    );
+
+    test(
+      'on mobile, ForbiddenException from API is rethrown (not swallowed)',
+      () async {
+        when(
+          () => apiRepo.updateRecording(any(), title: any(named: 'title')),
+        ).thenThrow(const ForbiddenException());
+
+        expect(
+          () => saveRecordingTitle(
+            recordingId: 'rec-1',
+            currentTitle: 'Old',
+            serverId: 'srv-1',
+            newTitle: 'New',
+            isWeb: false,
+            isOnline: true,
+            apiRepo: apiRepo,
+            localRepo: localRepo,
+          ),
+          throwsA(isA<ForbiddenException>()),
+        );
+      },
+    );
+
+    test(
+      'on mobile, writes the trimmed title into the local DB companion',
+      () async {
+        await saveRecordingTitle(
+          recordingId: 'rec-1',
+          currentTitle: 'Old',
+          serverId: null,
+          newTitle: '   Trimmed Title   ',
+          isWeb: false,
+          isOnline: false,
+          apiRepo: apiRepo,
+          localRepo: localRepo,
+        );
+
+        final captured =
+            verify(
+                  () => localRepo.updateRecording('rec-1', captureAny()),
+                ).captured.single
+                as LocalRecordingsCompanion;
+
+        expect(captured.title, const Value('Trimmed Title'));
+      },
+    );
+  });
+}

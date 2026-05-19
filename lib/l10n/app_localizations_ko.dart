@@ -462,13 +462,19 @@ class AppLocalizationsKo extends AppLocalizations {
       '이 녹음의 어조와 격식 수준을 가장 잘 나타내는 언어 사용역을 선택하세요.';
 
   @override
-  String get recording_titleHint => '제목 추가 (선택 사항)';
+  String get recording_titleHint => '녹음 제목';
 
   @override
   String get recording_descriptionHint => '짧은 설명 추가 (선택 사항)';
 
   @override
   String get recording_descriptionEmpty => '설명 추가';
+
+  @override
+  String get recording_titleEmpty => '제목 추가';
+
+  @override
+  String get recording_titleRequired => '제목은 비워둘 수 없습니다';
 
   @override
   String get recording_saveRecording => '녹음 저장';

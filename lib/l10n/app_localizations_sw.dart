@@ -472,13 +472,19 @@ class AppLocalizationsSw extends AppLocalizations {
       'Chagua rejista ya usemi inayoelezea vizuri toni na utaratibu wa rekodi hii.';
 
   @override
-  String get recording_titleHint => 'Ongeza kichwa (si lazima)';
+  String get recording_titleHint => 'Kichwa cha rekodi';
 
   @override
   String get recording_descriptionHint => 'Ongeza maelezo mafupi (si lazima)';
 
   @override
   String get recording_descriptionEmpty => 'Ongeza maelezo';
+
+  @override
+  String get recording_titleEmpty => 'Ongeza kichwa';
+
+  @override
+  String get recording_titleRequired => 'Kichwa hakiwezi kuwa tupu';
 
   @override
   String get recording_saveRecording => 'Hifadhi Rekodi';

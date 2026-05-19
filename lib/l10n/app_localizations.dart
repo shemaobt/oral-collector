@@ -1007,7 +1007,7 @@ abstract class AppLocalizations {
   /// No description provided for @recording_titleHint.
   ///
   /// In en, this message translates to:
-  /// **'Add a title (optional)'**
+  /// **'Recording title'**
   String get recording_titleHint;
 
   /// No description provided for @recording_descriptionHint.
@@ -1021,6 +1021,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add description'**
   String get recording_descriptionEmpty;
+
+  /// No description provided for @recording_titleEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Add title'**
+  String get recording_titleEmpty;
+
+  /// No description provided for @recording_titleRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Title cannot be empty'**
+  String get recording_titleRequired;
 
   /// No description provided for @recording_saveRecording.
   ///

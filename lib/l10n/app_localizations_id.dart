@@ -472,13 +472,19 @@ class AppLocalizationsId extends AppLocalizations {
       'Pilih register bicara yang paling menggambarkan nada dan formalitas rekaman ini.';
 
   @override
-  String get recording_titleHint => 'Tambah judul (opsional)';
+  String get recording_titleHint => 'Judul rekaman';
 
   @override
   String get recording_descriptionHint => 'Tambah deskripsi singkat (opsional)';
 
   @override
   String get recording_descriptionEmpty => 'Tambah deskripsi';
+
+  @override
+  String get recording_titleEmpty => 'Tambah judul';
+
+  @override
+  String get recording_titleRequired => 'Judul tidak boleh kosong';
 
   @override
   String get recording_saveRecording => 'Simpan Rekaman';

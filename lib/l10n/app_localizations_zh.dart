@@ -461,13 +461,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recording_registerDescription => '选择最能描述此录音语气和正式程度的语域。';
 
   @override
-  String get recording_titleHint => '添加标题（选填）';
+  String get recording_titleHint => '录音标题';
 
   @override
   String get recording_descriptionHint => '添加简短描述（选填）';
 
   @override
   String get recording_descriptionEmpty => '添加描述';
+
+  @override
+  String get recording_titleEmpty => '添加标题';
+
+  @override
+  String get recording_titleRequired => '标题不能为空';
 
   @override
   String get recording_saveRecording => '保存录音';

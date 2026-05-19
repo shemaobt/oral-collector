@@ -470,13 +470,19 @@ class AppLocalizationsTpi extends AppLocalizations {
       'Makim pasin bilong toktok we i stret long ton na fomol bilong dispela rekoding.';
 
   @override
-  String get recording_titleHint => 'Putim nem (sapos yu laik)';
+  String get recording_titleHint => 'Nem bilong rekoding';
 
   @override
   String get recording_descriptionHint => 'Raitim liklik stori (sapos yu laik)';
 
   @override
   String get recording_descriptionEmpty => 'Raitim stori';
+
+  @override
+  String get recording_titleEmpty => 'Putim nem';
+
+  @override
+  String get recording_titleRequired => 'Nem i no inap stap emti';
 
   @override
   String get recording_saveRecording => 'Sevim Rekoding';

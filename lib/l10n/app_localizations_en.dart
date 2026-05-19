@@ -468,13 +468,19 @@ class AppLocalizationsEn extends AppLocalizations {
       'Choose the speech register that best describes the tone and formality of this recording.';
 
   @override
-  String get recording_titleHint => 'Add a title (optional)';
+  String get recording_titleHint => 'Recording title';
 
   @override
   String get recording_descriptionHint => 'Add a short description (optional)';
 
   @override
   String get recording_descriptionEmpty => 'Add description';
+
+  @override
+  String get recording_titleEmpty => 'Add title';
+
+  @override
+  String get recording_titleRequired => 'Title cannot be empty';
 
   @override
   String get recording_saveRecording => 'Save Recording';
