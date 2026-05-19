@@ -220,9 +220,8 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
     final isFinalizing = recState.isFinalizing;
     final hasError = recState.finalizationError != null;
     final isFinalizingOrError = isFinalizing || hasError;
-    final isReady = !recState.isRecording &&
-        !recState.isPaused &&
-        !isFinalizingOrError;
+    final isReady =
+        !recState.isRecording && !recState.isPaused && !isFinalizingOrError;
     final isActive = recState.isRecording;
     final interrupted = ref.watch(interruptedSessionsProvider);
     final hasInterruptedAndReady = isReady && interrupted.isNotEmpty;
@@ -319,13 +318,10 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
                             padding: const EdgeInsets.only(top: 10),
                             child: _BackToListButton(
                               label: l10n.recovery_backToList,
-                              onTap: () =>
-                                  _handleCancelPendingResume(notifier),
+                              onTap: () => _handleCancelPendingResume(notifier),
                             ),
                           ),
-                        if (!isActive &&
-                            !isFinalizing &&
-                            tagLabel.isNotEmpty)
+                        if (!isActive && !isFinalizing && tagLabel.isNotEmpty)
                           Padding(
                             padding: const EdgeInsets.only(top: 8),
                             child: Container(
