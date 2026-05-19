@@ -1965,6 +1965,28 @@ class AppLocalizationsAr extends AppLocalizations {
   String get recording_inProgressNotificationBody => 'اضغط للعودة إلى التطبيق';
 
   @override
+  String get recording_finalizing => 'إنهاء التسجيل…';
+
+  @override
+  String get recording_combiningSegments => 'دمج الأجزاء…';
+
+  @override
+  String get recording_compressingAudio => 'ضغط الصوت…';
+
+  @override
+  String get recording_finalizationDegradedHint => 'قد تكون جودة الصوت منخفضة.';
+
+  @override
+  String get recording_finalizationFailed => 'تعذر حفظ هذا التسجيل';
+
+  @override
+  String get recording_finalizationFailedBody =>
+      'حاولنا استرداد الصوت لكن لم تكن هناك أجزاء متاحة.';
+
+  @override
+  String get recording_discardAndReturn => 'تجاهل والعودة';
+
+  @override
   String get profile_defaultMicrophone => 'الميكروفون الافتراضي';
 
   @override

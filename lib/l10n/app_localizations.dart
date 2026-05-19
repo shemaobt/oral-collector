@@ -3608,6 +3608,48 @@ abstract class AppLocalizations {
   /// **'Tap to return to the app'**
   String get recording_inProgressNotificationBody;
 
+  /// No description provided for @recording_finalizing.
+  ///
+  /// In en, this message translates to:
+  /// **'Finalizing recording…'**
+  String get recording_finalizing;
+
+  /// No description provided for @recording_combiningSegments.
+  ///
+  /// In en, this message translates to:
+  /// **'Combining segments…'**
+  String get recording_combiningSegments;
+
+  /// No description provided for @recording_compressingAudio.
+  ///
+  /// In en, this message translates to:
+  /// **'Compressing audio…'**
+  String get recording_compressingAudio;
+
+  /// No description provided for @recording_finalizationDegradedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio quality may be reduced.'**
+  String get recording_finalizationDegradedHint;
+
+  /// No description provided for @recording_finalizationFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save this recording'**
+  String get recording_finalizationFailed;
+
+  /// No description provided for @recording_finalizationFailedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'We tried to recover the audio but no segments were available.'**
+  String get recording_finalizationFailedBody;
+
+  /// No description provided for @recording_discardAndReturn.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard and return'**
+  String get recording_discardAndReturn;
+
   /// No description provided for @profile_defaultMicrophone.
   ///
   /// In en, this message translates to:

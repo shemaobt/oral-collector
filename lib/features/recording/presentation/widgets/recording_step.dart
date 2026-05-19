@@ -14,6 +14,7 @@ import '../notifiers/input_device_notifier.dart';
 import '../notifiers/recording_session_notifier.dart';
 import '../notifiers/recording_session_state.dart';
 import 'control_button.dart';
+import 'finalizing_overlay.dart';
 import 'input_device_picker_sheet.dart';
 import 'scrolling_waveform.dart';
 
@@ -172,6 +173,8 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
 
     final isReady = !recState.isRecording && !recState.isPaused;
     final isActive = recState.isRecording;
+    final showOverlay =
+        recState.isFinalizing || recState.finalizationError != null;
 
     final tagParts = <String>[];
     if (widget.genreName != null) tagParts.add(widget.genreName!);
@@ -179,101 +182,119 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
     if (widget.registerName != null) tagParts.add(widget.registerName!);
     final tagLabel = tagParts.join(' / ');
 
-    return SizedBox.expand(
-      child: ColoredBox(
-        color: colors.background,
-        child: SafeArea(
-          child: Column(
-            children: [
-              if (isActive &&
-                  recState.storageBannerSeverity ==
-                      StorageBannerSeverity.critical)
-                _StorageBanner(
-                  message: l10n.recording_storageCriticalBanner(
-                    ((recState.lastCheckpointAt?.inSeconds ?? 0) / 60).floor(),
-                  ),
-                ),
-              if (isActive && _showBackgroundResumeBanner)
-                _InfoBanner(message: l10n.recording_continuedInBackground),
-              Padding(
-                padding: const EdgeInsets.only(top: 24),
-                child: Text(
-                  formatElapsed(recState.elapsed),
-                  style: theme.textTheme.displayLarge?.copyWith(
-                    color: colors.foreground,
-                    fontWeight: FontWeight.w200,
-                    fontSize: 56,
-                    fontFeatures: [const FontFeature.tabularFigures()],
-                  ),
-                ),
-              ),
-
-              if (isActive)
-                Padding(
-                  padding: const EdgeInsets.only(top: 6),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (!recState.isPaused)
-                        Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: _PulsingDot(color: colors.accent),
-                        ),
-                      Text(
-                        recState.isPaused
-                            ? l10n.recording_paused
-                            : l10n.recording_recording,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: colors.secondary,
-                          letterSpacing: 1.2,
+    return PopScope(
+      canPop: !showOverlay,
+      child: Stack(
+        children: [
+          SizedBox.expand(
+            child: ColoredBox(
+              color: colors.background,
+              child: SafeArea(
+                child: Column(
+                  children: [
+                    if (isActive &&
+                        recState.storageBannerSeverity ==
+                            StorageBannerSeverity.critical)
+                      _StorageBanner(
+                        message: l10n.recording_storageCriticalBanner(
+                          ((recState.lastCheckpointAt?.inSeconds ?? 0) / 60)
+                              .floor(),
                         ),
                       ),
-                    ],
-                  ),
-                ),
-
-              if (!isActive && tagLabel.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: colors.surfaceAlt,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Text(
-                      tagLabel,
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: colors.secondary,
+                    if (isActive && _showBackgroundResumeBanner)
+                      _InfoBanner(
+                        message: l10n.recording_continuedInBackground,
+                      ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 24),
+                      child: Text(
+                        formatElapsed(recState.elapsed),
+                        style: theme.textTheme.displayLarge?.copyWith(
+                          color: colors.foreground,
+                          fontWeight: FontWeight.w200,
+                          fontSize: 56,
+                          fontFeatures: [const FontFeature.tabularFigures()],
+                        ),
                       ),
                     ),
-                  ),
-                ),
 
-              Expanded(
-                child: isReady
-                    ? _buildReadyContent(colors, notifier, recState)
-                    : _buildRecordingContent(colors, recState, l10n),
-              ),
+                    if (isActive)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 6),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (!recState.isPaused)
+                              Padding(
+                                padding: const EdgeInsets.only(right: 8),
+                                child: _PulsingDot(color: colors.accent),
+                              ),
+                            Text(
+                              recState.isPaused
+                                  ? l10n.recording_paused
+                                  : l10n.recording_recording,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: colors.secondary,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
 
-              if (isActive) _buildBottomControls(colors, notifier, recState),
+                    if (!isActive && tagLabel.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: colors.surfaceAlt,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Text(
+                            tagLabel,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: colors.secondary,
+                            ),
+                          ),
+                        ),
+                      ),
 
-              if (isReady)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 40),
-                  child: Text(
-                    l10n.recording_tapToRecord,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: colors.secondary,
+                    Expanded(
+                      child: isReady
+                          ? _buildReadyContent(colors, notifier, recState)
+                          : _buildRecordingContent(colors, recState, l10n),
                     ),
-                  ),
+
+                    if (isActive)
+                      _buildBottomControls(colors, notifier, recState),
+
+                    if (isReady)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 40),
+                        child: Text(
+                          l10n.recording_tapToRecord,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: colors.secondary,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
-            ],
+              ),
+            ),
           ),
-        ),
+          if (showOverlay)
+            FinalizingOverlay(
+              stage: recState.finalizationStage,
+              error: recState.finalizationError,
+              degraded: recState.finalizationDegraded,
+              onDiscard: notifier.dismissFinalizationError,
+            ),
+        ],
       ),
     );
   }

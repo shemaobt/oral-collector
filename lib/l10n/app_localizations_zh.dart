@@ -1926,6 +1926,27 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recording_inProgressNotificationBody => '点击返回应用';
 
   @override
+  String get recording_finalizing => '正在完成录音…';
+
+  @override
+  String get recording_combiningSegments => '正在合并片段…';
+
+  @override
+  String get recording_compressingAudio => '正在压缩音频…';
+
+  @override
+  String get recording_finalizationDegradedHint => '音频质量可能会降低。';
+
+  @override
+  String get recording_finalizationFailed => '无法保存此录音';
+
+  @override
+  String get recording_finalizationFailedBody => '我们尝试恢复音频，但没有可用的片段。';
+
+  @override
+  String get recording_discardAndReturn => '放弃并返回';
+
+  @override
   String get profile_defaultMicrophone => '默认麦克风';
 
   @override

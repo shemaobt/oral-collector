@@ -2027,6 +2027,30 @@ class AppLocalizationsFr extends AppLocalizations {
       'Touchez pour revenir à l\'application';
 
   @override
+  String get recording_finalizing => 'Finalisation de l\'enregistrement…';
+
+  @override
+  String get recording_combiningSegments => 'Combinaison des segments…';
+
+  @override
+  String get recording_compressingAudio => 'Compression de l\'audio…';
+
+  @override
+  String get recording_finalizationDegradedHint =>
+      'La qualité audio peut être réduite.';
+
+  @override
+  String get recording_finalizationFailed =>
+      'Impossible d\'enregistrer ce contenu';
+
+  @override
+  String get recording_finalizationFailedBody =>
+      'Nous avons essayé de récupérer l\'audio mais aucun segment n\'était disponible.';
+
+  @override
+  String get recording_discardAndReturn => 'Ignorer et revenir';
+
+  @override
   String get profile_defaultMicrophone => 'Microphone par défaut';
 
   @override

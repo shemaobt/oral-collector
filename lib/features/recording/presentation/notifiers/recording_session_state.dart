@@ -1,5 +1,7 @@
 enum StorageBannerSeverity { none, critical, forceStopped }
 
+enum FinalizationStage { idle, finalizing, combiningSegments, compressingAudio }
+
 class RecordingState {
   final bool isRecording;
   final bool isPaused;
@@ -12,6 +14,9 @@ class RecordingState {
   final bool showCheckpointToast;
   final StorageBannerSeverity storageBannerSeverity;
   final RecordingResult? autoStoppedResult;
+  final FinalizationStage finalizationStage;
+  final String? finalizationError;
+  final bool finalizationDegraded;
 
   const RecordingState({
     this.isRecording = false,
@@ -25,7 +30,12 @@ class RecordingState {
     this.showCheckpointToast = false,
     this.storageBannerSeverity = StorageBannerSeverity.none,
     this.autoStoppedResult,
+    this.finalizationStage = FinalizationStage.idle,
+    this.finalizationError,
+    this.finalizationDegraded = false,
   });
+
+  bool get isFinalizing => finalizationStage != FinalizationStage.idle;
 
   RecordingState copyWith({
     bool? isRecording,
@@ -39,12 +49,16 @@ class RecordingState {
     bool? showCheckpointToast,
     StorageBannerSeverity? storageBannerSeverity,
     RecordingResult? autoStoppedResult,
+    FinalizationStage? finalizationStage,
+    String? finalizationError,
+    bool? finalizationDegraded,
     bool clearGenreId = false,
     bool clearSubcategoryId = false,
     bool clearAmplitudeStream = false,
     bool clearSessionId = false,
     bool clearLastCheckpoint = false,
     bool clearAutoStoppedResult = false,
+    bool clearFinalizationError = false,
   }) {
     return RecordingState(
       isRecording: isRecording ?? this.isRecording,
@@ -69,6 +83,11 @@ class RecordingState {
       autoStoppedResult: clearAutoStoppedResult
           ? null
           : (autoStoppedResult ?? this.autoStoppedResult),
+      finalizationStage: finalizationStage ?? this.finalizationStage,
+      finalizationError: clearFinalizationError
+          ? null
+          : (finalizationError ?? this.finalizationError),
+      finalizationDegraded: finalizationDegraded ?? this.finalizationDegraded,
     );
   }
 }

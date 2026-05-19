@@ -19,7 +19,9 @@ import '../../data/providers.dart';
 import '../../data/services/recording_concat_service.dart';
 import '../../data/services/recording_notification.dart';
 import '../../data/services/segmented_recorder.dart';
+import '../../data/services/session_recovery.dart';
 import '../../data/services/storage_guard.dart';
+import '../../data/services/wav_concat.dart';
 import 'input_device_notifier.dart';
 import 'recording_session_state.dart';
 
@@ -238,7 +240,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
   }
 
   Future<RecordingResult?> stopRecording() async {
-    if (!state.isRecording) return null;
+    if (!state.isRecording || state.isFinalizing) return null;
 
     _elapsedTimer?.cancel();
     _toastTimer?.cancel();
@@ -252,19 +254,42 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
 
   Future<RecordingResult?> _stopNative(Duration fallbackElapsed) async {
     final recorder = _segRecorder;
+    final sessionId = state.sessionId;
     if (recorder == null) {
       state = const RecordingState();
       await RecordingNotification.instance.clear();
       return null;
     }
 
-    final sessionResult = await recorder.finish();
+    state = state.copyWith(finalizationStage: FinalizationStage.finalizing);
+
+    SegmentedRecordingResult? sessionResult;
+    var degraded = false;
+    try {
+      sessionResult = await recorder.finish();
+    } catch (e, st) {
+      debugPrint('[stopNative] recorder.finish failed: $e\n$st');
+      sessionResult = await _recoverFromDisk(sessionId);
+      if (sessionResult != null) degraded = true;
+    }
     _segRecorder = null;
 
-    state = const RecordingState();
+    state = state.copyWith(
+      isRecording: false,
+      isPaused: false,
+      elapsed: Duration.zero,
+      clearAmplitudeStream: true,
+      clearSessionId: true,
+      clearLastCheckpoint: true,
+      finalizationDegraded: degraded,
+    );
     await RecordingNotification.instance.clear();
 
     if (sessionResult == null || sessionResult.segmentPaths.isEmpty) {
+      state = state.copyWith(
+        finalizationStage: FinalizationStage.idle,
+        finalizationError: 'No audio segments were saved.',
+      );
       return null;
     }
 
@@ -278,6 +303,9 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
     if (sessionResult.segmentPaths.length == 1) {
       sourcePath = sessionResult.segmentPaths.first;
     } else {
+      state = state.copyWith(
+        finalizationStage: FinalizationStage.combiningSegments,
+      );
       final concat = ref.read(recordingConcatServiceProvider);
       final firstIsWav = sessionResult.segmentPaths.first
           .toLowerCase()
@@ -285,10 +313,33 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
       final concatExt = firstIsWav ? 'wav' : 'm4a';
       final concatPath =
           '${dir.path}/concat_${sessionResult.sessionId}.$concatExt';
-      final concatResult = await concat.concatSegments(
-        segmentPaths: sessionResult.segmentPaths,
-        outputPath: concatPath,
-      );
+
+      String? concatResult;
+      try {
+        concatResult = await concat.concatSegments(
+          segmentPaths: sessionResult.segmentPaths,
+          outputPath: concatPath,
+        );
+      } catch (e, st) {
+        debugPrint('[stopNative] concatSegments failed: $e\n$st');
+        concatResult = null;
+      }
+
+      if (concatResult == null && firstIsWav) {
+        try {
+          final ok = await concatWavFilesInDart(
+            segments: sessionResult.segmentPaths,
+            outputPath: concatPath,
+          );
+          if (ok) {
+            concatResult = concatPath;
+            state = state.copyWith(finalizationDegraded: true);
+          }
+        } catch (e, st) {
+          debugPrint('[stopNative] pure-dart WAV concat failed: $e\n$st');
+        }
+      }
+
       if (concatResult != null) {
         sourcePath = concatResult;
         for (final p in sessionResult.segmentPaths) {
@@ -296,20 +347,35 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
         }
       } else {
         sourcePath = sessionResult.segmentPaths.first;
+        state = state.copyWith(finalizationDegraded: true);
       }
     }
 
     final isWav = sourcePath.toLowerCase().endsWith('.wav');
     if (isWav) {
+      state = state.copyWith(
+        finalizationStage: FinalizationStage.compressingAudio,
+      );
       final m4aPath = '${dir.path}/recording_${sessionResult.sessionId}.m4a';
-      final ok = await ffmpeg_ops.compressToM4a(sourcePath, m4aPath);
+      var ok = false;
+      try {
+        ok = await ffmpeg_ops.compressToM4a(sourcePath, m4aPath);
+      } catch (e, st) {
+        debugPrint('[stopNative] compressToM4a failed: $e\n$st');
+        ok = false;
+      }
       if (ok) {
         unawaited(_deleteFileSafe(sourcePath));
+        state = const RecordingState();
         return RecordingResult(
           filePath: m4aPath,
           durationSeconds: totalDuration.inMilliseconds / 1000.0,
         );
       }
+      state = state.copyWith(
+        finalizationStage: FinalizationStage.idle,
+        finalizationDegraded: true,
+      );
       return RecordingResult(
         filePath: sourcePath,
         durationSeconds: totalDuration.inMilliseconds / 1000.0,
@@ -317,9 +383,34 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
       );
     }
 
+    state = const RecordingState();
     return RecordingResult(
       filePath: sourcePath,
       durationSeconds: totalDuration.inMilliseconds / 1000.0,
+    );
+  }
+
+  Future<SegmentedRecordingResult?> _recoverFromDisk(String? sessionId) async {
+    if (sessionId == null) return null;
+    try {
+      final repo = ref.read(recordingSessionRepositoryProvider);
+      final dir = await getApplicationDocumentsDirectory();
+      return await recoverSessionFromDisk(
+        repo: repo,
+        sessionId: sessionId,
+        documentsDir: dir,
+      );
+    } catch (e, st) {
+      debugPrint('[stopNative] recoverFromDisk failed: $e\n$st');
+      return null;
+    }
+  }
+
+  void dismissFinalizationError() {
+    state = state.copyWith(
+      clearFinalizationError: true,
+      finalizationStage: FinalizationStage.idle,
+      finalizationDegraded: false,
     );
   }
 
@@ -331,24 +422,51 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
       return null;
     }
 
-    final url = await recorder.stop();
+    state = state.copyWith(finalizationStage: FinalizationStage.finalizing);
+
+    String? url;
+    try {
+      url = await recorder.stop();
+    } catch (e, st) {
+      debugPrint('[stopWeb] recorder.stop failed: $e\n$st');
+      url = null;
+    }
     await _disposeWebRecorder();
 
-    state = const RecordingState();
+    state = state.copyWith(
+      isRecording: false,
+      isPaused: false,
+      elapsed: Duration.zero,
+      clearAmplitudeStream: true,
+      clearSessionId: true,
+      clearLastCheckpoint: true,
+    );
 
-    if (url == null || url.isEmpty) return null;
+    if (url == null || url.isEmpty) {
+      state = state.copyWith(
+        finalizationStage: FinalizationStage.idle,
+        finalizationError: 'No audio was recorded.',
+      );
+      return null;
+    }
 
     try {
       final bytes = await http.readBytes(Uri.parse(url));
       final format = _detectWebFormatFromUrl(url);
       final fullKey = '$pendingKey.$format';
       await file_ops.writeFileBytes(fullKey, bytes);
+      state = const RecordingState();
       return RecordingResult(
         filePath: fullKey,
         durationSeconds: fallbackElapsed.inMilliseconds / 1000.0,
         format: format,
       );
-    } catch (_) {
+    } catch (e, st) {
+      debugPrint('[stopWeb] download failed: $e\n$st');
+      state = state.copyWith(
+        finalizationStage: FinalizationStage.idle,
+        finalizationError: 'Failed to read recorded audio.',
+      );
       return null;
     }
   }

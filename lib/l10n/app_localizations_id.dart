@@ -2005,6 +2005,30 @@ class AppLocalizationsId extends AppLocalizations {
       'Ketuk untuk kembali ke aplikasi';
 
   @override
+  String get recording_finalizing => 'Menyelesaikan rekaman…';
+
+  @override
+  String get recording_combiningSegments => 'Menggabungkan segmen…';
+
+  @override
+  String get recording_compressingAudio => 'Mengompresi audio…';
+
+  @override
+  String get recording_finalizationDegradedHint =>
+      'Kualitas audio mungkin berkurang.';
+
+  @override
+  String get recording_finalizationFailed =>
+      'Tidak dapat menyimpan rekaman ini';
+
+  @override
+  String get recording_finalizationFailedBody =>
+      'Kami mencoba memulihkan audio tetapi tidak ada segmen yang tersedia.';
+
+  @override
+  String get recording_discardAndReturn => 'Buang dan kembali';
+
+  @override
   String get profile_defaultMicrophone => 'Mikrofon default';
 
   @override

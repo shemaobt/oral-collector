@@ -1998,6 +1998,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recording_inProgressNotificationBody => 'Tap to return to the app';
 
   @override
+  String get recording_finalizing => 'Finalizing recording…';
+
+  @override
+  String get recording_combiningSegments => 'Combining segments…';
+
+  @override
+  String get recording_compressingAudio => 'Compressing audio…';
+
+  @override
+  String get recording_finalizationDegradedHint =>
+      'Audio quality may be reduced.';
+
+  @override
+  String get recording_finalizationFailed => 'Couldn\'t save this recording';
+
+  @override
+  String get recording_finalizationFailedBody =>
+      'We tried to recover the audio but no segments were available.';
+
+  @override
+  String get recording_discardAndReturn => 'Discard and return';
+
+  @override
   String get profile_defaultMicrophone => 'Default microphone';
 
   @override
