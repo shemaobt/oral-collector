@@ -15,11 +15,11 @@ Future<bool> showBlockNavigationDialog(BuildContext context) async {
           onPressed: () => Navigator.of(ctx).pop(false),
           child: Text(l10n.common_cancel),
         ),
-        FilledButton(
-          style: FilledButton.styleFrom(
-            backgroundColor: Theme.of(ctx).colorScheme.error,
-          ),
+        TextButton(
           onPressed: () => Navigator.of(ctx).pop(true),
+          style: TextButton.styleFrom(
+            foregroundColor: Theme.of(ctx).colorScheme.error,
+          ),
           child: Text(l10n.recording_blockNavDiscardAndLeave),
         ),
       ],
