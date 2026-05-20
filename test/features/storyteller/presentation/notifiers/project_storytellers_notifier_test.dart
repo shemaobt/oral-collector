@@ -20,6 +20,10 @@ class _FakeSyncNotifier extends SyncNotifier {
 
   @override
   SyncState build() => SyncState(isOnline: initialOnline);
+
+  void setOnline(bool online) {
+    state = state.copyWith(isOnline: online);
+  }
 }
 
 Storyteller _makeStoryteller(String id, String name) => Storyteller(
@@ -122,5 +126,44 @@ void main() {
       expect(state.isLoading, isFalse);
       verify(() => api.listByProject('proj-1')).called(1);
     });
+  });
+
+  group('ProjectStorytellersNotifier.fetch — offline → online transition', () {
+    test(
+      'first fetch offline short-circuits; second fetch (post-flip) hits the API',
+      () async {
+        when(() => local.getByProject('proj-1')).thenAnswer((_) async => []);
+        when(() => api.listByProject('proj-1')).thenAnswer(
+          (_) async => [_makeStoryteller('s1', 'Alice')],
+        );
+        when(() => local.upsertAll(any(), any())).thenAnswer((_) async {});
+
+        final fakeSync = _FakeSyncNotifier(initialOnline: false);
+        final container = ProviderContainer(
+          overrides: [
+            storytellerApiRepositoryProvider.overrideWithValue(api),
+            localStorytellerRepositoryProvider.overrideWithValue(local),
+            syncNotifierProvider.overrideWith(() => fakeSync),
+          ],
+        );
+        addTearDown(container.dispose);
+
+        final notifier = container.read(
+          projectStorytellersNotifierProvider.notifier,
+        );
+
+        // Offline: no API call.
+        await notifier.fetch('proj-1');
+        verifyNever(() => api.listByProject(any()));
+
+        // Flip online and re-invoke (mirrors the screen's reconnect listener).
+        fakeSync.setOnline(true);
+        await notifier.fetch('proj-1');
+
+        verify(() => api.listByProject('proj-1')).called(1);
+        final state = container.read(projectStorytellersNotifierProvider);
+        expect(state.storytellers.map((s) => s.id), ['s1']);
+      },
+    );
   });
 }
