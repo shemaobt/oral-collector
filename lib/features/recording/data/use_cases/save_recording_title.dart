@@ -17,6 +17,11 @@ Future<SaveTitleResult> saveRecordingTitle({
   required RecordingApiRepository apiRepo,
   required LocalRecordingRepository? localRepo,
 }) async {
+  assert(
+    isWeb || localRepo != null,
+    'localRepo is required when isWeb is false',
+  );
+
   final trimmed = newTitle.trim();
 
   if (trimmed.isEmpty) {
@@ -35,21 +40,21 @@ Future<SaveTitleResult> saveRecordingTitle({
     return SaveTitleResult.saved;
   }
 
-  await localRepo!.updateRecording(
-    recordingId,
-    LocalRecordingsCompanion(title: Value(trimmed)),
-  );
+  final localCompanion = LocalRecordingsCompanion(title: Value(trimmed));
 
   if (isOnline && serverId != null && serverId.isNotEmpty) {
     try {
       await apiRepo.updateRecording(serverId, title: trimmed);
-      return SaveTitleResult.saved;
     } on ForbiddenException {
       rethrow;
     } catch (_) {
+      await localRepo!.updateRecording(recordingId, localCompanion);
       return SaveTitleResult.savedLocallyOnly;
     }
+    await localRepo!.updateRecording(recordingId, localCompanion);
+    return SaveTitleResult.saved;
   }
 
+  await localRepo!.updateRecording(recordingId, localCompanion);
   return SaveTitleResult.saved;
 }

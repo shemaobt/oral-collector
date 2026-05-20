@@ -144,7 +144,7 @@ void main() {
       verify(() => apiRepo.updateRecording('rec-1', title: 'New')).called(1);
     });
 
-    test('on mobile online with serverId: calls local repo AND API', () async {
+    test('on mobile online with serverId: calls API BEFORE local repo', () async {
       final result = await saveRecordingTitle(
         recordingId: 'rec-1',
         currentTitle: 'Old',
@@ -157,8 +157,10 @@ void main() {
       );
 
       expect(result, SaveTitleResult.saved);
-      verify(() => localRepo.updateRecording('rec-1', any())).called(1);
-      verify(() => apiRepo.updateRecording('srv-1', title: 'New')).called(1);
+      verifyInOrder([
+        () => apiRepo.updateRecording('srv-1', title: 'New'),
+        () => localRepo.updateRecording('rec-1', any()),
+      ]);
     });
 
     test('on mobile offline: calls local repo only, NOT API', () async {
@@ -226,14 +228,14 @@ void main() {
     );
 
     test(
-      'on mobile, ForbiddenException from API is rethrown (not swallowed)',
+      'on mobile, ForbiddenException from API is rethrown AND local DB is NOT written',
       () async {
         when(
           () => apiRepo.updateRecording(any(), title: any(named: 'title')),
         ).thenThrow(const ForbiddenException());
 
-        expect(
-          () => saveRecordingTitle(
+        await expectLater(
+          saveRecordingTitle(
             recordingId: 'rec-1',
             currentTitle: 'Old',
             serverId: 'srv-1',
@@ -245,6 +247,8 @@ void main() {
           ),
           throwsA(isA<ForbiddenException>()),
         );
+
+        verifyNever(() => localRepo.updateRecording(any(), any()));
       },
     );
 

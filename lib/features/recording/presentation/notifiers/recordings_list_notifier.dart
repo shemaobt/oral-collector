@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/database/app_database.dart';
@@ -91,6 +92,15 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
     } catch (_) {
       state = state.copyWith(isLoadingMore: false);
     }
+  }
+
+  void patchRecordingTitle(String recordingId, String title) {
+    final updated = state.recordings
+        .map(
+          (r) => r.id == recordingId ? r.copyWith(title: Value(title)) : r,
+        )
+        .toList();
+    state = state.copyWith(recordings: updated);
   }
 
   Future<List<LocalRecording>> _fetchAndMerge(String projectId) async {

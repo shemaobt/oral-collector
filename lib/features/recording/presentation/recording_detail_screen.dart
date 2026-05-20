@@ -342,9 +342,9 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
       case SaveTitleResult.saved:
       case SaveTitleResult.savedLocallyOnly:
         await _loadRecording();
-        await ref
+        ref
             .read(recordingsListNotifierProvider.notifier)
-            .fetchRecordings();
+            .patchRecordingTitle(widget.recordingId, newTitle.trim());
         if (!mounted) return;
         setState(() => _isEditingTitle = false);
     }
