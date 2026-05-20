@@ -96,9 +96,7 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
 
   void patchRecordingTitle(String recordingId, String title) {
     final updated = state.recordings
-        .map(
-          (r) => r.id == recordingId ? r.copyWith(title: Value(title)) : r,
-        )
+        .map((r) => r.id == recordingId ? r.copyWith(title: Value(title)) : r)
         .toList();
     state = state.copyWith(recordings: updated);
   }

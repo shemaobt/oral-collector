@@ -144,24 +144,27 @@ void main() {
       verify(() => apiRepo.updateRecording('rec-1', title: 'New')).called(1);
     });
 
-    test('on mobile online with serverId: calls API BEFORE local repo', () async {
-      final result = await saveRecordingTitle(
-        recordingId: 'rec-1',
-        currentTitle: 'Old',
-        serverId: 'srv-1',
-        newTitle: 'New',
-        isWeb: false,
-        isOnline: true,
-        apiRepo: apiRepo,
-        localRepo: localRepo,
-      );
+    test(
+      'on mobile online with serverId: calls API BEFORE local repo',
+      () async {
+        final result = await saveRecordingTitle(
+          recordingId: 'rec-1',
+          currentTitle: 'Old',
+          serverId: 'srv-1',
+          newTitle: 'New',
+          isWeb: false,
+          isOnline: true,
+          apiRepo: apiRepo,
+          localRepo: localRepo,
+        );
 
-      expect(result, SaveTitleResult.saved);
-      verifyInOrder([
-        () => apiRepo.updateRecording('srv-1', title: 'New'),
-        () => localRepo.updateRecording('rec-1', any()),
-      ]);
-    });
+        expect(result, SaveTitleResult.saved);
+        verifyInOrder([
+          () => apiRepo.updateRecording('srv-1', title: 'New'),
+          () => localRepo.updateRecording('rec-1', any()),
+        ]);
+      },
+    );
 
     test('on mobile offline: calls local repo only, NOT API', () async {
       final result = await saveRecordingTitle(
