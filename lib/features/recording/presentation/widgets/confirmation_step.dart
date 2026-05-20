@@ -83,10 +83,9 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
     super.initState();
     _initPlayer();
     Future.microtask(_prefetchStorytellers);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      ref.read(pendingRecordingDecisionProvider.notifier).state = widget.result;
-    });
+    // Set the pending-decision marker synchronously so any navigation attempt
+    // triggered between mount and the first frame is already covered.
+    ref.read(pendingRecordingDecisionProvider.notifier).state = widget.result;
   }
 
   void _prefetchStorytellers() {
@@ -175,6 +174,11 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
       revokePlayableBlobUrl(url);
       _playerBlobUrl = null;
     }
+    // Identity equality is intentional here: if a successor widget has already
+    // replaced the provider with its own RecordingResult, the references will
+    // differ even when the values look similar, and we leave that successor's
+    // marker untouched. RecordingResult does not override `==`, so this is
+    // the same as `identical(...)`.
     if (ref.read(pendingRecordingDecisionProvider) == widget.result) {
       ref.read(pendingRecordingDecisionProvider.notifier).state = null;
     }
