@@ -2058,6 +2058,10 @@ class AppLocalizationsHi extends AppLocalizations {
   String get recording_stageShortCompressing => 'COMPRESSING';
 
   @override
+  String get recording_savingPleaseWait =>
+      'Saving your recording — please wait a moment.';
+
+  @override
   String get profile_defaultMicrophone => 'डिफ़ॉल्ट माइक्रोफ़ोन';
 
   @override

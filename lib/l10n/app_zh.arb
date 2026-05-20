@@ -908,6 +908,7 @@
   "recording_stageShortFinalizing": "FINALIZING",
   "recording_stageShortCombining": "COMBINING",
   "recording_stageShortCompressing": "COMPRESSING",
+  "recording_savingPleaseWait": "Saving your recording — please wait a moment.",
   "profile_defaultMicrophone": "默认麦克风",
   "profile_systemDefault": "系统默认",
   "settings_deviceStorageTitle": "设备存储",

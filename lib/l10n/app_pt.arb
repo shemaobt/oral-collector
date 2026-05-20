@@ -705,6 +705,7 @@
   "recording_stageShortFinalizing": "FINALIZANDO",
   "recording_stageShortCombining": "COMBINANDO",
   "recording_stageShortCompressing": "COMPRIMINDO",
+  "recording_savingPleaseWait": "Salvando sua gravação — aguarde um momento.",
   "profile_defaultMicrophone": "Microfone padrão",
   "profile_systemDefault": "Padrão do sistema",
   "settings_deviceStorageTitle": "Armazenamento do dispositivo",

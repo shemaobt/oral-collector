@@ -693,6 +693,7 @@
   "recording_stageShortFinalizing": "FINALIZING",
   "recording_stageShortCombining": "COMBINING",
   "recording_stageShortCompressing": "COMPRESSING",
+  "recording_savingPleaseWait": "Saving your recording — please wait a moment.",
   "profile_defaultMicrophone": "기본 마이크",
   "profile_systemDefault": "시스템 기본값",
   "settings_deviceStorageTitle": "기기 저장 공간",

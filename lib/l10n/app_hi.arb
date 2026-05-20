@@ -693,6 +693,7 @@
   "recording_stageShortFinalizing": "FINALIZING",
   "recording_stageShortCombining": "COMBINING",
   "recording_stageShortCompressing": "COMPRESSING",
+  "recording_savingPleaseWait": "Saving your recording — please wait a moment.",
   "profile_defaultMicrophone": "डिफ़ॉल्ट माइक्रोफ़ोन",
   "profile_systemDefault": "सिस्टम डिफ़ॉल्ट",
   "settings_deviceStorageTitle": "डिवाइस स्टोरेज",

@@ -9,6 +9,7 @@ import '../../core/auth/auth_notifier.dart';
 import '../../core/theme/app_colors.dart';
 import '../../features/auth/data/providers/role_provider.dart';
 import '../../features/invite/presentation/notifiers/invite_notifier.dart';
+import '../../features/recording/presentation/notifiers/recording_session_notifier.dart';
 import '../../l10n/app_localizations.dart';
 import 'user_avatar.dart';
 
@@ -65,6 +66,23 @@ int _currentIndexFrom(BuildContext context, List<_TabItem> tabs) {
 }
 
 class _AppShellState extends ConsumerState<AppShell> {
+  void _navigateToTab(String path) {
+    final state = ref.read(recordingSessionNotifierProvider);
+    if (state.isFinalizing || state.finalizationError != null) {
+      final l10n = AppLocalizations.of(context);
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(l10n.recording_savingPleaseWait),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      return;
+    }
+    context.go(path);
+  }
+
   List<_TabItem> _buildWebTabs(AppLocalizations l10n) {
     final tabs = List<_TabItem>.from(AppShell._webBaseTabs(l10n));
     if (ref.read(roleNotifierProvider.notifier).isPlatformAdmin) {
@@ -101,7 +119,7 @@ class _AppShellState extends ConsumerState<AppShell> {
             _WebSidebar(
               tabs: tabs,
               selectedIndex: selectedIndex,
-              onTabTapped: (index) => context.go(tabs[index].path),
+              onTabTapped: (index) => _navigateToTab(tabs[index].path),
               pendingInvites: pendingInvites,
               startExpanded: isDesktop,
             ),
@@ -117,7 +135,7 @@ class _AppShellState extends ConsumerState<AppShell> {
       bottomNavigationBar: _FloatingNavBar(
         tabs: mobileTabs,
         selectedIndex: _currentIndexFrom(context, mobileTabs),
-        onTabTapped: (index) => context.go(mobileTabs[index].path),
+        onTabTapped: (index) => _navigateToTab(mobileTabs[index].path),
         colors: colors,
         pendingInvites: pendingInvites,
         bottomPadding: MediaQuery.of(context).padding.bottom,

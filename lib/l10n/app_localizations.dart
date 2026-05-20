@@ -3704,6 +3704,12 @@ abstract class AppLocalizations {
   /// **'COMPRESSING'**
   String get recording_stageShortCompressing;
 
+  /// Snackbar shown when the user taps a navigation tab while audio is being finalized
+  ///
+  /// In en, this message translates to:
+  /// **'Saving your recording — please wait a moment.'**
+  String get recording_savingPleaseWait;
+
   /// No description provided for @profile_defaultMicrophone.
   ///
   /// In en, this message translates to:

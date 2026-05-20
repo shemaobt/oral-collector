@@ -693,6 +693,7 @@
   "recording_stageShortFinalizing": "FINALIZING",
   "recording_stageShortCombining": "COMBINING",
   "recording_stageShortCompressing": "COMPRESSING",
+  "recording_savingPleaseWait": "Saving your recording — please wait a moment.",
   "profile_defaultMicrophone": "Defolt maikrofon",
   "profile_systemDefault": "Defolt bilong sistem",
   "settings_deviceStorageTitle": "Spes bilong divais",

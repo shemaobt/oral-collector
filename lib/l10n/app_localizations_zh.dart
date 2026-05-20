@@ -1977,6 +1977,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recording_stageShortCompressing => 'COMPRESSING';
 
   @override
+  String get recording_savingPleaseWait =>
+      'Saving your recording — please wait a moment.';
+
+  @override
   String get profile_defaultMicrophone => '默认麦克风';
 
   @override

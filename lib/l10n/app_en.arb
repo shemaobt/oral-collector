@@ -974,6 +974,10 @@
   "@recording_stageShortCompressing": {
     "description": "Short uppercase tag — compressing audio stage"
   },
+  "recording_savingPleaseWait": "Saving your recording — please wait a moment.",
+  "@recording_savingPleaseWait": {
+    "description": "Snackbar shown when the user taps a navigation tab while audio is being finalized"
+  },
   "profile_defaultMicrophone": "Default microphone",
   "profile_systemDefault": "System default",
   "settings_deviceStorageTitle": "Device storage",

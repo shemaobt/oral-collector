@@ -2066,6 +2066,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get recording_stageShortCompressing => 'COMPRIMINDO';
 
   @override
+  String get recording_savingPleaseWait =>
+      'Salvando sua gravação — aguarde um momento.';
+
+  @override
   String get profile_defaultMicrophone => 'Microfone padrão';
 
   @override
