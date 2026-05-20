@@ -235,8 +235,15 @@ class _WebSidebarState extends ConsumerState<_WebSidebar> {
                 colors: colors,
                 theme: theme,
                 onLogout: () async {
+                  final canGo = await confirmRecordingNavigationFromTab(
+                    context,
+                    ref,
+                  );
+                  if (!canGo) return;
+                  if (!context.mounted) return;
                   await ref.read(authNotifierProvider.notifier).logout();
-                  if (context.mounted) context.go('/login');
+                  if (!context.mounted) return;
+                  context.go('/login');
                 },
               ),
             ),
