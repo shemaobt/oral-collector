@@ -16,12 +16,11 @@ class MemberNotifier extends Notifier<MemberState> {
   MemberState build() => const MemberState();
 
   Future<void> fetchMembers(String projectId) async {
-    state = state.copyWith(isLoading: true, clearError: true);
-
     if (!ref.read(syncNotifierProvider).isOnline) {
-      state = state.copyWith(isLoading: false);
+      state = state.copyWith(isLoading: false, clearError: true);
       return;
     }
+    state = state.copyWith(isLoading: true, clearError: true);
 
     try {
       final members = await _repo.listMembers(projectId);
