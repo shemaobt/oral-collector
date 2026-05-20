@@ -7,7 +7,8 @@ void main() {
     test('default finalization fields', () {
       const state = RecordingState();
       expect(state.finalizationStage, FinalizationStage.idle);
-      expect(state.finalizationError, isNull);
+      expect(state.finalizationErrorKind, isNull);
+      expect(state.hasFinalizationError, isFalse);
       expect(state.finalizationDegraded, isFalse);
       expect(state.isFinalizing, isFalse);
     });
@@ -46,10 +47,13 @@ void main() {
       expect(updated.finalizationStage, FinalizationStage.combiningSegments);
     });
 
-    test('copyWith updates finalizationError', () {
+    test('copyWith updates finalizationErrorKind', () {
       const state = RecordingState();
-      final updated = state.copyWith(finalizationError: 'oops');
-      expect(updated.finalizationError, 'oops');
+      final updated = state.copyWith(
+        finalizationErrorKind: FinalizationErrorKind.noSegments,
+      );
+      expect(updated.finalizationErrorKind, FinalizationErrorKind.noSegments);
+      expect(updated.hasFinalizationError, isTrue);
     });
 
     test('copyWith updates finalizationDegraded', () {
@@ -67,17 +71,25 @@ void main() {
     });
 
     test('copyWith clearFinalizationError nulls out the error', () {
-      const state = RecordingState(finalizationError: 'failure');
+      const state = RecordingState(
+        finalizationErrorKind: FinalizationErrorKind.noSegments,
+      );
       final updated = state.copyWith(clearFinalizationError: true);
-      expect(updated.finalizationError, isNull);
+      expect(updated.finalizationErrorKind, isNull);
+      expect(updated.hasFinalizationError, isFalse);
     });
 
     test(
-      'copyWith without explicit fields keeps existing finalizationError',
+      'copyWith without explicit fields keeps existing finalizationErrorKind',
       () {
-        const state = RecordingState(finalizationError: 'failure');
+        const state = RecordingState(
+          finalizationErrorKind: FinalizationErrorKind.downloadFailed,
+        );
         final updated = state.copyWith(isRecording: true);
-        expect(updated.finalizationError, 'failure');
+        expect(
+          updated.finalizationErrorKind,
+          FinalizationErrorKind.downloadFailed,
+        );
       },
     );
 

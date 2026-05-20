@@ -10,12 +10,12 @@ class FinalizingOverlay extends StatelessWidget {
     super.key,
     required this.stage,
     required this.onDiscard,
-    this.error,
+    this.hasError = false,
     this.degraded = false,
   });
 
   final FinalizationStage stage;
-  final String? error;
+  final bool hasError;
   final bool degraded;
   final VoidCallback onDiscard;
 
@@ -25,7 +25,7 @@ class FinalizingOverlay extends StatelessWidget {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
 
-    final semanticsLabel = error != null
+    final semanticsLabel = hasError
         ? '${l10n.recording_finalizationFailed}. ${l10n.recording_finalizationFailedBody}'
         : _stageText(l10n, stage);
 
@@ -40,7 +40,7 @@ class FinalizingOverlay extends StatelessWidget {
             child: Center(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 32),
-                child: error != null
+                child: hasError
                     ? _ErrorContent(
                         colors: colors,
                         theme: theme,

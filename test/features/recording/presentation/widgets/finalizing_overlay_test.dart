@@ -95,7 +95,7 @@ void main() {
         _wrap(
           FinalizingOverlay(
             stage: FinalizationStage.idle,
-            error: 'No audio segments were saved.',
+            hasError: true,
             onDiscard: () {},
           ),
         ),
@@ -114,7 +114,7 @@ void main() {
         _wrap(
           FinalizingOverlay(
             stage: FinalizationStage.idle,
-            error: 'fail',
+            hasError: true,
             onDiscard: () {},
           ),
         ),
@@ -127,7 +127,7 @@ void main() {
         _wrap(
           FinalizingOverlay(
             stage: FinalizationStage.idle,
-            error: 'fail',
+            hasError: true,
             onDiscard: () {},
           ),
         ),
@@ -143,7 +143,7 @@ void main() {
         _wrap(
           FinalizingOverlay(
             stage: FinalizationStage.idle,
-            error: 'fail',
+            hasError: true,
             onDiscard: () => tapped++,
           ),
         ),

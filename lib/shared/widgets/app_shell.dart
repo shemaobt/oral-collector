@@ -70,7 +70,7 @@ class _AppShellState extends ConsumerState<AppShell> {
   Future<void> _navigateToTab(String path) async {
     final state = ref.read(recordingSessionNotifierProvider);
     final l10n = AppLocalizations.of(context);
-    if (state.isFinalizing || state.finalizationError != null) {
+    if (state.isFinalizing || state.hasFinalizationError) {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(

@@ -218,7 +218,7 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
     });
 
     final isFinalizing = recState.isFinalizing;
-    final hasError = recState.finalizationError != null;
+    final hasError = recState.hasFinalizationError;
     final isFinalizingOrError = isFinalizing || hasError;
     final isReady =
         !recState.isRecording && !recState.isPaused && !isFinalizingOrError;
@@ -241,7 +241,7 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
             child: hasError
                 ? FinalizingOverlay(
                     stage: recState.finalizationStage,
-                    error: recState.finalizationError,
+                    hasError: true,
                     degraded: recState.finalizationDegraded,
                     onDiscard: notifier.dismissFinalizationError,
                   )

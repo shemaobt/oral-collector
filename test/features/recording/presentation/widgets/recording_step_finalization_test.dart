@@ -163,7 +163,11 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      _wrap(state: const RecordingState(finalizationError: 'No segments')),
+      _wrap(
+        state: const RecordingState(
+          finalizationErrorKind: FinalizationErrorKind.noSegments,
+        ),
+      ),
     );
     await tester.pump();
     expect(find.byType(FinalizingOverlay), findsOneWidget);
@@ -230,7 +234,11 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      _wrap(state: const RecordingState(finalizationError: 'oops')),
+      _wrap(
+        state: const RecordingState(
+          finalizationErrorKind: FinalizationErrorKind.noSegments,
+        ),
+      ),
     );
     await tester.pump();
     final popScope = tester.widget<PopScope>(find.byType(PopScope).first);

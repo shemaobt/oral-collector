@@ -2,6 +2,20 @@ enum StorageBannerSeverity { none, critical, forceStopped }
 
 enum FinalizationStage { idle, finalizing, combiningSegments, compressingAudio }
 
+enum FinalizationErrorKind {
+  /// `recorder.finish()` returned no segments and on-disk recovery found none.
+  noSegments,
+
+  /// Web-only: the MediaRecorder produced no blob URL.
+  noAudio,
+
+  /// Web-only: downloading the blob URL failed.
+  downloadFailed,
+
+  /// The finalization service threw mid-pipeline (concat, compress, file IO).
+  finalizationFailed,
+}
+
 enum RecordingStopErrorKind { finishProducedNoSegments, finalizationFailed }
 
 class RecordingStopError {
@@ -29,7 +43,7 @@ class RecordingState {
   final StorageBannerSeverity storageBannerSeverity;
   final RecordingResult? autoStoppedResult;
   final FinalizationStage finalizationStage;
-  final String? finalizationError;
+  final FinalizationErrorKind? finalizationErrorKind;
   final bool finalizationDegraded;
   final bool isPendingResume;
   final bool wasResumedSession;
@@ -50,7 +64,7 @@ class RecordingState {
     this.storageBannerSeverity = StorageBannerSeverity.none,
     this.autoStoppedResult,
     this.finalizationStage = FinalizationStage.idle,
-    this.finalizationError,
+    this.finalizationErrorKind,
     this.finalizationDegraded = false,
     this.isPendingResume = false,
     this.wasResumedSession = false,
@@ -60,6 +74,7 @@ class RecordingState {
   });
 
   bool get isFinalizing => finalizationStage != FinalizationStage.idle;
+  bool get hasFinalizationError => finalizationErrorKind != null;
 
   RecordingState copyWith({
     bool? isRecording,
@@ -74,7 +89,7 @@ class RecordingState {
     StorageBannerSeverity? storageBannerSeverity,
     RecordingResult? autoStoppedResult,
     FinalizationStage? finalizationStage,
-    String? finalizationError,
+    FinalizationErrorKind? finalizationErrorKind,
     bool? finalizationDegraded,
     bool? isPendingResume,
     bool? wasResumedSession,
@@ -114,9 +129,9 @@ class RecordingState {
           ? null
           : (autoStoppedResult ?? this.autoStoppedResult),
       finalizationStage: finalizationStage ?? this.finalizationStage,
-      finalizationError: clearFinalizationError
+      finalizationErrorKind: clearFinalizationError
           ? null
-          : (finalizationError ?? this.finalizationError),
+          : (finalizationErrorKind ?? this.finalizationErrorKind),
       finalizationDegraded: finalizationDegraded ?? this.finalizationDegraded,
       isPendingResume: isPendingResume ?? this.isPendingResume,
       wasResumedSession: wasResumedSession ?? this.wasResumedSession,
