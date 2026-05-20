@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../core/auth/auth_notifier.dart';
+import '../../core/platform/file_ops.dart' as file_ops;
 import '../../core/theme/app_colors.dart';
 import '../../features/auth/data/providers/role_provider.dart';
 import '../../features/invite/presentation/notifiers/invite_notifier.dart';
@@ -66,10 +67,10 @@ int _currentIndexFrom(BuildContext context, List<_TabItem> tabs) {
 }
 
 class _AppShellState extends ConsumerState<AppShell> {
-  void _navigateToTab(String path) {
+  Future<void> _navigateToTab(String path) async {
     final state = ref.read(recordingSessionNotifierProvider);
+    final l10n = AppLocalizations.of(context);
     if (state.isFinalizing || state.finalizationError != null) {
-      final l10n = AppLocalizations.of(context);
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(
@@ -80,6 +81,37 @@ class _AppShellState extends ConsumerState<AppShell> {
         );
       return;
     }
+
+    final pendingResult = ref.read(pendingRecordingDecisionProvider);
+    if (pendingResult != null) {
+      final colors = AppColors.of(context);
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(l10n.recording_discardTitle),
+          content: Text(l10n.recording_discardMessage),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: Text(l10n.common_cancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              style: TextButton.styleFrom(foregroundColor: colors.error),
+              child: Text(l10n.recording_discard),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true) return;
+      try {
+        await file_ops.deleteFile(pendingResult.filePath);
+      } catch (_) {}
+      if (!mounted) return;
+      ref.read(pendingRecordingDecisionProvider.notifier).state = null;
+    }
+
+    if (!mounted) return;
     context.go(path);
   }
 

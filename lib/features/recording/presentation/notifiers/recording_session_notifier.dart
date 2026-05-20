@@ -59,6 +59,14 @@ final recordingSessionNotifierProvider =
       RecordingSessionNotifier.new,
     );
 
+/// Holds the recording that is awaiting a save/discard/re-record decision
+/// from the user (i.e. the user is on the ConfirmationStep). `null` means
+/// no recording is pending. Read by AppShell and screen-level PopScopes to
+/// block accidental navigation that would orphan the audio file.
+final pendingRecordingDecisionProvider = StateProvider<RecordingResult?>(
+  (_) => null,
+);
+
 class RecordingSessionNotifier extends Notifier<RecordingState> {
   SegmentedRecorder? _segRecorder;
   AudioRecorder? _webRecorder;
