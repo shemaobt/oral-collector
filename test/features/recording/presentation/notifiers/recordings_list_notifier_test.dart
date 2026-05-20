@@ -150,7 +150,7 @@ void main() {
   });
 
   group('RecordingsListNotifier.clearStaleRecordings — offline', () {
-    test('offline returns 0 without touching server or local', () async {
+    test('offline returns null without touching server or local', () async {
       final container = makeContainer(online: false);
       addTearDown(container.dispose);
 
@@ -158,7 +158,8 @@ void main() {
           .read(recordingsListNotifierProvider.notifier)
           .clearStaleRecordings();
 
-      expect(result, 0);
+      expect(result, isNull,
+          reason: 'null distinguishes "offline no-op" from a real "0 deleted" success');
       verifyNever(() => api.clearStaleRecordings(any()));
       verifyNever(() => local.deleteStaleRecordings(any()));
     });

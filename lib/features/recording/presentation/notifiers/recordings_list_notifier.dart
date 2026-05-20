@@ -236,11 +236,13 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
     await fetchRecordings();
   }
 
-  Future<int> clearStaleRecordings() async {
+  Future<int?> clearStaleRecordings() async {
     final projectId = ref.read(projectNotifierProvider).activeProject?.id;
     if (projectId == null) return 0;
 
-    if (!ref.read(syncNotifierProvider).isOnline) return 0;
+    // null (not 0) signals "didn't run because offline" so the screen can
+    // distinguish a real "0 deleted" success from a no-op fail-fast.
+    if (!ref.read(syncNotifierProvider).isOnline) return null;
 
     final serverDeleted = await _apiRepo.clearStaleRecordings(projectId);
     await _localRepo.deleteStaleRecordings(projectId);

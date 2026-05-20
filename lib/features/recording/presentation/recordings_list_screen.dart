@@ -197,7 +197,16 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
       final deleted = await ref
           .read(recordingsListNotifierProvider.notifier)
           .clearStaleRecordings();
-      if (mounted) {
+      if (!mounted) return;
+      if (deleted == null) {
+        // Connectivity dropped between the dialog confirm and the API call.
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.error_network),
+            backgroundColor: colors.error,
+          ),
+        );
+      } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(l10n.recordings_clearedCount(deleted))),
         );
