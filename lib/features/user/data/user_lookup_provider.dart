@@ -41,7 +41,10 @@ final userLookupProvider = FutureProvider.family<UserLookup?, String>((
   // Auto-invalidate on offline → online so a stale "null" from a prior offline
   // build gets re-fetched. ref.read (not watch) on the gate below means going
   // online → offline does NOT rebuild and wipe a previously-cached lookup.
-  ref.listen<bool>(syncNotifierProvider.select((s) => s.isOnline), (prev, next) {
+  ref.listen<bool>(syncNotifierProvider.select((s) => s.isOnline), (
+    prev,
+    next,
+  ) {
     if (next && prev == false) ref.invalidateSelf();
   });
 

@@ -158,8 +158,12 @@ void main() {
           .read(recordingsListNotifierProvider.notifier)
           .clearStaleRecordings();
 
-      expect(result, isNull,
-          reason: 'null distinguishes "offline no-op" from a real "0 deleted" success');
+      expect(
+        result,
+        isNull,
+        reason:
+            'null distinguishes "offline no-op" from a real "0 deleted" success',
+      );
       verifyNever(() => api.clearStaleRecordings(any()));
       verifyNever(() => local.deleteStaleRecordings(any()));
     });
@@ -169,15 +173,15 @@ void main() {
     test(
       'online merges server + local-only recordings, ordered by recordedAt desc',
       () async {
-        when(() => api.listRecordings(
-              'proj-1',
-              offset: 0,
-              limit: any(named: 'limit'),
-              userId: any(named: 'userId'),
-              storytellerId: any(named: 'storytellerId'),
-            )).thenAnswer(
-          (_) async => [_makeServerRecording('srv-1')],
-        );
+        when(
+          () => api.listRecordings(
+            'proj-1',
+            offset: 0,
+            limit: any(named: 'limit'),
+            userId: any(named: 'userId'),
+            storytellerId: any(named: 'storytellerId'),
+          ),
+        ).thenAnswer((_) async => [_makeServerRecording('srv-1')]);
         when(() => local.getAllRecordings('proj-1')).thenAnswer(
           (_) async => [_makeRecording('local-1')], // older, no serverId
         );
@@ -193,13 +197,15 @@ void main() {
         expect(state.isLoading, isFalse);
         // server recording is from 2026-02-01, local from 2026-01-01 → server first
         expect(state.recordings.map((r) => r.id), ['srv-1', 'local-1']);
-        verify(() => api.listRecordings(
-              'proj-1',
-              offset: 0,
-              limit: any(named: 'limit'),
-              userId: any(named: 'userId'),
-              storytellerId: any(named: 'storytellerId'),
-            )).called(1);
+        verify(
+          () => api.listRecordings(
+            'proj-1',
+            offset: 0,
+            limit: any(named: 'limit'),
+            userId: any(named: 'userId'),
+            storytellerId: any(named: 'storytellerId'),
+          ),
+        ).called(1);
       },
     );
   });
@@ -210,16 +216,18 @@ void main() {
       test(
         'first fetch offline falls back to local; second fetch (post-flip) hits the API',
         () async {
-          when(() => local.getAllRecordings('proj-1')).thenAnswer(
-            (_) async => [_makeRecording('local-1')],
-          );
-          when(() => api.listRecordings(
-                'proj-1',
-                offset: 0,
-                limit: any(named: 'limit'),
-                userId: any(named: 'userId'),
-                storytellerId: any(named: 'storytellerId'),
-              )).thenAnswer((_) async => [_makeServerRecording('srv-1')]);
+          when(
+            () => local.getAllRecordings('proj-1'),
+          ).thenAnswer((_) async => [_makeRecording('local-1')]);
+          when(
+            () => api.listRecordings(
+              'proj-1',
+              offset: 0,
+              limit: any(named: 'limit'),
+              userId: any(named: 'userId'),
+              storytellerId: any(named: 'storytellerId'),
+            ),
+          ).thenAnswer((_) async => [_makeServerRecording('srv-1')]);
 
           final fakeSync = _FakeSyncNotifier(initialOnline: false);
           final container = ProviderContainer(
@@ -243,27 +251,34 @@ void main() {
           // Offline: fallback to local.
           await notifier.fetchRecordings();
           expect(
-            container.read(recordingsListNotifierProvider).recordings.map((r) => r.id),
+            container
+                .read(recordingsListNotifierProvider)
+                .recordings
+                .map((r) => r.id),
             ['local-1'],
           );
-          verifyNever(() => api.listRecordings(
-                any(),
-                offset: any(named: 'offset'),
-                limit: any(named: 'limit'),
-                userId: any(named: 'userId'),
-                storytellerId: any(named: 'storytellerId'),
-              ));
+          verifyNever(
+            () => api.listRecordings(
+              any(),
+              offset: any(named: 'offset'),
+              limit: any(named: 'limit'),
+              userId: any(named: 'userId'),
+              storytellerId: any(named: 'storytellerId'),
+            ),
+          );
 
           fakeSync.setOnline(true);
           await notifier.fetchRecordings();
 
-          verify(() => api.listRecordings(
-                'proj-1',
-                offset: 0,
-                limit: any(named: 'limit'),
-                userId: any(named: 'userId'),
-                storytellerId: any(named: 'storytellerId'),
-              )).called(1);
+          verify(
+            () => api.listRecordings(
+              'proj-1',
+              offset: 0,
+              limit: any(named: 'limit'),
+              userId: any(named: 'userId'),
+              storytellerId: any(named: 'storytellerId'),
+            ),
+          ).called(1);
           final state = container.read(recordingsListNotifierProvider);
           expect(state.recordings.any((r) => r.id == 'srv-1'), isTrue);
         },

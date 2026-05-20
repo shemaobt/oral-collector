@@ -106,8 +106,11 @@ void main() {
         await Future<void>.delayed(Duration.zero);
 
         final cached = container.read(userLookupProvider('user-1'));
-        expect(cached.value?.id, 'user-1',
-            reason: 'cached value should survive online → offline transition');
+        expect(
+          cached.value?.id,
+          'user-1',
+          reason: 'cached value should survive online → offline transition',
+        );
         verifyNoMoreInteractions(client);
       },
     );

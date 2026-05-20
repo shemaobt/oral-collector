@@ -133,9 +133,9 @@ void main() {
       'two simultaneous fetch() calls for the same projectId only hit the API once',
       () async {
         when(() => local.getByProject('proj-1')).thenAnswer((_) async => []);
-        when(() => api.listByProject('proj-1')).thenAnswer(
-          (_) async => [_makeStoryteller('s1', 'Alice')],
-        );
+        when(
+          () => api.listByProject('proj-1'),
+        ).thenAnswer((_) async => [_makeStoryteller('s1', 'Alice')]);
         when(() => local.upsertAll(any(), any())).thenAnswer((_) async {});
 
         final container = makeContainer(online: true);
@@ -147,10 +147,7 @@ void main() {
         // Fire both calls without awaiting between them — mirrors what happens
         // when StorytellersListScreen + StorytellerPicker both fire their
         // reconnect listeners on the same connectivity flip.
-        await Future.wait([
-          notifier.fetch('proj-1'),
-          notifier.fetch('proj-1'),
-        ]);
+        await Future.wait([notifier.fetch('proj-1'), notifier.fetch('proj-1')]);
 
         verify(() => api.listByProject('proj-1')).called(1);
       },
@@ -160,9 +157,9 @@ void main() {
       'sequential fetch() calls (one completes before the next starts) both run',
       () async {
         when(() => local.getByProject('proj-1')).thenAnswer((_) async => []);
-        when(() => api.listByProject('proj-1')).thenAnswer(
-          (_) async => [_makeStoryteller('s1', 'Alice')],
-        );
+        when(
+          () => api.listByProject('proj-1'),
+        ).thenAnswer((_) async => [_makeStoryteller('s1', 'Alice')]);
         when(() => local.upsertAll(any(), any())).thenAnswer((_) async {});
 
         final container = makeContainer(online: true);
@@ -187,9 +184,9 @@ void main() {
       'first fetch offline short-circuits; second fetch (post-flip) hits the API',
       () async {
         when(() => local.getByProject('proj-1')).thenAnswer((_) async => []);
-        when(() => api.listByProject('proj-1')).thenAnswer(
-          (_) async => [_makeStoryteller('s1', 'Alice')],
-        );
+        when(
+          () => api.listByProject('proj-1'),
+        ).thenAnswer((_) async => [_makeStoryteller('s1', 'Alice')]);
         when(() => local.upsertAll(any(), any())).thenAnswer((_) async {});
 
         final fakeSync = _FakeSyncNotifier(initialOnline: false);
