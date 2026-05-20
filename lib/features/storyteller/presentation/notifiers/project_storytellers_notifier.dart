@@ -17,33 +17,45 @@ class ProjectStorytellersNotifier extends Notifier<ProjectStorytellersState> {
   LocalStorytellerRepository get _local =>
       ref.read(localStorytellerRepositoryProvider);
 
+  // Dedupe concurrent fetch() calls for the same project — when both
+  // StorytellersListScreen and StorytellerPicker are mounted, both register
+  // a reconnect listener and both fire on the same connectivity flip.
+  // We don't want two API hits for that. Project switches bypass.
+  String? _inflightProjectId;
+
   @override
   ProjectStorytellersState build() => const ProjectStorytellersState();
 
   Future<void> fetch(String projectId) async {
-    state = state.copyWith(
-      projectId: projectId,
-      isLoading: true,
-      clearError: true,
-    );
-
-    final cached = await _local.getByProject(projectId);
-    state = state.copyWith(storytellers: cached);
-
-    if (!ref.read(syncNotifierProvider).isOnline) {
-      state = state.copyWith(isLoading: false);
-      return;
-    }
-
+    if (_inflightProjectId == projectId) return;
+    _inflightProjectId = projectId;
     try {
-      final items = await _api.listByProject(projectId);
-      await _local.upsertAll(items, projectId);
-      state = state.copyWith(storytellers: items, isLoading: false);
-    } on Exception catch (e) {
       state = state.copyWith(
-        isLoading: false,
-        error: e.toString().replaceFirst('Exception: ', ''),
+        projectId: projectId,
+        isLoading: true,
+        clearError: true,
       );
+
+      final cached = await _local.getByProject(projectId);
+      state = state.copyWith(storytellers: cached);
+
+      if (!ref.read(syncNotifierProvider).isOnline) {
+        state = state.copyWith(isLoading: false);
+        return;
+      }
+
+      try {
+        final items = await _api.listByProject(projectId);
+        await _local.upsertAll(items, projectId);
+        state = state.copyWith(storytellers: items, isLoading: false);
+      } on Exception catch (e) {
+        state = state.copyWith(
+          isLoading: false,
+          error: e.toString().replaceFirst('Exception: ', ''),
+        );
+      }
+    } finally {
+      _inflightProjectId = null;
     }
   }
 

@@ -128,6 +128,60 @@ void main() {
     });
   });
 
+  group('ProjectStorytellersNotifier.fetch — concurrent call dedupe', () {
+    test(
+      'two simultaneous fetch() calls for the same projectId only hit the API once',
+      () async {
+        when(() => local.getByProject('proj-1')).thenAnswer((_) async => []);
+        when(() => api.listByProject('proj-1')).thenAnswer(
+          (_) async => [_makeStoryteller('s1', 'Alice')],
+        );
+        when(() => local.upsertAll(any(), any())).thenAnswer((_) async {});
+
+        final container = makeContainer(online: true);
+        addTearDown(container.dispose);
+        final notifier = container.read(
+          projectStorytellersNotifierProvider.notifier,
+        );
+
+        // Fire both calls without awaiting between them — mirrors what happens
+        // when StorytellersListScreen + StorytellerPicker both fire their
+        // reconnect listeners on the same connectivity flip.
+        await Future.wait([
+          notifier.fetch('proj-1'),
+          notifier.fetch('proj-1'),
+        ]);
+
+        verify(() => api.listByProject('proj-1')).called(1);
+      },
+    );
+
+    test(
+      'sequential fetch() calls (one completes before the next starts) both run',
+      () async {
+        when(() => local.getByProject('proj-1')).thenAnswer((_) async => []);
+        when(() => api.listByProject('proj-1')).thenAnswer(
+          (_) async => [_makeStoryteller('s1', 'Alice')],
+        );
+        when(() => local.upsertAll(any(), any())).thenAnswer((_) async {});
+
+        final container = makeContainer(online: true);
+        addTearDown(container.dispose);
+        final notifier = container.read(
+          projectStorytellersNotifierProvider.notifier,
+        );
+
+        // First fetch resolves before the second starts → second is NOT deduped.
+        // This guards against the dedupe being too sticky and breaking
+        // legitimate pull-to-refresh / reconnection retries.
+        await notifier.fetch('proj-1');
+        await notifier.fetch('proj-1');
+
+        verify(() => api.listByProject('proj-1')).called(2);
+      },
+    );
+  });
+
   group('ProjectStorytellersNotifier.fetch — offline → online transition', () {
     test(
       'first fetch offline short-circuits; second fetch (post-flip) hits the API',
