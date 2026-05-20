@@ -33,6 +33,7 @@ Path: @/lib/features/sync
   - Drift cache-first, network-overwrite: load local rows first, then conditionally call API. See `@/lib/features/storyteller/presentation/notifiers/project_storytellers_notifier.dart` and `@/lib/features/recording/presentation/notifiers/recordings_list_notifier.dart`.
   - Secure-storage hydrate + async `connectivityServiceProvider`: only used by `tryAutoLogin` because it runs at app boot.
 - **Writes do not queue offline (except recording uploads).** Storyteller create/update/delete, invite accept, and similar mutations hard-fail offline with a snackbar. The `SyncEngine` queue is purpose-built for recording file uploads only; a generic outbox is a future feature.
+- **Cold-start race (tracked in ENG-62).** `SyncState.isOnline` defaults to `false` and is only updated after `_initConnectivity()` resolves (a few ms after `build()`). Until ENG-62 lands, the canonical reconnect listener on long-lived screens is what triggers the first real network fetch when a user cold-starts the app while online — don't skip the listener. Symptom if you skip it: cold-start online shows the cache (or empty) and never advances until the user manually triggers a refresh.
 - **`clearStaleRecordings` returns 0 when offline.** It does not run the local cleanup either — that prevents the local row set from drifting out of sync with the server's view until reachability is restored.
 - **Checklist for any new screen / notifier that reads from the network:**
   1. Never call the API in `initState` without checking `syncNotifierProvider.isOnline` first.
