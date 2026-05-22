@@ -407,29 +407,26 @@ void main() {
       );
     });
 
-    test(
-      'delegates to engine even when no recordings are pending '
-      '(storytellers may need sync)',
-      () async {
-        when(
-          () => mockRecordingRepo.getPendingUploads(),
-        ).thenAnswer((_) async => []);
+    test('delegates to engine even when no recordings are pending '
+        '(storytellers may need sync)', () async {
+      when(
+        () => mockRecordingRepo.getPendingUploads(),
+      ).thenAnswer((_) async => []);
 
-        container.read(syncNotifierProvider);
-        await Future<void>.delayed(Duration.zero);
+      container.read(syncNotifierProvider);
+      await Future<void>.delayed(Duration.zero);
 
-        await container.read(syncNotifierProvider.notifier).processQueue();
+      await container.read(syncNotifierProvider.notifier).processQueue();
 
-        verify(
-          () => mockSyncEngine.processQueue(
-            deleteAfterUpload: any(named: 'deleteAfterUpload'),
-            wifiOnly: any(named: 'wifiOnly'),
-            maxConcurrency: any(named: 'maxConcurrency'),
-            onProgress: any(named: 'onProgress'),
-          ),
-        ).called(1);
-      },
-    );
+      verify(
+        () => mockSyncEngine.processQueue(
+          deleteAfterUpload: any(named: 'deleteAfterUpload'),
+          wifiOnly: any(named: 'wifiOnly'),
+          maxConcurrency: any(named: 'maxConcurrency'),
+          onProgress: any(named: 'onProgress'),
+        ),
+      ).called(1);
+    });
 
     test('sets initial state from pending recordings', () async {
       final recordings = [

@@ -48,7 +48,6 @@ void main() {
         expect(pending.single.serverId, isNull);
       },
     );
-
   });
 
   group('markUploaded', () {
