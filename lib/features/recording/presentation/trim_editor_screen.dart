@@ -24,6 +24,7 @@ import '../data/services/recording_trash.dart';
 import '../data/services/waveform_extractor.dart';
 import '../domain/entities/register.dart';
 import '../../../core/l10n/content_l10n.dart';
+import 'trim_edit_decision.dart';
 import 'widgets/edit_transport_bar.dart';
 import 'widgets/edit_volume_control.dart';
 import 'widgets/playback_key_handler.dart';
@@ -149,6 +150,13 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
   int get _segmentCount => _boundaries.length - 1;
 
   int get _keptCount => _segmentCount - _excludedSegments.length;
+
+  TrimEditDecision get _decision => TrimEditDecision(
+    splitPoints: _splitPoints,
+    excludedSegments: _excludedSegments,
+    gainDb: _gainDb,
+    totalDuration: _totalDuration,
+  );
 
   Duration _segmentStart(int i) {
     return Duration(
@@ -691,8 +699,8 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
 
   Future<void> _saveSplit() async {
     final recording = _recording;
-    if (recording == null || _splitPoints.isEmpty) return;
-    if (_keptCount == 0) return;
+    if (recording == null) return;
+    if (!_decision.canSave) return;
 
     final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
@@ -764,7 +772,9 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
 
     if (mounted) {
       final l10n = AppLocalizations.of(context);
-      final msg = _excludedSegments.isNotEmpty
+      final msg = _decision.mode == TrimSaveMode.boostOnly
+          ? l10n.trim_boostApplied
+          : _excludedSegments.isNotEmpty
           ? l10n.trim_savedSegments(kept.length, _excludedSegments.length)
           : l10n.trim_splitInto(kept.length);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
@@ -796,12 +806,23 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
           '${dir.path}/split_${now.millisecondsSinceEpoch}_$k.m4a';
 
       final needReencode = _gainDb.abs() > 0.01;
-      final command = needReencode
-          ? '-y -i "${recording.localFilePath}" -ss $startSec -to $endSec '
-                '-af "volume=${_gainDb.toStringAsFixed(2)}dB" '
-                '-c:a aac -b:a 128k "$outputPath"'
-          : '-y -i "${recording.localFilePath}" -ss $startSec -to $endSec '
-                '-c copy "$outputPath"';
+      final boostOnly = _decision.mode == TrimSaveMode.boostOnly;
+      final String command;
+      if (boostOnly) {
+        command =
+            '-y -i "${recording.localFilePath}" '
+            '-af "volume=${_gainDb.toStringAsFixed(2)}dB" '
+            '-c:a aac -b:a 128k "$outputPath"';
+      } else if (needReencode) {
+        command =
+            '-y -i "${recording.localFilePath}" -ss $startSec -to $endSec '
+            '-af "volume=${_gainDb.toStringAsFixed(2)}dB" '
+            '-c:a aac -b:a 128k "$outputPath"';
+      } else {
+        command =
+            '-y -i "${recording.localFilePath}" -ss $startSec -to $endSec '
+            '-c copy "$outputPath"';
+      }
 
       final success = await ffmpeg.executeFFmpegCommand(command);
       if (!success) {
@@ -871,7 +892,9 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
     if (mounted) {
       HapticFeedback.mediumImpact();
       final l10n = AppLocalizations.of(context);
-      final msg = _excludedSegments.isNotEmpty
+      final msg = _decision.mode == TrimSaveMode.boostOnly
+          ? l10n.trim_boostApplied
+          : _excludedSegments.isNotEmpty
           ? l10n.trim_savedSegments(keptTotal, _excludedSegments.length)
           : l10n.trim_splitInto(keptTotal);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
@@ -1260,7 +1283,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
             const SizedBox(width: 12),
             Expanded(
               child: ElevatedButton.icon(
-                onPressed: (_isSaving || !hasSplits || _keptCount == 0)
+                onPressed: (_isSaving || !_decision.canSave)
                     ? null
                     : _saveSplit,
                 icon: _isSaving
@@ -1272,10 +1295,17 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
                           color: isDark ? Colors.black : Colors.white,
                         ),
                       )
-                    : const Icon(LucideIcons.scissors, size: 16),
+                    : Icon(
+                        _decision.mode == TrimSaveMode.boostOnly
+                            ? LucideIcons.volume2
+                            : LucideIcons.scissors,
+                        size: 16,
+                      ),
                 label: Text(
                   _isSaving
                       ? l10n.trim_splitting
+                      : _decision.mode == TrimSaveMode.boostOnly
+                      ? l10n.trim_applyBoost
                       : hasSplits
                       ? l10n.trim_saveSegments(_keptCount)
                       : l10n.trim_addSplitsFirst,

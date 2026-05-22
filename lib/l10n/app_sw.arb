@@ -248,6 +248,8 @@
   "trim_splitting": "Inagawa...",
   "trim_saveSegments": "{count, plural, =1{Hifadhi sehemu 1} other{Hifadhi sehemu {count}}}",
   "trim_addSplitsFirst": "Ongeza migawanyo kwanza",
+  "trim_applyBoost": "Apply boost",
+  "trim_boostApplied": "Volume applied",
   "trim_savedSegments": "Imehifadhi sehemu {kept}, imeondoa {removed}",
   "trim_splitInto": "Gawa kuwa rekodi {count}",
   "trim_saveConfirmTitle": "Hifadhi mabadiliko?",

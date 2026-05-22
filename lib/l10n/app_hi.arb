@@ -248,6 +248,8 @@
   "trim_splitting": "विभाजित हो रहा है...",
   "trim_saveSegments": "{count, plural, =1{1 खंड सहेजें} other{{count} खंड सहेजें}}",
   "trim_addSplitsFirst": "पहले विभाजन जोड़ें",
+  "trim_applyBoost": "Apply boost",
+  "trim_boostApplied": "Volume applied",
   "trim_savedSegments": "{kept} खंड सहेज{kept, plural, =1{ा} other{े}}, {removed} हटाय{removed, plural, =1{ा} other{े}}",
   "trim_splitInto": "{count} रिकॉर्डिंग्स में विभाजित करें",
   "trim_saveConfirmTitle": "परिवर्तन सहेजें?",

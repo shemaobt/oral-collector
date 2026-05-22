@@ -747,6 +747,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String get trim_addSplitsFirst => 'Adicione divisões primeiro';
 
   @override
+  String get trim_applyBoost => 'Aplicar volume';
+
+  @override
+  String get trim_boostApplied => 'Volume aplicado';
+
+  @override
   String trim_savedSegments(int kept, int removed) {
     String _temp0 = intl.Intl.pluralLogic(
       kept,

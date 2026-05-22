@@ -744,6 +744,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get trim_addSplitsFirst => 'Tambahkan pembagian terlebih dahulu';
 
   @override
+  String get trim_applyBoost => 'Apply boost';
+
+  @override
+  String get trim_boostApplied => 'Volume applied';
+
+  @override
   String trim_savedSegments(int kept, int removed) {
     return 'Tersimpan $kept segmen, dihapus $removed';
   }

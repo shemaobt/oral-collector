@@ -721,6 +721,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get trim_addSplitsFirst => '먼저 분할 지점을 추가하세요';
 
   @override
+  String get trim_applyBoost => 'Apply boost';
+
+  @override
+  String get trim_boostApplied => 'Volume applied';
+
+  @override
   String trim_savedSegments(int kept, int removed) {
     return '세그먼트 $kept개 저장, $removed개 제거';
   }

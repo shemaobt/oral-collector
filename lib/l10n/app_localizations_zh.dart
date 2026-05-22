@@ -717,6 +717,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get trim_addSplitsFirst => '请先添加分割点';
 
   @override
+  String get trim_applyBoost => 'Apply boost';
+
+  @override
+  String get trim_boostApplied => 'Volume applied';
+
+  @override
   String trim_savedSegments(int kept, int removed) {
     return '已保存 $kept 个片段，移除了 $removed 个';
   }

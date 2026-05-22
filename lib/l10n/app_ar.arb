@@ -248,6 +248,8 @@
   "trim_splitting": "جارٍ التقسيم...",
   "trim_saveSegments": "{count, plural, =1{حفظ مقطع واحد} other{حفظ {count} مقاطع}}",
   "trim_addSplitsFirst": "أضف تقسيمات أولاً",
+  "trim_applyBoost": "Apply boost",
+  "trim_boostApplied": "Volume applied",
   "trim_savedSegments": "تم حفظ {kept} مقطع، وإزالة {removed}",
   "trim_splitInto": "تقسيم إلى {count} تسجيلات",
   "trim_saveConfirmTitle": "حفظ التغييرات؟",

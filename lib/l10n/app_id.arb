@@ -248,6 +248,8 @@
   "trim_splitting": "Membagi...",
   "trim_saveSegments": "{count, plural, =1{Simpan 1 segmen} other{Simpan {count} segmen}}",
   "trim_addSplitsFirst": "Tambahkan pembagian terlebih dahulu",
+  "trim_applyBoost": "Apply boost",
+  "trim_boostApplied": "Volume applied",
   "trim_savedSegments": "Tersimpan {kept} segmen, dihapus {removed}",
   "trim_splitInto": "Bagi menjadi {count} rekaman",
   "trim_saveConfirmTitle": "Simpan perubahan?",

@@ -304,6 +304,8 @@
     }
   },
   "trim_addSplitsFirst": "请先添加分割点",
+  "trim_applyBoost": "Apply boost",
+  "trim_boostApplied": "Volume applied",
   "trim_savedSegments": "已保存 {kept} 个片段，移除了 {removed} 个",
   "@trim_savedSegments": {
     "placeholders": {
