@@ -2349,6 +2349,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Forme d\'onde de découpage. Appuyez pour ajouter des marqueurs. Faites glisser pour repositionner. Pincez pour zoomer. Appuyez longuement pour supprimer.';
 
   @override
+  String get a11y_minimapScrubber =>
+      'Audio overview. Tap or drag to navigate to a position.';
+
+  @override
   String a11y_tabLabel(String label) {
     return 'Onglet $label';
   }

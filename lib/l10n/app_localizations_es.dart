@@ -2339,6 +2339,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Forma de onda para dividir. Toca para añadir marcadores. Arrastra para reposicionar. Pellizca para hacer zoom. Mantén pulsado para eliminar.';
 
   @override
+  String get a11y_minimapScrubber =>
+      'Audio overview. Tap or drag to navigate to a position.';
+
+  @override
   String a11y_tabLabel(String label) {
     return 'Pestaña $label';
   }

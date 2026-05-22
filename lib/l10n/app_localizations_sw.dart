@@ -2311,6 +2311,10 @@ class AppLocalizationsSw extends AppLocalizations {
       'Umbo la mawimbi ya kugawanya. Gusa kuweka alama. Buruta kuhamisha. Bana kuzomu. Bonyeza kwa muda ili kuondoa.';
 
   @override
+  String get a11y_minimapScrubber =>
+      'Audio overview. Tap or drag to navigate to a position.';
+
+  @override
   String a11y_tabLabel(String label) {
     return 'Kichupo cha $label';
   }

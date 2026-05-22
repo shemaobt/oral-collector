@@ -2283,6 +2283,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'مخطط الموجة للتقسيم. انقر لإضافة علامات التقسيم. اسحب لإعادة الترتيب. استخدم أصابعك للتكبير. اضغط مطولاً للإزالة.';
 
   @override
+  String get a11y_minimapScrubber =>
+      'Audio overview. Tap or drag to navigate to a position.';
+
+  @override
   String a11y_tabLabel(String label) {
     return 'علامة تبويب $label';
   }
