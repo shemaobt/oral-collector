@@ -2318,6 +2318,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Split waveform. Tap to add split markers. Drag to reposition. Pinch to zoom. Long-press to remove.';
 
   @override
+  String get a11y_minimapScrubber =>
+      'Audio overview. Tap or drag to navigate to a position.';
+
+  @override
   String a11y_tabLabel(String label) {
     return '$label tab';
   }

@@ -4172,6 +4172,12 @@ abstract class AppLocalizations {
   /// **'Split waveform. Tap to add split markers. Drag to reposition. Pinch to zoom. Long-press to remove.'**
   String get a11y_splitWaveform;
 
+  /// No description provided for @a11y_minimapScrubber.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio overview. Tap or drag to navigate to a position.'**
+  String get a11y_minimapScrubber;
+
   /// No description provided for @a11y_tabLabel.
   ///
   /// In en, this message translates to:

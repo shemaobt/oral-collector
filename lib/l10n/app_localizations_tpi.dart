@@ -2305,6 +2305,10 @@ class AppLocalizationsTpi extends AppLocalizations {
       'Wevfom bilong brukim. Klikim bai yu putim mak. Pulim bai yu senisim ples. Rausim pinga bai yu zoom. Holim longpela bai yu rausim.';
 
   @override
+  String get a11y_minimapScrubber =>
+      'Audio overview. Tap or drag to navigate to a position.';
+
+  @override
   String a11y_tabLabel(String label) {
     return 'Tab $label';
   }

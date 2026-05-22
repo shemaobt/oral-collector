@@ -2227,6 +2227,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get a11y_splitWaveform => '分割波形。点击添加分割标记。拖动重新定位。捏合缩放。长按移除。';
 
   @override
+  String get a11y_minimapScrubber =>
+      'Audio overview. Tap or drag to navigate to a position.';
+
+  @override
   String a11y_tabLabel(String label) {
     return '$label 选项卡';
   }

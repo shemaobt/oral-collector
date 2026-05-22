@@ -2323,6 +2323,10 @@ class AppLocalizationsHi extends AppLocalizations {
       'स्प्लिट वेवफ़ॉर्म। स्प्लिट मार्कर जोड़ने के लिए टैप करें। पुनः स्थान बदलने के लिए खींचें। ज़ूम के लिए पिंच करें। हटाने के लिए देर तक दबाएँ।';
 
   @override
+  String get a11y_minimapScrubber =>
+      'Audio overview. Tap or drag to navigate to a position.';
+
+  @override
   String a11y_tabLabel(String label) {
     return '$label टैब';
   }

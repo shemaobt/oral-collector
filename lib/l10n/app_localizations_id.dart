@@ -2325,6 +2325,10 @@ class AppLocalizationsId extends AppLocalizations {
       'Bentuk gelombang pembagi. Ketuk untuk menambahkan penanda. Seret untuk memindahkan. Cubit untuk memperbesar. Tekan lama untuk menghapus.';
 
   @override
+  String get a11y_minimapScrubber =>
+      'Audio overview. Tap or drag to navigate to a position.';
+
+  @override
   String a11y_tabLabel(String label) {
     return 'Tab $label';
   }

@@ -2239,6 +2239,10 @@ class AppLocalizationsKo extends AppLocalizations {
       '분할 파형. 탭하여 분할 마커를 추가하세요. 드래그하여 위치를 바꾸고, 핀치하여 확대하며, 길게 눌러 제거합니다.';
 
   @override
+  String get a11y_minimapScrubber =>
+      'Audio overview. Tap or drag to navigate to a position.';
+
+  @override
   String a11y_tabLabel(String label) {
     return '$label 탭';
   }

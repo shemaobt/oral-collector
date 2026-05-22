@@ -833,6 +833,7 @@
     }
   },
   "a11y_splitWaveform": "Forma de onda de divisão. Toque para adicionar marcadores. Arraste para reposicionar. Aperte para ampliar. Mantenha pressionado para remover.",
+  "a11y_minimapScrubber": "Visão geral do áudio. Toque ou arraste para navegar até uma posição.",
   "projectSettings_offlineTitle": "Você está offline",
   "projectSettings_offlineDescription": "Os detalhes do projeto não podem ser carregados sem uma conexão com a internet. Serão carregados automaticamente quando você se reconectar.",
   "recording_noAudioAvailable": "Nenhum áudio disponível",
