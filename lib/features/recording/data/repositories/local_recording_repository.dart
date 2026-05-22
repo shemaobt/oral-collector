@@ -196,6 +196,54 @@ class LocalRecordingRepository {
     return rows > 0;
   }
 
+  /// Inserts one child row per segment, propagating parent metadata per the
+  /// contract in `docs/recording-split-semantics.md`. See ENG-64.
+  Future<List<String>> splitRecording({
+    required LocalRecording parent,
+    required List<SplitSegmentSpec> segments,
+  }) async {
+    return _db.transaction(() async {
+      final ids = <String>[];
+      for (final seg in segments) {
+        await _db.into(_db.localRecordings).insert(
+              LocalRecordingsCompanion(
+                id: Value(seg.id),
+                projectId: Value(parent.projectId),
+                genreId: Value(
+                  (seg.genreOverride != null && seg.genreOverride!.isNotEmpty)
+                      ? seg.genreOverride!
+                      : parent.genreId,
+                ),
+                subcategoryId: (seg.subcategoryOverride != null &&
+                        seg.subcategoryOverride!.isNotEmpty)
+                    ? Value(seg.subcategoryOverride)
+                    : Value(parent.subcategoryId),
+                registerId: (seg.registerOverride != null &&
+                        seg.registerOverride!.isNotEmpty)
+                    ? Value(seg.registerOverride)
+                    : Value(parent.registerId),
+                secondaryGenreId: Value(parent.secondaryGenreId),
+                secondarySubcategoryId: Value(parent.secondarySubcategoryId),
+                secondaryRegisterId: Value(parent.secondaryRegisterId),
+                storytellerId: Value(parent.storytellerId),
+                userId: Value(parent.userId),
+                title: Value(seg.title),
+                description: Value(parent.description),
+                durationSeconds: Value(seg.durationSeconds),
+                fileSizeBytes: Value(seg.fileSizeBytes),
+                format: Value(parent.format),
+                localFilePath: Value(seg.localFilePath),
+                uploadStatus: const Value('local'),
+                cleaningStatus: const Value('none'),
+                recordedAt: Value(parent.recordedAt),
+              ),
+            );
+        ids.add(seg.id);
+      }
+      return ids;
+    });
+  }
+
   Future<bool> markAsFailed(String id, {bool incrementRetry = true}) async {
     if (incrementRetry) {
       final recording = await getRecordingById(id);
@@ -222,4 +270,28 @@ class LocalRecordingRepository {
       return rows > 0;
     }
   }
+}
+
+/// Per-segment input for [LocalRecordingRepository.splitRecording]. Fields
+/// that vary per child; the rest are inherited from the parent.
+class SplitSegmentSpec {
+  final String id;
+  final String title;
+  final String localFilePath;
+  final double durationSeconds;
+  final int fileSizeBytes;
+  final String? genreOverride;
+  final String? subcategoryOverride;
+  final String? registerOverride;
+
+  const SplitSegmentSpec({
+    required this.id,
+    required this.title,
+    required this.localFilePath,
+    required this.durationSeconds,
+    required this.fileSizeBytes,
+    this.genreOverride,
+    this.subcategoryOverride,
+    this.registerOverride,
+  });
 }

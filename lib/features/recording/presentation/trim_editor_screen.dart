@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:math';
 
-import 'package:drift/drift.dart' show Value;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -20,6 +19,8 @@ import '../../../shared/utils/error_helpers.dart';
 import '../../../shared/utils/recording_title.dart';
 import '../../genre/presentation/notifiers/genre_notifier.dart';
 import '../data/providers.dart';
+import '../data/repositories/local_recording_repository.dart';
+import '../data/server_to_local_recording.dart';
 import '../data/services/recording_trash.dart';
 import '../data/services/waveform_extractor.dart';
 import '../domain/entities/register.dart';
@@ -427,29 +428,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
       if (kIsWeb) {
         final apiRepo = ref.read(recordingApiRepositoryProvider);
         final server = await apiRepo.getRecording(widget.recordingId);
-        recording = LocalRecording(
-          id: server.id,
-          projectId: server.projectId,
-          genreId: server.genreId,
-          subcategoryId: server.subcategoryId,
-          registerId: server.registerId,
-          secondaryGenreId: server.secondaryGenreId,
-          secondarySubcategoryId: server.secondarySubcategoryId,
-          secondaryRegisterId: server.secondaryRegisterId,
-          title: server.title,
-          durationSeconds: server.durationSeconds,
-          fileSizeBytes: server.fileSizeBytes,
-          format: server.format,
-          localFilePath: '',
-          uploadStatus: server.uploadStatus,
-          serverId: server.id,
-          gcsUrl: server.gcsUrl,
-          cleaningStatus: server.cleaningStatus,
-          recordedAt: server.recordedAt,
-          createdAt: server.recordedAt,
-          retryCount: 0,
-          uploadedBytes: 0,
-        );
+        recording = serverRecordingToLocal(server);
       } else {
         final localRepo = ref.read(localRecordingRepositoryProvider);
 
@@ -462,26 +441,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
           try {
             final apiRepo = ref.read(recordingApiRepositoryProvider);
             final server = await apiRepo.getRecording(widget.recordingId);
-            recording = LocalRecording(
-              id: server.id,
-              projectId: server.projectId,
-              genreId: server.genreId,
-              subcategoryId: server.subcategoryId,
-              registerId: server.registerId,
-              title: server.title,
-              durationSeconds: server.durationSeconds,
-              fileSizeBytes: server.fileSizeBytes,
-              format: server.format,
-              localFilePath: '',
-              uploadStatus: server.uploadStatus,
-              serverId: server.id,
-              gcsUrl: server.gcsUrl,
-              cleaningStatus: server.cleaningStatus,
-              recordedAt: server.recordedAt,
-              createdAt: server.recordedAt,
-              retryCount: 0,
-              uploadedBytes: 0,
-            );
+            recording = serverRecordingToLocal(server);
           } catch (_) {}
         }
       }
@@ -786,6 +746,9 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
     final kept = _keptSegmentIndices;
     final keptTotal = kept.length;
 
+    // Phase 1: run ffmpeg per kept segment, collect specs. Field-propagation
+    // contract lives in docs/recording-split-semantics.md (ENG-64).
+    final specs = <SplitSegmentSpec>[];
     for (var k = 0; k < keptTotal; k++) {
       final i = kept[k];
       final startSec = _segmentStart(i).inMilliseconds / 1000.0;
@@ -810,46 +773,40 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
 
       final fileSize = await file_ops.fileLength(outputPath);
 
-      final id =
-          '${now.millisecondsSinceEpoch}_${k}_${recording.genreId.hashCode}';
-
-      final effGenre = _effectiveGenre(i);
-      final effSubcat = _effectiveSubcategory(i);
-      final effRegister = _effectiveRegister(i);
-      await repo.insertRecording(
-        LocalRecordingsCompanion(
-          id: Value(id),
-          projectId: Value(recording.projectId),
-          genreId: Value(effGenre.isNotEmpty ? effGenre : recording.genreId),
-          subcategoryId: (effSubcat != null && effSubcat.isNotEmpty)
-              ? Value(effSubcat)
-              : const Value.absent(),
-          registerId: (effRegister != null && effRegister.isNotEmpty)
-              ? Value(effRegister)
-              : const Value.absent(),
-          title: Value(
-            keptTotal == 1
-                ? originalTitle
-                : '$originalTitle (${k + 1}/$keptTotal)',
-          ),
-          durationSeconds: Value(segDuration),
-          fileSizeBytes: Value(fileSize),
-          format: const Value('m4a'),
-          localFilePath: Value(outputPath),
-          recordedAt: Value(recording.recordedAt),
+      specs.add(
+        SplitSegmentSpec(
+          id: '${now.millisecondsSinceEpoch}_${k}_${recording.genreId.hashCode}',
+          title: keptTotal == 1
+              ? originalTitle
+              : '$originalTitle (${k + 1}/$keptTotal)',
+          localFilePath: outputPath,
+          durationSeconds: segDuration,
+          fileSizeBytes: fileSize,
+          genreOverride: _effectiveGenre(i),
+          subcategoryOverride: _effectiveSubcategory(i),
+          registerOverride: _effectiveRegister(i),
         ),
       );
     }
+
+    // Phase 2: persist children with parent metadata propagated.
+    await repo.splitRecording(parent: recording, segments: specs);
 
     await RecordingTrash.putInTrash(
       sourcePath: recording.localFilePath,
       metadata: {
         'id': recording.id,
         'title': recording.title,
+        'description': recording.description,
         'projectId': recording.projectId,
         'genreId': recording.genreId,
         'subcategoryId': recording.subcategoryId,
         'registerId': recording.registerId,
+        'secondaryGenreId': recording.secondaryGenreId,
+        'secondarySubcategoryId': recording.secondarySubcategoryId,
+        'secondaryRegisterId': recording.secondaryRegisterId,
+        'storytellerId': recording.storytellerId,
+        'userId': recording.userId,
         'durationSeconds': recording.durationSeconds,
         'fileSizeBytes': recording.fileSizeBytes,
         'format': recording.format,
