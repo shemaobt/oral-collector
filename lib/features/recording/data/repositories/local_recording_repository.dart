@@ -205,7 +205,9 @@ class LocalRecordingRepository {
     return _db.transaction(() async {
       final ids = <String>[];
       for (final seg in segments) {
-        await _db.into(_db.localRecordings).insert(
+        await _db
+            .into(_db.localRecordings)
+            .insert(
               LocalRecordingsCompanion(
                 id: Value(seg.id),
                 projectId: Value(parent.projectId),
@@ -214,11 +216,13 @@ class LocalRecordingRepository {
                       ? seg.genreOverride!
                       : parent.genreId,
                 ),
-                subcategoryId: (seg.subcategoryOverride != null &&
+                subcategoryId:
+                    (seg.subcategoryOverride != null &&
                         seg.subcategoryOverride!.isNotEmpty)
                     ? Value(seg.subcategoryOverride)
                     : Value(parent.subcategoryId),
-                registerId: (seg.registerOverride != null &&
+                registerId:
+                    (seg.registerOverride != null &&
                         seg.registerOverride!.isNotEmpty)
                     ? Value(seg.registerOverride)
                     : Value(parent.registerId),

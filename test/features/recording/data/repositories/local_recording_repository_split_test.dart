@@ -193,7 +193,10 @@ void main() {
 
     await repo.splitRecording(
       parent: parent,
-      segments: [spec(id: 'c1'), spec(id: 'c2')],
+      segments: [
+        spec(id: 'c1'),
+        spec(id: 'c2'),
+      ],
     );
 
     final c1 = await repo.getRecordingById('c1');
@@ -211,7 +214,10 @@ void main() {
 
     await repo.splitRecording(
       parent: parent,
-      segments: [spec(id: 'c1'), spec(id: 'c2')],
+      segments: [
+        spec(id: 'c1'),
+        spec(id: 'c2'),
+      ],
     );
 
     final after = await repo.getRecordingById(parent.id);
@@ -289,7 +295,10 @@ void main() {
 
     await repo.splitRecording(
       parent: parent,
-      segments: [spec(id: 'c1'), spec(id: 'c2')],
+      segments: [
+        spec(id: 'c1'),
+        spec(id: 'c2'),
+      ],
     );
 
     final c1 = await repo.getRecordingById('c1');

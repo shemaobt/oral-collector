@@ -236,7 +236,6 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     await _loadRecording();
   }
 
-
   Future<void> _saveDescription(String newDescription) async {
     final trimmed = newDescription.trim();
     if (trimmed == (_recording?.description ?? '')) {
