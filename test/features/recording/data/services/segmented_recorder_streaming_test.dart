@@ -262,6 +262,66 @@ void main() {
   );
 
   test(
+    'finalized WAV files declare a duration consistent with the bytes streamed',
+    () async {
+      await seedSession('sess6');
+      await rec.startSession(sessionId: 'sess6', amplitudeMapper: (_) => 0.0);
+
+      // Inject exactly 5s worth of PCM (16kHz × 1ch × 2B = 32kB/s ⇒ 160kB).
+      const totalSamples = _sampleRate * 5;
+      const chunkSamples = 1600;
+      for (var n = 0; n < totalSamples; n += chunkSamples) {
+        await emitAndYield(toneChunk(n, chunkSamples));
+      }
+
+      final result = await rec.finish();
+      expect(result, isNotNull);
+
+      var headerDuration = Duration.zero;
+      for (final p in result!.segmentPaths) {
+        final raw = await File(p).readAsBytes();
+        expect(raw.length, greaterThanOrEqualTo(44));
+        final view = ByteData.sublistView(raw);
+        final numChannels = view.getUint16(22, Endian.little);
+        final sampleRate = view.getUint32(24, Endian.little);
+        final byteRate = view.getUint32(28, Endian.little);
+        final bitsPerSample = view.getUint16(34, Endian.little);
+        final dataSize = view.getUint32(40, Endian.little);
+
+        expect(numChannels, 1);
+        expect(sampleRate, _sampleRate);
+        expect(bitsPerSample, 16);
+        expect(
+          byteRate,
+          sampleRate * numChannels * bitsPerSample ~/ 8,
+          reason:
+              'header must be self-consistent — a player reads byteRate to '
+              'time playback; if it disagrees with sampleRate × channels × '
+              'bytesPerSample the audio drifts (root cause family of ENG-63 '
+              'streaming bug)',
+        );
+        expect(
+          (raw.length - 44),
+          dataSize,
+          reason: 'data chunk size in header must match file payload',
+        );
+
+        headerDuration += Duration(
+          microseconds: dataSize * 1000000 ~/ byteRate,
+        );
+      }
+
+      expect(
+        headerDuration,
+        const Duration(seconds: 5),
+        reason:
+            '160000 PCM bytes at 32000 B/s ⇒ exactly 5s; any external player '
+            'using the header should report 5s, not 2.5s',
+      );
+    },
+  );
+
+  test(
     'crash recovery: an in-progress segment file with unclosed sink is repairable',
     () async {
       await seedSession('sess5');

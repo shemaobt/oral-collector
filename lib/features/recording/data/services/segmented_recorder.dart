@@ -120,6 +120,18 @@ class SegmentedRecorder {
       await _setupAudioSession();
     }
 
+    if (!kIsWeb) {
+      // The app owns the AVAudioSession lifecycle (see _setupAudioSession);
+      // tell record_ios not to touch it.
+      try {
+        await _recorder!.ios?.manageAudioSession(false);
+      } on Exception catch (e) {
+        debugPrint(
+          'SegmentedRecorder: ios.manageAudioSession(false) failed: $e',
+        );
+      }
+    }
+
     _docDirPath = await _docDirProvider();
     _bytesPerSegment =
         _sampleRate *
@@ -138,9 +150,12 @@ class SegmentedRecorder {
         sampleRate: _sampleRate,
         numChannels: _numChannels,
         device: _inputDevice,
+        // Interruptions are handled in Dart via audio_session
+        // (_setupAudioSession). Without this, record_ios defaults to
+        // AudioInterruptionMode.pause and the native engine pauses on
+        // interruption without Dart's knowledge, dropping PCM frames.
+        audioInterruption: AudioInterruptionMode.none,
         iosConfig: const IosRecordConfig(
-          // ignore: deprecated_member_use
-          manageAudioSession: false,
           categoryOptions: [
             IosAudioCategoryOption.defaultToSpeaker,
             IosAudioCategoryOption.allowBluetooth,
