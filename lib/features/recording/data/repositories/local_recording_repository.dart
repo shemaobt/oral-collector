@@ -44,6 +44,17 @@ class LocalRecordingRepository {
     return rows > 0;
   }
 
+  Future<int> reassignStorytellerId({
+    required String fromId,
+    required String toId,
+  }) async {
+    return (_db.update(
+      _db.localRecordings,
+    )..where((t) => t.storytellerId.equals(fromId))).write(
+      LocalRecordingsCompanion(storytellerId: Value(toId)),
+    );
+  }
+
   Future<bool> deleteRecording(String id) async {
     final rows = await (_db.delete(
       _db.localRecordings,

@@ -75,6 +75,10 @@ class LocalStorytellers extends Table {
       boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().nullable()();
+  TextColumn get serverId => text().nullable()();
+  TextColumn get syncStatus => text().withDefault(const Constant('synced'))();
+  IntColumn get retryCount => integer().withDefault(const Constant(0))();
+  DateTimeColumn get lastRetryAt => dateTime().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -116,7 +120,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 9;
+  int get schemaVersion => 10;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -155,6 +159,12 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(localRecordings, localRecordings.splitFromId);
         await m.addColumn(localRecordings, localRecordings.splitIndex);
         await m.addColumn(localRecordings, localRecordings.splitSegmentCount);
+      }
+      if (from < 10) {
+        await m.addColumn(localStorytellers, localStorytellers.serverId);
+        await m.addColumn(localStorytellers, localStorytellers.syncStatus);
+        await m.addColumn(localStorytellers, localStorytellers.retryCount);
+        await m.addColumn(localStorytellers, localStorytellers.lastRetryAt);
       }
     },
   );

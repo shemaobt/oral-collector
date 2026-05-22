@@ -8,7 +8,6 @@ import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_snack_bar.dart';
 import '../../auth/data/providers/role_provider.dart';
 import '../../../core/auth/auth_notifier.dart';
-import '../../sync/presentation/notifiers/sync_notifier.dart';
 import '../domain/entities/storyteller.dart';
 import 'notifiers/project_storytellers_notifier.dart';
 import 'widgets/storyteller_tile.dart';
@@ -84,7 +83,6 @@ class _StorytellersListScreenState
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final state = ref.watch(projectStorytellersNotifierProvider);
-    final isOnline = ref.watch(syncNotifierProvider).isOnline;
 
     return Scaffold(
       appBar: AppBar(
@@ -102,19 +100,8 @@ class _StorytellersListScreenState
         actions: [
           IconButton(
             tooltip: l10n.storyteller_addNew,
-            onPressed: isOnline
-                ? () => context.push(
-                    '/project/${widget.projectId}/storytellers/new',
-                  )
-                : () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          l10n.storyteller_createRequiresConnection,
-                        ),
-                      ),
-                    );
-                  },
+            onPressed: () =>
+                context.push('/project/${widget.projectId}/storytellers/new'),
             icon: const Icon(LucideIcons.plus),
           ),
         ],

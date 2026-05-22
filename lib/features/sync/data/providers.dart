@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/network/authenticated_client.dart';
 import '../../recording/data/providers.dart';
+import '../../storyteller/data/providers.dart';
 import '../domain/repositories/connectivity_service.dart';
 import '../domain/repositories/sync_engine.dart';
 import 'repositories/connectivity_service.dart';
@@ -14,10 +15,12 @@ final connectivityServiceProvider = Provider<ConnectivityService>(
 
 final syncEngineProvider = Provider<SyncEngine>((ref) {
   final recordingRepo = ref.watch(localRecordingRepositoryProvider);
+  final storytellerRepo = ref.watch(localStorytellerRepositoryProvider);
   final connectivity = ref.watch(connectivityServiceProvider);
   final client = ref.watch(authenticatedClientProvider);
   return SyncEngineImpl(
     recordingRepo: recordingRepo,
+    storytellerRepo: storytellerRepo,
     connectivity: connectivity,
     client: client,
   );

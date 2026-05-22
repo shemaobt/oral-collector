@@ -12,6 +12,7 @@ import '../../../../core/database/app_database.dart';
 import '../../../../core/network/authenticated_client.dart';
 import '../../../../core/platform/file_ops.dart' as file_ops;
 import '../../../recording/data/repositories/local_recording_repository.dart';
+import '../../../storyteller/data/repositories/local_storyteller_repository.dart';
 import '../../domain/repositories/connectivity_service.dart';
 import '../../domain/repositories/sync_engine.dart';
 import '../services/resumable_upload_service.dart';
@@ -25,6 +26,7 @@ class _NonRetryableUploadException implements Exception {
 
 class SyncEngineImpl implements SyncEngine {
   final LocalRecordingRepository _recordingRepo;
+  final LocalStorytellerRepository _storytellerRepo;
   final ConnectivityService _connectivity;
   final AuthenticatedClient _client;
   late final ResumableUploadService _uploadService;
@@ -43,9 +45,11 @@ class SyncEngineImpl implements SyncEngine {
 
   SyncEngineImpl({
     required LocalRecordingRepository recordingRepo,
+    required LocalStorytellerRepository storytellerRepo,
     required ConnectivityService connectivity,
     required AuthenticatedClient client,
   }) : _recordingRepo = recordingRepo,
+       _storytellerRepo = storytellerRepo,
        _connectivity = connectivity,
        _client = client {
     _uploadService = ResumableUploadService(
@@ -77,6 +81,8 @@ class SyncEngineImpl implements SyncEngine {
 
     _isProcessing = true;
     try {
+      await _processPendingStorytellers();
+
       final pending = await _recordingRepo.getPendingUploads();
 
       final eligible = <LocalRecording>[];
@@ -252,7 +258,17 @@ class SyncEngineImpl implements SyncEngine {
         }
         if (recording.storytellerId != null &&
             recording.storytellerId!.isNotEmpty) {
-          createBody['storyteller_id'] = recording.storytellerId;
+          final resolvedStorytellerId = await _resolveStorytellerServerId(
+            recording.storytellerId!,
+          );
+          if (resolvedStorytellerId == null) {
+            debugPrint(
+              'SyncEngine: skipping recording $id, '
+              'referenced storyteller ${recording.storytellerId} is not yet synced',
+            );
+            return;
+          }
+          createBody['storyteller_id'] = resolvedStorytellerId;
         }
         final createResponse = await _client
             .post('/api/oc/recordings', body: createBody)
@@ -343,6 +359,85 @@ class SyncEngineImpl implements SyncEngine {
       debugPrint('SyncEngine: unexpected error uploading $id: $e\n$st');
       await _recordingRepo.markAsFailed(id);
     }
+  }
+
+  Future<void> _processPendingStorytellers() async {
+    final pending = await _storytellerRepo.getPendingSyncs();
+    for (final row in pending) {
+      if (row.retryCount > 0 && row.lastRetryAt != null) {
+        final backoffIndex = (row.retryCount - 1).clamp(
+          0,
+          _backoffDurations.length - 1,
+        );
+        final backoff = _backoffDurations[backoffIndex];
+        final elapsed = DateTime.now().difference(row.lastRetryAt!);
+        if (elapsed < backoff) continue;
+      }
+
+      final stillOnline = await _connectivity.isOnline;
+      if (!stillOnline) return;
+
+      try {
+        await _storytellerRepo.markUploading(row.id);
+
+        final body = <String, dynamic>{
+          'name': row.name,
+          'sex': row.sex,
+          'external_acceptance_confirmed': row.externalAcceptanceConfirmed,
+          if (row.age != null) 'age': row.age,
+          if (row.location != null && row.location!.isNotEmpty)
+            'location': row.location,
+          if (row.dialect != null && row.dialect!.isNotEmpty)
+            'dialect': row.dialect,
+        };
+
+        final response = await _client
+            .post('/api/oc/projects/${row.projectId}/storytellers', body: body)
+            .timeout(_apiTimeout);
+
+        if (response.statusCode != 201 && response.statusCode != 200) {
+          debugPrint(
+            'SyncEngine: storyteller ${row.id} failed '
+            'with ${response.statusCode}: ${response.body}',
+          );
+          await _storytellerRepo.markFailed(row.id);
+          continue;
+        }
+
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        final serverId = data['id'] as String;
+        await _storytellerRepo.markUploaded(row.id, serverId);
+        await _recordingRepo.reassignStorytellerId(
+          fromId: row.id,
+          toId: serverId,
+        );
+      } on TimeoutException catch (e) {
+        debugPrint('SyncEngine: timeout syncing storyteller ${row.id}: $e');
+        await _storytellerRepo.markFailed(row.id);
+      } on SocketException catch (e) {
+        debugPrint(
+          'SyncEngine: socket error syncing storyteller ${row.id}: $e',
+        );
+        await _storytellerRepo.markFailed(row.id);
+      } on Exception catch (e) {
+        debugPrint('SyncEngine: error syncing storyteller ${row.id}: $e');
+        await _storytellerRepo.markFailed(row.id);
+      }
+    }
+  }
+
+  Future<String?> _resolveStorytellerServerId(String referencedId) async {
+    final row = await _storytellerRepo.getRowById(referencedId);
+    if (row == null) {
+      return referencedId;
+    }
+    if (row.serverId != null && row.serverId!.isNotEmpty) {
+      return row.serverId;
+    }
+    if (row.syncStatus == 'synced') {
+      return row.id;
+    }
+    return null;
   }
 
   void _checkResponse(
