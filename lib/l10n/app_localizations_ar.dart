@@ -733,6 +733,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get trim_addSplitsFirst => 'أضف تقسيمات أولاً';
 
   @override
+  String get trim_applyBoost => 'Apply boost';
+
+  @override
+  String get trim_boostApplied => 'Volume applied';
+
+  @override
   String trim_savedSegments(int kept, int removed) {
     return 'تم حفظ $kept مقطع، وإزالة $removed';
   }

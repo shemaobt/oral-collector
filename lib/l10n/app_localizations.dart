@@ -1442,6 +1442,18 @@ abstract class AppLocalizations {
   /// **'Add splits first'**
   String get trim_addSplitsFirst;
 
+  /// No description provided for @trim_applyBoost.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply boost'**
+  String get trim_applyBoost;
+
+  /// No description provided for @trim_boostApplied.
+  ///
+  /// In en, this message translates to:
+  /// **'Volume applied'**
+  String get trim_boostApplied;
+
   /// No description provided for @trim_savedSegments.
   ///
   /// In en, this message translates to:

@@ -248,6 +248,8 @@
   "trim_splitting": "Brukim...",
   "trim_saveSegments": "{count, plural, =1{Sevim 1 segment} other{Sevim {count} segment}}",
   "trim_addSplitsFirst": "Putim ol brukim pastaim",
+  "trim_applyBoost": "Apply boost",
+  "trim_boostApplied": "Volume applied",
   "trim_savedSegments": "Sevim {kept} segment, rausim {removed}",
   "trim_splitInto": "Brukim i go long {count} rekoding",
   "trim_saveConfirmTitle": "Sevim senis?",

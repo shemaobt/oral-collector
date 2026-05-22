@@ -248,6 +248,8 @@
   "trim_splitting": "분할 중...",
   "trim_saveSegments": "{count, plural, =1{세그먼트 1개 저장} other{세그먼트 {count}개 저장}}",
   "trim_addSplitsFirst": "먼저 분할 지점을 추가하세요",
+  "trim_applyBoost": "Apply boost",
+  "trim_boostApplied": "Volume applied",
   "trim_savedSegments": "세그먼트 {kept}개 저장, {removed}개 제거",
   "trim_splitInto": "{count}개 녹음으로 분할",
   "trim_saveConfirmTitle": "변경 사항을 저장하시겠습니까?",

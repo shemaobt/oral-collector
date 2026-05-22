@@ -297,6 +297,8 @@
     }
   },
   "trim_addSplitsFirst": "Add splits first",
+  "trim_applyBoost": "Apply boost",
+  "trim_boostApplied": "Volume applied",
   "trim_savedSegments": "Saved {kept} segment{kept, plural, =1{} other{s}}, removed {removed}",
   "@trim_savedSegments": {
     "placeholders": {

@@ -248,6 +248,8 @@
   "trim_splitting": "Division en cours...",
   "trim_saveSegments": "{count, plural, =1{Sauvegarder 1 segment} other{Sauvegarder {count} segments}}",
   "trim_addSplitsFirst": "Ajoutez d'abord des divisions",
+  "trim_applyBoost": "Appliquer le volume",
+  "trim_boostApplied": "Volume appliqué",
   "trim_savedSegments": "{kept} segment{kept, plural, =1{ sauvegardé} other{s sauvegardés}}, {removed} supprimé(s)",
   "trim_splitInto": "Diviser en {count} enregistrements",
   "trim_saveConfirmTitle": "Enregistrer les modifications ?",

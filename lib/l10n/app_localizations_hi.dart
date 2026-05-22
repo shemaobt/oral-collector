@@ -744,6 +744,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get trim_addSplitsFirst => 'पहले विभाजन जोड़ें';
 
   @override
+  String get trim_applyBoost => 'Apply boost';
+
+  @override
+  String get trim_boostApplied => 'Volume applied';
+
+  @override
   String trim_savedSegments(int kept, int removed) {
     String _temp0 = intl.Intl.pluralLogic(
       kept,
