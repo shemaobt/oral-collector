@@ -75,11 +75,7 @@ class RecordingAboutSection extends StatelessWidget {
               child: const SizedBox(
                 width: 40,
                 height: 40,
-                child: Icon(
-                  LucideIcons.pencil,
-                  size: 18,
-                  color: Colors.white,
-                ),
+                child: Icon(LucideIcons.pencil, size: 18, color: Colors.white),
               ),
             ),
           ),
