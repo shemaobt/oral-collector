@@ -71,6 +71,13 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
   Duration _totalDuration = Duration.zero;
   Storyteller? _selectedStoryteller;
 
+  // Captured in initState so dispose() can clear the marker without touching
+  // `ref` — flutter_riverpod 2.x invalidates `ref` before State.dispose runs
+  // and any ref.read() in dispose throws "Cannot use ref after disposed",
+  // which would leave the provider dirty and trip AppShell's discard dialog
+  // on the next tab tap.
+  late final StateController<RecordingResult?> _pendingDecisionController;
+
   double get _progress {
     if (_totalDuration.inMilliseconds == 0) return 0.0;
     return (_position.inMilliseconds / _totalDuration.inMilliseconds).clamp(
@@ -82,11 +89,19 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
   @override
   void initState() {
     super.initState();
+    _pendingDecisionController = ref.read(
+      pendingRecordingDecisionProvider.notifier,
+    );
     _initPlayer();
     Future.microtask(_prefetchStorytellers);
-    // Set the pending-decision marker synchronously so any navigation attempt
-    // triggered between mount and the first frame is already covered.
-    ref.read(pendingRecordingDecisionProvider.notifier).state = widget.result;
+    // Defer until after the current build/layout pass: Riverpod forbids
+    // mutating providers inside widget lifecycle callbacks, and initState
+    // runs inside a build when this widget is mounted under a LayoutBuilder
+    // (the Scaffold body in QuickRecordingScreen does exactly that).
+    Future.microtask(() {
+      if (!mounted) return;
+      _pendingDecisionController.state = widget.result;
+    });
   }
 
   @override
@@ -190,9 +205,18 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
     // differ even when the values look similar, and we leave that successor's
     // marker untouched. RecordingResult does not override `==`, so this is
     // the same as `identical(...)`.
-    if (ref.read(pendingRecordingDecisionProvider) == widget.result) {
-      ref.read(pendingRecordingDecisionProvider.notifier).state = null;
-    }
+    //
+    // Defer the actual mutation: dispose() runs inside finalizeTree, and
+    // Riverpod refuses to notify listeners during a build phase. The
+    // controller object outlives the widget, so the microtask can use it
+    // safely.
+    final controller = _pendingDecisionController;
+    final ownedResult = widget.result;
+    Future.microtask(() {
+      if (controller.state == ownedResult) {
+        controller.state = null;
+      }
+    });
     super.dispose();
   }
 
