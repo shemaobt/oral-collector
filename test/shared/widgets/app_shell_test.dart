@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -6,7 +7,10 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import 'package:oral_collector/core/auth/auth_notifier.dart';
 import 'package:oral_collector/core/auth/auth_state.dart';
+import 'package:oral_collector/features/auth/data/providers/role_provider.dart';
 import 'package:oral_collector/features/auth/domain/entities/user.dart';
+import 'package:oral_collector/features/invite/presentation/notifiers/invite_notifier.dart';
+import 'package:oral_collector/features/invite/presentation/notifiers/invite_state.dart';
 import 'package:oral_collector/features/recording/presentation/notifiers/recording_session_notifier.dart';
 import 'package:oral_collector/features/recording/presentation/notifiers/recording_session_state.dart';
 import 'package:oral_collector/l10n/app_localizations.dart';
@@ -43,12 +47,56 @@ class _FakeAuthNotifier extends AuthNotifier {
   }
 }
 
+class _FakeInviteNotifier extends InviteNotifier {
+  @override
+  InviteState build() => const InviteState();
+
+  @override
+  Future<void> fetchInvites() async {}
+}
+
+class _FakeRoleNotifier extends RoleNotifier {
+  @override
+  RoleState build() => const RoleState();
+
+  @override
+  bool get isPlatformAdmin => false;
+}
+
 const _testUser = User(
   id: 'u1',
   email: 'test@example.com',
   displayName: 'Test User',
   isPlatformAdmin: false,
 );
+
+Widget _harness({
+  required RecordingState recordingState,
+  RecordingResult? pendingDecision,
+  required GoRouter router,
+}) {
+  return ProviderScope(
+    overrides: [
+      recordingSessionNotifierProvider.overrideWith(
+        () => _FakeRecordingSessionNotifier(recordingState),
+      ),
+      pendingRecordingDecisionProvider.overrideWith((_) => pendingDecision),
+      inviteNotifierProvider.overrideWith(_FakeInviteNotifier.new),
+      roleNotifierProvider.overrideWith(_FakeRoleNotifier.new),
+    ],
+    child: MaterialApp.router(
+      routerConfig: router,
+      locale: const Locale('en'),
+      supportedLocales: AppLocalizations.supportedLocales,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+    ),
+  );
+}
 
 GoRouter _buildRouter() {
   return GoRouter(
@@ -57,14 +105,36 @@ GoRouter _buildRouter() {
       ShellRoute(
         builder: (context, state, child) => AppShell(child: child),
         routes: [
-          GoRoute(path: '/home', builder: (_, _) => const Text('home page')),
+          GoRoute(
+            path: '/home',
+            builder: (_, _) => const Scaffold(
+              key: ValueKey('home-screen'),
+              body: Center(child: Text('home page')),
+            ),
+          ),
+          GoRoute(
+            path: '/record',
+            builder: (_, _) => const Scaffold(
+              key: ValueKey('record-screen'),
+              body: Center(child: Text('record page')),
+            ),
+          ),
           GoRoute(
             path: '/recordings',
-            builder: (_, _) => const Text('recordings page'),
+            builder: (_, _) => const Scaffold(
+              key: ValueKey('recordings-screen'),
+              body: Center(child: Text('recordings page')),
+            ),
           ),
         ],
       ),
-      GoRoute(path: '/login', builder: (_, _) => const Text('login page')),
+      GoRoute(
+        path: '/login',
+        builder: (_, _) => const Scaffold(
+          key: ValueKey('login-screen'),
+          body: Center(child: Text('login page')),
+        ),
+      ),
     ],
   );
 }
@@ -86,6 +156,8 @@ Future<void> _pumpShell(
       overrides: [
         recordingSessionNotifierProvider.overrideWith(() => rec),
         authNotifierProvider.overrideWith(() => auth),
+        inviteNotifierProvider.overrideWith(_FakeInviteNotifier.new),
+        roleNotifierProvider.overrideWith(_FakeRoleNotifier.new),
       ],
       child: MaterialApp.router(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -99,6 +171,130 @@ Future<void> _pumpShell(
 }
 
 void main() {
+  testWidgets(
+    'tapping a tab while finalizing shows snackbar and does not navigate',
+    (tester) async {
+      // Mobile layout (< 600px) so the bottom nav is used.
+      tester.view.physicalSize = const Size(400, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      final router = _buildRouter();
+      await tester.pumpWidget(
+        _harness(
+          recordingState: const RecordingState(
+            finalizationStage: FinalizationStage.compressingAudio,
+          ),
+          router: router,
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('home page'), findsOneWidget);
+
+      await tester.tap(find.bySemanticsLabel('Record tab'));
+      await tester.pump(); // start snackbar animation
+
+      expect(
+        find.text('Saving your recording — please wait a moment.'),
+        findsOneWidget,
+      );
+      // Did NOT navigate
+      expect(find.text('record page'), findsNothing);
+      expect(find.text('home page'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'tapping a tab while error overlay is up shows snackbar and does not '
+    'navigate',
+    (tester) async {
+      tester.view.physicalSize = const Size(400, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      final router = _buildRouter();
+      await tester.pumpWidget(
+        _harness(
+          recordingState: const RecordingState(
+            finalizationErrorKind: FinalizationErrorKind.noSegments,
+          ),
+          router: router,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.bySemanticsLabel('Record tab'));
+      await tester.pump();
+
+      expect(
+        find.text('Saving your recording — please wait a moment.'),
+        findsOneWidget,
+      );
+      expect(find.text('record page'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'tapping a tab while a recording decision is pending shows discard '
+    'dialog; Cancel keeps user on current page',
+    (tester) async {
+      tester.view.physicalSize = const Size(400, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      final router = _buildRouter();
+      await tester.pumpWidget(
+        _harness(
+          recordingState: const RecordingState(),
+          pendingDecision: const RecordingResult(
+            filePath: '/tmp/recording_test.m4a',
+            durationSeconds: 5.0,
+          ),
+          router: router,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.bySemanticsLabel('Record tab'));
+      await tester.pumpAndSettle();
+
+      // Discard dialog appears
+      expect(find.text('Discard Recording?'), findsOneWidget);
+      expect(find.text('Discard'), findsOneWidget);
+      expect(find.text('Cancel'), findsOneWidget);
+
+      // Cancel keeps user on /home
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('record page'), findsNothing);
+      expect(find.text('home page'), findsOneWidget);
+    },
+  );
+
+  testWidgets('idle state allows tab navigation without snackbar or dialog', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    final router = _buildRouter();
+    await tester.pumpWidget(
+      _harness(recordingState: const RecordingState(), router: router),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.bySemanticsLabel('Record tab'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('record page'), findsOneWidget);
+    expect(
+      find.text('Saving your recording — please wait a moment.'),
+      findsNothing,
+    );
+  });
+
   group('AppShell logout guard (G1)', () {
     testWidgets(
       'logout while recording shows the block-nav dialog and does not log out yet',

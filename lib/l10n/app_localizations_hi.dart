@@ -2060,6 +2060,53 @@ class AppLocalizationsHi extends AppLocalizations {
       'ऐप पर लौटने के लिए टैप करें';
 
   @override
+  String get recording_finalizing => 'रिकॉर्डिंग समाप्त की जा रही है…';
+
+  @override
+  String get recording_combiningSegments => 'खंडों को मिलाया जा रहा है…';
+
+  @override
+  String get recording_compressingAudio => 'ऑडियो संपीड़ित किया जा रहा है…';
+
+  @override
+  String get recording_finalizationDegradedHint =>
+      'ऑडियो गुणवत्ता कम हो सकती है।';
+
+  @override
+  String get recording_finalizationFailed =>
+      'इस रिकॉर्डिंग को सहेजा नहीं जा सका';
+
+  @override
+  String get recording_finalizationFailedBody =>
+      'हमने ऑडियो पुनर्प्राप्त करने का प्रयास किया लेकिन कोई खंड उपलब्ध नहीं था।';
+
+  @override
+  String get recording_discardAndReturn => 'त्यागें और लौटें';
+
+  @override
+  String get recording_savingRecording => 'Saving recording…';
+
+  @override
+  String get recording_processingYourAudio => 'Processing your audio';
+
+  @override
+  String get recording_dontCloseSaveNext =>
+      'Don\'t close — we\'ll open the save screen next.';
+
+  @override
+  String get recording_stageShortFinalizing => 'FINALIZING';
+
+  @override
+  String get recording_stageShortCombining => 'COMBINING';
+
+  @override
+  String get recording_stageShortCompressing => 'COMPRESSING';
+
+  @override
+  String get recording_savingPleaseWait =>
+      'Saving your recording — please wait a moment.';
+
+  @override
   String get profile_defaultMicrophone => 'डिफ़ॉल्ट माइक्रोफ़ोन';
 
   @override

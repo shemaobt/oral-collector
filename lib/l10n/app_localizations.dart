@@ -3710,6 +3710,90 @@ abstract class AppLocalizations {
   /// **'Tap to return to the app'**
   String get recording_inProgressNotificationBody;
 
+  /// No description provided for @recording_finalizing.
+  ///
+  /// In en, this message translates to:
+  /// **'Finalizing recording…'**
+  String get recording_finalizing;
+
+  /// No description provided for @recording_combiningSegments.
+  ///
+  /// In en, this message translates to:
+  /// **'Combining segments…'**
+  String get recording_combiningSegments;
+
+  /// No description provided for @recording_compressingAudio.
+  ///
+  /// In en, this message translates to:
+  /// **'Compressing audio…'**
+  String get recording_compressingAudio;
+
+  /// No description provided for @recording_finalizationDegradedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio quality may be reduced.'**
+  String get recording_finalizationDegradedHint;
+
+  /// No description provided for @recording_finalizationFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save this recording'**
+  String get recording_finalizationFailed;
+
+  /// No description provided for @recording_finalizationFailedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'We tried to recover the audio but no segments were available.'**
+  String get recording_finalizationFailedBody;
+
+  /// No description provided for @recording_discardAndReturn.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard and return'**
+  String get recording_discardAndReturn;
+
+  /// Headline shown under the timer while audio is being finalized after stop
+  ///
+  /// In en, this message translates to:
+  /// **'Saving recording…'**
+  String get recording_savingRecording;
+
+  /// Title of the inline status card shown in place of pause/stop controls during finalization
+  ///
+  /// In en, this message translates to:
+  /// **'Processing your audio'**
+  String get recording_processingYourAudio;
+
+  /// Body copy reassuring the user that the save screen will appear automatically
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t close — we\'ll open the save screen next.'**
+  String get recording_dontCloseSaveNext;
+
+  /// Short uppercase tag shown on the right of the inline finalization card
+  ///
+  /// In en, this message translates to:
+  /// **'FINALIZING'**
+  String get recording_stageShortFinalizing;
+
+  /// Short uppercase tag — combining segments stage
+  ///
+  /// In en, this message translates to:
+  /// **'COMBINING'**
+  String get recording_stageShortCombining;
+
+  /// Short uppercase tag — compressing audio stage
+  ///
+  /// In en, this message translates to:
+  /// **'COMPRESSING'**
+  String get recording_stageShortCompressing;
+
+  /// Snackbar shown when the user taps a navigation tab while audio is being finalized
+  ///
+  /// In en, this message translates to:
+  /// **'Saving your recording — please wait a moment.'**
+  String get recording_savingPleaseWait;
+
   /// No description provided for @profile_defaultMicrophone.
   ///
   /// In en, this message translates to:

@@ -2074,6 +2074,53 @@ class AppLocalizationsEs extends AppLocalizations {
       'Toca para volver a la app';
 
   @override
+  String get recording_finalizing => 'Finalizando grabación…';
+
+  @override
+  String get recording_combiningSegments => 'Combinando segmentos…';
+
+  @override
+  String get recording_compressingAudio => 'Comprimiendo audio…';
+
+  @override
+  String get recording_finalizationDegradedHint =>
+      'La calidad del audio puede haberse reducido.';
+
+  @override
+  String get recording_finalizationFailed =>
+      'No se pudo guardar esta grabación';
+
+  @override
+  String get recording_finalizationFailedBody =>
+      'Intentamos recuperar el audio pero no había segmentos disponibles.';
+
+  @override
+  String get recording_discardAndReturn => 'Descartar y volver';
+
+  @override
+  String get recording_savingRecording => 'Saving recording…';
+
+  @override
+  String get recording_processingYourAudio => 'Processing your audio';
+
+  @override
+  String get recording_dontCloseSaveNext =>
+      'Don\'t close — we\'ll open the save screen next.';
+
+  @override
+  String get recording_stageShortFinalizing => 'FINALIZING';
+
+  @override
+  String get recording_stageShortCombining => 'COMBINING';
+
+  @override
+  String get recording_stageShortCompressing => 'COMPRESSING';
+
+  @override
+  String get recording_savingPleaseWait =>
+      'Saving your recording — please wait a moment.';
+
+  @override
   String get profile_defaultMicrophone => 'Micrófono predeterminado';
 
   @override

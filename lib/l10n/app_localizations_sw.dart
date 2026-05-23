@@ -2046,6 +2046,52 @@ class AppLocalizationsSw extends AppLocalizations {
       'Bofya kurudi kwenye programu';
 
   @override
+  String get recording_finalizing => 'Inakamilisha kurekodi…';
+
+  @override
+  String get recording_combiningSegments => 'Inaunganisha sehemu…';
+
+  @override
+  String get recording_compressingAudio => 'Inabana sauti…';
+
+  @override
+  String get recording_finalizationDegradedHint =>
+      'Ubora wa sauti unaweza kupungua.';
+
+  @override
+  String get recording_finalizationFailed => 'Haikuweza kuhifadhi rekodi hii';
+
+  @override
+  String get recording_finalizationFailedBody =>
+      'Tulijaribu kurejesha sauti lakini hakuna sehemu zilizopatikana.';
+
+  @override
+  String get recording_discardAndReturn => 'Tupa na urudi';
+
+  @override
+  String get recording_savingRecording => 'Saving recording…';
+
+  @override
+  String get recording_processingYourAudio => 'Processing your audio';
+
+  @override
+  String get recording_dontCloseSaveNext =>
+      'Don\'t close — we\'ll open the save screen next.';
+
+  @override
+  String get recording_stageShortFinalizing => 'FINALIZING';
+
+  @override
+  String get recording_stageShortCombining => 'COMBINING';
+
+  @override
+  String get recording_stageShortCompressing => 'COMPRESSING';
+
+  @override
+  String get recording_savingPleaseWait =>
+      'Saving your recording — please wait a moment.';
+
+  @override
   String get profile_defaultMicrophone => 'Maikrofoni chaguomsingi';
 
   @override

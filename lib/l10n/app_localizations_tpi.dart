@@ -2043,6 +2043,52 @@ class AppLocalizationsTpi extends AppLocalizations {
       'Tasim bilong go bek long ap';
 
   @override
+  String get recording_finalizing => 'I pinisim rekoding…';
+
+  @override
+  String get recording_combiningSegments => 'I bungim ol hap…';
+
+  @override
+  String get recording_compressingAudio => 'I sotim audio…';
+
+  @override
+  String get recording_finalizationDegradedHint =>
+      'Audio kuality inap kamap liklik.';
+
+  @override
+  String get recording_finalizationFailed => 'I no inap sevim dispela rekoding';
+
+  @override
+  String get recording_finalizationFailedBody =>
+      'Mipela traim long kisim bek audio tasol i nogat ol hap.';
+
+  @override
+  String get recording_discardAndReturn => 'Lusim na go bek';
+
+  @override
+  String get recording_savingRecording => 'Saving recording…';
+
+  @override
+  String get recording_processingYourAudio => 'Processing your audio';
+
+  @override
+  String get recording_dontCloseSaveNext =>
+      'Don\'t close — we\'ll open the save screen next.';
+
+  @override
+  String get recording_stageShortFinalizing => 'FINALIZING';
+
+  @override
+  String get recording_stageShortCombining => 'COMBINING';
+
+  @override
+  String get recording_stageShortCompressing => 'COMPRESSING';
+
+  @override
+  String get recording_savingPleaseWait =>
+      'Saving your recording — please wait a moment.';
+
+  @override
   String get profile_defaultMicrophone => 'Defolt maikrofon';
 
   @override

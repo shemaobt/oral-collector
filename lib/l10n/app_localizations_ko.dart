@@ -1990,6 +1990,51 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recording_inProgressNotificationBody => '탭하여 앱으로 돌아가기';
 
   @override
+  String get recording_finalizing => '녹음 마무리 중…';
+
+  @override
+  String get recording_combiningSegments => '구간 결합 중…';
+
+  @override
+  String get recording_compressingAudio => '오디오 압축 중…';
+
+  @override
+  String get recording_finalizationDegradedHint => '오디오 품질이 저하될 수 있습니다.';
+
+  @override
+  String get recording_finalizationFailed => '이 녹음을 저장할 수 없습니다';
+
+  @override
+  String get recording_finalizationFailedBody =>
+      '오디오 복구를 시도했지만 사용 가능한 구간이 없었습니다.';
+
+  @override
+  String get recording_discardAndReturn => '버리고 돌아가기';
+
+  @override
+  String get recording_savingRecording => 'Saving recording…';
+
+  @override
+  String get recording_processingYourAudio => 'Processing your audio';
+
+  @override
+  String get recording_dontCloseSaveNext =>
+      'Don\'t close — we\'ll open the save screen next.';
+
+  @override
+  String get recording_stageShortFinalizing => 'FINALIZING';
+
+  @override
+  String get recording_stageShortCombining => 'COMBINING';
+
+  @override
+  String get recording_stageShortCompressing => 'COMPRESSING';
+
+  @override
+  String get recording_savingPleaseWait =>
+      'Saving your recording — please wait a moment.';
+
+  @override
   String get profile_defaultMicrophone => '기본 마이크';
 
   @override

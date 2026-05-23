@@ -966,6 +966,41 @@
   },
   "recording_inProgressNotificationTitle": "Recording in progress",
   "recording_inProgressNotificationBody": "Tap to return to the app",
+  "recording_finalizing": "Finalizing recording…",
+  "recording_combiningSegments": "Combining segments…",
+  "recording_compressingAudio": "Compressing audio…",
+  "recording_finalizationDegradedHint": "Audio quality may be reduced.",
+  "recording_finalizationFailed": "Couldn't save this recording",
+  "recording_finalizationFailedBody": "We tried to recover the audio but no segments were available.",
+  "recording_discardAndReturn": "Discard and return",
+  "recording_savingRecording": "Saving recording…",
+  "@recording_savingRecording": {
+    "description": "Headline shown under the timer while audio is being finalized after stop"
+  },
+  "recording_processingYourAudio": "Processing your audio",
+  "@recording_processingYourAudio": {
+    "description": "Title of the inline status card shown in place of pause/stop controls during finalization"
+  },
+  "recording_dontCloseSaveNext": "Don't close — we'll open the save screen next.",
+  "@recording_dontCloseSaveNext": {
+    "description": "Body copy reassuring the user that the save screen will appear automatically"
+  },
+  "recording_stageShortFinalizing": "FINALIZING",
+  "@recording_stageShortFinalizing": {
+    "description": "Short uppercase tag shown on the right of the inline finalization card"
+  },
+  "recording_stageShortCombining": "COMBINING",
+  "@recording_stageShortCombining": {
+    "description": "Short uppercase tag — combining segments stage"
+  },
+  "recording_stageShortCompressing": "COMPRESSING",
+  "@recording_stageShortCompressing": {
+    "description": "Short uppercase tag — compressing audio stage"
+  },
+  "recording_savingPleaseWait": "Saving your recording — please wait a moment.",
+  "@recording_savingPleaseWait": {
+    "description": "Snackbar shown when the user taps a navigation tab while audio is being finalized"
+  },
   "profile_defaultMicrophone": "Default microphone",
   "profile_systemDefault": "System default",
   "settings_deviceStorageTitle": "Device storage",
