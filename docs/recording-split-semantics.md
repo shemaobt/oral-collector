@@ -73,3 +73,9 @@ If you add a new `nullable` metadata column to `LocalRecordings`:
 2. Make sure `splitRecording` propagates it from parent to children (and update the table above).
 3. Make sure `buildHealMetadataCompanion` heals it when the server has a value and the local row is empty.
 4. Add the column to the cache tests in `local_recording_repository_cache_download_test.dart` and the heal tests in `recording_heal_companion_test.dart`.
+
+## Upload trigger after split (client)
+
+The upload pipeline is pull-based: `SyncNotifier.processQueue` reads `getPendingUploads()` via `.get()`, not `.watch()`, so inserting rows with `uploadStatus='local'` does not by itself wake the sync engine. Every call site that creates local recordings is responsible for kicking the queue explicitly afterwards (`unawaited(syncNotifier.processQueue())`) — see `confirmation_step.dart`, `file_import_screen.dart`, and the trim editor.
+
+For the trim/split path, that kick is wired through `RecordingSplitPersister` (`lib/features/recording/data/services/recording_split_persister.dart`). The persister is the single place that owns the post-FFmpeg pipeline: write children → trash parent → delete parent locally → best-effort delete remote parent → trigger upload. If you add another way to create recordings, make sure it also triggers the queue, otherwise the new rows will sit unprocessed until the next connectivity transition.

@@ -78,8 +78,12 @@ Path: @/lib/features/recording/data
   `RecordingApiRepositoryImpl`, and `RecordingSessionRepository`. See
   [./repositories/docs.md](repositories/docs.md).
 - The `services/` subfolder hosts platform-specific audio probes, the
-  segmented recorder, the foreground task, recovery & trash services, and
-  the resumable / direct uploaders.
+  segmented recorder, the foreground task, recovery & trash services, the
+  resumable / direct uploaders, and `RecordingSplitPersister` — the post-
+  FFmpeg pipeline of a trim/split save (writes children, trashes parent,
+  deletes parent locally + remotely, triggers upload queue). It is the
+  one place that wires the "split is saved → children start uploading"
+  causation, so the trim editor never has to think about sync.
 
 ### Things to Know
 

@@ -18,9 +18,11 @@ import '../../../core/theme/app_colors.dart';
 import '../../../shared/utils/error_helpers.dart';
 import '../../../shared/utils/recording_title.dart';
 import '../../genre/presentation/notifiers/genre_notifier.dart';
+import '../../sync/presentation/notifiers/sync_notifier.dart';
 import '../data/providers.dart';
 import '../data/repositories/local_recording_repository.dart';
 import '../data/server_to_local_recording.dart';
+import '../data/services/recording_split_persister.dart';
 import '../data/services/recording_trash.dart';
 import '../data/services/waveform_extractor.dart';
 import '../domain/entities/register.dart';
@@ -789,41 +791,37 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
       );
     }
 
-    // Phase 2: persist children with parent metadata propagated.
-    await repo.splitRecording(parent: recording, segments: specs);
-
-    await RecordingTrash.putInTrash(
-      sourcePath: recording.localFilePath,
-      metadata: {
-        'id': recording.id,
-        'title': recording.title,
-        'description': recording.description,
-        'projectId': recording.projectId,
-        'genreId': recording.genreId,
-        'subcategoryId': recording.subcategoryId,
-        'registerId': recording.registerId,
-        'secondaryGenreId': recording.secondaryGenreId,
-        'secondarySubcategoryId': recording.secondarySubcategoryId,
-        'secondaryRegisterId': recording.secondaryRegisterId,
-        'storytellerId': recording.storytellerId,
-        'userId': recording.userId,
-        'durationSeconds': recording.durationSeconds,
-        'fileSizeBytes': recording.fileSizeBytes,
-        'format': recording.format,
-        'serverId': recording.serverId,
-        'gcsUrl': recording.gcsUrl,
-        'recordedAt': recording.recordedAt.toIso8601String(),
-      },
+    // Phase 2: persist children, archive the parent, and kick the upload
+    // queue so the new children start syncing immediately when online.
+    final persister = RecordingSplitPersister(
+      localRepo: repo,
+      apiRepo: ref.read(recordingApiRepositoryProvider),
+      triggerUpload: ref.read(syncNotifierProvider.notifier).processQueue,
+      trashParent: (parent) => RecordingTrash.putInTrash(
+        sourcePath: parent.localFilePath,
+        metadata: {
+          'id': parent.id,
+          'title': parent.title,
+          'description': parent.description,
+          'projectId': parent.projectId,
+          'genreId': parent.genreId,
+          'subcategoryId': parent.subcategoryId,
+          'registerId': parent.registerId,
+          'secondaryGenreId': parent.secondaryGenreId,
+          'secondarySubcategoryId': parent.secondarySubcategoryId,
+          'secondaryRegisterId': parent.secondaryRegisterId,
+          'storytellerId': parent.storytellerId,
+          'userId': parent.userId,
+          'durationSeconds': parent.durationSeconds,
+          'fileSizeBytes': parent.fileSizeBytes,
+          'format': parent.format,
+          'serverId': parent.serverId,
+          'gcsUrl': parent.gcsUrl,
+          'recordedAt': parent.recordedAt.toIso8601String(),
+        },
+      ),
     );
-    await repo.deleteRecording(recording.id);
-
-    final serverId = recording.serverId;
-    if (serverId != null && serverId.isNotEmpty) {
-      try {
-        final apiRepo = ref.read(recordingApiRepositoryProvider);
-        await apiRepo.deleteRecording(serverId);
-      } catch (_) {}
-    }
+    await persister.persist(parent: recording, segments: specs);
 
     if (mounted) {
       HapticFeedback.mediumImpact();

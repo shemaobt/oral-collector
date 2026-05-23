@@ -71,9 +71,17 @@ Path: @/lib/features/recording/presentation
   touches only the affected fields, then `await _loadRecording()` to
   refresh the screen state.
 - `trim_editor_screen.dart` loads a recording the same way as the detail
-  screen but additionally streams audio from `gcsUrl` on web. Splits are
-  persisted locally via `LocalRecordingRepository.splitRecording`; the
-  parent row is deleted from local Drift and from the server.
+  screen but additionally streams audio from `gcsUrl` on web. After
+  FFmpeg cuts the segments, the editor hands off to
+  [../data/services/recording_split_persister.dart](../data/services/recording_split_persister.dart)
+  which writes the children, archives the parent, deletes the parent
+  locally and (best-effort) remotely, and kicks
+  `SyncNotifier.processQueue` so the new children start uploading without
+  the user having to interact. Prior to that handoff, the editor inlined
+  the same pipeline but forgot the upload trigger, so children sat in
+  `uploadStatus='local'` until the user edited a field on the detail
+  screen (which kicks the queue via the `!hasServerId` branch in
+  `_classifyRecording`).
 - `notifiers/` holds the Riverpod notifiers for the recording list and
   recording flow; `widgets/` holds the dialogs and section widgets shared
   by the detail and list screens.
