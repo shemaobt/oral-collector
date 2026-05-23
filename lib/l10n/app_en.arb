@@ -297,6 +297,8 @@
     }
   },
   "trim_addSplitsFirst": "Add splits first",
+  "trim_applyBoost": "Apply boost",
+  "trim_boostApplied": "Volume applied",
   "trim_savedSegments": "Saved {kept} segment{kept, plural, =1{} other{s}}, removed {removed}",
   "@trim_savedSegments": {
     "placeholders": {
@@ -329,6 +331,7 @@
   "trim_applyToAll": "Apply to all",
   "trim_copyFromPrevious": "Copy from previous",
   "trim_classifySegment": "Classify segment",
+  "trim_primaryEqualsSecondary": "Primary classification cannot match the recording's secondary classification.",
   "trim_volume": "Volume",
   "trim_peakClip": "Clipping",
   "trim_boostOnSave": "Boost applied on save",
@@ -897,6 +900,8 @@
   "recording_removeSecondary": "Remove alternative classification",
   "recording_secondaryRemoved": "Alternative classification removed",
   "recording_secondaryUpdated": "Alternative classification updated",
+  "recording_secondaryCollisionBanner": "This recording's primary and secondary classifications are the same. Clear the secondary or change the primary to sync.",
+  "recording_clearSecondary": "Clear secondary",
   "recording_unclassified": "Unclassified",
   "recording_inputSource": "Input",
   "recording_selectMicrophone": "Select microphone",
@@ -1067,6 +1072,7 @@
   "a11y_playAudio": "Play audio",
   "a11y_pauseAudio": "Pause audio",
   "a11y_splitWaveform": "Split waveform. Tap to add split markers. Drag to reposition. Pinch to zoom. Long-press to remove.",
+  "a11y_minimapScrubber": "Audio overview. Tap or drag to navigate to a position.",
   "a11y_tabLabel": "{label} tab",
   "@a11y_tabLabel": {
     "placeholders": {

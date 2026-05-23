@@ -10,6 +10,7 @@ class ServerRecording {
   final String? storytellerId;
   final String? userId;
   final String? title;
+  final String? description;
   final double durationSeconds;
   final int fileSizeBytes;
   final String format;
@@ -34,6 +35,7 @@ class ServerRecording {
     this.storytellerId,
     this.userId,
     this.title,
+    this.description,
     required this.durationSeconds,
     required this.fileSizeBytes,
     required this.format,
@@ -60,6 +62,7 @@ class ServerRecording {
       storytellerId: json['storyteller_id'] as String?,
       userId: json['user_id'] as String?,
       title: json['title'] as String?,
+      description: json['description'] as String?,
       durationSeconds: (json['duration_seconds'] as num).toDouble(),
       fileSizeBytes: json['file_size_bytes'] as int,
       format: json['format'] as String,

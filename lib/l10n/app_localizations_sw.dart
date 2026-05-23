@@ -742,6 +742,12 @@ class AppLocalizationsSw extends AppLocalizations {
   String get trim_addSplitsFirst => 'Ongeza migawanyo kwanza';
 
   @override
+  String get trim_applyBoost => 'Apply boost';
+
+  @override
+  String get trim_boostApplied => 'Volume applied';
+
+  @override
   String trim_savedSegments(int kept, int removed) {
     return 'Imehifadhi sehemu $kept, imeondoa $removed';
   }
@@ -770,6 +776,10 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get trim_classifySegment => 'Ainisha sehemu';
+
+  @override
+  String get trim_primaryEqualsSecondary =>
+      'Uainishaji msingi hauwezi kufanana na uainishaji wa pili wa rekodi.';
 
   @override
   String get trim_volume => 'Sauti';
@@ -1908,6 +1918,13 @@ class AppLocalizationsSw extends AppLocalizations {
   String get recording_secondaryUpdated => 'Ainisho mbadala imesasishwa';
 
   @override
+  String get recording_secondaryCollisionBanner =>
+      'Rekodi hii ina uainishaji msingi na wa pili sawa. Futa wa pili au badilisha msingi ili kusawazisha.';
+
+  @override
+  String get recording_clearSecondary => 'Futa wa pili';
+
+  @override
   String get recording_unclassified => 'Haijainishwa';
 
   @override
@@ -2319,6 +2336,10 @@ class AppLocalizationsSw extends AppLocalizations {
   @override
   String get a11y_splitWaveform =>
       'Umbo la mawimbi ya kugawanya. Gusa kuweka alama. Buruta kuhamisha. Bana kuzomu. Bonyeza kwa muda ili kuondoa.';
+
+  @override
+  String get a11y_minimapScrubber =>
+      'Audio overview. Tap or drag to navigate to a position.';
 
   @override
   String a11y_tabLabel(String label) {

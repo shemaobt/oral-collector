@@ -95,8 +95,10 @@ void main() {
       if (method == 'POST' &&
           path == '/api/oc/recordings/srv-abc/confirm-upload') {
         final body = jsonDecode(request.body) as Map<String, dynamic>;
-        expect(body['md5_hash'], isA<String>());
-        expect((body['md5_hash'] as String).length, 32);
+        expect(body.containsKey('md5_hash'), isFalse);
+        expect(body['crc32c'], isA<String>());
+        // base64 of 4 bytes always serializes to 8 chars (6 chars + "==").
+        expect((body['crc32c'] as String).length, 8);
         return http.Response('{}', 200);
       }
       return http.Response('unexpected', 500);

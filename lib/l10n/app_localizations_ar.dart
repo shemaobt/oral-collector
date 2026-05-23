@@ -733,6 +733,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get trim_addSplitsFirst => 'أضف تقسيمات أولاً';
 
   @override
+  String get trim_applyBoost => 'Apply boost';
+
+  @override
+  String get trim_boostApplied => 'Volume applied';
+
+  @override
   String trim_savedSegments(int kept, int removed) {
     return 'تم حفظ $kept مقطع، وإزالة $removed';
   }
@@ -761,6 +767,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get trim_classifySegment => 'تصنيف المقطع';
+
+  @override
+  String get trim_primaryEqualsSecondary =>
+      'لا يمكن أن يتطابق التصنيف الأساسي مع التصنيف الثانوي للتسجيل.';
 
   @override
   String get trim_volume => 'مستوى الصوت';
@@ -1885,6 +1895,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get recording_secondaryUpdated => 'تم تحديث التصنيف البديل';
 
   @override
+  String get recording_secondaryCollisionBanner =>
+      'هذا التسجيل له نفس التصنيف الأساسي والثانوي. امسح الثانوي أو غيّر الأساسي للمزامنة.';
+
+  @override
+  String get recording_clearSecondary => 'مسح الثانوي';
+
+  @override
   String get recording_unclassified => 'غير مصنف';
 
   @override
@@ -2291,6 +2308,10 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get a11y_splitWaveform =>
       'مخطط الموجة للتقسيم. انقر لإضافة علامات التقسيم. اسحب لإعادة الترتيب. استخدم أصابعك للتكبير. اضغط مطولاً للإزالة.';
+
+  @override
+  String get a11y_minimapScrubber =>
+      'Audio overview. Tap or drag to navigate to a position.';
 
   @override
   String a11y_tabLabel(String label) {

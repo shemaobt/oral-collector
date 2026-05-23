@@ -31,12 +31,13 @@ import '../../storyteller/domain/entities/storyteller.dart';
 import '../../sync/presentation/notifiers/sync_notifier.dart';
 import '../../../shared/utils/format.dart';
 import '../data/providers.dart';
+import '../data/recording_heal_companion.dart';
+import '../data/server_to_local_recording.dart';
 import '../data/services/audio_exporter.dart';
 import '../data/services/recording_trash.dart';
 import '../data/services/waveform_extractor.dart';
 import '../data/supported_audio_formats.dart';
 import '../domain/entities/register.dart';
-import '../domain/entities/server_recording.dart';
 import '../domain/entities/classification.dart';
 import 'widgets/classify_recording_dialog.dart';
 import 'widgets/move_category_dialog.dart';
@@ -103,7 +104,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
       if (kIsWeb) {
         final apiRepo = ref.read(recordingApiRepositoryProvider);
         final server = await apiRepo.getRecording(widget.recordingId);
-        recording = _serverToLocal(server);
+        recording = serverRecordingToLocal(server);
       } else {
         final localRepo = ref.read(localRecordingRepositoryProvider);
 
@@ -131,16 +132,9 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
           try {
             final apiRepo = ref.read(recordingApiRepositoryProvider);
             final server = await apiRepo.getRecording(recording.serverId!);
-            final updates = LocalRecordingsCompanion(
-              gcsUrl: server.gcsUrl != null && server.gcsUrl!.isNotEmpty
-                  ? Value(server.gcsUrl!)
-                  : const Value.absent(),
-              uploadStatus: server.gcsUrl != null && server.gcsUrl!.isNotEmpty
-                  ? Value(server.uploadStatus)
-                  : const Value.absent(),
-              userId: server.userId != null && server.userId!.isNotEmpty
-                  ? Value(server.userId)
-                  : const Value.absent(),
+            final updates = buildHealMetadataCompanion(
+              local: recording,
+              server: server,
             );
             await localRepo.updateRecording(recording.id, updates);
             recording = await localRepo.getRecordingById(recording.id);
@@ -151,7 +145,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
           try {
             final apiRepo = ref.read(recordingApiRepositoryProvider);
             final server = await apiRepo.getRecording(widget.recordingId);
-            recording = _serverToLocal(server);
+            recording = serverRecordingToLocal(server);
           } catch (_) {}
         }
       }
@@ -234,37 +228,6 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
       );
     }
     await _loadRecording();
-  }
-
-  static LocalRecording _serverToLocal(ServerRecording server) {
-    return LocalRecording(
-      id: server.id,
-      projectId: server.projectId,
-      genreId: server.genreId,
-      subcategoryId: server.subcategoryId,
-      registerId: server.registerId,
-      secondaryGenreId: server.secondaryGenreId,
-      secondarySubcategoryId: server.secondarySubcategoryId,
-      secondaryRegisterId: server.secondaryRegisterId,
-      storytellerId: server.storytellerId,
-      userId: server.userId,
-      title: server.title,
-      durationSeconds: server.durationSeconds,
-      fileSizeBytes: server.fileSizeBytes,
-      format: server.format,
-      localFilePath: '',
-      uploadStatus: server.uploadStatus,
-      serverId: server.id,
-      gcsUrl: server.gcsUrl,
-      cleaningStatus: server.cleaningStatus,
-      recordedAt: server.recordedAt,
-      createdAt: server.recordedAt,
-      retryCount: 0,
-      uploadedBytes: 0,
-      splitFromId: server.splitFromId,
-      splitIndex: server.splitIndex,
-      splitSegmentCount: server.splitSegmentCount,
-    );
   }
 
   Future<void> _saveDescription(String newDescription) async {
@@ -482,35 +445,10 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
       await file_ops.writeFileBytes(filePath, response.bodyBytes);
 
       final repo = ref.read(localRecordingRepositoryProvider);
-      final updated = await repo.updateRecording(
-        recording.id,
-        LocalRecordingsCompanion(localFilePath: Value(filePath)),
+      await repo.cacheDownloadedAudio(
+        recording: recording,
+        localFilePath: filePath,
       );
-      if (!updated) {
-        await repo.insertRecording(
-          LocalRecordingsCompanion(
-            id: Value(recording.id),
-            projectId: Value(recording.projectId),
-            genreId: Value(recording.genreId),
-            subcategoryId: recording.subcategoryId != null
-                ? Value(recording.subcategoryId!)
-                : const Value.absent(),
-            registerId: recording.registerId != null
-                ? Value(recording.registerId!)
-                : const Value.absent(),
-            title: Value(recording.title),
-            durationSeconds: Value(recording.durationSeconds),
-            fileSizeBytes: Value(recording.fileSizeBytes),
-            format: Value(recording.format),
-            localFilePath: Value(filePath),
-            uploadStatus: Value(recording.uploadStatus),
-            serverId: Value(recording.serverId ?? recording.id),
-            gcsUrl: Value(recording.gcsUrl),
-            cleaningStatus: Value(recording.cleaningStatus),
-            recordedAt: Value(recording.recordedAt),
-          ),
-        );
-      }
 
       await _loadRecording();
     } catch (e) {
@@ -1456,6 +1394,79 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
       isUnclassified: isUnclassified,
     );
 
+    final secondaryGenreCollides =
+        recording.secondaryGenreId != null &&
+        recording.secondaryGenreId!.isNotEmpty &&
+        recording.genreId == recording.secondaryGenreId;
+    final secondarySubcategoryCollides =
+        recording.secondarySubcategoryId != null &&
+        recording.secondarySubcategoryId!.isNotEmpty &&
+        recording.subcategoryId == recording.secondarySubcategoryId;
+    final secondaryRegisterCollides =
+        recording.secondaryRegisterId != null &&
+        recording.secondaryRegisterId!.isNotEmpty &&
+        recording.registerId == recording.secondaryRegisterId;
+    final hasSecondaryCollision =
+        secondaryGenreCollides ||
+        secondarySubcategoryCollides ||
+        secondaryRegisterCollides;
+
+    final secondaryCollisionBanner = hasSecondaryCollision
+        ? Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.errorContainer.withValues(alpha: 0.35),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: theme.colorScheme.error.withValues(alpha: 0.5),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  LucideIcons.alertCircle,
+                  size: 18,
+                  color: theme.colorScheme.error,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    l10n.recording_secondaryCollisionBanner,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.error,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                FilledButton.tonal(
+                  onPressed: _canEditRecording
+                      ? _clearSecondaryClassification
+                      : null,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: theme.colorScheme.error.withValues(
+                      alpha: 0.12,
+                    ),
+                    foregroundColor: theme.colorScheme.error,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: Text(
+                    l10n.recording_clearSecondary,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          )
+        : null;
+
     final classifyBanner = isUnclassified
         ? Container(
             padding: const EdgeInsets.all(14),
@@ -1523,6 +1534,10 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         RecordingUploadProgressSection(recordingId: recording.id),
+        if (secondaryCollisionBanner != null) ...[
+          secondaryCollisionBanner,
+          const SizedBox(height: 16),
+        ],
         if (classifyBanner != null) ...[
           classifyBanner,
           const SizedBox(height: 16),

@@ -1442,6 +1442,18 @@ abstract class AppLocalizations {
   /// **'Add splits first'**
   String get trim_addSplitsFirst;
 
+  /// No description provided for @trim_applyBoost.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply boost'**
+  String get trim_applyBoost;
+
+  /// No description provided for @trim_boostApplied.
+  ///
+  /// In en, this message translates to:
+  /// **'Volume applied'**
+  String get trim_boostApplied;
+
   /// No description provided for @trim_savedSegments.
   ///
   /// In en, this message translates to:
@@ -1489,6 +1501,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Classify segment'**
   String get trim_classifySegment;
+
+  /// No description provided for @trim_primaryEqualsSecondary.
+  ///
+  /// In en, this message translates to:
+  /// **'Primary classification cannot match the recording\'s secondary classification.'**
+  String get trim_primaryEqualsSecondary;
 
   /// No description provided for @trim_volume.
   ///
@@ -3470,6 +3488,18 @@ abstract class AppLocalizations {
   /// **'Alternative classification updated'**
   String get recording_secondaryUpdated;
 
+  /// No description provided for @recording_secondaryCollisionBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'This recording\'s primary and secondary classifications are the same. Clear the secondary or change the primary to sync.'**
+  String get recording_secondaryCollisionBanner;
+
+  /// No description provided for @recording_clearSecondary.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear secondary'**
+  String get recording_clearSecondary;
+
   /// No description provided for @recording_unclassified.
   ///
   /// In en, this message translates to:
@@ -4189,6 +4219,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Split waveform. Tap to add split markers. Drag to reposition. Pinch to zoom. Long-press to remove.'**
   String get a11y_splitWaveform;
+
+  /// No description provided for @a11y_minimapScrubber.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio overview. Tap or drag to navigate to a position.'**
+  String get a11y_minimapScrubber;
 
   /// No description provided for @a11y_tabLabel.
   ///

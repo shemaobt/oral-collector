@@ -744,6 +744,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get trim_addSplitsFirst => 'पहले विभाजन जोड़ें';
 
   @override
+  String get trim_applyBoost => 'Apply boost';
+
+  @override
+  String get trim_boostApplied => 'Volume applied';
+
+  @override
   String trim_savedSegments(int kept, int removed) {
     String _temp0 = intl.Intl.pluralLogic(
       kept,
@@ -784,6 +790,10 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get trim_classifySegment => 'खंड वर्गीकृत करें';
+
+  @override
+  String get trim_primaryEqualsSecondary =>
+      'प्राथमिक वर्गीकरण रिकॉर्डिंग के द्वितीयक वर्गीकरण से मेल नहीं खा सकता।';
 
   @override
   String get trim_volume => 'आवाज़';
@@ -1922,6 +1932,13 @@ class AppLocalizationsHi extends AppLocalizations {
   String get recording_secondaryUpdated => 'वैकल्पिक वर्गीकरण अद्यतन किया गया';
 
   @override
+  String get recording_secondaryCollisionBanner =>
+      'इस रिकॉर्डिंग की प्राथमिक और द्वितीयक वर्गीकरण समान हैं। समन्वयित करने के लिए द्वितीयक को साफ करें या प्राथमिक को बदलें।';
+
+  @override
+  String get recording_clearSecondary => 'द्वितीयक साफ करें';
+
+  @override
   String get recording_unclassified => 'अवर्गीकृत';
 
   @override
@@ -2331,6 +2348,10 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get a11y_splitWaveform =>
       'स्प्लिट वेवफ़ॉर्म। स्प्लिट मार्कर जोड़ने के लिए टैप करें। पुनः स्थान बदलने के लिए खींचें। ज़ूम के लिए पिंच करें। हटाने के लिए देर तक दबाएँ।';
+
+  @override
+  String get a11y_minimapScrubber =>
+      'Audio overview. Tap or drag to navigate to a position.';
 
   @override
   String a11y_tabLabel(String label) {

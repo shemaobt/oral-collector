@@ -171,6 +171,33 @@ class LocalRecordingRepository {
     return rows > 0;
   }
 
+  /// Persists a freshly-downloaded audio file alongside its full metadata.
+  /// If a row for [recording.id] already exists locally, only [localFilePath]
+  /// is updated so local edits (description, storyteller, secondary
+  /// classification) are preserved. Otherwise the full row is inserted from
+  /// [recording.toCompanion], so every metadata field reaches the database
+  /// — the hand-picked-subset bug from ENG-64 cannot recur here.
+  Future<void> cacheDownloadedAudio({
+    required LocalRecording recording,
+    required String localFilePath,
+  }) async {
+    await _db.transaction(() async {
+      final existing = await getRecordingById(recording.id);
+      if (existing != null) {
+        await (_db.update(
+          _db.localRecordings,
+        )..where((t) => t.id.equals(recording.id))).write(
+          LocalRecordingsCompanion(localFilePath: Value(localFilePath)),
+        );
+      } else {
+        final companion = recording
+            .toCompanion(false)
+            .copyWith(localFilePath: Value(localFilePath));
+        await _db.into(_db.localRecordings).insert(companion);
+      }
+    });
+  }
+
   Future<bool> replaceAudio({
     required String recordingId,
     required String newFilePath,
@@ -194,6 +221,89 @@ class LocalRecordingRepository {
           ),
         );
     return rows > 0;
+  }
+
+  /// Inserts one child row per segment, propagating parent metadata per the
+  /// contract in `docs/recording-split-semantics.md`. See ENG-64.
+  ///
+  /// Defense in depth: throws [ArgumentError] when a segment override would
+  /// collide with the parent's secondary classification of the same kind.
+  /// The server enforces `secondary != primary` and would reject the upload
+  /// with a 422; the UI is expected to block this case before reaching here.
+  Future<List<String>> splitRecording({
+    required LocalRecording parent,
+    required List<SplitSegmentSpec> segments,
+  }) async {
+    for (final seg in segments) {
+      if (seg.genreOverride != null &&
+          seg.genreOverride!.isNotEmpty &&
+          seg.genreOverride == parent.secondaryGenreId) {
+        throw ArgumentError(
+          'Segment ${seg.id} genreOverride "${seg.genreOverride}" collides '
+          'with parent.secondaryGenreId. UI must prevent this.',
+        );
+      }
+      if (seg.subcategoryOverride != null &&
+          seg.subcategoryOverride!.isNotEmpty &&
+          seg.subcategoryOverride == parent.secondarySubcategoryId) {
+        throw ArgumentError(
+          'Segment ${seg.id} subcategoryOverride "${seg.subcategoryOverride}" '
+          'collides with parent.secondarySubcategoryId. UI must prevent this.',
+        );
+      }
+      if (seg.registerOverride != null &&
+          seg.registerOverride!.isNotEmpty &&
+          seg.registerOverride == parent.secondaryRegisterId) {
+        throw ArgumentError(
+          'Segment ${seg.id} registerOverride "${seg.registerOverride}" '
+          'collides with parent.secondaryRegisterId. UI must prevent this.',
+        );
+      }
+    }
+    return _db.transaction(() async {
+      final ids = <String>[];
+      for (final seg in segments) {
+        await _db
+            .into(_db.localRecordings)
+            .insert(
+              LocalRecordingsCompanion(
+                id: Value(seg.id),
+                projectId: Value(parent.projectId),
+                genreId: Value(
+                  (seg.genreOverride != null && seg.genreOverride!.isNotEmpty)
+                      ? seg.genreOverride!
+                      : parent.genreId,
+                ),
+                subcategoryId:
+                    (seg.subcategoryOverride != null &&
+                        seg.subcategoryOverride!.isNotEmpty)
+                    ? Value(seg.subcategoryOverride)
+                    : Value(parent.subcategoryId),
+                registerId:
+                    (seg.registerOverride != null &&
+                        seg.registerOverride!.isNotEmpty)
+                    ? Value(seg.registerOverride)
+                    : Value(parent.registerId),
+                secondaryGenreId: Value(parent.secondaryGenreId),
+                secondarySubcategoryId: Value(parent.secondarySubcategoryId),
+                secondaryRegisterId: Value(parent.secondaryRegisterId),
+                storytellerId: Value(parent.storytellerId),
+                userId: Value(parent.userId),
+                title: Value(seg.title),
+                description: Value(parent.description),
+                durationSeconds: Value(seg.durationSeconds),
+                fileSizeBytes: Value(seg.fileSizeBytes),
+                format: Value(parent.format),
+                localFilePath: Value(seg.localFilePath),
+                uploadStatus: const Value('local'),
+                cleaningStatus: const Value('none'),
+                recordedAt: Value(parent.recordedAt),
+              ),
+            );
+        ids.add(seg.id);
+      }
+      return ids;
+    });
   }
 
   Future<bool> markAsFailed(String id, {bool incrementRetry = true}) async {
@@ -222,4 +332,28 @@ class LocalRecordingRepository {
       return rows > 0;
     }
   }
+}
+
+/// Per-segment input for [LocalRecordingRepository.splitRecording]. Fields
+/// that vary per child; the rest are inherited from the parent.
+class SplitSegmentSpec {
+  final String id;
+  final String title;
+  final String localFilePath;
+  final double durationSeconds;
+  final int fileSizeBytes;
+  final String? genreOverride;
+  final String? subcategoryOverride;
+  final String? registerOverride;
+
+  const SplitSegmentSpec({
+    required this.id,
+    required this.title,
+    required this.localFilePath,
+    required this.durationSeconds,
+    required this.fileSizeBytes,
+    this.genreOverride,
+    this.subcategoryOverride,
+    this.registerOverride,
+  });
 }
