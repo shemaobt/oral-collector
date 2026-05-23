@@ -753,6 +753,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get trim_classifySegment => '分类片段';
 
   @override
+  String get trim_primaryEqualsSecondary => '主分类不能与录音的次分类相同。';
+
+  @override
   String get trim_volume => '音量';
 
   @override
@@ -1855,6 +1858,13 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get recording_secondaryUpdated => '替代分类已更新';
+
+  @override
+  String get recording_secondaryCollisionBanner =>
+      '此录音的主要和次要分类相同。清除次要分类或更改主要分类以进行同步。';
+
+  @override
+  String get recording_clearSecondary => '清除次要';
 
   @override
   String get recording_unclassified => '未分类';

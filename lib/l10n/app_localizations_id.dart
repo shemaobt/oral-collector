@@ -780,6 +780,10 @@ class AppLocalizationsId extends AppLocalizations {
   String get trim_classifySegment => 'Klasifikasikan segmen';
 
   @override
+  String get trim_primaryEqualsSecondary =>
+      'Klasifikasi primer tidak boleh sama dengan klasifikasi sekunder rekaman.';
+
+  @override
   String get trim_volume => 'Volume';
 
   @override
@@ -1927,6 +1931,13 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get recording_secondaryUpdated => 'Klasifikasi alternatif diperbarui';
+
+  @override
+  String get recording_secondaryCollisionBanner =>
+      'Rekaman ini memiliki klasifikasi primer dan sekunder yang sama. Hapus yang sekunder atau ubah yang primer untuk sinkronisasi.';
+
+  @override
+  String get recording_clearSecondary => 'Hapus sekunder';
 
   @override
   String get recording_unclassified => 'Belum diklasifikasi';

@@ -789,6 +789,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get trim_classifySegment => 'Classificar segmento';
 
   @override
+  String get trim_primaryEqualsSecondary =>
+      'A classificação primária não pode ser igual à secundária da gravação.';
+
+  @override
   String get trim_volume => 'Volume';
 
   @override
@@ -1935,6 +1939,13 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get recording_secondaryUpdated =>
       'Classificação alternativa atualizada';
+
+  @override
+  String get recording_secondaryCollisionBanner =>
+      'Esta gravação tem as classificações primária e secundária iguais. Limpe a secundária ou altere a primária para sincronizar.';
+
+  @override
+  String get recording_clearSecondary => 'Limpar secundária';
 
   @override
   String get recording_unclassified => 'Não Classificado';
