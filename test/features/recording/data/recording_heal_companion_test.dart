@@ -117,36 +117,30 @@ void main() {
     );
   }
 
-  test(
-    'heals every user-content field when userId is null locally and the '
-    'server has one (the ENG-64 corruption marker)',
-    () async {
-      await seedCorruptedRow();
-      final local = (await repo.getRecordingById('rec-1'))!;
-      final server = buildServer(
-        description: 'A story from the server',
-        storytellerId: 's-server',
-        userId: 'u-server',
-        secondaryGenreId: 'sg-server',
-        secondarySubcategoryId: 'ss-server',
-        secondaryRegisterId: 'sr-server',
-      );
+  test('heals every user-content field when userId is null locally and the '
+      'server has one (the ENG-64 corruption marker)', () async {
+    await seedCorruptedRow();
+    final local = (await repo.getRecordingById('rec-1'))!;
+    final server = buildServer(
+      description: 'A story from the server',
+      storytellerId: 's-server',
+      userId: 'u-server',
+      secondaryGenreId: 'sg-server',
+      secondarySubcategoryId: 'ss-server',
+      secondaryRegisterId: 'sr-server',
+    );
 
-      final companion = buildHealMetadataCompanion(
-        local: local,
-        server: server,
-      );
-      await repo.updateRecording('rec-1', companion);
+    final companion = buildHealMetadataCompanion(local: local, server: server);
+    await repo.updateRecording('rec-1', companion);
 
-      final healed = (await repo.getRecordingById('rec-1'))!;
-      expect(healed.description, 'A story from the server');
-      expect(healed.storytellerId, 's-server');
-      expect(healed.userId, 'u-server');
-      expect(healed.secondaryGenreId, 'sg-server');
-      expect(healed.secondarySubcategoryId, 'ss-server');
-      expect(healed.secondaryRegisterId, 'sr-server');
-    },
-  );
+    final healed = (await repo.getRecordingById('rec-1'))!;
+    expect(healed.description, 'A story from the server');
+    expect(healed.storytellerId, 's-server');
+    expect(healed.userId, 'u-server');
+    expect(healed.secondaryGenreId, 'sg-server');
+    expect(healed.secondarySubcategoryId, 'ss-server');
+    expect(healed.secondaryRegisterId, 'sr-server');
+  });
 
   test(
     'never overwrites local edits when userId is populated locally',
@@ -174,24 +168,18 @@ void main() {
     },
   );
 
-  test(
-    'preserves a user-cleared description (empty string) even when the '
-    'server still has the old text',
-    () async {
-      await seedHealthyRow(description: '');
-      final local = (await repo.getRecordingById('rec-1'))!;
-      final server = buildServer(description: 'pre-clear server description');
+  test('preserves a user-cleared description (empty string) even when the '
+      'server still has the old text', () async {
+    await seedHealthyRow(description: '');
+    final local = (await repo.getRecordingById('rec-1'))!;
+    final server = buildServer(description: 'pre-clear server description');
 
-      final companion = buildHealMetadataCompanion(
-        local: local,
-        server: server,
-      );
-      await repo.updateRecording('rec-1', companion);
+    final companion = buildHealMetadataCompanion(local: local, server: server);
+    await repo.updateRecording('rec-1', companion);
 
-      final after = (await repo.getRecordingById('rec-1'))!;
-      expect(after.description, '');
-    },
-  );
+    final after = (await repo.getRecordingById('rec-1'))!;
+    expect(after.description, '');
+  });
 
   test(
     'preserves a user-cleared storytellerId (null) when userId is populated, '
@@ -233,28 +221,22 @@ void main() {
     },
   );
 
-  test(
-    'sets gcsUrl and uploadStatus from server when server has gcsUrl, '
-    'regardless of corruption marker',
-    () async {
-      await seedCorruptedRow();
-      final local = (await repo.getRecordingById('rec-1'))!;
-      final server = buildServer(
-        gcsUrl: 'https://gcs.example/rec-1.m4a',
-        uploadStatus: 'verified',
-      );
+  test('sets gcsUrl and uploadStatus from server when server has gcsUrl, '
+      'regardless of corruption marker', () async {
+    await seedCorruptedRow();
+    final local = (await repo.getRecordingById('rec-1'))!;
+    final server = buildServer(
+      gcsUrl: 'https://gcs.example/rec-1.m4a',
+      uploadStatus: 'verified',
+    );
 
-      final companion = buildHealMetadataCompanion(
-        local: local,
-        server: server,
-      );
-      await repo.updateRecording('rec-1', companion);
+    final companion = buildHealMetadataCompanion(local: local, server: server);
+    await repo.updateRecording('rec-1', companion);
 
-      final after = (await repo.getRecordingById('rec-1'))!;
-      expect(after.gcsUrl, 'https://gcs.example/rec-1.m4a');
-      expect(after.uploadStatus, 'verified');
-    },
-  );
+    final after = (await repo.getRecordingById('rec-1'))!;
+    expect(after.gcsUrl, 'https://gcs.example/rec-1.m4a');
+    expect(after.uploadStatus, 'verified');
+  });
 
   test(
     'leaves gcsUrl and uploadStatus alone when server has no gcsUrl',
@@ -278,30 +260,24 @@ void main() {
     },
   );
 
-  test(
-    'partial heal: when userId is the corruption marker, only fields the '
-    'server provides get filled',
-    () async {
-      await seedCorruptedRow();
-      final local = (await repo.getRecordingById('rec-1'))!;
-      final server = buildServer(
-        description: 'has description',
-        storytellerId: null,
-        secondaryGenreId: 'has sg',
-        secondarySubcategoryId: null,
-      );
+  test('partial heal: when userId is the corruption marker, only fields the '
+      'server provides get filled', () async {
+    await seedCorruptedRow();
+    final local = (await repo.getRecordingById('rec-1'))!;
+    final server = buildServer(
+      description: 'has description',
+      storytellerId: null,
+      secondaryGenreId: 'has sg',
+      secondarySubcategoryId: null,
+    );
 
-      final companion = buildHealMetadataCompanion(
-        local: local,
-        server: server,
-      );
-      await repo.updateRecording('rec-1', companion);
+    final companion = buildHealMetadataCompanion(local: local, server: server);
+    await repo.updateRecording('rec-1', companion);
 
-      final after = (await repo.getRecordingById('rec-1'))!;
-      expect(after.description, 'has description');
-      expect(after.storytellerId, isNull);
-      expect(after.secondaryGenreId, 'has sg');
-      expect(after.secondarySubcategoryId, isNull);
-    },
-  );
+    final after = (await repo.getRecordingById('rec-1'))!;
+    expect(after.description, 'has description');
+    expect(after.storytellerId, isNull);
+    expect(after.secondaryGenreId, 'has sg');
+    expect(after.secondarySubcategoryId, isNull);
+  });
 }
