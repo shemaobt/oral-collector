@@ -550,7 +550,6 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
     state = state.copyWith(
       isRecording: false,
       isPaused: false,
-      elapsed: Duration.zero,
       clearAmplitudeStream: true,
       clearSessionId: true,
       clearLastCheckpoint: true,
@@ -707,7 +706,6 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
     state = state.copyWith(
       isRecording: false,
       isPaused: false,
-      elapsed: Duration.zero,
       clearAmplitudeStream: true,
       clearSessionId: true,
       clearLastCheckpoint: true,

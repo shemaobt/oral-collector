@@ -105,6 +105,27 @@ void main() {
       expect(updated.finalizationStage, FinalizationStage.finalizing);
       expect(updated.finalizationDegraded, isTrue);
     });
+
+    test(
+      'stop→finalize transition keeps elapsed visible for the saving overlay',
+      () {
+        // Mirrors stopRecording's state mutation: isRecording flips off and
+        // finalizationStage moves to finalizing. The recording_step UI reads
+        // state.elapsed to render the duration label on the saving overlay,
+        // so a Duration.zero leak here surfaces as a 00:00:00 timer.
+        const recording = RecordingState(
+          isRecording: true,
+          elapsed: Duration(seconds: 30),
+        );
+        final finalizing = recording.copyWith(
+          isRecording: false,
+          isPaused: false,
+          finalizationStage: FinalizationStage.finalizing,
+        );
+        expect(finalizing.elapsed, const Duration(seconds: 30));
+        expect(finalizing.isFinalizing, isTrue);
+      },
+    );
   });
 
   group('RecordingState.isInProgress', () {
