@@ -13,6 +13,7 @@ import '../domain/entities/register.dart';
 import 'notifiers/recording_session_state.dart';
 import 'widgets/confirmation_step.dart';
 import 'widgets/genre_selection_step.dart';
+import 'widgets/recording_navigation_guard.dart';
 import 'widgets/recording_step.dart';
 import 'widgets/register_selection_step.dart';
 import 'widgets/subcategory_selection_step.dart';
@@ -166,15 +167,17 @@ class _RecordingFlowScreenState extends ConsumerState<RecordingFlowScreen> {
     final l10n = AppLocalizations.of(context);
     final genreState = ref.watch(genreNotifierProvider);
 
-    return Scaffold(
-      appBar: ScreenHeader(
-        title: _title(l10n),
-        subtitle: _subtitle(l10n),
-        icon: _icon,
+    return RecordingNavigationGuard(
+      child: Scaffold(
+        appBar: ScreenHeader(
+          title: _title(l10n),
+          subtitle: _subtitle(l10n),
+          icon: _icon,
+        ),
+        body: genreState.isLoading && genreState.genres.isEmpty
+            ? const Center(child: CircularProgressIndicator())
+            : _buildStep(genreState, l10n),
       ),
-      body: genreState.isLoading && genreState.genres.isEmpty
-          ? const Center(child: CircularProgressIndicator())
-          : _buildStep(genreState, l10n),
     );
   }
 

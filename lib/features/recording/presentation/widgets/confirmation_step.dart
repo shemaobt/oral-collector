@@ -62,6 +62,7 @@ class ConfirmationStep extends ConsumerStatefulWidget {
 
 class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
   final _descriptionController = TextEditingController();
+  final _titleController = TextEditingController();
   AudioPlayer? _player;
   String? _playerBlobUrl;
   bool _isPlaying = false;
@@ -86,6 +87,15 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
     // Set the pending-decision marker synchronously so any navigation attempt
     // triggered between mount and the first frame is already covered.
     ref.read(pendingRecordingDecisionProvider.notifier).state = widget.result;
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_titleController.text.isEmpty) {
+      final localeTag = Localizations.localeOf(context).toString();
+      _titleController.text = defaultRecordingTitle(locale: localeTag);
+    }
   }
 
   void _prefetchStorytellers() {
@@ -168,6 +178,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
   @override
   void dispose() {
     _descriptionController.dispose();
+    _titleController.dispose();
     _player?.dispose();
     final url = _playerBlobUrl;
     if (url != null) {
@@ -247,7 +258,9 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
         userId: currentUserId != null
             ? Value(currentUserId)
             : const Value.absent(),
-        title: Value(defaultRecordingTitle(locale: localeTag)),
+        title: Value(
+          resolveRecordingTitle(_titleController.text, locale: localeTag),
+        ),
         description: _descriptionController.text.trim().isNotEmpty
             ? Value(_descriptionController.text.trim())
             : const Value.absent(),
@@ -311,7 +324,10 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
           registerId: widget.registerId,
           storytellerId: _selectedStoryteller!.id,
           userId: currentUserId,
-          title: defaultRecordingTitle(locale: localeTag),
+          title: resolveRecordingTitle(
+            _titleController.text,
+            locale: localeTag,
+          ),
           description: description,
           durationSeconds: widget.result.durationSeconds,
           fileSizeBytes: bytes.length,
@@ -337,7 +353,9 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
             userId: currentUserId != null
                 ? Value(currentUserId)
                 : const Value.absent(),
-            title: Value(defaultRecordingTitle(locale: localeTag)),
+            title: Value(
+              resolveRecordingTitle(_titleController.text, locale: localeTag),
+            ),
             description: description != null
                 ? Value(description)
                 : const Value.absent(),
@@ -557,6 +575,59 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
                   ),
                   child: Column(
                     children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          color: colors.surfaceAlt,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
+                        child: Row(
+                          children: [
+                            Icon(
+                              LucideIcons.type,
+                              size: 20,
+                              color: colors.secondary,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    l10n.recording_title,
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      color: colors.secondary,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  TextField(
+                                    controller: _titleController,
+                                    maxLines: 1,
+                                    textInputAction: TextInputAction.next,
+                                    textCapitalization:
+                                        TextCapitalization.sentences,
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      fontWeight: FontWeight.w500,
+                                      color: colors.foreground,
+                                    ),
+                                    decoration: const InputDecoration(
+                                      isDense: true,
+                                      filled: false,
+                                      fillColor: Colors.transparent,
+                                      border: InputBorder.none,
+                                      enabledBorder: InputBorder.none,
+                                      focusedBorder: InputBorder.none,
+                                      contentPadding: EdgeInsets.zero,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 12),
                       StorytellerPicker(
                         projectId:
                             ref

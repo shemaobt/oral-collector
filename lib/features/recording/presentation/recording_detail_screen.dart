@@ -30,6 +30,7 @@ import '../../storyteller/data/providers.dart' as storyteller_providers;
 import '../../storyteller/domain/entities/storyteller.dart';
 import '../../sync/presentation/notifiers/sync_notifier.dart';
 import '../../../shared/utils/format.dart';
+import 'notifiers/recordings_list_notifier.dart';
 import '../data/providers.dart';
 import '../data/recording_heal_companion.dart';
 import '../data/server_to_local_recording.dart';
@@ -47,8 +48,10 @@ import 'widgets/recording_info_grid.dart';
 import 'widgets/recording_quick_actions.dart';
 import 'widgets/recording_status_section.dart';
 import 'widgets/recording_upload_progress_section.dart';
-import 'widgets/recording_description_section.dart';
+import 'widgets/recording_about_section.dart';
+import 'widgets/edit_recording_details_sheet.dart';
 import 'widgets/recording_storyteller_section.dart';
+import '../data/use_cases/save_recording_title.dart';
 import 'widgets/replace_audio_dialog.dart';
 
 class RecordingDetailScreen extends ConsumerStatefulWidget {
@@ -64,9 +67,7 @@ class RecordingDetailScreen extends ConsumerStatefulWidget {
 class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
   LocalRecording? _recording;
   bool _isLoading = true;
-  bool _isEditingDescription = false;
   Storyteller? _resolvedStoryteller;
-  late TextEditingController _descriptionController;
 
   bool get _canEditRecording {
     final user = ref.read(authNotifierProvider).currentUser;
@@ -84,14 +85,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
   @override
   void initState() {
     super.initState();
-    _descriptionController = TextEditingController();
     Future.microtask(_loadRecording);
-  }
-
-  @override
-  void dispose() {
-    _descriptionController.dispose();
-    super.dispose();
   }
 
   Future<void> _loadRecording() async {
@@ -153,7 +147,6 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
       if (mounted) {
         setState(() {
           _recording = recording;
-          _descriptionController.text = recording?.description ?? '';
           _isLoading = false;
         });
         if (isOnline && recording != null) {
@@ -230,27 +223,87 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     await _loadRecording();
   }
 
-  Future<void> _saveDescription(String newDescription) async {
-    final trimmed = newDescription.trim();
-    if (trimmed == (_recording?.description ?? '')) {
-      setState(() => _isEditingDescription = false);
-      return;
+  Future<void> _openEditDetails() async {
+    final recording = _recording;
+    if (recording == null) return;
+    final result = await showEditRecordingDetailsSheet(
+      context,
+      initialTitle: recording.title ?? '',
+      initialDescription: recording.description ?? '',
+    );
+    if (result == null || !mounted) return;
+
+    final l10n = AppLocalizations.of(context);
+    final apiRepo = ref.read(recordingApiRepositoryProvider);
+    final localRepo = kIsWeb
+        ? null
+        : ref.read(localRecordingRepositoryProvider);
+    final isOnline = ref.read(syncNotifierProvider).isOnline;
+
+    final titleChanged = result.title != (recording.title ?? '').trim();
+    final descriptionChanged =
+        result.description != (recording.description ?? '').trim();
+
+    if (titleChanged) {
+      try {
+        final titleResult = await saveRecordingTitle(
+          recordingId: widget.recordingId,
+          currentTitle: recording.title,
+          serverId: recording.serverId,
+          newTitle: result.title,
+          isWeb: kIsWeb,
+          isOnline: isOnline,
+          apiRepo: apiRepo,
+          localRepo: localRepo,
+        );
+        if (!mounted) return;
+        if (titleResult == SaveTitleResult.saved ||
+            titleResult == SaveTitleResult.savedLocallyOnly) {
+          ref
+              .read(recordingsListNotifierProvider.notifier)
+              .patchRecordingTitle(widget.recordingId, result.title);
+        }
+      } on ForbiddenException {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.recording_updateNoPermission),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        return;
+      }
     }
 
-    if (kIsWeb) {
-      final serverId = _recording?.serverId ?? widget.recordingId;
-      await ref
-          .read(recordingApiRepositoryProvider)
-          .updateRecording(serverId, description: trimmed);
-    } else {
-      final repo = ref.read(localRecordingRepositoryProvider);
-      await repo.updateRecording(
-        widget.recordingId,
-        LocalRecordingsCompanion(description: Value(trimmed)),
-      );
+    if (descriptionChanged) {
+      try {
+        if (kIsWeb) {
+          final serverId = recording.serverId ?? widget.recordingId;
+          await apiRepo.updateRecording(
+            serverId,
+            description: result.description,
+          );
+        } else {
+          await localRepo!.updateRecording(
+            widget.recordingId,
+            LocalRecordingsCompanion(description: Value(result.description)),
+          );
+        }
+      } on ForbiddenException {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.recording_updateNoPermission),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        return;
+      }
     }
-    await _loadRecording();
-    setState(() => _isEditingDescription = false);
+
+    if (titleChanged || descriptionChanged) {
+      await _loadRecording();
+    }
   }
 
   Future<void> _toggleCleaningStatus() async {
@@ -1160,20 +1213,15 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        RecordingDescriptionSection(
+        RecordingAboutSection(
           theme: theme,
           colors: colors,
+          title: recording.title,
           description: recording.description,
-          isEditing: _isEditingDescription,
-          controller: _descriptionController,
-          onSave: _saveDescription,
-          onCancel: () => setState(() {
-            _isEditingDescription = false;
-            _descriptionController.text = recording.description ?? '';
-          }),
-          onStartEdit: () => setState(() => _isEditingDescription = true),
+          canEdit: _canEditRecording,
+          onEdit: _openEditDetails,
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 14),
         Row(
           children: [
             Icon(
@@ -1213,97 +1261,98 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
         ],
         if (!isUnclassified && hasSecondary) ...[
           const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            decoration: BoxDecoration(
+          Material(
+            color: Colors.transparent,
+            shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(
+              side: BorderSide(
                 color: colors.foreground.withValues(alpha: 0.18),
               ),
             ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Icon(
-                  LucideIcons.layers,
-                  size: 13,
-                  color: colors.foreground.withValues(alpha: 0.55),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: _canEditRecording ? _editSecondaryClassification : null,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 8,
                 ),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        l10n.recording_alsoClassifiedAs,
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: colors.foreground.withValues(alpha: 0.55),
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                      if (secondaryBreadcrumb.isNotEmpty)
-                        Text(
-                          secondaryBreadcrumb,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: colors.foreground.withValues(alpha: 0.85),
-                            fontWeight: FontWeight.w500,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Icon(
+                      LucideIcons.layers,
+                      size: 13,
+                      color: colors.foreground.withValues(alpha: 0.55),
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            l10n.recording_alsoClassifiedAs,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: colors.foreground.withValues(alpha: 0.55),
+                              letterSpacing: 0.5,
+                            ),
                           ),
-                        ),
-                      if (secondaryRegisterName != null)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 2),
-                          child: Row(
-                            children: [
-                              Icon(
-                                LucideIcons.volume2,
-                                size: 11,
+                          if (secondaryBreadcrumb.isNotEmpty)
+                            Text(
+                              secondaryBreadcrumb,
+                              style: theme.textTheme.bodySmall?.copyWith(
                                 color: colors.foreground.withValues(
-                                  alpha: 0.55,
+                                  alpha: 0.85,
                                 ),
+                                fontWeight: FontWeight.w500,
                               ),
-                              const SizedBox(width: 4),
-                              Flexible(
-                                child: Text(
-                                  secondaryRegisterName,
-                                  style: theme.textTheme.labelSmall?.copyWith(
+                            ),
+                          if (secondaryRegisterName != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 2),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    LucideIcons.volume2,
+                                    size: 11,
                                     color: colors.foreground.withValues(
-                                      alpha: 0.65,
+                                      alpha: 0.55,
                                     ),
                                   ),
-                                ),
+                                  const SizedBox(width: 4),
+                                  Flexible(
+                                    child: Text(
+                                      secondaryRegisterName,
+                                      style: theme.textTheme.labelSmall
+                                          ?.copyWith(
+                                            color: colors.foreground.withValues(
+                                              alpha: 0.65,
+                                            ),
+                                          ),
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    if (_canEditRecording)
+                      IconButton(
+                        icon: const Icon(LucideIcons.x, size: 14),
+                        tooltip: l10n.recording_removeSecondary,
+                        color: colors.foreground.withValues(alpha: 0.6),
+                        onPressed: _clearSecondaryClassification,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(
+                          minWidth: 28,
+                          minHeight: 28,
                         ),
-                    ],
-                  ),
+                      ),
+                  ],
                 ),
-                if (_canEditRecording) ...[
-                  IconButton(
-                    icon: const Icon(LucideIcons.pencil, size: 14),
-                    tooltip: l10n.classify_addAlternativeTitle,
-                    color: colors.foreground.withValues(alpha: 0.6),
-                    onPressed: _editSecondaryClassification,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(
-                      minWidth: 28,
-                      minHeight: 28,
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(LucideIcons.x, size: 14),
-                    tooltip: l10n.recording_removeSecondary,
-                    color: colors.foreground.withValues(alpha: 0.6),
-                    onPressed: _clearSecondaryClassification,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(
-                      minWidth: 28,
-                      minHeight: 28,
-                    ),
-                  ),
-                ],
-              ],
+              ),
             ),
           ),
         ],

@@ -472,13 +472,31 @@ class AppLocalizationsSw extends AppLocalizations {
       'Chagua rejista ya usemi inayoelezea vizuri toni na utaratibu wa rekodi hii.';
 
   @override
-  String get recording_titleHint => 'Ongeza kichwa (si lazima)';
+  String get recording_titleHint => 'Kichwa cha rekodi';
 
   @override
   String get recording_descriptionHint => 'Ongeza maelezo mafupi (si lazima)';
 
   @override
   String get recording_descriptionEmpty => 'Ongeza maelezo';
+
+  @override
+  String get recording_titleEmpty => 'Ongeza kichwa';
+
+  @override
+  String get recording_titleRequired => 'Kichwa hakiwezi kuwa tupu';
+
+  @override
+  String get recording_title => 'Kichwa';
+
+  @override
+  String get recording_description => 'Maelezo';
+
+  @override
+  String get recording_editDetails => 'Hariri maelezo';
+
+  @override
+  String get recording_saveChanges => 'Hifadhi mabadiliko';
 
   @override
   String get recording_saveRecording => 'Hifadhi Rekodi';
@@ -2009,6 +2027,16 @@ class AppLocalizationsSw extends AppLocalizations {
   @override
   String get recording_recoverFailedLastSegment =>
       'Sauti fulani karibu na mwisho haikuweza kusomwa na ikarukwa.';
+
+  @override
+  String get recording_blockNavTitle => 'Recording in progress';
+
+  @override
+  String get recording_blockNavMessage =>
+      'You have a recording in progress. Discarding will permanently delete it.';
+
+  @override
+  String get recording_blockNavDiscardAndLeave => 'Discard and leave';
 
   @override
   String get recording_inProgressNotificationTitle => 'Inarekodi';

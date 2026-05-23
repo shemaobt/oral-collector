@@ -472,13 +472,31 @@ class AppLocalizationsId extends AppLocalizations {
       'Pilih register bicara yang paling menggambarkan nada dan formalitas rekaman ini.';
 
   @override
-  String get recording_titleHint => 'Tambah judul (opsional)';
+  String get recording_titleHint => 'Judul rekaman';
 
   @override
   String get recording_descriptionHint => 'Tambah deskripsi singkat (opsional)';
 
   @override
   String get recording_descriptionEmpty => 'Tambah deskripsi';
+
+  @override
+  String get recording_titleEmpty => 'Tambah judul';
+
+  @override
+  String get recording_titleRequired => 'Judul tidak boleh kosong';
+
+  @override
+  String get recording_title => 'Judul';
+
+  @override
+  String get recording_description => 'Deskripsi';
+
+  @override
+  String get recording_editDetails => 'Edit detail';
+
+  @override
+  String get recording_saveChanges => 'Simpan perubahan';
 
   @override
   String get recording_saveRecording => 'Simpan Rekaman';
@@ -2024,6 +2042,16 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get recording_recoverFailedLastSegment =>
       'Sebagian audio di dekat akhir tidak dapat dibaca dan dilewati.';
+
+  @override
+  String get recording_blockNavTitle => 'Recording in progress';
+
+  @override
+  String get recording_blockNavMessage =>
+      'You have a recording in progress. Discarding will permanently delete it.';
+
+  @override
+  String get recording_blockNavDiscardAndLeave => 'Discard and leave';
 
   @override
   String get recording_inProgressNotificationTitle => 'Perekaman berlangsung';

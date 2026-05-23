@@ -470,13 +470,31 @@ class AppLocalizationsTpi extends AppLocalizations {
       'Makim pasin bilong toktok we i stret long ton na fomol bilong dispela rekoding.';
 
   @override
-  String get recording_titleHint => 'Putim nem (sapos yu laik)';
+  String get recording_titleHint => 'Nem bilong rekoding';
 
   @override
   String get recording_descriptionHint => 'Raitim liklik stori (sapos yu laik)';
 
   @override
   String get recording_descriptionEmpty => 'Raitim stori';
+
+  @override
+  String get recording_titleEmpty => 'Putim nem';
+
+  @override
+  String get recording_titleRequired => 'Nem i no inap stap emti';
+
+  @override
+  String get recording_title => 'Nem';
+
+  @override
+  String get recording_description => 'Stori';
+
+  @override
+  String get recording_editDetails => 'Senisim ol detail';
+
+  @override
+  String get recording_saveChanges => 'Sevim ol senis';
 
   @override
   String get recording_saveRecording => 'Sevim Rekoding';
@@ -2006,6 +2024,16 @@ class AppLocalizationsTpi extends AppLocalizations {
   @override
   String get recording_recoverFailedLastSegment =>
       'Sampela audio klostu long pinis ino inap rid na mipela skipim.';
+
+  @override
+  String get recording_blockNavTitle => 'Recording in progress';
+
+  @override
+  String get recording_blockNavMessage =>
+      'You have a recording in progress. Discarding will permanently delete it.';
+
+  @override
+  String get recording_blockNavDiscardAndLeave => 'Discard and leave';
 
   @override
   String get recording_inProgressNotificationTitle => 'Rekodim i wok';

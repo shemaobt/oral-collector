@@ -462,13 +462,31 @@ class AppLocalizationsKo extends AppLocalizations {
       '이 녹음의 어조와 격식 수준을 가장 잘 나타내는 언어 사용역을 선택하세요.';
 
   @override
-  String get recording_titleHint => '제목 추가 (선택 사항)';
+  String get recording_titleHint => '녹음 제목';
 
   @override
   String get recording_descriptionHint => '짧은 설명 추가 (선택 사항)';
 
   @override
   String get recording_descriptionEmpty => '설명 추가';
+
+  @override
+  String get recording_titleEmpty => '제목 추가';
+
+  @override
+  String get recording_titleRequired => '제목은 비워둘 수 없습니다';
+
+  @override
+  String get recording_title => '제목';
+
+  @override
+  String get recording_description => '설명';
+
+  @override
+  String get recording_editDetails => '세부 정보 편집';
+
+  @override
+  String get recording_saveChanges => '변경사항 저장';
 
   @override
   String get recording_saveRecording => '녹음 저장';
@@ -1954,6 +1972,16 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get recording_recoverFailedLastSegment =>
       '끝부분의 일부 오디오를 읽을 수 없어 건너뛰었습니다.';
+
+  @override
+  String get recording_blockNavTitle => 'Recording in progress';
+
+  @override
+  String get recording_blockNavMessage =>
+      'You have a recording in progress. Discarding will permanently delete it.';
+
+  @override
+  String get recording_blockNavDiscardAndLeave => 'Discard and leave';
 
   @override
   String get recording_inProgressNotificationTitle => '녹음 중';

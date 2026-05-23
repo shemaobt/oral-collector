@@ -127,6 +127,7 @@ app.*.symbols
 # Claude
 
 .claude.DS_Store
+.claude/
 .scratch/
 .worktrees/
 

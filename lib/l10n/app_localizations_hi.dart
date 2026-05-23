@@ -472,13 +472,31 @@ class AppLocalizationsHi extends AppLocalizations {
       'वह भाषा शैली चुनें जो इस रिकॉर्डिंग के लहज़े और औपचारिकता का सबसे अच्छा वर्णन करती है।';
 
   @override
-  String get recording_titleHint => 'शीर्षक जोड़ें (वैकल्पिक)';
+  String get recording_titleHint => 'रिकॉर्डिंग का शीर्षक';
 
   @override
   String get recording_descriptionHint => 'संक्षिप्त विवरण जोड़ें (वैकल्पिक)';
 
   @override
   String get recording_descriptionEmpty => 'विवरण जोड़ें';
+
+  @override
+  String get recording_titleEmpty => 'शीर्षक जोड़ें';
+
+  @override
+  String get recording_titleRequired => 'शीर्षक खाली नहीं हो सकता';
+
+  @override
+  String get recording_title => 'शीर्षक';
+
+  @override
+  String get recording_description => 'विवरण';
+
+  @override
+  String get recording_editDetails => 'विवरण संपादित करें';
+
+  @override
+  String get recording_saveChanges => 'परिवर्तन सहेजें';
 
   @override
   String get recording_saveRecording => 'रिकॉर्डिंग सहेजें';
@@ -2023,6 +2041,16 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get recording_recoverFailedLastSegment =>
       'अंत के निकट का कुछ ऑडियो पढ़ा नहीं जा सका और छोड़ दिया गया।';
+
+  @override
+  String get recording_blockNavTitle => 'Recording in progress';
+
+  @override
+  String get recording_blockNavMessage =>
+      'You have a recording in progress. Discarding will permanently delete it.';
+
+  @override
+  String get recording_blockNavDiscardAndLeave => 'Discard and leave';
 
   @override
   String get recording_inProgressNotificationTitle => 'रिकॉर्डिंग जारी है';

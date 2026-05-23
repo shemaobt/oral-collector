@@ -11,6 +11,7 @@ import '../../core/theme/app_colors.dart';
 import '../../features/auth/data/providers/role_provider.dart';
 import '../../features/invite/presentation/notifiers/invite_notifier.dart';
 import '../../features/recording/presentation/notifiers/recording_session_notifier.dart';
+import '../../features/recording/presentation/widgets/recording_navigation_guard.dart';
 import '../../l10n/app_localizations.dart';
 import 'user_avatar.dart';
 
@@ -67,7 +68,7 @@ int _currentIndexFrom(BuildContext context, List<_TabItem> tabs) {
 }
 
 class _AppShellState extends ConsumerState<AppShell> {
-  Future<void> _navigateToTab(String path) async {
+  Future<void> _navigateToTab(String targetPath) async {
     final state = ref.read(recordingSessionNotifierProvider);
     final l10n = AppLocalizations.of(context);
     if (state.isFinalizing || state.hasFinalizationError) {
@@ -81,6 +82,10 @@ class _AppShellState extends ConsumerState<AppShell> {
         );
       return;
     }
+
+    final canGo = await confirmRecordingNavigationFromTab(context, ref);
+    if (!canGo) return;
+    if (!mounted) return;
 
     final pendingResult = ref.read(pendingRecordingDecisionProvider);
     if (pendingResult != null) {
@@ -112,7 +117,7 @@ class _AppShellState extends ConsumerState<AppShell> {
     }
 
     if (!mounted) return;
-    context.go(path);
+    context.go(targetPath);
   }
 
   List<_TabItem> _buildWebTabs(AppLocalizations l10n) {
@@ -277,8 +282,15 @@ class _WebSidebarState extends ConsumerState<_WebSidebar> {
                 colors: colors,
                 theme: theme,
                 onLogout: () async {
+                  final canGo = await confirmRecordingNavigationFromTab(
+                    context,
+                    ref,
+                  );
+                  if (!canGo) return;
+                  if (!context.mounted) return;
                   await ref.read(authNotifierProvider.notifier).logout();
-                  if (context.mounted) context.go('/login');
+                  if (!context.mounted) return;
+                  context.go('/login');
                 },
               ),
             ),

@@ -477,7 +477,7 @@ class AppLocalizationsEs extends AppLocalizations {
       'Elige el registro de habla que mejor describa el tono y la formalidad de esta grabación.';
 
   @override
-  String get recording_titleHint => 'Agregar un título (opcional)';
+  String get recording_titleHint => 'Título de la grabación';
 
   @override
   String get recording_descriptionHint =>
@@ -485,6 +485,24 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get recording_descriptionEmpty => 'Agregar descripción';
+
+  @override
+  String get recording_titleEmpty => 'Agregar título';
+
+  @override
+  String get recording_titleRequired => 'El título no puede estar vacío';
+
+  @override
+  String get recording_title => 'Título';
+
+  @override
+  String get recording_description => 'Descripción';
+
+  @override
+  String get recording_editDetails => 'Editar detalles';
+
+  @override
+  String get recording_saveChanges => 'Guardar cambios';
 
   @override
   String get recording_saveRecording => 'Guardar Grabación';
@@ -2037,6 +2055,16 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get recording_recoverFailedLastSegment =>
       'Parte del audio cerca del final no se pudo leer y fue omitido.';
+
+  @override
+  String get recording_blockNavTitle => 'Recording in progress';
+
+  @override
+  String get recording_blockNavMessage =>
+      'You have a recording in progress. Discarding will permanently delete it.';
+
+  @override
+  String get recording_blockNavDiscardAndLeave => 'Discard and leave';
 
   @override
   String get recording_inProgressNotificationTitle => 'Grabación en curso';

@@ -468,13 +468,31 @@ class AppLocalizationsAr extends AppLocalizations {
       'اختر سجل الكلام الذي يصف أفضل نبرة وشكلية هذا التسجيل.';
 
   @override
-  String get recording_titleHint => 'أضف عنواناً (اختياري)';
+  String get recording_titleHint => 'عنوان التسجيل';
 
   @override
   String get recording_descriptionHint => 'أضف وصفاً قصيراً (اختياري)';
 
   @override
   String get recording_descriptionEmpty => 'أضف وصفاً';
+
+  @override
+  String get recording_titleEmpty => 'أضف عنواناً';
+
+  @override
+  String get recording_titleRequired => 'لا يمكن أن يكون العنوان فارغاً';
+
+  @override
+  String get recording_title => 'العنوان';
+
+  @override
+  String get recording_description => 'الوصف';
+
+  @override
+  String get recording_editDetails => 'تعديل التفاصيل';
+
+  @override
+  String get recording_saveChanges => 'حفظ التغييرات';
 
   @override
   String get recording_saveRecording => 'حفظ التسجيل';
@@ -1985,6 +2003,16 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get recording_recoverFailedLastSegment =>
       'تعذرت قراءة بعض الصوت قرب النهاية وتم تخطيه.';
+
+  @override
+  String get recording_blockNavTitle => 'Recording in progress';
+
+  @override
+  String get recording_blockNavMessage =>
+      'You have a recording in progress. Discarding will permanently delete it.';
+
+  @override
+  String get recording_blockNavDiscardAndLeave => 'Discard and leave';
 
   @override
   String get recording_inProgressNotificationTitle => 'جاري التسجيل';

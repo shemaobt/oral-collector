@@ -179,9 +179,15 @@
   "recording_noGenres": "No genres available",
   "recording_noSubcategories": "No subcategories available",
   "recording_registerDescription": "Choose the speech register that best describes the tone and formality of this recording.",
-  "recording_titleHint": "Add a title (optional)",
+  "recording_titleHint": "Recording title",
   "recording_descriptionHint": "Add a short description (optional)",
   "recording_descriptionEmpty": "Add description",
+  "recording_titleEmpty": "Add title",
+  "recording_titleRequired": "Title cannot be empty",
+  "recording_title": "Title",
+  "recording_description": "Description",
+  "recording_editDetails": "Edit details",
+  "recording_saveChanges": "Save changes",
   "recording_saveRecording": "Save Recording",
   "recording_recordAgain": "Record Again",
   "recording_discard": "Discard",
@@ -946,6 +952,18 @@
   "recording_recoverButton": "Recover",
   "recording_recoverDiscard": "Discard",
   "recording_recoverFailedLastSegment": "Some audio near the end could not be read and was skipped.",
+  "recording_blockNavTitle": "Recording in progress",
+  "@recording_blockNavTitle": {
+    "description": "Title shown when user tries to navigate away during an active recording"
+  },
+  "recording_blockNavMessage": "You have a recording in progress. Discarding will permanently delete it.",
+  "@recording_blockNavMessage": {
+    "description": "Body of the block-nav confirmation dialog"
+  },
+  "recording_blockNavDiscardAndLeave": "Discard and leave",
+  "@recording_blockNavDiscardAndLeave": {
+    "description": "Destructive action label that discards the recording and navigates away"
+  },
   "recording_inProgressNotificationTitle": "Recording in progress",
   "recording_inProgressNotificationBody": "Tap to return to the app",
   "recording_finalizing": "Finalizing recording…",

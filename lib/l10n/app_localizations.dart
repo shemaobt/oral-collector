@@ -1007,7 +1007,7 @@ abstract class AppLocalizations {
   /// No description provided for @recording_titleHint.
   ///
   /// In en, this message translates to:
-  /// **'Add a title (optional)'**
+  /// **'Recording title'**
   String get recording_titleHint;
 
   /// No description provided for @recording_descriptionHint.
@@ -1021,6 +1021,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add description'**
   String get recording_descriptionEmpty;
+
+  /// No description provided for @recording_titleEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Add title'**
+  String get recording_titleEmpty;
+
+  /// No description provided for @recording_titleRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Title cannot be empty'**
+  String get recording_titleRequired;
+
+  /// No description provided for @recording_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get recording_title;
+
+  /// No description provided for @recording_description.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get recording_description;
+
+  /// No description provided for @recording_editDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit details'**
+  String get recording_editDetails;
+
+  /// No description provided for @recording_saveChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Save changes'**
+  String get recording_saveChanges;
 
   /// No description provided for @recording_saveRecording.
   ///
@@ -3643,6 +3679,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Some audio near the end could not be read and was skipped.'**
   String get recording_recoverFailedLastSegment;
+
+  /// Title shown when user tries to navigate away during an active recording
+  ///
+  /// In en, this message translates to:
+  /// **'Recording in progress'**
+  String get recording_blockNavTitle;
+
+  /// Body of the block-nav confirmation dialog
+  ///
+  /// In en, this message translates to:
+  /// **'You have a recording in progress. Discarding will permanently delete it.'**
+  String get recording_blockNavMessage;
+
+  /// Destructive action label that discards the recording and navigates away
+  ///
+  /// In en, this message translates to:
+  /// **'Discard and leave'**
+  String get recording_blockNavDiscardAndLeave;
 
   /// No description provided for @recording_inProgressNotificationTitle.
   ///
