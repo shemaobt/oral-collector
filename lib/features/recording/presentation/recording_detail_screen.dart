@@ -31,6 +31,7 @@ import '../../storyteller/domain/entities/storyteller.dart';
 import '../../sync/presentation/notifiers/sync_notifier.dart';
 import '../../../shared/utils/format.dart';
 import '../data/providers.dart';
+import '../data/recording_heal_companion.dart';
 import '../data/server_to_local_recording.dart';
 import '../data/services/audio_exporter.dart';
 import '../data/services/recording_trash.dart';
@@ -131,16 +132,9 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
           try {
             final apiRepo = ref.read(recordingApiRepositoryProvider);
             final server = await apiRepo.getRecording(recording.serverId!);
-            final updates = LocalRecordingsCompanion(
-              gcsUrl: server.gcsUrl != null && server.gcsUrl!.isNotEmpty
-                  ? Value(server.gcsUrl!)
-                  : const Value.absent(),
-              uploadStatus: server.gcsUrl != null && server.gcsUrl!.isNotEmpty
-                  ? Value(server.uploadStatus)
-                  : const Value.absent(),
-              userId: server.userId != null && server.userId!.isNotEmpty
-                  ? Value(server.userId)
-                  : const Value.absent(),
+            final updates = buildHealMetadataCompanion(
+              local: recording,
+              server: server,
             );
             await localRepo.updateRecording(recording.id, updates);
             recording = await localRepo.getRecordingById(recording.id);
@@ -451,35 +445,10 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
       await file_ops.writeFileBytes(filePath, response.bodyBytes);
 
       final repo = ref.read(localRecordingRepositoryProvider);
-      final updated = await repo.updateRecording(
-        recording.id,
-        LocalRecordingsCompanion(localFilePath: Value(filePath)),
+      await repo.cacheDownloadedAudio(
+        recording: recording,
+        localFilePath: filePath,
       );
-      if (!updated) {
-        await repo.insertRecording(
-          LocalRecordingsCompanion(
-            id: Value(recording.id),
-            projectId: Value(recording.projectId),
-            genreId: Value(recording.genreId),
-            subcategoryId: recording.subcategoryId != null
-                ? Value(recording.subcategoryId!)
-                : const Value.absent(),
-            registerId: recording.registerId != null
-                ? Value(recording.registerId!)
-                : const Value.absent(),
-            title: Value(recording.title),
-            durationSeconds: Value(recording.durationSeconds),
-            fileSizeBytes: Value(recording.fileSizeBytes),
-            format: Value(recording.format),
-            localFilePath: Value(filePath),
-            uploadStatus: Value(recording.uploadStatus),
-            serverId: Value(recording.serverId ?? recording.id),
-            gcsUrl: Value(recording.gcsUrl),
-            cleaningStatus: Value(recording.cleaningStatus),
-            recordedAt: Value(recording.recordedAt),
-          ),
-        );
-      }
 
       await _loadRecording();
     } catch (e) {

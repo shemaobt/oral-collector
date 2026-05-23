@@ -171,6 +171,33 @@ class LocalRecordingRepository {
     return rows > 0;
   }
 
+  /// Persists a freshly-downloaded audio file alongside its full metadata.
+  /// If a row for [recording.id] already exists locally, only [localFilePath]
+  /// is updated so local edits (description, storyteller, secondary
+  /// classification) are preserved. Otherwise the full row is inserted from
+  /// [recording.toCompanion], so every metadata field reaches the database
+  /// — the hand-picked-subset bug from ENG-64 cannot recur here.
+  Future<void> cacheDownloadedAudio({
+    required LocalRecording recording,
+    required String localFilePath,
+  }) async {
+    await _db.transaction(() async {
+      final existing = await getRecordingById(recording.id);
+      if (existing != null) {
+        await (_db.update(
+          _db.localRecordings,
+        )..where((t) => t.id.equals(recording.id))).write(
+          LocalRecordingsCompanion(localFilePath: Value(localFilePath)),
+        );
+      } else {
+        final companion = recording
+            .toCompanion(false)
+            .copyWith(localFilePath: Value(localFilePath));
+        await _db.into(_db.localRecordings).insert(companion);
+      }
+    });
+  }
+
   Future<bool> replaceAudio({
     required String recordingId,
     required String newFilePath,

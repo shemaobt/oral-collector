@@ -1,0 +1,115 @@
+# Noridoc: Recording Presentation
+
+Path: @/lib/features/recording/presentation
+
+### Overview
+
+- Holds the user-facing screens for the recording feature: the recordings
+  list, the detail screen, the recording flow / quick recording, the trim
+  editor, the file import flow, and the supporting notifiers and widgets.
+- The detail screen is the central hub for editing a recording's
+  metadata. It is also the call site of the ENG-64 fix: a server-only
+  recording opened for edit must download the audio and persist the row
+  without dropping any metadata field.
+- All persistence happens through the recording data layer at
+  [../data/](../data/). Screens never write directly to Drift; they read
+  through providers in [../data/providers.dart](../data/providers.dart)
+  and call repository methods.
+
+### How it fits into the larger codebase
+
+- Screens are wired into navigation by the top-level router in
+  [/lib/core/router/](../../../core/router/) (e.g. `/recording/:id`,
+  `/recording/:id/trim`, the recording flow, the file-import screen).
+- The detail screen depends on:
+  - [../data/recording_heal_companion.dart](../data/recording_heal_companion.dart)
+    for the additive-only metadata heal on online refresh.
+  - [../data/server_to_local_recording.dart](../data/server_to_local_recording.dart)
+    for kIsWeb and offline-miss cases where there is no local row yet.
+  - [../data/repositories/local_recording_repository.dart](../data/repositories/local_recording_repository.dart)
+    for `cacheDownloadedAudio` (the post-download write) and for in-place
+    edits (`updateRecording`, `deleteRecording`).
+  - [../data/providers.dart](../data/providers.dart) for
+    `localRecordingStreamProvider`, which streams Drift changes back into
+    the screen so any external write (sync, heal) re-renders the UI.
+- The trim editor at
+  [./trim_editor_screen.dart](./trim_editor_screen.dart) consumes the
+  same data layer and writes split children through
+  `LocalRecordingRepository.splitRecording`, following the propagation
+  contract documented in
+  [/docs/recording-split-semantics.md](../../../../docs/recording-split-semantics.md).
+- Cross-feature dependencies: storyteller resolution
+  ([/lib/features/storyteller/](../../storyteller/)), member loading and
+  roles
+  ([/lib/features/project/](../../project/),
+  [/lib/features/auth/data/providers/role_provider.dart](../../auth/data/providers/role_provider.dart)),
+  sync state for online/offline gating
+  ([/lib/features/sync/presentation/notifiers/sync_notifier.dart](../../sync/presentation/notifiers/sync_notifier.dart)),
+  and audio playback via `just_audio`.
+
+### Core Implementation
+
+- `recording_detail_screen.dart` owns the lifecycle for one recording.
+  `_loadRecording()` resolves the row by trying local-by-id, then
+  local-by-server-id, then (online) a server fetch that either heals an
+  existing local row via `buildHealMetadataCompanion(local, server)` or
+  builds an in-memory `LocalRecording` via `serverRecordingToLocal` when
+  nothing is cached. The screen also `ref.listen`s
+  `localRecordingStreamProvider(id)` so a heal or sync write propagates
+  back into local state without manual reloads.
+- `_ensureLocalFile(recording)` is the "download server audio so the user
+  can trim/replace" path. It downloads the file from `recording.gcsUrl`
+  via `http`, writes it to the app documents directory, and persists the
+  cache via `LocalRecordingRepository.cacheDownloadedAudio`. The hand-built
+  insert this method used to do was the ENG-64 corruption site; it is now
+  a single call into the repository.
+- All write actions on the detail screen (`_onStorytellerChanged`,
+  `_saveDescription`, `_toggleCleaningStatus`, `_moveCategory`,
+  `_classifyRecording`, `_persistSecondary`, `_replaceAudio`) follow the
+  same pattern: call the server first, then mirror the change locally via
+  `LocalRecordingRepository.updateRecording` with a narrow companion that
+  touches only the affected fields, then `await _loadRecording()` to
+  refresh the screen state.
+- `trim_editor_screen.dart` loads a recording the same way as the detail
+  screen but additionally streams audio from `gcsUrl` on web. Splits are
+  persisted locally via `LocalRecordingRepository.splitRecording`; the
+  parent row is deleted from local Drift and from the server.
+- `notifiers/` holds the Riverpod notifiers for the recording list and
+  recording flow; `widgets/` holds the dialogs and section widgets shared
+  by the detail and list screens.
+
+### Things to Know
+
+- **Listener-driven re-renders.** The detail screen keeps a local
+  `_recording` field but also listens to
+  `localRecordingStreamProvider(widget.recordingId)`. If anything writes
+  to that Drift row, the listener calls `setState(() => _recording =
+  updated)`. This is what makes the ENG-64 bug user-visible: a corrupt
+  cache insert immediately blanks the description on screen even though
+  the user did not edit anything. Cache writes therefore have to be
+  exhaustive.
+- **Heal runs at most once per online open.** The heal companion in
+  `_loadRecording` is gated by `localHasServerId && (needsGcsRefresh ||
+  needsUserRefresh)`; rows that already have `gcsUrl` and `userId` are
+  not heal-refreshed, which avoids redundant API calls. Inside the heal
+  companion itself the corruption marker is `userId IS NULL`: only rows
+  that lost userId to the original bug get user-content fields filled
+  from the server. Healthy rows never get their description / storyteller
+  / secondary classification touched — intentional clears survive.
+- **Web vs native divergence.** On `kIsWeb`, the detail screen does not
+  use Drift at all — it always reads via the API and renders an in-memory
+  `LocalRecording` from `serverRecordingToLocal`. The `_ensureLocalFile`
+  download path is a no-op on web. The trim editor for web routes to a
+  dedicated `/trim` path that uses streamed audio.
+- **Online-first then mirror locally.** Edits always call the server
+  first; if the server call fails, the local row is not changed (so we do
+  not generate phantom local edits). Errors are surfaced via
+  `ScaffoldMessenger` snackbars; `ForbiddenException` is treated as a
+  permission error and shown in orange.
+- **The "download for edit" UX dialog gating.** `_ensureLocalFile` first
+  asks the user for confirmation (`recording_downloadAudio`) before
+  pulling the bytes. If the user cancels, no write happens; if the
+  download fails, the dialog dismisses and a localized error snackbar is
+  shown.
+
+Created and maintained by Nori.

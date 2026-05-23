@@ -58,3 +58,18 @@ This asymmetry pre-dates ENG-64 and is **not part of the contract this doc defin
 [ENG-64](https://linear.app/shema-obt/issue/ENG-64) reported silent data loss: the trim/split editor was wiping `description`, `storyteller_id`, `secondary_*`, and `user_id` from child recordings. Investigation found two parallel implementations of the split — one on the phone (`_saveSplitLocally`) and one on the server (`persist_split_segments`) — and both had been written omitting the same set of fields. The fix added the missing field propagation to both implementations and locked the contract behind this doc plus parallel unit tests.
 
 If you change the propagation rules, update this table **and** both test files (`local_recording_repository_split_test.dart` and `test_oc_split_metadata.py`) in the same change.
+
+## Cache hydration (server → local)
+
+A second flavor of the same anti-pattern lived in the detail screen's "download for trim" code path. When the user opened a server-only recording and tapped Edit, `_ensureLocalFile()` downloaded the audio and hand-built a `LocalRecordingsCompanion` for the insert, omitting `description`, `storytellerId`, `userId`, `secondaryGenreId/SubcategoryId/RegisterId`, and the `splitFromId/splitIndex/splitSegmentCount` lineage. The `localRecordingStreamProvider` listener in the same screen would then re-render the recording with those fields as `null`. The user perceived this as "I tapped Edit, didn't change anything, and the description disappeared."
+
+The contract is the same as the split table above: **every recording-level metadata field on the in-memory `LocalRecording` must reach the persisted row**. The canonical write site is now `LocalRecordingRepository.cacheDownloadedAudio(recording: …, localFilePath: …)`. It uses Drift's generated `toCompanion(false)` so the column list is always exhaustive — adding a new column to the `LocalRecordings` schema cannot silently divorce cache writes from the contract.
+
+For rows already corrupted on a device before this fix landed, the detail screen heals them on the next online refresh via `buildHealMetadataCompanion(local, server)`. The bug omitted `userId` along with the user-content fields, so a local row with `userId IS NULL` paired with a server row that has one is the marker of corruption. When that marker is present, every user-content field on the row is rehydrated from the server. When it is absent, no user-content field is touched — so an intentionally cleared description (`''`) or a removed storyteller (`null`) survives a refresh instead of getting resurrected.
+
+If you add a new `nullable` metadata column to `LocalRecordings`:
+
+1. Make sure `serverRecordingToLocal` carries it from the server DTO.
+2. Make sure `splitRecording` propagates it from parent to children (and update the table above).
+3. Make sure `buildHealMetadataCompanion` heals it when the server has a value and the local row is empty.
+4. Add the column to the cache tests in `local_recording_repository_cache_download_test.dart` and the heal tests in `recording_heal_companion_test.dart`.
