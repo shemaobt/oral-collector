@@ -488,6 +488,18 @@ class AppLocalizationsPt extends AppLocalizations {
   String get recording_titleRequired => 'O título não pode ficar vazio';
 
   @override
+  String get recording_title => 'Título';
+
+  @override
+  String get recording_description => 'Descrição';
+
+  @override
+  String get recording_editDetails => 'Editar detalhes';
+
+  @override
+  String get recording_saveChanges => 'Salvar alterações';
+
+  @override
   String get recording_saveRecording => 'Salvar Gravação';
 
   @override

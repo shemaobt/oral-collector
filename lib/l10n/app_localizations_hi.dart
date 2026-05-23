@@ -487,6 +487,18 @@ class AppLocalizationsHi extends AppLocalizations {
   String get recording_titleRequired => 'शीर्षक खाली नहीं हो सकता';
 
   @override
+  String get recording_title => 'शीर्षक';
+
+  @override
+  String get recording_description => 'विवरण';
+
+  @override
+  String get recording_editDetails => 'विवरण संपादित करें';
+
+  @override
+  String get recording_saveChanges => 'परिवर्तन सहेजें';
+
+  @override
   String get recording_saveRecording => 'रिकॉर्डिंग सहेजें';
 
   @override

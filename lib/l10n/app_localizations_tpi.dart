@@ -485,6 +485,18 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get recording_titleRequired => 'Nem i no inap stap emti';
 
   @override
+  String get recording_title => 'Nem';
+
+  @override
+  String get recording_description => 'Stori';
+
+  @override
+  String get recording_editDetails => 'Senisim ol detail';
+
+  @override
+  String get recording_saveChanges => 'Sevim ol senis';
+
+  @override
   String get recording_saveRecording => 'Sevim Rekoding';
 
   @override

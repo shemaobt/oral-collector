@@ -1034,6 +1034,30 @@ abstract class AppLocalizations {
   /// **'Title cannot be empty'**
   String get recording_titleRequired;
 
+  /// No description provided for @recording_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get recording_title;
+
+  /// No description provided for @recording_description.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get recording_description;
+
+  /// No description provided for @recording_editDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit details'**
+  String get recording_editDetails;
+
+  /// No description provided for @recording_saveChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Save changes'**
+  String get recording_saveChanges;
+
   /// No description provided for @recording_saveRecording.
   ///
   /// In en, this message translates to:

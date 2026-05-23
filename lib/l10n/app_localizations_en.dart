@@ -483,6 +483,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recording_titleRequired => 'Title cannot be empty';
 
   @override
+  String get recording_title => 'Title';
+
+  @override
+  String get recording_description => 'Description';
+
+  @override
+  String get recording_editDetails => 'Edit details';
+
+  @override
+  String get recording_saveChanges => 'Save changes';
+
+  @override
   String get recording_saveRecording => 'Save Recording';
 
   @override

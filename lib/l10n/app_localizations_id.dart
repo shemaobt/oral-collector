@@ -487,6 +487,18 @@ class AppLocalizationsId extends AppLocalizations {
   String get recording_titleRequired => 'Judul tidak boleh kosong';
 
   @override
+  String get recording_title => 'Judul';
+
+  @override
+  String get recording_description => 'Deskripsi';
+
+  @override
+  String get recording_editDetails => 'Edit detail';
+
+  @override
+  String get recording_saveChanges => 'Simpan perubahan';
+
+  @override
   String get recording_saveRecording => 'Simpan Rekaman';
 
   @override

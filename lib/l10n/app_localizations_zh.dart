@@ -476,6 +476,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recording_titleRequired => '标题不能为空';
 
   @override
+  String get recording_title => '标题';
+
+  @override
+  String get recording_description => '描述';
+
+  @override
+  String get recording_editDetails => '编辑详情';
+
+  @override
+  String get recording_saveChanges => '保存更改';
+
+  @override
   String get recording_saveRecording => '保存录音';
 
   @override

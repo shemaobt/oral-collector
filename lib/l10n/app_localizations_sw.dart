@@ -487,6 +487,18 @@ class AppLocalizationsSw extends AppLocalizations {
   String get recording_titleRequired => 'Kichwa hakiwezi kuwa tupu';
 
   @override
+  String get recording_title => 'Kichwa';
+
+  @override
+  String get recording_description => 'Maelezo';
+
+  @override
+  String get recording_editDetails => 'Hariri maelezo';
+
+  @override
+  String get recording_saveChanges => 'Hifadhi mabadiliko';
+
+  @override
   String get recording_saveRecording => 'Hifadhi Rekodi';
 
   @override

@@ -483,6 +483,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get recording_titleRequired => 'لا يمكن أن يكون العنوان فارغاً';
 
   @override
+  String get recording_title => 'العنوان';
+
+  @override
+  String get recording_description => 'الوصف';
+
+  @override
+  String get recording_editDetails => 'تعديل التفاصيل';
+
+  @override
+  String get recording_saveChanges => 'حفظ التغييرات';
+
+  @override
   String get recording_saveRecording => 'حفظ التسجيل';
 
   @override

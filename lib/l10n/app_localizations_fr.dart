@@ -494,6 +494,18 @@ class AppLocalizationsFr extends AppLocalizations {
   String get recording_titleRequired => 'Le titre ne peut pas être vide';
 
   @override
+  String get recording_title => 'Titre';
+
+  @override
+  String get recording_description => 'Description';
+
+  @override
+  String get recording_editDetails => 'Modifier les détails';
+
+  @override
+  String get recording_saveChanges => 'Enregistrer les modifications';
+
+  @override
   String get recording_saveRecording => 'Sauvegarder l\'Enregistrement';
 
   @override

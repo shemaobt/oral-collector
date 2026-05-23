@@ -477,6 +477,18 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recording_titleRequired => '제목은 비워둘 수 없습니다';
 
   @override
+  String get recording_title => '제목';
+
+  @override
+  String get recording_description => '설명';
+
+  @override
+  String get recording_editDetails => '세부 정보 편집';
+
+  @override
+  String get recording_saveChanges => '변경사항 저장';
+
+  @override
   String get recording_saveRecording => '녹음 저장';
 
   @override
