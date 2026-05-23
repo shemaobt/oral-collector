@@ -1490,6 +1490,12 @@ abstract class AppLocalizations {
   /// **'Classify segment'**
   String get trim_classifySegment;
 
+  /// No description provided for @trim_primaryEqualsSecondary.
+  ///
+  /// In en, this message translates to:
+  /// **'Primary classification cannot match the recording\'s secondary classification.'**
+  String get trim_primaryEqualsSecondary;
+
   /// No description provided for @trim_volume.
   ///
   /// In en, this message translates to:
@@ -3469,6 +3475,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Alternative classification updated'**
   String get recording_secondaryUpdated;
+
+  /// No description provided for @recording_secondaryCollisionBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'This recording\'s primary and secondary classifications are the same. Clear the secondary or change the primary to sync.'**
+  String get recording_secondaryCollisionBanner;
+
+  /// No description provided for @recording_clearSecondary.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear secondary'**
+  String get recording_clearSecondary;
 
   /// No description provided for @recording_unclassified.
   ///

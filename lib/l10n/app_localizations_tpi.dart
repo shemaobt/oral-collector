@@ -770,6 +770,10 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get trim_classifySegment => 'Klasifaiim segment';
 
   @override
+  String get trim_primaryEqualsSecondary =>
+      'Primary klasifikesen i no inap stap wankain long sekondari klasifikesen bilong rekoding.';
+
+  @override
   String get trim_volume => 'Volium';
 
   @override
@@ -1903,6 +1907,13 @@ class AppLocalizationsTpi extends AppLocalizations {
 
   @override
   String get recording_secondaryUpdated => 'Narapela klasifikesen i nupela';
+
+  @override
+  String get recording_secondaryCollisionBanner =>
+      'Dispela rekoding i gat wankain primary na sekondari klasifikesen. Klinim sekondari o senisim primary bilong sinkronaisim.';
+
+  @override
+  String get recording_clearSecondary => 'Klinim sekondari';
 
   @override
   String get recording_unclassified => 'I no makim kain yet';

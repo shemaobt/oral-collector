@@ -775,6 +775,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trim_classifySegment => 'Classify segment';
 
   @override
+  String get trim_primaryEqualsSecondary =>
+      'Primary classification cannot match the recording\'s secondary classification.';
+
+  @override
   String get trim_volume => 'Volume';
 
   @override
@@ -1915,6 +1919,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recording_secondaryUpdated => 'Alternative classification updated';
+
+  @override
+  String get recording_secondaryCollisionBanner =>
+      'This recording\'s primary and secondary classifications are the same. Clear the secondary or change the primary to sync.';
+
+  @override
+  String get recording_clearSecondary => 'Clear secondary';
 
   @override
   String get recording_unclassified => 'Unclassified';

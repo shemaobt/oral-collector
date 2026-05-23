@@ -74,6 +74,10 @@ Path: @/lib/features/recording/data/repositories
   inside a transaction. The companion is built explicitly to encode the
   three-source rule (inherit / segment-specific / reset) defined in
   [/docs/recording-split-semantics.md](../../../../../docs/recording-split-semantics.md).
+  Before inserting, validates that no segment override collides with the
+  parent's secondary classification of the same kind — throws
+  `ArgumentError` if it does, since the server would reject the upload
+  with 422. The UI is expected to block this case earlier.
 - `replaceAudio` is used by the "replace audio" flow on the detail screen
   to swap the file and reset upload state (`md5Hash`, `uploadedBytes`,
   `resumableSessionUri`, `retryCount` → defaults; `uploadStatus` →

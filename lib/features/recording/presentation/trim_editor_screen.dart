@@ -277,6 +277,9 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
       ),
       builder: (ctx) => SegmentTaxonomySheet(
         parentGenreId: recording.genreId,
+        parentSecondaryGenreId: recording.secondaryGenreId,
+        parentSecondarySubcategoryId: recording.secondarySubcategoryId,
+        parentSecondaryRegisterId: recording.secondaryRegisterId,
         initialGenreId: initialGenre,
         initialSubcategoryId: initialSub,
         initialRegisterId: initialReg,

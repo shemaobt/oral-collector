@@ -786,6 +786,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get trim_classifySegment => 'Clasificar segmento';
 
   @override
+  String get trim_primaryEqualsSecondary =>
+      'La clasificación primaria no puede coincidir con la secundaria de la grabación.';
+
+  @override
   String get trim_volume => 'Volumen';
 
   @override
@@ -1934,6 +1938,13 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get recording_secondaryUpdated =>
       'Clasificación alternativa actualizada';
+
+  @override
+  String get recording_secondaryCollisionBanner =>
+      'Esta grabación tiene la misma clasificación primaria y secundaria. Borra la secundaria o cambia la primaria para sincronizar.';
+
+  @override
+  String get recording_clearSecondary => 'Borrar secundaria';
 
   @override
   String get recording_unclassified => 'Sin clasificar';

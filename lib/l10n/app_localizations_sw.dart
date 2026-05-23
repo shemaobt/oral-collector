@@ -772,6 +772,10 @@ class AppLocalizationsSw extends AppLocalizations {
   String get trim_classifySegment => 'Ainisha sehemu';
 
   @override
+  String get trim_primaryEqualsSecondary =>
+      'Uainishaji msingi hauwezi kufanana na uainishaji wa pili wa rekodi.';
+
+  @override
   String get trim_volume => 'Sauti';
 
   @override
@@ -1906,6 +1910,13 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get recording_secondaryUpdated => 'Ainisho mbadala imesasishwa';
+
+  @override
+  String get recording_secondaryCollisionBanner =>
+      'Rekodi hii ina uainishaji msingi na wa pili sawa. Futa wa pili au badilisha msingi ili kusawazisha.';
+
+  @override
+  String get recording_clearSecondary => 'Futa wa pili';
 
   @override
   String get recording_unclassified => 'Haijainishwa';

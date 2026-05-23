@@ -225,10 +225,41 @@ class LocalRecordingRepository {
 
   /// Inserts one child row per segment, propagating parent metadata per the
   /// contract in `docs/recording-split-semantics.md`. See ENG-64.
+  ///
+  /// Defense in depth: throws [ArgumentError] when a segment override would
+  /// collide with the parent's secondary classification of the same kind.
+  /// The server enforces `secondary != primary` and would reject the upload
+  /// with a 422; the UI is expected to block this case before reaching here.
   Future<List<String>> splitRecording({
     required LocalRecording parent,
     required List<SplitSegmentSpec> segments,
   }) async {
+    for (final seg in segments) {
+      if (seg.genreOverride != null &&
+          seg.genreOverride!.isNotEmpty &&
+          seg.genreOverride == parent.secondaryGenreId) {
+        throw ArgumentError(
+          'Segment ${seg.id} genreOverride "${seg.genreOverride}" collides '
+          'with parent.secondaryGenreId. UI must prevent this.',
+        );
+      }
+      if (seg.subcategoryOverride != null &&
+          seg.subcategoryOverride!.isNotEmpty &&
+          seg.subcategoryOverride == parent.secondarySubcategoryId) {
+        throw ArgumentError(
+          'Segment ${seg.id} subcategoryOverride "${seg.subcategoryOverride}" '
+          'collides with parent.secondarySubcategoryId. UI must prevent this.',
+        );
+      }
+      if (seg.registerOverride != null &&
+          seg.registerOverride!.isNotEmpty &&
+          seg.registerOverride == parent.secondaryRegisterId) {
+        throw ArgumentError(
+          'Segment ${seg.id} registerOverride "${seg.registerOverride}" '
+          'collides with parent.secondaryRegisterId. UI must prevent this.',
+        );
+      }
+    }
     return _db.transaction(() async {
       final ids = <String>[];
       for (final seg in segments) {

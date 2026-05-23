@@ -786,6 +786,10 @@ class AppLocalizationsHi extends AppLocalizations {
   String get trim_classifySegment => 'खंड वर्गीकृत करें';
 
   @override
+  String get trim_primaryEqualsSecondary =>
+      'प्राथमिक वर्गीकरण रिकॉर्डिंग के द्वितीयक वर्गीकरण से मेल नहीं खा सकता।';
+
+  @override
   String get trim_volume => 'आवाज़';
 
   @override
@@ -1920,6 +1924,13 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get recording_secondaryUpdated => 'वैकल्पिक वर्गीकरण अद्यतन किया गया';
+
+  @override
+  String get recording_secondaryCollisionBanner =>
+      'इस रिकॉर्डिंग की प्राथमिक और द्वितीयक वर्गीकरण समान हैं। समन्वयित करने के लिए द्वितीयक को साफ करें या प्राथमिक को बदलें।';
+
+  @override
+  String get recording_clearSecondary => 'द्वितीयक साफ करें';
 
   @override
   String get recording_unclassified => 'अवर्गीकृत';

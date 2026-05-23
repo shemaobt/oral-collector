@@ -1394,6 +1394,79 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
       isUnclassified: isUnclassified,
     );
 
+    final secondaryGenreCollides =
+        recording.secondaryGenreId != null &&
+        recording.secondaryGenreId!.isNotEmpty &&
+        recording.genreId == recording.secondaryGenreId;
+    final secondarySubcategoryCollides =
+        recording.secondarySubcategoryId != null &&
+        recording.secondarySubcategoryId!.isNotEmpty &&
+        recording.subcategoryId == recording.secondarySubcategoryId;
+    final secondaryRegisterCollides =
+        recording.secondaryRegisterId != null &&
+        recording.secondaryRegisterId!.isNotEmpty &&
+        recording.registerId == recording.secondaryRegisterId;
+    final hasSecondaryCollision =
+        secondaryGenreCollides ||
+        secondarySubcategoryCollides ||
+        secondaryRegisterCollides;
+
+    final secondaryCollisionBanner = hasSecondaryCollision
+        ? Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.errorContainer.withValues(alpha: 0.35),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: theme.colorScheme.error.withValues(alpha: 0.5),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  LucideIcons.alertCircle,
+                  size: 18,
+                  color: theme.colorScheme.error,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    l10n.recording_secondaryCollisionBanner,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.error,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                FilledButton.tonal(
+                  onPressed: _canEditRecording
+                      ? _clearSecondaryClassification
+                      : null,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: theme.colorScheme.error.withValues(
+                      alpha: 0.12,
+                    ),
+                    foregroundColor: theme.colorScheme.error,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: Text(
+                    l10n.recording_clearSecondary,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          )
+        : null;
+
     final classifyBanner = isUnclassified
         ? Container(
             padding: const EdgeInsets.all(14),
@@ -1461,6 +1534,10 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         RecordingUploadProgressSection(recordingId: recording.id),
+        if (secondaryCollisionBanner != null) ...[
+          secondaryCollisionBanner,
+          const SizedBox(height: 16),
+        ],
         if (classifyBanner != null) ...[
           classifyBanner,
           const SizedBox(height: 16),
