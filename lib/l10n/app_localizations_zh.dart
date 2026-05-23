@@ -717,6 +717,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get trim_addSplitsFirst => '请先添加分割点';
 
   @override
+  String get trim_applyBoost => 'Apply boost';
+
+  @override
+  String get trim_boostApplied => 'Volume applied';
+
+  @override
   String trim_savedSegments(int kept, int removed) {
     return '已保存 $kept 个片段，移除了 $removed 个';
   }
@@ -745,6 +751,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get trim_classifySegment => '分类片段';
+
+  @override
+  String get trim_primaryEqualsSecondary => '主分类不能与录音的次分类相同。';
 
   @override
   String get trim_volume => '音量';
@@ -1851,6 +1860,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recording_secondaryUpdated => '替代分类已更新';
 
   @override
+  String get recording_secondaryCollisionBanner =>
+      '此录音的主要和次要分类相同。清除次要分类或更改主要分类以进行同步。';
+
+  @override
+  String get recording_clearSecondary => '清除次要';
+
+  @override
   String get recording_unclassified => '未分类';
 
   @override
@@ -2269,6 +2285,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get a11y_splitWaveform => '分割波形。点击添加分割标记。拖动重新定位。捏合缩放。长按移除。';
+
+  @override
+  String get a11y_minimapScrubber =>
+      'Audio overview. Tap or drag to navigate to a position.';
 
   @override
   String a11y_tabLabel(String label) {

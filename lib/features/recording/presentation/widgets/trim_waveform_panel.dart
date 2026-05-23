@@ -6,6 +6,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'trim_waveform.dart';
 
+const Key kTrimMinimapKey = Key('trim_minimap_scrubber');
+
 class TrimWaveformPanel extends StatelessWidget {
   const TrimWaveformPanel({
     super.key,
@@ -138,11 +140,25 @@ class TrimWaveformPanel extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: _Minimap(
+                key: kTrimMinimapKey,
                 bars: waveformBars,
                 panFraction: panFraction,
                 zoom: zoom,
                 colors: colors,
                 isDark: isDark,
+                semanticsLabel: AppLocalizations.of(
+                  context,
+                ).a11y_minimapScrubber,
+                onScrubTo: (fraction) {
+                  onPlayheadSeek?.call(fraction);
+                  final viewportSize = 1.0 / zoom;
+                  final maxPan = (1.0 - viewportSize).clamp(0.0, 1.0);
+                  final newPan = (fraction - viewportSize / 2).clamp(
+                    0.0,
+                    maxPan,
+                  );
+                  onZoomPanChanged?.call((zoom: zoom, panFraction: newPan));
+                },
               ),
             ),
           TrimWaveform(
@@ -205,11 +221,14 @@ class TrimWaveformPanel extends StatelessWidget {
 
 class _Minimap extends StatelessWidget {
   const _Minimap({
+    super.key,
     required this.bars,
     required this.panFraction,
     required this.zoom,
     required this.colors,
     required this.isDark,
+    this.onScrubTo,
+    this.semanticsLabel,
   });
 
   final List<double> bars;
@@ -217,24 +236,54 @@ class _Minimap extends StatelessWidget {
   final double zoom;
   final AppColorSet colors;
   final bool isDark;
+  final ValueChanged<double>? onScrubTo;
+  final String? semanticsLabel;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 24,
-      child: CustomPaint(
-        painter: _MinimapPainter(
-          bars: bars,
-          panFraction: panFraction,
-          zoom: zoom,
-          barColor: colors.foreground.withValues(alpha: isDark ? 0.2 : 0.15),
-          viewportColor: colors.accent.withValues(alpha: 0.18),
-          viewportBorder: colors.accent.withValues(alpha: 0.6),
-          bgColor: isDark
-              ? Colors.white.withValues(alpha: 0.04)
-              : Colors.black.withValues(alpha: 0.03),
+    return Semantics(
+      label: semanticsLabel,
+      container: true,
+      child: SizedBox(
+        height: 24,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final width = constraints.maxWidth;
+
+            void emit(double localX) {
+              if (onScrubTo == null || width <= 0) return;
+              final fraction = (localX / width).clamp(0.0, 1.0);
+              onScrubTo!(fraction);
+            }
+
+            return GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onPanDown: (d) {
+                if (width > 0 && onScrubTo != null) {
+                  HapticFeedback.selectionClick();
+                }
+                emit(d.localPosition.dx);
+              },
+              onPanUpdate: (d) => emit(d.localPosition.dx),
+              child: CustomPaint(
+                painter: _MinimapPainter(
+                  bars: bars,
+                  panFraction: panFraction,
+                  zoom: zoom,
+                  barColor: colors.foreground.withValues(
+                    alpha: isDark ? 0.2 : 0.15,
+                  ),
+                  viewportColor: colors.accent.withValues(alpha: 0.18),
+                  viewportBorder: colors.accent.withValues(alpha: 0.6),
+                  bgColor: isDark
+                      ? Colors.white.withValues(alpha: 0.04)
+                      : Colors.black.withValues(alpha: 0.03),
+                ),
+                size: Size.infinite,
+              ),
+            );
+          },
         ),
-        size: Size.infinite,
       ),
     );
   }

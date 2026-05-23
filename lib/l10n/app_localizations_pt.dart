@@ -747,6 +747,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String get trim_addSplitsFirst => 'Adicione divisões primeiro';
 
   @override
+  String get trim_applyBoost => 'Aplicar volume';
+
+  @override
+  String get trim_boostApplied => 'Volume aplicado';
+
+  @override
   String trim_savedSegments(int kept, int removed) {
     String _temp0 = intl.Intl.pluralLogic(
       kept,
@@ -781,6 +787,10 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get trim_classifySegment => 'Classificar segmento';
+
+  @override
+  String get trim_primaryEqualsSecondary =>
+      'A classificação primária não pode ser igual à secundária da gravação.';
 
   @override
   String get trim_volume => 'Volume';
@@ -1931,6 +1941,13 @@ class AppLocalizationsPt extends AppLocalizations {
       'Classificação alternativa atualizada';
 
   @override
+  String get recording_secondaryCollisionBanner =>
+      'Esta gravação tem as classificações primária e secundária iguais. Limpe a secundária ou altere a primária para sincronizar.';
+
+  @override
+  String get recording_clearSecondary => 'Limpar secundária';
+
+  @override
   String get recording_unclassified => 'Não Classificado';
 
   @override
@@ -2377,6 +2394,10 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get a11y_splitWaveform =>
       'Forma de onda de divisão. Toque para adicionar marcadores. Arraste para reposicionar. Aperte para ampliar. Mantenha pressionado para remover.';
+
+  @override
+  String get a11y_minimapScrubber =>
+      'Visão geral do áudio. Toque ou arraste para navegar até uma posição.';
 
   @override
   String a11y_tabLabel(String label) {

@@ -740,6 +740,12 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get trim_addSplitsFirst => 'Putim ol brukim pastaim';
 
   @override
+  String get trim_applyBoost => 'Apply boost';
+
+  @override
+  String get trim_boostApplied => 'Volume applied';
+
+  @override
   String trim_savedSegments(int kept, int removed) {
     return 'Sevim $kept segment, rausim $removed';
   }
@@ -768,6 +774,10 @@ class AppLocalizationsTpi extends AppLocalizations {
 
   @override
   String get trim_classifySegment => 'Klasifaiim segment';
+
+  @override
+  String get trim_primaryEqualsSecondary =>
+      'Primary klasifikesen i no inap stap wankain long sekondari klasifikesen bilong rekoding.';
 
   @override
   String get trim_volume => 'Volium';
@@ -1905,6 +1915,13 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get recording_secondaryUpdated => 'Narapela klasifikesen i nupela';
 
   @override
+  String get recording_secondaryCollisionBanner =>
+      'Dispela rekoding i gat wankain primary na sekondari klasifikesen. Klinim sekondari o senisim primary bilong sinkronaisim.';
+
+  @override
+  String get recording_clearSecondary => 'Klinim sekondari';
+
+  @override
   String get recording_unclassified => 'I no makim kain yet';
 
   @override
@@ -2349,6 +2366,10 @@ class AppLocalizationsTpi extends AppLocalizations {
   @override
   String get a11y_splitWaveform =>
       'Wevfom bilong brukim. Klikim bai yu putim mak. Pulim bai yu senisim ples. Rausim pinga bai yu zoom. Holim longpela bai yu rausim.';
+
+  @override
+  String get a11y_minimapScrubber =>
+      'Audio overview. Tap or drag to navigate to a position.';
 
   @override
   String a11y_tabLabel(String label) {

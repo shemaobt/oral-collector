@@ -721,6 +721,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get trim_addSplitsFirst => '먼저 분할 지점을 추가하세요';
 
   @override
+  String get trim_applyBoost => 'Apply boost';
+
+  @override
+  String get trim_boostApplied => 'Volume applied';
+
+  @override
   String trim_savedSegments(int kept, int removed) {
     return '세그먼트 $kept개 저장, $removed개 제거';
   }
@@ -749,6 +755,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get trim_classifySegment => '세그먼트 분류';
+
+  @override
+  String get trim_primaryEqualsSecondary => '기본 분류는 녹음의 보조 분류와 같을 수 없습니다.';
 
   @override
   String get trim_volume => '볼륨';
@@ -1857,6 +1866,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recording_secondaryUpdated => '대체 분류가 업데이트되었습니다';
 
   @override
+  String get recording_secondaryCollisionBanner =>
+      '이 녹음의 기본 및 보조 분류가 동일합니다. 동기화하려면 보조를 지우거나 기본을 변경하세요.';
+
+  @override
+  String get recording_clearSecondary => '보조 지우기';
+
+  @override
   String get recording_unclassified => '미분류';
 
   @override
@@ -2282,6 +2298,10 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get a11y_splitWaveform =>
       '분할 파형. 탭하여 분할 마커를 추가하세요. 드래그하여 위치를 바꾸고, 핀치하여 확대하며, 길게 눌러 제거합니다.';
+
+  @override
+  String get a11y_minimapScrubber =>
+      'Audio overview. Tap or drag to navigate to a position.';
 
   @override
   String a11y_tabLabel(String label) {
