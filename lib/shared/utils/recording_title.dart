@@ -8,3 +8,9 @@ String defaultRecordingTitle({String? locale}) {
   final s = now.second.toString().padLeft(2, '0');
   return '$day $h:$m:$s';
 }
+
+String resolveRecordingTitle(String? input, {String? locale}) {
+  final trimmed = input?.trim() ?? '';
+  if (trimmed.isEmpty) return defaultRecordingTitle(locale: locale);
+  return trimmed;
+}

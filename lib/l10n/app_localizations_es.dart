@@ -477,7 +477,7 @@ class AppLocalizationsEs extends AppLocalizations {
       'Elige el registro de habla que mejor describa el tono y la formalidad de esta grabación.';
 
   @override
-  String get recording_titleHint => 'Agregar un título (opcional)';
+  String get recording_titleHint => 'Título de la grabación';
 
   @override
   String get recording_descriptionHint =>
@@ -485,6 +485,24 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get recording_descriptionEmpty => 'Agregar descripción';
+
+  @override
+  String get recording_titleEmpty => 'Agregar título';
+
+  @override
+  String get recording_titleRequired => 'El título no puede estar vacío';
+
+  @override
+  String get recording_title => 'Título';
+
+  @override
+  String get recording_description => 'Descripción';
+
+  @override
+  String get recording_editDetails => 'Editar detalles';
+
+  @override
+  String get recording_saveChanges => 'Guardar cambios';
 
   @override
   String get recording_saveRecording => 'Guardar Grabación';

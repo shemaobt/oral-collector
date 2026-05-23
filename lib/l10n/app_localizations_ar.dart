@@ -468,13 +468,31 @@ class AppLocalizationsAr extends AppLocalizations {
       'اختر سجل الكلام الذي يصف أفضل نبرة وشكلية هذا التسجيل.';
 
   @override
-  String get recording_titleHint => 'أضف عنواناً (اختياري)';
+  String get recording_titleHint => 'عنوان التسجيل';
 
   @override
   String get recording_descriptionHint => 'أضف وصفاً قصيراً (اختياري)';
 
   @override
   String get recording_descriptionEmpty => 'أضف وصفاً';
+
+  @override
+  String get recording_titleEmpty => 'أضف عنواناً';
+
+  @override
+  String get recording_titleRequired => 'لا يمكن أن يكون العنوان فارغاً';
+
+  @override
+  String get recording_title => 'العنوان';
+
+  @override
+  String get recording_description => 'الوصف';
+
+  @override
+  String get recording_editDetails => 'تعديل التفاصيل';
+
+  @override
+  String get recording_saveChanges => 'حفظ التغييرات';
 
   @override
   String get recording_saveRecording => 'حفظ التسجيل';
