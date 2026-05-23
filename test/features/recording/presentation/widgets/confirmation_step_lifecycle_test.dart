@@ -118,10 +118,7 @@ void main() {
       await tester.pump();
 
       expect(tester.takeException(), isNull);
-      expect(
-        container.read(pendingRecordingDecisionProvider),
-        equals(_result),
-      );
+      expect(container.read(pendingRecordingDecisionProvider), equals(_result));
 
       // Tear down cleanly so subsequent tests start fresh.
       await tester.pumpWidget(const SizedBox());
@@ -137,10 +134,7 @@ void main() {
 
       await tester.pumpWidget(_harness(container));
       await tester.pump();
-      expect(
-        container.read(pendingRecordingDecisionProvider),
-        equals(_result),
-      );
+      expect(container.read(pendingRecordingDecisionProvider), equals(_result));
 
       // Replace the subtree so ConfirmationStep unmounts.
       await tester.pumpWidget(

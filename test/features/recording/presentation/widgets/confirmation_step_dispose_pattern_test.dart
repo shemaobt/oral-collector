@@ -58,33 +58,30 @@ class _MarkerOwnerState extends ConsumerState<_MarkerOwner> {
 }
 
 void main() {
-  testWidgets(
-    'initState taking ownership of a provider does not throw under a '
-    'LayoutBuilder (Scaffold)',
-    (tester) async {
-      final container = ProviderContainer();
+  testWidgets('initState taking ownership of a provider does not throw under a '
+      'LayoutBuilder (Scaffold)', (tester) async {
+    final container = ProviderContainer();
 
-      await tester.pumpWidget(
-        UncontrolledProviderScope(
-          container: container,
-          child: const MaterialApp(
-            home: Scaffold(body: _MarkerOwner(value: 'a')),
-          ),
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(
+          home: Scaffold(body: _MarkerOwner(value: 'a')),
         ),
-      );
-      // Drain pending microtasks so the deferred state mutation lands.
-      await tester.pump();
+      ),
+    );
+    // Drain pending microtasks so the deferred state mutation lands.
+    await tester.pump();
 
-      expect(tester.takeException(), isNull);
-      expect(container.read(_markerProvider), 'a');
+    expect(tester.takeException(), isNull);
+    expect(container.read(_markerProvider), 'a');
 
-      // Drain any in-flight microtasks before disposing the container so
-      // the addTearDown of a previous container doesn't race a stray clear.
-      await tester.pumpWidget(const SizedBox());
-      await tester.pump();
-      container.dispose();
-    },
-  );
+    // Drain any in-flight microtasks before disposing the container so
+    // the addTearDown of a previous container doesn't race a stray clear.
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump();
+    container.dispose();
+  });
 
   testWidgets(
     'dispose releases the marker without throwing during finalizeTree',
