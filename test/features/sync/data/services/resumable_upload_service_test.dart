@@ -11,6 +11,7 @@ import 'package:mocktail/mocktail.dart';
 
 import 'package:oral_collector/core/database/app_database.dart';
 import 'package:oral_collector/core/network/authenticated_client.dart';
+import 'package:oral_collector/core/util/crc32c.dart';
 import 'package:oral_collector/features/recording/data/repositories/local_recording_repository.dart';
 import 'package:oral_collector/features/sync/data/services/resumable_upload_service.dart';
 
@@ -43,6 +44,8 @@ void main() {
       const result = ResumableUploadResult(success: true);
       expect(result.success, isTrue);
       expect(result.error, isNull);
+      expect(result.clientCrc32c, isNull);
+      expect(result.gcsCrc32c, isNull);
     });
 
     test('failure result', () {
@@ -50,6 +53,327 @@ void main() {
       expect(result.success, isFalse);
       expect(result.error, equals('timeout'));
     });
+  });
+
+  group('CRC32C validation', () {
+    late MockRecordingRepo mockRepo;
+    late MockSecureStorage mockStorage;
+
+    setUp(() {
+      mockRepo = MockRecordingRepo();
+      mockStorage = MockSecureStorage();
+      when(
+        () => mockStorage.read(key: any(named: 'key')),
+      ).thenAnswer((_) async => 'test-token');
+    });
+
+    test('single PUT: succeeds when GCS returns matching CRC32C', () async {
+      final testFile = File('${tempDir.path}/crc_match.m4a');
+      final fileBytes = Uint8List(1024);
+      testFile.writeAsBytesSync(fileBytes);
+      final expectedCrc = (Crc32c()..add(fileBytes)).base64BigEndian;
+
+      final mockClient = MockClient((request) async {
+        if (request.url.path.contains('upload-url')) {
+          return http.Response(
+            jsonEncode({
+              'upload_url': 'https://storage.googleapis.com/test',
+              'content_type': 'audio/mp4',
+            }),
+            200,
+          );
+        }
+        if (request.url.host == 'storage.googleapis.com') {
+          return http.Response(
+            '',
+            200,
+            headers: {'x-goog-hash': 'crc32c=$expectedCrc,md5=zzz=='},
+          );
+        }
+        return http.Response('', 404);
+      });
+
+      final authClient = AuthenticatedClient(
+        client: mockClient,
+        storage: mockStorage,
+      );
+
+      final service = ResumableUploadService(
+        client: authClient,
+        recordingRepo: mockRepo,
+      );
+
+      final result = await service.upload(
+        recordingId: 'rec-1',
+        serverId: 'srv-1',
+        localFilePath: testFile.path,
+        format: 'm4a',
+        fileSizeBytes: 1024,
+      );
+
+      expect(result.success, isTrue);
+      expect(result.clientCrc32c, equals(expectedCrc));
+      expect(result.gcsCrc32c, equals(expectedCrc));
+      mockClient.close();
+    });
+
+    test('single PUT: fails when GCS returns mismatched CRC32C', () async {
+      final testFile = File('${tempDir.path}/crc_mismatch.m4a');
+      testFile.writeAsBytesSync(Uint8List(1024));
+
+      final mockClient = MockClient((request) async {
+        if (request.url.path.contains('upload-url')) {
+          return http.Response(
+            jsonEncode({
+              'upload_url': 'https://storage.googleapis.com/test',
+              'content_type': 'audio/mp4',
+            }),
+            200,
+          );
+        }
+        if (request.url.host == 'storage.googleapis.com') {
+          return http.Response(
+            '',
+            200,
+            headers: {'x-goog-hash': 'crc32c=AAAAAA=='},
+          );
+        }
+        return http.Response('', 404);
+      });
+
+      final authClient = AuthenticatedClient(
+        client: mockClient,
+        storage: mockStorage,
+      );
+
+      final service = ResumableUploadService(
+        client: authClient,
+        recordingRepo: mockRepo,
+      );
+
+      final result = await service.upload(
+        recordingId: 'rec-1',
+        serverId: 'srv-1',
+        localFilePath: testFile.path,
+        format: 'm4a',
+        fileSizeBytes: 1024,
+      );
+
+      expect(result.success, isFalse);
+      expect(result.error, contains('CRC32C mismatch'));
+      mockClient.close();
+    });
+
+    test('single PUT: succeeds when GCS omits x-goog-hash', () async {
+      final testFile = File('${tempDir.path}/crc_absent.m4a');
+      testFile.writeAsBytesSync(Uint8List(1024));
+
+      final mockClient = MockClient((request) async {
+        if (request.url.path.contains('upload-url')) {
+          return http.Response(
+            jsonEncode({
+              'upload_url': 'https://storage.googleapis.com/test',
+              'content_type': 'audio/mp4',
+            }),
+            200,
+          );
+        }
+        if (request.url.host == 'storage.googleapis.com') {
+          return http.Response('', 200);
+        }
+        return http.Response('', 404);
+      });
+
+      final authClient = AuthenticatedClient(
+        client: mockClient,
+        storage: mockStorage,
+      );
+
+      final service = ResumableUploadService(
+        client: authClient,
+        recordingRepo: mockRepo,
+      );
+
+      final result = await service.upload(
+        recordingId: 'rec-1',
+        serverId: 'srv-1',
+        localFilePath: testFile.path,
+        format: 'm4a',
+        fileSizeBytes: 1024,
+      );
+
+      expect(result.success, isTrue);
+      expect(result.clientCrc32c, isNotNull);
+      expect(result.gcsCrc32c, isNull);
+      mockClient.close();
+    });
+
+    test(
+      'resumable: skips local CRC32C when resuming from non-zero offset',
+      () async {
+        const fileSize = 5 * 1024 * 1024;
+        const alreadyUploaded = 2 * 1024 * 1024;
+        const sessionUri = 'https://storage.googleapis.com/upload/resume-crc';
+
+        final testFile = File('${tempDir.path}/resume_crc.m4a');
+        testFile.writeAsBytesSync(Uint8List(fileSize));
+
+        when(() => mockRepo.getRecordingById('rec-1')).thenAnswer(
+          (_) async => LocalRecording(
+            id: 'rec-1',
+            projectId: 'proj-1',
+            genreId: 'genre-1',
+            subcategoryId: null,
+            title: 'Test',
+            durationSeconds: 60.0,
+            fileSizeBytes: fileSize,
+            format: 'm4a',
+            localFilePath: testFile.path,
+            uploadStatus: 'uploading',
+            serverId: 'srv-1',
+            gcsUrl: null,
+            registerId: null,
+            cleaningStatus: 'none',
+            recordedAt: DateTime(2024, 1, 1),
+            createdAt: DateTime(2024, 1, 1),
+            retryCount: 0,
+            lastRetryAt: null,
+            resumableSessionUri: sessionUri,
+            uploadedBytes: alreadyUploaded,
+            md5Hash: null,
+          ),
+        );
+        when(
+          () => mockRepo.updateRecording(any(), any()),
+        ).thenAnswer((_) async => true);
+
+        final mockClient = MockClient((request) async {
+          if (request.url.host == 'storage.googleapis.com') {
+            final range = request.headers['content-range'];
+            if (range != null && range.contains('*')) {
+              return http.Response(
+                '',
+                308,
+                headers: {'range': 'bytes=0-${alreadyUploaded - 1}'},
+              );
+            }
+            return http.Response(
+              '',
+              200,
+              headers: {'x-goog-hash': 'crc32c=AAAAAA=='},
+            );
+          }
+          return http.Response('', 404);
+        });
+
+        final authClient = AuthenticatedClient(
+          client: mockClient,
+          storage: mockStorage,
+        );
+
+        final service = ResumableUploadService(
+          client: authClient,
+          recordingRepo: mockRepo,
+        );
+
+        final result = await service.upload(
+          recordingId: 'rec-1',
+          serverId: 'srv-1',
+          localFilePath: testFile.path,
+          format: 'm4a',
+          fileSizeBytes: fileSize,
+        );
+
+        // Even with a "wrong" CRC32C from GCS, the upload succeeds because we
+        // skip local validation when resuming — we don't have all the bytes.
+        expect(result.success, isTrue);
+        expect(result.clientCrc32c, isNull);
+        mockClient.close();
+      },
+    );
+
+    test(
+      'resumable: fails when CRC32C mismatches on the final chunk',
+      () async {
+        const fileSize = 12 * 1024 * 1024;
+        const sessionUri =
+            'https://storage.googleapis.com/upload/multi-mismatch';
+
+        final testFile = File('${tempDir.path}/multi_mismatch.m4a');
+        testFile.writeAsBytesSync(Uint8List(fileSize));
+
+        when(() => mockRepo.getRecordingById('rec-1')).thenAnswer(
+          (_) async => LocalRecording(
+            id: 'rec-1',
+            projectId: 'proj-1',
+            genreId: 'genre-1',
+            subcategoryId: null,
+            title: 'Test',
+            durationSeconds: 60.0,
+            fileSizeBytes: fileSize,
+            format: 'm4a',
+            localFilePath: testFile.path,
+            uploadStatus: 'uploading',
+            serverId: 'srv-1',
+            gcsUrl: null,
+            registerId: null,
+            cleaningStatus: 'none',
+            recordedAt: DateTime(2024, 1, 1),
+            createdAt: DateTime(2024, 1, 1),
+            retryCount: 0,
+            lastRetryAt: null,
+            resumableSessionUri: null,
+            uploadedBytes: 0,
+            md5Hash: null,
+          ),
+        );
+        when(
+          () => mockRepo.updateRecording(any(), any()),
+        ).thenAnswer((_) async => true);
+
+        var chunkCount = 0;
+        final mockClient = MockClient((request) async {
+          if (request.url.path.contains('resumable-upload-url')) {
+            return http.Response(jsonEncode({'session_uri': sessionUri}), 200);
+          }
+          if (request.url.host == 'storage.googleapis.com') {
+            final range = request.headers['content-range'];
+            if (range != null && !range.contains('*')) {
+              chunkCount++;
+              if (chunkCount < 2) return http.Response('', 308);
+              return http.Response(
+                '',
+                200,
+                headers: {'x-goog-hash': 'crc32c=AAAAAA=='},
+              );
+            }
+          }
+          return http.Response('', 404);
+        });
+
+        final authClient = AuthenticatedClient(
+          client: mockClient,
+          storage: mockStorage,
+        );
+
+        final service = ResumableUploadService(
+          client: authClient,
+          recordingRepo: mockRepo,
+        );
+
+        final result = await service.upload(
+          recordingId: 'rec-1',
+          serverId: 'srv-1',
+          localFilePath: testFile.path,
+          format: 'm4a',
+          fileSizeBytes: fileSize,
+        );
+
+        expect(result.success, isFalse);
+        expect(result.error, contains('CRC32C mismatch'));
+        mockClient.close();
+      },
+    );
   });
 
   group('single PUT upload', () {
