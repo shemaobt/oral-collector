@@ -952,6 +952,18 @@
   "recording_recoverButton": "Recover",
   "recording_recoverDiscard": "Discard",
   "recording_recoverFailedLastSegment": "Some audio near the end could not be read and was skipped.",
+  "recording_blockNavTitle": "Recording in progress",
+  "@recording_blockNavTitle": {
+    "description": "Title shown when user tries to navigate away during an active recording"
+  },
+  "recording_blockNavMessage": "You have a recording in progress. Discarding will permanently delete it.",
+  "@recording_blockNavMessage": {
+    "description": "Body of the block-nav confirmation dialog"
+  },
+  "recording_blockNavDiscardAndLeave": "Discard and leave",
+  "@recording_blockNavDiscardAndLeave": {
+    "description": "Destructive action label that discards the recording and navigates away"
+  },
   "recording_inProgressNotificationTitle": "Recording in progress",
   "recording_inProgressNotificationBody": "Tap to return to the app",
   "profile_defaultMicrophone": "Default microphone",

@@ -32,6 +32,8 @@ class RecordingState {
   final String? currentSubcategoryName;
   final RecordingStopError? lastStopError;
 
+  bool get isInProgress => isRecording || isPaused;
+
   const RecordingState({
     this.isRecording = false,
     this.isPaused = false,

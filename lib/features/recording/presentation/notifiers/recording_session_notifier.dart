@@ -649,7 +649,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
   }
 
   Future<void> discardRecording() async {
-    if (!state.isRecording) return;
+    if (!state.isInProgress) return;
 
     _elapsedTimer?.cancel();
     _toastTimer?.cancel();

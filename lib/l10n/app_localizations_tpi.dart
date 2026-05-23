@@ -2026,6 +2026,16 @@ class AppLocalizationsTpi extends AppLocalizations {
       'Sampela audio klostu long pinis ino inap rid na mipela skipim.';
 
   @override
+  String get recording_blockNavTitle => 'Recording in progress';
+
+  @override
+  String get recording_blockNavMessage =>
+      'You have a recording in progress. Discarding will permanently delete it.';
+
+  @override
+  String get recording_blockNavDiscardAndLeave => 'Discard and leave';
+
+  @override
   String get recording_inProgressNotificationTitle => 'Rekodim i wok';
 
   @override

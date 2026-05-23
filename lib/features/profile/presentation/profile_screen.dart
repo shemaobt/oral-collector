@@ -19,6 +19,7 @@ import '../../../core/auth/auth_notifier.dart';
 import '../../auth/data/providers/role_provider.dart';
 import '../../invite/presentation/notifiers/invite_notifier.dart';
 import '../../project/presentation/notifiers/project_notifier.dart';
+import '../../recording/presentation/widgets/recording_navigation_guard.dart';
 import '../../sync/presentation/notifiers/sync_notifier.dart';
 import '../../sync/presentation/notifiers/sync_state.dart';
 import 'notifiers/profile_notifier.dart';
@@ -358,8 +359,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ),
                 ),
                 onTap: () async {
+                  final canGo = await confirmRecordingNavigationFromTab(
+                    context,
+                    ref,
+                  );
+                  if (!canGo) return;
+                  if (!context.mounted) return;
                   await ref.read(authNotifierProvider.notifier).logout();
-                  if (context.mounted) context.go('/login');
+                  if (!context.mounted) return;
+                  context.go('/login');
                 },
               ),
               const Divider(height: 1),
