@@ -765,7 +765,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
               children: [
                 WaveformVisualizer(
                   amplitudes: amplitudes,
-                  barColor: colors.foreground.withValues(alpha: 0.12),
+                  barColor: colors.foreground.withValues(alpha: 0.3),
                   fillWidth: true,
                   height: 100,
                   barCount: 80,

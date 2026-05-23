@@ -201,6 +201,15 @@
       "error": { "type": "String" }
     }
   },
+  "recording_serviceNotificationTitle": "Recording in progress",
+  "recording_serviceNotificationBody": "{elapsed} • {genre}",
+  "@recording_serviceNotificationBody": {
+    "placeholders": {
+      "elapsed": { "type": "String" },
+      "genre": { "type": "String" }
+    }
+  },
+  "recording_serviceNotificationStopAction": "Stop",
   "recording_notFound": "Recording not found",
   "recording_unknownGenre": "Unknown genre",
   "recording_splitRecording": "Edit Recording",
@@ -294,6 +303,8 @@
     }
   },
   "trim_addSplitsFirst": "Add splits first",
+  "trim_applyBoost": "Apply boost",
+  "trim_boostApplied": "Volume applied",
   "trim_savedSegments": "Saved {kept} segment{kept, plural, =1{} other{s}}, removed {removed}",
   "@trim_savedSegments": {
     "placeholders": {
@@ -326,6 +337,7 @@
   "trim_applyToAll": "Apply to all",
   "trim_copyFromPrevious": "Copy from previous",
   "trim_classifySegment": "Classify segment",
+  "trim_primaryEqualsSecondary": "Primary classification cannot match the recording's secondary classification.",
   "trim_volume": "Volume",
   "trim_peakClip": "Clipping",
   "trim_boostOnSave": "Boost applied on save",
@@ -894,6 +906,8 @@
   "recording_removeSecondary": "Remove alternative classification",
   "recording_secondaryRemoved": "Alternative classification removed",
   "recording_secondaryUpdated": "Alternative classification updated",
+  "recording_secondaryCollisionBanner": "This recording's primary and secondary classifications are the same. Clear the secondary or change the primary to sync.",
+  "recording_clearSecondary": "Clear secondary",
   "recording_unclassified": "Unclassified",
   "recording_inputSource": "Input",
   "recording_selectMicrophone": "Select microphone",
@@ -1052,6 +1066,7 @@
   "a11y_playAudio": "Play audio",
   "a11y_pauseAudio": "Pause audio",
   "a11y_splitWaveform": "Split waveform. Tap to add split markers. Drag to reposition. Pinch to zoom. Long-press to remove.",
+  "a11y_minimapScrubber": "Audio overview. Tap or drag to navigate to a position.",
   "a11y_tabLabel": "{label} tab",
   "@a11y_tabLabel": {
     "placeholders": {
@@ -1078,6 +1093,18 @@
   "recording_noAudioAvailable": "No audio available",
   "recording_noPendingUploads": "No pending uploads",
   "recording_uploadQueue": "Upload Queue",
+  "recording_uploadSpeed": "{speed}/s",
+  "@recording_uploadSpeed": {
+    "placeholders": {
+      "speed": { "type": "String" }
+    }
+  },
+  "recording_uploadEtaRemaining": "~{eta} remaining",
+  "@recording_uploadEtaRemaining": {
+    "placeholders": {
+      "eta": { "type": "String" }
+    }
+  },
   "recording_previewSelection": "Preview Selection",
   "recording_stopPreview": "Stop Preview",
   "recording_audioLoadFailed": "Failed to load audio",
@@ -1112,5 +1139,67 @@
       "index": { "type": "int" },
       "total": { "type": "int" }
     }
-  }
+  },
+  "recovery_interruptedTitle": "Interrupted recordings",
+  "recovery_startedAt": "Started at {time}",
+  "@recovery_startedAt": {
+    "placeholders": {
+      "time": { "type": "String" }
+    }
+  },
+  "recovery_resume": "Resume",
+  "recovery_save": "Save",
+  "recovery_discard": "Discard",
+  "recovery_confirmDiscardTitle": "Discard recording?",
+  "recovery_confirmDiscardBody": "{duration} of audio will be permanently deleted.",
+  "@recovery_confirmDiscardBody": {
+    "placeholders": {
+      "duration": { "type": "String" }
+    }
+  },
+  "recovery_homeBanner": "{count, plural, =1{1 interrupted recording — tap to resume} other{{count} interrupted recordings — tap to resume}}",
+  "@recovery_homeBanner": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "recovery_unsavedCount": "{count, plural, =1{1 unsaved recording} other{{count} unsaved recordings}}",
+  "@recovery_unsavedCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "recovery_latestSummary": "Latest · {duration} · {time}",
+  "@recovery_latestSummary": {
+    "placeholders": {
+      "duration": { "type": "String" },
+      "time": { "type": "String" }
+    }
+  },
+  "recovery_review": "Review",
+  "recovery_unsavedTitle": "Unsaved recordings",
+  "recovery_unsavedSubtitle": "{count, plural, =1{1 recording to review} other{{count} recordings to review}}",
+  "@recovery_unsavedSubtitle": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "recovery_discardAll": "Discard all",
+  "recovery_discardAllTitle": "Discard all recordings?",
+  "recovery_discardAllBody": "{count, plural, =1{1 recording will be permanently deleted.} other{{count} recordings will be permanently deleted.}}",
+  "@recovery_discardAllBody": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "recovery_newBadge": "NEW",
+  "recovery_mostRecent": "Most recent",
+  "recovery_recordingNumbered": "Recording {number}",
+  "@recovery_recordingNumbered": {
+    "placeholders": {
+      "number": { "type": "int" }
+    }
+  },
+  "format_yesterday": "Yesterday",
+  "recovery_backToList": "Not now"
 }

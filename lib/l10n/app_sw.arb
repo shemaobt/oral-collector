@@ -177,6 +177,19 @@
       }
     }
   },
+  "recording_serviceNotificationTitle": "Recording in progress",
+  "recording_serviceNotificationBody": "{elapsed} • {genre}",
+  "@recording_serviceNotificationBody": {
+    "placeholders": {
+      "elapsed": {
+        "type": "String"
+      },
+      "genre": {
+        "type": "String"
+      }
+    }
+  },
+  "recording_serviceNotificationStopAction": "Stop",
   "recording_notFound": "Rekodi haikupatikana",
   "recording_unknownGenre": "Aina isiyojulikana",
   "recording_splitRecording": "Hariri Rekodi",
@@ -241,6 +254,8 @@
   "trim_splitting": "Inagawa...",
   "trim_saveSegments": "{count, plural, =1{Hifadhi sehemu 1} other{Hifadhi sehemu {count}}}",
   "trim_addSplitsFirst": "Ongeza migawanyo kwanza",
+  "trim_applyBoost": "Apply boost",
+  "trim_boostApplied": "Volume applied",
   "trim_savedSegments": "Imehifadhi sehemu {kept}, imeondoa {removed}",
   "trim_splitInto": "Gawa kuwa rekodi {count}",
   "trim_saveConfirmTitle": "Hifadhi mabadiliko?",
@@ -249,6 +264,7 @@
   "trim_applyToAll": "Tumia kwa yote",
   "trim_copyFromPrevious": "Nakili kutoka iliyotangulia",
   "trim_classifySegment": "Ainisha sehemu",
+  "trim_primaryEqualsSecondary": "Uainishaji msingi hauwezi kufanana na uainishaji wa pili wa rekodi.",
   "trim_volume": "Sauti",
   "trim_peakClip": "Kukata",
   "trim_boostOnSave": "Nguvu itawekwa wakati wa kuhifadhi",
@@ -619,6 +635,8 @@
   "recording_removeSecondary": "Ondoa ainisho mbadala",
   "recording_secondaryRemoved": "Ainisho mbadala imeondolewa",
   "recording_secondaryUpdated": "Ainisho mbadala imesasishwa",
+  "recording_secondaryCollisionBanner": "Rekodi hii ina uainishaji msingi na wa pili sawa. Futa wa pili au badilisha msingi ili kusawazisha.",
+  "recording_clearSecondary": "Futa wa pili",
   "recording_unclassified": "Haijainishwa",
   "recording_inputSource": "Ingizo",
   "recording_selectMicrophone": "Chagua maikrofoni",
@@ -819,6 +837,8 @@
   "recording_noAudioAvailable": "Hakuna sauti inayopatikana",
   "recording_noPendingUploads": "Hakuna kupakia kunakosubiri",
   "recording_uploadQueue": "Foleni ya kupakia",
+  "recording_uploadSpeed": "{speed}/s",
+  "recording_uploadEtaRemaining": "~{eta} remaining",
   "recording_previewSelection": "Hakiki uteuzi",
   "recording_stopPreview": "Simamisha hakiki",
   "recording_audioLoadFailed": "Imeshindwa kupakia sauti",
@@ -831,5 +851,85 @@
   "recording_partOf": "Sehemu {part} kati ya {total}",
   "recording_splitFrom": "Imetenganishwa kutoka {sourceId}",
   "trim_segmentRemoved": "Sehemu {index} — imeondolewa",
-  "trim_segmentOfTotal": "Sehemu {index} kati ya {total}"
+  "trim_segmentOfTotal": "Sehemu {index} kati ya {total}",
+  "recovery_interruptedTitle": "Interrupted recordings",
+  "recovery_startedAt": "Started at {time}",
+  "@recovery_startedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "recovery_resume": "Resume",
+  "recovery_save": "Save",
+  "recovery_discard": "Discard",
+  "recovery_confirmDiscardTitle": "Discard recording?",
+  "recovery_confirmDiscardBody": "{duration} of audio will be permanently deleted.",
+  "@recovery_confirmDiscardBody": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "recovery_homeBanner": "{count, plural, =1{1 interrupted recording — tap to resume} other{{count} interrupted recordings — tap to resume}}",
+  "@recovery_homeBanner": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recovery_unsavedCount": "{count, plural, =1{1 unsaved recording} other{{count} unsaved recordings}}",
+  "@recovery_unsavedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recovery_latestSummary": "Latest · {duration} · {time}",
+  "@recovery_latestSummary": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "recovery_review": "Review",
+  "recovery_unsavedTitle": "Unsaved recordings",
+  "recovery_unsavedSubtitle": "{count, plural, =1{1 recording to review} other{{count} recordings to review}}",
+  "@recovery_unsavedSubtitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recovery_discardAll": "Discard all",
+  "recovery_discardAllTitle": "Discard all recordings?",
+  "recovery_discardAllBody": "{count, plural, =1{1 recording will be permanently deleted.} other{{count} recordings will be permanently deleted.}}",
+  "@recovery_discardAllBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recovery_newBadge": "NEW",
+  "recovery_mostRecent": "Most recent",
+  "recovery_recordingNumbered": "Recording {number}",
+  "@recovery_recordingNumbered": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "format_yesterday": "Yesterday",
+  "recovery_backToList": "Not now"
 }

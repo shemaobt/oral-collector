@@ -177,6 +177,19 @@
       }
     }
   },
+  "recording_serviceNotificationTitle": "Recording in progress",
+  "recording_serviceNotificationBody": "{elapsed} • {genre}",
+  "@recording_serviceNotificationBody": {
+    "placeholders": {
+      "elapsed": {
+        "type": "String"
+      },
+      "genre": {
+        "type": "String"
+      }
+    }
+  },
+  "recording_serviceNotificationStopAction": "Stop",
   "recording_notFound": "Grabación no encontrada",
   "recording_unknownGenre": "Género desconocido",
   "recording_splitRecording": "Editar Grabación",
@@ -241,6 +254,8 @@
   "trim_splitting": "Dividiendo...",
   "trim_saveSegments": "{count, plural, =1{Guardar 1 segmento} other{Guardar {count} segmentos}}",
   "trim_addSplitsFirst": "Agrega divisiones primero",
+  "trim_applyBoost": "Aplicar volumen",
+  "trim_boostApplied": "Volumen aplicado",
   "trim_savedSegments": "Se guardaron {kept} segmento{kept, plural, =1{} other{s}}, se eliminaron {removed}",
   "trim_splitInto": "Dividir en {count} grabaciones",
   "trim_saveConfirmTitle": "¿Guardar cambios?",
@@ -249,6 +264,7 @@
   "trim_applyToAll": "Aplicar a todos",
   "trim_copyFromPrevious": "Copiar del anterior",
   "trim_classifySegment": "Clasificar segmento",
+  "trim_primaryEqualsSecondary": "La clasificación primaria no puede coincidir con la secundaria de la grabación.",
   "trim_volume": "Volumen",
   "trim_peakClip": "Saturación",
   "trim_boostOnSave": "Aumento aplicado al guardar",
@@ -619,6 +635,8 @@
   "recording_removeSecondary": "Eliminar clasificación alternativa",
   "recording_secondaryRemoved": "Clasificación alternativa eliminada",
   "recording_secondaryUpdated": "Clasificación alternativa actualizada",
+  "recording_secondaryCollisionBanner": "Esta grabación tiene la misma clasificación primaria y secundaria. Borra la secundaria o cambia la primaria para sincronizar.",
+  "recording_clearSecondary": "Borrar secundaria",
   "recording_unclassified": "Sin clasificar",
   "recording_inputSource": "Entrada",
   "recording_selectMicrophone": "Seleccionar micrófono",
@@ -819,6 +837,8 @@
   "recording_noAudioAvailable": "No hay audio disponible",
   "recording_noPendingUploads": "No hay cargas pendientes",
   "recording_uploadQueue": "Cola de subida",
+  "recording_uploadSpeed": "{speed}/s",
+  "recording_uploadEtaRemaining": "~{eta} remaining",
   "recording_previewSelection": "Vista previa de la selección",
   "recording_stopPreview": "Detener vista previa",
   "recording_audioLoadFailed": "Error al cargar el audio",
@@ -831,5 +851,85 @@
   "recording_partOf": "Parte {part} de {total}",
   "recording_splitFrom": "Dividido de {sourceId}",
   "trim_segmentRemoved": "Segmento {index} — eliminado",
-  "trim_segmentOfTotal": "Segmento {index} de {total}"
+  "trim_segmentOfTotal": "Segmento {index} de {total}",
+  "recovery_interruptedTitle": "Interrupted recordings",
+  "recovery_startedAt": "Started at {time}",
+  "@recovery_startedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "recovery_resume": "Resume",
+  "recovery_save": "Save",
+  "recovery_discard": "Discard",
+  "recovery_confirmDiscardTitle": "Discard recording?",
+  "recovery_confirmDiscardBody": "{duration} of audio will be permanently deleted.",
+  "@recovery_confirmDiscardBody": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "recovery_homeBanner": "{count, plural, =1{1 interrupted recording — tap to resume} other{{count} interrupted recordings — tap to resume}}",
+  "@recovery_homeBanner": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recovery_unsavedCount": "{count, plural, =1{1 unsaved recording} other{{count} unsaved recordings}}",
+  "@recovery_unsavedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recovery_latestSummary": "Latest · {duration} · {time}",
+  "@recovery_latestSummary": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "recovery_review": "Review",
+  "recovery_unsavedTitle": "Unsaved recordings",
+  "recovery_unsavedSubtitle": "{count, plural, =1{1 recording to review} other{{count} recordings to review}}",
+  "@recovery_unsavedSubtitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recovery_discardAll": "Discard all",
+  "recovery_discardAllTitle": "Discard all recordings?",
+  "recovery_discardAllBody": "{count, plural, =1{1 recording will be permanently deleted.} other{{count} recordings will be permanently deleted.}}",
+  "@recovery_discardAllBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recovery_newBadge": "NEW",
+  "recovery_mostRecent": "Most recent",
+  "recovery_recordingNumbered": "Recording {number}",
+  "@recovery_recordingNumbered": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "format_yesterday": "Yesterday",
+  "recovery_backToList": "Not now"
 }

@@ -25,6 +25,24 @@ class RecordingSessionRepository {
     )..where((t) => t.status.equals('active'))).get();
   }
 
+  Future<List<RecordingSession>> findCrashedSessions() {
+    return (_db.select(_db.recordingSessions)
+          ..where((t) => t.status.equals('crashed'))
+          ..orderBy([(t) => OrderingTerm.desc(t.startedAt)]))
+        .get();
+  }
+
+  Future<List<RecordingSession>> findCompletedSessions() {
+    return (_db.select(_db.recordingSessions)
+          ..where((t) => t.status.equals('completed'))
+          ..orderBy([(t) => OrderingTerm.desc(t.startedAt)]))
+        .get();
+  }
+
+  Future<void> markActive(String sessionId) async {
+    await _setStatus(sessionId, 'active');
+  }
+
   Future<void> appendSegment(
     String sessionId,
     String path,

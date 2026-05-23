@@ -177,6 +177,19 @@
       }
     }
   },
+  "recording_serviceNotificationTitle": "Recording in progress",
+  "recording_serviceNotificationBody": "{elapsed} • {genre}",
+  "@recording_serviceNotificationBody": {
+    "placeholders": {
+      "elapsed": {
+        "type": "String"
+      },
+      "genre": {
+        "type": "String"
+      }
+    }
+  },
+  "recording_serviceNotificationStopAction": "Stop",
   "recording_notFound": "Rekaman tidak ditemukan",
   "recording_unknownGenre": "Genre tidak dikenal",
   "recording_splitRecording": "Edit Rekaman",
@@ -241,6 +254,8 @@
   "trim_splitting": "Membagi...",
   "trim_saveSegments": "{count, plural, =1{Simpan 1 segmen} other{Simpan {count} segmen}}",
   "trim_addSplitsFirst": "Tambahkan pembagian terlebih dahulu",
+  "trim_applyBoost": "Apply boost",
+  "trim_boostApplied": "Volume applied",
   "trim_savedSegments": "Tersimpan {kept} segmen, dihapus {removed}",
   "trim_splitInto": "Bagi menjadi {count} rekaman",
   "trim_saveConfirmTitle": "Simpan perubahan?",
@@ -249,6 +264,7 @@
   "trim_applyToAll": "Terapkan ke semua",
   "trim_copyFromPrevious": "Salin dari sebelumnya",
   "trim_classifySegment": "Klasifikasikan segmen",
+  "trim_primaryEqualsSecondary": "Klasifikasi primer tidak boleh sama dengan klasifikasi sekunder rekaman.",
   "trim_volume": "Volume",
   "trim_peakClip": "Klip",
   "trim_boostOnSave": "Penguat diterapkan saat menyimpan",
@@ -619,6 +635,8 @@
   "recording_removeSecondary": "Hapus klasifikasi alternatif",
   "recording_secondaryRemoved": "Klasifikasi alternatif dihapus",
   "recording_secondaryUpdated": "Klasifikasi alternatif diperbarui",
+  "recording_secondaryCollisionBanner": "Rekaman ini memiliki klasifikasi primer dan sekunder yang sama. Hapus yang sekunder atau ubah yang primer untuk sinkronisasi.",
+  "recording_clearSecondary": "Hapus sekunder",
   "recording_unclassified": "Belum diklasifikasi",
   "recording_inputSource": "Input",
   "recording_selectMicrophone": "Pilih mikrofon",
@@ -819,6 +837,8 @@
   "recording_noAudioAvailable": "Tidak ada audio tersedia",
   "recording_noPendingUploads": "Tidak ada unggahan tertunda",
   "recording_uploadQueue": "Antrean unggah",
+  "recording_uploadSpeed": "{speed}/s",
+  "recording_uploadEtaRemaining": "~{eta} remaining",
   "recording_previewSelection": "Pratinjau pilihan",
   "recording_stopPreview": "Hentikan pratinjau",
   "recording_audioLoadFailed": "Gagal memuat audio",
@@ -831,5 +851,85 @@
   "recording_partOf": "Bagian {part} dari {total}",
   "recording_splitFrom": "Dipisahkan dari {sourceId}",
   "trim_segmentRemoved": "Segmen {index} — dihapus",
-  "trim_segmentOfTotal": "Segmen {index} dari {total}"
+  "trim_segmentOfTotal": "Segmen {index} dari {total}",
+  "recovery_interruptedTitle": "Interrupted recordings",
+  "recovery_startedAt": "Started at {time}",
+  "@recovery_startedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "recovery_resume": "Resume",
+  "recovery_save": "Save",
+  "recovery_discard": "Discard",
+  "recovery_confirmDiscardTitle": "Discard recording?",
+  "recovery_confirmDiscardBody": "{duration} of audio will be permanently deleted.",
+  "@recovery_confirmDiscardBody": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "recovery_homeBanner": "{count, plural, =1{1 interrupted recording — tap to resume} other{{count} interrupted recordings — tap to resume}}",
+  "@recovery_homeBanner": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recovery_unsavedCount": "{count, plural, =1{1 unsaved recording} other{{count} unsaved recordings}}",
+  "@recovery_unsavedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recovery_latestSummary": "Latest · {duration} · {time}",
+  "@recovery_latestSummary": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "recovery_review": "Review",
+  "recovery_unsavedTitle": "Unsaved recordings",
+  "recovery_unsavedSubtitle": "{count, plural, =1{1 recording to review} other{{count} recordings to review}}",
+  "@recovery_unsavedSubtitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recovery_discardAll": "Discard all",
+  "recovery_discardAllTitle": "Discard all recordings?",
+  "recovery_discardAllBody": "{count, plural, =1{1 recording will be permanently deleted.} other{{count} recordings will be permanently deleted.}}",
+  "@recovery_discardAllBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recovery_newBadge": "NEW",
+  "recovery_mostRecent": "Most recent",
+  "recovery_recordingNumbered": "Recording {number}",
+  "@recovery_recordingNumbered": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "format_yesterday": "Yesterday",
+  "recovery_backToList": "Not now"
 }

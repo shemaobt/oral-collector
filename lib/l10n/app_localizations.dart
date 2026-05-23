@@ -1106,6 +1106,24 @@ abstract class AppLocalizations {
   /// **'Upload failed: {error}'**
   String recording_uploadFailed(String error);
 
+  /// No description provided for @recording_serviceNotificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording in progress'**
+  String get recording_serviceNotificationTitle;
+
+  /// No description provided for @recording_serviceNotificationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{elapsed} • {genre}'**
+  String recording_serviceNotificationBody(String elapsed, String genre);
+
+  /// No description provided for @recording_serviceNotificationStopAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get recording_serviceNotificationStopAction;
+
   /// No description provided for @recording_notFound.
   ///
   /// In en, this message translates to:
@@ -1460,6 +1478,18 @@ abstract class AppLocalizations {
   /// **'Add splits first'**
   String get trim_addSplitsFirst;
 
+  /// No description provided for @trim_applyBoost.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply boost'**
+  String get trim_applyBoost;
+
+  /// No description provided for @trim_boostApplied.
+  ///
+  /// In en, this message translates to:
+  /// **'Volume applied'**
+  String get trim_boostApplied;
+
   /// No description provided for @trim_savedSegments.
   ///
   /// In en, this message translates to:
@@ -1507,6 +1537,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Classify segment'**
   String get trim_classifySegment;
+
+  /// No description provided for @trim_primaryEqualsSecondary.
+  ///
+  /// In en, this message translates to:
+  /// **'Primary classification cannot match the recording\'s secondary classification.'**
+  String get trim_primaryEqualsSecondary;
 
   /// No description provided for @trim_volume.
   ///
@@ -3488,6 +3524,18 @@ abstract class AppLocalizations {
   /// **'Alternative classification updated'**
   String get recording_secondaryUpdated;
 
+  /// No description provided for @recording_secondaryCollisionBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'This recording\'s primary and secondary classifications are the same. Clear the secondary or change the primary to sync.'**
+  String get recording_secondaryCollisionBanner;
+
+  /// No description provided for @recording_clearSecondary.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear secondary'**
+  String get recording_clearSecondary;
+
   /// No description provided for @recording_unclassified.
   ///
   /// In en, this message translates to:
@@ -4190,6 +4238,12 @@ abstract class AppLocalizations {
   /// **'Split waveform. Tap to add split markers. Drag to reposition. Pinch to zoom. Long-press to remove.'**
   String get a11y_splitWaveform;
 
+  /// No description provided for @a11y_minimapScrubber.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio overview. Tap or drag to navigate to a position.'**
+  String get a11y_minimapScrubber;
+
   /// No description provided for @a11y_tabLabel.
   ///
   /// In en, this message translates to:
@@ -4286,6 +4340,18 @@ abstract class AppLocalizations {
   /// **'Upload Queue'**
   String get recording_uploadQueue;
 
+  /// No description provided for @recording_uploadSpeed.
+  ///
+  /// In en, this message translates to:
+  /// **'{speed}/s'**
+  String recording_uploadSpeed(String speed);
+
+  /// No description provided for @recording_uploadEtaRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'~{eta} remaining'**
+  String recording_uploadEtaRemaining(String eta);
+
   /// No description provided for @recording_previewSelection.
   ///
   /// In en, this message translates to:
@@ -4363,6 +4429,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Segment {index} of {total}'**
   String trim_segmentOfTotal(int index, int total);
+
+  /// No description provided for @recovery_interruptedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Interrupted recordings'**
+  String get recovery_interruptedTitle;
+
+  /// No description provided for @recovery_startedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Started at {time}'**
+  String recovery_startedAt(String time);
+
+  /// No description provided for @recovery_resume.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get recovery_resume;
+
+  /// No description provided for @recovery_save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get recovery_save;
+
+  /// No description provided for @recovery_discard.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get recovery_discard;
+
+  /// No description provided for @recovery_confirmDiscardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard recording?'**
+  String get recovery_confirmDiscardTitle;
+
+  /// No description provided for @recovery_confirmDiscardBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{duration} of audio will be permanently deleted.'**
+  String recovery_confirmDiscardBody(String duration);
+
+  /// No description provided for @recovery_homeBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 interrupted recording — tap to resume} other{{count} interrupted recordings — tap to resume}}'**
+  String recovery_homeBanner(int count);
+
+  /// No description provided for @recovery_unsavedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 unsaved recording} other{{count} unsaved recordings}}'**
+  String recovery_unsavedCount(int count);
+
+  /// No description provided for @recovery_latestSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Latest · {duration} · {time}'**
+  String recovery_latestSummary(String duration, String time);
+
+  /// No description provided for @recovery_review.
+  ///
+  /// In en, this message translates to:
+  /// **'Review'**
+  String get recovery_review;
+
+  /// No description provided for @recovery_unsavedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsaved recordings'**
+  String get recovery_unsavedTitle;
+
+  /// No description provided for @recovery_unsavedSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 recording to review} other{{count} recordings to review}}'**
+  String recovery_unsavedSubtitle(int count);
+
+  /// No description provided for @recovery_discardAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard all'**
+  String get recovery_discardAll;
+
+  /// No description provided for @recovery_discardAllTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard all recordings?'**
+  String get recovery_discardAllTitle;
+
+  /// No description provided for @recovery_discardAllBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 recording will be permanently deleted.} other{{count} recordings will be permanently deleted.}}'**
+  String recovery_discardAllBody(int count);
+
+  /// No description provided for @recovery_newBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'NEW'**
+  String get recovery_newBadge;
+
+  /// No description provided for @recovery_mostRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'Most recent'**
+  String get recovery_mostRecent;
+
+  /// No description provided for @recovery_recordingNumbered.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording {number}'**
+  String recovery_recordingNumbered(int number);
+
+  /// No description provided for @format_yesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get format_yesterday;
+
+  /// No description provided for @recovery_backToList.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get recovery_backToList;
 }
 
 class _AppLocalizationsDelegate

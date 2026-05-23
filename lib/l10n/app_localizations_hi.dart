@@ -526,6 +526,17 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
+  String get recording_serviceNotificationTitle => 'Recording in progress';
+
+  @override
+  String recording_serviceNotificationBody(String elapsed, String genre) {
+    return '$elapsed • $genre';
+  }
+
+  @override
+  String get recording_serviceNotificationStopAction => 'Stop';
+
+  @override
   String get recording_notFound => 'रिकॉर्डिंग नहीं मिली';
 
   @override
@@ -667,6 +678,7 @@ class AppLocalizationsHi extends AppLocalizations {
       locale: localeName,
       other: '$count रिकॉर्डिंग्स',
       one: '1 रिकॉर्डिंग',
+      zero: 'कोई रिकॉर्डिंग नहीं',
     );
     return '$_temp0';
   }
@@ -750,6 +762,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get trim_addSplitsFirst => 'पहले विभाजन जोड़ें';
 
   @override
+  String get trim_applyBoost => 'Apply boost';
+
+  @override
+  String get trim_boostApplied => 'Volume applied';
+
+  @override
   String trim_savedSegments(int kept, int removed) {
     String _temp0 = intl.Intl.pluralLogic(
       kept,
@@ -790,6 +808,10 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get trim_classifySegment => 'खंड वर्गीकृत करें';
+
+  @override
+  String get trim_primaryEqualsSecondary =>
+      'प्राथमिक वर्गीकरण रिकॉर्डिंग के द्वितीयक वर्गीकरण से मेल नहीं खा सकता।';
 
   @override
   String get trim_volume => 'आवाज़';
@@ -1928,6 +1950,13 @@ class AppLocalizationsHi extends AppLocalizations {
   String get recording_secondaryUpdated => 'वैकल्पिक वर्गीकरण अद्यतन किया गया';
 
   @override
+  String get recording_secondaryCollisionBanner =>
+      'इस रिकॉर्डिंग की प्राथमिक और द्वितीयक वर्गीकरण समान हैं। समन्वयित करने के लिए द्वितीयक को साफ करें या प्राथमिक को बदलें।';
+
+  @override
+  String get recording_clearSecondary => 'द्वितीयक साफ करें';
+
+  @override
   String get recording_unclassified => 'अवर्गीकृत';
 
   @override
@@ -2329,6 +2358,10 @@ class AppLocalizationsHi extends AppLocalizations {
       'स्प्लिट वेवफ़ॉर्म। स्प्लिट मार्कर जोड़ने के लिए टैप करें। पुनः स्थान बदलने के लिए खींचें। ज़ूम के लिए पिंच करें। हटाने के लिए देर तक दबाएँ।';
 
   @override
+  String get a11y_minimapScrubber =>
+      'Audio overview. Tap or drag to navigate to a position.';
+
+  @override
   String a11y_tabLabel(String label) {
     return '$label टैब';
   }
@@ -2383,6 +2416,16 @@ class AppLocalizationsHi extends AppLocalizations {
   String get recording_uploadQueue => 'अपलोड कतार';
 
   @override
+  String recording_uploadSpeed(String speed) {
+    return '$speed/s';
+  }
+
+  @override
+  String recording_uploadEtaRemaining(String eta) {
+    return '~$eta remaining';
+  }
+
+  @override
   String get recording_previewSelection => 'चयन का पूर्वावलोकन';
 
   @override
@@ -2432,4 +2475,107 @@ class AppLocalizationsHi extends AppLocalizations {
   String trim_segmentOfTotal(int index, int total) {
     return '$total में से खंड $index';
   }
+
+  @override
+  String get recovery_interruptedTitle => 'Interrupted recordings';
+
+  @override
+  String recovery_startedAt(String time) {
+    return 'Started at $time';
+  }
+
+  @override
+  String get recovery_resume => 'Resume';
+
+  @override
+  String get recovery_save => 'Save';
+
+  @override
+  String get recovery_discard => 'Discard';
+
+  @override
+  String get recovery_confirmDiscardTitle => 'Discard recording?';
+
+  @override
+  String recovery_confirmDiscardBody(String duration) {
+    return '$duration of audio will be permanently deleted.';
+  }
+
+  @override
+  String recovery_homeBanner(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count interrupted recordings — tap to resume',
+      one: '1 interrupted recording — tap to resume',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String recovery_unsavedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count unsaved recordings',
+      one: '1 unsaved recording',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String recovery_latestSummary(String duration, String time) {
+    return 'Latest · $duration · $time';
+  }
+
+  @override
+  String get recovery_review => 'Review';
+
+  @override
+  String get recovery_unsavedTitle => 'Unsaved recordings';
+
+  @override
+  String recovery_unsavedSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count recordings to review',
+      one: '1 recording to review',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recovery_discardAll => 'Discard all';
+
+  @override
+  String get recovery_discardAllTitle => 'Discard all recordings?';
+
+  @override
+  String recovery_discardAllBody(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count recordings will be permanently deleted.',
+      one: '1 recording will be permanently deleted.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recovery_newBadge => 'NEW';
+
+  @override
+  String get recovery_mostRecent => 'Most recent';
+
+  @override
+  String recovery_recordingNumbered(int number) {
+    return 'Recording $number';
+  }
+
+  @override
+  String get format_yesterday => 'Yesterday';
+
+  @override
+  String get recovery_backToList => 'Not now';
 }

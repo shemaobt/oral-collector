@@ -5,6 +5,7 @@ import '../../../../core/database/app_database.dart';
 import '../../../project/presentation/notifiers/project_notifier.dart';
 import '../../data/providers.dart';
 import '../../data/repositories/local_recording_repository.dart';
+import '../../data/server_to_local_recording.dart';
 import '../../domain/entities/server_recording.dart';
 import '../../domain/repositories/recording_api_repository.dart';
 import 'recordings_list_state.dart';
@@ -109,7 +110,12 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
       userId: state.selectedUserId,
       storytellerId: state.selectedStorytellerId,
     );
-    final localRecordings = await _localRepo.getAllRecordings(projectId);
+    List<LocalRecording> localRecordings;
+    try {
+      localRecordings = await _localRepo.getAllRecordings(projectId);
+    } catch (_) {
+      localRecordings = const [];
+    }
 
     final hasMore = serverRecordings.length >= _pageSize;
     _serverOffset = serverRecordings.length;
@@ -133,38 +139,7 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
   List<LocalRecording> _convertServerRecordings(
     List<ServerRecording> recordings,
   ) {
-    return recordings
-        .map(
-          (s) => LocalRecording(
-            id: s.id,
-            projectId: s.projectId,
-            genreId: s.genreId,
-            subcategoryId: s.subcategoryId,
-            registerId: s.registerId,
-            secondaryGenreId: s.secondaryGenreId,
-            secondarySubcategoryId: s.secondarySubcategoryId,
-            secondaryRegisterId: s.secondaryRegisterId,
-            storytellerId: s.storytellerId,
-            userId: s.userId,
-            title: s.title,
-            durationSeconds: s.durationSeconds,
-            fileSizeBytes: s.fileSizeBytes,
-            format: s.format,
-            localFilePath: '',
-            uploadStatus: s.uploadStatus,
-            serverId: s.id,
-            gcsUrl: s.gcsUrl,
-            cleaningStatus: s.cleaningStatus,
-            recordedAt: s.recordedAt,
-            createdAt: s.recordedAt,
-            retryCount: 0,
-            uploadedBytes: 0,
-            splitFromId: s.splitFromId,
-            splitIndex: s.splitIndex,
-            splitSegmentCount: s.splitSegmentCount,
-          ),
-        )
-        .toList();
+    return recordings.map(serverRecordingToLocal).toList();
   }
 
   Future<void> _fallbackToLocal(String projectId) async {

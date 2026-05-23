@@ -39,6 +39,23 @@
 	<array>
 		<string>audio</string>
 	</array>
+	<key>NSSupportsLiveActivities</key>
+	<true/>
+	<key>NSSupportsLiveActivitiesFrequentUpdates</key>
+	<true/>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>com.shema.oralCollector.liveactivity</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>oralcollector</string>
+			</array>
+		</dict>
+	</array>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Oral Collector needs access to your photo library to let you select images for your language project.</string>
 	<key>UIApplicationSceneManifest</key>

@@ -177,6 +177,19 @@
       }
     }
   },
+  "recording_serviceNotificationTitle": "Recording in progress",
+  "recording_serviceNotificationBody": "{elapsed} • {genre}",
+  "@recording_serviceNotificationBody": {
+    "placeholders": {
+      "elapsed": {
+        "type": "String"
+      },
+      "genre": {
+        "type": "String"
+      }
+    }
+  },
+  "recording_serviceNotificationStopAction": "Stop",
   "recording_notFound": "التسجيل غير موجود",
   "recording_unknownGenre": "نوع غير معروف",
   "recording_splitRecording": "تحرير التسجيل",
@@ -241,6 +254,8 @@
   "trim_splitting": "جارٍ التقسيم...",
   "trim_saveSegments": "{count, plural, =1{حفظ مقطع واحد} other{حفظ {count} مقاطع}}",
   "trim_addSplitsFirst": "أضف تقسيمات أولاً",
+  "trim_applyBoost": "Apply boost",
+  "trim_boostApplied": "Volume applied",
   "trim_savedSegments": "تم حفظ {kept} مقطع، وإزالة {removed}",
   "trim_splitInto": "تقسيم إلى {count} تسجيلات",
   "trim_saveConfirmTitle": "حفظ التغييرات؟",
@@ -249,6 +264,7 @@
   "trim_applyToAll": "تطبيق على الكل",
   "trim_copyFromPrevious": "نسخ من السابق",
   "trim_classifySegment": "تصنيف المقطع",
+  "trim_primaryEqualsSecondary": "لا يمكن أن يتطابق التصنيف الأساسي مع التصنيف الثانوي للتسجيل.",
   "trim_volume": "مستوى الصوت",
   "trim_peakClip": "تشبع",
   "trim_boostOnSave": "يُطبَّق التضخيم عند الحفظ",
@@ -619,6 +635,8 @@
   "recording_removeSecondary": "إزالة التصنيف البديل",
   "recording_secondaryRemoved": "تمت إزالة التصنيف البديل",
   "recording_secondaryUpdated": "تم تحديث التصنيف البديل",
+  "recording_secondaryCollisionBanner": "هذا التسجيل له نفس التصنيف الأساسي والثانوي. امسح الثانوي أو غيّر الأساسي للمزامنة.",
+  "recording_clearSecondary": "مسح الثانوي",
   "recording_unclassified": "غير مصنف",
   "recording_inputSource": "الإدخال",
   "recording_selectMicrophone": "اختر الميكروفون",
@@ -831,5 +849,85 @@
   "recording_partOf": "الجزء {part} من {total}",
   "recording_splitFrom": "مقسم من {sourceId}",
   "trim_segmentRemoved": "المقطع {index} — تمت إزالته",
-  "trim_segmentOfTotal": "المقطع {index} من {total}"
+  "trim_segmentOfTotal": "المقطع {index} من {total}",
+  "recovery_interruptedTitle": "Interrupted recordings",
+  "recovery_startedAt": "Started at {time}",
+  "@recovery_startedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "recovery_resume": "Resume",
+  "recovery_save": "Save",
+  "recovery_discard": "Discard",
+  "recovery_confirmDiscardTitle": "Discard recording?",
+  "recovery_confirmDiscardBody": "{duration} of audio will be permanently deleted.",
+  "@recovery_confirmDiscardBody": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "recovery_homeBanner": "{count, plural, =1{1 interrupted recording — tap to resume} other{{count} interrupted recordings — tap to resume}}",
+  "@recovery_homeBanner": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recovery_unsavedCount": "{count, plural, =1{1 unsaved recording} other{{count} unsaved recordings}}",
+  "@recovery_unsavedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recovery_latestSummary": "Latest · {duration} · {time}",
+  "@recovery_latestSummary": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "recovery_review": "Review",
+  "recovery_unsavedTitle": "Unsaved recordings",
+  "recovery_unsavedSubtitle": "{count, plural, =1{1 recording to review} other{{count} recordings to review}}",
+  "@recovery_unsavedSubtitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recovery_discardAll": "Discard all",
+  "recovery_discardAllTitle": "Discard all recordings?",
+  "recovery_discardAllBody": "{count, plural, =1{1 recording will be permanently deleted.} other{{count} recordings will be permanently deleted.}}",
+  "@recovery_discardAllBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recovery_newBadge": "NEW",
+  "recovery_mostRecent": "Most recent",
+  "recovery_recordingNumbered": "Recording {number}",
+  "@recovery_recordingNumbered": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "format_yesterday": "Yesterday",
+  "recovery_backToList": "Not now"
 }
