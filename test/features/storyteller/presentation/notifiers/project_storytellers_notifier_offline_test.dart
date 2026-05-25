@@ -9,8 +9,19 @@ import 'package:oral_collector/features/storyteller/data/providers.dart';
 import 'package:oral_collector/features/storyteller/domain/entities/storyteller.dart';
 import 'package:oral_collector/features/storyteller/domain/repositories/storyteller_repository.dart';
 import 'package:oral_collector/features/storyteller/presentation/notifiers/project_storytellers_notifier.dart';
+import 'package:oral_collector/features/sync/presentation/notifiers/sync_notifier.dart';
+import 'package:oral_collector/features/sync/presentation/notifiers/sync_state.dart';
 
 class MockStorytellerApi extends Mock implements StorytellerRepository {}
+
+class _FakeSyncNotifier extends SyncNotifier {
+  _FakeSyncNotifier({required this.initialOnline});
+
+  final bool initialOnline;
+
+  @override
+  SyncState build() => SyncState(isOnline: initialOnline);
+}
 
 void main() {
   late AppDatabase db;
@@ -29,6 +40,9 @@ void main() {
       overrides: [
         appDatabaseProvider.overrideWithValue(db),
         storytellerApiRepositoryProvider.overrideWithValue(mockApi),
+        syncNotifierProvider.overrideWith(
+          () => _FakeSyncNotifier(initialOnline: true),
+        ),
       ],
     );
   });

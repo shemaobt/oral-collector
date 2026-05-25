@@ -10,6 +10,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:oral_collector/core/database/app_database.dart';
 import 'package:oral_collector/core/network/authenticated_client.dart';
@@ -24,6 +25,8 @@ class MockConnectivity extends Mock implements ConnectivityService {}
 class MockSecureStorage extends Mock implements FlutterSecureStorage {}
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   late AppDatabase db;
   late LocalStorytellerRepository storytellerRepo;
   late LocalRecordingRepository recordingRepo;
@@ -36,6 +39,7 @@ void main() {
   });
 
   setUp(() {
+    SharedPreferences.setMockInitialValues({});
     db = AppDatabase.forTesting(NativeDatabase.memory());
     storytellerRepo = LocalStorytellerRepository(db);
     recordingRepo = LocalRecordingRepository(db);

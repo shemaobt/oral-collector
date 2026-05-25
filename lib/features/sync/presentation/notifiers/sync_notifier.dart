@@ -1,13 +1,17 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/widgets.dart' show Locale, WidgetsBinding;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/l10n/locale_provider.dart';
 import '../../../../core/platform/disk_space.dart' as disk_space;
 import '../../../../core/platform/file_ops.dart' as file_ops;
+import '../../../../l10n/app_localizations.dart';
 import '../../../recording/data/providers.dart';
 import '../../../recording/data/repositories/local_recording_repository.dart';
 import '../../data/providers.dart';
+import '../../data/services/upload_foreground_service.dart';
 import '../../domain/repositories/connectivity_service.dart';
 import '../../domain/repositories/sync_engine.dart';
 import 'sync_state.dart';
@@ -27,6 +31,15 @@ class SyncNotifier extends Notifier<SyncState> {
   SyncEngine get _syncEngine => ref.read(syncEngineProvider);
   LocalRecordingRepository get _recordingRepo =>
       ref.read(localRecordingRepositoryProvider);
+  UploadForegroundService get _uploadForegroundService =>
+      ref.read(uploadForegroundServiceProvider);
+
+  Future<AppLocalizations> _resolveLocalizations() async {
+    final Locale locale =
+        ref.read(localeProvider) ??
+        WidgetsBinding.instance.platformDispatcher.locale;
+    return AppLocalizations.delegate.load(locale);
+  }
 
   @override
   SyncState build() {
@@ -157,9 +170,22 @@ class SyncNotifier extends Notifier<SyncState> {
     await _refreshPendingCount();
   }
 
+  bool _isProcessing = false;
+
   Future<void> processQueue() async {
     if (!state.isOnline) return;
+    // Reentrancy guard: a second concurrent call would otherwise stop the
+    // foreground service in its finally while the first is still uploading.
+    if (_isProcessing) return;
+    _isProcessing = true;
+    try {
+      await _runQueue();
+    } finally {
+      _isProcessing = false;
+    }
+  }
 
+  Future<void> _runQueue() async {
     await _refreshPendingCount();
 
     final pending = await _recordingRepo.getPendingUploads();
@@ -184,12 +210,26 @@ class SyncNotifier extends Notifier<SyncState> {
     final isWifi = await _connectivity.isOnWifi;
     final concurrency = isWifi ? 3 : 1;
 
-    await _syncEngine.processQueue(
-      deleteAfterUpload: state.autoRemoveAfterUpload,
-      wifiOnly: state.autoUploadWifiOnly,
-      maxConcurrency: concurrency,
-      onProgress: _onUploadProgress,
+    // Keep the Android process alive while the queue runs so uploads continue
+    // when the app is minimized; the foreground service is declared with
+    // stopWithTask, so a swipe-away ends it (the queue resumes from the saved
+    // offset on next launch). No-op on iOS/web. The title resolver only runs on
+    // Android (inside start, after the platform guard).
+    await _uploadForegroundService.start(
+      titleResolver: () async =>
+          (await _resolveLocalizations()).upload_inProgressNotificationTitle,
+      body: pending.isNotEmpty ? (pending.first.title ?? '') : '',
     );
+    try {
+      await _syncEngine.processQueue(
+        deleteAfterUpload: state.autoRemoveAfterUpload,
+        wifiOnly: state.autoUploadWifiOnly,
+        maxConcurrency: concurrency,
+        onProgress: _onUploadProgress,
+      );
+    } finally {
+      await _uploadForegroundService.stop();
+    }
 
     await _refreshPendingCount();
 

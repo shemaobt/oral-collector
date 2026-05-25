@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:crypto/crypto.dart' as crypto;
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 import 'package:path/path.dart' as p;
@@ -16,6 +15,7 @@ import '../../../storyteller/data/repositories/local_storyteller_repository.dart
 import '../../domain/repositories/connectivity_service.dart';
 import '../../domain/repositories/sync_engine.dart';
 import '../services/resumable_upload_service.dart';
+import '../services/upload_downloader.dart';
 
 class _NonRetryableUploadException implements Exception {
   final String message;
@@ -48,6 +48,7 @@ class SyncEngineImpl implements SyncEngine {
     required LocalStorytellerRepository storytellerRepo,
     required ConnectivityService connectivity,
     required AuthenticatedClient client,
+    UploadDownloader? uploadDownloader,
   }) : _recordingRepo = recordingRepo,
        _storytellerRepo = storytellerRepo,
        _connectivity = connectivity,
@@ -55,6 +56,7 @@ class SyncEngineImpl implements SyncEngine {
     _uploadService = ResumableUploadService(
       client: _client,
       recordingRepo: _recordingRepo,
+      downloader: uploadDownloader,
     );
   }
 
@@ -69,18 +71,21 @@ class SyncEngineImpl implements SyncEngine {
     void Function(String recordingId, int bytesSent, int totalBytes)?
     onProgress,
   }) async {
+    // Set the guard before any await so two rapid callers can't both pass the
+    // check while one is mid-connectivity-probe. The previous ordering left a
+    // window where a second processQueue() entered before the first set the
+    // flag, doubling the work and racing the coordinator's resume.
     if (_isProcessing) return;
-
-    final online = await _connectivity.isOnline;
-    if (!online) return;
-
-    if (wifiOnly) {
-      final onWifi = await _connectivity.isOnWifi;
-      if (!onWifi) return;
-    }
-
     _isProcessing = true;
     try {
+      final online = await _connectivity.isOnline;
+      if (!online) return;
+
+      if (wifiOnly) {
+        final onWifi = await _connectivity.isOnWifi;
+        if (!onWifi) return;
+      }
+
       await _processPendingStorytellers();
 
       final pending = await _recordingRepo.getPendingUploads();
@@ -291,16 +296,6 @@ class SyncEngineImpl implements SyncEngine {
         );
       }
 
-      String? md5Hash = recording.md5Hash;
-      if (md5Hash == null || md5Hash.isEmpty) {
-        final fileBytes = await file_ops.readFileBytes(resolvedPath);
-        md5Hash = crypto.md5.convert(fileBytes).toString();
-        await _recordingRepo.updateRecording(
-          id,
-          LocalRecordingsCompanion(md5Hash: Value(md5Hash)),
-        );
-      }
-
       final uploadResult = await _uploadService.upload(
         recordingId: id,
         serverId: serverId,
@@ -312,14 +307,27 @@ class SyncEngineImpl implements SyncEngine {
             : null,
       );
 
+      if (uploadResult.pausedByRecording) {
+        await _recordingRepo.updateRecording(
+          id,
+          const LocalRecordingsCompanion(uploadStatus: Value('local')),
+        );
+        return;
+      }
+
       if (!uploadResult.success) {
         throw Exception('Upload failed: ${uploadResult.error}');
+      }
+
+      final confirmBody = <String, dynamic>{};
+      if (uploadResult.clientCrc32c != null) {
+        confirmBody['crc32c'] = uploadResult.clientCrc32c;
       }
 
       final confirmResponse = await _client
           .post(
             '/api/oc/recordings/$serverId/confirm-upload',
-            body: {'md5_hash': md5Hash},
+            body: confirmBody,
           )
           .timeout(_apiTimeout);
 
@@ -341,14 +349,11 @@ class SyncEngineImpl implements SyncEngine {
       }
     } on _NonRetryableUploadException catch (e) {
       debugPrint('SyncEngine: non-retryable upload failure for $id: $e');
-      await _recordingRepo.updateRecording(
-        id,
-        LocalRecordingsCompanion(
-          uploadStatus: const Value('failed'),
-          retryCount: const Value(maxRetries),
-          lastRetryAt: Value(DateTime.now()),
-        ),
-      );
+      await _markPermanentlyFailed(id);
+    } on FormatException catch (e, st) {
+      // Server returned malformed JSON. Retrying won't help; mark terminal.
+      debugPrint('SyncEngine: response parse error for $id: $e\n$st');
+      await _markPermanentlyFailed(id);
     } on TimeoutException catch (e) {
       debugPrint('SyncEngine: timeout uploading $id: $e');
       await _recordingRepo.markAsFailed(id);
@@ -356,6 +361,9 @@ class SyncEngineImpl implements SyncEngine {
       debugPrint('SyncEngine: socket error uploading $id: $e');
       await _recordingRepo.markAsFailed(id);
     } on Exception catch (e, st) {
+      // Catchall for unexpected Exception subtypes. Programmer errors
+      // (subclasses of Error like TypeError, StateError, ArgumentError)
+      // are NOT caught here — they propagate as bugs.
       debugPrint('SyncEngine: unexpected error uploading $id: $e\n$st');
       await _recordingRepo.markAsFailed(id);
     }
@@ -438,6 +446,17 @@ class SyncEngineImpl implements SyncEngine {
       return row.id;
     }
     return null;
+  }
+
+  Future<void> _markPermanentlyFailed(String id) async {
+    await _recordingRepo.updateRecording(
+      id,
+      LocalRecordingsCompanion(
+        uploadStatus: const Value('failed'),
+        retryCount: const Value(maxRetries),
+        lastRetryAt: Value(DateTime.now()),
+      ),
+    );
   }
 
   void _checkResponse(

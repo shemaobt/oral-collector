@@ -8,6 +8,7 @@ import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_snack_bar.dart';
 import '../../auth/data/providers/role_provider.dart';
 import '../../../core/auth/auth_notifier.dart';
+import '../../sync/presentation/notifiers/sync_notifier.dart';
 import '../domain/entities/storyteller.dart';
 import 'notifiers/project_storytellers_notifier.dart';
 import 'widgets/storyteller_tile.dart';
@@ -83,6 +84,17 @@ class _StorytellersListScreenState
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final state = ref.watch(projectStorytellersNotifierProvider);
+
+    ref.listen<bool>(syncNotifierProvider.select((s) => s.isOnline), (
+      prev,
+      next,
+    ) {
+      if (next && prev == false) {
+        ref
+            .read(projectStorytellersNotifierProvider.notifier)
+            .fetch(widget.projectId);
+      }
+    });
 
     return Scaffold(
       appBar: AppBar(

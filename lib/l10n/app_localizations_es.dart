@@ -36,10 +36,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get common_cancel => 'Cancelar';
 
   @override
-  String get common_resume => 'Resume';
+  String get common_resume => 'Continuar';
 
   @override
-  String get common_discard => 'Discard';
+  String get common_discard => 'Descartar';
 
   @override
   String get common_save => 'Guardar';
@@ -477,7 +477,7 @@ class AppLocalizationsEs extends AppLocalizations {
       'Elige el registro de habla que mejor describa el tono y la formalidad de esta grabación.';
 
   @override
-  String get recording_titleHint => 'Agregar un título (opcional)';
+  String get recording_titleHint => 'Título de la grabación';
 
   @override
   String get recording_descriptionHint =>
@@ -485,6 +485,24 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get recording_descriptionEmpty => 'Agregar descripción';
+
+  @override
+  String get recording_titleEmpty => 'Agregar título';
+
+  @override
+  String get recording_titleRequired => 'El título no puede estar vacío';
+
+  @override
+  String get recording_title => 'Título';
+
+  @override
+  String get recording_description => 'Descripción';
+
+  @override
+  String get recording_editDetails => 'Editar detalles';
+
+  @override
+  String get recording_saveChanges => 'Guardar cambios';
 
   @override
   String get recording_saveRecording => 'Guardar Grabación';
@@ -658,7 +676,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get recordings_dropToImport =>
-      'Tip: drag audio files onto this window to import.';
+      'Consejo: arrastra archivos de audio a esta ventana para importarlos.';
 
   @override
   String recordings_count(int count) {
@@ -750,6 +768,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get trim_addSplitsFirst => 'Agrega divisiones primero';
 
   @override
+  String get trim_applyBoost => 'Aplicar volumen';
+
+  @override
+  String get trim_boostApplied => 'Volumen aplicado';
+
+  @override
   String trim_savedSegments(int kept, int removed) {
     String _temp0 = intl.Intl.pluralLogic(
       kept,
@@ -784,6 +808,10 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get trim_classifySegment => 'Clasificar segmento';
+
+  @override
+  String get trim_primaryEqualsSecondary =>
+      'La clasificación primaria no puede coincidir con la secundaria de la grabación.';
 
   @override
   String get trim_volume => 'Volumen';
@@ -911,18 +939,18 @@ class AppLocalizationsEs extends AppLocalizations {
       '~10x más pequeño, sin pérdida de calidad para pipeline de ML';
 
   @override
-  String get import_dropHint => 'Drop audio files to import';
+  String get import_dropHint => 'Suelta archivos de audio para importar';
 
   @override
-  String get import_dropActive => 'Release to import';
+  String get import_dropActive => 'Suelta para importar';
 
   @override
   String import_rejectedTooLarge(int count, String names) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Skipped $count files over 500 MB: $names',
-      one: 'Skipped 1 file over 500 MB: $names',
+      other: 'Se omitieron $count archivos de más de 500 MB: $names',
+      one: 'Se omitió 1 archivo de más de 500 MB: $names',
     );
     return '$_temp0';
   }
@@ -933,9 +961,9 @@ class AppLocalizationsEs extends AppLocalizations {
       count,
       locale: localeName,
       other:
-          'Skipped $count files with unsupported audio codecs: $names. Re-export as PCM WAV or M4A.',
+          'Se omitieron $count archivos con códecs de audio no compatibles: $names. Vuelve a exportarlos como PCM WAV o M4A.',
       one:
-          'Skipped 1 file with an unsupported audio codec: $names. Re-export as PCM WAV or M4A.',
+          'Se omitió 1 archivo con códec de audio no compatible: $names. Vuelve a exportarlo como PCM WAV o M4A.',
     );
     return '$_temp0';
   }
@@ -945,27 +973,27 @@ class AppLocalizationsEs extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Skipped $count unreadable files: $names',
-      one: 'Skipped 1 unreadable file: $names',
+      other: 'Se omitieron $count archivos ilegibles: $names',
+      one: 'Se omitió 1 archivo ilegible: $names',
     );
     return '$_temp0';
   }
 
   @override
-  String get import_resumePromptTitle => 'Resume interrupted upload';
+  String get import_resumePromptTitle => 'Reanudar subida interrumpida';
 
   @override
   String import_resumePromptBody(String name, String size) {
-    return '\"$name\" ($size) was partially uploaded. Select the same file to continue.';
+    return '\"$name\" ($size) se subió parcialmente. Selecciona el mismo archivo para continuar.';
   }
 
   @override
   String get import_resumeSizeMismatch =>
-      'That file doesn\'t match the paused upload.';
+      'Ese archivo no coincide con la subida pausada.';
 
   @override
   String import_largeFileWarning(String size) {
-    return 'Large file ($size). Keep this tab open until the upload completes.';
+    return 'Archivo grande ($size). Mantén esta pestaña abierta hasta que termine la subida.';
   }
 
   @override
@@ -1936,6 +1964,13 @@ class AppLocalizationsEs extends AppLocalizations {
       'Clasificación alternativa actualizada';
 
   @override
+  String get recording_secondaryCollisionBanner =>
+      'Esta grabación tiene la misma clasificación primaria y secundaria. Borra la secundaria o cambia la primaria para sincronizar.';
+
+  @override
+  String get recording_clearSecondary => 'Borrar secundaria';
+
+  @override
   String get recording_unclassified => 'Sin clasificar';
 
   @override
@@ -2022,11 +2057,68 @@ class AppLocalizationsEs extends AppLocalizations {
       'Parte del audio cerca del final no se pudo leer y fue omitido.';
 
   @override
+  String get recording_blockNavTitle => 'Recording in progress';
+
+  @override
+  String get recording_blockNavMessage =>
+      'You have a recording in progress. Discarding will permanently delete it.';
+
+  @override
+  String get recording_blockNavDiscardAndLeave => 'Discard and leave';
+
+  @override
   String get recording_inProgressNotificationTitle => 'Grabación en curso';
 
   @override
   String get recording_inProgressNotificationBody =>
       'Toca para volver a la app';
+
+  @override
+  String get recording_finalizing => 'Finalizando grabación…';
+
+  @override
+  String get recording_combiningSegments => 'Combinando segmentos…';
+
+  @override
+  String get recording_compressingAudio => 'Comprimiendo audio…';
+
+  @override
+  String get recording_finalizationDegradedHint =>
+      'La calidad del audio puede haberse reducido.';
+
+  @override
+  String get recording_finalizationFailed =>
+      'No se pudo guardar esta grabación';
+
+  @override
+  String get recording_finalizationFailedBody =>
+      'Intentamos recuperar el audio pero no había segmentos disponibles.';
+
+  @override
+  String get recording_discardAndReturn => 'Descartar y volver';
+
+  @override
+  String get recording_savingRecording => 'Saving recording…';
+
+  @override
+  String get recording_processingYourAudio => 'Processing your audio';
+
+  @override
+  String get recording_dontCloseSaveNext =>
+      'Don\'t close — we\'ll open the save screen next.';
+
+  @override
+  String get recording_stageShortFinalizing => 'FINALIZING';
+
+  @override
+  String get recording_stageShortCombining => 'COMBINING';
+
+  @override
+  String get recording_stageShortCompressing => 'COMPRESSING';
+
+  @override
+  String get recording_savingPleaseWait =>
+      'Saving your recording — please wait a moment.';
 
   @override
   String get profile_defaultMicrophone => 'Micrófono predeterminado';
@@ -2339,6 +2431,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Forma de onda para dividir. Toca para añadir marcadores. Arrastra para reposicionar. Pellizca para hacer zoom. Mantén pulsado para eliminar.';
 
   @override
+  String get a11y_minimapScrubber =>
+      'Audio overview. Tap or drag to navigate to a position.';
+
+  @override
   String a11y_tabLabel(String label) {
     return 'Pestaña $label';
   }
@@ -2554,4 +2650,30 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get recovery_backToList => 'Not now';
+
+  @override
+  String get upload_pausedWhileRecording =>
+      'Subida pausada durante la grabación';
+
+  @override
+  String get upload_inProgressNotificationTitle => 'Subiendo grabación';
+
+  @override
+  String get upload_inProgressNotificationBody =>
+      'Enviando audio en segundo plano';
+
+  @override
+  String get upload_completeNotificationTitle => 'Subida completada';
+
+  @override
+  String get upload_failedNotificationTitle => 'Subida fallida';
+
+  @override
+  String get liveActivity_recordingStatus => 'Grabando';
+
+  @override
+  String get liveActivity_recordingPausedStatus => 'Grabación pausada';
+
+  @override
+  String get liveActivity_uploadingStatus => 'Subiendo';
 }

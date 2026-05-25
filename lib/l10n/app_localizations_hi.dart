@@ -36,10 +36,10 @@ class AppLocalizationsHi extends AppLocalizations {
   String get common_cancel => 'रद्द करें';
 
   @override
-  String get common_resume => 'Resume';
+  String get common_resume => 'जारी रखें';
 
   @override
-  String get common_discard => 'Discard';
+  String get common_discard => 'हटाएँ';
 
   @override
   String get common_save => 'सहेजें';
@@ -472,13 +472,31 @@ class AppLocalizationsHi extends AppLocalizations {
       'वह भाषा शैली चुनें जो इस रिकॉर्डिंग के लहज़े और औपचारिकता का सबसे अच्छा वर्णन करती है।';
 
   @override
-  String get recording_titleHint => 'शीर्षक जोड़ें (वैकल्पिक)';
+  String get recording_titleHint => 'रिकॉर्डिंग का शीर्षक';
 
   @override
   String get recording_descriptionHint => 'संक्षिप्त विवरण जोड़ें (वैकल्पिक)';
 
   @override
   String get recording_descriptionEmpty => 'विवरण जोड़ें';
+
+  @override
+  String get recording_titleEmpty => 'शीर्षक जोड़ें';
+
+  @override
+  String get recording_titleRequired => 'शीर्षक खाली नहीं हो सकता';
+
+  @override
+  String get recording_title => 'शीर्षक';
+
+  @override
+  String get recording_description => 'विवरण';
+
+  @override
+  String get recording_editDetails => 'विवरण संपादित करें';
+
+  @override
+  String get recording_saveChanges => 'परिवर्तन सहेजें';
 
   @override
   String get recording_saveRecording => 'रिकॉर्डिंग सहेजें';
@@ -651,7 +669,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get recordings_dropToImport =>
-      'Tip: drag audio files onto this window to import.';
+      'सुझाव: आयात करने के लिए ऑडियो फ़ाइलें इस विंडो पर खींचें।';
 
   @override
   String recordings_count(int count) {
@@ -744,6 +762,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get trim_addSplitsFirst => 'पहले विभाजन जोड़ें';
 
   @override
+  String get trim_applyBoost => 'Apply boost';
+
+  @override
+  String get trim_boostApplied => 'Volume applied';
+
+  @override
   String trim_savedSegments(int kept, int removed) {
     String _temp0 = intl.Intl.pluralLogic(
       kept,
@@ -784,6 +808,10 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get trim_classifySegment => 'खंड वर्गीकृत करें';
+
+  @override
+  String get trim_primaryEqualsSecondary =>
+      'प्राथमिक वर्गीकरण रिकॉर्डिंग के द्वितीयक वर्गीकरण से मेल नहीं खा सकता।';
 
   @override
   String get trim_volume => 'आवाज़';
@@ -909,18 +937,18 @@ class AppLocalizationsHi extends AppLocalizations {
       '~10x छोटा, ML पाइपलाइन के लिए गुणवत्ता हानि नहीं';
 
   @override
-  String get import_dropHint => 'Drop audio files to import';
+  String get import_dropHint => 'आयात करने के लिए ऑडियो फ़ाइलें छोड़ें';
 
   @override
-  String get import_dropActive => 'Release to import';
+  String get import_dropActive => 'आयात के लिए छोड़ें';
 
   @override
   String import_rejectedTooLarge(int count, String names) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Skipped $count files over 500 MB: $names',
-      one: 'Skipped 1 file over 500 MB: $names',
+      other: '500 एमबी से बड़ी $count फ़ाइलें छोड़ दी गईं: $names',
+      one: '500 एमबी से बड़ी 1 फ़ाइल छोड़ दी गई: $names',
     );
     return '$_temp0';
   }
@@ -931,9 +959,9 @@ class AppLocalizationsHi extends AppLocalizations {
       count,
       locale: localeName,
       other:
-          'Skipped $count files with unsupported audio codecs: $names. Re-export as PCM WAV or M4A.',
+          'असमर्थित ऑडियो कोडेक वाली $count फ़ाइलें छोड़ दी गईं: $names. उन्हें PCM WAV या M4A के रूप में पुनः निर्यात करें.',
       one:
-          'Skipped 1 file with an unsupported audio codec: $names. Re-export as PCM WAV or M4A.',
+          'असमर्थित ऑडियो कोडेक वाली 1 फ़ाइल छोड़ दी गई: $names. इसे PCM WAV या M4A के रूप में पुनः निर्यात करें.',
     );
     return '$_temp0';
   }
@@ -943,27 +971,27 @@ class AppLocalizationsHi extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Skipped $count unreadable files: $names',
-      one: 'Skipped 1 unreadable file: $names',
+      other: '$count अपठनीय फ़ाइलें छोड़ दी गईं: $names',
+      one: '1 अपठनीय फ़ाइल छोड़ दी गई: $names',
     );
     return '$_temp0';
   }
 
   @override
-  String get import_resumePromptTitle => 'Resume interrupted upload';
+  String get import_resumePromptTitle => 'रुका हुआ अपलोड फिर से शुरू करें';
 
   @override
   String import_resumePromptBody(String name, String size) {
-    return '\"$name\" ($size) was partially uploaded. Select the same file to continue.';
+    return '\"$name\" ($size) आंशिक रूप से अपलोड हुई थी। जारी रखने के लिए वही फ़ाइल चुनें।';
   }
 
   @override
   String get import_resumeSizeMismatch =>
-      'That file doesn\'t match the paused upload.';
+      'यह फ़ाइल रुके हुए अपलोड से मेल नहीं खाती।';
 
   @override
   String import_largeFileWarning(String size) {
-    return 'Large file ($size). Keep this tab open until the upload completes.';
+    return 'बड़ी फ़ाइल ($size)। अपलोड पूरा होने तक यह टैब खुला रखें।';
   }
 
   @override
@@ -1922,6 +1950,13 @@ class AppLocalizationsHi extends AppLocalizations {
   String get recording_secondaryUpdated => 'वैकल्पिक वर्गीकरण अद्यतन किया गया';
 
   @override
+  String get recording_secondaryCollisionBanner =>
+      'इस रिकॉर्डिंग की प्राथमिक और द्वितीयक वर्गीकरण समान हैं। समन्वयित करने के लिए द्वितीयक को साफ करें या प्राथमिक को बदलें।';
+
+  @override
+  String get recording_clearSecondary => 'द्वितीयक साफ करें';
+
+  @override
   String get recording_unclassified => 'अवर्गीकृत';
 
   @override
@@ -2008,11 +2043,68 @@ class AppLocalizationsHi extends AppLocalizations {
       'अंत के निकट का कुछ ऑडियो पढ़ा नहीं जा सका और छोड़ दिया गया।';
 
   @override
+  String get recording_blockNavTitle => 'Recording in progress';
+
+  @override
+  String get recording_blockNavMessage =>
+      'You have a recording in progress. Discarding will permanently delete it.';
+
+  @override
+  String get recording_blockNavDiscardAndLeave => 'Discard and leave';
+
+  @override
   String get recording_inProgressNotificationTitle => 'रिकॉर्डिंग जारी है';
 
   @override
   String get recording_inProgressNotificationBody =>
       'ऐप पर लौटने के लिए टैप करें';
+
+  @override
+  String get recording_finalizing => 'रिकॉर्डिंग समाप्त की जा रही है…';
+
+  @override
+  String get recording_combiningSegments => 'खंडों को मिलाया जा रहा है…';
+
+  @override
+  String get recording_compressingAudio => 'ऑडियो संपीड़ित किया जा रहा है…';
+
+  @override
+  String get recording_finalizationDegradedHint =>
+      'ऑडियो गुणवत्ता कम हो सकती है।';
+
+  @override
+  String get recording_finalizationFailed =>
+      'इस रिकॉर्डिंग को सहेजा नहीं जा सका';
+
+  @override
+  String get recording_finalizationFailedBody =>
+      'हमने ऑडियो पुनर्प्राप्त करने का प्रयास किया लेकिन कोई खंड उपलब्ध नहीं था।';
+
+  @override
+  String get recording_discardAndReturn => 'त्यागें और लौटें';
+
+  @override
+  String get recording_savingRecording => 'Saving recording…';
+
+  @override
+  String get recording_processingYourAudio => 'Processing your audio';
+
+  @override
+  String get recording_dontCloseSaveNext =>
+      'Don\'t close — we\'ll open the save screen next.';
+
+  @override
+  String get recording_stageShortFinalizing => 'FINALIZING';
+
+  @override
+  String get recording_stageShortCombining => 'COMBINING';
+
+  @override
+  String get recording_stageShortCompressing => 'COMPRESSING';
+
+  @override
+  String get recording_savingPleaseWait =>
+      'Saving your recording — please wait a moment.';
 
   @override
   String get profile_defaultMicrophone => 'डिफ़ॉल्ट माइक्रोफ़ोन';
@@ -2323,6 +2415,10 @@ class AppLocalizationsHi extends AppLocalizations {
       'स्प्लिट वेवफ़ॉर्म। स्प्लिट मार्कर जोड़ने के लिए टैप करें। पुनः स्थान बदलने के लिए खींचें। ज़ूम के लिए पिंच करें। हटाने के लिए देर तक दबाएँ।';
 
   @override
+  String get a11y_minimapScrubber =>
+      'Audio overview. Tap or drag to navigate to a position.';
+
+  @override
   String a11y_tabLabel(String label) {
     return '$label टैब';
   }
@@ -2539,4 +2635,30 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get recovery_backToList => 'Not now';
+
+  @override
+  String get upload_pausedWhileRecording =>
+      'रिकॉर्डिंग के दौरान अपलोड रोका गया';
+
+  @override
+  String get upload_inProgressNotificationTitle => 'रिकॉर्डिंग अपलोड हो रही है';
+
+  @override
+  String get upload_inProgressNotificationBody =>
+      'पृष्ठभूमि में ऑडियो भेजा जा रहा है';
+
+  @override
+  String get upload_completeNotificationTitle => 'अपलोड पूर्ण';
+
+  @override
+  String get upload_failedNotificationTitle => 'अपलोड विफल';
+
+  @override
+  String get liveActivity_recordingStatus => 'रिकॉर्डिंग';
+
+  @override
+  String get liveActivity_recordingPausedStatus => 'रिकॉर्डिंग रोकी गई';
+
+  @override
+  String get liveActivity_uploadingStatus => 'अपलोड हो रहा है';
 }

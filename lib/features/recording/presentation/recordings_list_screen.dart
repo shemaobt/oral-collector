@@ -162,6 +162,17 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
   Future<void> _clearStaleRecordings() async {
     final l10n = AppLocalizations.of(context);
     final colors = AppColors.of(context);
+
+    if (!ref.read(syncNotifierProvider).isOnline) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.error_network),
+          backgroundColor: colors.error,
+        ),
+      );
+      return;
+    }
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -186,7 +197,16 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
       final deleted = await ref
           .read(recordingsListNotifierProvider.notifier)
           .clearStaleRecordings();
-      if (mounted) {
+      if (!mounted) return;
+      if (deleted == null) {
+        // Connectivity dropped between the dialog confirm and the API call.
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.error_network),
+            backgroundColor: colors.error,
+          ),
+        );
+      } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(l10n.recordings_clearedCount(deleted))),
         );

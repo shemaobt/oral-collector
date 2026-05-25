@@ -7,6 +7,7 @@ import 'package:oral_collector/core/database/app_database.dart';
 import 'package:oral_collector/features/recording/data/providers.dart';
 import 'package:oral_collector/features/recording/data/repositories/local_recording_repository.dart';
 import 'package:oral_collector/features/sync/data/providers.dart';
+import 'package:oral_collector/features/sync/data/services/upload_foreground_service.dart';
 import 'package:oral_collector/features/sync/domain/repositories/connectivity_service.dart';
 import 'package:oral_collector/features/sync/domain/repositories/sync_engine.dart';
 import 'package:oral_collector/features/sync/presentation/notifiers/sync_notifier.dart';
@@ -17,6 +18,33 @@ class MockConnectivity extends Mock implements ConnectivityService {}
 class MockSyncEngine extends Mock implements SyncEngine {}
 
 class MockRecordingRepo extends Mock implements LocalRecordingRepository {}
+
+class _FakeUploadForegroundService implements UploadForegroundService {
+  int startCount = 0;
+  int stopCount = 0;
+
+  @override
+  bool get isRunning => false;
+
+  @override
+  Future<void> start({
+    required Future<String> Function() titleResolver,
+    required String body,
+  }) async {
+    startCount++;
+  }
+
+  @override
+  Future<void> updateProgress({
+    required String title,
+    required String body,
+  }) async {}
+
+  @override
+  Future<void> stop() async {
+    stopCount++;
+  }
+}
 
 LocalRecording makeRecording({
   String id = 'rec-1',
@@ -389,6 +417,49 @@ void main() {
   });
 
   group('processQueue', () {
+    test('a concurrent call does not stop the foreground service while the '
+        'first run is still uploading', () async {
+      final fakeFgs = _FakeUploadForegroundService();
+      final engineGate = Completer<void>();
+
+      when(
+        () => mockRecordingRepo.getPendingUploads(),
+      ).thenAnswer((_) async => [makeRecording()]);
+      when(
+        () => mockSyncEngine.processQueue(
+          deleteAfterUpload: any(named: 'deleteAfterUpload'),
+          wifiOnly: any(named: 'wifiOnly'),
+          maxConcurrency: any(named: 'maxConcurrency'),
+          onProgress: any(named: 'onProgress'),
+        ),
+      ).thenAnswer((_) => engineGate.future);
+
+      final c = ProviderContainer(
+        overrides: [
+          connectivityServiceProvider.overrideWithValue(mockConnectivity),
+          syncEngineProvider.overrideWithValue(mockSyncEngine),
+          localRecordingRepositoryProvider.overrideWithValue(mockRecordingRepo),
+          uploadForegroundServiceProvider.overrideWithValue(fakeFgs),
+        ],
+      );
+      addTearDown(c.dispose);
+
+      final notifier = c.read(syncNotifierProvider.notifier);
+      await Future<void>.delayed(Duration.zero);
+
+      final first = notifier.processQueue();
+      await Future<void>.delayed(Duration.zero);
+      await notifier.processQueue();
+
+      expect(fakeFgs.startCount, 1);
+      expect(fakeFgs.stopCount, 0);
+
+      engineGate.complete();
+      await first;
+
+      expect(fakeFgs.stopCount, 1);
+    });
+
     test('returns early when offline', () async {
       when(() => mockConnectivity.isOnline).thenAnswer((_) async => false);
 

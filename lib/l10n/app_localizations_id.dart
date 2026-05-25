@@ -36,10 +36,10 @@ class AppLocalizationsId extends AppLocalizations {
   String get common_cancel => 'Batal';
 
   @override
-  String get common_resume => 'Resume';
+  String get common_resume => 'Lanjutkan';
 
   @override
-  String get common_discard => 'Discard';
+  String get common_discard => 'Buang';
 
   @override
   String get common_save => 'Simpan';
@@ -472,13 +472,31 @@ class AppLocalizationsId extends AppLocalizations {
       'Pilih register bicara yang paling menggambarkan nada dan formalitas rekaman ini.';
 
   @override
-  String get recording_titleHint => 'Tambah judul (opsional)';
+  String get recording_titleHint => 'Judul rekaman';
 
   @override
   String get recording_descriptionHint => 'Tambah deskripsi singkat (opsional)';
 
   @override
   String get recording_descriptionEmpty => 'Tambah deskripsi';
+
+  @override
+  String get recording_titleEmpty => 'Tambah judul';
+
+  @override
+  String get recording_titleRequired => 'Judul tidak boleh kosong';
+
+  @override
+  String get recording_title => 'Judul';
+
+  @override
+  String get recording_description => 'Deskripsi';
+
+  @override
+  String get recording_editDetails => 'Edit detail';
+
+  @override
+  String get recording_saveChanges => 'Simpan perubahan';
 
   @override
   String get recording_saveRecording => 'Simpan Rekaman';
@@ -651,7 +669,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get recordings_dropToImport =>
-      'Tip: drag audio files onto this window to import.';
+      'Tip: seret berkas audio ke jendela ini untuk mengimpor.';
 
   @override
   String recordings_count(int count) {
@@ -744,6 +762,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get trim_addSplitsFirst => 'Tambahkan pembagian terlebih dahulu';
 
   @override
+  String get trim_applyBoost => 'Apply boost';
+
+  @override
+  String get trim_boostApplied => 'Volume applied';
+
+  @override
   String trim_savedSegments(int kept, int removed) {
     return 'Tersimpan $kept segmen, dihapus $removed';
   }
@@ -772,6 +796,10 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get trim_classifySegment => 'Klasifikasikan segmen';
+
+  @override
+  String get trim_primaryEqualsSecondary =>
+      'Klasifikasi primer tidak boleh sama dengan klasifikasi sekunder rekaman.';
 
   @override
   String get trim_volume => 'Volume';
@@ -899,18 +927,18 @@ class AppLocalizationsId extends AppLocalizations {
       '~10x lebih kecil, tanpa kehilangan kualitas untuk pipeline ML';
 
   @override
-  String get import_dropHint => 'Drop audio files to import';
+  String get import_dropHint => 'Jatuhkan berkas audio untuk diimpor';
 
   @override
-  String get import_dropActive => 'Release to import';
+  String get import_dropActive => 'Lepaskan untuk mengimpor';
 
   @override
   String import_rejectedTooLarge(int count, String names) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Skipped $count files over 500 MB: $names',
-      one: 'Skipped 1 file over 500 MB: $names',
+      other: '$count berkas di atas 500 MB dilewati: $names',
+      one: '1 berkas di atas 500 MB dilewati: $names',
     );
     return '$_temp0';
   }
@@ -921,9 +949,9 @@ class AppLocalizationsId extends AppLocalizations {
       count,
       locale: localeName,
       other:
-          'Skipped $count files with unsupported audio codecs: $names. Re-export as PCM WAV or M4A.',
+          '$count berkas dengan codec audio tak didukung dilewati: $names. Ekspor ulang sebagai PCM WAV atau M4A.',
       one:
-          'Skipped 1 file with an unsupported audio codec: $names. Re-export as PCM WAV or M4A.',
+          '1 berkas dengan codec audio tak didukung dilewati: $names. Ekspor ulang sebagai PCM WAV atau M4A.',
     );
     return '$_temp0';
   }
@@ -933,27 +961,27 @@ class AppLocalizationsId extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Skipped $count unreadable files: $names',
-      one: 'Skipped 1 unreadable file: $names',
+      other: '$count berkas tak terbaca dilewati: $names',
+      one: '1 berkas tak terbaca dilewati: $names',
     );
     return '$_temp0';
   }
 
   @override
-  String get import_resumePromptTitle => 'Resume interrupted upload';
+  String get import_resumePromptTitle => 'Lanjutkan unggahan yang terhenti';
 
   @override
   String import_resumePromptBody(String name, String size) {
-    return '\"$name\" ($size) was partially uploaded. Select the same file to continue.';
+    return '\"$name\" ($size) terunggah sebagian. Pilih berkas yang sama untuk melanjutkan.';
   }
 
   @override
   String get import_resumeSizeMismatch =>
-      'That file doesn\'t match the paused upload.';
+      'Berkas itu tidak cocok dengan unggahan yang dijeda.';
 
   @override
   String import_largeFileWarning(String size) {
-    return 'Large file ($size). Keep this tab open until the upload completes.';
+    return 'Berkas besar ($size). Biarkan tab ini terbuka hingga unggahan selesai.';
   }
 
   @override
@@ -1923,6 +1951,13 @@ class AppLocalizationsId extends AppLocalizations {
   String get recording_secondaryUpdated => 'Klasifikasi alternatif diperbarui';
 
   @override
+  String get recording_secondaryCollisionBanner =>
+      'Rekaman ini memiliki klasifikasi primer dan sekunder yang sama. Hapus yang sekunder atau ubah yang primer untuk sinkronisasi.';
+
+  @override
+  String get recording_clearSecondary => 'Hapus sekunder';
+
+  @override
   String get recording_unclassified => 'Belum diklasifikasi';
 
   @override
@@ -2009,11 +2044,68 @@ class AppLocalizationsId extends AppLocalizations {
       'Sebagian audio di dekat akhir tidak dapat dibaca dan dilewati.';
 
   @override
+  String get recording_blockNavTitle => 'Recording in progress';
+
+  @override
+  String get recording_blockNavMessage =>
+      'You have a recording in progress. Discarding will permanently delete it.';
+
+  @override
+  String get recording_blockNavDiscardAndLeave => 'Discard and leave';
+
+  @override
   String get recording_inProgressNotificationTitle => 'Perekaman berlangsung';
 
   @override
   String get recording_inProgressNotificationBody =>
       'Ketuk untuk kembali ke aplikasi';
+
+  @override
+  String get recording_finalizing => 'Menyelesaikan rekaman…';
+
+  @override
+  String get recording_combiningSegments => 'Menggabungkan segmen…';
+
+  @override
+  String get recording_compressingAudio => 'Mengompresi audio…';
+
+  @override
+  String get recording_finalizationDegradedHint =>
+      'Kualitas audio mungkin berkurang.';
+
+  @override
+  String get recording_finalizationFailed =>
+      'Tidak dapat menyimpan rekaman ini';
+
+  @override
+  String get recording_finalizationFailedBody =>
+      'Kami mencoba memulihkan audio tetapi tidak ada segmen yang tersedia.';
+
+  @override
+  String get recording_discardAndReturn => 'Buang dan kembali';
+
+  @override
+  String get recording_savingRecording => 'Saving recording…';
+
+  @override
+  String get recording_processingYourAudio => 'Processing your audio';
+
+  @override
+  String get recording_dontCloseSaveNext =>
+      'Don\'t close — we\'ll open the save screen next.';
+
+  @override
+  String get recording_stageShortFinalizing => 'FINALIZING';
+
+  @override
+  String get recording_stageShortCombining => 'COMBINING';
+
+  @override
+  String get recording_stageShortCompressing => 'COMPRESSING';
+
+  @override
+  String get recording_savingPleaseWait =>
+      'Saving your recording — please wait a moment.';
 
   @override
   String get profile_defaultMicrophone => 'Mikrofon default';
@@ -2325,6 +2417,10 @@ class AppLocalizationsId extends AppLocalizations {
       'Bentuk gelombang pembagi. Ketuk untuk menambahkan penanda. Seret untuk memindahkan. Cubit untuk memperbesar. Tekan lama untuk menghapus.';
 
   @override
+  String get a11y_minimapScrubber =>
+      'Audio overview. Tap or drag to navigate to a position.';
+
+  @override
   String a11y_tabLabel(String label) {
     return 'Tab $label';
   }
@@ -2541,4 +2637,29 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get recovery_backToList => 'Not now';
+
+  @override
+  String get upload_pausedWhileRecording => 'Unggahan dijeda saat merekam';
+
+  @override
+  String get upload_inProgressNotificationTitle => 'Mengunggah rekaman';
+
+  @override
+  String get upload_inProgressNotificationBody =>
+      'Mengirim audio di latar belakang';
+
+  @override
+  String get upload_completeNotificationTitle => 'Unggahan selesai';
+
+  @override
+  String get upload_failedNotificationTitle => 'Unggahan gagal';
+
+  @override
+  String get liveActivity_recordingStatus => 'Merekam';
+
+  @override
+  String get liveActivity_recordingPausedStatus => 'Rekaman dijeda';
+
+  @override
+  String get liveActivity_uploadingStatus => 'Mengunggah';
 }
