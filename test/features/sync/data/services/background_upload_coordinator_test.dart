@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:oral_collector/features/recording/presentation/notifiers/recording_session_state.dart';
 import 'package:oral_collector/features/sync/data/services/background_upload_coordinator.dart';
 import 'package:oral_collector/features/sync/data/services/upload_downloader.dart';
+import 'package:oral_collector/features/sync/data/services/upload_foreground_service.dart';
 
 class _RecordingDownloader implements UploadDownloader {
   int cancelAllCount = 0;
@@ -32,6 +33,27 @@ class _RecordingDownloader implements UploadDownloader {
   }
 }
 
+class _FakeUploadForegroundService implements UploadForegroundService {
+  int startCount = 0;
+  int stopCount = 0;
+
+  @override
+  bool get isRunning => false;
+
+  @override
+  Future<void> start({
+    required Future<String> Function() titleResolver,
+    required String body,
+  }) async {
+    startCount++;
+  }
+
+  @override
+  Future<void> stop() async {
+    stopCount++;
+  }
+}
+
 void main() {
   group('BackgroundUploadCoordinator', () {
     test(
@@ -41,6 +63,7 @@ void main() {
         var resumeCalls = 0;
         final coordinator = BackgroundUploadCoordinator(
           downloader: downloader,
+          uploadForegroundService: _FakeUploadForegroundService(),
           onResume: () async => resumeCalls++,
         );
 
@@ -53,10 +76,28 @@ void main() {
       },
     );
 
+    test('stops the upload foreground service when recording starts', () async {
+      final downloader = _RecordingDownloader();
+      final fgs = _FakeUploadForegroundService();
+      final coordinator = BackgroundUploadCoordinator(
+        downloader: downloader,
+        uploadForegroundService: fgs,
+        onResume: () async {},
+      );
+
+      await coordinator.onRecordingStateChanged(
+        const RecordingState(isRecording: true),
+      );
+
+      expect(fgs.stopCount, 1);
+      expect(downloader.cancelAllCount, 1);
+    });
+
     test('does not cancel again if state remains recording', () async {
       final downloader = _RecordingDownloader();
       final coordinator = BackgroundUploadCoordinator(
         downloader: downloader,
+        uploadForegroundService: _FakeUploadForegroundService(),
         onResume: () async {},
       );
 
@@ -74,6 +115,7 @@ void main() {
       final downloader = _RecordingDownloader();
       final coordinator = BackgroundUploadCoordinator(
         downloader: downloader,
+        uploadForegroundService: _FakeUploadForegroundService(),
         onResume: () async {},
       );
 
@@ -93,6 +135,7 @@ void main() {
       var resumeCalls = 0;
       final coordinator = BackgroundUploadCoordinator(
         downloader: downloader,
+        uploadForegroundService: _FakeUploadForegroundService(),
         onResume: () async => resumeCalls++,
       );
 
@@ -110,6 +153,7 @@ void main() {
       final callOrder = <String>[];
       final coordinator = BackgroundUploadCoordinator(
         downloader: _OrderingDownloader(downloader, callOrder),
+        uploadForegroundService: _FakeUploadForegroundService(),
         onResume: () async => callOrder.add('onResume'),
       );
 
@@ -133,6 +177,7 @@ void main() {
         var resumeCalls = 0;
         final coordinator = BackgroundUploadCoordinator(
           downloader: downloader,
+          uploadForegroundService: _FakeUploadForegroundService(),
           onResume: () async => resumeCalls++,
         );
 

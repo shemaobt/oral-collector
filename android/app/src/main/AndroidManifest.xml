@@ -6,6 +6,7 @@
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
     <application
         android:label="Oral Collector"
         android:name="${applicationName}"
@@ -42,7 +43,7 @@
             android:resource="@drawable/ic_recording_notification" />
         <service
             android:name="com.pravera.flutter_foreground_task.service.ForegroundService"
-            android:foregroundServiceType="microphone"
+            android:foregroundServiceType="microphone|dataSync"
             android:exported="false"
             android:stopWithTask="true"
             tools:replace="android:foregroundServiceType,android:exported,android:stopWithTask"

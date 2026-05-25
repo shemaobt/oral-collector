@@ -8,6 +8,7 @@ import 'repositories/connectivity_service.dart';
 import 'repositories/sync_engine.dart';
 import 'services/background_sync_service.dart';
 import 'services/upload_downloader.dart';
+import 'services/upload_foreground_service.dart';
 
 final connectivityServiceProvider = Provider<ConnectivityService>(
   (_) => ConnectivityServiceImpl(),
@@ -33,4 +34,8 @@ final syncEngineProvider = Provider<SyncEngine>((ref) {
 
 final backgroundSyncServiceProvider = Provider<BackgroundSyncService>(
   (_) => BackgroundSyncService(),
+);
+
+final uploadForegroundServiceProvider = Provider<UploadForegroundService>(
+  (_) => UploadForegroundService(),
 );

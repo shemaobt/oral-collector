@@ -64,6 +64,7 @@ class RecordingForegroundService {
     try {
       await FlutterForegroundTask.startService(
         serviceId: recordingServiceId,
+        serviceTypes: const [ForegroundServiceTypes.microphone],
         notificationTitle: content.title,
         notificationText: content.body,
         notificationIcon: const NotificationIcon(
