@@ -14,6 +14,7 @@ import '../../../recording/data/repositories/local_recording_repository.dart';
 import '../../domain/repositories/connectivity_service.dart';
 import '../../domain/repositories/sync_engine.dart';
 import '../services/resumable_upload_service.dart';
+import '../services/upload_downloader.dart';
 
 class _NonRetryableUploadException implements Exception {
   final String message;
@@ -44,12 +45,14 @@ class SyncEngineImpl implements SyncEngine {
     required LocalRecordingRepository recordingRepo,
     required ConnectivityService connectivity,
     required AuthenticatedClient client,
+    UploadDownloader? uploadDownloader,
   }) : _recordingRepo = recordingRepo,
        _connectivity = connectivity,
        _client = client {
     _uploadService = ResumableUploadService(
       client: _client,
       recordingRepo: _recordingRepo,
+      downloader: uploadDownloader,
     );
   }
 
@@ -64,18 +67,21 @@ class SyncEngineImpl implements SyncEngine {
     void Function(String recordingId, int bytesSent, int totalBytes)?
     onProgress,
   }) async {
+    // Set the guard before any await so two rapid callers can't both pass the
+    // check while one is mid-connectivity-probe. The previous ordering left a
+    // window where a second processQueue() entered before the first set the
+    // flag, doubling the work and racing the coordinator's resume.
     if (_isProcessing) return;
-
-    final online = await _connectivity.isOnline;
-    if (!online) return;
-
-    if (wifiOnly) {
-      final onWifi = await _connectivity.isOnWifi;
-      if (!onWifi) return;
-    }
-
     _isProcessing = true;
     try {
+      final online = await _connectivity.isOnline;
+      if (!online) return;
+
+      if (wifiOnly) {
+        final onWifi = await _connectivity.isOnWifi;
+        if (!onWifi) return;
+      }
+
       final pending = await _recordingRepo.getPendingUploads();
 
       final eligible = <LocalRecording>[];
@@ -285,6 +291,14 @@ class SyncEngineImpl implements SyncEngine {
             : null,
       );
 
+      if (uploadResult.pausedByRecording) {
+        await _recordingRepo.updateRecording(
+          id,
+          const LocalRecordingsCompanion(uploadStatus: Value('local')),
+        );
+        return;
+      }
+
       if (!uploadResult.success) {
         throw Exception('Upload failed: ${uploadResult.error}');
       }
@@ -319,14 +333,11 @@ class SyncEngineImpl implements SyncEngine {
       }
     } on _NonRetryableUploadException catch (e) {
       debugPrint('SyncEngine: non-retryable upload failure for $id: $e');
-      await _recordingRepo.updateRecording(
-        id,
-        LocalRecordingsCompanion(
-          uploadStatus: const Value('failed'),
-          retryCount: const Value(maxRetries),
-          lastRetryAt: Value(DateTime.now()),
-        ),
-      );
+      await _markPermanentlyFailed(id);
+    } on FormatException catch (e, st) {
+      // Server returned malformed JSON. Retrying won't help; mark terminal.
+      debugPrint('SyncEngine: response parse error for $id: $e\n$st');
+      await _markPermanentlyFailed(id);
     } on TimeoutException catch (e) {
       debugPrint('SyncEngine: timeout uploading $id: $e');
       await _recordingRepo.markAsFailed(id);
@@ -334,9 +345,23 @@ class SyncEngineImpl implements SyncEngine {
       debugPrint('SyncEngine: socket error uploading $id: $e');
       await _recordingRepo.markAsFailed(id);
     } on Exception catch (e, st) {
+      // Catchall for unexpected Exception subtypes. Programmer errors
+      // (subclasses of Error like TypeError, StateError, ArgumentError)
+      // are NOT caught here — they propagate as bugs.
       debugPrint('SyncEngine: unexpected error uploading $id: $e\n$st');
       await _recordingRepo.markAsFailed(id);
     }
+  }
+
+  Future<void> _markPermanentlyFailed(String id) async {
+    await _recordingRepo.updateRecording(
+      id,
+      LocalRecordingsCompanion(
+        uploadStatus: const Value('failed'),
+        retryCount: const Value(maxRetries),
+        lastRetryAt: Value(DateTime.now()),
+      ),
+    );
   }
 
   void _checkResponse(

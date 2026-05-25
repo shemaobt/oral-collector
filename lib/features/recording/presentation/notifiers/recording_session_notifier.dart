@@ -14,6 +14,7 @@ import 'package:record/record.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../core/l10n/locale_provider.dart';
 import '../../../../core/platform/file_ops.dart' as file_ops;
+import '../../../../core/platform/recording_active_flag.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/utils/format.dart' as fmt;
 import '../../../project/presentation/notifiers/project_notifier.dart';
@@ -166,6 +167,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
       _pendingResumeSessionId = null;
       _pendingResumeSegmentPaths = null;
       _pendingResumeDuration = null;
+      await const RecordingActiveFlag().markInactive();
       state = const RecordingState();
       await ref.read(recoveryCoordinatorProvider).refresh();
       return;
@@ -185,6 +187,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
     final sessionRepo = ref.read(recordingSessionRepositoryProvider);
     await sessionRepo.markCrashed(activeSessionId);
 
+    await const RecordingActiveFlag().markInactive();
     state = const RecordingState();
     await RecordingNotification.instance.clear();
     await _stopLiveActivityIfIOS();
@@ -283,6 +286,8 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
       _segRecorder = null;
       return false;
     }
+
+    await const RecordingActiveFlag().markActive();
 
     state = RecordingState(
       isRecording: true,
@@ -416,6 +421,8 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
       return false;
     }
 
+    await const RecordingActiveFlag().markActive();
+
     state = state.copyWith(
       amplitudeStream: recorder.amplitudeStream,
       sessionId: sessionId,
@@ -499,6 +506,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
         _pendingResumeSessionId = null;
         _pendingResumeSegmentPaths = null;
         _pendingResumeDuration = null;
+        await const RecordingActiveFlag().markInactive();
         state = const RecordingState(
           finalizationStage: FinalizationStage.finalizing,
         );
@@ -520,6 +528,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
         return result;
       }
 
+      await const RecordingActiveFlag().markInactive();
       state = const RecordingState();
       await RecordingNotification.instance.clear();
       await _stopLiveActivityIfIOS();
@@ -547,6 +556,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
     }
     _segRecorder = null;
 
+    await const RecordingActiveFlag().markInactive();
     state = state.copyWith(
       isRecording: false,
       isPaused: false,
@@ -688,6 +698,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
     final recorder = _webRecorder;
     final pendingKey = _webPendingKey;
     if (recorder == null || pendingKey == null) {
+      await const RecordingActiveFlag().markInactive();
       state = const RecordingState();
       return null;
     }
@@ -703,6 +714,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
     }
     await _disposeWebRecorder();
 
+    await const RecordingActiveFlag().markInactive();
     state = state.copyWith(
       isRecording: false,
       isPaused: false,
@@ -779,6 +791,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
       }
     }
 
+    await const RecordingActiveFlag().markInactive();
     state = const RecordingState();
   }
 
@@ -813,10 +826,14 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
     if (kIsWeb || !Platform.isIOS) return false;
     final supported = await RecordingLiveActivity.instance.isSupported();
     if (!supported) return false;
+    final l10n = await _resolveLocalizations();
     final started = await RecordingLiveActivity.instance.start(
       activityId: sessionId,
       genre: state.currentGenreName ?? '',
       subcategory: state.currentSubcategoryName ?? '',
+      localizedRecordingStatus: l10n.liveActivity_recordingStatus,
+      localizedRecordingPausedStatus: l10n.liveActivity_recordingPausedStatus,
+      localizedStopAction: l10n.recording_serviceNotificationStopAction,
     );
     if (!started) return false;
     _liveActivityActive = true;

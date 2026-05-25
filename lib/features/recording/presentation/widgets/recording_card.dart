@@ -8,6 +8,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/utils/format.dart';
 import '../../../sync/presentation/notifiers/sync_notifier.dart';
 import '../../domain/entities/classification.dart';
+import '../notifiers/recording_session_notifier.dart';
 
 class RecordingCard extends ConsumerWidget {
   const RecordingCard({
@@ -85,6 +86,13 @@ class RecordingCard extends ConsumerWidget {
         (s) => s.uploadingId == recording.id ? s.syncProgress : 0,
       ),
     );
+    final isRecordingActive = ref.watch(
+      recordingSessionNotifierProvider.select((s) => s.isRecording),
+    );
+    final isPausedByRecording =
+        isRecordingActive &&
+        recording.uploadStatus == 'local' &&
+        (recording.uploadedBytes > 0 || recording.resumableSessionUri != null);
     final isUnclassified = recording.isUnclassified;
     final breadcrumbParts = <String>[];
     if (genreName != null) breadcrumbParts.add(genreName!);
@@ -318,6 +326,32 @@ class RecordingCard extends ConsumerWidget {
                                 fontFeatures: const [
                                   FontFeature.tabularFigures(),
                                 ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                      if (isPausedByRecording) ...[
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            Icon(
+                              LucideIcons.pauseCircle,
+                              size: 12,
+                              color: colors.secondary.withValues(alpha: 0.7),
+                            ),
+                            const SizedBox(width: 4),
+                            Flexible(
+                              child: Text(
+                                l10n.upload_pausedWhileRecording,
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: colors.secondary.withValues(
+                                    alpha: 0.85,
+                                  ),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           ],

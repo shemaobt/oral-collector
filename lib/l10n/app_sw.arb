@@ -948,5 +948,25 @@
     }
   },
   "format_yesterday": "Yesterday",
-  "recovery_backToList": "Not now"
+  "recovery_backToList": "Not now",
+  "common_discard": "Tupa",
+  "common_resume": "Endelea",
+  "import_dropActive": "Achia ili kuingiza",
+  "import_dropHint": "Dondosha faili za sauti ili kuingiza",
+  "import_largeFileWarning": "Faili kubwa ({size}). Acha kichupo hiki kifunguliwe hadi upakiaji ukamilike.",
+  "import_rejectedTooLarge": "{count, plural, =1{Imeruka faili 1 yenye zaidi ya MB 500: {names}} other{Imeruka faili {count} zenye zaidi ya MB 500: {names}}}",
+  "import_rejectedUnreadable": "{count, plural, =1{Imeruka faili 1 isiyoweza kusomeka: {names}} other{Imeruka faili {count} zisizoweza kusomeka: {names}}}",
+  "import_rejectedUnsupportedCodec": "{count, plural, =1{Imeruka faili 1 yenye kodeki ya sauti isiyotegemewa: {names}. Hamisha tena kama PCM WAV au M4A.} other{Imeruka faili {count} zenye kodeki za sauti zisizotegemewa: {names}. Hamisha tena kama PCM WAV au M4A.}}",
+  "import_resumePromptBody": "\"{name}\" ({size}) ilipakiwa kwa sehemu. Chagua faili ileile ili kuendelea.",
+  "import_resumePromptTitle": "Endelea upakiaji uliokatizwa",
+  "import_resumeSizeMismatch": "Faili hiyo hailingani na upakiaji uliosimamishwa.",
+  "recordings_dropToImport": "Kidokezo: buruta faili za sauti kwenye dirisha hili ili kuingiza.",
+  "upload_completeNotificationTitle": "Upakiaji umekamilika",
+  "upload_failedNotificationTitle": "Upakiaji umeshindwa",
+  "upload_inProgressNotificationBody": "Inatuma sauti chinichini",
+  "upload_inProgressNotificationTitle": "Inapakia rekodi",
+  "upload_pausedWhileRecording": "Upakiaji umesitishwa wakati wa kurekodi",
+  "liveActivity_recordingStatus": "Inarekodi",
+  "liveActivity_recordingPausedStatus": "Rekodi imesimama",
+  "liveActivity_uploadingStatus": "Inapakia"
 }

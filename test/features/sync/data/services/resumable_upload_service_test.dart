@@ -8,12 +8,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:oral_collector/core/database/app_database.dart';
 import 'package:oral_collector/core/network/authenticated_client.dart';
 import 'package:oral_collector/core/util/crc32c.dart';
 import 'package:oral_collector/features/recording/data/repositories/local_recording_repository.dart';
 import 'package:oral_collector/features/sync/data/services/resumable_upload_service.dart';
+import 'package:oral_collector/features/sync/data/services/upload_downloader.dart';
 
 class MockRecordingRepo extends Mock implements LocalRecordingRepository {}
 
@@ -22,8 +24,115 @@ class MockSecureStorage extends Mock implements FlutterSecureStorage {}
 class FakeLocalRecordingsCompanion extends Fake
     implements LocalRecordingsCompanion {}
 
+class _ChunkCall {
+  final String taskId;
+  final String url;
+  final String filePath;
+  final int offset;
+  final int end;
+  final Map<String, String> headers;
+  _ChunkCall({
+    required this.taskId,
+    required this.url,
+    required this.filePath,
+    required this.offset,
+    required this.end,
+    required this.headers,
+  });
+}
+
+class _StubDownloader implements UploadDownloader {
+  _StubDownloader({List<UploadResult>? responses})
+    : _responses = responses != null ? List<UploadResult>.from(responses) : [];
+
+  final List<UploadResult> _responses;
+  final List<_ChunkCall> calls = [];
+  bool cancelCalled = false;
+  String? lastCancelledTaskId;
+
+  void enqueueResponse(UploadResult result) => _responses.add(result);
+
+  @override
+  Future<UploadResult> putChunk({
+    required String taskId,
+    required String url,
+    required String filePath,
+    required int offset,
+    required int end,
+    required Map<String, String> headers,
+  }) async {
+    calls.add(
+      _ChunkCall(
+        taskId: taskId,
+        url: url,
+        filePath: filePath,
+        offset: offset,
+        end: end,
+        headers: Map.from(headers),
+      ),
+    );
+    if (_responses.isEmpty) {
+      return const UploadResult(statusCode: 200);
+    }
+    return _responses.removeAt(0);
+  }
+
+  @override
+  Future<void> cancel(String taskId) async {
+    cancelCalled = true;
+    lastCancelledTaskId = taskId;
+  }
+
+  @override
+  Future<void> cancelAll() async {
+    cancelCalled = true;
+  }
+
+  @override
+  Future<void> resumeAfterCancel() async {}
+}
+
+LocalRecording _seedRecording({
+  required String id,
+  required int fileSizeBytes,
+  required String filePath,
+  String? resumableSessionUri,
+  int uploadedBytes = 0,
+}) {
+  return LocalRecording(
+    id: id,
+    projectId: 'proj-1',
+    genreId: 'genre-1',
+    subcategoryId: null,
+    title: 'Test',
+    durationSeconds: 60.0,
+    fileSizeBytes: fileSizeBytes,
+    format: 'm4a',
+    localFilePath: filePath,
+    uploadStatus: 'uploading',
+    serverId: 'srv-1',
+    gcsUrl: null,
+    registerId: null,
+    cleaningStatus: 'none',
+    recordedAt: DateTime(2024, 1, 1),
+    createdAt: DateTime(2024, 1, 1),
+    retryCount: 0,
+    lastRetryAt: null,
+    resumableSessionUri: resumableSessionUri,
+    uploadedBytes: uploadedBytes,
+    md5Hash: null,
+  );
+}
+
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   late Directory tempDir;
+  late MockRecordingRepo mockRepo;
+  late MockSecureStorage mockStorage;
+  late _StubDownloader fakeDownloader;
+  const sessionUri = 'https://storage.googleapis.com/upload/session-123';
+  const chunkSize = 8 * 1024 * 1024;
 
   setUpAll(() {
     registerFallbackValue(FakeLocalRecordingsCompanion());
@@ -32,363 +141,83 @@ void main() {
   });
 
   setUp(() {
+    SharedPreferences.setMockInitialValues({});
     tempDir = Directory.systemTemp.createTempSync('upload_test');
+    mockRepo = MockRecordingRepo();
+    mockStorage = MockSecureStorage();
+    fakeDownloader = _StubDownloader();
+    when(
+      () => mockStorage.read(key: any(named: 'key')),
+    ).thenAnswer((_) async => 'test-token');
+    when(
+      () => mockRepo.updateRecording(any(), any()),
+    ).thenAnswer((_) async => true);
   });
 
   tearDown(() {
     tempDir.deleteSync(recursive: true);
   });
 
+  ResumableUploadService buildService({MockClient? httpClient}) {
+    final client =
+        httpClient ?? MockClient((_) async => http.Response('', 404));
+    final authClient = AuthenticatedClient(
+      client: client,
+      storage: mockStorage,
+    );
+    return ResumableUploadService(
+      client: authClient,
+      recordingRepo: mockRepo,
+      downloader: fakeDownloader,
+    );
+  }
+
   group('ResumableUploadResult', () {
     test('success result', () {
       const result = ResumableUploadResult(success: true);
       expect(result.success, isTrue);
       expect(result.error, isNull);
+      expect(result.pausedByRecording, isFalse);
       expect(result.clientCrc32c, isNull);
       expect(result.gcsCrc32c, isNull);
     });
 
-    test('failure result', () {
-      const result = ResumableUploadResult(success: false, error: 'timeout');
-      expect(result.success, isFalse);
-      expect(result.error, equals('timeout'));
+    test('paused_by_recording is exposed as a typed flag', () {
+      const result = ResumableUploadResult(
+        success: false,
+        error: pausedByRecordingError,
+      );
+      expect(result.pausedByRecording, isTrue);
     });
   });
 
-  group('CRC32C validation', () {
-    late MockRecordingRepo mockRepo;
-    late MockSecureStorage mockStorage;
-
-    setUp(() {
-      mockRepo = MockRecordingRepo();
-      mockStorage = MockSecureStorage();
-      when(
-        () => mockStorage.read(key: any(named: 'key')),
-      ).thenAnswer((_) async => 'test-token');
-    });
-
-    test('single PUT: succeeds when GCS returns matching CRC32C', () async {
-      final testFile = File('${tempDir.path}/crc_match.m4a');
-      final fileBytes = Uint8List(1024);
-      testFile.writeAsBytesSync(fileBytes);
-      final expectedCrc = (Crc32c()..add(fileBytes)).base64BigEndian;
-
-      final mockClient = MockClient((request) async {
-        if (request.url.path.contains('upload-url')) {
-          return http.Response(
-            jsonEncode({
-              'upload_url': 'https://storage.googleapis.com/test',
-              'content_type': 'audio/mp4',
-            }),
-            200,
-          );
-        }
-        if (request.url.host == 'storage.googleapis.com') {
-          return http.Response(
-            '',
-            200,
-            headers: {'x-goog-hash': 'crc32c=$expectedCrc,md5=zzz=='},
-          );
-        }
-        return http.Response('', 404);
-      });
-
-      final authClient = AuthenticatedClient(
-        client: mockClient,
-        storage: mockStorage,
-      );
-
-      final service = ResumableUploadService(
-        client: authClient,
-        recordingRepo: mockRepo,
-      );
-
-      final result = await service.upload(
-        recordingId: 'rec-1',
-        serverId: 'srv-1',
-        localFilePath: testFile.path,
-        format: 'm4a',
-        fileSizeBytes: 1024,
-      );
-
-      expect(result.success, isTrue);
-      expect(result.clientCrc32c, equals(expectedCrc));
-      expect(result.gcsCrc32c, equals(expectedCrc));
-      mockClient.close();
-    });
-
-    test('single PUT: fails when GCS returns mismatched CRC32C', () async {
-      final testFile = File('${tempDir.path}/crc_mismatch.m4a');
-      testFile.writeAsBytesSync(Uint8List(1024));
-
-      final mockClient = MockClient((request) async {
-        if (request.url.path.contains('upload-url')) {
-          return http.Response(
-            jsonEncode({
-              'upload_url': 'https://storage.googleapis.com/test',
-              'content_type': 'audio/mp4',
-            }),
-            200,
-          );
-        }
-        if (request.url.host == 'storage.googleapis.com') {
-          return http.Response(
-            '',
-            200,
-            headers: {'x-goog-hash': 'crc32c=AAAAAA=='},
-          );
-        }
-        return http.Response('', 404);
-      });
-
-      final authClient = AuthenticatedClient(
-        client: mockClient,
-        storage: mockStorage,
-      );
-
-      final service = ResumableUploadService(
-        client: authClient,
-        recordingRepo: mockRepo,
-      );
-
-      final result = await service.upload(
-        recordingId: 'rec-1',
-        serverId: 'srv-1',
-        localFilePath: testFile.path,
-        format: 'm4a',
-        fileSizeBytes: 1024,
-      );
-
-      expect(result.success, isFalse);
-      expect(result.error, contains('CRC32C mismatch'));
-      mockClient.close();
-    });
-
-    test('single PUT: succeeds when GCS omits x-goog-hash', () async {
-      final testFile = File('${tempDir.path}/crc_absent.m4a');
-      testFile.writeAsBytesSync(Uint8List(1024));
-
-      final mockClient = MockClient((request) async {
-        if (request.url.path.contains('upload-url')) {
-          return http.Response(
-            jsonEncode({
-              'upload_url': 'https://storage.googleapis.com/test',
-              'content_type': 'audio/mp4',
-            }),
-            200,
-          );
-        }
-        if (request.url.host == 'storage.googleapis.com') {
-          return http.Response('', 200);
-        }
-        return http.Response('', 404);
-      });
-
-      final authClient = AuthenticatedClient(
-        client: mockClient,
-        storage: mockStorage,
-      );
-
-      final service = ResumableUploadService(
-        client: authClient,
-        recordingRepo: mockRepo,
-      );
-
-      final result = await service.upload(
-        recordingId: 'rec-1',
-        serverId: 'srv-1',
-        localFilePath: testFile.path,
-        format: 'm4a',
-        fileSizeBytes: 1024,
-      );
-
-      expect(result.success, isTrue);
-      expect(result.clientCrc32c, isNotNull);
-      expect(result.gcsCrc32c, isNull);
-      mockClient.close();
-    });
-
+  group('RecordingActiveFlag gate (§1 mutex)', () {
     test(
-      'resumable: skips local CRC32C when resuming from non-zero offset',
+      'returns paused_by_recording without enqueueing any chunk when flag is active',
       () async {
-        const fileSize = 5 * 1024 * 1024;
-        const alreadyUploaded = 2 * 1024 * 1024;
-        const sessionUri = 'https://storage.googleapis.com/upload/resume-crc';
-
-        final testFile = File('${tempDir.path}/resume_crc.m4a');
-        testFile.writeAsBytesSync(Uint8List(fileSize));
-
-        when(() => mockRepo.getRecordingById('rec-1')).thenAnswer(
-          (_) async => LocalRecording(
-            id: 'rec-1',
-            projectId: 'proj-1',
-            genreId: 'genre-1',
-            subcategoryId: null,
-            title: 'Test',
-            durationSeconds: 60.0,
-            fileSizeBytes: fileSize,
-            format: 'm4a',
-            localFilePath: testFile.path,
-            uploadStatus: 'uploading',
-            serverId: 'srv-1',
-            gcsUrl: null,
-            registerId: null,
-            cleaningStatus: 'none',
-            recordedAt: DateTime(2024, 1, 1),
-            createdAt: DateTime(2024, 1, 1),
-            retryCount: 0,
-            lastRetryAt: null,
-            resumableSessionUri: sessionUri,
-            uploadedBytes: alreadyUploaded,
-            md5Hash: null,
-          ),
-        );
-        when(
-          () => mockRepo.updateRecording(any(), any()),
-        ).thenAnswer((_) async => true);
-
-        final mockClient = MockClient((request) async {
-          if (request.url.host == 'storage.googleapis.com') {
-            final range = request.headers['content-range'];
-            if (range != null && range.contains('*')) {
-              return http.Response(
-                '',
-                308,
-                headers: {'range': 'bytes=0-${alreadyUploaded - 1}'},
-              );
-            }
-            return http.Response(
-              '',
-              200,
-              headers: {'x-goog-hash': 'crc32c=AAAAAA=='},
-            );
-          }
-          return http.Response('', 404);
+        SharedPreferences.setMockInitialValues({
+          'com.shema.oralCollector.is_recording_active': true,
         });
+        final testFile = File('${tempDir.path}/x.m4a');
+        testFile.writeAsBytesSync(Uint8List(1024));
 
-        final authClient = AuthenticatedClient(
-          client: mockClient,
-          storage: mockStorage,
-        );
-
-        final service = ResumableUploadService(
-          client: authClient,
-          recordingRepo: mockRepo,
-        );
-
+        final service = buildService();
         final result = await service.upload(
           recordingId: 'rec-1',
           serverId: 'srv-1',
           localFilePath: testFile.path,
           format: 'm4a',
-          fileSizeBytes: fileSize,
+          fileSizeBytes: 1024,
         );
 
-        // Even with a "wrong" CRC32C from GCS, the upload succeeds because we
-        // skip local validation when resuming — we don't have all the bytes.
-        expect(result.success, isTrue);
-        expect(result.clientCrc32c, isNull);
-        mockClient.close();
-      },
-    );
-
-    test(
-      'resumable: fails when CRC32C mismatches on the final chunk',
-      () async {
-        const fileSize = 12 * 1024 * 1024;
-        const sessionUri =
-            'https://storage.googleapis.com/upload/multi-mismatch';
-
-        final testFile = File('${tempDir.path}/multi_mismatch.m4a');
-        testFile.writeAsBytesSync(Uint8List(fileSize));
-
-        when(() => mockRepo.getRecordingById('rec-1')).thenAnswer(
-          (_) async => LocalRecording(
-            id: 'rec-1',
-            projectId: 'proj-1',
-            genreId: 'genre-1',
-            subcategoryId: null,
-            title: 'Test',
-            durationSeconds: 60.0,
-            fileSizeBytes: fileSize,
-            format: 'm4a',
-            localFilePath: testFile.path,
-            uploadStatus: 'uploading',
-            serverId: 'srv-1',
-            gcsUrl: null,
-            registerId: null,
-            cleaningStatus: 'none',
-            recordedAt: DateTime(2024, 1, 1),
-            createdAt: DateTime(2024, 1, 1),
-            retryCount: 0,
-            lastRetryAt: null,
-            resumableSessionUri: null,
-            uploadedBytes: 0,
-            md5Hash: null,
-          ),
-        );
-        when(
-          () => mockRepo.updateRecording(any(), any()),
-        ).thenAnswer((_) async => true);
-
-        var chunkCount = 0;
-        final mockClient = MockClient((request) async {
-          if (request.url.path.contains('resumable-upload-url')) {
-            return http.Response(jsonEncode({'session_uri': sessionUri}), 200);
-          }
-          if (request.url.host == 'storage.googleapis.com') {
-            final range = request.headers['content-range'];
-            if (range != null && !range.contains('*')) {
-              chunkCount++;
-              if (chunkCount < 2) return http.Response('', 308);
-              return http.Response(
-                '',
-                200,
-                headers: {'x-goog-hash': 'crc32c=AAAAAA=='},
-              );
-            }
-          }
-          return http.Response('', 404);
-        });
-
-        final authClient = AuthenticatedClient(
-          client: mockClient,
-          storage: mockStorage,
-        );
-
-        final service = ResumableUploadService(
-          client: authClient,
-          recordingRepo: mockRepo,
-        );
-
-        final result = await service.upload(
-          recordingId: 'rec-1',
-          serverId: 'srv-1',
-          localFilePath: testFile.path,
-          format: 'm4a',
-          fileSizeBytes: fileSize,
-        );
-
-        expect(result.success, isFalse);
-        expect(result.error, contains('CRC32C mismatch'));
-        mockClient.close();
+        expect(result.pausedByRecording, isTrue);
+        expect(fakeDownloader.calls, isEmpty);
       },
     );
   });
 
-  group('single PUT upload', () {
-    late MockRecordingRepo mockRepo;
-    late MockSecureStorage mockStorage;
-
-    setUp(() {
-      mockRepo = MockRecordingRepo();
-      mockStorage = MockSecureStorage();
-      when(
-        () => mockStorage.read(key: any(named: 'key')),
-      ).thenAnswer((_) async => 'test-token');
-    });
-
-    test('uploads small file successfully', () async {
+  group('single PUT upload (< 5 MB)', () {
+    test('uploads small file via downloader with offset 0', () async {
       final testFile = File('${tempDir.path}/small.m4a');
       testFile.writeAsBytesSync(Uint8List(1024));
 
@@ -402,22 +231,12 @@ void main() {
             200,
           );
         }
-        if (request.url.host == 'storage.googleapis.com') {
-          return http.Response('', 200);
-        }
         return http.Response('', 404);
       });
 
-      final authClient = AuthenticatedClient(
-        client: mockClient,
-        storage: mockStorage,
-      );
+      fakeDownloader.enqueueResponse(const UploadResult(statusCode: 200));
 
-      final service = ResumableUploadService(
-        client: authClient,
-        recordingRepo: mockRepo,
-      );
-
+      final service = buildService(httpClient: mockClient);
       final result = await service.upload(
         recordingId: 'rec-1',
         serverId: 'srv-1',
@@ -427,16 +246,22 @@ void main() {
       );
 
       expect(result.success, isTrue);
-      mockClient.close();
+      expect(fakeDownloader.calls, hasLength(1));
+      final call = fakeDownloader.calls.first;
+      expect(call.offset, 0);
+      expect(call.end, 1024);
+      expect(call.url, 'https://storage.googleapis.com/test');
+      expect(call.headers['Content-Type'], 'audio/mp4');
     });
 
-    test('retries on 403 expired URL', () async {
-      final testFile = File('${tempDir.path}/retry.m4a');
+    test('retries once on 403 expired URL', () async {
+      final testFile = File('${tempDir.path}/expired.m4a');
       testFile.writeAsBytesSync(Uint8List(512));
 
-      var putCount = 0;
+      var urlRequests = 0;
       final mockClient = MockClient((request) async {
         if (request.url.path.contains('upload-url')) {
+          urlRequests++;
           return http.Response(
             jsonEncode({
               'upload_url': 'https://storage.googleapis.com/test',
@@ -445,185 +270,108 @@ void main() {
             200,
           );
         }
-        if (request.url.host == 'storage.googleapis.com') {
-          putCount++;
-          if (putCount == 1) return http.Response('expired', 403);
-          return http.Response('', 200);
-        }
         return http.Response('', 404);
       });
 
-      final authClient = AuthenticatedClient(
-        client: mockClient,
-        storage: mockStorage,
-      );
+      fakeDownloader.enqueueResponse(const UploadResult(statusCode: 403));
+      fakeDownloader.enqueueResponse(const UploadResult(statusCode: 200));
 
-      final service = ResumableUploadService(
-        client: authClient,
-        recordingRepo: mockRepo,
-      );
-
+      final service = buildService(httpClient: mockClient);
       final result = await service.upload(
-        recordingId: 'rec-2',
-        serverId: 'srv-2',
+        recordingId: 'rec-1',
+        serverId: 'srv-1',
         localFilePath: testFile.path,
         format: 'm4a',
         fileSizeBytes: 512,
       );
 
       expect(result.success, isTrue);
-      expect(putCount, 2);
-      mockClient.close();
+      expect(urlRequests, 2);
+      expect(fakeDownloader.calls, hasLength(2));
+    });
+
+    test('reports progress via callback after success', () async {
+      final testFile = File('${tempDir.path}/progress.m4a');
+      testFile.writeAsBytesSync(Uint8List(2048));
+
+      final mockClient = MockClient((request) async {
+        return http.Response(
+          jsonEncode({
+            'upload_url': 'https://storage.googleapis.com/test',
+            'content_type': 'audio/mp4',
+          }),
+          200,
+        );
+      });
+
+      fakeDownloader.enqueueResponse(const UploadResult(statusCode: 200));
+
+      var sentBytes = 0;
+      var totalBytes = 0;
+      final service = buildService(httpClient: mockClient);
+      await service.upload(
+        recordingId: 'rec-1',
+        serverId: 'srv-1',
+        localFilePath: testFile.path,
+        format: 'm4a',
+        fileSizeBytes: 2048,
+        onProgress: (sent, total) {
+          sentBytes = sent;
+          totalBytes = total;
+        },
+      );
+
+      expect(sentBytes, 2048);
+      expect(totalBytes, 2048);
     });
 
     test('fails when upload-url endpoint fails', () async {
-      final testFile = File('${tempDir.path}/fail.m4a');
+      final testFile = File('${tempDir.path}/x.m4a');
       testFile.writeAsBytesSync(Uint8List(256));
 
-      final mockClient = MockClient((request) async {
-        return http.Response('Server Error', 500);
-      });
+      final mockClient = MockClient((request) async => http.Response('', 500));
 
-      final authClient = AuthenticatedClient(
-        client: mockClient,
-        storage: mockStorage,
-      );
-
-      final service = ResumableUploadService(
-        client: authClient,
-        recordingRepo: mockRepo,
-      );
-
+      final service = buildService(httpClient: mockClient);
       final result = await service.upload(
-        recordingId: 'rec-3',
-        serverId: 'srv-3',
+        recordingId: 'rec-1',
+        serverId: 'srv-1',
         localFilePath: testFile.path,
         format: 'm4a',
         fileSizeBytes: 256,
       );
 
       expect(result.success, isFalse);
-      mockClient.close();
-    });
-
-    test('tracks progress via callback', () async {
-      final testFile = File('${tempDir.path}/progress.m4a');
-      testFile.writeAsBytesSync(Uint8List(2048));
-
-      final progressCalls = <(int, int)>[];
-
-      final mockClient = MockClient((request) async {
-        if (request.url.path.contains('upload-url')) {
-          return http.Response(
-            jsonEncode({
-              'upload_url': 'https://storage.googleapis.com/test',
-              'content_type': 'audio/mp4',
-            }),
-            200,
-          );
-        }
-        if (request.url.host == 'storage.googleapis.com') {
-          return http.Response('', 200);
-        }
-        return http.Response('', 404);
-      });
-
-      final authClient = AuthenticatedClient(
-        client: mockClient,
-        storage: mockStorage,
-      );
-
-      final service = ResumableUploadService(
-        client: authClient,
-        recordingRepo: mockRepo,
-      );
-
-      await service.upload(
-        recordingId: 'rec-4',
-        serverId: 'srv-4',
-        localFilePath: testFile.path,
-        format: 'm4a',
-        fileSizeBytes: 2048,
-        onProgress: (sent, total) => progressCalls.add((sent, total)),
-      );
-
-      expect(progressCalls, isNotEmpty);
-      expect(progressCalls.last.$1, equals(progressCalls.last.$2));
-      mockClient.close();
+      expect(fakeDownloader.calls, isEmpty);
     });
   });
 
-  group('resumable upload - new session', () {
-    late MockRecordingRepo mockRepo;
-    late MockSecureStorage mockStorage;
-    const sessionUri = 'https://storage.googleapis.com/upload/session-123';
+  group('resumable upload (>= 5 MB)', () {
     const fileSize = 5 * 1024 * 1024;
 
-    setUp(() {
-      mockRepo = MockRecordingRepo();
-      mockStorage = MockSecureStorage();
-      when(
-        () => mockStorage.read(key: any(named: 'key')),
-      ).thenAnswer((_) async => 'test-token');
-    });
-
-    test('creates resumable session for file >= 5MB', () async {
-      final testFile = File('${tempDir.path}/large.m4a');
+    test('creates a new resumable session when none exists', () async {
+      final testFile = File('${tempDir.path}/r.m4a');
       testFile.writeAsBytesSync(Uint8List(fileSize));
 
       when(() => mockRepo.getRecordingById('rec-1')).thenAnswer(
-        (_) async => LocalRecording(
+        (_) async => _seedRecording(
           id: 'rec-1',
-          projectId: 'proj-1',
-          genreId: 'genre-1',
-          subcategoryId: null,
-          title: 'Test',
-          durationSeconds: 60.0,
           fileSizeBytes: fileSize,
-          format: 'm4a',
-          localFilePath: testFile.path,
-          uploadStatus: 'uploading',
-          serverId: 'srv-1',
-          gcsUrl: null,
-          registerId: null,
-          cleaningStatus: 'none',
-          recordedAt: DateTime(2024, 1, 1),
-          createdAt: DateTime(2024, 1, 1),
-          retryCount: 0,
-          lastRetryAt: null,
-          resumableSessionUri: null,
-          uploadedBytes: 0,
-          md5Hash: null,
+          filePath: testFile.path,
         ),
       );
 
-      when(
-        () => mockRepo.updateRecording(any(), any()),
-      ).thenAnswer((_) async => true);
-
       var sessionRequested = false;
-
       final mockClient = MockClient((request) async {
         if (request.url.path.contains('resumable-upload-url')) {
           sessionRequested = true;
           return http.Response(jsonEncode({'session_uri': sessionUri}), 200);
         }
-        if (request.url.host == 'storage.googleapis.com') {
-          return http.Response('', 200);
-        }
         return http.Response('', 404);
       });
 
-      final authClient = AuthenticatedClient(
-        client: mockClient,
-        storage: mockStorage,
-      );
+      fakeDownloader.enqueueResponse(const UploadResult(statusCode: 200));
 
-      final service = ResumableUploadService(
-        client: authClient,
-        recordingRepo: mockRepo,
-      );
-
+      final service = buildService(httpClient: mockClient);
       final result = await service.upload(
         recordingId: 'rec-1',
         serverId: 'srv-1',
@@ -634,382 +382,177 @@ void main() {
 
       expect(result.success, isTrue);
       expect(sessionRequested, isTrue);
-      mockClient.close();
+      expect(fakeDownloader.calls.single.url, sessionUri);
     });
 
-    test('uploads file in correct chunk sizes', () async {
-      final testFile = File('${tempDir.path}/chunk_size.m4a');
-      testFile.writeAsBytesSync(Uint8List(fileSize));
+    test(
+      'chunk Content-Range header reflects offset, end, fileLength',
+      () async {
+        final testFile = File('${tempDir.path}/cr.m4a');
+        testFile.writeAsBytesSync(Uint8List(fileSize));
 
-      when(() => mockRepo.getRecordingById('rec-1')).thenAnswer(
-        (_) async => LocalRecording(
-          id: 'rec-1',
-          projectId: 'proj-1',
-          genreId: 'genre-1',
-          subcategoryId: null,
-          title: 'Test',
-          durationSeconds: 60.0,
-          fileSizeBytes: fileSize,
-          format: 'm4a',
-          localFilePath: testFile.path,
-          uploadStatus: 'uploading',
-          serverId: 'srv-1',
-          gcsUrl: null,
-          registerId: null,
-          cleaningStatus: 'none',
-          recordedAt: DateTime(2024, 1, 1),
-          createdAt: DateTime(2024, 1, 1),
-          retryCount: 0,
-          lastRetryAt: null,
-          resumableSessionUri: null,
-          uploadedBytes: 0,
-          md5Hash: null,
-        ),
-      );
+        when(() => mockRepo.getRecordingById('rec-1')).thenAnswer(
+          (_) async => _seedRecording(
+            id: 'rec-1',
+            fileSizeBytes: fileSize,
+            filePath: testFile.path,
+            resumableSessionUri: sessionUri,
+          ),
+        );
 
-      when(
-        () => mockRepo.updateRecording(any(), any()),
-      ).thenAnswer((_) async => true);
-
-      final capturedRanges = <String>[];
-
-      final mockClient = MockClient((request) async {
-        if (request.url.path.contains('resumable-upload-url')) {
-          return http.Response(jsonEncode({'session_uri': sessionUri}), 200);
-        }
-        if (request.url.host == 'storage.googleapis.com') {
-          final range = request.headers['content-range'];
-          if (range != null && !range.contains('*')) {
-            capturedRanges.add(range);
+        // Query-offset call returns 308 + Range: bytes=0-(fileSize-1) but
+        // for a fresh-but-known sessionUri we return Range: bytes=0-0 which
+        // the service uses as offset=1. Easier: have query return 0 bytes
+        // received (no range header), so service starts at offset=0.
+        final mockClient = MockClient((request) async {
+          if (request.method == 'PUT' &&
+              request.headers['Content-Range'] == 'bytes */$fileSize') {
+            // query-offset response: 308 with no range header means offset=0
+            return http.Response('', 308);
           }
-          return http.Response('', 200);
-        }
-        return http.Response('', 404);
-      });
+          return http.Response('', 404);
+        });
 
-      final authClient = AuthenticatedClient(
-        client: mockClient,
-        storage: mockStorage,
-      );
+        fakeDownloader.enqueueResponse(const UploadResult(statusCode: 200));
 
-      final service = ResumableUploadService(
-        client: authClient,
-        recordingRepo: mockRepo,
-      );
+        final service = buildService(httpClient: mockClient);
+        await service.upload(
+          recordingId: 'rec-1',
+          serverId: 'srv-1',
+          localFilePath: testFile.path,
+          format: 'm4a',
+          fileSizeBytes: fileSize,
+        );
 
-      await service.upload(
-        recordingId: 'rec-1',
-        serverId: 'srv-1',
-        localFilePath: testFile.path,
-        format: 'm4a',
-        fileSizeBytes: fileSize,
-      );
+        // 5 MB fits in a single 8 MB chunk → 1 putChunk call.
+        expect(fakeDownloader.calls, hasLength(1));
+        final call = fakeDownloader.calls.first;
+        expect(call.offset, 0);
+        expect(call.end, fileSize);
+        expect(
+          call.headers['Content-Range'],
+          'bytes 0-${fileSize - 1}/$fileSize',
+        );
+      },
+    );
 
-      expect(capturedRanges, hasLength(1));
-      expect(capturedRanges[0], equals('bytes 0-${fileSize - 1}/$fileSize'));
-      mockClient.close();
-    });
-
-    test('reports progress after each chunk via callback', () async {
-      final testFile = File('${tempDir.path}/progress.m4a');
-      testFile.writeAsBytesSync(Uint8List(fileSize));
+    test('persists uploadedBytes in repo after each chunk commit', () async {
+      const bigFile = 12 * 1024 * 1024; // forces 2 chunks
+      final testFile = File('${tempDir.path}/big.m4a');
+      testFile.writeAsBytesSync(Uint8List(bigFile));
 
       when(() => mockRepo.getRecordingById('rec-1')).thenAnswer(
-        (_) async => LocalRecording(
+        (_) async => _seedRecording(
           id: 'rec-1',
-          projectId: 'proj-1',
-          genreId: 'genre-1',
-          subcategoryId: null,
-          title: 'Test',
-          durationSeconds: 60.0,
-          fileSizeBytes: fileSize,
-          format: 'm4a',
-          localFilePath: testFile.path,
-          uploadStatus: 'uploading',
-          serverId: 'srv-1',
-          gcsUrl: null,
-          registerId: null,
-          cleaningStatus: 'none',
-          recordedAt: DateTime(2024, 1, 1),
-          createdAt: DateTime(2024, 1, 1),
-          retryCount: 0,
-          lastRetryAt: null,
-          resumableSessionUri: null,
-          uploadedBytes: 0,
-          md5Hash: null,
+          fileSizeBytes: bigFile,
+          filePath: testFile.path,
         ),
       );
-
-      when(
-        () => mockRepo.updateRecording(any(), any()),
-      ).thenAnswer((_) async => true);
-
-      final progressCalls = <(int, int)>[];
 
       final mockClient = MockClient((request) async {
         if (request.url.path.contains('resumable-upload-url')) {
           return http.Response(jsonEncode({'session_uri': sessionUri}), 200);
         }
-        if (request.url.host == 'storage.googleapis.com') {
-          return http.Response('', 200);
-        }
         return http.Response('', 404);
       });
 
-      final authClient = AuthenticatedClient(
-        client: mockClient,
-        storage: mockStorage,
-      );
+      fakeDownloader.enqueueResponse(const UploadResult(statusCode: 308));
+      fakeDownloader.enqueueResponse(const UploadResult(statusCode: 200));
 
-      final service = ResumableUploadService(
-        client: authClient,
-        recordingRepo: mockRepo,
-      );
-
-      await service.upload(
+      final service = buildService(httpClient: mockClient);
+      final result = await service.upload(
         recordingId: 'rec-1',
         serverId: 'srv-1',
         localFilePath: testFile.path,
         format: 'm4a',
-        fileSizeBytes: fileSize,
-        onProgress: (sent, total) => progressCalls.add((sent, total)),
+        fileSizeBytes: bigFile,
       );
 
-      expect(progressCalls, isNotEmpty);
-      expect(progressCalls.last, equals((fileSize, fileSize)));
-      mockClient.close();
-    });
+      expect(result.success, isTrue);
+      // 2 chunks: 0..8MB then 8MB..12MB.
+      expect(fakeDownloader.calls, hasLength(2));
+      expect(fakeDownloader.calls[0].offset, 0);
+      expect(fakeDownloader.calls[0].end, chunkSize);
+      expect(fakeDownloader.calls[1].offset, chunkSize);
+      expect(fakeDownloader.calls[1].end, bigFile);
 
-    test('updates uploadedBytes in repo after each chunk', () async {
-      final testFile = File('${tempDir.path}/update_bytes.m4a');
-      testFile.writeAsBytesSync(Uint8List(fileSize));
-
-      when(() => mockRepo.getRecordingById('rec-1')).thenAnswer(
-        (_) async => LocalRecording(
-          id: 'rec-1',
-          projectId: 'proj-1',
-          genreId: 'genre-1',
-          subcategoryId: null,
-          title: 'Test',
-          durationSeconds: 60.0,
-          fileSizeBytes: fileSize,
-          format: 'm4a',
-          localFilePath: testFile.path,
-          uploadStatus: 'uploading',
-          serverId: 'srv-1',
-          gcsUrl: null,
-          registerId: null,
-          cleaningStatus: 'none',
-          recordedAt: DateTime(2024, 1, 1),
-          createdAt: DateTime(2024, 1, 1),
-          retryCount: 0,
-          lastRetryAt: null,
-          resumableSessionUri: null,
-          uploadedBytes: 0,
-          md5Hash: null,
-        ),
-      );
-
-      when(
-        () => mockRepo.updateRecording(any(), any()),
-      ).thenAnswer((_) async => true);
-
-      final mockClient = MockClient((request) async {
-        if (request.url.path.contains('resumable-upload-url')) {
-          return http.Response(jsonEncode({'session_uri': sessionUri}), 200);
-        }
-        if (request.url.host == 'storage.googleapis.com') {
-          return http.Response('', 200);
-        }
-        return http.Response('', 404);
-      });
-
-      final authClient = AuthenticatedClient(
-        client: mockClient,
-        storage: mockStorage,
-      );
-
-      final service = ResumableUploadService(
-        client: authClient,
-        recordingRepo: mockRepo,
-      );
-
-      await service.upload(
-        recordingId: 'rec-1',
-        serverId: 'srv-1',
-        localFilePath: testFile.path,
-        format: 'm4a',
-        fileSizeBytes: fileSize,
-      );
-
+      // First chunk persists uploadedBytes=8MB, then session cleared on done.
+      // We expect updateRecording calls including offsets after each chunk.
       verify(
-        () => mockRepo.updateRecording('rec-1', any()),
-      ).called(greaterThanOrEqualTo(2));
-      mockClient.close();
-    });
-
-    test('clears session data on completion', () async {
-      final testFile = File('${tempDir.path}/clear_session.m4a');
-      testFile.writeAsBytesSync(Uint8List(fileSize));
-
-      when(() => mockRepo.getRecordingById('rec-1')).thenAnswer(
-        (_) async => LocalRecording(
-          id: 'rec-1',
-          projectId: 'proj-1',
-          genreId: 'genre-1',
-          subcategoryId: null,
-          title: 'Test',
-          durationSeconds: 60.0,
-          fileSizeBytes: fileSize,
-          format: 'm4a',
-          localFilePath: testFile.path,
-          uploadStatus: 'uploading',
-          serverId: 'srv-1',
-          gcsUrl: null,
-          registerId: null,
-          cleaningStatus: 'none',
-          recordedAt: DateTime(2024, 1, 1),
-          createdAt: DateTime(2024, 1, 1),
-          retryCount: 0,
-          lastRetryAt: null,
-          resumableSessionUri: null,
-          uploadedBytes: 0,
-          md5Hash: null,
-        ),
-      );
-
-      final updateCalls = <LocalRecordingsCompanion>[];
-      when(() => mockRepo.updateRecording(any(), any())).thenAnswer((
-        inv,
-      ) async {
-        updateCalls.add(inv.positionalArguments[1] as LocalRecordingsCompanion);
-        return true;
-      });
-
-      final mockClient = MockClient((request) async {
-        if (request.url.path.contains('resumable-upload-url')) {
-          return http.Response(jsonEncode({'session_uri': sessionUri}), 200);
-        }
-        if (request.url.host == 'storage.googleapis.com') {
-          return http.Response('', 200);
-        }
-        return http.Response('', 404);
-      });
-
-      final authClient = AuthenticatedClient(
-        client: mockClient,
-        storage: mockStorage,
-      );
-
-      final service = ResumableUploadService(
-        client: authClient,
-        recordingRepo: mockRepo,
-      );
-
-      await service.upload(
-        recordingId: 'rec-1',
-        serverId: 'srv-1',
-        localFilePath: testFile.path,
-        format: 'm4a',
-        fileSizeBytes: fileSize,
-      );
-
-      final lastUpdate = updateCalls.last;
-      expect(lastUpdate.resumableSessionUri.present, isTrue);
-      expect(lastUpdate.resumableSessionUri.value, isNull);
-      expect(lastUpdate.uploadedBytes.present, isTrue);
-      expect(lastUpdate.uploadedBytes.value, equals(0));
-      mockClient.close();
-    });
-  });
-
-  group('resumable upload - resume existing session', () {
-    late MockRecordingRepo mockRepo;
-    late MockSecureStorage mockStorage;
-    const existingSessionUri =
-        'https://storage.googleapis.com/upload/existing-session';
-    const fileSize = 5 * 1024 * 1024;
-    const alreadyUploaded = 2 * 1024 * 1024;
-
-    setUp(() {
-      mockRepo = MockRecordingRepo();
-      mockStorage = MockSecureStorage();
-      when(
-        () => mockStorage.read(key: any(named: 'key')),
-      ).thenAnswer((_) async => 'test-token');
-    });
-
-    test('reuses existing session URI from recording', () async {
-      final testFile = File('${tempDir.path}/resume.m4a');
-      testFile.writeAsBytesSync(Uint8List(fileSize));
-
-      when(() => mockRepo.getRecordingById('rec-1')).thenAnswer(
-        (_) async => LocalRecording(
-          id: 'rec-1',
-          projectId: 'proj-1',
-          genreId: 'genre-1',
-          subcategoryId: null,
-          title: 'Test',
-          durationSeconds: 60.0,
-          fileSizeBytes: fileSize,
-          format: 'm4a',
-          localFilePath: testFile.path,
-          uploadStatus: 'uploading',
-          serverId: 'srv-1',
-          gcsUrl: null,
-          registerId: null,
-          cleaningStatus: 'none',
-          recordedAt: DateTime(2024, 1, 1),
-          createdAt: DateTime(2024, 1, 1),
-          retryCount: 0,
-          lastRetryAt: null,
-          resumableSessionUri: existingSessionUri,
-          uploadedBytes: alreadyUploaded,
-          md5Hash: null,
-        ),
-      );
-
-      when(
         () => mockRepo.updateRecording(any(), any()),
-      ).thenAnswer((_) async => true);
+      ).called(greaterThanOrEqualTo(2));
+    });
 
-      var sessionCreated = false;
+    test(
+      '410 response triggers fresh session and resets offset to 0',
+      () async {
+        const bigFile = 12 * 1024 * 1024;
+        final testFile = File('${tempDir.path}/expired_session.m4a');
+        testFile.writeAsBytesSync(Uint8List(bigFile));
 
-      final mockClient = MockClient((request) async {
-        if (request.url.path.contains('resumable-upload-url')) {
-          sessionCreated = true;
-          return http.Response(
-            jsonEncode({
-              'session_uri':
-                  'https://storage.googleapis.com/upload/new-session',
-            }),
-            200,
-          );
-        }
-        if (request.url.host == 'storage.googleapis.com') {
-          final range = request.headers['content-range'];
-          if (range != null && range.contains('*')) {
+        when(() => mockRepo.getRecordingById('rec-1')).thenAnswer(
+          (_) async => _seedRecording(
+            id: 'rec-1',
+            fileSizeBytes: bigFile,
+            filePath: testFile.path,
+          ),
+        );
+
+        var sessionCallCount = 0;
+        final mockClient = MockClient((request) async {
+          if (request.url.path.contains('resumable-upload-url')) {
+            sessionCallCount++;
             return http.Response(
-              '',
-              308,
-              headers: {'range': 'bytes=0-${alreadyUploaded - 1}'},
+              jsonEncode({'session_uri': '$sessionUri-$sessionCallCount'}),
+              200,
             );
           }
-          return http.Response('', 200);
+          return http.Response('', 404);
+        });
+
+        fakeDownloader.enqueueResponse(const UploadResult(statusCode: 410));
+        fakeDownloader.enqueueResponse(const UploadResult(statusCode: 308));
+        fakeDownloader.enqueueResponse(const UploadResult(statusCode: 200));
+
+        final service = buildService(httpClient: mockClient);
+        final result = await service.upload(
+          recordingId: 'rec-1',
+          serverId: 'srv-1',
+          localFilePath: testFile.path,
+          format: 'm4a',
+          fileSizeBytes: bigFile,
+        );
+
+        expect(result.success, isTrue);
+        // Service requests 2 separate sessions: original + recreated.
+        expect(sessionCallCount, 2);
+      },
+    );
+
+    test('returns failure when a chunk PUT fails non-recoverably', () async {
+      final testFile = File('${tempDir.path}/fail.m4a');
+      testFile.writeAsBytesSync(Uint8List(fileSize));
+
+      when(() => mockRepo.getRecordingById('rec-1')).thenAnswer(
+        (_) async => _seedRecording(
+          id: 'rec-1',
+          fileSizeBytes: fileSize,
+          filePath: testFile.path,
+        ),
+      );
+
+      final mockClient = MockClient((request) async {
+        if (request.url.path.contains('resumable-upload-url')) {
+          return http.Response(jsonEncode({'session_uri': sessionUri}), 200);
         }
         return http.Response('', 404);
       });
 
-      final authClient = AuthenticatedClient(
-        client: mockClient,
-        storage: mockStorage,
+      fakeDownloader.enqueueResponse(
+        const UploadResult(statusCode: 500, responseBody: 'server error'),
       );
 
-      final service = ResumableUploadService(
-        client: authClient,
-        recordingRepo: mockRepo,
-      );
-
+      final service = buildService(httpClient: mockClient);
       final result = await service.upload(
         recordingId: 'rec-1',
         serverId: 'srv-1',
@@ -1018,256 +561,32 @@ void main() {
         fileSizeBytes: fileSize,
       );
 
-      expect(result.success, isTrue);
-      expect(sessionCreated, isFalse);
-      mockClient.close();
-    });
-
-    test('queries server for current offset', () async {
-      final testFile = File('${tempDir.path}/query_offset.m4a');
-      testFile.writeAsBytesSync(Uint8List(fileSize));
-
-      when(() => mockRepo.getRecordingById('rec-1')).thenAnswer(
-        (_) async => LocalRecording(
-          id: 'rec-1',
-          projectId: 'proj-1',
-          genreId: 'genre-1',
-          subcategoryId: null,
-          title: 'Test',
-          durationSeconds: 60.0,
-          fileSizeBytes: fileSize,
-          format: 'm4a',
-          localFilePath: testFile.path,
-          uploadStatus: 'uploading',
-          serverId: 'srv-1',
-          gcsUrl: null,
-          registerId: null,
-          cleaningStatus: 'none',
-          recordedAt: DateTime(2024, 1, 1),
-          createdAt: DateTime(2024, 1, 1),
-          retryCount: 0,
-          lastRetryAt: null,
-          resumableSessionUri: existingSessionUri,
-          uploadedBytes: alreadyUploaded,
-          md5Hash: null,
-        ),
-      );
-
-      when(
-        () => mockRepo.updateRecording(any(), any()),
-      ).thenAnswer((_) async => true);
-
-      var offsetQueried = false;
-
-      final mockClient = MockClient((request) async {
-        if (request.url.host == 'storage.googleapis.com') {
-          final range = request.headers['content-range'];
-          if (range != null && range.contains('*')) {
-            offsetQueried = true;
-            return http.Response(
-              '',
-              308,
-              headers: {'range': 'bytes=0-${alreadyUploaded - 1}'},
-            );
-          }
-          return http.Response('', 200);
-        }
-        return http.Response('', 404);
-      });
-
-      final authClient = AuthenticatedClient(
-        client: mockClient,
-        storage: mockStorage,
-      );
-
-      final service = ResumableUploadService(
-        client: authClient,
-        recordingRepo: mockRepo,
-      );
-
-      await service.upload(
-        recordingId: 'rec-1',
-        serverId: 'srv-1',
-        localFilePath: testFile.path,
-        format: 'm4a',
-        fileSizeBytes: fileSize,
-      );
-
-      expect(offsetQueried, isTrue);
-      mockClient.close();
-    });
-
-    test('resumes from the offset returned by server', () async {
-      final testFile = File('${tempDir.path}/resume_offset.m4a');
-      testFile.writeAsBytesSync(Uint8List(fileSize));
-
-      when(() => mockRepo.getRecordingById('rec-1')).thenAnswer(
-        (_) async => LocalRecording(
-          id: 'rec-1',
-          projectId: 'proj-1',
-          genreId: 'genre-1',
-          subcategoryId: null,
-          title: 'Test',
-          durationSeconds: 60.0,
-          fileSizeBytes: fileSize,
-          format: 'm4a',
-          localFilePath: testFile.path,
-          uploadStatus: 'uploading',
-          serverId: 'srv-1',
-          gcsUrl: null,
-          registerId: null,
-          cleaningStatus: 'none',
-          recordedAt: DateTime(2024, 1, 1),
-          createdAt: DateTime(2024, 1, 1),
-          retryCount: 0,
-          lastRetryAt: null,
-          resumableSessionUri: existingSessionUri,
-          uploadedBytes: alreadyUploaded,
-          md5Hash: null,
-        ),
-      );
-
-      when(
-        () => mockRepo.updateRecording(any(), any()),
-      ).thenAnswer((_) async => true);
-
-      final capturedRanges = <String>[];
-
-      final mockClient = MockClient((request) async {
-        if (request.url.host == 'storage.googleapis.com') {
-          final range = request.headers['content-range'];
-          if (range != null && range.contains('*')) {
-            return http.Response(
-              '',
-              308,
-              headers: {'range': 'bytes=0-${alreadyUploaded - 1}'},
-            );
-          }
-          if (range != null) {
-            capturedRanges.add(range);
-          }
-          return http.Response('', 200);
-        }
-        return http.Response('', 404);
-      });
-
-      final authClient = AuthenticatedClient(
-        client: mockClient,
-        storage: mockStorage,
-      );
-
-      final service = ResumableUploadService(
-        client: authClient,
-        recordingRepo: mockRepo,
-      );
-
-      await service.upload(
-        recordingId: 'rec-1',
-        serverId: 'srv-1',
-        localFilePath: testFile.path,
-        format: 'm4a',
-        fileSizeBytes: fileSize,
-      );
-
-      expect(capturedRanges, hasLength(1));
-      expect(
-        capturedRanges[0],
-        equals('bytes $alreadyUploaded-${fileSize - 1}/$fileSize'),
-      );
-      mockClient.close();
-    });
-  });
-
-  group('resumable upload - session expiry', () {
-    late MockRecordingRepo mockRepo;
-    late MockSecureStorage mockStorage;
-    const fileSize = 5 * 1024 * 1024;
-
-    setUp(() {
-      mockRepo = MockRecordingRepo();
-      mockStorage = MockSecureStorage();
-      when(
-        () => mockStorage.read(key: any(named: 'key')),
-      ).thenAnswer((_) async => 'test-token');
+      expect(result.success, isFalse);
+      expect(result.pausedByRecording, isFalse);
     });
 
     test(
-      'on 410 response creates new session and retries from beginning',
+      'queryOffset == fileLength short-circuits to success AND clears session bookkeeping',
       () async {
-        final testFile = File('${tempDir.path}/expiry.m4a');
+        final testFile = File('${tempDir.path}/done.m4a');
         testFile.writeAsBytesSync(Uint8List(fileSize));
 
         when(() => mockRepo.getRecordingById('rec-1')).thenAnswer(
-          (_) async => LocalRecording(
+          (_) async => _seedRecording(
             id: 'rec-1',
-            projectId: 'proj-1',
-            genreId: 'genre-1',
-            subcategoryId: null,
-            title: 'Test',
-            durationSeconds: 60.0,
             fileSizeBytes: fileSize,
-            format: 'm4a',
-            localFilePath: testFile.path,
-            uploadStatus: 'uploading',
-            serverId: 'srv-1',
-            gcsUrl: null,
-            registerId: null,
-            cleaningStatus: 'none',
-            recordedAt: DateTime(2024, 1, 1),
-            createdAt: DateTime(2024, 1, 1),
-            retryCount: 0,
-            lastRetryAt: null,
-            resumableSessionUri: null,
-            uploadedBytes: 0,
-            md5Hash: null,
+            filePath: testFile.path,
+            resumableSessionUri: sessionUri,
+            uploadedBytes: fileSize,
           ),
         );
 
-        final updateCalls = <LocalRecordingsCompanion>[];
-        when(() => mockRepo.updateRecording(any(), any())).thenAnswer((
-          inv,
-        ) async {
-          updateCalls.add(
-            inv.positionalArguments[1] as LocalRecordingsCompanion,
-          );
-          return true;
-        });
-
-        var sessionCreateCount = 0;
-        var chunkPutCount = 0;
-
         final mockClient = MockClient((request) async {
-          if (request.url.path.contains('resumable-upload-url')) {
-            sessionCreateCount++;
-            return http.Response(
-              jsonEncode({
-                'session_uri':
-                    'https://storage.googleapis.com/upload/session-$sessionCreateCount',
-              }),
-              200,
-            );
-          }
-          if (request.url.host == 'storage.googleapis.com') {
-            final range = request.headers['content-range'];
-            if (range != null && !range.contains('*')) {
-              chunkPutCount++;
-              if (chunkPutCount == 1) return http.Response('', 410);
-              return http.Response('', 200);
-            }
-          }
-          return http.Response('', 404);
+          // GCS reports the upload is already done.
+          return http.Response('', 200);
         });
 
-        final authClient = AuthenticatedClient(
-          client: mockClient,
-          storage: mockStorage,
-        );
-
-        final service = ResumableUploadService(
-          client: authClient,
-          recordingRepo: mockRepo,
-        );
-
+        final service = buildService(httpClient: mockClient);
         final result = await service.upload(
           recordingId: 'rec-1',
           serverId: 'srv-1',
@@ -1277,364 +596,256 @@ void main() {
         );
 
         expect(result.success, isTrue);
-        expect(sessionCreateCount, 2);
+        expect(fakeDownloader.calls, isEmpty);
 
-        final resetUpdate = updateCalls.firstWhere(
-          (c) =>
-              c.uploadedBytes.present &&
-              c.uploadedBytes.value == 0 &&
-              c.resumableSessionUri.present &&
-              c.resumableSessionUri.value != null,
+        // Verify the stale session URI was cleared so the next sync run
+        // doesn't waste a round-trip querying an exhausted URI.
+        final captured = verify(
+          () => mockRepo.updateRecording('rec-1', captureAny()),
+        ).captured;
+        final hasClearingUpdate = captured.any((companion) {
+          final c = companion as LocalRecordingsCompanion;
+          return c.resumableSessionUri.present &&
+              c.resumableSessionUri.value == null;
+        });
+        expect(
+          hasClearingUpdate,
+          isTrue,
+          reason: 'quickSuccess must null out resumableSessionUri',
         );
-        expect(resetUpdate, isNotNull);
-        mockClient.close();
       },
     );
-  });
 
-  group('resumable upload - multi-chunk', () {
-    late MockRecordingRepo mockRepo;
-    late MockSecureStorage mockStorage;
-    const sessionUri = 'https://storage.googleapis.com/upload/multi-chunk';
-    const fileSize = 12 * 1024 * 1024;
-    const chunkSize = 8 * 1024 * 1024;
+    test(
+      'server-reported offset overrides client uploadedBytes when smaller',
+      () async {
+        // Scenario: client persisted 24 MB but GCS only committed 8 MB (e.g.,
+        // we crashed after onProgress but before the DB write under the old
+        // ordering, or the last chunk PUT was rolled back server-side).
+        // Service must trust the server view and re-upload from 8 MB, not 24.
+        const bigFile = 32 * 1024 * 1024;
+        final testFile = File('${tempDir.path}/disagree.m4a');
+        testFile.writeAsBytesSync(Uint8List(bigFile));
 
-    setUp(() {
-      mockRepo = MockRecordingRepo();
-      mockStorage = MockSecureStorage();
-      when(
-        () => mockStorage.read(key: any(named: 'key')),
-      ).thenAnswer((_) async => 'test-token');
-    });
+        when(() => mockRepo.getRecordingById('rec-1')).thenAnswer(
+          (_) async => _seedRecording(
+            id: 'rec-1',
+            fileSizeBytes: bigFile,
+            filePath: testFile.path,
+            resumableSessionUri: sessionUri,
+            uploadedBytes: 24 * 1024 * 1024, // client thinks 24
+          ),
+        );
 
-    test('splits file larger than 8MB into multiple chunks', () async {
-      final testFile = File('${tempDir.path}/multi_chunk.m4a');
-      testFile.writeAsBytesSync(Uint8List(fileSize));
-
-      when(() => mockRepo.getRecordingById('rec-1')).thenAnswer(
-        (_) async => LocalRecording(
-          id: 'rec-1',
-          projectId: 'proj-1',
-          genreId: 'genre-1',
-          subcategoryId: null,
-          title: 'Test',
-          durationSeconds: 60.0,
-          fileSizeBytes: fileSize,
-          format: 'm4a',
-          localFilePath: testFile.path,
-          uploadStatus: 'uploading',
-          serverId: 'srv-1',
-          gcsUrl: null,
-          registerId: null,
-          cleaningStatus: 'none',
-          recordedAt: DateTime(2024, 1, 1),
-          createdAt: DateTime(2024, 1, 1),
-          retryCount: 0,
-          lastRetryAt: null,
-          resumableSessionUri: null,
-          uploadedBytes: 0,
-          md5Hash: null,
-        ),
-      );
-
-      when(
-        () => mockRepo.updateRecording(any(), any()),
-      ).thenAnswer((_) async => true);
-
-      final capturedRanges = <String>[];
-
-      final mockClient = MockClient((request) async {
-        if (request.url.path.contains('resumable-upload-url')) {
-          return http.Response(jsonEncode({'session_uri': sessionUri}), 200);
-        }
-        if (request.url.host == 'storage.googleapis.com') {
-          final range = request.headers['content-range'];
-          if (range != null && !range.contains('*')) {
-            capturedRanges.add(range);
-            if (capturedRanges.length < 2) return http.Response('', 308);
-            return http.Response('', 200);
+        final mockClient = MockClient((request) async {
+          if (request.headers['Content-Range'] == 'bytes */$bigFile') {
+            // Server reports 8 MB committed (last byte = 8388607).
+            return http.Response(
+              '',
+              308,
+              headers: {'range': 'bytes=0-8388607'},
+            );
           }
-        }
-        return http.Response('', 404);
-      });
+          return http.Response('', 404);
+        });
 
-      final authClient = AuthenticatedClient(
-        client: mockClient,
-        storage: mockStorage,
-      );
+        // From offset 8 MB → 16 MB → 24 MB → 32 MB = 3 chunks (8 MB each).
+        fakeDownloader.enqueueResponse(const UploadResult(statusCode: 308));
+        fakeDownloader.enqueueResponse(const UploadResult(statusCode: 308));
+        fakeDownloader.enqueueResponse(const UploadResult(statusCode: 200));
 
-      final service = ResumableUploadService(
-        client: authClient,
-        recordingRepo: mockRepo,
-      );
-
-      final result = await service.upload(
-        recordingId: 'rec-1',
-        serverId: 'srv-1',
-        localFilePath: testFile.path,
-        format: 'm4a',
-        fileSizeBytes: fileSize,
-      );
-
-      expect(result.success, isTrue);
-      expect(capturedRanges, hasLength(2));
-      expect(capturedRanges[0], equals('bytes 0-${chunkSize - 1}/$fileSize'));
-      expect(
-        capturedRanges[1],
-        equals('bytes $chunkSize-${fileSize - 1}/$fileSize'),
-      );
-      mockClient.close();
-    });
-
-    test('reports progress for all chunks', () async {
-      final testFile = File('${tempDir.path}/multi_progress.m4a');
-      testFile.writeAsBytesSync(Uint8List(fileSize));
-
-      when(() => mockRepo.getRecordingById('rec-1')).thenAnswer(
-        (_) async => LocalRecording(
-          id: 'rec-1',
-          projectId: 'proj-1',
-          genreId: 'genre-1',
-          subcategoryId: null,
-          title: 'Test',
-          durationSeconds: 60.0,
-          fileSizeBytes: fileSize,
-          format: 'm4a',
-          localFilePath: testFile.path,
-          uploadStatus: 'uploading',
+        final service = buildService(httpClient: mockClient);
+        final result = await service.upload(
+          recordingId: 'rec-1',
           serverId: 'srv-1',
-          gcsUrl: null,
-          registerId: null,
-          cleaningStatus: 'none',
-          recordedAt: DateTime(2024, 1, 1),
-          createdAt: DateTime(2024, 1, 1),
-          retryCount: 0,
-          lastRetryAt: null,
-          resumableSessionUri: null,
-          uploadedBytes: 0,
-          md5Hash: null,
-        ),
-      );
+          localFilePath: testFile.path,
+          format: 'm4a',
+          fileSizeBytes: bigFile,
+        );
 
-      when(
-        () => mockRepo.updateRecording(any(), any()),
-      ).thenAnswer((_) async => true);
+        expect(result.success, isTrue);
+        expect(fakeDownloader.calls, hasLength(3));
+        // First chunk should resume from 8 MB (server-reported), NOT 24 MB.
+        expect(fakeDownloader.calls.first.offset, 8 * 1024 * 1024);
+      },
+    );
 
-      final progressCalls = <(int, int)>[];
-      var chunkCount = 0;
+    test(
+      'server-reported offset is trusted even when greater than client uploadedBytes',
+      () async {
+        // Scenario: client persisted 0 (e.g., process killed right after
+        // session-URI write but before any chunk write succeeded persistently)
+        // but the previous run did manage to PUT chunk 0. Server should be
+        // trusted; we skip the first chunk.
+        const bigFile = 16 * 1024 * 1024;
+        final testFile = File('${tempDir.path}/server_ahead.m4a');
+        testFile.writeAsBytesSync(Uint8List(bigFile));
 
-      final mockClient = MockClient((request) async {
-        if (request.url.path.contains('resumable-upload-url')) {
-          return http.Response(jsonEncode({'session_uri': sessionUri}), 200);
-        }
-        if (request.url.host == 'storage.googleapis.com') {
-          final range = request.headers['content-range'];
-          if (range != null && !range.contains('*')) {
-            chunkCount++;
-            if (chunkCount < 2) return http.Response('', 308);
-            return http.Response('', 200);
+        when(() => mockRepo.getRecordingById('rec-1')).thenAnswer(
+          (_) async => _seedRecording(
+            id: 'rec-1',
+            fileSizeBytes: bigFile,
+            filePath: testFile.path,
+            resumableSessionUri: sessionUri,
+            uploadedBytes: 0, // client thinks zero
+          ),
+        );
+
+        final mockClient = MockClient((request) async {
+          if (request.headers['Content-Range'] == 'bytes */$bigFile') {
+            // Server reports 8 MB already committed.
+            return http.Response(
+              '',
+              308,
+              headers: {'range': 'bytes=0-8388607'},
+            );
           }
-        }
-        return http.Response('', 404);
-      });
+          return http.Response('', 404);
+        });
 
-      final authClient = AuthenticatedClient(
-        client: mockClient,
-        storage: mockStorage,
-      );
+        fakeDownloader.enqueueResponse(const UploadResult(statusCode: 200));
 
-      final service = ResumableUploadService(
-        client: authClient,
-        recordingRepo: mockRepo,
-      );
-
-      await service.upload(
-        recordingId: 'rec-1',
-        serverId: 'srv-1',
-        localFilePath: testFile.path,
-        format: 'm4a',
-        fileSizeBytes: fileSize,
-        onProgress: (sent, total) => progressCalls.add((sent, total)),
-      );
-
-      expect(progressCalls, hasLength(2));
-      expect(progressCalls[0], equals((chunkSize, fileSize)));
-      expect(progressCalls[1], equals((fileSize, fileSize)));
-      mockClient.close();
-    });
-  });
-
-  group('resumable upload - error handling', () {
-    late MockRecordingRepo mockRepo;
-    late MockSecureStorage mockStorage;
-    const fileSize = 5 * 1024 * 1024;
-
-    setUp(() {
-      mockRepo = MockRecordingRepo();
-      mockStorage = MockSecureStorage();
-      when(
-        () => mockStorage.read(key: any(named: 'key')),
-      ).thenAnswer((_) async => 'test-token');
-    });
-
-    test('returns failure when session creation fails', () async {
-      final testFile = File('${tempDir.path}/fail_session.m4a');
-      testFile.writeAsBytesSync(Uint8List(fileSize));
-
-      when(() => mockRepo.getRecordingById('rec-1')).thenAnswer(
-        (_) async => LocalRecording(
-          id: 'rec-1',
-          projectId: 'proj-1',
-          genreId: 'genre-1',
-          subcategoryId: null,
-          title: 'Test',
-          durationSeconds: 60.0,
-          fileSizeBytes: fileSize,
-          format: 'm4a',
-          localFilePath: testFile.path,
-          uploadStatus: 'uploading',
+        final service = buildService(httpClient: mockClient);
+        final result = await service.upload(
+          recordingId: 'rec-1',
           serverId: 'srv-1',
-          gcsUrl: null,
-          registerId: null,
-          cleaningStatus: 'none',
-          recordedAt: DateTime(2024, 1, 1),
-          createdAt: DateTime(2024, 1, 1),
-          retryCount: 0,
-          lastRetryAt: null,
-          resumableSessionUri: null,
-          uploadedBytes: 0,
-          md5Hash: null,
-        ),
-      );
-
-      final mockClient = MockClient((request) async {
-        if (request.url.path.contains('resumable-upload-url')) {
-          return http.Response('Server Error', 500);
-        }
-        return http.Response('', 404);
-      });
-
-      final authClient = AuthenticatedClient(
-        client: mockClient,
-        storage: mockStorage,
-      );
-
-      final service = ResumableUploadService(
-        client: authClient,
-        recordingRepo: mockRepo,
-      );
-
-      final result = await service.upload(
-        recordingId: 'rec-1',
-        serverId: 'srv-1',
-        localFilePath: testFile.path,
-        format: 'm4a',
-        fileSizeBytes: fileSize,
-      );
-
-      expect(result.success, isFalse);
-      expect(
-        result.error,
-        contains('Failed to create resumable upload session'),
-      );
-      mockClient.close();
-    });
-
-    test('returns failure when chunk upload fails', () async {
-      final testFile = File('${tempDir.path}/fail_chunk.m4a');
-      testFile.writeAsBytesSync(Uint8List(fileSize));
-
-      when(() => mockRepo.getRecordingById('rec-1')).thenAnswer(
-        (_) async => LocalRecording(
-          id: 'rec-1',
-          projectId: 'proj-1',
-          genreId: 'genre-1',
-          subcategoryId: null,
-          title: 'Test',
-          durationSeconds: 60.0,
-          fileSizeBytes: fileSize,
-          format: 'm4a',
           localFilePath: testFile.path,
-          uploadStatus: 'uploading',
+          format: 'm4a',
+          fileSizeBytes: bigFile,
+        );
+
+        expect(result.success, isTrue);
+        // Only one chunk: from 8 MB to 16 MB.
+        expect(fakeDownloader.calls, hasLength(1));
+        expect(fakeDownloader.calls.first.offset, 8 * 1024 * 1024);
+        expect(fakeDownloader.calls.first.end, bigFile);
+      },
+    );
+
+    test(
+      'cancelled chunk persists uploadedBytes from previous successful chunk',
+      () async {
+        // §1 invariant: when recording starts mid-upload, the cancellation
+        // surfaces as paused_by_recording. The bytes from the chunk that
+        // already succeeded must remain in the DB so the next resume picks
+        // up where we left off (not zeroed back to 0).
+        const bigFile = 24 * 1024 * 1024;
+        final testFile = File('${tempDir.path}/cancel_mid.m4a');
+        testFile.writeAsBytesSync(Uint8List(bigFile));
+
+        when(() => mockRepo.getRecordingById('rec-1')).thenAnswer(
+          (_) async => _seedRecording(
+            id: 'rec-1',
+            fileSizeBytes: bigFile,
+            filePath: testFile.path,
+          ),
+        );
+
+        final mockClient = MockClient((request) async {
+          if (request.url.path.contains('resumable-upload-url')) {
+            return http.Response(jsonEncode({'session_uri': sessionUri}), 200);
+          }
+          return http.Response('', 404);
+        });
+
+        // Chunk 1 succeeds (308), then chunk 2 is cancelled (recording starts).
+        fakeDownloader.enqueueResponse(const UploadResult(statusCode: 308));
+        fakeDownloader.enqueueResponse(
+          const UploadResult(statusCode: 0, cancelled: true),
+        );
+
+        final service = buildService(httpClient: mockClient);
+        final result = await service.upload(
+          recordingId: 'rec-1',
           serverId: 'srv-1',
-          gcsUrl: null,
-          registerId: null,
-          cleaningStatus: 'none',
-          recordedAt: DateTime(2024, 1, 1),
-          createdAt: DateTime(2024, 1, 1),
-          retryCount: 0,
-          lastRetryAt: null,
-          resumableSessionUri: null,
-          uploadedBytes: 0,
-          md5Hash: null,
-        ),
-      );
+          localFilePath: testFile.path,
+          format: 'm4a',
+          fileSizeBytes: bigFile,
+        );
 
-      when(
-        () => mockRepo.updateRecording(any(), any()),
-      ).thenAnswer((_) async => true);
+        expect(result.pausedByRecording, isTrue);
 
-      final mockClient = MockClient((request) async {
-        if (request.url.path.contains('resumable-upload-url')) {
-          return http.Response(
-            jsonEncode({
-              'session_uri':
-                  'https://storage.googleapis.com/upload/session-fail',
-            }),
-            200,
-          );
-        }
-        if (request.url.host == 'storage.googleapis.com') {
-          return http.Response('Internal Server Error', 500);
-        }
-        return http.Response('', 404);
-      });
+        // Verify the DB was updated with uploadedBytes = 8 MB (the first
+        // successful chunk's end offset). Capture all update calls and
+        // confirm at least one wrote uploadedBytes = 8 MB.
+        final captured = verify(
+          () => mockRepo.updateRecording('rec-1', captureAny()),
+        ).captured;
+        final persistedOffsets = captured
+            .map((c) => (c as LocalRecordingsCompanion).uploadedBytes)
+            .where((v) => v.present)
+            .map((v) => v.value)
+            .toList();
+        expect(
+          persistedOffsets,
+          contains(chunkSize),
+          reason: 'first chunk\'s 8MB end offset must be in the DB',
+        );
+      },
+    );
 
-      final authClient = AuthenticatedClient(
-        client: mockClient,
-        storage: mockStorage,
-      );
+    test(
+      'final chunk 200/201 terminates the loop AND clears session bookkeeping',
+      () async {
+        // Distinguish the terminal 200 from intermediate 308 — and confirm
+        // the session URI and uploadedBytes are reset on completion.
+        const bigFile = 16 * 1024 * 1024;
+        final testFile = File('${tempDir.path}/terminal.m4a');
+        testFile.writeAsBytesSync(Uint8List(bigFile));
 
-      final service = ResumableUploadService(
-        client: authClient,
-        recordingRepo: mockRepo,
-      );
+        when(() => mockRepo.getRecordingById('rec-1')).thenAnswer(
+          (_) async => _seedRecording(
+            id: 'rec-1',
+            fileSizeBytes: bigFile,
+            filePath: testFile.path,
+          ),
+        );
 
-      final result = await service.upload(
-        recordingId: 'rec-1',
-        serverId: 'srv-1',
-        localFilePath: testFile.path,
-        format: 'm4a',
-        fileSizeBytes: fileSize,
-      );
+        final mockClient = MockClient((request) async {
+          if (request.url.path.contains('resumable-upload-url')) {
+            return http.Response(jsonEncode({'session_uri': sessionUri}), 200);
+          }
+          return http.Response('', 404);
+        });
 
-      expect(result.success, isFalse);
-      expect(result.error, contains('Chunk upload failed'));
-      mockClient.close();
-    });
+        fakeDownloader.enqueueResponse(const UploadResult(statusCode: 308));
+        fakeDownloader.enqueueResponse(const UploadResult(statusCode: 200));
+
+        final service = buildService(httpClient: mockClient);
+        final result = await service.upload(
+          recordingId: 'rec-1',
+          serverId: 'srv-1',
+          localFilePath: testFile.path,
+          format: 'm4a',
+          fileSizeBytes: bigFile,
+        );
+
+        expect(result.success, isTrue);
+        expect(fakeDownloader.calls, hasLength(2));
+        // Verify the final chunk's Content-Range covers the last byte range.
+        expect(
+          fakeDownloader.calls[1].headers['Content-Range'],
+          'bytes 8388608-${bigFile - 1}/$bigFile',
+        );
+
+        final captured = verify(
+          () => mockRepo.updateRecording('rec-1', captureAny()),
+        ).captured;
+        final finalUpdate = captured.last as LocalRecordingsCompanion;
+        expect(finalUpdate.resumableSessionUri.present, isTrue);
+        expect(finalUpdate.resumableSessionUri.value, isNull);
+      },
+    );
 
     test('returns failure when recording not found in repo', () async {
-      final testFile = File('${tempDir.path}/not_found.m4a');
+      final testFile = File('${tempDir.path}/missing.m4a');
       testFile.writeAsBytesSync(Uint8List(fileSize));
 
       when(
         () => mockRepo.getRecordingById('rec-missing'),
       ).thenAnswer((_) async => null);
 
-      final mockClient = MockClient((request) async {
-        return http.Response('', 404);
-      });
-
-      final authClient = AuthenticatedClient(
-        client: mockClient,
-        storage: mockStorage,
-      );
-
-      final service = ResumableUploadService(
-        client: authClient,
-        recordingRepo: mockRepo,
-      );
-
+      final service = buildService();
       final result = await service.upload(
         recordingId: 'rec-missing',
         serverId: 'srv-1',
@@ -1644,8 +855,354 @@ void main() {
       );
 
       expect(result.success, isFalse);
-      expect(result.error, contains('Recording not found'));
-      mockClient.close();
     });
+
+    test('cancelled chunk surfaces as paused_by_recording', () async {
+      final testFile = File('${tempDir.path}/cancel.m4a');
+      testFile.writeAsBytesSync(Uint8List(fileSize));
+
+      when(() => mockRepo.getRecordingById('rec-1')).thenAnswer(
+        (_) async => _seedRecording(
+          id: 'rec-1',
+          fileSizeBytes: fileSize,
+          filePath: testFile.path,
+        ),
+      );
+
+      final mockClient = MockClient((request) async {
+        if (request.url.path.contains('resumable-upload-url')) {
+          return http.Response(jsonEncode({'session_uri': sessionUri}), 200);
+        }
+        return http.Response('', 404);
+      });
+
+      fakeDownloader.enqueueResponse(
+        const UploadResult(statusCode: 0, cancelled: true),
+      );
+
+      final service = buildService(httpClient: mockClient);
+      final result = await service.upload(
+        recordingId: 'rec-1',
+        serverId: 'srv-1',
+        localFilePath: testFile.path,
+        format: 'm4a',
+        fileSizeBytes: fileSize,
+      );
+
+      expect(result.pausedByRecording, isTrue);
+    });
+  });
+
+  group('CRC32C validation (in-process path)', () {
+    test(
+      'single PUT returns clientCrc32c and succeeds when GCS omits x-goog-hash',
+      () async {
+        final testFile = File('${tempDir.path}/crc_absent.m4a');
+        final fileBytes = Uint8List.fromList(
+          List.generate(1024, (i) => i % 256),
+        );
+        testFile.writeAsBytesSync(fileBytes);
+        final expectedCrc = (Crc32c()..add(fileBytes)).base64BigEndian;
+
+        final mockClient = MockClient((request) async {
+          if (request.url.path.contains('upload-url')) {
+            return http.Response(
+              jsonEncode({
+                'upload_url': 'https://storage.googleapis.com/test',
+                'content_type': 'audio/mp4',
+              }),
+              200,
+            );
+          }
+          return http.Response('', 404);
+        });
+
+        fakeDownloader.enqueueResponse(const UploadResult(statusCode: 200));
+
+        final service = buildService(httpClient: mockClient);
+        final result = await service.upload(
+          recordingId: 'rec-1',
+          serverId: 'srv-1',
+          localFilePath: testFile.path,
+          format: 'm4a',
+          fileSizeBytes: fileBytes.length,
+        );
+
+        expect(result.success, isTrue);
+        expect(result.clientCrc32c, equals(expectedCrc));
+        expect(result.gcsCrc32c, isNull);
+      },
+    );
+
+    test('single PUT succeeds when GCS CRC32C matches', () async {
+      final testFile = File('${tempDir.path}/crc_match.m4a');
+      final fileBytes = Uint8List.fromList(List.generate(2048, (i) => i % 256));
+      testFile.writeAsBytesSync(fileBytes);
+      final expectedCrc = (Crc32c()..add(fileBytes)).base64BigEndian;
+
+      final mockClient = MockClient((request) async {
+        if (request.url.path.contains('upload-url')) {
+          return http.Response(
+            jsonEncode({
+              'upload_url': 'https://storage.googleapis.com/test',
+              'content_type': 'audio/mp4',
+            }),
+            200,
+          );
+        }
+        return http.Response('', 404);
+      });
+
+      fakeDownloader.enqueueResponse(
+        UploadResult(
+          statusCode: 200,
+          responseHeaders: {'x-goog-hash': 'crc32c=$expectedCrc,md5=zzz=='},
+        ),
+      );
+
+      final service = buildService(httpClient: mockClient);
+      final result = await service.upload(
+        recordingId: 'rec-1',
+        serverId: 'srv-1',
+        localFilePath: testFile.path,
+        format: 'm4a',
+        fileSizeBytes: fileBytes.length,
+      );
+
+      expect(result.success, isTrue);
+      expect(result.clientCrc32c, equals(expectedCrc));
+      expect(result.gcsCrc32c, equals(expectedCrc));
+    });
+
+    test('single PUT fails on CRC32C mismatch', () async {
+      final testFile = File('${tempDir.path}/crc_mismatch.m4a');
+      testFile.writeAsBytesSync(Uint8List(1024));
+
+      final mockClient = MockClient((request) async {
+        if (request.url.path.contains('upload-url')) {
+          return http.Response(
+            jsonEncode({
+              'upload_url': 'https://storage.googleapis.com/test',
+              'content_type': 'audio/mp4',
+            }),
+            200,
+          );
+        }
+        return http.Response('', 404);
+      });
+
+      fakeDownloader.enqueueResponse(
+        const UploadResult(
+          statusCode: 200,
+          responseHeaders: {'x-goog-hash': 'crc32c=AAAAAA=='},
+        ),
+      );
+
+      final service = buildService(httpClient: mockClient);
+      final result = await service.upload(
+        recordingId: 'rec-1',
+        serverId: 'srv-1',
+        localFilePath: testFile.path,
+        format: 'm4a',
+        fileSizeBytes: 1024,
+      );
+
+      expect(result.success, isFalse);
+      expect(result.error, contains('CRC32C mismatch'));
+      expect(result.pausedByRecording, isFalse);
+    });
+
+    test(
+      'resumable validates CRC32C from the terminal chunk headers',
+      () async {
+        const fileSize = 5 * 1024 * 1024;
+        final testFile = File('${tempDir.path}/crc_resumable.m4a');
+        final fileBytes = Uint8List(fileSize);
+        testFile.writeAsBytesSync(fileBytes);
+        final expectedCrc = (Crc32c()..add(fileBytes)).base64BigEndian;
+
+        when(() => mockRepo.getRecordingById('rec-1')).thenAnswer(
+          (_) async => _seedRecording(
+            id: 'rec-1',
+            fileSizeBytes: fileSize,
+            filePath: testFile.path,
+          ),
+        );
+
+        final mockClient = MockClient((request) async {
+          if (request.url.path.contains('resumable-upload-url')) {
+            return http.Response(jsonEncode({'session_uri': sessionUri}), 200);
+          }
+          return http.Response('', 404);
+        });
+
+        fakeDownloader.enqueueResponse(
+          UploadResult(
+            statusCode: 200,
+            responseHeaders: {'x-goog-hash': 'crc32c=$expectedCrc'},
+          ),
+        );
+
+        final service = buildService(httpClient: mockClient);
+        final result = await service.upload(
+          recordingId: 'rec-1',
+          serverId: 'srv-1',
+          localFilePath: testFile.path,
+          format: 'm4a',
+          fileSizeBytes: fileSize,
+        );
+
+        expect(result.success, isTrue);
+        expect(result.clientCrc32c, equals(expectedCrc));
+        expect(result.gcsCrc32c, equals(expectedCrc));
+      },
+    );
+
+    test(
+      'resumable fails on CRC32C mismatch from the terminal chunk',
+      () async {
+        const fileSize = 5 * 1024 * 1024;
+        final testFile = File('${tempDir.path}/crc_resumable_bad.m4a');
+        testFile.writeAsBytesSync(Uint8List(fileSize));
+
+        when(() => mockRepo.getRecordingById('rec-1')).thenAnswer(
+          (_) async => _seedRecording(
+            id: 'rec-1',
+            fileSizeBytes: fileSize,
+            filePath: testFile.path,
+          ),
+        );
+
+        final mockClient = MockClient((request) async {
+          if (request.url.path.contains('resumable-upload-url')) {
+            return http.Response(jsonEncode({'session_uri': sessionUri}), 200);
+          }
+          return http.Response('', 404);
+        });
+
+        fakeDownloader.enqueueResponse(
+          const UploadResult(
+            statusCode: 200,
+            responseHeaders: {'x-goog-hash': 'crc32c=AAAAAA=='},
+          ),
+        );
+
+        final service = buildService(httpClient: mockClient);
+        final result = await service.upload(
+          recordingId: 'rec-1',
+          serverId: 'srv-1',
+          localFilePath: testFile.path,
+          format: 'm4a',
+          fileSizeBytes: fileSize,
+        );
+
+        expect(result.success, isFalse);
+        expect(result.error, contains('CRC32C mismatch'));
+      },
+    );
+
+    test('resumable ignores x-goog-hash on intermediate 308 chunks', () async {
+      const fileSize = 12 * 1024 * 1024; // two chunks: 8 MB + 4 MB
+      final testFile = File('${tempDir.path}/crc_two_chunks.m4a');
+      final fileBytes = Uint8List(fileSize);
+      testFile.writeAsBytesSync(fileBytes);
+      final expectedCrc = (Crc32c()..add(fileBytes)).base64BigEndian;
+
+      when(() => mockRepo.getRecordingById('rec-1')).thenAnswer(
+        (_) async => _seedRecording(
+          id: 'rec-1',
+          fileSizeBytes: fileSize,
+          filePath: testFile.path,
+        ),
+      );
+
+      final mockClient = MockClient((request) async {
+        if (request.url.path.contains('resumable-upload-url')) {
+          return http.Response(jsonEncode({'session_uri': sessionUri}), 200);
+        }
+        return http.Response('', 404);
+      });
+
+      // Intermediate chunk: 308 with a bogus hash that must be ignored.
+      fakeDownloader.enqueueResponse(
+        const UploadResult(
+          statusCode: 308,
+          responseHeaders: {'x-goog-hash': 'crc32c=BOGUS=='},
+        ),
+      );
+      // Terminal chunk: 200 with the correct hash.
+      fakeDownloader.enqueueResponse(
+        UploadResult(
+          statusCode: 200,
+          responseHeaders: {'x-goog-hash': 'crc32c=$expectedCrc'},
+        ),
+      );
+
+      final service = buildService(httpClient: mockClient);
+      final result = await service.upload(
+        recordingId: 'rec-1',
+        serverId: 'srv-1',
+        localFilePath: testFile.path,
+        format: 'm4a',
+        fileSizeBytes: fileSize,
+      );
+
+      expect(result.success, isTrue);
+      expect(result.gcsCrc32c, equals(expectedCrc));
+      expect(fakeDownloader.calls, hasLength(2));
+    });
+
+    test(
+      'resumable computes client CRC over the whole file when resuming from a '
+      'non-zero offset',
+      () async {
+        const fileSize = 16 * 1024 * 1024;
+        final testFile = File('${tempDir.path}/crc_resume_offset.m4a');
+        final fileBytes = Uint8List(fileSize);
+        testFile.writeAsBytesSync(fileBytes);
+        final expectedCrc = (Crc32c()..add(fileBytes)).base64BigEndian;
+
+        when(() => mockRepo.getRecordingById('rec-1')).thenAnswer(
+          (_) async => _seedRecording(
+            id: 'rec-1',
+            fileSizeBytes: fileSize,
+            filePath: testFile.path,
+            resumableSessionUri: sessionUri,
+            uploadedBytes: 8 * 1024 * 1024,
+          ),
+        );
+
+        final mockClient = MockClient((request) async {
+          if (request.headers['Content-Range'] == 'bytes */$fileSize') {
+            return http.Response(
+              '',
+              308,
+              headers: {'range': 'bytes=0-8388607'},
+            );
+          }
+          return http.Response('', 404);
+        });
+
+        fakeDownloader.enqueueResponse(
+          UploadResult(
+            statusCode: 200,
+            responseHeaders: {'x-goog-hash': 'crc32c=$expectedCrc'},
+          ),
+        );
+
+        final service = buildService(httpClient: mockClient);
+        final result = await service.upload(
+          recordingId: 'rec-1',
+          serverId: 'srv-1',
+          localFilePath: testFile.path,
+          format: 'm4a',
+          fileSizeBytes: fileSize,
+        );
+
+        expect(result.success, isTrue);
+        expect(result.clientCrc32c, equals(expectedCrc));
+        expect(result.gcsCrc32c, equals(expectedCrc));
+      },
+    );
   });
 }

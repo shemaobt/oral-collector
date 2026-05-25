@@ -948,5 +948,25 @@
     }
   },
   "format_yesterday": "Yesterday",
-  "recovery_backToList": "Not now"
+  "recovery_backToList": "Not now",
+  "common_discard": "Descartar",
+  "common_resume": "Continuar",
+  "import_dropActive": "Suelta para importar",
+  "import_dropHint": "Suelta archivos de audio para importar",
+  "import_largeFileWarning": "Archivo grande ({size}). Mantén esta pestaña abierta hasta que termine la subida.",
+  "import_rejectedTooLarge": "{count, plural, =1{Se omitió 1 archivo de más de 500 MB: {names}} other{Se omitieron {count} archivos de más de 500 MB: {names}}}",
+  "import_rejectedUnreadable": "{count, plural, =1{Se omitió 1 archivo ilegible: {names}} other{Se omitieron {count} archivos ilegibles: {names}}}",
+  "import_rejectedUnsupportedCodec": "{count, plural, =1{Se omitió 1 archivo con códec de audio no compatible: {names}. Vuelve a exportarlo como PCM WAV o M4A.} other{Se omitieron {count} archivos con códecs de audio no compatibles: {names}. Vuelve a exportarlos como PCM WAV o M4A.}}",
+  "import_resumePromptBody": "\"{name}\" ({size}) se subió parcialmente. Selecciona el mismo archivo para continuar.",
+  "import_resumePromptTitle": "Reanudar subida interrumpida",
+  "import_resumeSizeMismatch": "Ese archivo no coincide con la subida pausada.",
+  "recordings_dropToImport": "Consejo: arrastra archivos de audio a esta ventana para importarlos.",
+  "upload_completeNotificationTitle": "Subida completada",
+  "upload_failedNotificationTitle": "Subida fallida",
+  "upload_inProgressNotificationBody": "Enviando audio en segundo plano",
+  "upload_inProgressNotificationTitle": "Subiendo grabación",
+  "upload_pausedWhileRecording": "Subida pausada durante la grabación",
+  "liveActivity_recordingStatus": "Grabando",
+  "liveActivity_recordingPausedStatus": "Grabación pausada",
+  "liveActivity_uploadingStatus": "Subiendo"
 }

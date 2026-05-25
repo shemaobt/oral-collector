@@ -946,5 +946,27 @@
     }
   },
   "format_yesterday": "Yesterday",
-  "recovery_backToList": "Not now"
+  "recovery_backToList": "Not now",
+  "common_discard": "تجاهل",
+  "common_resume": "استئناف",
+  "import_dropActive": "حرر للاستيراد",
+  "import_dropHint": "أسقط ملفات الصوت للاستيراد",
+  "import_largeFileWarning": "ملف كبير ({size}). أبقِ هذه التبويبة مفتوحة حتى ينتهي الرفع.",
+  "import_rejectedTooLarge": "{count, plural, =1{تم تخطي ملف واحد يتجاوز 500 ميغابايت: {names}} other{تم تخطي {count} ملفات تتجاوز 500 ميغابايت: {names}}}",
+  "import_rejectedUnreadable": "{count, plural, =1{تم تخطي ملف واحد غير قابل للقراءة: {names}} other{تم تخطي {count} ملفات غير قابلة للقراءة: {names}}}",
+  "import_rejectedUnsupportedCodec": "{count, plural, =1{تم تخطي ملف واحد بترميز صوتي غير مدعوم: {names}. أعد تصديره بصيغة PCM WAV أو M4A.} other{تم تخطي {count} ملفات بترميزات صوتية غير مدعومة: {names}. أعد تصديرها بصيغة PCM WAV أو M4A.}}",
+  "import_resumePromptBody": "تم رفع \"{name}\" ({size}) جزئيًا. اختر الملف نفسه للمتابعة.",
+  "import_resumePromptTitle": "استئناف الرفع المتوقف",
+  "import_resumeSizeMismatch": "هذا الملف لا يطابق الرفع المتوقف.",
+  "recordings_dropToImport": "تلميح: اسحب ملفات الصوت إلى هذه النافذة لاستيرادها.",
+  "recording_uploadEtaRemaining": "متبقي ~{eta}",
+  "recording_uploadSpeed": "{speed}/ث",
+  "upload_completeNotificationTitle": "اكتمل الرفع",
+  "upload_failedNotificationTitle": "فشل الرفع",
+  "upload_inProgressNotificationBody": "جاري إرسال الصوت في الخلفية",
+  "upload_inProgressNotificationTitle": "جاري رفع التسجيل",
+  "upload_pausedWhileRecording": "تم إيقاف الرفع مؤقتًا أثناء التسجيل",
+  "liveActivity_recordingStatus": "تسجيل",
+  "liveActivity_recordingPausedStatus": "إيقاف التسجيل مؤقتًا",
+  "liveActivity_uploadingStatus": "جاري الرفع"
 }

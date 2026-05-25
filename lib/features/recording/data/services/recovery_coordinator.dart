@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../../../core/database/app_database.dart';
+import '../../../../core/platform/recording_active_flag.dart';
 import '../providers.dart';
 import 'segment_paths.dart';
 import 'wav_header_repair.dart';
@@ -48,15 +49,19 @@ class RecoveryCoordinator {
 
   Future<void> scanOnStartup() async {
     final repo = _ref.read(recordingSessionRepositoryProvider);
-    final active = await repo.findActiveSessions();
-    if (active.isNotEmpty) {
-      debugPrint(
-        'RecoveryCoordinator: scanOnStartup found ${active.length} active session(s)',
-      );
-    }
-    for (final session in active) {
-      await _repairInFlightSegments(session);
-      await repo.markCrashed(session.id);
+    try {
+      final active = await repo.findActiveSessions();
+      if (active.isNotEmpty) {
+        debugPrint(
+          'RecoveryCoordinator: scanOnStartup found ${active.length} active session(s)',
+        );
+      }
+      for (final session in active) {
+        await _repairInFlightSegments(session);
+        await repo.markCrashed(session.id);
+      }
+    } finally {
+      await const RecordingActiveFlag().markInactive();
     }
     await _sweepCompletedWithOrphanSegments();
     await refresh();

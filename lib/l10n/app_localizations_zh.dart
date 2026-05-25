@@ -36,10 +36,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get common_cancel => '取消';
 
   @override
-  String get common_resume => 'Resume';
+  String get common_resume => '继续';
 
   @override
-  String get common_discard => 'Discard';
+  String get common_discard => '丢弃';
 
   @override
   String get common_save => '保存';
@@ -645,8 +645,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recordings_noRecordingsSubtitle => '点击麦克风录制您的第一个故事，或导入音频文件。';
 
   @override
-  String get recordings_dropToImport =>
-      'Tip: drag audio files onto this window to import.';
+  String get recordings_dropToImport => '提示：将音频文件拖到此窗口以导入。';
 
   @override
   String recordings_count(int count) {
@@ -896,18 +895,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get import_compressWavHint => '~10x 更小，对 ML 流水线无质量损失';
 
   @override
-  String get import_dropHint => 'Drop audio files to import';
+  String get import_dropHint => '拖放音频文件以导入';
 
   @override
-  String get import_dropActive => 'Release to import';
+  String get import_dropActive => '释放以导入';
 
   @override
   String import_rejectedTooLarge(int count, String names) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Skipped $count files over 500 MB: $names',
-      one: 'Skipped 1 file over 500 MB: $names',
+      other: '已跳过 $count 个超过 500 MB 的文件：$names',
+      one: '已跳过 1 个超过 500 MB 的文件：$names',
     );
     return '$_temp0';
   }
@@ -917,10 +916,8 @@ class AppLocalizationsZh extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other:
-          'Skipped $count files with unsupported audio codecs: $names. Re-export as PCM WAV or M4A.',
-      one:
-          'Skipped 1 file with an unsupported audio codec: $names. Re-export as PCM WAV or M4A.',
+      other: '已跳过 $count 个使用不支持的音频编解码器的文件：$names。请重新导出为 PCM WAV 或 M4A。',
+      one: '已跳过 1 个使用不支持的音频编解码器的文件：$names。请重新导出为 PCM WAV 或 M4A。',
     );
     return '$_temp0';
   }
@@ -930,27 +927,26 @@ class AppLocalizationsZh extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Skipped $count unreadable files: $names',
-      one: 'Skipped 1 unreadable file: $names',
+      other: '已跳过 $count 个无法读取的文件：$names',
+      one: '已跳过 1 个无法读取的文件：$names',
     );
     return '$_temp0';
   }
 
   @override
-  String get import_resumePromptTitle => 'Resume interrupted upload';
+  String get import_resumePromptTitle => '继续中断的上传';
 
   @override
   String import_resumePromptBody(String name, String size) {
-    return '\"$name\" ($size) was partially uploaded. Select the same file to continue.';
+    return '“$name”（$size）已部分上传。选择相同文件以继续。';
   }
 
   @override
-  String get import_resumeSizeMismatch =>
-      'That file doesn\'t match the paused upload.';
+  String get import_resumeSizeMismatch => '该文件与暂停的上传不匹配。';
 
   @override
   String import_largeFileWarning(String size) {
-    return 'Large file ($size). Keep this tab open until the upload completes.';
+    return '大文件（$size）。请保持此标签页打开,直至上传完成。';
   }
 
   @override
@@ -2373,12 +2369,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String recording_uploadSpeed(String speed) {
-    return '$speed/s';
+    return '$speed/秒';
   }
 
   @override
   String recording_uploadEtaRemaining(String eta) {
-    return '~$eta remaining';
+    return '剩余约 $eta';
   }
 
   @override
@@ -2530,4 +2526,28 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get recovery_backToList => 'Not now';
+
+  @override
+  String get upload_pausedWhileRecording => '录音时暂停上传';
+
+  @override
+  String get upload_inProgressNotificationTitle => '正在上传录音';
+
+  @override
+  String get upload_inProgressNotificationBody => '正在后台发送音频';
+
+  @override
+  String get upload_completeNotificationTitle => '上传完成';
+
+  @override
+  String get upload_failedNotificationTitle => '上传失败';
+
+  @override
+  String get liveActivity_recordingStatus => '录音中';
+
+  @override
+  String get liveActivity_recordingPausedStatus => '录音已暂停';
+
+  @override
+  String get liveActivity_uploadingStatus => '上传中';
 }

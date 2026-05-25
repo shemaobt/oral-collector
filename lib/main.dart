@@ -1,3 +1,4 @@
+import 'package:background_downloader/background_downloader.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
@@ -5,7 +6,6 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
-import 'package:workmanager/workmanager.dart';
 
 import 'core/database/database_provider.dart';
 import 'core/l10n/locale_provider.dart';
@@ -19,7 +19,8 @@ import 'features/recording/data/services/recording_notification.dart';
 import 'features/recording/data/services/recording_trash.dart';
 import 'features/recording/data/services/recovery_coordinator.dart';
 import 'features/sync/data/providers.dart';
-import 'features/sync/data/services/background_sync_service.dart';
+import 'features/sync/data/services/background_upload_coordinator.dart';
+import 'features/sync/data/services/upload_progress_visualizer.dart';
 import 'features/sync/presentation/notifiers/sync_notifier.dart';
 import 'shared/preview_helpers.dart';
 
@@ -49,11 +50,6 @@ void main() async {
   }
 
   if (!kIsWeb && platform.isAndroidPlatform) {
-    try {
-      await Workmanager().initialize(callbackDispatcher);
-    } on Exception {
-      // noop
-    }
     try {
       FlutterForegroundTask.initCommunicationPort();
     } on Exception {
@@ -89,13 +85,31 @@ class _OralCollectorAppState extends ConsumerState<OralCollectorApp> {
     Future.microtask(() async {
       ref.read(authNotifierProvider.notifier).tryAutoLogin();
 
-      _initBackgroundSync();
-
+      // Crash-recovery must clear any stale RecordingActiveFlag from a
+      // previous run BEFORE the upload listeners go live. Otherwise the very
+      // first processQueue() trigger reads a stuck-true flag and short-circuits
+      // every chunk with pausedByRecording until the next state change.
       if (!kIsWeb) {
         RecordingTrash.pruneOldTrash(maxAgeHours: 24);
         await ref.read(recoveryCoordinatorProvider).scanOnStartup();
         await RecordingLiveActivity.instance.endAll();
       }
+
+      await _initBackgroundSync();
+
+      if (!kIsWeb && platform.isIOSPlatform) {
+        // iOS uploads run via background_downloader (URLSession background).
+        // start() activates task tracking and reschedules tasks the OS dropped
+        // while the app was suspended/killed, so uploads resume on next launch.
+        try {
+          await FileDownloader().start();
+        } on Exception catch (e) {
+          debugPrint('FileDownloader.start failed: $e');
+        }
+      }
+
+      ref.read(recordingUploadListenerProvider);
+      ref.read(uploadProgressVisualizerListenerProvider);
     });
   }
 

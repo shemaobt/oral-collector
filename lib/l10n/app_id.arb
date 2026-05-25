@@ -948,5 +948,25 @@
     }
   },
   "format_yesterday": "Yesterday",
-  "recovery_backToList": "Not now"
+  "recovery_backToList": "Not now",
+  "common_discard": "Buang",
+  "common_resume": "Lanjutkan",
+  "import_dropActive": "Lepaskan untuk mengimpor",
+  "import_dropHint": "Jatuhkan berkas audio untuk diimpor",
+  "import_largeFileWarning": "Berkas besar ({size}). Biarkan tab ini terbuka hingga unggahan selesai.",
+  "import_rejectedTooLarge": "{count, plural, =1{1 berkas di atas 500 MB dilewati: {names}} other{{count} berkas di atas 500 MB dilewati: {names}}}",
+  "import_rejectedUnreadable": "{count, plural, =1{1 berkas tak terbaca dilewati: {names}} other{{count} berkas tak terbaca dilewati: {names}}}",
+  "import_rejectedUnsupportedCodec": "{count, plural, =1{1 berkas dengan codec audio tak didukung dilewati: {names}. Ekspor ulang sebagai PCM WAV atau M4A.} other{{count} berkas dengan codec audio tak didukung dilewati: {names}. Ekspor ulang sebagai PCM WAV atau M4A.}}",
+  "import_resumePromptBody": "\"{name}\" ({size}) terunggah sebagian. Pilih berkas yang sama untuk melanjutkan.",
+  "import_resumePromptTitle": "Lanjutkan unggahan yang terhenti",
+  "import_resumeSizeMismatch": "Berkas itu tidak cocok dengan unggahan yang dijeda.",
+  "recordings_dropToImport": "Tip: seret berkas audio ke jendela ini untuk mengimpor.",
+  "upload_completeNotificationTitle": "Unggahan selesai",
+  "upload_failedNotificationTitle": "Unggahan gagal",
+  "upload_inProgressNotificationBody": "Mengirim audio di latar belakang",
+  "upload_inProgressNotificationTitle": "Mengunggah rekaman",
+  "upload_pausedWhileRecording": "Unggahan dijeda saat merekam",
+  "liveActivity_recordingStatus": "Merekam",
+  "liveActivity_recordingPausedStatus": "Rekaman dijeda",
+  "liveActivity_uploadingStatus": "Mengunggah"
 }

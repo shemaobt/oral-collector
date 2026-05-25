@@ -36,10 +36,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get common_cancel => 'Annuler';
 
   @override
-  String get common_resume => 'Resume';
+  String get common_resume => 'Reprendre';
 
   @override
-  String get common_discard => 'Discard';
+  String get common_discard => 'Ignorer';
 
   @override
   String get common_save => 'Enregistrer';
@@ -677,7 +677,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get recordings_dropToImport =>
-      'Tip: drag audio files onto this window to import.';
+      'Astuce : faites glisser des fichiers audio sur cette fenêtre pour les importer.';
 
   @override
   String recordings_count(int count) {
@@ -942,18 +942,18 @@ class AppLocalizationsFr extends AppLocalizations {
       '~10x plus petit, aucune perte de qualité pour le pipeline ML';
 
   @override
-  String get import_dropHint => 'Drop audio files to import';
+  String get import_dropHint => 'Déposez des fichiers audio à importer';
 
   @override
-  String get import_dropActive => 'Release to import';
+  String get import_dropActive => 'Relâcher pour importer';
 
   @override
   String import_rejectedTooLarge(int count, String names) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Skipped $count files over 500 MB: $names',
-      one: 'Skipped 1 file over 500 MB: $names',
+      other: '$count fichiers de plus de 500 Mo ignorés : $names',
+      one: '1 fichier de plus de 500 Mo ignoré : $names',
     );
     return '$_temp0';
   }
@@ -964,9 +964,9 @@ class AppLocalizationsFr extends AppLocalizations {
       count,
       locale: localeName,
       other:
-          'Skipped $count files with unsupported audio codecs: $names. Re-export as PCM WAV or M4A.',
+          '$count fichiers avec des codecs audio non pris en charge ignorés : $names. Réexportez-les en PCM WAV ou M4A.',
       one:
-          'Skipped 1 file with an unsupported audio codec: $names. Re-export as PCM WAV or M4A.',
+          '1 fichier avec un codec audio non pris en charge ignoré : $names. Réexportez-le en PCM WAV ou M4A.',
     );
     return '$_temp0';
   }
@@ -976,27 +976,28 @@ class AppLocalizationsFr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Skipped $count unreadable files: $names',
-      one: 'Skipped 1 unreadable file: $names',
+      other: '$count fichiers illisibles ignorés : $names',
+      one: '1 fichier illisible ignoré : $names',
     );
     return '$_temp0';
   }
 
   @override
-  String get import_resumePromptTitle => 'Resume interrupted upload';
+  String get import_resumePromptTitle =>
+      'Reprendre le téléversement interrompu';
 
   @override
   String import_resumePromptBody(String name, String size) {
-    return '\"$name\" ($size) was partially uploaded. Select the same file to continue.';
+    return '« $name » ($size) a été partiellement téléversé. Sélectionnez le même fichier pour continuer.';
   }
 
   @override
   String get import_resumeSizeMismatch =>
-      'That file doesn\'t match the paused upload.';
+      'Ce fichier ne correspond pas au téléversement en pause.';
 
   @override
   String import_largeFileWarning(String size) {
-    return 'Large file ($size). Keep this tab open until the upload completes.';
+    return 'Fichier volumineux ($size). Gardez cet onglet ouvert jusqu\'à la fin du téléversement.';
   }
 
   @override
@@ -2663,4 +2664,31 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get recovery_backToList => 'Not now';
+
+  @override
+  String get upload_pausedWhileRecording =>
+      'Téléversement en pause pendant l\'enregistrement';
+
+  @override
+  String get upload_inProgressNotificationTitle =>
+      'Téléversement de l\'enregistrement';
+
+  @override
+  String get upload_inProgressNotificationBody =>
+      'Envoi de l\'audio en arrière-plan';
+
+  @override
+  String get upload_completeNotificationTitle => 'Téléversement terminé';
+
+  @override
+  String get upload_failedNotificationTitle => 'Échec du téléversement';
+
+  @override
+  String get liveActivity_recordingStatus => 'Enregistrement';
+
+  @override
+  String get liveActivity_recordingPausedStatus => 'Enregistrement en pause';
+
+  @override
+  String get liveActivity_uploadingStatus => 'Téléversement';
 }

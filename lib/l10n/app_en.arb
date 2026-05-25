@@ -198,15 +198,21 @@
   "recording_uploadFailed": "Upload failed: {error}",
   "@recording_uploadFailed": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "recording_serviceNotificationTitle": "Recording in progress",
   "recording_serviceNotificationBody": "{elapsed} • {genre}",
   "@recording_serviceNotificationBody": {
     "placeholders": {
-      "elapsed": { "type": "String" },
-      "genre": { "type": "String" }
+      "elapsed": {
+        "type": "String"
+      },
+      "genre": {
+        "type": "String"
+      }
     }
   },
   "recording_serviceNotificationStopAction": "Stop",
@@ -245,8 +251,12 @@
   "recording_replaceFormatMismatch": "Replacement must be a {expected} file, but got {actual}",
   "@recording_replaceFormatMismatch": {
     "placeholders": {
-      "expected": { "type": "String" },
-      "actual": { "type": "String" }
+      "expected": {
+        "type": "String"
+      },
+      "actual": {
+        "type": "String"
+      }
     }
   },
   "recording_replaceInvalidAudio": "Could not read the selected audio file",
@@ -921,22 +931,28 @@
   "recording_storageLowWarnBody": "About {minutes} min of recording available. Continue?",
   "@recording_storageLowWarnBody": {
     "placeholders": {
-      "minutes": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "recording_storageRefuseTitle": "Not enough storage",
   "recording_storageRefuseBody": "Free up space on this device before recording.",
-  "recording_storageCriticalBanner": "Storage critical \u2014 about {minutes} min remaining. Consider stopping soon.",
+  "recording_storageCriticalBanner": "Storage critical — about {minutes} min remaining. Consider stopping soon.",
   "@recording_storageCriticalBanner": {
     "placeholders": {
-      "minutes": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "recording_storageForceStopped": "Recording stopped due to critically low storage. Your progress has been saved.",
   "recording_savedAt": "Saved at {time}",
   "@recording_savedAt": {
     "placeholders": {
-      "time": { "type": "String" }
+      "time": {
+        "type": "String"
+      }
     }
   },
   "recording_continuedInBackground": "Recording continued in background",
@@ -946,7 +962,9 @@
   "recording_recoverBody": "We found about {minutes} min of audio from an earlier session.",
   "@recording_recoverBody": {
     "placeholders": {
-      "minutes": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "recording_recoverButton": "Recover",
@@ -1004,11 +1022,15 @@
   "profile_defaultMicrophone": "Default microphone",
   "profile_systemDefault": "System default",
   "settings_deviceStorageTitle": "Device storage",
-  "settings_deviceStorageSubtitle": "Used {used} \u00b7 Free {free}",
+  "settings_deviceStorageSubtitle": "Used {used} · Free {free}",
   "@settings_deviceStorageSubtitle": {
     "placeholders": {
-      "used": { "type": "String" },
-      "free": { "type": "String" }
+      "used": {
+        "type": "String"
+      },
+      "free": {
+        "type": "String"
+      }
     }
   },
   "fab_quickRecord": "Quick",
@@ -1117,7 +1139,9 @@
   "a11y_tabLabel": "{label} tab",
   "@a11y_tabLabel": {
     "placeholders": {
-      "label": { "type": "String" }
+      "label": {
+        "type": "String"
+      }
     }
   },
   "profile_adminBadge": "Admin",
@@ -1128,7 +1152,9 @@
   "trim_splitError": "Error splitting: {error}",
   "@trim_splitError": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "error_serverFailure": "The server could not complete the request. Please try again.",
@@ -1143,13 +1169,17 @@
   "recording_uploadSpeed": "{speed}/s",
   "@recording_uploadSpeed": {
     "placeholders": {
-      "speed": { "type": "String" }
+      "speed": {
+        "type": "String"
+      }
     }
   },
   "recording_uploadEtaRemaining": "~{eta} remaining",
   "@recording_uploadEtaRemaining": {
     "placeholders": {
-      "eta": { "type": "String" }
+      "eta": {
+        "type": "String"
+      }
     }
   },
   "recording_previewSelection": "Preview Selection",
@@ -1164,34 +1194,48 @@
   "recording_partOf": "Part {part} of {total}",
   "@recording_partOf": {
     "placeholders": {
-      "part": { "type": "int" },
-      "total": { "type": "int" }
+      "part": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "recording_splitFrom": "Split from {sourceId}",
   "@recording_splitFrom": {
     "placeholders": {
-      "sourceId": { "type": "String" }
+      "sourceId": {
+        "type": "String"
+      }
     }
   },
   "trim_segmentRemoved": "Segment {index} — removed",
   "@trim_segmentRemoved": {
     "placeholders": {
-      "index": { "type": "int" }
+      "index": {
+        "type": "int"
+      }
     }
   },
   "trim_segmentOfTotal": "Segment {index} of {total}",
   "@trim_segmentOfTotal": {
     "placeholders": {
-      "index": { "type": "int" },
-      "total": { "type": "int" }
+      "index": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "recovery_interruptedTitle": "Interrupted recordings",
   "recovery_startedAt": "Started at {time}",
   "@recovery_startedAt": {
     "placeholders": {
-      "time": { "type": "String" }
+      "time": {
+        "type": "String"
+      }
     }
   },
   "recovery_resume": "Resume",
@@ -1201,26 +1245,36 @@
   "recovery_confirmDiscardBody": "{duration} of audio will be permanently deleted.",
   "@recovery_confirmDiscardBody": {
     "placeholders": {
-      "duration": { "type": "String" }
+      "duration": {
+        "type": "String"
+      }
     }
   },
   "recovery_homeBanner": "{count, plural, =1{1 interrupted recording — tap to resume} other{{count} interrupted recordings — tap to resume}}",
   "@recovery_homeBanner": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "recovery_unsavedCount": "{count, plural, =1{1 unsaved recording} other{{count} unsaved recordings}}",
   "@recovery_unsavedCount": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "recovery_latestSummary": "Latest · {duration} · {time}",
   "@recovery_latestSummary": {
     "placeholders": {
-      "duration": { "type": "String" },
-      "time": { "type": "String" }
+      "duration": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
     }
   },
   "recovery_review": "Review",
@@ -1228,7 +1282,9 @@
   "recovery_unsavedSubtitle": "{count, plural, =1{1 recording to review} other{{count} recordings to review}}",
   "@recovery_unsavedSubtitle": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "recovery_discardAll": "Discard all",
@@ -1236,7 +1292,9 @@
   "recovery_discardAllBody": "{count, plural, =1{1 recording will be permanently deleted.} other{{count} recordings will be permanently deleted.}}",
   "@recovery_discardAllBody": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "recovery_newBadge": "NEW",
@@ -1244,9 +1302,31 @@
   "recovery_recordingNumbered": "Recording {number}",
   "@recovery_recordingNumbered": {
     "placeholders": {
-      "number": { "type": "int" }
+      "number": {
+        "type": "int"
+      }
     }
   },
   "format_yesterday": "Yesterday",
-  "recovery_backToList": "Not now"
+  "recovery_backToList": "Not now",
+  "upload_pausedWhileRecording": "Upload paused while recording",
+  "@upload_pausedWhileRecording": {
+    "description": "Hint shown on a recording card when the upload is paused because a recording is currently active (ENG-48 §1 mutex)."
+  },
+  "upload_inProgressNotificationTitle": "Uploading recording",
+  "upload_inProgressNotificationBody": "Sending audio in the background",
+  "upload_completeNotificationTitle": "Upload complete",
+  "upload_failedNotificationTitle": "Upload failed",
+  "liveActivity_recordingStatus": "Recording",
+  "liveActivity_recordingPausedStatus": "Recording paused",
+  "liveActivity_uploadingStatus": "Uploading",
+  "@liveActivity_recordingStatus": {
+    "description": "Live Activity (iOS) lock-screen status while a recording session is active."
+  },
+  "@liveActivity_recordingPausedStatus": {
+    "description": "Live Activity (iOS) lock-screen status while a recording session is paused."
+  },
+  "@liveActivity_uploadingStatus": {
+    "description": "Live Activity (iOS) lock-screen and Dynamic Island short status while an upload is running."
+  }
 }

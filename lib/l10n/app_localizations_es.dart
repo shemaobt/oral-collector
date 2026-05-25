@@ -36,10 +36,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get common_cancel => 'Cancelar';
 
   @override
-  String get common_resume => 'Resume';
+  String get common_resume => 'Continuar';
 
   @override
-  String get common_discard => 'Discard';
+  String get common_discard => 'Descartar';
 
   @override
   String get common_save => 'Guardar';
@@ -676,7 +676,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get recordings_dropToImport =>
-      'Tip: drag audio files onto this window to import.';
+      'Consejo: arrastra archivos de audio a esta ventana para importarlos.';
 
   @override
   String recordings_count(int count) {
@@ -939,18 +939,18 @@ class AppLocalizationsEs extends AppLocalizations {
       '~10x más pequeño, sin pérdida de calidad para pipeline de ML';
 
   @override
-  String get import_dropHint => 'Drop audio files to import';
+  String get import_dropHint => 'Suelta archivos de audio para importar';
 
   @override
-  String get import_dropActive => 'Release to import';
+  String get import_dropActive => 'Suelta para importar';
 
   @override
   String import_rejectedTooLarge(int count, String names) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Skipped $count files over 500 MB: $names',
-      one: 'Skipped 1 file over 500 MB: $names',
+      other: 'Se omitieron $count archivos de más de 500 MB: $names',
+      one: 'Se omitió 1 archivo de más de 500 MB: $names',
     );
     return '$_temp0';
   }
@@ -961,9 +961,9 @@ class AppLocalizationsEs extends AppLocalizations {
       count,
       locale: localeName,
       other:
-          'Skipped $count files with unsupported audio codecs: $names. Re-export as PCM WAV or M4A.',
+          'Se omitieron $count archivos con códecs de audio no compatibles: $names. Vuelve a exportarlos como PCM WAV o M4A.',
       one:
-          'Skipped 1 file with an unsupported audio codec: $names. Re-export as PCM WAV or M4A.',
+          'Se omitió 1 archivo con códec de audio no compatible: $names. Vuelve a exportarlo como PCM WAV o M4A.',
     );
     return '$_temp0';
   }
@@ -973,27 +973,27 @@ class AppLocalizationsEs extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Skipped $count unreadable files: $names',
-      one: 'Skipped 1 unreadable file: $names',
+      other: 'Se omitieron $count archivos ilegibles: $names',
+      one: 'Se omitió 1 archivo ilegible: $names',
     );
     return '$_temp0';
   }
 
   @override
-  String get import_resumePromptTitle => 'Resume interrupted upload';
+  String get import_resumePromptTitle => 'Reanudar subida interrumpida';
 
   @override
   String import_resumePromptBody(String name, String size) {
-    return '\"$name\" ($size) was partially uploaded. Select the same file to continue.';
+    return '\"$name\" ($size) se subió parcialmente. Selecciona el mismo archivo para continuar.';
   }
 
   @override
   String get import_resumeSizeMismatch =>
-      'That file doesn\'t match the paused upload.';
+      'Ese archivo no coincide con la subida pausada.';
 
   @override
   String import_largeFileWarning(String size) {
-    return 'Large file ($size). Keep this tab open until the upload completes.';
+    return 'Archivo grande ($size). Mantén esta pestaña abierta hasta que termine la subida.';
   }
 
   @override
@@ -2650,4 +2650,30 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get recovery_backToList => 'Not now';
+
+  @override
+  String get upload_pausedWhileRecording =>
+      'Subida pausada durante la grabación';
+
+  @override
+  String get upload_inProgressNotificationTitle => 'Subiendo grabación';
+
+  @override
+  String get upload_inProgressNotificationBody =>
+      'Enviando audio en segundo plano';
+
+  @override
+  String get upload_completeNotificationTitle => 'Subida completada';
+
+  @override
+  String get upload_failedNotificationTitle => 'Subida fallida';
+
+  @override
+  String get liveActivity_recordingStatus => 'Grabando';
+
+  @override
+  String get liveActivity_recordingPausedStatus => 'Grabación pausada';
+
+  @override
+  String get liveActivity_uploadingStatus => 'Subiendo';
 }

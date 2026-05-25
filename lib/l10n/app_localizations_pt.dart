@@ -2489,7 +2489,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String recording_uploadEtaRemaining(String eta) {
-    return '~$eta remaining';
+    return '~$eta restantes';
   }
 
   @override
@@ -2644,4 +2644,29 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get recovery_backToList => 'Agora não';
+
+  @override
+  String get upload_pausedWhileRecording => 'Upload pausado durante a gravação';
+
+  @override
+  String get upload_inProgressNotificationTitle => 'Enviando gravação';
+
+  @override
+  String get upload_inProgressNotificationBody =>
+      'Enviando áudio em segundo plano';
+
+  @override
+  String get upload_completeNotificationTitle => 'Envio concluído';
+
+  @override
+  String get upload_failedNotificationTitle => 'Falha no envio';
+
+  @override
+  String get liveActivity_recordingStatus => 'Gravando';
+
+  @override
+  String get liveActivity_recordingPausedStatus => 'Gravação pausada';
+
+  @override
+  String get liveActivity_uploadingStatus => 'Enviando';
 }

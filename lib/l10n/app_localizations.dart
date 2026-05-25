@@ -4657,6 +4657,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Not now'**
   String get recovery_backToList;
+
+  /// Hint shown on a recording card when the upload is paused because a recording is currently active (ENG-48 §1 mutex).
+  ///
+  /// In en, this message translates to:
+  /// **'Upload paused while recording'**
+  String get upload_pausedWhileRecording;
+
+  /// No description provided for @upload_inProgressNotificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading recording'**
+  String get upload_inProgressNotificationTitle;
+
+  /// No description provided for @upload_inProgressNotificationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending audio in the background'**
+  String get upload_inProgressNotificationBody;
+
+  /// No description provided for @upload_completeNotificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload complete'**
+  String get upload_completeNotificationTitle;
+
+  /// No description provided for @upload_failedNotificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload failed'**
+  String get upload_failedNotificationTitle;
+
+  /// Live Activity (iOS) lock-screen status while a recording session is active.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording'**
+  String get liveActivity_recordingStatus;
+
+  /// Live Activity (iOS) lock-screen status while a recording session is paused.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording paused'**
+  String get liveActivity_recordingPausedStatus;
+
+  /// Live Activity (iOS) lock-screen and Dynamic Island short status while an upload is running.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading'**
+  String get liveActivity_uploadingStatus;
 }
 
 class _AppLocalizationsDelegate
