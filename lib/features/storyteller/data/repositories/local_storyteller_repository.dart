@@ -3,6 +3,9 @@ import 'package:drift/drift.dart';
 import '../../../../core/database/app_database.dart';
 import '../../domain/entities/storyteller.dart';
 
+const _pendingStatuses = ['local', 'failed', 'uploading'];
+const _maxRetries = 5;
+
 class LocalStorytellerRepository {
   final AppDatabase _db;
 
@@ -10,9 +13,12 @@ class LocalStorytellerRepository {
 
   Future<void> upsertAll(List<Storyteller> items, String projectId) async {
     await _db.transaction(() async {
-      await (_db.delete(
-        _db.localStorytellers,
-      )..where((tbl) => tbl.projectId.equals(projectId))).go();
+      await (_db.delete(_db.localStorytellers)..where(
+            (tbl) =>
+                tbl.projectId.equals(projectId) &
+                tbl.syncStatus.isNotIn(_pendingStatuses),
+          ))
+          .go();
       for (final s in items) {
         await _db
             .into(_db.localStorytellers)
@@ -37,10 +43,70 @@ class LocalStorytellerRepository {
     return row == null ? null : _fromRow(row);
   }
 
+  Future<LocalStoryteller?> getRowById(String id) async {
+    return (_db.select(
+      _db.localStorytellers,
+    )..where((tbl) => tbl.id.equals(id))).getSingleOrNull();
+  }
+
   Future<void> delete(String id) async {
     await (_db.delete(
       _db.localStorytellers,
     )..where((tbl) => tbl.id.equals(id))).go();
+  }
+
+  Future<void> insertLocal(
+    Storyteller storyteller, {
+    String syncStatus = 'local',
+  }) async {
+    await _db
+        .into(_db.localStorytellers)
+        .insert(
+          _toCompanion(storyteller).copyWith(syncStatus: Value(syncStatus)),
+          mode: InsertMode.insertOrReplace,
+        );
+  }
+
+  Future<List<LocalStoryteller>> getPendingSyncs() async {
+    return (_db.select(_db.localStorytellers)..where(
+          (tbl) =>
+              tbl.syncStatus.isIn(_pendingStatuses) &
+              tbl.retryCount.isSmallerThanValue(_maxRetries),
+        ))
+        .get();
+  }
+
+  Future<void> markUploading(String id) async {
+    await (_db.update(
+      _db.localStorytellers,
+    )..where((tbl) => tbl.id.equals(id))).write(
+      const LocalStorytellersCompanion(syncStatus: Value('uploading')),
+    );
+  }
+
+  Future<void> markUploaded(String localId, String serverId) async {
+    await (_db.update(
+      _db.localStorytellers,
+    )..where((tbl) => tbl.id.equals(localId))).write(
+      LocalStorytellersCompanion(
+        serverId: Value(serverId),
+        syncStatus: const Value('synced'),
+      ),
+    );
+  }
+
+  Future<void> markFailed(String id) async {
+    final row = await getRowById(id);
+    if (row == null) return;
+    await (_db.update(
+      _db.localStorytellers,
+    )..where((tbl) => tbl.id.equals(id))).write(
+      LocalStorytellersCompanion(
+        syncStatus: const Value('failed'),
+        retryCount: Value(row.retryCount + 1),
+        lastRetryAt: Value(DateTime.now()),
+      ),
+    );
   }
 
   LocalStorytellersCompanion _toCompanion(Storyteller s) {

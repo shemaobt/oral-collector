@@ -187,7 +187,6 @@ class SyncNotifier extends Notifier<SyncState> {
 
   Future<void> _runQueue() async {
     await _refreshPendingCount();
-    if (state.pendingCount == 0) return;
 
     final pending = await _recordingRepo.getPendingUploads();
     final totalBytes = pending.fold(0, (sum, r) => sum + r.fileSizeBytes);

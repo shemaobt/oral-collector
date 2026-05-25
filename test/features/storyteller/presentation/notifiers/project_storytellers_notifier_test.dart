@@ -105,14 +105,17 @@ void main() {
 
   group('ProjectStorytellersNotifier.fetch — online behavior', () {
     test('online fetches from API, persists, and ends with API list', () async {
-      when(() => local.getByProject('proj-1')).thenAnswer((_) async => []);
       final fromApi = [
         _makeStoryteller('s1', 'Alice'),
         _makeStoryteller('s2', 'Bob'),
         _makeStoryteller('s3', 'Carol'),
       ];
+      var stored = <Storyteller>[];
+      when(() => local.getByProject('proj-1')).thenAnswer((_) async => stored);
       when(() => api.listByProject('proj-1')).thenAnswer((_) async => fromApi);
-      when(() => local.upsertAll(any(), any())).thenAnswer((_) async {});
+      when(() => local.upsertAll(any(), any())).thenAnswer((invocation) async {
+        stored = invocation.positionalArguments[0] as List<Storyteller>;
+      });
 
       final container = makeContainer(online: true);
       addTearDown(container.dispose);
@@ -183,11 +186,18 @@ void main() {
     test(
       'first fetch offline short-circuits; second fetch (post-flip) hits the API',
       () async {
-        when(() => local.getByProject('proj-1')).thenAnswer((_) async => []);
+        var stored = <Storyteller>[];
+        when(
+          () => local.getByProject('proj-1'),
+        ).thenAnswer((_) async => stored);
         when(
           () => api.listByProject('proj-1'),
         ).thenAnswer((_) async => [_makeStoryteller('s1', 'Alice')]);
-        when(() => local.upsertAll(any(), any())).thenAnswer((_) async {});
+        when(() => local.upsertAll(any(), any())).thenAnswer((
+          invocation,
+        ) async {
+          stored = invocation.positionalArguments[0] as List<Storyteller>;
+        });
 
         final fakeSync = _FakeSyncNotifier(initialOnline: false);
         final container = ProviderContainer(

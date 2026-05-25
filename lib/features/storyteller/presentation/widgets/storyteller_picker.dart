@@ -217,7 +217,7 @@ class _StorytellerPickerSheetState
                 controller: controller,
                 padding: EdgeInsets.zero,
                 children: [
-                  if (widget.showAddNew && isOnline)
+                  if (widget.showAddNew)
                     ListTile(
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 24,

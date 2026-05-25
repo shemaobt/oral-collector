@@ -84,7 +84,6 @@ class _StorytellersListScreenState
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final state = ref.watch(projectStorytellersNotifierProvider);
-    final isOnline = ref.watch(syncNotifierProvider).isOnline;
 
     ref.listen<bool>(syncNotifierProvider.select((s) => s.isOnline), (
       prev,
@@ -113,19 +112,8 @@ class _StorytellersListScreenState
         actions: [
           IconButton(
             tooltip: l10n.storyteller_addNew,
-            onPressed: isOnline
-                ? () => context.push(
-                    '/project/${widget.projectId}/storytellers/new',
-                  )
-                : () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          l10n.storyteller_createRequiresConnection,
-                        ),
-                      ),
-                    );
-                  },
+            onPressed: () =>
+                context.push('/project/${widget.projectId}/storytellers/new'),
             icon: const Icon(LucideIcons.plus),
           ),
         ],

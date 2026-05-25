@@ -14,6 +14,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:oral_collector/core/database/app_database.dart';
 import 'package:oral_collector/core/network/authenticated_client.dart';
 import 'package:oral_collector/features/recording/data/repositories/local_recording_repository.dart';
+import 'package:oral_collector/features/storyteller/data/repositories/local_storyteller_repository.dart';
 import 'package:oral_collector/features/sync/data/repositories/sync_engine.dart';
 import 'package:oral_collector/features/sync/data/services/upload_downloader.dart';
 import 'package:oral_collector/features/sync/domain/repositories/connectivity_service.dart';
@@ -44,6 +45,8 @@ class _AlwaysOkDownloader implements UploadDownloader {
 }
 
 class MockRecordingRepo extends Mock implements LocalRecordingRepository {}
+
+class MockStorytellerRepo extends Mock implements LocalStorytellerRepository {}
 
 class MockConnectivity extends Mock implements ConnectivityService {}
 
@@ -105,6 +108,7 @@ void main() {
 
   late Directory tempDir;
   late MockRecordingRepo mockRepo;
+  late MockStorytellerRepo mockStorytellerRepo;
   late MockConnectivity mockConnectivity;
   late MockSecureStorage mockStorage;
 
@@ -118,12 +122,19 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     tempDir = Directory.systemTemp.createTempSync('sync_engine_test');
     mockRepo = MockRecordingRepo();
+    mockStorytellerRepo = MockStorytellerRepo();
     mockConnectivity = MockConnectivity();
     mockStorage = MockSecureStorage();
 
     when(
       () => mockStorage.read(key: any(named: 'key')),
     ).thenAnswer((_) async => 'test-token');
+    when(
+      () => mockStorytellerRepo.getPendingSyncs(),
+    ).thenAnswer((_) async => <LocalStoryteller>[]);
+    when(
+      () => mockStorytellerRepo.getRowById(any()),
+    ).thenAnswer((_) async => null);
   });
 
   tearDown(() {
@@ -140,6 +151,7 @@ void main() {
     );
     return SyncEngineImpl(
       recordingRepo: mockRepo,
+      storytellerRepo: mockStorytellerRepo,
       connectivity: mockConnectivity,
       client: authClient,
       uploadDownloader: downloader ?? const _AlwaysOkDownloader(),
