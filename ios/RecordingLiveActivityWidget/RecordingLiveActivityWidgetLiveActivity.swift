@@ -163,10 +163,11 @@ private struct UploadLockScreenView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack(alignment: .center, spacing: 12) {
-                Image(systemName: "arrow.up.circle.fill")
-                    .font(.system(size: 28, weight: .semibold))
-                    .foregroundStyle(Brand.accent)
+            HStack(alignment: .center, spacing: 14) {
+                Image("BrandLogo")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 50, height: 40)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(data.uploadingRecordingTitleLabel)
                         .font(.headline)
@@ -216,9 +217,10 @@ struct RecordingLiveActivityWidgetLiveActivity: Widget {
                     HStack(spacing: 8) {
                         switch data.kind {
                         case .upload:
-                            Image(systemName: "arrow.up.circle.fill")
-                                .font(.system(size: 22, weight: .semibold))
-                                .foregroundStyle(Brand.accent)
+                            Image("BrandLogo")
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 30, height: 24)
                         case .recording:
                             if data.isPaused {
                                 Image(systemName: "pause.circle.fill")
