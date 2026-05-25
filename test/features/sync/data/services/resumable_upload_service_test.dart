@@ -12,6 +12,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:oral_collector/core/database/app_database.dart';
 import 'package:oral_collector/core/network/authenticated_client.dart';
+import 'package:oral_collector/core/util/crc32c.dart';
 import 'package:oral_collector/features/recording/data/repositories/local_recording_repository.dart';
 import 'package:oral_collector/features/sync/data/services/resumable_upload_service.dart';
 import 'package:oral_collector/features/sync/data/services/upload_downloader.dart';
@@ -890,5 +891,308 @@ void main() {
 
       expect(result.pausedByRecording, isTrue);
     });
+  });
+
+  group('CRC32C validation (in-process path)', () {
+    test(
+      'single PUT returns clientCrc32c and succeeds when GCS omits x-goog-hash',
+      () async {
+        final testFile = File('${tempDir.path}/crc_absent.m4a');
+        final fileBytes = Uint8List.fromList(
+          List.generate(1024, (i) => i % 256),
+        );
+        testFile.writeAsBytesSync(fileBytes);
+        final expectedCrc = (Crc32c()..add(fileBytes)).base64BigEndian;
+
+        final mockClient = MockClient((request) async {
+          if (request.url.path.contains('upload-url')) {
+            return http.Response(
+              jsonEncode({
+                'upload_url': 'https://storage.googleapis.com/test',
+                'content_type': 'audio/mp4',
+              }),
+              200,
+            );
+          }
+          return http.Response('', 404);
+        });
+
+        fakeDownloader.enqueueResponse(const UploadResult(statusCode: 200));
+
+        final service = buildService(httpClient: mockClient);
+        final result = await service.upload(
+          recordingId: 'rec-1',
+          serverId: 'srv-1',
+          localFilePath: testFile.path,
+          format: 'm4a',
+          fileSizeBytes: fileBytes.length,
+        );
+
+        expect(result.success, isTrue);
+        expect(result.clientCrc32c, equals(expectedCrc));
+        expect(result.gcsCrc32c, isNull);
+      },
+    );
+
+    test('single PUT succeeds when GCS CRC32C matches', () async {
+      final testFile = File('${tempDir.path}/crc_match.m4a');
+      final fileBytes = Uint8List.fromList(List.generate(2048, (i) => i % 256));
+      testFile.writeAsBytesSync(fileBytes);
+      final expectedCrc = (Crc32c()..add(fileBytes)).base64BigEndian;
+
+      final mockClient = MockClient((request) async {
+        if (request.url.path.contains('upload-url')) {
+          return http.Response(
+            jsonEncode({
+              'upload_url': 'https://storage.googleapis.com/test',
+              'content_type': 'audio/mp4',
+            }),
+            200,
+          );
+        }
+        return http.Response('', 404);
+      });
+
+      fakeDownloader.enqueueResponse(
+        UploadResult(
+          statusCode: 200,
+          responseHeaders: {'x-goog-hash': 'crc32c=$expectedCrc,md5=zzz=='},
+        ),
+      );
+
+      final service = buildService(httpClient: mockClient);
+      final result = await service.upload(
+        recordingId: 'rec-1',
+        serverId: 'srv-1',
+        localFilePath: testFile.path,
+        format: 'm4a',
+        fileSizeBytes: fileBytes.length,
+      );
+
+      expect(result.success, isTrue);
+      expect(result.clientCrc32c, equals(expectedCrc));
+      expect(result.gcsCrc32c, equals(expectedCrc));
+    });
+
+    test('single PUT fails on CRC32C mismatch', () async {
+      final testFile = File('${tempDir.path}/crc_mismatch.m4a');
+      testFile.writeAsBytesSync(Uint8List(1024));
+
+      final mockClient = MockClient((request) async {
+        if (request.url.path.contains('upload-url')) {
+          return http.Response(
+            jsonEncode({
+              'upload_url': 'https://storage.googleapis.com/test',
+              'content_type': 'audio/mp4',
+            }),
+            200,
+          );
+        }
+        return http.Response('', 404);
+      });
+
+      fakeDownloader.enqueueResponse(
+        const UploadResult(
+          statusCode: 200,
+          responseHeaders: {'x-goog-hash': 'crc32c=AAAAAA=='},
+        ),
+      );
+
+      final service = buildService(httpClient: mockClient);
+      final result = await service.upload(
+        recordingId: 'rec-1',
+        serverId: 'srv-1',
+        localFilePath: testFile.path,
+        format: 'm4a',
+        fileSizeBytes: 1024,
+      );
+
+      expect(result.success, isFalse);
+      expect(result.error, contains('CRC32C mismatch'));
+      expect(result.pausedByRecording, isFalse);
+    });
+
+    test('resumable validates CRC32C from the terminal chunk headers', () async {
+      const fileSize = 5 * 1024 * 1024;
+      final testFile = File('${tempDir.path}/crc_resumable.m4a');
+      final fileBytes = Uint8List(fileSize);
+      testFile.writeAsBytesSync(fileBytes);
+      final expectedCrc = (Crc32c()..add(fileBytes)).base64BigEndian;
+
+      when(() => mockRepo.getRecordingById('rec-1')).thenAnswer(
+        (_) async => _seedRecording(
+          id: 'rec-1',
+          fileSizeBytes: fileSize,
+          filePath: testFile.path,
+        ),
+      );
+
+      final mockClient = MockClient((request) async {
+        if (request.url.path.contains('resumable-upload-url')) {
+          return http.Response(jsonEncode({'session_uri': sessionUri}), 200);
+        }
+        return http.Response('', 404);
+      });
+
+      fakeDownloader.enqueueResponse(
+        UploadResult(
+          statusCode: 200,
+          responseHeaders: {'x-goog-hash': 'crc32c=$expectedCrc'},
+        ),
+      );
+
+      final service = buildService(httpClient: mockClient);
+      final result = await service.upload(
+        recordingId: 'rec-1',
+        serverId: 'srv-1',
+        localFilePath: testFile.path,
+        format: 'm4a',
+        fileSizeBytes: fileSize,
+      );
+
+      expect(result.success, isTrue);
+      expect(result.clientCrc32c, equals(expectedCrc));
+      expect(result.gcsCrc32c, equals(expectedCrc));
+    });
+
+    test('resumable fails on CRC32C mismatch from the terminal chunk', () async {
+      const fileSize = 5 * 1024 * 1024;
+      final testFile = File('${tempDir.path}/crc_resumable_bad.m4a');
+      testFile.writeAsBytesSync(Uint8List(fileSize));
+
+      when(() => mockRepo.getRecordingById('rec-1')).thenAnswer(
+        (_) async => _seedRecording(
+          id: 'rec-1',
+          fileSizeBytes: fileSize,
+          filePath: testFile.path,
+        ),
+      );
+
+      final mockClient = MockClient((request) async {
+        if (request.url.path.contains('resumable-upload-url')) {
+          return http.Response(jsonEncode({'session_uri': sessionUri}), 200);
+        }
+        return http.Response('', 404);
+      });
+
+      fakeDownloader.enqueueResponse(
+        const UploadResult(
+          statusCode: 200,
+          responseHeaders: {'x-goog-hash': 'crc32c=AAAAAA=='},
+        ),
+      );
+
+      final service = buildService(httpClient: mockClient);
+      final result = await service.upload(
+        recordingId: 'rec-1',
+        serverId: 'srv-1',
+        localFilePath: testFile.path,
+        format: 'm4a',
+        fileSizeBytes: fileSize,
+      );
+
+      expect(result.success, isFalse);
+      expect(result.error, contains('CRC32C mismatch'));
+    });
+
+    test('resumable ignores x-goog-hash on intermediate 308 chunks', () async {
+      const fileSize = 12 * 1024 * 1024; // two chunks: 8 MB + 4 MB
+      final testFile = File('${tempDir.path}/crc_two_chunks.m4a');
+      final fileBytes = Uint8List(fileSize);
+      testFile.writeAsBytesSync(fileBytes);
+      final expectedCrc = (Crc32c()..add(fileBytes)).base64BigEndian;
+
+      when(() => mockRepo.getRecordingById('rec-1')).thenAnswer(
+        (_) async => _seedRecording(
+          id: 'rec-1',
+          fileSizeBytes: fileSize,
+          filePath: testFile.path,
+        ),
+      );
+
+      final mockClient = MockClient((request) async {
+        if (request.url.path.contains('resumable-upload-url')) {
+          return http.Response(jsonEncode({'session_uri': sessionUri}), 200);
+        }
+        return http.Response('', 404);
+      });
+
+      // Intermediate chunk: 308 with a bogus hash that must be ignored.
+      fakeDownloader.enqueueResponse(
+        const UploadResult(
+          statusCode: 308,
+          responseHeaders: {'x-goog-hash': 'crc32c=BOGUS=='},
+        ),
+      );
+      // Terminal chunk: 200 with the correct hash.
+      fakeDownloader.enqueueResponse(
+        UploadResult(
+          statusCode: 200,
+          responseHeaders: {'x-goog-hash': 'crc32c=$expectedCrc'},
+        ),
+      );
+
+      final service = buildService(httpClient: mockClient);
+      final result = await service.upload(
+        recordingId: 'rec-1',
+        serverId: 'srv-1',
+        localFilePath: testFile.path,
+        format: 'm4a',
+        fileSizeBytes: fileSize,
+      );
+
+      expect(result.success, isTrue);
+      expect(result.gcsCrc32c, equals(expectedCrc));
+      expect(fakeDownloader.calls, hasLength(2));
+    });
+
+    test(
+      'resumable computes client CRC over the whole file when resuming from a '
+      'non-zero offset',
+      () async {
+        const fileSize = 16 * 1024 * 1024;
+        final testFile = File('${tempDir.path}/crc_resume_offset.m4a');
+        final fileBytes = Uint8List(fileSize);
+        testFile.writeAsBytesSync(fileBytes);
+        final expectedCrc = (Crc32c()..add(fileBytes)).base64BigEndian;
+
+        when(() => mockRepo.getRecordingById('rec-1')).thenAnswer(
+          (_) async => _seedRecording(
+            id: 'rec-1',
+            fileSizeBytes: fileSize,
+            filePath: testFile.path,
+            resumableSessionUri: sessionUri,
+            uploadedBytes: 8 * 1024 * 1024,
+          ),
+        );
+
+        final mockClient = MockClient((request) async {
+          if (request.headers['Content-Range'] == 'bytes */$fileSize') {
+            return http.Response('', 308, headers: {'range': 'bytes=0-8388607'});
+          }
+          return http.Response('', 404);
+        });
+
+        fakeDownloader.enqueueResponse(
+          UploadResult(
+            statusCode: 200,
+            responseHeaders: {'x-goog-hash': 'crc32c=$expectedCrc'},
+          ),
+        );
+
+        final service = buildService(httpClient: mockClient);
+        final result = await service.upload(
+          recordingId: 'rec-1',
+          serverId: 'srv-1',
+          localFilePath: testFile.path,
+          format: 'm4a',
+          fileSizeBytes: fileSize,
+        );
+
+        expect(result.success, isTrue);
+        expect(result.clientCrc32c, equals(expectedCrc));
+        expect(result.gcsCrc32c, equals(expectedCrc));
+      },
+    );
   });
 }

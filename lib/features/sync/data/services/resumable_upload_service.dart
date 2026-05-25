@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/foundation.dart';
@@ -180,8 +181,22 @@ class ResumableUploadService {
       }
 
       if (result.statusCode == 200 || result.statusCode == 201) {
+        final clientCrc = await _computeFileCrc32c(filePath);
+        final gcsCrc = parseGcsCrc32cHeader(result.responseHeaders);
+        if (gcsCrc != null && gcsCrc != clientCrc) {
+          return ResumableUploadResult(
+            success: false,
+            error: 'CRC32C mismatch (client=$clientCrc, gcs=$gcsCrc)',
+            clientCrc32c: clientCrc,
+            gcsCrc32c: gcsCrc,
+          );
+        }
         onProgress?.call(fileLength, fileLength);
-        return const ResumableUploadResult(success: true);
+        return ResumableUploadResult(
+          success: true,
+          clientCrc32c: clientCrc,
+          gcsCrc32c: gcsCrc,
+        );
       }
 
       final isExpired = result.statusCode == 403 || result.statusCode == 400;
@@ -268,6 +283,7 @@ class ResumableUploadService {
       onProgress?.call(offset, fileLength);
     }
 
+    Map<String, String>? finalHeaders;
     var chunkIndex = 0;
     while (offset < fileLength) {
       if (await _recordingFlag.read()) {
@@ -301,6 +317,9 @@ class ResumableUploadService {
       final chunkResult = _classifyChunkStatus(result.statusCode);
 
       if (chunkResult == _ChunkResult.success) {
+        if (result.statusCode == 200 || result.statusCode == 201) {
+          finalHeaders = result.responseHeaders;
+        }
         // Persist before signalling progress so a crash between the two
         // doesn't leave the UI ahead of the DB.
         await _recordingRepo.updateRecording(
@@ -345,7 +364,23 @@ class ResumableUploadService {
       ),
     );
 
-    return const ResumableUploadResult(success: true);
+    final clientCrc = await _computeFileCrc32c(filePath);
+    final gcsCrc = finalHeaders != null
+        ? parseGcsCrc32cHeader(finalHeaders)
+        : null;
+    if (gcsCrc != null && gcsCrc != clientCrc) {
+      return ResumableUploadResult(
+        success: false,
+        error: 'CRC32C mismatch (client=$clientCrc, gcs=$gcsCrc)',
+        clientCrc32c: clientCrc,
+        gcsCrc32c: gcsCrc,
+      );
+    }
+    return ResumableUploadResult(
+      success: true,
+      clientCrc32c: clientCrc,
+      gcsCrc32c: gcsCrc,
+    );
   }
 
   _ChunkResult _classifyChunkStatus(int statusCode) {
@@ -356,6 +391,14 @@ class ResumableUploadService {
       return _ChunkResult.sessionExpired;
     }
     return _ChunkResult.failed;
+  }
+
+  Future<String> _computeFileCrc32c(String filePath) async {
+    final crc = Crc32c();
+    await for (final chunk in File(filePath).openRead()) {
+      crc.add(chunk);
+    }
+    return crc.base64BigEndian;
   }
 
   Future<ResumableUploadResult> _legacySinglePut({

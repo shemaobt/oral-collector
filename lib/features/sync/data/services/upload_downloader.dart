@@ -1,22 +1,22 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:background_downloader/background_downloader.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
-import 'package:path/path.dart' as p;
 
 class UploadResult {
   final int statusCode;
   final String? responseBody;
   final String? errorReason;
   final bool cancelled;
+  final Map<String, String> responseHeaders;
 
   const UploadResult({
     required this.statusCode,
     this.responseBody,
     this.errorReason,
     this.cancelled = false,
+    this.responseHeaders = const {},
   });
 }
 
@@ -41,10 +41,10 @@ abstract class UploadDownloader {
 }
 
 UploadDownloader defaultUploadDownloader({http.Client? httpClient}) {
-  if (!kIsWeb && Platform.isAndroid) {
-    return HttpInlineUploader(httpClient ?? http.Client());
-  }
-  return const BackgroundDownloaderUploader();
+  // In-process HTTP transport on every platform (see [HttpInlineUploader]):
+  // the upload loop lives in the Dart isolate, so it stops when the app is
+  // closed and resumes from the saved GCS offset on the next launch.
+  return HttpInlineUploader(httpClient ?? http.Client());
 }
 
 /// In-process HTTP chunk transport. Used on Android so the upload loop dies
@@ -104,10 +104,15 @@ class HttpInlineUploader implements UploadDownloader {
         return UploadResult(
           statusCode: response.statusCode,
           responseBody: body,
+          responseHeaders: response.headers,
           cancelled: true,
         );
       }
-      return UploadResult(statusCode: response.statusCode, responseBody: body);
+      return UploadResult(
+        statusCode: response.statusCode,
+        responseBody: body,
+        responseHeaders: response.headers,
+      );
     } on TimeoutException {
       return const UploadResult(statusCode: 0, errorReason: 'timeout');
     } on http.ClientException catch (e) {
@@ -131,102 +136,6 @@ class HttpInlineUploader implements UploadDownloader {
   Future<void> resumeAfterCancel() async {
     _cancelAllPending = false;
     _cancelledTaskIds.clear();
-  }
-}
-
-class BackgroundDownloaderUploader implements UploadDownloader {
-  const BackgroundDownloaderUploader();
-
-  @override
-  Future<UploadResult> putChunk({
-    required String taskId,
-    required String url,
-    required String filePath,
-    required int offset,
-    required int end,
-    required Map<String, String> headers,
-  }) async {
-    final dir = p.dirname(filePath);
-    final filename = p.basename(filePath);
-    final task = UploadTask(
-      taskId: taskId,
-      url: url,
-      baseDirectory: BaseDirectory.root,
-      directory: dir.startsWith('/') ? dir.substring(1) : dir,
-      filename: filename,
-      httpRequestMethod: 'PUT',
-      post: 'binary',
-      // The `Range` header here is the `background_downloader` package's
-      // slicing directive (it tells the native uploader which byte slice to
-      // PUT) — NOT a GCS request header. GCS itself ignores `Range` on PUTs
-      // and uses `Content-Range` (added by the caller). Removing this would
-      // make every chunk upload the whole file from byte 0.
-      headers: {...headers, 'Range': 'bytes=$offset-${end - 1}'},
-      priority: 0,
-      updates: Updates.statusAndProgress,
-      retries: 0,
-    );
-
-    final result = await FileDownloader().upload(task);
-    final exception = result.exception;
-    final effectiveStatus = switch (result.status) {
-      TaskStatus.complete => result.responseStatusCode ?? 200,
-      _ when exception is TaskHttpException && exception.httpResponseCode > 0 =>
-        exception.httpResponseCode,
-      _ => result.responseStatusCode ?? 0,
-    };
-    final body = result.responseBody;
-    switch (result.status) {
-      case TaskStatus.complete:
-        return UploadResult(statusCode: effectiveStatus, responseBody: body);
-      case TaskStatus.canceled:
-        return UploadResult(
-          statusCode: effectiveStatus,
-          responseBody: body,
-          cancelled: true,
-        );
-      case TaskStatus.failed:
-      case TaskStatus.notFound:
-      case TaskStatus.enqueued:
-      case TaskStatus.running:
-      case TaskStatus.waitingToRetry:
-      case TaskStatus.paused:
-        return UploadResult(
-          statusCode: effectiveStatus,
-          responseBody: body,
-          errorReason: exception?.description ?? result.status.name,
-        );
-    }
-  }
-
-  @override
-  Future<void> cancel(String taskId) async {
-    try {
-      await FileDownloader().cancelTaskWithId(taskId);
-    } on Exception catch (e) {
-      // Most often the task already finished or was never enqueued — those are
-      // benign. Log unexpected Exception subtypes so a misbehaving plugin
-      // doesn't fail silently. Errors (TypeError, StateError) propagate.
-      debugPrint('BackgroundDownloaderUploader.cancel($taskId): $e');
-    }
-  }
-
-  @override
-  Future<void> cancelAll() async {
-    try {
-      final tasks = await FileDownloader().allTasks();
-      for (final task in tasks) {
-        await FileDownloader().cancelTaskWithId(task.taskId);
-      }
-    } on Exception catch (e) {
-      debugPrint('BackgroundDownloaderUploader.cancelAll: $e');
-    }
-  }
-
-  @override
-  Future<void> resumeAfterCancel() async {
-    // background_downloader holds no sticky cancel state — new UploadTasks
-    // proceed regardless.
   }
 }
 

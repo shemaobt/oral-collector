@@ -166,5 +166,30 @@ void main() {
       expect(result.responseBody, '{"ok": true}');
       expect(result.cancelled, isFalse);
     });
+
+    test('surfaces GCS response headers on success', () async {
+      final file = File('${tempDir.path}/headers.m4a');
+      file.writeAsBytesSync(Uint8List.fromList([1, 2, 3]));
+
+      final client = MockClient((request) async {
+        return http.Response(
+          '',
+          200,
+          headers: {'x-goog-hash': 'crc32c=Nks/tw=='},
+        );
+      });
+
+      final result = await HttpInlineUploader(client).putChunk(
+        taskId: 't',
+        url: 'https://example.test/upload',
+        filePath: file.path,
+        offset: 0,
+        end: 3,
+        headers: const {'Content-Range': 'bytes 0-2/3'},
+      );
+
+      expect(result.statusCode, 200);
+      expect(result.responseHeaders['x-goog-hash'], 'crc32c=Nks/tw==');
+    });
   });
 }
