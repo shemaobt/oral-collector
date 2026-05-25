@@ -20,7 +20,6 @@ import 'features/recording/data/services/recording_trash.dart';
 import 'features/recording/data/services/recovery_coordinator.dart';
 import 'features/sync/data/providers.dart';
 import 'features/sync/data/services/background_upload_coordinator.dart';
-import 'features/sync/data/services/upload_notification.dart';
 import 'features/sync/data/services/upload_progress_visualizer.dart';
 import 'features/sync/presentation/notifiers/sync_notifier.dart';
 import 'shared/preview_helpers.dart';
@@ -61,14 +60,6 @@ void main() async {
   if (!kIsWeb) {
     try {
       await RecordingNotification.instance.init();
-    } on Exception {
-      // noop
-    }
-    try {
-      await UploadNotification.instance.init();
-      // Drop any orphan upload notification left over from a previous run
-      // that was killed mid-upload (swipe-away on Android).
-      await UploadNotification.instance.clear();
     } on Exception {
       // noop
     }
