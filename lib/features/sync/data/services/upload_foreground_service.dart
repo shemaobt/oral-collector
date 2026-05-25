@@ -85,6 +85,23 @@ class UploadForegroundService {
     }
   }
 
+  /// Updates the ongoing foreground-service notification (e.g. with upload
+  /// progress). No-op when the service isn't running.
+  Future<void> updateProgress({
+    required String title,
+    required String body,
+  }) async {
+    if (kIsWeb || !Platform.isAndroid || !_running) return;
+    try {
+      await FlutterForegroundTask.updateService(
+        notificationTitle: title,
+        notificationText: body,
+      );
+    } on Exception catch (e) {
+      debugPrint('UploadForegroundService: updateService failed: $e');
+    }
+  }
+
   Future<void> stop() async {
     if (kIsWeb || !Platform.isAndroid || !_running) return;
     try {

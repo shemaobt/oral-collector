@@ -49,6 +49,12 @@ class _FakeUploadForegroundService implements UploadForegroundService {
   }
 
   @override
+  Future<void> updateProgress({
+    required String title,
+    required String body,
+  }) async {}
+
+  @override
   Future<void> stop() async {
     stopCount++;
   }

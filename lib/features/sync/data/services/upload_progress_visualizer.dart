@@ -10,8 +10,9 @@ import '../../../../core/platform/recording_active_flag.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../presentation/notifiers/sync_notifier.dart';
 import '../../presentation/notifiers/sync_state.dart';
+import '../providers.dart';
+import 'upload_foreground_service.dart';
 import 'upload_live_activity.dart';
-import 'upload_notification.dart';
 
 typedef LocalizationsResolver = Future<AppLocalizations> Function();
 
@@ -23,17 +24,21 @@ Future<AppLocalizations> _defaultLocalizationsResolver() async {
 class UploadProgressVisualizer {
   UploadProgressVisualizer({
     UploadLiveActivity? liveActivity,
-    UploadNotification? notification,
+    UploadForegroundService? uploadForegroundService,
     RecordingActiveFlag? recordingFlag,
     LocalizationsResolver? localizationsResolver,
   }) : _liveActivity = liveActivity ?? UploadLiveActivity.instance,
-       _notification = notification ?? UploadNotification.instance,
+       _uploadForegroundService =
+           uploadForegroundService ?? UploadForegroundService(),
        _recordingFlag = recordingFlag ?? const RecordingActiveFlag(),
        _resolveLocalizations =
            localizationsResolver ?? _defaultLocalizationsResolver;
 
   final UploadLiveActivity _liveActivity;
-  final UploadNotification _notification;
+  // On Android the upload notification IS the foreground service's ongoing
+  // notification (the service keeps the process alive while minimized), so we
+  // update that one rather than showing a separate progress notification.
+  final UploadForegroundService _uploadForegroundService;
   final RecordingActiveFlag _recordingFlag;
   final LocalizationsResolver _resolveLocalizations;
   String? _activeRecordingId;
@@ -41,6 +46,9 @@ class UploadProgressVisualizer {
   // notification view on every minor float update (the upload coordinator
   // can fire dozens of progress events per chunk).
   int _lastShownPercent = -1;
+
+  String _androidBody(String fileName, int progressPercent) =>
+      '$fileName • $progressPercent%';
 
   Future<void> onStateChanged(SyncState? previous, SyncState next) async {
     if (kIsWeb) return;
@@ -70,10 +78,9 @@ class UploadProgressVisualizer {
               l10n.upload_inProgressNotificationTitle,
         );
       } else if (Platform.isAndroid) {
-        await _notification.showProgress(
+        await _uploadForegroundService.updateProgress(
           title: l10n.upload_inProgressNotificationTitle,
-          body: fileName,
-          progressPercent: next.syncProgress,
+          body: _androidBody(fileName, next.syncProgress),
         );
       }
       return;
@@ -84,9 +91,9 @@ class UploadProgressVisualizer {
       _lastShownPercent = -1;
       if (Platform.isIOS) {
         await _liveActivity.stop();
-      } else if (Platform.isAndroid) {
-        await _notification.clear();
       }
+      // Android: the foreground service (and its notification) is stopped by
+      // SyncNotifier when the queue finishes — nothing to clear here.
       return;
     }
 
@@ -105,10 +112,9 @@ class UploadProgressVisualizer {
               l10n.upload_inProgressNotificationTitle,
         );
       } else if (Platform.isAndroid) {
-        await _notification.showProgress(
+        await _uploadForegroundService.updateProgress(
           title: l10n.upload_inProgressNotificationTitle,
-          body: fileName,
-          progressPercent: next.syncProgress,
+          body: _androidBody(fileName, next.syncProgress),
         );
       }
       return;
@@ -121,15 +127,14 @@ class UploadProgressVisualizer {
         // iOS Live Activity has its own per-update budget; let it through.
         await _liveActivity.update(progressPercent: next.syncProgress);
       } else if (Platform.isAndroid) {
-        // Skip if the integer-percent hasn't moved — onlyAlertOnce already
-        // suppresses sound but the notification view still rebuilds.
+        // Skip if the integer-percent hasn't moved — the foreground-service
+        // notification view still rebuilds otherwise.
         if (next.syncProgress == _lastShownPercent) return;
         _lastShownPercent = next.syncProgress;
         final l10n = await _resolveLocalizations();
-        await _notification.showProgress(
+        await _uploadForegroundService.updateProgress(
           title: l10n.upload_inProgressNotificationTitle,
-          body: fileName,
-          progressPercent: next.syncProgress,
+          body: _androidBody(fileName, next.syncProgress),
         );
       }
     }
@@ -157,6 +162,9 @@ final uploadProgressVisualizerProvider = Provider<UploadProgressVisualizer>((
   ref,
 ) {
   return UploadProgressVisualizer(
+    // Share the same foreground-service instance SyncNotifier starts/stops, so
+    // its running state is consistent when we update the notification.
+    uploadForegroundService: ref.read(uploadForegroundServiceProvider),
     localizationsResolver: () async {
       // Prefer the explicit user locale; fall back to the OS locale.
       final Locale locale =
