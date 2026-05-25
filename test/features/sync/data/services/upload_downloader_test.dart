@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:background_downloader/background_downloader.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -190,6 +191,62 @@ void main() {
 
       expect(result.statusCode, 200);
       expect(result.responseHeaders['x-goog-hash'], 'crc32c=Nks/tw==');
+    });
+  });
+
+  group('BackgroundDownloaderUploader.uploadResultFromTaskStatus', () {
+    test('complete forwards statusCode, body and responseHeaders', () {
+      final result = BackgroundDownloaderUploader.uploadResultFromTaskStatus(
+        status: TaskStatus.complete,
+        responseStatusCode: 200,
+        responseBody: 'ok',
+        responseHeaders: {'x-goog-hash': 'crc32c=AAAA=='},
+      );
+
+      expect(result.statusCode, 200);
+      expect(result.responseBody, 'ok');
+      expect(result.responseHeaders['x-goog-hash'], 'crc32c=AAAA==');
+      expect(result.cancelled, isFalse);
+      expect(result.errorReason, isNull);
+    });
+
+    test('complete without a response code defaults to 200', () {
+      final result = BackgroundDownloaderUploader.uploadResultFromTaskStatus(
+        status: TaskStatus.complete,
+      );
+
+      expect(result.statusCode, 200);
+      expect(result.responseHeaders, isEmpty);
+    });
+
+    test('canceled maps to cancelled and still forwards headers', () {
+      final result = BackgroundDownloaderUploader.uploadResultFromTaskStatus(
+        status: TaskStatus.canceled,
+        responseHeaders: {'x-goog-hash': 'crc32c=BBBB=='},
+      );
+
+      expect(result.cancelled, isTrue);
+      expect(result.responseHeaders['x-goog-hash'], 'crc32c=BBBB==');
+    });
+
+    test('failed surfaces the status name as errorReason', () {
+      final result = BackgroundDownloaderUploader.uploadResultFromTaskStatus(
+        status: TaskStatus.failed,
+        responseStatusCode: 500,
+      );
+
+      expect(result.statusCode, 500);
+      expect(result.errorReason, 'failed');
+    });
+
+    test('TaskHttpException response code becomes the effective status', () {
+      final result = BackgroundDownloaderUploader.uploadResultFromTaskStatus(
+        status: TaskStatus.failed,
+        exception: TaskHttpException('boom', 410),
+      );
+
+      expect(result.statusCode, 410);
+      expect(result.errorReason, contains('boom'));
     });
   });
 }

@@ -51,6 +51,7 @@ dependencies:
   just_audio: ^0.9.42
   audio_session: ^0.1.21
   connectivity_plus: ^6.1.1
+  background_downloader: ^8.9.0
   flutter_local_notifications: ^18.0.1
   flutter_foreground_task: ^9.2.2
   live_activities: ^2.4.7

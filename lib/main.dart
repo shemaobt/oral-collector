@@ -1,3 +1,4 @@
+import 'package:background_downloader/background_downloader.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
@@ -104,6 +105,17 @@ class _OralCollectorAppState extends ConsumerState<OralCollectorApp> {
       }
 
       await _initBackgroundSync();
+
+      if (!kIsWeb && platform.isIOSPlatform) {
+        // iOS uploads run via background_downloader (URLSession background).
+        // start() activates task tracking and reschedules tasks the OS dropped
+        // while the app was suspended/killed, so uploads resume on next launch.
+        try {
+          await FileDownloader().start();
+        } on Exception catch (e) {
+          debugPrint('FileDownloader.start failed: $e');
+        }
+      }
 
       ref.read(recordingUploadListenerProvider);
       ref.read(uploadProgressVisualizerListenerProvider);
