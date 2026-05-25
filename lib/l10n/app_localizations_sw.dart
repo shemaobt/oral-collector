@@ -472,13 +472,31 @@ class AppLocalizationsSw extends AppLocalizations {
       'Chagua rejista ya usemi inayoelezea vizuri toni na utaratibu wa rekodi hii.';
 
   @override
-  String get recording_titleHint => 'Ongeza kichwa (si lazima)';
+  String get recording_titleHint => 'Kichwa cha rekodi';
 
   @override
   String get recording_descriptionHint => 'Ongeza maelezo mafupi (si lazima)';
 
   @override
   String get recording_descriptionEmpty => 'Ongeza maelezo';
+
+  @override
+  String get recording_titleEmpty => 'Ongeza kichwa';
+
+  @override
+  String get recording_titleRequired => 'Kichwa hakiwezi kuwa tupu';
+
+  @override
+  String get recording_title => 'Kichwa';
+
+  @override
+  String get recording_description => 'Maelezo';
+
+  @override
+  String get recording_editDetails => 'Hariri maelezo';
+
+  @override
+  String get recording_saveChanges => 'Hifadhi mabadiliko';
 
   @override
   String get recording_saveRecording => 'Hifadhi Rekodi';
@@ -742,6 +760,12 @@ class AppLocalizationsSw extends AppLocalizations {
   String get trim_addSplitsFirst => 'Ongeza migawanyo kwanza';
 
   @override
+  String get trim_applyBoost => 'Apply boost';
+
+  @override
+  String get trim_boostApplied => 'Volume applied';
+
+  @override
   String trim_savedSegments(int kept, int removed) {
     return 'Imehifadhi sehemu $kept, imeondoa $removed';
   }
@@ -770,6 +794,10 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get trim_classifySegment => 'Ainisha sehemu';
+
+  @override
+  String get trim_primaryEqualsSecondary =>
+      'Uainishaji msingi hauwezi kufanana na uainishaji wa pili wa rekodi.';
 
   @override
   String get trim_volume => 'Sauti';
@@ -1908,6 +1936,13 @@ class AppLocalizationsSw extends AppLocalizations {
   String get recording_secondaryUpdated => 'Ainisho mbadala imesasishwa';
 
   @override
+  String get recording_secondaryCollisionBanner =>
+      'Rekodi hii ina uainishaji msingi na wa pili sawa. Futa wa pili au badilisha msingi ili kusawazisha.';
+
+  @override
+  String get recording_clearSecondary => 'Futa wa pili';
+
+  @override
   String get recording_unclassified => 'Haijainishwa';
 
   @override
@@ -1994,11 +2029,67 @@ class AppLocalizationsSw extends AppLocalizations {
       'Sauti fulani karibu na mwisho haikuweza kusomwa na ikarukwa.';
 
   @override
+  String get recording_blockNavTitle => 'Recording in progress';
+
+  @override
+  String get recording_blockNavMessage =>
+      'You have a recording in progress. Discarding will permanently delete it.';
+
+  @override
+  String get recording_blockNavDiscardAndLeave => 'Discard and leave';
+
+  @override
   String get recording_inProgressNotificationTitle => 'Inarekodi';
 
   @override
   String get recording_inProgressNotificationBody =>
       'Bofya kurudi kwenye programu';
+
+  @override
+  String get recording_finalizing => 'Inakamilisha kurekodi…';
+
+  @override
+  String get recording_combiningSegments => 'Inaunganisha sehemu…';
+
+  @override
+  String get recording_compressingAudio => 'Inabana sauti…';
+
+  @override
+  String get recording_finalizationDegradedHint =>
+      'Ubora wa sauti unaweza kupungua.';
+
+  @override
+  String get recording_finalizationFailed => 'Haikuweza kuhifadhi rekodi hii';
+
+  @override
+  String get recording_finalizationFailedBody =>
+      'Tulijaribu kurejesha sauti lakini hakuna sehemu zilizopatikana.';
+
+  @override
+  String get recording_discardAndReturn => 'Tupa na urudi';
+
+  @override
+  String get recording_savingRecording => 'Saving recording…';
+
+  @override
+  String get recording_processingYourAudio => 'Processing your audio';
+
+  @override
+  String get recording_dontCloseSaveNext =>
+      'Don\'t close — we\'ll open the save screen next.';
+
+  @override
+  String get recording_stageShortFinalizing => 'FINALIZING';
+
+  @override
+  String get recording_stageShortCombining => 'COMBINING';
+
+  @override
+  String get recording_stageShortCompressing => 'COMPRESSING';
+
+  @override
+  String get recording_savingPleaseWait =>
+      'Saving your recording — please wait a moment.';
 
   @override
   String get profile_defaultMicrophone => 'Maikrofoni chaguomsingi';
@@ -2309,6 +2400,10 @@ class AppLocalizationsSw extends AppLocalizations {
   @override
   String get a11y_splitWaveform =>
       'Umbo la mawimbi ya kugawanya. Gusa kuweka alama. Buruta kuhamisha. Bana kuzomu. Bonyeza kwa muda ili kuondoa.';
+
+  @override
+  String get a11y_minimapScrubber =>
+      'Audio overview. Tap or drag to navigate to a position.';
 
   @override
   String a11y_tabLabel(String label) {

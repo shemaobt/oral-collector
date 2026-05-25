@@ -1,12 +1,12 @@
 import 'dart:convert';
 
-import 'package:crypto/crypto.dart' as crypto;
 import 'package:drift/drift.dart' show Value;
 import 'package:http/http.dart' as http;
 
 import '../../../../core/database/app_database.dart';
 import '../../../../core/network/authenticated_client.dart';
 import '../../../../core/platform/file_source.dart';
+import '../../../../core/util/crc32c.dart';
 import '../../../sync/data/services/resumable_upload_service.dart';
 import '../repositories/local_recording_repository.dart';
 
@@ -115,6 +115,7 @@ class DirectRecordingUploader {
     required DirectUploadMetadata meta,
   }) async {
     final bytes = await source.readRange(0, source.length);
+    final clientCrc = (Crc32c()..add(bytes)).base64BigEndian;
 
     final urlResponse = await _client
         .post(
@@ -148,8 +149,14 @@ class DirectRecordingUploader {
       );
     }
 
-    final md5Hash = crypto.md5.convert(bytes).toString();
-    await _confirm(serverId, md5Hash: md5Hash);
+    final gcsCrc = parseGcsCrc32cHeader(putStreamed.headers);
+    if (gcsCrc != null && gcsCrc != clientCrc) {
+      throw _UploaderException(
+        'CRC32C mismatch (client=$clientCrc, gcs=$gcsCrc)',
+      );
+    }
+
+    await _confirm(serverId, crc32c: clientCrc);
   }
 
   Future<void> _uploadResumable({
@@ -207,16 +214,16 @@ class DirectRecordingUploader {
         );
       }
 
-      await _confirm(serverId, md5Hash: null);
+      await _confirm(serverId, crc32c: result.clientCrc32c);
       await _recordingRepo.deleteRecording(shadowId);
     } catch (e) {
       rethrow;
     }
   }
 
-  Future<void> _confirm(String serverId, {required String? md5Hash}) async {
+  Future<void> _confirm(String serverId, {required String? crc32c}) async {
     final confirmBody = <String, dynamic>{};
-    if (md5Hash != null) confirmBody['md5_hash'] = md5Hash;
+    if (crc32c != null) confirmBody['crc32c'] = crc32c;
 
     final confirmResponse = await _client
         .post('/api/oc/recordings/$serverId/confirm-upload', body: confirmBody)

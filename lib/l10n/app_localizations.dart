@@ -1007,7 +1007,7 @@ abstract class AppLocalizations {
   /// No description provided for @recording_titleHint.
   ///
   /// In en, this message translates to:
-  /// **'Add a title (optional)'**
+  /// **'Recording title'**
   String get recording_titleHint;
 
   /// No description provided for @recording_descriptionHint.
@@ -1021,6 +1021,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add description'**
   String get recording_descriptionEmpty;
+
+  /// No description provided for @recording_titleEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Add title'**
+  String get recording_titleEmpty;
+
+  /// No description provided for @recording_titleRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Title cannot be empty'**
+  String get recording_titleRequired;
+
+  /// No description provided for @recording_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get recording_title;
+
+  /// No description provided for @recording_description.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get recording_description;
+
+  /// No description provided for @recording_editDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit details'**
+  String get recording_editDetails;
+
+  /// No description provided for @recording_saveChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Save changes'**
+  String get recording_saveChanges;
 
   /// No description provided for @recording_saveRecording.
   ///
@@ -1442,6 +1478,18 @@ abstract class AppLocalizations {
   /// **'Add splits first'**
   String get trim_addSplitsFirst;
 
+  /// No description provided for @trim_applyBoost.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply boost'**
+  String get trim_applyBoost;
+
+  /// No description provided for @trim_boostApplied.
+  ///
+  /// In en, this message translates to:
+  /// **'Volume applied'**
+  String get trim_boostApplied;
+
   /// No description provided for @trim_savedSegments.
   ///
   /// In en, this message translates to:
@@ -1489,6 +1537,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Classify segment'**
   String get trim_classifySegment;
+
+  /// No description provided for @trim_primaryEqualsSecondary.
+  ///
+  /// In en, this message translates to:
+  /// **'Primary classification cannot match the recording\'s secondary classification.'**
+  String get trim_primaryEqualsSecondary;
 
   /// No description provided for @trim_volume.
   ///
@@ -3470,6 +3524,18 @@ abstract class AppLocalizations {
   /// **'Alternative classification updated'**
   String get recording_secondaryUpdated;
 
+  /// No description provided for @recording_secondaryCollisionBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'This recording\'s primary and secondary classifications are the same. Clear the secondary or change the primary to sync.'**
+  String get recording_secondaryCollisionBanner;
+
+  /// No description provided for @recording_clearSecondary.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear secondary'**
+  String get recording_clearSecondary;
+
   /// No description provided for @recording_unclassified.
   ///
   /// In en, this message translates to:
@@ -3614,6 +3680,24 @@ abstract class AppLocalizations {
   /// **'Some audio near the end could not be read and was skipped.'**
   String get recording_recoverFailedLastSegment;
 
+  /// Title shown when user tries to navigate away during an active recording
+  ///
+  /// In en, this message translates to:
+  /// **'Recording in progress'**
+  String get recording_blockNavTitle;
+
+  /// Body of the block-nav confirmation dialog
+  ///
+  /// In en, this message translates to:
+  /// **'You have a recording in progress. Discarding will permanently delete it.'**
+  String get recording_blockNavMessage;
+
+  /// Destructive action label that discards the recording and navigates away
+  ///
+  /// In en, this message translates to:
+  /// **'Discard and leave'**
+  String get recording_blockNavDiscardAndLeave;
+
   /// No description provided for @recording_inProgressNotificationTitle.
   ///
   /// In en, this message translates to:
@@ -3625,6 +3709,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tap to return to the app'**
   String get recording_inProgressNotificationBody;
+
+  /// No description provided for @recording_finalizing.
+  ///
+  /// In en, this message translates to:
+  /// **'Finalizing recording…'**
+  String get recording_finalizing;
+
+  /// No description provided for @recording_combiningSegments.
+  ///
+  /// In en, this message translates to:
+  /// **'Combining segments…'**
+  String get recording_combiningSegments;
+
+  /// No description provided for @recording_compressingAudio.
+  ///
+  /// In en, this message translates to:
+  /// **'Compressing audio…'**
+  String get recording_compressingAudio;
+
+  /// No description provided for @recording_finalizationDegradedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio quality may be reduced.'**
+  String get recording_finalizationDegradedHint;
+
+  /// No description provided for @recording_finalizationFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save this recording'**
+  String get recording_finalizationFailed;
+
+  /// No description provided for @recording_finalizationFailedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'We tried to recover the audio but no segments were available.'**
+  String get recording_finalizationFailedBody;
+
+  /// No description provided for @recording_discardAndReturn.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard and return'**
+  String get recording_discardAndReturn;
+
+  /// Headline shown under the timer while audio is being finalized after stop
+  ///
+  /// In en, this message translates to:
+  /// **'Saving recording…'**
+  String get recording_savingRecording;
+
+  /// Title of the inline status card shown in place of pause/stop controls during finalization
+  ///
+  /// In en, this message translates to:
+  /// **'Processing your audio'**
+  String get recording_processingYourAudio;
+
+  /// Body copy reassuring the user that the save screen will appear automatically
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t close — we\'ll open the save screen next.'**
+  String get recording_dontCloseSaveNext;
+
+  /// Short uppercase tag shown on the right of the inline finalization card
+  ///
+  /// In en, this message translates to:
+  /// **'FINALIZING'**
+  String get recording_stageShortFinalizing;
+
+  /// Short uppercase tag — combining segments stage
+  ///
+  /// In en, this message translates to:
+  /// **'COMBINING'**
+  String get recording_stageShortCombining;
+
+  /// Short uppercase tag — compressing audio stage
+  ///
+  /// In en, this message translates to:
+  /// **'COMPRESSING'**
+  String get recording_stageShortCompressing;
+
+  /// Snackbar shown when the user taps a navigation tab while audio is being finalized
+  ///
+  /// In en, this message translates to:
+  /// **'Saving your recording — please wait a moment.'**
+  String get recording_savingPleaseWait;
 
   /// No description provided for @profile_defaultMicrophone.
   ///
@@ -4171,6 +4339,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Split waveform. Tap to add split markers. Drag to reposition. Pinch to zoom. Long-press to remove.'**
   String get a11y_splitWaveform;
+
+  /// No description provided for @a11y_minimapScrubber.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio overview. Tap or drag to navigate to a position.'**
+  String get a11y_minimapScrubber;
 
   /// No description provided for @a11y_tabLabel.
   ///

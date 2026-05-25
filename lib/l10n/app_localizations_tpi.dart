@@ -470,13 +470,31 @@ class AppLocalizationsTpi extends AppLocalizations {
       'Makim pasin bilong toktok we i stret long ton na fomol bilong dispela rekoding.';
 
   @override
-  String get recording_titleHint => 'Putim nem (sapos yu laik)';
+  String get recording_titleHint => 'Nem bilong rekoding';
 
   @override
   String get recording_descriptionHint => 'Raitim liklik stori (sapos yu laik)';
 
   @override
   String get recording_descriptionEmpty => 'Raitim stori';
+
+  @override
+  String get recording_titleEmpty => 'Putim nem';
+
+  @override
+  String get recording_titleRequired => 'Nem i no inap stap emti';
+
+  @override
+  String get recording_title => 'Nem';
+
+  @override
+  String get recording_description => 'Stori';
+
+  @override
+  String get recording_editDetails => 'Senisim ol detail';
+
+  @override
+  String get recording_saveChanges => 'Sevim ol senis';
 
   @override
   String get recording_saveRecording => 'Sevim Rekoding';
@@ -740,6 +758,12 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get trim_addSplitsFirst => 'Putim ol brukim pastaim';
 
   @override
+  String get trim_applyBoost => 'Apply boost';
+
+  @override
+  String get trim_boostApplied => 'Volume applied';
+
+  @override
   String trim_savedSegments(int kept, int removed) {
     return 'Sevim $kept segment, rausim $removed';
   }
@@ -768,6 +792,10 @@ class AppLocalizationsTpi extends AppLocalizations {
 
   @override
   String get trim_classifySegment => 'Klasifaiim segment';
+
+  @override
+  String get trim_primaryEqualsSecondary =>
+      'Primary klasifikesen i no inap stap wankain long sekondari klasifikesen bilong rekoding.';
 
   @override
   String get trim_volume => 'Volium';
@@ -1905,6 +1933,13 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get recording_secondaryUpdated => 'Narapela klasifikesen i nupela';
 
   @override
+  String get recording_secondaryCollisionBanner =>
+      'Dispela rekoding i gat wankain primary na sekondari klasifikesen. Klinim sekondari o senisim primary bilong sinkronaisim.';
+
+  @override
+  String get recording_clearSecondary => 'Klinim sekondari';
+
+  @override
   String get recording_unclassified => 'I no makim kain yet';
 
   @override
@@ -1991,11 +2026,67 @@ class AppLocalizationsTpi extends AppLocalizations {
       'Sampela audio klostu long pinis ino inap rid na mipela skipim.';
 
   @override
+  String get recording_blockNavTitle => 'Recording in progress';
+
+  @override
+  String get recording_blockNavMessage =>
+      'You have a recording in progress. Discarding will permanently delete it.';
+
+  @override
+  String get recording_blockNavDiscardAndLeave => 'Discard and leave';
+
+  @override
   String get recording_inProgressNotificationTitle => 'Rekodim i wok';
 
   @override
   String get recording_inProgressNotificationBody =>
       'Tasim bilong go bek long ap';
+
+  @override
+  String get recording_finalizing => 'I pinisim rekoding…';
+
+  @override
+  String get recording_combiningSegments => 'I bungim ol hap…';
+
+  @override
+  String get recording_compressingAudio => 'I sotim audio…';
+
+  @override
+  String get recording_finalizationDegradedHint =>
+      'Audio kuality inap kamap liklik.';
+
+  @override
+  String get recording_finalizationFailed => 'I no inap sevim dispela rekoding';
+
+  @override
+  String get recording_finalizationFailedBody =>
+      'Mipela traim long kisim bek audio tasol i nogat ol hap.';
+
+  @override
+  String get recording_discardAndReturn => 'Lusim na go bek';
+
+  @override
+  String get recording_savingRecording => 'Saving recording…';
+
+  @override
+  String get recording_processingYourAudio => 'Processing your audio';
+
+  @override
+  String get recording_dontCloseSaveNext =>
+      'Don\'t close — we\'ll open the save screen next.';
+
+  @override
+  String get recording_stageShortFinalizing => 'FINALIZING';
+
+  @override
+  String get recording_stageShortCombining => 'COMBINING';
+
+  @override
+  String get recording_stageShortCompressing => 'COMPRESSING';
+
+  @override
+  String get recording_savingPleaseWait =>
+      'Saving your recording — please wait a moment.';
 
   @override
   String get profile_defaultMicrophone => 'Defolt maikrofon';
@@ -2303,6 +2394,10 @@ class AppLocalizationsTpi extends AppLocalizations {
   @override
   String get a11y_splitWaveform =>
       'Wevfom bilong brukim. Klikim bai yu putim mak. Pulim bai yu senisim ples. Rausim pinga bai yu zoom. Holim longpela bai yu rausim.';
+
+  @override
+  String get a11y_minimapScrubber =>
+      'Audio overview. Tap or drag to navigate to a position.';
 
   @override
   String a11y_tabLabel(String label) {

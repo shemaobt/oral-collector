@@ -468,13 +468,31 @@ class AppLocalizationsAr extends AppLocalizations {
       'اختر سجل الكلام الذي يصف أفضل نبرة وشكلية هذا التسجيل.';
 
   @override
-  String get recording_titleHint => 'أضف عنواناً (اختياري)';
+  String get recording_titleHint => 'عنوان التسجيل';
 
   @override
   String get recording_descriptionHint => 'أضف وصفاً قصيراً (اختياري)';
 
   @override
   String get recording_descriptionEmpty => 'أضف وصفاً';
+
+  @override
+  String get recording_titleEmpty => 'أضف عنواناً';
+
+  @override
+  String get recording_titleRequired => 'لا يمكن أن يكون العنوان فارغاً';
+
+  @override
+  String get recording_title => 'العنوان';
+
+  @override
+  String get recording_description => 'الوصف';
+
+  @override
+  String get recording_editDetails => 'تعديل التفاصيل';
+
+  @override
+  String get recording_saveChanges => 'حفظ التغييرات';
 
   @override
   String get recording_saveRecording => 'حفظ التسجيل';
@@ -733,6 +751,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get trim_addSplitsFirst => 'أضف تقسيمات أولاً';
 
   @override
+  String get trim_applyBoost => 'Apply boost';
+
+  @override
+  String get trim_boostApplied => 'Volume applied';
+
+  @override
   String trim_savedSegments(int kept, int removed) {
     return 'تم حفظ $kept مقطع، وإزالة $removed';
   }
@@ -761,6 +785,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get trim_classifySegment => 'تصنيف المقطع';
+
+  @override
+  String get trim_primaryEqualsSecondary =>
+      'لا يمكن أن يتطابق التصنيف الأساسي مع التصنيف الثانوي للتسجيل.';
 
   @override
   String get trim_volume => 'مستوى الصوت';
@@ -1884,6 +1912,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get recording_secondaryUpdated => 'تم تحديث التصنيف البديل';
 
   @override
+  String get recording_secondaryCollisionBanner =>
+      'هذا التسجيل له نفس التصنيف الأساسي والثانوي. امسح الثانوي أو غيّر الأساسي للمزامنة.';
+
+  @override
+  String get recording_clearSecondary => 'مسح الثانوي';
+
+  @override
   String get recording_unclassified => 'غير مصنف';
 
   @override
@@ -1969,10 +2004,65 @@ class AppLocalizationsAr extends AppLocalizations {
       'تعذرت قراءة بعض الصوت قرب النهاية وتم تخطيه.';
 
   @override
+  String get recording_blockNavTitle => 'Recording in progress';
+
+  @override
+  String get recording_blockNavMessage =>
+      'You have a recording in progress. Discarding will permanently delete it.';
+
+  @override
+  String get recording_blockNavDiscardAndLeave => 'Discard and leave';
+
+  @override
   String get recording_inProgressNotificationTitle => 'جاري التسجيل';
 
   @override
   String get recording_inProgressNotificationBody => 'اضغط للعودة إلى التطبيق';
+
+  @override
+  String get recording_finalizing => 'إنهاء التسجيل…';
+
+  @override
+  String get recording_combiningSegments => 'دمج الأجزاء…';
+
+  @override
+  String get recording_compressingAudio => 'ضغط الصوت…';
+
+  @override
+  String get recording_finalizationDegradedHint => 'قد تكون جودة الصوت منخفضة.';
+
+  @override
+  String get recording_finalizationFailed => 'تعذر حفظ هذا التسجيل';
+
+  @override
+  String get recording_finalizationFailedBody =>
+      'حاولنا استرداد الصوت لكن لم تكن هناك أجزاء متاحة.';
+
+  @override
+  String get recording_discardAndReturn => 'تجاهل والعودة';
+
+  @override
+  String get recording_savingRecording => 'Saving recording…';
+
+  @override
+  String get recording_processingYourAudio => 'Processing your audio';
+
+  @override
+  String get recording_dontCloseSaveNext =>
+      'Don\'t close — we\'ll open the save screen next.';
+
+  @override
+  String get recording_stageShortFinalizing => 'FINALIZING';
+
+  @override
+  String get recording_stageShortCombining => 'COMBINING';
+
+  @override
+  String get recording_stageShortCompressing => 'COMPRESSING';
+
+  @override
+  String get recording_savingPleaseWait =>
+      'Saving your recording — please wait a moment.';
 
   @override
   String get profile_defaultMicrophone => 'الميكروفون الافتراضي';
@@ -2280,6 +2370,10 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get a11y_splitWaveform =>
       'مخطط الموجة للتقسيم. انقر لإضافة علامات التقسيم. اسحب لإعادة الترتيب. استخدم أصابعك للتكبير. اضغط مطولاً للإزالة.';
+
+  @override
+  String get a11y_minimapScrubber =>
+      'Audio overview. Tap or drag to navigate to a position.';
 
   @override
   String a11y_tabLabel(String label) {

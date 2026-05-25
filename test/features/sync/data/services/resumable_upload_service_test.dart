@@ -177,6 +177,8 @@ void main() {
       expect(result.success, isTrue);
       expect(result.error, isNull);
       expect(result.pausedByRecording, isFalse);
+      expect(result.clientCrc32c, isNull);
+      expect(result.gcsCrc32c, isNull);
     });
 
     test('paused_by_recording is exposed as a typed flag', () {

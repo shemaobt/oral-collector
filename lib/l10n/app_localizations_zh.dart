@@ -461,13 +461,31 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recording_registerDescription => '选择最能描述此录音语气和正式程度的语域。';
 
   @override
-  String get recording_titleHint => '添加标题（选填）';
+  String get recording_titleHint => '录音标题';
 
   @override
   String get recording_descriptionHint => '添加简短描述（选填）';
 
   @override
   String get recording_descriptionEmpty => '添加描述';
+
+  @override
+  String get recording_titleEmpty => '添加标题';
+
+  @override
+  String get recording_titleRequired => '标题不能为空';
+
+  @override
+  String get recording_title => '标题';
+
+  @override
+  String get recording_description => '描述';
+
+  @override
+  String get recording_editDetails => '编辑详情';
+
+  @override
+  String get recording_saveChanges => '保存更改';
 
   @override
   String get recording_saveRecording => '保存录音';
@@ -716,6 +734,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get trim_addSplitsFirst => '请先添加分割点';
 
   @override
+  String get trim_applyBoost => 'Apply boost';
+
+  @override
+  String get trim_boostApplied => 'Volume applied';
+
+  @override
   String trim_savedSegments(int kept, int removed) {
     return '已保存 $kept 个片段，移除了 $removed 个';
   }
@@ -744,6 +768,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get trim_classifySegment => '分类片段';
+
+  @override
+  String get trim_primaryEqualsSecondary => '主分类不能与录音的次分类相同。';
 
   @override
   String get trim_volume => '音量';
@@ -1847,6 +1874,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recording_secondaryUpdated => '替代分类已更新';
 
   @override
+  String get recording_secondaryCollisionBanner =>
+      '此录音的主要和次要分类相同。清除次要分类或更改主要分类以进行同步。';
+
+  @override
+  String get recording_clearSecondary => '清除次要';
+
+  @override
   String get recording_unclassified => '未分类';
 
   @override
@@ -1927,10 +1961,64 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recording_recoverFailedLastSegment => '末尾附近的部分音频无法读取并已跳过。';
 
   @override
+  String get recording_blockNavTitle => 'Recording in progress';
+
+  @override
+  String get recording_blockNavMessage =>
+      'You have a recording in progress. Discarding will permanently delete it.';
+
+  @override
+  String get recording_blockNavDiscardAndLeave => 'Discard and leave';
+
+  @override
   String get recording_inProgressNotificationTitle => '正在录音';
 
   @override
   String get recording_inProgressNotificationBody => '点击返回应用';
+
+  @override
+  String get recording_finalizing => '正在完成录音…';
+
+  @override
+  String get recording_combiningSegments => '正在合并片段…';
+
+  @override
+  String get recording_compressingAudio => '正在压缩音频…';
+
+  @override
+  String get recording_finalizationDegradedHint => '音频质量可能会降低。';
+
+  @override
+  String get recording_finalizationFailed => '无法保存此录音';
+
+  @override
+  String get recording_finalizationFailedBody => '我们尝试恢复音频，但没有可用的片段。';
+
+  @override
+  String get recording_discardAndReturn => '放弃并返回';
+
+  @override
+  String get recording_savingRecording => 'Saving recording…';
+
+  @override
+  String get recording_processingYourAudio => 'Processing your audio';
+
+  @override
+  String get recording_dontCloseSaveNext =>
+      'Don\'t close — we\'ll open the save screen next.';
+
+  @override
+  String get recording_stageShortFinalizing => 'FINALIZING';
+
+  @override
+  String get recording_stageShortCombining => 'COMBINING';
+
+  @override
+  String get recording_stageShortCompressing => 'COMPRESSING';
+
+  @override
+  String get recording_savingPleaseWait =>
+      'Saving your recording — please wait a moment.';
 
   @override
   String get profile_defaultMicrophone => '默认麦克风';
@@ -2221,6 +2309,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get a11y_splitWaveform => '分割波形。点击添加分割标记。拖动重新定位。捏合缩放。长按移除。';
+
+  @override
+  String get a11y_minimapScrubber =>
+      'Audio overview. Tap or drag to navigate to a position.';
 
   @override
   String a11y_tabLabel(String label) {

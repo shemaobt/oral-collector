@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:crypto/crypto.dart' as crypto;
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 import 'package:path/path.dart' as p;
@@ -281,16 +280,6 @@ class SyncEngineImpl implements SyncEngine {
         );
       }
 
-      String? md5Hash = recording.md5Hash;
-      if (md5Hash == null || md5Hash.isEmpty) {
-        final fileBytes = await file_ops.readFileBytes(resolvedPath);
-        md5Hash = crypto.md5.convert(fileBytes).toString();
-        await _recordingRepo.updateRecording(
-          id,
-          LocalRecordingsCompanion(md5Hash: Value(md5Hash)),
-        );
-      }
-
       final uploadResult = await _uploadService.upload(
         recordingId: id,
         serverId: serverId,
@@ -314,10 +303,15 @@ class SyncEngineImpl implements SyncEngine {
         throw Exception('Upload failed: ${uploadResult.error}');
       }
 
+      final confirmBody = <String, dynamic>{};
+      if (uploadResult.clientCrc32c != null) {
+        confirmBody['crc32c'] = uploadResult.clientCrc32c;
+      }
+
       final confirmResponse = await _client
           .post(
             '/api/oc/recordings/$serverId/confirm-upload',
-            body: {'md5_hash': md5Hash},
+            body: confirmBody,
           )
           .timeout(_apiTimeout);
 

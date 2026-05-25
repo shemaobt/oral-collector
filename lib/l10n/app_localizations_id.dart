@@ -472,13 +472,31 @@ class AppLocalizationsId extends AppLocalizations {
       'Pilih register bicara yang paling menggambarkan nada dan formalitas rekaman ini.';
 
   @override
-  String get recording_titleHint => 'Tambah judul (opsional)';
+  String get recording_titleHint => 'Judul rekaman';
 
   @override
   String get recording_descriptionHint => 'Tambah deskripsi singkat (opsional)';
 
   @override
   String get recording_descriptionEmpty => 'Tambah deskripsi';
+
+  @override
+  String get recording_titleEmpty => 'Tambah judul';
+
+  @override
+  String get recording_titleRequired => 'Judul tidak boleh kosong';
+
+  @override
+  String get recording_title => 'Judul';
+
+  @override
+  String get recording_description => 'Deskripsi';
+
+  @override
+  String get recording_editDetails => 'Edit detail';
+
+  @override
+  String get recording_saveChanges => 'Simpan perubahan';
 
   @override
   String get recording_saveRecording => 'Simpan Rekaman';
@@ -744,6 +762,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get trim_addSplitsFirst => 'Tambahkan pembagian terlebih dahulu';
 
   @override
+  String get trim_applyBoost => 'Apply boost';
+
+  @override
+  String get trim_boostApplied => 'Volume applied';
+
+  @override
   String trim_savedSegments(int kept, int removed) {
     return 'Tersimpan $kept segmen, dihapus $removed';
   }
@@ -772,6 +796,10 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get trim_classifySegment => 'Klasifikasikan segmen';
+
+  @override
+  String get trim_primaryEqualsSecondary =>
+      'Klasifikasi primer tidak boleh sama dengan klasifikasi sekunder rekaman.';
 
   @override
   String get trim_volume => 'Volume';
@@ -1923,6 +1951,13 @@ class AppLocalizationsId extends AppLocalizations {
   String get recording_secondaryUpdated => 'Klasifikasi alternatif diperbarui';
 
   @override
+  String get recording_secondaryCollisionBanner =>
+      'Rekaman ini memiliki klasifikasi primer dan sekunder yang sama. Hapus yang sekunder atau ubah yang primer untuk sinkronisasi.';
+
+  @override
+  String get recording_clearSecondary => 'Hapus sekunder';
+
+  @override
   String get recording_unclassified => 'Belum diklasifikasi';
 
   @override
@@ -2009,11 +2044,68 @@ class AppLocalizationsId extends AppLocalizations {
       'Sebagian audio di dekat akhir tidak dapat dibaca dan dilewati.';
 
   @override
+  String get recording_blockNavTitle => 'Recording in progress';
+
+  @override
+  String get recording_blockNavMessage =>
+      'You have a recording in progress. Discarding will permanently delete it.';
+
+  @override
+  String get recording_blockNavDiscardAndLeave => 'Discard and leave';
+
+  @override
   String get recording_inProgressNotificationTitle => 'Perekaman berlangsung';
 
   @override
   String get recording_inProgressNotificationBody =>
       'Ketuk untuk kembali ke aplikasi';
+
+  @override
+  String get recording_finalizing => 'Menyelesaikan rekaman…';
+
+  @override
+  String get recording_combiningSegments => 'Menggabungkan segmen…';
+
+  @override
+  String get recording_compressingAudio => 'Mengompresi audio…';
+
+  @override
+  String get recording_finalizationDegradedHint =>
+      'Kualitas audio mungkin berkurang.';
+
+  @override
+  String get recording_finalizationFailed =>
+      'Tidak dapat menyimpan rekaman ini';
+
+  @override
+  String get recording_finalizationFailedBody =>
+      'Kami mencoba memulihkan audio tetapi tidak ada segmen yang tersedia.';
+
+  @override
+  String get recording_discardAndReturn => 'Buang dan kembali';
+
+  @override
+  String get recording_savingRecording => 'Saving recording…';
+
+  @override
+  String get recording_processingYourAudio => 'Processing your audio';
+
+  @override
+  String get recording_dontCloseSaveNext =>
+      'Don\'t close — we\'ll open the save screen next.';
+
+  @override
+  String get recording_stageShortFinalizing => 'FINALIZING';
+
+  @override
+  String get recording_stageShortCombining => 'COMBINING';
+
+  @override
+  String get recording_stageShortCompressing => 'COMPRESSING';
+
+  @override
+  String get recording_savingPleaseWait =>
+      'Saving your recording — please wait a moment.';
 
   @override
   String get profile_defaultMicrophone => 'Mikrofon default';
@@ -2323,6 +2415,10 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get a11y_splitWaveform =>
       'Bentuk gelombang pembagi. Ketuk untuk menambahkan penanda. Seret untuk memindahkan. Cubit untuk memperbesar. Tekan lama untuk menghapus.';
+
+  @override
+  String get a11y_minimapScrubber =>
+      'Audio overview. Tap or drag to navigate to a position.';
 
   @override
   String a11y_tabLabel(String label) {

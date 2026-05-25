@@ -462,13 +462,31 @@ class AppLocalizationsKo extends AppLocalizations {
       '이 녹음의 어조와 격식 수준을 가장 잘 나타내는 언어 사용역을 선택하세요.';
 
   @override
-  String get recording_titleHint => '제목 추가 (선택 사항)';
+  String get recording_titleHint => '녹음 제목';
 
   @override
   String get recording_descriptionHint => '짧은 설명 추가 (선택 사항)';
 
   @override
   String get recording_descriptionEmpty => '설명 추가';
+
+  @override
+  String get recording_titleEmpty => '제목 추가';
+
+  @override
+  String get recording_titleRequired => '제목은 비워둘 수 없습니다';
+
+  @override
+  String get recording_title => '제목';
+
+  @override
+  String get recording_description => '설명';
+
+  @override
+  String get recording_editDetails => '세부 정보 편집';
+
+  @override
+  String get recording_saveChanges => '변경사항 저장';
 
   @override
   String get recording_saveRecording => '녹음 저장';
@@ -720,6 +738,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get trim_addSplitsFirst => '먼저 분할 지점을 추가하세요';
 
   @override
+  String get trim_applyBoost => 'Apply boost';
+
+  @override
+  String get trim_boostApplied => 'Volume applied';
+
+  @override
   String trim_savedSegments(int kept, int removed) {
     return '세그먼트 $kept개 저장, $removed개 제거';
   }
@@ -748,6 +772,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get trim_classifySegment => '세그먼트 분류';
+
+  @override
+  String get trim_primaryEqualsSecondary => '기본 분류는 녹음의 보조 분류와 같을 수 없습니다.';
 
   @override
   String get trim_volume => '볼륨';
@@ -1854,6 +1881,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recording_secondaryUpdated => '대체 분류가 업데이트되었습니다';
 
   @override
+  String get recording_secondaryCollisionBanner =>
+      '이 녹음의 기본 및 보조 분류가 동일합니다. 동기화하려면 보조를 지우거나 기본을 변경하세요.';
+
+  @override
+  String get recording_clearSecondary => '보조 지우기';
+
+  @override
   String get recording_unclassified => '미분류';
 
   @override
@@ -1937,10 +1971,65 @@ class AppLocalizationsKo extends AppLocalizations {
       '끝부분의 일부 오디오를 읽을 수 없어 건너뛰었습니다.';
 
   @override
+  String get recording_blockNavTitle => 'Recording in progress';
+
+  @override
+  String get recording_blockNavMessage =>
+      'You have a recording in progress. Discarding will permanently delete it.';
+
+  @override
+  String get recording_blockNavDiscardAndLeave => 'Discard and leave';
+
+  @override
   String get recording_inProgressNotificationTitle => '녹음 중';
 
   @override
   String get recording_inProgressNotificationBody => '탭하여 앱으로 돌아가기';
+
+  @override
+  String get recording_finalizing => '녹음 마무리 중…';
+
+  @override
+  String get recording_combiningSegments => '구간 결합 중…';
+
+  @override
+  String get recording_compressingAudio => '오디오 압축 중…';
+
+  @override
+  String get recording_finalizationDegradedHint => '오디오 품질이 저하될 수 있습니다.';
+
+  @override
+  String get recording_finalizationFailed => '이 녹음을 저장할 수 없습니다';
+
+  @override
+  String get recording_finalizationFailedBody =>
+      '오디오 복구를 시도했지만 사용 가능한 구간이 없었습니다.';
+
+  @override
+  String get recording_discardAndReturn => '버리고 돌아가기';
+
+  @override
+  String get recording_savingRecording => 'Saving recording…';
+
+  @override
+  String get recording_processingYourAudio => 'Processing your audio';
+
+  @override
+  String get recording_dontCloseSaveNext =>
+      'Don\'t close — we\'ll open the save screen next.';
+
+  @override
+  String get recording_stageShortFinalizing => 'FINALIZING';
+
+  @override
+  String get recording_stageShortCombining => 'COMBINING';
+
+  @override
+  String get recording_stageShortCompressing => 'COMPRESSING';
+
+  @override
+  String get recording_savingPleaseWait =>
+      'Saving your recording — please wait a moment.';
 
   @override
   String get profile_defaultMicrophone => '기본 마이크';
@@ -2234,6 +2323,10 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get a11y_splitWaveform =>
       '분할 파형. 탭하여 분할 마커를 추가하세요. 드래그하여 위치를 바꾸고, 핀치하여 확대하며, 길게 눌러 제거합니다.';
+
+  @override
+  String get a11y_minimapScrubber =>
+      'Audio overview. Tap or drag to navigate to a position.';
 
   @override
   String a11y_tabLabel(String label) {

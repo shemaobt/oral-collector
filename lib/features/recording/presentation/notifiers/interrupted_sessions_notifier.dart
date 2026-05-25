@@ -54,7 +54,7 @@ class InterruptedSessionsNotifier extends Notifier<void> {
       return null;
     }
 
-    final result = await ref
+    final outcome = await ref
         .read(recordingFinalizationServiceProvider)
         .finalize(
           sessionId: session.id,
@@ -66,7 +66,7 @@ class InterruptedSessionsNotifier extends Notifier<void> {
     await _cleanupOrphanedSegments(session.id, -1);
     await sessionRepo.markRecovered(session.id);
     await ref.read(recoveryCoordinatorProvider).refresh();
-    return result;
+    return outcome?.result;
   }
 
   Future<void> _cleanupOrphanedSegments(

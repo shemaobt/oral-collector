@@ -477,7 +477,7 @@ class AppLocalizationsEs extends AppLocalizations {
       'Elige el registro de habla que mejor describa el tono y la formalidad de esta grabación.';
 
   @override
-  String get recording_titleHint => 'Agregar un título (opcional)';
+  String get recording_titleHint => 'Título de la grabación';
 
   @override
   String get recording_descriptionHint =>
@@ -485,6 +485,24 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get recording_descriptionEmpty => 'Agregar descripción';
+
+  @override
+  String get recording_titleEmpty => 'Agregar título';
+
+  @override
+  String get recording_titleRequired => 'El título no puede estar vacío';
+
+  @override
+  String get recording_title => 'Título';
+
+  @override
+  String get recording_description => 'Descripción';
+
+  @override
+  String get recording_editDetails => 'Editar detalles';
+
+  @override
+  String get recording_saveChanges => 'Guardar cambios';
 
   @override
   String get recording_saveRecording => 'Guardar Grabación';
@@ -750,6 +768,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get trim_addSplitsFirst => 'Agrega divisiones primero';
 
   @override
+  String get trim_applyBoost => 'Aplicar volumen';
+
+  @override
+  String get trim_boostApplied => 'Volumen aplicado';
+
+  @override
   String trim_savedSegments(int kept, int removed) {
     String _temp0 = intl.Intl.pluralLogic(
       kept,
@@ -784,6 +808,10 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get trim_classifySegment => 'Clasificar segmento';
+
+  @override
+  String get trim_primaryEqualsSecondary =>
+      'La clasificación primaria no puede coincidir con la secundaria de la grabación.';
 
   @override
   String get trim_volume => 'Volumen';
@@ -1936,6 +1964,13 @@ class AppLocalizationsEs extends AppLocalizations {
       'Clasificación alternativa actualizada';
 
   @override
+  String get recording_secondaryCollisionBanner =>
+      'Esta grabación tiene la misma clasificación primaria y secundaria. Borra la secundaria o cambia la primaria para sincronizar.';
+
+  @override
+  String get recording_clearSecondary => 'Borrar secundaria';
+
+  @override
   String get recording_unclassified => 'Sin clasificar';
 
   @override
@@ -2022,11 +2057,68 @@ class AppLocalizationsEs extends AppLocalizations {
       'Parte del audio cerca del final no se pudo leer y fue omitido.';
 
   @override
+  String get recording_blockNavTitle => 'Recording in progress';
+
+  @override
+  String get recording_blockNavMessage =>
+      'You have a recording in progress. Discarding will permanently delete it.';
+
+  @override
+  String get recording_blockNavDiscardAndLeave => 'Discard and leave';
+
+  @override
   String get recording_inProgressNotificationTitle => 'Grabación en curso';
 
   @override
   String get recording_inProgressNotificationBody =>
       'Toca para volver a la app';
+
+  @override
+  String get recording_finalizing => 'Finalizando grabación…';
+
+  @override
+  String get recording_combiningSegments => 'Combinando segmentos…';
+
+  @override
+  String get recording_compressingAudio => 'Comprimiendo audio…';
+
+  @override
+  String get recording_finalizationDegradedHint =>
+      'La calidad del audio puede haberse reducido.';
+
+  @override
+  String get recording_finalizationFailed =>
+      'No se pudo guardar esta grabación';
+
+  @override
+  String get recording_finalizationFailedBody =>
+      'Intentamos recuperar el audio pero no había segmentos disponibles.';
+
+  @override
+  String get recording_discardAndReturn => 'Descartar y volver';
+
+  @override
+  String get recording_savingRecording => 'Saving recording…';
+
+  @override
+  String get recording_processingYourAudio => 'Processing your audio';
+
+  @override
+  String get recording_dontCloseSaveNext =>
+      'Don\'t close — we\'ll open the save screen next.';
+
+  @override
+  String get recording_stageShortFinalizing => 'FINALIZING';
+
+  @override
+  String get recording_stageShortCombining => 'COMBINING';
+
+  @override
+  String get recording_stageShortCompressing => 'COMPRESSING';
+
+  @override
+  String get recording_savingPleaseWait =>
+      'Saving your recording — please wait a moment.';
 
   @override
   String get profile_defaultMicrophone => 'Micrófono predeterminado';
@@ -2337,6 +2429,10 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get a11y_splitWaveform =>
       'Forma de onda para dividir. Toca para añadir marcadores. Arrastra para reposicionar. Pellizca para hacer zoom. Mantén pulsado para eliminar.';
+
+  @override
+  String get a11y_minimapScrubber =>
+      'Audio overview. Tap or drag to navigate to a position.';
 
   @override
   String a11y_tabLabel(String label) {

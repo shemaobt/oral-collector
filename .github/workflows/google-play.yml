@@ -63,7 +63,7 @@ jobs:
         run: echo 'BACKEND_URL=https://tripod-backend.shemaywam.com' > .env
 
       - name: Build AAB
-        run: flutter build appbundle --release --build-number=${{ github.run_number }}
+        run: flutter build appbundle --release --build-number=$(( 100 + ${{ github.run_number }} ))
 
       - name: Upload to Google Play (closed testing track)
         uses: r0adkll/upload-google-play@v1

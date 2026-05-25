@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:math';
 
-import 'package:drift/drift.dart' show Value;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -19,11 +18,16 @@ import '../../../core/theme/app_colors.dart';
 import '../../../shared/utils/error_helpers.dart';
 import '../../../shared/utils/recording_title.dart';
 import '../../genre/presentation/notifiers/genre_notifier.dart';
+import '../../sync/presentation/notifiers/sync_notifier.dart';
 import '../data/providers.dart';
+import '../data/repositories/local_recording_repository.dart';
+import '../data/server_to_local_recording.dart';
+import '../data/services/recording_split_persister.dart';
 import '../data/services/recording_trash.dart';
 import '../data/services/waveform_extractor.dart';
 import '../domain/entities/register.dart';
 import '../../../core/l10n/content_l10n.dart';
+import 'trim_edit_decision.dart';
 import 'widgets/edit_transport_bar.dart';
 import 'widgets/edit_volume_control.dart';
 import 'widgets/playback_key_handler.dart';
@@ -150,6 +154,13 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
 
   int get _keptCount => _segmentCount - _excludedSegments.length;
 
+  TrimEditDecision get _decision => TrimEditDecision(
+    splitPoints: _splitPoints,
+    excludedSegments: _excludedSegments,
+    gainDb: _gainDb,
+    totalDuration: _totalDuration,
+  );
+
   Duration _segmentStart(int i) {
     return Duration(
       milliseconds: (_boundaries[i] * _totalDuration.inMilliseconds).round(),
@@ -274,6 +285,9 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
       ),
       builder: (ctx) => SegmentTaxonomySheet(
         parentGenreId: recording.genreId,
+        parentSecondaryGenreId: recording.secondaryGenreId,
+        parentSecondarySubcategoryId: recording.secondarySubcategoryId,
+        parentSecondaryRegisterId: recording.secondaryRegisterId,
         initialGenreId: initialGenre,
         initialSubcategoryId: initialSub,
         initialRegisterId: initialReg,
@@ -427,29 +441,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
       if (kIsWeb) {
         final apiRepo = ref.read(recordingApiRepositoryProvider);
         final server = await apiRepo.getRecording(widget.recordingId);
-        recording = LocalRecording(
-          id: server.id,
-          projectId: server.projectId,
-          genreId: server.genreId,
-          subcategoryId: server.subcategoryId,
-          registerId: server.registerId,
-          secondaryGenreId: server.secondaryGenreId,
-          secondarySubcategoryId: server.secondarySubcategoryId,
-          secondaryRegisterId: server.secondaryRegisterId,
-          title: server.title,
-          durationSeconds: server.durationSeconds,
-          fileSizeBytes: server.fileSizeBytes,
-          format: server.format,
-          localFilePath: '',
-          uploadStatus: server.uploadStatus,
-          serverId: server.id,
-          gcsUrl: server.gcsUrl,
-          cleaningStatus: server.cleaningStatus,
-          recordedAt: server.recordedAt,
-          createdAt: server.recordedAt,
-          retryCount: 0,
-          uploadedBytes: 0,
-        );
+        recording = serverRecordingToLocal(server);
       } else {
         final localRepo = ref.read(localRecordingRepositoryProvider);
 
@@ -462,26 +454,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
           try {
             final apiRepo = ref.read(recordingApiRepositoryProvider);
             final server = await apiRepo.getRecording(widget.recordingId);
-            recording = LocalRecording(
-              id: server.id,
-              projectId: server.projectId,
-              genreId: server.genreId,
-              subcategoryId: server.subcategoryId,
-              registerId: server.registerId,
-              title: server.title,
-              durationSeconds: server.durationSeconds,
-              fileSizeBytes: server.fileSizeBytes,
-              format: server.format,
-              localFilePath: '',
-              uploadStatus: server.uploadStatus,
-              serverId: server.id,
-              gcsUrl: server.gcsUrl,
-              cleaningStatus: server.cleaningStatus,
-              recordedAt: server.recordedAt,
-              createdAt: server.recordedAt,
-              retryCount: 0,
-              uploadedBytes: 0,
-            );
+            recording = serverRecordingToLocal(server);
           } catch (_) {}
         }
       }
@@ -691,8 +664,8 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
 
   Future<void> _saveSplit() async {
     final recording = _recording;
-    if (recording == null || _splitPoints.isEmpty) return;
-    if (_keptCount == 0) return;
+    if (recording == null) return;
+    if (!_decision.canSave) return;
 
     final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
@@ -764,7 +737,9 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
 
     if (mounted) {
       final l10n = AppLocalizations.of(context);
-      final msg = _excludedSegments.isNotEmpty
+      final msg = _decision.mode == TrimSaveMode.boostOnly
+          ? l10n.trim_boostApplied
+          : _excludedSegments.isNotEmpty
           ? l10n.trim_savedSegments(kept.length, _excludedSegments.length)
           : l10n.trim_splitInto(kept.length);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
@@ -786,6 +761,9 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
     final kept = _keptSegmentIndices;
     final keptTotal = kept.length;
 
+    // Phase 1: run ffmpeg per kept segment, collect specs. Field-propagation
+    // contract lives in docs/recording-split-semantics.md (ENG-64).
+    final specs = <SplitSegmentSpec>[];
     for (var k = 0; k < keptTotal; k++) {
       final i = kept[k];
       final startSec = _segmentStart(i).inMilliseconds / 1000.0;
@@ -796,12 +774,23 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
           '${dir.path}/split_${now.millisecondsSinceEpoch}_$k.m4a';
 
       final needReencode = _gainDb.abs() > 0.01;
-      final command = needReencode
-          ? '-y -i "${recording.localFilePath}" -ss $startSec -to $endSec '
-                '-af "volume=${_gainDb.toStringAsFixed(2)}dB" '
-                '-c:a aac -b:a 128k "$outputPath"'
-          : '-y -i "${recording.localFilePath}" -ss $startSec -to $endSec '
-                '-c copy "$outputPath"';
+      final boostOnly = _decision.mode == TrimSaveMode.boostOnly;
+      final String command;
+      if (boostOnly) {
+        command =
+            '-y -i "${recording.localFilePath}" '
+            '-af "volume=${_gainDb.toStringAsFixed(2)}dB" '
+            '-c:a aac -b:a 128k "$outputPath"';
+      } else if (needReencode) {
+        command =
+            '-y -i "${recording.localFilePath}" -ss $startSec -to $endSec '
+            '-af "volume=${_gainDb.toStringAsFixed(2)}dB" '
+            '-c:a aac -b:a 128k "$outputPath"';
+      } else {
+        command =
+            '-y -i "${recording.localFilePath}" -ss $startSec -to $endSec '
+            '-c copy "$outputPath"';
+      }
 
       final success = await ffmpeg.executeFFmpegCommand(command);
       if (!success) {
@@ -810,68 +799,60 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
 
       final fileSize = await file_ops.fileLength(outputPath);
 
-      final id =
-          '${now.millisecondsSinceEpoch}_${k}_${recording.genreId.hashCode}';
-
-      final effGenre = _effectiveGenre(i);
-      final effSubcat = _effectiveSubcategory(i);
-      final effRegister = _effectiveRegister(i);
-      await repo.insertRecording(
-        LocalRecordingsCompanion(
-          id: Value(id),
-          projectId: Value(recording.projectId),
-          genreId: Value(effGenre.isNotEmpty ? effGenre : recording.genreId),
-          subcategoryId: (effSubcat != null && effSubcat.isNotEmpty)
-              ? Value(effSubcat)
-              : const Value.absent(),
-          registerId: (effRegister != null && effRegister.isNotEmpty)
-              ? Value(effRegister)
-              : const Value.absent(),
-          title: Value(
-            keptTotal == 1
-                ? originalTitle
-                : '$originalTitle (${k + 1}/$keptTotal)',
-          ),
-          durationSeconds: Value(segDuration),
-          fileSizeBytes: Value(fileSize),
-          format: const Value('m4a'),
-          localFilePath: Value(outputPath),
-          recordedAt: Value(recording.recordedAt),
+      specs.add(
+        SplitSegmentSpec(
+          id: '${now.millisecondsSinceEpoch}_${k}_${recording.genreId.hashCode}',
+          title: keptTotal == 1
+              ? originalTitle
+              : '$originalTitle (${k + 1}/$keptTotal)',
+          localFilePath: outputPath,
+          durationSeconds: segDuration,
+          fileSizeBytes: fileSize,
+          genreOverride: _effectiveGenre(i),
+          subcategoryOverride: _effectiveSubcategory(i),
+          registerOverride: _effectiveRegister(i),
         ),
       );
     }
 
-    await RecordingTrash.putInTrash(
-      sourcePath: recording.localFilePath,
-      metadata: {
-        'id': recording.id,
-        'title': recording.title,
-        'projectId': recording.projectId,
-        'genreId': recording.genreId,
-        'subcategoryId': recording.subcategoryId,
-        'registerId': recording.registerId,
-        'durationSeconds': recording.durationSeconds,
-        'fileSizeBytes': recording.fileSizeBytes,
-        'format': recording.format,
-        'serverId': recording.serverId,
-        'gcsUrl': recording.gcsUrl,
-        'recordedAt': recording.recordedAt.toIso8601String(),
-      },
+    // Phase 2: persist children, archive the parent, and kick the upload
+    // queue so the new children start syncing immediately when online.
+    final persister = RecordingSplitPersister(
+      localRepo: repo,
+      apiRepo: ref.read(recordingApiRepositoryProvider),
+      triggerUpload: ref.read(syncNotifierProvider.notifier).processQueue,
+      trashParent: (parent) => RecordingTrash.putInTrash(
+        sourcePath: parent.localFilePath,
+        metadata: {
+          'id': parent.id,
+          'title': parent.title,
+          'description': parent.description,
+          'projectId': parent.projectId,
+          'genreId': parent.genreId,
+          'subcategoryId': parent.subcategoryId,
+          'registerId': parent.registerId,
+          'secondaryGenreId': parent.secondaryGenreId,
+          'secondarySubcategoryId': parent.secondarySubcategoryId,
+          'secondaryRegisterId': parent.secondaryRegisterId,
+          'storytellerId': parent.storytellerId,
+          'userId': parent.userId,
+          'durationSeconds': parent.durationSeconds,
+          'fileSizeBytes': parent.fileSizeBytes,
+          'format': parent.format,
+          'serverId': parent.serverId,
+          'gcsUrl': parent.gcsUrl,
+          'recordedAt': parent.recordedAt.toIso8601String(),
+        },
+      ),
     );
-    await repo.deleteRecording(recording.id);
-
-    final serverId = recording.serverId;
-    if (serverId != null && serverId.isNotEmpty) {
-      try {
-        final apiRepo = ref.read(recordingApiRepositoryProvider);
-        await apiRepo.deleteRecording(serverId);
-      } catch (_) {}
-    }
+    await persister.persist(parent: recording, segments: specs);
 
     if (mounted) {
       HapticFeedback.mediumImpact();
       final l10n = AppLocalizations.of(context);
-      final msg = _excludedSegments.isNotEmpty
+      final msg = _decision.mode == TrimSaveMode.boostOnly
+          ? l10n.trim_boostApplied
+          : _excludedSegments.isNotEmpty
           ? l10n.trim_savedSegments(keptTotal, _excludedSegments.length)
           : l10n.trim_splitInto(keptTotal);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
@@ -1260,7 +1241,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
             const SizedBox(width: 12),
             Expanded(
               child: ElevatedButton.icon(
-                onPressed: (_isSaving || !hasSplits || _keptCount == 0)
+                onPressed: (_isSaving || !_decision.canSave)
                     ? null
                     : _saveSplit,
                 icon: _isSaving
@@ -1272,10 +1253,17 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
                           color: isDark ? Colors.black : Colors.white,
                         ),
                       )
-                    : const Icon(LucideIcons.scissors, size: 16),
+                    : Icon(
+                        _decision.mode == TrimSaveMode.boostOnly
+                            ? LucideIcons.volume2
+                            : LucideIcons.scissors,
+                        size: 16,
+                      ),
                 label: Text(
                   _isSaving
                       ? l10n.trim_splitting
+                      : _decision.mode == TrimSaveMode.boostOnly
+                      ? l10n.trim_applyBoost
                       : hasSplits
                       ? l10n.trim_saveSegments(_keptCount)
                       : l10n.trim_addSplitsFirst,
