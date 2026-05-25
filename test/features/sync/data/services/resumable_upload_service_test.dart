@@ -1012,88 +1012,94 @@ void main() {
       expect(result.pausedByRecording, isFalse);
     });
 
-    test('resumable validates CRC32C from the terminal chunk headers', () async {
-      const fileSize = 5 * 1024 * 1024;
-      final testFile = File('${tempDir.path}/crc_resumable.m4a');
-      final fileBytes = Uint8List(fileSize);
-      testFile.writeAsBytesSync(fileBytes);
-      final expectedCrc = (Crc32c()..add(fileBytes)).base64BigEndian;
+    test(
+      'resumable validates CRC32C from the terminal chunk headers',
+      () async {
+        const fileSize = 5 * 1024 * 1024;
+        final testFile = File('${tempDir.path}/crc_resumable.m4a');
+        final fileBytes = Uint8List(fileSize);
+        testFile.writeAsBytesSync(fileBytes);
+        final expectedCrc = (Crc32c()..add(fileBytes)).base64BigEndian;
 
-      when(() => mockRepo.getRecordingById('rec-1')).thenAnswer(
-        (_) async => _seedRecording(
-          id: 'rec-1',
+        when(() => mockRepo.getRecordingById('rec-1')).thenAnswer(
+          (_) async => _seedRecording(
+            id: 'rec-1',
+            fileSizeBytes: fileSize,
+            filePath: testFile.path,
+          ),
+        );
+
+        final mockClient = MockClient((request) async {
+          if (request.url.path.contains('resumable-upload-url')) {
+            return http.Response(jsonEncode({'session_uri': sessionUri}), 200);
+          }
+          return http.Response('', 404);
+        });
+
+        fakeDownloader.enqueueResponse(
+          UploadResult(
+            statusCode: 200,
+            responseHeaders: {'x-goog-hash': 'crc32c=$expectedCrc'},
+          ),
+        );
+
+        final service = buildService(httpClient: mockClient);
+        final result = await service.upload(
+          recordingId: 'rec-1',
+          serverId: 'srv-1',
+          localFilePath: testFile.path,
+          format: 'm4a',
           fileSizeBytes: fileSize,
-          filePath: testFile.path,
-        ),
-      );
+        );
 
-      final mockClient = MockClient((request) async {
-        if (request.url.path.contains('resumable-upload-url')) {
-          return http.Response(jsonEncode({'session_uri': sessionUri}), 200);
-        }
-        return http.Response('', 404);
-      });
+        expect(result.success, isTrue);
+        expect(result.clientCrc32c, equals(expectedCrc));
+        expect(result.gcsCrc32c, equals(expectedCrc));
+      },
+    );
 
-      fakeDownloader.enqueueResponse(
-        UploadResult(
-          statusCode: 200,
-          responseHeaders: {'x-goog-hash': 'crc32c=$expectedCrc'},
-        ),
-      );
+    test(
+      'resumable fails on CRC32C mismatch from the terminal chunk',
+      () async {
+        const fileSize = 5 * 1024 * 1024;
+        final testFile = File('${tempDir.path}/crc_resumable_bad.m4a');
+        testFile.writeAsBytesSync(Uint8List(fileSize));
 
-      final service = buildService(httpClient: mockClient);
-      final result = await service.upload(
-        recordingId: 'rec-1',
-        serverId: 'srv-1',
-        localFilePath: testFile.path,
-        format: 'm4a',
-        fileSizeBytes: fileSize,
-      );
+        when(() => mockRepo.getRecordingById('rec-1')).thenAnswer(
+          (_) async => _seedRecording(
+            id: 'rec-1',
+            fileSizeBytes: fileSize,
+            filePath: testFile.path,
+          ),
+        );
 
-      expect(result.success, isTrue);
-      expect(result.clientCrc32c, equals(expectedCrc));
-      expect(result.gcsCrc32c, equals(expectedCrc));
-    });
+        final mockClient = MockClient((request) async {
+          if (request.url.path.contains('resumable-upload-url')) {
+            return http.Response(jsonEncode({'session_uri': sessionUri}), 200);
+          }
+          return http.Response('', 404);
+        });
 
-    test('resumable fails on CRC32C mismatch from the terminal chunk', () async {
-      const fileSize = 5 * 1024 * 1024;
-      final testFile = File('${tempDir.path}/crc_resumable_bad.m4a');
-      testFile.writeAsBytesSync(Uint8List(fileSize));
+        fakeDownloader.enqueueResponse(
+          const UploadResult(
+            statusCode: 200,
+            responseHeaders: {'x-goog-hash': 'crc32c=AAAAAA=='},
+          ),
+        );
 
-      when(() => mockRepo.getRecordingById('rec-1')).thenAnswer(
-        (_) async => _seedRecording(
-          id: 'rec-1',
+        final service = buildService(httpClient: mockClient);
+        final result = await service.upload(
+          recordingId: 'rec-1',
+          serverId: 'srv-1',
+          localFilePath: testFile.path,
+          format: 'm4a',
           fileSizeBytes: fileSize,
-          filePath: testFile.path,
-        ),
-      );
+        );
 
-      final mockClient = MockClient((request) async {
-        if (request.url.path.contains('resumable-upload-url')) {
-          return http.Response(jsonEncode({'session_uri': sessionUri}), 200);
-        }
-        return http.Response('', 404);
-      });
-
-      fakeDownloader.enqueueResponse(
-        const UploadResult(
-          statusCode: 200,
-          responseHeaders: {'x-goog-hash': 'crc32c=AAAAAA=='},
-        ),
-      );
-
-      final service = buildService(httpClient: mockClient);
-      final result = await service.upload(
-        recordingId: 'rec-1',
-        serverId: 'srv-1',
-        localFilePath: testFile.path,
-        format: 'm4a',
-        fileSizeBytes: fileSize,
-      );
-
-      expect(result.success, isFalse);
-      expect(result.error, contains('CRC32C mismatch'));
-    });
+        expect(result.success, isFalse);
+        expect(result.error, contains('CRC32C mismatch'));
+      },
+    );
 
     test('resumable ignores x-goog-hash on intermediate 308 chunks', () async {
       const fileSize = 12 * 1024 * 1024; // two chunks: 8 MB + 4 MB
@@ -1168,7 +1174,11 @@ void main() {
 
         final mockClient = MockClient((request) async {
           if (request.headers['Content-Range'] == 'bytes */$fileSize') {
-            return http.Response('', 308, headers: {'range': 'bytes=0-8388607'});
+            return http.Response(
+              '',
+              308,
+              headers: {'range': 'bytes=0-8388607'},
+            );
           }
           return http.Response('', 404);
         });
