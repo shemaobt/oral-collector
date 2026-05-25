@@ -36,10 +36,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get common_cancel => 'إلغاء';
 
   @override
-  String get common_resume => 'Resume';
+  String get common_resume => 'استئناف';
 
   @override
-  String get common_discard => 'Discard';
+  String get common_discard => 'تجاهل';
 
   @override
   String get common_save => 'حفظ';
@@ -468,13 +468,31 @@ class AppLocalizationsAr extends AppLocalizations {
       'اختر سجل الكلام الذي يصف أفضل نبرة وشكلية هذا التسجيل.';
 
   @override
-  String get recording_titleHint => 'أضف عنواناً (اختياري)';
+  String get recording_titleHint => 'عنوان التسجيل';
 
   @override
   String get recording_descriptionHint => 'أضف وصفاً قصيراً (اختياري)';
 
   @override
   String get recording_descriptionEmpty => 'أضف وصفاً';
+
+  @override
+  String get recording_titleEmpty => 'أضف عنواناً';
+
+  @override
+  String get recording_titleRequired => 'لا يمكن أن يكون العنوان فارغاً';
+
+  @override
+  String get recording_title => 'العنوان';
+
+  @override
+  String get recording_description => 'الوصف';
+
+  @override
+  String get recording_editDetails => 'تعديل التفاصيل';
+
+  @override
+  String get recording_saveChanges => 'حفظ التغييرات';
 
   @override
   String get recording_saveRecording => 'حفظ التسجيل';
@@ -501,6 +519,17 @@ class AppLocalizationsAr extends AppLocalizations {
   String recording_uploadFailed(String error) {
     return 'فشل الرفع: $error';
   }
+
+  @override
+  String get recording_serviceNotificationTitle => 'Recording in progress';
+
+  @override
+  String recording_serviceNotificationBody(String elapsed, String genre) {
+    return '$elapsed • $genre';
+  }
+
+  @override
+  String get recording_serviceNotificationStopAction => 'Stop';
 
   @override
   String get recording_notFound => 'التسجيل غير موجود';
@@ -631,7 +660,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get recordings_dropToImport =>
-      'Tip: drag audio files onto this window to import.';
+      'تلميح: اسحب ملفات الصوت إلى هذه النافذة لاستيرادها.';
 
   @override
   String recordings_count(int count) {
@@ -722,6 +751,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get trim_addSplitsFirst => 'أضف تقسيمات أولاً';
 
   @override
+  String get trim_applyBoost => 'Apply boost';
+
+  @override
+  String get trim_boostApplied => 'Volume applied';
+
+  @override
   String trim_savedSegments(int kept, int removed) {
     return 'تم حفظ $kept مقطع، وإزالة $removed';
   }
@@ -750,6 +785,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get trim_classifySegment => 'تصنيف المقطع';
+
+  @override
+  String get trim_primaryEqualsSecondary =>
+      'لا يمكن أن يتطابق التصنيف الأساسي مع التصنيف الثانوي للتسجيل.';
 
   @override
   String get trim_volume => 'مستوى الصوت';
@@ -875,18 +914,18 @@ class AppLocalizationsAr extends AppLocalizations {
       '~10x أصغر، بدون فقدان للجودة لخط أنابيب ML';
 
   @override
-  String get import_dropHint => 'Drop audio files to import';
+  String get import_dropHint => 'أسقط ملفات الصوت للاستيراد';
 
   @override
-  String get import_dropActive => 'Release to import';
+  String get import_dropActive => 'حرر للاستيراد';
 
   @override
   String import_rejectedTooLarge(int count, String names) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Skipped $count files over 500 MB: $names',
-      one: 'Skipped 1 file over 500 MB: $names',
+      other: 'تم تخطي $count ملفات تتجاوز 500 ميغابايت: $names',
+      one: 'تم تخطي ملف واحد يتجاوز 500 ميغابايت: $names',
     );
     return '$_temp0';
   }
@@ -897,9 +936,9 @@ class AppLocalizationsAr extends AppLocalizations {
       count,
       locale: localeName,
       other:
-          'Skipped $count files with unsupported audio codecs: $names. Re-export as PCM WAV or M4A.',
+          'تم تخطي $count ملفات بترميزات صوتية غير مدعومة: $names. أعد تصديرها بصيغة PCM WAV أو M4A.',
       one:
-          'Skipped 1 file with an unsupported audio codec: $names. Re-export as PCM WAV or M4A.',
+          'تم تخطي ملف واحد بترميز صوتي غير مدعوم: $names. أعد تصديره بصيغة PCM WAV أو M4A.',
     );
     return '$_temp0';
   }
@@ -909,27 +948,26 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Skipped $count unreadable files: $names',
-      one: 'Skipped 1 unreadable file: $names',
+      other: 'تم تخطي $count ملفات غير قابلة للقراءة: $names',
+      one: 'تم تخطي ملف واحد غير قابل للقراءة: $names',
     );
     return '$_temp0';
   }
 
   @override
-  String get import_resumePromptTitle => 'Resume interrupted upload';
+  String get import_resumePromptTitle => 'استئناف الرفع المتوقف';
 
   @override
   String import_resumePromptBody(String name, String size) {
-    return '\"$name\" ($size) was partially uploaded. Select the same file to continue.';
+    return 'تم رفع \"$name\" ($size) جزئيًا. اختر الملف نفسه للمتابعة.';
   }
 
   @override
-  String get import_resumeSizeMismatch =>
-      'That file doesn\'t match the paused upload.';
+  String get import_resumeSizeMismatch => 'هذا الملف لا يطابق الرفع المتوقف.';
 
   @override
   String import_largeFileWarning(String size) {
-    return 'Large file ($size). Keep this tab open until the upload completes.';
+    return 'ملف كبير ($size). أبقِ هذه التبويبة مفتوحة حتى ينتهي الرفع.';
   }
 
   @override
@@ -1874,6 +1912,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get recording_secondaryUpdated => 'تم تحديث التصنيف البديل';
 
   @override
+  String get recording_secondaryCollisionBanner =>
+      'هذا التسجيل له نفس التصنيف الأساسي والثانوي. امسح الثانوي أو غيّر الأساسي للمزامنة.';
+
+  @override
+  String get recording_clearSecondary => 'مسح الثانوي';
+
+  @override
   String get recording_unclassified => 'غير مصنف';
 
   @override
@@ -1959,10 +2004,65 @@ class AppLocalizationsAr extends AppLocalizations {
       'تعذرت قراءة بعض الصوت قرب النهاية وتم تخطيه.';
 
   @override
+  String get recording_blockNavTitle => 'Recording in progress';
+
+  @override
+  String get recording_blockNavMessage =>
+      'You have a recording in progress. Discarding will permanently delete it.';
+
+  @override
+  String get recording_blockNavDiscardAndLeave => 'Discard and leave';
+
+  @override
   String get recording_inProgressNotificationTitle => 'جاري التسجيل';
 
   @override
   String get recording_inProgressNotificationBody => 'اضغط للعودة إلى التطبيق';
+
+  @override
+  String get recording_finalizing => 'إنهاء التسجيل…';
+
+  @override
+  String get recording_combiningSegments => 'دمج الأجزاء…';
+
+  @override
+  String get recording_compressingAudio => 'ضغط الصوت…';
+
+  @override
+  String get recording_finalizationDegradedHint => 'قد تكون جودة الصوت منخفضة.';
+
+  @override
+  String get recording_finalizationFailed => 'تعذر حفظ هذا التسجيل';
+
+  @override
+  String get recording_finalizationFailedBody =>
+      'حاولنا استرداد الصوت لكن لم تكن هناك أجزاء متاحة.';
+
+  @override
+  String get recording_discardAndReturn => 'تجاهل والعودة';
+
+  @override
+  String get recording_savingRecording => 'Saving recording…';
+
+  @override
+  String get recording_processingYourAudio => 'Processing your audio';
+
+  @override
+  String get recording_dontCloseSaveNext =>
+      'Don\'t close — we\'ll open the save screen next.';
+
+  @override
+  String get recording_stageShortFinalizing => 'FINALIZING';
+
+  @override
+  String get recording_stageShortCombining => 'COMBINING';
+
+  @override
+  String get recording_stageShortCompressing => 'COMPRESSING';
+
+  @override
+  String get recording_savingPleaseWait =>
+      'Saving your recording — please wait a moment.';
 
   @override
   String get profile_defaultMicrophone => 'الميكروفون الافتراضي';
@@ -2272,6 +2372,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'مخطط الموجة للتقسيم. انقر لإضافة علامات التقسيم. اسحب لإعادة الترتيب. استخدم أصابعك للتكبير. اضغط مطولاً للإزالة.';
 
   @override
+  String get a11y_minimapScrubber =>
+      'Audio overview. Tap or drag to navigate to a position.';
+
+  @override
   String a11y_tabLabel(String label) {
     return 'علامة تبويب $label';
   }
@@ -2326,6 +2430,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get recording_uploadQueue => 'قائمة انتظار الرفع';
 
   @override
+  String recording_uploadSpeed(String speed) {
+    return '$speed/ث';
+  }
+
+  @override
+  String recording_uploadEtaRemaining(String eta) {
+    return 'متبقي ~$eta';
+  }
+
+  @override
   String get recording_previewSelection => 'معاينة التحديد';
 
   @override
@@ -2374,4 +2488,132 @@ class AppLocalizationsAr extends AppLocalizations {
   String trim_segmentOfTotal(int index, int total) {
     return 'المقطع $index من $total';
   }
+
+  @override
+  String get recovery_interruptedTitle => 'Interrupted recordings';
+
+  @override
+  String recovery_startedAt(String time) {
+    return 'Started at $time';
+  }
+
+  @override
+  String get recovery_resume => 'Resume';
+
+  @override
+  String get recovery_save => 'Save';
+
+  @override
+  String get recovery_discard => 'Discard';
+
+  @override
+  String get recovery_confirmDiscardTitle => 'Discard recording?';
+
+  @override
+  String recovery_confirmDiscardBody(String duration) {
+    return '$duration of audio will be permanently deleted.';
+  }
+
+  @override
+  String recovery_homeBanner(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count interrupted recordings — tap to resume',
+      one: '1 interrupted recording — tap to resume',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String recovery_unsavedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count unsaved recordings',
+      one: '1 unsaved recording',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String recovery_latestSummary(String duration, String time) {
+    return 'Latest · $duration · $time';
+  }
+
+  @override
+  String get recovery_review => 'Review';
+
+  @override
+  String get recovery_unsavedTitle => 'Unsaved recordings';
+
+  @override
+  String recovery_unsavedSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count recordings to review',
+      one: '1 recording to review',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recovery_discardAll => 'Discard all';
+
+  @override
+  String get recovery_discardAllTitle => 'Discard all recordings?';
+
+  @override
+  String recovery_discardAllBody(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count recordings will be permanently deleted.',
+      one: '1 recording will be permanently deleted.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recovery_newBadge => 'NEW';
+
+  @override
+  String get recovery_mostRecent => 'Most recent';
+
+  @override
+  String recovery_recordingNumbered(int number) {
+    return 'Recording $number';
+  }
+
+  @override
+  String get format_yesterday => 'Yesterday';
+
+  @override
+  String get recovery_backToList => 'Not now';
+
+  @override
+  String get upload_pausedWhileRecording =>
+      'تم إيقاف الرفع مؤقتًا أثناء التسجيل';
+
+  @override
+  String get upload_inProgressNotificationTitle => 'جاري رفع التسجيل';
+
+  @override
+  String get upload_inProgressNotificationBody => 'جاري إرسال الصوت في الخلفية';
+
+  @override
+  String get upload_completeNotificationTitle => 'اكتمل الرفع';
+
+  @override
+  String get upload_failedNotificationTitle => 'فشل الرفع';
+
+  @override
+  String get liveActivity_recordingStatus => 'تسجيل';
+
+  @override
+  String get liveActivity_recordingPausedStatus => 'إيقاف التسجيل مؤقتًا';
+
+  @override
+  String get liveActivity_uploadingStatus => 'جاري الرفع';
 }

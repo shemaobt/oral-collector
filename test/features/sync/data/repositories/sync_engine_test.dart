@@ -9,14 +9,44 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:oral_collector/core/database/app_database.dart';
 import 'package:oral_collector/core/network/authenticated_client.dart';
 import 'package:oral_collector/features/recording/data/repositories/local_recording_repository.dart';
+import 'package:oral_collector/features/storyteller/data/repositories/local_storyteller_repository.dart';
 import 'package:oral_collector/features/sync/data/repositories/sync_engine.dart';
+import 'package:oral_collector/features/sync/data/services/upload_downloader.dart';
 import 'package:oral_collector/features/sync/domain/repositories/connectivity_service.dart';
 
+class _AlwaysOkDownloader implements UploadDownloader {
+  const _AlwaysOkDownloader();
+
+  @override
+  Future<UploadResult> putChunk({
+    required String taskId,
+    required String url,
+    required String filePath,
+    required int offset,
+    required int end,
+    required Map<String, String> headers,
+  }) async {
+    return const UploadResult(statusCode: 200);
+  }
+
+  @override
+  Future<void> cancel(String taskId) async {}
+
+  @override
+  Future<void> cancelAll() async {}
+
+  @override
+  Future<void> resumeAfterCancel() async {}
+}
+
 class MockRecordingRepo extends Mock implements LocalRecordingRepository {}
+
+class MockStorytellerRepo extends Mock implements LocalStorytellerRepository {}
 
 class MockConnectivity extends Mock implements ConnectivityService {}
 
@@ -74,8 +104,11 @@ LocalRecording makeRecording({
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   late Directory tempDir;
   late MockRecordingRepo mockRepo;
+  late MockStorytellerRepo mockStorytellerRepo;
   late MockConnectivity mockConnectivity;
   late MockSecureStorage mockStorage;
 
@@ -86,29 +119,42 @@ void main() {
   });
 
   setUp(() {
+    SharedPreferences.setMockInitialValues({});
     tempDir = Directory.systemTemp.createTempSync('sync_engine_test');
     mockRepo = MockRecordingRepo();
+    mockStorytellerRepo = MockStorytellerRepo();
     mockConnectivity = MockConnectivity();
     mockStorage = MockSecureStorage();
 
     when(
       () => mockStorage.read(key: any(named: 'key')),
     ).thenAnswer((_) async => 'test-token');
+    when(
+      () => mockStorytellerRepo.getPendingSyncs(),
+    ).thenAnswer((_) async => <LocalStoryteller>[]);
+    when(
+      () => mockStorytellerRepo.getRowById(any()),
+    ).thenAnswer((_) async => null);
   });
 
   tearDown(() {
     tempDir.deleteSync(recursive: true);
   });
 
-  SyncEngineImpl buildEngine(MockClient httpClient) {
+  SyncEngineImpl buildEngine(
+    MockClient httpClient, {
+    UploadDownloader? downloader,
+  }) {
     final authClient = AuthenticatedClient(
       client: httpClient,
       storage: mockStorage,
     );
     return SyncEngineImpl(
       recordingRepo: mockRepo,
+      storytellerRepo: mockStorytellerRepo,
       connectivity: mockConnectivity,
       client: authClient,
+      uploadDownloader: downloader ?? const _AlwaysOkDownloader(),
     );
   }
 
@@ -260,6 +306,39 @@ void main() {
       verify(() => mockRepo.markAsUploading('rec-1')).called(1);
       verify(() => mockRepo.markAsUploaded('rec-1', 'srv-1', any())).called(1);
       expect(engine.isProcessing, isFalse);
+      httpClient.close();
+    });
+
+    test('§1 paused_by_recording reverts uploadStatus to local without marking '
+        'as failed and without incrementing retryCount', () async {
+      // Pre-flag the flag so ResumableUploadService returns paused_by_recording
+      // before even touching the downloader.
+      SharedPreferences.setMockInitialValues({
+        'com.shema.oralCollector.is_recording_active': true,
+      });
+      final testFile = File('${tempDir.path}/paused.m4a');
+      testFile.writeAsBytesSync(Uint8List(1024));
+
+      final rec = makeRecording(localFilePath: testFile.path);
+
+      when(() => mockConnectivity.isOnline).thenAnswer((_) async => true);
+      when(() => mockRepo.getPendingUploads()).thenAnswer((_) async => [rec]);
+      stubRepoForUpload(testFile.path);
+
+      final httpClient = buildSuccessClient();
+      final engine = buildEngine(httpClient);
+
+      await engine.processQueue();
+
+      verify(() => mockRepo.markAsUploading('rec-1')).called(1);
+      // No markAsUploaded and no markAsFailed — the row reverts to local.
+      verifyNever(() => mockRepo.markAsUploaded(any(), any(), any()));
+      verifyNever(
+        () => mockRepo.markAsFailed(
+          any(),
+          incrementRetry: any(named: 'incrementRetry'),
+        ),
+      );
       httpClient.close();
     });
   });
@@ -558,63 +637,77 @@ void main() {
       httpClient.close();
     });
 
-    test('polling returns upload_failed marks as failed', () async {
-      final testFile = File('${tempDir.path}/poll_fail.m4a');
-      testFile.writeAsBytesSync(Uint8List(1024));
+    test(
+      'malformed confirm-upload response marks as permanently failed (non-retryable)',
+      () async {
+        // Engine no longer polls a status endpoint; confirm-upload is the
+        // single source of truth. A 200 with an unparseable body indicates a
+        // server-side protocol violation — retrying won't help, so the row
+        // is marked failed with retryCount=maxRetries (H7).
+        final testFile = File('${tempDir.path}/poll_fail.m4a');
+        testFile.writeAsBytesSync(Uint8List(1024));
 
-      final rec = makeRecording(localFilePath: testFile.path);
+        final rec = makeRecording(localFilePath: testFile.path);
 
-      when(() => mockConnectivity.isOnline).thenAnswer((_) async => true);
-      when(() => mockRepo.getPendingUploads()).thenAnswer((_) async => [rec]);
-      stubRepoForUpload(testFile.path);
+        when(() => mockConnectivity.isOnline).thenAnswer((_) async => true);
+        when(() => mockRepo.getPendingUploads()).thenAnswer((_) async => [rec]);
+        stubRepoForUpload(testFile.path);
 
-      final httpClient = MockClient((request) async {
-        final path = request.url.path;
+        final httpClient = MockClient((request) async {
+          final path = request.url.path;
 
-        if (request.method == 'POST' && path == '/api/oc/recordings') {
-          return http.Response(jsonEncode({'id': 'srv-1'}), 201);
-        }
+          if (request.method == 'POST' && path == '/api/oc/recordings') {
+            return http.Response(jsonEncode({'id': 'srv-1'}), 201);
+          }
 
-        if (request.method == 'POST' &&
-            path == '/api/oc/recordings/upload-url') {
-          return http.Response(
-            jsonEncode({
-              'upload_url': 'https://storage.googleapis.com/test',
-              'content_type': 'audio/mp4',
-            }),
-            200,
-          );
-        }
+          if (request.method == 'POST' &&
+              path == '/api/oc/recordings/upload-url') {
+            return http.Response(
+              jsonEncode({
+                'upload_url': 'https://storage.googleapis.com/test',
+                'content_type': 'audio/mp4',
+              }),
+              200,
+            );
+          }
 
-        if (request.url.host == 'storage.googleapis.com') {
-          return http.Response('', 200);
-        }
+          if (request.url.host == 'storage.googleapis.com') {
+            return http.Response('', 200);
+          }
 
-        if (request.method == 'POST' && path.contains('/confirm-upload')) {
-          return http.Response('', 200);
-        }
+          if (request.method == 'POST' && path.contains('/confirm-upload')) {
+            // Malformed body — JSON parsing will fail.
+            return http.Response('', 200);
+          }
 
-        if (request.method == 'GET' && path == '/api/oc/recordings/srv-1') {
-          return http.Response(
-            jsonEncode({
-              'upload_status': 'upload_failed',
-              'upload_error': 'Checksum mismatch',
-            }),
-            200,
-          );
-        }
+          return http.Response('Not Found', 404);
+        });
 
-        return http.Response('Not Found', 404);
-      });
+        final engine = buildEngine(httpClient);
 
-      final engine = buildEngine(httpClient);
+        await engine.processQueue();
 
-      await engine.processQueue();
-
-      verify(() => mockRepo.markAsFailed('rec-1')).called(1);
-      verifyNever(() => mockRepo.markAsUploaded(any(), any(), any()));
-      httpClient.close();
-    });
+        verifyNever(() => mockRepo.markAsUploaded(any(), any(), any()));
+        // Verify the permanently-failed update happened.
+        final captured = verify(
+          () => mockRepo.updateRecording('rec-1', captureAny()),
+        ).captured;
+        final hadPermanentFail = captured.any((c) {
+          final companion = c as LocalRecordingsCompanion;
+          return companion.uploadStatus.present &&
+              companion.uploadStatus.value == 'failed' &&
+              companion.retryCount.present &&
+              companion.retryCount.value == SyncEngineImpl.maxRetries;
+        });
+        expect(
+          hadPermanentFail,
+          isTrue,
+          reason:
+              'malformed confirm-upload must be marked non-retryable failed',
+        );
+        httpClient.close();
+      },
+    );
 
     test('confirm-upload failure marks as failed not uploaded', () async {
       final testFile = File('${tempDir.path}/poll_timeout.m4a');

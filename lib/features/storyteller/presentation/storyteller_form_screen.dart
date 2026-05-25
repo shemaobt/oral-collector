@@ -7,7 +7,6 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/widgets/error_snack_bar.dart';
-import '../../sync/presentation/notifiers/sync_notifier.dart';
 import '../domain/entities/storyteller.dart';
 import 'notifiers/project_storytellers_notifier.dart';
 
@@ -97,14 +96,7 @@ class _StorytellerFormScreenState extends ConsumerState<StorytellerFormScreen> {
   }
 
   Future<void> _submit() async {
-    final l10n = AppLocalizations.of(context);
     if (!_formKey.currentState!.validate()) return;
-    if (!ref.read(syncNotifierProvider).isOnline) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.storyteller_createRequiresConnection)),
-      );
-      return;
-    }
 
     setState(() => _isSaving = true);
 
@@ -152,7 +144,6 @@ class _StorytellerFormScreenState extends ConsumerState<StorytellerFormScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final colors = AppColors.of(context);
-    final isOnline = ref.watch(syncNotifierProvider).isOnline;
 
     return Scaffold(
       appBar: AppBar(
@@ -178,25 +169,6 @@ class _StorytellerFormScreenState extends ConsumerState<StorytellerFormScreen> {
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            if (!isOnline) ...[
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: colors.error.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    Icon(LucideIcons.wifiOff, size: 18, color: colors.error),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(l10n.storyteller_createRequiresConnection),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-            ],
             TextFormField(
               controller: _nameCtrl,
               decoration: InputDecoration(

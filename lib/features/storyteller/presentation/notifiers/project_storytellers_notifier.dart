@@ -1,5 +1,8 @@
+import 'dart:math' as math;
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../sync/presentation/notifiers/sync_notifier.dart';
 import '../../data/providers.dart';
 import '../../data/repositories/local_storyteller_repository.dart';
 import '../../domain/entities/storyteller.dart';
@@ -16,30 +19,46 @@ class ProjectStorytellersNotifier extends Notifier<ProjectStorytellersState> {
   LocalStorytellerRepository get _local =>
       ref.read(localStorytellerRepositoryProvider);
 
+  // Dedupe concurrent fetch() calls for the same project — when both
+  // StorytellersListScreen and StorytellerPicker are mounted, both register
+  // a reconnect listener and both fire on the same connectivity flip.
+  // We don't want two API hits for that. Project switches bypass.
+  String? _inflightProjectId;
+
   @override
   ProjectStorytellersState build() => const ProjectStorytellersState();
 
   Future<void> fetch(String projectId) async {
-    state = state.copyWith(
-      projectId: projectId,
-      isLoading: true,
-      clearError: true,
-    );
-
-    final cached = await _local.getByProject(projectId);
-    if (cached.isNotEmpty) {
-      state = state.copyWith(storytellers: cached);
-    }
-
+    if (_inflightProjectId == projectId) return;
+    _inflightProjectId = projectId;
     try {
-      final items = await _api.listByProject(projectId);
-      await _local.upsertAll(items, projectId);
-      state = state.copyWith(storytellers: items, isLoading: false);
-    } on Exception catch (e) {
       state = state.copyWith(
-        isLoading: false,
-        error: e.toString().replaceFirst('Exception: ', ''),
+        projectId: projectId,
+        isLoading: true,
+        clearError: true,
       );
+
+      final cached = await _local.getByProject(projectId);
+      state = state.copyWith(storytellers: cached);
+
+      if (!ref.read(syncNotifierProvider).isOnline) {
+        state = state.copyWith(isLoading: false);
+        return;
+      }
+
+      try {
+        final items = await _api.listByProject(projectId);
+        await _local.upsertAll(items, projectId);
+        final merged = await _local.getByProject(projectId);
+        state = state.copyWith(storytellers: merged, isLoading: false);
+      } on Exception catch (e) {
+        state = state.copyWith(
+          isLoading: false,
+          error: e.toString().replaceFirst('Exception: ', ''),
+        );
+      }
+    } finally {
+      _inflightProjectId = null;
     }
   }
 
@@ -54,7 +73,9 @@ class ProjectStorytellersNotifier extends Notifier<ProjectStorytellersState> {
   }) async {
     state = state.copyWith(isMutating: true, clearError: true);
     try {
-      final created = await _api.create(
+      final localId = _newLocalStorytellerId();
+      final local = Storyteller(
+        id: localId,
         projectId: projectId,
         name: name,
         sex: sex,
@@ -62,12 +83,13 @@ class ProjectStorytellersNotifier extends Notifier<ProjectStorytellersState> {
         location: location,
         dialect: dialect,
         externalAcceptanceConfirmed: externalAcceptanceConfirmed,
+        createdAt: DateTime.now(),
       );
-      final next = [...state.storytellers, created]
+      await _local.insertLocal(local, syncStatus: 'local');
+      final next = [...state.storytellers, local]
         ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
-      await _local.upsertAll(next, projectId);
       state = state.copyWith(storytellers: next, isMutating: false);
-      return created;
+      return local;
     } on Exception catch (e) {
       state = state.copyWith(
         isMutating: false,
@@ -75,6 +97,15 @@ class ProjectStorytellersNotifier extends Notifier<ProjectStorytellersState> {
       );
       return null;
     }
+  }
+
+  String _newLocalStorytellerId() {
+    final millis = DateTime.now().millisecondsSinceEpoch;
+    final rand = math.Random.secure()
+        .nextInt(0xFFFFFF)
+        .toRadixString(16)
+        .padLeft(6, '0');
+    return 'stl_${millis}_$rand';
   }
 
   Future<Storyteller?> update(
@@ -118,7 +149,11 @@ class ProjectStorytellersNotifier extends Notifier<ProjectStorytellersState> {
   Future<bool> delete(String id) async {
     state = state.copyWith(isMutating: true, clearError: true);
     try {
-      await _api.delete(id);
+      final row = await _local.getRowById(id);
+      final isLocalOnly = row != null && row.syncStatus != 'synced';
+      if (!isLocalOnly) {
+        await _api.delete(id);
+      }
       final next = state.storytellers.where((s) => s.id != id).toList();
       await _local.delete(id);
       state = state.copyWith(storytellers: next, isMutating: false);

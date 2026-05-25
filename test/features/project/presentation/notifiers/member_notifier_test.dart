@@ -1,0 +1,118 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:oral_collector/features/project/data/providers.dart';
+import 'package:oral_collector/features/project/domain/entities/project_member.dart';
+import 'package:oral_collector/features/project/domain/repositories/project_repository.dart';
+import 'package:oral_collector/features/project/presentation/notifiers/member_notifier.dart';
+import 'package:oral_collector/features/sync/presentation/notifiers/sync_notifier.dart';
+import 'package:oral_collector/features/sync/presentation/notifiers/sync_state.dart';
+
+class _MockProjectRepo extends Mock implements ProjectRepository {}
+
+class _FakeSyncNotifier extends SyncNotifier {
+  _FakeSyncNotifier({required this.initialOnline});
+
+  final bool initialOnline;
+
+  @override
+  SyncState build() => SyncState(isOnline: initialOnline);
+
+  void setOnline(bool online) {
+    state = state.copyWith(isOnline: online);
+  }
+}
+
+ProjectMember _makeMember(String userId, String email) => ProjectMember(
+  id: 'mem-$userId',
+  projectId: 'proj-1',
+  userId: userId,
+  email: email,
+);
+
+void main() {
+  late _MockProjectRepo repo;
+
+  ProviderContainer makeContainer({required bool online}) => ProviderContainer(
+    overrides: [
+      projectRepositoryProvider.overrideWithValue(repo),
+      syncNotifierProvider.overrideWith(
+        () => _FakeSyncNotifier(initialOnline: online),
+      ),
+    ],
+  );
+
+  setUp(() {
+    repo = _MockProjectRepo();
+  });
+
+  group('MemberNotifier.fetchMembers — offline', () {
+    test('offline does not call API, ends not loading', () async {
+      final container = makeContainer(online: false);
+      addTearDown(container.dispose);
+
+      await container
+          .read(memberNotifierProvider.notifier)
+          .fetchMembers('proj-1');
+
+      final state = container.read(memberNotifierProvider);
+      expect(state.isLoading, isFalse);
+      verifyNever(() => repo.listMembers(any()));
+    });
+  });
+
+  group('MemberNotifier.fetchMembers — online', () {
+    test('online fetches from API and populates members', () async {
+      final fromApi = [
+        _makeMember('u1', 'alice@example.com'),
+        _makeMember('u2', 'bob@example.com'),
+      ];
+      when(() => repo.listMembers('proj-1')).thenAnswer((_) async => fromApi);
+
+      final container = makeContainer(online: true);
+      addTearDown(container.dispose);
+
+      await container
+          .read(memberNotifierProvider.notifier)
+          .fetchMembers('proj-1');
+
+      final state = container.read(memberNotifierProvider);
+      expect(state.members.map((m) => m.userId), ['u1', 'u2']);
+      expect(state.isLoading, isFalse);
+      expect(state.error, isNull);
+      verify(() => repo.listMembers('proj-1')).called(1);
+    });
+  });
+
+  group('MemberNotifier.fetchMembers — offline → online transition', () {
+    test(
+      'first fetch offline short-circuits; second fetch (post-flip) hits the API',
+      () async {
+        when(
+          () => repo.listMembers('proj-1'),
+        ).thenAnswer((_) async => [_makeMember('u1', 'alice@example.com')]);
+
+        final fakeSync = _FakeSyncNotifier(initialOnline: false);
+        final container = ProviderContainer(
+          overrides: [
+            projectRepositoryProvider.overrideWithValue(repo),
+            syncNotifierProvider.overrideWith(() => fakeSync),
+          ],
+        );
+        addTearDown(container.dispose);
+
+        final notifier = container.read(memberNotifierProvider.notifier);
+
+        await notifier.fetchMembers('proj-1');
+        verifyNever(() => repo.listMembers(any()));
+
+        fakeSync.setOnline(true);
+        await notifier.fetchMembers('proj-1');
+
+        verify(() => repo.listMembers('proj-1')).called(1);
+        final state = container.read(memberNotifierProvider);
+        expect(state.members.map((m) => m.userId), ['u1']);
+      },
+    );
+  });
+}

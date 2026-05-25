@@ -1007,7 +1007,7 @@ abstract class AppLocalizations {
   /// No description provided for @recording_titleHint.
   ///
   /// In en, this message translates to:
-  /// **'Add a title (optional)'**
+  /// **'Recording title'**
   String get recording_titleHint;
 
   /// No description provided for @recording_descriptionHint.
@@ -1021,6 +1021,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add description'**
   String get recording_descriptionEmpty;
+
+  /// No description provided for @recording_titleEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Add title'**
+  String get recording_titleEmpty;
+
+  /// No description provided for @recording_titleRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Title cannot be empty'**
+  String get recording_titleRequired;
+
+  /// No description provided for @recording_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get recording_title;
+
+  /// No description provided for @recording_description.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get recording_description;
+
+  /// No description provided for @recording_editDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit details'**
+  String get recording_editDetails;
+
+  /// No description provided for @recording_saveChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Save changes'**
+  String get recording_saveChanges;
 
   /// No description provided for @recording_saveRecording.
   ///
@@ -1069,6 +1105,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Upload failed: {error}'**
   String recording_uploadFailed(String error);
+
+  /// No description provided for @recording_serviceNotificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording in progress'**
+  String get recording_serviceNotificationTitle;
+
+  /// No description provided for @recording_serviceNotificationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{elapsed} • {genre}'**
+  String recording_serviceNotificationBody(String elapsed, String genre);
+
+  /// No description provided for @recording_serviceNotificationStopAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get recording_serviceNotificationStopAction;
 
   /// No description provided for @recording_notFound.
   ///
@@ -1424,6 +1478,18 @@ abstract class AppLocalizations {
   /// **'Add splits first'**
   String get trim_addSplitsFirst;
 
+  /// No description provided for @trim_applyBoost.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply boost'**
+  String get trim_applyBoost;
+
+  /// No description provided for @trim_boostApplied.
+  ///
+  /// In en, this message translates to:
+  /// **'Volume applied'**
+  String get trim_boostApplied;
+
   /// No description provided for @trim_savedSegments.
   ///
   /// In en, this message translates to:
@@ -1471,6 +1537,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Classify segment'**
   String get trim_classifySegment;
+
+  /// No description provided for @trim_primaryEqualsSecondary.
+  ///
+  /// In en, this message translates to:
+  /// **'Primary classification cannot match the recording\'s secondary classification.'**
+  String get trim_primaryEqualsSecondary;
 
   /// No description provided for @trim_volume.
   ///
@@ -3452,6 +3524,18 @@ abstract class AppLocalizations {
   /// **'Alternative classification updated'**
   String get recording_secondaryUpdated;
 
+  /// No description provided for @recording_secondaryCollisionBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'This recording\'s primary and secondary classifications are the same. Clear the secondary or change the primary to sync.'**
+  String get recording_secondaryCollisionBanner;
+
+  /// No description provided for @recording_clearSecondary.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear secondary'**
+  String get recording_clearSecondary;
+
   /// No description provided for @recording_unclassified.
   ///
   /// In en, this message translates to:
@@ -3596,6 +3680,24 @@ abstract class AppLocalizations {
   /// **'Some audio near the end could not be read and was skipped.'**
   String get recording_recoverFailedLastSegment;
 
+  /// Title shown when user tries to navigate away during an active recording
+  ///
+  /// In en, this message translates to:
+  /// **'Recording in progress'**
+  String get recording_blockNavTitle;
+
+  /// Body of the block-nav confirmation dialog
+  ///
+  /// In en, this message translates to:
+  /// **'You have a recording in progress. Discarding will permanently delete it.'**
+  String get recording_blockNavMessage;
+
+  /// Destructive action label that discards the recording and navigates away
+  ///
+  /// In en, this message translates to:
+  /// **'Discard and leave'**
+  String get recording_blockNavDiscardAndLeave;
+
   /// No description provided for @recording_inProgressNotificationTitle.
   ///
   /// In en, this message translates to:
@@ -3607,6 +3709,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tap to return to the app'**
   String get recording_inProgressNotificationBody;
+
+  /// No description provided for @recording_finalizing.
+  ///
+  /// In en, this message translates to:
+  /// **'Finalizing recording…'**
+  String get recording_finalizing;
+
+  /// No description provided for @recording_combiningSegments.
+  ///
+  /// In en, this message translates to:
+  /// **'Combining segments…'**
+  String get recording_combiningSegments;
+
+  /// No description provided for @recording_compressingAudio.
+  ///
+  /// In en, this message translates to:
+  /// **'Compressing audio…'**
+  String get recording_compressingAudio;
+
+  /// No description provided for @recording_finalizationDegradedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio quality may be reduced.'**
+  String get recording_finalizationDegradedHint;
+
+  /// No description provided for @recording_finalizationFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save this recording'**
+  String get recording_finalizationFailed;
+
+  /// No description provided for @recording_finalizationFailedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'We tried to recover the audio but no segments were available.'**
+  String get recording_finalizationFailedBody;
+
+  /// No description provided for @recording_discardAndReturn.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard and return'**
+  String get recording_discardAndReturn;
+
+  /// Headline shown under the timer while audio is being finalized after stop
+  ///
+  /// In en, this message translates to:
+  /// **'Saving recording…'**
+  String get recording_savingRecording;
+
+  /// Title of the inline status card shown in place of pause/stop controls during finalization
+  ///
+  /// In en, this message translates to:
+  /// **'Processing your audio'**
+  String get recording_processingYourAudio;
+
+  /// Body copy reassuring the user that the save screen will appear automatically
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t close — we\'ll open the save screen next.'**
+  String get recording_dontCloseSaveNext;
+
+  /// Short uppercase tag shown on the right of the inline finalization card
+  ///
+  /// In en, this message translates to:
+  /// **'FINALIZING'**
+  String get recording_stageShortFinalizing;
+
+  /// Short uppercase tag — combining segments stage
+  ///
+  /// In en, this message translates to:
+  /// **'COMBINING'**
+  String get recording_stageShortCombining;
+
+  /// Short uppercase tag — compressing audio stage
+  ///
+  /// In en, this message translates to:
+  /// **'COMPRESSING'**
+  String get recording_stageShortCompressing;
+
+  /// Snackbar shown when the user taps a navigation tab while audio is being finalized
+  ///
+  /// In en, this message translates to:
+  /// **'Saving your recording — please wait a moment.'**
+  String get recording_savingPleaseWait;
 
   /// No description provided for @profile_defaultMicrophone.
   ///
@@ -4154,6 +4340,12 @@ abstract class AppLocalizations {
   /// **'Split waveform. Tap to add split markers. Drag to reposition. Pinch to zoom. Long-press to remove.'**
   String get a11y_splitWaveform;
 
+  /// No description provided for @a11y_minimapScrubber.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio overview. Tap or drag to navigate to a position.'**
+  String get a11y_minimapScrubber;
+
   /// No description provided for @a11y_tabLabel.
   ///
   /// In en, this message translates to:
@@ -4250,6 +4442,18 @@ abstract class AppLocalizations {
   /// **'Upload Queue'**
   String get recording_uploadQueue;
 
+  /// No description provided for @recording_uploadSpeed.
+  ///
+  /// In en, this message translates to:
+  /// **'{speed}/s'**
+  String recording_uploadSpeed(String speed);
+
+  /// No description provided for @recording_uploadEtaRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'~{eta} remaining'**
+  String recording_uploadEtaRemaining(String eta);
+
   /// No description provided for @recording_previewSelection.
   ///
   /// In en, this message translates to:
@@ -4327,6 +4531,180 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Segment {index} of {total}'**
   String trim_segmentOfTotal(int index, int total);
+
+  /// No description provided for @recovery_interruptedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Interrupted recordings'**
+  String get recovery_interruptedTitle;
+
+  /// No description provided for @recovery_startedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Started at {time}'**
+  String recovery_startedAt(String time);
+
+  /// No description provided for @recovery_resume.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get recovery_resume;
+
+  /// No description provided for @recovery_save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get recovery_save;
+
+  /// No description provided for @recovery_discard.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get recovery_discard;
+
+  /// No description provided for @recovery_confirmDiscardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard recording?'**
+  String get recovery_confirmDiscardTitle;
+
+  /// No description provided for @recovery_confirmDiscardBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{duration} of audio will be permanently deleted.'**
+  String recovery_confirmDiscardBody(String duration);
+
+  /// No description provided for @recovery_homeBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 interrupted recording — tap to resume} other{{count} interrupted recordings — tap to resume}}'**
+  String recovery_homeBanner(int count);
+
+  /// No description provided for @recovery_unsavedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 unsaved recording} other{{count} unsaved recordings}}'**
+  String recovery_unsavedCount(int count);
+
+  /// No description provided for @recovery_latestSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Latest · {duration} · {time}'**
+  String recovery_latestSummary(String duration, String time);
+
+  /// No description provided for @recovery_review.
+  ///
+  /// In en, this message translates to:
+  /// **'Review'**
+  String get recovery_review;
+
+  /// No description provided for @recovery_unsavedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsaved recordings'**
+  String get recovery_unsavedTitle;
+
+  /// No description provided for @recovery_unsavedSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 recording to review} other{{count} recordings to review}}'**
+  String recovery_unsavedSubtitle(int count);
+
+  /// No description provided for @recovery_discardAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard all'**
+  String get recovery_discardAll;
+
+  /// No description provided for @recovery_discardAllTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard all recordings?'**
+  String get recovery_discardAllTitle;
+
+  /// No description provided for @recovery_discardAllBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 recording will be permanently deleted.} other{{count} recordings will be permanently deleted.}}'**
+  String recovery_discardAllBody(int count);
+
+  /// No description provided for @recovery_newBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'NEW'**
+  String get recovery_newBadge;
+
+  /// No description provided for @recovery_mostRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'Most recent'**
+  String get recovery_mostRecent;
+
+  /// No description provided for @recovery_recordingNumbered.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording {number}'**
+  String recovery_recordingNumbered(int number);
+
+  /// No description provided for @format_yesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get format_yesterday;
+
+  /// No description provided for @recovery_backToList.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get recovery_backToList;
+
+  /// Hint shown on a recording card when the upload is paused because a recording is currently active (ENG-48 §1 mutex).
+  ///
+  /// In en, this message translates to:
+  /// **'Upload paused while recording'**
+  String get upload_pausedWhileRecording;
+
+  /// No description provided for @upload_inProgressNotificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading recording'**
+  String get upload_inProgressNotificationTitle;
+
+  /// No description provided for @upload_inProgressNotificationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending audio in the background'**
+  String get upload_inProgressNotificationBody;
+
+  /// No description provided for @upload_completeNotificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload complete'**
+  String get upload_completeNotificationTitle;
+
+  /// No description provided for @upload_failedNotificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload failed'**
+  String get upload_failedNotificationTitle;
+
+  /// Live Activity (iOS) lock-screen status while a recording session is active.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording'**
+  String get liveActivity_recordingStatus;
+
+  /// Live Activity (iOS) lock-screen status while a recording session is paused.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording paused'**
+  String get liveActivity_recordingPausedStatus;
+
+  /// Live Activity (iOS) lock-screen and Dynamic Island short status while an upload is running.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading'**
+  String get liveActivity_uploadingStatus;
 }
 
 class _AppLocalizationsDelegate

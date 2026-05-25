@@ -26,12 +26,18 @@ class SegmentTaxonomySheet extends ConsumerStatefulWidget {
   const SegmentTaxonomySheet({
     super.key,
     required this.parentGenreId,
+    this.parentSecondaryGenreId,
+    this.parentSecondarySubcategoryId,
+    this.parentSecondaryRegisterId,
     this.initialGenreId,
     this.initialSubcategoryId,
     this.initialRegisterId,
   });
 
   final String parentGenreId;
+  final String? parentSecondaryGenreId;
+  final String? parentSecondarySubcategoryId;
+  final String? parentSecondaryRegisterId;
   final String? initialGenreId;
   final String? initialSubcategoryId;
   final String? initialRegisterId;
@@ -67,6 +73,25 @@ class _SegmentTaxonomySheetState extends ConsumerState<SegmentTaxonomySheet> {
         .where((g) => g.id == activeGenreId)
         .firstOrNull;
     final subcategories = activeGenre?.subcategories ?? [];
+
+    final effectiveGenre = _genreId ?? widget.parentGenreId;
+    final effectiveSubcategory = _subcategoryId;
+    final effectiveRegister = _registerId;
+
+    final genreCollides =
+        widget.parentSecondaryGenreId != null &&
+        widget.parentSecondaryGenreId!.isNotEmpty &&
+        effectiveGenre == widget.parentSecondaryGenreId;
+    final subcategoryCollides =
+        widget.parentSecondarySubcategoryId != null &&
+        widget.parentSecondarySubcategoryId!.isNotEmpty &&
+        effectiveSubcategory == widget.parentSecondarySubcategoryId;
+    final registerCollides =
+        widget.parentSecondaryRegisterId != null &&
+        widget.parentSecondaryRegisterId!.isNotEmpty &&
+        effectiveRegister == widget.parentSecondaryRegisterId;
+    final hasCollision =
+        genreCollides || subcategoryCollides || registerCollides;
 
     final screenHeight = MediaQuery.of(context).size.height;
     final maxSheetHeight = screenHeight * 0.85;
@@ -216,6 +241,45 @@ class _SegmentTaxonomySheetState extends ConsumerState<SegmentTaxonomySheet> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    if (hasCollision)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 10,
+                          ),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.errorContainer.withValues(
+                              alpha: 0.4,
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: theme.colorScheme.error.withValues(
+                                alpha: 0.5,
+                              ),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                LucideIcons.alertCircle,
+                                size: 18,
+                                color: theme.colorScheme.error,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  l10n.trim_primaryEqualsSecondary,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.error,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     CheckboxListTile(
                       contentPadding: EdgeInsets.zero,
                       controlAffinity: ListTileControlAffinity.leading,
@@ -240,14 +304,16 @@ class _SegmentTaxonomySheetState extends ConsumerState<SegmentTaxonomySheet> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: FilledButton(
-                            onPressed: () => Navigator.of(context).pop(
-                              SegmentTaxonomyResult(
-                                genreId: _genreId,
-                                subcategoryId: _subcategoryId,
-                                registerId: _registerId,
-                                applyToAll: _applyToAll,
-                              ),
-                            ),
+                            onPressed: hasCollision
+                                ? null
+                                : () => Navigator.of(context).pop(
+                                    SegmentTaxonomyResult(
+                                      genreId: _genreId,
+                                      subcategoryId: _subcategoryId,
+                                      registerId: _registerId,
+                                      applyToAll: _applyToAll,
+                                    ),
+                                  ),
                             child: Text(l10n.common_save),
                           ),
                         ),

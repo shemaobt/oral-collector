@@ -153,9 +153,15 @@
   "recording_noGenres": "Aucun genre disponible",
   "recording_noSubcategories": "Aucune sous-catégorie disponible",
   "recording_registerDescription": "Choisissez le registre de parole qui décrit le mieux le ton et la formalité de cet enregistrement.",
-  "recording_titleHint": "Ajouter un titre (facultatif)",
+  "recording_titleHint": "Titre de l'enregistrement",
   "recording_descriptionHint": "Ajouter une brève description (facultatif)",
   "recording_descriptionEmpty": "Ajouter une description",
+  "recording_titleEmpty": "Ajouter un titre",
+  "recording_titleRequired": "Le titre ne peut pas être vide",
+  "recording_title": "Titre",
+  "recording_description": "Description",
+  "recording_editDetails": "Modifier les détails",
+  "recording_saveChanges": "Enregistrer les modifications",
   "recording_saveRecording": "Sauvegarder l'Enregistrement",
   "recording_recordAgain": "Enregistrer à Nouveau",
   "recording_discard": "Abandonner",
@@ -171,6 +177,19 @@
       }
     }
   },
+  "recording_serviceNotificationTitle": "Recording in progress",
+  "recording_serviceNotificationBody": "{elapsed} • {genre}",
+  "@recording_serviceNotificationBody": {
+    "placeholders": {
+      "elapsed": {
+        "type": "String"
+      },
+      "genre": {
+        "type": "String"
+      }
+    }
+  },
+  "recording_serviceNotificationStopAction": "Stop",
   "recording_notFound": "Enregistrement introuvable",
   "recording_unknownGenre": "Genre inconnu",
   "recording_splitRecording": "Modifier l'Enregistrement",
@@ -219,7 +238,7 @@
   "recordings_selectProjectSubtitle": "Choisissez un projet pour voir ses enregistrements",
   "recordings_noRecordings": "Aucun enregistrement pour le moment",
   "recordings_noRecordingsSubtitle": "Appuyez sur le micro pour enregistrer votre première histoire, ou importez un fichier audio.",
-  "recordings_count": "{count, plural, =1{1 enregistrement} other{{count} enregistrements}}",
+  "recordings_count": "{count, plural, =0{Aucun enregistrement} =1{1 enregistrement} other{{count} enregistrements}}",
   "recording_statusUploaded": "Téléversé",
   "recording_statusUploading": "Téléversement",
   "recording_statusFailed": "Échoué",
@@ -235,6 +254,8 @@
   "trim_splitting": "Division en cours...",
   "trim_saveSegments": "{count, plural, =1{Sauvegarder 1 segment} other{Sauvegarder {count} segments}}",
   "trim_addSplitsFirst": "Ajoutez d'abord des divisions",
+  "trim_applyBoost": "Appliquer le volume",
+  "trim_boostApplied": "Volume appliqué",
   "trim_savedSegments": "{kept} segment{kept, plural, =1{ sauvegardé} other{s sauvegardés}}, {removed} supprimé(s)",
   "trim_splitInto": "Diviser en {count} enregistrements",
   "trim_saveConfirmTitle": "Enregistrer les modifications ?",
@@ -243,6 +264,7 @@
   "trim_applyToAll": "Appliquer à tous",
   "trim_copyFromPrevious": "Copier du précédent",
   "trim_classifySegment": "Classer le segment",
+  "trim_primaryEqualsSecondary": "La classification primaire ne peut pas correspondre à la classification secondaire de l'enregistrement.",
   "trim_volume": "Volume",
   "trim_peakClip": "Saturation",
   "trim_boostOnSave": "Gain appliqué à l'enregistrement",
@@ -613,6 +635,8 @@
   "recording_removeSecondary": "Supprimer la classification alternative",
   "recording_secondaryRemoved": "Classification alternative supprimée",
   "recording_secondaryUpdated": "Classification alternative mise à jour",
+  "recording_secondaryCollisionBanner": "Cet enregistrement a les mêmes classifications primaire et secondaire. Supprimez la secondaire ou modifiez la primaire pour synchroniser.",
+  "recording_clearSecondary": "Effacer la secondaire",
   "recording_unclassified": "Non classifié",
   "recording_inputSource": "Entrée",
   "recording_selectMicrophone": "Sélectionner le microphone",
@@ -665,8 +689,25 @@
   "recording_recoverButton": "Récupérer",
   "recording_recoverDiscard": "Ignorer",
   "recording_recoverFailedLastSegment": "Une partie de l'audio près de la fin n'a pas pu être lue et a été ignorée.",
+  "recording_blockNavTitle": "Recording in progress",
+  "recording_blockNavMessage": "You have a recording in progress. Discarding will permanently delete it.",
+  "recording_blockNavDiscardAndLeave": "Discard and leave",
   "recording_inProgressNotificationTitle": "Enregistrement en cours",
   "recording_inProgressNotificationBody": "Touchez pour revenir à l'application",
+  "recording_finalizing": "Finalisation de l'enregistrement…",
+  "recording_combiningSegments": "Combinaison des segments…",
+  "recording_compressingAudio": "Compression de l'audio…",
+  "recording_finalizationDegradedHint": "La qualité audio peut être réduite.",
+  "recording_finalizationFailed": "Impossible d'enregistrer ce contenu",
+  "recording_finalizationFailedBody": "Nous avons essayé de récupérer l'audio mais aucun segment n'était disponible.",
+  "recording_discardAndReturn": "Ignorer et revenir",
+  "recording_savingRecording": "Saving recording…",
+  "recording_processingYourAudio": "Processing your audio",
+  "recording_dontCloseSaveNext": "Don't close — we'll open the save screen next.",
+  "recording_stageShortFinalizing": "FINALIZING",
+  "recording_stageShortCombining": "COMBINING",
+  "recording_stageShortCompressing": "COMPRESSING",
+  "recording_savingPleaseWait": "Saving your recording — please wait a moment.",
   "profile_defaultMicrophone": "Microphone par défaut",
   "profile_systemDefault": "Par défaut du système",
   "settings_deviceStorageTitle": "Stockage de l'appareil",
@@ -813,6 +854,8 @@
   "recording_noAudioAvailable": "Aucun audio disponible",
   "recording_noPendingUploads": "Aucun envoi en attente",
   "recording_uploadQueue": "File d'attente d'envoi",
+  "recording_uploadSpeed": "{speed}/s",
+  "recording_uploadEtaRemaining": "~{eta} remaining",
   "recording_previewSelection": "Aperçu de la sélection",
   "recording_stopPreview": "Arrêter l'aperçu",
   "recording_audioLoadFailed": "Échec du chargement de l'audio",
@@ -825,5 +868,105 @@
   "recording_partOf": "Partie {part} sur {total}",
   "recording_splitFrom": "Divisé de {sourceId}",
   "trim_segmentRemoved": "Segment {index} — supprimé",
-  "trim_segmentOfTotal": "Segment {index} sur {total}"
+  "trim_segmentOfTotal": "Segment {index} sur {total}",
+  "recovery_interruptedTitle": "Interrupted recordings",
+  "recovery_startedAt": "Started at {time}",
+  "@recovery_startedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "recovery_resume": "Resume",
+  "recovery_save": "Save",
+  "recovery_discard": "Discard",
+  "recovery_confirmDiscardTitle": "Discard recording?",
+  "recovery_confirmDiscardBody": "{duration} of audio will be permanently deleted.",
+  "@recovery_confirmDiscardBody": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "recovery_homeBanner": "{count, plural, =1{1 interrupted recording — tap to resume} other{{count} interrupted recordings — tap to resume}}",
+  "@recovery_homeBanner": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recovery_unsavedCount": "{count, plural, =1{1 unsaved recording} other{{count} unsaved recordings}}",
+  "@recovery_unsavedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recovery_latestSummary": "Latest · {duration} · {time}",
+  "@recovery_latestSummary": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "recovery_review": "Review",
+  "recovery_unsavedTitle": "Unsaved recordings",
+  "recovery_unsavedSubtitle": "{count, plural, =1{1 recording to review} other{{count} recordings to review}}",
+  "@recovery_unsavedSubtitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recovery_discardAll": "Discard all",
+  "recovery_discardAllTitle": "Discard all recordings?",
+  "recovery_discardAllBody": "{count, plural, =1{1 recording will be permanently deleted.} other{{count} recordings will be permanently deleted.}}",
+  "@recovery_discardAllBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recovery_newBadge": "NEW",
+  "recovery_mostRecent": "Most recent",
+  "recovery_recordingNumbered": "Recording {number}",
+  "@recovery_recordingNumbered": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "format_yesterday": "Yesterday",
+  "recovery_backToList": "Not now",
+  "common_discard": "Ignorer",
+  "common_resume": "Reprendre",
+  "import_dropActive": "Relâcher pour importer",
+  "import_dropHint": "Déposez des fichiers audio à importer",
+  "import_largeFileWarning": "Fichier volumineux ({size}). Gardez cet onglet ouvert jusqu'à la fin du téléversement.",
+  "import_rejectedTooLarge": "{count, plural, =1{1 fichier de plus de 500 Mo ignoré : {names}} other{{count} fichiers de plus de 500 Mo ignorés : {names}}}",
+  "import_rejectedUnreadable": "{count, plural, =1{1 fichier illisible ignoré : {names}} other{{count} fichiers illisibles ignorés : {names}}}",
+  "import_rejectedUnsupportedCodec": "{count, plural, =1{1 fichier avec un codec audio non pris en charge ignoré : {names}. Réexportez-le en PCM WAV ou M4A.} other{{count} fichiers avec des codecs audio non pris en charge ignorés : {names}. Réexportez-les en PCM WAV ou M4A.}}",
+  "import_resumePromptBody": "« {name} » ({size}) a été partiellement téléversé. Sélectionnez le même fichier pour continuer.",
+  "import_resumePromptTitle": "Reprendre le téléversement interrompu",
+  "import_resumeSizeMismatch": "Ce fichier ne correspond pas au téléversement en pause.",
+  "recordings_dropToImport": "Astuce : faites glisser des fichiers audio sur cette fenêtre pour les importer.",
+  "upload_completeNotificationTitle": "Téléversement terminé",
+  "upload_failedNotificationTitle": "Échec du téléversement",
+  "upload_inProgressNotificationBody": "Envoi de l'audio en arrière-plan",
+  "upload_inProgressNotificationTitle": "Téléversement de l'enregistrement",
+  "upload_pausedWhileRecording": "Téléversement en pause pendant l'enregistrement",
+  "liveActivity_recordingStatus": "Enregistrement",
+  "liveActivity_recordingPausedStatus": "Enregistrement en pause",
+  "liveActivity_uploadingStatus": "Téléversement"
 }

@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/utils/format.dart';
+import '../../../sync/presentation/notifiers/sync_notifier.dart';
 import '../../domain/entities/classification.dart';
+import '../notifiers/recording_session_notifier.dart';
 
-class RecordingCard extends StatelessWidget {
+class RecordingCard extends ConsumerWidget {
   const RecordingCard({
     super.key,
     required this.recording,
@@ -70,11 +73,26 @@ class RecordingCard extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final colors = AppColors.of(context);
     final statusColor = _statusAccentColor(colors);
+    final isUploadingThis = ref.watch(
+      syncNotifierProvider.select((s) => s.uploadingId == recording.id),
+    );
+    final uploadProgress = ref.watch(
+      syncNotifierProvider.select(
+        (s) => s.uploadingId == recording.id ? s.syncProgress : 0,
+      ),
+    );
+    final isRecordingActive = ref.watch(
+      recordingSessionNotifierProvider.select((s) => s.isRecording),
+    );
+    final isPausedByRecording =
+        isRecordingActive &&
+        recording.uploadStatus == 'local' &&
+        (recording.uploadedBytes > 0 || recording.resumableSessionUri != null);
     final isUnclassified = recording.isUnclassified;
     final breadcrumbParts = <String>[];
     if (genreName != null) breadcrumbParts.add(genreName!);
@@ -280,6 +298,65 @@ class RecordingCard extends StatelessWidget {
                           ),
                         ],
                       ),
+                      if (isUploadingThis) ...[
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(2),
+                                child: LinearProgressIndicator(
+                                  value: (uploadProgress / 100).clamp(0.0, 1.0),
+                                  minHeight: 3,
+                                  backgroundColor: colors.border.withValues(
+                                    alpha: 0.3,
+                                  ),
+                                  valueColor: AlwaysStoppedAnimation(
+                                    colors.accent,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              '$uploadProgress%',
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: colors.accent,
+                                fontWeight: FontWeight.w600,
+                                fontFeatures: const [
+                                  FontFeature.tabularFigures(),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                      if (isPausedByRecording) ...[
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            Icon(
+                              LucideIcons.pauseCircle,
+                              size: 12,
+                              color: colors.secondary.withValues(alpha: 0.7),
+                            ),
+                            const SizedBox(width: 4),
+                            Flexible(
+                              child: Text(
+                                l10n.upload_pausedWhileRecording,
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: colors.secondary.withValues(
+                                    alpha: 0.85,
+                                  ),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ],
                   ),
                 ),

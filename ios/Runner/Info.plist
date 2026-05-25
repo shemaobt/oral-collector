@@ -38,6 +38,28 @@
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>audio</string>
+		<string>fetch</string>
+	</array>
+	<key>NSSupportsLiveActivities</key>
+	<true/>
+	<!-- NSSupportsLiveActivitiesFrequentUpdates is intentionally OMITTED.
+	     This app uses the `live_activities` Flutter plugin, which carries
+	     state in App Group UserDefaults and ships an EMPTY ActivityKit
+	     ContentState. The frequent-updates entitlement only takes effect
+	     for activities that push real ContentState deltas — claiming it
+	     here would be misleading. -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>com.shema.oralCollector.liveactivity</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>oralcollector</string>
+			</array>
+		</dict>
 	</array>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Oral Collector needs access to your photo library to let you select images for your language project.</string>

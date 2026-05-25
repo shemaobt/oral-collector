@@ -2572,6 +2572,52 @@ class $LocalStorytellersTable extends LocalStorytellers
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _serverIdMeta = const VerificationMeta(
+    'serverId',
+  );
+  @override
+  late final GeneratedColumn<String> serverId = GeneratedColumn<String>(
+    'server_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _syncStatusMeta = const VerificationMeta(
+    'syncStatus',
+  );
+  @override
+  late final GeneratedColumn<String> syncStatus = GeneratedColumn<String>(
+    'sync_status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('synced'),
+  );
+  static const VerificationMeta _retryCountMeta = const VerificationMeta(
+    'retryCount',
+  );
+  @override
+  late final GeneratedColumn<int> retryCount = GeneratedColumn<int>(
+    'retry_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _lastRetryAtMeta = const VerificationMeta(
+    'lastRetryAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> lastRetryAt = GeneratedColumn<DateTime>(
+    'last_retry_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -2584,6 +2630,10 @@ class $LocalStorytellersTable extends LocalStorytellers
     externalAcceptanceConfirmed,
     createdAt,
     updatedAt,
+    serverId,
+    syncStatus,
+    retryCount,
+    lastRetryAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2665,6 +2715,33 @@ class $LocalStorytellersTable extends LocalStorytellers
         updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
       );
     }
+    if (data.containsKey('server_id')) {
+      context.handle(
+        _serverIdMeta,
+        serverId.isAcceptableOrUnknown(data['server_id']!, _serverIdMeta),
+      );
+    }
+    if (data.containsKey('sync_status')) {
+      context.handle(
+        _syncStatusMeta,
+        syncStatus.isAcceptableOrUnknown(data['sync_status']!, _syncStatusMeta),
+      );
+    }
+    if (data.containsKey('retry_count')) {
+      context.handle(
+        _retryCountMeta,
+        retryCount.isAcceptableOrUnknown(data['retry_count']!, _retryCountMeta),
+      );
+    }
+    if (data.containsKey('last_retry_at')) {
+      context.handle(
+        _lastRetryAtMeta,
+        lastRetryAt.isAcceptableOrUnknown(
+          data['last_retry_at']!,
+          _lastRetryAtMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -2714,6 +2791,22 @@ class $LocalStorytellersTable extends LocalStorytellers
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
       ),
+      serverId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}server_id'],
+      ),
+      syncStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sync_status'],
+      )!,
+      retryCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}retry_count'],
+      )!,
+      lastRetryAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_retry_at'],
+      ),
     );
   }
 
@@ -2735,6 +2828,10 @@ class LocalStoryteller extends DataClass
   final bool externalAcceptanceConfirmed;
   final DateTime createdAt;
   final DateTime? updatedAt;
+  final String? serverId;
+  final String syncStatus;
+  final int retryCount;
+  final DateTime? lastRetryAt;
   const LocalStoryteller({
     required this.id,
     required this.projectId,
@@ -2746,6 +2843,10 @@ class LocalStoryteller extends DataClass
     required this.externalAcceptanceConfirmed,
     required this.createdAt,
     this.updatedAt,
+    this.serverId,
+    required this.syncStatus,
+    required this.retryCount,
+    this.lastRetryAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2770,6 +2871,14 @@ class LocalStoryteller extends DataClass
     if (!nullToAbsent || updatedAt != null) {
       map['updated_at'] = Variable<DateTime>(updatedAt);
     }
+    if (!nullToAbsent || serverId != null) {
+      map['server_id'] = Variable<String>(serverId);
+    }
+    map['sync_status'] = Variable<String>(syncStatus);
+    map['retry_count'] = Variable<int>(retryCount);
+    if (!nullToAbsent || lastRetryAt != null) {
+      map['last_retry_at'] = Variable<DateTime>(lastRetryAt);
+    }
     return map;
   }
 
@@ -2791,6 +2900,14 @@ class LocalStoryteller extends DataClass
       updatedAt: updatedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(updatedAt),
+      serverId: serverId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(serverId),
+      syncStatus: Value(syncStatus),
+      retryCount: Value(retryCount),
+      lastRetryAt: lastRetryAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastRetryAt),
     );
   }
 
@@ -2812,6 +2929,10 @@ class LocalStoryteller extends DataClass
       ),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime?>(json['updatedAt']),
+      serverId: serializer.fromJson<String?>(json['serverId']),
+      syncStatus: serializer.fromJson<String>(json['syncStatus']),
+      retryCount: serializer.fromJson<int>(json['retryCount']),
+      lastRetryAt: serializer.fromJson<DateTime?>(json['lastRetryAt']),
     );
   }
   @override
@@ -2830,6 +2951,10 @@ class LocalStoryteller extends DataClass
       ),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime?>(updatedAt),
+      'serverId': serializer.toJson<String?>(serverId),
+      'syncStatus': serializer.toJson<String>(syncStatus),
+      'retryCount': serializer.toJson<int>(retryCount),
+      'lastRetryAt': serializer.toJson<DateTime?>(lastRetryAt),
     };
   }
 
@@ -2844,6 +2969,10 @@ class LocalStoryteller extends DataClass
     bool? externalAcceptanceConfirmed,
     DateTime? createdAt,
     Value<DateTime?> updatedAt = const Value.absent(),
+    Value<String?> serverId = const Value.absent(),
+    String? syncStatus,
+    int? retryCount,
+    Value<DateTime?> lastRetryAt = const Value.absent(),
   }) => LocalStoryteller(
     id: id ?? this.id,
     projectId: projectId ?? this.projectId,
@@ -2856,6 +2985,10 @@ class LocalStoryteller extends DataClass
         externalAcceptanceConfirmed ?? this.externalAcceptanceConfirmed,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
+    serverId: serverId.present ? serverId.value : this.serverId,
+    syncStatus: syncStatus ?? this.syncStatus,
+    retryCount: retryCount ?? this.retryCount,
+    lastRetryAt: lastRetryAt.present ? lastRetryAt.value : this.lastRetryAt,
   );
   LocalStoryteller copyWithCompanion(LocalStorytellersCompanion data) {
     return LocalStoryteller(
@@ -2871,6 +3004,16 @@ class LocalStoryteller extends DataClass
           : this.externalAcceptanceConfirmed,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      serverId: data.serverId.present ? data.serverId.value : this.serverId,
+      syncStatus: data.syncStatus.present
+          ? data.syncStatus.value
+          : this.syncStatus,
+      retryCount: data.retryCount.present
+          ? data.retryCount.value
+          : this.retryCount,
+      lastRetryAt: data.lastRetryAt.present
+          ? data.lastRetryAt.value
+          : this.lastRetryAt,
     );
   }
 
@@ -2886,7 +3029,11 @@ class LocalStoryteller extends DataClass
           ..write('dialect: $dialect, ')
           ..write('externalAcceptanceConfirmed: $externalAcceptanceConfirmed, ')
           ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('serverId: $serverId, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('retryCount: $retryCount, ')
+          ..write('lastRetryAt: $lastRetryAt')
           ..write(')'))
         .toString();
   }
@@ -2903,6 +3050,10 @@ class LocalStoryteller extends DataClass
     externalAcceptanceConfirmed,
     createdAt,
     updatedAt,
+    serverId,
+    syncStatus,
+    retryCount,
+    lastRetryAt,
   );
   @override
   bool operator ==(Object other) =>
@@ -2918,7 +3069,11 @@ class LocalStoryteller extends DataClass
           other.externalAcceptanceConfirmed ==
               this.externalAcceptanceConfirmed &&
           other.createdAt == this.createdAt &&
-          other.updatedAt == this.updatedAt);
+          other.updatedAt == this.updatedAt &&
+          other.serverId == this.serverId &&
+          other.syncStatus == this.syncStatus &&
+          other.retryCount == this.retryCount &&
+          other.lastRetryAt == this.lastRetryAt);
 }
 
 class LocalStorytellersCompanion extends UpdateCompanion<LocalStoryteller> {
@@ -2932,6 +3087,10 @@ class LocalStorytellersCompanion extends UpdateCompanion<LocalStoryteller> {
   final Value<bool> externalAcceptanceConfirmed;
   final Value<DateTime> createdAt;
   final Value<DateTime?> updatedAt;
+  final Value<String?> serverId;
+  final Value<String> syncStatus;
+  final Value<int> retryCount;
+  final Value<DateTime?> lastRetryAt;
   final Value<int> rowid;
   const LocalStorytellersCompanion({
     this.id = const Value.absent(),
@@ -2944,6 +3103,10 @@ class LocalStorytellersCompanion extends UpdateCompanion<LocalStoryteller> {
     this.externalAcceptanceConfirmed = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.serverId = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+    this.retryCount = const Value.absent(),
+    this.lastRetryAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   LocalStorytellersCompanion.insert({
@@ -2957,6 +3120,10 @@ class LocalStorytellersCompanion extends UpdateCompanion<LocalStoryteller> {
     this.externalAcceptanceConfirmed = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.serverId = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+    this.retryCount = const Value.absent(),
+    this.lastRetryAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        projectId = Value(projectId),
@@ -2973,6 +3140,10 @@ class LocalStorytellersCompanion extends UpdateCompanion<LocalStoryteller> {
     Expression<bool>? externalAcceptanceConfirmed,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
+    Expression<String>? serverId,
+    Expression<String>? syncStatus,
+    Expression<int>? retryCount,
+    Expression<DateTime>? lastRetryAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -2987,6 +3158,10 @@ class LocalStorytellersCompanion extends UpdateCompanion<LocalStoryteller> {
         'external_acceptance_confirmed': externalAcceptanceConfirmed,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
+      if (serverId != null) 'server_id': serverId,
+      if (syncStatus != null) 'sync_status': syncStatus,
+      if (retryCount != null) 'retry_count': retryCount,
+      if (lastRetryAt != null) 'last_retry_at': lastRetryAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -3002,6 +3177,10 @@ class LocalStorytellersCompanion extends UpdateCompanion<LocalStoryteller> {
     Value<bool>? externalAcceptanceConfirmed,
     Value<DateTime>? createdAt,
     Value<DateTime?>? updatedAt,
+    Value<String?>? serverId,
+    Value<String>? syncStatus,
+    Value<int>? retryCount,
+    Value<DateTime?>? lastRetryAt,
     Value<int>? rowid,
   }) {
     return LocalStorytellersCompanion(
@@ -3016,6 +3195,10 @@ class LocalStorytellersCompanion extends UpdateCompanion<LocalStoryteller> {
           externalAcceptanceConfirmed ?? this.externalAcceptanceConfirmed,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      serverId: serverId ?? this.serverId,
+      syncStatus: syncStatus ?? this.syncStatus,
+      retryCount: retryCount ?? this.retryCount,
+      lastRetryAt: lastRetryAt ?? this.lastRetryAt,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -3055,6 +3238,18 @@ class LocalStorytellersCompanion extends UpdateCompanion<LocalStoryteller> {
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
+    if (serverId.present) {
+      map['server_id'] = Variable<String>(serverId.value);
+    }
+    if (syncStatus.present) {
+      map['sync_status'] = Variable<String>(syncStatus.value);
+    }
+    if (retryCount.present) {
+      map['retry_count'] = Variable<int>(retryCount.value);
+    }
+    if (lastRetryAt.present) {
+      map['last_retry_at'] = Variable<DateTime>(lastRetryAt.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -3074,6 +3269,10 @@ class LocalStorytellersCompanion extends UpdateCompanion<LocalStoryteller> {
           ..write('externalAcceptanceConfirmed: $externalAcceptanceConfirmed, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
+          ..write('serverId: $serverId, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('retryCount: $retryCount, ')
+          ..write('lastRetryAt: $lastRetryAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -5116,6 +5315,10 @@ typedef $$LocalStorytellersTableCreateCompanionBuilder =
       Value<bool> externalAcceptanceConfirmed,
       Value<DateTime> createdAt,
       Value<DateTime?> updatedAt,
+      Value<String?> serverId,
+      Value<String> syncStatus,
+      Value<int> retryCount,
+      Value<DateTime?> lastRetryAt,
       Value<int> rowid,
     });
 typedef $$LocalStorytellersTableUpdateCompanionBuilder =
@@ -5130,6 +5333,10 @@ typedef $$LocalStorytellersTableUpdateCompanionBuilder =
       Value<bool> externalAcceptanceConfirmed,
       Value<DateTime> createdAt,
       Value<DateTime?> updatedAt,
+      Value<String?> serverId,
+      Value<String> syncStatus,
+      Value<int> retryCount,
+      Value<DateTime?> lastRetryAt,
       Value<int> rowid,
     });
 
@@ -5189,6 +5396,26 @@ class $$LocalStorytellersTableFilterComposer
 
   ColumnFilters<DateTime> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get serverId => $composableBuilder(
+    column: $table.serverId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get retryCount => $composableBuilder(
+    column: $table.retryCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lastRetryAt => $composableBuilder(
+    column: $table.lastRetryAt,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -5251,6 +5478,26 @@ class $$LocalStorytellersTableOrderingComposer
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get serverId => $composableBuilder(
+    column: $table.serverId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get retryCount => $composableBuilder(
+    column: $table.retryCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get lastRetryAt => $composableBuilder(
+    column: $table.lastRetryAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$LocalStorytellersTableAnnotationComposer
@@ -5293,6 +5540,24 @@ class $$LocalStorytellersTableAnnotationComposer
 
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get serverId =>
+      $composableBuilder(column: $table.serverId, builder: (column) => column);
+
+  GeneratedColumn<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get retryCount => $composableBuilder(
+    column: $table.retryCount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get lastRetryAt => $composableBuilder(
+    column: $table.lastRetryAt,
+    builder: (column) => column,
+  );
 }
 
 class $$LocalStorytellersTableTableManager
@@ -5345,6 +5610,10 @@ class $$LocalStorytellersTableTableManager
                 Value<bool> externalAcceptanceConfirmed = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime?> updatedAt = const Value.absent(),
+                Value<String?> serverId = const Value.absent(),
+                Value<String> syncStatus = const Value.absent(),
+                Value<int> retryCount = const Value.absent(),
+                Value<DateTime?> lastRetryAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => LocalStorytellersCompanion(
                 id: id,
@@ -5357,6 +5626,10 @@ class $$LocalStorytellersTableTableManager
                 externalAcceptanceConfirmed: externalAcceptanceConfirmed,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                serverId: serverId,
+                syncStatus: syncStatus,
+                retryCount: retryCount,
+                lastRetryAt: lastRetryAt,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -5371,6 +5644,10 @@ class $$LocalStorytellersTableTableManager
                 Value<bool> externalAcceptanceConfirmed = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime?> updatedAt = const Value.absent(),
+                Value<String?> serverId = const Value.absent(),
+                Value<String> syncStatus = const Value.absent(),
+                Value<int> retryCount = const Value.absent(),
+                Value<DateTime?> lastRetryAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => LocalStorytellersCompanion.insert(
                 id: id,
@@ -5383,6 +5660,10 @@ class $$LocalStorytellersTableTableManager
                 externalAcceptanceConfirmed: externalAcceptanceConfirmed,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                serverId: serverId,
+                syncStatus: syncStatus,
+                retryCount: retryCount,
+                lastRetryAt: lastRetryAt,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

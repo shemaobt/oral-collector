@@ -9,13 +9,20 @@ import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/utils/format.dart';
 import '../../../../shared/widgets/record_button.dart';
+import '../../data/services/recovery_coordinator.dart';
 import '../../data/services/storage_guard.dart';
 import '../notifiers/input_device_notifier.dart';
 import '../notifiers/recording_session_notifier.dart';
 import '../notifiers/recording_session_state.dart';
 import 'control_button.dart';
+import 'finalizing_overlay.dart';
+import 'finalizing_status_card.dart';
+import 'finalizing_waveform.dart';
 import 'input_device_picker_sheet.dart';
+import 'saving_recording_label.dart';
 import 'scrolling_waveform.dart';
+import 'unsaved_recordings_banner.dart';
+import 'unsaved_recordings_sheet.dart';
 
 class RecordingStep extends ConsumerStatefulWidget {
   const RecordingStep({
@@ -70,6 +77,11 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
     if (state == AppLifecycleState.resumed &&
         previous == AppLifecycleState.paused &&
         isRecording) {
+      unawaited(
+        ref
+            .read(recordingSessionNotifierProvider.notifier)
+            .reactivateAudioSession(),
+      );
       if (!mounted) return;
       setState(() => _showBackgroundResumeBanner = true);
       _backgroundBannerTimer?.cancel();
@@ -109,7 +121,12 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
     }
 
     HapticFeedback.mediumImpact();
-    await notifier.startRecording(widget.genreId, widget.subcategoryId);
+    await notifier.startRecording(
+      widget.genreId,
+      widget.subcategoryId,
+      genreName: widget.genreName,
+      subcategoryName: widget.subcategoryName,
+    );
   }
 
   Future<void> _showRefuseDialog() async {
@@ -151,6 +168,20 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
     );
   }
 
+  Future<void> _handleCancelPendingResume(
+    RecordingSessionNotifier notifier,
+  ) async {
+    HapticFeedback.selectionClick();
+    await notifier.cancelPendingResume();
+  }
+
+  void _openRecoverySheet() {
+    UnsavedRecordingsSheet.show(context, (result) {
+      if (!mounted) return;
+      widget.onRecordingComplete(result);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -170,8 +201,30 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
       });
     });
 
-    final isReady = !recState.isRecording && !recState.isPaused;
+    ref.listen<RecordingState>(recordingSessionNotifierProvider, (prev, next) {
+      final error = next.lastStopError;
+      if (error == null) return;
+      if (prev?.lastStopError == error) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        notifier.acknowledgeLastStopError();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.recording_recoveryFailed),
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      });
+    });
+
+    final isFinalizing = recState.isFinalizing;
+    final hasError = recState.hasFinalizationError;
+    final isFinalizingOrError = isFinalizing || hasError;
+    final isReady =
+        !recState.isRecording && !recState.isPaused && !isFinalizingOrError;
     final isActive = recState.isRecording;
+    final interrupted = ref.watch(interruptedSessionsProvider);
+    final hasInterruptedAndReady = isReady && interrupted.isNotEmpty;
 
     final tagParts = <String>[];
     if (widget.genreName != null) tagParts.add(widget.genreName!);
@@ -179,99 +232,145 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
     if (widget.registerName != null) tagParts.add(widget.registerName!);
     final tagLabel = tagParts.join(' / ');
 
-    return SizedBox.expand(
-      child: ColoredBox(
-        color: colors.background,
-        child: SafeArea(
-          child: Column(
-            children: [
-              if (isActive &&
-                  recState.storageBannerSeverity ==
-                      StorageBannerSeverity.critical)
-                _StorageBanner(
-                  message: l10n.recording_storageCriticalBanner(
-                    ((recState.lastCheckpointAt?.inSeconds ?? 0) / 60).floor(),
-                  ),
-                ),
-              if (isActive && _showBackgroundResumeBanner)
-                _InfoBanner(message: l10n.recording_continuedInBackground),
-              Padding(
-                padding: const EdgeInsets.only(top: 24),
-                child: Text(
-                  formatElapsed(recState.elapsed),
-                  style: theme.textTheme.displayLarge?.copyWith(
-                    color: colors.foreground,
-                    fontWeight: FontWeight.w200,
-                    fontSize: 56,
-                    fontFeatures: [const FontFeature.tabularFigures()],
-                  ),
-                ),
-              ),
-
-              if (isActive)
-                Padding(
-                  padding: const EdgeInsets.only(top: 6),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
+    return PopScope(
+      canPop: !isFinalizingOrError,
+      child: SizedBox.expand(
+        child: ColoredBox(
+          color: colors.background,
+          child: SafeArea(
+            child: hasError
+                ? FinalizingOverlay(
+                    stage: recState.finalizationStage,
+                    hasError: true,
+                    degraded: recState.finalizationDegraded,
+                    onDiscard: notifier.dismissFinalizationError,
+                  )
+                : Column(
                     children: [
-                      if (!recState.isPaused)
+                      if (isActive &&
+                          recState.storageBannerSeverity ==
+                              StorageBannerSeverity.critical)
+                        _StorageBanner(
+                          message: l10n.recording_storageCriticalBanner(
+                            ((recState.lastCheckpointAt?.inSeconds ?? 0) / 60)
+                                .floor(),
+                          ),
+                        ),
+                      if (isActive && _showBackgroundResumeBanner)
+                        _InfoBanner(
+                          message: l10n.recording_continuedInBackground,
+                        ),
+                      if (hasInterruptedAndReady)
                         Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: _PulsingDot(color: colors.accent),
+                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                          child: UnsavedRecordingsBanner(
+                            sessions: interrupted,
+                            onReview: () => _openRecoverySheet(),
+                          ),
+                        )
+                      else ...[
+                        Padding(
+                          padding: const EdgeInsets.only(top: 24),
+                          child: Text(
+                            formatElapsed(recState.elapsed),
+                            style: theme.textTheme.displayLarge?.copyWith(
+                              color: colors.foreground,
+                              fontWeight: FontWeight.w200,
+                              fontSize: 56,
+                              fontFeatures: [
+                                const FontFeature.tabularFigures(),
+                              ],
+                            ),
+                          ),
                         ),
-                      Text(
-                        recState.isPaused
-                            ? l10n.recording_paused
-                            : l10n.recording_recording,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: colors.secondary,
-                          letterSpacing: 1.2,
-                        ),
+                        if (isActive && !isFinalizing)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 6),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (!recState.isPaused)
+                                  Padding(
+                                    padding: const EdgeInsets.only(right: 8),
+                                    child: _PulsingDot(color: colors.accent),
+                                  ),
+                                Text(
+                                  recState.isPaused
+                                      ? l10n.recording_paused
+                                      : l10n.recording_recording,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: colors.secondary,
+                                    letterSpacing: 1.2,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        if (isFinalizing)
+                          const Padding(
+                            padding: EdgeInsets.only(top: 10),
+                            child: SavingRecordingLabel(),
+                          ),
+                        if (isActive &&
+                            (recState.isPendingResume ||
+                                recState.wasResumedSession))
+                          Padding(
+                            padding: const EdgeInsets.only(top: 10),
+                            child: _BackToListButton(
+                              label: l10n.recovery_backToList,
+                              onTap: () => _handleCancelPendingResume(notifier),
+                            ),
+                          ),
+                        if (!isActive && !isFinalizing && tagLabel.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: colors.surfaceAlt,
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Text(
+                                tagLabel,
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: colors.secondary,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                      Expanded(
+                        child: isReady
+                            ? _buildReadyContent(colors, notifier, recState)
+                            : isFinalizing
+                            ? const Center(child: FinalizingWaveform())
+                            : _buildRecordingContent(colors, recState, l10n),
                       ),
+                      if (isActive)
+                        _buildBottomControls(colors, notifier, recState),
+                      if (isFinalizing)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 32),
+                          child: FinalizingStatusCard(
+                            stage: recState.finalizationStage,
+                            degraded: recState.finalizationDegraded,
+                          ),
+                        ),
+                      if (isReady)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 40),
+                          child: Text(
+                            l10n.recording_tapToRecord,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: colors.secondary,
+                            ),
+                          ),
+                        ),
                     ],
                   ),
-                ),
-
-              if (!isActive && tagLabel.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: colors.surfaceAlt,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Text(
-                      tagLabel,
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: colors.secondary,
-                      ),
-                    ),
-                  ),
-                ),
-
-              Expanded(
-                child: isReady
-                    ? _buildReadyContent(colors, notifier, recState)
-                    : _buildRecordingContent(colors, recState, l10n),
-              ),
-
-              if (isActive) _buildBottomControls(colors, notifier, recState),
-
-              if (isReady)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 40),
-                  child: Text(
-                    l10n.recording_tapToRecord,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: colors.secondary,
-                    ),
-                  ),
-                ),
-            ],
           ),
         ),
       ),
@@ -649,6 +748,43 @@ class _CheckpointChip extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _BackToListButton extends StatelessWidget {
+  const _BackToListButton({required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(LucideIcons.arrowLeft, size: 14, color: colors.secondary),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  color: colors.secondary,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -472,7 +472,7 @@ class AppLocalizationsPt extends AppLocalizations {
       'Escolha o registro de fala que melhor descreve o tom e a formalidade desta gravação.';
 
   @override
-  String get recording_titleHint => 'Adicionar um título (opcional)';
+  String get recording_titleHint => 'Título da gravação';
 
   @override
   String get recording_descriptionHint =>
@@ -480,6 +480,24 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get recording_descriptionEmpty => 'Adicionar descrição';
+
+  @override
+  String get recording_titleEmpty => 'Adicionar título';
+
+  @override
+  String get recording_titleRequired => 'O título não pode ficar vazio';
+
+  @override
+  String get recording_title => 'Título';
+
+  @override
+  String get recording_description => 'Descrição';
+
+  @override
+  String get recording_editDetails => 'Editar detalhes';
+
+  @override
+  String get recording_saveChanges => 'Salvar alterações';
 
   @override
   String get recording_saveRecording => 'Salvar Gravação';
@@ -507,6 +525,17 @@ class AppLocalizationsPt extends AppLocalizations {
   String recording_uploadFailed(String error) {
     return 'Falha no envio: $error';
   }
+
+  @override
+  String get recording_serviceNotificationTitle => 'Gravação em andamento';
+
+  @override
+  String recording_serviceNotificationBody(String elapsed, String genre) {
+    return '$elapsed • $genre';
+  }
+
+  @override
+  String get recording_serviceNotificationStopAction => 'Parar';
 
   @override
   String get recording_notFound => 'Gravação não encontrada';
@@ -651,6 +680,7 @@ class AppLocalizationsPt extends AppLocalizations {
       locale: localeName,
       other: '$count gravações',
       one: '1 gravação',
+      zero: 'Nenhuma gravação',
     );
     return '$_temp0';
   }
@@ -735,6 +765,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String get trim_addSplitsFirst => 'Adicione divisões primeiro';
 
   @override
+  String get trim_applyBoost => 'Aplicar volume';
+
+  @override
+  String get trim_boostApplied => 'Volume aplicado';
+
+  @override
   String trim_savedSegments(int kept, int removed) {
     String _temp0 = intl.Intl.pluralLogic(
       kept,
@@ -769,6 +805,10 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get trim_classifySegment => 'Classificar segmento';
+
+  @override
+  String get trim_primaryEqualsSecondary =>
+      'A classificação primária não pode ser igual à secundária da gravação.';
 
   @override
   String get trim_volume => 'Volume';
@@ -1919,6 +1959,13 @@ class AppLocalizationsPt extends AppLocalizations {
       'Classificação alternativa atualizada';
 
   @override
+  String get recording_secondaryCollisionBanner =>
+      'Esta gravação tem as classificações primária e secundária iguais. Limpe a secundária ou altere a primária para sincronizar.';
+
+  @override
+  String get recording_clearSecondary => 'Limpar secundária';
+
+  @override
   String get recording_unclassified => 'Não Classificado';
 
   @override
@@ -2005,10 +2052,67 @@ class AppLocalizationsPt extends AppLocalizations {
       'Algum áudio próximo ao fim não pôde ser lido e foi ignorado.';
 
   @override
+  String get recording_blockNavTitle => 'Recording in progress';
+
+  @override
+  String get recording_blockNavMessage =>
+      'You have a recording in progress. Discarding will permanently delete it.';
+
+  @override
+  String get recording_blockNavDiscardAndLeave => 'Discard and leave';
+
+  @override
   String get recording_inProgressNotificationTitle => 'Gravação em andamento';
 
   @override
   String get recording_inProgressNotificationBody => 'Toque para voltar ao app';
+
+  @override
+  String get recording_finalizing => 'Finalizando gravação…';
+
+  @override
+  String get recording_combiningSegments => 'Combinando segmentos…';
+
+  @override
+  String get recording_compressingAudio => 'Comprimindo áudio…';
+
+  @override
+  String get recording_finalizationDegradedHint =>
+      'A qualidade do áudio pode estar reduzida.';
+
+  @override
+  String get recording_finalizationFailed =>
+      'Não foi possível salvar esta gravação';
+
+  @override
+  String get recording_finalizationFailedBody =>
+      'Tentamos recuperar o áudio, mas nenhum segmento estava disponível.';
+
+  @override
+  String get recording_discardAndReturn => 'Descartar e voltar';
+
+  @override
+  String get recording_savingRecording => 'Salvando gravação…';
+
+  @override
+  String get recording_processingYourAudio => 'Processando seu áudio';
+
+  @override
+  String get recording_dontCloseSaveNext =>
+      'Não feche — vamos abrir a tela de salvar em seguida.';
+
+  @override
+  String get recording_stageShortFinalizing => 'FINALIZANDO';
+
+  @override
+  String get recording_stageShortCombining => 'COMBINANDO';
+
+  @override
+  String get recording_stageShortCompressing => 'COMPRIMINDO';
+
+  @override
+  String get recording_savingPleaseWait =>
+      'Salvando sua gravação — aguarde um momento.';
 
   @override
   String get profile_defaultMicrophone => 'Microfone padrão';
@@ -2320,6 +2424,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'Forma de onda de divisão. Toque para adicionar marcadores. Arraste para reposicionar. Aperte para ampliar. Mantenha pressionado para remover.';
 
   @override
+  String get a11y_minimapScrubber =>
+      'Visão geral do áudio. Toque ou arraste para navegar até uma posição.';
+
+  @override
   String a11y_tabLabel(String label) {
     return 'Guia $label';
   }
@@ -2375,6 +2483,16 @@ class AppLocalizationsPt extends AppLocalizations {
   String get recording_uploadQueue => 'Fila de envio';
 
   @override
+  String recording_uploadSpeed(String speed) {
+    return '$speed/s';
+  }
+
+  @override
+  String recording_uploadEtaRemaining(String eta) {
+    return '~$eta restantes';
+  }
+
+  @override
   String get recording_previewSelection => 'Pré-visualizar seleção';
 
   @override
@@ -2423,4 +2541,132 @@ class AppLocalizationsPt extends AppLocalizations {
   String trim_segmentOfTotal(int index, int total) {
     return 'Segmento $index de $total';
   }
+
+  @override
+  String get recovery_interruptedTitle => 'Gravações interrompidas';
+
+  @override
+  String recovery_startedAt(String time) {
+    return 'Iniciada às $time';
+  }
+
+  @override
+  String get recovery_resume => 'Continuar';
+
+  @override
+  String get recovery_save => 'Salvar';
+
+  @override
+  String get recovery_discard => 'Descartar';
+
+  @override
+  String get recovery_confirmDiscardTitle => 'Descartar gravação?';
+
+  @override
+  String recovery_confirmDiscardBody(String duration) {
+    return '$duration de áudio serão apagados permanentemente.';
+  }
+
+  @override
+  String recovery_homeBanner(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count gravações interrompidas — toque para continuar',
+      one: '1 gravação interrompida — toque para continuar',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String recovery_unsavedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count gravações não salvas',
+      one: '1 gravação não salva',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String recovery_latestSummary(String duration, String time) {
+    return 'Última · $duration · $time';
+  }
+
+  @override
+  String get recovery_review => 'Revisar';
+
+  @override
+  String get recovery_unsavedTitle => 'Gravações não salvas';
+
+  @override
+  String recovery_unsavedSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count gravações para revisar',
+      one: '1 gravação para revisar',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recovery_discardAll => 'Descartar todas';
+
+  @override
+  String get recovery_discardAllTitle => 'Descartar todas as gravações?';
+
+  @override
+  String recovery_discardAllBody(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count gravações serão apagadas permanentemente.',
+      one: '1 gravação será apagada permanentemente.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recovery_newBadge => 'NOVO';
+
+  @override
+  String get recovery_mostRecent => 'Mais recente';
+
+  @override
+  String recovery_recordingNumbered(int number) {
+    return 'Gravação $number';
+  }
+
+  @override
+  String get format_yesterday => 'Ontem';
+
+  @override
+  String get recovery_backToList => 'Agora não';
+
+  @override
+  String get upload_pausedWhileRecording => 'Upload pausado durante a gravação';
+
+  @override
+  String get upload_inProgressNotificationTitle => 'Enviando gravação';
+
+  @override
+  String get upload_inProgressNotificationBody =>
+      'Enviando áudio em segundo plano';
+
+  @override
+  String get upload_completeNotificationTitle => 'Envio concluído';
+
+  @override
+  String get upload_failedNotificationTitle => 'Falha no envio';
+
+  @override
+  String get liveActivity_recordingStatus => 'Gravando';
+
+  @override
+  String get liveActivity_recordingPausedStatus => 'Gravação pausada';
+
+  @override
+  String get liveActivity_uploadingStatus => 'Enviando';
 }

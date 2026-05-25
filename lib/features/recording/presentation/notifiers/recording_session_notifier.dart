@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:io' show File, Platform;
 import 'dart:math' as math;
 
+import 'package:audio_session/audio_session.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
@@ -11,14 +13,21 @@ import 'package:record/record.dart';
 
 import '../../../../core/database/app_database.dart';
 import '../../../../core/l10n/locale_provider.dart';
-import '../../../../core/platform/ffmpeg_ops.dart' as ffmpeg_ops;
 import '../../../../core/platform/file_ops.dart' as file_ops;
+import '../../../../core/platform/recording_active_flag.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../shared/utils/format.dart' as fmt;
 import '../../../project/presentation/notifiers/project_notifier.dart';
 import '../../data/providers.dart';
 import '../../data/services/recording_concat_service.dart';
+import '../../data/services/recording_finalization_service.dart';
+import '../../data/services/recording_foreground_service.dart';
+import '../../data/services/recording_live_activity.dart';
 import '../../data/services/recording_notification.dart';
+import '../../data/services/recovery_coordinator.dart';
+import '../../data/services/segment_paths.dart';
 import '../../data/services/segmented_recorder.dart';
+import '../../data/services/session_recovery.dart';
 import '../../data/services/storage_guard.dart';
 import 'input_device_notifier.dart';
 import 'recording_session_state.dart';
@@ -33,10 +42,29 @@ final recordingConcatServiceProvider = Provider<RecordingConcatService>(
   (_) => RecordingConcatService(),
 );
 
+final recordingFinalizationServiceProvider =
+    Provider<RecordingFinalizationService>((ref) {
+      return RecordingFinalizationService(
+        concat: ref.watch(recordingConcatServiceProvider),
+      );
+    });
+
+final recordingForegroundServiceProvider = Provider<RecordingForegroundService>(
+  (_) => RecordingForegroundService(),
+);
+
 final recordingSessionNotifierProvider =
     NotifierProvider<RecordingSessionNotifier, RecordingState>(
       RecordingSessionNotifier.new,
     );
+
+/// Holds the recording that is awaiting a save/discard/re-record decision
+/// from the user (i.e. the user is on the ConfirmationStep). `null` means
+/// no recording is pending. Read by AppShell and screen-level PopScopes to
+/// block accidental navigation that would orphan the audio file.
+final pendingRecordingDecisionProvider = StateProvider<RecordingResult?>(
+  (_) => null,
+);
 
 class RecordingSessionNotifier extends Notifier<RecordingState> {
   SegmentedRecorder? _segRecorder;
@@ -46,6 +74,12 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
   Timer? _toastTimer;
   StreamController<double>? _webAmplitudeController;
   StreamSubscription<Amplitude>? _webAmplitudeSub;
+  bool _liveActivityActive = false;
+  StreamSubscription<dynamic>? _liveActivityUrlSub;
+  AppLocalizations? _cachedL10n;
+  String? _pendingResumeSessionId;
+  List<String>? _pendingResumeSegmentPaths;
+  Duration? _pendingResumeDuration;
 
   @override
   RecordingState build() {
@@ -63,10 +97,132 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
     }
   }
 
+  void acknowledgeLastStopError() {
+    if (state.lastStopError != null) {
+      state = state.copyWith(clearLastStopError: true);
+    }
+  }
+
+  Future<void> reactivateAudioSession() async {
+    if (!state.isRecording || kIsWeb) return;
+    try {
+      final session = await AudioSession.instance;
+      await session.setActive(true);
+      debugPrint(
+        'RecordingSessionNotifier: audio session re-activated on resume',
+      );
+    } on Exception catch (e) {
+      debugPrint('RecordingSessionNotifier: re-activate failed: $e');
+    }
+  }
+
+  Future<bool> loadInterruptedSession(String sessionId) async {
+    if (kIsWeb) return false;
+    if (state.isRecording) return false;
+
+    final sessionRepo = ref.read(recordingSessionRepositoryProvider);
+    final session = await sessionRepo.getById(sessionId);
+    if (session == null) return false;
+
+    final paths = sessionRepo.decodeSegmentPaths(session);
+    final validPaths = <String>[];
+    for (final p in paths) {
+      if (await file_ops.fileExists(p)) {
+        validPaths.add(p);
+      }
+    }
+    if (validPaths.isEmpty) {
+      await sessionRepo.markDiscarded(session.id);
+      await ref.read(recoveryCoordinatorProvider).refresh();
+      return false;
+    }
+
+    await _cleanupOrphanedSegments(session.id, session.lastSegmentIndex);
+
+    _pendingResumeSessionId = session.id;
+    _pendingResumeSegmentPaths = validPaths;
+    _pendingResumeDuration = Duration(
+      milliseconds: (session.totalDurationSeconds * 1000).round(),
+    );
+
+    state = RecordingState(
+      isRecording: true,
+      isPaused: true,
+      elapsed: _pendingResumeDuration!,
+      currentGenreId: session.genreId,
+      currentSubcategoryId: session.subcategoryId,
+      sessionId: session.id,
+      isPendingResume: true,
+      wasResumedSession: true,
+    );
+    await ref.read(recoveryCoordinatorProvider).refresh();
+    return true;
+  }
+
+  Future<void> cancelPendingResume() async {
+    if (kIsWeb) return;
+    final pendingSessionId = _pendingResumeSessionId;
+
+    if (pendingSessionId != null && _segRecorder == null) {
+      _pendingResumeSessionId = null;
+      _pendingResumeSegmentPaths = null;
+      _pendingResumeDuration = null;
+      await const RecordingActiveFlag().markInactive();
+      state = const RecordingState();
+      await ref.read(recoveryCoordinatorProvider).refresh();
+      return;
+    }
+
+    final activeSessionId = state.sessionId;
+    final recorder = _segRecorder;
+    if (recorder == null || activeSessionId == null) {
+      return;
+    }
+
+    _elapsedTimer?.cancel();
+    _toastTimer?.cancel();
+    await recorder.finish();
+    _segRecorder = null;
+
+    final sessionRepo = ref.read(recordingSessionRepositoryProvider);
+    await sessionRepo.markCrashed(activeSessionId);
+
+    await const RecordingActiveFlag().markInactive();
+    state = const RecordingState();
+    await RecordingNotification.instance.clear();
+    await _stopLiveActivityIfIOS();
+    await _stopForegroundServiceIfAndroid();
+    await ref.read(recoveryCoordinatorProvider).refresh();
+  }
+
+  Future<void> _cleanupOrphanedSegments(
+    String sessionId,
+    int lastFinalizedIndex,
+  ) async {
+    if (kIsWeb) return;
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      final prefix = SegmentPaths.prefixFor(dir.path, sessionId);
+      final entries = await dir.list().toList();
+      for (final entry in entries) {
+        if (entry is! File) continue;
+        final index = SegmentPaths.parseIndex(entry.path, prefix);
+        if (index == null) continue;
+        if (index > lastFinalizedIndex) {
+          try {
+            await entry.delete();
+          } catch (_) {}
+        }
+      }
+    } catch (_) {}
+  }
+
   Future<bool> startRecording(
     String genreId,
     String subcategoryId, {
     String? projectId,
+    String? genreName,
+    String? subcategoryName,
   }) async {
     if (state.isRecording) return true;
 
@@ -78,15 +234,24 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
 
     final resolvedProjectId =
         projectId ?? ref.read(projectNotifierProvider).activeProject?.id ?? '';
-    return _startNative(genreId, subcategoryId, resolvedProjectId, mapper);
+    return _startNative(
+      genreId,
+      subcategoryId,
+      resolvedProjectId,
+      mapper,
+      genreName: genreName,
+      subcategoryName: subcategoryName,
+    );
   }
 
   Future<bool> _startNative(
     String genreId,
     String subcategoryId,
     String projectId,
-    AmplitudeMapper mapper,
-  ) async {
+    AmplitudeMapper mapper, {
+    String? genreName,
+    String? subcategoryName,
+  }) async {
     final sessionRepo = ref.read(recordingSessionRepositoryProvider);
     final storageGuard = ref.read(storageGuardProvider);
 
@@ -109,37 +274,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
       storageGuard: storageGuard,
     );
     _segRecorder = recorder;
-
-    recorder.onCheckpoint = (totalSaved) {
-      _toastTimer?.cancel();
-      state = state.copyWith(
-        lastCheckpointAt: totalSaved,
-        showCheckpointToast: true,
-      );
-      _toastTimer = Timer(const Duration(seconds: 2), () {
-        state = state.copyWith(showCheckpointToast: false);
-      });
-    };
-
-    recorder.onStorageCritical = (_) {
-      if (state.storageBannerSeverity != StorageBannerSeverity.forceStopped) {
-        state = state.copyWith(
-          storageBannerSeverity: StorageBannerSeverity.critical,
-        );
-      }
-    };
-
-    recorder.onStorageForceStop = () {
-      state = state.copyWith(
-        storageBannerSeverity: StorageBannerSeverity.forceStopped,
-      );
-      scheduleMicrotask(() async {
-        final result = await stopRecording();
-        if (result != null) {
-          state = state.copyWith(autoStoppedResult: result);
-        }
-      });
-    };
+    _attachRecorderCallbacks(recorder);
 
     final ok = await recorder.startSession(
       sessionId: sessionId,
@@ -152,18 +287,26 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
       return false;
     }
 
+    await const RecordingActiveFlag().markActive();
+
     state = RecordingState(
       isRecording: true,
       isPaused: false,
       elapsed: Duration.zero,
       currentGenreId: genreId,
       currentSubcategoryId: subcategoryId,
+      currentGenreName: genreName,
+      currentSubcategoryName: subcategoryName,
       amplitudeStream: recorder.amplitudeStream,
       sessionId: sessionId,
     );
 
     _startElapsedTimer();
-    await _showRecordingNotification();
+    final liveActivityStarted = await _startLiveActivityIfIOS(sessionId);
+    if (!liveActivityStarted) {
+      await _showRecordingNotification();
+    }
+    await _startForegroundServiceIfAndroid();
     return true;
   }
 
@@ -228,6 +371,13 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
   Future<void> resumeRecording() async {
     if (!state.isRecording || !state.isPaused) return;
 
+    if (!kIsWeb && _segRecorder == null && _pendingResumeSessionId != null) {
+      final ok = await _startRecorderForResume();
+      if (!ok) return;
+      state = state.copyWith(isPaused: false);
+      return;
+    }
+
     if (kIsWeb) {
       await _webRecorder?.resume();
     } else {
@@ -237,8 +387,99 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
     state = state.copyWith(isPaused: false);
   }
 
+  Future<bool> _startRecorderForResume() async {
+    final sessionId = _pendingResumeSessionId;
+    final segmentPaths = _pendingResumeSegmentPaths;
+    final duration = _pendingResumeDuration;
+    if (sessionId == null || segmentPaths == null || duration == null) {
+      return false;
+    }
+
+    final sessionRepo = ref.read(recordingSessionRepositoryProvider);
+    final storageGuard = ref.read(storageGuardProvider);
+
+    await sessionRepo.markActive(sessionId);
+
+    await _segRecorder?.dispose();
+    final recorder = SegmentedRecorder(
+      sessionRepo: sessionRepo,
+      storageGuard: storageGuard,
+    );
+    _segRecorder = recorder;
+    _attachRecorderCallbacks(recorder);
+
+    final mapper = _amplitudeMapperFor(ref.read(noiseSensitivityProvider));
+    final ok = await recorder.startSession(
+      sessionId: sessionId,
+      amplitudeMapper: mapper,
+      inputDevice: ref.read(inputDeviceNotifierProvider).selectedDevice,
+      resumeFromPaths: segmentPaths,
+      resumeFromDuration: duration,
+    );
+    if (!ok) {
+      _segRecorder = null;
+      return false;
+    }
+
+    await const RecordingActiveFlag().markActive();
+
+    state = state.copyWith(
+      amplitudeStream: recorder.amplitudeStream,
+      sessionId: sessionId,
+      isPendingResume: false,
+      wasResumedSession: true,
+    );
+
+    _pendingResumeSessionId = null;
+    _pendingResumeSegmentPaths = null;
+    _pendingResumeDuration = null;
+
+    _startElapsedTimer();
+    final liveActivityStarted = await _startLiveActivityIfIOS(sessionId);
+    if (!liveActivityStarted) {
+      await _showRecordingNotification();
+    }
+    await _startForegroundServiceIfAndroid();
+
+    await ref.read(recoveryCoordinatorProvider).refresh();
+    return true;
+  }
+
+  void _attachRecorderCallbacks(SegmentedRecorder recorder) {
+    recorder.onCheckpoint = (totalSaved) {
+      _toastTimer?.cancel();
+      state = state.copyWith(
+        lastCheckpointAt: totalSaved,
+        showCheckpointToast: true,
+      );
+      _toastTimer = Timer(const Duration(seconds: 2), () {
+        state = state.copyWith(showCheckpointToast: false);
+      });
+    };
+
+    recorder.onStorageCritical = (_) {
+      if (state.storageBannerSeverity != StorageBannerSeverity.forceStopped) {
+        state = state.copyWith(
+          storageBannerSeverity: StorageBannerSeverity.critical,
+        );
+      }
+    };
+
+    recorder.onStorageForceStop = () {
+      state = state.copyWith(
+        storageBannerSeverity: StorageBannerSeverity.forceStopped,
+      );
+      scheduleMicrotask(() async {
+        final result = await stopRecording();
+        if (result != null) {
+          state = state.copyWith(autoStoppedResult: result);
+        }
+      });
+    };
+  }
+
   Future<RecordingResult?> stopRecording() async {
-    if (!state.isRecording) return null;
+    if (!state.isRecording || state.isFinalizing) return null;
 
     _elapsedTimer?.cancel();
     _toastTimer?.cancel();
@@ -252,19 +493,103 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
 
   Future<RecordingResult?> _stopNative(Duration fallbackElapsed) async {
     final recorder = _segRecorder;
+    final sessionId = state.sessionId;
+    final sessionRepo = ref.read(recordingSessionRepositoryProvider);
+
     if (recorder == null) {
+      final pendingSessionId = _pendingResumeSessionId;
+      final pendingPaths = _pendingResumeSegmentPaths;
+      final pendingDuration = _pendingResumeDuration;
+      if (pendingSessionId != null &&
+          pendingPaths != null &&
+          pendingPaths.isNotEmpty) {
+        _pendingResumeSessionId = null;
+        _pendingResumeSegmentPaths = null;
+        _pendingResumeDuration = null;
+        await const RecordingActiveFlag().markInactive();
+        state = const RecordingState(
+          finalizationStage: FinalizationStage.finalizing,
+        );
+        await RecordingNotification.instance.clear();
+        await _stopLiveActivityIfIOS();
+        await _stopForegroundServiceIfAndroid();
+
+        final result = await _finalizeOrCrash(
+          sessionId: pendingSessionId,
+          segmentPaths: pendingPaths,
+          totalDuration: pendingDuration ?? fallbackElapsed,
+        );
+        if (result != null) {
+          await _cleanupOrphanedSegments(pendingSessionId, -1);
+          await sessionRepo.markRecovered(pendingSessionId);
+          await ref.read(recoveryCoordinatorProvider).refresh();
+          state = const RecordingState();
+        }
+        return result;
+      }
+
+      await const RecordingActiveFlag().markInactive();
       state = const RecordingState();
       await RecordingNotification.instance.clear();
+      await _stopLiveActivityIfIOS();
+      await _stopForegroundServiceIfAndroid();
       return null;
     }
 
-    final sessionResult = await recorder.finish();
+    state = state.copyWith(finalizationStage: FinalizationStage.finalizing);
+
+    // Capture session id up-front: SegmentedRecorder.finish() clears its
+    // internal sessionId, and if finish() throws we still need to mark the
+    // session crashed so the unsaved-recordings banner can rescue it.
+    final activeSessionId = recorder.sessionId;
+
+    SegmentedRecordingResult? sessionResult;
+    Object? finishError;
+    var degraded = false;
+    try {
+      sessionResult = await recorder.finish();
+    } catch (e, st) {
+      finishError = e;
+      debugPrint('[stopNative] recorder.finish failed: $e\n$st');
+      sessionResult = await _recoverFromDisk(sessionId);
+      if (sessionResult != null) degraded = true;
+    }
     _segRecorder = null;
 
-    state = const RecordingState();
+    await const RecordingActiveFlag().markInactive();
+    state = state.copyWith(
+      isRecording: false,
+      isPaused: false,
+      clearAmplitudeStream: true,
+      clearSessionId: true,
+      clearLastCheckpoint: true,
+      finalizationDegraded: degraded,
+    );
     await RecordingNotification.instance.clear();
+    await _stopLiveActivityIfIOS();
+    await _stopForegroundServiceIfAndroid();
 
-    if (sessionResult == null || sessionResult.segmentPaths.isEmpty) {
+    final hasUsableResult =
+        sessionResult != null && sessionResult.segmentPaths.isNotEmpty;
+    if (!hasUsableResult) {
+      final sessionIdForRecovery = sessionResult?.sessionId ?? activeSessionId;
+      var recoverable = false;
+      if (sessionIdForRecovery != null) {
+        await sessionRepo.markCrashed(sessionIdForRecovery);
+        await ref.read(recoveryCoordinatorProvider).refresh();
+        recoverable = ref
+            .read(interruptedSessionsProvider)
+            .any((s) => s.sessionId == sessionIdForRecovery);
+      }
+      state = state.copyWith(
+        finalizationStage: FinalizationStage.idle,
+        finalizationErrorKind: FinalizationErrorKind.noSegments,
+        lastStopError: RecordingStopError(
+          kind: RecordingStopErrorKind.finishProducedNoSegments,
+          recoverable: recoverable,
+          technicalMessage: finishError?.toString(),
+        ),
+      );
       return null;
     }
 
@@ -272,54 +597,100 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
         ? sessionResult.totalDuration
         : fallbackElapsed;
 
-    final dir = await getApplicationDocumentsDirectory();
-    String? sourcePath;
-
-    if (sessionResult.segmentPaths.length == 1) {
-      sourcePath = sessionResult.segmentPaths.first;
-    } else {
-      final concat = ref.read(recordingConcatServiceProvider);
-      final firstIsWav = sessionResult.segmentPaths.first
-          .toLowerCase()
-          .endsWith('.wav');
-      final concatExt = firstIsWav ? 'wav' : 'm4a';
-      final concatPath =
-          '${dir.path}/concat_${sessionResult.sessionId}.$concatExt';
-      final concatResult = await concat.concatSegments(
-        segmentPaths: sessionResult.segmentPaths,
-        outputPath: concatPath,
-      );
-      if (concatResult != null) {
-        sourcePath = concatResult;
-        for (final p in sessionResult.segmentPaths) {
-          unawaited(_deleteFileSafe(p));
-        }
-      } else {
-        sourcePath = sessionResult.segmentPaths.first;
-      }
+    if (degraded) {
+      state = state.copyWith(finalizationDegraded: true);
     }
 
-    final isWav = sourcePath.toLowerCase().endsWith('.wav');
-    if (isWav) {
-      final m4aPath = '${dir.path}/recording_${sessionResult.sessionId}.m4a';
-      final ok = await ffmpeg_ops.compressToM4a(sourcePath, m4aPath);
-      if (ok) {
-        unawaited(_deleteFileSafe(sourcePath));
-        return RecordingResult(
-          filePath: m4aPath,
-          durationSeconds: totalDuration.inMilliseconds / 1000.0,
-        );
-      }
-      return RecordingResult(
-        filePath: sourcePath,
-        durationSeconds: totalDuration.inMilliseconds / 1000.0,
-        format: 'wav',
+    final result = await _finalizeOrCrash(
+      sessionId: sessionResult.sessionId,
+      segmentPaths: sessionResult.segmentPaths,
+      totalDuration: totalDuration,
+    );
+    if (result != null) {
+      await sessionRepo.markCompleted(sessionResult.sessionId);
+      state = const RecordingState();
+    }
+    return result;
+  }
+
+  Future<RecordingResult?> _finalizeOrCrash({
+    required String sessionId,
+    required List<String> segmentPaths,
+    required Duration totalDuration,
+  }) async {
+    final sessionRepo = ref.read(recordingSessionRepositoryProvider);
+    final finalizer = ref.read(recordingFinalizationServiceProvider);
+
+    FinalizationOutcome? outcome;
+    Object? error;
+    try {
+      outcome = await finalizer.finalize(
+        sessionId: sessionId,
+        segmentPaths: segmentPaths,
+        totalDuration: totalDuration,
+        onStage: (stage) {
+          state = state.copyWith(finalizationStage: stage);
+        },
+      );
+    } catch (e, st) {
+      error = e;
+      debugPrint(
+        'RecordingSessionNotifier: finalize failed for $sessionId: $e\n$st',
       );
     }
 
-    return RecordingResult(
-      filePath: sourcePath,
-      durationSeconds: totalDuration.inMilliseconds / 1000.0,
+    if (outcome != null) {
+      if (outcome.degraded) {
+        state = state.copyWith(finalizationDegraded: true);
+      }
+      return outcome.result;
+    }
+
+    await sessionRepo.markCrashed(sessionId);
+    await ref.read(recoveryCoordinatorProvider).refresh();
+    final recoverable = ref
+        .read(interruptedSessionsProvider)
+        .any((s) => s.sessionId == sessionId);
+    // outcome == null with non-empty segmentPaths only happens when the
+    // service threw (every other branch returns a FinalizationOutcome).
+    // Empty segments are filtered before reaching this method, so an error
+    // here means the pipeline crashed — surface the more precise kind.
+    final errorKind = error != null
+        ? FinalizationErrorKind.finalizationFailed
+        : FinalizationErrorKind.noSegments;
+    state = state.copyWith(
+      finalizationStage: FinalizationStage.idle,
+      finalizationErrorKind: errorKind,
+      lastStopError: RecordingStopError(
+        kind: RecordingStopErrorKind.finalizationFailed,
+        recoverable: recoverable,
+        technicalMessage: error?.toString(),
+      ),
+    );
+    return null;
+  }
+
+  Future<SegmentedRecordingResult?> _recoverFromDisk(String? sessionId) async {
+    if (sessionId == null) return null;
+    try {
+      final repo = ref.read(recordingSessionRepositoryProvider);
+      final dir = await getApplicationDocumentsDirectory();
+      return await recoverSessionFromDisk(
+        repo: repo,
+        sessionId: sessionId,
+        documentsDir: dir,
+      );
+    } catch (e, st) {
+      debugPrint('[stopNative] recoverFromDisk failed: $e\n$st');
+      return null;
+    }
+  }
+
+  void dismissFinalizationError() {
+    state = state.copyWith(
+      clearFinalizationError: true,
+      finalizationStage: FinalizationStage.idle,
+      finalizationDegraded: false,
     );
   }
 
@@ -327,28 +698,56 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
     final recorder = _webRecorder;
     final pendingKey = _webPendingKey;
     if (recorder == null || pendingKey == null) {
+      await const RecordingActiveFlag().markInactive();
       state = const RecordingState();
       return null;
     }
 
-    final url = await recorder.stop();
+    state = state.copyWith(finalizationStage: FinalizationStage.finalizing);
+
+    String? url;
+    try {
+      url = await recorder.stop();
+    } catch (e, st) {
+      debugPrint('[stopWeb] recorder.stop failed: $e\n$st');
+      url = null;
+    }
     await _disposeWebRecorder();
 
-    state = const RecordingState();
+    await const RecordingActiveFlag().markInactive();
+    state = state.copyWith(
+      isRecording: false,
+      isPaused: false,
+      clearAmplitudeStream: true,
+      clearSessionId: true,
+      clearLastCheckpoint: true,
+    );
 
-    if (url == null || url.isEmpty) return null;
+    if (url == null || url.isEmpty) {
+      state = state.copyWith(
+        finalizationStage: FinalizationStage.idle,
+        finalizationErrorKind: FinalizationErrorKind.noAudio,
+      );
+      return null;
+    }
 
     try {
       final bytes = await http.readBytes(Uri.parse(url));
       final format = _detectWebFormatFromUrl(url);
       final fullKey = '$pendingKey.$format';
       await file_ops.writeFileBytes(fullKey, bytes);
+      state = const RecordingState();
       return RecordingResult(
         filePath: fullKey,
         durationSeconds: fallbackElapsed.inMilliseconds / 1000.0,
         format: format,
       );
-    } catch (_) {
+    } catch (e, st) {
+      debugPrint('[stopWeb] download failed: $e\n$st');
+      state = state.copyWith(
+        finalizationStage: FinalizationStage.idle,
+        finalizationErrorKind: FinalizationErrorKind.downloadFailed,
+      );
       return null;
     }
   }
@@ -361,7 +760,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
   }
 
   Future<void> discardRecording() async {
-    if (!state.isRecording) return;
+    if (!state.isInProgress) return;
 
     _elapsedTimer?.cancel();
     _toastTimer?.cancel();
@@ -369,11 +768,30 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
     if (kIsWeb) {
       await _disposeWebRecorder();
     } else {
-      await _segRecorder?.discard();
-      _segRecorder = null;
-      await RecordingNotification.instance.clear();
+      final pendingSessionId = _pendingResumeSessionId;
+      if (pendingSessionId != null && _segRecorder == null) {
+        final paths = _pendingResumeSegmentPaths ?? const <String>[];
+        for (final p in paths) {
+          await _deleteFileSafe(p);
+        }
+        await _cleanupOrphanedSegments(pendingSessionId, -1);
+        await ref
+            .read(recordingSessionRepositoryProvider)
+            .markDiscarded(pendingSessionId);
+        _pendingResumeSessionId = null;
+        _pendingResumeSegmentPaths = null;
+        _pendingResumeDuration = null;
+        await ref.read(recoveryCoordinatorProvider).refresh();
+      } else {
+        await _segRecorder?.discard();
+        _segRecorder = null;
+        await RecordingNotification.instance.clear();
+        await _stopLiveActivityIfIOS();
+        await _stopForegroundServiceIfAndroid();
+      }
     }
 
+    await const RecordingActiveFlag().markInactive();
     state = const RecordingState();
   }
 
@@ -399,7 +817,102 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
       state = state.copyWith(
         elapsed: state.elapsed + const Duration(seconds: 1),
       );
+      unawaited(_updateForegroundNotification());
+      unawaited(_updateLiveActivity());
     });
+  }
+
+  Future<bool> _startLiveActivityIfIOS(String sessionId) async {
+    if (kIsWeb || !Platform.isIOS) return false;
+    final supported = await RecordingLiveActivity.instance.isSupported();
+    if (!supported) return false;
+    final l10n = await _resolveLocalizations();
+    final started = await RecordingLiveActivity.instance.start(
+      activityId: sessionId,
+      genre: state.currentGenreName ?? '',
+      subcategory: state.currentSubcategoryName ?? '',
+      localizedRecordingStatus: l10n.liveActivity_recordingStatus,
+      localizedRecordingPausedStatus: l10n.liveActivity_recordingPausedStatus,
+      localizedStopAction: l10n.recording_serviceNotificationStopAction,
+    );
+    if (!started) return false;
+    _liveActivityActive = true;
+    _liveActivityUrlSub?.cancel();
+    _liveActivityUrlSub = RecordingLiveActivity.instance.urlSchemeStream.listen(
+      (event) {
+        final host = event.host;
+        final path = event.path;
+        if (host == 'stop-recording' || path == '/stop-recording') {
+          scheduleMicrotask(_handleBackgroundStop);
+        }
+      },
+    );
+    return true;
+  }
+
+  Future<void> _stopLiveActivityIfIOS() async {
+    if (kIsWeb || !Platform.isIOS) return;
+    await _liveActivityUrlSub?.cancel();
+    _liveActivityUrlSub = null;
+    if (!_liveActivityActive) return;
+    await RecordingLiveActivity.instance.stop();
+    _liveActivityActive = false;
+  }
+
+  Future<void> _updateLiveActivity() async {
+    if (kIsWeb || !Platform.isIOS || !_liveActivityActive) return;
+    await RecordingLiveActivity.instance.update(
+      elapsedLabel: fmt.formatElapsed(state.elapsed),
+      isPaused: state.isPaused,
+    );
+  }
+
+  Future<void> _startForegroundServiceIfAndroid() async {
+    if (kIsWeb || !Platform.isAndroid) return;
+    final l10n = await _resolveLocalizations();
+    _cachedL10n = l10n;
+    final service = ref.read(recordingForegroundServiceProvider);
+    await service.start(
+      content: RecordingForegroundServiceContent(
+        title: l10n.recording_serviceNotificationTitle,
+        body: _formatNotificationBody(l10n),
+        stopActionLabel: l10n.recording_serviceNotificationStopAction,
+      ),
+      onStopRequested: () => scheduleMicrotask(_handleBackgroundStop),
+    );
+  }
+
+  Future<void> _stopForegroundServiceIfAndroid() async {
+    if (kIsWeb || !Platform.isAndroid) return;
+    await ref.read(recordingForegroundServiceProvider).stop();
+    _cachedL10n = null;
+  }
+
+  Future<void> _updateForegroundNotification() async {
+    if (kIsWeb || !Platform.isAndroid) return;
+    final l10n = _cachedL10n;
+    if (l10n == null) return;
+    await ref
+        .read(recordingForegroundServiceProvider)
+        .update(
+          title: l10n.recording_serviceNotificationTitle,
+          body: _formatNotificationBody(l10n),
+        );
+  }
+
+  Future<void> _handleBackgroundStop() async {
+    if (!state.isRecording) return;
+    final result = await stopRecording();
+    if (result != null) {
+      state = state.copyWith(autoStoppedResult: result);
+    }
+  }
+
+  String _formatNotificationBody(AppLocalizations l10n) {
+    final elapsed = fmt.formatElapsed(state.elapsed);
+    final genre = state.currentGenreName?.trim() ?? '';
+    if (genre.isEmpty) return elapsed;
+    return l10n.recording_serviceNotificationBody(elapsed, genre);
   }
 
   Future<void> _disposeWebRecorder() async {
@@ -430,6 +943,8 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
     _segRecorder?.dispose();
     _segRecorder = null;
     _disposeWebRecorder();
+    unawaited(_stopLiveActivityIfIOS());
+    unawaited(_stopForegroundServiceIfAndroid());
   }
 }
 

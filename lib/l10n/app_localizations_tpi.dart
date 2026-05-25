@@ -36,10 +36,10 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get common_cancel => 'Lusim';
 
   @override
-  String get common_resume => 'Resume';
+  String get common_resume => 'Statim gen';
 
   @override
-  String get common_discard => 'Discard';
+  String get common_discard => 'Rausim';
 
   @override
   String get common_save => 'Sevim';
@@ -470,13 +470,31 @@ class AppLocalizationsTpi extends AppLocalizations {
       'Makim pasin bilong toktok we i stret long ton na fomol bilong dispela rekoding.';
 
   @override
-  String get recording_titleHint => 'Putim nem (sapos yu laik)';
+  String get recording_titleHint => 'Nem bilong rekoding';
 
   @override
   String get recording_descriptionHint => 'Raitim liklik stori (sapos yu laik)';
 
   @override
   String get recording_descriptionEmpty => 'Raitim stori';
+
+  @override
+  String get recording_titleEmpty => 'Putim nem';
+
+  @override
+  String get recording_titleRequired => 'Nem i no inap stap emti';
+
+  @override
+  String get recording_title => 'Nem';
+
+  @override
+  String get recording_description => 'Stori';
+
+  @override
+  String get recording_editDetails => 'Senisim ol detail';
+
+  @override
+  String get recording_saveChanges => 'Sevim ol senis';
 
   @override
   String get recording_saveRecording => 'Sevim Rekoding';
@@ -503,6 +521,17 @@ class AppLocalizationsTpi extends AppLocalizations {
   String recording_uploadFailed(String error) {
     return 'Aplot i bagarap: $error';
   }
+
+  @override
+  String get recording_serviceNotificationTitle => 'Recording in progress';
+
+  @override
+  String recording_serviceNotificationBody(String elapsed, String genre) {
+    return '$elapsed • $genre';
+  }
+
+  @override
+  String get recording_serviceNotificationStopAction => 'Stop';
 
   @override
   String get recording_notFound => 'Rekoding i no stap';
@@ -637,7 +666,7 @@ class AppLocalizationsTpi extends AppLocalizations {
 
   @override
   String get recordings_dropToImport =>
-      'Tip: drag audio files onto this window to import.';
+      'Tip: pulim ol audio fail i go long dispela windo bilong imotim.';
 
   @override
   String recordings_count(int count) {
@@ -729,6 +758,12 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get trim_addSplitsFirst => 'Putim ol brukim pastaim';
 
   @override
+  String get trim_applyBoost => 'Apply boost';
+
+  @override
+  String get trim_boostApplied => 'Volume applied';
+
+  @override
   String trim_savedSegments(int kept, int removed) {
     return 'Sevim $kept segment, rausim $removed';
   }
@@ -757,6 +792,10 @@ class AppLocalizationsTpi extends AppLocalizations {
 
   @override
   String get trim_classifySegment => 'Klasifaiim segment';
+
+  @override
+  String get trim_primaryEqualsSecondary =>
+      'Primary klasifikesen i no inap stap wankain long sekondari klasifikesen bilong rekoding.';
 
   @override
   String get trim_volume => 'Volium';
@@ -882,18 +921,18 @@ class AppLocalizationsTpi extends AppLocalizations {
       '~10x liklik moa, i no lusim gutpela sait long ML pipeline';
 
   @override
-  String get import_dropHint => 'Drop audio files to import';
+  String get import_dropHint => 'Drop ol audio fail bilong imotim';
 
   @override
-  String get import_dropActive => 'Release to import';
+  String get import_dropActive => 'Lusim na imotim';
 
   @override
   String import_rejectedTooLarge(int count, String names) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Skipped $count files over 500 MB: $names',
-      one: 'Skipped 1 file over 500 MB: $names',
+      other: 'Skipim $count fail bikpela tumas long 500 MB: $names',
+      one: 'Skipim 1 fail bikpela tumas long 500 MB: $names',
     );
     return '$_temp0';
   }
@@ -904,9 +943,9 @@ class AppLocalizationsTpi extends AppLocalizations {
       count,
       locale: localeName,
       other:
-          'Skipped $count files with unsupported audio codecs: $names. Re-export as PCM WAV or M4A.',
+          'Skipim $count fail wantaim odio kodek i no inap: $names. Ekspot gen olsem PCM WAV o M4A.',
       one:
-          'Skipped 1 file with an unsupported audio codec: $names. Re-export as PCM WAV or M4A.',
+          'Skipim 1 fail wantaim odio kodek i no inap: $names. Ekspot gen olsem PCM WAV o M4A.',
     );
     return '$_temp0';
   }
@@ -916,27 +955,27 @@ class AppLocalizationsTpi extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Skipped $count unreadable files: $names',
-      one: 'Skipped 1 unreadable file: $names',
+      other: 'Skipim $count fail i no inap kaunim: $names',
+      one: 'Skipim 1 fail i no inap kaunim: $names',
     );
     return '$_temp0';
   }
 
   @override
-  String get import_resumePromptTitle => 'Resume interrupted upload';
+  String get import_resumePromptTitle => 'Statim gen aplotim i no pinis';
 
   @override
   String import_resumePromptBody(String name, String size) {
-    return '\"$name\" ($size) was partially uploaded. Select the same file to continue.';
+    return '\"$name\" ($size) i no go pinis. Makim wankain fail bilong go het.';
   }
 
   @override
   String get import_resumeSizeMismatch =>
-      'That file doesn\'t match the paused upload.';
+      'Dispela fail i no wankain wantaim aplotim i wet.';
 
   @override
   String import_largeFileWarning(String size) {
-    return 'Large file ($size). Keep this tab open until the upload completes.';
+    return 'Bikpela fail ($size). Larim dispela tab i op inap long aplotim i pinis.';
   }
 
   @override
@@ -1894,6 +1933,13 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get recording_secondaryUpdated => 'Narapela klasifikesen i nupela';
 
   @override
+  String get recording_secondaryCollisionBanner =>
+      'Dispela rekoding i gat wankain primary na sekondari klasifikesen. Klinim sekondari o senisim primary bilong sinkronaisim.';
+
+  @override
+  String get recording_clearSecondary => 'Klinim sekondari';
+
+  @override
   String get recording_unclassified => 'I no makim kain yet';
 
   @override
@@ -1980,11 +2026,67 @@ class AppLocalizationsTpi extends AppLocalizations {
       'Sampela audio klostu long pinis ino inap rid na mipela skipim.';
 
   @override
+  String get recording_blockNavTitle => 'Recording in progress';
+
+  @override
+  String get recording_blockNavMessage =>
+      'You have a recording in progress. Discarding will permanently delete it.';
+
+  @override
+  String get recording_blockNavDiscardAndLeave => 'Discard and leave';
+
+  @override
   String get recording_inProgressNotificationTitle => 'Rekodim i wok';
 
   @override
   String get recording_inProgressNotificationBody =>
       'Tasim bilong go bek long ap';
+
+  @override
+  String get recording_finalizing => 'I pinisim rekoding…';
+
+  @override
+  String get recording_combiningSegments => 'I bungim ol hap…';
+
+  @override
+  String get recording_compressingAudio => 'I sotim audio…';
+
+  @override
+  String get recording_finalizationDegradedHint =>
+      'Audio kuality inap kamap liklik.';
+
+  @override
+  String get recording_finalizationFailed => 'I no inap sevim dispela rekoding';
+
+  @override
+  String get recording_finalizationFailedBody =>
+      'Mipela traim long kisim bek audio tasol i nogat ol hap.';
+
+  @override
+  String get recording_discardAndReturn => 'Lusim na go bek';
+
+  @override
+  String get recording_savingRecording => 'Saving recording…';
+
+  @override
+  String get recording_processingYourAudio => 'Processing your audio';
+
+  @override
+  String get recording_dontCloseSaveNext =>
+      'Don\'t close — we\'ll open the save screen next.';
+
+  @override
+  String get recording_stageShortFinalizing => 'FINALIZING';
+
+  @override
+  String get recording_stageShortCombining => 'COMBINING';
+
+  @override
+  String get recording_stageShortCompressing => 'COMPRESSING';
+
+  @override
+  String get recording_savingPleaseWait =>
+      'Saving your recording — please wait a moment.';
 
   @override
   String get profile_defaultMicrophone => 'Defolt maikrofon';
@@ -2294,6 +2396,10 @@ class AppLocalizationsTpi extends AppLocalizations {
       'Wevfom bilong brukim. Klikim bai yu putim mak. Pulim bai yu senisim ples. Rausim pinga bai yu zoom. Holim longpela bai yu rausim.';
 
   @override
+  String get a11y_minimapScrubber =>
+      'Audio overview. Tap or drag to navigate to a position.';
+
+  @override
   String a11y_tabLabel(String label) {
     return 'Tab $label';
   }
@@ -2349,6 +2455,16 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get recording_uploadQueue => 'Lain bilong aplot';
 
   @override
+  String recording_uploadSpeed(String speed) {
+    return '$speed/s';
+  }
+
+  @override
+  String recording_uploadEtaRemaining(String eta) {
+    return '~$eta remaining';
+  }
+
+  @override
   String get recording_previewSelection => 'Lukim ol makim pastaim';
 
   @override
@@ -2397,4 +2513,131 @@ class AppLocalizationsTpi extends AppLocalizations {
   String trim_segmentOfTotal(int index, int total) {
     return 'Pisis $index bilong $total';
   }
+
+  @override
+  String get recovery_interruptedTitle => 'Interrupted recordings';
+
+  @override
+  String recovery_startedAt(String time) {
+    return 'Started at $time';
+  }
+
+  @override
+  String get recovery_resume => 'Resume';
+
+  @override
+  String get recovery_save => 'Save';
+
+  @override
+  String get recovery_discard => 'Discard';
+
+  @override
+  String get recovery_confirmDiscardTitle => 'Discard recording?';
+
+  @override
+  String recovery_confirmDiscardBody(String duration) {
+    return '$duration of audio will be permanently deleted.';
+  }
+
+  @override
+  String recovery_homeBanner(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count interrupted recordings — tap to resume',
+      one: '1 interrupted recording — tap to resume',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String recovery_unsavedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count unsaved recordings',
+      one: '1 unsaved recording',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String recovery_latestSummary(String duration, String time) {
+    return 'Latest · $duration · $time';
+  }
+
+  @override
+  String get recovery_review => 'Review';
+
+  @override
+  String get recovery_unsavedTitle => 'Unsaved recordings';
+
+  @override
+  String recovery_unsavedSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count recordings to review',
+      one: '1 recording to review',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recovery_discardAll => 'Discard all';
+
+  @override
+  String get recovery_discardAllTitle => 'Discard all recordings?';
+
+  @override
+  String recovery_discardAllBody(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count recordings will be permanently deleted.',
+      one: '1 recording will be permanently deleted.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recovery_newBadge => 'NEW';
+
+  @override
+  String get recovery_mostRecent => 'Most recent';
+
+  @override
+  String recovery_recordingNumbered(int number) {
+    return 'Recording $number';
+  }
+
+  @override
+  String get format_yesterday => 'Yesterday';
+
+  @override
+  String get recovery_backToList => 'Not now';
+
+  @override
+  String get upload_pausedWhileRecording => 'Aplotim i wet taim rekodim';
+
+  @override
+  String get upload_inProgressNotificationTitle => 'Aplotim rekod';
+
+  @override
+  String get upload_inProgressNotificationBody => 'Salim odio long baksait';
+
+  @override
+  String get upload_completeNotificationTitle => 'Aplotim i pinis';
+
+  @override
+  String get upload_failedNotificationTitle => 'Aplotim i fel';
+
+  @override
+  String get liveActivity_recordingStatus => 'Rekodim';
+
+  @override
+  String get liveActivity_recordingPausedStatus => 'Rekodim i wet';
+
+  @override
+  String get liveActivity_uploadingStatus => 'Aplotim';
 }

@@ -36,10 +36,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get common_cancel => '取消';
 
   @override
-  String get common_resume => 'Resume';
+  String get common_resume => '继续';
 
   @override
-  String get common_discard => 'Discard';
+  String get common_discard => '丢弃';
 
   @override
   String get common_save => '保存';
@@ -461,13 +461,31 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recording_registerDescription => '选择最能描述此录音语气和正式程度的语域。';
 
   @override
-  String get recording_titleHint => '添加标题（选填）';
+  String get recording_titleHint => '录音标题';
 
   @override
   String get recording_descriptionHint => '添加简短描述（选填）';
 
   @override
   String get recording_descriptionEmpty => '添加描述';
+
+  @override
+  String get recording_titleEmpty => '添加标题';
+
+  @override
+  String get recording_titleRequired => '标题不能为空';
+
+  @override
+  String get recording_title => '标题';
+
+  @override
+  String get recording_description => '描述';
+
+  @override
+  String get recording_editDetails => '编辑详情';
+
+  @override
+  String get recording_saveChanges => '保存更改';
 
   @override
   String get recording_saveRecording => '保存录音';
@@ -494,6 +512,17 @@ class AppLocalizationsZh extends AppLocalizations {
   String recording_uploadFailed(String error) {
     return '上传失败:$error';
   }
+
+  @override
+  String get recording_serviceNotificationTitle => 'Recording in progress';
+
+  @override
+  String recording_serviceNotificationBody(String elapsed, String genre) {
+    return '$elapsed • $genre';
+  }
+
+  @override
+  String get recording_serviceNotificationStopAction => 'Stop';
 
   @override
   String get recording_notFound => '未找到录音';
@@ -616,8 +645,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recordings_noRecordingsSubtitle => '点击麦克风录制您的第一个故事，或导入音频文件。';
 
   @override
-  String get recordings_dropToImport =>
-      'Tip: drag audio files onto this window to import.';
+  String get recordings_dropToImport => '提示：将音频文件拖到此窗口以导入。';
 
   @override
   String recordings_count(int count) {
@@ -706,6 +734,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get trim_addSplitsFirst => '请先添加分割点';
 
   @override
+  String get trim_applyBoost => 'Apply boost';
+
+  @override
+  String get trim_boostApplied => 'Volume applied';
+
+  @override
   String trim_savedSegments(int kept, int removed) {
     return '已保存 $kept 个片段，移除了 $removed 个';
   }
@@ -734,6 +768,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get trim_classifySegment => '分类片段';
+
+  @override
+  String get trim_primaryEqualsSecondary => '主分类不能与录音的次分类相同。';
 
   @override
   String get trim_volume => '音量';
@@ -858,18 +895,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get import_compressWavHint => '~10x 更小，对 ML 流水线无质量损失';
 
   @override
-  String get import_dropHint => 'Drop audio files to import';
+  String get import_dropHint => '拖放音频文件以导入';
 
   @override
-  String get import_dropActive => 'Release to import';
+  String get import_dropActive => '释放以导入';
 
   @override
   String import_rejectedTooLarge(int count, String names) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Skipped $count files over 500 MB: $names',
-      one: 'Skipped 1 file over 500 MB: $names',
+      other: '已跳过 $count 个超过 500 MB 的文件：$names',
+      one: '已跳过 1 个超过 500 MB 的文件：$names',
     );
     return '$_temp0';
   }
@@ -879,10 +916,8 @@ class AppLocalizationsZh extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other:
-          'Skipped $count files with unsupported audio codecs: $names. Re-export as PCM WAV or M4A.',
-      one:
-          'Skipped 1 file with an unsupported audio codec: $names. Re-export as PCM WAV or M4A.',
+      other: '已跳过 $count 个使用不支持的音频编解码器的文件：$names。请重新导出为 PCM WAV 或 M4A。',
+      one: '已跳过 1 个使用不支持的音频编解码器的文件：$names。请重新导出为 PCM WAV 或 M4A。',
     );
     return '$_temp0';
   }
@@ -892,27 +927,26 @@ class AppLocalizationsZh extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Skipped $count unreadable files: $names',
-      one: 'Skipped 1 unreadable file: $names',
+      other: '已跳过 $count 个无法读取的文件：$names',
+      one: '已跳过 1 个无法读取的文件：$names',
     );
     return '$_temp0';
   }
 
   @override
-  String get import_resumePromptTitle => 'Resume interrupted upload';
+  String get import_resumePromptTitle => '继续中断的上传';
 
   @override
   String import_resumePromptBody(String name, String size) {
-    return '\"$name\" ($size) was partially uploaded. Select the same file to continue.';
+    return '“$name”（$size）已部分上传。选择相同文件以继续。';
   }
 
   @override
-  String get import_resumeSizeMismatch =>
-      'That file doesn\'t match the paused upload.';
+  String get import_resumeSizeMismatch => '该文件与暂停的上传不匹配。';
 
   @override
   String import_largeFileWarning(String size) {
-    return 'Large file ($size). Keep this tab open until the upload completes.';
+    return '大文件（$size）。请保持此标签页打开,直至上传完成。';
   }
 
   @override
@@ -1840,6 +1874,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recording_secondaryUpdated => '替代分类已更新';
 
   @override
+  String get recording_secondaryCollisionBanner =>
+      '此录音的主要和次要分类相同。清除次要分类或更改主要分类以进行同步。';
+
+  @override
+  String get recording_clearSecondary => '清除次要';
+
+  @override
   String get recording_unclassified => '未分类';
 
   @override
@@ -1920,10 +1961,64 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recording_recoverFailedLastSegment => '末尾附近的部分音频无法读取并已跳过。';
 
   @override
+  String get recording_blockNavTitle => 'Recording in progress';
+
+  @override
+  String get recording_blockNavMessage =>
+      'You have a recording in progress. Discarding will permanently delete it.';
+
+  @override
+  String get recording_blockNavDiscardAndLeave => 'Discard and leave';
+
+  @override
   String get recording_inProgressNotificationTitle => '正在录音';
 
   @override
   String get recording_inProgressNotificationBody => '点击返回应用';
+
+  @override
+  String get recording_finalizing => '正在完成录音…';
+
+  @override
+  String get recording_combiningSegments => '正在合并片段…';
+
+  @override
+  String get recording_compressingAudio => '正在压缩音频…';
+
+  @override
+  String get recording_finalizationDegradedHint => '音频质量可能会降低。';
+
+  @override
+  String get recording_finalizationFailed => '无法保存此录音';
+
+  @override
+  String get recording_finalizationFailedBody => '我们尝试恢复音频，但没有可用的片段。';
+
+  @override
+  String get recording_discardAndReturn => '放弃并返回';
+
+  @override
+  String get recording_savingRecording => 'Saving recording…';
+
+  @override
+  String get recording_processingYourAudio => 'Processing your audio';
+
+  @override
+  String get recording_dontCloseSaveNext =>
+      'Don\'t close — we\'ll open the save screen next.';
+
+  @override
+  String get recording_stageShortFinalizing => 'FINALIZING';
+
+  @override
+  String get recording_stageShortCombining => 'COMBINING';
+
+  @override
+  String get recording_stageShortCompressing => 'COMPRESSING';
+
+  @override
+  String get recording_savingPleaseWait =>
+      'Saving your recording — please wait a moment.';
 
   @override
   String get profile_defaultMicrophone => '默认麦克风';
@@ -2216,6 +2311,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get a11y_splitWaveform => '分割波形。点击添加分割标记。拖动重新定位。捏合缩放。长按移除。';
 
   @override
+  String get a11y_minimapScrubber =>
+      'Audio overview. Tap or drag to navigate to a position.';
+
+  @override
   String a11y_tabLabel(String label) {
     return '$label 选项卡';
   }
@@ -2269,6 +2368,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recording_uploadQueue => '上传队列';
 
   @override
+  String recording_uploadSpeed(String speed) {
+    return '$speed/秒';
+  }
+
+  @override
+  String recording_uploadEtaRemaining(String eta) {
+    return '剩余约 $eta';
+  }
+
+  @override
   String get recording_previewSelection => '预览选区';
 
   @override
@@ -2314,4 +2423,131 @@ class AppLocalizationsZh extends AppLocalizations {
   String trim_segmentOfTotal(int index, int total) {
     return '片段 $index，共 $total 个';
   }
+
+  @override
+  String get recovery_interruptedTitle => 'Interrupted recordings';
+
+  @override
+  String recovery_startedAt(String time) {
+    return 'Started at $time';
+  }
+
+  @override
+  String get recovery_resume => 'Resume';
+
+  @override
+  String get recovery_save => 'Save';
+
+  @override
+  String get recovery_discard => 'Discard';
+
+  @override
+  String get recovery_confirmDiscardTitle => 'Discard recording?';
+
+  @override
+  String recovery_confirmDiscardBody(String duration) {
+    return '$duration of audio will be permanently deleted.';
+  }
+
+  @override
+  String recovery_homeBanner(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count interrupted recordings — tap to resume',
+      one: '1 interrupted recording — tap to resume',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String recovery_unsavedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count unsaved recordings',
+      one: '1 unsaved recording',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String recovery_latestSummary(String duration, String time) {
+    return 'Latest · $duration · $time';
+  }
+
+  @override
+  String get recovery_review => 'Review';
+
+  @override
+  String get recovery_unsavedTitle => 'Unsaved recordings';
+
+  @override
+  String recovery_unsavedSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count recordings to review',
+      one: '1 recording to review',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recovery_discardAll => 'Discard all';
+
+  @override
+  String get recovery_discardAllTitle => 'Discard all recordings?';
+
+  @override
+  String recovery_discardAllBody(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count recordings will be permanently deleted.',
+      one: '1 recording will be permanently deleted.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recovery_newBadge => 'NEW';
+
+  @override
+  String get recovery_mostRecent => 'Most recent';
+
+  @override
+  String recovery_recordingNumbered(int number) {
+    return 'Recording $number';
+  }
+
+  @override
+  String get format_yesterday => 'Yesterday';
+
+  @override
+  String get recovery_backToList => 'Not now';
+
+  @override
+  String get upload_pausedWhileRecording => '录音时暂停上传';
+
+  @override
+  String get upload_inProgressNotificationTitle => '正在上传录音';
+
+  @override
+  String get upload_inProgressNotificationBody => '正在后台发送音频';
+
+  @override
+  String get upload_completeNotificationTitle => '上传完成';
+
+  @override
+  String get upload_failedNotificationTitle => '上传失败';
+
+  @override
+  String get liveActivity_recordingStatus => '录音中';
+
+  @override
+  String get liveActivity_recordingPausedStatus => '录音已暂停';
+
+  @override
+  String get liveActivity_uploadingStatus => '上传中';
 }

@@ -146,6 +146,17 @@ class _StorytellerPickerSheetState
     final isOnline = ref.watch(syncNotifierProvider).isOnline;
     final colors = AppColors.of(context);
 
+    ref.listen<bool>(syncNotifierProvider.select((s) => s.isOnline), (
+      prev,
+      next,
+    ) {
+      if (next && prev == false) {
+        ref
+            .read(projectStorytellersNotifierProvider.notifier)
+            .fetch(widget.projectId);
+      }
+    });
+
     final scoped = state.storytellers
         .where((s) => s.projectId == widget.projectId)
         .toList();
@@ -206,7 +217,7 @@ class _StorytellerPickerSheetState
                 controller: controller,
                 padding: EdgeInsets.zero,
                 children: [
-                  if (widget.showAddNew && isOnline)
+                  if (widget.showAddNew)
                     ListTile(
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 24,

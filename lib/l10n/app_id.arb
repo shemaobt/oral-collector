@@ -153,9 +153,15 @@
   "recording_noGenres": "Tidak ada genre tersedia",
   "recording_noSubcategories": "Tidak ada subkategori tersedia",
   "recording_registerDescription": "Pilih register bicara yang paling menggambarkan nada dan formalitas rekaman ini.",
-  "recording_titleHint": "Tambah judul (opsional)",
+  "recording_titleHint": "Judul rekaman",
   "recording_descriptionHint": "Tambah deskripsi singkat (opsional)",
   "recording_descriptionEmpty": "Tambah deskripsi",
+  "recording_titleEmpty": "Tambah judul",
+  "recording_titleRequired": "Judul tidak boleh kosong",
+  "recording_title": "Judul",
+  "recording_description": "Deskripsi",
+  "recording_editDetails": "Edit detail",
+  "recording_saveChanges": "Simpan perubahan",
   "recording_saveRecording": "Simpan Rekaman",
   "recording_recordAgain": "Rekam Ulang",
   "recording_discard": "Buang",
@@ -171,6 +177,19 @@
       }
     }
   },
+  "recording_serviceNotificationTitle": "Recording in progress",
+  "recording_serviceNotificationBody": "{elapsed} • {genre}",
+  "@recording_serviceNotificationBody": {
+    "placeholders": {
+      "elapsed": {
+        "type": "String"
+      },
+      "genre": {
+        "type": "String"
+      }
+    }
+  },
+  "recording_serviceNotificationStopAction": "Stop",
   "recording_notFound": "Rekaman tidak ditemukan",
   "recording_unknownGenre": "Genre tidak dikenal",
   "recording_splitRecording": "Edit Rekaman",
@@ -235,6 +254,8 @@
   "trim_splitting": "Membagi...",
   "trim_saveSegments": "{count, plural, =1{Simpan 1 segmen} other{Simpan {count} segmen}}",
   "trim_addSplitsFirst": "Tambahkan pembagian terlebih dahulu",
+  "trim_applyBoost": "Apply boost",
+  "trim_boostApplied": "Volume applied",
   "trim_savedSegments": "Tersimpan {kept} segmen, dihapus {removed}",
   "trim_splitInto": "Bagi menjadi {count} rekaman",
   "trim_saveConfirmTitle": "Simpan perubahan?",
@@ -243,6 +264,7 @@
   "trim_applyToAll": "Terapkan ke semua",
   "trim_copyFromPrevious": "Salin dari sebelumnya",
   "trim_classifySegment": "Klasifikasikan segmen",
+  "trim_primaryEqualsSecondary": "Klasifikasi primer tidak boleh sama dengan klasifikasi sekunder rekaman.",
   "trim_volume": "Volume",
   "trim_peakClip": "Klip",
   "trim_boostOnSave": "Penguat diterapkan saat menyimpan",
@@ -613,6 +635,8 @@
   "recording_removeSecondary": "Hapus klasifikasi alternatif",
   "recording_secondaryRemoved": "Klasifikasi alternatif dihapus",
   "recording_secondaryUpdated": "Klasifikasi alternatif diperbarui",
+  "recording_secondaryCollisionBanner": "Rekaman ini memiliki klasifikasi primer dan sekunder yang sama. Hapus yang sekunder atau ubah yang primer untuk sinkronisasi.",
+  "recording_clearSecondary": "Hapus sekunder",
   "recording_unclassified": "Belum diklasifikasi",
   "recording_inputSource": "Input",
   "recording_selectMicrophone": "Pilih mikrofon",
@@ -665,8 +689,25 @@
   "recording_recoverButton": "Pulihkan",
   "recording_recoverDiscard": "Buang",
   "recording_recoverFailedLastSegment": "Sebagian audio di dekat akhir tidak dapat dibaca dan dilewati.",
+  "recording_blockNavTitle": "Recording in progress",
+  "recording_blockNavMessage": "You have a recording in progress. Discarding will permanently delete it.",
+  "recording_blockNavDiscardAndLeave": "Discard and leave",
   "recording_inProgressNotificationTitle": "Perekaman berlangsung",
   "recording_inProgressNotificationBody": "Ketuk untuk kembali ke aplikasi",
+  "recording_finalizing": "Menyelesaikan rekaman…",
+  "recording_combiningSegments": "Menggabungkan segmen…",
+  "recording_compressingAudio": "Mengompresi audio…",
+  "recording_finalizationDegradedHint": "Kualitas audio mungkin berkurang.",
+  "recording_finalizationFailed": "Tidak dapat menyimpan rekaman ini",
+  "recording_finalizationFailedBody": "Kami mencoba memulihkan audio tetapi tidak ada segmen yang tersedia.",
+  "recording_discardAndReturn": "Buang dan kembali",
+  "recording_savingRecording": "Saving recording…",
+  "recording_processingYourAudio": "Processing your audio",
+  "recording_dontCloseSaveNext": "Don't close — we'll open the save screen next.",
+  "recording_stageShortFinalizing": "FINALIZING",
+  "recording_stageShortCombining": "COMBINING",
+  "recording_stageShortCompressing": "COMPRESSING",
+  "recording_savingPleaseWait": "Saving your recording — please wait a moment.",
   "profile_defaultMicrophone": "Mikrofon default",
   "profile_systemDefault": "Default sistem",
   "settings_deviceStorageTitle": "Penyimpanan perangkat",
@@ -813,6 +854,8 @@
   "recording_noAudioAvailable": "Tidak ada audio tersedia",
   "recording_noPendingUploads": "Tidak ada unggahan tertunda",
   "recording_uploadQueue": "Antrean unggah",
+  "recording_uploadSpeed": "{speed}/s",
+  "recording_uploadEtaRemaining": "~{eta} remaining",
   "recording_previewSelection": "Pratinjau pilihan",
   "recording_stopPreview": "Hentikan pratinjau",
   "recording_audioLoadFailed": "Gagal memuat audio",
@@ -825,5 +868,105 @@
   "recording_partOf": "Bagian {part} dari {total}",
   "recording_splitFrom": "Dipisahkan dari {sourceId}",
   "trim_segmentRemoved": "Segmen {index} — dihapus",
-  "trim_segmentOfTotal": "Segmen {index} dari {total}"
+  "trim_segmentOfTotal": "Segmen {index} dari {total}",
+  "recovery_interruptedTitle": "Interrupted recordings",
+  "recovery_startedAt": "Started at {time}",
+  "@recovery_startedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "recovery_resume": "Resume",
+  "recovery_save": "Save",
+  "recovery_discard": "Discard",
+  "recovery_confirmDiscardTitle": "Discard recording?",
+  "recovery_confirmDiscardBody": "{duration} of audio will be permanently deleted.",
+  "@recovery_confirmDiscardBody": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "recovery_homeBanner": "{count, plural, =1{1 interrupted recording — tap to resume} other{{count} interrupted recordings — tap to resume}}",
+  "@recovery_homeBanner": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recovery_unsavedCount": "{count, plural, =1{1 unsaved recording} other{{count} unsaved recordings}}",
+  "@recovery_unsavedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recovery_latestSummary": "Latest · {duration} · {time}",
+  "@recovery_latestSummary": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "recovery_review": "Review",
+  "recovery_unsavedTitle": "Unsaved recordings",
+  "recovery_unsavedSubtitle": "{count, plural, =1{1 recording to review} other{{count} recordings to review}}",
+  "@recovery_unsavedSubtitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recovery_discardAll": "Discard all",
+  "recovery_discardAllTitle": "Discard all recordings?",
+  "recovery_discardAllBody": "{count, plural, =1{1 recording will be permanently deleted.} other{{count} recordings will be permanently deleted.}}",
+  "@recovery_discardAllBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recovery_newBadge": "NEW",
+  "recovery_mostRecent": "Most recent",
+  "recovery_recordingNumbered": "Recording {number}",
+  "@recovery_recordingNumbered": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "format_yesterday": "Yesterday",
+  "recovery_backToList": "Not now",
+  "common_discard": "Buang",
+  "common_resume": "Lanjutkan",
+  "import_dropActive": "Lepaskan untuk mengimpor",
+  "import_dropHint": "Jatuhkan berkas audio untuk diimpor",
+  "import_largeFileWarning": "Berkas besar ({size}). Biarkan tab ini terbuka hingga unggahan selesai.",
+  "import_rejectedTooLarge": "{count, plural, =1{1 berkas di atas 500 MB dilewati: {names}} other{{count} berkas di atas 500 MB dilewati: {names}}}",
+  "import_rejectedUnreadable": "{count, plural, =1{1 berkas tak terbaca dilewati: {names}} other{{count} berkas tak terbaca dilewati: {names}}}",
+  "import_rejectedUnsupportedCodec": "{count, plural, =1{1 berkas dengan codec audio tak didukung dilewati: {names}. Ekspor ulang sebagai PCM WAV atau M4A.} other{{count} berkas dengan codec audio tak didukung dilewati: {names}. Ekspor ulang sebagai PCM WAV atau M4A.}}",
+  "import_resumePromptBody": "\"{name}\" ({size}) terunggah sebagian. Pilih berkas yang sama untuk melanjutkan.",
+  "import_resumePromptTitle": "Lanjutkan unggahan yang terhenti",
+  "import_resumeSizeMismatch": "Berkas itu tidak cocok dengan unggahan yang dijeda.",
+  "recordings_dropToImport": "Tip: seret berkas audio ke jendela ini untuk mengimpor.",
+  "upload_completeNotificationTitle": "Unggahan selesai",
+  "upload_failedNotificationTitle": "Unggahan gagal",
+  "upload_inProgressNotificationBody": "Mengirim audio di latar belakang",
+  "upload_inProgressNotificationTitle": "Mengunggah rekaman",
+  "upload_pausedWhileRecording": "Unggahan dijeda saat merekam",
+  "liveActivity_recordingStatus": "Merekam",
+  "liveActivity_recordingPausedStatus": "Rekaman dijeda",
+  "liveActivity_uploadingStatus": "Mengunggah"
 }

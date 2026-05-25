@@ -153,9 +153,15 @@
   "recording_noGenres": "لا توجد أنواع متاحة",
   "recording_noSubcategories": "لا توجد فئات فرعية متاحة",
   "recording_registerDescription": "اختر سجل الكلام الذي يصف أفضل نبرة وشكلية هذا التسجيل.",
-  "recording_titleHint": "أضف عنواناً (اختياري)",
+  "recording_titleHint": "عنوان التسجيل",
   "recording_descriptionHint": "أضف وصفاً قصيراً (اختياري)",
   "recording_descriptionEmpty": "أضف وصفاً",
+  "recording_titleEmpty": "أضف عنواناً",
+  "recording_titleRequired": "لا يمكن أن يكون العنوان فارغاً",
+  "recording_title": "العنوان",
+  "recording_description": "الوصف",
+  "recording_editDetails": "تعديل التفاصيل",
+  "recording_saveChanges": "حفظ التغييرات",
   "recording_saveRecording": "حفظ التسجيل",
   "recording_recordAgain": "إعادة التسجيل",
   "recording_discard": "تجاهل",
@@ -171,6 +177,19 @@
       }
     }
   },
+  "recording_serviceNotificationTitle": "Recording in progress",
+  "recording_serviceNotificationBody": "{elapsed} • {genre}",
+  "@recording_serviceNotificationBody": {
+    "placeholders": {
+      "elapsed": {
+        "type": "String"
+      },
+      "genre": {
+        "type": "String"
+      }
+    }
+  },
+  "recording_serviceNotificationStopAction": "Stop",
   "recording_notFound": "التسجيل غير موجود",
   "recording_unknownGenre": "نوع غير معروف",
   "recording_splitRecording": "تحرير التسجيل",
@@ -235,6 +254,8 @@
   "trim_splitting": "جارٍ التقسيم...",
   "trim_saveSegments": "{count, plural, =1{حفظ مقطع واحد} other{حفظ {count} مقاطع}}",
   "trim_addSplitsFirst": "أضف تقسيمات أولاً",
+  "trim_applyBoost": "Apply boost",
+  "trim_boostApplied": "Volume applied",
   "trim_savedSegments": "تم حفظ {kept} مقطع، وإزالة {removed}",
   "trim_splitInto": "تقسيم إلى {count} تسجيلات",
   "trim_saveConfirmTitle": "حفظ التغييرات؟",
@@ -243,6 +264,7 @@
   "trim_applyToAll": "تطبيق على الكل",
   "trim_copyFromPrevious": "نسخ من السابق",
   "trim_classifySegment": "تصنيف المقطع",
+  "trim_primaryEqualsSecondary": "لا يمكن أن يتطابق التصنيف الأساسي مع التصنيف الثانوي للتسجيل.",
   "trim_volume": "مستوى الصوت",
   "trim_peakClip": "تشبع",
   "trim_boostOnSave": "يُطبَّق التضخيم عند الحفظ",
@@ -613,6 +635,8 @@
   "recording_removeSecondary": "إزالة التصنيف البديل",
   "recording_secondaryRemoved": "تمت إزالة التصنيف البديل",
   "recording_secondaryUpdated": "تم تحديث التصنيف البديل",
+  "recording_secondaryCollisionBanner": "هذا التسجيل له نفس التصنيف الأساسي والثانوي. امسح الثانوي أو غيّر الأساسي للمزامنة.",
+  "recording_clearSecondary": "مسح الثانوي",
   "recording_unclassified": "غير مصنف",
   "recording_inputSource": "الإدخال",
   "recording_selectMicrophone": "اختر الميكروفون",
@@ -665,8 +689,25 @@
   "recording_recoverButton": "استعادة",
   "recording_recoverDiscard": "تجاهل",
   "recording_recoverFailedLastSegment": "تعذرت قراءة بعض الصوت قرب النهاية وتم تخطيه.",
+  "recording_blockNavTitle": "Recording in progress",
+  "recording_blockNavMessage": "You have a recording in progress. Discarding will permanently delete it.",
+  "recording_blockNavDiscardAndLeave": "Discard and leave",
   "recording_inProgressNotificationTitle": "جاري التسجيل",
   "recording_inProgressNotificationBody": "اضغط للعودة إلى التطبيق",
+  "recording_finalizing": "إنهاء التسجيل…",
+  "recording_combiningSegments": "دمج الأجزاء…",
+  "recording_compressingAudio": "ضغط الصوت…",
+  "recording_finalizationDegradedHint": "قد تكون جودة الصوت منخفضة.",
+  "recording_finalizationFailed": "تعذر حفظ هذا التسجيل",
+  "recording_finalizationFailedBody": "حاولنا استرداد الصوت لكن لم تكن هناك أجزاء متاحة.",
+  "recording_discardAndReturn": "تجاهل والعودة",
+  "recording_savingRecording": "Saving recording…",
+  "recording_processingYourAudio": "Processing your audio",
+  "recording_dontCloseSaveNext": "Don't close — we'll open the save screen next.",
+  "recording_stageShortFinalizing": "FINALIZING",
+  "recording_stageShortCombining": "COMBINING",
+  "recording_stageShortCompressing": "COMPRESSING",
+  "recording_savingPleaseWait": "Saving your recording — please wait a moment.",
   "profile_defaultMicrophone": "الميكروفون الافتراضي",
   "profile_systemDefault": "الافتراضي للنظام",
   "settings_deviceStorageTitle": "مساحة تخزين الجهاز",
@@ -825,5 +866,107 @@
   "recording_partOf": "الجزء {part} من {total}",
   "recording_splitFrom": "مقسم من {sourceId}",
   "trim_segmentRemoved": "المقطع {index} — تمت إزالته",
-  "trim_segmentOfTotal": "المقطع {index} من {total}"
+  "trim_segmentOfTotal": "المقطع {index} من {total}",
+  "recovery_interruptedTitle": "Interrupted recordings",
+  "recovery_startedAt": "Started at {time}",
+  "@recovery_startedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "recovery_resume": "Resume",
+  "recovery_save": "Save",
+  "recovery_discard": "Discard",
+  "recovery_confirmDiscardTitle": "Discard recording?",
+  "recovery_confirmDiscardBody": "{duration} of audio will be permanently deleted.",
+  "@recovery_confirmDiscardBody": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "recovery_homeBanner": "{count, plural, =1{1 interrupted recording — tap to resume} other{{count} interrupted recordings — tap to resume}}",
+  "@recovery_homeBanner": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recovery_unsavedCount": "{count, plural, =1{1 unsaved recording} other{{count} unsaved recordings}}",
+  "@recovery_unsavedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recovery_latestSummary": "Latest · {duration} · {time}",
+  "@recovery_latestSummary": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "recovery_review": "Review",
+  "recovery_unsavedTitle": "Unsaved recordings",
+  "recovery_unsavedSubtitle": "{count, plural, =1{1 recording to review} other{{count} recordings to review}}",
+  "@recovery_unsavedSubtitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recovery_discardAll": "Discard all",
+  "recovery_discardAllTitle": "Discard all recordings?",
+  "recovery_discardAllBody": "{count, plural, =1{1 recording will be permanently deleted.} other{{count} recordings will be permanently deleted.}}",
+  "@recovery_discardAllBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recovery_newBadge": "NEW",
+  "recovery_mostRecent": "Most recent",
+  "recovery_recordingNumbered": "Recording {number}",
+  "@recovery_recordingNumbered": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "format_yesterday": "Yesterday",
+  "recovery_backToList": "Not now",
+  "common_discard": "تجاهل",
+  "common_resume": "استئناف",
+  "import_dropActive": "حرر للاستيراد",
+  "import_dropHint": "أسقط ملفات الصوت للاستيراد",
+  "import_largeFileWarning": "ملف كبير ({size}). أبقِ هذه التبويبة مفتوحة حتى ينتهي الرفع.",
+  "import_rejectedTooLarge": "{count, plural, =1{تم تخطي ملف واحد يتجاوز 500 ميغابايت: {names}} other{تم تخطي {count} ملفات تتجاوز 500 ميغابايت: {names}}}",
+  "import_rejectedUnreadable": "{count, plural, =1{تم تخطي ملف واحد غير قابل للقراءة: {names}} other{تم تخطي {count} ملفات غير قابلة للقراءة: {names}}}",
+  "import_rejectedUnsupportedCodec": "{count, plural, =1{تم تخطي ملف واحد بترميز صوتي غير مدعوم: {names}. أعد تصديره بصيغة PCM WAV أو M4A.} other{تم تخطي {count} ملفات بترميزات صوتية غير مدعومة: {names}. أعد تصديرها بصيغة PCM WAV أو M4A.}}",
+  "import_resumePromptBody": "تم رفع \"{name}\" ({size}) جزئيًا. اختر الملف نفسه للمتابعة.",
+  "import_resumePromptTitle": "استئناف الرفع المتوقف",
+  "import_resumeSizeMismatch": "هذا الملف لا يطابق الرفع المتوقف.",
+  "recordings_dropToImport": "تلميح: اسحب ملفات الصوت إلى هذه النافذة لاستيرادها.",
+  "recording_uploadEtaRemaining": "متبقي ~{eta}",
+  "recording_uploadSpeed": "{speed}/ث",
+  "upload_completeNotificationTitle": "اكتمل الرفع",
+  "upload_failedNotificationTitle": "فشل الرفع",
+  "upload_inProgressNotificationBody": "جاري إرسال الصوت في الخلفية",
+  "upload_inProgressNotificationTitle": "جاري رفع التسجيل",
+  "upload_pausedWhileRecording": "تم إيقاف الرفع مؤقتًا أثناء التسجيل",
+  "liveActivity_recordingStatus": "تسجيل",
+  "liveActivity_recordingPausedStatus": "إيقاف التسجيل مؤقتًا",
+  "liveActivity_uploadingStatus": "جاري الرفع"
 }

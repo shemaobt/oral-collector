@@ -36,10 +36,10 @@ class AppLocalizationsSw extends AppLocalizations {
   String get common_cancel => 'Ghairi';
 
   @override
-  String get common_resume => 'Resume';
+  String get common_resume => 'Endelea';
 
   @override
-  String get common_discard => 'Discard';
+  String get common_discard => 'Tupa';
 
   @override
   String get common_save => 'Hifadhi';
@@ -472,13 +472,31 @@ class AppLocalizationsSw extends AppLocalizations {
       'Chagua rejista ya usemi inayoelezea vizuri toni na utaratibu wa rekodi hii.';
 
   @override
-  String get recording_titleHint => 'Ongeza kichwa (si lazima)';
+  String get recording_titleHint => 'Kichwa cha rekodi';
 
   @override
   String get recording_descriptionHint => 'Ongeza maelezo mafupi (si lazima)';
 
   @override
   String get recording_descriptionEmpty => 'Ongeza maelezo';
+
+  @override
+  String get recording_titleEmpty => 'Ongeza kichwa';
+
+  @override
+  String get recording_titleRequired => 'Kichwa hakiwezi kuwa tupu';
+
+  @override
+  String get recording_title => 'Kichwa';
+
+  @override
+  String get recording_description => 'Maelezo';
+
+  @override
+  String get recording_editDetails => 'Hariri maelezo';
+
+  @override
+  String get recording_saveChanges => 'Hifadhi mabadiliko';
 
   @override
   String get recording_saveRecording => 'Hifadhi Rekodi';
@@ -505,6 +523,17 @@ class AppLocalizationsSw extends AppLocalizations {
   String recording_uploadFailed(String error) {
     return 'Kupakia kumeshindikana: $error';
   }
+
+  @override
+  String get recording_serviceNotificationTitle => 'Recording in progress';
+
+  @override
+  String recording_serviceNotificationBody(String elapsed, String genre) {
+    return '$elapsed • $genre';
+  }
+
+  @override
+  String get recording_serviceNotificationStopAction => 'Stop';
 
   @override
   String get recording_notFound => 'Rekodi haikupatikana';
@@ -639,7 +668,7 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get recordings_dropToImport =>
-      'Tip: drag audio files onto this window to import.';
+      'Kidokezo: buruta faili za sauti kwenye dirisha hili ili kuingiza.';
 
   @override
   String recordings_count(int count) {
@@ -731,6 +760,12 @@ class AppLocalizationsSw extends AppLocalizations {
   String get trim_addSplitsFirst => 'Ongeza migawanyo kwanza';
 
   @override
+  String get trim_applyBoost => 'Apply boost';
+
+  @override
+  String get trim_boostApplied => 'Volume applied';
+
+  @override
   String trim_savedSegments(int kept, int removed) {
     return 'Imehifadhi sehemu $kept, imeondoa $removed';
   }
@@ -759,6 +794,10 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get trim_classifySegment => 'Ainisha sehemu';
+
+  @override
+  String get trim_primaryEqualsSecondary =>
+      'Uainishaji msingi hauwezi kufanana na uainishaji wa pili wa rekodi.';
 
   @override
   String get trim_volume => 'Sauti';
@@ -884,18 +923,18 @@ class AppLocalizationsSw extends AppLocalizations {
       '~10x ndogo, bila kupoteza ubora kwa mfereji wa ML';
 
   @override
-  String get import_dropHint => 'Drop audio files to import';
+  String get import_dropHint => 'Dondosha faili za sauti ili kuingiza';
 
   @override
-  String get import_dropActive => 'Release to import';
+  String get import_dropActive => 'Achia ili kuingiza';
 
   @override
   String import_rejectedTooLarge(int count, String names) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Skipped $count files over 500 MB: $names',
-      one: 'Skipped 1 file over 500 MB: $names',
+      other: 'Imeruka faili $count zenye zaidi ya MB 500: $names',
+      one: 'Imeruka faili 1 yenye zaidi ya MB 500: $names',
     );
     return '$_temp0';
   }
@@ -906,9 +945,9 @@ class AppLocalizationsSw extends AppLocalizations {
       count,
       locale: localeName,
       other:
-          'Skipped $count files with unsupported audio codecs: $names. Re-export as PCM WAV or M4A.',
+          'Imeruka faili $count zenye kodeki za sauti zisizotegemewa: $names. Hamisha tena kama PCM WAV au M4A.',
       one:
-          'Skipped 1 file with an unsupported audio codec: $names. Re-export as PCM WAV or M4A.',
+          'Imeruka faili 1 yenye kodeki ya sauti isiyotegemewa: $names. Hamisha tena kama PCM WAV au M4A.',
     );
     return '$_temp0';
   }
@@ -918,27 +957,27 @@ class AppLocalizationsSw extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Skipped $count unreadable files: $names',
-      one: 'Skipped 1 unreadable file: $names',
+      other: 'Imeruka faili $count zisizoweza kusomeka: $names',
+      one: 'Imeruka faili 1 isiyoweza kusomeka: $names',
     );
     return '$_temp0';
   }
 
   @override
-  String get import_resumePromptTitle => 'Resume interrupted upload';
+  String get import_resumePromptTitle => 'Endelea upakiaji uliokatizwa';
 
   @override
   String import_resumePromptBody(String name, String size) {
-    return '\"$name\" ($size) was partially uploaded. Select the same file to continue.';
+    return '\"$name\" ($size) ilipakiwa kwa sehemu. Chagua faili ileile ili kuendelea.';
   }
 
   @override
   String get import_resumeSizeMismatch =>
-      'That file doesn\'t match the paused upload.';
+      'Faili hiyo hailingani na upakiaji uliosimamishwa.';
 
   @override
   String import_largeFileWarning(String size) {
-    return 'Large file ($size). Keep this tab open until the upload completes.';
+    return 'Faili kubwa ($size). Acha kichupo hiki kifunguliwe hadi upakiaji ukamilike.';
   }
 
   @override
@@ -1897,6 +1936,13 @@ class AppLocalizationsSw extends AppLocalizations {
   String get recording_secondaryUpdated => 'Ainisho mbadala imesasishwa';
 
   @override
+  String get recording_secondaryCollisionBanner =>
+      'Rekodi hii ina uainishaji msingi na wa pili sawa. Futa wa pili au badilisha msingi ili kusawazisha.';
+
+  @override
+  String get recording_clearSecondary => 'Futa wa pili';
+
+  @override
   String get recording_unclassified => 'Haijainishwa';
 
   @override
@@ -1983,11 +2029,67 @@ class AppLocalizationsSw extends AppLocalizations {
       'Sauti fulani karibu na mwisho haikuweza kusomwa na ikarukwa.';
 
   @override
+  String get recording_blockNavTitle => 'Recording in progress';
+
+  @override
+  String get recording_blockNavMessage =>
+      'You have a recording in progress. Discarding will permanently delete it.';
+
+  @override
+  String get recording_blockNavDiscardAndLeave => 'Discard and leave';
+
+  @override
   String get recording_inProgressNotificationTitle => 'Inarekodi';
 
   @override
   String get recording_inProgressNotificationBody =>
       'Bofya kurudi kwenye programu';
+
+  @override
+  String get recording_finalizing => 'Inakamilisha kurekodi…';
+
+  @override
+  String get recording_combiningSegments => 'Inaunganisha sehemu…';
+
+  @override
+  String get recording_compressingAudio => 'Inabana sauti…';
+
+  @override
+  String get recording_finalizationDegradedHint =>
+      'Ubora wa sauti unaweza kupungua.';
+
+  @override
+  String get recording_finalizationFailed => 'Haikuweza kuhifadhi rekodi hii';
+
+  @override
+  String get recording_finalizationFailedBody =>
+      'Tulijaribu kurejesha sauti lakini hakuna sehemu zilizopatikana.';
+
+  @override
+  String get recording_discardAndReturn => 'Tupa na urudi';
+
+  @override
+  String get recording_savingRecording => 'Saving recording…';
+
+  @override
+  String get recording_processingYourAudio => 'Processing your audio';
+
+  @override
+  String get recording_dontCloseSaveNext =>
+      'Don\'t close — we\'ll open the save screen next.';
+
+  @override
+  String get recording_stageShortFinalizing => 'FINALIZING';
+
+  @override
+  String get recording_stageShortCombining => 'COMBINING';
+
+  @override
+  String get recording_stageShortCompressing => 'COMPRESSING';
+
+  @override
+  String get recording_savingPleaseWait =>
+      'Saving your recording — please wait a moment.';
 
   @override
   String get profile_defaultMicrophone => 'Maikrofoni chaguomsingi';
@@ -2300,6 +2402,10 @@ class AppLocalizationsSw extends AppLocalizations {
       'Umbo la mawimbi ya kugawanya. Gusa kuweka alama. Buruta kuhamisha. Bana kuzomu. Bonyeza kwa muda ili kuondoa.';
 
   @override
+  String get a11y_minimapScrubber =>
+      'Audio overview. Tap or drag to navigate to a position.';
+
+  @override
   String a11y_tabLabel(String label) {
     return 'Kichupo cha $label';
   }
@@ -2356,6 +2462,16 @@ class AppLocalizationsSw extends AppLocalizations {
   String get recording_uploadQueue => 'Foleni ya kupakia';
 
   @override
+  String recording_uploadSpeed(String speed) {
+    return '$speed/s';
+  }
+
+  @override
+  String recording_uploadEtaRemaining(String eta) {
+    return '~$eta remaining';
+  }
+
+  @override
   String get recording_previewSelection => 'Hakiki uteuzi';
 
   @override
@@ -2403,4 +2519,132 @@ class AppLocalizationsSw extends AppLocalizations {
   String trim_segmentOfTotal(int index, int total) {
     return 'Sehemu $index kati ya $total';
   }
+
+  @override
+  String get recovery_interruptedTitle => 'Interrupted recordings';
+
+  @override
+  String recovery_startedAt(String time) {
+    return 'Started at $time';
+  }
+
+  @override
+  String get recovery_resume => 'Resume';
+
+  @override
+  String get recovery_save => 'Save';
+
+  @override
+  String get recovery_discard => 'Discard';
+
+  @override
+  String get recovery_confirmDiscardTitle => 'Discard recording?';
+
+  @override
+  String recovery_confirmDiscardBody(String duration) {
+    return '$duration of audio will be permanently deleted.';
+  }
+
+  @override
+  String recovery_homeBanner(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count interrupted recordings — tap to resume',
+      one: '1 interrupted recording — tap to resume',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String recovery_unsavedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count unsaved recordings',
+      one: '1 unsaved recording',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String recovery_latestSummary(String duration, String time) {
+    return 'Latest · $duration · $time';
+  }
+
+  @override
+  String get recovery_review => 'Review';
+
+  @override
+  String get recovery_unsavedTitle => 'Unsaved recordings';
+
+  @override
+  String recovery_unsavedSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count recordings to review',
+      one: '1 recording to review',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recovery_discardAll => 'Discard all';
+
+  @override
+  String get recovery_discardAllTitle => 'Discard all recordings?';
+
+  @override
+  String recovery_discardAllBody(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count recordings will be permanently deleted.',
+      one: '1 recording will be permanently deleted.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recovery_newBadge => 'NEW';
+
+  @override
+  String get recovery_mostRecent => 'Most recent';
+
+  @override
+  String recovery_recordingNumbered(int number) {
+    return 'Recording $number';
+  }
+
+  @override
+  String get format_yesterday => 'Yesterday';
+
+  @override
+  String get recovery_backToList => 'Not now';
+
+  @override
+  String get upload_pausedWhileRecording =>
+      'Upakiaji umesitishwa wakati wa kurekodi';
+
+  @override
+  String get upload_inProgressNotificationTitle => 'Inapakia rekodi';
+
+  @override
+  String get upload_inProgressNotificationBody => 'Inatuma sauti chinichini';
+
+  @override
+  String get upload_completeNotificationTitle => 'Upakiaji umekamilika';
+
+  @override
+  String get upload_failedNotificationTitle => 'Upakiaji umeshindwa';
+
+  @override
+  String get liveActivity_recordingStatus => 'Inarekodi';
+
+  @override
+  String get liveActivity_recordingPausedStatus => 'Rekodi imesimama';
+
+  @override
+  String get liveActivity_uploadingStatus => 'Inapakia';
 }
