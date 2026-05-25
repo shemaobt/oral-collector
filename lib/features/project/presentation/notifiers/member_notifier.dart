@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../sync/presentation/notifiers/sync_notifier.dart';
 import '../../data/providers.dart';
 import '../../domain/repositories/project_repository.dart';
 import 'member_state.dart';
@@ -15,6 +16,10 @@ class MemberNotifier extends Notifier<MemberState> {
   MemberState build() => const MemberState();
 
   Future<void> fetchMembers(String projectId) async {
+    if (!ref.read(syncNotifierProvider).isOnline) {
+      state = state.copyWith(isLoading: false, clearError: true);
+      return;
+    }
     state = state.copyWith(isLoading: true, clearError: true);
 
     try {

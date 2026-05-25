@@ -86,6 +86,17 @@ class _StorytellersListScreenState
     final state = ref.watch(projectStorytellersNotifierProvider);
     final isOnline = ref.watch(syncNotifierProvider).isOnline;
 
+    ref.listen<bool>(syncNotifierProvider.select((s) => s.isOnline), (
+      prev,
+      next,
+    ) {
+      if (next && prev == false) {
+        ref
+            .read(projectStorytellersNotifierProvider.notifier)
+            .fetch(widget.projectId);
+      }
+    });
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
