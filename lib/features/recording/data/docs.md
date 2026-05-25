@@ -84,6 +84,17 @@ Path: @/lib/features/recording/data
   deletes parent locally + remotely, triggers upload queue). It is the
   one place that wires the "split is saved → children start uploading"
   causation, so the trim editor never has to think about sync.
+- `RecordingForegroundService` (in `services/`) keeps the Android process
+  alive while recording. It does not own the foreground service outright:
+  recording and upload share the single foreground service the
+  `flutter_foreground_task` plugin exposes, arbitrated by
+  [/lib/core/platform/foreground_service_arbiter.dart](../../../core/platform/foreground_service_arbiter.dart)
+  (recording is owner `recording`, upload is owner `upload`). `start` is a
+  `takeOver` — it stops an active upload's service and switches the
+  notification to recording; `stop` is an owner-aware `release` that no-ops
+  if upload has since taken over. It re-runs `FlutterForegroundTask.init`
+  before each start because the recording (`recording_foreground`) and
+  upload (`upload_foreground`) notification channels differ.
 
 ### Things to Know
 

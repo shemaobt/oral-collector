@@ -170,9 +170,22 @@ class SyncNotifier extends Notifier<SyncState> {
     await _refreshPendingCount();
   }
 
+  bool _isProcessing = false;
+
   Future<void> processQueue() async {
     if (!state.isOnline) return;
+    // Reentrancy guard: a second concurrent call would otherwise stop the
+    // foreground service in its finally while the first is still uploading.
+    if (_isProcessing) return;
+    _isProcessing = true;
+    try {
+      await _runQueue();
+    } finally {
+      _isProcessing = false;
+    }
+  }
 
+  Future<void> _runQueue() async {
     await _refreshPendingCount();
     if (state.pendingCount == 0) return;
 

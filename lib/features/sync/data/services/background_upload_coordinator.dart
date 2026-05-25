@@ -45,9 +45,8 @@ class BackgroundUploadCoordinator {
     } on Object catch (e) {
       debugPrint('BackgroundUploadCoordinator: cancelAll failed: $e');
     }
-    // Stop the upload foreground service before recording starts its own — the
-    // plugin allows only one foreground service at a time. stop() is a no-op
-    // when not running (and off Android).
+    // Owner-aware via ForegroundServiceArbiter; safe in any order with
+    // recording taking over. No-op off Android / when idle.
     try {
       await _uploadForegroundService.stop();
     } on Object catch (e) {

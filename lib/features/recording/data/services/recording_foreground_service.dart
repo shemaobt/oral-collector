@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 
 import '../../../../core/config/recording_config.dart';
+import '../../../../core/platform/foreground_service_arbiter.dart';
 import 'recording_foreground_task.dart';
 
 class RecordingForegroundServiceContent {
@@ -21,64 +22,68 @@ class RecordingForegroundServiceContent {
 class RecordingForegroundService {
   RecordingForegroundService();
 
-  bool _initialized = false;
-  bool _running = false;
   void Function()? _onStopRequested;
 
-  bool get isRunning => _running;
+  bool get isRunning =>
+      ForegroundServiceArbiter.isOwner(ForegroundServiceOwner.recording);
 
   Future<bool> start({
     required RecordingForegroundServiceContent content,
     required void Function() onStopRequested,
   }) async {
     if (kIsWeb || !Platform.isAndroid) return false;
-    if (!_initialized) {
-      try {
-        FlutterForegroundTask.init(
-          androidNotificationOptions: AndroidNotificationOptions(
-            channelId: 'recording_foreground',
-            channelName: content.title,
-            channelDescription: content.title,
-            channelImportance: NotificationChannelImportance.LOW,
-            priority: NotificationPriority.LOW,
-            onlyAlertOnce: true,
-          ),
-          iosNotificationOptions: const IOSNotificationOptions(),
-          foregroundTaskOptions: ForegroundTaskOptions(
-            eventAction: ForegroundTaskEventAction.nothing(),
-            autoRunOnBoot: false,
-            autoRunOnMyPackageReplaced: false,
-            allowWakeLock: true,
-            allowWifiLock: false,
-          ),
-        );
-        _initialized = true;
-      } on Exception catch (e) {
-        debugPrint('RecordingForegroundService: init failed: $e');
-        return false;
-      }
+    try {
+      FlutterForegroundTask.init(
+        androidNotificationOptions: AndroidNotificationOptions(
+          channelId: 'recording_foreground',
+          channelName: content.title,
+          channelDescription: content.title,
+          channelImportance: NotificationChannelImportance.LOW,
+          priority: NotificationPriority.LOW,
+          onlyAlertOnce: true,
+        ),
+        iosNotificationOptions: const IOSNotificationOptions(),
+        foregroundTaskOptions: ForegroundTaskOptions(
+          eventAction: ForegroundTaskEventAction.nothing(),
+          autoRunOnBoot: false,
+          autoRunOnMyPackageReplaced: false,
+          allowWakeLock: true,
+          allowWifiLock: false,
+        ),
+      );
+    } on Exception catch (e) {
+      debugPrint('RecordingForegroundService: init failed: $e');
+      return false;
     }
 
     _onStopRequested = onStopRequested;
     FlutterForegroundTask.addTaskDataCallback(_onForegroundData);
     try {
-      await FlutterForegroundTask.startService(
-        serviceId: recordingServiceId,
-        serviceTypes: const [ForegroundServiceTypes.microphone],
-        notificationTitle: content.title,
-        notificationText: content.body,
-        notificationIcon: const NotificationIcon(
-          metaDataName: RecordingConfig.notificationIconMetadata,
-        ),
-        notificationButtons: [
-          NotificationButton(
-            id: recordingStopButtonId,
-            text: content.stopActionLabel,
-          ),
-        ],
-        callback: startRecordingTaskCallback,
+      await ForegroundServiceArbiter.takeOver(
+        owner: ForegroundServiceOwner.recording,
+        isRunning: () => FlutterForegroundTask.isRunningService,
+        stop: () async {
+          await FlutterForegroundTask.stopService();
+        },
+        start: () async {
+          await FlutterForegroundTask.startService(
+            serviceId: recordingServiceId,
+            serviceTypes: const [ForegroundServiceTypes.microphone],
+            notificationTitle: content.title,
+            notificationText: content.body,
+            notificationIcon: const NotificationIcon(
+              metaDataName: RecordingConfig.notificationIconMetadata,
+            ),
+            notificationButtons: [
+              NotificationButton(
+                id: recordingStopButtonId,
+                text: content.stopActionLabel,
+              ),
+            ],
+            callback: startRecordingTaskCallback,
+          );
+        },
       );
-      _running = true;
       return true;
     } on Exception catch (e) {
       debugPrint('RecordingForegroundService: startService failed: $e');
@@ -87,7 +92,10 @@ class RecordingForegroundService {
   }
 
   Future<void> update({required String title, required String body}) async {
-    if (kIsWeb || !Platform.isAndroid || !_running) return;
+    if (kIsWeb || !Platform.isAndroid) return;
+    if (!ForegroundServiceArbiter.isOwner(ForegroundServiceOwner.recording)) {
+      return;
+    }
     try {
       await FlutterForegroundTask.updateService(
         notificationTitle: title,
@@ -102,13 +110,17 @@ class RecordingForegroundService {
     if (kIsWeb || !Platform.isAndroid) return;
     FlutterForegroundTask.removeTaskDataCallback(_onForegroundData);
     _onStopRequested = null;
-    if (!_running) return;
     try {
-      await FlutterForegroundTask.stopService();
+      await ForegroundServiceArbiter.release(
+        owner: ForegroundServiceOwner.recording,
+        isRunning: () => FlutterForegroundTask.isRunningService,
+        stop: () async {
+          await FlutterForegroundTask.stopService();
+        },
+      );
     } on Exception catch (e) {
       debugPrint('RecordingForegroundService: stopService failed: $e');
     }
-    _running = false;
   }
 
   void _onForegroundData(Object data) {
