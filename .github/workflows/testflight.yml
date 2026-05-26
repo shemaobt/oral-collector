@@ -2,7 +2,7 @@ name: TestFlight
 
 on:
   push:
-    branches: [main, ci/testflight-api-key-diagnostic]
+    branches: [main]
   workflow_dispatch:
 
 jobs:
