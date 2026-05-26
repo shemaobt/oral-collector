@@ -79,6 +79,10 @@ jobs:
           echo "== live App Store Connect auth from CI (same ES256 JWT xcodebuild builds) =="
           python3 -m pip install --quiet pyjwt cryptography --break-system-packages 2>/dev/null || python3 -m pip install --quiet pyjwt cryptography 2>/dev/null || true
           python3 .github/scripts/asc_auth_check.py || echo "(auth check script could not run)"
+          echo "== xcodebuild auth probe A: WITH -authenticationKeyPath (same flags as the failing archive) =="
+          xcodebuild -downloadAllProvisioningProfiles -authenticationKeyPath "$API_KEY_PATH" -authenticationKeyID "$APPSTORE_API_KEY_ID" -authenticationKeyIssuerID "$APPSTORE_ISSUER_ID" 2>&1 | tail -20 || true
+          echo "== xcodebuild auth probe B: WITHOUT -authenticationKeyPath (auto-discover key from ~/.appstoreconnect) =="
+          xcodebuild -downloadAllProvisioningProfiles -authenticationKeyID "$APPSTORE_API_KEY_ID" -authenticationKeyIssuerID "$APPSTORE_ISSUER_ID" 2>&1 | tail -20 || true
           echo "== diagnostic complete; stopping before the ~5-min archive =="
           exit 1
 
