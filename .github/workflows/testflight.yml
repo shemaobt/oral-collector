@@ -2,7 +2,8 @@ name: TestFlight
 
 on:
   push:
-    branches: [main]
+    branches: [main, ci/testflight-api-key-diagnostic]
+  workflow_dispatch:
 
 jobs:
   build-and-upload:
@@ -58,6 +59,28 @@ jobs:
           KEY_PATH="$HOME/.appstoreconnect/private_keys/AuthKey_${APPSTORE_API_KEY_ID}.p8"
           echo "$APPSTORE_API_PRIVATE_KEY" > "$KEY_PATH"
           echo "API_KEY_PATH=$KEY_PATH" >> "$GITHUB_ENV"
+
+      - name: Diagnose API key auth in CI (no secret values printed)
+        env:
+          APPSTORE_API_KEY_ID: ${{ secrets.APPSTORE_API_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+        run: |
+          echo "== reconstructed .p8 in CI =="
+          openssl pkey -in "$API_KEY_PATH" -noout 2>/dev/null && echo "parses: OK" || echo "parses: FAIL (reconstruction broke the key)"
+          FP=$(openssl pkey -in "$API_KEY_PATH" -pubout 2>/dev/null | openssl dgst -sha256 | awk '{print $NF}')
+          echo "CI  pubkey sha256: $FP"
+          echo "exp pubkey sha256: 54183ea0f952df7d7a362e28adbd5257e6f13b52c12d583c6007def4c8c791d7"
+          if [ "$FP" = "54183ea0f952df7d7a362e28adbd5257e6f13b52c12d583c6007def4c8c791d7" ]; then
+            echo "-> KEY MATCHES local (reconstruction is perfect; the .p8 is not the problem)"
+          else
+            echo "-> KEY DIFFERS (the secret is being mangled on reconstruction)"
+          fi
+          echo "Key ID length: ${#APPSTORE_API_KEY_ID} (expect 10); Issuer length: ${#APPSTORE_ISSUER_ID} (expect 36)"
+          echo "== live App Store Connect auth from CI (same ES256 JWT xcodebuild builds) =="
+          python3 -m pip install --quiet pyjwt cryptography --break-system-packages 2>/dev/null || python3 -m pip install --quiet pyjwt cryptography 2>/dev/null || true
+          python3 .github/scripts/asc_auth_check.py || echo "(auth check script could not run)"
+          echo "== diagnostic complete; stopping before the ~5-min archive =="
+          exit 1
 
       - name: Resolve version
         run: |
