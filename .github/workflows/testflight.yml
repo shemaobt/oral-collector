@@ -8,6 +8,9 @@ on:
 jobs:
   build-and-upload:
     runs-on: macos-26
+    env:
+      FASTLANE_SKIP_UPDATE_CHECK: "1"
+      FASTLANE_HIDE_CHANGELOG: "1"
     steps:
       - uses: actions/checkout@v4
 
@@ -53,38 +56,16 @@ jobs:
       - name: Set up App Store Connect API key
         env:
           APPSTORE_API_KEY_ID: ${{ secrets.APPSTORE_API_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
           APPSTORE_API_PRIVATE_KEY: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
         run: |
           mkdir -p "$HOME/.appstoreconnect/private_keys"
           KEY_PATH="$HOME/.appstoreconnect/private_keys/AuthKey_${APPSTORE_API_KEY_ID}.p8"
           echo "$APPSTORE_API_PRIVATE_KEY" > "$KEY_PATH"
           echo "API_KEY_PATH=$KEY_PATH" >> "$GITHUB_ENV"
-
-      - name: Diagnose API key auth in CI (no secret values printed)
-        env:
-          APPSTORE_API_KEY_ID: ${{ secrets.APPSTORE_API_KEY_ID }}
-          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
-        run: |
-          echo "== reconstructed .p8 in CI =="
-          openssl pkey -in "$API_KEY_PATH" -noout 2>/dev/null && echo "parses: OK" || echo "parses: FAIL (reconstruction broke the key)"
-          FP=$(openssl pkey -in "$API_KEY_PATH" -pubout 2>/dev/null | openssl dgst -sha256 | awk '{print $NF}')
-          echo "CI  pubkey sha256: $FP"
-          echo "exp pubkey sha256: 54183ea0f952df7d7a362e28adbd5257e6f13b52c12d583c6007def4c8c791d7"
-          if [ "$FP" = "54183ea0f952df7d7a362e28adbd5257e6f13b52c12d583c6007def4c8c791d7" ]; then
-            echo "-> KEY MATCHES local (reconstruction is perfect; the .p8 is not the problem)"
-          else
-            echo "-> KEY DIFFERS (the secret is being mangled on reconstruction)"
-          fi
-          echo "Key ID length: ${#APPSTORE_API_KEY_ID} (expect 10); Issuer length: ${#APPSTORE_ISSUER_ID} (expect 36)"
-          echo "== live App Store Connect auth from CI (same ES256 JWT xcodebuild builds) =="
-          python3 -m pip install --quiet pyjwt cryptography --break-system-packages 2>/dev/null || python3 -m pip install --quiet pyjwt cryptography 2>/dev/null || true
-          python3 .github/scripts/asc_auth_check.py || echo "(auth check script could not run)"
-          echo "== xcodebuild auth probe A: WITH -authenticationKeyPath (same flags as the failing archive) =="
-          xcodebuild -downloadAllProvisioningProfiles -authenticationKeyPath "$API_KEY_PATH" -authenticationKeyID "$APPSTORE_API_KEY_ID" -authenticationKeyIssuerID "$APPSTORE_ISSUER_ID" 2>&1 | tail -20 || true
-          echo "== xcodebuild auth probe B: WITHOUT -authenticationKeyPath (auto-discover key from ~/.appstoreconnect) =="
-          xcodebuild -downloadAllProvisioningProfiles -authenticationKeyID "$APPSTORE_API_KEY_ID" -authenticationKeyIssuerID "$APPSTORE_ISSUER_ID" 2>&1 | tail -20 || true
-          echo "== diagnostic complete; stopping before the ~5-min archive =="
-          exit 1
+          # fastlane wants the key as a JSON file (key content embedded + JSON-escaped)
+          KEY_PATH="$KEY_PATH" python3 -c "import json,os; print(json.dumps({'key_id':os.environ['APPSTORE_API_KEY_ID'],'issuer_id':os.environ['APPSTORE_ISSUER_ID'],'key':open(os.environ['KEY_PATH']).read(),'in_house':False}))" > "$RUNNER_TEMP/asc_api_key.json"
+          echo "ASC_KEY_JSON=$RUNNER_TEMP/asc_api_key.json" >> "$GITHUB_ENV"
 
       - name: Resolve version
         run: |
@@ -92,13 +73,30 @@ jobs:
           echo "APP_VERSION=$APP_VERSION" >> "$GITHUB_ENV"
           echo "BUILD_NUMBER=${{ github.run_number }}" >> "$GITHUB_ENV"
 
+      - name: Fetch App Store provisioning profiles (fastlane sigh, via API key)
+        run: |
+          fastlane sigh --api_key_path "$ASC_KEY_JSON" \
+            --app_identifier com.shema.oralCollector \
+            --provisioning_name "OC App Store CI" \
+            --platform ios --force
+          fastlane sigh --api_key_path "$ASC_KEY_JSON" \
+            --app_identifier com.shema.oralCollector.RecordingLiveActivityWidget \
+            --provisioning_name "OC Widget App Store CI" \
+            --platform ios --force
+
+      - name: Configure manual signing per target
+        run: |
+          fastlane run update_code_signing_settings \
+            path:"ios/Runner.xcodeproj" use_automatic_signing:false team_id:"55ZKR3YQMJ" \
+            targets:"Runner" profile_name:"OC App Store CI" code_sign_identity:"Apple Distribution"
+          fastlane run update_code_signing_settings \
+            path:"ios/Runner.xcodeproj" use_automatic_signing:false team_id:"55ZKR3YQMJ" \
+            targets:"RecordingLiveActivityWidgetExtension" profile_name:"OC Widget App Store CI" code_sign_identity:"Apple Distribution"
+
       - name: Generate Flutter Xcode config (no build)
         run: flutter build ios --release --config-only --build-name="$APP_VERSION" --build-number="$BUILD_NUMBER"
 
-      - name: Archive (Xcode-managed automatic signing via API key)
-        env:
-          APPSTORE_API_KEY_ID: ${{ secrets.APPSTORE_API_KEY_ID }}
-          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+      - name: Archive (manual signing with fetched profiles)
         run: |
           xcodebuild archive \
             -workspace ios/Runner.xcworkspace \
@@ -106,28 +104,15 @@ jobs:
             -configuration Release \
             -destination 'generic/platform=iOS' \
             -archivePath "$RUNNER_TEMP/Runner.xcarchive" \
-            -allowProvisioningUpdates \
-            -authenticationKeyPath "$API_KEY_PATH" \
-            -authenticationKeyID "$APPSTORE_API_KEY_ID" \
-            -authenticationKeyIssuerID "$APPSTORE_ISSUER_ID" \
-            CODE_SIGN_STYLE=Automatic \
-            DEVELOPMENT_TEAM=55ZKR3YQMJ \
             CURRENT_PROJECT_VERSION="$BUILD_NUMBER" \
             MARKETING_VERSION="$APP_VERSION"
 
       - name: Export IPA
-        env:
-          APPSTORE_API_KEY_ID: ${{ secrets.APPSTORE_API_KEY_ID }}
-          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
         run: |
           xcodebuild -exportArchive \
             -archivePath "$RUNNER_TEMP/Runner.xcarchive" \
             -exportPath "$RUNNER_TEMP/ipa" \
-            -exportOptionsPlist ios/ExportOptions.plist \
-            -allowProvisioningUpdates \
-            -authenticationKeyPath "$API_KEY_PATH" \
-            -authenticationKeyID "$APPSTORE_API_KEY_ID" \
-            -authenticationKeyIssuerID "$APPSTORE_ISSUER_ID"
+            -exportOptionsPlist ios/ExportOptions.plist
 
       - name: Upload to TestFlight via xcrun altool
         env:
