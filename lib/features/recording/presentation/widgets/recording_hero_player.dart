@@ -1,14 +1,16 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/database/app_database.dart';
-import '../../../../core/platform/file_ops.dart' as file_ops;
 import '../../../../core/theme/app_colors.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../../shared/widgets/audio_player_widget.dart';
+import '../notifiers/recording_player_notifier.dart';
+import '../notifiers/recording_player_state.dart';
+import 'recording_player_controls.dart';
 
-class RecordingHeroPlayer extends StatefulWidget {
+class RecordingHeroPlayer extends ConsumerWidget {
   const RecordingHeroPlayer({
     super.key,
     required this.recording,
@@ -21,68 +23,22 @@ class RecordingHeroPlayer extends StatefulWidget {
   final ThemeData theme;
 
   @override
-  State<RecordingHeroPlayer> createState() => _RecordingHeroPlayerState();
-}
-
-class _RecordingHeroPlayerState extends State<RecordingHeroPlayer> {
-  late Future<Widget> _playerFuture;
-  late String _cacheKey;
-  String _noAudioLabel = '';
-
-  String _keyFor(LocalRecording r) => '${r.localFilePath}|${r.gcsUrl ?? ''}';
-
-  Future<Widget> _resolvePlayer() async {
-    final recording = widget.recording;
-    final effectiveGcsUrl =
-        (recording.gcsUrl != null && recording.gcsUrl!.isNotEmpty)
-        ? recording.gcsUrl
-        : null;
-
-    if (!kIsWeb && recording.localFilePath.isNotEmpty) {
-      final exists = await file_ops.fileExists(recording.localFilePath);
-      if (exists) {
-        return AudioPlayerWidget(
-          filePath: recording.localFilePath,
-          url: effectiveGcsUrl,
-        );
-      }
-    }
-    if (effectiveGcsUrl != null) {
-      return AudioPlayerWidget(url: effectiveGcsUrl);
-    }
-    return Text(
-      _noAudioLabel,
-      style: TextStyle(color: widget.colors.secondary, fontSize: 14),
-    );
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _cacheKey = _keyFor(widget.recording);
-    _playerFuture = _resolvePlayer();
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _noAudioLabel = AppLocalizations.of(context).recording_noAudioAvailable;
-  }
-
-  @override
-  void didUpdateWidget(covariant RecordingHeroPlayer oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    final nextKey = _keyFor(widget.recording);
-    if (nextKey != _cacheKey) {
-      _cacheKey = nextKey;
-      _playerFuture = _resolvePlayer();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isWide = MediaQuery.of(context).size.width >= 700;
-    final colors = widget.colors;
+    final state = ref.watch(recordingPlayerProvider(recording.id));
+
+    // The `ref.watch` above keeps the provider alive during the load. Defer
+    // the load call to a microtask so it runs outside the build phase. The
+    // notifier dedupes by (filePath|url), so this is idempotent across
+    // rebuilds and across multiple call sites (initial load, replace audio,
+    // metadata edits).
+    final filePath = kIsWeb ? null : recording.localFilePath;
+    final url = recording.gcsUrl;
+    Future.microtask(() {
+      ref
+          .read(recordingPlayerProvider(recording.id).notifier)
+          .load(filePath: filePath, url: url);
+    });
 
     return Container(
       decoration: isWide
@@ -121,7 +77,7 @@ class _RecordingHeroPlayerState extends State<RecordingHeroPlayer> {
                       ),
                     ),
                     const SizedBox(width: 16),
-                    Expanded(child: _buildPlayer()),
+                    Expanded(child: _buildPlayer(context, state)),
                   ],
                 )
               : Column(
@@ -141,7 +97,7 @@ class _RecordingHeroPlayerState extends State<RecordingHeroPlayer> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    _buildPlayer(),
+                    _buildPlayer(context, state),
                   ],
                 ),
         ),
@@ -149,32 +105,51 @@ class _RecordingHeroPlayerState extends State<RecordingHeroPlayer> {
     );
   }
 
-  Widget _buildPlayer() {
-    final colors = widget.colors;
-    return FutureBuilder<Widget>(
-      future: _playerFuture,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return SizedBox(
-            height: 72,
-            child: Center(
-              child: SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: colors.primary,
-                ),
-              ),
+  Widget _buildPlayer(BuildContext context, RecordingPlayerState state) {
+    if (state.isLoading) {
+      return SizedBox(
+        height: 72,
+        child: Center(
+          child: SizedBox(
+            width: 24,
+            height: 24,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: colors.primary,
             ),
-          );
-        }
-        return snapshot.data ??
-            Text(
-              _noAudioLabel,
-              style: TextStyle(color: colors.secondary, fontSize: 14),
-            );
-      },
-    );
+          ),
+        ),
+      );
+    }
+
+    if (state.errorKind != null) {
+      final l10n = AppLocalizations.of(context);
+      final message = switch (state.errorKind!) {
+        RecordingPlayerError.fileNotFound => l10n.recording_audioFileNotFound,
+        RecordingPlayerError.loadFailed => l10n.recording_audioLoadFailed,
+      };
+      return SizedBox(
+        height: 64,
+        child: Center(
+          child: Text(
+            message,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: colors.error,
+              fontSize: 14.0,
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (!state.hasAudio) {
+      final l10n = AppLocalizations.of(context);
+      return Text(
+        l10n.recording_noAudioAvailable,
+        style: TextStyle(color: colors.secondary, fontSize: 14),
+      );
+    }
+
+    return RecordingPlayerControls(recordingId: recording.id);
   }
 }

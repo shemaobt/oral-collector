@@ -79,11 +79,21 @@ Path: @/lib/features/recording/data
   [./repositories/docs.md](repositories/docs.md).
 - The `services/` subfolder hosts platform-specific audio probes, the
   segmented recorder, the foreground task, recovery & trash services, the
-  resumable / direct uploaders, and `RecordingSplitPersister` — the post-
-  FFmpeg pipeline of a trim/split save (writes children, trashes parent,
+  resumable / direct uploaders, the audio path resolver used by the
+  detail-screen player, and `RecordingSplitPersister` — the post-FFmpeg
+  pipeline of a trim/split save (writes children, trashes parent,
   deletes parent locally + remotely, triggers upload queue). It is the
   one place that wires the "split is saved → children start uploading"
   causation, so the trim editor never has to think about sync.
+- `services/audio_path_resolver.dart` exposes the pure async
+  `resolveRecordingPath(storedPath)`. It returns the first existing path
+  among: the stored path itself, the application documents directory
+  with the same basename, and a `recordings/` subdirectory of the docs
+  dir. The detail-screen's playback notifier
+  ([../presentation/notifiers/recording_player_notifier.dart](../presentation/notifiers/recording_player_notifier.dart))
+  consumes it through `audioPathResolverProvider` and falls back to
+  `gcsUrl` when resolution returns `null`. On `kIsWeb` it short-circuits
+  to `null` because the playback notifier always uses URLs on web.
 - `RecordingForegroundService` (in `services/`) keeps the Android process
   alive while recording. It does not own the foreground service outright:
   recording and upload share the single foreground service the
