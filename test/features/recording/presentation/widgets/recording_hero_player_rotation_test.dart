@@ -169,10 +169,8 @@ void main() {
       );
 
       await tester.pumpWidget(_harness(container, _recording()));
-      await container
-          .read(recordingPlayerProvider(_recordingId).notifier)
-          .load(filePath: _filePath);
-      await tester.pump();
+      // Drain the microtask the widget posts to call notifier.load().
+      await tester.pumpAndSettle(const Duration(milliseconds: 50));
 
       // Rotate to landscape, width >= 700 dp → Column branch. The entire
       // RecordingHeroPlayer subtree is rebuilt under a different ancestor.
@@ -203,10 +201,8 @@ void main() {
       );
 
       await tester.pumpWidget(_harness(container, _recording()));
-      await container
-          .read(recordingPlayerProvider(_recordingId).notifier)
-          .load(filePath: _filePath);
-      await tester.pump();
+      // Drain the microtask the widget posts to call notifier.load().
+      await tester.pumpAndSettle(const Duration(milliseconds: 50));
 
       binding.platformDispatcher.views.first.physicalSize = const Size(
         390,

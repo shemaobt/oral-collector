@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -25,6 +26,19 @@ class RecordingHeroPlayer extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isWide = MediaQuery.of(context).size.width >= 700;
     final state = ref.watch(recordingPlayerProvider(recording.id));
+
+    // The `ref.watch` above keeps the provider alive during the load. Defer
+    // the load call to a microtask so it runs outside the build phase. The
+    // notifier dedupes by (filePath|url), so this is idempotent across
+    // rebuilds and across multiple call sites (initial load, replace audio,
+    // metadata edits).
+    final filePath = kIsWeb ? null : recording.localFilePath;
+    final url = recording.gcsUrl;
+    Future.microtask(() {
+      ref
+          .read(recordingPlayerProvider(recording.id).notifier)
+          .load(filePath: filePath, url: url);
+    });
 
     return Container(
       decoration: isWide

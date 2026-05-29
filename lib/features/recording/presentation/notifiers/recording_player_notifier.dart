@@ -22,6 +22,7 @@ class RecordingPlayerNotifier
     extends AutoDisposeFamilyNotifier<RecordingPlayerState, String> {
   late final AudioPlayer player;
   String? _lastKey;
+  Future<void>? _inFlight;
 
   @override
   RecordingPlayerState build(String arg) {
@@ -31,23 +32,32 @@ class RecordingPlayerNotifier
   }
 
   Future<void> load({String? filePath, String? url}) async {
-    final hasFilePath = filePath != null && filePath.isNotEmpty;
-    final hasUrl = url != null && url.isNotEmpty;
     final key = '${filePath ?? ''}|${url ?? ''}';
 
-    if (_lastKey == key && state.hasAudio) return;
-    final wasLoaded = _lastKey != null;
+    if (_lastKey == key) {
+      if (_inFlight != null) return _inFlight;
+      if (state.hasAudio || state.errorKind != null) return;
+    }
     _lastKey = key;
+
+    final future = _doLoad(filePath: filePath, url: url);
+    _inFlight = future;
+    try {
+      await future;
+    } finally {
+      if (identical(_inFlight, future)) _inFlight = null;
+    }
+  }
+
+  Future<void> _doLoad({String? filePath, String? url}) async {
+    final hasFilePath = filePath != null && filePath.isNotEmpty;
+    final hasUrl = url != null && url.isNotEmpty;
 
     state = const RecordingPlayerState(isLoading: true);
 
     if (!hasFilePath && !hasUrl) {
       state = const RecordingPlayerState(isLoading: false, hasAudio: false);
       return;
-    }
-
-    if (wasLoaded) {
-      await player.stop();
     }
 
     try {

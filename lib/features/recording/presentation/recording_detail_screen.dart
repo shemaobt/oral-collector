@@ -43,7 +43,6 @@ import '../domain/entities/classification.dart';
 import 'widgets/classify_recording_dialog.dart';
 import 'widgets/move_category_dialog.dart';
 import 'widgets/secondary_classification_fields.dart';
-import 'notifiers/recording_player_notifier.dart';
 import 'widgets/recording_hero_player.dart';
 import 'widgets/recording_info_grid.dart';
 import 'widgets/recording_quick_actions.dart';
@@ -150,14 +149,6 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
           _recording = recording;
           _isLoading = false;
         });
-        if (recording != null) {
-          await ref
-              .read(recordingPlayerProvider(widget.recordingId).notifier)
-              .load(
-                filePath: kIsWeb ? null : recording.localFilePath,
-                url: recording.gcsUrl,
-              );
-        }
         if (isOnline && recording != null) {
           await ref
               .read(roleNotifierProvider.notifier)
