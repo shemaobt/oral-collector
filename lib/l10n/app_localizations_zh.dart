@@ -905,8 +905,8 @@ class AppLocalizationsZh extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '已跳过 $count 个超过 500 MB 的文件：$names',
-      one: '已跳过 1 个超过 500 MB 的文件：$names',
+      other: '已跳过 $count 个超过 10 GB 的文件：$names',
+      one: '已跳过 1 个超过 10 GB 的文件：$names',
     );
     return '$_temp0';
   }

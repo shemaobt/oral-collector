@@ -45,7 +45,10 @@ Path: @/lib/features/recording/presentation
   [/lib/features/auth/data/providers/role_provider.dart](../../auth/data/providers/role_provider.dart)),
   sync state for online/offline gating
   ([/lib/features/sync/presentation/notifiers/sync_notifier.dart](../../sync/presentation/notifiers/sync_notifier.dart)),
-  and audio playback via `just_audio`.
+  and audio playback via `just_audio` — wrapped by
+  `RecordingPlayerNotifier` (see
+  [./notifiers/docs.md](notifiers/docs.md)) so the underlying
+  `AudioPlayer` survives widget rebuilds.
 
 ### Core Implementation
 
@@ -82,9 +85,22 @@ Path: @/lib/features/recording/presentation
   `uploadStatus='local'` until the user edited a field on the detail
   screen (which kicks the queue via the `!hasServerId` branch in
   `_classifyRecording`).
-- `notifiers/` holds the Riverpod notifiers for the recording list and
-  recording flow; `widgets/` holds the dialogs and section widgets shared
-  by the detail and list screens.
+- The detail screen's audio playback is owned by
+  `RecordingPlayerNotifier` at
+  [./notifiers/recording_player_notifier.dart](notifiers/recording_player_notifier.dart).
+  After `_loadRecording` resolves the row, it calls
+  `ref.read(recordingPlayerProvider(id).notifier).load(filePath, url)`;
+  the same call also covers replace-audio and storyteller-change paths,
+  which re-invoke `_loadRecording`. `RecordingHeroPlayer` watches that
+  provider and renders the play controls / loading / error sub-views.
+  Path resolution (stored path → docs dir → `recordings/` subdir) is
+  delegated to
+  [../data/services/audio_path_resolver.dart](../data/services/audio_path_resolver.dart).
+- `notifiers/` holds the Riverpod notifiers for the recording list,
+  recording flow, and detail-screen playback (see
+  [./notifiers/docs.md](notifiers/docs.md)); `widgets/` holds the
+  dialogs and section widgets shared by the detail and list screens
+  (see [./widgets/docs.md](widgets/docs.md)).
 
 ### Things to Know
 
@@ -119,5 +135,15 @@ Path: @/lib/features/recording/presentation
   pulling the bytes. If the user cancels, no write happens; if the
   download fails, the dialog dismisses and a localized error snackbar is
   shown.
+- **Detail screen `LayoutBuilder` swap is what makes audio playback
+  fragile.** The screen pivots between a `Column`/`AppBar` wide layout
+  and a `CustomScrollView`/`SliverAppBar` phone layout at the 700 dp
+  width threshold. Any orientation change that crosses that threshold
+  rebuilds the entire subtree under a different ancestor. Long-lived
+  resources used by the hero — most notably the `AudioPlayer` — must
+  therefore live outside the widget tree. ENG-69 was the regression
+  where the player lived inside a `StatefulWidget` State and was
+  disposed by this swap mid-playback; the fix hoists it into
+  `RecordingPlayerNotifier`.
 
 Created and maintained by Nori.

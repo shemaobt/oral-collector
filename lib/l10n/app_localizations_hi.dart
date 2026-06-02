@@ -947,8 +947,8 @@ class AppLocalizationsHi extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '500 एमबी से बड़ी $count फ़ाइलें छोड़ दी गईं: $names',
-      one: '500 एमबी से बड़ी 1 फ़ाइल छोड़ दी गई: $names',
+      other: '10 जीबी से बड़ी $count फ़ाइलें छोड़ दी गईं: $names',
+      one: '10 जीबी से बड़ी 1 फ़ाइल छोड़ दी गई: $names',
     );
     return '$_temp0';
   }

@@ -73,17 +73,67 @@ Path: @/lib/features/recording/data
   (`gcsUrl`, `uploadStatus`) are adopted whenever the server reports a
   `gcsUrl`, independent of the corruption marker.
 - `supported_audio_formats.dart` is a static list of mime types and file
-  extensions used by the file-import flow.
+  extensions used by the file-import flow, plus `kMaxImportFileBytesWeb` (the
+  10 GB web import ceiling enforced in
+  [../presentation/file_import_screen.dart](../presentation/file_import_screen.dart)).
 - The `repositories/` subfolder hosts `LocalRecordingRepository`,
   `RecordingApiRepositoryImpl`, and `RecordingSessionRepository`. See
   [./repositories/docs.md](repositories/docs.md).
-- The `services/` subfolder hosts platform-specific audio probes, the
+- The `services/` subfolder hosts the audio probe, the
   segmented recorder, the foreground task, recovery & trash services, the
-  resumable / direct uploaders, and `RecordingSplitPersister` — the post-
-  FFmpeg pipeline of a trim/split save (writes children, trashes parent,
+  resumable / direct uploaders, the audio path resolver used by the
+  detail-screen player, and `RecordingSplitPersister` — the post-FFmpeg
+  pipeline of a trim/split save (writes children, trashes parent,
   deletes parent locally + remotely, triggers upload queue). It is the
   one place that wires the "split is saved → children start uploading"
   causation, so the trim editor never has to think about sync.
+- `services/audio_path_resolver.dart` exposes the pure async
+  `resolveRecordingPath(storedPath)`. It returns the first existing path
+  among: the stored path itself, the application documents directory
+  with the same basename, and a `recordings/` subdirectory of the docs
+  dir. The detail-screen's playback notifier
+  ([../presentation/notifiers/recording_player_notifier.dart](../presentation/notifiers/recording_player_notifier.dart))
+  consumes it through `audioPathResolverProvider` and falls back to
+  `gcsUrl` when resolution returns `null`. On `kIsWeb` it short-circuits
+  to `null` because the playback notifier always uses URLs on web.
+- `services/audio_probe.dart` exposes `AudioProbe`, the duration + codec +
+  playability detector the file-import flow
+  ([../presentation/file_import_screen.dart](../presentation/file_import_screen.dart))
+  runs on every candidate before accepting it. `probeFromSource` is a
+  two-stage pipeline: a cheap **header probe** that reads only container
+  metadata, then a **player fallback** that instantiates a real platform
+  decoder. The header probe wins (returns early, no player) only when it
+  yields a positive duration AND a browser-playable codec; otherwise the
+  player result is merged in (`_merge` prefers the player's duration and the
+  header's codec). The platform halves live in `audio_probe_native.dart` /
+  `audio_probe_web.dart`, selected by conditional import; the web player
+  reads only the first 5 MB of the file before handing it to an HTML5
+  `<audio>` element via `just_audio`.
+
+  ```
+  probeFromSource(extension)
+    ├─ wav  → _probeWavHeader (RIFF/fmt /data, in-process bytes)
+    ├─ m4a  → audio_metadata/mp4_box_probe.probeMp4Duration
+    ├─ mp3  → audio_metadata/mp3_frame_probe.probeMp3Duration
+    ├─ ogg  → audio_metadata/ogg_page_probe.probeOggDuration
+    └─ (header has duration + playable codec?)
+         yes → return header result      (no decoder spun up)
+         no  → probeWithPlayer*FromSource → _merge(header, player)
+  ```
+- `services/audio_metadata/` holds the container-header parsers used by the
+  header-probe stage. Each reads duration and codec straight from the file's
+  structure using ranged reads
+  ([/lib/core/platform/file_source.dart](../../../core/platform/file_source.dart),
+  `readRange` = `Blob.slice` on web, `RandomAccessFile` seek on native), so a
+  multi-gigabyte file is probed without ever being loaded whole.
+  `mp4_box_probe.dart` walks ISO-BMFF top-level boxes to locate `moov` (front
+  OR end of file), reading duration from `mvhd`/`mdhd` and codec from `stsd`;
+  `mp3_frame_probe.dart` skips ID3v2 and reads the first frame header plus
+  Xing/Info or size÷bitrate; `ogg_page_probe.dart` reads codec/sample-rate
+  from the first page and total samples from the last page's
+  `granule_position` in the tail. `AudioProbeResult` lives in
+  `services/audio_probe_result.dart` (re-exported from `audio_probe.dart`) so
+  these parsers and `AudioProbe` can share the type without an import cycle.
 - `RecordingForegroundService` (in `services/`) keeps the Android process
   alive while recording. It does not own the foreground service outright:
   recording and upload share the single foreground service the
@@ -121,6 +171,24 @@ Path: @/lib/features/recording/data
   [/test/features/recording/data/](../../../../test/features/recording/data/).
   The checklist is reproduced at the bottom of
   [/docs/recording-split-semantics.md](../../../../docs/recording-split-semantics.md).
+- **The header probe exists to survive the web player's 5 MB cap.** On web
+  the player slices only the first 5 MB; progressive phone recorders
+  (Samsung/Android) write the MP4/M4A `moov` index at the END of the file, so
+  for a long recording the slice has no index and the browser rejects it with
+  `MediaError` code 4. The container parsers locate `moov` wherever it sits
+  and report duration directly, so import no longer depends on the index
+  landing in the first 5 MB. Native was never affected — it decodes the whole
+  file — and still works because the parser falls back to the player.
+- **A non-playable codec is reported WITHOUT a duration on purpose.** When a
+  parser sees a codec a browser cannot decode (e.g. ALAC in MP4), it returns
+  the codec but no duration, so the `hasDuration && playable` gate fails and
+  the platform player still runs. This preserves native playback of formats
+  the browser refuses, and lets `file_import_screen.dart` distinguish
+  `unsupportedCodec` from `unreadableContainer` in its rejection message.
+- **64-bit container fields are read as two uint32 halves.** dart2js has no
+  native 64-bit int / `ByteData.getUint64`, so `mp4_box_probe.dart` and
+  `ogg_page_probe.dart` reconstruct large durations/granules from two 32-bit
+  reads — required for the parsers to behave identically on web and native.
 - The `localRecordingStreamProvider` is a Drift `watchSingleOrNull` query.
   Any update via `LocalRecordingRepository` (including the heal companion)
   will fire the stream, which the detail screen listens to. This is why

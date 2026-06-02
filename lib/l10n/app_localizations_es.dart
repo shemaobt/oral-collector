@@ -949,8 +949,8 @@ class AppLocalizationsEs extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Se omitieron $count archivos de más de 500 MB: $names',
-      one: 'Se omitió 1 archivo de más de 500 MB: $names',
+      other: 'Se omitieron $count archivos de más de 10 GB: $names',
+      one: 'Se omitió 1 archivo de más de 10 GB: $names',
     );
     return '$_temp0';
   }

@@ -954,7 +954,7 @@
   "import_dropActive": "आयात के लिए छोड़ें",
   "import_dropHint": "आयात करने के लिए ऑडियो फ़ाइलें छोड़ें",
   "import_largeFileWarning": "बड़ी फ़ाइल ({size})। अपलोड पूरा होने तक यह टैब खुला रखें।",
-  "import_rejectedTooLarge": "{count, plural, =1{500 एमबी से बड़ी 1 फ़ाइल छोड़ दी गई: {names}} other{500 एमबी से बड़ी {count} फ़ाइलें छोड़ दी गईं: {names}}}",
+  "import_rejectedTooLarge": "{count, plural, =1{10 जीबी से बड़ी 1 फ़ाइल छोड़ दी गई: {names}} other{10 जीबी से बड़ी {count} फ़ाइलें छोड़ दी गईं: {names}}}",
   "import_rejectedUnreadable": "{count, plural, =1{1 अपठनीय फ़ाइल छोड़ दी गई: {names}} other{{count} अपठनीय फ़ाइलें छोड़ दी गईं: {names}}}",
   "import_rejectedUnsupportedCodec": "{count, plural, =1{असमर्थित ऑडियो कोडेक वाली 1 फ़ाइल छोड़ दी गई: {names}. इसे PCM WAV या M4A के रूप में पुनः निर्यात करें.} other{असमर्थित ऑडियो कोडेक वाली {count} फ़ाइलें छोड़ दी गईं: {names}. उन्हें PCM WAV या M4A के रूप में पुनः निर्यात करें.}}",
   "import_resumePromptBody": "\"{name}\" ({size}) आंशिक रूप से अपलोड हुई थी। जारी रखने के लिए वही फ़ाइल चुनें।",

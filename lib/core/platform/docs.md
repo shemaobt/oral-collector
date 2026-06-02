@@ -43,6 +43,18 @@ Path: @/lib/core/platform
 
 ### Core Implementation
 
+- `file_source.dart` defines `FileSource`, the read-only handle the
+  file-import and audio-probe paths use to read a candidate file without
+  caring whether it is a native path, a `cross_file` `XFile`, or an in-memory
+  buffer. Its core method is `readRange(start, end)`; `readHead(max)` is a
+  thin wrapper. The whole point of the abstraction is **ranged reads**: the
+  web variant (`file_source_web.dart`) implements `readRange` as
+  `Blob.slice(start, end).arrayBuffer()`, and the native variant
+  (`file_source_native.dart`) as a `RandomAccessFile` seek + read, so a caller
+  can read the tail or an interior box of a multi-gigabyte file without
+  loading it whole. The container-header parsers under
+  [/lib/features/recording/data/services/audio_metadata/](../../features/recording/data/services/audio_metadata/)
+  depend on this to probe arbitrarily large imports cheaply.
 - `ForegroundServiceArbiter` is all static state: a single `_owner`
   (`none` / `recording` / `upload`) plus a `_queue` mutex.
 - `takeOver(owner, isRunning, stop, start)` is the hand-off primitive: it
@@ -62,6 +74,16 @@ Path: @/lib/core/platform
 
 ### Things to Know
 
+- **`FileSource.readRange` is a true ranged read, not a slice of a
+  preloaded buffer** (except for the in-memory variant, which already holds
+  the bytes). Web goes through `Blob.slice`, native through a seeked
+  `RandomAccessFile`. All variants guard `end <= start` to an empty result;
+  reads past EOF return fewer bytes (`Blob.slice`/`RandomAccessFile` truncate;
+  the in-memory variant clamps), so a parser reading near EOF cannot overrun.
+  Callers
+  rely on this to read a file's tail (e.g. an MP4 `moov` or an Ogg last page)
+  without paying for the whole file — see
+  [/lib/features/recording/data/docs.md](../../features/recording/data/docs.md).
 - **Serialization closes a TOCTOU window.** `release` re-checks ownership
   and then awaits `isRunning` / `stop`. If a hand-off could run during those
   awaits, a stale release could stop the service the hand-off just claimed.

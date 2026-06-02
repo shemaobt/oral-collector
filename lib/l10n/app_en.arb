@@ -430,7 +430,7 @@
   "import_compressWavHint": "~10x smaller, no quality loss for ML pipeline",
   "import_dropHint": "Drop audio files to import",
   "import_dropActive": "Release to import",
-  "import_rejectedTooLarge": "{count, plural, =1{Skipped 1 file over 500 MB: {names}} other{Skipped {count} files over 500 MB: {names}}}",
+  "import_rejectedTooLarge": "{count, plural, =1{Skipped 1 file over 10 GB: {names}} other{Skipped {count} files over 10 GB: {names}}}",
   "@import_rejectedTooLarge": {
     "placeholders": {
       "count": {
