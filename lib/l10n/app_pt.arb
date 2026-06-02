@@ -345,7 +345,7 @@
   "import_compressWavHint": "~10x menor, sem perda de qualidade para pipeline de ML",
   "import_dropHint": "Solte arquivos de áudio para importar",
   "import_dropActive": "Solte para importar",
-  "import_rejectedTooLarge": "{count, plural, =1{Ignorado 1 arquivo maior que 500 MB: {names}} other{Ignorados {count} arquivos maiores que 500 MB: {names}}}",
+  "import_rejectedTooLarge": "{count, plural, =1{Ignorado 1 arquivo maior que 10 GB: {names}} other{Ignorados {count} arquivos maiores que 10 GB: {names}}}",
   "import_rejectedUnsupportedCodec": "{count, plural, =1{Ignorado 1 arquivo com codec de áudio não suportado: {names}. Reexporte como PCM WAV ou M4A.} other{Ignorados {count} arquivos com codec de áudio não suportado: {names}. Reexporte como PCM WAV ou M4A.}}",
   "import_rejectedUnreadable": "{count, plural, =1{Ignorado 1 arquivo ilegível: {names}} other{Ignorados {count} arquivos ilegíveis: {names}}}",
   "import_resumePromptTitle": "Retomar envio interrompido",

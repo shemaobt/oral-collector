@@ -909,8 +909,8 @@ class AppLocalizationsKo extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '500MB가 넘는 파일 $count개 건너뜀: $names',
-      one: '500MB가 넘는 파일 1개 건너뜀: $names',
+      other: '10GB가 넘는 파일 $count개 건너뜀: $names',
+      one: '10GB가 넘는 파일 1개 건너뜀: $names',
     );
     return '$_temp0';
   }

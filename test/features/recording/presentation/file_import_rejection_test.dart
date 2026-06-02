@@ -10,7 +10,7 @@ void main() {
       const RejectedFile(name: 'big.wav', reason: RejectionReason.tooLarge),
     ];
     final message = localizeRejectionGroup(l10n, rejects);
-    expect(message, contains('500 MB'));
+    expect(message, contains('10 GB'));
     expect(message, contains('big.wav'));
   });
 

@@ -933,8 +933,8 @@ class AppLocalizationsSw extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Imeruka faili $count zenye zaidi ya MB 500: $names',
-      one: 'Imeruka faili 1 yenye zaidi ya MB 500: $names',
+      other: 'Imeruka faili $count zenye zaidi ya GB 10: $names',
+      one: 'Imeruka faili 1 yenye zaidi ya GB 10: $names',
     );
     return '$_temp0';
   }

@@ -924,8 +924,8 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'تم تخطي $count ملفات تتجاوز 500 ميغابايت: $names',
-      one: 'تم تخطي ملف واحد يتجاوز 500 ميغابايت: $names',
+      other: 'تم تخطي $count ملفات تتجاوز 10 غيغابايت: $names',
+      one: 'تم تخطي ملف واحد يتجاوز 10 غيغابايت: $names',
     );
     return '$_temp0';
   }
