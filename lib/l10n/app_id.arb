@@ -954,7 +954,7 @@
   "import_dropActive": "Lepaskan untuk mengimpor",
   "import_dropHint": "Jatuhkan berkas audio untuk diimpor",
   "import_largeFileWarning": "Berkas besar ({size}). Biarkan tab ini terbuka hingga unggahan selesai.",
-  "import_rejectedTooLarge": "{count, plural, =1{1 berkas di atas 500 MB dilewati: {names}} other{{count} berkas di atas 500 MB dilewati: {names}}}",
+  "import_rejectedTooLarge": "{count, plural, =1{1 berkas di atas 10 GB dilewati: {names}} other{{count} berkas di atas 10 GB dilewati: {names}}}",
   "import_rejectedUnreadable": "{count, plural, =1{1 berkas tak terbaca dilewati: {names}} other{{count} berkas tak terbaca dilewati: {names}}}",
   "import_rejectedUnsupportedCodec": "{count, plural, =1{1 berkas dengan codec audio tak didukung dilewati: {names}. Ekspor ulang sebagai PCM WAV atau M4A.} other{{count} berkas dengan codec audio tak didukung dilewati: {names}. Ekspor ulang sebagai PCM WAV atau M4A.}}",
   "import_resumePromptBody": "\"{name}\" ({size}) terunggah sebagian. Pilih berkas yang sama untuk melanjutkan.",

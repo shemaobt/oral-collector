@@ -2,32 +2,17 @@ import 'package:flutter/foundation.dart';
 
 import '../../../../core/platform/file_source.dart';
 
+import 'audio_metadata/mp3_frame_probe.dart';
+import 'audio_metadata/mp4_box_probe.dart';
+import 'audio_metadata/ogg_page_probe.dart';
 import 'audio_probe_native.dart'
     if (dart.library.js_interop) 'audio_probe_web.dart';
+import 'audio_probe_result.dart';
 
 export 'audio_probe_native.dart'
     if (dart.library.js_interop) 'audio_probe_web.dart'
     show createPlayableBlobUrl, revokePlayableBlobUrl;
-
-@immutable
-class AudioProbeResult {
-  const AudioProbeResult({
-    this.durationSeconds,
-    this.codec,
-    this.playable = false,
-    this.diagnostic,
-  });
-
-  final double? durationSeconds;
-  final String? codec;
-  final bool playable;
-  final String? diagnostic;
-
-  bool get hasDuration =>
-      durationSeconds != null &&
-      durationSeconds!.isFinite &&
-      durationSeconds! > 0;
-}
+export 'audio_probe_result.dart';
 
 class AudioProbe {
   const AudioProbe();
@@ -80,6 +65,12 @@ class AudioProbe {
           'AudioProbe: header read failed for ${source.name}: $e\n$st',
         );
       }
+    } else if (extension == 'm4a') {
+      headerResult = await _tryContainerProbe(source, probeMp4Duration);
+    } else if (extension == 'mp3') {
+      headerResult = await _tryContainerProbe(source, probeMp3Duration);
+    } else if (extension == 'ogg') {
+      headerResult = await _tryContainerProbe(source, probeOggDuration);
     }
 
     if (headerResult != null &&
@@ -103,6 +94,20 @@ class AudioProbe {
     }
 
     return _merge(headerResult, playerResult);
+  }
+
+  Future<AudioProbeResult?> _tryContainerProbe(
+    FileSource source,
+    Future<AudioProbeResult?> Function(FileSource) probe,
+  ) async {
+    try {
+      return await probe(source);
+    } catch (e, st) {
+      debugPrint(
+        'AudioProbe: container probe failed for ${source.name}: $e\n$st',
+      );
+      return null;
+    }
   }
 
   AudioProbeResult _merge(

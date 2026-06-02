@@ -931,8 +931,8 @@ class AppLocalizationsTpi extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Skipim $count fail bikpela tumas long 500 MB: $names',
-      one: 'Skipim 1 fail bikpela tumas long 500 MB: $names',
+      other: 'Skipim $count fail bikpela tumas long 10 GB: $names',
+      one: 'Skipim 1 fail bikpela tumas long 10 GB: $names',
     );
     return '$_temp0';
   }

@@ -1167,7 +1167,7 @@
   "import_dropActive": "释放以导入",
   "import_dropHint": "拖放音频文件以导入",
   "import_largeFileWarning": "大文件（{size}）。请保持此标签页打开,直至上传完成。",
-  "import_rejectedTooLarge": "{count, plural, =1{已跳过 1 个超过 500 MB 的文件：{names}} other{已跳过 {count} 个超过 500 MB 的文件：{names}}}",
+  "import_rejectedTooLarge": "{count, plural, =1{已跳过 1 个超过 10 GB 的文件：{names}} other{已跳过 {count} 个超过 10 GB 的文件：{names}}}",
   "import_rejectedUnreadable": "{count, plural, =1{已跳过 1 个无法读取的文件：{names}} other{已跳过 {count} 个无法读取的文件：{names}}}",
   "import_rejectedUnsupportedCodec": "{count, plural, =1{已跳过 1 个使用不支持的音频编解码器的文件：{names}。请重新导出为 PCM WAV 或 M4A。} other{已跳过 {count} 个使用不支持的音频编解码器的文件：{names}。请重新导出为 PCM WAV 或 M4A。}}",
   "import_resumePromptBody": "“{name}”（{size}）已部分上传。选择相同文件以继续。",

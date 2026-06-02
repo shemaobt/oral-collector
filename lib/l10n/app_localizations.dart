@@ -1727,7 +1727,7 @@ abstract class AppLocalizations {
   /// No description provided for @import_rejectedTooLarge.
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, =1{Skipped 1 file over 500 MB: {names}} other{Skipped {count} files over 500 MB: {names}}}'**
+  /// **'{count, plural, =1{Skipped 1 file over 10 GB: {names}} other{Skipped {count} files over 10 GB: {names}}}'**
   String import_rejectedTooLarge(int count, String names);
 
   /// No description provided for @import_rejectedUnsupportedCodec.
