@@ -257,6 +257,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
     final repo = ref.read(localRecordingRepositoryProvider);
     final syncNotifier = ref.read(syncNotifierProvider.notifier);
     final isOnline = ref.read(syncNotifierProvider).isOnline;
+    final l10n = AppLocalizations.of(context);
 
     int fileSize = 0;
     try {
@@ -266,47 +267,56 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
     final id =
         '${DateTime.now().millisecondsSinceEpoch}_${widget.genreId.hashCode}';
 
-    await repo.insertRecording(
-      LocalRecordingsCompanion(
-        id: Value(id),
-        projectId: Value(projectId),
-        genreId: Value(widget.genreId),
-        subcategoryId:
-            widget.subcategoryId != null && widget.subcategoryId!.isNotEmpty
-            ? Value(widget.subcategoryId!)
-            : const Value.absent(),
-        registerId: widget.registerId != null && widget.registerId!.isNotEmpty
-            ? Value(widget.registerId!)
-            : const Value.absent(),
-        storytellerId: Value(_selectedStoryteller!.id),
-        userId: currentUserId != null
-            ? Value(currentUserId)
-            : const Value.absent(),
-        title: Value(
-          resolveRecordingTitle(_titleController.text, locale: localeTag),
+    try {
+      await repo.insertRecording(
+        LocalRecordingsCompanion(
+          id: Value(id),
+          projectId: Value(projectId),
+          genreId: Value(widget.genreId),
+          subcategoryId:
+              widget.subcategoryId != null && widget.subcategoryId!.isNotEmpty
+              ? Value(widget.subcategoryId!)
+              : const Value.absent(),
+          registerId: widget.registerId != null && widget.registerId!.isNotEmpty
+              ? Value(widget.registerId!)
+              : const Value.absent(),
+          storytellerId: Value(_selectedStoryteller!.id),
+          userId: currentUserId != null
+              ? Value(currentUserId)
+              : const Value.absent(),
+          title: Value(
+            resolveRecordingTitle(_titleController.text, locale: localeTag),
+          ),
+          description: _descriptionController.text.trim().isNotEmpty
+              ? Value(_descriptionController.text.trim())
+              : const Value.absent(),
+          durationSeconds: Value(widget.result.durationSeconds),
+          fileSizeBytes: Value(fileSize),
+          format: Value(widget.result.format),
+          localFilePath: Value(widget.result.filePath),
+          recordedAt: Value(DateTime.now()),
         ),
-        description: _descriptionController.text.trim().isNotEmpty
-            ? Value(_descriptionController.text.trim())
-            : const Value.absent(),
-        durationSeconds: Value(widget.result.durationSeconds),
-        fileSizeBytes: Value(fileSize),
-        format: Value(widget.result.format),
-        localFilePath: Value(widget.result.filePath),
-        recordedAt: Value(DateTime.now()),
-      ),
-    );
+      );
 
-    if (isOnline) {
-      unawaited(syncNotifier.processQueue());
-    }
+      if (isOnline) {
+        unawaited(syncNotifier.processQueue());
+      }
 
-    if (mounted) {
-      HapticFeedback.mediumImpact();
-      final l10n = AppLocalizations.of(context);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.recording_saved)));
-      context.go('/home');
+      if (mounted) {
+        HapticFeedback.mediumImpact();
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.recording_saved)));
+        context.go('/home');
+      }
+    } catch (e) {
+      if (mounted) {
+        final friendly = friendlyErrorMessage(e.toString(), l10n);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.recording_uploadFailed(friendly))),
+        );
+        setState(() => _isSaving = false);
+      }
     }
   }
 
