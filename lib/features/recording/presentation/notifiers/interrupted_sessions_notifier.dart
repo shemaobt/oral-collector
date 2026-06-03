@@ -6,6 +6,7 @@ import 'package:path_provider/path_provider.dart';
 
 import '../../../../core/platform/file_ops.dart' as file_ops;
 import '../../data/providers.dart';
+import '../../data/services/recording_finalization_service.dart';
 import '../../data/services/recovery_coordinator.dart';
 import '../../data/services/segment_paths.dart';
 import 'recording_session_notifier.dart';
@@ -54,19 +55,32 @@ class InterruptedSessionsNotifier extends Notifier<void> {
       return null;
     }
 
-    final outcome = await ref
-        .read(recordingFinalizationServiceProvider)
-        .finalize(
-          sessionId: session.id,
-          segmentPaths: validPaths,
-          totalDuration: Duration(
-            milliseconds: (session.totalDurationSeconds * 1000).round(),
-          ),
-        );
+    FinalizationOutcome? outcome;
+    try {
+      outcome = await ref
+          .read(recordingFinalizationServiceProvider)
+          .finalize(
+            sessionId: session.id,
+            segmentPaths: validPaths,
+            totalDuration: Duration(
+              milliseconds: (session.totalDurationSeconds * 1000).round(),
+            ),
+          );
+    } catch (e, st) {
+      debugPrint(
+        'InterruptedSessionsNotifier: finalize failed for ${session.id}: $e\n$st',
+      );
+    }
+
+    if (outcome == null) {
+      await ref.read(recoveryCoordinatorProvider).refresh();
+      return null;
+    }
+
     await _cleanupOrphanedSegments(session.id, -1);
     await sessionRepo.markRecovered(session.id);
     await ref.read(recoveryCoordinatorProvider).refresh();
-    return outcome?.result;
+    return outcome.result;
   }
 
   Future<void> _cleanupOrphanedSegments(

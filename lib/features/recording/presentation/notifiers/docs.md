@@ -71,7 +71,13 @@ Path: @/lib/features/recording/presentation/notifiers
 - `InputDeviceNotifier` tracks the currently selected microphone for
   capture; `InterruptedSessionsNotifier` powers the "you have an
   unsaved recording" prompt on app open by reading recovery rows from
-  `RecordingSessionRepository`.
+  `RecordingSessionRepository`. Its `save` / `discard` actions are the
+  resolution side of that prompt: `save` re-runs the finalization
+  pipeline against the surviving segments and (only on success) marks
+  the session recovered, while `discard` deletes the segments and marks
+  the session discarded. Both end by calling
+  [../../data/services/recovery_coordinator.dart](../../data/services/recovery_coordinator.dart)'s
+  `refresh()` so the prompt list re-derives from the database.
 
 ### Things to Know
 
@@ -105,5 +111,22 @@ Path: @/lib/features/recording/presentation/notifiers
   `audioPlayerFactoryProvider` and `audioPathResolverProvider` exist so
   the notifier can be unit-tested without `just_audio` plugin channels
   or the filesystem. Production code never overrides them.
+- **A failed finalize keeps the recording recoverable — on both stop
+  paths.** Finalization (FFmpeg concat + IO under
+  [../../data/services/recording_finalization_service.dart](../../data/services/recording_finalization_service.dart))
+  can throw or return null. The main stop path
+  (`RecordingSessionNotifier._finalizeOrCrash`) and the recovery save
+  path (`InterruptedSessionsNotifier.save`) now treat that case
+  identically: they swallow the failure, refresh the recovery
+  coordinator, and return `null` — leaving the session in status
+  `crashed` so it stays listed by `recovery_coordinator.dart`'s
+  `refresh()` and can be retried. `markRecovered` / `markCompleted` only
+  run after a finalize that produced a result, so the database never
+  records a session as resolved while its audio was never assembled.
+  This invariant is why neither caller may surface the exception:
+  [../widgets/unsaved_recordings_sheet.dart](../widgets/unsaved_recordings_sheet.dart)'s
+  save handler has no try/catch and only closes the sheet when `save`
+  returns non-null, so an escaping exception (the ENG-80 bug) would
+  crash the recovery UI and half-handle the session.
 
 Created and maintained by Nori.
