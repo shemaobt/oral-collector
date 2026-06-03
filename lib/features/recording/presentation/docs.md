@@ -96,6 +96,23 @@ Path: @/lib/features/recording/presentation
   Path resolution (stored path → docs dir → `recordings/` subdir) is
   delegated to
   [../data/services/audio_path_resolver.dart](../data/services/audio_path_resolver.dart).
+- `file_import_screen.dart` is the multi-file import flow: it picks /
+  drops candidates, probes each via
+  [../data/services/audio_probe.dart](../data/services/audio_probe.dart),
+  collects per-entry metadata, and saves the batch. The per-batch save
+  delegates to the pure
+  [./import_save_runner.dart](import_save_runner.dart) seam, which walks
+  the entries and invokes a per-entry callback. That callback branches on
+  `kIsWeb`: web uploads bytes straight to the server through
+  `DirectRecordingUploader.upload` (no Drift row); native copies the file
+  into the docs `recordings/` dir, optionally compresses WAV→M4A via
+  FFmpeg, then writes a row through
+  `LocalRecordingRepository.insertRecording` and lets the sync queue pick
+  it up. Pure-logic seams like this and
+  [./trim_edit_decision.dart](trim_edit_decision.dart) exist because
+  `kIsWeb` is always false under test, so the branch-selecting orchestration
+  is extracted to a headless-testable function while the screen keeps only
+  the platform calls.
 - `notifiers/` holds the Riverpod notifiers for the recording list,
   recording flow, and detail-screen playback (see
   [./notifiers/docs.md](notifiers/docs.md)); `widgets/` holds the
@@ -135,6 +152,20 @@ Path: @/lib/features/recording/presentation
   pulling the bytes. If the user cancels, no write happens; if the
   download fails, the dialog dismisses and a localized error snackbar is
   shown.
+- **Import batch save is client-side idempotent on retry (ENG-80).** The
+  import screen tracks which entries have already been saved in a
+  `_completedEntryIds` set that outlives a single save and is keyed by
+  entry id. `runImportSave` skips any entry already in that set, so if one
+  entry throws part-way through a batch, the already-uploaded entries stay
+  in the list and a second tap of Save re-runs only the still-pending ones
+  instead of re-uploading the completed ones (which previously duplicated
+  them — twice on the server for web, twice through sync for native).
+  Removing an entry also drops it from the set. This idempotence is
+  client-only: the server metadata create (`_createMetadata` in
+  [../data/services/direct_recording_uploader.dart](../data/services/direct_recording_uploader.dart))
+  and the sync engine carry no dedupe key, so an entry that fails *after*
+  its server metadata already exists still creates a second metadata on its
+  own re-attempt. Fixing that requires an API change and is out of scope.
 - **Detail screen `LayoutBuilder` swap is what makes audio playback
   fragile.** The screen pivots between a `Column`/`AppBar` wide layout
   and a `CustomScrollView`/`SliverAppBar` phone layout at the 700 dp

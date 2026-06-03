@@ -23,11 +23,13 @@ import '../../sync/presentation/notifiers/sync_notifier.dart';
 import '../../project/presentation/notifiers/project_notifier.dart';
 import '../../storyteller/domain/entities/storyteller.dart';
 import '../data/providers.dart';
+import '../data/repositories/local_recording_repository.dart';
 import '../data/services/audio_probe.dart';
 import '../data/services/direct_recording_uploader.dart';
 import '../data/supported_audio_formats.dart';
 import 'file_import_entry.dart';
 import 'file_import_rejection.dart';
+import 'import_save_runner.dart';
 import 'notifiers/recordings_list_notifier.dart';
 import 'widgets/file_metadata_editor.dart';
 import 'widgets/import_drop_zone.dart';
@@ -65,6 +67,7 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
   Storyteller? _bulkStoryteller;
 
   final Set<String> _errorEntryIds = {};
+  final Set<String> _completedEntryIds = {};
   final Map<String, GlobalKey> _errorKeys = {};
   final ScrollController _scrollController = ScrollController();
 
@@ -344,6 +347,7 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
       _entries[idx].dispose();
       _entries.removeAt(idx);
       _errorEntryIds.remove(id);
+      _completedEntryIds.remove(id);
       _errorKeys.remove(id);
     });
     if (_entries.isEmpty && mounted) {
@@ -438,7 +442,7 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
 
     setState(() {
       _isSaving = true;
-      _saveProgress = 0;
+      _saveProgress = _completedEntryIds.length;
     });
 
     final projectState = ref.read(projectNotifierProvider);
@@ -448,131 +452,20 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
     final uploader = ref.read(directRecordingUploaderProvider);
 
     try {
-      for (var i = 0; i < _entries.length; i++) {
-        final entry = _entries[i];
-
-        String savedFilePath = entry.path;
-        int fileSizeBytes = entry.sizeBytes;
-        String format = entry.format;
-
-        if (kIsWeb) {
-          final source = entry.source;
-          if (source == null || source.length <= 0) {
-            throw Exception('Import "${entry.fileName}" has no source');
-          }
-
-          final title = entry.fileName.replaceAll(RegExp(r'\.[^.]+$'), '');
-          final description = entry.descriptionController.text.trim();
-
-          if (mounted) {
-            setState(() {
-              _currentFileBytesSent = 0;
-              _currentFileBytesTotal = source.length;
-            });
-          }
-
-          await uploader.upload(
-            source: source,
-            meta: DirectUploadMetadata(
-              projectId: projectId,
-              genreId: entry.genreId!,
-              subcategoryId:
-                  entry.subcategoryId != null && entry.subcategoryId!.isNotEmpty
-                  ? entry.subcategoryId!
-                  : 'unclassified',
-              registerId: entry.registerId,
-              storytellerId: entry.storytellerId,
-              userId: currentUserId,
-              title: title,
-              description: description.isEmpty ? null : description,
-              durationSeconds: entry.durationSeconds,
-              fileSizeBytes: source.length,
-              format: format,
-              recordedAt: DateTime.now(),
-            ),
-            onProgress: (sent, total) {
-              if (!mounted) return;
-              setState(() {
-                _currentFileBytesSent = sent;
-                _currentFileBytesTotal = total;
-              });
-            },
-          );
-
-          if (mounted) {
-            setState(() {
-              _saveProgress = i + 1;
-              _currentFileBytesSent = 0;
-              _currentFileBytesTotal = 0;
-            });
-          }
-          continue;
-        }
-
-        final appDir = await getApplicationDocumentsDirectory();
-        final recordingsPath = '${appDir.path}/recordings';
-        if (!await file_ops.dirExists(recordingsPath)) {
-          await file_ops.createDir(recordingsPath);
-        }
-        final destFileName =
-            '${DateTime.now().millisecondsSinceEpoch}_${entry.fileName}';
-        final destPath = '$recordingsPath/$destFileName';
-        await file_ops.copyFile(entry.path, destPath);
-        savedFilePath = destPath;
-
-        if (_compressWav && format == 'wav') {
-          final m4aPath = destPath.replaceAll(
-            RegExp(r'\.wav$', caseSensitive: false),
-            '.m4a',
-          );
-          final success = await ffmpeg_ops.compressToM4a(destPath, m4aPath);
-          if (success) {
-            await file_ops.deleteFile(destPath);
-            savedFilePath = m4aPath;
-            format = 'm4a';
-          }
-        }
-
-        fileSizeBytes = await file_ops.fileLength(savedFilePath);
-
-        final id = '${DateTime.now().microsecondsSinceEpoch}_$i';
-        final title = entry.fileName.replaceAll(RegExp(r'\.[^.]+$'), '');
-        final description = entry.descriptionController.text.trim();
-
-        await repo.insertRecording(
-          LocalRecordingsCompanion(
-            id: Value(id),
-            projectId: Value(projectId),
-            genreId: Value(entry.genreId!),
-            subcategoryId:
-                entry.subcategoryId != null && entry.subcategoryId!.isNotEmpty
-                ? Value(entry.subcategoryId!)
-                : const Value.absent(),
-            registerId: entry.registerId != null && entry.registerId!.isNotEmpty
-                ? Value(entry.registerId!)
-                : const Value.absent(),
-            storytellerId: entry.storytellerId != null
-                ? Value(entry.storytellerId!)
-                : const Value.absent(),
-            userId: currentUserId != null
-                ? Value(currentUserId)
-                : const Value.absent(),
-            title: Value(title),
-            description: description.isNotEmpty
-                ? Value(description)
-                : const Value.absent(),
-            durationSeconds: Value(entry.durationSeconds),
-            fileSizeBytes: Value(fileSizeBytes),
-            format: Value(format),
-            localFilePath: Value(savedFilePath),
-            recordedAt: Value(DateTime.now()),
-          ),
-        );
-
-        if (mounted) {
-          setState(() => _saveProgress = i + 1);
-        }
-      }
+      await runImportSave(
+        _entries.toList(),
+        _completedEntryIds,
+        (entry) => _saveEntry(
+          entry,
+          projectId: projectId,
+          currentUserId: currentUserId,
+          repo: repo,
+          uploader: uploader,
+        ),
+        onProgress: (count) {
+          if (mounted) setState(() => _saveProgress = count);
+        },
+      );
 
       if (!kIsWeb) {
         ref.read(syncNotifierProvider.notifier).processQueue();
@@ -592,6 +485,131 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
         );
       }
     }
+  }
+
+  Future<void> _saveEntry(
+    FileImportEntry entry, {
+    required String projectId,
+    required String? currentUserId,
+    required LocalRecordingRepository repo,
+    required DirectRecordingUploader uploader,
+  }) async {
+    String savedFilePath = entry.path;
+    int fileSizeBytes = entry.sizeBytes;
+    String format = entry.format;
+
+    if (kIsWeb) {
+      final source = entry.source;
+      if (source == null || source.length <= 0) {
+        throw Exception('Import "${entry.fileName}" has no source');
+      }
+
+      final title = entry.fileName.replaceAll(RegExp(r'\.[^.]+$'), '');
+      final description = entry.descriptionController.text.trim();
+
+      if (mounted) {
+        setState(() {
+          _currentFileBytesSent = 0;
+          _currentFileBytesTotal = source.length;
+        });
+      }
+
+      await uploader.upload(
+        source: source,
+        meta: DirectUploadMetadata(
+          projectId: projectId,
+          genreId: entry.genreId!,
+          subcategoryId:
+              entry.subcategoryId != null && entry.subcategoryId!.isNotEmpty
+              ? entry.subcategoryId!
+              : 'unclassified',
+          registerId: entry.registerId,
+          storytellerId: entry.storytellerId,
+          userId: currentUserId,
+          title: title,
+          description: description.isEmpty ? null : description,
+          durationSeconds: entry.durationSeconds,
+          fileSizeBytes: source.length,
+          format: format,
+          recordedAt: DateTime.now(),
+        ),
+        onProgress: (sent, total) {
+          if (!mounted) return;
+          setState(() {
+            _currentFileBytesSent = sent;
+            _currentFileBytesTotal = total;
+          });
+        },
+      );
+
+      if (mounted) {
+        setState(() {
+          _currentFileBytesSent = 0;
+          _currentFileBytesTotal = 0;
+        });
+      }
+      return;
+    }
+
+    final appDir = await getApplicationDocumentsDirectory();
+    final recordingsPath = '${appDir.path}/recordings';
+    if (!await file_ops.dirExists(recordingsPath)) {
+      await file_ops.createDir(recordingsPath);
+    }
+    final destFileName =
+        '${DateTime.now().millisecondsSinceEpoch}_${entry.fileName}';
+    final destPath = '$recordingsPath/$destFileName';
+    await file_ops.copyFile(entry.path, destPath);
+    savedFilePath = destPath;
+
+    if (_compressWav && format == 'wav') {
+      final m4aPath = destPath.replaceAll(
+        RegExp(r'\.wav$', caseSensitive: false),
+        '.m4a',
+      );
+      final success = await ffmpeg_ops.compressToM4a(destPath, m4aPath);
+      if (success) {
+        await file_ops.deleteFile(destPath);
+        savedFilePath = m4aPath;
+        format = 'm4a';
+      }
+    }
+
+    fileSizeBytes = await file_ops.fileLength(savedFilePath);
+
+    final id = '${DateTime.now().microsecondsSinceEpoch}_${entry.id}';
+    final title = entry.fileName.replaceAll(RegExp(r'\.[^.]+$'), '');
+    final description = entry.descriptionController.text.trim();
+
+    await repo.insertRecording(
+      LocalRecordingsCompanion(
+        id: Value(id),
+        projectId: Value(projectId),
+        genreId: Value(entry.genreId!),
+        subcategoryId:
+            entry.subcategoryId != null && entry.subcategoryId!.isNotEmpty
+            ? Value(entry.subcategoryId!)
+            : const Value.absent(),
+        registerId: entry.registerId != null && entry.registerId!.isNotEmpty
+            ? Value(entry.registerId!)
+            : const Value.absent(),
+        storytellerId: entry.storytellerId != null
+            ? Value(entry.storytellerId!)
+            : const Value.absent(),
+        userId: currentUserId != null
+            ? Value(currentUserId)
+            : const Value.absent(),
+        title: Value(title),
+        description: description.isNotEmpty
+            ? Value(description)
+            : const Value.absent(),
+        durationSeconds: Value(entry.durationSeconds),
+        fileSizeBytes: Value(fileSizeBytes),
+        format: Value(format),
+        localFilePath: Value(savedFilePath),
+        recordedAt: Value(DateTime.now()),
+      ),
+    );
   }
 
   @override
