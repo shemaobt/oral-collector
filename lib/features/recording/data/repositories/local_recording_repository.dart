@@ -12,6 +12,14 @@ class LocalRecordingRepository {
     await _db.into(_db.localRecordings).insert(data);
   }
 
+  /// Inserts [data], or updates the row in place when its primary key already
+  /// exists. Columns absent from [data] are left untouched, so an in-progress
+  /// upload's resume state (`resumableSessionUri`, `uploadedBytes`) survives a
+  /// retry that reuses the same id.
+  Future<void> upsertRecording(LocalRecordingsCompanion data) async {
+    await _db.into(_db.localRecordings).insertOnConflictUpdate(data);
+  }
+
   Future<List<LocalRecording>> getAllRecordings(String projectId) async {
     return (_db.select(_db.localRecordings)
           ..where((t) => t.projectId.equals(projectId))

@@ -61,6 +61,15 @@ Path: @/lib/features/recording/data/repositories
   `localRecordingStreamProvider`), `getPendingUploads`,
   `getPendingWebUploads`, and the aggregate helpers
   `countRecordings`/`totalDuration`/`getLocalUnclassifiedStats`.
+- `insertRecording` is a plain insert; `upsertRecording` is
+  `insertOnConflictUpdate` (insert-or-update keyed on the primary key).
+  Columns absent from the companion are left untouched on an update, so a
+  partial upsert preserves whatever the existing row already holds. The
+  web direct-upload path
+  ([../services/direct_recording_uploader.dart](../services/direct_recording_uploader.dart))
+  uses `upsertRecording` for its shadow row so a retry that reuses the same
+  id (`web_<serverId>`) reconciles in place instead of hitting `UNIQUE
+  constraint failed` — see Things to Know.
 - `cacheDownloadedAudio({recording, localFilePath})` is the canonical
   entry point for the "download server audio for editing" path. It runs
   inside a Drift transaction. If a row for `recording.id` already exists,
@@ -123,5 +132,17 @@ Path: @/lib/features/recording/data/repositories
   metadata.** After upload, server-side enrichment (e.g. `user_id`
   resolution) is reconciled later by the detail screen's heal path
   (`buildHealMetadataCompanion`), not by the upload pipeline.
+- **`upsertRecording` is what makes a failed web import retryable
+  (ENG-80).** A large web import inserts a `web_<serverId>` shadow row to
+  track resume state; on failure that row is intentionally left behind for
+  the resume banner
+  ([../../presentation/widgets/pending_web_uploads_banner.dart](../../presentation/widgets/pending_web_uploads_banner.dart)).
+  Re-importing the same file from the import screen re-derives the same
+  `serverId` (the create is server-idempotent) and re-writes the shadow row;
+  with a plain `insertRecording` that second write threw on the duplicate
+  primary key and the import could never finish. Because `upsertRecording`
+  leaves `resumableSessionUri`/`uploadedBytes` absent on the second write,
+  those columns survive and the resumable upload service continues from the
+  persisted offset rather than restarting.
 
 Created and maintained by Nori.
