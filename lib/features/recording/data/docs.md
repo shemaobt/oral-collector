@@ -185,6 +185,16 @@ Path: @/lib/features/recording/data
   the platform player still runs. This preserves native playback of formats
   the browser refuses, and lets `file_import_screen.dart` distinguish
   `unsupportedCodec` from `unreadableContainer` in its rejection message.
+- **`RecordingFinalizationService.finalize` can keep its sources alive.**
+  The `deleteSources` flag (default `true`) controls whether the segment
+  files and the intermediate `sourcePath` are deleted after a successful
+  assemble. The normal stop path leaves it `true`; crash recovery
+  (`InterruptedSessionsNotifier.save`) passes `false` so the segments
+  survive until the user confirms the save on the confirmation screen —
+  only then are they cleaned up by `confirmRecovery`. This is the
+  data-layer half of the ENG-80 no-data-loss invariant; the flow is
+  documented in
+  [../presentation/notifiers/docs.md](../presentation/notifiers/docs.md).
 - **64-bit container fields are read as two uint32 halves.** dart2js has no
   native 64-bit int / `ByteData.getUint64`, so `mp4_box_probe.dart` and
   `ogg_page_probe.dart` reconstruct large durations/granules from two 32-bit

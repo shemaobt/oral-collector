@@ -71,6 +71,7 @@ void main() {
         sessionId: any(named: 'sessionId'),
         segmentPaths: any(named: 'segmentPaths'),
         totalDuration: any(named: 'totalDuration'),
+        deleteSources: any(named: 'deleteSources'),
       ),
     ).thenThrow(error);
   }
@@ -81,6 +82,7 @@ void main() {
         sessionId: any(named: 'sessionId'),
         segmentPaths: any(named: 'segmentPaths'),
         totalDuration: any(named: 'totalDuration'),
+        deleteSources: any(named: 'deleteSources'),
       ),
     ).thenAnswer((_) async => outcome);
   }
@@ -102,7 +104,8 @@ void main() {
   });
 
   test(
-    'finalize succeeds: marks the session recovered and returns the result',
+    'save: finalizes WITHOUT deleting sources, returns the result, and defers '
+    'markRecovered (the session stays recoverable until confirmRecovery)',
     () async {
       final result = RecordingResult(
         filePath: '${tmp.path}/out.m4a',
@@ -119,9 +122,36 @@ void main() {
       final returned = await notifier.save('s1');
 
       expect(returned?.filePath, '${tmp.path}/out.m4a');
-      verify(() => repo.markRecovered('s1')).called(1);
+      verify(
+        () => service.finalize(
+          sessionId: 's1',
+          segmentPaths: any(named: 'segmentPaths'),
+          totalDuration: any(named: 'totalDuration'),
+          deleteSources: false,
+        ),
+      ).called(1);
+      verifyNever(() => repo.markRecovered(any()));
     },
   );
+
+  test('confirmRecovery: marks the session recovered and deletes the session '
+      'segments except the kept (finalized) file', () async {
+    final keep = '${tmp.path}/out.m4a';
+    File(keep).writeAsBytesSync(const [9, 9, 9]);
+
+    final container = makeContainer();
+    addTearDown(container.dispose);
+    final notifier = container.read(
+      interruptedSessionsNotifierProvider.notifier,
+    );
+
+    await notifier.confirmRecovery('s1', keepPath: keep);
+
+    verify(() => repo.markRecovered('s1')).called(1);
+    verify(() => coordinator.refresh()).called(1);
+    expect(File(segPath).existsSync(), isFalse);
+    expect(File(keep).existsSync(), isTrue);
+  });
 
   test('finalize returns null without throwing: keeps the session recoverable '
       'instead of marking it recovered', () async {
