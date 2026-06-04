@@ -44,6 +44,8 @@ class ConfirmationStep extends ConsumerStatefulWidget {
     this.registerName,
     required this.onReRecord,
     required this.onDiscard,
+    this.onSaved,
+    this.showReRecord = true,
   });
 
   final RecordingResult result;
@@ -55,6 +57,14 @@ class ConfirmationStep extends ConsumerStatefulWidget {
   final String? registerName;
   final VoidCallback onReRecord;
   final VoidCallback onDiscard;
+
+  /// When set, runs instead of the default `go('/home')` after a successful
+  /// save (crash-recovery uses it to mark the session recovered and route to
+  /// the recordings list). When null, the normal new-recording flow applies.
+  final VoidCallback? onSaved;
+
+  /// Recovery has no segments to re-record, so the host hides the button.
+  final bool showReRecord;
 
   @override
   ConsumerState<ConfirmationStep> createState() => _ConfirmationStepState();
@@ -306,7 +316,11 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(l10n.recording_saved)));
-      context.go('/home');
+      if (widget.onSaved != null) {
+        widget.onSaved!();
+      } else {
+        context.go('/home');
+      }
     }
   }
 
@@ -747,35 +761,36 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
                         ),
                       ),
 
-                      const SizedBox(height: 8),
-
-                      SizedBox(
-                        width: double.infinity,
-                        height: 52,
-                        child: OutlinedButton(
-                          onPressed: _isSaving
-                              ? null
-                              : () {
-                                  _player?.stop();
-                                  widget.onReRecord();
-                                },
-                          style: OutlinedButton.styleFrom(
-                            side: BorderSide(
-                              color: colors.border.withValues(alpha: 0.5),
+                      if (widget.showReRecord) ...[
+                        const SizedBox(height: 8),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 52,
+                          child: OutlinedButton(
+                            onPressed: _isSaving
+                                ? null
+                                : () {
+                                    _player?.stop();
+                                    widget.onReRecord();
+                                  },
+                            style: OutlinedButton.styleFrom(
+                              side: BorderSide(
+                                color: colors.border.withValues(alpha: 0.5),
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
                             ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                          ),
-                          child: Text(
-                            l10n.recording_recordAgain,
-                            style: theme.textTheme.titleSmall?.copyWith(
-                              color: colors.foreground,
-                              fontWeight: FontWeight.w500,
+                            child: Text(
+                              l10n.recording_recordAgain,
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                color: colors.foreground,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                           ),
                         ),
-                      ),
+                      ],
 
                       const SizedBox(height: 4),
 
