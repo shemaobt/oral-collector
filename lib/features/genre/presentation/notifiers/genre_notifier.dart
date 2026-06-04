@@ -1,12 +1,9 @@
-import 'dart:convert';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/auth/auth_notifier.dart';
 import '../../../../core/errors/api_exception.dart';
+import '../../data/genre_cache.dart';
 import '../../data/providers.dart';
-import '../../domain/entities/genre.dart';
 import '../../domain/repositories/genre_repository.dart';
 import 'genre_state.dart';
 
@@ -15,9 +12,8 @@ final genreNotifierProvider = NotifierProvider<GenreNotifier, GenreState>(
 );
 
 class GenreNotifier extends Notifier<GenreState> {
-  static const _cachedGenresKey = 'cached_genres';
-
   GenreRepository get _repo => ref.read(genreRepositoryProvider);
+  GenreCache get _cache => ref.read(genreCacheProvider);
 
   @override
   GenreState build() {
@@ -26,25 +22,11 @@ class GenreNotifier extends Notifier<GenreState> {
   }
 
   Future<void> _hydrateFromCache() async {
-    final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_cachedGenresKey);
-    if (raw == null) return;
-    try {
-      final genres = (jsonDecode(raw) as List<dynamic>)
-          .map((j) => Genre.fromJson(j as Map<String, dynamic>))
-          .toList();
-      state = state.copyWith(genres: genres);
-    } on Exception {
-      // ignore corrupt cache
-    }
-  }
-
-  Future<void> _persistCache(List<Genre> genres) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-      _cachedGenresKey,
-      jsonEncode(genres.map((g) => g.toJson()).toList()),
-    );
+    final cached = await _cache.read();
+    if (cached == null) return;
+    // A completed fetch is authoritative: never let a late hydration clobber it.
+    if (state.lastFetched != null) return;
+    state = state.copyWith(genres: cached);
   }
 
   Future<void> fetchGenres() async {
@@ -52,7 +34,7 @@ class GenreNotifier extends Notifier<GenreState> {
     state = state.copyWith(isLoading: true);
     try {
       final genres = await _repo.listGenres();
-      await _persistCache(genres);
+      await _cache.write(genres);
       state = GenreState(
         genres: genres,
         isLoading: false,
