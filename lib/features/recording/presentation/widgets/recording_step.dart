@@ -184,10 +184,7 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
   }
 
   void _openRecoverySheet() {
-    UnsavedRecordingsSheet.show(context, (result) {
-      if (!mounted) return;
-      widget.onRecordingComplete(result);
-    });
+    UnsavedRecordingsSheet.show(context);
   }
 
   @override

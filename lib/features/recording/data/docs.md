@@ -79,6 +79,17 @@ Path: @/lib/features/recording/data
 - The `repositories/` subfolder hosts `LocalRecordingRepository`,
   `RecordingApiRepositoryImpl`, and `RecordingSessionRepository`. See
   [./repositories/docs.md](repositories/docs.md).
+- `services/direct_recording_uploader.dart` (`DirectRecordingUploader`) is
+  the web file-import upload path: it creates the server metadata, then
+  branches on a 5 MB threshold. Files under the threshold PUT in a single
+  shot with **no Drift row**. Files at or above it go resumable via
+  `ResumableUploadService.uploadFromSource`, and for the duration of that
+  upload a `web_<serverId>` shadow row (`uploadStatus='web_uploading'`)
+  exists in Drift to carry resume state; it is deleted on success and left
+  in place on failure for the resume banner. That shadow row is written with
+  `LocalRecordingRepository.upsertRecording` (not `insertRecording`) so a
+  retry of a failed large import reuses the row instead of colliding on its
+  primary key — see ENG-80 in Things to Know.
 - The `services/` subfolder hosts the audio probe, the
   segmented recorder, the foreground task, recovery & trash services, the
   resumable / direct uploaders, the audio path resolver used by the
@@ -185,10 +196,33 @@ Path: @/lib/features/recording/data
   the platform player still runs. This preserves native playback of formats
   the browser refuses, and lets `file_import_screen.dart` distinguish
   `unsupportedCodec` from `unreadableContainer` in its rejection message.
+- **`RecordingFinalizationService.finalize` can keep its sources alive.**
+  The `deleteSources` flag (default `true`) controls whether the segment
+  files and the intermediate `sourcePath` are deleted after a successful
+  assemble. The normal stop path leaves it `true`; crash recovery
+  (`InterruptedSessionsNotifier.save`) passes `false` so the segments
+  survive until the user confirms the save on the confirmation screen —
+  only then are they cleaned up by `confirmRecovery`. This is the
+  data-layer half of the ENG-80 no-data-loss invariant; the flow is
+  documented in
+  [../presentation/notifiers/docs.md](../presentation/notifiers/docs.md).
 - **64-bit container fields are read as two uint32 halves.** dart2js has no
   native 64-bit int / `ByteData.getUint64`, so `mp4_box_probe.dart` and
   `ogg_page_probe.dart` reconstruct large durations/granules from two 32-bit
   reads — required for the parsers to behave identically on web and native.
+- **The web resumable import shadow row is upserted, and survives a retry
+  (ENG-80).** `DirectRecordingUploader._uploadResumable` inserts a
+  `web_<serverId>` shadow row and only deletes it on success — its `catch`
+  rethrows without cleanup on purpose, because the resume banner
+  ([../presentation/widgets/pending_web_uploads_banner.dart](../presentation/widgets/pending_web_uploads_banner.dart))
+  enumerates these `web_uploading` rows via `getPendingWebUploads`. The
+  small-file (single-shot) path never creates this row. Retrying a failed
+  large import from the import screen re-derives the same `serverId` (the
+  metadata create is idempotent server-side) and re-writes the shadow row;
+  because the write is an `upsertRecording` that omits
+  `resumableSessionUri`/`uploadedBytes`, the prior resume state is kept and
+  the resumable service continues from the persisted offset instead of
+  restarting or throwing on the duplicate key.
 - The `localRecordingStreamProvider` is a Drift `watchSingleOrNull` query.
   Any update via `LocalRecordingRepository` (including the heal companion)
   will fire the stream, which the detail screen listens to. This is why

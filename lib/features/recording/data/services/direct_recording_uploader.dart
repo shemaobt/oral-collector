@@ -170,7 +170,7 @@ class DirectRecordingUploader {
         source.filePath ??
         'web_import_${DateTime.now().millisecondsSinceEpoch}_$serverId';
 
-    await _recordingRepo.insertRecording(
+    await _recordingRepo.upsertRecording(
       LocalRecordingsCompanion(
         id: Value(shadowId),
         projectId: Value(meta.projectId),

@@ -65,7 +65,10 @@ Path: @/lib/features/recording/presentation/widgets
   waveform, finalizing overlay, confirmation step) consume
   `recordingSessionNotifierProvider` and visualize the segmented
   recorder's progress; they call back into the notifier for transport
-  actions.
+  actions. `ConfirmationStep` is the only widget that materializes a
+  `local_recording` row (its `_save` writes the Drift row / web upload);
+  it is reused by both the normal recording flow and crash recovery via
+  [../recovery_confirm_screen.dart](../recovery_confirm_screen.dart).
 - List-side widgets (recording card, filter chips, filter bar, filter
   sheet) consume `recordingsListNotifierProvider` and the
   genre/project notifiers; they emit user intent back to
@@ -123,5 +126,16 @@ Path: @/lib/features/recording/presentation/widgets
   [../../data/services/segmented_recorder.dart](../../data/services/segmented_recorder.dart),
   which subscribes to the platform `interruptionEventStream` and
   re-activates the session itself.
+- **`ConfirmationStep` is parameterized for the recovery reuse (ENG-80).**
+  Two optional params let the recovery screen host the same widget
+  without duplicating the save logic: `onSaved` runs in place of the
+  default `go('/home')` after the row is written (recovery uses it to
+  mark the session recovered and route to `/recordings`), and
+  `showReRecord` hides the "record again" button (recovery has no live
+  segments to re-capture). Because the save row is created here, the
+  recovery flow must reach this screen — routing straight to the list
+  after finalize was the original ENG-80 data-loss bug. See
+  [../notifiers/docs.md](../notifiers/docs.md) for the deferred-resolution
+  invariant.
 
 Created and maintained by Nori.

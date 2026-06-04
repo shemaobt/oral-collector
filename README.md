@@ -58,7 +58,7 @@ See [AGENTS.md](AGENTS.md) for project conventions and agent guidelines.
 - **Analyze only:** `flutter analyze`
 - **Format only:** `dart format lib/ test/`
 
-The same checks run in CI on every push and pull request to `main` (see [.github/workflows/lint.yml](.github/workflows/lint.yml)).
+Format, analyze, and the full test suite (`flutter test`) run in CI on every pull request to `main` and `dev` (see [.github/workflows/lint.yml](.github/workflows/lint.yml) and [.github/workflows/test.yml](.github/workflows/test.yml)).
 
 ## Deployment
 
