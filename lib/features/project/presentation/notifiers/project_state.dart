@@ -7,6 +7,7 @@ class ProjectState {
   final Project? activeProject;
   final bool isLoading;
   final String? error;
+  final DateTime? lastFetched;
 
   const ProjectState({
     this.projects = const [],
@@ -14,6 +15,7 @@ class ProjectState {
     this.activeProject,
     this.isLoading = false,
     this.error,
+    this.lastFetched,
   });
 
   ProjectState copyWith({
@@ -22,6 +24,7 @@ class ProjectState {
     Project? activeProject,
     bool? isLoading,
     String? error,
+    DateTime? lastFetched,
     bool clearActiveProject = false,
     bool clearError = false,
   }) {
@@ -33,6 +36,7 @@ class ProjectState {
           : (activeProject ?? this.activeProject),
       isLoading: isLoading ?? this.isLoading,
       error: clearError ? null : (error ?? this.error),
+      lastFetched: lastFetched ?? this.lastFetched,
     );
   }
 }

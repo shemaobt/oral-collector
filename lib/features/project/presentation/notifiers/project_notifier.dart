@@ -1,10 +1,9 @@
-import 'dart:convert';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/auth/auth_notifier.dart';
 import '../../../../core/errors/api_exception.dart';
+import '../../data/project_cache.dart';
 import '../../data/providers.dart';
 import '../../domain/entities/language.dart';
 import '../../domain/entities/project.dart';
@@ -17,10 +16,9 @@ final projectNotifierProvider = NotifierProvider<ProjectNotifier, ProjectState>(
 
 class ProjectNotifier extends Notifier<ProjectState> {
   static const _activeProjectIdKey = 'active_project_id';
-  static const _cachedProjectsKey = 'cached_projects';
-  static const _cachedLanguagesKey = 'cached_languages';
 
   ProjectRepository get _repo => ref.read(projectRepositoryProvider);
+  ProjectCache get _cache => ref.read(projectCacheProvider);
 
   @override
   ProjectState build() {
@@ -29,47 +27,21 @@ class ProjectNotifier extends Notifier<ProjectState> {
   }
 
   Future<void> _hydrateFromCache() async {
-    final prefs = await SharedPreferences.getInstance();
-    final rawProjects = prefs.getString(_cachedProjectsKey);
-    if (rawProjects == null) return;
+    final cached = await _cache.read();
+    if (cached == null) return;
+    // A completed fetch is authoritative: never let a late hydration clobber it.
+    if (state.lastFetched != null) return;
 
-    try {
-      final projects = (jsonDecode(rawProjects) as List<dynamic>)
-          .map((j) => Project.fromJson(j as Map<String, dynamic>))
-          .toList();
+    final active = await _restoreActiveProject(cached.projects);
+    // _restoreActiveProject awaits prefs; a fetch can complete during that gap.
+    // Re-check so the late hydration still can't clobber fresh server data.
+    if (state.lastFetched != null) return;
 
-      final rawLanguages = prefs.getString(_cachedLanguagesKey);
-      final languages = rawLanguages != null
-          ? (jsonDecode(rawLanguages) as List<dynamic>)
-                .map((j) => Language.fromJson(j as Map<String, dynamic>))
-                .toList()
-          : <Language>[];
-
-      final active = await _restoreActiveProject(projects);
-
-      state = state.copyWith(
-        projects: projects,
-        languages: languages,
-        activeProject: active,
-        clearActiveProject: active == null,
-      );
-    } on Exception {
-      // ignore corrupt cache
-    }
-  }
-
-  Future<void> _persistCache(
-    List<Project> projects,
-    List<Language> languages,
-  ) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-      _cachedProjectsKey,
-      jsonEncode(projects.map((p) => p.toJson()).toList()),
-    );
-    await prefs.setString(
-      _cachedLanguagesKey,
-      jsonEncode(languages.map((l) => l.toJson()).toList()),
+    state = state.copyWith(
+      projects: cached.projects,
+      languages: cached.languages,
+      activeProject: active,
+      clearActiveProject: active == null,
     );
   }
 
@@ -87,7 +59,7 @@ class ProjectNotifier extends Notifier<ProjectState> {
       final enriched = _enrichWithLanguageNames(projects, languages);
       final active = await _restoreActiveProject(enriched);
 
-      await _persistCache(enriched, languages);
+      await _cache.write(enriched, languages);
 
       state = state.copyWith(
         projects: enriched,
@@ -95,6 +67,7 @@ class ProjectNotifier extends Notifier<ProjectState> {
         activeProject: active,
         isLoading: false,
         clearActiveProject: active == null,
+        lastFetched: DateTime.now(),
       );
     } on UnauthorizedException {
       state = state.copyWith(isLoading: false);
