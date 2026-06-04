@@ -19,10 +19,10 @@ Widget _harness(SyncState state) {
     overrides: [
       syncNotifierProvider.overrideWith(() => _FakeSyncNotifier(state)),
     ],
-    child: MaterialApp(
+    child: const MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: const Scaffold(body: SyncStatusIndicator()),
+      home: Scaffold(body: SyncStatusIndicator()),
     ),
   );
 }

@@ -192,7 +192,7 @@ class _ScrollingWaveformPainter extends CustomPainter {
           width: barWidth,
           height: barHeight,
         ),
-        Radius.circular(barWidth / 2),
+        const Radius.circular(barWidth / 2),
       );
       canvas.drawRRect(rect, paint);
     }

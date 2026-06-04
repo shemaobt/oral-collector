@@ -10,8 +10,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
 import 'package:oral_collector/core/database/app_database.dart';
 import 'package:oral_collector/core/network/authenticated_client.dart';
 import 'package:oral_collector/features/recording/data/repositories/local_recording_repository.dart';
@@ -19,6 +17,7 @@ import 'package:oral_collector/features/storyteller/data/repositories/local_stor
 import 'package:oral_collector/features/storyteller/domain/entities/storyteller.dart';
 import 'package:oral_collector/features/sync/data/repositories/sync_engine.dart';
 import 'package:oral_collector/features/sync/domain/repositories/connectivity_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MockConnectivity extends Mock implements ConnectivityService {}
 

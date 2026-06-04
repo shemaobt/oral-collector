@@ -5,7 +5,7 @@ import '../../../l10n/app_localizations.dart';
 String friendlyErrorMessage(String raw, AppLocalizations l10n) {
   final lower = raw.toLowerCase();
 
-  var message = raw
+  final message = raw
       .replaceFirst(RegExp(r'^Exception:\s*', caseSensitive: false), '')
       .replaceFirst(
         RegExp(r'^ClientException[^:]*:\s*', caseSensitive: false),

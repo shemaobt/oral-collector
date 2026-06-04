@@ -6,9 +6,9 @@ void main() {
     const oneMinute = Duration(minutes: 1);
 
     test('not saveable when nothing was edited', () {
-      final decision = TrimEditDecision(
-        splitPoints: const [],
-        excludedSegments: const {},
+      final decision = const TrimEditDecision(
+        splitPoints: [],
+        excludedSegments: {},
         gainDb: 0.0,
         totalDuration: oneMinute,
       );
@@ -17,9 +17,9 @@ void main() {
     });
 
     test('saveable when only the volume changed', () {
-      final decision = TrimEditDecision(
-        splitPoints: const [],
-        excludedSegments: const {},
+      final decision = const TrimEditDecision(
+        splitPoints: [],
+        excludedSegments: {},
         gainDb: 3.0,
         totalDuration: oneMinute,
       );
@@ -29,9 +29,9 @@ void main() {
     });
 
     test('saveable when only splits were added', () {
-      final decision = TrimEditDecision(
-        splitPoints: const [0.5],
-        excludedSegments: const {},
+      final decision = const TrimEditDecision(
+        splitPoints: [0.5],
+        excludedSegments: {},
         gainDb: 0.0,
         totalDuration: oneMinute,
       );
@@ -41,9 +41,9 @@ void main() {
     });
 
     test('saveable when splits and gain change happen together', () {
-      final decision = TrimEditDecision(
-        splitPoints: const [0.3, 0.7],
-        excludedSegments: const {},
+      final decision = const TrimEditDecision(
+        splitPoints: [0.3, 0.7],
+        excludedSegments: {},
         gainDb: -4.0,
         totalDuration: oneMinute,
       );
@@ -53,9 +53,9 @@ void main() {
     });
 
     test('not saveable when every split segment was excluded', () {
-      final decision = TrimEditDecision(
-        splitPoints: const [0.5],
-        excludedSegments: const {0, 1},
+      final decision = const TrimEditDecision(
+        splitPoints: [0.5],
+        excludedSegments: {0, 1},
         gainDb: 0.0,
         totalDuration: oneMinute,
       );
@@ -64,9 +64,9 @@ void main() {
     });
 
     test('keptCount reflects the number of surviving segments', () {
-      final decision = TrimEditDecision(
-        splitPoints: const [0.25, 0.5, 0.75],
-        excludedSegments: const {1},
+      final decision = const TrimEditDecision(
+        splitPoints: [0.25, 0.5, 0.75],
+        excludedSegments: {1},
         gainDb: 0.0,
         totalDuration: oneMinute,
       );
@@ -78,9 +78,9 @@ void main() {
     test(
       'boost-only mode produces a single virtual segment covering full audio',
       () {
-        final decision = TrimEditDecision(
-          splitPoints: const [],
-          excludedSegments: const {},
+        final decision = const TrimEditDecision(
+          splitPoints: [],
+          excludedSegments: {},
           gainDb: 5.0,
           totalDuration: oneMinute,
         );
@@ -95,9 +95,9 @@ void main() {
     );
 
     test('split mode emits one segment per kept slice with applied gain', () {
-      final decision = TrimEditDecision(
-        splitPoints: const [0.5],
-        excludedSegments: const {},
+      final decision = const TrimEditDecision(
+        splitPoints: [0.5],
+        excludedSegments: {},
         gainDb: 2.0,
         totalDuration: oneMinute,
       );
@@ -114,9 +114,9 @@ void main() {
     });
 
     test('excluded segments do not appear in the output list', () {
-      final decision = TrimEditDecision(
-        splitPoints: const [0.25, 0.75],
-        excludedSegments: const {1},
+      final decision = const TrimEditDecision(
+        splitPoints: [0.25, 0.75],
+        excludedSegments: {1},
         gainDb: 0.0,
         totalDuration: oneMinute,
       );
@@ -129,9 +129,9 @@ void main() {
     });
 
     test('negative gain inside the deadzone is treated as unchanged', () {
-      final decision = TrimEditDecision(
-        splitPoints: const [],
-        excludedSegments: const {},
+      final decision = const TrimEditDecision(
+        splitPoints: [],
+        excludedSegments: {},
         gainDb: -0.005,
         totalDuration: oneMinute,
       );
@@ -142,9 +142,9 @@ void main() {
     test(
       'gain exactly equal to the deadzone threshold is treated as no change',
       () {
-        final decision = TrimEditDecision(
-          splitPoints: const [],
-          excludedSegments: const {},
+        final decision = const TrimEditDecision(
+          splitPoints: [],
+          excludedSegments: {},
           gainDb: 0.01,
           totalDuration: oneMinute,
         );
@@ -154,20 +154,20 @@ void main() {
     );
 
     test('audio exactly at minimum duration is still too short', () {
-      final decision = TrimEditDecision(
-        splitPoints: const [],
-        excludedSegments: const {},
+      final decision = const TrimEditDecision(
+        splitPoints: [],
+        excludedSegments: {},
         gainDb: 6.0,
-        totalDuration: const Duration(milliseconds: 200),
+        totalDuration: Duration(milliseconds: 200),
       );
 
       expect(decision.canSave, isFalse);
     });
 
     test('unsorted split points still produce sliced segments in order', () {
-      final decision = TrimEditDecision(
-        splitPoints: const [0.75, 0.25],
-        excludedSegments: const {},
+      final decision = const TrimEditDecision(
+        splitPoints: [0.75, 0.25],
+        excludedSegments: {},
         gainDb: 0.0,
         totalDuration: oneMinute,
       );

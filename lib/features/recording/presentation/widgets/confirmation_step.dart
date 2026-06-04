@@ -12,13 +12,12 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/auth/auth_notifier.dart';
 import '../../../../core/database/app_database.dart';
+import '../../../../core/platform/file_ops.dart' as file_ops;
+import '../../../../core/platform/file_source.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/utils/error_helpers.dart';
 import '../../../../shared/utils/format.dart';
 import '../../../../shared/utils/recording_title.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/platform/file_ops.dart' as file_ops;
-import '../../../../core/platform/file_source.dart';
-import '../../data/services/audio_probe.dart';
 import '../../../../shared/widgets/app_shell.dart';
 import '../../../../shared/widgets/waveform_visualizer.dart';
 import '../../../project/presentation/notifiers/project_notifier.dart';
@@ -27,6 +26,7 @@ import '../../../storyteller/presentation/notifiers/project_storytellers_notifie
 import '../../../storyteller/presentation/widgets/storyteller_picker.dart';
 import '../../../sync/presentation/notifiers/sync_notifier.dart';
 import '../../data/providers.dart';
+import '../../data/services/audio_probe.dart';
 import '../../data/services/direct_recording_uploader.dart';
 import '../../domain/entities/classification.dart';
 import '../notifiers/recording_session_notifier.dart';
@@ -591,7 +591,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
                 ),
 
                 Padding(
-                  padding: EdgeInsets.fromLTRB(
+                  padding: const EdgeInsets.fromLTRB(
                     20,
                     0,
                     20,

@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import '../../../../l10n/app_localizations.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/widgets/app_shell.dart';
 import '../../../shared/widgets/error_snack_bar.dart';
-import '../../../../l10n/app_localizations.dart';
 import '../../sync/presentation/notifiers/sync_notifier.dart';
 import '../data/providers.dart';
+import '../domain/entities/language.dart';
 import '../domain/repositories/project_repository.dart';
 import 'notifiers/project_notifier.dart';
-import '../domain/entities/language.dart';
 
 Future<bool?> showCreateProjectSheet(BuildContext context) {
   return showModalBottomSheet<bool>(

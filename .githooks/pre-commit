@@ -2,5 +2,9 @@
 set -e
 cd "$(git rev-parse --show-toplevel)"
 flutter pub get
-flutter analyze
+# Staged lints (ENG-89 / ADR-0007) report at `info`; --no-fatal-infos keeps the
+# hook green until rules are promoted. Warnings and errors still block.
+flutter analyze --no-fatal-infos
 dart format --set-exit-if-changed lib/ test/
+# riverpod_lint via custom_lint — non-blocking while the baseline is burned down.
+dart run custom_lint || true

@@ -3,12 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import '../../../../l10n/app_localizations.dart';
+import '../../../core/auth/auth_notifier.dart';
+import '../../../core/auth/auth_state.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/preview_helpers.dart';
 import '../../../shared/widgets/error_snack_bar.dart';
-import '../../../core/auth/auth_notifier.dart';
-import '../../../core/auth/auth_state.dart';
-import '../../../../l10n/app_localizations.dart';
 import 'widgets/hero_panel.dart';
 
 @Preview(name: 'Signup Screen', wrapper: previewWrapper)
@@ -71,7 +71,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       return Scaffold(
         body: Row(
           children: [
-            Expanded(flex: 4, child: HeroPanel()),
+            const Expanded(flex: 4, child: HeroPanel()),
             Expanded(
               flex: 5,
               child: _buildDesktopForm(authState, colors, theme, l10n),
