@@ -103,6 +103,29 @@ Path: @/lib/features/recording/presentation/widgets
   returns `child` as-is. The Focus + space-bar shortcut is meant to
   match desktop-browser audio player conventions; mobile does not get
   it.
+- **"Returned from background" is detected by a real-background flag,
+  not the previous lifecycle state.** `recording_step.dart` re-activates
+  the capture audio session on resume (otherwise the mic comes back
+  dead on Android 14+). The framework synthesizes intermediate states,
+  so the return path is always `paused → hidden → inactive → resumed` —
+  the state immediately before `resumed` is *always* `inactive`, never
+  `paused`. The widget therefore latches a flag whenever it sees
+  `hidden`/`paused` and only acts on the following `resumed` (and only
+  while `isRecording`), calling
+  `recordingSessionNotifierProvider.notifier.reactivateAudioSession()`
+  and showing the "continued in background" banner for 3s. A bare
+  `inactive` blip (e.g. opening iOS control center, which never reaches
+  background) leaves the flag unset, so it neither re-activates nor
+  shows the banner — this avoids the false positive a `previous ==
+  inactive` check would produce.
+- **This widget's resume path is distinct from OS-interruption
+  recovery.** The foreground/background re-activation above is owned by
+  the widget and the session notifier. Re-activation after an OS audio
+  interruption (phone calls, another app grabbing audio) is a separate
+  path inside
+  [../../data/services/segmented_recorder.dart](../../data/services/segmented_recorder.dart),
+  which subscribes to the platform `interruptionEventStream` and
+  re-activates the session itself.
 - **`ConfirmationStep` is parameterized for the recovery reuse (ENG-80).**
   Two optional params let the recovery screen host the same widget
   without duplicating the save logic: `onSaved` runs in place of the
