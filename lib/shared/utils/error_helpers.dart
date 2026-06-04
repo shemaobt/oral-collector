@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import '../../../l10n/app_localizations.dart';
+import '../../core/errors/app_exception.dart';
 
 String friendlyErrorMessage(String raw, AppLocalizations l10n) {
   final lower = raw.toLowerCase();
@@ -69,7 +70,8 @@ String friendlyErrorMessage(String raw, AppLocalizations l10n) {
     return l10n.error_imageUploadFailed;
   }
   if (lower.contains('not authenticated') ||
-      lower.contains('session expired')) {
+      lower.contains('session expired') ||
+      lower.contains('unauthorized')) {
     return l10n.error_notAuthenticated;
   }
   if (lower.contains('permission') || lower.contains('forbidden')) {
@@ -150,4 +152,26 @@ String _humanizeDetail(String detail, AppLocalizations l10n) {
     return detail;
   }
   return l10n.error_generic;
+}
+
+/// Localizes any error for display: typed AppException first, then the legacy
+/// string-matching fallback for untyped errors.
+String friendlyErrorFor(Object error, AppLocalizations l10n) {
+  if (error is AppException) return messageForException(error, l10n);
+  return friendlyErrorMessage(error.toString(), l10n);
+}
+
+/// Exhaustive map from a domain exception to a localized message. Adding a leaf
+/// to AppException (e.g. ENG-147 ParseException) breaks compilation here until a
+/// case is added.
+String messageForException(AppException e, AppLocalizations l10n) {
+  return switch (e) {
+    NetworkException() => l10n.error_network,
+    TimeoutException() => l10n.error_timeout,
+    UnauthorizedException() => l10n.error_notAuthenticated,
+    ForbiddenException() => l10n.error_noPermission,
+    ConflictException() => l10n.error_serverFailure,
+    ValidationException() => l10n.error_generic,
+    ServerException() => l10n.error_serverFailure,
+  };
 }
