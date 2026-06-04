@@ -48,7 +48,7 @@ class RecordingStep extends ConsumerStatefulWidget {
 
 class _RecordingStepState extends ConsumerState<RecordingStep>
     with WidgetsBindingObserver {
-  AppLifecycleState? _lastLifecycleState;
+  bool _wasBackgrounded = false;
   bool _showBackgroundResumeBanner = false;
   Timer? _backgroundBannerTimer;
 
@@ -71,25 +71,33 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    final previous = _lastLifecycleState;
-    _lastLifecycleState = state;
-    final isRecording = ref.read(recordingSessionNotifierProvider).isRecording;
-    if (state == AppLifecycleState.resumed &&
-        previous == AppLifecycleState.paused &&
-        isRecording) {
-      unawaited(
-        ref
-            .read(recordingSessionNotifierProvider.notifier)
-            .reactivateAudioSession(),
-      );
-      if (!mounted) return;
-      setState(() => _showBackgroundResumeBanner = true);
-      _backgroundBannerTimer?.cancel();
-      _backgroundBannerTimer = Timer(const Duration(seconds: 3), () {
-        if (!mounted) return;
-        setState(() => _showBackgroundResumeBanner = false);
-      });
+    // The framework synthesizes intermediate states, so the return path is
+    // always paused → hidden → inactive → resumed. We can't key off the state
+    // right before `resumed` (it's always `inactive`); instead we remember
+    // whether the app actually went to background (hidden/paused) and act on
+    // the next `resumed`. A bare `inactive` blip (e.g. iOS control center)
+    // never sets the flag, so it neither re-activates nor shows the banner.
+    if (state == AppLifecycleState.hidden ||
+        state == AppLifecycleState.paused) {
+      _wasBackgrounded = true;
     }
+    if (state != AppLifecycleState.resumed) return;
+    final wasBackgrounded = _wasBackgrounded;
+    _wasBackgrounded = false;
+    if (!wasBackgrounded) return;
+    if (!ref.read(recordingSessionNotifierProvider).isRecording) return;
+    unawaited(
+      ref
+          .read(recordingSessionNotifierProvider.notifier)
+          .reactivateAudioSession(),
+    );
+    if (!mounted) return;
+    setState(() => _showBackgroundResumeBanner = true);
+    _backgroundBannerTimer?.cancel();
+    _backgroundBannerTimer = Timer(const Duration(seconds: 3), () {
+      if (!mounted) return;
+      setState(() => _showBackgroundResumeBanner = false);
+    });
   }
 
   Future<void> _handleStop(RecordingSessionNotifier notifier) async {
@@ -176,10 +184,7 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
   }
 
   void _openRecoverySheet() {
-    UnsavedRecordingsSheet.show(context, (result) {
-      if (!mounted) return;
-      widget.onRecordingComplete(result);
-    });
+    UnsavedRecordingsSheet.show(context);
   }
 
   @override

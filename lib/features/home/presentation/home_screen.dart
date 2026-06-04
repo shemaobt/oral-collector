@@ -272,7 +272,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       sessions: interrupted,
                       onReview: () => UnsavedRecordingsSheet.show(
                         context,
-                        (_) => context.go('/recordings'),
                         onSessionResumed: () => context.go('/quick-record'),
                       ),
                     ),

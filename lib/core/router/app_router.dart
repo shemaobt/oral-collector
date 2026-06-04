@@ -20,6 +20,7 @@ import '../../features/recording/presentation/quick_recording_screen.dart';
 import '../../features/recording/presentation/recording_detail_screen.dart';
 import '../../features/recording/presentation/recording_flow_screen.dart';
 import '../../features/recording/presentation/recordings_list_screen.dart';
+import '../../features/recording/presentation/recovery_confirm_screen.dart';
 import '../../features/recording/presentation/trim_editor_screen.dart';
 import '../../features/storyteller/presentation/storyteller_form_screen.dart';
 import '../../features/storyteller/presentation/storytellers_list_screen.dart';
@@ -185,6 +186,15 @@ List<RouteBase> _routesFor(Ref ref) => [
           return hasProject ? null : '/home';
         },
         builder: (context, state) => const QuickRecordingScreen(),
+      ),
+      GoRoute(
+        path: '/recovery-confirm',
+        redirect: (context, state) {
+          final hasProject =
+              ref.read(projectNotifierProvider).activeProject != null;
+          return hasProject ? null : '/home';
+        },
+        builder: (context, state) => const RecoveryConfirmScreen(),
       ),
       GoRoute(
         path: '/recordings',

@@ -71,7 +71,34 @@ Path: @/lib/features/recording/presentation/notifiers
 - `InputDeviceNotifier` tracks the currently selected microphone for
   capture; `InterruptedSessionsNotifier` powers the "you have an
   unsaved recording" prompt on app open by reading recovery rows from
-  `RecordingSessionRepository`.
+  `RecordingSessionRepository`. It exposes a **two-phase save** plus a
+  one-shot discard for resolving that prompt:
+  - `save` re-runs the finalization pipeline against the surviving
+    segments with `deleteSources: false` and returns the
+    `RecordingResult` *without* resolving the session — it does **not**
+    call `markRecovered` and does **not** clean up segments. The
+    session stays `crashed` and the produced file is the input to the
+    confirmation screen (see ENG-80 below).
+  - `confirmRecovery(sessionId, keepPath:)` is the second phase: it
+    runs only after the user confirms metadata on
+    [../recovery_confirm_screen.dart](../recovery_confirm_screen.dart),
+    marks the session recovered, and deletes every segment except
+    `keepPath`. `keepPath` is the finalized file, which in the
+    single-segment / degraded fallbacks *is itself one of the segments*
+    — hence the exception rather than a blanket delete.
+  - `discardRecovered(sessionId, filePath:)` deletes the finalized file
+    then defers to `discard`, used by the confirmation screen's discard
+    action.
+  - `discard` deletes the segments and marks the session discarded.
+  All paths end by calling
+  [../../data/services/recovery_coordinator.dart](../../data/services/recovery_coordinator.dart)'s
+  `refresh()`, which re-derives the prompt list from `findCrashedSessions()`;
+  a session left `crashed` therefore re-appears in the banner.
+- `PendingRecovery` + `pendingRecoveryProvider` (a `StateProvider`)
+  carry the finalized `RecordingResult` and the session's classification
+  from `save` to the confirmation screen. They exist because go_router's
+  `extra` is lossy across redirects and on web — the finalized file path
+  must survive the navigation, so it is parked in a provider instead.
 
 ### Things to Know
 
@@ -105,5 +132,47 @@ Path: @/lib/features/recording/presentation/notifiers
   `audioPlayerFactoryProvider` and `audioPathResolverProvider` exist so
   the notifier can be unit-tested without `just_audio` plugin channels
   or the filesystem. Production code never overrides them.
+- **A failed finalize keeps the recording recoverable — on both stop
+  paths.** Finalization (FFmpeg concat + IO under
+  [../../data/services/recording_finalization_service.dart](../../data/services/recording_finalization_service.dart))
+  can throw or return null. The main stop path
+  (`RecordingSessionNotifier._finalizeOrCrash`) and the recovery save
+  path (`InterruptedSessionsNotifier.save`) both swallow the failure,
+  refresh the recovery coordinator, and return `null` — leaving the
+  session `crashed` so it stays listed by `recovery_coordinator.dart`'s
+  `refresh()` and can be retried. This is why neither caller may surface
+  the exception:
+  [../widgets/unsaved_recordings_sheet.dart](../widgets/unsaved_recordings_sheet.dart)'s
+  save handler has no try/catch, so an escaping exception (one half of
+  the original ENG-80 bug) would crash the recovery UI and half-handle
+  the session.
+- **A recovered session is only resolved after the user confirms — no
+  silent data loss (ENG-80).** The materialization of a `local_recording`
+  row happens *only* in `ConfirmationStep._save` (see
+  [../widgets/confirmation_step.dart](../widgets/confirmation_step.dart));
+  nothing else creates one. The original recovery "Save" path discarded
+  the finalized `RecordingResult` and routed straight to `/recordings`,
+  so the assembled audio was left orphaned on disk and no row was ever
+  created. The flow now mirrors a normal recording: recovery `save`
+  finalizes and parks the result, the home banner routes to
+  [../recovery_confirm_screen.dart](../recovery_confirm_screen.dart),
+  and only the user's Save there (`confirmRecovery` → `markRecovered`)
+  or Discard (`discardRecovered` → `markDiscarded`) resolves the
+  session. The two preconditions that make this safe live in `save`:
+  it must **not** `markRecovered` (or the abandoned-confirmation session
+  would vanish from the banner), and it must finalize with
+  `deleteSources: false` (or the segments would be gone before the user
+  decides). Leaving the confirmation screen without deciding keeps the
+  session `crashed` with segments intact, so it simply re-surfaces in
+  the banner on the next open.
+- **The confirmation result is passed via a provider, not go_router
+  `extra`.** `pendingRecoveryProvider` holds the finalized
+  `RecordingResult` + classification across the
+  [../widgets/unsaved_recordings_sheet.dart](../widgets/unsaved_recordings_sheet.dart)
+  → `/recovery-confirm` navigation. The sheet captures
+  `GoRouter.of(context)` **before** `Navigator.pop` (the modal's context
+  is defunct after the pop) and the confirmation screen reads the
+  provider. `extra` is avoided because it is dropped on redirect and on
+  web, and the finalized file path cannot be lost.
 
 Created and maintained by Nori.
