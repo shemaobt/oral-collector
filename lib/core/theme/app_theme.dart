@@ -124,6 +124,7 @@ abstract class AppTheme {
     return ThemeData(
       useMaterial3: true,
       fontFamily: _fontFamily,
+      extensions: const [AppColors.light],
       colorScheme: const ColorScheme(
         brightness: Brightness.light,
         primary: AppColors.primary,
@@ -413,6 +414,7 @@ abstract class AppTheme {
     return ThemeData(
       useMaterial3: true,
       fontFamily: _fontFamily,
+      extensions: const [AppColors.dark],
       colorScheme: const ColorScheme(
         brightness: Brightness.dark,
         primary: AppColors.darkPrimary,
