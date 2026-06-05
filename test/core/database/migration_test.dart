@@ -10,6 +10,7 @@ import 'package:oral_collector/core/database/app_database.dart';
 
 import 'generated/schema.dart';
 import 'generated/schema_v1.dart' as v1;
+import 'generated/schema_v6.dart' as v6;
 
 void main() {
   late SchemaVerifier verifier;
@@ -76,6 +77,51 @@ void main() {
         expect(row.durationSeconds, 42.5);
         expect(row.fileSizeBytes, 123456);
         expect(row.retryCount, 2);
+        expect(row.recordedAt.millisecondsSinceEpoch, 1700000000 * 1000);
+      } finally {
+        await db.close();
+      }
+    },
+  );
+
+  test(
+    'preserves a storyteller across the v6 -> v10 sync-column migration',
+    () async {
+      final schema = await verifier.schemaAt(6);
+
+      // Seed a storyteller at v6 — the version where local_storytellers exists
+      // at its pre-sync 10-column shape, before serverId/syncStatus/retryCount/
+      // lastRetryAt are added at v10. This guards the from>=6 branch the ENG-123
+      // fix touches against a destructive future migration of this table.
+      final oldDb = v6.DatabaseAtV6(schema.newConnection());
+      await oldDb
+          .into(oldDb.localStorytellers)
+          .insert(
+            v6.LocalStorytellersCompanion.insert(
+              id: 'st-1',
+              projectId: 'proj-1',
+              name: 'Ada',
+              sex: 'F',
+              age: const Value(42),
+            ),
+          );
+      await oldDb.close();
+
+      final db = AppDatabase.forTesting(schema.newConnection());
+      try {
+        await verifier.migrateAndValidate(db, 10);
+
+        final rows = await db.select(db.localStorytellers).get();
+        expect(rows, hasLength(1));
+        final row = rows.single;
+        expect(row.id, 'st-1');
+        expect(row.name, 'Ada');
+        expect(row.sex, 'F');
+        expect(row.age, 42);
+        // Sync columns introduced at v10 land with their defaults.
+        expect(row.syncStatus, 'synced');
+        expect(row.retryCount, 0);
+        expect(row.serverId, isNull);
       } finally {
         await db.close();
       }
