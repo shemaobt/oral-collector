@@ -61,6 +61,7 @@ Path: @/lib/core/errors
   | `ValidationException` | `validation` | optional | `field` |
   | `ServerException` | `server` | required | — |
   | `ConflictException` | `conflict` | 409 | — |
+  | `ParseException` | `parse` | none | `field`, `expected` |
 
 - The boundary overrides `code` with a status-derived value (e.g. `server_500`,
   `client_404`) when it constructs a leaf; the defaults above apply when a leaf
@@ -75,9 +76,11 @@ Path: @/lib/core/errors
   `messageForException` in
   [../../shared/utils/error_helpers.dart](../../shared/utils/error_helpers.dart)
   switches exhaustively over the sealed type with no default arm, adding a new
-  leaf here breaks that switch until a case is added. ENG-147 (E8) adds its
-  `ParseException` leaf to [./app_exception.dart](app_exception.dart) and is
-  expected to fix the resulting switch error — this coupling is intended.
+  leaf here breaks that switch until a case is added. ENG-147 (E8) added the
+  `ParseException` leaf to [./app_exception.dart](app_exception.dart) — the
+  home of the safe-readers in
+  [../serialization/docs.md](../serialization/docs.md) — and the matching switch
+  arm mapping it to `error_generic`; this coupling is the intended tripwire.
 - **`cause` is the type only, never the value.** Leaves store
   `e.runtimeType`, not the caught object, so a `SocketException` message or an
   HTTP body can never leak through the exception into a log or the UI.

@@ -74,6 +74,7 @@ index.
 | [0005](ADR-0005-security-policy.md) | Security policy | Proposed | E6 |
 | [0006](ADR-0006-observability.md) | Observability | Proposed | E3 |
 | [0007](ADR-0007-lint-baseline.md) | Strict lint baseline | Accepted | E1 |
+| [0008](ADR-0008-data-serialization.md) | Data serialization & safe-readers | Accepted | E8 |
 
 ## Template
 

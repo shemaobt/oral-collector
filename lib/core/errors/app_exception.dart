@@ -88,3 +88,29 @@ final class ConflictException extends AppException {
     super.traceId,
   });
 }
+
+/// Thrown by the safe-readers (ENG-147, ADR-0008) when a JSON field violates its
+/// contract. `field` is the offending key, `expected` a type label; `cause`
+/// keeps the raw value but `toString()` redacts it to its runtime type.
+final class ParseException extends AppException {
+  const ParseException({
+    required this.field,
+    required this.expected,
+    super.cause,
+    super.code = 'parse',
+    super.traceId,
+  });
+
+  final String field;
+  final String expected;
+
+  @override
+  String toString() {
+    final buffer = StringBuffer(
+      'ParseException(field: $field, expected: $expected, code: $code',
+    );
+    if (cause != null) buffer.write(', got: ${cause.runtimeType}');
+    if (traceId != null) buffer.write(', traceId: $traceId');
+    return (buffer..write(')')).toString();
+  }
+}
