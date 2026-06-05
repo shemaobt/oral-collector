@@ -16,6 +16,7 @@ import '../../../core/l10n/content_l10n.dart';
 import '../../../core/platform/ffmpeg_ops.dart' as ffmpeg;
 import '../../../core/platform/file_ops.dart' as file_ops;
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/tokens.dart';
 import '../../../shared/utils/error_helpers.dart';
 import '../../../shared/utils/recording_title.dart';
 import '../../genre/presentation/notifiers/genre_notifier.dart';
@@ -281,7 +282,9 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
       isScrollControlled: true,
       showDragHandle: false,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(RadiusScale.r20),
+        ),
       ),
       builder: (ctx) => SegmentTaxonomySheet(
         parentGenreId: recording.genreId,
@@ -913,7 +916,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
         ),
         body: Center(
           child: Padding(
-            padding: const EdgeInsets.all(32),
+            padding: const EdgeInsets.all(SpacingScale.s32),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -922,7 +925,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
                   size: 48,
                   color: theme.colorScheme.secondary,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: SpacingScale.s16),
                 Text(
                   _errorMessage!,
                   textAlign: TextAlign.center,
@@ -1055,7 +1058,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
                       : '$genreName · ${l10n.trim_inheritLabel}')
                 : subName;
             return Padding(
-              padding: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.only(bottom: SpacingScale.s8),
               child: SegmentCard(
                 index: i,
                 total: _segmentCount,
@@ -1083,7 +1086,10 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
         ] else
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+            padding: const EdgeInsets.symmetric(
+              horizontal: SpacingScale.s24,
+              vertical: SpacingScale.s32,
+            ),
             decoration: BoxDecoration(
               border: Border.all(color: colors.border.withValues(alpha: 0.2)),
               borderRadius: BorderRadius.circular(14),
@@ -1095,7 +1101,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
                   size: 36,
                   color: colors.foreground.withValues(alpha: 0.2),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: SpacingScale.s12),
                 Text(
                   l10n.trim_instructions,
                   textAlign: TextAlign.center,
@@ -1145,7 +1151,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
                   Expanded(
                     flex: 3,
                     child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(24),
+                      padding: const EdgeInsets.all(SpacingScale.s24),
                       child: waveformPanel,
                     ),
                   ),
@@ -1155,7 +1161,12 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
                       children: [
                         Expanded(
                           child: SingleChildScrollView(
-                            padding: const EdgeInsets.fromLTRB(0, 24, 24, 16),
+                            padding: const EdgeInsets.fromLTRB(
+                              0,
+                              SpacingScale.s24,
+                              SpacingScale.s24,
+                              SpacingScale.s16,
+                            ),
                             child: segmentsList,
                           ),
                         ),
@@ -1172,14 +1183,14 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
                 Expanded(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 16,
+                      horizontal: SpacingScale.s16,
+                      vertical: SpacingScale.s16,
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         waveformPanel,
-                        const SizedBox(height: 20),
+                        const SizedBox(height: SpacingScale.s20),
                         segmentsList,
                       ],
                     ),
@@ -1201,7 +1212,12 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
     AppLocalizations l10n,
   ) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+      padding: const EdgeInsets.fromLTRB(
+        SpacingScale.s16,
+        SpacingScale.s12,
+        SpacingScale.s16,
+        SpacingScale.s16,
+      ),
       decoration: BoxDecoration(
         color: colors.card,
         border: Border(
@@ -1232,13 +1248,13 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
                   ),
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(RadiusScale.r12),
                   ),
                 ),
                 child: Text(l10n.common_cancel),
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: SpacingScale.s12),
             Expanded(
               child: ElevatedButton.icon(
                 onPressed: (_isSaving || !_decision.canSave)
@@ -1279,7 +1295,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
                       : Colors.white.withValues(alpha: 0.4),
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(RadiusScale.r12),
                   ),
                   elevation: 0,
                 ),
