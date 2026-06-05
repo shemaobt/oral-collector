@@ -20,8 +20,5 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Ensure .env exists (declared asset)
-        run: touch .env
-
       - name: Run tests
         run: flutter test
