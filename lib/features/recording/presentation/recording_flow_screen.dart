@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
-import '../../../../l10n/app_localizations.dart';
 import '../../../../core/l10n/content_l10n.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../shared/widgets/screen_header.dart';
-import '../../genre/presentation/notifiers/genre_notifier.dart';
-import '../../sync/presentation/notifiers/sync_notifier.dart';
-import '../../genre/presentation/notifiers/genre_state.dart';
 import '../../genre/domain/entities/genre.dart';
+import '../../genre/presentation/notifiers/genre_notifier.dart';
+import '../../genre/presentation/notifiers/genre_state.dart';
+import '../../sync/presentation/notifiers/sync_notifier.dart';
 import '../domain/entities/register.dart';
 import 'notifiers/recording_session_state.dart';
 import 'widgets/confirmation_step.dart';

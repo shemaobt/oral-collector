@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../l10n/app_localizations.dart';
+import '../../../core/auth/auth_notifier.dart';
+import '../../../core/auth/auth_state.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/preview_helpers.dart';
 import '../../../shared/widgets/error_snack_bar.dart';
-import '../../../core/auth/auth_notifier.dart';
-import '../../../core/auth/auth_state.dart';
-import '../../../../l10n/app_localizations.dart';
 import 'widgets/hero_panel.dart';
-import 'widgets/login_mobile_hero.dart';
 import 'widgets/login_form.dart';
+import 'widgets/login_mobile_hero.dart';
 
 @Preview(name: 'Login Screen', wrapper: previewWrapper)
 Widget loginScreenPreview() => const LoginScreen();
@@ -60,7 +60,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       return Scaffold(
         body: Row(
           children: [
-            Expanded(flex: 4, child: HeroPanel()),
+            const Expanded(flex: 4, child: HeroPanel()),
             Expanded(
               flex: 5,
               child: _buildDesktopForm(authState, colors, l10n),

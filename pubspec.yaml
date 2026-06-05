@@ -78,6 +78,8 @@ dev_dependencies:
   drift_dev: ^2.22.1
   build_runner: ^2.4.14
   mocktail: ^1.0.4
+  custom_lint: ^0.7.6
+  riverpod_lint: ^2.6.5
 
 flutter_launcher_icons:
   android: true

@@ -3,20 +3,20 @@ import 'dart:async';
 import 'package:background_downloader/background_downloader.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_web_plugins/url_strategy.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_web_plugins/url_strategy.dart';
 
+import 'core/auth/auth_notifier.dart';
 import 'core/database/database_provider.dart';
 import 'core/l10n/locale_provider.dart';
 import 'core/l10n/supported_locales.dart';
+import 'core/observability/error_reporter.dart';
 import 'core/platform/file_ops.dart' as platform;
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
-import 'core/auth/auth_notifier.dart';
-import 'core/observability/error_reporter.dart';
 import 'features/recording/data/services/recording_live_activity.dart';
 import 'features/recording/data/services/recording_notification.dart';
 import 'features/recording/data/services/recording_trash.dart';
@@ -25,9 +25,8 @@ import 'features/sync/data/providers.dart';
 import 'features/sync/data/services/background_upload_coordinator.dart';
 import 'features/sync/data/services/upload_progress_visualizer.dart';
 import 'features/sync/presentation/notifiers/sync_notifier.dart';
-import 'shared/preview_helpers.dart';
-
 import 'l10n/app_localizations.dart';
+import 'shared/preview_helpers.dart';
 
 @Preview(name: 'Oral Collector App', wrapper: previewWrapper)
 Widget oralCollectorPreview() => const OralCollectorApp();

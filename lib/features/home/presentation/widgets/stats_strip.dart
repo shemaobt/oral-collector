@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/utils/format.dart';
-import '../../../../../l10n/app_localizations.dart';
 
 class StatsStrip extends StatelessWidget {
   const StatsStrip({

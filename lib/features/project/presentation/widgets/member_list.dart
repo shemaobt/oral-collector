@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../l10n/app_localizations.dart';
-import '../../presentation/notifiers/member_notifier.dart';
 import '../../domain/entities/project_member.dart';
+import '../../presentation/notifiers/member_notifier.dart';
 import 'member_tile.dart';
 
 class MemberList extends ConsumerWidget {

@@ -3,17 +3,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import '../../../../l10n/app_localizations.dart';
 import '../../../core/l10n/content_l10n.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../../l10n/app_localizations.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/utils/genre_helpers.dart';
 import '../../../shared/widgets/status_banner.dart';
 import '../../project/domain/entities/stats.dart';
 import '../../project/presentation/notifiers/stats_notifier.dart';
 import '../../sync/presentation/notifiers/sync_notifier.dart';
-import 'notifiers/genre_notifier.dart';
 import '../domain/entities/genre.dart';
+import 'notifiers/genre_notifier.dart';
 
 class GenreDetailScreen extends ConsumerWidget {
   const GenreDetailScreen({super.key, required this.genreId});

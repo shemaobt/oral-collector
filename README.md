@@ -2,7 +2,7 @@
 
 Mobile and web app (Oral Capture) for collecting monolingual audio data. Supports iOS, Android, and web.
 
-See [AGENTS.md](AGENTS.md) for project conventions and agent guidelines.
+See [AGENTS.md](AGENTS.md) for project conventions and agent guidelines, and [docs/adr/](docs/adr/ADR-0000-process.md) for architecture decisions.
 
 ## Prerequisites
 
@@ -55,7 +55,8 @@ See [AGENTS.md](AGENTS.md) for project conventions and agent guidelines.
   git config core.hooksPath .githooks
   ```
 - **Full check (manual):** `./scripts/lint.sh` — same as the pre-commit hook.
-- **Analyze only:** `flutter analyze`
+- **Analyze only:** `flutter analyze --no-fatal-infos` (strict lints are staged at `info`; see [ADR-0007](docs/adr/ADR-0007-lint-baseline.md))
+- **Riverpod lints:** `dart run custom_lint`
 - **Format only:** `dart format lib/ test/`
 
 Format, analyze, and the full test suite (`flutter test`) run in CI on every pull request to `main` and `dev` (see [.github/workflows/lint.yml](.github/workflows/lint.yml) and [.github/workflows/test.yml](.github/workflows/test.yml)).

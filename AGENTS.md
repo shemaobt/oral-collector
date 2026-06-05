@@ -87,6 +87,11 @@ This document defines engineering standards and behaviors for LLM agents working
 - Good: Need to refresh list: use existing `ref.invalidate(meaningMapsProvider)` or notifier's refresh method; do not add a new "RefreshService" that only calls the same provider.
 - Bad: Wrapper provider that only forwards to an existing provider with no added behavior.
 
+### Architecture Decision Records (ADRs)
+
+- Cross-cutting decisions live in [`docs/adr/`](docs/adr/ADR-0000-process.md) and are the **living standard** — consult them before changing architecture, and add an ADR when you make a new cross-cutting decision (see ADR-0000 for the process and template).
+- An ADR captures *why* a decision was made; keep per-folder `docs.md` (noridocs) current for *what* a module does.
+
 ---
 
 ## 3. Stack and Build
@@ -100,7 +105,7 @@ This document defines engineering standards and behaviors for LLM agents working
 - **Env / config**: **flutter_dotenv** (`.env` file, not committed) or **envied** (compile-time, generated `.g.dart`); never hardcode secrets
 - **Icons**: **lucide_icons** or **cupertino_icons**; prefer one icon set per project
 - **Fonts**: **google_fonts** for theme text styles
-- **Linting**: **flutter_lints** in `dev_dependencies`; respect `analysis_options.yaml`
+- **Linting**: **flutter_lints** + **custom_lint** / **riverpod_lint** in `dev_dependencies`; respect `analysis_options.yaml`. Strict rules are staged at `info` and analysis runs with `--no-fatal-infos` — see [ADR-0007](docs/adr/ADR-0007-lint-baseline.md)
 
 Use only these stack choices unless the project already uses something else. Do not introduce GetX, Bloc, or a second state/navigation system.
 
