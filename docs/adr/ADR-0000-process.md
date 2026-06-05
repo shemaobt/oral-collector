@@ -68,7 +68,7 @@ index.
 |-----|-------|--------|------|
 | [0000](ADR-0000-process.md) | ADR process | Accepted | E1 |
 | [0001](ADR-0001-error-model.md) | Error model | Proposed | E3 |
-| [0002](ADR-0002-design-tokens.md) | Design tokens | Proposed | E2 |
+| [0002](ADR-0002-design-tokens.md) | Design tokens | Accepted | E2 |
 | [0003](ADR-0003-offline-persistence-contract.md) | Offline / persistence contract | Proposed | E4 |
 | [0004](ADR-0004-async-and-state-conventions.md) | Async & state conventions | Proposed | E5 |
 | [0005](ADR-0005-security-policy.md) | Security policy | Proposed | E6 |

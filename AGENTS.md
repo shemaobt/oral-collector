@@ -182,13 +182,14 @@ lib/
 
 - **Centralized theme**: Define `AppTheme.lightTheme` (and dark if needed) in `core/theme/app_theme.dart`. Use `ThemeData` with `colorScheme`, `textTheme`, `appBarTheme`, `cardTheme`, `elevatedButtonTheme`, `inputDecorationTheme` as appropriate.
 - **Colors**: Define semantic colors in `core/theme/app_colors.dart` (e.g. `primary`, `background`, `foreground`, `card`, `border`, `error`) and use them in `ColorScheme` and in widgets via `AppColors.primary` or `Theme.of(context).colorScheme.primary`.
+- **Spacing, radii & durations**: Use the design tokens in `core/theme/` instead of hardcoded numbers. The `const` scales `SpacingScale.s16` / `RadiusScale.r12` / `DurationScale.ms200` are the source of truth (preserve `const`: `const EdgeInsets.all(SpacingScale.s16)`); `context.spacing.s16` / `context.radii.r12` / `context.durations.ms200` are the theme-aware accessors for dynamic code. Only on-grid (4px) values are tokenized. See ADR-0002.
 - **Typography**: Use `google_fonts` in theme (e.g. `GoogleFonts.outfitTextTheme().apply(...)`). Prefer theme over hardcoded font names in widgets.
 - **Consistency**: Use theme and `AppColors` instead of raw `Colors.blue` or arbitrary hex in widget code.
 
 **Examples:**
 
-- Good: `Theme.of(context).textTheme.titleMedium`, `AppColors.foreground`, `Theme.of(context).colorScheme.primary`.
-- Bad: `TextStyle(fontSize: 16, color: Color(0xFF333333))` scattered in screens.
+- Good: `Theme.of(context).textTheme.titleMedium`, `AppColors.foreground`, `const EdgeInsets.all(SpacingScale.s16)`, `BorderRadius.circular(RadiusScale.r12)`.
+- Bad: `TextStyle(fontSize: 16, color: Color(0xFF333333))` or `EdgeInsets.all(16)` scattered in screens.
 
 ---
 
