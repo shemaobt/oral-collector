@@ -5,11 +5,11 @@ import '../../../l10n/app_localizations.dart';
 import '../../core/theme/app_colors.dart';
 import '../utils/error_helpers.dart';
 
-void showErrorSnackBar(BuildContext context, String rawError) {
+void showErrorSnackBar(BuildContext context, Object rawError) {
   final colors = AppColors.of(context);
   final theme = Theme.of(context);
   final l10n = AppLocalizations.of(context);
-  final message = friendlyErrorMessage(rawError, l10n);
+  final message = friendlyErrorFor(rawError, l10n);
 
   ScaffoldMessenger.of(context)
     ..hideCurrentSnackBar()
