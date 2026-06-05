@@ -59,9 +59,6 @@ jobs:
           storeFile=upload-keystore.jks
           EOF
 
-      - name: Create .env for build
-        run: echo 'BACKEND_URL=https://tripod-backend.shemaywam.com' > .env
-
       - name: Build AAB
         run: flutter build appbundle --release --build-number=$(( 100 + ${{ github.run_number }} ))
 

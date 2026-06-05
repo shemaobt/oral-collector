@@ -3,16 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import '../../../../l10n/app_localizations.dart';
+import '../../../core/auth/auth_notifier.dart';
 import '../../../core/l10n/locale_provider.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../../l10n/app_localizations.dart';
 import '../../../shared/preview_helpers.dart';
 import '../../../shared/widgets/app_shell.dart';
 import '../../../shared/widgets/locale_picker_sheet.dart';
 import '../../../shared/widgets/status_banner.dart';
 import '../../../shared/widgets/sync_status_indicator.dart';
 import '../../../shared/widgets/user_avatar.dart';
-import '../../../core/auth/auth_notifier.dart';
 import '../../genre/presentation/notifiers/genre_notifier.dart';
 import '../../project/presentation/notifiers/project_notifier.dart';
 import '../../project/presentation/notifiers/stats_notifier.dart';
@@ -22,10 +22,10 @@ import '../../recording/presentation/widgets/unsaved_recordings_sheet.dart';
 import '../../sync/presentation/notifiers/sync_notifier.dart';
 import 'notifiers/home_notifier.dart';
 import 'notifiers/home_state.dart';
+import 'widgets/expandable_record_fab.dart';
 import 'widgets/genre_card.dart';
 import 'widgets/hero_genre_card.dart';
 import 'widgets/no_project_card.dart';
-import 'widgets/expandable_record_fab.dart';
 import 'widgets/project_switcher_sheet.dart';
 import 'widgets/stats_strip.dart';
 
@@ -272,7 +272,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       sessions: interrupted,
                       onReview: () => UnsavedRecordingsSheet.show(
                         context,
-                        (_) => context.go('/recordings'),
                         onSessionResumed: () => context.go('/quick-record'),
                       ),
                     ),

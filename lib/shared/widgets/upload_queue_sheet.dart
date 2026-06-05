@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../features/sync/presentation/notifiers/sync_notifier.dart';
 import '../../features/recording/data/providers.dart';
+import '../../features/sync/presentation/notifiers/sync_notifier.dart';
 import '../../l10n/app_localizations.dart';
 import '../utils/format.dart';
 

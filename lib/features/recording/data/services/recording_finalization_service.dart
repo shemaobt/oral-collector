@@ -38,6 +38,7 @@ class RecordingFinalizationService {
     required List<String> segmentPaths,
     required Duration totalDuration,
     void Function(FinalizationStage stage)? onStage,
+    bool deleteSources = true,
   }) async {
     if (segmentPaths.isEmpty) return null;
 
@@ -86,8 +87,10 @@ class RecordingFinalizationService {
 
       if (concatResult != null) {
         sourcePath = concatResult;
-        for (final p in segmentPaths) {
-          unawaited(_deleteFileSafe(p));
+        if (deleteSources) {
+          for (final p in segmentPaths) {
+            unawaited(_deleteFileSafe(p));
+          }
         }
       } else {
         sourcePath = segmentPaths.first;
@@ -107,7 +110,12 @@ class RecordingFinalizationService {
         ok = false;
       }
       if (ok) {
-        unawaited(_deleteFileSafe(sourcePath));
+        // Reclaim the intermediate concat temp even when keeping sources: a
+        // non-degraded sourcePath is derived, never the recovered file. (When
+        // degraded, sourcePath is an original segment, so keep-sources holds.)
+        if (deleteSources || !degraded) {
+          unawaited(_deleteFileSafe(sourcePath));
+        }
         return FinalizationOutcome(
           result: RecordingResult(
             filePath: m4aPath,

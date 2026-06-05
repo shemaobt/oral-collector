@@ -12,6 +12,7 @@ import 'package:path_provider/path_provider.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/database/app_database.dart';
+import '../../../core/l10n/content_l10n.dart';
 import '../../../core/platform/ffmpeg_ops.dart' as ffmpeg;
 import '../../../core/platform/file_ops.dart' as file_ops;
 import '../../../core/theme/app_colors.dart';
@@ -26,7 +27,6 @@ import '../data/services/recording_split_persister.dart';
 import '../data/services/recording_trash.dart';
 import '../data/services/waveform_extractor.dart';
 import '../domain/entities/register.dart';
-import '../../../core/l10n/content_l10n.dart';
 import 'trim_edit_decision.dart';
 import 'widgets/edit_transport_bar.dart';
 import 'widgets/edit_volume_control.dart';

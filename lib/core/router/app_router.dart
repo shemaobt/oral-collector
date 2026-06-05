@@ -5,28 +5,29 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/admin/presentation/admin_dashboard_screen.dart';
-import '../config/recording_config.dart';
-import '../auth/auth_notifier.dart';
-import '../auth/auth_state.dart';
-import '../../features/project/presentation/notifiers/project_notifier.dart';
 import '../../features/auth/presentation/forgot_password_screen.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/reset_password_screen.dart';
 import '../../features/auth/presentation/signup_screen.dart';
 import '../../features/genre/presentation/genre_detail_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
+import '../../features/profile/presentation/profile_screen.dart';
+import '../../features/project/presentation/notifiers/project_notifier.dart';
 import '../../features/project/presentation/project_settings_screen.dart';
 import '../../features/project/presentation/projects_screen.dart';
 import '../../features/recording/presentation/file_import_screen.dart';
-import '../../features/recording/presentation/recording_detail_screen.dart';
 import '../../features/recording/presentation/quick_recording_screen.dart';
+import '../../features/recording/presentation/recording_detail_screen.dart';
 import '../../features/recording/presentation/recording_flow_screen.dart';
 import '../../features/recording/presentation/recordings_list_screen.dart';
+import '../../features/recording/presentation/recovery_confirm_screen.dart';
 import '../../features/recording/presentation/trim_editor_screen.dart';
 import '../../features/storyteller/presentation/storyteller_form_screen.dart';
 import '../../features/storyteller/presentation/storytellers_list_screen.dart';
-import '../../features/profile/presentation/profile_screen.dart';
 import '../../shared/widgets/app_shell.dart';
+import '../auth/auth_notifier.dart';
+import '../auth/auth_state.dart';
+import '../config/recording_config.dart';
 
 class _RouterNotifier extends ChangeNotifier {
   _RouterNotifier(this._ref) {
@@ -185,6 +186,15 @@ List<RouteBase> _routesFor(Ref ref) => [
           return hasProject ? null : '/home';
         },
         builder: (context, state) => const QuickRecordingScreen(),
+      ),
+      GoRoute(
+        path: '/recovery-confirm',
+        redirect: (context, state) {
+          final hasProject =
+              ref.read(projectNotifierProvider).activeProject != null;
+          return hasProject ? null : '/home';
+        },
+        builder: (context, state) => const RecoveryConfirmScreen(),
       ),
       GoRoute(
         path: '/recordings',

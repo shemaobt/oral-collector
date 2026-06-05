@@ -2,7 +2,7 @@
 
 Mobile and web app (Oral Capture) for collecting monolingual audio data. Supports iOS, Android, and web.
 
-See [AGENTS.md](AGENTS.md) for project conventions and agent guidelines.
+See [AGENTS.md](AGENTS.md) for project conventions and agent guidelines, and [docs/adr/](docs/adr/ADR-0000-process.md) for architecture decisions.
 
 ## Prerequisites
 
@@ -14,7 +14,7 @@ See [AGENTS.md](AGENTS.md) for project conventions and agent guidelines.
 ## Setup
 
 1. Clone the repo and open the project directory.
-2. Copy `.env.example` to `.env` and set any required values (e.g. `BACKEND_URL=` when you have a backend).
+2. (Optional, debug only) To point at a local backend, copy `.env.example` to `.env` and set `BACKEND_URL`. It is read at build time via `--dart-define-from-file=.env` (see Run) and is never bundled into the app. Without it, builds use the production backend.
 3. Install dependencies:
 
    ```bash
@@ -34,6 +34,9 @@ See [AGENTS.md](AGENTS.md) for project conventions and agent guidelines.
 
 - **Default device:**  
   `flutter run`
+
+- **Local backend (debug):**  
+  `flutter run --dart-define-from-file=.env` (or `--dart-define=BACKEND_URL=http://host:port`)
 
 ## Build
 
@@ -55,10 +58,11 @@ See [AGENTS.md](AGENTS.md) for project conventions and agent guidelines.
   git config core.hooksPath .githooks
   ```
 - **Full check (manual):** `./scripts/lint.sh` — same as the pre-commit hook.
-- **Analyze only:** `flutter analyze`
+- **Analyze only:** `flutter analyze --no-fatal-infos` (strict lints are staged at `info`; see [ADR-0007](docs/adr/ADR-0007-lint-baseline.md))
+- **Riverpod lints:** `dart run custom_lint`
 - **Format only:** `dart format lib/ test/`
 
-The same checks run in CI on every push and pull request to `main` (see [.github/workflows/lint.yml](.github/workflows/lint.yml)).
+Format, analyze, and the full test suite (`flutter test`) run in CI on every pull request to `main` and `dev` (see [.github/workflows/lint.yml](.github/workflows/lint.yml) and [.github/workflows/test.yml](.github/workflows/test.yml)).
 
 ## Deployment
 

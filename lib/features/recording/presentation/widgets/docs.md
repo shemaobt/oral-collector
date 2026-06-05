@@ -65,7 +65,10 @@ Path: @/lib/features/recording/presentation/widgets
   waveform, finalizing overlay, confirmation step) consume
   `recordingSessionNotifierProvider` and visualize the segmented
   recorder's progress; they call back into the notifier for transport
-  actions.
+  actions. `ConfirmationStep` is the only widget that materializes a
+  `local_recording` row (its `_save` writes the Drift row / web upload);
+  it is reused by both the normal recording flow and crash recovery via
+  [../recovery_confirm_screen.dart](../recovery_confirm_screen.dart).
 - List-side widgets (recording card, filter chips, filter bar, filter
   sheet) consume `recordingsListNotifierProvider` and the
   genre/project notifiers; they emit user intent back to
@@ -100,5 +103,39 @@ Path: @/lib/features/recording/presentation/widgets
   returns `child` as-is. The Focus + space-bar shortcut is meant to
   match desktop-browser audio player conventions; mobile does not get
   it.
+- **"Returned from background" is detected by a real-background flag,
+  not the previous lifecycle state.** `recording_step.dart` re-activates
+  the capture audio session on resume (otherwise the mic comes back
+  dead on Android 14+). The framework synthesizes intermediate states,
+  so the return path is always `paused → hidden → inactive → resumed` —
+  the state immediately before `resumed` is *always* `inactive`, never
+  `paused`. The widget therefore latches a flag whenever it sees
+  `hidden`/`paused` and only acts on the following `resumed` (and only
+  while `isRecording`), calling
+  `recordingSessionNotifierProvider.notifier.reactivateAudioSession()`
+  and showing the "continued in background" banner for 3s. A bare
+  `inactive` blip (e.g. opening iOS control center, which never reaches
+  background) leaves the flag unset, so it neither re-activates nor
+  shows the banner — this avoids the false positive a `previous ==
+  inactive` check would produce.
+- **This widget's resume path is distinct from OS-interruption
+  recovery.** The foreground/background re-activation above is owned by
+  the widget and the session notifier. Re-activation after an OS audio
+  interruption (phone calls, another app grabbing audio) is a separate
+  path inside
+  [../../data/services/segmented_recorder.dart](../../data/services/segmented_recorder.dart),
+  which subscribes to the platform `interruptionEventStream` and
+  re-activates the session itself.
+- **`ConfirmationStep` is parameterized for the recovery reuse (ENG-80).**
+  Two optional params let the recovery screen host the same widget
+  without duplicating the save logic: `onSaved` runs in place of the
+  default `go('/home')` after the row is written (recovery uses it to
+  mark the session recovered and route to `/recordings`), and
+  `showReRecord` hides the "record again" button (recovery has no live
+  segments to re-capture). Because the save row is created here, the
+  recovery flow must reach this screen — routing straight to the list
+  after finalize was the original ENG-80 data-loss bug. See
+  [../notifiers/docs.md](../notifiers/docs.md) for the deferred-resolution
+  invariant.
 
 Created and maintained by Nori.

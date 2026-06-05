@@ -96,6 +96,28 @@ Path: @/lib/features/recording/presentation
   Path resolution (stored path → docs dir → `recordings/` subdir) is
   delegated to
   [../data/services/audio_path_resolver.dart](../data/services/audio_path_resolver.dart).
+- `file_import_screen.dart` is the multi-file import flow: it picks /
+  drops candidates, probes each via
+  [../data/services/audio_probe.dart](../data/services/audio_probe.dart),
+  collects per-entry metadata, and saves the batch. The per-batch save
+  delegates to the pure
+  [./import_save_runner.dart](import_save_runner.dart) seam, which walks
+  the entries and invokes a per-entry callback. That callback branches on
+  `kIsWeb`: web uploads bytes straight to the server through
+  `DirectRecordingUploader.upload`; native copies the file into the docs
+  `recordings/` dir, optionally compresses WAV→M4A via FFmpeg, then writes a
+  row through `LocalRecordingRepository.insertRecording` and lets the sync
+  queue pick it up. The web path is only "no Drift row" for small
+  (single-shot, <5 MB) files; a large web import goes resumable and
+  `DirectRecordingUploader` inserts a temporary `web_<serverId>` shadow row
+  (`uploadStatus='web_uploading'`) to carry resume state, deleting it on
+  success — see
+  [../data/services/direct_recording_uploader.dart](../data/services/direct_recording_uploader.dart).
+  Pure-logic seams like this and
+  [./trim_edit_decision.dart](trim_edit_decision.dart) exist because
+  `kIsWeb` is always false under test, so the branch-selecting orchestration
+  is extracted to a headless-testable function while the screen keeps only
+  the platform calls.
 - `notifiers/` holds the Riverpod notifiers for the recording list,
   recording flow, and detail-screen playback (see
   [./notifiers/docs.md](notifiers/docs.md)); `widgets/` holds the
@@ -135,6 +157,28 @@ Path: @/lib/features/recording/presentation
   pulling the bytes. If the user cancels, no write happens; if the
   download fails, the dialog dismisses and a localized error snackbar is
   shown.
+- **Import batch save is idempotent on retry (ENG-80).** Two layers
+  cooperate. First, the import screen tracks which entries have already been
+  saved in a `_completedEntryIds` set that outlives a single save and is
+  keyed by entry id; `runImportSave` skips any entry already in that set, so
+  if one entry throws part-way through a batch, the already-uploaded entries
+  stay in the list and a second tap of Save re-runs only the still-pending
+  ones instead of re-uploading the completed ones. Removing an entry also
+  drops it from the set. Second, re-attempting an entry that failed *after*
+  its server metadata already exists is safe: the metadata create
+  (`_createMetadata` in
+  [../data/services/direct_recording_uploader.dart](../data/services/direct_recording_uploader.dart))
+  is idempotent server-side and returns the same `serverId`, so no duplicate
+  recording is created. The real ENG-80 defect was on the large web
+  (resumable) path: that path persists a `web_<serverId>` shadow Drift row
+  to carry resume state, and a retry that re-derived the same `serverId`
+  re-wrote that row. The original code used a plain insert, which crashed
+  with `UNIQUE constraint failed: local_recordings.id` and left the import
+  unable to complete from the import screen. `_uploadResumable` now writes
+  the shadow row with `LocalRecordingRepository.upsertRecording`, so the
+  retry reconciles the existing row and the resumable service resumes from
+  the persisted offset (`resumableSessionUri`/`uploadedBytes`) instead of
+  crashing or re-uploading what already landed.
 - **Detail screen `LayoutBuilder` swap is what makes audio playback
   fragile.** The screen pivots between a `Column`/`AppBar` wide layout
   and a `CustomScrollView`/`SliverAppBar` phone layout at the 700 dp

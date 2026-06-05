@@ -3,19 +3,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import '../../../../l10n/app_localizations.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/preview_helpers.dart';
 import '../../../shared/widgets/app_shell.dart';
-import '../../../shared/widgets/error_snack_bar.dart';
 import '../../../shared/widgets/empty_state.dart';
+import '../../../shared/widgets/error_snack_bar.dart';
 import '../../../shared/widgets/screen_header.dart';
 import '../../../shared/widgets/sync_status_indicator.dart';
-import '../../../../l10n/app_localizations.dart';
 import '../../auth/data/providers/role_provider.dart';
 import '../../sync/presentation/notifiers/sync_notifier.dart';
+import 'create_project_dialog.dart';
 import 'notifiers/project_notifier.dart';
 import 'notifiers/project_state.dart';
-import 'create_project_dialog.dart';
 import 'widgets/create_project_fab.dart';
 import 'widgets/project_card.dart';
 
