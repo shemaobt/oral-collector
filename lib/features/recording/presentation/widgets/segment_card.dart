@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../../l10n/app_localizations.dart';
 
 class SegmentCard extends StatelessWidget {
@@ -61,7 +62,7 @@ class SegmentCard extends StatelessWidget {
     final showTaxonomyRow = onClassify != null && !isExcluded;
 
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
+      duration: DurationScale.ms200,
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: isExcluded

@@ -4,6 +4,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 
 class ExpandableRecordFab extends StatefulWidget {
   const ExpandableRecordFab({
@@ -32,7 +33,7 @@ class _ExpandableRecordFabState extends State<ExpandableRecordFab>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 200),
+      duration: DurationScale.ms200,
     );
     _expandAnimation = CurvedAnimation(
       parent: _controller,
@@ -146,7 +147,7 @@ class _ExpandableRecordFabState extends State<ExpandableRecordFab>
                       ],
                     ),
                     child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 200),
+                      duration: DurationScale.ms200,
                       child: Icon(
                         _isOpen ? LucideIcons.x : LucideIcons.mic,
                         key: ValueKey(_isOpen),

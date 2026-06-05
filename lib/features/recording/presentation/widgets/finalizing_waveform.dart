@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 
 /// Static "captured" waveform with a sweep highlight crossing left → right.
 ///
@@ -116,7 +117,7 @@ class _Bar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 120),
+      duration: DurationScale.ms120,
       width: width,
       height: height,
       decoration: BoxDecoration(

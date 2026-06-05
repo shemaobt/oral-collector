@@ -6,6 +6,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/errors/api_exception.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/tokens.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_snack_bar.dart';
 import '../../../shared/widgets/invite_dialog.dart';
@@ -338,7 +339,7 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
           const SizedBox(height: 14),
           AnimatedOpacity(
             opacity: _isEdited ? 1.0 : 0.0,
-            duration: const Duration(milliseconds: 200),
+            duration: DurationScale.ms200,
             child: SizedBox(
               height: 44,
               width: double.infinity,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 
 /// "Saving recording…" label with three bouncing dots — shown below the timer
 /// while finalization is in progress.
@@ -21,7 +22,7 @@ class _SavingRecordingLabelState extends State<SavingRecordingLabel>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1100),
+      duration: DurationScale.ms1100,
     )..repeat();
   }
 

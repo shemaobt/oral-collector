@@ -3,6 +3,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../notifiers/recordings_list_state.dart';
 
 class StatusFilterBar extends StatelessWidget {
@@ -48,7 +49,7 @@ class StatusFilterBar extends StatelessWidget {
           return GestureDetector(
             onTap: () => onFilterChanged(filter),
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
+              duration: DurationScale.ms200,
               curve: Curves.easeOut,
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
               decoration: BoxDecoration(
