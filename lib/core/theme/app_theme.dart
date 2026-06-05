@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'app_colors.dart';
+import 'tokens.dart';
 
 const _fontFamily = 'PlusJakartaSans';
 
@@ -124,6 +125,11 @@ abstract class AppTheme {
     return ThemeData(
       useMaterial3: true,
       fontFamily: _fontFamily,
+      extensions: const <ThemeExtension<dynamic>>[
+        AppSpacing.fallback,
+        AppRadii.fallback,
+        AppDurations.fallback,
+      ],
       colorScheme: const ColorScheme(
         brightness: Brightness.light,
         primary: AppColors.primary,
@@ -413,6 +419,11 @@ abstract class AppTheme {
     return ThemeData(
       useMaterial3: true,
       fontFamily: _fontFamily,
+      extensions: const <ThemeExtension<dynamic>>[
+        AppSpacing.fallback,
+        AppRadii.fallback,
+        AppDurations.fallback,
+      ],
       colorScheme: const ColorScheme(
         brightness: Brightness.dark,
         primary: AppColors.darkPrimary,
