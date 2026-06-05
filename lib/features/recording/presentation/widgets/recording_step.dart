@@ -7,6 +7,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../../shared/utils/format.dart';
 import '../../../../shared/widgets/record_button.dart';
 import '../../data/services/recovery_coordinator.dart';
@@ -533,7 +534,7 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
         ref.read(noiseSensitivityProvider.notifier).state = value;
       },
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
+        duration: DurationScale.ms200,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           color: isSelected ? colors.foreground : colors.surfaceAlt,
@@ -573,7 +574,7 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
             bottom: 16,
             child: AnimatedOpacity(
               opacity: recState.showCheckpointToast ? 1.0 : 0.0,
-              duration: const Duration(milliseconds: 250),
+              duration: DurationScale.ms250,
               child: _CheckpointChip(
                 label: l10n.recording_savedAt(formatElapsed(checkpoint)),
               ),
@@ -814,7 +815,7 @@ class _PulsingDotState extends State<_PulsingDot>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 900),
+      duration: DurationScale.ms900,
     )..repeat(reverse: true);
   }
 

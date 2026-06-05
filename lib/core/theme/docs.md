@@ -1,103 +1,111 @@
-# Noridoc: Core Theme
+# Noridoc: Theme
 
 Path: @/lib/core/theme
 
 ### Overview
 
-- Owns the app's design-token foundation: the brand/semantic color palette
-  ([app_colors.dart](app_colors.dart)) and the Material 3 `ThemeData` builders
-  that style every widget ([app_theme.dart](app_theme.dart)).
-- `AppColorSet` is the first `ThemeExtension` in the codebase. It carries the
-  semantic color tokens and implements the `copyWith` / `lerp` / equality
-  contract, establishing the pattern intended for future token sets
-  (e.g. spacing, radii).
-- Colors reach widgets two ways: Material components are styled from raw color
-  constants baked into `ThemeData`, while app code reads semantic tokens via
-  `AppColors.of(context)`, which resolves the registered `AppColorSet`.
+- The app's design-system foundation: the brand/semantic color palette and the
+  `AppColorSet` `ThemeExtension` ([app_colors.dart](app_colors.dart)), the
+  Material 3 `ThemeData` builders that style every widget
+  ([app_theme.dart](app_theme.dart)), and the spacing/radii/motion design-token
+  system (`app_spacing.dart` / `app_radii.dart` / `app_durations.dart` /
+  [context_tokens.dart](context_tokens.dart), re-exported by
+  [tokens.dart](tokens.dart)).
+- All token families follow one **hybrid** pattern: a source-of-truth scale
+  (semantic color constants assembled into `AppColorSet`; `const` scales
+  `SpacingScale` / `RadiusScale` / `DurationScale`), a thin `ThemeExtension` that
+  carries it and makes it theme-aware, and a resolver that reads the registered
+  extension with a fallback.
+- `AppColorSet` is the first `ThemeExtension`; `AppSpacing` / `AppRadii` /
+  `AppDurations` follow the same contract. Conventions, grid policy, and scope
+  are governed by [ADR-0002](/docs/adr/ADR-0002-design-tokens.md).
 
 ### How it fits into the larger codebase
 
-- `AppTheme.lightTheme` / `AppTheme.darkTheme` are installed into a
-  `MaterialApp` in [../../main.dart](../../main.dart) (the production app) and
-  in [../../shared/preview_helpers.dart](../../shared/preview_helpers.dart)
-  (widgetbook/device previews). These are the only places the themes are wired
-  in; `themeMode: ThemeMode.system` selects between them.
-- Feature widgets across the app (home, auth, recording, sync, etc.) call
-  `AppColors.of(context)` to pull semantic tokens, e.g.
-  [../../features/recording/presentation/recordings_list_screen.dart](../../features/recording/presentation/recordings_list_screen.dart).
-  This folder is therefore an upstream dependency of nearly every presentation
-  layer, but depends on nothing in the app itself (only Flutter `material`).
-- The theme is the app-wide source of truth for color/typography state. There
-  is no Riverpod/notifier state here — brightness state lives in Flutter's
-  inherited `Theme` (driven by the platform), and `AppColors.of` reads from
-  that inherited widget rather than holding state of its own.
-- Token values are pinned by [../../../test/core/theme/app_colors_test.dart](../../../test/core/theme/app_colors_test.dart),
-  which also locks the `ThemeExtension` contract, the `ThemeData` registration,
-  and the `of()` resolution order.
+- `AppTheme.lightTheme` / `AppTheme.darkTheme` are installed into a `MaterialApp`
+  in [../../main.dart](../../main.dart) (and the preview helpers); `themeMode:
+  system` selects between them. This is the single registration point, so every
+  screen inherits the palette and all token extensions.
+- Colors reach widgets two ways: Material components are styled from raw color
+  constants baked into `ThemeData`, while app code reads semantic tokens via
+  `AppColors.of(context)`, which resolves the registered `AppColorSet`. This
+  folder is an upstream dependency of nearly every presentation layer but depends
+  only on Flutter `material`.
+- Spacing/radii/motion consumers reference the `const` scale directly (e.g.
+  `SpacingScale.s16`, `RadiusScale.r12`, `DurationScale.ms200`) or the
+  `context.spacing` / `.radii` / `.durations` accessor. Migrated call sites
+  include the recording screens and the app chrome
+  ([/lib/shared/widgets/app_shell.dart](/lib/shared/widgets/app_shell.dart)),
+  plus UI motion durations across many widgets — all value-identical literal
+  swaps, no behavior change.
+- Token values and contracts are pinned by tests under
+  [/test/core/theme/](/test/core/theme) (colors in `app_colors_test.dart`;
+  spacing/radii/durations, the `context.*` accessor, and the `ThemeData`
+  registration in the `app_*`/`context_tokens` tests).
 
 ### Core Implementation
 
-- **Two color paths from one palette.** `AppColors` exposes raw `static const
-  Color` constants plus two assembled `AppColorSet` instances (`light` /
-  `dark`). `AppTheme` builds its `ColorScheme` and every component theme from
-  the raw constants; the matching `AppColorSet` is registered separately in
-  `ThemeData.extensions`. Both paths derive from the same constants, so the
-  Material-styled surfaces and the `of()`-read tokens stay in sync.
-
 ```
-raw const tokens (AppColors.primary, darkSurface, ...)
-   ├─► AppTheme builders ─► ColorScheme + component themes ─► Material widgets
-   └─► AppColorSet light/dark ─► ThemeData.extensions ─► AppColors.of(context) ─► app widgets
+source of truth                       ThemeExtension (const fallback)        resolver
+─────────────────────────────────────────────────────────────────────────────────────
+AppColors raw consts ─► AppColorSet light/dark ─► ThemeData.extensions ─► AppColors.of(context)
+SpacingScale/RadiusScale/DurationScale ─► AppSpacing/AppRadii/AppDurations ─► context.spacing/.radii/.durations
+                                                = Theme.of(context).extension<T>() ?? T.fallback
 ```
 
-- **`AppColors.of(context)` resolution.** It reads `Theme.of(context)`,
-  prefers `theme.extension<AppColorSet>()`, and only falls back to a
-  brightness check when no extension is registered:
-
-```
-Theme.of(context)
-   ├─ extension<AppColorSet>()  ─► registered set        (production path)
-   └─ null ─► brightness == dark ? AppColors.dark : AppColors.light  (fallback)
-```
-
-- **Extension registration.** `lightTheme` registers `AppColors.light` and
-  `darkTheme` registers `AppColors.dark`. Because both production themes always
-  register an extension, the brightness fallback never runs in the real app; it
-  exists for bare `ThemeData.light()` / `ThemeData.dark()` used in tests or
-  previews.
-- **`AppColorSet` is an immutable value type.** `const` constructor, `copyWith`
-  for per-token overrides, value-based `==` / `hashCode`, and a `lerp` that
-  interpolates each token with `Color.lerp`. `lerp` returns the receiver
-  unchanged when the other value is `null` or not an `AppColorSet`.
-- `AppTheme` also builds the typography (`_buildTextTheme`) and a large set of
-  component themes (buttons, inputs, cards, navigation, dialogs, etc.) so the
-  Material defaults match the brand palette without per-widget styling.
+- **Registration.** `lightTheme` registers `AppColors.light`; `darkTheme`
+  registers `AppColors.dark`; both register `AppSpacing.fallback`,
+  `AppRadii.fallback`, `AppDurations.fallback` — in a single
+  `const <ThemeExtension<dynamic>>[...]` list per theme.
+- **`AppColors.of(context)`** reads `Theme.of(context)`, prefers
+  `extension<AppColorSet>()`, and only falls back to a brightness check when no
+  extension is registered (bare `ThemeData` in tests/previews).
+- **`context.spacing/radii/durations`** ([context_tokens.dart](context_tokens.dart))
+  read `Theme.of(context).extension<T>() ?? T.fallback`, so tokens still resolve
+  under a bare `MaterialApp`.
+- The `const` scales ([app_spacing.dart](app_spacing.dart),
+  [app_radii.dart](app_radii.dart), [app_durations.dart](app_durations.dart)) are
+  `abstract final class`es of `static const` values; being `const` they let
+  migrated sites keep their const-ness (e.g. `const
+  EdgeInsets.all(SpacingScale.s16)`).
+- Each `ThemeExtension` has a `const` constructor, `copyWith`, value `==` /
+  `hashCode`, and a `lerp` (`Color.lerp` for colors, `lerpDouble` for
+  spacing/radii, `lerpDuration` for motion) guarded with `if (other is! T)
+  return this;`. [app_theme.dart](app_theme.dart) also builds the typography and
+  the component themes.
 
 ### Things to Know
 
-- **Invariant: a registered extension's brightness must match its
-  `ThemeData.brightness`.** Since `of()` prefers the extension and ignores
-  brightness whenever one is present, registering the dark set on a light
-  `ThemeData` (or vice versa) would make `of()` hand back colors for the wrong
-  mode while the Material `ColorScheme` stays correct — an inconsistent UI. The
-  builders uphold this by pairing light↔`AppColors.light` and
+- **Invariant: the source-of-truth scale is canonical.** Each `ThemeExtension`
+  defaults / falls back to it, so widgets resolve tokens even under bare
+  `ThemeData` (tests, previews).
+- **Color/brightness invariant.** A registered `AppColorSet`'s brightness must
+  match its `ThemeData.brightness` — `of()` prefers the extension and ignores
+  brightness when one is present, so a mismatched pairing would hand back colors
+  for the wrong mode. The builders pair light↔`AppColors.light`,
   dark↔`AppColors.dark`.
-- **`lerp` is effectively dormant in production.** [../../main.dart](../../main.dart)
-  sets `themeAnimationDuration: Duration.zero`, so theme switches snap and
-  `lerp` runs only at `t == 1.0` (no visible cross-fade). The interpolation
-  exists to satisfy the `ThemeExtension` contract and enable future animated
-  transitions.
-- **The `AppColorSet` is a curated semantic subset, not every constant.**
-  Extra raw constants (surface containers, outline variant, switch thumb, the
-  `brand*` source colors) feed the `ColorScheme` / component themes only and
-  are not part of the token set returned by `of()`.
-- **Some tokens are shared or remapped across modes.** For example the dark
-  set maps its `card` token to the dark surface color, and `error` is the same
-  value in both light and dark sets. Read [app_colors.dart](app_colors.dart)
-  for the exact mapping rather than assuming a 1:1 light/dark pairing.
-- **Adding a token is a multi-point edit.** A new field on `AppColorSet` must
-  be threaded through the constructor, `copyWith`, `lerp`, `==`, `hashCode`,
-  and both `light` / `dark` instances, or the value-equality and interpolation
-  contracts break.
+- **Grid policy.** Only on-grid values are tokenized: spacing
+  {4,8,12,16,20,24,28,32,40,48}px and radii {4,8,12,16,20,24}px. Off-grid
+  stragglers (6/10/14/22/26/34, radius 36) are deliberately **not** tokens —
+  normalizing them is a separate, behavior-changing follow-up.
+- **`DurationScale` is motion-only.** I/O timeouts, logic timers, and
+  snackbar/feedback display durations are excluded and remain raw `Duration`s.
+- **Migration is pure.** Only literals already equal to a token value AND the
+  direct argument of an `EdgeInsets` / `SizedBox` / `BorderRadius` / `Radius` /
+  `Duration` constructor were swapped; literals inside expressions are left
+  (e.g. `EdgeInsets.symmetric(horizontal: expanded ? 10 : 0, vertical:
+  SpacingScale.s8)`).
+- **Naming.** Colors are semantic; spacing/radii/durations are value-encoded
+  (`sN` / `rN` / `msN` = the literal px or ms); no `md`/`lg` aliases (YAGNI).
+- **`lerp` is effectively dormant in production** — [../../main.dart](../../main.dart)
+  sets `themeAnimationDuration: Duration.zero`, so theme switches snap; the
+  interpolation exists to satisfy the contract and enable future animation.
+- **Deferred, per ADR-0002.** [app_theme.dart](app_theme.dart) still inlines its
+  own internal radii/padding literals (to consume the `const` scale under
+  ENG-115); the `Color(0x…)` / bare `Colors.*` lint rule (ENG-76 / ENG-159); and
+  off-grid normalization.
+- **Adding a token field is a multi-point edit** — thread it through the
+  constructor, `copyWith`, `lerp`, `==`, `hashCode`, and the registered
+  instances, or the equality/interpolation contracts break.
 
 Created and maintained by Nori.

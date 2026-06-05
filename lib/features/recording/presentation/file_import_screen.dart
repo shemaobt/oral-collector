@@ -16,6 +16,7 @@ import '../../../core/platform/file_ops.dart' as file_ops;
 import '../../../core/platform/file_source.dart';
 import '../../../core/platform/web_file_picker.dart' as web_picker;
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/tokens.dart';
 import '../../../shared/utils/error_helpers.dart';
 import '../../genre/presentation/notifiers/genre_notifier.dart';
 import '../../project/presentation/notifiers/project_notifier.dart';
@@ -414,7 +415,7 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
         if (ctx != null) {
           Scrollable.ensureVisible(
             ctx,
-            duration: const Duration(milliseconds: 300),
+            duration: DurationScale.ms300,
             alignment: 0.1,
             alignmentPolicy: ScrollPositionAlignmentPolicy.explicit,
           );

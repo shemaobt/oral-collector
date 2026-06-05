@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/tokens.dart';
 
 class WaveformVisualizer extends StatefulWidget {
   const WaveformVisualizer({
@@ -43,7 +44,7 @@ class _WaveformVisualizerState extends State<WaveformVisualizer>
     super.initState();
     _animController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 150),
+      duration: DurationScale.ms150,
     );
     _bars = _isLive
         ? List.filled(widget.barCount, 0.0, growable: true)

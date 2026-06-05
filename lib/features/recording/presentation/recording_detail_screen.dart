@@ -20,6 +20,7 @@ import '../../../core/database/app_database.dart';
 import '../../../core/errors/api_exception.dart';
 import '../../../core/platform/file_ops.dart' as file_ops;
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/tokens.dart';
 import '../../../shared/utils/format.dart';
 import '../../auth/data/providers/role_provider.dart';
 import '../../genre/presentation/notifiers/genre_notifier.dart';
@@ -1240,7 +1241,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
           ],
         ),
         if (registerName != null) ...[
-          const SizedBox(height: 4),
+          const SizedBox(height: SpacingScale.s4),
           Row(
             children: [
               Icon(LucideIcons.volume2, size: 14, color: colors.secondary),
@@ -1258,11 +1259,11 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
           ),
         ],
         if (!isUnclassified && hasSecondary) ...[
-          const SizedBox(height: 8),
+          const SizedBox(height: SpacingScale.s8),
           Material(
             color: Colors.transparent,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(RadiusScale.r8),
               side: BorderSide(
                 color: colors.foreground.withValues(alpha: 0.18),
               ),
@@ -1273,7 +1274,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
               child: Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 10,
-                  vertical: 8,
+                  vertical: SpacingScale.s8,
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -1318,7 +1319,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
                                       alpha: 0.55,
                                     ),
                                   ),
-                                  const SizedBox(width: 4),
+                                  const SizedBox(width: SpacingScale.s4),
                                   Flexible(
                                     child: Text(
                                       secondaryRegisterName,
@@ -1364,7 +1365,10 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
               label: Text(l10n.recording_addAlternative),
               style: TextButton.styleFrom(
                 foregroundColor: colors.foreground.withValues(alpha: 0.65),
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: SpacingScale.s8,
+                  vertical: SpacingScale.s4,
+                ),
                 minimumSize: Size.zero,
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 textStyle: theme.textTheme.labelSmall,
@@ -1463,7 +1467,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               color: theme.colorScheme.errorContainer.withValues(alpha: 0.35),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(RadiusScale.r12),
               border: Border.all(
                 color: theme.colorScheme.error.withValues(alpha: 0.5),
               ),
@@ -1484,7 +1488,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: SpacingScale.s8),
                 FilledButton.tonal(
                   onPressed: _canEditRecording
                       ? _clearSecondaryClassification
@@ -1495,7 +1499,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
                     ),
                     foregroundColor: theme.colorScheme.error,
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
+                      horizontal: SpacingScale.s12,
                       vertical: 6,
                     ),
                     minimumSize: Size.zero,
@@ -1519,7 +1523,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               color: Colors.amber.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(RadiusScale.r12),
               border: Border.all(
                 color: Colors.amber.shade700.withValues(alpha: 0.3),
               ),
@@ -1540,7 +1544,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: SpacingScale.s8),
                 FilledButton.tonal(
                   onPressed: _classifyRecording,
                   style: FilledButton.styleFrom(
@@ -1549,7 +1553,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
                     ),
                     foregroundColor: Colors.amber.shade700,
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
+                      horizontal: SpacingScale.s12,
                       vertical: 6,
                     ),
                     minimumSize: Size.zero,
@@ -1583,20 +1587,20 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
         RecordingUploadProgressSection(recordingId: recording.id),
         if (secondaryCollisionBanner != null) ...[
           secondaryCollisionBanner,
-          const SizedBox(height: 16),
+          const SizedBox(height: SpacingScale.s16),
         ],
         if (classifyBanner != null) ...[
           classifyBanner,
-          const SizedBox(height: 16),
+          const SizedBox(height: SpacingScale.s16),
         ],
         titleAndGenre,
-        const SizedBox(height: 20),
+        const SizedBox(height: SpacingScale.s20),
         storytellerSection,
-        const SizedBox(height: 24),
+        const SizedBox(height: SpacingScale.s24),
         infoGrid,
-        const SizedBox(height: 24),
+        const SizedBox(height: SpacingScale.s24),
         statusSection,
-        const SizedBox(height: 24),
+        const SizedBox(height: SpacingScale.s24),
         quickActions,
       ],
     );
@@ -1626,7 +1630,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
                 child: Row(
                   children: [
                     const Icon(LucideIcons.scissors, size: 18),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: SpacingScale.s12),
                     Text(l10n.recording_splitRecording),
                   ],
                 ),
@@ -1636,7 +1640,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
                 child: Row(
                   children: [
                     const Icon(LucideIcons.share2, size: 18),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: SpacingScale.s12),
                     Text(l10n.recording_exportAudio),
                   ],
                 ),
@@ -1651,7 +1655,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
                         size: 18,
                         color: Colors.amber.shade700,
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: SpacingScale.s12),
                       Text(l10n.classify_action),
                     ],
                   ),
@@ -1662,7 +1666,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
                   child: Row(
                     children: [
                       const Icon(LucideIcons.folderInput, size: 18),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: SpacingScale.s12),
                       Text(l10n.recording_moveCategory),
                     ],
                   ),
@@ -1672,7 +1676,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
                 child: Row(
                   children: [
                     Icon(LucideIcons.refreshCw, size: 18, color: colors.error),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: SpacingScale.s12),
                     Text(
                       l10n.recording_replaceAudio,
                       style: TextStyle(color: colors.error),
@@ -1685,7 +1689,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
                 child: Row(
                   children: [
                     Icon(LucideIcons.trash2, size: 18, color: colors.error),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: SpacingScale.s12),
                     Text(
                       l10n.common_delete,
                       style: TextStyle(color: colors.error),
@@ -1706,12 +1710,12 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
                 AppBar(leading: const BackButton(), actions: [?menuButton]),
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(24),
+                    padding: const EdgeInsets.all(SpacingScale.s24),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         titleAndGenre,
-                        const SizedBox(height: 24),
+                        const SizedBox(height: SpacingScale.s24),
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -1720,12 +1724,12 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   infoGrid,
-                                  const SizedBox(height: 24),
+                                  const SizedBox(height: SpacingScale.s24),
                                   quickActions,
                                 ],
                               ),
                             ),
-                            const SizedBox(width: 24),
+                            const SizedBox(width: SpacingScale.s24),
                             Expanded(child: statusSection),
                           ],
                         ),
@@ -1789,7 +1793,12 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
               ),
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 80),
+                  padding: const EdgeInsets.fromLTRB(
+                    SpacingScale.s20,
+                    SpacingScale.s20,
+                    SpacingScale.s20,
+                    80,
+                  ),
                   child: detailContent,
                 ),
               ),
@@ -1837,7 +1846,7 @@ class _SecondaryEditDialogState extends State<_SecondaryEditDialog> {
       title: Row(
         children: [
           Icon(LucideIcons.layers, size: 20, color: colors.secondary),
-          const SizedBox(width: 8),
+          const SizedBox(width: SpacingScale.s8),
           Expanded(child: Text(l10n.classify_addAlternativeTitle)),
         ],
       ),

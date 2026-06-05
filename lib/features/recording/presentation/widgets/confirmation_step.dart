@@ -15,6 +15,7 @@ import '../../../../core/database/app_database.dart';
 import '../../../../core/platform/file_ops.dart' as file_ops;
 import '../../../../core/platform/file_source.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../../shared/utils/error_helpers.dart';
 import '../../../../shared/utils/format.dart';
 import '../../../../shared/utils/recording_title.dart';
@@ -503,7 +504,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
             child: Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.only(top: 20),
+                  padding: const EdgeInsets.only(top: SpacingScale.s20),
                   child: Text(
                     formatDurationMinSec(widget.result.durationSeconds),
                     style: theme.textTheme.displayLarge?.copyWith(
@@ -520,12 +521,14 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
                   child: widget.genreId == kUnclassifiedGenreId
                       ? Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 4,
+                            horizontal: SpacingScale.s12,
+                            vertical: SpacingScale.s4,
                           ),
                           decoration: BoxDecoration(
                             color: Colors.amber.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(
+                              RadiusScale.r16,
+                            ),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -535,7 +538,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
                                 size: 12,
                                 color: Colors.amber.shade700,
                               ),
-                              const SizedBox(width: 4),
+                              const SizedBox(width: SpacingScale.s4),
                               Text(
                                 l10n.quickRecord_classifyLater,
                                 style: theme.textTheme.labelSmall?.copyWith(
@@ -549,12 +552,14 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
                       : tagLabel.isNotEmpty
                       ? Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 4,
+                            horizontal: SpacingScale.s12,
+                            vertical: SpacingScale.s4,
                           ),
                           decoration: BoxDecoration(
                             color: colors.surfaceAlt,
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(
+                              RadiusScale.r16,
+                            ),
                           ),
                           child: Text(
                             tagLabel,
@@ -568,11 +573,13 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
 
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: SpacingScale.s20,
+                    ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const SizedBox(height: 12),
+                        const SizedBox(height: SpacingScale.s12),
                         _buildWaveformPlayer(colors, amplitudes),
                         const SizedBox(height: 6),
                         Text(
@@ -588,7 +595,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
                 ),
 
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.only(bottom: SpacingScale.s12),
                   child: GestureDetector(
                     onTap: _togglePlayback,
                     child: Container(
@@ -616,9 +623,9 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
 
                 Padding(
                   padding: const EdgeInsets.fromLTRB(
-                    20,
+                    SpacingScale.s20,
                     0,
-                    20,
+                    SpacingScale.s20,
                     AppShell.scrollBottomPadding,
                   ),
                   child: Column(
@@ -636,7 +643,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
                               size: 20,
                               color: colors.secondary,
                             ),
-                            const SizedBox(width: 12),
+                            const SizedBox(width: SpacingScale.s12),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -675,7 +682,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: SpacingScale.s12),
                       StorytellerPicker(
                         projectId:
                             ref
@@ -701,7 +708,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
                             ),
                           ),
                         ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: SpacingScale.s12),
                       TextField(
                         controller: _descriptionController,
                         minLines: 2,
@@ -714,28 +721,34 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
                           filled: true,
                           fillColor: colors.surfaceAlt,
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(
+                              RadiusScale.r12,
+                            ),
                             borderSide: BorderSide.none,
                           ),
                           enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(
+                              RadiusScale.r12,
+                            ),
                             borderSide: BorderSide.none,
                           ),
                           focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(
+                              RadiusScale.r12,
+                            ),
                             borderSide: BorderSide(
                               color: colors.accent,
                               width: 1.5,
                             ),
                           ),
                           contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
+                            horizontal: SpacingScale.s16,
                             vertical: 14,
                           ),
                         ),
                       ),
 
-                      const SizedBox(height: 16),
+                      const SizedBox(height: SpacingScale.s16),
 
                       SizedBox(
                         width: double.infinity,
@@ -754,8 +767,8 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
                           ),
                           child: _isSaving
                               ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
+                                  width: SpacingScale.s20,
+                                  height: SpacingScale.s20,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
                                     color: Colors.white,
@@ -772,7 +785,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
                       ),
 
                       if (widget.showReRecord) ...[
-                        const SizedBox(height: 8),
+                        const SizedBox(height: SpacingScale.s8),
                         SizedBox(
                           width: double.infinity,
                           height: 52,
@@ -802,7 +815,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
                         ),
                       ],
 
-                      const SizedBox(height: 4),
+                      const SizedBox(height: SpacingScale.s4),
 
                       TextButton(
                         onPressed: _isSaving ? null : _discard,
