@@ -1,21 +1,4 @@
-class UnauthorizedException implements Exception {
-  final String message;
-
-  const UnauthorizedException([
-    this.message = 'Session expired. Please log in again.',
-  ]);
-
-  @override
-  String toString() => message;
-}
-
-class ForbiddenException implements Exception {
-  final String message;
-
-  const ForbiddenException([
-    this.message = 'You do not have permission to perform this action',
-  ]);
-
-  @override
-  String toString() => message;
-}
+// ENG-99: the exception types now live in the sealed hierarchy in
+// app_exception.dart. Only the legacy names are re-exported here so the
+// existing imports keep working; new code should import app_exception.dart.
+export 'app_exception.dart' show UnauthorizedException, ForbiddenException;
