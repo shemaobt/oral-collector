@@ -160,7 +160,11 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(localRecordings, localRecordings.splitIndex);
         await m.addColumn(localRecordings, localRecordings.splitSegmentCount);
       }
-      if (from < 10) {
+      // The from<6 step creates local_storytellers from its current (v10)
+      // definition, which already carries these sync columns. Only add them when
+      // upgrading a table that was created at an older, pre-sync shape (from>=6);
+      // adding them after the from<6 createTable would duplicate the columns.
+      if (from >= 6 && from < 10) {
         await m.addColumn(localStorytellers, localStorytellers.serverId);
         await m.addColumn(localStorytellers, localStorytellers.syncStatus);
         await m.addColumn(localStorytellers, localStorytellers.retryCount);
