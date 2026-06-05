@@ -172,6 +172,7 @@ String messageForException(AppException e, AppLocalizations l10n) {
     ForbiddenException() => l10n.error_noPermission,
     ConflictException() => l10n.error_serverFailure,
     ValidationException() => l10n.error_generic,
+    ParseException() => l10n.error_generic,
     ServerException() => l10n.error_serverFailure,
   };
 }
