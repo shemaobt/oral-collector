@@ -73,7 +73,11 @@ void main() {
   late _MockApi api;
   late _MockLocal local;
 
-  final activeProject = Project(id: 'proj-1', name: 'Test', languageId: 'en');
+  final activeProject = const Project(
+    id: 'proj-1',
+    name: 'Test',
+    languageId: 'en',
+  );
 
   ProviderContainer makeContainer({required bool online}) => ProviderContainer(
     overrides: [

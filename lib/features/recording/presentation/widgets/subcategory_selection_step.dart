@@ -141,7 +141,7 @@ class SubcategorySelectionStep extends StatelessWidget {
         ),
 
         Padding(
-          padding: EdgeInsets.fromLTRB(
+          padding: const EdgeInsets.fromLTRB(
             16,
             16,
             16,

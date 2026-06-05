@@ -125,7 +125,7 @@ abstract class AppTheme {
       useMaterial3: true,
       fontFamily: _fontFamily,
       extensions: const [AppColors.light],
-      colorScheme: ColorScheme(
+      colorScheme: const ColorScheme(
         brightness: Brightness.light,
         primary: AppColors.primary,
         onPrimary: Colors.white,
@@ -154,7 +154,7 @@ abstract class AppTheme {
         elevation: 0,
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
-        titleTextStyle: TextStyle(
+        titleTextStyle: const TextStyle(
           fontFamily: _fontFamily,
           fontSize: 18,
           fontWeight: FontWeight.w700,
@@ -189,7 +189,7 @@ abstract class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          textStyle: TextStyle(
+          textStyle: const TextStyle(
             fontFamily: _fontFamily,
             fontSize: 15,
             fontWeight: FontWeight.w600,
@@ -205,7 +205,7 @@ abstract class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          textStyle: TextStyle(
+          textStyle: const TextStyle(
             fontFamily: _fontFamily,
             fontSize: 15,
             fontWeight: FontWeight.w600,
@@ -220,7 +220,7 @@ abstract class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          textStyle: TextStyle(
+          textStyle: const TextStyle(
             fontFamily: _fontFamily,
             fontSize: 15,
             fontWeight: FontWeight.w600,
@@ -231,7 +231,7 @@ abstract class AppTheme {
         style: TextButton.styleFrom(
           foregroundColor: AppColors.primary,
           minimumSize: const Size(0, 48),
-          textStyle: TextStyle(
+          textStyle: const TextStyle(
             fontFamily: _fontFamily,
             fontSize: 14,
             fontWeight: FontWeight.w600,
@@ -277,7 +277,7 @@ abstract class AppTheme {
       navigationRailTheme: NavigationRailThemeData(
         backgroundColor: AppColors.card,
         selectedIconTheme: const IconThemeData(color: AppColors.accent),
-        selectedLabelTextStyle: TextStyle(
+        selectedLabelTextStyle: const TextStyle(
           fontFamily: _fontFamily,
           fontSize: 12,
           fontWeight: FontWeight.w600,
@@ -292,7 +292,7 @@ abstract class AppTheme {
         color: AppColors.border.withValues(alpha: 0.4),
         thickness: 1,
       ),
-      listTileTheme: ListTileThemeData(
+      listTileTheme: const ListTileThemeData(
         titleTextStyle: TextStyle(
           fontFamily: _fontFamily,
           fontSize: 16,
@@ -351,7 +351,7 @@ abstract class AppTheme {
       ),
       snackBarTheme: SnackBarThemeData(
         backgroundColor: AppColors.surfaceContainerHighest,
-        contentTextStyle: TextStyle(
+        contentTextStyle: const TextStyle(
           fontFamily: _fontFamily,
           fontSize: 14,
           fontWeight: FontWeight.w500,
@@ -364,12 +364,12 @@ abstract class AppTheme {
         labelColor: AppColors.accent,
         unselectedLabelColor: AppColors.foreground.withValues(alpha: 0.4),
         indicatorColor: AppColors.accent,
-        labelStyle: TextStyle(
+        labelStyle: const TextStyle(
           fontFamily: _fontFamily,
           fontSize: 14,
           fontWeight: FontWeight.w600,
         ),
-        unselectedLabelStyle: TextStyle(
+        unselectedLabelStyle: const TextStyle(
           fontFamily: _fontFamily,
           fontSize: 14,
           fontWeight: FontWeight.w500,
@@ -415,7 +415,7 @@ abstract class AppTheme {
       useMaterial3: true,
       fontFamily: _fontFamily,
       extensions: const [AppColors.dark],
-      colorScheme: ColorScheme(
+      colorScheme: const ColorScheme(
         brightness: Brightness.dark,
         primary: AppColors.darkPrimary,
         onPrimary: Colors.white,
@@ -438,7 +438,7 @@ abstract class AppTheme {
         foregroundColor: AppColors.darkForeground,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
-        titleTextStyle: TextStyle(
+        titleTextStyle: const TextStyle(
           fontFamily: _fontFamily,
           fontSize: 18,
           fontWeight: FontWeight.w700,
@@ -466,7 +466,7 @@ abstract class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          textStyle: TextStyle(
+          textStyle: const TextStyle(
             fontFamily: _fontFamily,
             fontSize: 15,
             fontWeight: FontWeight.w600,
@@ -519,7 +519,7 @@ abstract class AppTheme {
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: AppColors.error),
         ),
-        hintStyle: TextStyle(color: AppColors.darkBorder),
+        hintStyle: const TextStyle(color: AppColors.darkBorder),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 16,
@@ -543,7 +543,7 @@ abstract class AppTheme {
         color: AppColors.darkBorder.withValues(alpha: 0.3),
         thickness: 1,
       ),
-      listTileTheme: ListTileThemeData(
+      listTileTheme: const ListTileThemeData(
         titleTextStyle: TextStyle(
           fontFamily: _fontFamily,
           fontSize: 16,

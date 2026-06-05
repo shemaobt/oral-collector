@@ -205,6 +205,41 @@ void main() {
     );
   });
 
+  group('finalize - deleteSources flag (crash recovery)', () {
+    test(
+      'deleteSources=false keeps the original segment files after a successful '
+      'concat + compress (so a cancelled recovery can still re-recover)',
+      () async {
+        final w1 = '${tmp.path}/s1.wav';
+        final w2 = '${tmp.path}/s2.wav';
+        await File(w1).writeAsBytes(_buildWavFile([1, 2]));
+        await File(w2).writeAsBytes(_buildWavFile([3, 4]));
+
+        final concatOut = '${tmp.path}/concat_sess.wav';
+        final service = RecordingFinalizationService(
+          concat: _StubConcatService(result: () => concatOut),
+          documentsDirFn: tmpDocsDir,
+          compressFn: okCompress,
+        );
+
+        final outcome = await service.finalize(
+          sessionId: 'sess',
+          segmentPaths: [w1, w2],
+          totalDuration: const Duration(seconds: 5),
+          deleteSources: false,
+        );
+
+        // Give any (incorrect) unawaited deletion a chance to run before we
+        // assert the sources survived.
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+
+        expect(outcome, isNotNull);
+        expect(File(w1).existsSync(), isTrue);
+        expect(File(w2).existsSync(), isTrue);
+      },
+    );
+  });
+
   group('finalize - concat fallbacks', () {
     test(
       'pure-Dart WAV fallback runs when ffmpeg concat returns null and marks '

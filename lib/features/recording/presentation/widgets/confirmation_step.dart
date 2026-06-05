@@ -12,13 +12,12 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/auth/auth_notifier.dart';
 import '../../../../core/database/app_database.dart';
+import '../../../../core/platform/file_ops.dart' as file_ops;
+import '../../../../core/platform/file_source.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/utils/error_helpers.dart';
 import '../../../../shared/utils/format.dart';
 import '../../../../shared/utils/recording_title.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/platform/file_ops.dart' as file_ops;
-import '../../../../core/platform/file_source.dart';
-import '../../data/services/audio_probe.dart';
 import '../../../../shared/widgets/app_shell.dart';
 import '../../../../shared/widgets/waveform_visualizer.dart';
 import '../../../project/presentation/notifiers/project_notifier.dart';
@@ -27,6 +26,7 @@ import '../../../storyteller/presentation/notifiers/project_storytellers_notifie
 import '../../../storyteller/presentation/widgets/storyteller_picker.dart';
 import '../../../sync/presentation/notifiers/sync_notifier.dart';
 import '../../data/providers.dart';
+import '../../data/services/audio_probe.dart';
 import '../../data/services/direct_recording_uploader.dart';
 import '../../domain/entities/classification.dart';
 import '../notifiers/recording_session_notifier.dart';
@@ -44,6 +44,8 @@ class ConfirmationStep extends ConsumerStatefulWidget {
     this.registerName,
     required this.onReRecord,
     required this.onDiscard,
+    this.onSaved,
+    this.showReRecord = true,
   });
 
   final RecordingResult result;
@@ -55,6 +57,14 @@ class ConfirmationStep extends ConsumerStatefulWidget {
   final String? registerName;
   final VoidCallback onReRecord;
   final VoidCallback onDiscard;
+
+  /// When set, runs instead of the default `go('/home')` after a successful
+  /// save (crash-recovery uses it to mark the session recovered and route to
+  /// the recordings list). When null, the normal new-recording flow applies.
+  final VoidCallback? onSaved;
+
+  /// Recovery has no segments to re-record, so the host hides the button.
+  final bool showReRecord;
 
   @override
   ConsumerState<ConfirmationStep> createState() => _ConfirmationStepState();
@@ -257,6 +267,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
     final repo = ref.read(localRecordingRepositoryProvider);
     final syncNotifier = ref.read(syncNotifierProvider.notifier);
     final isOnline = ref.read(syncNotifierProvider).isOnline;
+    final l10n = AppLocalizations.of(context);
 
     int fileSize = 0;
     try {
@@ -266,47 +277,60 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
     final id =
         '${DateTime.now().millisecondsSinceEpoch}_${widget.genreId.hashCode}';
 
-    await repo.insertRecording(
-      LocalRecordingsCompanion(
-        id: Value(id),
-        projectId: Value(projectId),
-        genreId: Value(widget.genreId),
-        subcategoryId:
-            widget.subcategoryId != null && widget.subcategoryId!.isNotEmpty
-            ? Value(widget.subcategoryId!)
-            : const Value.absent(),
-        registerId: widget.registerId != null && widget.registerId!.isNotEmpty
-            ? Value(widget.registerId!)
-            : const Value.absent(),
-        storytellerId: Value(_selectedStoryteller!.id),
-        userId: currentUserId != null
-            ? Value(currentUserId)
-            : const Value.absent(),
-        title: Value(
-          resolveRecordingTitle(_titleController.text, locale: localeTag),
+    try {
+      await repo.insertRecording(
+        LocalRecordingsCompanion(
+          id: Value(id),
+          projectId: Value(projectId),
+          genreId: Value(widget.genreId),
+          subcategoryId:
+              widget.subcategoryId != null && widget.subcategoryId!.isNotEmpty
+              ? Value(widget.subcategoryId!)
+              : const Value.absent(),
+          registerId: widget.registerId != null && widget.registerId!.isNotEmpty
+              ? Value(widget.registerId!)
+              : const Value.absent(),
+          storytellerId: Value(_selectedStoryteller!.id),
+          userId: currentUserId != null
+              ? Value(currentUserId)
+              : const Value.absent(),
+          title: Value(
+            resolveRecordingTitle(_titleController.text, locale: localeTag),
+          ),
+          description: _descriptionController.text.trim().isNotEmpty
+              ? Value(_descriptionController.text.trim())
+              : const Value.absent(),
+          durationSeconds: Value(widget.result.durationSeconds),
+          fileSizeBytes: Value(fileSize),
+          format: Value(widget.result.format),
+          localFilePath: Value(widget.result.filePath),
+          recordedAt: Value(DateTime.now()),
         ),
-        description: _descriptionController.text.trim().isNotEmpty
-            ? Value(_descriptionController.text.trim())
-            : const Value.absent(),
-        durationSeconds: Value(widget.result.durationSeconds),
-        fileSizeBytes: Value(fileSize),
-        format: Value(widget.result.format),
-        localFilePath: Value(widget.result.filePath),
-        recordedAt: Value(DateTime.now()),
-      ),
-    );
+      );
 
-    if (isOnline) {
-      unawaited(syncNotifier.processQueue());
-    }
+      if (isOnline) {
+        unawaited(syncNotifier.processQueue());
+      }
 
-    if (mounted) {
-      HapticFeedback.mediumImpact();
-      final l10n = AppLocalizations.of(context);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.recording_saved)));
-      context.go('/home');
+      if (mounted) {
+        HapticFeedback.mediumImpact();
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.recording_saved)));
+        if (widget.onSaved != null) {
+          widget.onSaved!();
+        } else {
+          context.go('/home');
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        final friendly = friendlyErrorMessage(e.toString(), l10n);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.recording_uploadFailed(friendly))),
+        );
+        setState(() => _isSaving = false);
+      }
     }
   }
 
@@ -591,7 +615,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
                 ),
 
                 Padding(
-                  padding: EdgeInsets.fromLTRB(
+                  padding: const EdgeInsets.fromLTRB(
                     20,
                     0,
                     20,
@@ -747,35 +771,36 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
                         ),
                       ),
 
-                      const SizedBox(height: 8),
-
-                      SizedBox(
-                        width: double.infinity,
-                        height: 52,
-                        child: OutlinedButton(
-                          onPressed: _isSaving
-                              ? null
-                              : () {
-                                  _player?.stop();
-                                  widget.onReRecord();
-                                },
-                          style: OutlinedButton.styleFrom(
-                            side: BorderSide(
-                              color: colors.border.withValues(alpha: 0.5),
+                      if (widget.showReRecord) ...[
+                        const SizedBox(height: 8),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 52,
+                          child: OutlinedButton(
+                            onPressed: _isSaving
+                                ? null
+                                : () {
+                                    _player?.stop();
+                                    widget.onReRecord();
+                                  },
+                            style: OutlinedButton.styleFrom(
+                              side: BorderSide(
+                                color: colors.border.withValues(alpha: 0.5),
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
                             ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                          ),
-                          child: Text(
-                            l10n.recording_recordAgain,
-                            style: theme.textTheme.titleSmall?.copyWith(
-                              color: colors.foreground,
-                              fontWeight: FontWeight.w500,
+                            child: Text(
+                              l10n.recording_recordAgain,
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                color: colors.foreground,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                           ),
                         ),
-                      ),
+                      ],
 
                       const SizedBox(height: 4),
 

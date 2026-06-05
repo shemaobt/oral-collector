@@ -5,16 +5,15 @@ import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
 import 'package:oral_collector/core/config/recording_config.dart';
 import 'package:oral_collector/core/database/app_database.dart';
 import 'package:oral_collector/core/database/database_provider.dart';
 import 'package:oral_collector/core/platform/recording_active_flag.dart';
+import 'package:oral_collector/features/recording/data/repositories/recording_session_repository.dart';
 import 'package:oral_collector/features/recording/data/services/recovery_coordinator.dart';
 import 'package:oral_collector/features/recording/data/services/segment_paths.dart';
 import 'package:oral_collector/features/recording/data/services/wav_header_repair.dart';
-import 'package:oral_collector/features/recording/data/repositories/recording_session_repository.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

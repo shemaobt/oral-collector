@@ -1,7 +1,7 @@
 import 'dart:convert';
 
-import '../../../../core/network/authenticated_client.dart';
 import '../../../../core/network/api_error_handler.dart';
+import '../../../../core/network/authenticated_client.dart';
 import '../../domain/entities/genre.dart';
 import '../../domain/repositories/genre_repository.dart';
 

@@ -1,8 +1,8 @@
 import 'dart:convert';
 
 import '../../../../core/errors/api_exception.dart';
-import '../../../../core/network/authenticated_client.dart';
 import '../../../../core/network/api_error_handler.dart';
+import '../../../../core/network/authenticated_client.dart';
 import '../../domain/entities/server_recording.dart';
 import '../../domain/repositories/recording_api_repository.dart';
 

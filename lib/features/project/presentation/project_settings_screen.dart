@@ -3,19 +3,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import '../../../../l10n/app_localizations.dart';
 import '../../../core/errors/api_exception.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_snack_bar.dart';
 import '../../../shared/widgets/invite_dialog.dart';
-import '../../../../l10n/app_localizations.dart';
 import '../../auth/data/providers/role_provider.dart';
 import '../../sync/presentation/notifiers/sync_notifier.dart';
 import '../data/providers.dart';
-import 'notifiers/member_notifier.dart';
-import 'notifiers/project_notifier.dart';
 import '../domain/entities/project.dart';
 import '../domain/entities/project_member.dart';
+import 'notifiers/member_notifier.dart';
+import 'notifiers/project_notifier.dart';
 import 'widgets/member_list.dart';
 import 'widgets/project_settings_header.dart';
 

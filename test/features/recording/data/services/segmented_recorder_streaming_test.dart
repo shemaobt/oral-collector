@@ -5,13 +5,12 @@ import 'dart:typed_data';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:record/record.dart';
-
 import 'package:oral_collector/core/database/app_database.dart';
 import 'package:oral_collector/features/recording/data/repositories/recording_session_repository.dart';
 import 'package:oral_collector/features/recording/data/services/segmented_recorder.dart';
 import 'package:oral_collector/features/recording/data/services/storage_guard.dart';
 import 'package:oral_collector/features/recording/data/services/wav_header_repair.dart';
+import 'package:record/record.dart';
 
 class _MockAudioRecorder extends Mock implements AudioRecorder {}
 

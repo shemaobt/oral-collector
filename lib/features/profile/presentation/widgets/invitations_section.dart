@@ -4,8 +4,8 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../shared/utils/error_helpers.dart';
 import '../../../../shared/widgets/section_header.dart';
-import '../../../invite/presentation/notifiers/invite_state.dart';
 import '../../../invite/domain/entities/invite.dart';
+import '../../../invite/presentation/notifiers/invite_state.dart';
 import 'invite_tile.dart';
 
 class InvitationsSection extends StatelessWidget {

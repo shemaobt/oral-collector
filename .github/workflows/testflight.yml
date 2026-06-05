@@ -31,9 +31,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pods-
 
-      - name: Create .env for build
-        run: echo 'BACKEND_URL=https://tripod-backend.shemaywam.com' > .env
-
       - name: Install dependencies
         run: |
           flutter pub get
