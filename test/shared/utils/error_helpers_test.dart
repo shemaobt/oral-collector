@@ -55,6 +55,16 @@ void main() {
         l10n.error_generic,
       );
     });
+
+    test('ParseException -> error_generic', () {
+      expect(
+        friendlyErrorFor(
+          const ParseException(field: 'x', expected: 'String'),
+          l10n,
+        ),
+        l10n.error_generic,
+      );
+    });
   });
 
   group('friendlyErrorFor preserva o fallback por string', () {

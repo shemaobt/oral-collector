@@ -41,6 +41,7 @@ void main() {
       ValidationException(),
       ServerException(statusCode: 500),
       ConflictException(),
+      ParseException(field: 'x', expected: 'String'),
     ];
 
     test('toda folha continua capturável por on Exception', () {
@@ -77,6 +78,33 @@ void main() {
         const ForbiddenException().toString().toLowerCase(),
         contains('forbidden'),
       );
+    });
+  });
+
+  group('ParseException', () {
+    test('toString inclui field, expected e code', () {
+      const e = ParseException(field: 'access_token', expected: 'String');
+
+      final s = e.toString();
+
+      expect(s, contains('access_token'));
+      expect(s, contains('String'));
+      expect(s, contains('parse'));
+    });
+
+    test('redige o valor de cause, mantendo o tipo', () {
+      const secret = 'raw token=abc123 email=user@example.com';
+      const e = ParseException(
+        field: 'access_token',
+        expected: 'String',
+        cause: secret,
+      );
+
+      final s = e.toString();
+
+      expect(s, isNot(contains(secret)));
+      expect(s, isNot(contains('token=abc123')));
+      expect(s, contains('String'));
     });
   });
 }

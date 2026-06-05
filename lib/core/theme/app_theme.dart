@@ -126,6 +126,7 @@ abstract class AppTheme {
       useMaterial3: true,
       fontFamily: _fontFamily,
       extensions: const <ThemeExtension<dynamic>>[
+        AppColors.light,
         AppSpacing.fallback,
         AppRadii.fallback,
         AppDurations.fallback,
@@ -420,6 +421,7 @@ abstract class AppTheme {
       useMaterial3: true,
       fontFamily: _fontFamily,
       extensions: const <ThemeExtension<dynamic>>[
+        AppColors.dark,
         AppSpacing.fallback,
         AppRadii.fallback,
         AppDurations.fallback,

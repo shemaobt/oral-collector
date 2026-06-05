@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class AppColorSet {
+class AppColorSet extends ThemeExtension<AppColorSet> {
   final Color primary;
   final Color accent;
   final Color background;
@@ -30,6 +30,95 @@ class AppColorSet {
     required this.border,
     required this.error,
   });
+
+  @override
+  AppColorSet copyWith({
+    Color? primary,
+    Color? accent,
+    Color? background,
+    Color? foreground,
+    Color? card,
+    Color? surfaceAlt,
+    Color? secondary,
+    Color? info,
+    Color? infoText,
+    Color? success,
+    Color? successText,
+    Color? border,
+    Color? error,
+  }) {
+    return AppColorSet(
+      primary: primary ?? this.primary,
+      accent: accent ?? this.accent,
+      background: background ?? this.background,
+      foreground: foreground ?? this.foreground,
+      card: card ?? this.card,
+      surfaceAlt: surfaceAlt ?? this.surfaceAlt,
+      secondary: secondary ?? this.secondary,
+      info: info ?? this.info,
+      infoText: infoText ?? this.infoText,
+      success: success ?? this.success,
+      successText: successText ?? this.successText,
+      border: border ?? this.border,
+      error: error ?? this.error,
+    );
+  }
+
+  @override
+  AppColorSet lerp(covariant ThemeExtension<AppColorSet>? other, double t) {
+    if (other is! AppColorSet) return this;
+    return AppColorSet(
+      primary: Color.lerp(primary, other.primary, t)!,
+      accent: Color.lerp(accent, other.accent, t)!,
+      background: Color.lerp(background, other.background, t)!,
+      foreground: Color.lerp(foreground, other.foreground, t)!,
+      card: Color.lerp(card, other.card, t)!,
+      surfaceAlt: Color.lerp(surfaceAlt, other.surfaceAlt, t)!,
+      secondary: Color.lerp(secondary, other.secondary, t)!,
+      info: Color.lerp(info, other.info, t)!,
+      infoText: Color.lerp(infoText, other.infoText, t)!,
+      success: Color.lerp(success, other.success, t)!,
+      successText: Color.lerp(successText, other.successText, t)!,
+      border: Color.lerp(border, other.border, t)!,
+      error: Color.lerp(error, other.error, t)!,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is AppColorSet &&
+        other.primary == primary &&
+        other.accent == accent &&
+        other.background == background &&
+        other.foreground == foreground &&
+        other.card == card &&
+        other.surfaceAlt == surfaceAlt &&
+        other.secondary == secondary &&
+        other.info == info &&
+        other.infoText == infoText &&
+        other.success == success &&
+        other.successText == successText &&
+        other.border == border &&
+        other.error == error;
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    primary,
+    accent,
+    background,
+    foreground,
+    card,
+    surfaceAlt,
+    secondary,
+    info,
+    infoText,
+    success,
+    successText,
+    border,
+    error,
+  );
 }
 
 abstract class AppColors {
@@ -77,10 +166,12 @@ abstract class AppColors {
   static const Color darkBorder = Color(0xFF5A5440);
 
   static AppColorSet of(BuildContext context) {
-    return Theme.of(context).brightness == Brightness.dark ? _dark : _light;
+    final theme = Theme.of(context);
+    return theme.extension<AppColorSet>() ??
+        (theme.brightness == Brightness.dark ? dark : light);
   }
 
-  static const _light = AppColorSet(
+  static const light = AppColorSet(
     primary: primary,
     accent: accent,
     background: background,
@@ -96,7 +187,7 @@ abstract class AppColors {
     error: error,
   );
 
-  static const _dark = AppColorSet(
+  static const dark = AppColorSet(
     primary: darkPrimary,
     accent: darkAccent,
     background: darkBackground,
