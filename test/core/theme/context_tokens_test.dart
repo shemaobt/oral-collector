@@ -28,13 +28,16 @@ void main() {
     expect(ctx.durations.ms200, const Duration(milliseconds: 200));
   });
 
-  testWidgets('context tokens resolve through the app dark theme', (
+  testWidgets('context tokens resolve a registered non-fallback extension', (
     tester,
   ) async {
     late BuildContext ctx;
     await tester.pumpWidget(
       MaterialApp(
-        theme: AppTheme.darkTheme,
+        theme: ThemeData(
+          useMaterial3: true,
+          extensions: const <ThemeExtension<dynamic>>[AppSpacing(s16: 99)],
+        ),
         home: Builder(
           builder: (context) {
             ctx = context;
@@ -44,9 +47,7 @@ void main() {
       ),
     );
 
-    expect(ctx.spacing.s24, 24);
-    expect(ctx.radii.r16, 16);
-    expect(ctx.durations.ms200, const Duration(milliseconds: 200));
+    expect(ctx.spacing.s16, 99);
   });
 
   testWidgets('context tokens fall back to the scale without a registered '

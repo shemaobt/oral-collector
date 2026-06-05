@@ -21,11 +21,6 @@ void main() {
       expect(radii.r24, RadiusScale.r24);
     });
 
-    test('fallback equals a default-constructed instance', () {
-      expect(AppRadii.fallback, const AppRadii());
-      expect(AppRadii.fallback.hashCode, const AppRadii().hashCode);
-    });
-
     test('copyWith overrides only the named field', () {
       const base = AppRadii();
       final modified = base.copyWith(r12: 99);

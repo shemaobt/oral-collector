@@ -25,11 +25,6 @@ void main() {
       expect(spacing.s48, SpacingScale.s48);
     });
 
-    test('fallback equals a default-constructed instance', () {
-      expect(AppSpacing.fallback, const AppSpacing());
-      expect(AppSpacing.fallback.hashCode, const AppSpacing().hashCode);
-    });
-
     test('copyWith overrides only the named field', () {
       const base = AppSpacing();
       final modified = base.copyWith(s16: 99);

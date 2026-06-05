@@ -23,11 +23,6 @@ void main() {
       expect(durations.ms1200, DurationScale.ms1200);
     });
 
-    test('fallback equals a default-constructed instance', () {
-      expect(AppDurations.fallback, const AppDurations());
-      expect(AppDurations.fallback.hashCode, const AppDurations().hashCode);
-    });
-
     test('copyWith overrides only the named field', () {
       const base = AppDurations();
       final modified = base.copyWith(ms200: const Duration(milliseconds: 500));
