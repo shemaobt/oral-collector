@@ -24,7 +24,11 @@ Path: @/lib/features/recording/data
   the generated Dart class `LocalRecording` and its `LocalRecordingsCompanion`
   are imported from there. `toCompanion(false)` is the canonical way to
   serialize an in-memory `LocalRecording` to a Drift insert/update payload —
-  it covers every column in the schema, including ones added later.
+  it covers every column in the schema, including ones added later. Adding a
+  column is a schema migration: follow the snapshot + step-through
+  migration-test workflow in
+  [/lib/core/database/docs.md](../../../core/database/docs.md), which guards the
+  upgrade path that carries un-uploaded recordings forward.
 - Consumed by the recording presentation layer:
   [/lib/features/recording/presentation/recording_detail_screen.dart](../presentation/recording_detail_screen.dart),
   [/lib/features/recording/presentation/trim_editor_screen.dart](../presentation/trim_editor_screen.dart),
