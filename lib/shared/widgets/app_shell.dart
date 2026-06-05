@@ -8,6 +8,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../core/auth/auth_notifier.dart';
 import '../../core/platform/file_ops.dart' as file_ops;
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/tokens.dart';
 import '../../features/auth/data/providers/role_provider.dart';
 import '../../features/invite/presentation/notifiers/invite_notifier.dart';
 import '../../features/recording/presentation/notifiers/recording_session_notifier.dart';
@@ -227,7 +228,7 @@ class _WebSidebarState extends ConsumerState<_WebSidebar> {
     final l10n = AppLocalizations.of(context);
 
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
+      duration: DurationScale.ms200,
       curve: Curves.easeInOut,
       width: _expanded ? 220 : 72,
       decoration: BoxDecoration(
@@ -243,7 +244,7 @@ class _WebSidebarState extends ConsumerState<_WebSidebar> {
           SizedBox(height: MediaQuery.of(context).padding.top + 16),
 
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
+            padding: const EdgeInsets.symmetric(horizontal: SpacingScale.s12),
             child: Column(
               children: List.generate(widget.tabs.length, (i) {
                 final tab = widget.tabs[i];
@@ -252,7 +253,7 @@ class _WebSidebarState extends ConsumerState<_WebSidebar> {
                     tab.path == '/profile' && widget.pendingInvites > 0;
 
                 return Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
+                  padding: const EdgeInsets.only(bottom: SpacingScale.s4),
                   child: _SidebarNavItem(
                     icon: tab.icon,
                     label: tab.label,
@@ -273,7 +274,7 @@ class _WebSidebarState extends ConsumerState<_WebSidebar> {
 
           if (user != null)
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
+              padding: const EdgeInsets.symmetric(horizontal: SpacingScale.s12),
               child: _SidebarUserRow(
                 avatarUrl: user.avatarUrl,
                 displayName: user.displayName,
@@ -294,10 +295,10 @@ class _WebSidebarState extends ConsumerState<_WebSidebar> {
                 },
               ),
             ),
-          const SizedBox(height: 8),
+          const SizedBox(height: SpacingScale.s8),
 
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
+            padding: const EdgeInsets.symmetric(horizontal: SpacingScale.s12),
             child: _SidebarCollapseToggle(
               expanded: _expanded,
               collapseLabel: l10n.nav_collapse,
@@ -306,7 +307,7 @@ class _WebSidebarState extends ConsumerState<_WebSidebar> {
               theme: theme,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: SpacingScale.s12),
         ],
       ),
     );
@@ -364,7 +365,7 @@ class _SidebarNavItem extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(10),
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
+            duration: DurationScale.ms200,
             padding: EdgeInsets.symmetric(
               horizontal: expanded ? 12 : 0,
               vertical: 10,
@@ -379,7 +380,7 @@ class _SidebarNavItem extends StatelessWidget {
                 ? Row(
                     children: [
                       displayIcon,
-                      const SizedBox(width: 12),
+                      const SizedBox(width: SpacingScale.s12),
                       Expanded(
                         child: Text(
                           label,
@@ -434,7 +435,10 @@ class _SidebarUserRow extends StatelessWidget {
     );
 
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: expanded ? 10 : 0, vertical: 8),
+      padding: EdgeInsets.symmetric(
+        horizontal: expanded ? 10 : 0,
+        vertical: SpacingScale.s8,
+      ),
       decoration: BoxDecoration(
         color: colors.surfaceAlt.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(10),
@@ -458,9 +462,9 @@ class _SidebarUserRow extends StatelessWidget {
                   color: Colors.transparent,
                   child: InkWell(
                     onTap: onLogout,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(RadiusScale.r8),
                     child: Padding(
-                      padding: const EdgeInsets.all(4),
+                      padding: const EdgeInsets.all(SpacingScale.s4),
                       child: Icon(
                         LucideIcons.logOut,
                         size: 16,
@@ -475,14 +479,14 @@ class _SidebarUserRow extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 avatar,
-                const SizedBox(height: 8),
+                const SizedBox(height: SpacingScale.s8),
                 Material(
                   color: Colors.transparent,
                   child: InkWell(
                     onTap: onLogout,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(RadiusScale.r8),
                     child: Padding(
-                      padding: const EdgeInsets.all(4),
+                      padding: const EdgeInsets.all(SpacingScale.s4),
                       child: Icon(
                         LucideIcons.logOut,
                         size: 16,
@@ -532,7 +536,7 @@ class _SidebarCollapseToggle extends StatelessWidget {
                       size: 18,
                       color: colors.secondary,
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: SpacingScale.s12),
                     Text(
                       collapseLabel,
                       style: theme.textTheme.bodySmall?.copyWith(
@@ -585,9 +589,9 @@ class _FloatingNavBar extends StatelessWidget {
 
     return Padding(
       padding: EdgeInsets.fromLTRB(
-        16,
+        SpacingScale.s16,
         6,
-        16,
+        SpacingScale.s16,
         bottomPadding > 16 ? bottomPadding - 16 : 2,
       ),
       child: Container(
@@ -607,7 +611,7 @@ class _FloatingNavBar extends StatelessWidget {
             filter: ImageFilter.blur(sigmaX: 28, sigmaY: 28),
             child: Container(
               height: 68,
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(SpacingScale.s8),
               decoration: BoxDecoration(
                 color: navBg,
                 borderRadius: BorderRadius.circular(34),
@@ -650,7 +654,7 @@ class _FloatingNavBar extends StatelessWidget {
                               onTap: () => onTabTapped(i),
                               borderRadius: BorderRadius.circular(26),
                               child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 300),
+                                duration: DurationScale.ms300,
                                 curve: Curves.easeInOut,
                                 width: isSelected
                                     ? selectedWidth
@@ -725,7 +729,7 @@ class _NavItemContent extends StatelessWidget {
         : iconWidget;
 
     return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 200),
+      duration: DurationScale.ms200,
       switchInCurve: Curves.easeIn,
       switchOutCurve: Curves.easeOut,
       child: isSelected
