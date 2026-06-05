@@ -2,13 +2,13 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:drift/native.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:mocktail/mocktail.dart';
 
+import 'package:oral_collector/core/config/env.dart';
 import 'package:oral_collector/core/database/app_database.dart';
 import 'package:oral_collector/core/network/authenticated_client.dart';
 import 'package:oral_collector/core/platform/file_source.dart';
@@ -48,10 +48,6 @@ void main() {
   late MockSecureStorage storage;
   late MockResumableUploadService resumable;
   late MockLocalRecordingRepository repo;
-
-  setUpAll(() {
-    dotenv.testLoad(fileInput: 'BACKEND_URL=http://localhost:8080');
-  });
 
   setUp(() {
     storage = MockSecureStorage();
@@ -140,10 +136,10 @@ void main() {
     expect(serverId, 'srv-abc');
 
     expect(calls, [
-      'POST http://localhost:8080/api/oc/recordings',
-      'POST http://localhost:8080/api/oc/recordings/upload-url',
+      'POST ${Env.backendUrl}/api/oc/recordings',
+      'POST ${Env.backendUrl}/api/oc/recordings/upload-url',
       'PUT https://storage.googleapis.com/bucket/object',
-      'POST http://localhost:8080/api/oc/recordings/srv-abc/confirm-upload',
+      'POST ${Env.backendUrl}/api/oc/recordings/srv-abc/confirm-upload',
     ]);
     verifyZeroInteractions(resumable);
   });

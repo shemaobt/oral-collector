@@ -41,7 +41,6 @@ dependencies:
   flutter_secure_storage: ^9.2.2
   path_provider: ^2.1.5
   shared_preferences: ^2.3.3
-  flutter_dotenv: ^5.2.1
   http: ^1.2.2
   http_parser: ^4.1.0
   lucide_icons: ^0.257.0
@@ -99,7 +98,6 @@ flutter:
   generate: true
   uses-material-design: true
   assets:
-    - .env
     - assets/app_icon.png
     - assets/hero_heart.png
     - assets/hero_wide.png

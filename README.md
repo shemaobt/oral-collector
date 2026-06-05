@@ -14,7 +14,7 @@ See [AGENTS.md](AGENTS.md) for project conventions and agent guidelines, and [do
 ## Setup
 
 1. Clone the repo and open the project directory.
-2. Copy `.env.example` to `.env` and set any required values (e.g. `BACKEND_URL=` when you have a backend).
+2. (Optional, debug only) To point at a local backend, copy `.env.example` to `.env` and set `BACKEND_URL`. It is read at build time via `--dart-define-from-file=.env` (see Run) and is never bundled into the app. Without it, builds use the production backend.
 3. Install dependencies:
 
    ```bash
@@ -34,6 +34,9 @@ See [AGENTS.md](AGENTS.md) for project conventions and agent guidelines, and [do
 
 - **Default device:**  
   `flutter run`
+
+- **Local backend (debug):**  
+  `flutter run --dart-define-from-file=.env` (or `--dart-define=BACKEND_URL=http://host:port`)
 
 ## Build
 
