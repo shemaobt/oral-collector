@@ -13,7 +13,6 @@ import 'dart:typed_data';
 
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -67,10 +66,6 @@ void main() {
   late AppDatabase db;
   late LocalRecordingRepository repo;
   late MockSecureStorage secureStorage;
-
-  setUpAll(() {
-    dotenv.testLoad(fileInput: 'BACKEND_URL=http://localhost:8080');
-  });
 
   setUp(() {
     SharedPreferences.setMockInitialValues({});

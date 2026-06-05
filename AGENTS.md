@@ -102,7 +102,7 @@ This document defines engineering standards and behaviors for LLM agents working
 - **Navigation**: **go_router** with declarative routes; or `MaterialApp.home` + imperative `Navigator` for simpler apps
 - **HTTP**: **http** package or **dio**; single API base URL from config
 - **Local storage**: **flutter_secure_storage** for tokens/credentials; **path_provider** for files; **shared_preferences** for simple key-value when appropriate
-- **Env / config**: **flutter_dotenv** (`.env` file, not committed) or **envied** (compile-time, generated `.g.dart`); never hardcode secrets
+- **Env / config**: compile-time `--dart-define` / `--dart-define-from-file=.env` read via `String.fromEnvironment` (see `core/config/env.dart`); never bundle `.env` as a Flutter asset; never ship secrets in the client
 - **Icons**: **lucide_icons** or **cupertino_icons**; prefer one icon set per project
 - **Fonts**: **google_fonts** for theme text styles
 - **Linting**: **flutter_lints** + **custom_lint** / **riverpod_lint** in `dev_dependencies`; respect `analysis_options.yaml`. Strict rules are staged at `info` and analysis runs with `--no-fatal-infos` — see [ADR-0007](docs/adr/ADR-0007-lint-baseline.md)
@@ -212,14 +212,14 @@ lib/
 
 ## 9. Secrets and Configuration
 
-- **No hardcoded secrets**: API keys, backend URLs, and credentials must come from environment or config. Use **flutter_dotenv** with a `.env` file (gitignored) and `dotenv.env['VAR']`, or **envied** with `@EnviedField` and generated code; provide `.env.example` with variable names only.
-- **Fail fast**: If the app requires a config value (e.g. backend URL), fail at startup or when first used rather than defaulting to a production URL or empty string in a way that hides misconfiguration.
+- **Never ship secrets in the client**: API keys, credentials, and secrets must not be bundled as assets, hardcoded, or passed via `--dart-define` (compiled values are extractable from the binary, especially the web bundle). Secrets live server-side or in **flutter_secure_storage** at runtime. See [ADR-0005](docs/adr/ADR-0005-security-policy.md).
+- **Non-secret build config**: Resolve non-secret values (e.g. the backend URL) at compile time via `--dart-define` / `--dart-define-from-file=.env`, read with `String.fromEnvironment` in `core/config/env.dart`. `.env` is a build-time input only and must never be a Flutter asset. Release pins the production value; debug/profile may override it.
 - **Secure storage**: Use **flutter_secure_storage** for tokens and sensitive data; do not store secrets in shared_preferences or in code.
 
 **Examples:**
 
-- Good: `Env.backendUrl` from `core/config/env.dart` backed by `dotenv.env['BACKEND_URL']` or envied; `.env` in `.gitignore`; `.env.example` with `BACKEND_URL=`.
-- Bad: `static const baseUrl = 'https://api.prod.com';` in source.
+- Good: `Env.backendUrl` from `core/config/env.dart` via `String.fromEnvironment('BACKEND_URL')`, pinned to production in release and overridable in debug with `--dart-define-from-file=.env`; `.env` gitignored and never an asset.
+- Bad: bundling `.env` as a Flutter asset, or putting an API key / secret in source or `--dart-define`.
 
 ---
 
@@ -269,11 +269,11 @@ lib/
 - [ ] Thin client: app consumes APIs and presents data; business logic lives on the backend; local persistence only when a feature justifies it (offline, credentials, preferences, caching).
 - [ ] Respect clean architecture: domain independent of Flutter and data; presentation and data depend on domain.
 - [ ] Prefer existing methods and abstractions; avoid overengineering.
-- [ ] Use only the stack above: Flutter, Dart 3, Riverpod, go_router (or MaterialApp.home), http/dio, flutter_secure_storage, env via dotenv/envied, lucide/cupertino icons, google_fonts, flutter_lints.
+- [ ] Use only the stack above: Flutter, Dart 3, Riverpod, go_router (or MaterialApp.home), http/dio, flutter_secure_storage, env via `--dart-define`/`String.fromEnvironment`, lucide/cupertino icons, google_fonts, flutter_lints.
 - [ ] Structure: Feature-based `lib/features/<name>/data|domain|presentation`; core for config, theme, router.
 - [ ] State: Riverpod only; one provider per logical state; screens watch and call notifiers; no duplicate state in widgets.
 - [ ] Build: Flutter CLI on host; document env and platform steps.
-- [ ] Secrets: No hardcoded keys or URLs; .env or envied; .env.example; flutter_secure_storage for tokens.
+- [ ] Secrets: never bundle `.env` or ship secrets in the client (no secrets in `--dart-define`); non-secret config via `String.fromEnvironment`; flutter_secure_storage for tokens.
 - [ ] Do not commit unless the user explicitly asks; when committing use semantic messages (`type(scope): description`).
 
 ---

@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:background_downloader/background_downloader.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -44,12 +43,6 @@ void main() {
       usePathUrlStrategy();
 
       installGlobalErrorHandlers(reporter);
-
-      try {
-        await dotenv.load(fileName: '.env');
-      } on Exception {
-        // noop
-      }
 
       if (!kIsWeb && platform.isAndroidPlatform) {
         try {
