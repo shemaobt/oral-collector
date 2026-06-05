@@ -3,7 +3,7 @@
 - Status: Accepted
 - Date: 2026-06-05
 - Epic: E2 (Design System & UI Componentization)
-- Related: ENG-106, ENG-115, ENG-76, ENG-159, ENG-90, ADR-0000, ADR-0007
+- Related: ENG-106, ENG-115, ENG-162, ENG-163, ENG-76, ENG-159, ENG-90, ADR-0000, ADR-0007
 
 ## Context
 
@@ -66,12 +66,12 @@ and land with (or after) the color tokens so violations have a migration target.
 6. **Scope of the first pass (ENG-106).** The token infrastructure + tests,
    registration, and migration of the four densest screens (`recording_detail`,
    `confirmation_step`, `app_shell`, `trim_editor`) plus all UI motion
-   `Duration`s. The long tail of remaining files is a tracked follow-up.
+   `Duration`s. The long tail of remaining files is tracked as ENG-163.
 
 7. **Deferred.** `app_theme.dart`'s own internal radii/padding literals consume
    the `const` scale in the theme builders (ENG-115); color tokens →
    `ThemeExtension` and the `Color(0x…)` / bare `Colors.*` lint rule (ENG-76 /
-   ENG-159); off-grid normalization.
+   ENG-159); off-grid normalization (ENG-162).
 
 ## Consequences
 
