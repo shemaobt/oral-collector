@@ -45,8 +45,13 @@ Path: @/lib/features/genre/data
 - `GenreCache` exposes `read()` (nullable: null when nothing is cached or the
   blob is unreadable) and `write(genres)`. `SharedPreferencesGenreCache`
   stores the genre list as a JSON string under a single key and intentionally
-  swallows decode failures, returning null so a corrupt cache degrades to an
-  empty/offline state rather than throwing.
+  swallows any malformed-cache failure with a broad `catch`, returning null so a
+  corrupt cache degrades to an empty/offline state rather than throwing. The
+  catch is broad rather than `on Exception` because the un-migrated
+  `Genre.fromJson` still force-casts, so a bad cached record raises a cast
+  `Error`, not an `Exception` (ENG-148); it narrows to a catchable
+  `ParseException` once that factory adopts the safe-readers in
+  [/lib/core/serialization](../../../core/serialization/docs.md).
 - The repository is a thin GET wrapper: it guards the response, fails loudly
   on non-200, and maps the JSON array into `Genre` entities. It does not cache;
   caching is the notifier's decision after a successful fetch.
