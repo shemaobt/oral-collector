@@ -34,13 +34,16 @@
 </head>
 <body>
   <script>
+    // ENG-130: sql.js auto-hospedado (same-origin). drift chama initSqlJs() sem
+    // args, então este window.Module (merge do Emscripten MODULARIZE) é o único
+    // hook de locateFile; `return file` resolve contra <base href> (raiz e subpath).
     window.Module = {
       locateFile: function(file) {
-        return 'https://cdn.jsdelivr.net/npm/sql.js@1.11.0/dist/' + file;
+        return file;
       }
     };
   </script>
-  <script src="https://cdn.jsdelivr.net/npm/sql.js@1.11.0/dist/sql-wasm.js"></script>
+  <script src="sql-wasm.js"></script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
