@@ -28,6 +28,23 @@ decisions are recorded here as their features land:
   (especially from the web bundle), so they are for non-secret config only. Real
   secrets stay server-side or in `flutter_secure_storage` at runtime.
 
+### Secure storage — iOS Keychain accessibility (ENG-128)
+
+- The runtime secret store (`flutter_secure_storage`, holding the access/refresh
+  tokens and the cached user) pins the iOS Keychain accessibility to
+  `first_unlock_this_device` (`kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly`)
+  via explicit `IOSOptions` in `core/providers/secure_storage_provider.dart`. The
+  items are bound to the device (not migrated to a new device or included in
+  backups) and stay readable in the background after the first unlock; the
+  previous default (`whenUnlocked`) is unreadable while the device is locked,
+  which can break background uploads.
+- Android intentionally stays on the package default
+  (`encryptedSharedPreferences: false`), which still encrypts at rest with a
+  Keystore-backed key. Switching to AndroidX `EncryptedSharedPreferences` would
+  invalidate already-stored tokens (one-time re-login), can crash when reading
+  legacy data without `resetOnError`, and depends on a library Google has
+  deprecated; revisit alongside the `flutter_secure_storage` v10 migration.
+
 ### Web deploy security headers and CSP (ENG-167)
 
 The nginx-served web build (Cloud Run; `docker/Dockerfile.web` serving
@@ -47,17 +64,16 @@ directives live in a single `docker/security-headers.conf` snippet copied to
   at runtime, not a generic allowlist:
   - `script-src` permits `'wasm-unsafe-eval'` and the gstatic CDN because the
     build is `flutter build web --release --no-wasm-dry-run` (CanvasKit
-    renderer, fetched from gstatic, with WASM instantiation), and jsDelivr
-    because `web/index.html` loads sql.js from there.
+    renderer, fetched from gstatic, with WASM instantiation). sql.js is served
+    same-origin (ENG-130 self-hosts it), so `'self'` covers it.
   - `connect-src` permits the backend API
     (`https://tripod-backend.shemaywam.com`, the production URL pinned in
     `core/config/env.dart`) **and** Google Cloud Storage
     (`https://storage.googleapis.com`) — uploads PUT to GCS v4 presigned URLs
     and playback GETs from GCS, a different origin than the backend, so omitting
-    it would break upload/playback — plus gstatic and jsDelivr for the
-    `.wasm` fetches, plus `https://fonts.gstatic.com` for CanvasKit's
-    Noto/Roboto fallback fonts (fetched via XHR, so under `connect-src`, not
-    `font-src`).
+    it would break upload/playback — plus gstatic for the CanvasKit `.wasm`
+    fetch and `https://fonts.gstatic.com` for CanvasKit's Noto/Roboto fallback
+    fonts (fetched via XHR, so under `connect-src`, not `font-src`).
   - `style-src 'self' 'unsafe-inline'` (Flutter injects inline styles),
     `media-src` permits GCS for audio playback, plus `img-src`, `worker-src`,
     and the lockdown directives `object-src 'none'`, `base-uri 'self'`,
@@ -66,10 +82,11 @@ directives live in a single `docker/security-headers.conf` snippet copied to
 - `Strict-Transport-Security` (HSTS) is deliberately omitted: it is outside this
   ticket's scope and risky, since `includeSubDomains`/`preload` would affect
   sibling `*.shemaywam.com` subdomains. Left as a follow-up.
-- The header CSP must stay in lockstep with whatever `web/index.html` loads
-  (today, sql.js from jsDelivr — ENG-130's scope). If ENG-130 self-hosts sql.js
-  or adds a `<meta http-equiv="Content-Security-Policy">`, this header must be
-  updated together; a header CSP and a meta CSP are enforced as their
+- The header CSP must stay in lockstep with whatever `web/index.html` loads. With
+  ENG-130 self-hosting sql.js, the only remaining third-party origins are gstatic
+  (CanvasKit) and fonts.gstatic.com (its font fallback). If a future change adds
+  a `<meta http-equiv="Content-Security-Policy">` to `web/index.html`, this
+  header and that meta must be updated together; the two are enforced as their
   intersection.
 - A hermetic Docker test (`docker/verify-security-headers.sh`) builds nginx from
   the real config and curls `/`, a `.js`, and a `.png` to assert the headers. It
@@ -83,14 +100,17 @@ directives live in a single `docker/security-headers.conf` snippet copied to
 - A future real secret must not reuse the bundled-`.env` pattern; it requires a
   server-side or secure-storage mechanism, to be specified by the broader E6
   policy (ENG-90).
+- Changing iOS Keychain accessibility does not force re-login: the plugin's read
+  path ignores accessibility, so existing tokens stay readable and acquire the
+  new attribute lazily on the next write. Hardening Android storage at rest is an
+  open follow-up gated on the v10 migration.
 - The CSP couples the deploy config to the web build's runtime dependencies:
   changing renderers, CDNs, or the set of contacted origins (backend, GCS) means
   the `docker/security-headers.conf` allowlist must change too, or requests are
   silently blocked. `docker/verify-security-headers.sh` is the manual check for
   this.
 - Future tightening (follow-up): building with `--no-web-resources-cdn`
-  (self-hosting CanvasKit, dropping www.gstatic.com) together with ENG-130
-  self-hosting sql.js (dropping jsDelivr) would collapse the CSP toward
-  `default-src 'self'` plus the backend, GCS, and — unless the CanvasKit font
-  fallback is also self-hosted — fonts.gstatic.com. HSTS remains a separate
-  follow-up.
+  (self-hosting CanvasKit, dropping www.gstatic.com) and self-hosting the
+  CanvasKit font fallback (dropping fonts.gstatic.com) would collapse the CSP
+  toward `default-src 'self'` plus the backend and GCS only. HSTS remains a
+  separate follow-up.

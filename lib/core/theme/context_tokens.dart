@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'app_durations.dart';
+import 'app_opacity.dart';
 import 'app_radii.dart';
 import 'app_spacing.dart';
 
@@ -18,4 +19,7 @@ extension TokenContext on BuildContext {
 
   AppDurations get durations =>
       Theme.of(this).extension<AppDurations>() ?? AppDurations.fallback;
+
+  AppOpacity get opacity =>
+      Theme.of(this).extension<AppOpacity>() ?? AppOpacity.fallback;
 }
