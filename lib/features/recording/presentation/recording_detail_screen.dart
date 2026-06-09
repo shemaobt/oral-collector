@@ -39,6 +39,7 @@ import '../data/supported_audio_formats.dart';
 import '../data/use_cases/save_recording_title.dart';
 import '../domain/entities/classification.dart';
 import '../domain/entities/register.dart';
+import '../domain/recording_edit_policy.dart';
 import 'notifiers/recordings_list_notifier.dart';
 import 'widgets/classify_recording_dialog.dart';
 import 'widgets/edit_recording_details_sheet.dart';
@@ -69,16 +70,15 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
   Storyteller? _resolvedStoryteller;
 
   bool get _canEditRecording {
-    final user = ref.read(authNotifierProvider).currentUser;
-    if (user == null) return false;
     final recording = _recording;
     if (recording == null) return false;
-    if (ref
-        .read(roleNotifierProvider.notifier)
-        .canManageProject(recording.projectId)) {
-      return true;
-    }
-    return true;
+    return canEditRecording(
+      user: ref.read(authNotifierProvider).currentUser,
+      canManageProject: ref
+          .read(roleNotifierProvider.notifier)
+          .canManageProject(recording.projectId),
+      recordingUserId: recording.userId,
+    );
   }
 
   @override

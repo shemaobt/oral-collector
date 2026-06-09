@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -131,26 +133,64 @@ void main() {
   });
 
   group('RecordingsListNotifier.loadMore — offline', () {
-    test('offline skips API, isLoadingMore returns to false', () async {
-      final container = makeContainer(online: false);
-      addTearDown(container.dispose);
+    test(
+      'offline skips the page request, isLoadingMore returns to false',
+      () async {
+        // Load a full first page online so the list is paginatable
+        // (isLoading false, hasMore true), then drop offline before paginating —
+        // loadMore only reaches its offline branch once a load has completed.
+        when(
+          () => api.listRecordings(
+            'proj-1',
+            offset: 0,
+            limit: any(named: 'limit'),
+            userId: any(named: 'userId'),
+            storytellerId: any(named: 'storytellerId'),
+          ),
+        ).thenAnswer(
+          (_) async => List.generate(50, (i) => _makeServerRecording('s$i')),
+        );
+        when(
+          () => local.getAllRecordings('proj-1'),
+        ).thenAnswer((_) async => const []);
 
-      final notifier = container.read(recordingsListNotifierProvider.notifier);
-      await notifier.loadMore();
+        final fakeSync = _FakeSyncNotifier(initialOnline: true);
+        final container = ProviderContainer(
+          overrides: [
+            recordingApiRepositoryProvider.overrideWithValue(api),
+            localRecordingRepositoryProvider.overrideWithValue(local),
+            projectNotifierProvider.overrideWith(
+              () => _FakeProjectNotifier(
+                ProjectState(activeProject: activeProject),
+              ),
+            ),
+            syncNotifierProvider.overrideWith(() => fakeSync),
+          ],
+        );
+        addTearDown(container.dispose);
 
-      final state = container.read(recordingsListNotifierProvider);
-      expect(state.isLoadingMore, isFalse);
-      verifyNever(
-        () => api.listRecordings(
-          any(),
-          offset: any(named: 'offset'),
-          limit: any(named: 'limit'),
-          userId: any(named: 'userId'),
-          storytellerId: any(named: 'storytellerId'),
-          uploadStatus: any(named: 'uploadStatus'),
-        ),
-      );
-    });
+        final notifier = container.read(
+          recordingsListNotifierProvider.notifier,
+        );
+        await notifier
+            .fetchRecordings(); // isLoading false, hasMore true, offset 50
+        fakeSync.setOnline(false);
+
+        await notifier.loadMore();
+
+        final state = container.read(recordingsListNotifierProvider);
+        expect(state.isLoadingMore, isFalse);
+        verifyNever(
+          () => api.listRecordings(
+            'proj-1',
+            offset: 50,
+            limit: any(named: 'limit'),
+            userId: any(named: 'userId'),
+            storytellerId: any(named: 'storytellerId'),
+          ),
+        );
+      },
+    );
   });
 
   group('RecordingsListNotifier.clearStaleRecordings — offline', () {
@@ -289,4 +329,253 @@ void main() {
       );
     },
   );
+
+  group('race guards', () {
+    test('a stale fetch does not overwrite a newer fetch', () async {
+      final fetchAGate = Completer<List<ServerRecording>>();
+      final fetchBGate = Completer<List<ServerRecording>>();
+      when(
+        () => api.listRecordings(
+          'proj-1',
+          offset: 0,
+          limit: any(named: 'limit'),
+          userId: 'A',
+          storytellerId: any(named: 'storytellerId'),
+        ),
+      ).thenAnswer((_) => fetchAGate.future);
+      when(
+        () => api.listRecordings(
+          'proj-1',
+          offset: 0,
+          limit: any(named: 'limit'),
+          userId: 'B',
+          storytellerId: any(named: 'storytellerId'),
+        ),
+      ).thenAnswer((_) => fetchBGate.future);
+      when(
+        () => local.getAllRecordings('proj-1'),
+      ).thenAnswer((_) async => const []);
+
+      final container = makeContainer(online: true);
+      addTearDown(container.dispose);
+      final notifier = container.read(recordingsListNotifierProvider.notifier);
+
+      final fetchA = notifier.setUserFilter('A');
+      final fetchB = notifier.setUserFilter('B');
+
+      // B is the latest request; it resolves first, then the stale A resolves.
+      fetchBGate.complete([_makeServerRecording('srv-B')]);
+      await fetchB;
+      fetchAGate.complete([_makeServerRecording('srv-A')]);
+      await fetchA;
+
+      final state = container.read(recordingsListNotifierProvider);
+      expect(state.recordings.map((r) => r.id), contains('srv-B'));
+      expect(state.recordings.map((r) => r.id), isNot(contains('srv-A')));
+      expect(state.selectedUserId, 'B');
+      expect(state.isLoading, isFalse);
+    });
+
+    test('an in-flight loadMore is discarded by a superseding fetch', () async {
+      when(
+        () => api.listRecordings(
+          'proj-1',
+          offset: 0,
+          limit: any(named: 'limit'),
+          userId: any(named: 'userId'),
+          storytellerId: any(named: 'storytellerId'),
+        ),
+      ).thenAnswer(
+        (_) async => List.generate(50, (i) => _makeServerRecording('p0-$i')),
+      );
+      when(
+        () => local.getAllRecordings('proj-1'),
+      ).thenAnswer((_) async => const []);
+
+      final container = makeContainer(online: true);
+      addTearDown(container.dispose);
+      final notifier = container.read(recordingsListNotifierProvider.notifier);
+
+      await notifier.fetchRecordings();
+
+      final loadMoreGate = Completer<List<ServerRecording>>();
+      when(
+        () => api.listRecordings(
+          'proj-1',
+          offset: 50,
+          limit: any(named: 'limit'),
+          userId: any(named: 'userId'),
+          storytellerId: any(named: 'storytellerId'),
+        ),
+      ).thenAnswer((_) => loadMoreGate.future);
+      final loadMore = notifier.loadMore();
+
+      final fetchGate = Completer<List<ServerRecording>>();
+      when(
+        () => api.listRecordings(
+          'proj-1',
+          offset: 0,
+          limit: any(named: 'limit'),
+          userId: any(named: 'userId'),
+          storytellerId: any(named: 'storytellerId'),
+        ),
+      ).thenAnswer((_) => fetchGate.future);
+      final fetch = notifier.fetchRecordings();
+
+      // The fresh fetch resolves and applies first.
+      fetchGate.complete([
+        _makeServerRecording('new-0'),
+        _makeServerRecording('new-1'),
+      ]);
+      await fetch;
+      // The superseded loadMore resolves last; its stale page must be dropped.
+      loadMoreGate.complete(
+        List.generate(50, (i) => _makeServerRecording('p1-$i')),
+      );
+      await loadMore;
+
+      final state = container.read(recordingsListNotifierProvider);
+      expect(
+        state.recordings.map((r) => r.id),
+        unorderedEquals(['new-0', 'new-1']),
+      );
+      expect(state.recordings.any((r) => r.id.startsWith('p1-')), isFalse);
+      expect(state.hasMore, isFalse);
+      expect(state.isLoadingMore, isFalse);
+    });
+
+    test(
+      'fetchRecordings clears isLoadingMore left by a superseded loadMore',
+      () async {
+        when(
+          () => api.listRecordings(
+            'proj-1',
+            offset: 0,
+            limit: any(named: 'limit'),
+            userId: any(named: 'userId'),
+            storytellerId: any(named: 'storytellerId'),
+          ),
+        ).thenAnswer(
+          (_) async => List.generate(50, (i) => _makeServerRecording('p0-$i')),
+        );
+        when(
+          () => local.getAllRecordings('proj-1'),
+        ).thenAnswer((_) async => const []);
+
+        final container = makeContainer(online: true);
+        addTearDown(container.dispose);
+        final notifier = container.read(
+          recordingsListNotifierProvider.notifier,
+        );
+
+        await notifier.fetchRecordings();
+
+        final loadMoreGate = Completer<List<ServerRecording>>();
+        when(
+          () => api.listRecordings(
+            'proj-1',
+            offset: 50,
+            limit: any(named: 'limit'),
+            userId: any(named: 'userId'),
+            storytellerId: any(named: 'storytellerId'),
+          ),
+        ).thenAnswer((_) => loadMoreGate.future);
+        final loadMore = notifier.loadMore();
+
+        expect(
+          container.read(recordingsListNotifierProvider).isLoadingMore,
+          isTrue,
+        );
+
+        final fetchGate = Completer<List<ServerRecording>>();
+        when(
+          () => api.listRecordings(
+            'proj-1',
+            offset: 0,
+            limit: any(named: 'limit'),
+            userId: any(named: 'userId'),
+            storytellerId: any(named: 'storytellerId'),
+          ),
+        ).thenAnswer((_) => fetchGate.future);
+        final fetch = notifier.fetchRecordings();
+
+        expect(
+          container.read(recordingsListNotifierProvider).isLoadingMore,
+          isFalse,
+        );
+
+        fetchGate.complete(const []);
+        await fetch;
+        loadMoreGate.complete(const []);
+        await loadMore;
+      },
+    );
+
+    test(
+      'loadMore does not start while a fetchRecordings is in flight',
+      () async {
+        when(
+          () => api.listRecordings(
+            'proj-1',
+            offset: 0,
+            limit: any(named: 'limit'),
+            userId: any(named: 'userId'),
+            storytellerId: any(named: 'storytellerId'),
+          ),
+        ).thenAnswer(
+          (_) async => List.generate(50, (i) => _makeServerRecording('p0-$i')),
+        );
+        when(
+          () => local.getAllRecordings('proj-1'),
+        ).thenAnswer((_) async => const []);
+        // If loadMore wrongly proceeds it hits this page-2 stub against the
+        // soon-to-be-reset offset; the assertion below catches that.
+        when(
+          () => api.listRecordings(
+            'proj-1',
+            offset: 50,
+            limit: any(named: 'limit'),
+            userId: any(named: 'userId'),
+            storytellerId: any(named: 'storytellerId'),
+          ),
+        ).thenAnswer((_) async => const []);
+
+        final container = makeContainer(online: true);
+        addTearDown(container.dispose);
+        final notifier = container.read(
+          recordingsListNotifierProvider.notifier,
+        );
+
+        await notifier
+            .fetchRecordings(); // isLoading false, hasMore true, offset 50
+
+        // A fresh fetch is in flight (isLoading true) but has not applied yet.
+        final fetchGate = Completer<List<ServerRecording>>();
+        when(
+          () => api.listRecordings(
+            'proj-1',
+            offset: 0,
+            limit: any(named: 'limit'),
+            userId: any(named: 'userId'),
+            storytellerId: any(named: 'storytellerId'),
+          ),
+        ).thenAnswer((_) => fetchGate.future);
+        final fetch = notifier.fetchRecordings();
+
+        await notifier.loadMore();
+        verifyNever(
+          () => api.listRecordings(
+            'proj-1',
+            offset: 50,
+            limit: any(named: 'limit'),
+            userId: any(named: 'userId'),
+            storytellerId: any(named: 'storytellerId'),
+          ),
+        );
+
+        fetchGate.complete([_makeServerRecording('new-0')]);
+        await fetch;
+      },
+    );
+  });
 }

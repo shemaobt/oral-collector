@@ -40,8 +40,8 @@ class SharedPreferencesProjectCache implements ProjectCache {
                 .toList()
           : <Language>[];
       return ProjectCacheSnapshot(projects: projects, languages: languages);
-    } on Exception {
-      return null; // corrupt cache → treat as empty
+    } catch (_) {
+      return null; // corrupt cache → treat as empty (incl. cast Errors)
     }
   }
 

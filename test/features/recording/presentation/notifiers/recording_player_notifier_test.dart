@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:just_audio/just_audio.dart';
@@ -6,6 +8,31 @@ import 'package:oral_collector/features/recording/presentation/notifiers/recordi
 import 'package:oral_collector/features/recording/presentation/notifiers/recording_player_state.dart';
 
 class _MockAudioPlayer extends Mock implements AudioPlayer {}
+
+/// Records any state notification that lands AFTER its provider was disposed —
+/// i.e. a stale write to a dead notifier.
+class _RecordingObserver extends ProviderObserver {
+  final disposedProviders = <ProviderBase<Object?>>{};
+  final lateUpdates = <ProviderBase<Object?>>[];
+
+  @override
+  void didDisposeProvider(
+    ProviderBase<Object?> provider,
+    ProviderContainer container,
+  ) {
+    disposedProviders.add(provider);
+  }
+
+  @override
+  void didUpdateProvider(
+    ProviderBase<Object?> provider,
+    Object? previousValue,
+    Object? newValue,
+    ProviderContainer container,
+  ) {
+    if (disposedProviders.contains(provider)) lateUpdates.add(provider);
+  }
+}
 
 const _recordingId = 'rec-test';
 
@@ -246,6 +273,70 @@ void main() {
       container.dispose();
 
       verify(() => mockPlayer.dispose()).called(1);
+    });
+
+    test('does not write state after being disposed mid-load', () async {
+      final mockPlayer = _MockAudioPlayer();
+      _stubBasicPlayerStubs(mockPlayer);
+      final setUrlGate = Completer<Duration?>();
+      when(() => mockPlayer.setUrl(any())).thenAnswer((_) => setUrlGate.future);
+
+      final observer = _RecordingObserver();
+      final container = ProviderContainer(
+        observers: [observer],
+        overrides: [
+          audioPlayerFactoryProvider.overrideWithValue(() => mockPlayer),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final notifier = container.read(
+        recordingPlayerProvider(_recordingId).notifier,
+      );
+      final loadFuture = notifier.load(url: 'https://example.com/a.m4a');
+
+      // Provider is torn down while the load is suspended on setUrl.
+      container.dispose();
+      verify(() => mockPlayer.dispose()).called(1);
+
+      setUrlGate.complete(null);
+      await loadFuture;
+
+      // The observer saw the dispose (so it is attached and the provider is
+      // gone), yet recorded no post-dispose update — the stale write was skipped.
+      expect(observer.disposedProviders, isNotEmpty);
+      expect(observer.lateUpdates, isEmpty);
+    });
+
+    test('does not write error state after being disposed mid-load', () async {
+      final mockPlayer = _MockAudioPlayer();
+      _stubBasicPlayerStubs(mockPlayer);
+      final setUrlGate = Completer<Duration?>();
+      when(() => mockPlayer.setUrl(any())).thenAnswer((_) => setUrlGate.future);
+
+      final observer = _RecordingObserver();
+      final container = ProviderContainer(
+        observers: [observer],
+        overrides: [
+          audioPlayerFactoryProvider.overrideWithValue(() => mockPlayer),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final notifier = container.read(
+        recordingPlayerProvider(_recordingId).notifier,
+      );
+      final loadFuture = notifier.load(url: 'https://example.com/a.m4a');
+
+      // Provider torn down, then the suspended load fails: the catch must not
+      // write loadFailed onto the dead notifier.
+      container.dispose();
+      verify(() => mockPlayer.dispose()).called(1);
+      setUrlGate.completeError(Exception('late boom'));
+      await loadFuture;
+
+      expect(observer.disposedProviders, isNotEmpty);
+      expect(observer.lateUpdates, isEmpty);
     });
   });
 }

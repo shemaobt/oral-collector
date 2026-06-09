@@ -3,6 +3,8 @@ import 'dart:convert';
 import '../../../../core/errors/api_exception.dart';
 import '../../../../core/network/api_error_handler.dart';
 import '../../../../core/network/authenticated_client.dart';
+import '../../../../core/serialization/parse_list.dart';
+import '../../../../core/serialization/safe_read.dart';
 import '../../domain/entities/server_recording.dart';
 import '../../domain/repositories/recording_api_repository.dart';
 
@@ -49,10 +51,11 @@ class RecordingApiRepositoryImpl implements RecordingApiRepository {
     if (response.statusCode != 200) {
       throw Exception('Failed to list recordings: ${response.body}');
     }
-    final data = jsonDecode(response.body) as List<dynamic>;
-    return data
-        .map((json) => ServerRecording.fromJson(json as Map<String, dynamic>))
-        .toList();
+    return parseList(
+      jsonDecode(response.body),
+      ServerRecording.fromJson,
+      context: 'listRecordings',
+    );
   }
 
   @override
@@ -131,7 +134,7 @@ class RecordingApiRepositoryImpl implements RecordingApiRepository {
       throw Exception('Failed to clear stale recordings: ${response.body}');
     }
     final data = jsonDecode(response.body) as Map<String, dynamic>;
-    return data['deleted'] as int? ?? 0;
+    return readIntOrNull(data, 'deleted') ?? 0;
   }
 
   @override

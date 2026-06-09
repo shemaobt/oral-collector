@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/auth/auth_notifier.dart';
 import '../../../../core/network/authenticated_client.dart';
+import '../../../../core/serialization/safe_read.dart';
 
 class RoleState {
   final Map<String, String> projectRoles;
@@ -72,13 +73,17 @@ class RoleNotifier extends Notifier<RoleState> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
-        final rolesMap = data['project_roles'] as Map<String, dynamic>? ?? {};
+        final rolesMap =
+            readMapOrNull(data, 'project_roles') ?? const <String, dynamic>{};
         final projectRoles = rolesMap.map(
-          (key, value) => MapEntry(key, value as String),
+          (key, _) => MapEntry(key, readString(rolesMap, key)),
         );
         state = state.copyWith(projectRoles: projectRoles, fetched: true);
       }
-    } catch (_) {}
+    } catch (_) {
+      // Best-effort: roles are optional UI enrichment — never let a fetch or
+      // parse failure break the app.
+    }
   }
 
   void invalidate() {

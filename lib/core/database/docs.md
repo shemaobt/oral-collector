@@ -53,7 +53,7 @@ Path: @/lib/core/database
 ### Core Implementation
 
 - `AppDatabase` is annotated with `@DriftDatabase(tables: [...])` and exposes
-  the current `schemaVersion` (10). `AppDatabase.forTesting(e)` takes an
+  the current `schemaVersion` (11). `AppDatabase.forTesting(e)` takes an
   explicit executor and is the entry point the migration tests and an in-memory
   `NativeDatabase.memory()` use.
 - `MigrationStrategy` has two callbacks:
@@ -84,7 +84,7 @@ Path: @/lib/core/database
     [/analysis_options.yaml](../../../analysis_options.yaml).
   - [/test/core/database/migration_test.dart](../../../test/core/database/migration_test.dart) —
     drives drift's `SchemaVerifier`: it `startAt(k)` for every historical
-    version and `migrateAndValidate(db, 10)`, asserting the resulting schema
+    version and `migrateAndValidate(db, 11)`, asserting the resulting schema
     matches the current reference, plus a data-integrity case that seeds an
     un-uploaded recording at the oldest version and asserts the row and its
     fields survive the full upgrade.
@@ -100,6 +100,12 @@ Path: @/lib/core/database
   already had the table at an older, pre-sync shape. The migration test is the
   guard against reintroducing this whenever a table is both created in one step
   and altered in a later step.
+- **`@TableIndex` indexes follow the same fresh-vs-upgrade split.** `createAll()`
+  builds them for fresh installs, but `onUpgrade` must create each one
+  explicitly with `m.createIndex(...)` — the `if (from < 11)` step added in
+  ENG-117. A forgotten `onUpgrade` index ships an un-indexed upgrade path while
+  fresh installs look fine; the migration test catches it because
+  `migrateAndValidate` diffs indexes, not just tables and columns.
 - **A failed migration is not recovered by wiping the database.** The open path
   in [./connection/](connection/) has no `beforeOpen`, no try/catch, and no
   delete-and-recreate. A bad migration therefore bricks the database — data is
@@ -110,7 +116,8 @@ Path: @/lib/core/database
   step makes the migration test fail or, worse, lets an untested upgrade path
   ship:
   1. bump `schemaVersion` in [./app_database.dart](app_database.dart);
-  2. add the `if (from < N)` step to `onUpgrade`;
+  2. add the `if (from < N)` step to `onUpgrade` (`addColumn`/`createTable` for
+     columns and tables, `m.createIndex(...)` for an `@TableIndex`);
   3. dump a new snapshot:
      `dart run drift_dev schema dump lib/core/database/app_database.dart drift_schemas/drift_schema_vN.json`;
   4. regenerate fixtures:

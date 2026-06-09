@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:oral_collector/core/auth/auth_notifier.dart';
+import 'package:oral_collector/core/errors/app_exception.dart';
 import 'package:oral_collector/features/genre/data/genre_cache.dart';
 import 'package:oral_collector/features/genre/data/providers.dart';
 import 'package:oral_collector/features/genre/domain/entities/genre.dart';
@@ -10,6 +12,14 @@ import 'package:oral_collector/features/genre/domain/repositories/genre_reposito
 import 'package:oral_collector/features/genre/presentation/notifiers/genre_notifier.dart';
 
 class MockGenreRepository extends Mock implements GenreRepository {}
+
+/// Auth notifier whose refresh always fails transiently, to assert that the
+/// fire-and-forget `handleUnauthorized()` call in `fetchGenres` swallows it
+/// (ENG-141) instead of leaking an unhandled async error.
+class _ThrowingAuthNotifier extends AuthNotifier {
+  @override
+  Future<bool> handleUnauthorized() async => throw const TimeoutException();
+}
 
 /// Cache fake whose [read] can be gated on a [Completer], forcing the
 /// interleaving (fetch completes before hydration) that the real static
@@ -114,5 +124,33 @@ void main() {
     final state = container.read(genreNotifierProvider);
     expect(state.genres, isEmpty);
     expect(state.lastFetched, isNull);
+  });
+
+  test('fetchGenres não vaza erro não tratado quando o refresh falha '
+      'transitoriamente (ENG-141)', () async {
+    when(() => repo.listGenres()).thenThrow(const UnauthorizedException());
+
+    final container = ProviderContainer(
+      overrides: [
+        genreRepositoryProvider.overrideWithValue(repo),
+        genreCacheProvider.overrideWithValue(FakeGenreCache(cached: null)),
+        authNotifierProvider.overrideWith(_ThrowingAuthNotifier.new),
+      ],
+    );
+    addTearDown(container.dispose);
+    final notifier = container.read(genreNotifierProvider.notifier);
+
+    Object? uncaught;
+    await runZonedGuarded(() async {
+      await notifier.fetchGenres();
+      await Future<void>.delayed(Duration.zero);
+    }, (error, _) => uncaught = error);
+
+    expect(
+      uncaught,
+      isNull,
+      reason: 'falha transitória de refresh fire-and-forget não pode escapar',
+    );
+    expect(container.read(genreNotifierProvider).isLoading, isFalse);
   });
 }
