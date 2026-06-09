@@ -37,7 +37,8 @@ Path: @/lib/core/errors
   [../../shared/widgets/error_snack_bar.dart](../../shared/widgets/error_snack_bar.dart).
 - `UnauthorizedException` is the one leaf the app branches on by type, not just
   for display: [../auth/auth_notifier.dart](../auth/auth_notifier.dart) catches
-  it to drive session-expiry/refresh handling.
+  it to drive session-expiry/refresh handling. See [../auth/docs.md](../auth/docs.md)
+  for the refresh contract and single-flight invariant.
 - The ~52 legacy `throw Exception('Failed to X: ${response.body}')` call sites
   in the feature repositories are intentionally **not** migrated yet; they
   still flow through the legacy string fallback. This folder is the target they
