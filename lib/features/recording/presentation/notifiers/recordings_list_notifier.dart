@@ -18,6 +18,12 @@ final recordingsListNotifierProvider =
       RecordingsListNotifier.new,
     );
 
+typedef _FetchResult = ({
+  List<LocalRecording> merged,
+  bool hasMore,
+  int serverOffset,
+});
+
 class RecordingsListNotifier extends Notifier<RecordingsListState> {
   RecordingApiRepository get _apiRepo =>
       ref.read(recordingApiRepositoryProvider);
@@ -25,39 +31,63 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
       ref.read(localRecordingRepositoryProvider);
 
   int _serverOffset = 0;
-  List<LocalRecording> _localOnlyRecordings = [];
-  final Set<String> _serverIds = {};
+  // Bumped on each fetchRecordings; a fetch/loadMore whose generation no longer
+  // matches discards its result instead of clobbering a newer fetch.
+  int _fetchGeneration = 0;
 
   @override
   RecordingsListState build() => const RecordingsListState();
 
   Future<void> fetchRecordings() async {
+    final gen = ++_fetchGeneration;
     final projectId = ref.read(projectNotifierProvider).activeProject?.id;
     if (projectId == null) {
       state = state.copyWith(isLoading: false);
       return;
     }
 
-    state = state.copyWith(isLoading: true);
-    _serverOffset = 0;
-    _serverIds.clear();
-    _localOnlyRecordings = [];
+    // Reset isLoadingMore here so a superseded in-flight loadMore that bails on
+    // the generation check does not leave the flag stuck true.
+    state = state.copyWith(isLoading: true, isLoadingMore: false);
 
     if (!ref.read(syncNotifierProvider).isOnline) {
-      await _fallbackToLocal(projectId);
+      final local = await _loadLocal(projectId);
+      if (gen != _fetchGeneration) return;
+      _serverOffset = 0;
+      state = state.copyWith(
+        recordings: local ?? state.recordings,
+        isLoading: false,
+        hasMore: false,
+      );
       return;
     }
 
     try {
-      final merged = await _fetchAndMerge(projectId);
-      state = state.copyWith(recordings: merged, isLoading: false);
-    } catch (e) {
-      await _fallbackToLocal(projectId);
+      final result = await _fetchAndMerge(projectId);
+      if (gen != _fetchGeneration) return;
+      _serverOffset = result.serverOffset;
+      state = state.copyWith(
+        recordings: result.merged,
+        isLoading: false,
+        hasMore: result.hasMore,
+      );
+    } catch (_) {
+      final local = await _loadLocal(projectId);
+      if (gen != _fetchGeneration) return;
+      _serverOffset = 0;
+      state = state.copyWith(
+        recordings: local ?? state.recordings,
+        isLoading: false,
+        hasMore: false,
+      );
     }
   }
 
   Future<void> loadMore() async {
-    if (state.isLoadingMore || !state.hasMore) return;
+    // Bail while a full fetchRecordings is in flight (isLoading): it will reset
+    // the list and _serverOffset on apply, so a page fetched against the
+    // current offset would be stale and silently drop records.
+    if (state.isLoadingMore || !state.hasMore || state.isLoading) return;
 
     final projectId = ref.read(projectNotifierProvider).activeProject?.id;
     if (projectId == null) return;
@@ -67,6 +97,7 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
       return;
     }
 
+    final gen = _fetchGeneration;
     state = state.copyWith(isLoadingMore: true);
 
     try {
@@ -77,15 +108,14 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
         userId: state.selectedUserId,
         storytellerId: state.selectedStorytellerId,
       );
+      // A fetchRecordings started after us reset the list and offset; applying
+      // this page now would append a stale page, so discard it.
+      if (gen != _fetchGeneration) return;
 
       final hasMore = serverPage.length >= _pageSize;
       _serverOffset += serverPage.length;
 
       final newPageIds = serverPage.map((s) => s.id).toSet();
-      for (final id in newPageIds) {
-        _serverIds.add(id);
-      }
-
       final existingIds = state.recordings.map((r) => r.id).toSet();
       final newServerAsLocal = _convertServerRecordings(
         serverPage,
@@ -102,6 +132,7 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
         hasMore: hasMore,
       );
     } catch (_) {
+      if (gen != _fetchGeneration) return;
       state = state.copyWith(isLoadingMore: false);
     }
   }
@@ -113,7 +144,7 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
     state = state.copyWith(recordings: updated);
   }
 
-  Future<List<LocalRecording>> _fetchAndMerge(String projectId) async {
+  Future<_FetchResult> _fetchAndMerge(String projectId) async {
     final serverRecordings = await _apiRepo.listRecordings(
       projectId,
       offset: 0,
@@ -128,23 +159,19 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
       localRecordings = const [];
     }
 
-    final hasMore = serverRecordings.length >= _pageSize;
-    _serverOffset = serverRecordings.length;
-
-    for (final s in serverRecordings) {
-      _serverIds.add(s.id);
-    }
-
-    _localOnlyRecordings = localRecordings
-        .where((r) => r.serverId == null || !_serverIds.contains(r.serverId))
+    final serverIds = {for (final s in serverRecordings) s.id};
+    final localOnly = localRecordings
+        .where((r) => r.serverId == null || !serverIds.contains(r.serverId))
         .toList();
 
-    final serverAsLocal = _convertServerRecordings(serverRecordings);
-    final merged = [..._localOnlyRecordings, ...serverAsLocal];
-    merged.sort((a, b) => b.recordedAt.compareTo(a.recordedAt));
+    final merged = [...localOnly, ..._convertServerRecordings(serverRecordings)]
+      ..sort((a, b) => b.recordedAt.compareTo(a.recordedAt));
 
-    state = state.copyWith(hasMore: hasMore);
-    return merged;
+    return (
+      merged: merged,
+      hasMore: serverRecordings.length >= _pageSize,
+      serverOffset: serverRecordings.length,
+    );
   }
 
   List<LocalRecording> _convertServerRecordings(
@@ -153,16 +180,11 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
     return recordings.map(serverRecordingToLocal).toList();
   }
 
-  Future<void> _fallbackToLocal(String projectId) async {
+  Future<List<LocalRecording>?> _loadLocal(String projectId) async {
     try {
-      final recordings = await _localRepo.getAllRecordings(projectId);
-      state = state.copyWith(
-        recordings: recordings,
-        isLoading: false,
-        hasMore: false,
-      );
+      return await _localRepo.getAllRecordings(projectId);
     } catch (_) {
-      state = state.copyWith(isLoading: false, hasMore: false);
+      return null;
     }
   }
 

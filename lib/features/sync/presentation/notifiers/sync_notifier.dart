@@ -73,44 +73,55 @@ class SyncNotifier extends Notifier<SyncState> {
   }
 
   Future<void> syncOne(String recordingId) async {
-    state = state.copyWith(uploadingId: recordingId, syncProgress: 0);
-    _fileProgress.clear();
-
+    // Shared upload guard: syncOne and processQueue are mutually exclusive so
+    // they cannot interleave shared state or start/stop the foreground service
+    // concurrently. Bail if an upload op is already running. resetAndRetry must
+    // NOT acquire this guard — it calls syncOne, and a re-entrant acquire would
+    // make the inner syncOne bail and silently skip the upload.
+    if (_isProcessing) return;
+    _isProcessing = true;
     try {
-      final recording = await _recordingRepo.getRecordingById(recordingId);
-      if (recording == null) return;
+      state = state.copyWith(uploadingId: recordingId, syncProgress: 0);
+      _fileProgress.clear();
 
-      state = state.copyWith(
-        currentFileName: recording.title,
-        totalQueueSizeBytes: recording.fileSizeBytes,
-        totalUploadedBytes: 0,
-        uploadSpeedBps: 0,
-      );
+      try {
+        final recording = await _recordingRepo.getRecordingById(recordingId);
+        if (recording == null) return;
 
-      _speedSampleTime = DateTime.now();
-      _speedSampleBytes = 0;
+        state = state.copyWith(
+          currentFileName: recording.title,
+          totalQueueSizeBytes: recording.fileSizeBytes,
+          totalUploadedBytes: 0,
+          uploadSpeedBps: 0,
+        );
 
-      await _syncEngine.uploadSingle(
-        recordingId,
-        deleteAfterUpload: state.autoRemoveAfterUpload,
-        onProgress: _onUploadProgress,
-      );
+        _speedSampleTime = DateTime.now();
+        _speedSampleBytes = 0;
 
-      state = state.copyWith(
-        syncProgress: 100,
-        clearUploadingId: true,
-        clearCurrentFileName: true,
-        lastSyncAt: DateTime.now(),
-      );
-    } on Exception {
-      state = state.copyWith(
-        clearUploadingId: true,
-        clearCurrentFileName: true,
-        syncProgress: 0,
-      );
+        await _syncEngine.uploadSingle(
+          recordingId,
+          deleteAfterUpload: state.autoRemoveAfterUpload,
+          onProgress: _onUploadProgress,
+        );
+
+        state = state.copyWith(
+          syncProgress: 100,
+          clearUploadingId: true,
+          clearCurrentFileName: true,
+          lastSyncAt: DateTime.now(),
+        );
+      } on Exception {
+        state = state.copyWith(
+          clearUploadingId: true,
+          clearCurrentFileName: true,
+          syncProgress: 0,
+        );
+      }
+
+      await _refreshPendingCount();
+    } finally {
+      _isProcessing = false;
     }
-
-    await _refreshPendingCount();
   }
 
   Future<void> retryFailed() async {
@@ -174,8 +185,8 @@ class SyncNotifier extends Notifier<SyncState> {
 
   Future<void> processQueue() async {
     if (!state.isOnline) return;
-    // Reentrancy guard: a second concurrent call would otherwise stop the
-    // foreground service in its finally while the first is still uploading.
+    // Shared upload guard (see syncOne): bail if an upload op is already in
+    // flight so concurrent runs can't stop the foreground service mid-upload.
     if (_isProcessing) return;
     _isProcessing = true;
     try {

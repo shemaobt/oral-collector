@@ -672,6 +672,115 @@ void main() {
     });
   });
 
+  group('upload guard', () {
+    test('syncOne bails while processQueue is in flight', () async {
+      final fakeFgs = _FakeUploadForegroundService();
+      final engineGate = Completer<void>();
+
+      when(
+        () => mockRecordingRepo.getPendingUploads(),
+      ).thenAnswer((_) async => [makeRecording()]);
+      when(
+        () => mockSyncEngine.processQueue(
+          deleteAfterUpload: any(named: 'deleteAfterUpload'),
+          wifiOnly: any(named: 'wifiOnly'),
+          maxConcurrency: any(named: 'maxConcurrency'),
+          onProgress: any(named: 'onProgress'),
+        ),
+      ).thenAnswer((_) => engineGate.future);
+      // syncOne's path is stubbed so RED fails on the verifyNever assertion
+      // rather than on a missing stub.
+      when(
+        () => mockRecordingRepo.getRecordingById('rec-1'),
+      ).thenAnswer((_) async => makeRecording(id: 'rec-1'));
+      when(
+        () => mockSyncEngine.uploadSingle(
+          any(),
+          deleteAfterUpload: any(named: 'deleteAfterUpload'),
+          onProgress: any(named: 'onProgress'),
+        ),
+      ).thenAnswer((_) async {});
+
+      final c = ProviderContainer(
+        overrides: [
+          connectivityServiceProvider.overrideWithValue(mockConnectivity),
+          syncEngineProvider.overrideWithValue(mockSyncEngine),
+          localRecordingRepositoryProvider.overrideWithValue(mockRecordingRepo),
+          uploadForegroundServiceProvider.overrideWithValue(fakeFgs),
+        ],
+      );
+      addTearDown(c.dispose);
+
+      final notifier = c.read(syncNotifierProvider.notifier);
+      await Future<void>.delayed(Duration.zero);
+
+      final first = notifier.processQueue();
+      await notifier.syncOne('rec-1');
+
+      verifyNever(
+        () => mockSyncEngine.uploadSingle(
+          any(),
+          deleteAfterUpload: any(named: 'deleteAfterUpload'),
+          onProgress: any(named: 'onProgress'),
+        ),
+      );
+
+      engineGate.complete();
+      await first;
+    });
+
+    test('processQueue bails while syncOne is in flight', () async {
+      final fakeFgs = _FakeUploadForegroundService();
+      final uploadGate = Completer<void>();
+
+      when(
+        () => mockRecordingRepo.getRecordingById('rec-1'),
+      ).thenAnswer((_) async => makeRecording(id: 'rec-1'));
+      when(
+        () => mockSyncEngine.uploadSingle(
+          any(),
+          deleteAfterUpload: any(named: 'deleteAfterUpload'),
+          onProgress: any(named: 'onProgress'),
+        ),
+      ).thenAnswer((_) => uploadGate.future);
+      when(
+        () => mockRecordingRepo.getPendingUploads(),
+      ).thenAnswer((_) async => [makeRecording()]);
+
+      final c = ProviderContainer(
+        overrides: [
+          connectivityServiceProvider.overrideWithValue(mockConnectivity),
+          syncEngineProvider.overrideWithValue(mockSyncEngine),
+          localRecordingRepositoryProvider.overrideWithValue(mockRecordingRepo),
+          uploadForegroundServiceProvider.overrideWithValue(fakeFgs),
+        ],
+      );
+      addTearDown(c.dispose);
+
+      final notifier = c.read(syncNotifierProvider.notifier);
+      await Future<void>.delayed(Duration.zero);
+
+      final first = notifier.syncOne('rec-1');
+      await notifier.processQueue();
+
+      verifyNever(
+        () => mockSyncEngine.processQueue(
+          deleteAfterUpload: any(named: 'deleteAfterUpload'),
+          wifiOnly: any(named: 'wifiOnly'),
+          maxConcurrency: any(named: 'maxConcurrency'),
+          onProgress: any(named: 'onProgress'),
+        ),
+      );
+      expect(fakeFgs.startCount, 0);
+      // syncOne genuinely holds the guard: it set uploadingId before its first
+      // await, so processQueue bailed on a real in-flight upload (not offline).
+      expect(c.read(syncNotifierProvider).uploadingId, 'rec-1');
+
+      uploadGate.complete();
+      await first;
+    });
+  });
+
   group('updateSettings', () {
     test('updates autoUploadWifiOnly', () async {
       container.read(syncNotifierProvider);
@@ -729,6 +838,9 @@ void main() {
   });
 
   group('resetAndRetry', () {
+    // Also guards the upload-guard pitfall: resetAndRetry calls syncOne, so it
+    // must NOT acquire the shared guard itself — otherwise the inner syncOne
+    // would re-entrantly bail and silently skip the upload.
     test('calls resetRetryCount then syncOne', () async {
       when(
         () => mockRecordingRepo.resetRetryCount('rec-1'),

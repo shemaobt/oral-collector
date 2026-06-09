@@ -76,12 +76,16 @@ Path: @/lib/features/sync/data/services
   uninterruptible upload.
 - **Notification lifetime is a reentrancy hazard at the caller.** The upload
   FGS is started/stopped around the engine call inside
-  `SyncNotifier._runQueue`, and that method is reentrancy-guarded
-  (`_isProcessing`) in `processQueue`
+  `SyncNotifier._runQueue`. `processQueue` holds a shared `_isProcessing`
+  upload guard — also taken by `syncOne` — so the two upload entry points are
+  mutually exclusive
   ([/lib/features/sync/presentation/notifiers/sync_notifier.dart](../../presentation/notifiers/sync_notifier.dart)).
   Without that guard a second concurrent `processQueue` (e.g. app resume →
   recordings-list refresh → `processQueue`) short-circuited on the engine's
   own guard but still ran its `finally`, stopping the foreground service
   while the first upload kept running — the notification vanished mid-upload.
+  The same guard now also blocks a `syncOne` (e.g. reset-and-retry) from
+  starting underneath an active queue, so the FGS is never stopped out from
+  under an in-flight upload.
 
 Created and maintained by Nori.
