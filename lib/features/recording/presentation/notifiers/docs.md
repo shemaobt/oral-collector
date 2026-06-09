@@ -55,9 +55,9 @@ Path: @/lib/features/recording/presentation/notifiers
 - `RecordingPlayerNotifier` (`recording_player_notifier.dart`) is an
   `AutoDisposeFamilyNotifier<RecordingPlayerState, String>` keyed by
   recording id. Its `build(arg)` creates a `just_audio` `AudioPlayer`
-  through `audioPlayerFactoryProvider` and registers
-  `ref.onDispose(() => player.dispose())`. Callers obtain the
-  long-lived player via
+  through `audioPlayerFactoryProvider` and registers an `onDispose`
+  that releases the player and flags the notifier disposed (see Things
+  to Know). Callers obtain the long-lived player via
   `ref.read(recordingPlayerProvider(id).notifier).player` and use the
   notifier's `load` / `togglePlay` / `seek` / `stop` methods. State is
   the immutable `RecordingPlayerState` in `recording_player_state.dart`
@@ -116,6 +116,17 @@ Path: @/lib/features/recording/presentation/notifiers
   argument is the recording id, so two different recordings' players
   are isolated — opening recording A then B does not steal A's
   playback state.
+- **Post-await writes are guarded by a `_disposed` flag (ENG-134).**
+  Because the autoDispose provider can be torn down mid-load — the
+  detail screen unmounts while `_doLoad` is suspended on path
+  resolution or `setFilePath` / `setUrl` — the `onDispose` callback
+  sets `_disposed = true` alongside `player.dispose()`, and every
+  `await` in `_doLoad` (including the top of the `on Object catch`) is
+  followed by an early return when disposed. The guard is hand-rolled
+  because Riverpod 2.6.1 has no `ref.mounted`, and a post-dispose
+  `state =` does **not** throw: it is a silent stale write plus a
+  spurious `didUpdateProvider` to observers, and on the file path it
+  could call `setFilePath` / `setUrl` on the already-disposed player.
 - **`load` is idempotent for the same source.**
   `RecordingPlayerNotifier.load` caches the last `filePath|url` key
   and skips re-running `setFilePath` / `setUrl` if the same source is

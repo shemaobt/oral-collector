@@ -23,11 +23,17 @@ class RecordingPlayerNotifier
   late final AudioPlayer player;
   String? _lastKey;
   Future<void>? _inFlight;
+  bool _disposed = false;
 
   @override
   RecordingPlayerState build(String arg) {
     player = ref.read(audioPlayerFactoryProvider)();
-    ref.onDispose(() => player.dispose());
+    // Riverpod 2.6.1 has no ref.mounted; flag dispose so post-await writes can
+    // bail instead of mutating a disposed (autoDispose) notifier.
+    ref.onDispose(() {
+      _disposed = true;
+      player.dispose();
+    });
     return const RecordingPlayerState();
   }
 
@@ -64,13 +70,16 @@ class RecordingPlayerNotifier
       if (hasFilePath) {
         final resolver = ref.read(audioPathResolverProvider);
         final resolved = await resolver(filePath);
+        if (_disposed) return;
         if (resolved != null) {
           await player.setFilePath(resolved);
+          if (_disposed) return;
           state = const RecordingPlayerState(isLoading: false, hasAudio: true);
           return;
         }
         if (hasUrl) {
           await player.setUrl(url);
+          if (_disposed) return;
           state = const RecordingPlayerState(isLoading: false, hasAudio: true);
           return;
         }
@@ -82,8 +91,10 @@ class RecordingPlayerNotifier
         return;
       }
       await player.setUrl(url!);
+      if (_disposed) return;
       state = const RecordingPlayerState(isLoading: false, hasAudio: true);
     } on Object catch (e, st) {
+      if (_disposed) return;
       debugPrint('RecordingPlayerNotifier.load failed: $e\n$st');
       state = const RecordingPlayerState(
         isLoading: false,
