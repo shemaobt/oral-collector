@@ -91,7 +91,7 @@ jobs:
             targets:"RecordingLiveActivityWidgetExtension" profile_name:"OC Widget App Store CI" code_sign_identity:"Apple Distribution"
 
       - name: Generate Flutter Xcode config (no build)
-        run: flutter build ios --release --config-only --build-name="$APP_VERSION" --build-number="$BUILD_NUMBER"
+        run: flutter build ios --release --config-only --build-name="$APP_VERSION" --build-number="$BUILD_NUMBER" --obfuscate --split-debug-info="$GITHUB_WORKSPACE/build/symbols"
 
       - name: Archive (manual signing with fetched profiles)
         run: |
@@ -110,6 +110,14 @@ jobs:
             -archivePath "$RUNNER_TEMP/Runner.xcarchive" \
             -exportPath "$RUNNER_TEMP/ipa" \
             -exportOptionsPlist ios/ExportOptions.plist
+
+      - name: Archive Dart symbols (de-obfuscation maps)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-symbols-${{ github.run_number }}
+          path: build/symbols/
+          if-no-files-found: error
+          retention-days: 90
 
       - name: Upload to TestFlight via xcrun altool
         env:

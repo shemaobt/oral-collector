@@ -6,13 +6,13 @@ Path: @/lib/features/sync
 
 - Owns the app's connectivity signal, the upload queue for local recordings, and the offline-aware policy that every other feature is expected to honor.
 - Exposes `syncNotifierProvider` (synchronous `SyncState.isOnline`) as the canonical "are we online?" check used across notifiers, screens, and providers.
-- Hosts the `SyncEngine` that drains the local recordings queue (Drift-backed) to the server, and the platform-specific `BackgroundSyncService` (WorkManager on Android, periodic timer on web).
+- Hosts the `SyncEngine` that drains the local recordings queue (Drift-backed) to the server, and `BackgroundSyncService`, a periodic timer (web and iOS) that re-triggers the queue. On Android the queue is instead kept alive while the app is minimized by the upload foreground service (see `@/lib/features/sync/data/services/docs.md`).
 
 ### How it fits into the larger codebase
 
 - Other features import `syncNotifierProvider` from `@/lib/features/sync/presentation/notifiers/sync_notifier.dart` and gate any API call on `state.isOnline`. See `@/lib/features/home/presentation/home_screen.dart` for the canonical reconnect-listener shape.
 - The `SyncEngine` depends on `@/lib/features/recording/data/repositories/local_recording_repository.dart` (Drift table of pending uploads) and `@/lib/core/network/authenticated_client.dart`. Recordings are created locally first; the engine reconciles them with the server on its own schedule.
-- `BackgroundSyncService` (Android WorkManager) reads credentials from SharedPreferences populated by `@/lib/core/auth/auth_notifier.dart`. The worker runs out-of-process, so it builds its own `AppDatabase` and `http.Client` rather than reusing Riverpod providers.
+- The upload pipeline runs in-process through Riverpod: `syncEngineProvider` builds `SyncEngineImpl` with the shared `authenticatedClientProvider` (`@/lib/core/network/authenticated_client.dart`), which reads the access token from `flutter_secure_storage` via `@/lib/core/providers/secure_storage_provider.dart` (the store `@/lib/core/auth/auth_notifier.dart` writes to). Keeping the Android process alive via the foreground service is what lets that in-process credential read keep working while the app is backgrounded; there is no out-of-process worker.
 - Connectivity flips originate in `connectivity_plus` and flow through `ConnectivityServiceImpl` → `SyncNotifier._onConnectivityChanged`, which triggers `processQueue()` on offline → online. Screens that need to refresh their own data on reconnect register their own `ref.listen` (the sync layer doesn't notify them directly).
 - The global HTTP client at `@/lib/core/providers/http_client_provider.dart` enforces a 15 s connect timeout on native platforms. This is the safety net for the "Wi-Fi connected, no real internet" case that `connectivity_plus` can't detect.
 
