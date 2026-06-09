@@ -136,3 +136,7 @@ app.*.symbols
 
 # FVM
 .fvm/
+
+# layerlens generated dependency diagrams
+DEPS.md
+**/DEPS.md

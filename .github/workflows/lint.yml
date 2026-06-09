@@ -29,3 +29,12 @@ jobs:
       - name: Custom lint (riverpod_lint)
         run: dart run custom_lint
         continue-on-error: true
+
+      - name: Code metrics gate (dart_code_linter)
+        run: sh scripts/check_metrics.sh
+
+      - name: Import-cycle report (layerlens, advisory)
+        run: |
+          dart pub global activate layerlens
+          dart pub global run layerlens --fail-on-cycles
+        continue-on-error: true
