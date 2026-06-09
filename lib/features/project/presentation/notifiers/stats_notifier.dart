@@ -24,7 +24,13 @@ class StatsNotifier extends Notifier<StatsState> {
       state = state.copyWith(genreStats: genreStats, isLoading: false);
     } on UnauthorizedException {
       state = state.copyWith(isLoading: false);
-      ref.read(authNotifierProvider.notifier).handleUnauthorized();
+      // Fire-and-forget: handleUnauthorized pode propagar uma falha transitória
+      // de refresh (ENG-141); aqui ela é ignorada (sessão preservada). Só
+      // Exceptions, não Errors, para não mascarar bugs.
+      ref
+          .read(authNotifierProvider.notifier)
+          .handleUnauthorized()
+          .catchError((_) => false, test: (e) => e is Exception);
     } on Exception {
       state = state.copyWith(isLoading: false);
     }
