@@ -118,6 +118,19 @@ Path: @/lib/features/recording/presentation
   `kIsWeb` is always false under test, so the branch-selecting orchestration
   is extracted to a headless-testable function while the screen keeps only
   the platform calls.
+- The `_canEditRecording` getter on the detail screen is the single
+  client-side authorization chokepoint for the recording. It gates the
+  "⋮" popup menu (split/trim, export, replace, move, classify, delete)
+  and is passed as `canEdit:` into the section widgets
+  (`RecordingAboutSection`, `RecordingQuickActions`,
+  `RecordingStorytellerSection`), which hide their own controls when it
+  is false. The getter is now a thin delegate to the pure policy
+  `canEditRecording` in
+  [../domain/recording_edit_policy.dart](../domain/recording_edit_policy.dart);
+  it feeds the policy the current `User`, the boolean from
+  `RoleNotifier.canManageProject(recording.projectId)`, and
+  `recording.userId`. See [../domain/docs.md](../domain/docs.md) for the
+  rule and its rationale.
 - `notifiers/` holds the Riverpod notifiers for the recording list,
   recording flow, and detail-screen playback (see
   [./notifiers/docs.md](notifiers/docs.md)); `widgets/` holds the
@@ -147,6 +160,18 @@ Path: @/lib/features/recording/presentation
   `LocalRecording` from `serverRecordingToLocal`. The `_ensureLocalFile`
   download path is a no-op on web. The trim editor for web routes to a
   dedicated `/trim` path that uses streamed audio.
+- **Edit controls are role/ownership gated, not just login gated
+  (ENG-142).** Every edit affordance on the detail screen flows through
+  the one `_canEditRecording` getter, so a single policy decides
+  visibility of the popup menu and all section edit buttons. The rule
+  (in [../domain/docs.md](../domain/docs.md)) makes a recording editable
+  only for platform admins, managers of *that* recording's project, and
+  the recording's own creator; ordinary non-owner users no longer see
+  those controls. This is a UX/authorization-surface fix, not a security
+  boundary — the server remains the enforcement point and a matching
+  server-side check is tracked separately (ENG-81). The getter still
+  short-circuits to non-editable while `_recording` is null (before the
+  row resolves).
 - **Online-first then mirror locally.** Edits always call the server
   first; if the server call fails, the local row is not changed (so we do
   not generate phantom local edits). Errors are surfaced via

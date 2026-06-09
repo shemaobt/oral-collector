@@ -94,6 +94,13 @@ Path: @/lib/features/recording/presentation/widgets
   locally" invariant in one place — see
   [../docs.md](../docs.md) and
   [../../data/repositories/docs.md](../../data/repositories/docs.md).
+- **The detail-screen sections do not decide who may edit.** The
+  `canEdit` flag passed into `RecordingAboutSection`,
+  `RecordingQuickActions`, and `RecordingStorytellerSection` only toggles
+  control visibility; the actual role/ownership decision is the screen's
+  `_canEditRecording` getter delegating to the policy in
+  [../../domain/docs.md](../../domain/docs.md). A section showing its
+  edit buttons therefore implies the screen already granted edit rights.
 - **Waveform widgets are isolated from the player.**
   `scrolling_waveform.dart` and `trim_waveform.dart` consume the
   `WaveformExtractor` service from
