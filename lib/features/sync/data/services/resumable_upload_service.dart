@@ -6,6 +6,7 @@ import 'package:drift/drift.dart' show Value;
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
+import '../../../../core/config/url_policy.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../core/network/authenticated_client.dart';
 import '../../../../core/platform/file_source.dart';
@@ -160,6 +161,12 @@ class ResumableUploadService {
       final uploadData =
           jsonDecode(uploadUrlResponse.body) as Map<String, dynamic>;
       final uploadUrl = uploadData['upload_url'] as String;
+      if (!isHttpsUrl(uploadUrl)) {
+        return const ResumableUploadResult(
+          success: false,
+          error: 'Insecure upload URL (non-https)',
+        );
+      }
       final contentType =
           uploadData['content_type'] as String? ?? 'application/octet-stream';
 
@@ -235,6 +242,15 @@ class ResumableUploadService {
 
     String? sessionUri = recording.resumableSessionUri;
     int startOffset = recording.uploadedBytes;
+
+    if (sessionUri != null &&
+        sessionUri.isNotEmpty &&
+        !isHttpsUrl(sessionUri)) {
+      // A session URI persisted by an older build (or a then-rogue backend)
+      // is treated as missing so a fresh, validated one is minted.
+      sessionUri = null;
+      startOffset = 0;
+    }
 
     if (sessionUri != null && sessionUri.isNotEmpty) {
       final queryOffset = await _queryUploadOffset(sessionUri, fileLength);
@@ -429,6 +445,12 @@ class ResumableUploadService {
       final uploadData =
           jsonDecode(uploadUrlResponse.body) as Map<String, dynamic>;
       final uploadUrl = uploadData['upload_url'] as String;
+      if (!isHttpsUrl(uploadUrl)) {
+        return const ResumableUploadResult(
+          success: false,
+          error: 'Insecure upload URL (non-https)',
+        );
+      }
       final contentType =
           uploadData['content_type'] as String? ?? 'application/octet-stream';
 
@@ -501,6 +523,13 @@ class ResumableUploadService {
     String? sessionUri = recording.resumableSessionUri;
     int startOffset = recording.uploadedBytes;
     final fileLength = source.length;
+
+    if (sessionUri != null &&
+        sessionUri.isNotEmpty &&
+        !isHttpsUrl(sessionUri)) {
+      sessionUri = null;
+      startOffset = 0;
+    }
 
     if (sessionUri != null && sessionUri.isNotEmpty) {
       final queryOffset = await _queryUploadOffset(sessionUri, fileLength);
@@ -645,7 +674,12 @@ class ResumableUploadService {
       if (response.statusCode != 200) return null;
 
       final data = jsonDecode(response.body) as Map<String, dynamic>;
-      return data['session_uri'] as String;
+      final sessionUri = data['session_uri'] as String;
+      if (!isHttpsUrl(sessionUri)) {
+        debugPrint('ResumableUploadService: rejected non-https session_uri');
+        return null;
+      }
+      return sessionUri;
     } on Exception {
       return null;
     }

@@ -62,6 +62,12 @@ Path: @/lib/features/sync/data/services
   `upload_downloader.dart`) validates CRC32C and resumes from the saved GCS
   offset; the foreground service / Live Activity are lifecycle and UI
   concerns layered on top of it.
+- The server returns the GCS target out-of-band (`upload_url` for single-PUT,
+  `session_uri` for resumable), so the transport re-checks its scheme at the
+  server→app boundary before any PUT, using the `isHttpsUrl` predicate from
+  [/lib/core/config/url_policy.dart](../../../../core/config/url_policy.dart).
+  This is the only place the presigned URL is scheme-validated — it never flows
+  through `AuthenticatedClient.baseUrl`. See "Things to Know".
 
 ### Things to Know
 
@@ -87,5 +93,15 @@ Path: @/lib/features/sync/data/services
   The same guard now also blocks a `syncOne` (e.g. reset-and-retry) from
   starting underneath an active queue, so the FGS is never stopped out from
   under an in-flight upload.
+
+- **A non-https presigned URL fails closed, it does not crash the upload.**
+  Both single-PUT paths reject the server's `upload_url` by returning
+  `ResumableUploadResult(success: false)` (so the queue marks the row failed
+  and retries later), and `_requestResumableSession` rejects a non-https
+  `session_uri` by logging and returning `null`, which surfaces as a failed
+  session to its callers. This is the transport half of the app-wide
+  no-cleartext-PUT invariant whose policy and rationale live in
+  [/lib/core/network/docs.md](../../../../core/network/docs.md); the
+  config/contract half throws instead.
 
 Created and maintained by Nori.

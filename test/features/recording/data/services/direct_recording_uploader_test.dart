@@ -255,4 +255,38 @@ void main() {
     expect(serverId, 'srv-A');
     expect(await realRepo.getRecordingById('web_srv-A'), isNull);
   });
+
+  test('recusa upload-url http inseguro sem fazer PUT', () async {
+    final bytes = Uint8List(10);
+    final calls = <String>[];
+    final httpClient = MockClient((request) async {
+      calls.add('${request.method} ${request.url}');
+      final path = request.url.path;
+      if (request.method == 'POST' && path == '/api/oc/recordings') {
+        return http.Response(jsonEncode({'id': 'srv-abc'}), 201);
+      }
+      if (request.method == 'POST' && path == '/api/oc/recordings/upload-url') {
+        return http.Response(
+          jsonEncode({
+            'upload_url': 'http://evil.com/leak',
+            'content_type': 'audio/mp4',
+          }),
+          200,
+        );
+      }
+      return http.Response('unexpected', 500);
+    });
+    final auth = AuthenticatedClient(client: httpClient, storage: storage);
+    final uploader = DirectRecordingUploader(
+      client: auth,
+      resumableUploadService: resumable,
+      recordingRepo: repo,
+    );
+
+    await expectLater(
+      uploader.upload(source: sampleSource(bytes), meta: sampleMeta()),
+      throwsA(isA<Exception>()),
+    );
+    expect(calls.any((c) => c.startsWith('PUT')), isFalse);
+  });
 }

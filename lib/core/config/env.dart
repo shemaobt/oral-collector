@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart' show kReleaseMode;
 
+import 'url_policy.dart';
+
 abstract class Env {
   static const _productionUrl = 'https://tripod-backend.shemaywam.com';
   // Debug/profile override via `--dart-define=BACKEND_URL=...` or
@@ -9,6 +11,8 @@ abstract class Env {
   static String get backendUrl {
     if (kReleaseMode) return _productionUrl;
     final override = _override.trim();
-    return override.isEmpty ? _productionUrl : override;
+    final url = override.isEmpty ? _productionUrl : override;
+    assertHttpsUrl(url);
+    return url;
   }
 }

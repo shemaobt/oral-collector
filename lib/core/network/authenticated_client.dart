@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 
 import '../auth/auth_notifier.dart';
 import '../config/env.dart';
+import '../config/url_policy.dart';
 import '../providers/http_client_provider.dart';
 import '../providers/secure_storage_provider.dart';
 
@@ -86,8 +87,10 @@ class AuthenticatedClient {
     Object? body,
     Map<String, String>? headers,
   }) async {
+    final target = url.startsWith('http') ? url : '$baseUrl$url';
+    assertHttpsUrl(target);
     return _client.put(
-      Uri.parse(url.startsWith('http') ? url : '$baseUrl$url'),
+      Uri.parse(target),
       headers: headers ?? await _headers(),
       body: body is String ? body : (body != null ? jsonEncode(body) : null),
     );

@@ -14,6 +14,11 @@ Path: @/lib/core/network
   `guardResponse` chokepoint that most repositories already call after each
   request; it now delegates to the boundary while preserving its exact prior
   contract.
+- The cleartext guard lives one folder over in
+  [../config/url_policy.dart](../config/url_policy.dart) (`isHttpsUrl` /
+  `assertHttpsUrl`) and is enforced at this edge: `AuthenticatedClient.put`
+  asserts the scheme of any full caller URL before sending. See "Things to
+  Know" for the policy and the app-wide scheme invariant.
 
 ### How it fits into the larger codebase
 
@@ -66,6 +71,13 @@ Path: @/lib/core/network
   403 (delegating to `throwForResponse`); every other status passes through for
   the caller to handle. This is the historical contract — the consolidation
   kept the same statuses and leaf types and only added `traceId` population.
+- **`put` is the only method that accepts a full caller-supplied URL**, so it
+  is the only one that re-asserts the scheme. `get`/`post`/`patch`/`delete`
+  build their target from `baseUrl` (which is `Env.backendUrl`, already
+  validated when resolved — see [../config/env.dart](../config/env.dart)), so
+  re-checking them would be redundant. `put` is the path the upload transport
+  uses for server-provided presigned GCS URLs, which never pass through
+  `baseUrl`.
 
 ### Things to Know
 
@@ -111,5 +123,35 @@ Path: @/lib/core/network
   transient throw on a 401 that does reach them never escapes as an unhandled
   async error, and the boot path `tryAutoLogin` catches the transient throw to
   keep the cached session offline-first.
+
+- **The cleartext (HTTPS) scheme policy is enforced in Dart, not just by the
+  platform.** `package:http` rides Dart's `HttpClient`, which the platform
+  cleartext policies (Android network-security-config, iOS ATS) do not cover,
+  so the scheme check is a pure-Dart guard in
+  [../config/url_policy.dart](../config/url_policy.dart) (IPv4 parsed by hand,
+  no `dart:io`, to stay web-safe). The policy:
+
+  | Build | http allowed? | https allowed? |
+  | --- | --- | --- |
+  | non-release (`kReleaseMode` false) | loopback / RFC1918 private hosts only (`localhost`, `127/8`, `10/8`, `172.16/12`, `192.168/16`) | always |
+  | release | never | always |
+
+  The private-host carve-out exists so the emulator host (`10.0.2.2`) and LAN
+  dev backends (`192.168.x.x`) keep working under `--dart-define=BACKEND_URL`;
+  a host that merely contains `localhost` (e.g. `localhost.evil.com`) is **not**
+  treated as loopback. `assertHttpsUrl` redacts the rejected value to
+  `scheme://host` so a signed URL's query/signature never reaches logs or crash
+  reports.
+- **System invariant — no recording bytes are ever PUT over cleartext.** Two
+  deliberate error models enforce this. Config/contract sites **throw**:
+  `Env.backendUrl` ([../config/env.dart](../config/env.dart)) and
+  `AuthenticatedClient.put` raise `ArgumentError`. Upload-transport sites use
+  the `isHttpsUrl` predicate plus each layer's existing graceful failure, so a
+  bad URL fails closed rather than crashing a background upload — the server's
+  presigned `upload_url` / `session_uri` is validated at the server→app
+  boundary before any PUT in
+  [../../features/sync/data/services/resumable_upload_service.dart](../../features/sync/data/services/resumable_upload_service.dart)
+  and
+  [../../features/recording/data/services/direct_recording_uploader.dart](../../features/recording/data/services/direct_recording_uploader.dart).
 
 Created and maintained by Nori.
