@@ -51,9 +51,13 @@ Path: @/lib/features/project/data
   (`cached_projects` / `cached_languages`). `read()` keys off the projects blob:
   null when nothing is cached or the blob is corrupt, with an empty language
   list tolerated.
-- `SharedPreferencesProjectCache` intentionally swallows decode failures and
-  returns null, so a corrupt cache degrades to an empty/offline state rather
-  than throwing.
+- `SharedPreferencesProjectCache` intentionally swallows any malformed-cache
+  failure with a broad `catch` and returns null, so a corrupt cache degrades to
+  an empty/offline state rather than throwing. The catch is broad rather than
+  `on Exception` because the un-migrated `Project.fromJson` / `Language.fromJson`
+  still force-cast, so a bad cached record raises a cast `Error`, not an
+  `Exception` (ENG-148); it narrows once those factories adopt the safe-readers
+  in [/lib/core/serialization](../../../core/serialization/docs.md).
 - The repositories are thin request wrappers: they guard the response, fail
   loudly on unexpected status codes, and map JSON into entities. They do not
   cache; caching is the notifier's decision after a successful fetch.

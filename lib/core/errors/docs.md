@@ -81,6 +81,9 @@ Path: @/lib/core/errors
   home of the safe-readers in
   [../serialization/docs.md](../serialization/docs.md) — and the matching switch
   arm mapping it to `error_generic`; this coupling is the intended tripwire.
+  ENG-148 then wired the first runtime producers (the safe-reader call-site
+  migration), so `ParseException` now actually reaches this switch from live
+  parse paths such as login and stats, not only as a compile-time tripwire.
 - **`cause` is the type only, never the value.** Leaves store
   `e.runtimeType`, not the caught object, so a `SocketException` message or an
   HTTP body can never leak through the exception into a log or the UI.

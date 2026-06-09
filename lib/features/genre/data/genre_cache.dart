@@ -22,8 +22,8 @@ class SharedPreferencesGenreCache implements GenreCache {
       return (jsonDecode(raw) as List<dynamic>)
           .map((j) => Genre.fromJson(j as Map<String, dynamic>))
           .toList();
-    } on Exception {
-      return null; // corrupt cache → treat as empty
+    } catch (_) {
+      return null; // corrupt cache → treat as empty (incl. cast Errors)
     }
   }
 

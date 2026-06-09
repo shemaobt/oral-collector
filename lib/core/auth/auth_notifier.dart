@@ -184,8 +184,8 @@ class AuthNotifier extends Notifier<AuthState> {
     if (raw == null) return null;
     try {
       return User.fromJson(jsonDecode(raw) as Map<String, dynamic>);
-    } on Exception {
-      return null;
+    } catch (_) {
+      return null; // corrupt cached user → treat as no cache (incl. cast Errors)
     }
   }
 
