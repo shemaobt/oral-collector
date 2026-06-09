@@ -33,10 +33,11 @@ Path: @/lib/core/database
   storyteller, and session tables are likewise owned by their respective
   feature data layers (e.g. [genre](../../features/genre/data/docs.md),
   [project](../../features/project/data/docs.md)).
-- Out-of-process callers cannot reuse the Riverpod-scoped handle. The Android
-  background sync worker constructs its **own** `AppDatabase` instead — see
-  [sync docs](../../features/sync/docs.md). Both handles open the same
-  on-disk file, so they share one schema and one migration history.
+- `AppDatabase` is constructed only in [./database_provider.dart](database_provider.dart)
+  behind `appDatabaseProvider`; background uploads reuse that same in-process
+  handle (the Android upload pipeline stays in-process via the foreground
+  service — see [sync docs](../../features/sync/docs.md)) rather than opening a
+  second connection.
 - Connection setup is platform-conditional. [./connection.dart](connection.dart)
   exports the native or web implementation at compile time:
 
