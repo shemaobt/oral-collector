@@ -51,8 +51,8 @@ void main() {
       authClient.get('/b'),
       authClient.get('/c'),
     ];
-    // Segura o refresh em voo: com o guard antigo _isRefreshing, as requests
-    // concorrentes veriam "já refreshando" e pulariam o retry, voltando 401.
+    // Hold the refresh in-flight: with the old _isRefreshing guard, concurrent
+    // requests would see "already refreshing", skip the retry, and return 401.
     await pumpEventQueue();
     gate.complete();
     final responses = await Future.wait(inflight);

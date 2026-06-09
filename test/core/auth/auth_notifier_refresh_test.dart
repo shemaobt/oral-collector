@@ -241,9 +241,9 @@ void main() {
   });
 
   group('coalescing (ENG-136)', () {
-    // Gateia repo.refreshToken num Completer para manter UM refresh "em voo"
-    // enquanto disparamos chamadas concorrentes — sem isso o "concorrente"
-    // serializaria e o teste passaria à toa.
+    // Gate repo.refreshToken on a Completer to hold ONE refresh in-flight while
+    // we fire concurrent calls — without it the "concurrent" calls serialize
+    // and the test passes vacuously.
     test('N handleUnauthorized concorrentes coalescem num único refresh — '
         'impede a corrida de rotação que deslogaria', () async {
       when(
@@ -264,7 +264,7 @@ void main() {
       ];
       await pumpEventQueue();
 
-      // Em voo, só existe UMA chamada ao endpoint de refresh.
+      // While in-flight, only ONE call reaches the refresh endpoint.
       verify(() => repo.refreshToken('r0')).called(1);
 
       gate.complete();
@@ -292,15 +292,15 @@ void main() {
       final container = makeContainer();
       final notifier = container.read(authNotifierProvider.notifier);
 
-      // Onda 1 concorrente → um único refresh.
+      // Wave 1, concurrent → a single refresh.
       await Future.wait([
         for (var i = 0; i < 3; i++) notifier.handleUnauthorized(),
       ]);
       verify(() => repo.refreshToken('r0')).called(1);
 
-      // Onda 2 concorrente, após a 1ª completar: se o slot não tivesse sido
-      // liberado, retornaria o Future já completo e refreshToken NÃO seria
-      // chamado de novo (called(0) → falha).
+      // Wave 2, concurrent, after wave 1 completes: if the slot weren't
+      // cleared this would return the already-completed Future and refreshToken
+      // would NOT be called again (called(0) → fail).
       await Future.wait([
         for (var i = 0; i < 3; i++) notifier.handleUnauthorized(),
       ]);
@@ -324,8 +324,8 @@ void main() {
       final inflight = [
         for (var i = 0; i < 4; i++) notifier.handleUnauthorized(),
       ];
-      // Anexa os handlers de erro ANTES de liberar o gate, senão as rejeições
-      // viram erros async não tratados e quebram o teste.
+      // Attach error handlers BEFORE releasing the gate, or the rejections
+      // become unhandled async errors and break the test.
       final outcomes = [
         for (final f in inflight)
           f.then<Object?>((_) => null, onError: (e) => e),
@@ -378,7 +378,7 @@ void main() {
       await auto;
       final refreshed = await manual;
 
-      // Prova que AMBOS os caminhos enxergaram o sucesso do refresh único.
+      // Both paths observed the single refresh succeed.
       expect(refreshed, isTrue);
       final state = container.read(authNotifierProvider);
       expect(state.currentUser?.id, 'u1');

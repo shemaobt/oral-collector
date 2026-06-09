@@ -196,10 +196,10 @@ class AuthNotifier extends Notifier<AuthState> {
     }
   }
 
-  // Single-flight: chamadas concorrentes compartilham UM refresh em voo, então
-  // N respostas 401 simultâneas disparam só uma rotação de token (ENG-136).
-  // Mantém-se NÃO-async — o slot precisa ser atribuído antes de qualquer await,
-  // senão a corrida reaparece.
+  // Single-flight: concurrent callers share ONE in-flight refresh, so N
+  // simultaneous 401s trigger a single token rotation (ENG-136). Must stay
+  // non-async: the slot has to be assigned before any await, or the race
+  // returns.
   Future<bool> _tryRefresh() {
     return _inFlightRefresh ??= _doTryRefresh().whenComplete(
       () => _inFlightRefresh = null,

@@ -40,9 +40,9 @@ class AuthenticatedClient {
   ) async {
     final response = await request();
     if (response.statusCode == 401 && _refreshToken != null) {
-      // Sem guard per-client: o refresh é coalescido globalmente no AuthNotifier
-      // (ENG-136), então 401s concorrentes aguardam o MESMO refresh e todas
-      // fazem retry — em vez de pularem o retry e falharem com 401.
+      // No per-client guard: the refresh is coalesced globally in AuthNotifier
+      // (ENG-136), so concurrent 401s await the same refresh and all retry,
+      // instead of skipping the retry and failing with 401.
       final refreshed = await _refreshToken();
       if (refreshed) {
         return request();
