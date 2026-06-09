@@ -1,3 +1,4 @@
+import 'dart:async' show Completer;
 import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -236,6 +237,152 @@ void main() {
       );
       expect(state.isLoading, isFalse);
       verifyNever(() => storage.delete(key: any(named: 'key')));
+    });
+  });
+
+  group('coalescing (ENG-136)', () {
+    // Gateia repo.refreshToken num Completer para manter UM refresh "em voo"
+    // enquanto disparamos chamadas concorrentes — sem isso o "concorrente"
+    // serializaria e o teste passaria à toa.
+    test('N handleUnauthorized concorrentes coalescem num único refresh — '
+        'impede a corrida de rotação que deslogaria', () async {
+      when(
+        () => storage.read(key: 'refresh_token'),
+      ).thenAnswer((_) async => 'r0');
+      final gate = Completer<void>();
+      when(() => repo.refreshToken('r0')).thenAnswer((_) async {
+        await gate.future;
+        return (accessToken: 'a1', refreshToken: 'r1');
+      });
+      when(() => repo.getMe('a1')).thenAnswer((_) async => user);
+
+      final container = makeContainer();
+      final notifier = await signIn(container);
+
+      final inflight = [
+        for (var i = 0; i < 5; i++) notifier.handleUnauthorized(),
+      ];
+      await pumpEventQueue();
+
+      // Em voo, só existe UMA chamada ao endpoint de refresh.
+      verify(() => repo.refreshToken('r0')).called(1);
+
+      gate.complete();
+      final results = await Future.wait(inflight);
+
+      expect(results, everyElement(isTrue));
+      expect(
+        container.read(authNotifierProvider).currentUser?.id,
+        'u1',
+        reason: 'sessão sobrevive: um único refresh, sem rotação concorrente',
+      );
+      verifyNever(() => storage.delete(key: any(named: 'key')));
+    });
+
+    test('o slot em voo reseta ao completar — uma nova onda concorrente '
+        'dispara um novo refresh', () async {
+      when(
+        () => storage.read(key: 'refresh_token'),
+      ).thenAnswer((_) async => 'r0');
+      when(
+        () => repo.refreshToken('r0'),
+      ).thenAnswer((_) async => (accessToken: 'a1', refreshToken: 'r1'));
+      when(() => repo.getMe('a1')).thenAnswer((_) async => user);
+
+      final container = makeContainer();
+      final notifier = container.read(authNotifierProvider.notifier);
+
+      // Onda 1 concorrente → um único refresh.
+      await Future.wait([
+        for (var i = 0; i < 3; i++) notifier.handleUnauthorized(),
+      ]);
+      verify(() => repo.refreshToken('r0')).called(1);
+
+      // Onda 2 concorrente, após a 1ª completar: se o slot não tivesse sido
+      // liberado, retornaria o Future já completo e refreshToken NÃO seria
+      // chamado de novo (called(0) → falha).
+      await Future.wait([
+        for (var i = 0; i < 3; i++) notifier.handleUnauthorized(),
+      ]);
+      verify(() => repo.refreshToken('r0')).called(1);
+    });
+
+    test('falha transitória concorrente propaga o mesmo erro a todos e '
+        'preserva a sessão', () async {
+      when(
+        () => storage.read(key: 'refresh_token'),
+      ).thenAnswer((_) async => 'r0');
+      final gate = Completer<void>();
+      when(() => repo.refreshToken('r0')).thenAnswer((_) async {
+        await gate.future;
+        throw const TimeoutException();
+      });
+
+      final container = makeContainer();
+      final notifier = await signIn(container);
+
+      final inflight = [
+        for (var i = 0; i < 4; i++) notifier.handleUnauthorized(),
+      ];
+      // Anexa os handlers de erro ANTES de liberar o gate, senão as rejeições
+      // viram erros async não tratados e quebram o teste.
+      final outcomes = [
+        for (final f in inflight)
+          f.then<Object?>((_) => null, onError: (e) => e),
+      ];
+      await pumpEventQueue();
+
+      verify(() => repo.refreshToken('r0')).called(1);
+
+      gate.complete();
+      final errors = await Future.wait(outcomes);
+
+      expect(errors, everyElement(isA<TimeoutException>()));
+      expect(
+        container.read(authNotifierProvider).currentUser?.id,
+        'u1',
+        reason: 'transitório preserva a sessão (ENG-141)',
+      );
+      verifyNever(() => storage.delete(key: any(named: 'key')));
+    });
+
+    test('tryAutoLogin e handleUnauthorized concorrentes compartilham um '
+        'único refresh (fixa o seam em _tryRefresh)', () async {
+      when(
+        () => storage.read(key: 'access_token'),
+      ).thenAnswer((_) async => 'a0');
+      when(
+        () => storage.read(key: 'cached_user'),
+      ).thenAnswer((_) async => null);
+      when(
+        () => storage.read(key: 'refresh_token'),
+      ).thenAnswer((_) async => 'r0');
+      when(() => repo.getMe('a0')).thenThrow(const UnauthorizedException());
+      final gate = Completer<void>();
+      when(() => repo.refreshToken('r0')).thenAnswer((_) async {
+        await gate.future;
+        return (accessToken: 'a1', refreshToken: 'r1');
+      });
+      when(() => repo.getMe('a1')).thenAnswer((_) async => user);
+
+      final container = makeContainer();
+      final notifier = container.read(authNotifierProvider.notifier);
+
+      final auto = notifier.tryAutoLogin();
+      final manual = notifier.handleUnauthorized();
+      await pumpEventQueue();
+
+      verify(() => repo.refreshToken('r0')).called(1);
+
+      gate.complete();
+      await auto;
+      final refreshed = await manual;
+
+      // Prova que AMBOS os caminhos enxergaram o sucesso do refresh único.
+      expect(refreshed, isTrue);
+      final state = container.read(authNotifierProvider);
+      expect(state.currentUser?.id, 'u1');
+      expect(state.isLoading, isFalse);
     });
   });
 }

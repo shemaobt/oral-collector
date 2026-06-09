@@ -23,9 +23,13 @@ Path: @/lib/core/network
   token, JSON-encodes bodies, and retries once after a 401 **only when** the
   `TokenRefresher` callback (wired to `handleUnauthorized` in
   [../auth/auth_notifier.dart](../auth/auth_notifier.dart)) reports a successful
-  refresh. A 401 on the refresh itself (session truly expired) skips the retry;
-  a transient refresh failure (network/timeout/5xx/parse) propagates and also
-  skips the retry — see "Things to Know".
+  refresh. Every 401 invokes the refresher — there is no per-client guard
+  skipping concurrent attempts — because the refresh itself is coalesced
+  globally in `AuthNotifier` (ENG-136, see [../auth/docs.md](../auth/docs.md));
+  concurrent 401s therefore await the **same** rotation and all retry. A 401 on
+  the refresh itself (session truly expired) skips the retry; a transient
+  refresh failure (network/timeout/5xx/parse) propagates and also skips the
+  retry — see "Things to Know".
 - The boundary produces the leaves defined in
   [../errors/app_exception.dart](../errors/app_exception.dart); the UI consumes
   them in
@@ -88,9 +92,15 @@ Path: @/lib/core/network
   treated as success by callers).
 - **The 401 retry in `AuthenticatedClient` happens before `guardResponse`,
   and the `TokenRefresher` contract decides between three outcomes.**
-  `_withRefresh` calls the refresher once on a 401 (guarded by `_isRefreshing`
-  against recursion) inside a `try`/`finally` that resets the flag. The
-  refresher is `handleUnauthorized` in
+  `_withRefresh` calls the refresher on every 401 and, on success, re-issues the
+  request. Recursion safety does **not** come from a per-client flag: the retry
+  is a raw `request()` that does not re-enter `_withRefresh`, so a request makes
+  at most one retry. Deduping of concurrent refreshes is now a **global
+  single-flight** in `AuthNotifier._tryRefresh` (ENG-136), shared by every
+  refresh path (this client's callback, the fire-and-forget genre/project/stats
+  notifiers, and the boot `tryAutoLogin`); concurrent 401s await one rotation
+  and all retry, instead of all-but-one skipping the retry and failing with a
+  401. The refresher is `handleUnauthorized` in
   [../auth/auth_notifier.dart](../auth/auth_notifier.dart), and its return /
   throw fully determines what reaches the repository's `guardResponse`:
 
@@ -98,7 +108,7 @@ Path: @/lib/core/network
   | --- | --- | --- | --- |
   | Refresh OK | returns `true` | re-issues the request | the retried response (no `UnauthorizedException`) |
   | Refresh 401 (expired) | returns `false`, clears the session | skips retry, returns the original 401 | `UnauthorizedException` |
-  | Refresh transient (network/timeout/5xx/parse) | **propagates**, session preserved | exception unwinds through `finally`, no retry | the transient leaf, **not** a 401 |
+  | Refresh transient (network/timeout/5xx/parse) | **propagates**, session preserved | exception unwinds out of `_withRefresh`, no retry | the transient leaf, **not** a 401 |
 
   Before ENG-141 the refresher swallowed every non-401 failure as `return true`,
   so `_withRefresh` re-ran the request with the still-stale token and a real

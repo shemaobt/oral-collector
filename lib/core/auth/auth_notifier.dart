@@ -23,6 +23,8 @@ class AuthNotifier extends Notifier<AuthState> {
   FlutterSecureStorage get _storage => ref.read(secureStorageProvider);
   AuthRepository get _repo => ref.read(authRepositoryProvider);
 
+  Future<bool>? _inFlightRefresh;
+
   @override
   AuthState build() {
     return const AuthState();
@@ -194,7 +196,17 @@ class AuthNotifier extends Notifier<AuthState> {
     }
   }
 
-  Future<bool> _tryRefresh() async {
+  // Single-flight: chamadas concorrentes compartilham UM refresh em voo, então
+  // N respostas 401 simultâneas disparam só uma rotação de token (ENG-136).
+  // Mantém-se NÃO-async — o slot precisa ser atribuído antes de qualquer await,
+  // senão a corrida reaparece.
+  Future<bool> _tryRefresh() {
+    return _inFlightRefresh ??= _doTryRefresh().whenComplete(
+      () => _inFlightRefresh = null,
+    );
+  }
+
+  Future<bool> _doTryRefresh() async {
     try {
       final refreshToken = await _storage.read(key: _refreshTokenKey);
       if (refreshToken == null) return false;
