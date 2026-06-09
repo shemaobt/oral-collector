@@ -291,4 +291,24 @@ If the repo is **mobile-only**, this file is the single agent guideline. A separ
 
 ---
 
+## 15. Quality Gates
+
+Static quality gates run in CI (on every PR) and locally via `make quality`. Run it before opening
+a PR and treat any hard-gate violation as blocking. See [ADR-0009](docs/adr/ADR-0009-architecture-dependency-rules.md)
+and `obt/.claude/quality-gates-plan.md`.
+
+- **Code metrics** (`dart_code_linter`, config in `analysis_options.yaml`, enforced by
+  `scripts/check_metrics.sh`): cyclomatic complexity, source lines of code, nesting level, and
+  number of parameters. **Hard gate.** Phase 0 thresholds equal the current worst value (green now)
+  and ratchet down over time. Generated code (`*.g.dart`) is excluded.
+- **Import cycles** (`layerlens --fail-on-cycles`): **advisory** — reported in CI, does not block.
+  The codebase has known cycles documented in ADR-0009.
+- **Coverage** (`flutter test --coverage`): **advisory** — generated and uploaded in CI, not yet
+  enforced (current ~19%).
+
+The existing `flutter analyze --no-fatal-infos` / ADR-0007 lint baseline is unchanged; these gates
+are additive.
+
+---
+
 *Reference for Flutter mobile apps. Use as `AGENTS.md` or `MOBILE.md` at repository root. Built using [agents.md](https://agents.md/) format.*
