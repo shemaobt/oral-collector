@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../../core/serialization/parse_list.dart';
 import '../domain/entities/language.dart';
 import '../domain/entities/project.dart';
 
@@ -31,22 +30,18 @@ class SharedPreferencesProjectCache implements ProjectCache {
     final rawProjects = prefs.getString(_cachedProjectsKey);
     if (rawProjects == null) return null;
     try {
-      final projects = parseList(
-        jsonDecode(rawProjects),
-        Project.fromJson,
-        context: 'projectCache',
-      );
+      final projects = (jsonDecode(rawProjects) as List<dynamic>)
+          .map((j) => Project.fromJson(j as Map<String, dynamic>))
+          .toList();
       final rawLanguages = prefs.getString(_cachedLanguagesKey);
       final languages = rawLanguages != null
-          ? parseList(
-              jsonDecode(rawLanguages),
-              Language.fromJson,
-              context: 'languageCache',
-            )
+          ? (jsonDecode(rawLanguages) as List<dynamic>)
+                .map((j) => Language.fromJson(j as Map<String, dynamic>))
+                .toList()
           : <Language>[];
       return ProjectCacheSnapshot(projects: projects, languages: languages);
-    } on Exception {
-      return null; // corrupt cache → treat as empty
+    } catch (_) {
+      return null; // corrupt cache → treat as empty (incl. cast Errors)
     }
   }
 

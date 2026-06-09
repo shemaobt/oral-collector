@@ -51,15 +51,13 @@ Path: @/lib/features/project/data
   (`cached_projects` / `cached_languages`). `read()` keys off the projects blob:
   null when nothing is cached or the blob is corrupt, with an empty language
   list tolerated.
-- `SharedPreferencesProjectCache` reads both blobs back through `parseList`
-  ([/lib/core/serialization/parse_list.dart](../../../core/serialization/parse_list.dart))
-  under a two-level failure policy: a corrupt container (unparseable JSON or a
-  non-list, for either projects or languages) is swallowed and `read()` returns
-  null so the cache degrades to an empty/offline state, while a single malformed
-  project or language is skipped and the survivors are returned. Returning null on
-  whole-blob corruption also closes a latent bug — the outer `on Exception` never
-  caught the `Error` the old force-cast `.map(... as ...)` threw. See
-  [/lib/core/serialization/docs.md](../../../core/serialization/docs.md).
+- `SharedPreferencesProjectCache` intentionally swallows any malformed-cache
+  failure with a broad `catch` and returns null, so a corrupt cache degrades to
+  an empty/offline state rather than throwing. The catch is broad rather than
+  `on Exception` because the un-migrated `Project.fromJson` / `Language.fromJson`
+  still force-cast, so a bad cached record raises a cast `Error`, not an
+  `Exception` (ENG-148); it narrows once those factories adopt the safe-readers
+  in [/lib/core/serialization](../../../core/serialization/docs.md).
 - The repositories are thin request wrappers: they guard the response, fail
   loudly on unexpected status codes, and map JSON into entities. They do not
   cache; caching is the notifier's decision after a successful fetch.

@@ -7,6 +7,7 @@
 library;
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:oral_collector/core/errors/app_exception.dart';
 import 'package:oral_collector/features/recording/domain/entities/server_recording.dart';
 
 void main() {
@@ -40,4 +41,22 @@ void main() {
     expect(missing.description, isNull);
     expect(explicitNull.description, isNull);
   });
+
+  test(
+    'throws a catchable ParseException when file_size_bytes is not a num',
+    () {
+      final json = baseJson()..['file_size_bytes'] = 'not-a-number';
+
+      expect(
+        () => ServerRecording.fromJson(json),
+        throwsA(
+          isA<ParseException>().having(
+            (e) => e.field,
+            'field',
+            'file_size_bytes',
+          ),
+        ),
+      );
+    },
+  );
 }

@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../../core/serialization/parse_list.dart';
 import '../domain/entities/genre.dart';
 
 abstract class GenreCache {
@@ -20,9 +19,11 @@ class SharedPreferencesGenreCache implements GenreCache {
     final raw = prefs.getString(_cachedGenresKey);
     if (raw == null) return null;
     try {
-      return parseList(jsonDecode(raw), Genre.fromJson, context: 'genreCache');
-    } on Exception {
-      return null; // corrupt cache → treat as empty
+      return (jsonDecode(raw) as List<dynamic>)
+          .map((j) => Genre.fromJson(j as Map<String, dynamic>))
+          .toList();
+    } catch (_) {
+      return null; // corrupt cache → treat as empty (incl. cast Errors)
     }
   }
 

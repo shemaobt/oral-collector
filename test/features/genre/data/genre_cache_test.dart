@@ -5,36 +5,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  late SharedPreferencesGenreCache cache;
+  test('read() returns null instead of crashing when a cached genre has a '
+      'wrong-typed field', () async {
+    // `id` is an int, so Genre.fromJson's `as String` throws a TypeError (an
+    // Error, not an Exception) — the read must still degrade to a cache miss.
+    SharedPreferences.setMockInitialValues({
+      'cached_genres': '[{"id": 123, "name": "Tales"}]',
+    });
 
-  setUp(() {
-    cache = SharedPreferencesGenreCache();
+    final result = await SharedPreferencesGenreCache().read();
+
+    expect(result, isNull);
   });
-
-  test(
-    'read pula um genre malformado e retorna os válidos (não null)',
-    () async {
-      SharedPreferences.setMockInitialValues(<String, Object>{
-        'cached_genres': '[{"id":"g-1","name":"Folktale"},{"name":"sem id"}]',
-      });
-
-      final result = await cache.read();
-
-      expect(result, isNotNull);
-      expect(result!.map((g) => g.id).toList(), <String>['g-1']);
-    },
-  );
-
-  test(
-    'read com JSON corrompido retorna null (invalida o cache inteiro)',
-    () async {
-      SharedPreferences.setMockInitialValues(<String, Object>{
-        'cached_genres': 'not json at all',
-      });
-
-      final result = await cache.read();
-
-      expect(result, isNull);
-    },
-  );
 }

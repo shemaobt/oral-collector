@@ -1,3 +1,5 @@
+import '../../../../core/serialization/safe_read.dart';
+
 class ServerRecording {
   final String id;
   final String projectId;
@@ -64,7 +66,7 @@ class ServerRecording {
       title: json['title'] as String?,
       description: json['description'] as String?,
       durationSeconds: (json['duration_seconds'] as num).toDouble(),
-      fileSizeBytes: json['file_size_bytes'] as int,
+      fileSizeBytes: readInt(json, 'file_size_bytes'),
       format: json['format'] as String,
       gcsUrl: json['gcs_url'] as String?,
       uploadStatus: json['upload_status'] as String,

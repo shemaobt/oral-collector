@@ -4,6 +4,7 @@ import '../../../../core/errors/api_exception.dart';
 import '../../../../core/network/api_error_handler.dart';
 import '../../../../core/network/authenticated_client.dart';
 import '../../../../core/serialization/parse_list.dart';
+import '../../../../core/serialization/safe_read.dart';
 import '../../domain/entities/server_recording.dart';
 import '../../domain/repositories/recording_api_repository.dart';
 
@@ -133,7 +134,7 @@ class RecordingApiRepositoryImpl implements RecordingApiRepository {
       throw Exception('Failed to clear stale recordings: ${response.body}');
     }
     final data = jsonDecode(response.body) as Map<String, dynamic>;
-    return data['deleted'] as int? ?? 0;
+    return readIntOrNull(data, 'deleted') ?? 0;
   }
 
   @override
