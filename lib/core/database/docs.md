@@ -72,7 +72,10 @@ Path: @/lib/core/database
   `LazyDatabase` and uses `NativeDatabase.createInBackground` so the SQLite
   handle (and any migration) runs off the UI isolate.
   [./connection/web.dart](connection/web.dart) is the IndexedDB-backed
-  `WebDatabase` fallback.
+  `WebDatabase` (drift's legacy `package:drift/web.dart`), which persists the
+  database under the name `oral_collector` in the browser. Its SQLite engine is
+  the `sql.js` WebAssembly build, served **same-origin from `web/` with no CDN**
+  (see Things to Know).
 - The migration-test workflow has three committed artifacts that must stay in
   lockstep with `app_database.dart`:
   - `drift_schemas/drift_schema_vN.json` — one snapshot per schema version. The
@@ -134,5 +137,27 @@ Path: @/lib/core/database
   were reconstructed, the migration test's job is to prove the migration code
   reproduces the current reference from each reconstructed starting point — not
   to trust the snapshots blindly.
+- **On web the sql.js engine is self-hosted, not loaded from a CDN (ENG-130).**
+  The `.js` loader and `.wasm` binary live in the repo's `web/` directory and
+  are served same-origin. This is a security boundary: a CDN compromise could
+  otherwise inject JS/WASM into the app origin and exfiltrate the local DB.
+  Subresource Integrity on the `<script>` was insufficient because it cannot
+  cover a `.wasm` fetched programmatically via `WebAssembly.instantiateStreaming`;
+  self-hosting gives same-origin integrity for both files. (CSP hardening is a
+  separate effort, ENG-167.)
+- **The only hook that points the wasm at the right origin is
+  `window.Module.locateFile` in `web/index.html`.** Drift's `WebDatabase`
+  (see [./connection/web.dart](connection/web.dart)) calls the global
+  `initSqlJs()` with **no arguments**, so it never passes `locateFile`. The
+  MODULARIZE sql.js build merges a pre-defined `window.Module`, so that block is
+  the sole place Emscripten learns where `sql-wasm.wasm` lives. It returns the
+  bare filename so the URL resolves against `<base href>` (works for both
+  root and subpath deploys). No Dart code is involved; that block must be kept
+  and repointed, never removed.
+- **The `web/` sql.js `.js` and `.wasm` are a version-pinned matched pair.** They
+  must be re-vendored **together** on any version bump. nginx
+  ([/docker/nginx.conf](../../../docker/nginx.conf)) caches `.wasm` for one year
+  `immutable` on its stable filename, so a future bump must also cache-bust
+  (e.g. rename) to avoid serving a stale wasm.
 
 Created and maintained by Nori.
