@@ -4,6 +4,7 @@ import 'dart:convert';
 
 import '../../../../core/network/api_error_handler.dart';
 import '../../../../core/network/authenticated_client.dart';
+import '../../../../core/serialization/parse_list.dart';
 import '../../domain/entities/storyteller.dart';
 import '../../domain/repositories/storyteller_repository.dart';
 
@@ -22,10 +23,11 @@ class StorytellerApiRepositoryImpl implements StorytellerRepository {
     if (response.statusCode != 200) {
       throw Exception('Failed to list storytellers: ${response.body}');
     }
-    final data = jsonDecode(response.body) as List<dynamic>;
-    return data
-        .map((json) => Storyteller.fromJson(json as Map<String, dynamic>))
-        .toList();
+    return parseList(
+      jsonDecode(response.body),
+      Storyteller.fromJson,
+      context: 'listByProject',
+    );
   }
 
   @override

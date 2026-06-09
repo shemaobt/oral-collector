@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import '../../../../core/network/api_error_handler.dart';
 import '../../../../core/network/authenticated_client.dart';
+import '../../../../core/serialization/parse_list.dart';
 import '../../domain/entities/genre.dart';
 import '../../domain/repositories/genre_repository.dart';
 
@@ -17,9 +18,10 @@ class GenreRepositoryImpl implements GenreRepository {
     if (response.statusCode != 200) {
       throw Exception('Failed to list genres: ${response.body}');
     }
-    final data = jsonDecode(response.body) as List<dynamic>;
-    return data
-        .map((json) => Genre.fromJson(json as Map<String, dynamic>))
-        .toList();
+    return parseList(
+      jsonDecode(response.body),
+      Genre.fromJson,
+      context: 'listGenres',
+    );
   }
 }

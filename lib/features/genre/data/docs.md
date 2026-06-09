@@ -53,8 +53,12 @@ Path: @/lib/features/genre/data
   `ParseException` once that factory adopts the safe-readers in
   [/lib/core/serialization](../../../core/serialization/docs.md).
 - The repository is a thin GET wrapper: it guards the response, fails loudly
-  on non-200, and maps the JSON array into `Genre` entities. It does not cache;
-  caching is the notifier's decision after a successful fetch.
+  on non-200, and maps the JSON array into `Genre` entities through `parseList`
+  ([/lib/core/serialization](../../../core/serialization/docs.md)), which
+  **skips-and-logs** a malformed element rather than failing the whole list —
+  deliberately the opposite of the cache above, which drops the entire blob on
+  any bad record. It does not cache; caching is the notifier's decision after a
+  successful fetch.
 - The notifier hydrates from `GenreCache.read()` on build (fire-and-forget, so
   cached genres appear before the network returns) and persists via
   `GenreCache.write()` only after a successful `listGenres()`.
