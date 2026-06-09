@@ -43,10 +43,17 @@ Path: @/lib/features/genre/data
 ### Core Implementation
 
 - `GenreCache` exposes `read()` (nullable: null when nothing is cached or the
-  blob is unreadable) and `write(genres)`. `SharedPreferencesGenreCache`
-  stores the genre list as a JSON string under a single key and intentionally
-  swallows decode failures, returning null so a corrupt cache degrades to an
-  empty/offline state rather than throwing.
+  blob is unreadable) and `write(genres)`. `SharedPreferencesGenreCache` stores
+  the genre list as a JSON string under a single key and reads it back through
+  `parseList`
+  ([/lib/core/serialization/parse_list.dart](../../../core/serialization/parse_list.dart))
+  under a two-level failure policy: a corrupt container (unparseable JSON or a
+  non-list) is swallowed and `read()` returns null so the cache degrades to an
+  empty/offline state, while a single malformed genre is skipped and the
+  surviving genres are returned. Returning null on whole-blob corruption also
+  closes a latent bug — the outer `on Exception` never caught the `Error` the old
+  force-cast `.map(... as ...)` threw. See
+  [/lib/core/serialization/docs.md](../../../core/serialization/docs.md).
 - The repository is a thin GET wrapper: it guards the response, fails loudly
   on non-200, and maps the JSON array into `Genre` entities. It does not cache;
   caching is the notifier's decision after a successful fetch.
