@@ -12,8 +12,11 @@ Path: @/lib/core/serialization
   `TypeError`/`NoSuchMethodError` a raw cast (`json['x'] as String`) would.
 - The safe-readers are the typed replacement for the hand-written
   `json['x'] as T` force-casts scattered across every `fromJson`. Migration is
-  incremental and behavior-preserving; **no call site is migrated in this
-  change** — the helpers ship fully unit-tested first.
+  incremental and behavior-preserving: ENG-148 is the **first consuming wave**,
+  routing the enumerated quick-win fragile casts (single scalar/string/nested-map
+  reads at repository and DTO boundaries) through the readers. Full
+  `fromJson`-factory and list-repository migration remain follow-ups
+  (ENG-146/153).
 - This folder is where future E8 siblings land: an element-isolating
   `parseList<T>` (ENG-146), tolerant `fromWire` enum mapping (ENG-150), and
   decode/leaf-read helpers (ENG-153).
@@ -29,9 +32,12 @@ Path: @/lib/core/serialization
   lets the existing UI-boundary mapping in
   [../../shared/utils/error_helpers.dart](../../shared/utils/error_helpers.dart)
   handle it (it maps to `error_generic`).
-- The intended consumers are the feature `fromJson` factories under
-  `lib/features/*/data/`, which today still force-cast. They migrate toward
-  these readers in later waves; until then this folder has no inbound callers.
+- The first consumers landed in ENG-148: a curated set of fragile force-casts
+  at the data boundary — repository response parsing (e.g. stats counts,
+  login/signup token extraction) and a server DTO scalar field. The broader
+  population of feature `fromJson` factories under `lib/features/*/data/` still
+  force-cast and migrate in later waves (ENG-146/153), so most of this folder's
+  inbound surface is still ahead of it.
 - The readers operate strictly **after** JSON decoding: they take a decoded
   `Map`, not bytes. They contain **no** `dart:convert`, no logging, and no l10n —
   pure functions with no side effects.
@@ -77,8 +83,13 @@ Path: @/lib/core/serialization
   skip-and-log-vs-fail page policy belongs to the element-isolating `parseList`
   and the call sites (per [ADR-0008](../../../docs/adr/ADR-0008-data-serialization.md)),
   not here.
-- **No call sites consume these yet.** Adding the helpers does not change any
-  runtime behavior on its own; the value is realized only as `fromJson`
-  factories migrate to them in subsequent tickets.
+- **The first wave is wired (ENG-148); migration is still partial.** Two
+  complementary moves landed: the enumerated quick-win casts now route through
+  these readers, so a malformed payload surfaces as a catchable `ParseException`
+  instead of an uncatchable `Error`; and the persisted-cache read sites that
+  still call un-migrated `fromJson` factories widened their catch to a broad
+  `catch (_)`, so a corrupt cached record degrades to a cache-miss instead of
+  crashing on the `Error` those factories still throw. That broad catch is the
+  deliberate bridge until those factories adopt the readers.
 
 Created and maintained by Nori.
