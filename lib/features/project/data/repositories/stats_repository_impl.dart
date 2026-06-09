@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import '../../../../core/network/api_error_handler.dart';
 import '../../../../core/network/authenticated_client.dart';
+import '../../../../core/serialization/safe_read.dart';
 import '../../domain/entities/stats.dart';
 import '../../domain/repositories/stats_repository.dart';
 
@@ -42,7 +43,7 @@ class StatsRepositoryImpl implements StatsRepository {
       subcatsByGenre[genreId]![subcatId] = SubcategoryStat(
         subcategoryId: subcatId,
         totalDurationSeconds: (map['duration_seconds'] as num).toDouble(),
-        recordingCount: map['recording_count'] as int,
+        recordingCount: readInt(map, 'recording_count'),
       );
     }
     return subcatsByGenre;
@@ -59,7 +60,7 @@ class StatsRepositoryImpl implements StatsRepository {
       genreStats[genreId] = GenreStat(
         genreId: genreId,
         totalDurationSeconds: (map['duration_seconds'] as num).toDouble(),
-        recordingCount: map['recording_count'] as int,
+        recordingCount: readInt(map, 'recording_count'),
         subcategories: subcatsByGenre[genreId] ?? const {},
       );
     }
