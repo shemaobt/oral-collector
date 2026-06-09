@@ -64,10 +64,17 @@ Path: @/lib/features/recording/presentation/notifiers
   (`isLoading`, `errorKind`, `hasAudio`); the error kind is one of
   `fileNotFound` (local missing and no fallback URL) or `loadFailed`
   (decoder/network error).
-- `RecordingsListNotifier` paginates server recordings, merges them
-  with local-only rows from `LocalRecordingRepository`, and exposes
-  patch operations (e.g. `patchRecordingTitle`) used after edits so
-  the list rerenders without a full refetch.
+- `RecordingsListNotifier` (`recordings_list_notifier.dart`) owns the
+  paginated list. `fetchRecordings` loads page zero — the server list
+  merged with local-only rows from `LocalRecordingRepository`, deduped
+  by `serverId` — and `loadMore` appends later pages from the
+  `_serverOffset` cursor; offline or on an API error both fall back to
+  the full local set. Status / genre / subcategory / search filtering
+  is computed client-side by `RecordingsListState.filteredRecordings`
+  and never refetches, so only `setUserFilter`, `setStorytellerFilter`,
+  `clearAllFilters`, `clearStaleRecordings`, and pull-to-refresh re-hit
+  the server. `patchRecordingTitle` rerenders after an edit without a
+  full refetch.
 - `InputDeviceNotifier` tracks the currently selected microphone for
   capture; `InterruptedSessionsNotifier` powers the "you have an
   unsaved recording" prompt on app open by reading recovery rows from
@@ -174,5 +181,24 @@ Path: @/lib/features/recording/presentation/notifiers
   is defunct after the pop) and the confirmation screen reads the
   provider. `extra` is avoided because it is dropped on redirect and on
   web, and the finalized file path cannot be lost.
+- **`RecordingsListNotifier` discards stale fetches with a generation
+  guard (last-write-wins).** Switching filters quickly — e.g.
+  `setUserFilter('A')` then `setUserFilter('B')` — fires overlapping
+  `fetchRecordings` calls, and a slow earlier one could otherwise
+  resolve last and overwrite the newer result (and corrupt shared
+  fields mid-flight). `fetchRecordings` bumps a monotonic
+  `_fetchGeneration` on entry and, after every await, returns early if
+  its generation is no longer current before touching `state` or
+  `_serverOffset`. For this to hold, `_fetchAndMerge` is
+  side-effect-free: it returns the merged list, `hasMore`, and the next
+  offset as a record, and the caller applies `state` and `_serverOffset`
+  together with no await between the generation check and the apply.
+  `loadMore` *captures* the current generation (it does not bump it) and
+  drops its page if a newer `fetchRecordings` superseded it, so a stale
+  page is never appended and `_serverOffset` is not corrupted;
+  `fetchRecordings` also clears `isLoadingMore` synchronously on entry so
+  a superseded `loadMore` that bails cannot leave the spinner stuck.
+  `_serverOffset` is the only mutable field shared across these methods —
+  everything else lives on `state` or as a local.
 
 Created and maintained by Nori.
