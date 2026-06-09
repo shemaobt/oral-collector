@@ -59,8 +59,13 @@ Path: @/lib/features/project/data
   `Exception` (ENG-148); it narrows once those factories adopt the safe-readers
   in [/lib/core/serialization](../../../core/serialization/docs.md).
 - The repositories are thin request wrappers: they guard the response, fail
-  loudly on unexpected status codes, and map JSON into entities. They do not
-  cache; caching is the notifier's decision after a successful fetch.
+  loudly on unexpected status codes, and map JSON into entities. The
+  list-returning reads route their array through `parseList`
+  ([/lib/core/serialization](../../../core/serialization/docs.md)), which
+  **skips-and-logs** a malformed element instead of failing the page, while
+  single-object reads (`getProject`, create/update) stay fail-fast. Both differ
+  from the cache above, which drops the whole snapshot on any bad record. They do
+  not cache; caching is the notifier's decision after a successful fetch.
 - The notifier hydrates from `ProjectCache.read()` on build (fire-and-forget, so
   cached data appears before the network returns) and persists the enriched
   project list via `ProjectCache.write()` after a successful fetch.
