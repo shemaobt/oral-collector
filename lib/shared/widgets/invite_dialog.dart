@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../core/network/authenticated_client.dart';
+import '../../core/serialization/parse_list.dart';
 import '../../core/theme/app_colors.dart';
 import '../../features/project/presentation/notifiers/member_notifier.dart';
 import '../../l10n/app_localizations.dart';
@@ -84,11 +85,12 @@ class _InviteDialogState extends ConsumerState<InviteDialog> {
       if (!mounted) return;
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body) as List<dynamic>;
         setState(() {
-          _results = data
-              .map((j) => _SearchResult.fromJson(j as Map<String, dynamic>))
-              .toList();
+          _results = parseList(
+            jsonDecode(response.body),
+            _SearchResult.fromJson,
+            context: 'userSearch',
+          );
           _isSearching = false;
         });
       } else {

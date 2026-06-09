@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import '../../../../core/network/authenticated_client.dart';
+import '../../../../core/serialization/parse_list.dart';
 import '../../domain/entities/invite.dart';
 import '../../domain/repositories/invite_repository.dart';
 
@@ -16,10 +17,11 @@ class InviteRepositoryImpl implements InviteRepository {
     if (response.statusCode != 200) {
       throw Exception('Failed to fetch invites: ${response.body}');
     }
-    final data = jsonDecode(response.body) as List<dynamic>;
-    return data
-        .map((json) => Invite.fromJson(json as Map<String, dynamic>))
-        .toList();
+    return parseList(
+      jsonDecode(response.body),
+      Invite.fromJson,
+      context: 'fetchMyInvites',
+    );
   }
 
   @override
