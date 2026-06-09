@@ -19,16 +19,18 @@ void main() {
     verifier = SchemaVerifier(GeneratedHelper());
   });
 
-  group('migrating a database at each historical version up to v10', () {
+  group('migrating a database at each historical version up to v11', () {
     // A user who skipped builds upgrades straight from their on-disk version to
-    // the current schema. drift runs onUpgrade(from, 10) once. The resulting
-    // schema must match the official v10 reference for every starting point.
-    for (var from = 1; from < 10; from++) {
-      test('v$from -> v10 yields the expected v10 schema', () async {
+    // the current schema. drift runs onUpgrade(from, 11) once. The resulting
+    // schema must match the official v11 reference for every starting point —
+    // indexes included, so a forgotten createIndex in onUpgrade fails here
+    // (migrateAndValidate diffs indexes, not just tables and columns).
+    for (var from = 1; from < 11; from++) {
+      test('v$from -> v11 yields the expected v11 schema', () async {
         final connection = await verifier.startAt(from);
         final db = AppDatabase.forTesting(connection);
         try {
-          await verifier.migrateAndValidate(db, 10);
+          await verifier.migrateAndValidate(db, 11);
         } finally {
           await db.close();
         }
@@ -37,7 +39,7 @@ void main() {
   });
 
   test(
-    'preserves an un-uploaded recording across the full v1 -> v10 upgrade',
+    'preserves an un-uploaded recording across the full v1 -> v11 upgrade',
     () async {
       final schema = await verifier.schemaAt(1);
 
@@ -62,10 +64,10 @@ void main() {
           );
       await oldDb.close();
 
-      // Run the real migration to v10 on the app's database class.
+      // Run the real migration to v11 on the app's database class.
       final db = AppDatabase.forTesting(schema.newConnection());
       try {
-        await verifier.migrateAndValidate(db, 10);
+        await verifier.migrateAndValidate(db, 11);
 
         final rows = await db.select(db.localRecordings).get();
         expect(rows, hasLength(1));
@@ -84,47 +86,44 @@ void main() {
     },
   );
 
-  test(
-    'preserves a storyteller across the v6 -> v10 sync-column migration',
-    () async {
-      final schema = await verifier.schemaAt(6);
+  test('preserves a storyteller across the v6 -> v11 upgrade', () async {
+    final schema = await verifier.schemaAt(6);
 
-      // Seed a storyteller at v6 — the version where local_storytellers exists
-      // at its pre-sync 10-column shape, before serverId/syncStatus/retryCount/
-      // lastRetryAt are added at v10. This guards the from>=6 branch the ENG-123
-      // fix touches against a destructive future migration of this table.
-      final oldDb = v6.DatabaseAtV6(schema.newConnection());
-      await oldDb
-          .into(oldDb.localStorytellers)
-          .insert(
-            v6.LocalStorytellersCompanion.insert(
-              id: 'st-1',
-              projectId: 'proj-1',
-              name: 'Ada',
-              sex: 'F',
-              age: const Value(42),
-            ),
-          );
-      await oldDb.close();
+    // Seed a storyteller at v6 — the version where local_storytellers exists
+    // at its pre-sync 10-column shape, before serverId/syncStatus/retryCount/
+    // lastRetryAt are added at v10. This guards the from>=6 branch the ENG-123
+    // fix touches against a destructive future migration of this table.
+    final oldDb = v6.DatabaseAtV6(schema.newConnection());
+    await oldDb
+        .into(oldDb.localStorytellers)
+        .insert(
+          v6.LocalStorytellersCompanion.insert(
+            id: 'st-1',
+            projectId: 'proj-1',
+            name: 'Ada',
+            sex: 'F',
+            age: const Value(42),
+          ),
+        );
+    await oldDb.close();
 
-      final db = AppDatabase.forTesting(schema.newConnection());
-      try {
-        await verifier.migrateAndValidate(db, 10);
+    final db = AppDatabase.forTesting(schema.newConnection());
+    try {
+      await verifier.migrateAndValidate(db, 11);
 
-        final rows = await db.select(db.localStorytellers).get();
-        expect(rows, hasLength(1));
-        final row = rows.single;
-        expect(row.id, 'st-1');
-        expect(row.name, 'Ada');
-        expect(row.sex, 'F');
-        expect(row.age, 42);
-        // Sync columns introduced at v10 land with their defaults.
-        expect(row.syncStatus, 'synced');
-        expect(row.retryCount, 0);
-        expect(row.serverId, isNull);
-      } finally {
-        await db.close();
-      }
-    },
-  );
+      final rows = await db.select(db.localStorytellers).get();
+      expect(rows, hasLength(1));
+      final row = rows.single;
+      expect(row.id, 'st-1');
+      expect(row.name, 'Ada');
+      expect(row.sex, 'F');
+      expect(row.age, 42);
+      // Sync columns introduced at v10 land with their defaults.
+      expect(row.syncStatus, 'synced');
+      expect(row.retryCount, 0);
+      expect(row.serverId, isNull);
+    } finally {
+      await db.close();
+    }
+  });
 }
