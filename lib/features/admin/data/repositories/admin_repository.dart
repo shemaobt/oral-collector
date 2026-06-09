@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import '../../../../core/network/api_error_handler.dart';
 import '../../../../core/network/authenticated_client.dart';
+import '../../../../core/serialization/parse_list.dart';
 import '../../../genre/domain/entities/genre.dart';
 import '../../../project/domain/entities/project.dart';
 import '../../../recording/domain/entities/recording.dart';
@@ -31,10 +32,11 @@ class AdminRepositoryImpl implements AdminRepository {
     if (response.statusCode != 200) {
       throw Exception('Failed to fetch projects: ${response.body}');
     }
-    final data = jsonDecode(response.body) as List<dynamic>;
-    return data
-        .map((json) => Project.fromJson(json as Map<String, dynamic>))
-        .toList();
+    return parseList(
+      jsonDecode(response.body),
+      Project.fromJson,
+      context: 'fetchAllProjects',
+    );
   }
 
   @override
@@ -44,10 +46,11 @@ class AdminRepositoryImpl implements AdminRepository {
     if (response.statusCode != 200) {
       throw Exception('Failed to fetch genres: ${response.body}');
     }
-    final data = jsonDecode(response.body) as List<dynamic>;
-    return data
-        .map((json) => Genre.fromJson(json as Map<String, dynamic>))
-        .toList();
+    return parseList(
+      jsonDecode(response.body),
+      Genre.fromJson,
+      context: 'fetchAllGenres',
+    );
   }
 
   @override
@@ -123,10 +126,11 @@ class AdminRepositoryImpl implements AdminRepository {
     if (response.statusCode != 200) {
       throw Exception('Failed to fetch cleaning queue: ${response.body}');
     }
-    final data = jsonDecode(response.body) as List<dynamic>;
-    return data
-        .map((json) => Recording.fromJson(json as Map<String, dynamic>))
-        .toList();
+    return parseList(
+      jsonDecode(response.body),
+      Recording.fromJson,
+      context: 'fetchCleaningQueue',
+    );
   }
 
   @override

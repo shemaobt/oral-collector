@@ -20,9 +20,12 @@ Path: @/lib/core/network
 - `AuthenticatedClient` (in [./authenticated_client.dart](authenticated_client.dart))
   is provided via `authenticatedClientProvider` and consumed by feature
   repositories under `lib/features/*/data/repositories/`. It injects the bearer
-  token, JSON-encodes bodies, and transparently retries once after a 401 via
-  the `TokenRefresher` callback wired to
-  [../auth/auth_notifier.dart](../auth/auth_notifier.dart).
+  token, JSON-encodes bodies, and retries once after a 401 **only when** the
+  `TokenRefresher` callback (wired to `handleUnauthorized` in
+  [../auth/auth_notifier.dart](../auth/auth_notifier.dart)) reports a successful
+  refresh. A 401 on the refresh itself (session truly expired) skips the retry;
+  a transient refresh failure (network/timeout/5xx/parse) propagates and also
+  skips the retry — see "Things to Know".
 - The boundary produces the leaves defined in
   [../errors/app_exception.dart](../errors/app_exception.dart); the UI consumes
   them in
@@ -83,10 +86,30 @@ Path: @/lib/core/network
   falls into the `>= 400` arm; there is no dedicated `NotFoundException`
   because 404 is sometimes a non-exceptional outcome (e.g. delete-then-404 is
   treated as success by callers).
-- **The 401 retry in `AuthenticatedClient` happens before `guardResponse`.**
-  `_withRefresh` re-issues the request once on a 401 (guarded by
-  `_isRefreshing` against recursion); only the final response reaches a
-  repository's `guardResponse`, so a successful refresh never surfaces an
-  `UnauthorizedException`.
+- **The 401 retry in `AuthenticatedClient` happens before `guardResponse`,
+  and the `TokenRefresher` contract decides between three outcomes.**
+  `_withRefresh` calls the refresher once on a 401 (guarded by `_isRefreshing`
+  against recursion) inside a `try`/`finally` that resets the flag. The
+  refresher is `handleUnauthorized` in
+  [../auth/auth_notifier.dart](../auth/auth_notifier.dart), and its return /
+  throw fully determines what reaches the repository's `guardResponse`:
+
+  | Refresh outcome | `handleUnauthorized` | `_withRefresh` | Caller sees |
+  | --- | --- | --- | --- |
+  | Refresh OK | returns `true` | re-issues the request | the retried response (no `UnauthorizedException`) |
+  | Refresh 401 (expired) | returns `false`, clears the session | skips retry, returns the original 401 | `UnauthorizedException` |
+  | Refresh transient (network/timeout/5xx/parse) | **propagates**, session preserved | exception unwinds through `finally`, no retry | the transient leaf, **not** a 401 |
+
+  Before ENG-141 the refresher swallowed every non-401 failure as `return true`,
+  so `_withRefresh` re-ran the request with the still-stale token and a real
+  network/timeout error was masked as a 401. The current contract is the fix:
+  only a genuine 401 on the refresh clears the session, and a transient failure
+  surfaces its own leaf so feature notifiers that catch `UnauthorizedException`
+  (genre/project/stats) fall through to their generic `on Exception` arm
+  instead. Because `handleUnauthorized` can now throw, its fire-and-forget
+  callers guard it: those notifiers wrap the call in `.catchError` so a
+  transient throw on a 401 that does reach them never escapes as an unhandled
+  async error, and the boot path `tryAutoLogin` catches the transient throw to
+  keep the cached session offline-first.
 
 Created and maintained by Nori.

@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import '../../../../core/network/api_error_handler.dart';
 import '../../../../core/network/authenticated_client.dart';
+import '../../../../core/serialization/parse_list.dart';
 import '../../domain/entities/language.dart';
 import '../../domain/entities/project.dart';
 import '../../domain/entities/project_member.dart';
@@ -36,10 +37,11 @@ class ProjectRepositoryImpl implements ProjectRepository {
     if (response.statusCode != 200) {
       throw Exception('Failed to list languages: ${response.body}');
     }
-    final data = jsonDecode(response.body) as List<dynamic>;
-    return data
-        .map((json) => Language.fromJson(json as Map<String, dynamic>))
-        .toList();
+    return parseList(
+      jsonDecode(response.body),
+      Language.fromJson,
+      context: 'listLanguages',
+    );
   }
 
   @override
@@ -49,10 +51,11 @@ class ProjectRepositoryImpl implements ProjectRepository {
     if (response.statusCode != 200) {
       throw Exception('Failed to list projects: ${response.body}');
     }
-    final data = jsonDecode(response.body) as List<dynamic>;
-    return data
-        .map((json) => Project.fromJson(json as Map<String, dynamic>))
-        .toList();
+    return parseList(
+      jsonDecode(response.body),
+      Project.fromJson,
+      context: 'listProjects',
+    );
   }
 
   @override
@@ -96,10 +99,11 @@ class ProjectRepositoryImpl implements ProjectRepository {
     if (response.statusCode != 200) {
       throw Exception('Failed to list members: ${response.body}');
     }
-    final data = jsonDecode(response.body) as List<dynamic>;
-    return data
-        .map((json) => ProjectMember.fromJson(json as Map<String, dynamic>))
-        .toList();
+    return parseList(
+      jsonDecode(response.body),
+      ProjectMember.fromJson,
+      context: 'listMembers',
+    );
   }
 
   @override

@@ -49,10 +49,15 @@ class AuthNotifier extends Notifier<AuthState> {
       await _storeUser(user);
       state = state.copyWith(currentUser: user, isLoading: false);
     } on UnauthorizedException {
-      final refreshed = await _tryRefresh();
-      if (!refreshed) {
-        await _clearTokens();
-        state = const AuthState();
+      try {
+        final refreshed = await _tryRefresh();
+        if (!refreshed) {
+          await _clearTokens();
+          state = const AuthState();
+        }
+      } on Exception {
+        // Refresh transitório no boot: preserva a sessão em cache (offline-first).
+        state = state.copyWith(isLoading: false);
       }
     } on Exception {
       state = state.copyWith(isLoading: false);
@@ -184,8 +189,8 @@ class AuthNotifier extends Notifier<AuthState> {
     if (raw == null) return null;
     try {
       return User.fromJson(jsonDecode(raw) as Map<String, dynamic>);
-    } on Exception {
-      return null;
+    } catch (_) {
+      return null; // corrupt cached user → treat as no cache (incl. cast Errors)
     }
   }
 
@@ -203,8 +208,8 @@ class AuthNotifier extends Notifier<AuthState> {
       return true;
     } on UnauthorizedException {
       return false;
-    } on Exception {
-      return true;
     }
+    // Outras exceções (rede/timeout/5xx/parse) são transitórias: propagam para a
+    // request falhar como erro de rede, preservando a sessão (ENG-141).
   }
 }

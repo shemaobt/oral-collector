@@ -7,6 +7,7 @@ import 'package:path/path.dart' as p;
 import '../../../../core/auth/auth_repository.dart';
 import '../../../../core/config/env.dart';
 import '../../../../core/network/api_error_handler.dart';
+import '../../../../core/serialization/safe_read.dart';
 import '../../domain/entities/user.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
@@ -32,10 +33,11 @@ class AuthRepositoryImpl implements AuthRepository {
     }
 
     final data = jsonDecode(response.body) as Map<String, dynamic>;
+    final tokens = readMap(data, 'tokens');
     return (
       user: User.fromJson(data['user'] as Map<String, dynamic>),
-      accessToken: data['tokens']['access_token'] as String,
-      refreshToken: data['tokens']['refresh_token'] as String,
+      accessToken: readString(tokens, 'access_token'),
+      refreshToken: readString(tokens, 'refresh_token'),
     );
   }
 
@@ -65,10 +67,11 @@ class AuthRepositoryImpl implements AuthRepository {
     }
 
     final data = jsonDecode(response.body) as Map<String, dynamic>;
+    final tokens = readMap(data, 'tokens');
     return (
       user: User.fromJson(data['user'] as Map<String, dynamic>),
-      accessToken: data['tokens']['access_token'] as String,
-      refreshToken: data['tokens']['refresh_token'] as String,
+      accessToken: readString(tokens, 'access_token'),
+      refreshToken: readString(tokens, 'refresh_token'),
     );
   }
 

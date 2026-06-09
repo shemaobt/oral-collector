@@ -55,19 +55,26 @@ Path: @/lib/features/recording/presentation/notifiers
 - `RecordingPlayerNotifier` (`recording_player_notifier.dart`) is an
   `AutoDisposeFamilyNotifier<RecordingPlayerState, String>` keyed by
   recording id. Its `build(arg)` creates a `just_audio` `AudioPlayer`
-  through `audioPlayerFactoryProvider` and registers
-  `ref.onDispose(() => player.dispose())`. Callers obtain the
-  long-lived player via
+  through `audioPlayerFactoryProvider` and registers an `onDispose`
+  that releases the player and flags the notifier disposed (see Things
+  to Know). Callers obtain the long-lived player via
   `ref.read(recordingPlayerProvider(id).notifier).player` and use the
   notifier's `load` / `togglePlay` / `seek` / `stop` methods. State is
   the immutable `RecordingPlayerState` in `recording_player_state.dart`
   (`isLoading`, `errorKind`, `hasAudio`); the error kind is one of
   `fileNotFound` (local missing and no fallback URL) or `loadFailed`
   (decoder/network error).
-- `RecordingsListNotifier` paginates server recordings, merges them
-  with local-only rows from `LocalRecordingRepository`, and exposes
-  patch operations (e.g. `patchRecordingTitle`) used after edits so
-  the list rerenders without a full refetch.
+- `RecordingsListNotifier` (`recordings_list_notifier.dart`) owns the
+  paginated list. `fetchRecordings` loads page zero — the server list
+  merged with local-only rows from `LocalRecordingRepository`, deduped
+  by `serverId` — and `loadMore` appends later pages from the
+  `_serverOffset` cursor; offline or on an API error both fall back to
+  the full local set. Status / genre / subcategory / search filtering
+  is computed client-side by `RecordingsListState.filteredRecordings`
+  and never refetches, so only `setUserFilter`, `setStorytellerFilter`,
+  `clearAllFilters`, `clearStaleRecordings`, and pull-to-refresh re-hit
+  the server. `patchRecordingTitle` rerenders after an edit without a
+  full refetch.
 - `InputDeviceNotifier` tracks the currently selected microphone for
   capture; `InterruptedSessionsNotifier` powers the "you have an
   unsaved recording" prompt on app open by reading recovery rows from
@@ -116,6 +123,17 @@ Path: @/lib/features/recording/presentation/notifiers
   argument is the recording id, so two different recordings' players
   are isolated — opening recording A then B does not steal A's
   playback state.
+- **Post-await writes are guarded by a `_disposed` flag (ENG-134).**
+  Because the autoDispose provider can be torn down mid-load — the
+  detail screen unmounts while `_doLoad` is suspended on path
+  resolution or `setFilePath` / `setUrl` — the `onDispose` callback
+  sets `_disposed = true` alongside `player.dispose()`, and every
+  `await` in `_doLoad` (including the top of the `on Object catch`) is
+  followed by an early return when disposed. The guard is hand-rolled
+  because Riverpod 2.6.1 has no `ref.mounted`, and a post-dispose
+  `state =` does **not** throw: it is a silent stale write plus a
+  spurious `didUpdateProvider` to observers, and on the file path it
+  could call `setFilePath` / `setUrl` on the already-disposed player.
 - **`load` is idempotent for the same source.**
   `RecordingPlayerNotifier.load` caches the last `filePath|url` key
   and skips re-running `setFilePath` / `setUrl` if the same source is
@@ -174,5 +192,24 @@ Path: @/lib/features/recording/presentation/notifiers
   is defunct after the pop) and the confirmation screen reads the
   provider. `extra` is avoided because it is dropped on redirect and on
   web, and the finalized file path cannot be lost.
+- **`RecordingsListNotifier` discards stale fetches with a generation
+  guard (last-write-wins).** Switching filters quickly — e.g.
+  `setUserFilter('A')` then `setUserFilter('B')` — fires overlapping
+  `fetchRecordings` calls, and a slow earlier one could otherwise
+  resolve last and overwrite the newer result (and corrupt shared
+  fields mid-flight). `fetchRecordings` bumps a monotonic
+  `_fetchGeneration` on entry and, after every await, returns early if
+  its generation is no longer current before touching `state` or
+  `_serverOffset`. For this to hold, `_fetchAndMerge` is
+  side-effect-free: it returns the merged list, `hasMore`, and the next
+  offset as a record, and the caller applies `state` and `_serverOffset`
+  together with no await between the generation check and the apply.
+  `loadMore` *captures* the current generation (it does not bump it) and
+  drops its page if a newer `fetchRecordings` superseded it, so a stale
+  page is never appended and `_serverOffset` is not corrupted;
+  `fetchRecordings` also clears `isLoadingMore` synchronously on entry so
+  a superseded `loadMore` that bails cannot leave the spinner stuck.
+  `_serverOffset` is the only mutable field shared across these methods —
+  everything else lives on `state` or as a local.
 
 Created and maintained by Nori.

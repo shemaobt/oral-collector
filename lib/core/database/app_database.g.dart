@@ -4133,6 +4133,26 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $LocalStorytellersTable(this);
   late final $RecordingSessionsTable recordingSessions =
       $RecordingSessionsTable(this);
+  late final Index idxRecordingsProjectRecorded = Index(
+    'idx_recordings_project_recorded',
+    'CREATE INDEX idx_recordings_project_recorded ON local_recordings (project_id, recorded_at)',
+  );
+  late final Index idxRecordingsStatusRecorded = Index(
+    'idx_recordings_status_recorded',
+    'CREATE INDEX idx_recordings_status_recorded ON local_recordings (upload_status, recorded_at)',
+  );
+  late final Index idxRecordingsServerId = Index(
+    'idx_recordings_server_id',
+    'CREATE INDEX idx_recordings_server_id ON local_recordings (server_id)',
+  );
+  late final Index idxRecordingsStorytellerId = Index(
+    'idx_recordings_storyteller_id',
+    'CREATE INDEX idx_recordings_storyteller_id ON local_recordings (storyteller_id)',
+  );
+  late final Index idxStorytellersProjectId = Index(
+    'idx_storytellers_project_id',
+    'CREATE INDEX idx_storytellers_project_id ON local_storytellers (project_id)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -4143,6 +4163,11 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     localSubcategories,
     localStorytellers,
     recordingSessions,
+    idxRecordingsProjectRecorded,
+    idxRecordingsStatusRecorded,
+    idxRecordingsServerId,
+    idxRecordingsStorytellerId,
+    idxStorytellersProjectId,
   ];
 }
 

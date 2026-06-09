@@ -4,6 +4,16 @@ import 'connection.dart';
 
 part 'app_database.g.dart';
 
+@TableIndex(
+  name: 'idx_recordings_project_recorded',
+  columns: {#projectId, #recordedAt},
+)
+@TableIndex(
+  name: 'idx_recordings_status_recorded',
+  columns: {#uploadStatus, #recordedAt},
+)
+@TableIndex(name: 'idx_recordings_server_id', columns: {#serverId})
+@TableIndex(name: 'idx_recordings_storyteller_id', columns: {#storytellerId})
 class LocalRecordings extends Table {
   TextColumn get id => text()();
   TextColumn get projectId => text()();
@@ -63,6 +73,7 @@ class LocalSubcategories extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+@TableIndex(name: 'idx_storytellers_project_id', columns: {#projectId})
 class LocalStorytellers extends Table {
   TextColumn get id => text()();
   TextColumn get projectId => text()();
@@ -120,7 +131,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 10;
+  int get schemaVersion => 11;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -169,6 +180,16 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(localStorytellers, localStorytellers.syncStatus);
         await m.addColumn(localStorytellers, localStorytellers.retryCount);
         await m.addColumn(localStorytellers, localStorytellers.lastRetryAt);
+      }
+      // @TableIndex declares these, so onCreate builds them via createAll();
+      // the upgrade path has to create them explicitly. All indexed columns
+      // predate v10, so this step is safe for every starting version.
+      if (from < 11) {
+        await m.createIndex(idxRecordingsProjectRecorded);
+        await m.createIndex(idxRecordingsStatusRecorded);
+        await m.createIndex(idxRecordingsServerId);
+        await m.createIndex(idxRecordingsStorytellerId);
+        await m.createIndex(idxStorytellersProjectId);
       }
     },
   );

@@ -12,11 +12,18 @@ Path: @/lib/core/serialization
   `TypeError`/`NoSuchMethodError` a raw cast (`json['x'] as String`) would.
 - The safe-readers are the typed replacement for the hand-written
   `json['x'] as T` force-casts scattered across every `fromJson`. Migration is
-  incremental and behavior-preserving; **no call site is migrated in this
-  change** — the helpers ship fully unit-tested first.
-- This folder is where future E8 siblings land: an element-isolating
-  `parseList<T>` (ENG-146), tolerant `fromWire` enum mapping (ENG-150), and
-  decode/leaf-read helpers (ENG-153).
+  incremental and behavior-preserving: ENG-148 is the **first consuming wave**,
+  routing the enumerated quick-win fragile casts (single scalar/string/nested-map
+  reads at repository and DTO boundaries) through the readers. Full
+  `fromJson`-factory migration remains a follow-up (ENG-153).
+- The folder also holds the element-isolating **`parseList<T>`**
+  ([./parse_list.dart](parse_list.dart), ENG-146): a page-policy layer, already
+  consumed by the network-list endpoints, that maps a decoded array
+  element-by-element and **skips-and-logs** bad records so one cannot blank a
+  page. Where the safe-readers decide *how* a field is read, `parseList` decides
+  *whether* a bad record drops the page. Future E8 siblings still land here:
+  tolerant `fromWire` enum mapping (ENG-150) and decode/leaf-read helpers
+  (ENG-153).
 
 ### How it fits into the larger codebase
 
@@ -29,12 +36,29 @@ Path: @/lib/core/serialization
   lets the existing UI-boundary mapping in
   [../../shared/utils/error_helpers.dart](../../shared/utils/error_helpers.dart)
   handle it (it maps to `error_generic`).
-- The intended consumers are the feature `fromJson` factories under
-  `lib/features/*/data/`, which today still force-cast. They migrate toward
-  these readers in later waves; until then this folder has no inbound callers.
+- The first safe-reader consumers landed in ENG-148: a curated set of fragile
+  force-casts at the data boundary — repository response parsing (e.g. stats
+  counts, login/signup token extraction) and a server DTO scalar field. The
+  broader population of feature `fromJson` factories under `lib/features/*/data/`
+  still force-cast and migrate in a later wave (ENG-153), so most of this
+  folder's inbound surface is still ahead of it.
+- `parseList` (ENG-146) is, by contrast, already wired at the network-list
+  boundary: every list-returning repository method routes its decoded array
+  through it — genre
+  [`listGenres`](../../features/genre/data/repositories/genre_repository.dart),
+  the project list/language/member reads
+  ([project_repository_impl.dart](../../features/project/data/repositories/project_repository_impl.dart)),
+  and the admin queues
+  ([admin_repository.dart](../../features/admin/data/repositories/admin_repository.dart)) —
+  plus the invite-dialog user search
+  ([invite_dialog.dart](../../shared/widgets/invite_dialog.dart)). Single-object
+  reads (`getProject`, login, create/update) deliberately stay fail-fast and do
+  not use it.
 - The readers operate strictly **after** JSON decoding: they take a decoded
   `Map`, not bytes. They contain **no** `dart:convert`, no logging, and no l10n —
-  pure functions with no side effects.
+  pure functions with no side effects. `parseList` is the one deliberate
+  exception in the folder: as a policy layer it **does** log each skipped element
+  (via `dart:developer`), an intentional side effect, not a reader concern.
 - Rationale, the rejected codegen alternatives (`freezed`, `json_serializable`),
   and the verified backend wire contract live in
   [ADR-0008](../../../docs/adr/ADR-0008-data-serialization.md).
@@ -59,6 +83,18 @@ Path: @/lib/core/serialization
   `NoSuchMethodError` of a chained `data['x']['y']` (when `x` is absent) into a
   `ParseException`, and returns a typed `Map<String, dynamic>` so successive
   reads chain off its result.
+- **`parseList<T>`** ([./parse_list.dart](parse_list.dart)) wraps a decoded list
+  as a page-policy layer, not a per-field reader. A non-`List` `raw` is a broken
+  container, not a bad row, so it **fails fast** with a `ParseException` (the
+  `context` argument becomes the exception's `field`; `expected` is `'List'`). A
+  `List` is mapped element-by-element; any element whose `parse` throws is caught
+  and **skipped-and-logged**, and the surviving elements are returned.
+- `parseList`'s per-element `catch` is intentionally **broad** (`Error` *and*
+  `Exception`): the `fromJson` factories it drives still force-cast, so a bad
+  element surfaces as an `Error` that escapes `on Exception`, and the collection
+  boundary is where it is contained. Skips log via `dart:developer` at warning
+  level by default; an injectable `onSkip` callback overrides the sink (tests use
+  it to assert which indices were dropped).
 
 ### Things to Know
 
@@ -72,13 +108,30 @@ Path: @/lib/core/serialization
   exception's `toString()`. The `cause` field still holds the live object, so
   log `e` (or its `toString()`), never `e.cause` directly. See
   [../errors/docs.md](../errors/docs.md).
-- **These are pure replacements, not a policy layer.** They decide *how* a field
-  is read, not *whether* a bad record should fail the whole page. The
-  skip-and-log-vs-fail page policy belongs to the element-isolating `parseList`
-  and the call sites (per [ADR-0008](../../../docs/adr/ADR-0008-data-serialization.md)),
-  not here.
-- **No call sites consume these yet.** Adding the helpers does not change any
-  runtime behavior on its own; the value is realized only as `fromJson`
-  factories migrate to them in subsequent tickets.
+- **Safe-readers are the "how"; `parseList` is the "whether".** The readers
+  decide *how* a field is read — pure, no logging, no side effects — not
+  *whether* a bad record should fail the whole page. That skip-and-log-vs-fail
+  page policy now lives in the element-isolating `parseList` and its call sites
+  (per [ADR-0008](../../../docs/adr/ADR-0008-data-serialization.md)), which logs
+  each skipped element on purpose — exactly the side effect the readers refuse.
+- **The first wave is wired (ENG-148); migration is still partial.** Two
+  complementary moves landed: the enumerated quick-win casts now route through
+  these readers, so a malformed payload surfaces as a catchable `ParseException`
+  instead of an uncatchable `Error`; and the persisted-cache read sites that
+  still call un-migrated `fromJson` factories widened their catch to a broad
+  `catch (_)`, so a corrupt cached record degrades to a cache-miss instead of
+  crashing on the `Error` those factories still throw. That broad catch is the
+  deliberate bridge until those factories adopt the readers.
+- **Caches deliberately do not use `parseList`; they invalidate wholesale.** The
+  persisted-cache read sites
+  ([genre_cache.dart](../../features/genre/data/genre_cache.dart),
+  [project_cache.dart](../../features/project/data/project_cache.dart)) wrap the
+  *entire* decode in one broad `catch (_)` and return null on any malformed
+  element — dropping the whole blob, not the bad row. This ENG-148 choice is
+  distinct from `parseList`'s skip-and-log: a cache is a uniform format the app
+  wrote itself, so one malformed element almost always means schema drift, which
+  makes the whole cache suspect — better to refetch than surface a partial list.
+  Skip-and-log is reserved for network **list** responses, where dropping one bad
+  row keeps the rest of the server page visible.
 
 Created and maintained by Nori.
