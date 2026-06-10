@@ -93,7 +93,14 @@ Path: @/lib/features/recording/data
   in place on failure for the resume banner. That shadow row is written with
   `LocalRecordingRepository.upsertRecording` (not `insertRecording`) so a
   retry of a failed large import reuses the row instead of colliding on its
-  primary key — see ENG-80 in Things to Know.
+  primary key — see ENG-80 in Things to Know. The single-shot path validates
+  the server's presigned `upload_url` with `isHttpsUrl`
+  ([/lib/core/config/url_policy.dart](../../../core/config/url_policy.dart))
+  before the GCS PUT; a non-https URL throws `_UploaderException`, consistent
+  with how this uploader reports every other failure. The resumable branch
+  delegates that validation to `ResumableUploadService`. The scheme policy and
+  the app-wide no-cleartext-PUT invariant are documented in
+  [/lib/core/network/docs.md](../../../core/network/docs.md).
 - The `services/` subfolder hosts the audio probe, the
   segmented recorder, the foreground task, recovery & trash services, the
   resumable / direct uploaders, the audio path resolver used by the

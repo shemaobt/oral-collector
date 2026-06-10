@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:drift/drift.dart' show Value;
 import 'package:http/http.dart' as http;
 
+import '../../../../core/config/url_policy.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../core/network/authenticated_client.dart';
 import '../../../../core/platform/file_source.dart';
@@ -130,6 +131,9 @@ class DirectRecordingUploader {
     }
     final urlData = jsonDecode(urlResponse.body) as Map<String, dynamic>;
     final uploadUrl = urlData['upload_url'] as String;
+    if (!isHttpsUrl(uploadUrl)) {
+      throw _UploaderException('Insecure upload URL (non-https)');
+    }
     final contentType =
         urlData['content_type'] as String? ?? 'application/octet-stream';
 
