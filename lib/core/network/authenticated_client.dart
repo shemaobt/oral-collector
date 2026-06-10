@@ -16,7 +16,6 @@ class AuthenticatedClient {
   final http.Client _client;
   final FlutterSecureStorage _storage;
   final TokenRefresher? _refreshToken;
-  bool _isRefreshing = false;
 
   AuthenticatedClient({
     required http.Client client,
@@ -41,15 +40,13 @@ class AuthenticatedClient {
     Future<http.Response> Function() request,
   ) async {
     final response = await request();
-    if (response.statusCode == 401 && _refreshToken != null && !_isRefreshing) {
-      _isRefreshing = true;
-      try {
-        final refreshed = await _refreshToken();
-        if (refreshed) {
-          return request();
-        }
-      } finally {
-        _isRefreshing = false;
+    if (response.statusCode == 401 && _refreshToken != null) {
+      // No per-client guard: the refresh is coalesced globally in AuthNotifier
+      // (ENG-136), so concurrent 401s await the same refresh and all retry,
+      // instead of skipping the retry and failing with 401.
+      final refreshed = await _refreshToken();
+      if (refreshed) {
+        return request();
       }
     }
     return response;
