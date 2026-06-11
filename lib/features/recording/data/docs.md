@@ -93,7 +93,10 @@ Path: @/lib/features/recording/data
   in place on failure for the resume banner. That shadow row is written with
   `LocalRecordingRepository.upsertRecording` (not `insertRecording`) so a
   retry of a failed large import reuses the row instead of colliding on its
-  primary key — see ENG-80 in Things to Know. The single-shot path validates
+  primary key — see ENG-80 in Things to Know. The single-shot path computes its
+  client-side CRC32C **off the UI isolate** via the shared helper in
+  [/lib/core/util/docs.md](../../../core/util/docs.md) (background isolate on
+  native, cooperative chunked yield on web; see ADR-0004), then validates
   the server's presigned `upload_url` with `isHttpsUrl`
   ([/lib/core/config/url_policy.dart](../../../core/config/url_policy.dart))
   before the GCS PUT; a non-https URL throws `_UploaderException`, consistent

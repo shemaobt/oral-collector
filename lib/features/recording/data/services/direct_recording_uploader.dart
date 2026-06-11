@@ -8,6 +8,7 @@ import '../../../../core/network/response_decoder.dart';
 import '../../../../core/platform/file_source.dart';
 import '../../../../core/serialization/safe_read.dart';
 import '../../../../core/util/crc32c.dart';
+import '../../../../core/util/crc32c_async.dart';
 import '../../../sync/data/services/resumable_upload_service.dart';
 import '../repositories/local_recording_repository.dart';
 
@@ -116,7 +117,7 @@ class DirectRecordingUploader {
     required DirectUploadMetadata meta,
   }) async {
     final bytes = await source.readRange(0, source.length);
-    final clientCrc = (Crc32c()..add(bytes)).base64BigEndian;
+    final clientCrc = await crc32cBytesBase64(bytes);
 
     final urlResponse = await _client
         .post(

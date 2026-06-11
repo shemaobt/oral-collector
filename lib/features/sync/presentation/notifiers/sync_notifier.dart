@@ -145,40 +145,47 @@ class SyncNotifier extends Notifier<SyncState> {
     if (kIsWeb) return 0;
 
     final all = await _recordingRepo.getAllLocalRecordings();
-    var totalBytes = 0;
+    final sizes = await Future.wait(all.map((r) => _fileSize(r.localFilePath)));
+    return sizes.fold<int>(0, (sum, n) => sum + n);
+  }
 
-    for (final recording in all) {
-      try {
-        if (await file_ops.fileExists(recording.localFilePath)) {
-          totalBytes += await file_ops.fileLength(recording.localFilePath);
-        }
-      } on Exception catch (_) {}
-    }
-
-    return totalBytes;
+  Future<int> _fileSize(String path) async {
+    try {
+      if (await file_ops.fileExists(path)) {
+        return await file_ops.fileLength(path);
+      }
+    } on Exception catch (_) {}
+    return 0;
   }
 
   Future<({int usedBytes, int freeBytes, int totalBytes})>
   getStorageSnapshot() async {
-    final used = await getLocalStorageUsed();
-    final free = await disk_space.getFreeBytes();
-    final total = await disk_space.getTotalBytes();
-    return (usedBytes: used, freeBytes: free, totalBytes: total);
+    final results = await Future.wait([
+      getLocalStorageUsed(),
+      disk_space.getFreeBytes(),
+      disk_space.getTotalBytes(),
+    ]);
+    return (
+      usedBytes: results[0],
+      freeBytes: results[1],
+      totalBytes: results[2],
+    );
   }
 
   Future<void> clearLocalCache() async {
     if (kIsWeb) return;
 
     final all = await _recordingRepo.getAllLocalRecordings();
-
-    for (final recording in all) {
-      try {
-        await file_ops.deleteFile(recording.localFilePath);
-      } on Exception catch (_) {}
-    }
+    await Future.wait(all.map((r) => _deleteQuietly(r.localFilePath)));
 
     await _recordingRepo.deleteAllRecordings();
     await _refreshPendingCount();
+  }
+
+  Future<void> _deleteQuietly(String path) async {
+    try {
+      await file_ops.deleteFile(path);
+    } on Exception catch (_) {}
   }
 
   bool _isProcessing = false;

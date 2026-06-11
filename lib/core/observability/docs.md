@@ -65,8 +65,12 @@ Path: @/lib/core/observability
   adapter must NOT also call `installGlobalErrorHandlers`, or every error is
   reported twice.
 - **Child isolates are not covered.** `PlatformDispatcher.onError` does not catch
-  errors from child isolates; the app spawns none today, so this is a documented
-  limitation rather than a gap.
+  errors from child isolates. The app does spawn short-lived background isolates
+  for off-UI work (the `compute`-based CRC32C helper in
+  [/lib/core/util/docs.md](../util/docs.md); see ADR-0004), but `compute`
+  propagates an isolate failure back through the caller's `Future`, so those
+  errors surface at the awaiting call site rather than escaping to the global
+  handlers. A fire-and-forget isolate would not be covered.
 - **The app-root `ProviderContainer` is never disposed** — intentional, it lives
   for the process lifetime.
 - Behavior is verified by the tests under

@@ -13,6 +13,7 @@ import '../../../../core/platform/file_source.dart';
 import '../../../../core/platform/recording_active_flag.dart';
 import '../../../../core/serialization/safe_read.dart';
 import '../../../../core/util/crc32c.dart';
+import '../../../../core/util/crc32c_async.dart';
 import '../../../recording/data/repositories/local_recording_repository.dart';
 import 'upload_downloader.dart';
 
@@ -410,13 +411,18 @@ class ResumableUploadService {
     return _ChunkResult.failed;
   }
 
-  Future<String> _computeFileCrc32c(String filePath) async {
+  // Static so it is sendable to the background isolate. Reads the file and
+  // hashes it off the UI isolate (file I/O + CRC). See ADR-0004.
+  static Future<String> _crc32cFileFromPath(String filePath) async {
     final crc = Crc32c();
     await for (final chunk in File(filePath).openRead()) {
       crc.add(chunk);
     }
     return crc.base64BigEndian;
   }
+
+  Future<String> _computeFileCrc32c(String filePath) =>
+      compute(_crc32cFileFromPath, filePath);
 
   Future<ResumableUploadResult> _legacySinglePut({
     required String serverId,
@@ -426,7 +432,7 @@ class ResumableUploadService {
   }) async {
     final bytes = await source.readRange(0, source.length);
     final fileLength = bytes.length;
-    final clientCrc = (Crc32c()..add(bytes)).base64BigEndian;
+    final clientCrc = await crc32cBytesBase64(bytes);
 
     for (var attempt = 0; attempt < 2; attempt++) {
       final uploadUrlResponse = await _client

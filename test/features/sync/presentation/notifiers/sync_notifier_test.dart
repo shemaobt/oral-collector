@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -52,6 +53,7 @@ LocalRecording makeRecording({
   int fileSizeBytes = 1024,
   String? title = 'Test',
   int retryCount = 0,
+  String localFilePath = '/tmp/test.m4a',
 }) => LocalRecording(
   id: id,
   projectId: 'proj-1',
@@ -61,7 +63,7 @@ LocalRecording makeRecording({
   durationSeconds: 60.0,
   fileSizeBytes: fileSizeBytes,
   format: 'm4a',
-  localFilePath: '/tmp/test.m4a',
+  localFilePath: localFilePath,
   uploadStatus: uploadStatus,
   serverId: null,
   gcsUrl: null,
@@ -932,6 +934,59 @@ void main() {
         uploadSpeedBps: 1000,
       );
       expect(state.estimatedTimeRemaining, const Duration(seconds: 5));
+    });
+  });
+
+  group('getLocalStorageUsed', () {
+    test('sums existing local file sizes and skips missing files', () async {
+      final dir = Directory.systemTemp.createTempSync('sync_storage_used');
+      addTearDown(() => dir.deleteSync(recursive: true));
+      File('${dir.path}/a.m4a').writeAsBytesSync(List.filled(100, 0));
+      File('${dir.path}/b.m4a').writeAsBytesSync(List.filled(250, 0));
+
+      when(() => mockRecordingRepo.getAllLocalRecordings()).thenAnswer(
+        (_) async => [
+          makeRecording(id: 'a', localFilePath: '${dir.path}/a.m4a'),
+          makeRecording(id: 'b', localFilePath: '${dir.path}/b.m4a'),
+          makeRecording(id: 'c', localFilePath: '${dir.path}/missing.m4a'),
+        ],
+      );
+
+      final notifier = container.read(syncNotifierProvider.notifier);
+      await Future<void>.delayed(Duration.zero);
+      expect(await notifier.getLocalStorageUsed(), 350);
+    });
+  });
+
+  group('clearLocalCache', () {
+    test('deletes every local file and then clears the repository', () async {
+      final dir = Directory.systemTemp.createTempSync('sync_storage_clear');
+      addTearDown(() {
+        if (dir.existsSync()) dir.deleteSync(recursive: true);
+      });
+      final a = File('${dir.path}/a.m4a')..writeAsBytesSync(List.filled(10, 0));
+      final b = File('${dir.path}/b.m4a')..writeAsBytesSync(List.filled(10, 0));
+
+      when(() => mockRecordingRepo.getAllLocalRecordings()).thenAnswer(
+        (_) async => [
+          makeRecording(id: 'a', localFilePath: a.path),
+          makeRecording(id: 'b', localFilePath: b.path),
+        ],
+      );
+      when(() => mockRecordingRepo.deleteAllRecordings()).thenAnswer((_) async {
+        // Ordering contract: files are deleted before the repository is cleared.
+        expect(a.existsSync(), isFalse);
+        expect(b.existsSync(), isFalse);
+        return 2;
+      });
+
+      final notifier = container.read(syncNotifierProvider.notifier);
+      await Future<void>.delayed(Duration.zero);
+      await notifier.clearLocalCache();
+
+      expect(a.existsSync(), isFalse);
+      expect(b.existsSync(), isFalse);
+      verify(() => mockRecordingRepo.deleteAllRecordings()).called(1);
     });
   });
 }

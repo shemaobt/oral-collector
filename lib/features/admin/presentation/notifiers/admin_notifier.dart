@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/util/bounded_concurrency.dart';
 import '../../../genre/domain/entities/genre.dart';
 import '../../../project/domain/entities/project.dart';
 import '../../../recording/domain/entities/recording.dart';
@@ -70,16 +71,22 @@ class AdminNotifier extends Notifier<AdminState> {
     }
   }
 
+  static const _batchCleanConcurrency = 6;
+
   Future<int> triggerBatchClean(List<String> recordingIds) async {
-    int successCount = 0;
-    for (final id in recordingIds) {
-      try {
-        await _repo.triggerClean(id);
-        successCount++;
-      } on Exception catch (_) {
-        // skip failed individual clean triggers
-      }
-    }
+    final outcomes = await mapBounded<String, bool>(
+      recordingIds,
+      _batchCleanConcurrency,
+      (id) async {
+        try {
+          await _repo.triggerClean(id);
+          return true;
+        } on Exception {
+          return false;
+        }
+      },
+    );
+    final successCount = outcomes.where((ok) => ok).length;
     await refreshCleaningQueue();
     return successCount;
   }
