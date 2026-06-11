@@ -56,10 +56,8 @@ void main() {
   group('splitRecording', () {
     void stubSplit(Object body, {int status = 200}) {
       when(() => client.post(any(), body: any(named: 'body'))).thenAnswer(
-        (_) async => http.Response(
-          body is String ? body : jsonEncode(body),
-          status,
-        ),
+        (_) async =>
+            http.Response(body is String ? body : jsonEncode(body), status),
       );
     }
 
@@ -89,22 +87,25 @@ void main() {
       );
     });
 
-    test('throws a catchable ParseException when an id is not a String', () async {
-      stubSplit({
-        'recording_ids': ['r-1', 123],
-      });
+    test(
+      'throws a catchable ParseException when an id is not a String',
+      () async {
+        stubSplit({
+          'recording_ids': ['r-1', 123],
+        });
 
-      await expectLater(
-        repo.splitRecording(serverId: 's-1', segments: segments),
-        throwsA(
-          isA<ParseException>().having(
-            (e) => e.field,
-            'field',
-            'recording_ids',
+        await expectLater(
+          repo.splitRecording(serverId: 's-1', segments: segments),
+          throwsA(
+            isA<ParseException>().having(
+              (e) => e.field,
+              'field',
+              'recording_ids',
+            ),
           ),
-        ),
-      );
-    });
+        );
+      },
+    );
 
     test('throws UnauthorizedException on 401', () async {
       stubSplit('', status: 401);

@@ -21,8 +21,10 @@ void main() {
 
     test('clearDescription wins over a provided description', () {
       expect(
-        const ProjectUpdate(description: 'ignored', clearDescription: true)
-            .toJson(),
+        const ProjectUpdate(
+          description: 'ignored',
+          clearDescription: true,
+        ).toJson(),
         {'description': null},
       );
     });
