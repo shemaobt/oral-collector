@@ -37,7 +37,8 @@ void main() {
 
     test('created_at presente e malformado lança ParseException', () {
       expect(
-        () => Recording.fromJson(_json(includeCreatedAt: true, createdAt: 'xx')),
+        () =>
+            Recording.fromJson(_json(includeCreatedAt: true, createdAt: 'xx')),
         throwsA(
           isA<ParseException>().having((e) => e.field, 'field', 'created_at'),
         ),
@@ -48,7 +49,11 @@ void main() {
       expect(
         () => Recording.fromJson(_json(uploadStatus: 5)),
         throwsA(
-          isA<ParseException>().having((e) => e.field, 'field', 'upload_status'),
+          isA<ParseException>().having(
+            (e) => e.field,
+            'field',
+            'upload_status',
+          ),
         ),
       );
     });
