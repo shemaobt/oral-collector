@@ -69,12 +69,10 @@ class ServerRecording {
       fileSizeBytes: readInt(json, 'file_size_bytes'),
       format: json['format'] as String,
       gcsUrl: json['gcs_url'] as String?,
-      uploadStatus: json['upload_status'] as String,
-      cleaningStatus: json['cleaning_status'] as String,
-      recordedAt: DateTime.parse(json['recorded_at'] as String),
-      uploadedAt: json['uploaded_at'] != null
-          ? DateTime.parse(json['uploaded_at'] as String)
-          : null,
+      uploadStatus: readString(json, 'upload_status'),
+      cleaningStatus: readString(json, 'cleaning_status'),
+      recordedAt: readDate(json, 'recorded_at'),
+      uploadedAt: readDateOrNull(json, 'uploaded_at'),
       splitFromId: json['split_from_id'] as String?,
       splitIndex: (json['split_index'] as num?)?.toInt(),
       splitSegmentCount: (json['split_segment_count'] as num?)?.toInt(),

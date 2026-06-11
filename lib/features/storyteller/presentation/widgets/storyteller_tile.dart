@@ -25,9 +25,11 @@ class StorytellerTile extends StatelessWidget {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
 
-    final sexLabel = storyteller.sex == StorytellerSex.male
-        ? l10n.storyteller_sexMale
-        : l10n.storyteller_sexFemale;
+    final sexLabel = switch (storyteller.sex) {
+      StorytellerSex.male => l10n.storyteller_sexMale,
+      StorytellerSex.female => l10n.storyteller_sexFemale,
+      StorytellerSex.unknown => '—',
+    };
 
     final parts = <String>[sexLabel];
     if (storyteller.age != null) {

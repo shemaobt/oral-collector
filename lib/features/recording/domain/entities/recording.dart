@@ -1,3 +1,5 @@
+import '../../../../core/serialization/safe_read.dart';
+
 class Recording {
   final String id;
   final String projectId;
@@ -61,12 +63,10 @@ class Recording {
       fileSizeBytes: (json['file_size_bytes'] as num).toInt(),
       format: json['format'] as String,
       gcsUrl: json['gcs_url'] as String?,
-      uploadStatus: json['upload_status'] as String,
-      cleaningStatus: json['cleaning_status'] as String,
-      recordedAt: DateTime.parse(json['recorded_at'] as String),
-      createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at'] as String)
-          : null,
+      uploadStatus: readString(json, 'upload_status'),
+      cleaningStatus: readString(json, 'cleaning_status'),
+      recordedAt: readDate(json, 'recorded_at'),
+      createdAt: readDateOrNull(json, 'created_at'),
       splitFromId: json['split_from_id'] as String?,
       splitIndex: (json['split_index'] as num?)?.toInt(),
       splitSegmentCount: (json['split_segment_count'] as num?)?.toInt(),

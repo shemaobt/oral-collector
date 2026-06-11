@@ -43,7 +43,7 @@ class StorytellerApiRepositoryImpl implements StorytellerRepository {
   }) async {
     final body = <String, dynamic>{
       'name': name,
-      'sex': sex.toJson(),
+      'sex': sex.toWire(),
       'external_acceptance_confirmed': externalAcceptanceConfirmed,
       if (age != null) 'age': age,
       if (location != null && location.isNotEmpty) 'location': location,
@@ -67,7 +67,7 @@ class StorytellerApiRepositoryImpl implements StorytellerRepository {
   }) async {
     final body = <String, dynamic>{
       if (name != null) 'name': name,
-      if (sex != null) 'sex': sex.toJson(),
+      if (sex != null) 'sex': sex.toWire(),
       if (age != null) 'age': age,
       if (location != null) 'location': location,
       if (dialect != null) 'dialect': dialect,

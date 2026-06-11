@@ -1,3 +1,5 @@
+import '../../../../core/serialization/safe_read.dart';
+
 class ProjectMember {
   final String id;
   final String projectId;
@@ -28,9 +30,7 @@ class ProjectMember {
       displayName: json['display_name'] as String?,
       avatarUrl: json['avatar_url'] as String?,
       role: json['role'] as String? ?? 'member',
-      grantedAt: json['granted_at'] != null
-          ? DateTime.parse(json['granted_at'] as String)
-          : null,
+      grantedAt: readDateOrNull(json, 'granted_at'),
     );
   }
 }
