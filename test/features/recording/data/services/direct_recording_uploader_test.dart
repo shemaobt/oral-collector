@@ -166,27 +166,29 @@ void main() {
     );
   });
 
-  test('throws a catchable ParseException when create returns a non-string id',
-      () async {
-    final bytes = Uint8List(10);
-    final httpClient = MockClient((request) async {
-      if (request.url.path == '/api/oc/recordings') {
-        return http.Response(jsonEncode({'id': 123}), 201);
-      }
-      return http.Response('unexpected', 500);
-    });
-    final auth = AuthenticatedClient(client: httpClient, storage: storage);
-    final uploader = DirectRecordingUploader(
-      client: auth,
-      resumableUploadService: resumable,
-      recordingRepo: repo,
-    );
+  test(
+    'throws a catchable ParseException when create returns a non-string id',
+    () async {
+      final bytes = Uint8List(10);
+      final httpClient = MockClient((request) async {
+        if (request.url.path == '/api/oc/recordings') {
+          return http.Response(jsonEncode({'id': 123}), 201);
+        }
+        return http.Response('unexpected', 500);
+      });
+      final auth = AuthenticatedClient(client: httpClient, storage: storage);
+      final uploader = DirectRecordingUploader(
+        client: auth,
+        resumableUploadService: resumable,
+        recordingRepo: repo,
+      );
 
-    await expectLater(
-      uploader.upload(source: sampleSource(bytes), meta: sampleMeta()),
-      throwsA(isA<ParseException>()),
-    );
-  });
+      await expectLater(
+        uploader.upload(source: sampleSource(bytes), meta: sampleMeta()),
+        throwsA(isA<ParseException>()),
+      );
+    },
+  );
 
   test('throws when GCS PUT fails', () async {
     final bytes = Uint8List(10);
