@@ -22,7 +22,12 @@ Path: @/lib/features/sync/data/services
   ([/lib/features/recording/data/repositories/local_recording_repository.dart](../../../recording/data/repositories/local_recording_repository.dart))
   to enumerate `getPendingUploads` and to flip rows
   `uploading` / `uploaded` / `failed`. The actual queue walk lives in the
-  `SyncEngine` ([/lib/features/sync/domain/repositories/sync_engine.dart](../../domain/repositories/sync_engine.dart)).
+  `SyncEngine` ([/lib/features/sync/domain/repositories/sync_engine.dart](../../domain/repositories/sync_engine.dart)),
+  which drains that list **in the order the repository returns it** —
+  `createdAt ASC, id ASC` (FIFO by enqueue time, ENG-122). The engine adds no
+  ordering of its own, so the upload order is whatever the repository query
+  defines; see
+  [/lib/features/recording/data/repositories/docs.md](../../../recording/data/repositories/docs.md).
 - `UploadForegroundService` shares the single Android foreground service
   with recording. It does not call the plugin directly for lifecycle; it
   goes through [/lib/core/platform/foreground_service_arbiter.dart](../../../../core/platform/foreground_service_arbiter.dart)

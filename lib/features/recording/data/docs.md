@@ -39,7 +39,11 @@ Path: @/lib/features/recording/data
   ([/lib/features/sync/](../../sync/)) reads
   `localRecordingRepositoryProvider` to enumerate pending uploads
   (`getPendingUploads`, `getPendingWebUploads`) and to mark rows as
-  `uploading` / `uploaded` / `failed`. The resumable upload service is
+  `uploading` / `uploaded` / `failed`. Those two queries also define the
+  **order the upload queue is drained in** (`createdAt ASC, id ASC`, FIFO by
+  enqueue time); the sync engine consumes the list in that order, so the
+  ordering is a contract this folder owns on sync's behalf — see
+  [./repositories/docs.md](repositories/docs.md). The resumable upload service is
   exported from this folder via `resumableUploadServiceProvider` but its
   implementation lives in
   [/lib/features/sync/data/services/resumable_upload_service.dart](../../sync/data/services/resumable_upload_service.dart).
@@ -234,11 +238,15 @@ Path: @/lib/features/recording/data
   `resumableSessionUri`/`uploadedBytes`, the prior resume state is kept and
   the resumable service continues from the persisted offset instead of
   restarting or throwing on the duplicate key.
-- The `localRecordingStreamProvider` is a Drift `watchSingleOrNull` query.
-  Any update via `LocalRecordingRepository` (including the heal companion)
-  will fire the stream, which the detail screen listens to. This is why
-  a partial / hand-picked insert is dangerous: the stream re-pushes a
-  `LocalRecording` with missing fields into `setState`, blanking the UI
-  even if the user did not change anything.
+- The `localRecordingStreamProvider` is a Drift `watchSingleOrNull` query
+  with `.distinct()` appended (ENG-121). Drift invalidates query streams at
+  the table level, so any write through `LocalRecordingRepository` — even to
+  an unrelated row — re-runs the query; `.distinct()` drops the re-emission
+  when the resulting `LocalRecording` is identical, so the detail screen's
+  `ref.listen` only rebuilds on real value changes. A write that *does*
+  change the row (including the heal companion or a partial / hand-picked
+  insert) still fires: this is why such an insert is dangerous — the stream
+  re-pushes a `LocalRecording` with missing fields into `setState`, blanking
+  the UI even if the user did not change anything.
 
 Created and maintained by Nori.

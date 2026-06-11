@@ -42,7 +42,7 @@ class LocalRecordingRepository {
   Stream<LocalRecording?> watchRecordingById(String id) {
     return (_db.select(
       _db.localRecordings,
-    )..where((t) => t.id.equals(id))).watchSingleOrNull();
+    )..where((t) => t.id.equals(id))).watchSingleOrNull().distinct();
   }
 
   Future<bool> updateRecording(String id, LocalRecordingsCompanion data) async {
@@ -76,14 +76,20 @@ class LocalRecordingRepository {
                 t.uploadStatus.equals('failed') |
                 t.uploadStatus.equals('uploading'),
           )
-          ..orderBy([(t) => OrderingTerm.asc(t.recordedAt)]))
+          ..orderBy([
+            (t) => OrderingTerm.asc(t.createdAt),
+            (t) => OrderingTerm.asc(t.id),
+          ]))
         .get();
   }
 
   Future<List<LocalRecording>> getPendingWebUploads() async {
     return (_db.select(_db.localRecordings)
           ..where((t) => t.uploadStatus.equals('web_uploading'))
-          ..orderBy([(t) => OrderingTerm.asc(t.recordedAt)]))
+          ..orderBy([
+            (t) => OrderingTerm.asc(t.createdAt),
+            (t) => OrderingTerm.asc(t.id),
+          ]))
         .get();
   }
 
