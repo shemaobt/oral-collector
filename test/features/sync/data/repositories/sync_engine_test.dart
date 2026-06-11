@@ -221,6 +221,36 @@ void main() {
     when(() => mockRepo.resetRetryCount(id)).thenAnswer((_) async => true);
   }
 
+  // A permanent (non-retryable) failure routes through _markPermanentlyFailed,
+  // which writes uploadStatus='failed' with retryCount=maxRetries.
+  void expectPermanentFailRec1() {
+    final captured = verify(
+      () => mockRepo.updateRecording('rec-1', captureAny()),
+    ).captured;
+    final hadPermanentFail = captured.any((c) {
+      final companion = c as LocalRecordingsCompanion;
+      return companion.uploadStatus.present &&
+          companion.uploadStatus.value == 'failed' &&
+          companion.retryCount.present &&
+          companion.retryCount.value == SyncEngineImpl.maxRetries;
+    });
+    expect(
+      hadPermanentFail,
+      isTrue,
+      reason: 'deve marcar falha permanente (não-retryable)',
+    );
+  }
+
+  MockClient createStatusOnCreate(int status) {
+    return MockClient((request) async {
+      if (request.method == 'POST' &&
+          request.url.path == '/api/oc/recordings') {
+        return http.Response('error', status);
+      }
+      return http.Response('Not Found', 404);
+    });
+  }
+
   group('processQueue - basic flow', () {
     test('returns immediately when already processing', () async {
       final testFile = File('${tempDir.path}/test.m4a');
@@ -577,6 +607,115 @@ void main() {
 
       verify(() => mockRepo.markAsFailed('rec-1')).called(1);
       verifyNever(() => mockRepo.markAsUploaded(any(), any(), any()));
+      httpClient.close();
+    });
+
+    test('429 marca como falha retryable', () async {
+      final testFile = File('${tempDir.path}/rate_limited.m4a');
+      testFile.writeAsBytesSync(Uint8List(1024));
+
+      final rec = makeRecording(localFilePath: testFile.path);
+
+      when(() => mockConnectivity.isOnline).thenAnswer((_) async => true);
+      when(() => mockRepo.getPendingUploads()).thenAnswer((_) async => [rec]);
+      stubRepoForUpload(testFile.path);
+
+      final httpClient = createStatusOnCreate(429);
+      final engine = buildEngine(httpClient);
+
+      await engine.processQueue();
+
+      verify(() => mockRepo.markAsFailed('rec-1')).called(1);
+      verifyNever(() => mockRepo.markAsUploaded(any(), any(), any()));
+      httpClient.close();
+    });
+
+    test('403 marca como falha não-retryable', () async {
+      final testFile = File('${tempDir.path}/forbidden.m4a');
+      testFile.writeAsBytesSync(Uint8List(1024));
+
+      final rec = makeRecording(localFilePath: testFile.path);
+
+      when(() => mockConnectivity.isOnline).thenAnswer((_) async => true);
+      when(() => mockRepo.getPendingUploads()).thenAnswer((_) async => [rec]);
+      stubRepoForUpload(testFile.path);
+
+      final httpClient = createStatusOnCreate(403);
+      final engine = buildEngine(httpClient);
+
+      await engine.processQueue();
+
+      verifyNever(() => mockRepo.markAsFailed('rec-1'));
+      verifyNever(() => mockRepo.markAsUploaded(any(), any(), any()));
+      expectPermanentFailRec1();
+      httpClient.close();
+    });
+
+    test('409 marca como falha não-retryable', () async {
+      final testFile = File('${tempDir.path}/conflict.m4a');
+      testFile.writeAsBytesSync(Uint8List(1024));
+
+      final rec = makeRecording(localFilePath: testFile.path);
+
+      when(() => mockConnectivity.isOnline).thenAnswer((_) async => true);
+      when(() => mockRepo.getPendingUploads()).thenAnswer((_) async => [rec]);
+      stubRepoForUpload(testFile.path);
+
+      final httpClient = createStatusOnCreate(409);
+      final engine = buildEngine(httpClient);
+
+      await engine.processQueue();
+
+      verifyNever(() => mockRepo.markAsFailed('rec-1'));
+      verifyNever(() => mockRepo.markAsUploaded(any(), any(), any()));
+      expectPermanentFailRec1();
+      httpClient.close();
+    });
+
+    test('400 marca como falha não-retryable', () async {
+      final testFile = File('${tempDir.path}/bad_request.m4a');
+      testFile.writeAsBytesSync(Uint8List(1024));
+
+      final rec = makeRecording(localFilePath: testFile.path);
+
+      when(() => mockConnectivity.isOnline).thenAnswer((_) async => true);
+      when(() => mockRepo.getPendingUploads()).thenAnswer((_) async => [rec]);
+      stubRepoForUpload(testFile.path);
+
+      final httpClient = createStatusOnCreate(400);
+      final engine = buildEngine(httpClient);
+
+      await engine.processQueue();
+
+      verifyNever(() => mockRepo.markAsFailed('rec-1'));
+      verifyNever(() => mockRepo.markAsUploaded(any(), any(), any()));
+      expectPermanentFailRec1();
+      httpClient.close();
+    });
+
+    test('create com id não-string marca como falha permanente', () async {
+      final testFile = File('${tempDir.path}/bad_id.m4a');
+      testFile.writeAsBytesSync(Uint8List(1024));
+
+      final rec = makeRecording(localFilePath: testFile.path);
+
+      when(() => mockConnectivity.isOnline).thenAnswer((_) async => true);
+      when(() => mockRepo.getPendingUploads()).thenAnswer((_) async => [rec]);
+      stubRepoForUpload(testFile.path);
+
+      final httpClient = MockClient((request) async {
+        if (request.method == 'POST' &&
+            request.url.path == '/api/oc/recordings') {
+          return http.Response(jsonEncode({'id': 123}), 201);
+        }
+        return http.Response('Not Found', 404);
+      });
+      final engine = buildEngine(httpClient);
+
+      await engine.processQueue();
+
+      verifyNever(() => mockRepo.markAsUploaded(any(), any(), any()));
+      expectPermanentFailRec1();
       httpClient.close();
     });
   });
