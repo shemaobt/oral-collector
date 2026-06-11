@@ -6,6 +6,7 @@ import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/l10n/content_l10n.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../genre/domain/entities/genre.dart';
+import '../../../genre/domain/entities/genre_update.dart';
 import '../notifiers/admin_notifier.dart';
 
 class AdminGenreCard extends ConsumerWidget {
@@ -191,19 +192,20 @@ class AdminGenreCard extends ConsumerWidget {
     );
 
     if (result == true) {
-      final data = <String, dynamic>{};
       final newName = nameController.text.trim();
       final newDesc = descController.text.trim();
+      final descChanged = newDesc != (genre.description ?? '');
 
-      if (newName != genre.name) data['name'] = newName;
-      if (newDesc != (genre.description ?? '')) {
-        data['description'] = newDesc.isEmpty ? null : newDesc;
-      }
+      final update = GenreUpdate(
+        name: newName != genre.name ? newName : null,
+        description: descChanged && newDesc.isNotEmpty ? newDesc : null,
+        clearDescription: descChanged && newDesc.isEmpty,
+      );
 
-      if (data.isNotEmpty) {
+      if (!update.isEmpty) {
         final success = await ref
             .read(adminNotifierProvider.notifier)
-            .updateGenre(genre.id, data);
+            .updateGenre(genre.id, update);
         if (success && context.mounted) {
           ScaffoldMessenger.of(
             context,

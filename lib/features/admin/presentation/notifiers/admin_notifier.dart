@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../genre/domain/entities/genre.dart';
+import '../../../genre/domain/entities/genre_update.dart';
 import '../../../project/domain/entities/project.dart';
 import '../../../recording/domain/entities/recording.dart';
 import '../../data/providers.dart';
@@ -108,9 +109,9 @@ class AdminNotifier extends Notifier<AdminState> {
     }
   }
 
-  Future<bool> updateGenre(String id, Map<String, dynamic> data) async {
+  Future<bool> updateGenre(String id, GenreUpdate update) async {
     try {
-      await _repo.updateGenre(id, data);
+      await _repo.updateGenre(id, update);
       final genres = await _repo.fetchAllGenres();
       state = state.copyWith(genres: genres);
       return true;

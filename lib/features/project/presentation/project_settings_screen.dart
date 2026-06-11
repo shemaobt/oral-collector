@@ -16,6 +16,7 @@ import '../data/providers.dart';
 import '../domain/entities/project.dart';
 import '../domain/entities/project_member.dart';
 import '../domain/entities/project_stats.dart';
+import '../domain/entities/project_update.dart';
 import 'notifiers/member_notifier.dart';
 import 'notifiers/project_notifier.dart';
 import 'widgets/member_list.dart';
@@ -138,18 +139,17 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
 
     setState(() => _isSaving = true);
 
-    final data = <String, dynamic>{};
     final newName = _nameController.text.trim();
     final newDesc = _descriptionController.text.trim();
+    final descChanged = newDesc != (_project!.description ?? '');
 
-    if (newName != _project!.name) {
-      data['name'] = newName;
-    }
-    if (newDesc != (_project!.description ?? '')) {
-      data['description'] = newDesc.isEmpty ? null : newDesc;
-    }
+    final update = ProjectUpdate(
+      name: newName != _project!.name ? newName : null,
+      description: descChanged && newDesc.isNotEmpty ? newDesc : null,
+      clearDescription: descChanged && newDesc.isEmpty,
+    );
 
-    if (data.isEmpty) {
+    if (update.isEmpty) {
       setState(() => _isSaving = false);
       return;
     }
@@ -157,7 +157,7 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
     try {
       await ref
           .read(projectNotifierProvider.notifier)
-          .updateProject(widget.projectId, data);
+          .updateProject(widget.projectId, update);
       if (!mounted) return;
 
       final updatedState = ref.read(projectNotifierProvider);

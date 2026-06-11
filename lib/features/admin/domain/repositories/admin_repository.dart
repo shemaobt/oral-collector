@@ -1,4 +1,5 @@
 import '../../../genre/domain/entities/genre.dart';
+import '../../../genre/domain/entities/genre_update.dart';
 import '../../../project/domain/entities/project.dart';
 import '../../../recording/domain/entities/recording.dart';
 import '../entities/admin_stats.dart';
@@ -13,7 +14,7 @@ abstract class AdminRepository {
     String? icon,
     String? color,
   });
-  Future<Genre> updateGenre(String id, Map<String, dynamic> data);
+  Future<Genre> updateGenre(String id, GenreUpdate update);
   Future<void> deleteGenre(String id);
   Future<void> createSubcategory({
     required String genreId,
