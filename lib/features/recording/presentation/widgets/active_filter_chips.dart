@@ -124,7 +124,9 @@ class ActiveFilterChips extends ConsumerWidget {
           icon: Icon(LucideIcons.x, size: 14, color: colors.error),
           label: Text(
             l10n.filter_clearAll,
-            style: TextStyle(color: colors.error, fontSize: 12),
+            style: Theme.of(
+              context,
+            ).textTheme.labelMedium?.copyWith(color: colors.error),
           ),
           style: TextButton.styleFrom(
             padding: const EdgeInsets.symmetric(horizontal: 8),

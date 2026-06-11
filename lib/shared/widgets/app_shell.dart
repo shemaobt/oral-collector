@@ -349,7 +349,10 @@ class _SidebarNavItem extends StatelessWidget {
         ? Badge(
             label: Text(
               '$badgeCount',
-              style: const TextStyle(fontSize: 10, color: Colors.white),
+              style: theme.textTheme.labelSmall?.copyWith(
+                fontSize: 10,
+                color: theme.colorScheme.onPrimary,
+              ),
             ),
             backgroundColor: colors.accent,
             child: iconWidget,
@@ -711,19 +714,25 @@ class _NavItemContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final iconWidget = Icon(
       icon,
       size: 20,
-      color: isSelected ? Colors.white : iconColor,
+      color: isSelected ? theme.colorScheme.onPrimary : iconColor,
     );
 
     final displayIcon = hasBadge
         ? Badge(
             label: Text(
               '$badgeCount',
-              style: const TextStyle(fontSize: 10, color: Colors.white),
+              style: theme.textTheme.labelSmall?.copyWith(
+                fontSize: 10,
+                color: theme.colorScheme.onPrimary,
+              ),
             ),
-            backgroundColor: isSelected ? Colors.white : accentColor,
+            backgroundColor: isSelected
+                ? theme.colorScheme.onPrimary
+                : accentColor,
             child: iconWidget,
           )
         : iconWidget;
@@ -742,9 +751,9 @@ class _NavItemContent extends StatelessWidget {
                 Flexible(
                   child: Text(
                     label,
-                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    style: theme.textTheme.labelMedium?.copyWith(
                       fontWeight: FontWeight.w700,
-                      color: Colors.white,
+                      color: theme.colorScheme.onPrimary,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
