@@ -23,6 +23,10 @@ sealed class AppException implements Exception {
   final Object? cause;
   final String? traceId;
 
+  /// Se repetir a mesma request pode plausivelmente ter sucesso (ENG-103):
+  /// intrínseco ao tipo/status do erro. 429 é o único caso dependente de status.
+  bool get retryable;
+
   @override
   String toString() {
     final buffer = StringBuffer('$runtimeType(code: $code');
@@ -35,10 +39,16 @@ sealed class AppException implements Exception {
 
 final class NetworkException extends AppException {
   const NetworkException({super.code = 'network', super.cause, super.traceId});
+
+  @override
+  bool get retryable => true;
 }
 
 final class TimeoutException extends AppException {
   const TimeoutException({super.code = 'timeout', super.cause, super.traceId});
+
+  @override
+  bool get retryable => true;
 }
 
 final class UnauthorizedException extends AppException {
@@ -48,6 +58,9 @@ final class UnauthorizedException extends AppException {
     super.cause,
     super.traceId,
   });
+
+  @override
+  bool get retryable => false;
 }
 
 final class ForbiddenException extends AppException {
@@ -57,6 +70,9 @@ final class ForbiddenException extends AppException {
     super.cause,
     super.traceId,
   });
+
+  @override
+  bool get retryable => false;
 }
 
 final class ValidationException extends AppException {
@@ -69,6 +85,9 @@ final class ValidationException extends AppException {
   });
 
   final String? field;
+
+  @override
+  bool get retryable => statusCode == 429;
 }
 
 final class ServerException extends AppException {
@@ -78,6 +97,9 @@ final class ServerException extends AppException {
     super.cause,
     super.traceId,
   });
+
+  @override
+  bool get retryable => true;
 }
 
 final class ConflictException extends AppException {
@@ -87,6 +109,9 @@ final class ConflictException extends AppException {
     super.cause,
     super.traceId,
   });
+
+  @override
+  bool get retryable => false;
 }
 
 /// Thrown by the safe-readers (ENG-147, ADR-0008) when a JSON field violates its
@@ -103,6 +128,9 @@ final class ParseException extends AppException {
 
   final String field;
   final String expected;
+
+  @override
+  bool get retryable => false;
 
   @override
   String toString() {

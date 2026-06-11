@@ -107,4 +107,30 @@ void main() {
       expect(s, contains('String'));
     });
   });
+
+  group('retryable (ENG-103)', () {
+    test('falhas transitórias de transporte/servidor são retryable', () {
+      expect(const NetworkException().retryable, isTrue);
+      expect(const TimeoutException().retryable, isTrue);
+      expect(const ServerException(statusCode: 500).retryable, isTrue);
+      expect(const ServerException(statusCode: 503).retryable, isTrue);
+    });
+
+    test('429 é retryable; demais 4xx não são', () {
+      expect(const ValidationException(statusCode: 429).retryable, isTrue);
+      expect(const ValidationException(statusCode: 404).retryable, isFalse);
+      expect(const ValidationException(statusCode: 422).retryable, isFalse);
+      expect(const ValidationException().retryable, isFalse);
+    });
+
+    test('erros determinísticos não são retryable', () {
+      expect(const UnauthorizedException().retryable, isFalse);
+      expect(const ForbiddenException().retryable, isFalse);
+      expect(const ConflictException().retryable, isFalse);
+      expect(
+        const ParseException(field: 'x', expected: 'String').retryable,
+        isFalse,
+      );
+    });
+  });
 }
