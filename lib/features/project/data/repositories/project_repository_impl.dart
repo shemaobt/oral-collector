@@ -61,6 +61,7 @@ class ProjectRepositoryImpl implements ProjectRepository {
   @override
   Future<Project> getProject(String id) async {
     final response = await _client.get('/api/projects/$id');
+    guardResponse(response);
     if (response.statusCode != 200) {
       throw Exception('Failed to get project: ${response.body}');
     }
