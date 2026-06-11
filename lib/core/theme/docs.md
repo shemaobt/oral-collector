@@ -116,6 +116,30 @@ SpacingScale/RadiusScale/DurationScale/OpacityScale ─► AppSpacing/AppRadii/A
   distinct alpha values the theme actually uses (`o06`…`o70`), not a generated
   scale, so it has no on/off-grid policy — a value gets a token only because a
   component theme needs it.
+- **The typography ramp has gaps — keep `copyWith(fontSize:)` when no token
+  matches.** `_buildTextTheme` ([app_theme.dart](app_theme.dart)) defines the
+  `textTheme.*` roles at a fixed set of sizes (display/headline/title/body/label),
+  but several literal sizes consumers use have no exact token (e.g. 10, 14, and
+  12@w400 — only `labelMedium` is 12, at w600). This is the typography analogue of
+  the off-grid spacing stragglers in the Grid policy above. When a site moves from
+  a hand-built `TextStyle(fontSize: N)` to a theme token, it starts from the
+  nearest-role token (for size/weight/family/`height` defaults) and keeps an
+  explicit `.copyWith(fontSize: N)` so the rendered size is unchanged. The
+  surviving `fontSize` override is therefore intentional, not redundant — snapping
+  it to a token would change the rendered size. Introducing a token for one of
+  those sizes (so the override can drop) is a separate, possibly behavior-changing
+  follow-up.
+- **Every `textTheme` role bakes in `color: fg`, so themed `errorStyle` /
+  `hintStyle` must set `color` explicitly.** `_buildTextTheme` applies `color: fg`
+  (the theme foreground) to every role. A token used directly as an
+  `InputDecoration.errorStyle` (or hint/helper) is merged by the `InputDecorator`,
+  and the baked-in foreground wins over the decorator's semantic color — so a
+  red error label would silently regress to the foreground color. A themed
+  `errorStyle` must `copyWith(color: …error)` to preserve its meaning. (This is
+  the same reason styles used on a colored chrome — e.g. nav items / badges on the
+  primary surface — `copyWith(color: colorScheme.onPrimary)`; `onPrimary` is the
+  one token that is pure white in both light and dark, so it preserves a former
+  `Colors.white` literal value-for-value.)
 - **`DurationScale` is motion-only.** I/O timeouts, logic timers, and
   snackbar/feedback display durations are excluded and remain raw `Duration`s.
 - **Migration is pure.** Only literals already equal to a token value AND the

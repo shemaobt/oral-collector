@@ -717,7 +717,10 @@ class _InfoBanner extends StatelessWidget {
           Expanded(
             child: Text(
               message,
-              style: TextStyle(color: colors.secondary, fontSize: 12),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: colors.secondary,
+                fontSize: 12,
+              ),
             ),
           ),
         ],
