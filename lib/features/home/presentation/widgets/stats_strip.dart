@@ -58,7 +58,7 @@ class StatsStrip extends StatelessWidget {
           value: '$unclassifiedCount',
           label: l10n.filter_unclassified,
           icon: LucideIcons.tag,
-          color: Colors.amber.shade700,
+          color: colors.warning,
         ),
     ];
 

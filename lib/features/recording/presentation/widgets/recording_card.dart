@@ -171,7 +171,7 @@ class RecordingCard extends ConsumerWidget {
                               breadcrumb,
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: isUnclassified
-                                    ? Colors.amber.shade700
+                                    ? colors.warning
                                     : colors.secondary,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -265,9 +265,7 @@ class RecordingCard extends ConsumerWidget {
                                 vertical: 3,
                               ),
                               decoration: BoxDecoration(
-                                color: Colors.amber.shade700.withValues(
-                                  alpha: 0.1,
-                                ),
+                                color: colors.warning.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Row(
@@ -276,13 +274,13 @@ class RecordingCard extends ConsumerWidget {
                                   Icon(
                                     LucideIcons.tag,
                                     size: 11,
-                                    color: Colors.amber.shade700,
+                                    color: colors.warning,
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
                                     l10n.recording_unclassified,
                                     style: theme.textTheme.labelSmall?.copyWith(
-                                      color: Colors.amber.shade700,
+                                      color: colors.warning,
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),

@@ -5,6 +5,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../shared/utils/cleaning_status_style.dart';
 
 class RecordingStatusSection extends StatelessWidget {
   const RecordingStatusSection({
@@ -26,6 +27,11 @@ class RecordingStatusSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final locale = Localizations.localeOf(context).languageCode;
+    final cleaningStyle = CleaningStatusStyle.forStatus(
+      recording.cleaningStatus,
+      colors,
+      l10n,
+    );
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -80,11 +86,11 @@ class RecordingStatusSection extends StatelessWidget {
             ),
           ),
           StatusRow(
-            icon: _cleaningIcon(),
-            iconColor: _cleaningColor(),
+            icon: cleaningStyle.icon,
+            iconColor: cleaningStyle.color,
             label: l10n.detail_cleaning,
-            value: _cleaningLabel(l10n),
-            valueColor: _cleaningColor(),
+            value: cleaningStyle.label,
+            valueColor: cleaningStyle.color,
             colors: colors,
             theme: theme,
           ),
@@ -155,51 +161,6 @@ class RecordingStatusSection extends StatelessWidget {
       default:
         if (recording.retryCount > 0) return l10n.detail_pendingRetried;
         return l10n.detail_notSynced;
-    }
-  }
-
-  IconData _cleaningIcon() {
-    switch (recording.cleaningStatus) {
-      case 'cleaned':
-        return LucideIcons.sparkles;
-      case 'cleaning':
-        return LucideIcons.loader;
-      case 'needs_cleaning':
-        return LucideIcons.alertCircle;
-      case 'failed':
-        return LucideIcons.alertTriangle;
-      default:
-        return LucideIcons.minus;
-    }
-  }
-
-  Color _cleaningColor() {
-    switch (recording.cleaningStatus) {
-      case 'cleaned':
-        return colors.success;
-      case 'cleaning':
-        return colors.info;
-      case 'needs_cleaning':
-        return Colors.amber.shade700;
-      case 'failed':
-        return colors.error;
-      default:
-        return colors.secondary;
-    }
-  }
-
-  String _cleaningLabel(AppLocalizations l10n) {
-    switch (recording.cleaningStatus) {
-      case 'cleaned':
-        return l10n.cleaning_cleaned;
-      case 'cleaning':
-        return l10n.cleaning_cleaning;
-      case 'needs_cleaning':
-        return l10n.cleaning_needsCleaning;
-      case 'failed':
-        return l10n.cleaning_cleanFailed;
-      default:
-        return l10n.detail_notFlagged;
     }
   }
 }

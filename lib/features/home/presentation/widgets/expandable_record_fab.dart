@@ -101,7 +101,7 @@ class _ExpandableRecordFabState extends State<ExpandableRecordFab>
             offsetY: 72,
             icon: LucideIcons.zap,
             label: l10n.fab_quickRecord,
-            color: Colors.amber.shade700,
+            color: colors.warning,
             onTap: () {
               _close();
               widget.onQuickRecord();

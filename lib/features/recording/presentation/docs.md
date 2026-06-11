@@ -176,7 +176,9 @@ Path: @/lib/features/recording/presentation
   first; if the server call fails, the local row is not changed (so we do
   not generate phantom local edits). Errors are surfaced via
   `ScaffoldMessenger` snackbars; `ForbiddenException` is treated as a
-  permission error and shown in orange.
+  permission error and shown in the semantic `warning` color
+  (`AppColors.of(context).warning`, resolved in the async handler), not a raw
+  `Colors.orange`.
 - **The "download for edit" UX dialog gating.** `_ensureLocalFile` first
   asks the user for confirmation (`recording_downloadAudio`) before
   pulling the bytes. If the user cancels, no write happens; if the

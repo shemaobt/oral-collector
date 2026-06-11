@@ -267,7 +267,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(l10n.recording_updateNoPermission),
-            backgroundColor: Colors.orange,
+            backgroundColor: AppColors.of(context).warning,
           ),
         );
         return;
@@ -293,7 +293,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(l10n.recording_updateNoPermission),
-            backgroundColor: Colors.orange,
+            backgroundColor: AppColors.of(context).warning,
           ),
         );
         return;
@@ -334,7 +334,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(l10n.recording_updateNoPermission),
-              backgroundColor: Colors.orange,
+              backgroundColor: AppColors.of(context).warning,
             ),
           );
         }
@@ -397,7 +397,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(l10n.recording_deleteNoPermission),
-            backgroundColor: Colors.orange,
+            backgroundColor: AppColors.of(context).warning,
           ),
         );
       }
@@ -853,7 +853,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(l10n.recording_moveNoPermission),
-            backgroundColor: Colors.orange,
+            backgroundColor: AppColors.of(context).warning,
           ),
         );
       }
@@ -950,7 +950,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(l10n.recording_moveNoPermission),
-              backgroundColor: Colors.orange,
+              backgroundColor: AppColors.of(context).warning,
             ),
           );
         }
@@ -1082,7 +1082,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(l10n.recording_moveNoPermission),
-              backgroundColor: Colors.orange,
+              backgroundColor: AppColors.of(context).warning,
             ),
           );
         }
@@ -1226,14 +1226,14 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
             Icon(
               isUnclassified ? LucideIcons.tag : LucideIcons.layers,
               size: 14,
-              color: isUnclassified ? Colors.amber.shade700 : colors.accent,
+              color: isUnclassified ? colors.warning : colors.accent,
             ),
             const SizedBox(width: 6),
             Flexible(
               child: Text(
                 genreBreadcrumb,
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: isUnclassified ? Colors.amber.shade700 : colors.accent,
+                  color: isUnclassified ? colors.warning : colors.accent,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -1522,25 +1522,19 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
         ? Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: Colors.amber.withValues(alpha: 0.1),
+              color: colors.warning.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(RadiusScale.r12),
-              border: Border.all(
-                color: Colors.amber.shade700.withValues(alpha: 0.3),
-              ),
+              border: Border.all(color: colors.warning.withValues(alpha: 0.3)),
             ),
             child: Row(
               children: [
-                Icon(
-                  LucideIcons.alertCircle,
-                  size: 18,
-                  color: Colors.amber.shade700,
-                ),
+                Icon(LucideIcons.alertCircle, size: 18, color: colors.warning),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     l10n.classify_banner,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: Colors.amber.shade700,
+                      color: colors.warning,
                     ),
                   ),
                 ),
@@ -1548,10 +1542,8 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
                 FilledButton.tonal(
                   onPressed: _classifyRecording,
                   style: FilledButton.styleFrom(
-                    backgroundColor: Colors.amber.shade700.withValues(
-                      alpha: 0.15,
-                    ),
-                    foregroundColor: Colors.amber.shade700,
+                    backgroundColor: colors.warning.withValues(alpha: 0.15),
+                    foregroundColor: colors.warning,
                     padding: const EdgeInsets.symmetric(
                       horizontal: SpacingScale.s12,
                       vertical: 6,
@@ -1650,11 +1642,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
                   value: 'classify',
                   child: Row(
                     children: [
-                      Icon(
-                        LucideIcons.tag,
-                        size: 18,
-                        color: Colors.amber.shade700,
-                      ),
+                      Icon(LucideIcons.tag, size: 18, color: colors.warning),
                       const SizedBox(width: SpacingScale.s12),
                       Text(l10n.classify_action),
                     ],

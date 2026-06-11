@@ -21,6 +21,7 @@ const _testColors = AppColorSet(
   successText: Color(0xFF005500),
   border: Color(0xFFCCCCCC),
   error: Color(0xFFAA0000),
+  warning: Color(0xFFFFAA00),
 );
 
 Widget _wrap(Widget child) {

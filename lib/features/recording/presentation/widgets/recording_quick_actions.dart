@@ -65,7 +65,7 @@ class RecordingQuickActions extends StatelessWidget {
               label: cleaningIsActive
                   ? l10n.action_clearFlag
                   : l10n.action_flagClean,
-              color: cleaningIsActive ? colors.success : Colors.amber.shade700,
+              color: cleaningIsActive ? colors.success : colors.warning,
               colors: colors,
               theme: theme,
               onTap: onToggleCleaning,
@@ -76,7 +76,7 @@ class RecordingQuickActions extends StatelessWidget {
                     ? LucideIcons.tag
                     : LucideIcons.folderInput,
                 label: isUnclassified ? l10n.classify_action : l10n.action_move,
-                color: isUnclassified ? Colors.amber.shade700 : colors.info,
+                color: isUnclassified ? colors.warning : colors.info,
                 colors: colors,
                 theme: theme,
                 onTap: onMoveCategory,
