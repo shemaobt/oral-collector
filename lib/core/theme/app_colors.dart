@@ -12,6 +12,7 @@ class AppColorSet extends ThemeExtension<AppColorSet> {
   final Color infoText;
   final Color success;
   final Color successText;
+  final Color warning;
   final Color border;
   final Color error;
 
@@ -27,6 +28,7 @@ class AppColorSet extends ThemeExtension<AppColorSet> {
     required this.infoText,
     required this.success,
     required this.successText,
+    required this.warning,
     required this.border,
     required this.error,
   });
@@ -44,6 +46,7 @@ class AppColorSet extends ThemeExtension<AppColorSet> {
     Color? infoText,
     Color? success,
     Color? successText,
+    Color? warning,
     Color? border,
     Color? error,
   }) {
@@ -59,6 +62,7 @@ class AppColorSet extends ThemeExtension<AppColorSet> {
       infoText: infoText ?? this.infoText,
       success: success ?? this.success,
       successText: successText ?? this.successText,
+      warning: warning ?? this.warning,
       border: border ?? this.border,
       error: error ?? this.error,
     );
@@ -79,6 +83,7 @@ class AppColorSet extends ThemeExtension<AppColorSet> {
       infoText: Color.lerp(infoText, other.infoText, t)!,
       success: Color.lerp(success, other.success, t)!,
       successText: Color.lerp(successText, other.successText, t)!,
+      warning: Color.lerp(warning, other.warning, t)!,
       border: Color.lerp(border, other.border, t)!,
       error: Color.lerp(error, other.error, t)!,
     );
@@ -99,6 +104,7 @@ class AppColorSet extends ThemeExtension<AppColorSet> {
         other.infoText == infoText &&
         other.success == success &&
         other.successText == successText &&
+        other.warning == warning &&
         other.border == border &&
         other.error == error;
   }
@@ -116,6 +122,7 @@ class AppColorSet extends ThemeExtension<AppColorSet> {
     infoText,
     success,
     successText,
+    warning,
     border,
     error,
   );
@@ -141,6 +148,7 @@ abstract class AppColors {
   static const Color infoText = Color(0xFF4D6F68);
   static const Color success = brandVerdeClaro;
   static const Color successText = Color(0xFF5D6233);
+  static const Color warning = Color(0xFFFFA000);
   static const Color border = brandAreia;
   static const Color error = Color(0xFFB91C1C);
 
@@ -163,6 +171,7 @@ abstract class AppColors {
   static const Color darkInfoText = Color(0xFF9FD4C6);
   static const Color darkSuccess = Color(0xFF9DC044);
   static const Color darkSuccessText = Color(0xFFB4C976);
+  static const Color darkWarning = Color(0xFFE0A458);
   static const Color darkBorder = Color(0xFF5A5440);
 
   static AppColorSet of(BuildContext context) {
@@ -183,6 +192,7 @@ abstract class AppColors {
     infoText: infoText,
     success: success,
     successText: successText,
+    warning: warning,
     border: border,
     error: error,
   );
@@ -199,6 +209,7 @@ abstract class AppColors {
     infoText: darkInfoText,
     success: darkSuccess,
     successText: darkSuccessText,
+    warning: darkWarning,
     border: darkBorder,
     error: error,
   );

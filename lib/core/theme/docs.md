@@ -33,6 +33,16 @@ Path: @/lib/core/theme
   `AppColors.of(context)`, which resolves the registered `AppColorSet`. This
   folder is an upstream dependency of nearly every presentation layer but depends
   only on Flutter `material`.
+- The semantic state tokens are `info`/`infoText`, `success`/`successText`,
+  `warning`, and `error`. `info` and `success` carry a darker `*Text` companion
+  for legible text-on-tint; `warning` and `error` are single tokens with no text
+  pair (callers tint both icon and label with the one color). `warning` is the
+  caution/attention color (amber/orange): it backs the unclassified affordances
+  (FABs, badges, breadcrumbs, the classify banner), `ForbiddenException`
+  permission snackbars, and the `needs_cleaning` cleaning state via
+  [/lib/shared/utils/cleaning_status_style.dart](/lib/shared/utils/cleaning_status_style.dart).
+  It replaced the previously hardcoded `Colors.amber.shade700` / `Colors.orange`
+  literals so those surfaces now adapt to dark mode.
 - Spacing/radii/motion/opacity consumers reference the `const` scale directly
   (e.g. `SpacingScale.s16`, `RadiusScale.r12`, `DurationScale.ms200`,
   `OpacityScale.o40`) or the `context.spacing` / `.radii` / `.durations` /

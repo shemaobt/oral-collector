@@ -127,7 +127,7 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(l10n.recording_deleteNoPermission),
-            backgroundColor: Colors.orange,
+            backgroundColor: AppColors.of(context).warning,
           ),
         );
       }

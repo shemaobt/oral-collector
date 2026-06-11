@@ -23,6 +23,7 @@ void main() {
       expect(c.successText.toARGB32(), 0xFF5D6233);
       expect(c.border.toARGB32(), 0xFFC5C29F);
       expect(c.error.toARGB32(), 0xFFB91C1C);
+      expect(c.warning.toARGB32(), 0xFFFFA000);
     });
 
     test('dark tokens match the design palette', () {
@@ -40,6 +41,7 @@ void main() {
       expect(c.successText.toARGB32(), 0xFFB4C976);
       expect(c.border.toARGB32(), 0xFF5A5440);
       expect(c.error.toARGB32(), 0xFFB91C1C);
+      expect(c.warning.toARGB32(), 0xFFE0A458);
     });
   });
 
@@ -59,6 +61,7 @@ void main() {
       expect(updated.primary, AppColors.light.primary);
       expect(updated.foreground, AppColors.light.foreground);
       expect(updated.error, AppColors.light.error);
+      expect(updated.warning, AppColors.light.warning);
       expect(updated, isNot(AppColors.light));
     });
 
@@ -87,6 +90,7 @@ void main() {
           successText: Color.lerp(light.successText, dark.successText, 0.5)!,
           border: Color.lerp(light.border, dark.border, 0.5)!,
           error: Color.lerp(light.error, dark.error, 0.5)!,
+          warning: Color.lerp(light.warning, dark.warning, 0.5)!,
         ),
       );
     });

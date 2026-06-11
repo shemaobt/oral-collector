@@ -525,7 +525,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
                             vertical: SpacingScale.s4,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.amber.withValues(alpha: 0.15),
+                            color: colors.warning.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(
                               RadiusScale.r16,
                             ),
@@ -536,13 +536,13 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
                               Icon(
                                 LucideIcons.tag,
                                 size: 12,
-                                color: Colors.amber.shade700,
+                                color: colors.warning,
                               ),
                               const SizedBox(width: SpacingScale.s4),
                               Text(
                                 l10n.quickRecord_classifyLater,
                                 style: theme.textTheme.labelSmall?.copyWith(
-                                  color: Colors.amber.shade700,
+                                  color: colors.warning,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
