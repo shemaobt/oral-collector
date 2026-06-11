@@ -1,11 +1,13 @@
 import 'dart:convert';
 
 import '../../../../core/errors/api_exception.dart';
+import '../../../../core/errors/app_exception.dart' show ParseException;
 import '../../../../core/network/api_error_handler.dart';
 import '../../../../core/network/authenticated_client.dart';
 import '../../../../core/serialization/parse_list.dart';
 import '../../../../core/serialization/safe_read.dart';
 import '../../domain/entities/server_recording.dart';
+import '../../domain/entities/split_segment_request.dart';
 import '../../domain/repositories/recording_api_repository.dart';
 
 class RecordingApiRepositoryImpl implements RecordingApiRepository {
@@ -140,11 +142,11 @@ class RecordingApiRepositoryImpl implements RecordingApiRepository {
   @override
   Future<List<String>> splitRecording({
     required String serverId,
-    required List<Map<String, dynamic>> segments,
+    required List<SplitSegmentRequest> segments,
   }) async {
     final response = await _client.post(
       '/api/oc/recordings/$serverId/split',
-      body: {'segments': segments},
+      body: {'segments': segments.map((s) => s.toJson()).toList()},
     );
     guardResponse(response);
     if (response.statusCode != 200 &&
@@ -155,9 +157,16 @@ class RecordingApiRepositoryImpl implements RecordingApiRepository {
       );
     }
     final data = jsonDecode(response.body);
-    if (data is Map<String, dynamic> && data.containsKey('recording_ids')) {
-      return (data['recording_ids'] as List<dynamic>).cast<String>();
-    }
-    return [];
+    if (data is! Map<String, dynamic>) return const [];
+    final ids = data['recording_ids'];
+    if (ids is! List) return const [];
+    return ids.map((e) {
+      if (e is String) return e;
+      throw ParseException(
+        field: 'recording_ids',
+        expected: 'String',
+        cause: e,
+      );
+    }).toList();
   }
 }

@@ -28,6 +28,7 @@ import '../data/services/recording_split_persister.dart';
 import '../data/services/recording_trash.dart';
 import '../data/services/waveform_extractor.dart';
 import '../domain/entities/register.dart';
+import '../domain/entities/split_segment_request.dart';
 import 'trim_edit_decision.dart';
 import 'widgets/edit_transport_bar.dart';
 import 'widgets/edit_volume_control.dart';
@@ -717,26 +718,27 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
     final serverId = recording.serverId ?? recording.id;
     final kept = _keptSegmentIndices;
 
+    final hasGain = _gainDb.abs() > 0.01;
     final segments = kept.map((i) {
       final effGenre = _effectiveGenre(i);
       final effSubcat = _effectiveSubcategory(i);
       final effRegister = _effectiveRegister(i);
-      return {
-        'start_seconds': _segmentStart(i).inMilliseconds / 1000.0,
-        'end_seconds': _segmentEnd(i).inMilliseconds / 1000.0,
-        if (effGenre.isNotEmpty) 'genre_id': effGenre,
-        if (effSubcat != null && effSubcat.isNotEmpty)
-          'subcategory_id': effSubcat,
-        if (effRegister != null && effRegister.isNotEmpty)
-          'register_id': effRegister,
-      };
+      return SplitSegmentRequest(
+        startSeconds: _segmentStart(i).inMilliseconds / 1000.0,
+        endSeconds: _segmentEnd(i).inMilliseconds / 1000.0,
+        genreId: effGenre.isNotEmpty ? effGenre : null,
+        subcategoryId: (effSubcat != null && effSubcat.isNotEmpty)
+            ? effSubcat
+            : null,
+        registerId: (effRegister != null && effRegister.isNotEmpty)
+            ? effRegister
+            : null,
+        gainDb: hasGain ? _gainDb : null,
+      );
     }).toList();
 
     final apiRepo = ref.read(recordingApiRepositoryProvider);
-    final payloadSegments = _gainDb.abs() > 0.01
-        ? segments.map((s) => {...s, 'gain_db': _gainDb}).toList()
-        : segments;
-    await apiRepo.splitRecording(serverId: serverId, segments: payloadSegments);
+    await apiRepo.splitRecording(serverId: serverId, segments: segments);
 
     if (mounted) {
       final l10n = AppLocalizations.of(context);
