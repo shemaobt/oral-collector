@@ -1,9 +1,8 @@
-import 'dart:convert';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/auth/auth_notifier.dart';
 import '../../../../core/network/authenticated_client.dart';
+import '../../../../core/network/response_decoder.dart';
 import '../../../../core/serialization/safe_read.dart';
 
 class RoleState {
@@ -72,7 +71,7 @@ class RoleNotifier extends Notifier<RoleState> {
       final response = await client.get('/api/auth/my-project-roles');
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        final data = decodeObject(response);
         final rolesMap =
             readMapOrNull(data, 'project_roles') ?? const <String, dynamic>{};
         final projectRoles = rolesMap.map(

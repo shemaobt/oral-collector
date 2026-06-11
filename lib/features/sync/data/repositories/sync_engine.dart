@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:drift/drift.dart' show Value;
@@ -9,7 +8,9 @@ import 'package:path_provider/path_provider.dart';
 
 import '../../../../core/database/app_database.dart';
 import '../../../../core/network/authenticated_client.dart';
+import '../../../../core/network/response_decoder.dart';
 import '../../../../core/platform/file_ops.dart' as file_ops;
+import '../../../../core/serialization/safe_read.dart';
 import '../../../recording/data/repositories/local_recording_repository.dart';
 import '../../../storyteller/data/repositories/local_storyteller_repository.dart';
 import '../../domain/repositories/connectivity_service.dart';
@@ -286,9 +287,8 @@ class SyncEngineImpl implements SyncEngine {
           expected: 201,
         );
 
-        final createData =
-            jsonDecode(createResponse.body) as Map<String, dynamic>;
-        serverId = createData['id'] as String;
+        final createData = decodeObject(createResponse);
+        serverId = readString(createData, 'id');
 
         await _recordingRepo.updateRecording(
           id,
@@ -338,9 +338,8 @@ class SyncEngineImpl implements SyncEngine {
         expected: 200,
       );
 
-      final confirmData =
-          jsonDecode(confirmResponse.body) as Map<String, dynamic>;
-      final gcsUrl = confirmData['gcs_url'] as String?;
+      final confirmData = decodeObject(confirmResponse);
+      final gcsUrl = readStringOrNull(confirmData, 'gcs_url');
 
       await _recordingRepo.markAsUploaded(id, serverId, gcsUrl);
 
@@ -412,8 +411,8 @@ class SyncEngineImpl implements SyncEngine {
           continue;
         }
 
-        final data = jsonDecode(response.body) as Map<String, dynamic>;
-        final serverId = data['id'] as String;
+        final data = decodeObject(response);
+        final serverId = readString(data, 'id');
         await _storytellerRepo.markUploaded(row.id, serverId);
         await _recordingRepo.reassignStorytellerId(
           fromId: row.id,

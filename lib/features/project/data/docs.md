@@ -32,11 +32,13 @@ Path: @/lib/features/project/data
   implement the domain contracts
   ([/lib/features/project/domain/repositories](../domain/repositories)) and talk
   to the backend through the shared
-  [/lib/core/network/authenticated_client.dart](../../../core/network/authenticated_client.dart),
-  running responses through `guardResponse`
+  [/lib/core/network/authenticated_client.dart](../../../core/network/authenticated_client.dart).
+  A 401 still surfaces as the `UnauthorizedException` the notifier hands to
+  [/lib/core/auth/auth_notifier.dart](../../../core/auth/auth_notifier.dart) — via
+  the decode helpers' `throwForResponse` on body-decoding methods, and via
+  `guardResponse`
   ([/lib/core/network/api_error_handler.dart](../../../core/network/api_error_handler.dart))
-  so a 401 surfaces as the `UnauthorizedException` the notifier hands to
-  [/lib/core/auth/auth_notifier.dart](../../../core/auth/auth_notifier.dart).
+  on the no-body/conservative methods (see "Core Implementation").
 - Both the repository and the cache serialize via `Project.fromJson` /
   `toJson` and `Language.fromJson` / `toJson`
   ([/lib/features/project/domain/entities](../domain/entities)), so the
@@ -58,14 +60,24 @@ Path: @/lib/features/project/data
   still force-cast, so a bad cached record raises a cast `Error`, not an
   `Exception` (ENG-148); it narrows once those factories adopt the safe-readers
   in [/lib/core/serialization](../../../core/serialization/docs.md).
-- The repositories are thin request wrappers: they guard the response, fail
-  loudly on unexpected status codes, and map JSON into entities. The
-  list-returning reads route their array through `parseList`
+- The repositories are thin request wrappers that fail loudly on unexpected
+  status codes and map JSON into entities, but the failure path differs by method
+  shape after ENG-153. **Body-decoding** reads/creates (`getProject`,
+  `listProjects`/`listLanguages`/`listMembers`, create/update) go through
+  `decodeObject` / `decodeList`
+  ([/lib/core/network/response_decoder.dart](../../../core/network/response_decoder.dart)),
+  which fold the status check into the decode: any non-2xx becomes a typed
+  `AppException` and a malformed body a catchable `ParseException`, replacing the
+  old bespoke `guardResponse` + `Exception('Failed to …')`. The list reads then
+  wrap the decoded array in `parseList`
   ([/lib/core/serialization](../../../core/serialization/docs.md)), which
-  **skips-and-logs** a malformed element instead of failing the page, while
-  single-object reads (`getProject`, create/update) stay fail-fast. Both differ
-  from the cache above, which drops the whole snapshot on any bad record. They do
-  not cache; caching is the notifier's decision after a successful fetch.
+  **skips-and-logs** a malformed element instead of failing the page; single
+  objects stay fail-fast on a wrong-shaped root. **No-body** mutations
+  (`removeMember`, `inviteMember`) keep `guardResponse` plus the bespoke
+  `Exception`, and `getProjectStats` keeps its conservative non-200 → `{}` guard
+  ahead of the decode. All differ from the cache above, which drops the whole
+  snapshot on any bad record. The repositories do not cache; caching is the
+  notifier's decision after a successful fetch.
 - The notifier hydrates from `ProjectCache.read()` on build (fire-and-forget, so
   cached data appears before the network returns) and persists the enriched
   project list via `ProjectCache.write()` after a successful fetch.

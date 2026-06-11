@@ -104,4 +104,17 @@ Path: @/lib/features/sync/data/services
   [/lib/core/network/docs.md](../../../../core/network/docs.md); the
   config/contract half throws instead.
 
+- **A malformed upload-response body now also fails closed instead of crashing
+  (ENG-153).** The transport reads the server's `upload_url` / `session_uri` /
+  `content_type` through `decodeObject` + the `safe_read` leaf readers
+  ([/lib/core/network/response_decoder.dart](../../../../core/network/response_decoder.dart),
+  [/lib/core/serialization/safe_read.dart](../../../../core/serialization/safe_read.dart))
+  rather than a raw `jsonDecode(...) as Map` / `as String`. A bad payload used to
+  throw `TypeError` (an `Error`), which escaped the transport's `on Exception`
+  arms and stranded the recording mid-upload; it now throws a catchable
+  `ParseException`, so the existing `on Exception` handlers degrade gracefully
+  (a failed `_requestResumableSession` returns `null`; the queue marks the row
+  failed and retries). No catch block was changed — see the Error-vs-Exception
+  invariant in [/lib/core/network/docs.md](../../../../core/network/docs.md).
+
 Created and maintained by Nori.
