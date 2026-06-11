@@ -1,11 +1,12 @@
 import '../entities/language.dart';
 import '../entities/project.dart';
 import '../entities/project_member.dart';
+import '../entities/project_stats.dart';
 
 abstract class ProjectRepository {
   Future<List<Project>> listProjects();
   Future<Project> getProject(String id);
-  Future<Map<String, dynamic>> getProjectStats(String projectId);
+  Future<ProjectStats> getProjectStats(String projectId);
   Future<Project> createProject({
     required String name,
     required String languageId,

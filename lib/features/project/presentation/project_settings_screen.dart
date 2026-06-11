@@ -15,6 +15,7 @@ import '../../sync/presentation/notifiers/sync_notifier.dart';
 import '../data/providers.dart';
 import '../domain/entities/project.dart';
 import '../domain/entities/project_member.dart';
+import '../domain/entities/project_stats.dart';
 import 'notifiers/member_notifier.dart';
 import 'notifiers/project_notifier.dart';
 import 'widgets/member_list.dart';
@@ -66,24 +67,24 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
   Future<void> _loadProject() async {
     final repo = ref.read(projectRepositoryProvider);
     try {
-      final results = await Future.wait([
-        repo.getProject(widget.projectId),
-        repo.getProjectStats(widget.projectId),
-      ]);
+      final project = await repo.getProject(widget.projectId);
       if (!mounted) return;
 
-      final project = results[0] as Project;
-      final stats = results[1] as Map<String, dynamic>;
+      // Stats are best-effort: a stats failure falls back to the project's own
+      // counts instead of failing the whole screen load.
+      ProjectStats? stats;
+      try {
+        stats = await repo.getProjectStats(widget.projectId);
+      } on Exception {
+        stats = null;
+      }
+      if (!mounted) return;
 
-      final recordingCount =
-          (stats['total_recordings'] as num?)?.toInt() ??
-          project.recordingCount;
+      final recordingCount = stats?.totalRecordings ?? project.recordingCount;
       final totalDuration =
-          (stats['total_duration_seconds'] as num?)?.toDouble() ??
-          project.totalDurationSeconds;
+          stats?.totalDurationSeconds ?? project.totalDurationSeconds;
       final storytellerCount =
-          (stats['total_storytellers'] as num?)?.toInt() ??
-          project.storytellerCount;
+          stats?.totalStorytellers ?? project.storytellerCount;
 
       final languages = ref.read(projectNotifierProvider).languages;
       final lang = languages

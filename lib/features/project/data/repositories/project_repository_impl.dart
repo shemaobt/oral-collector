@@ -2,10 +2,12 @@ import 'dart:convert';
 
 import '../../../../core/network/api_error_handler.dart';
 import '../../../../core/network/authenticated_client.dart';
+import '../../../../core/network/error_boundary.dart';
 import '../../../../core/serialization/parse_list.dart';
 import '../../domain/entities/language.dart';
 import '../../domain/entities/project.dart';
 import '../../domain/entities/project_member.dart';
+import '../../domain/entities/project_stats.dart';
 import '../../domain/repositories/project_repository.dart';
 
 class ProjectRepositoryImpl implements ProjectRepository {
@@ -69,11 +71,12 @@ class ProjectRepositoryImpl implements ProjectRepository {
   }
 
   @override
-  Future<Map<String, dynamic>> getProjectStats(String projectId) async {
+  Future<ProjectStats> getProjectStats(String projectId) async {
     final response = await _client.get('/api/oc/projects/$projectId/stats');
-    guardResponse(response);
-    if (response.statusCode != 200) return {};
-    return jsonDecode(response.body) as Map<String, dynamic>;
+    if (response.statusCode != 200) throwForResponse(response);
+    return ProjectStats.fromJson(
+      jsonDecode(response.body) as Map<String, dynamic>,
+    );
   }
 
   @override
