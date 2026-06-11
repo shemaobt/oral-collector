@@ -14,16 +14,24 @@ Path: @/lib/core/serialization
   `json['x'] as T` force-casts scattered across every `fromJson`. Migration is
   incremental and behavior-preserving: ENG-148 is the **first consuming wave**,
   routing the enumerated quick-win fragile casts (single scalar/string/nested-map
-  reads at repository and DTO boundaries) through the readers. Full
-  `fromJson`-factory migration remains a follow-up (ENG-153).
+  reads at repository and DTO boundaries) through the readers. ENG-153 then added
+  the centralized `decodeObject` / `decodeList` entry point in
+  [../network/response_decoder.dart](../network/response_decoder.dart) and routed
+  the **upload-pipeline** force-casts through it plus these readers (so a
+  malformed payload can no longer escape the upload's `on Exception` handlers as
+  an uncatchable `Error`). Broad `fromJson`-factory migration across every
+  feature remains partial.
 - The folder also holds the element-isolating **`parseList<T>`**
   ([./parse_list.dart](parse_list.dart), ENG-146): a page-policy layer, already
   consumed by the network-list endpoints, that maps a decoded array
   element-by-element and **skips-and-logs** bad records so one cannot blank a
   page. Where the safe-readers decide *how* a field is read, `parseList` decides
-  *whether* a bad record drops the page. Future E8 siblings still land here:
-  tolerant `fromWire` enum mapping (ENG-150) and decode/leaf-read helpers
-  (ENG-153).
+  *whether* a bad record drops the page. The status-check + decode + root-assert
+  layer (`decodeObject` / `decodeList`, ENG-153) that produces the decoded `Map`
+  / `List` these helpers consume landed one folder over in
+  [../network/response_decoder.dart](../network/response_decoder.dart) (see
+  [../network/docs.md](../network/docs.md)); a future E8 sibling still expected
+  here is the tolerant `fromWire` enum mapping (ENG-150).
 
 ### How it fits into the larger codebase
 
@@ -38,10 +46,14 @@ Path: @/lib/core/serialization
   handle it (it maps to `error_generic`).
 - The first safe-reader consumers landed in ENG-148: a curated set of fragile
   force-casts at the data boundary — repository response parsing (e.g. stats
-  counts, login/signup token extraction) and a server DTO scalar field. The
-  broader population of feature `fromJson` factories under `lib/features/*/data/`
-  still force-cast and migrate in a later wave (ENG-153), so most of this
-  folder's inbound surface is still ahead of it.
+  counts, login/signup token extraction) and a server DTO scalar field. ENG-153
+  extended this to the **upload pipeline**, replacing the response force-casts in
+  the sync engine, the resumable upload service, and the direct uploader with
+  `decodeObject` + these readers — the path where an uncatchable `Error` was most
+  damaging because it stranded a recording mid-upload. The broader population of
+  feature `fromJson` factories under `lib/features/*/data/` still force-cast and
+  migrates incrementally, so much of this folder's inbound surface is still ahead
+  of it.
 - `parseList` (ENG-146) is, by contrast, already wired at the network-list
   boundary: every list-returning repository method routes its decoded array
   through it — genre

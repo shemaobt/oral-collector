@@ -1,9 +1,8 @@
-import 'dart:convert';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/network/api_error_handler.dart';
 import '../../../core/network/authenticated_client.dart';
+import '../../../core/network/response_decoder.dart';
 import '../../sync/presentation/notifiers/sync_notifier.dart';
 
 class UserLookup {
@@ -55,6 +54,6 @@ final userLookupProvider = FutureProvider.family<UserLookup?, String>((
   guardResponse(response);
   if (response.statusCode == 404) return null;
   if (response.statusCode != 200) return null;
-  final data = jsonDecode(response.body) as Map<String, dynamic>;
+  final data = decodeObject(response);
   return UserLookup.fromJson(data);
 });

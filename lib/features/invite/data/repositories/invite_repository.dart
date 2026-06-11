@@ -1,6 +1,5 @@
-import 'dart:convert';
-
 import '../../../../core/network/authenticated_client.dart';
+import '../../../../core/network/response_decoder.dart';
 import '../../../../core/serialization/parse_list.dart';
 import '../../domain/entities/invite.dart';
 import '../../domain/repositories/invite_repository.dart';
@@ -14,11 +13,8 @@ class InviteRepositoryImpl implements InviteRepository {
   @override
   Future<List<Invite>> fetchMyInvites() async {
     final response = await _client.get('/api/oc/invites/mine');
-    if (response.statusCode != 200) {
-      throw Exception('Failed to fetch invites: ${response.body}');
-    }
     return parseList(
-      jsonDecode(response.body),
+      decodeList(response),
       Invite.fromJson,
       context: 'fetchMyInvites',
     );

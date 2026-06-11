@@ -11,9 +11,15 @@ Path: @/lib/core/network
   raw failures into domain exceptions: `throwForStatus` / `throwForResponse`
   (HTTP status -> leaf) and `guard<T>` (transport exceptions -> leaf).
 - [./api_error_handler.dart](api_error_handler.dart) exposes the narrow
-  `guardResponse` chokepoint that most repositories already call after each
-  request; it now delegates to the boundary while preserving its exact prior
-  contract.
+  `guardResponse` chokepoint (401/403 only) that the conservative repository
+  sites still call after a request; it delegates to the boundary while preserving
+  its exact prior contract.
+- [./response_decoder.dart](response_decoder.dart) is the centralized typed-decode
+  entry point: `decodeObject` / `decodeList` perform status-check → `jsonDecode`
+  → root-shape assert in one call, so a malformed server payload surfaces as a
+  **catchable** `AppException`/`FormatException` instead of an uncatchable
+  `TypeError`. This is the throw-side fix for the Error-vs-Exception escape that
+  motivated ENG-143/ENG-153 — see "Things to Know".
 - The cleartext guard lives one folder over in
   [../config/url_policy.dart](../config/url_policy.dart) (`isHttpsUrl` /
   `assertHttpsUrl`) and is enforced at this edge: `AuthenticatedClient.put`
@@ -42,11 +48,17 @@ Path: @/lib/core/network
   See [../errors/docs.md](../errors/docs.md) for the hierarchy and its
   invariants, and
   [the ADR](../../../docs/adr/0001-sealed-app-exception.md) for the rationale.
-- `guardResponse` is already wired into the repository layer (auth, recording,
-  project, genre, storyteller, admin, user, stats, ...). Those repositories
-  still throw legacy `Exception('Failed to X: ${response.body}')` for non
-  401/403 statuses; the boundary did not change that, so those call sites are
-  migrated only in later waves.
+- The repository layer reaches the boundary through two complementary fronts.
+  `guardResponse` (401/403 only) is still wired into the conservative sites that
+  need bespoke status semantics. Most **body-decoding** reads/creates were
+  migrated to `decodeObject` / `decodeList`, which fold the full status check
+  into the decode (any non-2xx → typed leaf via `throwForResponse`), so those
+  paths no longer throw the legacy `Exception('Failed to X: ${response.body}')`.
+  The legacy throw now survives mainly on **no-body** status paths (deletes and a
+  few mutations that do not parse a response root), which keep `guardResponse`
+  plus the bespoke `Exception`. Conservative status-semantics sites keep their
+  own handling and use the decoder only for the safe decode — see "Things to
+  Know".
 
 ### Core Implementation
 
@@ -75,6 +87,21 @@ Path: @/lib/core/network
   403 (delegating to `throwForResponse`); every other status passes through for
   the caller to handle. This is the historical contract — the consolidation
   kept the same statuses and leaf types and only added `traceId` population.
+- `decodeObject` / `decodeList` in
+  [./response_decoder.dart](response_decoder.dart) are the status-check + decode +
+  root-assert layer that sits between a raw `http.Response` and a typed
+  `fromJson`/safe-reader. Each (1) delegates **any** non-2xx status to
+  `throwForResponse` (so the full status table applies, not just 401/403), then
+  (2) `jsonDecode`s the body — a non-JSON body raises the SDK `FormatException` —
+  then (3) asserts the decoded root is the expected `Map`/`List`, raising
+  `ParseException` ([../errors/app_exception.dart](../errors/app_exception.dart))
+  on a wrong-shaped root. They replace the repeated
+  `jsonDecode(response.body) as Map<String, dynamic>` / `as List` force-cast and
+  **compose**, not compete, with the serialization layer: list endpoints wrap the
+  result in `parseList` ([../serialization/parse_list.dart](../serialization/parse_list.dart))
+  for per-element tolerance, and object endpoints feed the decoded `Map` to the
+  `safe_read` leaf readers ([../serialization/safe_read.dart](../serialization/safe_read.dart))
+  for individual fields. See [../serialization/docs.md](../serialization/docs.md).
 - **`put` is the only method that accepts a full caller-supplied URL**, so it
   is the only one that re-asserts the scheme. `get`/`post`/`patch`/`delete`
   build their target from `baseUrl` (which is `Env.backendUrl`, already
@@ -102,6 +129,31 @@ Path: @/lib/core/network
   falls into the `>= 400` arm; there is no dedicated `NotFoundException`
   because 404 is sometimes a non-exceptional outcome (e.g. delete-then-404 is
   treated as success by callers).
+- **The decode helpers exist to keep a malformed *server payload* catchable
+  (Error-vs-Exception invariant, ENG-143/ENG-153).** A failed `as Map`/`as List`
+  cast on a decoded body throws `TypeError`, a subclass of `Error`, **not**
+  `Exception`. The upload pipeline catches `on Exception` deliberately — a
+  programmer-error `Error` should propagate as a crash — so a malformed payload
+  (a *server* problem, not a programmer bug) escaped every `on Exception` handler
+  and left a recording wedged mid-upload, never transitioned to `markAsFailed`.
+  `decodeObject` / `decodeList` convert that bad payload into a catchable
+  `ParseException` / `FormatException` (both `Exception`s), so the **existing**
+  handlers catch it and degrade gracefully. The fix is purely on the **throw**
+  side: **no catch block was changed**, preserving the app-wide
+  "catch `on Exception` only" policy. The same reasoning underlies the
+  `safe_read` leaf readers ([../serialization/docs.md](../serialization/docs.md))
+  and `parseList`'s broad per-element catch.
+- **The decoder applies the *full* status table; conservative sites must guard
+  status before calling it.** Because `decodeObject` / `decodeList` route any
+  non-2xx through `throwForResponse`, a site that needs a non-exceptional status
+  outcome (404 → `null`, non-200 → empty/`{}`, or a login 401 that must read as
+  "bad credentials" rather than `UnauthorizedException`) checks the status and
+  returns/throws **before** calling the decoder, then uses the decoder only for
+  the 2xx safe decode. The known conservative callers are `auth_repository_impl`
+  (login/signup keep `Exception('… failed')` so a 401 is not an
+  `UnauthorizedException`), `user_lookup_provider` (404 → `null`), and the stats
+  reads (`StatsRepositoryImpl`, `ProjectRepositoryImpl.getProjectStats`) which
+  return `{}` on non-200.
 - **The 401 retry in `AuthenticatedClient` happens before `guardResponse`,
   and the `TokenRefresher` contract decides between three outcomes.**
   `_withRefresh` calls the refresher on every 401 and, on success, re-issues the

@@ -1,7 +1,6 @@
-import 'dart:convert';
-
 import '../../../../core/network/api_error_handler.dart';
 import '../../../../core/network/authenticated_client.dart';
+import '../../../../core/network/response_decoder.dart';
 import '../../../../core/serialization/parse_list.dart';
 import '../../domain/entities/language.dart';
 import '../../domain/entities/project.dart';
@@ -23,22 +22,14 @@ class ProjectRepositoryImpl implements ProjectRepository {
       '/api/languages',
       body: {'name': name, 'code': code},
     );
-    guardResponse(response);
-    if (response.statusCode != 201) {
-      throw Exception('Failed to create language: ${response.body}');
-    }
-    return Language.fromJson(jsonDecode(response.body) as Map<String, dynamic>);
+    return Language.fromJson(decodeObject(response));
   }
 
   @override
   Future<List<Language>> listLanguages() async {
     final response = await _client.get('/api/languages');
-    guardResponse(response);
-    if (response.statusCode != 200) {
-      throw Exception('Failed to list languages: ${response.body}');
-    }
     return parseList(
-      jsonDecode(response.body),
+      decodeList(response),
       Language.fromJson,
       context: 'listLanguages',
     );
@@ -47,12 +38,8 @@ class ProjectRepositoryImpl implements ProjectRepository {
   @override
   Future<List<Project>> listProjects() async {
     final response = await _client.get('/api/oc/projects');
-    guardResponse(response);
-    if (response.statusCode != 200) {
-      throw Exception('Failed to list projects: ${response.body}');
-    }
     return parseList(
-      jsonDecode(response.body),
+      decodeList(response),
       Project.fromJson,
       context: 'listProjects',
     );
@@ -61,10 +48,7 @@ class ProjectRepositoryImpl implements ProjectRepository {
   @override
   Future<Project> getProject(String id) async {
     final response = await _client.get('/api/projects/$id');
-    if (response.statusCode != 200) {
-      throw Exception('Failed to get project: ${response.body}');
-    }
-    return Project.fromJson(jsonDecode(response.body) as Map<String, dynamic>);
+    return Project.fromJson(decodeObject(response));
   }
 
   @override
@@ -72,7 +56,7 @@ class ProjectRepositoryImpl implements ProjectRepository {
     final response = await _client.get('/api/oc/projects/$projectId/stats');
     guardResponse(response);
     if (response.statusCode != 200) return {};
-    return jsonDecode(response.body) as Map<String, dynamic>;
+    return decodeObject(response);
   }
 
   @override
@@ -85,22 +69,14 @@ class ProjectRepositoryImpl implements ProjectRepository {
     if (description != null) body['description'] = description;
 
     final response = await _client.post('/api/projects', body: body);
-    guardResponse(response);
-    if (response.statusCode != 201) {
-      throw Exception('Failed to create project: ${response.body}');
-    }
-    return Project.fromJson(jsonDecode(response.body) as Map<String, dynamic>);
+    return Project.fromJson(decodeObject(response));
   }
 
   @override
   Future<List<ProjectMember>> listMembers(String projectId) async {
     final response = await _client.get('/api/projects/$projectId/access/users');
-    guardResponse(response);
-    if (response.statusCode != 200) {
-      throw Exception('Failed to list members: ${response.body}');
-    }
     return parseList(
-      jsonDecode(response.body),
+      decodeList(response),
       ProjectMember.fromJson,
       context: 'listMembers',
     );
@@ -136,10 +112,6 @@ class ProjectRepositoryImpl implements ProjectRepository {
   @override
   Future<Project> updateProject(String id, Map<String, dynamic> data) async {
     final response = await _client.patch('/api/projects/$id', body: data);
-    guardResponse(response);
-    if (response.statusCode != 200) {
-      throw Exception('Failed to update project: ${response.body}');
-    }
-    return Project.fromJson(jsonDecode(response.body) as Map<String, dynamic>);
+    return Project.fromJson(decodeObject(response));
   }
 }

@@ -553,6 +553,36 @@ void main() {
       httpClient.close();
     });
 
+    test(
+      'malformed create payload marks as failure instead of crashing',
+      () async {
+        final testFile = File('${tempDir.path}/malformed_create.m4a');
+        testFile.writeAsBytesSync(Uint8List(1024));
+
+        final rec = makeRecording(localFilePath: testFile.path);
+
+        when(() => mockConnectivity.isOnline).thenAnswer((_) async => true);
+        when(() => mockRepo.getPendingUploads()).thenAnswer((_) async => [rec]);
+        stubRepoForUpload(testFile.path);
+
+        final httpClient = MockClient((request) async {
+          if (request.method == 'POST' &&
+              request.url.path == '/api/oc/recordings') {
+            return http.Response(jsonEncode({'id': 123}), 201);
+          }
+          return http.Response('Not Found', 404);
+        });
+
+        final engine = buildEngine(httpClient);
+
+        await engine.processQueue();
+
+        verify(() => mockRepo.markAsFailed('rec-1')).called(1);
+        verifyNever(() => mockRepo.markAsUploaded(any(), any(), any()));
+        httpClient.close();
+      },
+    );
+
     test('timeout marks as retryable failure', () async {
       final testFile = File('${tempDir.path}/timeout.m4a');
       testFile.writeAsBytesSync(Uint8List(1024));

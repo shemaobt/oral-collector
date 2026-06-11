@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:oral_collector/core/database/app_database.dart';
+import 'package:oral_collector/core/errors/app_exception.dart';
 import 'package:oral_collector/core/network/authenticated_client.dart';
 import 'package:oral_collector/core/platform/file_source.dart';
 import 'package:oral_collector/core/util/crc32c.dart';
@@ -250,6 +251,32 @@ void main() {
       expect(call.end, 1024);
       expect(call.url, 'https://storage.googleapis.com/test');
       expect(call.headers['Content-Type'], 'audio/mp4');
+    });
+
+    test('throws a catchable ParseException when upload-url returns a '
+        'non-string upload_url', () async {
+      final testFile = File('${tempDir.path}/malformed_url.m4a');
+      testFile.writeAsBytesSync(Uint8List(512));
+
+      final mockClient = MockClient((request) async {
+        if (request.url.path.contains('upload-url')) {
+          return http.Response(jsonEncode({'upload_url': 123}), 200);
+        }
+        return http.Response('', 404);
+      });
+
+      final service = buildService(httpClient: mockClient);
+
+      await expectLater(
+        service.upload(
+          recordingId: 'rec-1',
+          serverId: 'srv-1',
+          localFilePath: testFile.path,
+          format: 'm4a',
+          fileSizeBytes: 512,
+        ),
+        throwsA(isA<ParseException>()),
+      );
     });
 
     test('retries once on 403 expired URL', () async {

@@ -10,6 +10,7 @@ import 'package:mocktail/mocktail.dart';
 
 import 'package:oral_collector/core/config/env.dart';
 import 'package:oral_collector/core/database/app_database.dart';
+import 'package:oral_collector/core/errors/app_exception.dart';
 import 'package:oral_collector/core/network/authenticated_client.dart';
 import 'package:oral_collector/core/platform/file_source.dart';
 import 'package:oral_collector/features/recording/data/repositories/local_recording_repository.dart';
@@ -164,6 +165,30 @@ void main() {
       throwsA(isA<Exception>()),
     );
   });
+
+  test(
+    'throws a catchable ParseException when create returns a non-string id',
+    () async {
+      final bytes = Uint8List(10);
+      final httpClient = MockClient((request) async {
+        if (request.url.path == '/api/oc/recordings') {
+          return http.Response(jsonEncode({'id': 123}), 201);
+        }
+        return http.Response('unexpected', 500);
+      });
+      final auth = AuthenticatedClient(client: httpClient, storage: storage);
+      final uploader = DirectRecordingUploader(
+        client: auth,
+        resumableUploadService: resumable,
+        recordingRepo: repo,
+      );
+
+      await expectLater(
+        uploader.upload(source: sampleSource(bytes), meta: sampleMeta()),
+        throwsA(isA<ParseException>()),
+      );
+    },
+  );
 
   test('throws when GCS PUT fails', () async {
     final bytes = Uint8List(10);
