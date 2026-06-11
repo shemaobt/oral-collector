@@ -20,8 +20,8 @@ jobs:
           channel: "stable"
           cache: true
 
-      - name: Install dependencies
-        run: flutter pub get
+      - name: Install dependencies (lock must be authoritative)
+        run: flutter pub get --enforce-lockfile
 
       - name: Regenerate drift code and migration-test fixtures
         run: |
