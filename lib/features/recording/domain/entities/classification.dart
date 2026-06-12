@@ -1,20 +1,33 @@
-import '../../../../core/database/app_database.dart';
-
 const String kUnclassifiedGenreId = 'unclassified';
 
-extension RecordingClassification on LocalRecording {
-  bool get hasGenre => genreId != kUnclassifiedGenreId;
-  bool get hasRegister => registerId != null && registerId!.isNotEmpty;
-  bool get isUnclassified => !hasGenre || !hasRegister;
-  bool get isClassified => hasGenre && hasRegister;
+// "Sem gênero" significa exatamente a sentinela; um id qualquer (mesmo vazio)
+// conta como gênero. Registros não têm sentinela — só presença não-vazia.
+bool recordingHasGenre(String genreId) => genreId != kUnclassifiedGenreId;
 
-  bool get hasSecondaryGenre =>
-      secondaryGenreId != null &&
-      secondaryGenreId!.isNotEmpty &&
-      secondaryGenreId != kUnclassifiedGenreId;
+bool recordingHasRegister(String? registerId) =>
+    registerId != null && registerId.isNotEmpty;
 
-  bool get hasSecondaryRegister =>
-      secondaryRegisterId != null && secondaryRegisterId!.isNotEmpty;
+bool recordingIsUnclassified({
+  required String genreId,
+  required String? registerId,
+}) => !recordingHasGenre(genreId) || !recordingHasRegister(registerId);
 
-  bool get hasSecondary => hasSecondaryGenre || hasSecondaryRegister;
-}
+bool recordingIsClassified({
+  required String genreId,
+  required String? registerId,
+}) => recordingHasGenre(genreId) && recordingHasRegister(registerId);
+
+bool recordingHasSecondaryGenre(String? secondaryGenreId) =>
+    secondaryGenreId != null &&
+    secondaryGenreId.isNotEmpty &&
+    secondaryGenreId != kUnclassifiedGenreId;
+
+bool recordingHasSecondaryRegister(String? secondaryRegisterId) =>
+    secondaryRegisterId != null && secondaryRegisterId.isNotEmpty;
+
+bool recordingHasSecondary({
+  required String? secondaryGenreId,
+  required String? secondaryRegisterId,
+}) =>
+    recordingHasSecondaryGenre(secondaryGenreId) ||
+    recordingHasSecondaryRegister(secondaryRegisterId);
