@@ -147,6 +147,14 @@ Path: @/lib/features/recording/presentation/widgets
   [../../data/services/segmented_recorder.dart](../../data/services/segmented_recorder.dart),
   which subscribes to the platform `interruptionEventStream` and
   re-activates the session itself.
+- **`ConfirmationStep` cancels its own preview-player stream subscriptions
+  on dispose (ENG-140 F16).** Its inline `AudioPlayer` preview subscribes to
+  `playerStateStream` / `positionStream` / `durationStream`; those handles are
+  stored and `cancel()`-ed in `dispose()` before `_player.dispose()`. just_audio
+  0.9.42 does not close those streams when the player is disposed, so dropping
+  the subscriptions is required to stop their `setState` callbacks from firing
+  on an unmounted widget. (This widget owns a short-lived preview player only;
+  the long-lived detail-screen player still lives in `RecordingPlayerNotifier`.)
 - **`ConfirmationStep` is parameterized for the recovery reuse (ENG-80).**
   Two optional params let the recovery screen host the same widget
   without duplicating the save logic: `onSaved` runs in place of the

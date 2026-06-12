@@ -107,7 +107,11 @@ Path: @/lib/features/recording/presentation
   `DirectRecordingUploader.upload`; native copies the file into the docs
   `recordings/` dir, optionally compresses WAV→M4A via FFmpeg, then writes a
   row through `LocalRecordingRepository.insertRecording` and lets the sync
-  queue pick it up. The web path is only "no Drift row" for small
+  queue pick it up. The native compress step deletes the copied WAV
+  (`destPath`) only when `compressToM4a` returns `true`, which now means a
+  verified non-empty m4a exists on disk — the ENG-140 F18 delete-on-success
+  contract documented in
+  [/lib/core/platform/docs.md](../../../core/platform/docs.md). The web path is only "no Drift row" for small
   (single-shot, <5 MB) files; a large web import goes resumable and
   `DirectRecordingUploader` inserts a temporary `web_<serverId>` shadow row
   (`uploadStatus='web_uploading'`) to carry resume state, deleting it on
@@ -206,6 +210,16 @@ Path: @/lib/features/recording/presentation
   retry reconciles the existing row and the resumable service resumes from
   the persisted offset (`resumableSessionUri`/`uploadedBytes`) instead of
   crashing or re-uploading what already landed.
+- **The trim loader distinguishes a failed load from a missing recording
+  (ENG-140 F21).** `trim_editor_screen.dart` resolves a server-only recording
+  by calling `apiRepo.getRecording`. A thrown error is no longer swallowed as
+  "not found": only an HTTP 404 (`isRecordingNotFound` in
+  [./trim_load_error.dart](trim_load_error.dart)) falls through to the
+  `trim_notFound` state; any other error (network/timeout/server) sets
+  `_errorMessage` and surfaces. Because a failed load also leaves `_recording`
+  null, the `build` method now checks the error state **before** the
+  not-found state, so a real error is shown instead of a misleading "not
+  found" screen.
 - **Detail screen `LayoutBuilder` swap is what makes audio playback
   fragile.** The screen pivots between a `Column`/`AppBar` wide layout
   and a `CustomScrollView`/`SliverAppBar` phone layout at the 700 dp
