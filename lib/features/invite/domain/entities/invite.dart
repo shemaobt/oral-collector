@@ -1,3 +1,5 @@
+import '../../../../core/serialization/safe_read.dart';
+
 class Invite {
   final String id;
   final String projectId;
@@ -22,9 +24,7 @@ class Invite {
       projectName: json['project_name'] as String? ?? '',
       role: json['role'] as String? ?? 'member',
       status: json['status'] as String? ?? 'pending',
-      createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at'] as String)
-          : null,
+      createdAt: readDateOrNull(json, 'created_at'),
     );
   }
 

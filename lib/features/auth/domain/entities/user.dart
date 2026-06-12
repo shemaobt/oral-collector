@@ -1,3 +1,5 @@
+import '../../../../core/serialization/safe_read.dart';
+
 class User {
   final String id;
   final String email;
@@ -21,9 +23,7 @@ class User {
       email: json['email'] as String,
       displayName: json['display_name'] as String?,
       isPlatformAdmin: json['is_platform_admin'] == true,
-      createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at'] as String)
-          : null,
+      createdAt: readDateOrNull(json, 'created_at'),
       avatarUrl: json['avatar_url'] as String?,
     );
   }

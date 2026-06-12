@@ -30,8 +30,26 @@ Path: @/lib/core/serialization
   layer (`decodeObject` / `decodeList`, ENG-153) that produces the decoded `Map`
   / `List` these helpers consume landed one folder over in
   [../network/response_decoder.dart](../network/response_decoder.dart) (see
-  [../network/docs.md](../network/docs.md)); a future E8 sibling still expected
-  here is the tolerant `fromWire` enum mapping (ENG-150).
+  [../network/docs.md](../network/docs.md)).
+- ENG-152 routed the hand-written entity `fromJson` factories' timestamp
+  reads through these safe-readers (`readDate` / `readDateOrNull`) — e.g.
+  [storyteller.dart](../../features/storyteller/domain/entities/storyteller.dart),
+  [recording.dart](../../features/recording/domain/entities/recording.dart), and
+  [user.dart](../../features/auth/domain/entities/user.dart) — so a
+  malformed/wrong-typed timestamp surfaces as a catchable `ParseException`
+  instead of an uncatchable `FormatException`/`TypeError`. The **tolerant
+  `fromWire` enum** that ADR-0008 anticipated (ENG-150) has now landed, but it
+  lives in its own feature, **not** in this folder: `StorytellerSex` in
+  [storyteller.dart](../../features/storyteller/domain/entities/storyteller.dart)
+  maps an unrecognized wire value to an `unknown` sentinel and never throws (its
+  `sex` field is still read through `readString` here, so a non-string stays a
+  catchable `ParseException`). The analogous `UploadStatus` / `CleaningStatus`
+  tolerant enums named in [ADR-0008](../../../docs/adr/ADR-0008-data-serialization.md)
+  are **deliberately deferred**: they remain raw wire `String`s (now read via
+  `readString` on `recording.dart` / `server_recording.dart`) because their
+  canonical value sets are still `needs-api` and their UI string switches already
+  default safely — so, unlike `StorytellerSex`, they never threw an uncatchable
+  `Error`.
 
 ### How it fits into the larger codebase
 

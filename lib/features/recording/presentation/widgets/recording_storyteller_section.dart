@@ -95,9 +95,11 @@ class RecordingStorytellerSection extends ConsumerWidget {
       }
 
       final st = resolvedStoryteller!;
-      final sexLabel = st.sex == StorytellerSex.male
-          ? l10n.storyteller_sexMale
-          : l10n.storyteller_sexFemale;
+      final sexLabel = switch (st.sex) {
+        StorytellerSex.male => l10n.storyteller_sexMale,
+        StorytellerSex.female => l10n.storyteller_sexFemale,
+        StorytellerSex.unknown => '—',
+      };
       final parts = <String>[sexLabel];
       if (st.age != null) parts.add(l10n.storyteller_ageYearsShort(st.age!));
       final loc = (st.location ?? '').trim();
