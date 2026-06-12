@@ -1,5 +1,5 @@
-import '../../../../core/network/api_error_handler.dart';
 import '../../../../core/network/authenticated_client.dart';
+import '../../../../core/network/error_boundary.dart';
 import '../../../../core/network/response_decoder.dart';
 import '../../../../core/serialization/parse_list.dart';
 import '../../domain/entities/invite.dart';
@@ -24,18 +24,16 @@ class InviteRepositoryImpl implements InviteRepository {
   @override
   Future<void> acceptInvite(String inviteId) async {
     final response = await _client.post('/api/oc/invites/$inviteId/accept');
-    guardResponse(response);
     if (response.statusCode != 200 && response.statusCode != 204) {
-      throw Exception('Failed to accept invite: ${response.body}');
+      throwForResponse(response);
     }
   }
 
   @override
   Future<void> declineInvite(String inviteId) async {
     final response = await _client.post('/api/oc/invites/$inviteId/decline');
-    guardResponse(response);
     if (response.statusCode != 200 && response.statusCode != 204) {
-      throw Exception('Failed to decline invite: ${response.body}');
+      throwForResponse(response);
     }
   }
 }

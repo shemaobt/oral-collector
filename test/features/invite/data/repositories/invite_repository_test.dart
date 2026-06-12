@@ -56,4 +56,47 @@ void main() {
 
     await expectLater(repo.acceptInvite('i-1'), completes);
   });
+
+  test('acceptInvite em 500 lança ServerException sem vazar o corpo', () async {
+    when(
+      () => client.post(any()),
+    ).thenAnswer((_) async => http.Response('secret-body', 500));
+
+    await expectLater(
+      repo.acceptInvite('i-1'),
+      throwsA(
+        isA<ServerException>()
+            .having((e) => e.statusCode, 'statusCode', 500)
+            .having((e) => e.code, 'code', 'server_500')
+            .having(
+              (e) => e.toString(),
+              'toString',
+              isNot(contains('secret-body')),
+            ),
+      ),
+    );
+  });
+
+  test(
+    'declineInvite em 500 lança ServerException sem vazar o corpo',
+    () async {
+      when(
+        () => client.post(any()),
+      ).thenAnswer((_) async => http.Response('secret-body', 500));
+
+      await expectLater(
+        repo.declineInvite('i-1'),
+        throwsA(
+          isA<ServerException>()
+              .having((e) => e.statusCode, 'statusCode', 500)
+              .having((e) => e.code, 'code', 'server_500')
+              .having(
+                (e) => e.toString(),
+                'toString',
+                isNot(contains('secret-body')),
+              ),
+        ),
+      );
+    },
+  );
 }

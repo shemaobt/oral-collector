@@ -5,7 +5,7 @@ class ProjectStorytellersState {
   final List<Storyteller> storytellers;
   final bool isLoading;
   final bool isMutating;
-  final String? error;
+  final Object? error;
 
   const ProjectStorytellersState({
     this.projectId,
@@ -20,7 +20,7 @@ class ProjectStorytellersState {
     List<Storyteller>? storytellers,
     bool? isLoading,
     bool? isMutating,
-    String? error,
+    Object? error,
     bool clearError = false,
   }) {
     return ProjectStorytellersState(

@@ -3,7 +3,7 @@ import '../../features/auth/domain/entities/user.dart';
 class AuthState {
   final User? currentUser;
   final bool isLoading;
-  final String? error;
+  final Object? error;
 
   const AuthState({this.currentUser, this.isLoading = false, this.error});
 
@@ -12,7 +12,7 @@ class AuthState {
   AuthState copyWith({
     User? currentUser,
     bool? isLoading,
-    String? error,
+    Object? error,
     bool clearUser = false,
     bool clearError = false,
   }) {

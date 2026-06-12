@@ -68,7 +68,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
       }
     });
 
-    ref.listen<String?>(adminNotifierProvider.select((s) => s.error), (
+    ref.listen<Object?>(adminNotifierProvider.select((s) => s.error), (
       prev,
       next,
     ) {
