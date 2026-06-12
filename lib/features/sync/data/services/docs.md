@@ -61,7 +61,17 @@ Path: @/lib/features/sync/data/services
 - The transport itself (`resumable_upload_service.dart`,
   `upload_downloader.dart`) validates CRC32C and resumes from the saved GCS
   offset; the foreground service / Live Activity are lifecycle and UI
-  concerns layered on top of it.
+  concerns layered on top of it. The client-side CRC32C is computed **off the
+  UI isolate** through the shared helper in
+  [/lib/core/util/docs.md](../../../../core/util/docs.md) (a background isolate
+  on native, a cooperative chunked yield on web) — for the path upload the
+  whole file is read and hashed inside the isolate from its path, so multi-MB
+  bytes are not copied across the boundary. This is the app's first
+  background-isolate usage; see ADR-0004. (The legacy web resumable path is the
+  exception — it still folds the CRC per upload chunk on the UI isolate,
+  interleaved with the chunk uploads.) The CRC is still checked against the
+  GCS `x-goog-hash` after the PUT, and the validate-scheme → PUT ordering is
+  unchanged.
 - The server returns the GCS target out-of-band (`upload_url` for single-PUT,
   `session_uri` for resumable), so the transport re-checks its scheme at the
   server→app boundary before any PUT, using the `isHttpsUrl` predicate from
