@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/errors/api_exception.dart';
+import '../../../../core/observability/error_reporter.dart';
 import '../../../../core/util/bounded_concurrency.dart';
 import '../../../genre/domain/entities/genre.dart';
 import '../../../genre/domain/entities/genre_update.dart';
@@ -52,10 +54,9 @@ class AdminNotifier extends Notifier<AdminState> {
     try {
       final queue = await _repo.fetchCleaningQueue();
       state = state.copyWith(cleaningQueue: queue);
-    } on Exception catch (e) {
-      state = state.copyWith(
-        error: e.toString().replaceFirst('Exception: ', ''),
-      );
+    } on Exception catch (e, st) {
+      _reportUnexpected(e, st);
+      state = state.copyWith(error: e);
     }
   }
 
@@ -64,10 +65,9 @@ class AdminNotifier extends Notifier<AdminState> {
       await _repo.triggerClean(recordingId);
       await refreshCleaningQueue();
       return true;
-    } on Exception catch (e) {
-      state = state.copyWith(
-        error: e.toString().replaceFirst('Exception: ', ''),
-      );
+    } on Exception catch (e, st) {
+      _reportUnexpected(e, st);
+      state = state.copyWith(error: e);
       return false;
     }
   }
@@ -108,10 +108,9 @@ class AdminNotifier extends Notifier<AdminState> {
       final genres = await _repo.fetchAllGenres();
       state = state.copyWith(genres: genres);
       return true;
-    } on Exception catch (e) {
-      state = state.copyWith(
-        error: e.toString().replaceFirst('Exception: ', ''),
-      );
+    } on Exception catch (e, st) {
+      _reportUnexpected(e, st);
+      state = state.copyWith(error: e);
       return false;
     }
   }
@@ -122,10 +121,9 @@ class AdminNotifier extends Notifier<AdminState> {
       final genres = await _repo.fetchAllGenres();
       state = state.copyWith(genres: genres);
       return true;
-    } on Exception catch (e) {
-      state = state.copyWith(
-        error: e.toString().replaceFirst('Exception: ', ''),
-      );
+    } on Exception catch (e, st) {
+      _reportUnexpected(e, st);
+      state = state.copyWith(error: e);
       return false;
     }
   }
@@ -136,10 +134,9 @@ class AdminNotifier extends Notifier<AdminState> {
       final genres = await _repo.fetchAllGenres();
       state = state.copyWith(genres: genres);
       return true;
-    } on Exception catch (e) {
-      state = state.copyWith(
-        error: e.toString().replaceFirst('Exception: ', ''),
-      );
+    } on Exception catch (e, st) {
+      _reportUnexpected(e, st);
+      state = state.copyWith(error: e);
       return false;
     }
   }
@@ -158,10 +155,9 @@ class AdminNotifier extends Notifier<AdminState> {
       final genres = await _repo.fetchAllGenres();
       state = state.copyWith(genres: genres);
       return true;
-    } on Exception catch (e) {
-      state = state.copyWith(
-        error: e.toString().replaceFirst('Exception: ', ''),
-      );
+    } on Exception catch (e, st) {
+      _reportUnexpected(e, st);
+      state = state.copyWith(error: e);
       return false;
     }
   }
@@ -172,11 +168,17 @@ class AdminNotifier extends Notifier<AdminState> {
       final genres = await _repo.fetchAllGenres();
       state = state.copyWith(genres: genres);
       return true;
-    } on Exception catch (e) {
-      state = state.copyWith(
-        error: e.toString().replaceFirst('Exception: ', ''),
-      );
+    } on Exception catch (e, st) {
+      _reportUnexpected(e, st);
+      state = state.copyWith(error: e);
       return false;
     }
+  }
+
+  void _reportUnexpected(Object error, StackTrace stackTrace) {
+    // 401 é sessão expirada esperada (tratada por refresh/login alhures);
+    // só erros inesperados vão à telemetria.
+    if (error is UnauthorizedException) return;
+    ref.read(errorReporterProvider).reportError(error, stackTrace);
   }
 }

@@ -153,4 +153,15 @@ void main() {
     );
     expect(container.read(genreNotifierProvider).isLoading, isFalse);
   });
+
+  test('fetchGenres re-lança a exceção tipada original em vez de embrulhá-la '
+      'numa Exception genérica', () async {
+    when(
+      () => repo.listGenres(),
+    ).thenThrow(const ServerException(statusCode: 500, code: 'server_500'));
+    final container = makeContainer(FakeGenreCache(cached: null));
+    final notifier = container.read(genreNotifierProvider.notifier);
+
+    await expectLater(notifier.fetchGenres(), throwsA(isA<ServerException>()));
+  });
 }

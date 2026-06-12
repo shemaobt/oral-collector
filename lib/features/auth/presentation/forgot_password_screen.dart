@@ -5,6 +5,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/auth/providers.dart';
+import '../../../core/observability/error_reporter.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/widgets/error_snack_bar.dart';
 
@@ -31,6 +32,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   Future<void> _handleSubmit() async {
     if (!_formKey.currentState!.validate()) return;
 
+    final reporter = ref.read(errorReporterProvider);
     setState(() => _isLoading = true);
 
     try {
@@ -38,13 +40,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           .read(authRepositoryProvider)
           .requestPasswordReset(_emailController.text.trim());
       if (mounted) setState(() => _emailSent = true);
-    } on Exception catch (e) {
-      if (mounted) {
-        showErrorSnackBar(
-          context,
-          e.toString().replaceFirst('Exception: ', ''),
-        );
-      }
+    } on Exception catch (e, st) {
+      reporter.reportError(e, st);
+      if (mounted) showErrorSnackBar(context, e);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }

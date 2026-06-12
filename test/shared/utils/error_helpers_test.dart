@@ -42,6 +42,16 @@ void main() {
       );
     });
 
+    test('ServerException com code dinâmico não expõe o código cru', () {
+      final shown = friendlyErrorFor(
+        const ServerException(statusCode: 500, code: 'server_500'),
+        l10n,
+      );
+      expect(shown, l10n.error_serverFailure);
+      expect(shown, isNot(contains('server_500')));
+      expect(shown, isNot(contains('ServerException')));
+    });
+
     test('ConflictException -> error_serverFailure', () {
       expect(
         friendlyErrorFor(const ConflictException(), l10n),
