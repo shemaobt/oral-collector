@@ -16,6 +16,7 @@ import 'core/observability/error_reporter.dart';
 import 'core/platform/file_ops.dart' as platform;
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'features/recording/data/providers.dart';
 import 'features/recording/data/services/recording_live_activity.dart';
 import 'features/recording/data/services/recording_notification.dart';
 import 'features/recording/data/services/recording_trash.dart';
@@ -90,6 +91,10 @@ class _OralCollectorAppState extends ConsumerState<OralCollectorApp> {
 
     Future.microtask(() async {
       ref.read(authNotifierProvider.notifier).tryAutoLogin();
+
+      // Reclaim recordings orphaned in `uploading` by a mid-upload crash so the
+      // queue drains them again; must run before sync/listeners go live.
+      await ref.read(localRecordingRepositoryProvider).resetStuckUploading();
 
       // Crash-recovery must clear any stale RecordingActiveFlag from a
       // previous run BEFORE the upload listeners go live. Otherwise the very

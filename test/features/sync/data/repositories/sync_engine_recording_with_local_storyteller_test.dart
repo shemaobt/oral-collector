@@ -309,6 +309,15 @@ void main() {
             'recording referencing an unsynced local storyteller must NOT call recording-create',
       );
 
+      final blocked = await recordingRepo.getRecordingById('rec_blocked');
+      expect(
+        blocked!.uploadStatus,
+        'local',
+        reason:
+            'a recording blocked on an unsynced storyteller must revert to '
+            'local (re-enqueueable), not stay stranded in uploading',
+      );
+
       httpClient.close();
     },
   );
