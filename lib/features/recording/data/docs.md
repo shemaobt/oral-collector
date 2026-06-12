@@ -41,8 +41,12 @@ Path: @/lib/features/recording/data
   (`getPendingUploads`, `getPendingWebUploads`) and to mark rows as
   `uploading` / `uploaded` / `failed`. Those two queries also define the
   **order the upload queue is drained in** (`createdAt ASC, id ASC`, FIFO by
-  enqueue time); the sync engine consumes the list in that order, so the
-  ordering is a contract this folder owns on sync's behalf — see
+  enqueue time); the sync engine consumes the list in that order (applying its
+  own eligibility filter, which skips `uploading` rows), so the ordering is a
+  contract this folder owns on sync's behalf — see
+  [./repositories/docs.md](repositories/docs.md). The startup crash-recovery
+  reclaim of rows orphaned in `uploading` (`resetStuckUploading`, called from
+  [/lib/main.dart](../../../main.dart)) also lives on this repository — see
   [./repositories/docs.md](repositories/docs.md). The resumable upload service is
   exported from this folder via `resumableUploadServiceProvider` but its
   implementation lives in
