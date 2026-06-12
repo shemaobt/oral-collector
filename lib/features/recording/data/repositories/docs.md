@@ -61,6 +61,19 @@ Path: @/lib/features/recording/data/repositories
   `localRecordingStreamProvider`), `getPendingUploads`,
   `getPendingWebUploads`, and the aggregate helpers
   `countRecordings`/`totalDuration`/`getLocalUnclassifiedStats`.
+- `getPendingUploads` / `getPendingWebUploads` define the **upload queue
+  order**: they sort `createdAt ASC, id ASC`, and
+  [the sync engine](../../../sync/data/repositories/sync_engine.dart) drains
+  the returned list in that order (FIFO). `createdAt` is the row-insertion
+  timestamp (true enqueue order); `id` is a stable tiebreaker. This is a
+  load-bearing ordering invariant — see Things to Know.
+- `watchRecordingById` is a `watchSingleOrNull` query with `.distinct()`
+  appended. Drift invalidates query streams at the table level, so every
+  write to `local_recordings` re-runs this query and re-emits even when the
+  row is byte-identical; `.distinct()` suppresses those duplicate downstream
+  emissions so the detail screen's `ref.listen` does not rebuild on unrelated
+  writes. The query still re-executes — table-level invalidation is inherent
+  to Drift and is not removed by `.distinct()`.
 - `insertRecording` is a plain insert; `upsertRecording` is
   `insertOnConflictUpdate` (insert-or-update keyed on the primary key).
   Columns absent from the companion are left untouched on an update, so a
@@ -132,6 +145,24 @@ Path: @/lib/features/recording/data/repositories
   metadata.** After upload, server-side enrichment (e.g. `user_id`
   resolution) is reconciled later by the detail screen's heal path
   (`buildHealMetadataCompanion`), not by the upload pipeline.
+- **The pending-upload order is `createdAt ASC, id ASC`, and the queue is
+  drained in that order (ENG-122).** Ordering by `recordedAt` (wall-clock
+  recording time) is wrong for a FIFO queue: a batch import stamps many rows
+  with the same `DateTime.now()`, split segments inherit the parent's
+  `recordedAt`, and `recordedAt` can move backward relative to enqueue order.
+  `createdAt` (row insertion time) is the true enqueue order. `id` is the
+  tiebreaker because `createdAt` is persisted at 1-second granularity (Drift
+  stores `dateTime()` as unix seconds), so a same-second batch import would
+  otherwise drain nondeterministically. This sort is intentionally **not
+  index-covered**: the index on `local_recordings` is
+  `(uploadStatus, recordedAt)` (see
+  [/lib/core/database/app_database.dart](../../../../core/database/app_database.dart)),
+  and the pending set is small enough that the uncovered sort is negligible —
+  no schema change or new index was added.
+- **`watchRecordingById` carries `.distinct()` (ENG-121).** It exists only to
+  collapse Drift's table-level re-emissions, not to change what the stream
+  reports. Any consumer that needs to observe a write which produces an
+  identical `LocalRecording` value (there is none today) would not see it.
 - **`upsertRecording` is what makes a failed web import retryable
   (ENG-80).** A large web import inserts a `web_<serverId>` shadow row to
   track resume state; on failure that row is intentionally left behind for
