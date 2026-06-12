@@ -74,10 +74,23 @@ Path: @/lib/features/project/data
   **skips-and-logs** a malformed element instead of failing the page; single
   objects stay fail-fast on a wrong-shaped root. **No-body** mutations
   (`removeMember`, `inviteMember`) keep `guardResponse` plus the bespoke
-  `Exception`, and `getProjectStats` keeps its conservative non-200 → `{}` guard
-  ahead of the decode. All differ from the cache above, which drops the whole
-  snapshot on any bad record. The repositories do not cache; caching is the
-  notifier's decision after a successful fetch.
+  `Exception`. All differ from the cache above, which drops the whole snapshot
+  on any bad record. The repositories do not cache; caching is the notifier's
+  decision after a successful fetch.
+- The mutation/stats surface is **typed at the repository boundary** (ENG-94):
+  `updateProject`/`createProject` take a `ProjectUpdate`
+  ([../domain/entities/project_update.dart](../domain/entities/project_update.dart))
+  whose `toJson` builds the PATCH body, and `getProjectStats` returns a parsed
+  `ProjectStats`
+  ([../domain/entities/project_stats.dart](../domain/entities/project_stats.dart))
+  instead of a raw `Map` and now routes non-200 through the decoder (no silent
+  `{}`). `ProjectUpdate.toJson` encodes the partial-update distinction: a `null`
+  field is omitted (left untouched) while a `clearDescription` flag emits an
+  explicit `null` to clear it — the wire cannot otherwise tell "leave alone"
+  from "clear". `ProjectStats.fromJson` reads its counters through the
+  safe-readers
+  ([/lib/core/serialization](../../../core/serialization/docs.md)) and its fields
+  are nullable so a caller can fall back to the project's own counts.
 - The notifier hydrates from `ProjectCache.read()` on build (fire-and-forget, so
   cached data appears before the network returns) and persists the enriched
   project list via `ProjectCache.write()` after a successful fetch.
@@ -105,6 +118,16 @@ Path: @/lib/features/project/data
   the server because it backs pull-to-refresh on multiple screens (home and
   projects). Here `lastFetched` serves exclusively the hydration guard, never
   fetch de-duplication.
+- **`getProjectStats` now throws on non-200; "best-effort" lives at the call
+  site, not the repository.** It previously returned an empty `Map` on any
+  non-200, silently hiding the failure. It now routes non-200 through
+  `throwForResponse` ([/lib/core/network](../../../core/network/docs.md)) like
+  the other reads. The settings screen
+  ([../presentation/project_settings_screen.dart](../presentation/project_settings_screen.dart))
+  is the only caller and wraps the stats fetch in its own `try`/`catch`,
+  falling back to the project's own counts so a stats failure no longer fails
+  the whole screen load. Note this stats endpoint lives on
+  `ProjectRepositoryImpl`, distinct from `StatsRepositoryImpl`.
 - **Provider override is the supported injection point.** Tests and any
   alternate backend swap the cache by overriding `projectCacheProvider`; nothing
   else in the app constructs `SharedPreferencesProjectCache` directly.

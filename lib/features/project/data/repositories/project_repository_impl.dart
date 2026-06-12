@@ -5,6 +5,8 @@ import '../../../../core/serialization/parse_list.dart';
 import '../../domain/entities/language.dart';
 import '../../domain/entities/project.dart';
 import '../../domain/entities/project_member.dart';
+import '../../domain/entities/project_stats.dart';
+import '../../domain/entities/project_update.dart';
 import '../../domain/repositories/project_repository.dart';
 
 class ProjectRepositoryImpl implements ProjectRepository {
@@ -52,11 +54,9 @@ class ProjectRepositoryImpl implements ProjectRepository {
   }
 
   @override
-  Future<Map<String, dynamic>> getProjectStats(String projectId) async {
+  Future<ProjectStats> getProjectStats(String projectId) async {
     final response = await _client.get('/api/oc/projects/$projectId/stats');
-    guardResponse(response);
-    if (response.statusCode != 200) return {};
-    return decodeObject(response);
+    return ProjectStats.fromJson(decodeObject(response));
   }
 
   @override
@@ -110,8 +110,11 @@ class ProjectRepositoryImpl implements ProjectRepository {
   }
 
   @override
-  Future<Project> updateProject(String id, Map<String, dynamic> data) async {
-    final response = await _client.patch('/api/projects/$id', body: data);
+  Future<Project> updateProject(String id, ProjectUpdate update) async {
+    final response = await _client.patch(
+      '/api/projects/$id',
+      body: update.toJson(),
+    );
     return Project.fromJson(decodeObject(response));
   }
 }

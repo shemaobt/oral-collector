@@ -3,6 +3,7 @@ import '../../../../core/network/authenticated_client.dart';
 import '../../../../core/network/response_decoder.dart';
 import '../../../../core/serialization/parse_list.dart';
 import '../../../genre/domain/entities/genre.dart';
+import '../../../genre/domain/entities/genre_update.dart';
 import '../../../project/domain/entities/project.dart';
 import '../../../recording/domain/entities/recording.dart';
 import '../../domain/entities/admin_stats.dart';
@@ -56,8 +57,11 @@ class AdminRepositoryImpl implements AdminRepository {
   }
 
   @override
-  Future<Genre> updateGenre(String id, Map<String, dynamic> data) async {
-    final response = await _client.patch('/api/oc/genres/$id', body: data);
+  Future<Genre> updateGenre(String id, GenreUpdate update) async {
+    final response = await _client.patch(
+      '/api/oc/genres/$id',
+      body: update.toJson(),
+    );
     return Genre.fromJson(decodeObject(response));
   }
 

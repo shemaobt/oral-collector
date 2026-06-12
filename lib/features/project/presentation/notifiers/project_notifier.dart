@@ -7,6 +7,7 @@ import '../../data/project_cache.dart';
 import '../../data/providers.dart';
 import '../../domain/entities/language.dart';
 import '../../domain/entities/project.dart';
+import '../../domain/entities/project_update.dart';
 import '../../domain/repositories/project_repository.dart';
 import 'project_state.dart';
 
@@ -132,11 +133,11 @@ class ProjectNotifier extends Notifier<ProjectState> {
     }
   }
 
-  Future<void> updateProject(String id, Map<String, dynamic> data) async {
+  Future<void> updateProject(String id, ProjectUpdate update) async {
     state = state.copyWith(isLoading: true, clearError: true);
 
     try {
-      final updated = await _repo.updateProject(id, data);
+      final updated = await _repo.updateProject(id, update);
       final updatedList = state.projects.map((p) {
         return p.id == id ? updated : p;
       }).toList();

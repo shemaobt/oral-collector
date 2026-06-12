@@ -51,18 +51,20 @@ Path: @/lib/core/errors
   ([./app_exception.dart](app_exception.dart) declares `library;`) because
   `sealed` requires all subtypes to be co-located. A new leaf cannot be added
   from another file.
-- Leaf fields:
+- Leaf fields. `retryable` (ENG-103) is intrinsic to the leaf: it answers
+  "could re-issuing the identical request plausibly succeed?" and is what the
+  upload queue branches on (see "Things to Know").
 
-  | Leaf | Default `code` | `statusCode` | Extra |
-  | --- | --- | --- | --- |
-  | `NetworkException` | `network` | none | — |
-  | `TimeoutException` | `timeout` | none | — |
-  | `UnauthorizedException` | `unauthorized` | 401 | — |
-  | `ForbiddenException` | `forbidden` | 403 | — |
-  | `ValidationException` | `validation` | optional | `field` |
-  | `ServerException` | `server` | required | — |
-  | `ConflictException` | `conflict` | 409 | — |
-  | `ParseException` | `parse` | none | `field`, `expected` |
+  | Leaf | Default `code` | `statusCode` | `retryable` | Extra |
+  | --- | --- | --- | --- | --- |
+  | `NetworkException` | `network` | none | true | — |
+  | `TimeoutException` | `timeout` | none | true | — |
+  | `UnauthorizedException` | `unauthorized` | 401 | false | — |
+  | `ForbiddenException` | `forbidden` | 403 | false | — |
+  | `ValidationException` | `validation` | optional | only when 429 | `field` |
+  | `ServerException` | `server` | required | true | — |
+  | `ConflictException` | `conflict` | 409 | false | — |
+  | `ParseException` | `parse` | none | false | `field`, `expected` |
 
 - The boundary overrides `code` with a status-derived value (e.g. `server_500`,
   `client_404`) when it constructs a leaf; the defaults above apply when a leaf
@@ -85,6 +87,17 @@ Path: @/lib/core/errors
   ENG-148 then wired the first runtime producers (the safe-reader call-site
   migration), so `ParseException` now actually reaches this switch from live
   parse paths such as login and stats, not only as a compile-time tripwire.
+- **`retryable` is intrinsic to the type, with 429 as the one status-dependent
+  case.** Transport/transient leaves (`Network`, `Timeout`, `Server`) are
+  retryable; auth/authorization/conflict and `ParseException` are not.
+  `ValidationException` is retryable **only** for `statusCode == 429`, since a
+  rate-limit is the one `4xx` that clears on its own. The sole consumer today is
+  the upload queue in
+  [../../features/sync/data/repositories/sync_engine.dart](../../features/sync/data/repositories/sync_engine.dart),
+  which marks a row failed-and-retryable vs permanently-failed by this flag
+  alone, never by the exception subtype — so the `429`-becomes-retryable rule is
+  what flipped a rate-limited upload from terminal to retried (see
+  [../../features/sync/docs.md](../../features/sync/docs.md)).
 - **`cause` is the type only, never the value.** Leaves store
   `e.runtimeType`, not the caught object, so a `SocketException` message or an
   HTTP body can never leak through the exception into a log or the UI.

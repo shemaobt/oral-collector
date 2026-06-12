@@ -7,6 +7,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import '../../../../core/database/app_database.dart';
+import '../../../../core/errors/app_exception.dart' show AppException;
 import '../../../../core/network/authenticated_client.dart';
 import '../../../../core/network/response_decoder.dart';
 import '../../../../core/platform/file_ops.dart' as file_ops;
@@ -17,13 +18,6 @@ import '../../domain/repositories/connectivity_service.dart';
 import '../../domain/repositories/sync_engine.dart';
 import '../services/resumable_upload_service.dart';
 import '../services/upload_downloader.dart';
-
-class _NonRetryableUploadException implements Exception {
-  final String message;
-  _NonRetryableUploadException(this.message);
-  @override
-  String toString() => message;
-}
 
 class SyncEngineImpl implements SyncEngine {
   final LocalRecordingRepository _recordingRepo;
@@ -280,13 +274,6 @@ class SyncEngineImpl implements SyncEngine {
             .post('/api/oc/recordings', body: createBody)
             .timeout(_apiTimeout);
 
-        _checkResponse(
-          createResponse.statusCode,
-          createResponse.body,
-          'Create',
-          expected: 201,
-        );
-
         final createData = decodeObject(createResponse);
         serverId = readString(createData, 'id');
 
@@ -331,13 +318,6 @@ class SyncEngineImpl implements SyncEngine {
           )
           .timeout(_apiTimeout);
 
-      _checkResponse(
-        confirmResponse.statusCode,
-        confirmResponse.body,
-        'Confirm',
-        expected: 200,
-      );
-
       final confirmData = decodeObject(confirmResponse);
       final gcsUrl = readStringOrNull(confirmData, 'gcs_url');
 
@@ -346,23 +326,23 @@ class SyncEngineImpl implements SyncEngine {
       if (deleteAfterUpload && !kIsWeb) {
         await file_ops.deleteFile(resolvedPath);
       }
-    } on _NonRetryableUploadException catch (e) {
-      debugPrint('SyncEngine: non-retryable upload failure for $id: $e');
-      await _markPermanentlyFailed(id);
+    } on AppException catch (e, st) {
+      // Retry decision by the typed flag (ENG-103), not by exception subtype.
+      if (e.retryable) {
+        debugPrint('SyncEngine: retryable upload failure for $id: $e');
+        await _recordingRepo.markAsFailed(id);
+      } else {
+        debugPrint('SyncEngine: permanent upload failure for $id: $e\n$st');
+        await _markPermanentlyFailed(id);
+      }
     } on FormatException catch (e, st) {
-      // Server returned malformed JSON. Retrying won't help; mark terminal.
+      // Server returned a non-JSON body. Retrying won't help; mark terminal.
       debugPrint('SyncEngine: response parse error for $id: $e\n$st');
       await _markPermanentlyFailed(id);
-    } on TimeoutException catch (e) {
-      debugPrint('SyncEngine: timeout uploading $id: $e');
-      await _recordingRepo.markAsFailed(id);
-    } on SocketException catch (e) {
-      debugPrint('SyncEngine: socket error uploading $id: $e');
-      await _recordingRepo.markAsFailed(id);
     } on Exception catch (e, st) {
-      // Catchall for unexpected Exception subtypes. Programmer errors
-      // (subclasses of Error like TypeError, StateError, ArgumentError)
-      // are NOT caught here — they propagate as bugs.
+      // Transport faults (socket/timeout/filesystem) and other transient
+      // Exception subtypes → retry. Programmer errors (Error subtypes like
+      // TypeError, StateError) are NOT caught here — they propagate as bugs.
       debugPrint('SyncEngine: unexpected error uploading $id: $e\n$st');
       await _recordingRepo.markAsFailed(id);
     }
@@ -456,27 +436,5 @@ class SyncEngineImpl implements SyncEngine {
         lastRetryAt: Value(DateTime.now()),
       ),
     );
-  }
-
-  void _checkResponse(
-    int statusCode,
-    String body,
-    String operation, {
-    int? expected,
-  }) {
-    if (expected != null && statusCode == expected) return;
-    if (expected == null && statusCode >= 200 && statusCode < 300) return;
-
-    if (statusCode == 401 || statusCode == 403) {
-      throw _NonRetryableUploadException(
-        '$operation: auth error ($statusCode): $body',
-      );
-    }
-    if (statusCode >= 400 && statusCode < 500) {
-      throw _NonRetryableUploadException(
-        '$operation: client error ($statusCode): $body',
-      );
-    }
-    throw Exception('$operation failed ($statusCode): $body');
   }
 }

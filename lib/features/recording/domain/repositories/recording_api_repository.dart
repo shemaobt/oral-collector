@@ -1,4 +1,5 @@
 import '../entities/server_recording.dart';
+import '../entities/split_segment_request.dart';
 
 abstract class RecordingApiRepository {
   Future<ServerRecording> getRecording(String serverId);
@@ -30,7 +31,7 @@ abstract class RecordingApiRepository {
 
   Future<List<String>> splitRecording({
     required String serverId,
-    required List<Map<String, dynamic>> segments,
+    required List<SplitSegmentRequest> segments,
   });
 
   Future<int> clearStaleRecordings(String projectId);
