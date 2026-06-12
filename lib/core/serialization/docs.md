@@ -80,10 +80,11 @@ Path: @/lib/core/serialization
   ([project_repository_impl.dart](../../features/project/data/repositories/project_repository_impl.dart)),
   and the admin queues
   ([admin_repository.dart](../../features/admin/data/repositories/admin_repository.dart)) —
-  plus the invite-dialog user search
-  ([invite_dialog.dart](../../shared/widgets/invite_dialog.dart)). Single-object
-  reads (`getProject`, login, create/update) deliberately stay fail-fast and do
-  not use it.
+  plus the user search
+  ([user_search_repository.dart](../../features/user/data/user_search_repository.dart)),
+  whose parsing was lifted out of the `InviteDialog` widget into a repository so
+  the widget no longer decodes JSON. Single-object reads (`getProject`, login,
+  create/update) deliberately stay fail-fast and do not use it.
 - The readers operate strictly **after** JSON decoding: they take a decoded
   `Map`, not bytes. They contain **no** `dart:convert`, no logging, and no l10n —
   pure functions with no side effects. `parseList` is the one deliberate
