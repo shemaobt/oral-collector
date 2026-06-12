@@ -4,6 +4,7 @@ import '../../../../core/errors/api_exception.dart';
 import '../../../../core/errors/app_exception.dart' show ParseException;
 import '../../../../core/network/api_error_handler.dart';
 import '../../../../core/network/authenticated_client.dart';
+import '../../../../core/network/response_decoder.dart';
 import '../../../../core/serialization/parse_list.dart';
 import '../../../../core/serialization/safe_read.dart';
 import '../../domain/entities/server_recording.dart';
@@ -19,13 +20,7 @@ class RecordingApiRepositoryImpl implements RecordingApiRepository {
   @override
   Future<ServerRecording> getRecording(String serverId) async {
     final response = await _client.get('/api/oc/recordings/$serverId');
-    guardResponse(response);
-    if (response.statusCode != 200) {
-      throw Exception('Failed to get recording: ${response.body}');
-    }
-    return ServerRecording.fromJson(
-      jsonDecode(response.body) as Map<String, dynamic>,
-    );
+    return ServerRecording.fromJson(decodeObject(response));
   }
 
   @override
@@ -49,12 +44,8 @@ class RecordingApiRepositoryImpl implements RecordingApiRepository {
     };
     final query = params.entries.map((e) => '${e.key}=${e.value}').join('&');
     final response = await _client.get('/api/oc/recordings?$query');
-    guardResponse(response);
-    if (response.statusCode != 200) {
-      throw Exception('Failed to list recordings: ${response.body}');
-    }
     return parseList(
-      jsonDecode(response.body),
+      decodeList(response),
       ServerRecording.fromJson,
       context: 'listRecordings',
     );
@@ -131,11 +122,7 @@ class RecordingApiRepositoryImpl implements RecordingApiRepository {
     final response = await _client.post(
       '/api/oc/recordings/clear-stale?project_id=$projectId',
     );
-    guardResponse(response);
-    if (response.statusCode != 200) {
-      throw Exception('Failed to clear stale recordings: ${response.body}');
-    }
-    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    final data = decodeObject(response);
     return readIntOrNull(data, 'deleted') ?? 0;
   }
 

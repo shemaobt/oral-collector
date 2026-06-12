@@ -121,10 +121,10 @@ Path: @/lib/core/database
   1. bump `schemaVersion` in [./app_database.dart](app_database.dart);
   2. add the `if (from < N)` step to `onUpgrade` (`addColumn`/`createTable` for
      columns and tables, `m.createIndex(...)` for an `@TableIndex`);
-  3. dump a new snapshot:
-     `dart run drift_dev schema dump lib/core/database/app_database.dart drift_schemas/drift_schema_vN.json`;
+  3. dump a new snapshot (the repo builds under FVM, so prefix `fvm`):
+     `fvm dart run drift_dev schema dump lib/core/database/app_database.dart drift_schemas/drift_schema_vN.json`;
   4. regenerate fixtures:
-     `dart run drift_dev schema generate --data-classes --companions drift_schemas/ test/core/database/generated/`;
+     `fvm dart run drift_dev schema generate --data-classes --companions drift_schemas/ test/core/database/generated/`;
   5. extend the `startAt(N)` coverage in
      [the migration test](../../../test/core/database/migration_test.dart).
 - **The generated fixtures are committed and analysis-excluded.** Treat
@@ -132,6 +132,20 @@ Path: @/lib/core/database
   regenerate. The exclusion in
   [/analysis_options.yaml](../../../analysis_options.yaml) keeps the
   drift-generated lint noise out of `flutter analyze`.
+- **Schema codegen is reproducible because the toolchain is pinned (ENG-165).**
+  `drift`/`drift_dev` are pinned to an exact version in
+  [/pubspec.yaml](../../../pubspec.yaml) with `pubspec.lock` committed, so
+  regeneration is deterministic — this is what makes the "always regenerate"
+  rule above safe. Before pinning, a floating `drift_dev` rewrote the older
+  fixtures on every `schema generate` (retyping `dateTime()` columns int↔DateTime
+  and churning the schema-format), which is why an earlier version had to be
+  hand-registered instead of regenerated. The pinned version is the ceiling
+  resolvable under `custom_lint`'s `analyzer ^7` constraint, so raising
+  `drift_dev` requires a coordinated lint-toolchain bump. The `Codegen`
+  workflow ([/.github/workflows/codegen.yml](../../../.github/workflows/codegen.yml))
+  enforces this: it re-runs codegen on every PR and fails if `*.g.dart`,
+  `test/core/database/generated/`, or `pubspec.lock` drift from the committed
+  source.
 - **Snapshots are the source of truth for old shapes; the live database is the
   source of truth for the current shape.** Because the pre-current snapshots
   were reconstructed, the migration test's job is to prove the migration code

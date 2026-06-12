@@ -1,0 +1,36 @@
+name: Codegen
+
+on:
+  pull_request:
+    branches: [main, dev]
+
+# Reproducibility gate: with drift/drift_dev pinned and pubspec.lock committed,
+# re-running codegen must be a no-op. Fails if generated drift output or the
+# committed schema fixtures drift from the source (ENG-165).
+jobs:
+  codegen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.41.5"
+          channel: "stable"
+          cache: true
+
+      - name: Install dependencies (lock must be authoritative)
+        run: flutter pub get --enforce-lockfile
+
+      - name: Regenerate drift code and migration-test fixtures
+        run: |
+          dart run build_runner build --delete-conflicting-outputs
+          dart run drift_dev schema generate --data-classes --companions drift_schemas/ test/core/database/generated/
+
+      - name: Fail if codegen or lockfile is out of date
+        run: |
+          if ! git diff --exit-code -- '*.g.dart' 'test/core/database/generated/' pubspec.lock; then
+            echo "::error::Generated code is stale. Run 'dart run build_runner build --delete-conflicting-outputs' and 'dart run drift_dev schema generate --data-classes --companions drift_schemas/ test/core/database/generated/', then commit the result."
+            exit 1
+          fi

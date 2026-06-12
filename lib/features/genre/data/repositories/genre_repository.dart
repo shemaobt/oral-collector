@@ -1,7 +1,5 @@
-import 'dart:convert';
-
-import '../../../../core/network/api_error_handler.dart';
 import '../../../../core/network/authenticated_client.dart';
+import '../../../../core/network/response_decoder.dart';
 import '../../../../core/serialization/parse_list.dart';
 import '../../domain/entities/genre.dart';
 import '../../domain/repositories/genre_repository.dart';
@@ -14,12 +12,8 @@ class GenreRepositoryImpl implements GenreRepository {
   @override
   Future<List<Genre>> listGenres() async {
     final response = await _client.get('/api/oc/genres');
-    guardResponse(response);
-    if (response.statusCode != 200) {
-      throw Exception('Failed to list genres: ${response.body}');
-    }
     return parseList(
-      jsonDecode(response.body),
+      decodeList(response),
       Genre.fromJson,
       context: 'listGenres',
     );

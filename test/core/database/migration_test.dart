@@ -55,7 +55,9 @@ void main() {
               projectId: 'proj-1',
               genreId: 'genre-1',
               localFilePath: '/audio/rec-1.m4a',
-              recordedAt: 1700000000,
+              recordedAt: DateTime.fromMillisecondsSinceEpoch(
+                1700000000 * 1000,
+              ),
               title: const Value('My narration'),
               durationSeconds: const Value(42.5),
               fileSizeBytes: const Value(123456),

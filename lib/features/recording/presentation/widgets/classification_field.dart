@@ -207,7 +207,11 @@ class ClassificationField extends StatelessWidget {
           vertical: 10,
         ),
         errorText: hasError ? l10n.import_fieldRequired : null,
-        errorStyle: const TextStyle(fontSize: 10, height: 0.8),
+        errorStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
+          fontSize: 10,
+          height: 0.8,
+          color: colors.error,
+        ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
           borderSide: BorderSide(

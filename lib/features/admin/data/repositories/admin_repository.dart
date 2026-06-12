@@ -1,7 +1,6 @@
-import 'dart:convert';
-
 import '../../../../core/network/api_error_handler.dart';
 import '../../../../core/network/authenticated_client.dart';
+import '../../../../core/network/response_decoder.dart';
 import '../../../../core/serialization/parse_list.dart';
 import '../../../genre/domain/entities/genre.dart';
 import '../../../genre/domain/entities/genre_update.dart';
@@ -18,23 +17,14 @@ class AdminRepositoryImpl implements AdminRepository {
   @override
   Future<AdminStats> fetchStats() async {
     final response = await _client.get('/api/oc/admin/stats');
-    guardResponse(response);
-    if (response.statusCode != 200) {
-      throw Exception('Failed to fetch admin stats: ${response.body}');
-    }
-    final data = jsonDecode(response.body) as Map<String, dynamic>;
-    return AdminStats.fromJson(data);
+    return AdminStats.fromJson(decodeObject(response));
   }
 
   @override
   Future<List<Project>> fetchAllProjects() async {
     final response = await _client.get('/api/oc/projects');
-    guardResponse(response);
-    if (response.statusCode != 200) {
-      throw Exception('Failed to fetch projects: ${response.body}');
-    }
     return parseList(
-      jsonDecode(response.body),
+      decodeList(response),
       Project.fromJson,
       context: 'fetchAllProjects',
     );
@@ -43,12 +33,8 @@ class AdminRepositoryImpl implements AdminRepository {
   @override
   Future<List<Genre>> fetchAllGenres() async {
     final response = await _client.get('/api/oc/genres');
-    guardResponse(response);
-    if (response.statusCode != 200) {
-      throw Exception('Failed to fetch genres: ${response.body}');
-    }
     return parseList(
-      jsonDecode(response.body),
+      decodeList(response),
       Genre.fromJson,
       context: 'fetchAllGenres',
     );
@@ -67,12 +53,7 @@ class AdminRepositoryImpl implements AdminRepository {
     if (color != null) body['color'] = color;
 
     final response = await _client.post('/api/oc/genres', body: body);
-    guardResponse(response);
-    if (response.statusCode != 200 && response.statusCode != 201) {
-      throw Exception('Failed to create genre: ${response.body}');
-    }
-    final data = jsonDecode(response.body) as Map<String, dynamic>;
-    return Genre.fromJson(data);
+    return Genre.fromJson(decodeObject(response));
   }
 
   @override
@@ -81,12 +62,7 @@ class AdminRepositoryImpl implements AdminRepository {
       '/api/oc/genres/$id',
       body: update.toJson(),
     );
-    guardResponse(response);
-    if (response.statusCode != 200) {
-      throw Exception('Failed to update genre: ${response.body}');
-    }
-    final responseData = jsonDecode(response.body) as Map<String, dynamic>;
-    return Genre.fromJson(responseData);
+    return Genre.fromJson(decodeObject(response));
   }
 
   @override
@@ -126,12 +102,8 @@ class AdminRepositoryImpl implements AdminRepository {
   @override
   Future<List<Recording>> fetchCleaningQueue() async {
     final response = await _client.get('/api/oc/admin/cleaning-queue');
-    guardResponse(response);
-    if (response.statusCode != 200) {
-      throw Exception('Failed to fetch cleaning queue: ${response.body}');
-    }
     return parseList(
-      jsonDecode(response.body),
+      decodeList(response),
       Recording.fromJson,
       context: 'fetchCleaningQueue',
     );

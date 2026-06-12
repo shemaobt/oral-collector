@@ -44,7 +44,9 @@ dependencies:
   http: ^1.2.2
   http_parser: ^4.1.0
   lucide_icons: ^0.257.0
-  drift: ^2.22.1
+  # Pinned exact (with committed pubspec.lock) for reproducible schema codegen;
+  # 2.29.0 is the ceiling under custom_lint ^0.7's analyzer ^7 (ENG-165).
+  drift: 2.29.0
   sqlite3_flutter_libs: ^0.5.28
   record: ^6.2.1
   just_audio: ^0.9.42
@@ -74,7 +76,7 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.3
-  drift_dev: ^2.22.1
+  drift_dev: 2.29.0 # Pinned to match drift (ENG-165); generates schema fixtures.
   build_runner: ^2.4.14
   mocktail: ^1.0.4
   custom_lint: ^0.7.6

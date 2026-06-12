@@ -1,9 +1,8 @@
 // ignore_for_file: use_null_aware_elements
 
-import 'dart:convert';
-
 import '../../../../core/network/api_error_handler.dart';
 import '../../../../core/network/authenticated_client.dart';
+import '../../../../core/network/response_decoder.dart';
 import '../../../../core/serialization/parse_list.dart';
 import '../../domain/entities/storyteller.dart';
 import '../../domain/repositories/storyteller_repository.dart';
@@ -19,12 +18,8 @@ class StorytellerApiRepositoryImpl implements StorytellerRepository {
     final response = await _client.get(
       '/api/oc/projects/$projectId/storytellers',
     );
-    guardResponse(response);
-    if (response.statusCode != 200) {
-      throw Exception('Failed to list storytellers: ${response.body}');
-    }
     return parseList(
-      jsonDecode(response.body),
+      decodeList(response),
       Storyteller.fromJson,
       context: 'listByProject',
     );
@@ -33,13 +28,7 @@ class StorytellerApiRepositoryImpl implements StorytellerRepository {
   @override
   Future<Storyteller> get(String storytellerId) async {
     final response = await _client.get('/api/oc/storytellers/$storytellerId');
-    guardResponse(response);
-    if (response.statusCode != 200) {
-      throw Exception('Failed to load storyteller: ${response.body}');
-    }
-    return Storyteller.fromJson(
-      jsonDecode(response.body) as Map<String, dynamic>,
-    );
+    return Storyteller.fromJson(decodeObject(response));
   }
 
   @override
@@ -64,13 +53,7 @@ class StorytellerApiRepositoryImpl implements StorytellerRepository {
       '/api/oc/projects/$projectId/storytellers',
       body: body,
     );
-    guardResponse(response);
-    if (response.statusCode != 201 && response.statusCode != 200) {
-      throw Exception('Failed to create storyteller: ${response.body}');
-    }
-    return Storyteller.fromJson(
-      jsonDecode(response.body) as Map<String, dynamic>,
-    );
+    return Storyteller.fromJson(decodeObject(response));
   }
 
   @override
@@ -93,13 +76,7 @@ class StorytellerApiRepositoryImpl implements StorytellerRepository {
       '/api/oc/storytellers/$storytellerId',
       body: body,
     );
-    guardResponse(response);
-    if (response.statusCode != 200) {
-      throw Exception('Failed to update storyteller: ${response.body}');
-    }
-    return Storyteller.fromJson(
-      jsonDecode(response.body) as Map<String, dynamic>,
-    );
+    return Storyteller.fromJson(decodeObject(response));
   }
 
   @override

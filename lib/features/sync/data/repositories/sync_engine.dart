@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:drift/drift.dart' show Value;
@@ -10,7 +9,7 @@ import 'package:path_provider/path_provider.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../core/errors/app_exception.dart' show AppException;
 import '../../../../core/network/authenticated_client.dart';
-import '../../../../core/network/error_boundary.dart';
+import '../../../../core/network/response_decoder.dart';
 import '../../../../core/platform/file_ops.dart' as file_ops;
 import '../../../../core/serialization/safe_read.dart';
 import '../../../recording/data/repositories/local_recording_repository.dart';
@@ -275,12 +274,7 @@ class SyncEngineImpl implements SyncEngine {
             .post('/api/oc/recordings', body: createBody)
             .timeout(_apiTimeout);
 
-        if (createResponse.statusCode != 201) {
-          throwForResponse(createResponse);
-        }
-
-        final createData =
-            jsonDecode(createResponse.body) as Map<String, dynamic>;
+        final createData = decodeObject(createResponse);
         serverId = readString(createData, 'id');
 
         await _recordingRepo.updateRecording(
@@ -324,12 +318,7 @@ class SyncEngineImpl implements SyncEngine {
           )
           .timeout(_apiTimeout);
 
-      if (confirmResponse.statusCode != 200) {
-        throwForResponse(confirmResponse);
-      }
-
-      final confirmData =
-          jsonDecode(confirmResponse.body) as Map<String, dynamic>;
+      final confirmData = decodeObject(confirmResponse);
       final gcsUrl = readStringOrNull(confirmData, 'gcs_url');
 
       await _recordingRepo.markAsUploaded(id, serverId, gcsUrl);
@@ -402,8 +391,8 @@ class SyncEngineImpl implements SyncEngine {
           continue;
         }
 
-        final data = jsonDecode(response.body) as Map<String, dynamic>;
-        final serverId = data['id'] as String;
+        final data = decodeObject(response);
+        final serverId = readString(data, 'id');
         await _storytellerRepo.markUploaded(row.id, serverId);
         await _recordingRepo.reassignStorytellerId(
           fromId: row.id,

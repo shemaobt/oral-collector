@@ -146,7 +146,10 @@ class RecordingHeroPlayer extends ConsumerWidget {
       final l10n = AppLocalizations.of(context);
       return Text(
         l10n.recording_noAudioAvailable,
-        style: TextStyle(color: colors.secondary, fontSize: 14),
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: colors.secondary,
+          fontSize: 14.0,
+        ),
       );
     }
 
