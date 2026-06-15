@@ -1,5 +1,5 @@
 import '../../../../core/database/app_database.dart';
-import '../../domain/entities/classification.dart';
+import '../../data/local_recording_classification.dart';
 
 enum StatusFilter { all, pending, uploaded, needsCleaning, unclassified }
 

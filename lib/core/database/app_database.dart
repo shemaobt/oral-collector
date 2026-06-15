@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 
 import 'connection.dart';
+import 'schema_versions.dart';
 
 part 'app_database.g.dart';
 
@@ -134,63 +135,103 @@ class AppDatabase extends _$AppDatabase {
   int get schemaVersion => 11;
 
   @override
-  MigrationStrategy get migration => MigrationStrategy(
-    onCreate: (m) => m.createAll(),
-    onUpgrade: (m, from, to) async {
-      if (from < 2) {
-        await m.addColumn(localRecordings, localRecordings.registerId);
-      }
-      if (from < 3) {
-        await m.addColumn(localRecordings, localRecordings.resumableSessionUri);
-        await m.addColumn(localRecordings, localRecordings.uploadedBytes);
-      }
-      if (from < 4) {
-        await m.addColumn(localRecordings, localRecordings.md5Hash);
-      }
-      if (from < 5) {
-        await m.addColumn(localRecordings, localRecordings.description);
-      }
-      if (from < 6) {
-        await m.addColumn(localRecordings, localRecordings.storytellerId);
-        await m.addColumn(localRecordings, localRecordings.userId);
-        await m.createTable(localStorytellers);
-      }
-      if (from < 7) {
-        await m.createTable(recordingSessions);
-      }
-      if (from < 8) {
-        await m.addColumn(localRecordings, localRecordings.secondaryGenreId);
-        await m.addColumn(
-          localRecordings,
-          localRecordings.secondarySubcategoryId,
-        );
-        await m.addColumn(localRecordings, localRecordings.secondaryRegisterId);
-      }
-      if (from < 9) {
-        await m.addColumn(localRecordings, localRecordings.splitFromId);
-        await m.addColumn(localRecordings, localRecordings.splitIndex);
-        await m.addColumn(localRecordings, localRecordings.splitSegmentCount);
-      }
-      // The from<6 step creates local_storytellers from its current (v10)
-      // definition, which already carries these sync columns. Only add them when
-      // upgrading a table that was created at an older, pre-sync shape (from>=6);
-      // adding them after the from<6 createTable would duplicate the columns.
-      if (from >= 6 && from < 10) {
-        await m.addColumn(localStorytellers, localStorytellers.serverId);
-        await m.addColumn(localStorytellers, localStorytellers.syncStatus);
-        await m.addColumn(localStorytellers, localStorytellers.retryCount);
-        await m.addColumn(localStorytellers, localStorytellers.lastRetryAt);
-      }
-      // @TableIndex declares these, so onCreate builds them via createAll();
-      // the upgrade path has to create them explicitly. All indexed columns
-      // predate v10, so this step is safe for every starting version.
-      if (from < 11) {
-        await m.createIndex(idxRecordingsProjectRecorded);
-        await m.createIndex(idxRecordingsStatusRecorded);
-        await m.createIndex(idxRecordingsServerId);
-        await m.createIndex(idxRecordingsStorytellerId);
-        await m.createIndex(idxStorytellersProjectId);
-      }
-    },
-  );
+  MigrationStrategy get migration =>
+      MigrationStrategy(onCreate: (m) => m.createAll(), onUpgrade: _upgrade);
 }
+
+// Each callback migrates exactly one version using that version's schema
+// snapshot (from schema_versions.dart), so createTable/addColumn see each table
+// as it existed at that version — local_storytellers is created at its pre-sync
+// v6 shape, then the sync columns are added at v10. Kept top-level so a step
+// can't reach the current database definition by mistake.
+final OnUpgrade _upgrade = stepByStep(
+  from1To2: (m, schema) async {
+    await m.addColumn(
+      schema.localRecordings,
+      schema.localRecordings.registerId,
+    );
+  },
+  from2To3: (m, schema) async {
+    await m.addColumn(
+      schema.localRecordings,
+      schema.localRecordings.resumableSessionUri,
+    );
+    await m.addColumn(
+      schema.localRecordings,
+      schema.localRecordings.uploadedBytes,
+    );
+  },
+  from3To4: (m, schema) async {
+    await m.addColumn(schema.localRecordings, schema.localRecordings.md5Hash);
+  },
+  from4To5: (m, schema) async {
+    await m.addColumn(
+      schema.localRecordings,
+      schema.localRecordings.description,
+    );
+  },
+  from5To6: (m, schema) async {
+    await m.addColumn(
+      schema.localRecordings,
+      schema.localRecordings.storytellerId,
+    );
+    await m.addColumn(schema.localRecordings, schema.localRecordings.userId);
+    await m.createTable(schema.localStorytellers);
+  },
+  from6To7: (m, schema) async {
+    await m.createTable(schema.recordingSessions);
+  },
+  from7To8: (m, schema) async {
+    await m.addColumn(
+      schema.localRecordings,
+      schema.localRecordings.secondaryGenreId,
+    );
+    await m.addColumn(
+      schema.localRecordings,
+      schema.localRecordings.secondarySubcategoryId,
+    );
+    await m.addColumn(
+      schema.localRecordings,
+      schema.localRecordings.secondaryRegisterId,
+    );
+  },
+  from8To9: (m, schema) async {
+    await m.addColumn(
+      schema.localRecordings,
+      schema.localRecordings.splitFromId,
+    );
+    await m.addColumn(
+      schema.localRecordings,
+      schema.localRecordings.splitIndex,
+    );
+    await m.addColumn(
+      schema.localRecordings,
+      schema.localRecordings.splitSegmentCount,
+    );
+  },
+  from9To10: (m, schema) async {
+    await m.addColumn(
+      schema.localStorytellers,
+      schema.localStorytellers.serverId,
+    );
+    await m.addColumn(
+      schema.localStorytellers,
+      schema.localStorytellers.syncStatus,
+    );
+    await m.addColumn(
+      schema.localStorytellers,
+      schema.localStorytellers.retryCount,
+    );
+    await m.addColumn(
+      schema.localStorytellers,
+      schema.localStorytellers.lastRetryAt,
+    );
+  },
+  from10To11: (m, schema) async {
+    await m.create(schema.idxRecordingsProjectRecorded);
+    await m.create(schema.idxRecordingsStatusRecorded);
+    await m.create(schema.idxRecordingsServerId);
+    await m.create(schema.idxRecordingsStorytellerId);
+    await m.create(schema.idxStorytellersProjectId);
+  },
+);

@@ -4,8 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:oral_collector/features/admin/data/providers.dart';
+import 'package:oral_collector/features/admin/domain/entities/admin_stats.dart';
 import 'package:oral_collector/features/admin/domain/repositories/admin_repository.dart';
 import 'package:oral_collector/features/admin/presentation/notifiers/admin_notifier.dart';
+import 'package:oral_collector/features/genre/domain/entities/genre.dart';
+import 'package:oral_collector/features/project/domain/entities/project.dart';
+import 'package:oral_collector/features/recording/domain/entities/recording.dart';
 
 class MockAdminRepository extends Mock implements AdminRepository {}
 
@@ -61,5 +65,69 @@ void main() {
       gate.complete();
       await future;
     });
+  });
+
+  group('fetchAll', () {
+    test('routes each repo result into its matching state slot', () async {
+      const statsFixture = AdminStats(totalProjects: 7);
+      final projectsFixture = [
+        const Project(id: 'p1', name: 'Proj', languageId: 'l1'),
+      ];
+      final genresFixture = <Genre>[];
+      final queueFixture = <Recording>[];
+
+      when(() => repo.fetchStats()).thenAnswer((_) async => statsFixture);
+      when(
+        () => repo.fetchAllProjects(),
+      ).thenAnswer((_) async => projectsFixture);
+      when(() => repo.fetchAllGenres()).thenAnswer((_) async => genresFixture);
+      when(
+        () => repo.fetchCleaningQueue(),
+      ).thenAnswer((_) async => queueFixture);
+
+      final notifier = container.read(adminNotifierProvider.notifier);
+      await notifier.fetchAll();
+
+      final state = container.read(adminNotifierProvider);
+      expect(state.stats?.totalProjects, 7);
+      expect(state.projects, same(projectsFixture));
+      expect(state.genres, same(genresFixture));
+      expect(state.cleaningQueue, same(queueFixture));
+      expect(state.isLoading, isFalse);
+    });
+
+    test(
+      'a single failing fetch is isolated: the other slots still load',
+      () async {
+        final projectsFixture = [
+          const Project(id: 'p1', name: 'Proj', languageId: 'l1'),
+        ];
+        final genresFixture = <Genre>[];
+        final queueFixture = <Recording>[];
+
+        when(
+          () => repo.fetchStats(),
+        ).thenAnswer((_) => Future<AdminStats>.error(Exception('stats down')));
+        when(
+          () => repo.fetchAllProjects(),
+        ).thenAnswer((_) async => projectsFixture);
+        when(
+          () => repo.fetchAllGenres(),
+        ).thenAnswer((_) async => genresFixture);
+        when(
+          () => repo.fetchCleaningQueue(),
+        ).thenAnswer((_) async => queueFixture);
+
+        final notifier = container.read(adminNotifierProvider.notifier);
+        await notifier.fetchAll();
+
+        final state = container.read(adminNotifierProvider);
+        expect(state.projects, same(projectsFixture));
+        expect(state.genres, same(genresFixture));
+        expect(state.cleaningQueue, same(queueFixture));
+        expect(state.stats, isNull);
+        expect(state.isLoading, isFalse);
+      },
+    );
   });
 }

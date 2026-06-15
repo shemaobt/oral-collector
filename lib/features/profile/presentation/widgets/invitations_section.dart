@@ -54,7 +54,7 @@ class InvitationsSection extends StatelessWidget {
           )
         else if (inviteState.error != null)
           _ErrorCard(
-            message: friendlyErrorMessage(
+            message: friendlyErrorFor(
               inviteState.error!,
               AppLocalizations.of(context),
             ),

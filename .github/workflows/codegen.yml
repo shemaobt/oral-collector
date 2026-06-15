@@ -23,14 +23,15 @@ jobs:
       - name: Install dependencies (lock must be authoritative)
         run: flutter pub get --enforce-lockfile
 
-      - name: Regenerate drift code and migration-test fixtures
+      - name: Regenerate drift code, step-by-step migrations, and migration-test fixtures
         run: |
+          dart run drift_dev schema steps drift_schemas/ lib/core/database/schema_versions.dart
           dart run build_runner build --delete-conflicting-outputs
           dart run drift_dev schema generate --data-classes --companions drift_schemas/ test/core/database/generated/
 
       - name: Fail if codegen or lockfile is out of date
         run: |
-          if ! git diff --exit-code -- '*.g.dart' 'test/core/database/generated/' pubspec.lock; then
-            echo "::error::Generated code is stale. Run 'dart run build_runner build --delete-conflicting-outputs' and 'dart run drift_dev schema generate --data-classes --companions drift_schemas/ test/core/database/generated/', then commit the result."
+          if ! git diff --exit-code -- '*.g.dart' 'lib/core/database/schema_versions.dart' 'test/core/database/generated/' pubspec.lock; then
+            echo "::error::Generated code is stale. Run 'dart run drift_dev schema steps drift_schemas/ lib/core/database/schema_versions.dart', 'dart run build_runner build --delete-conflicting-outputs' and 'dart run drift_dev schema generate --data-classes --companions drift_schemas/ test/core/database/generated/', then commit the result."
             exit 1
           fi

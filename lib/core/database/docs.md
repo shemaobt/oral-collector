@@ -19,6 +19,12 @@ Path: @/lib/core/database
   [/test/core/database/](../../../test/core/database/)) and fixed a
   duplicate-column crash on the upgrade path from an old pre-sync schema
   straight to the current version.
+- ENG-161 rewrote `onUpgrade` from hand-written `if (from < N)` blocks to
+  drift's generated `stepByStep` helper, so each step migrates exactly one
+  version against that version's schema snapshot. This eliminated the
+  duplicate-column footgun by construction (no conditional guard) and made the
+  upgrade honor drift's `to` argument instead of always migrating to the
+  current version.
 
 ### How it fits into the larger codebase
 
@@ -61,13 +67,20 @@ Path: @/lib/core/database
   | Callback | When it runs | Effect |
   | --- | --- | --- |
   | `onCreate` | fresh install | `createAll()` builds every table at the current shape, skipping the upgrade steps entirely |
-  | `onUpgrade(m, from, to)` | an existing file is opened by a newer build | replays ordered `if (from < N)` steps once, from the on-disk version up to `to` |
+  | `onUpgrade` (the `stepByStep` `_upgrade`) | an existing file is opened by a newer build | runs each `from(N-1)ToN` callback in order, from the on-disk version up to `to` |
 
-- Each upgrade step is additive: a new column is `addColumn`-ed and a new table
-  is `createTable`-d, in version order. A user who skipped several releases
-  replays each intervening step in one `onUpgrade` call. The one non-trivial
-  step adds the storyteller sync columns and is guarded
-  `from >= 6 && from < 10` (see Things to Know).
+- `onUpgrade` is the generated `stepByStep` helper (from
+  [./schema_versions.dart](schema_versions.dart)) bound to a top-level
+  `final OnUpgrade _upgrade`. It is deliberately top-level: a top-level field has
+  no `this`, so a step cannot accidentally reach the *current* table definitions.
+- Each upgrade step is additive and applies only that one version's delta. The
+  callback receives `(Migrator m, SchemaN schema)` where `schema` is the
+  **destination** version's typed snapshot, so `m.addColumn`,
+  `m.createTable`, and `m.create` operate on the table/index *as it existed at
+  that version* — e.g. `from5To6` creates `local_storytellers` at its pre-sync
+  v6 shape and `from9To10` adds the sync columns. A user who skipped several
+  releases runs each intervening step in order in one upgrade, and drift's `to`
+  argument bounds how far it goes (see Things to Know).
 - [./connection/native.dart](connection/native.dart) wraps the file open in a
   `LazyDatabase` and uses `NativeDatabase.createInBackground` so the SQLite
   handle (and any migration) runs off the UI isolate.
@@ -76,37 +89,48 @@ Path: @/lib/core/database
   database under the name `oral_collector` in the browser. Its SQLite engine is
   the `sql.js` WebAssembly build, served **same-origin from `web/` with no CDN**
   (see Things to Know).
-- The migration-test workflow has three committed artifacts that must stay in
+- The migration workflow has several committed artifacts that must stay in
   lockstep with `app_database.dart`:
   - `drift_schemas/drift_schema_vN.json` — one snapshot per schema version. The
     current version is dumped from the real database; the older snapshots were
     reconstructed (no historical snapshots existed before ENG-123).
+  - [./schema_versions.dart](schema_versions.dart) — `drift_dev`-generated from
+    those snapshots (`schema steps`); holds the `SchemaN` typed snapshots and the
+    `stepByStep` factory that `_upgrade` calls. Committed and analysis-excluded
+    like `.g.dart` (ENG-161); `app_database.dart` imports it.
   - [/test/core/database/generated/](../../../test/core/database/generated/) —
     `drift_dev`-generated `GeneratedHelper` and per-version `DatabaseAtVN`
     classes, committed like `.g.dart` output and excluded from analysis in
     [/analysis_options.yaml](../../../analysis_options.yaml).
   - [/test/core/database/migration_test.dart](../../../test/core/database/migration_test.dart) —
-    drives drift's `SchemaVerifier`: it `startAt(k)` for every historical
-    version and `migrateAndValidate(db, 11)`, asserting the resulting schema
-    matches the current reference, plus a data-integrity case that seeds an
-    un-uploaded recording at the oldest version and asserts the row and its
-    fields survive the full upgrade.
+    drives drift's `SchemaVerifier`. For every historical version it `startAt(k)`
+    and both `migrateAndValidate(db, 11)` (the skip-many-releases path) and
+    `migrateAndValidate(db, k + 1)` (a single step lands exactly on the next
+    version, exercising that `stepByStep` honors `to`). Plus data-integrity
+    cases that seed an un-uploaded recording at the oldest version and a
+    storyteller at v6 and assert the rows and fields survive the upgrade.
 
 ### Things to Know
 
-- **`createTable` / `createAll` emit the table's CURRENT shape, not a historical
-  one.** Inside `onUpgrade`, `m.createTable(localStorytellers)` in the older
-  step builds the table at today's definition, which already carries the sync
-  columns added in a later version. The duplicate-column crash fixed in ENG-123
-  came from then `addColumn`-ing those same columns: the
-  `from >= 6 && from < 10` guard makes the adds run **only** for databases that
-  already had the table at an older, pre-sync shape. The migration test is the
-  guard against reintroducing this whenever a table is both created in one step
-  and altered in a later step.
+- **`stepByStep` made each step see the table at its own version, removing the
+  duplicate-column footgun.** The danger is real and worth remembering: bare
+  `createTable`/`createAll` on the *current* table definitions emit today's
+  shape, so a step that created `local_storytellers` in an old release would
+  build it already carrying the sync columns added later — and then
+  `addColumn`-ing those same columns crashed the upgrade (the bug fixed in
+  ENG-123, which needed a hand-written `from >= 6 && from < 10` guard so the
+  adds ran only for databases that had the table at its older, pre-sync shape).
+  With `stepByStep` each callback gets the **destination version's** `schema`
+  snapshot: `from5To6` creates `local_storytellers` at its v6 shape (no sync
+  columns) and `from9To10` adds them, so there is no duplication and the
+  conditional guard no longer exists. The migration test still backs this up —
+  `migrateAndValidate` diffs every starting point against its reference.
 - **`@TableIndex` indexes follow the same fresh-vs-upgrade split.** `createAll()`
-  builds them for fresh installs, but `onUpgrade` must create each one
-  explicitly with `m.createIndex(...)` — the `if (from < 11)` step added in
-  ENG-117. A forgotten `onUpgrade` index ships an un-indexed upgrade path while
+  builds them for fresh installs, but the upgrade path must create each one
+  explicitly. They are created in the `from10To11` step via
+  `m.create(schema.<index>)` (e.g. `schema.idxRecordingsProjectRecorded`) —
+  introduced for the v11 indexes in ENG-117 and ported onto `stepByStep` in
+  ENG-161. A forgotten upgrade index ships an un-indexed upgrade path while
   fresh installs look fine; the migration test catches it because
   `migrateAndValidate` diffs indexes, not just tables and columns.
 - **A failed migration is not recovered by wiping the database.** The open path
@@ -115,23 +139,32 @@ Path: @/lib/core/database
   stranded (un-uploaded recordings cannot be reached), not deleted — until a
   build with a corrected migration ships. This is why the upgrade path is
   test-guarded rather than left to recover at runtime.
-- **Adding a new schema version is a fixed five-step process.** Skipping any
+- **Adding a new schema version is a fixed multi-step process.** Skipping any
   step makes the migration test fail or, worse, lets an untested upgrade path
-  ship:
+  ship. The commands match the `Codegen` workflow
+  ([/.github/workflows/codegen.yml](../../../.github/workflows/codegen.yml)); the
+  repo builds under FVM, so prefix `fvm`:
   1. bump `schemaVersion` in [./app_database.dart](app_database.dart);
-  2. add the `if (from < N)` step to `onUpgrade` (`addColumn`/`createTable` for
-     columns and tables, `m.createIndex(...)` for an `@TableIndex`);
-  3. dump a new snapshot (the repo builds under FVM, so prefix `fvm`):
+  2. dump a new snapshot:
      `fvm dart run drift_dev schema dump lib/core/database/app_database.dart drift_schemas/drift_schema_vN.json`;
-  4. regenerate fixtures:
+  3. regenerate the step helper (must run **before** `build_runner`, since
+     `app_database.dart` imports it):
+     `fvm dart run drift_dev schema steps drift_schemas/ lib/core/database/schema_versions.dart`;
+  4. add the `from(N-1)ToN` callback to the `stepByStep` call in
+     `app_database.dart` (`m.addColumn`/`m.createTable` for columns and tables,
+     `m.create(schema.<index>)` for an `@TableIndex`), operating on the
+     destination version's `schema`;
+  5. regenerate the migration-test fixtures:
      `fvm dart run drift_dev schema generate --data-classes --companions drift_schemas/ test/core/database/generated/`;
-  5. extend the `startAt(N)` coverage in
+  6. extend the `startAt(N)` coverage in
      [the migration test](../../../test/core/database/migration_test.dart).
-- **The generated fixtures are committed and analysis-excluded.** Treat
-  `test/core/database/generated/` like `*.g.dart`: never hand-edit it, always
-  regenerate. The exclusion in
-  [/analysis_options.yaml](../../../analysis_options.yaml) keeps the
-  drift-generated lint noise out of `flutter analyze`.
+- **The generated drift artifacts are committed and analysis-excluded.** Treat
+  `test/core/database/generated/` and
+  [./schema_versions.dart](schema_versions.dart) like `*.g.dart`: never hand-edit
+  them, always regenerate. Their exclusions in
+  [/analysis_options.yaml](../../../analysis_options.yaml) keep the
+  drift-generated lint noise out of `flutter analyze` (the `schema_versions.dart`
+  path is listed explicitly because it does not match the `**/*.g.dart` glob).
 - **Schema codegen is reproducible because the toolchain is pinned (ENG-165).**
   `drift`/`drift_dev` are pinned to an exact version in
   [/pubspec.yaml](../../../pubspec.yaml) with `pubspec.lock` committed, so
@@ -143,9 +176,10 @@ Path: @/lib/core/database
   resolvable under `custom_lint`'s `analyzer ^7` constraint, so raising
   `drift_dev` requires a coordinated lint-toolchain bump. The `Codegen`
   workflow ([/.github/workflows/codegen.yml](../../../.github/workflows/codegen.yml))
-  enforces this: it re-runs codegen on every PR and fails if `*.g.dart`,
-  `test/core/database/generated/`, or `pubspec.lock` drift from the committed
-  source.
+  enforces this: on every PR it regenerates the step helper, runs `build_runner`,
+  and regenerates the test fixtures, then fails if `*.g.dart`,
+  `schema_versions.dart`, `test/core/database/generated/`, or `pubspec.lock`
+  drift from the committed source.
 - **Snapshots are the source of truth for old shapes; the live database is the
   source of truth for the current shape.** Because the pre-current snapshots
   were reconstructed, the migration test's job is to prove the migration code

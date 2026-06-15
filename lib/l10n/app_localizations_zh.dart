@@ -938,11 +938,11 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String import_resumePromptBody(String name, String size) {
-    return '“$name”（$size）已部分上传。选择相同文件以继续。';
+    return '“$name”（$size）已部分上传。请选择完全相同（未更改）的文件以继续。';
   }
 
   @override
-  String get import_resumeSizeMismatch => '该文件与暂停的上传不匹配。';
+  String get import_resumeSizeMismatch => '这是另一个文件。请选择您正在上传的那个完全相同的文件。';
 
   @override
   String import_largeFileWarning(String size) {

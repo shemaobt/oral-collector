@@ -30,6 +30,7 @@ import '../data/services/waveform_extractor.dart';
 import '../domain/entities/register.dart';
 import '../domain/entities/split_segment_request.dart';
 import 'trim_edit_decision.dart';
+import 'trim_load_error.dart';
 import 'widgets/edit_transport_bar.dart';
 import 'widgets/edit_volume_control.dart';
 import 'widgets/playback_key_handler.dart';
@@ -434,6 +435,23 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
     return peak;
   }
 
+  /// Surfaces a server-load failure as an error unless it is a genuine 404.
+  /// Returns true when the caller should abort `_loadRecording` (error shown or
+  /// widget unmounted); false for a 404 so the caller falls through to the
+  /// not-found state with `_recording` still null (ENG-140 F21).
+  bool _handleServerLoadError(Object e, StackTrace st) {
+    debugPrint(
+      'TrimEditor: server lookup failed for ${widget.recordingId}: $e\n$st',
+    );
+    if (!mounted) return true;
+    if (isRecordingNotFound(e)) return false;
+    setState(() {
+      _isLoading = false;
+      _errorMessage = friendlyErrorFor(e, AppLocalizations.of(context));
+    });
+    return true;
+  }
+
   Future<void> _loadRecording() async {
     setState(() {
       _isLoading = true;
@@ -443,9 +461,13 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
       LocalRecording? recording;
 
       if (kIsWeb) {
-        final apiRepo = ref.read(recordingApiRepositoryProvider);
-        final server = await apiRepo.getRecording(widget.recordingId);
-        recording = serverRecordingToLocal(server);
+        try {
+          final apiRepo = ref.read(recordingApiRepositoryProvider);
+          final server = await apiRepo.getRecording(widget.recordingId);
+          recording = serverRecordingToLocal(server);
+        } catch (e, st) {
+          if (_handleServerLoadError(e, st)) return;
+        }
       } else {
         final localRepo = ref.read(localRecordingRepositoryProvider);
 
@@ -459,7 +481,9 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
             final apiRepo = ref.read(recordingApiRepositoryProvider);
             final server = await apiRepo.getRecording(widget.recordingId);
             recording = serverRecordingToLocal(server);
-          } catch (_) {}
+          } catch (e, st) {
+            if (_handleServerLoadError(e, st)) return;
+          }
         }
       }
 
@@ -705,7 +729,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
     } catch (e) {
       if (mounted) {
         final l10n = AppLocalizations.of(context);
-        final friendly = friendlyErrorMessage(e.toString(), l10n);
+        final friendly = friendlyErrorFor(e, l10n);
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(l10n.trim_splitError(friendly))));
@@ -900,16 +924,8 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
       );
     }
 
-    if (_recording == null) {
-      return Scaffold(
-        appBar: AppBar(
-          leading: const BackButton(),
-          title: Text(l10n.trim_title),
-        ),
-        body: Center(child: Text(l10n.trim_notFound)),
-      );
-    }
-
+    // Error takes precedence over not-found: a failed load leaves _recording
+    // null, so checking not-found first would mask the real error (ENG-140 F21).
     if (_errorMessage != null) {
       return Scaffold(
         appBar: AppBar(
@@ -937,6 +953,16 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
             ),
           ),
         ),
+      );
+    }
+
+    if (_recording == null) {
+      return Scaffold(
+        appBar: AppBar(
+          leading: const BackButton(),
+          title: Text(l10n.trim_title),
+        ),
+        body: Center(child: Text(l10n.trim_notFound)),
       );
     }
 

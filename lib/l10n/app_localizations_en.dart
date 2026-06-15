@@ -971,12 +971,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String import_resumePromptBody(String name, String size) {
-    return '\"$name\" ($size) was partially uploaded. Select the same file to continue.';
+    return '\"$name\" ($size) was partially uploaded. Select the exact same file (unchanged) to continue.';
   }
 
   @override
   String get import_resumeSizeMismatch =>
-      'That file doesn\'t match the paused upload.';
+      'That\'s a different file. Select the exact same file you were uploading.';
 
   @override
   String import_largeFileWarning(String size) {

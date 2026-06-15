@@ -968,12 +968,12 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String import_resumePromptBody(String name, String size) {
-    return '\"$name\" ($size) ilipakiwa kwa sehemu. Chagua faili ileile ili kuendelea.';
+    return '\"$name\" ($size) ilipakiwa kwa sehemu. Chagua faili ileile kabisa (bila mabadiliko) ili kuendelea.';
   }
 
   @override
   String get import_resumeSizeMismatch =>
-      'Faili hiyo hailingani na upakiaji uliosimamishwa.';
+      'Hiyo ni faili tofauti. Chagua faili ileile kabisa uliyokuwa ukipakia.';
 
   @override
   String import_largeFileWarning(String size) {

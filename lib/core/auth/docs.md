@@ -30,14 +30,28 @@ Path: @/lib/core/auth
   [../router/app_router.dart](../router/app_router.dart) and the auth screens
   watch `authNotifierProvider` for redirect/UI. Clearing `currentUser` (logout,
   or a refresh that returns `false`) is the signal that drives them back to login.
-- Several feature notifiers (genre/project/stats under
+- Several feature notifiers (genre/project/stats and, since ENG-173, invite under
   `lib/features/*/presentation/notifiers/`) call `handleUnauthorized` directly,
   fire-and-forget, when they catch an `UnauthorizedException`. They guard it with
   `.catchError(..., test: (e) => e is Exception)` so a transient refresh throw
-  preserves the session and never escapes as an unhandled async error.
+  preserves the session and never escapes as an unhandled async error. The `invite`
+  accept/decline variants additionally return `false` from this arm so the caller
+  treats the 401 as a failed action.
 - Errors crossing this boundary come from [../errors](../errors); the one leaf
   the session branches on by **type** is `UnauthorizedException` (a real 401 on
   the refresh = expired session). See [../errors/docs.md](../errors/docs.md).
+- **Notifier `error` convention (ENG-173), shared across the app.** `AuthState`
+  and the other notifier states (admin, project, member, invite, storyteller) type
+  their `error` field as `Object?` and store the **raw caught exception**
+  (`copyWith(error: e)`), never a pre-localized string. The technical detail is
+  reported to the telemetry sink from the same catch
+  (`ref.read(errorReporterProvider).reportError(e, st)`,
+  [../observability/docs.md](../observability/docs.md)); the UI layer translates the
+  stored exception at display time via `friendlyErrorFor` /
+  `showErrorSnackBar(context, Object)`
+  ([../../shared/utils/error_helpers.dart](../../shared/utils/error_helpers.dart)).
+  This keeps a typed `AppException` intact end-to-end so it hits the exhaustive
+  `messageForException` switch instead of degrading to the string fallback.
 
 ### Core Implementation
 

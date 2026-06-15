@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ENG-133 debug-only override (replaces the src/main config in debug builds via
+     resource merging). Permits cleartext so developers reach a local/LAN HTTP
+     backend (dev .env uses an RFC1918 IP over http). Never ships: debug builds are
+     non-shippable, and url_policy.dart still restricts the Dart HttpClient to
+     loopback/RFC1918 outside release. A permissive base is used because
+     <domain-config> cannot express CIDR ranges and the dev IP varies per machine. -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

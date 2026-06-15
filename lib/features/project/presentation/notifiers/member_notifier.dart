@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/errors/api_exception.dart';
+import '../../../../core/observability/error_reporter.dart';
 import '../../../sync/presentation/notifiers/sync_notifier.dart';
 import '../../data/providers.dart';
 import '../../domain/repositories/project_repository.dart';
@@ -25,11 +27,9 @@ class MemberNotifier extends Notifier<MemberState> {
     try {
       final members = await _repo.listMembers(projectId);
       state = state.copyWith(members: members, isLoading: false);
-    } on Exception catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString().replaceFirst('Exception: ', ''),
-      );
+    } on Exception catch (e, st) {
+      _reportUnexpected(e, st);
+      state = state.copyWith(isLoading: false, error: e);
     }
   }
 
@@ -42,10 +42,9 @@ class MemberNotifier extends Notifier<MemberState> {
         members: state.members.where((m) => m.userId != userId).toList(),
       );
       return true;
-    } on Exception catch (e) {
-      state = state.copyWith(
-        error: e.toString().replaceFirst('Exception: ', ''),
-      );
+    } on Exception catch (e, st) {
+      _reportUnexpected(e, st);
+      state = state.copyWith(error: e);
       return false;
     }
   }
@@ -60,11 +59,17 @@ class MemberNotifier extends Notifier<MemberState> {
     try {
       await _repo.inviteMember(projectId: projectId, email: email, role: role);
       return true;
-    } on Exception catch (e) {
-      state = state.copyWith(
-        error: e.toString().replaceFirst('Exception: ', ''),
-      );
+    } on Exception catch (e, st) {
+      _reportUnexpected(e, st);
+      state = state.copyWith(error: e);
       return false;
     }
+  }
+
+  void _reportUnexpected(Object error, StackTrace stackTrace) {
+    // 401 é sessão expirada esperada (tratada por refresh/login alhures);
+    // só erros inesperados vão à telemetria.
+    if (error is UnauthorizedException) return;
+    ref.read(errorReporterProvider).reportError(error, stackTrace);
   }
 }

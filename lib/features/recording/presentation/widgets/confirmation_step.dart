@@ -75,6 +75,9 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
   final _descriptionController = TextEditingController();
   final _titleController = TextEditingController();
   AudioPlayer? _player;
+  StreamSubscription<PlayerState>? _playerStateSub;
+  StreamSubscription<Duration>? _positionSub;
+  StreamSubscription<Duration?>? _durationSub;
   String? _playerBlobUrl;
   bool _isPlaying = false;
   bool _isSaving = false;
@@ -136,7 +139,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
 
   Future<void> _initPlayer() async {
     _player = AudioPlayer();
-    _player!.playerStateStream.listen((playerState) {
+    _playerStateSub = _player!.playerStateStream.listen((playerState) {
       if (!mounted) return;
       final playing = playerState.playing;
       final completed =
@@ -149,11 +152,11 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
         _player!.pause();
       }
     });
-    _player!.positionStream.listen((pos) {
+    _positionSub = _player!.positionStream.listen((pos) {
       if (!mounted) return;
       setState(() => _position = pos);
     });
-    _player!.durationStream.listen((dur) {
+    _durationSub = _player!.durationStream.listen((dur) {
       if (!mounted || dur == null) return;
       setState(() => _totalDuration = dur);
     });
@@ -205,6 +208,9 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
   void dispose() {
     _descriptionController.dispose();
     _titleController.dispose();
+    _playerStateSub?.cancel();
+    _positionSub?.cancel();
+    _durationSub?.cancel();
     _player?.dispose();
     final url = _playerBlobUrl;
     if (url != null) {
@@ -326,7 +332,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
       }
     } catch (e) {
       if (mounted) {
-        final friendly = friendlyErrorMessage(e.toString(), l10n);
+        final friendly = friendlyErrorFor(e, l10n);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(l10n.recording_uploadFailed(friendly))),
         );
@@ -428,7 +434,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
       }
     } catch (e) {
       if (mounted) {
-        final friendly = friendlyErrorMessage(e.toString(), l10n);
+        final friendly = friendlyErrorFor(e, l10n);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(l10n.recording_uploadFailed(friendly))),
         );

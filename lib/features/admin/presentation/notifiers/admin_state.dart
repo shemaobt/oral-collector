@@ -9,7 +9,7 @@ class AdminState {
   final List<Genre> genres;
   final List<Recording> cleaningQueue;
   final bool isLoading;
-  final String? error;
+  final Object? error;
 
   const AdminState({
     this.stats,
@@ -26,7 +26,7 @@ class AdminState {
     List<Genre>? genres,
     List<Recording>? cleaningQueue,
     bool? isLoading,
-    String? error,
+    Object? error,
     bool clearError = false,
   }) {
     return AdminState(

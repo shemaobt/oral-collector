@@ -29,6 +29,7 @@ import '../../project/presentation/notifiers/stats_notifier.dart';
 import '../../storyteller/data/providers.dart' as storyteller_providers;
 import '../../storyteller/domain/entities/storyteller.dart';
 import '../../sync/presentation/notifiers/sync_notifier.dart';
+import '../data/local_recording_classification.dart';
 import '../data/providers.dart';
 import '../data/recording_heal_companion.dart';
 import '../data/server_to_local_recording.dart';
@@ -37,7 +38,6 @@ import '../data/services/recording_trash.dart';
 import '../data/services/waveform_extractor.dart';
 import '../data/supported_audio_formats.dart';
 import '../data/use_cases/save_recording_title.dart';
-import '../domain/entities/classification.dart';
 import '../domain/entities/register.dart';
 import '../domain/recording_edit_policy.dart';
 import 'notifiers/recordings_list_notifier.dart';
@@ -387,42 +387,26 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
 
     if (confirmed != true) return;
 
-    final serverId = recording.serverId ?? recording.id;
-    try {
-      final apiRepo = ref.read(recordingApiRepositoryProvider);
-      await apiRepo.deleteRecording(serverId);
-    } on ForbiddenException {
-      if (mounted) {
-        final l10n = AppLocalizations.of(context);
+    final result = await ref
+        .read(recordingsListNotifierProvider.notifier)
+        .deleteRecording(recording);
+    if (!mounted) return;
+    switch (result) {
+      case DeleteRecordingResult.forbidden:
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(l10n.recording_deleteNoPermission),
             backgroundColor: AppColors.of(context).warning,
           ),
         );
-      }
-      return;
-    } catch (_) {
-      if (kIsWeb) {
-        if (mounted) {
-          final l10n = AppLocalizations.of(context);
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(l10n.recording_deleteFailed)));
-        }
         return;
-      }
-      if (mounted) {
-        final l10n = AppLocalizations.of(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.recording_deleteFailedLocal)),
-        );
-      }
-    }
-
-    if (!kIsWeb) {
-      final repo = ref.read(localRecordingRepositoryProvider);
-      await repo.deleteRecording(widget.recordingId);
+      case DeleteRecordingResult.failed:
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.recording_deleteFailed)));
+        return;
+      case DeleteRecordingResult.ok:
+        break;
     }
 
     if (ref.read(syncNotifierProvider).isOnline) {
@@ -431,12 +415,10 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
           .fetchGenreStats(recording.projectId);
     }
 
-    if (mounted) {
-      if (context.canPop()) {
-        context.pop();
-      } else {
-        context.go('/recordings');
-      }
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/recordings');
     }
   }
 

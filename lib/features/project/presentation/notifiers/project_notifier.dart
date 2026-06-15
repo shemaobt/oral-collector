@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/auth/auth_notifier.dart';
 import '../../../../core/errors/api_exception.dart';
+import '../../../../core/observability/error_reporter.dart';
 import '../../data/project_cache.dart';
 import '../../data/providers.dart';
 import '../../domain/entities/language.dart';
@@ -79,11 +80,9 @@ class ProjectNotifier extends Notifier<ProjectState> {
           .read(authNotifierProvider.notifier)
           .handleUnauthorized()
           .catchError((_) => false, test: (e) => e is Exception);
-    } on Exception catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString().replaceFirst('Exception: ', ''),
-      );
+    } on Exception catch (e, st) {
+      ref.read(errorReporterProvider).reportError(e, st);
+      state = state.copyWith(isLoading: false, error: e);
     }
   }
 
@@ -101,10 +100,9 @@ class ProjectNotifier extends Notifier<ProjectState> {
     try {
       final languages = await _repo.listLanguages();
       state = state.copyWith(languages: languages);
-    } on Exception catch (e) {
-      state = state.copyWith(
-        error: e.toString().replaceFirst('Exception: ', ''),
-      );
+    } on Exception catch (e, st) {
+      ref.read(errorReporterProvider).reportError(e, st);
+      state = state.copyWith(error: e);
     }
   }
 
@@ -125,11 +123,9 @@ class ProjectNotifier extends Notifier<ProjectState> {
         projects: [...state.projects, project],
         isLoading: false,
       );
-    } on Exception catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString().replaceFirst('Exception: ', ''),
-      );
+    } on Exception catch (e, st) {
+      ref.read(errorReporterProvider).reportError(e, st);
+      state = state.copyWith(isLoading: false, error: e);
     }
   }
 
@@ -151,11 +147,9 @@ class ProjectNotifier extends Notifier<ProjectState> {
         activeProject: activeUpdated,
         isLoading: false,
       );
-    } on Exception catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString().replaceFirst('Exception: ', ''),
-      );
+    } on Exception catch (e, st) {
+      ref.read(errorReporterProvider).reportError(e, st);
+      state = state.copyWith(isLoading: false, error: e);
     }
   }
 
