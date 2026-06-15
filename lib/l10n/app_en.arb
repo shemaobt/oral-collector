@@ -464,7 +464,7 @@
     }
   },
   "import_resumePromptTitle": "Resume interrupted upload",
-  "import_resumePromptBody": "\"{name}\" ({size}) was partially uploaded. Select the same file to continue.",
+  "import_resumePromptBody": "\"{name}\" ({size}) was partially uploaded. Select the exact same file (unchanged) to continue.",
   "@import_resumePromptBody": {
     "placeholders": {
       "name": {
@@ -475,7 +475,7 @@
       }
     }
   },
-  "import_resumeSizeMismatch": "That file doesn't match the paused upload.",
+  "import_resumeSizeMismatch": "That's a different file. Select the exact same file you were uploading.",
   "import_largeFileWarning": "Large file ({size}). Keep this tab open until the upload completes.",
   "@import_largeFileWarning": {
     "placeholders": {

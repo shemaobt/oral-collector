@@ -984,12 +984,12 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String import_resumePromptBody(String name, String size) {
-    return '\"$name\" ($size) se subió parcialmente. Selecciona el mismo archivo para continuar.';
+    return '\"$name\" ($size) se subió parcialmente. Selecciona exactamente el mismo archivo (sin cambios) para continuar.';
   }
 
   @override
   String get import_resumeSizeMismatch =>
-      'Ese archivo no coincide con la subida pausada.';
+      'Ese es otro archivo. Selecciona exactamente el mismo archivo que estabas subiendo.';
 
   @override
   String import_largeFileWarning(String size) {

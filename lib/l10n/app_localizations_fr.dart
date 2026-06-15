@@ -988,12 +988,12 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String import_resumePromptBody(String name, String size) {
-    return '« $name » ($size) a été partiellement téléversé. Sélectionnez le même fichier pour continuer.';
+    return '« $name » ($size) a été partiellement téléversé. Sélectionnez exactement le même fichier (sans modification) pour continuer.';
   }
 
   @override
   String get import_resumeSizeMismatch =>
-      'Ce fichier ne correspond pas au téléversement en pause.';
+      'C\'est un autre fichier. Sélectionnez exactement le même fichier que celui en cours de téléversement.';
 
   @override
   String import_largeFileWarning(String size) {

@@ -982,12 +982,12 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String import_resumePromptBody(String name, String size) {
-    return '\"$name\" ($size) आंशिक रूप से अपलोड हुई थी। जारी रखने के लिए वही फ़ाइल चुनें।';
+    return '\"$name\" ($size) आंशिक रूप से अपलोड हुई थी। जारी रखने के लिए ठीक वही फ़ाइल (बिना बदलाव) चुनें।';
   }
 
   @override
   String get import_resumeSizeMismatch =>
-      'यह फ़ाइल रुके हुए अपलोड से मेल नहीं खाती।';
+      'यह एक अलग फ़ाइल है। ठीक वही फ़ाइल चुनें जिसे आप अपलोड कर रहे थे।';
 
   @override
   String import_largeFileWarning(String size) {
