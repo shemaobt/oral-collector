@@ -733,7 +733,9 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
 
     try {
       final bytes = await http.readBytes(Uri.parse(url));
-      final format = _detectWebFormatFromUrl(url);
+      // Web records with a fixed Opus encoder (see _startWeb); record_web
+      // packages Opus into a WebM container, so the format is always 'webm'.
+      const format = 'webm';
       final fullKey = '$pendingKey.$format';
       await file_ops.writeFileBytes(fullKey, bytes);
       state = const RecordingState();
@@ -750,13 +752,6 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
       );
       return null;
     }
-  }
-
-  String _detectWebFormatFromUrl(String url) {
-    final lower = url.toLowerCase();
-    if (lower.endsWith('.mp4') || lower.contains('mp4')) return 'mp4';
-    if (lower.endsWith('.ogg') || lower.contains('ogg')) return 'ogg';
-    return 'webm';
   }
 
   Future<void> discardRecording() async {
