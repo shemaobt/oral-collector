@@ -42,8 +42,17 @@ Path: @/lib/core/errors
   `e.toString()`. Stringifying early (the old
   `e.toString().replaceFirst('Exception: ', '')`) discarded the type, forcing a
   typed leaf through the brittle string fallback and leaking custom messages /
-  response bodies. Translation is now exclusively the UI's job (`friendlyErrorFor`
+  response bodies. Translation is exclusively the UI's job (`friendlyErrorFor`
   / `showErrorSnackBar`), so a typed leaf always reaches `messageForException`.
+  ENG-100 finished this boundary by routing the last widget catch-sites that
+  still called `friendlyErrorMessage(e.toString())` directly (file-import,
+  trim-split, confirmation-step upload) through `friendlyErrorFor` instead: no
+  widget forces the regex path anymore, so `friendlyErrorMessage` is reached
+  only via `friendlyErrorFor`'s fallback arm for genuinely untyped errors. That
+  retained-but-legacy fallback (and its private `_humanizeDetail`) is now pinned
+  by characterization tests
+  ([../../../test/shared/utils/error_helpers_test.dart](../../../test/shared/utils/error_helpers_test.dart))
+  so its input→output mapping is locked before it is eventually retired.
   See the `error` invariant in [../auth/docs.md](../auth/docs.md).
 - `UnauthorizedException` is the one leaf the app branches on by type, not just
   for display: [../auth/auth_notifier.dart](../auth/auth_notifier.dart) catches
