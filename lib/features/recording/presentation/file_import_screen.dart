@@ -147,7 +147,7 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
       if (mounted) {
         setState(() => _isAnalyzing = false);
         final l10n = AppLocalizations.of(context);
-        final friendly = friendlyErrorMessage(e.toString(), l10n);
+        final friendly = friendlyErrorFor(e, l10n);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(l10n.import_pickError(friendly))),
         );
@@ -173,7 +173,7 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
       if (mounted) {
         setState(() => _isAnalyzing = false);
         final l10n = AppLocalizations.of(context);
-        final friendly = friendlyErrorMessage(e.toString(), l10n);
+        final friendly = friendlyErrorFor(e, l10n);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(l10n.import_pickError(friendly))),
         );
@@ -479,7 +479,7 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
       if (mounted) {
         setState(() => _isSaving = false);
         final l10n = AppLocalizations.of(context);
-        final friendly = friendlyErrorMessage(e.toString(), l10n);
+        final friendly = friendlyErrorFor(e, l10n);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(l10n.import_saveError(friendly))),
         );
