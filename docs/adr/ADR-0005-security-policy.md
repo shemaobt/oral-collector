@@ -3,7 +3,7 @@
 - Status: Proposed
 - Date: 2026-06-04
 - Epic: E6 (Security)
-- Related: ENG-90, ENG-167, ENG-130, ENG-133, ENG-132, ADR-0000
+- Related: ENG-90, ENG-167, ENG-130, ENG-132, ENG-133, ENG-170, ADR-0000
 
 ## Context
 
@@ -38,12 +38,40 @@ decisions are recorded here as their features land:
   backups) and stay readable in the background after the first unlock; the
   previous default (`whenUnlocked`) is unreadable while the device is locked,
   which can break background uploads.
-- Android intentionally stays on the package default
-  (`encryptedSharedPreferences: false`), which still encrypts at rest with a
-  Keystore-backed key. Switching to AndroidX `EncryptedSharedPreferences` would
-  invalidate already-stored tokens (one-time re-login), can crash when reading
-  legacy data without `resetOnError`, and depends on a library Google has
-  deprecated; revisit alongside the `flutter_secure_storage` v10 migration.
+- Android previously stayed on the package default
+  (`encryptedSharedPreferences: false`), still encrypting at rest with a
+  Keystore-backed key, because switching to AndroidX `EncryptedSharedPreferences`
+  would invalidate already-stored tokens (one-time re-login), could crash when
+  reading legacy data without `resetOnError`, and depended on a library Google
+  has deprecated. Superseded by the v10 migration below (ENG-170).
+
+### Secure storage — Android at-rest encryption via v10 (ENG-170)
+
+- `flutter_secure_storage` is upgraded 9.2.4 → 10.x. v10 drops the deprecated
+  Jetpack `EncryptedSharedPreferences` for a custom cipher stack (default key
+  cipher RSA-OAEP-SHA256, storage cipher AES-GCM) that encrypts the token store
+  at rest by default — no `encryptedSharedPreferences` flag (deprecated in v10,
+  removed in v11).
+- Android options are pinned in `core/providers/secure_storage_provider.dart`:
+  `AndroidOptions(resetOnError: true, migrateOnAlgorithmChange: false)`.
+  - `migrateOnAlgorithmChange: false` — we do not run v10's automatic migrator
+    over v9-written data. It has open decrypt-crash reports
+    (juliansteenbakker/flutter_secure_storage#1079) and the whole payload
+    (access/refresh tokens + cached user) is re-derivable by re-login, so a
+    migration attempt buys nothing and only adds a crash surface.
+  - `resetOnError: true` (also the v10 default) — on the first post-upgrade boot
+    the v9 ciphertext is unreadable under the new ciphers; the store is wiped and
+    the user logs in once instead of the app throwing. This is the accepted cost.
+- The wipe-not-crash behavior assumes v9 never used `encryptedSharedPreferences:
+  true` (verified: never set in this app). That legacy backend would raise a
+  `PlatformException` outside the `resetOnError` guard, so the deprecated flag
+  must not be reintroduced as a fallback. v10's `migrateWithBackup` (crash-resistant
+  migration) is likewise declined: migration is pointless for a payload that is
+  re-derivable by re-login.
+- Minimum Android SDK rises to 23 (Android 6.0): `minSdk = maxOf(flutter.minSdkVersion, 23)`
+  in `android/app/build.gradle.kts`.
+- Net effect: a one-time re-login for existing Android users on upgrade; iOS is
+  unaffected (its store and `IOSOptions` are unchanged).
 
 ### Web deploy security headers and CSP (ENG-167)
 
@@ -137,8 +165,9 @@ directives live in a single `docker/security-headers.conf` snippet copied to
   policy (ENG-90).
 - Changing iOS Keychain accessibility does not force re-login: the plugin's read
   path ignores accessibility, so existing tokens stay readable and acquire the
-  new attribute lazily on the next write. Hardening Android storage at rest is an
-  open follow-up gated on the v10 migration.
+  new attribute lazily on the next write. Hardening Android storage at rest is
+  done via the `flutter_secure_storage` v10 migration (ENG-170), at the cost of a
+  one-time re-login on the upgrade; iOS is unaffected.
 - The CSP couples the deploy config to the web build's runtime dependencies:
   changing renderers, CDNs, or the set of contacted origins (backend, GCS) means
   the `docker/security-headers.conf` allowlist must change too, or requests are
