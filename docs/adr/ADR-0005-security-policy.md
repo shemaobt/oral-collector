@@ -3,7 +3,7 @@
 - Status: Proposed
 - Date: 2026-06-04
 - Epic: E6 (Security)
-- Related: ENG-90, ENG-167, ENG-130, ENG-170, ADR-0000
+- Related: ENG-90, ENG-167, ENG-130, ENG-132, ENG-133, ENG-170, ADR-0000
 
 ## Context
 
@@ -107,9 +107,8 @@ directives live in a single `docker/security-headers.conf` snippet copied to
     and the lockdown directives `object-src 'none'`, `base-uri 'self'`,
     `frame-ancestors 'self'`. `X-Frame-Options: SAMEORIGIN` is the coherent
     legacy counterpart to `frame-ancestors 'self'`.
-- `Strict-Transport-Security` (HSTS) is deliberately omitted: it is outside this
-  ticket's scope and risky, since `includeSubDomains`/`preload` would affect
-  sibling `*.shemaywam.com` subdomains. Left as a follow-up.
+- `Strict-Transport-Security` (HSTS) is omitted **in ENG-167**; it was added later
+  by ENG-133 (see "Transport hardening" below).
 - The header CSP must stay in lockstep with whatever `web/index.html` loads. With
   ENG-130 self-hosting sql.js, the only remaining third-party origins are gstatic
   (CanvasKit) and fonts.gstatic.com (its font fallback). If a future change adds
@@ -120,6 +119,42 @@ directives live in a single `docker/security-headers.conf` snippet copied to
   the real config and curls `/`, a `.js`, and a `.png` to assert the headers. It
   is a local/manual gate, not wired into CI (CI runs `flutter test`, not
   Docker).
+
+### Transport hardening: cleartext block, HSTS, reset-token scrubbing (ENG-133)
+
+- **Android cleartext is blocked at the OS layer.** A `network-security-config`
+  (`android/app/src/main/res/xml/network_security_config.xml`, wired via
+  `android:networkSecurityConfig` on `<application>`) sets
+  `cleartextTrafficPermitted="false"`, so non-debug builds cannot make plaintext
+  HTTP requests even from native plugins that bypass Dart's `HttpClient`. This is
+  defense-in-depth under `core/config/url_policy.dart` (ENG-132), which already
+  blocks http in release at the Dart layer. `minSdk` is 24, so the config is always
+  honored and `usesCleartextTraffic` is redundant (omitted).
+- **Debug keeps cleartext for local dev.** A build-type resource overlay
+  (`android/app/src/debug/res/xml/network_security_config.xml`) re-permits
+  cleartext in debug builds so developers can reach a LAN/loopback HTTP backend
+  (dev `.env` uses an RFC1918 IP over http). It never ships, and `url_policy.dart`
+  still restricts the Dart client. A permissive debug base is used rather than a
+  per-host `domain-config` because the config cannot express CIDR ranges and the
+  dev IP varies per machine.
+- **HSTS is now sent** (supersedes the ENG-167 omission above):
+  `Strict-Transport-Security: max-age=63072000; includeSubDomains` in
+  `docker/security-headers.conf`, with a matching assertion in
+  `docker/verify-security-headers.sh`. No `preload` — it is effectively permanent
+  and would lock every `*.shemaywam.com` subdomain to HTTPS; `includeSubDomains`
+  already assumes all subdomains serve HTTPS. The header is only honored over
+  HTTPS; nginx serves plain `:8080` behind a TLS-terminating edge, which must
+  forward it.
+- **The password-reset token is scrubbed from the web URL.** The reset link
+  carries `?token=…`; once the screen captures it, `core/web/url_history.dart`
+  (web-only, behind a conditional import so `package:web` never enters the
+  Android/iOS AOT build) calls `history.replaceState` to drop the query, so the
+  token is not retained in browser history / back-forward or leaked via Referer on
+  later navigations. The token is still sent to nginx on the initial GET (access
+  logs) and is briefly in-URL before first paint; full mitigation (a fragment token
+  or a one-time server-side code) is a backend follow-up.
+- **R8 (Android shrink/obfuscate)** is enabled on the release build in the same
+  batch — see ADR-0009, whose original "R8 out of scope" note ENG-133 supersedes.
 
 ## Consequences
 
@@ -141,5 +176,5 @@ directives live in a single `docker/security-headers.conf` snippet copied to
 - Future tightening (follow-up): building with `--no-web-resources-cdn`
   (self-hosting CanvasKit, dropping www.gstatic.com) and self-hosting the
   CanvasKit font fallback (dropping fonts.gstatic.com) would collapse the CSP
-  toward `default-src 'self'` plus the backend and GCS only. HSTS remains a
-  separate follow-up.
+  toward `default-src 'self'` plus the backend and GCS only. HSTS was added in
+  ENG-133.

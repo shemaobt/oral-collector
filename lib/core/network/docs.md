@@ -199,7 +199,12 @@ Path: @/lib/core/network
   cleartext policies (Android network-security-config, iOS ATS) do not cover,
   so the scheme check is a pure-Dart guard in
   [../config/url_policy.dart](../config/url_policy.dart) (IPv4 parsed by hand,
-  no `dart:io`, to stay web-safe). The policy:
+  no `dart:io`, to stay web-safe). As of ENG-133 this Dart guard is backed by
+  **OS-layer defense-in-depth**: an Android `network-security-config` blocks
+  cleartext for non-debug builds (a debug overlay re-permits it for LAN/loopback
+  dev backends), and the web deploy sends HSTS — both are infra-level and
+  documented in [ADR-0005](../../../docs/adr/ADR-0005-security-policy.md), not a
+  `docs.md`. The Dart policy:
 
   | Build | http allowed? | https allowed? |
   | --- | --- | --- |

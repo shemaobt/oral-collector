@@ -729,7 +729,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
     } catch (e) {
       if (mounted) {
         final l10n = AppLocalizations.of(context);
-        final friendly = friendlyErrorMessage(e.toString(), l10n);
+        final friendly = friendlyErrorFor(e, l10n);
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(l10n.trim_splitError(friendly))));

@@ -332,7 +332,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
       }
     } catch (e) {
       if (mounted) {
-        final friendly = friendlyErrorMessage(e.toString(), l10n);
+        final friendly = friendlyErrorFor(e, l10n);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(l10n.recording_uploadFailed(friendly))),
         );
@@ -434,7 +434,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
       }
     } catch (e) {
       if (mounted) {
-        final friendly = friendlyErrorMessage(e.toString(), l10n);
+        final friendly = friendlyErrorFor(e, l10n);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(l10n.recording_uploadFailed(friendly))),
         );
