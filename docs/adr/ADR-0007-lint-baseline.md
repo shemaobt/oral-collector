@@ -3,7 +3,10 @@
 - Status: Accepted
 - Date: 2026-06-04
 - Epic: E1 (Architecture & Standards)
-- Related: ENG-89, ENG-90, ADR-0000, ADR-0002, ADR-0004
+- Related: ENG-89, ENG-90, ENG-159, ADR-0000, ADR-0002, ADR-0004
+- Update (2026-06-15, ENG-159): the deferred custom rule from item 5 shipped as
+  the `obt_lints` plugin — `avoid_hardcoded_color` + `avoid_material_colors`,
+  staged at `info` and non-blocking, exempting `lib/core/theme/**`.
 
 ## Context
 
