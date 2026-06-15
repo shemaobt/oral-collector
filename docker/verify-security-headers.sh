@@ -96,6 +96,7 @@ for path in "/" "/app.js" "/icon.png"; do
   check "$path" '^X-Content-Type-Options: *nosniff'                                          "X-Content-Type-Options: nosniff"
   check "$path" '^Referrer-Policy: *strict-origin-when-cross-origin'                         "Referrer-Policy"
   check "$path" '^X-Frame-Options: *SAMEORIGIN'                                              "X-Frame-Options: SAMEORIGIN"
+  check "$path" '^Strict-Transport-Security: *max-age=63072000;.*includeSubDomains'          "Strict-Transport-Security (HSTS)"
 done
 
 if [ "$fail" -ne 0 ]; then

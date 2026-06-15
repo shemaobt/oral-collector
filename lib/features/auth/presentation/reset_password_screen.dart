@@ -7,6 +7,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../core/auth/providers.dart';
 import '../../../core/observability/error_reporter.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/web/url_history.dart';
 import '../../../shared/widgets/error_snack_bar.dart';
 
 class ResetPasswordScreen extends ConsumerStatefulWidget {
@@ -27,6 +28,17 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
   bool _obscureConfirm = true;
   bool _isLoading = false;
   bool _success = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Scrub the token from the address bar as soon as we have it, so it is not
+    // kept in browser history or leaked via Referer. The value is already held
+    // in widget.token, so _handleReset still works after the URL is cleaned.
+    if (widget.token?.isNotEmpty ?? false) {
+      stripUrlQueryParam('token');
+    }
+  }
 
   @override
   void dispose() {
