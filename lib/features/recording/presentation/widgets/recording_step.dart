@@ -277,15 +277,24 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
                       else ...[
                         Padding(
                           padding: const EdgeInsets.only(top: 24),
-                          child: Text(
-                            formatElapsed(recState.elapsed),
-                            style: theme.textTheme.displayLarge?.copyWith(
-                              color: colors.foreground,
-                              fontWeight: FontWeight.w200,
-                              fontSize: 56,
-                              fontFeatures: [
-                                const FontFeature.tabularFigures(),
-                              ],
+                          child: SizedBox(
+                            width: double.infinity,
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.center,
+                              child: Text(
+                                formatElapsed(recState.elapsed),
+                                maxLines: 1,
+                                softWrap: false,
+                                style: theme.textTheme.displayLarge?.copyWith(
+                                  color: colors.foreground,
+                                  fontWeight: FontWeight.w200,
+                                  fontSize: 56,
+                                  fontFeatures: [
+                                    const FontFeature.tabularFigures(),
+                                  ],
+                                ),
+                              ),
                             ),
                           ),
                         ),
@@ -365,16 +374,6 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
                             degraded: recState.finalizationDegraded,
                           ),
                         ),
-                      if (isReady)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 40),
-                          child: Text(
-                            l10n.recording_tapToRecord,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: colors.secondary,
-                            ),
-                          ),
-                        ),
                     ],
                   ),
           ),
@@ -390,15 +389,32 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
   ) {
     final sensitivity = ref.watch(noiseSensitivityProvider);
     return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
       children: [
+        const SizedBox(height: 24),
         _buildInputSourceRow(colors),
         const SizedBox(height: 12),
         _buildSensitivitySelector(colors, sensitivity),
-        const SizedBox(height: 32),
-        _buildRecordButtonWithRings(
-          colors,
-          () => _handleRecordTap(notifier, recState),
+        Expanded(
+          child: Center(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: _buildRecordButtonWithRings(
+                colors,
+                () => _handleRecordTap(notifier, recState),
+              ),
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(top: 8, bottom: 24),
+          child: Text(
+            AppLocalizations.of(context).recording_tapToRecord,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: colors.secondary),
+          ),
         ),
       ],
     );
@@ -424,31 +440,47 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
         );
       },
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         child: Row(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(LucideIcons.mic2, size: 14, color: colors.secondary),
-            const SizedBox(width: 6),
-            Text(
-              l10n.recording_inputSource,
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: colors.secondary,
-              ),
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Icon(LucideIcons.mic2, size: 14, color: colors.secondary),
             ),
             const SizedBox(width: 6),
             Flexible(
-              child: Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.labelMedium?.copyWith(
-                  color: colors.foreground,
-                ),
+              child: Wrap(
+                alignment: WrapAlignment.center,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 6,
+                runSpacing: 2,
+                children: [
+                  Text(
+                    l10n.recording_inputSource,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: colors.secondary,
+                    ),
+                  ),
+                  Text(
+                    label,
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: colors.foreground,
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(width: 4),
-            Icon(LucideIcons.chevronDown, size: 14, color: colors.secondary),
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Icon(
+                LucideIcons.chevronDown,
+                size: 14,
+                color: colors.secondary,
+              ),
+            ),
           ],
         ),
       ),
@@ -487,37 +519,53 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
     NoiseSensitivity current,
   ) {
     final theme = Theme.of(context);
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(LucideIcons.mic, size: 14, color: colors.secondary),
-        const SizedBox(width: 6),
-        Text(
-          AppLocalizations.of(context).recording_sensitivity,
-          style: theme.textTheme.labelSmall?.copyWith(color: colors.secondary),
-        ),
-        const SizedBox(width: 10),
-        _sensitivityChip(
-          colors,
-          NoiseSensitivity.low,
-          current,
-          AppLocalizations.of(context).recording_sensitivityLow,
-        ),
-        const SizedBox(width: 4),
-        _sensitivityChip(
-          colors,
-          NoiseSensitivity.medium,
-          current,
-          AppLocalizations.of(context).recording_sensitivityMed,
-        ),
-        const SizedBox(width: 4),
-        _sensitivityChip(
-          colors,
-          NoiseSensitivity.high,
-          current,
-          AppLocalizations.of(context).recording_sensitivityHigh,
-        ),
-      ],
+    final l10n = AppLocalizations.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: [
+          Icon(LucideIcons.mic, size: 14, color: colors.secondary),
+          const SizedBox(width: 6),
+          Text(
+            l10n.recording_sensitivity,
+            maxLines: 1,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: colors.secondary,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Flexible(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _sensitivityChip(
+                    colors,
+                    NoiseSensitivity.low,
+                    current,
+                    l10n.recording_sensitivityLow,
+                  ),
+                  const SizedBox(width: 4),
+                  _sensitivityChip(
+                    colors,
+                    NoiseSensitivity.medium,
+                    current,
+                    l10n.recording_sensitivityMed,
+                  ),
+                  const SizedBox(width: 4),
+                  _sensitivityChip(
+                    colors,
+                    NoiseSensitivity.high,
+                    current,
+                    l10n.recording_sensitivityHigh,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -542,6 +590,8 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
         ),
         child: Text(
           label,
+          maxLines: 1,
+          softWrap: false,
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
             color: isSelected ? colors.background : colors.secondary,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,

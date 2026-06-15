@@ -147,6 +147,29 @@ Path: @/lib/features/recording/presentation/widgets
   [../../data/services/segmented_recorder.dart](../../data/services/segmented_recorder.dart),
   which subscribes to the platform `interruptionEventStream` and
   re-activates the session itself.
+- **The Quick Recording "ready" state is responsive to system text scale,
+  not text-clamped (ENG-171).** `recording_step.dart`'s not-recording layout
+  must survive a large OS font (`MediaQuery` `textScaler`) without overflowing
+  or hiding controls — a user-reported regression where the fixed-size,
+  non-wrapping layout broke under enlarged fonts. The stance is responsive
+  layout, deliberately *not* a per-screen low text-scale clamp (a low clamp was
+  rejected because it hurts low-vision users; only the app-wide *high* ceiling
+  in [/lib/main.dart](/lib/main.dart) applies — see
+  [/lib/core/theme/docs.md](/lib/core/theme/docs.md)). The mechanism is a few
+  reflowing primitives instead of fixed sizes: the sensitivity chips scroll
+  horizontally (label/icon stay pinned), the input-source row wraps its
+  label + device name to a second line instead of truncating it, and both the
+  fixed-size record-ring stack and the elapsed timer sit in a `FittedBox` that
+  scales them down only when space is tight (base size unchanged at 1×). The
+  "tap to record" hint is the last child *inside* the centered ready-content
+  `Column` rather than a fixed sibling, so Column ordering guarantees it cannot
+  overlap the record button under scale. The timer block is shared with the
+  active-recording state, so its `FittedBox` benefits both. This is the first
+  widget slice of the
+  staged app-wide a11y program (ENG-177); regression is pinned by a widget test
+  that pumps this state at 1.0×/1.3×/2.0× on a realistic phone viewport via the
+  shared `pumpAtTextScale` / `expectNoOverflow` harness in
+  [/test/support/text_scale.dart](/test/support/text_scale.dart).
 - **`ConfirmationStep` is parameterized for the recovery reuse (ENG-80).**
   Two optional params let the recovery screen host the same widget
   without duplicating the save logic: `onSaved` runs in place of the
