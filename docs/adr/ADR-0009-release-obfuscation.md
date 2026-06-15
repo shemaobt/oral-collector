@@ -44,8 +44,10 @@ artifacts.
   (`name: <platform>-symbols-<run>`, `retention-days: 90`, `if-no-files-found: error`).
 - **Web** (`deploy-web.yml`): no change. Flutter web has no `--obfuscate`; the release web
   compiler minifies instead. A comment in the workflow records this.
-- **R8 out of scope.** Java/Kotlin shrinking (`isMinifyEnabled`/`isShrinkResources`) stays
-  off; Dart obfuscation is independent of R8 and needs no `build.gradle.kts` change.
+- **R8 (later enabled by ENG-133).** This ADR originally left Java/Kotlin shrinking
+  (`isMinifyEnabled`/`isShrinkResources`) off. ENG-133 enabled R8 on the release build
+  (`proguard-android-optimize.txt` + the existing `proguard-rules.pro`); it is an
+  independent layer from Dart obfuscation. See ADR-0005 / ENG-133.
 
 ## Consequences
 
