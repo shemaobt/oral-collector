@@ -112,6 +112,15 @@ Path: @/lib/features/recording/data/repositories
   to swap the file and reset upload state (`md5Hash`, `uploadedBytes`,
   `resumableSessionUri`, `retryCount` → defaults; `uploadStatus` →
   `'local'`).
+- `deleteRecording(id)` is a plain physical row delete (a single Drift
+  `delete().go()`); there is no tombstone column. It only removes the
+  Drift row — it does **not** delete the audio file or call the server.
+  The user-initiated hard-delete flow that combines the remote delete, this
+  row delete, and the physical audio-file delete is orchestrated by
+  `RecordingsListNotifier.deleteRecording` (ENG-120), not here — see
+  [../../presentation/notifiers/docs.md](../../presentation/notifiers/docs.md).
+  `deleteStaleRecordings(projectId)` is the separate user-triggered "clear
+  stale" sweep that bulk-deletes `failed` and `uploading` rows for a project.
 - Lifecycle helpers: `markAsUploading`, `markAsUploaded(id, serverId,
   gcsUrl)`, `markAsFailed`, `resetRetryCount`, and `resetStuckUploading`.
   These mutate only upload-state columns; they never touch user-content

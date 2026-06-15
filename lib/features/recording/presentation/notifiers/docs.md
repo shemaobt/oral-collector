@@ -75,6 +75,19 @@ Path: @/lib/features/recording/presentation/notifiers
   `clearAllFilters`, `clearStaleRecordings`, and pull-to-refresh re-hit
   the server. `patchRecordingTitle` rerenders after an edit without a
   full refetch.
+- `deleteRecording(LocalRecording)` is the single owner of the
+  user-initiated **hard delete** for both the list and detail screens
+  (ENG-120). It deletes remotely via the recording API *only* when the
+  row has a `serverId` (local-only rows skip the API), hard-deletes the
+  Drift row through
+  [../../data/repositories/local_recording_repository.dart](../../data/repositories/local_recording_repository.dart),
+  best-effort deletes the physical audio file via
+  [/lib/core/platform/file_ops.dart](../../../../core/platform/file_ops.dart)'s
+  `deleteFile`, then optimistically removes the item from `state` (no
+  refetch). It returns `DeleteRecordingResult { ok, forbidden, failed }`
+  so the screen picks the snackbar without re-deriving it from an
+  exception. See Things to Know for the web-orphan fix and the
+  remote-failure semantics.
 - `InputDeviceNotifier` tracks the currently selected microphone for
   capture; `InterruptedSessionsNotifier` powers the "you have an
   unsaved recording" prompt on app open by reading recovery rows from
@@ -211,5 +224,44 @@ Path: @/lib/features/recording/presentation/notifiers
   a superseded `loadMore` that bails cannot leave the spinner stuck.
   `_serverOffset` is the only mutable field shared across these methods —
   everything else lives on `state` or as a local.
+- **Delete is a hard delete on every platform — the row delete is never
+  `kIsWeb`-gated (ENG-120).** Each screen previously owned a duplicated
+  delete that ran the local Drift delete inside `if (!kIsWeb)`. On web
+  that guard skipped the row delete, so the server delete left an orphan
+  Drift row that reappeared on the next `fetchRecordings` merge
+  (resurrection). `deleteRecording` removes the guard and always deletes
+  the row, then the audio file. On web `file_ops.deleteFile` clears the
+  in-memory cache entry rather than touching disk (see
+  [/lib/core/platform/docs.md](../../../../core/platform/docs.md)); on
+  native it removes the file. The audio delete is best-effort —
+  a missing or locked file must not abort the row delete, so it swallows
+  the exception and still returns `ok`.
+- **On a remote-delete failure for a synced row, nothing local is
+  touched (ENG-120).** A `ForbiddenException` maps to
+  `DeleteRecordingResult.forbidden` and any other error to `failed`, and
+  in both cases the row, the file, and `state` are left intact so the
+  user can retry. This is a deliberate semantics change from the old
+  per-screen code, which (on non-web) deleted the local row even when the
+  remote delete failed.
+- **Delete resolves the real local row, never trusting the list item's
+  `id` (ENG-120).** The list shows the server-converted copy of a synced
+  recording (`serverRecordingToLocal` in
+  [../../data/server_to_local_recording.dart](../../data/server_to_local_recording.dart)
+  sets `id == serverId` and an empty `localFilePath`), but a row that was
+  created locally and then uploaded keeps its original uuid `id` and only
+  gains a `serverId` (`markAsUploaded` never rewrites `id`). So deleting by
+  `recording.id` would miss that uuid row — orphaning it (resurrects on the
+  next merge) and leaking its audio file (the list copy's path is empty).
+  `deleteRecording` first resolves the true row via `getRecordingById` then
+  `getRecordingByServerId`, and deletes that row's real `id` and real
+  `localFilePath`. This is what makes the hard delete actually remove the
+  row + audio for a list-synced recording on every platform, generalizing
+  the web-orphan fix above.
+- **This is a hard delete, not a tombstone.** `deleteRecording` removes
+  the row and audio outright; there is no soft-delete / tombstone marker.
+  The durable cross-device delete case (delete on device A propagating to
+  device B) is out of scope and needs a server-side delete contract
+  (`needs-api`); a synced row deleted here will reappear on a different
+  device that still lists it from the server.
 
 Created and maintained by Nori.

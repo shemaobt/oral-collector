@@ -28,7 +28,10 @@ Path: @/lib/features/recording/presentation
     for kIsWeb and offline-miss cases where there is no local row yet.
   - [../data/repositories/local_recording_repository.dart](../data/repositories/local_recording_repository.dart)
     for `cacheDownloadedAudio` (the post-download write) and for in-place
-    edits (`updateRecording`, `deleteRecording`).
+    edits (`updateRecording`). The user-initiated recording delete is no
+    longer issued here from the screen — it is delegated to
+    `RecordingsListNotifier.deleteRecording` (see Core Implementation and
+    [./notifiers/docs.md](notifiers/docs.md)).
   - [../data/providers.dart](../data/providers.dart) for
     `localRecordingStreamProvider`, which streams Drift changes back into
     the screen so any external write (sync, heal) re-renders the UI.
@@ -73,6 +76,20 @@ Path: @/lib/features/recording/presentation
   `LocalRecordingRepository.updateRecording` with a narrow companion that
   touches only the affected fields, then `await _loadRecording()` to
   refresh the screen state.
+- **Delete is the one action both screens delegate, not inline (ENG-120).**
+  The list and detail screens each only show the confirm dialog, call
+  `RecordingsListNotifier.deleteRecording(recording)`, and `switch` on the
+  returned `DeleteRecordingResult` to pick the snackbar (`forbidden` →
+  permission warning in `AppColors.of(context).warning`, `failed` → generic
+  failure, `ok` → no snackbar). The notifier owns the whole flow — remote
+  delete, the local Drift row, the audio file, and optimistic state removal
+  — so the screens no longer touch `recordingApiRepositoryProvider`,
+  `localRecordingRepositoryProvider`, `kIsWeb`, or `ForbiddenException` for
+  delete. On `ok` *only*, the detail screen then refreshes genre stats and
+  pops / navigates to `/recordings`; the list screen does nothing more
+  because the notifier already removed the item from state (no refetch). See
+  [./notifiers/docs.md](notifiers/docs.md) for the hard-delete semantics
+  and the web-orphan fix.
 - `trim_editor_screen.dart` loads a recording the same way as the detail
   screen but additionally streams audio from `gcsUrl` on web. After
   FFmpeg cuts the segments, the editor hands off to
