@@ -540,10 +540,14 @@ class _SidebarCollapseToggle extends StatelessWidget {
                       color: colors.secondary,
                     ),
                     const SizedBox(width: SpacingScale.s12),
-                    Text(
-                      collapseLabel,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: colors.secondary,
+                    Flexible(
+                      child: Text(
+                        collapseLabel,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colors.secondary,
+                        ),
                       ),
                     ),
                   ],

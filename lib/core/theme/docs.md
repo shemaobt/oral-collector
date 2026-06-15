@@ -121,8 +121,11 @@ SpacingScale/RadiusScale/DurationScale/OpacityScale ─► AppSpacing/AppRadii/A
   only *lowers* extreme up-scaling and never raises the floor — low-vision users
   keep full up-scaling up to 2×. A symmetric/low clamp was explicitly rejected
   for that reason; resilience to large fonts is instead the responsibility of
-  responsive layout in each screen. Tests pump screens against this ceiling via
-  [/test/support/text_scale.dart](/test/support/text_scale.dart).
+  responsive layout — both in each feature screen and, since ENG-178, in the
+  cross-cutting shared widget library
+  ([/lib/shared/widgets/docs.md](/lib/shared/widgets/docs.md): scroll-when-overflow,
+  `Flexible`+ellipsis, preserved fixed chrome). Tests pump screens against this
+  ceiling via [/test/support/text_scale.dart](/test/support/text_scale.dart).
 - **Color/brightness invariant.** A registered `AppColorSet`'s brightness must
   match its `ThemeData.brightness` — `of()` prefers the extension and ignores
   brightness when one is present, so a mismatched pairing would hand back colors

@@ -69,7 +69,9 @@ class _CleaningStatusBadgeState extends State<CleaningStatusBadge>
     }
 
     final iconSize = widget.compact ? 12.0 : 14.0;
-    final fontSize = widget.compact ? 11.0 : 13.0;
+    // `null` keeps labelSmall's native 11 (== the old compact size); only the
+    // off-token 13 stays as an explicit override (ENG-114 convention).
+    final double? fontSize = widget.compact ? null : 13.0;
     final hPad = widget.compact ? 6.0 : 8.0;
     final vPad = widget.compact ? 2.0 : 3.0;
 
@@ -97,12 +99,16 @@ class _CleaningStatusBadgeState extends State<CleaningStatusBadge>
         children: [
           iconWidget,
           const SizedBox(width: 4),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              fontSize: fontSize,
-              color: color,
-              fontWeight: FontWeight.w600,
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                fontSize: fontSize,
+                color: color,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
