@@ -25,7 +25,7 @@ class AdminNotifier extends Notifier<AdminState> {
   Future<void> fetchAll() async {
     state = state.copyWith(isLoading: true, clearError: true);
 
-    final results = await Future.wait([
+    final (stats, projects, genres, cleaningQueue) = await (
       _repo.fetchStats().then<AdminStats?>((v) => v).catchError((_) => null),
       _repo
           .fetchAllProjects()
@@ -39,13 +39,13 @@ class AdminNotifier extends Notifier<AdminState> {
           .fetchCleaningQueue()
           .then<List<Recording>?>((v) => v)
           .catchError((_) => null),
-    ]);
+    ).wait;
 
     state = AdminState(
-      stats: results[0] as AdminStats? ?? state.stats,
-      projects: results[1] as List<Project>? ?? state.projects,
-      genres: results[2] as List<Genre>? ?? state.genres,
-      cleaningQueue: results[3] as List<Recording>? ?? state.cleaningQueue,
+      stats: stats ?? state.stats,
+      projects: projects ?? state.projects,
+      genres: genres ?? state.genres,
+      cleaningQueue: cleaningQueue ?? state.cleaningQueue,
       isLoading: false,
     );
   }
