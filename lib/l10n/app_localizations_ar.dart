@@ -959,11 +959,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String import_resumePromptBody(String name, String size) {
-    return 'تم رفع \"$name\" ($size) جزئيًا. اختر الملف نفسه للمتابعة.';
+    return 'تم رفع \"$name\" ($size) جزئيًا. اختر الملف نفسه تمامًا (دون تغيير) للمتابعة.';
   }
 
   @override
-  String get import_resumeSizeMismatch => 'هذا الملف لا يطابق الرفع المتوقف.';
+  String get import_resumeSizeMismatch =>
+      'هذا ملف مختلف. اختر الملف نفسه تمامًا الذي كنت ترفعه.';
 
   @override
   String import_largeFileWarning(String size) {

@@ -972,12 +972,12 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String import_resumePromptBody(String name, String size) {
-    return '\"$name\" ($size) terunggah sebagian. Pilih berkas yang sama untuk melanjutkan.';
+    return '\"$name\" ($size) terunggah sebagian. Pilih berkas yang sama persis (tanpa perubahan) untuk melanjutkan.';
   }
 
   @override
   String get import_resumeSizeMismatch =>
-      'Berkas itu tidak cocok dengan unggahan yang dijeda.';
+      'Itu berkas yang berbeda. Pilih berkas yang sama persis dengan yang sedang Anda unggah.';
 
   @override
   String import_largeFileWarning(String size) {
