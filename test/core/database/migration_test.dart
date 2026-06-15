@@ -38,6 +38,27 @@ void main() {
     }
   });
 
+  group('migrating a database one version at a time', () {
+    // stepByStep honors the `to` argument: onUpgrade(from, from + 1) must land
+    // exactly on the next version's schema instead of running through to the
+    // latest. migrateAndValidate diffs tables, columns and indexes, so every
+    // single step is validated against its own snapshot in isolation.
+    for (var from = 1; from < 11; from++) {
+      test(
+        'v$from -> v${from + 1} yields the expected v${from + 1} schema',
+        () async {
+          final connection = await verifier.startAt(from);
+          final db = AppDatabase.forTesting(connection);
+          try {
+            await verifier.migrateAndValidate(db, from + 1);
+          } finally {
+            await db.close();
+          }
+        },
+      );
+    }
+  });
+
   test(
     'preserves an un-uploaded recording across the full v1 -> v11 upgrade',
     () async {
@@ -93,8 +114,9 @@ void main() {
 
     // Seed a storyteller at v6 — the version where local_storytellers exists
     // at its pre-sync 10-column shape, before serverId/syncStatus/retryCount/
-    // lastRetryAt are added at v10. This guards the from>=6 branch the ENG-123
-    // fix touches against a destructive future migration of this table.
+    // lastRetryAt are added at v10. This proves the from5To6 (create) /
+    // from9To10 (add sync columns) split upgrades a v6-shaped table without
+    // duplicating columns.
     final oldDb = v6.DatabaseAtV6(schema.newConnection());
     await oldDb
         .into(oldDb.localStorytellers)
