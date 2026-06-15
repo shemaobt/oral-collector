@@ -3,7 +3,7 @@
 - Status: Accepted
 - Date: 2026-06-04
 - Epic: E1 (Architecture & Standards)
-- Related: ENG-89, ENG-90, ADR-0000, ADR-0002, ADR-0004
+- Related: ENG-89, ENG-90, ENG-156, ADR-0000, ADR-0002, ADR-0004
 
 ## Context
 
@@ -63,6 +63,20 @@ Adopt a **staged** lint baseline.
 then promote it from `info` to `warning`/`error` via `analyzer: errors:` (which
 `flutter analyze` enforces even with `--no-fatal-infos`). Make the
 `dart run custom_lint` step blocking once its baseline is clean.
+
+**Promoted in ENG-156 (2026-06-15).** Burned down `directives_ordering` (1
+violation — unsorted imports in a recording widget test) and promoted four rules
+via `analyzer: errors:`. `use_build_context_synchronously` → `error` (a real
+correctness bug — a `BuildContext` used across an async gap); the style/format
+rules `directives_ordering`, `prefer_const_constructors`, `prefer_final_locals`
+→ `warning`. Under `--no-fatal-infos` both levels fail CI; the split reflects
+intent (correctness vs. style). The CI command is unchanged. An
+intentional-violation pass confirms each promoted rule now fails analyze:
+`use_build_context_synchronously` reports as `error` in `lib/` — note the
+analyzer does not apply this rule to `test/` — with 0 current violations because
+the codebase already guards async gaps with `context.mounted`. Still staged at
+`info`: `unawaited_futures` (40); `riverpod_lint`'s
+`avoid_public_notifier_properties` (14) stays non-blocking.
 
 ## Consequences
 
