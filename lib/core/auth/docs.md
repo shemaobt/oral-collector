@@ -7,7 +7,12 @@ Path: @/lib/core/auth
 - The app's single source of truth for the authenticated session. `AuthNotifier`
   in [./auth_notifier.dart](auth_notifier.dart) holds `currentUser` (the only
   signal of being logged in) and owns the access/refresh tokens and cached user
-  in `FlutterSecureStorage`.
+  in `FlutterSecureStorage`, the one store every secret in the app lives in. That
+  store is encrypted at rest on both platforms: iOS via the Keychain, Android via
+  the secure-storage plugin's platform-encrypted backend. Hardening the Android
+  at-rest encryption (ENG-170, [the security ADR](../../../docs/adr/ADR-0005-security-policy.md))
+  is why the plugin and `minSdk` were raised; the options pinning both backends
+  live in [../providers/secure_storage_provider.dart](../providers/secure_storage_provider.dart).
 - It is the only place that mutates the session: login/signup/logout, profile
   and avatar updates, account deletion, boot restore (`tryAutoLogin`), and the
   401-driven token refresh (`handleUnauthorized`).
