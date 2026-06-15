@@ -12,13 +12,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
 import 'package:oral_collector/features/recording/presentation/notifiers/input_device_notifier.dart';
 import 'package:oral_collector/features/recording/presentation/notifiers/recording_session_notifier.dart';
 import 'package:oral_collector/features/recording/presentation/notifiers/recording_session_state.dart';
 import 'package:oral_collector/features/recording/presentation/widgets/recording_step.dart';
 import 'package:oral_collector/l10n/app_localizations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 const _bannerText = 'Recording continued in background';
 
