@@ -437,6 +437,31 @@ void main() {
       verify(() => mockRepo.markAsUploading('rec-1')).called(1);
       httpClient.close();
     });
+
+    test('does not re-dispatch a row already in the uploading state', () async {
+      final testFile = File('${tempDir.path}/inflight.m4a');
+      testFile.writeAsBytesSync(Uint8List(1024));
+
+      final rec = makeRecording(
+        localFilePath: testFile.path,
+        uploadStatus: 'uploading',
+      );
+
+      when(() => mockConnectivity.isOnline).thenAnswer((_) async => true);
+      when(() => mockRepo.getPendingUploads()).thenAnswer((_) async => [rec]);
+
+      final httpClient = buildSuccessClient();
+      final engine = buildEngine(httpClient);
+
+      await engine.processQueue();
+
+      // The queue ran and saw the row, but left it untouched — proving the row
+      // was skipped specifically, not that the whole pass no-op'd.
+      verify(() => mockRepo.getPendingUploads()).called(1);
+      verifyNever(() => mockRepo.markAsUploading(any()));
+      verifyNever(() => mockRepo.updateRecording(any(), any()));
+      httpClient.close();
+    });
   });
 
   group('processQueue - concurrency', () {

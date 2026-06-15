@@ -3,7 +3,7 @@ import '../../domain/entities/invite.dart';
 class InviteState {
   final List<Invite> invites;
   final bool isLoading;
-  final String? error;
+  final Object? error;
 
   const InviteState({
     this.invites = const [],
@@ -16,7 +16,7 @@ class InviteState {
   InviteState copyWith({
     List<Invite>? invites,
     bool? isLoading,
-    String? error,
+    Object? error,
     bool clearError = false,
   }) {
     return InviteState(

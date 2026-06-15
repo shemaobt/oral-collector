@@ -1751,13 +1751,13 @@ abstract class AppLocalizations {
   /// No description provided for @import_resumePromptBody.
   ///
   /// In en, this message translates to:
-  /// **'\"{name}\" ({size}) was partially uploaded. Select the same file to continue.'**
+  /// **'\"{name}\" ({size}) was partially uploaded. Select the exact same file (unchanged) to continue.'**
   String import_resumePromptBody(String name, String size);
 
   /// No description provided for @import_resumeSizeMismatch.
   ///
   /// In en, this message translates to:
-  /// **'That file doesn\'t match the paused upload.'**
+  /// **'That\'s a different file. Select the exact same file you were uploading.'**
   String get import_resumeSizeMismatch;
 
   /// No description provided for @import_largeFileWarning.

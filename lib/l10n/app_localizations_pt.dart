@@ -980,12 +980,12 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String import_resumePromptBody(String name, String size) {
-    return '\"$name\" ($size) foi enviado parcialmente. Selecione o mesmo arquivo para continuar.';
+    return '\"$name\" ($size) foi enviado parcialmente. Selecione exatamente o mesmo arquivo (sem alterações) para continuar.';
   }
 
   @override
   String get import_resumeSizeMismatch =>
-      'Este arquivo não corresponde ao envio pausado.';
+      'Esse é outro arquivo. Selecione exatamente o mesmo arquivo que estava sendo enviado.';
 
   @override
   String import_largeFileWarning(String size) {

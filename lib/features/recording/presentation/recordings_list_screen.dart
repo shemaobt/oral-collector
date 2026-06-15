@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,7 +6,6 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/l10n/content_l10n.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/database/app_database.dart';
-import '../../../core/errors/api_exception.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../features/auth/data/providers/role_provider.dart';
 import '../../../shared/preview_helpers.dart';
@@ -20,7 +18,6 @@ import '../../../shared/widgets/sync_status_indicator.dart';
 import '../../genre/presentation/notifiers/genre_notifier.dart';
 import '../../project/presentation/notifiers/project_notifier.dart';
 import '../../sync/presentation/notifiers/sync_notifier.dart';
-import '../data/providers.dart';
 import '../domain/entities/register.dart';
 import 'notifiers/recordings_list_notifier.dart';
 import 'notifiers/recordings_list_state.dart';
@@ -118,37 +115,25 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
     );
     if (confirmed != true) return;
 
-    final serverId = recording.serverId ?? recording.id;
-    try {
-      final apiRepo = ref.read(recordingApiRepositoryProvider);
-      await apiRepo.deleteRecording(serverId);
-    } on ForbiddenException {
-      if (mounted) {
+    final result = await ref
+        .read(recordingsListNotifierProvider.notifier)
+        .deleteRecording(recording);
+    if (!mounted) return;
+    switch (result) {
+      case DeleteRecordingResult.ok:
+        break;
+      case DeleteRecordingResult.forbidden:
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(l10n.recording_deleteNoPermission),
             backgroundColor: AppColors.of(context).warning,
           ),
         );
-      }
-      return;
-    } catch (_) {
-      if (kIsWeb) {
-        if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(l10n.recording_deleteFailed)));
-        }
-        return;
-      }
+      case DeleteRecordingResult.failed:
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.recording_deleteFailed)));
     }
-
-    if (!kIsWeb) {
-      final repo = ref.read(localRecordingRepositoryProvider);
-      await repo.deleteRecording(recording.id);
-    }
-
-    ref.read(recordingsListNotifierProvider.notifier).fetchRecordings();
   }
 
   void _refreshAll() {

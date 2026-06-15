@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../core/platform/recording_active_flag.dart';
 import '../providers.dart';
+import '../repositories/recording_session_repository.dart';
 import 'segment_paths.dart';
 import 'wav_header_repair.dart';
 
@@ -41,11 +42,14 @@ class RecoveryCoordinator {
     DirectoryResolver? directoryResolver,
   }) : _wavRepair = wavRepair ?? const WavHeaderRepair(),
        _directoryResolver =
-           directoryResolver ?? getApplicationDocumentsDirectory;
+           directoryResolver ?? getApplicationDocumentsDirectory {
+    _ref.onDispose(() => _disposed = true);
+  }
 
   final Ref _ref;
   final WavHeaderRepair _wavRepair;
   final DirectoryResolver _directoryResolver;
+  bool _disposed = false;
 
   Future<void> scanOnStartup() async {
     final repo = _ref.read(recordingSessionRepositoryProvider);
@@ -57,7 +61,7 @@ class RecoveryCoordinator {
         );
       }
       for (final session in active) {
-        await _repairInFlightSegments(session);
+        await _repairInFlightSegments(session, repo);
         await repo.markCrashed(session.id);
       }
     } finally {
@@ -114,12 +118,15 @@ class RecoveryCoordinator {
         'RecoveryCoordinator: sweep promoting orphan session ${session.id} '
         'from completed → crashed',
       );
-      await _repairInFlightSegments(session);
+      await _repairInFlightSegments(session, sessionRepo);
       await sessionRepo.markCrashed(session.id);
     }
   }
 
-  Future<void> _repairInFlightSegments(RecordingSession session) async {
+  Future<void> _repairInFlightSegments(
+    RecordingSession session,
+    RecordingSessionRepository repo,
+  ) async {
     Directory dir;
     try {
       dir = await _directoryResolver();
@@ -147,7 +154,6 @@ class RecoveryCoordinator {
 
     if (candidates.isEmpty) return;
 
-    final repo = _ref.read(recordingSessionRepositoryProvider);
     for (final candidate in candidates) {
       final result = await _wavRepair.repair(candidate.file.path);
       if (result != null && result.duration > Duration.zero) {
@@ -166,6 +172,9 @@ class RecoveryCoordinator {
 
   Future<void> refresh() async {
     final repo = _ref.read(recordingSessionRepositoryProvider);
+    // Capture the notifier before the awaits; the post-await write is skipped
+    // via _disposed if the provider is torn down mid-refresh (ENG-140 F22).
+    final interrupted = _ref.read(interruptedSessionsProvider.notifier);
     final crashed = await repo.findCrashedSessions();
 
     final result = <InterruptedSession>[];
@@ -177,7 +186,7 @@ class RecoveryCoordinator {
         // Filesystem may hold orphan segments that never made it into the DB
         // (e.g. _stopNative caught a finish() exception before appendSegment
         // ran). Repair + attach before declaring the session lost.
-        await _repairInFlightSegments(session);
+        await _repairInFlightSegments(session, repo);
         final reloaded = await repo.getById(session.id);
         if (reloaded != null) {
           session = reloaded;
@@ -203,7 +212,8 @@ class RecoveryCoordinator {
       );
     }
 
-    _ref.read(interruptedSessionsProvider.notifier).state = result;
+    if (_disposed) return;
+    interrupted.state = result;
   }
 }
 

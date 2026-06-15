@@ -28,7 +28,10 @@ Path: @/lib/features/recording/presentation
     for kIsWeb and offline-miss cases where there is no local row yet.
   - [../data/repositories/local_recording_repository.dart](../data/repositories/local_recording_repository.dart)
     for `cacheDownloadedAudio` (the post-download write) and for in-place
-    edits (`updateRecording`, `deleteRecording`).
+    edits (`updateRecording`). The user-initiated recording delete is no
+    longer issued here from the screen — it is delegated to
+    `RecordingsListNotifier.deleteRecording` (see Core Implementation and
+    [./notifiers/docs.md](notifiers/docs.md)).
   - [../data/providers.dart](../data/providers.dart) for
     `localRecordingStreamProvider`, which streams Drift changes back into
     the screen so any external write (sync, heal) re-renders the UI.
@@ -73,6 +76,20 @@ Path: @/lib/features/recording/presentation
   `LocalRecordingRepository.updateRecording` with a narrow companion that
   touches only the affected fields, then `await _loadRecording()` to
   refresh the screen state.
+- **Delete is the one action both screens delegate, not inline (ENG-120).**
+  The list and detail screens each only show the confirm dialog, call
+  `RecordingsListNotifier.deleteRecording(recording)`, and `switch` on the
+  returned `DeleteRecordingResult` to pick the snackbar (`forbidden` →
+  permission warning in `AppColors.of(context).warning`, `failed` → generic
+  failure, `ok` → no snackbar). The notifier owns the whole flow — remote
+  delete, the local Drift row, the audio file, and optimistic state removal
+  — so the screens no longer touch `recordingApiRepositoryProvider`,
+  `localRecordingRepositoryProvider`, `kIsWeb`, or `ForbiddenException` for
+  delete. On `ok` *only*, the detail screen then refreshes genre stats and
+  pops / navigates to `/recordings`; the list screen does nothing more
+  because the notifier already removed the item from state (no refetch). See
+  [./notifiers/docs.md](notifiers/docs.md) for the hard-delete semantics
+  and the web-orphan fix.
 - `trim_editor_screen.dart` loads a recording the same way as the detail
   screen but additionally streams audio from `gcsUrl` on web. After
   FFmpeg cuts the segments, the editor hands off to
@@ -107,7 +124,11 @@ Path: @/lib/features/recording/presentation
   `DirectRecordingUploader.upload`; native copies the file into the docs
   `recordings/` dir, optionally compresses WAV→M4A via FFmpeg, then writes a
   row through `LocalRecordingRepository.insertRecording` and lets the sync
-  queue pick it up. The web path is only "no Drift row" for small
+  queue pick it up. The native compress step deletes the copied WAV
+  (`destPath`) only when `compressToM4a` returns `true`, which now means a
+  verified non-empty m4a exists on disk — the ENG-140 F18 delete-on-success
+  contract documented in
+  [/lib/core/platform/docs.md](../../../core/platform/docs.md). The web path is only "no Drift row" for small
   (single-shot, <5 MB) files; a large web import goes resumable and
   `DirectRecordingUploader` inserts a temporary `web_<serverId>` shadow row
   (`uploadStatus='web_uploading'`) to carry resume state, deleting it on
@@ -206,6 +227,16 @@ Path: @/lib/features/recording/presentation
   retry reconciles the existing row and the resumable service resumes from
   the persisted offset (`resumableSessionUri`/`uploadedBytes`) instead of
   crashing or re-uploading what already landed.
+- **The trim loader distinguishes a failed load from a missing recording
+  (ENG-140 F21).** `trim_editor_screen.dart` resolves a server-only recording
+  by calling `apiRepo.getRecording`. A thrown error is no longer swallowed as
+  "not found": only an HTTP 404 (`isRecordingNotFound` in
+  [./trim_load_error.dart](trim_load_error.dart)) falls through to the
+  `trim_notFound` state; any other error (network/timeout/server) sets
+  `_errorMessage` and surfaces. Because a failed load also leaves `_recording`
+  null, the `build` method now checks the error state **before** the
+  not-found state, so a real error is shown instead of a misleading "not
+  found" screen.
 - **Quick Recording is resilient to large system fonts via responsive
   layout (ENG-171).** The recording-flow "ready" state (in
   [./widgets/recording_step.dart](widgets/recording_step.dart)) reflows under a

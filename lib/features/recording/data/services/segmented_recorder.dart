@@ -237,8 +237,9 @@ class SegmentedRecorder {
   }
 
   void _rotateSync() {
-    final closing = _currentSink!;
-    final closingPath = _currentSegmentPath!;
+    final closing = _currentSink;
+    final closingPath = _currentSegmentPath;
+    if (closing == null || closingPath == null) return;
     final closingDuration = closing.currentDuration;
     _openNextSink();
     _finalizeChain = _finalizeChain.then(

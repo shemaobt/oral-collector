@@ -41,8 +41,12 @@ Path: @/lib/features/recording/data
   (`getPendingUploads`, `getPendingWebUploads`) and to mark rows as
   `uploading` / `uploaded` / `failed`. Those two queries also define the
   **order the upload queue is drained in** (`createdAt ASC, id ASC`, FIFO by
-  enqueue time); the sync engine consumes the list in that order, so the
-  ordering is a contract this folder owns on sync's behalf — see
+  enqueue time); the sync engine consumes the list in that order (applying its
+  own eligibility filter, which skips `uploading` rows), so the ordering is a
+  contract this folder owns on sync's behalf — see
+  [./repositories/docs.md](repositories/docs.md). The startup crash-recovery
+  reclaim of rows orphaned in `uploading` (`resetStuckUploading`, called from
+  [/lib/main.dart](../../../main.dart)) also lives on this repository — see
   [./repositories/docs.md](repositories/docs.md). The resumable upload service is
   exported from this folder via `resumableUploadServiceProvider` but its
   implementation lives in
@@ -80,6 +84,16 @@ Path: @/lib/features/recording/data
   `storytellerId=null`) survives a refresh. Server-controlled fields
   (`gcsUrl`, `uploadStatus`) are adopted whenever the server reports a
   `gcsUrl`, independent of the corruption marker.
+- `local_recording_classification.dart` is data-layer glue on the
+  `LocalRecording` row: the `RecordingClassification` extension whose
+  getters (`recording.isUnclassified`, `recording.hasSecondary`, …) read
+  the genre/register ids off the row and delegate to the pure domain
+  predicates in
+  [../domain/entities/classification.dart](../domain/entities/classification.dart).
+  It lives here (not in domain) because the extension legitimately depends
+  on Drift; domain stays Drift-free (ENG-175). Consumers that want the
+  ergonomic getters import this file; callers that only need the
+  `kUnclassifiedGenreId` sentinel import the domain file directly.
 - `supported_audio_formats.dart` is a static list of mime types and file
   extensions used by the file-import flow, plus `kMaxImportFileBytesWeb` (the
   10 GB web import ceiling enforced in
@@ -224,6 +238,26 @@ Path: @/lib/features/recording/data
   data-layer half of the ENG-80 no-data-loss invariant; the flow is
   documented in
   [../presentation/notifiers/docs.md](../presentation/notifiers/docs.md).
+- **WAV deletion only happens after `compressToM4a` proves a real output
+  (ENG-140 F18).** When `sourcePath` is a WAV, `finalize` deletes it only
+  on a `true` return from `compressToM4a`
+  ([/lib/core/platform/ffmpeg_ops.dart](../../../core/platform/ffmpeg_ops.dart)).
+  That contract is now load-bearing: `compressToM4a` verifies the m4a exists
+  and is non-empty before returning `true`, so an ffmpeg exit-0-but-empty edge
+  can no longer make `finalize` delete the only copy of the audio. See
+  [/lib/core/platform/docs.md](../../../core/platform/docs.md).
+- **`RecoveryCoordinator.refresh()` never touches a torn-down ref (ENG-140
+  F22).** `refresh()` reads `findCrashedSessions()` and other providers across
+  several awaits, then writes the derived list to
+  `interruptedSessionsProvider.notifier.state`. Because the coordinator's
+  backing provider can be disposed mid-await (the recovery UI unmounts), the
+  constructor registers `_ref.onDispose(() => _disposed = true)`, the method
+  captures the `interruptedSessionsProvider` notifier **before** the awaits,
+  and the final state write is guarded by `if (_disposed) return`. flutter_riverpod
+  2.6.1 has no `ref.mounted`, and a post-dispose `ref.read` throws "Cannot use
+  Ref after it has been disposed"; this is the same hand-rolled `_disposed`
+  pattern `RecordingPlayerNotifier` uses (see
+  [../presentation/notifiers/docs.md](../presentation/notifiers/docs.md)).
 - **64-bit container fields are read as two uint32 halves.** dart2js has no
   native 64-bit int / `ByteData.getUint64`, so `mp4_box_probe.dart` and
   `ogg_page_probe.dart` reconstruct large durations/granules from two 32-bit

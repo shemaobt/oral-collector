@@ -6,6 +6,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../features/auth/domain/entities/user.dart';
 import '../../features/sync/data/providers.dart';
 import '../errors/api_exception.dart';
+import '../observability/error_reporter.dart';
 import '../providers/secure_storage_provider.dart';
 import 'auth_repository.dart';
 import 'auth_state.dart';
@@ -74,11 +75,9 @@ class AuthNotifier extends Notifier<AuthState> {
       await _storeTokens(result.accessToken, result.refreshToken);
       await _storeUser(result.user);
       state = state.copyWith(currentUser: result.user, isLoading: false);
-    } on Exception catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString().replaceFirst('Exception: ', ''),
-      );
+    } on Exception catch (e, st) {
+      ref.read(errorReporterProvider).reportError(e, st);
+      state = state.copyWith(isLoading: false, error: e);
     }
   }
 
@@ -94,11 +93,9 @@ class AuthNotifier extends Notifier<AuthState> {
       await _storeTokens(result.accessToken, result.refreshToken);
       await _storeUser(result.user);
       state = state.copyWith(currentUser: result.user, isLoading: false);
-    } on Exception catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString().replaceFirst('Exception: ', ''),
-      );
+    } on Exception catch (e, st) {
+      ref.read(errorReporterProvider).reportError(e, st);
+      state = state.copyWith(isLoading: false, error: e);
     }
   }
 
@@ -112,11 +109,9 @@ class AuthNotifier extends Notifier<AuthState> {
       final user = await _repo.updateMe(accessToken, displayName: displayName);
       await _storeUser(user);
       state = state.copyWith(currentUser: user, isLoading: false);
-    } on Exception catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString().replaceFirst('Exception: ', ''),
-      );
+    } on Exception catch (e, st) {
+      ref.read(errorReporterProvider).reportError(e, st);
+      state = state.copyWith(isLoading: false, error: e);
     }
   }
 
@@ -131,11 +126,9 @@ class AuthNotifier extends Notifier<AuthState> {
       final user = await _repo.updateMe(accessToken, avatarUrl: imageUrl);
       await _storeUser(user);
       state = state.copyWith(currentUser: user, isLoading: false);
-    } on Exception catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString().replaceFirst('Exception: ', ''),
-      );
+    } on Exception catch (e, st) {
+      ref.read(errorReporterProvider).reportError(e, st);
+      state = state.copyWith(isLoading: false, error: e);
       rethrow;
     }
   }
@@ -159,11 +152,9 @@ class AuthNotifier extends Notifier<AuthState> {
       await _repo.deleteAccount(accessToken);
       await _clearTokens();
       state = const AuthState();
-    } on Exception catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString().replaceFirst('Exception: ', ''),
-      );
+    } on Exception catch (e, st) {
+      ref.read(errorReporterProvider).reportError(e, st);
+      state = state.copyWith(isLoading: false, error: e);
     }
   }
 

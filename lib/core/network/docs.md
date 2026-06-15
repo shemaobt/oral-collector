@@ -45,20 +45,28 @@ Path: @/lib/core/network
   [../errors/app_exception.dart](../errors/app_exception.dart); the UI consumes
   them in
   [../../shared/utils/error_helpers.dart](../../shared/utils/error_helpers.dart).
-  See [../errors/docs.md](../errors/docs.md) for the hierarchy and its
-  invariants, and
+  These leaves travel **untranslated** all the way to that UI boundary: feature
+  notifiers store the raw exception in their `Object?` `error` field and only the
+  UI calls `friendlyErrorFor` / `showErrorSnackBar` (ENG-173), so the type the
+  boundary picks here is the type that reaches `messageForException`. See
+  [../errors/docs.md](../errors/docs.md) for the hierarchy and its invariants, and
   [the ADR](../../../docs/adr/0001-sealed-app-exception.md) for the rationale.
-- The repository layer reaches the boundary through two complementary fronts.
+- The repository layer reaches the boundary through three fronts.
   `guardResponse` (401/403 only) is still wired into the conservative sites that
-  need bespoke status semantics. Most **body-decoding** reads/creates were
-  migrated to `decodeObject` / `decodeList`, which fold the full status check
-  into the decode (any non-2xx → typed leaf via `throwForResponse`), so those
-  paths no longer throw the legacy `Exception('Failed to X: ${response.body}')`.
-  The legacy throw now survives mainly on **no-body** status paths (deletes and a
-  few mutations that do not parse a response root), which keep `guardResponse`
-  plus the bespoke `Exception`. Conservative status-semantics sites keep their
-  own handling and use the decoder only for the safe decode — see "Things to
-  Know".
+  need bespoke status semantics (auth, recording, admin, user-lookup, stats,
+  storyteller, project). Most **body-decoding** reads/creates were migrated to
+  `decodeObject` / `decodeList`, which fold the full status check into the decode
+  (any non-2xx → typed leaf via `throwForResponse`), so those paths no longer throw
+  the legacy `Exception('Failed to X: ${response.body}')`. A **no-body** status path
+  can also call `throwForResponse` directly for the full status table:
+  `invite_repository`
+  ([../../features/invite/data/repositories/invite_repository.dart](../../features/invite/data/repositories/invite_repository.dart))
+  does exactly this for accept/decline (ENG-173), replacing the old
+  `guardResponse` + bespoke `Exception('Failed to … : body)`. The legacy throw now
+  survives mainly on the remaining **no-body** paths (deletes and a few mutations
+  that do not parse a response root) that still keep `guardResponse` plus the
+  bespoke `Exception`. Conservative status-semantics sites keep their own handling
+  and use the decoder only for the safe decode — see "Things to Know".
 
 ### Core Implementation
 
@@ -191,7 +199,12 @@ Path: @/lib/core/network
   cleartext policies (Android network-security-config, iOS ATS) do not cover,
   so the scheme check is a pure-Dart guard in
   [../config/url_policy.dart](../config/url_policy.dart) (IPv4 parsed by hand,
-  no `dart:io`, to stay web-safe). The policy:
+  no `dart:io`, to stay web-safe). As of ENG-133 this Dart guard is backed by
+  **OS-layer defense-in-depth**: an Android `network-security-config` blocks
+  cleartext for non-debug builds (a debug overlay re-permits it for LAN/loopback
+  dev backends), and the web deploy sends HSTS — both are infra-level and
+  documented in [ADR-0005](../../../docs/adr/ADR-0005-security-policy.md), not a
+  `docs.md`. The Dart policy:
 
   | Build | http allowed? | https allowed? |
   | --- | --- | --- |

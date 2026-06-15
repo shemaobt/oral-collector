@@ -5,7 +5,9 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/auth/providers.dart';
+import '../../../core/observability/error_reporter.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/web/url_history.dart';
 import '../../../shared/widgets/error_snack_bar.dart';
 
 class ResetPasswordScreen extends ConsumerStatefulWidget {
@@ -28,6 +30,17 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
   bool _success = false;
 
   @override
+  void initState() {
+    super.initState();
+    // Scrub the token from the address bar as soon as we have it, so it is not
+    // kept in browser history or leaked via Referer. The value is already held
+    // in widget.token, so _handleReset still works after the URL is cleaned.
+    if (widget.token?.isNotEmpty ?? false) {
+      stripUrlQueryParam('token');
+    }
+  }
+
+  @override
   void dispose() {
     _passwordController.dispose();
     _confirmController.dispose();
@@ -37,6 +50,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
   Future<void> _handleReset() async {
     if (!_formKey.currentState!.validate()) return;
 
+    final reporter = ref.read(errorReporterProvider);
     setState(() => _isLoading = true);
 
     try {
@@ -44,13 +58,9 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
           .read(authRepositoryProvider)
           .resetPassword(widget.token!, _passwordController.text);
       if (mounted) setState(() => _success = true);
-    } on Exception catch (e) {
-      if (mounted) {
-        showErrorSnackBar(
-          context,
-          e.toString().replaceFirst('Exception: ', ''),
-        );
-      }
+    } on Exception catch (e, st) {
+      reporter.reportError(e, st);
+      if (mounted) showErrorSnackBar(context, e);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }

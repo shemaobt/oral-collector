@@ -943,11 +943,11 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String import_resumePromptBody(String name, String size) {
-    return '\"$name\"($size)이(가) 부분적으로 업로드되었습니다. 계속하려면 같은 파일을 선택하세요.';
+    return '\"$name\"($size)이(가) 부분적으로 업로드되었습니다. 계속하려면 변경되지 않은 똑같은 파일을 선택하세요.';
   }
 
   @override
-  String get import_resumeSizeMismatch => '이 파일은 일시 중지된 업로드와 일치하지 않습니다.';
+  String get import_resumeSizeMismatch => '다른 파일입니다. 업로드하던 것과 똑같은 파일을 선택하세요.';
 
   @override
   String import_largeFileWarning(String size) {
