@@ -47,5 +47,13 @@ linter:
     prefer_final_locals: true
     directives_ordering: true
 
+# Custom lint rules (plugins habilitados em analyzer.plugins acima).
+# obt_lints (ENG-159): bane Color(0x…) / bare Colors.* fora de lib/core/theme/**.
+# Staged em `info`, não-bloqueante (ADR-0007); promover por regra após burn-down.
+custom_lint:
+  rules:
+    - avoid_hardcoded_color
+    - avoid_material_colors
+
 # Additional information about this file can be found at
 # https://dart.dev/guides/language/analysis-options

@@ -67,6 +67,12 @@ Path: @/lib/core/theme
   unavailable, so it reads the same canonical scales those resolvers fall back
   to). This closes the prior "second source of truth" where the builders
   duplicated radii/spacing literals next to the scales.
+- This directory is the **only** place raw `Color(...)` / bare `Colors.*` are
+  allowed: the `obt_lints` custom_lint plugin
+  ([/packages/obt_lints/docs.md](/packages/obt_lints/docs.md), ENG-159) flags
+  them everywhere else and exempts `lib/core/theme/**` by path, so the palette
+  here stays the design-token source of truth. The rule ships staged at `info`
+  (ADR-0007), so it is currently advisory, not blocking.
 - Token values and contracts are pinned by tests under
   [/test/core/theme/](/test/core/theme) (colors in `app_colors_test.dart`;
   spacing/radii/durations/opacity, the `context.*` accessor, the resolved
@@ -171,10 +177,11 @@ SpacingScale/RadiusScale/DurationScale/OpacityScale ─► AppSpacing/AppRadii/A
 - **`lerp` is effectively dormant in production** — [../../main.dart](../../main.dart)
   sets `themeAnimationDuration: Duration.zero`, so theme switches snap; the
   interpolation exists to satisfy the contract and enable future animation.
-- **Deferred, per ADR-0002.** The `Color(0x…)` / bare `Colors.*` lint rule
-  (ENG-76 / ENG-159); and off-grid normalization (e.g. the button `vertical: 14`
-  literal). (ENG-115 — [app_theme.dart](app_theme.dart) consuming the `const`
-  radii/spacing/opacity scales instead of inlining its own literals — is done.)
+- **Deferred, per ADR-0002.** Off-grid normalization (e.g. the button `vertical:
+  14` literal). (ENG-115 — [app_theme.dart](app_theme.dart) consuming the `const`
+  radii/spacing/opacity scales instead of inlining its own literals — is done;
+  the `Color(0x…)` / bare `Colors.*` lint rule (ENG-76 / ENG-159) has now shipped
+  as the `obt_lints` plugin, [/packages/obt_lints/docs.md](/packages/obt_lints/docs.md).)
 - **Adding a token field is a multi-point edit** — thread it through the
   constructor, `copyWith`, `lerp`, `==`, `hashCode`, and the registered
   instances, or the equality/interpolation contracts break.

@@ -4,6 +4,10 @@
 - Date: 2026-06-05
 - Epic: E2 (Design System & UI Componentization)
 - Related: ENG-106, ENG-115, ENG-162, ENG-163, ENG-76, ENG-159, ENG-90, ADR-0000, ADR-0007
+- Update (2026-06-15, ENG-159): the deferred `Color(0x…)`/`Colors.*` lint rule
+  from item 7 shipped as the `obt_lints` plugin (`avoid_hardcoded_color` +
+  `avoid_material_colors`), staged at `info`/non-blocking, exempting
+  `lib/core/theme/**`.
 
 ## Context
 
