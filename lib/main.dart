@@ -155,6 +155,10 @@ class _OralCollectorAppState extends ConsumerState<OralCollectorApp> {
         GlobalCupertinoLocalizations.delegate,
       ],
       routerConfig: router,
+      // High ceiling only: never lowers the floor, so low-vision users keep
+      // full up-scaling; bounds pathological OS settings (>2x) app-wide.
+      builder: (context, child) =>
+          MediaQuery.withClampedTextScaling(maxScaleFactor: 2.0, child: child!),
     );
   }
 }

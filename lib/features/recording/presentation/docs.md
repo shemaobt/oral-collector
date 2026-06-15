@@ -237,6 +237,14 @@ Path: @/lib/features/recording/presentation
   null, the `build` method now checks the error state **before** the
   not-found state, so a real error is shown instead of a misleading "not
   found" screen.
+- **Quick Recording is resilient to large system fonts via responsive
+  layout (ENG-171).** The recording-flow "ready" state (in
+  [./widgets/recording_step.dart](widgets/recording_step.dart)) reflows under a
+  large OS `textScaler` rather than clamping it down — see
+  [./widgets/docs.md](widgets/docs.md). The complementary app-wide *high*
+  ceiling (2× max) lives at the `MaterialApp` builder; that invariant is owned
+  by [/lib/core/theme/docs.md](/lib/core/theme/docs.md). This screen is the
+  first slice of the staged app-wide a11y program (ENG-177).
 - **Detail screen `LayoutBuilder` swap is what makes audio playback
   fragile.** The screen pivots between a `Column`/`AppBar` wide layout
   and a `CustomScrollView`/`SliverAppBar` phone layout at the 700 dp
