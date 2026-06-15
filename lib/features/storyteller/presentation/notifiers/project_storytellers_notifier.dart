@@ -2,6 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/errors/api_exception.dart';
+import '../../../../core/observability/error_reporter.dart';
 import '../../../sync/presentation/notifiers/sync_notifier.dart';
 import '../../data/providers.dart';
 import '../../data/repositories/local_storyteller_repository.dart';
@@ -51,11 +53,9 @@ class ProjectStorytellersNotifier extends Notifier<ProjectStorytellersState> {
         await _local.upsertAll(items, projectId);
         final merged = await _local.getByProject(projectId);
         state = state.copyWith(storytellers: merged, isLoading: false);
-      } on Exception catch (e) {
-        state = state.copyWith(
-          isLoading: false,
-          error: e.toString().replaceFirst('Exception: ', ''),
-        );
+      } on Exception catch (e, st) {
+        _reportUnexpected(e, st);
+        state = state.copyWith(isLoading: false, error: e);
       }
     } finally {
       _inflightProjectId = null;
@@ -90,11 +90,9 @@ class ProjectStorytellersNotifier extends Notifier<ProjectStorytellersState> {
         ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
       state = state.copyWith(storytellers: next, isMutating: false);
       return local;
-    } on Exception catch (e) {
-      state = state.copyWith(
-        isMutating: false,
-        error: e.toString().replaceFirst('Exception: ', ''),
-      );
+    } on Exception catch (e, st) {
+      _reportUnexpected(e, st);
+      state = state.copyWith(isMutating: false, error: e);
       return null;
     }
   }
@@ -137,11 +135,9 @@ class ProjectStorytellersNotifier extends Notifier<ProjectStorytellersState> {
       }
       state = state.copyWith(storytellers: next, isMutating: false);
       return updated;
-    } on Exception catch (e) {
-      state = state.copyWith(
-        isMutating: false,
-        error: e.toString().replaceFirst('Exception: ', ''),
-      );
+    } on Exception catch (e, st) {
+      _reportUnexpected(e, st);
+      state = state.copyWith(isMutating: false, error: e);
       return null;
     }
   }
@@ -158,12 +154,17 @@ class ProjectStorytellersNotifier extends Notifier<ProjectStorytellersState> {
       await _local.delete(id);
       state = state.copyWith(storytellers: next, isMutating: false);
       return true;
-    } on Exception catch (e) {
-      state = state.copyWith(
-        isMutating: false,
-        error: e.toString().replaceFirst('Exception: ', ''),
-      );
+    } on Exception catch (e, st) {
+      _reportUnexpected(e, st);
+      state = state.copyWith(isMutating: false, error: e);
       return false;
     }
+  }
+
+  void _reportUnexpected(Object error, StackTrace stackTrace) {
+    // 401 é sessão expirada esperada (tratada por refresh/login alhures);
+    // só erros inesperados vão à telemetria.
+    if (error is UnauthorizedException) return;
+    ref.read(errorReporterProvider).reportError(error, stackTrace);
   }
 }

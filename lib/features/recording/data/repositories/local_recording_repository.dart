@@ -194,6 +194,16 @@ class LocalRecordingRepository {
     return rows > 0;
   }
 
+  /// Hands rows orphaned in `uploading` (the app died mid-upload) back to the
+  /// queue at startup. Only [uploadStatus] is rewritten — retry budget and the
+  /// resumable offset survive, so the upload resumes instead of restarting.
+  /// Target `local` (not `failed`) keeps the row clear of [deleteStaleRecordings].
+  Future<int> resetStuckUploading() async {
+    return (_db.update(_db.localRecordings)
+          ..where((t) => t.uploadStatus.equals('uploading')))
+        .write(const LocalRecordingsCompanion(uploadStatus: Value('local')));
+  }
+
   /// Persists a freshly-downloaded audio file alongside its full metadata.
   /// If a row for [recording.id] already exists locally, only [localFilePath]
   /// is updated so local edits (description, storyteller, secondary

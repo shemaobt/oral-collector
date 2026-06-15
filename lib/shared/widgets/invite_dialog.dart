@@ -1,40 +1,16 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
-import '../../core/network/authenticated_client.dart';
-import '../../core/serialization/parse_list.dart';
 import '../../core/theme/app_colors.dart';
 import '../../features/project/presentation/notifiers/member_notifier.dart';
+import '../../features/user/data/user_lookup_provider.dart';
+import '../../features/user/data/user_search_repository.dart';
 import '../../l10n/app_localizations.dart';
 import 'error_snack_bar.dart';
 import 'user_avatar.dart';
-
-class _SearchResult {
-  final String id;
-  final String email;
-  final String? displayName;
-  final String? avatarUrl;
-
-  const _SearchResult({
-    required this.id,
-    required this.email,
-    this.displayName,
-    this.avatarUrl,
-  });
-
-  factory _SearchResult.fromJson(Map<String, dynamic> json) {
-    return _SearchResult(
-      id: json['id'] as String,
-      email: json['email'] as String,
-      displayName: json['display_name'] as String?,
-      avatarUrl: json['avatar_url'] as String?,
-    );
-  }
-}
 
 class InviteDialog extends ConsumerStatefulWidget {
   const InviteDialog({super.key, required this.projectId});
@@ -48,9 +24,9 @@ class InviteDialog extends ConsumerStatefulWidget {
 class _InviteDialogState extends ConsumerState<InviteDialog> {
   final _searchController = TextEditingController();
   Timer? _debounce;
-  List<_SearchResult> _results = [];
+  List<UserLookup> _results = [];
   bool _isSearching = false;
-  _SearchResult? _selectedUser;
+  UserLookup? _selectedUser;
   String _selectedRole = 'member';
   bool _isSubmitting = false;
 
@@ -78,30 +54,20 @@ class _InviteDialogState extends ConsumerState<InviteDialog> {
 
   Future<void> _searchUsers(String query) async {
     try {
-      final client = ref.read(authenticatedClientProvider);
-      final response = await client.get(
-        '/api/users/search?q=${Uri.encodeQueryComponent(query)}',
-      );
+      final results = await ref
+          .read(userSearchRepositoryProvider)
+          .search(query);
       if (!mounted) return;
-
-      if (response.statusCode == 200) {
-        setState(() {
-          _results = parseList(
-            jsonDecode(response.body),
-            _SearchResult.fromJson,
-            context: 'userSearch',
-          );
-          _isSearching = false;
-        });
-      } else {
-        setState(() => _isSearching = false);
-      }
+      setState(() {
+        _results = results;
+        _isSearching = false;
+      });
     } catch (_) {
       if (mounted) setState(() => _isSearching = false);
     }
   }
 
-  void _selectUser(_SearchResult user) {
+  void _selectUser(UserLookup user) {
     setState(() {
       _selectedUser = user;
       _searchController.clear();

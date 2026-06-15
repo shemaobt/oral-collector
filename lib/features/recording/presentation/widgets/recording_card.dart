@@ -7,7 +7,7 @@ import '../../../../core/database/app_database.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/utils/format.dart';
 import '../../../sync/presentation/notifiers/sync_notifier.dart';
-import '../../domain/entities/classification.dart';
+import '../../data/local_recording_classification.dart';
 import '../notifiers/recording_session_notifier.dart';
 
 class RecordingCard extends ConsumerWidget {

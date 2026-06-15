@@ -34,15 +34,29 @@ Path: @/lib/core/errors
   maps each leaf to an `l10n.error_*` key, and `friendlyErrorFor(Object)`
   dispatches typed-first before falling back to legacy string matching. The
   snack bar entry point is
-  [../../shared/widgets/error_snack_bar.dart](../../shared/widgets/error_snack_bar.dart).
+  [../../shared/widgets/error_snack_bar.dart](../../shared/widgets/error_snack_bar.dart),
+  whose `showErrorSnackBar(context, Object)` calls `friendlyErrorFor`.
+- **The exception type is preserved until that UI boundary (ENG-173).** Feature
+  state holds the *raw* exception, not a pre-localized string: every notifier's
+  `error` field is typed `Object?` and a catch stores `copyWith(error: e)` — never
+  `e.toString()`. Stringifying early (the old
+  `e.toString().replaceFirst('Exception: ', '')`) discarded the type, forcing a
+  typed leaf through the brittle string fallback and leaking custom messages /
+  response bodies. Translation is now exclusively the UI's job (`friendlyErrorFor`
+  / `showErrorSnackBar`), so a typed leaf always reaches `messageForException`.
+  See the `error` invariant in [../auth/docs.md](../auth/docs.md).
 - `UnauthorizedException` is the one leaf the app branches on by type, not just
   for display: [../auth/auth_notifier.dart](../auth/auth_notifier.dart) catches
   it to drive session-expiry/refresh handling. See [../auth/docs.md](../auth/docs.md)
   for the refresh contract and single-flight invariant.
-- The ~52 legacy `throw Exception('Failed to X: ${response.body}')` call sites
-  in the feature repositories are intentionally **not** migrated yet; they
+- The legacy `throw Exception('Failed to X: ${response.body}')` call sites that
+  remain in the feature repositories are intentionally **not** migrated yet; they
   still flow through the legacy string fallback. This folder is the target they
-  migrate toward in later waves.
+  migrate toward in later waves. `invite_repository` was migrated in ENG-173 — its
+  no-body accept/decline now route any non-2xx through `throwForResponse`
+  ([../network/error_boundary.dart](../network/error_boundary.dart)) and stop
+  leaking the body — so it is the worked example of moving a no-body status path
+  onto the typed boundary.
 
 ### Core Implementation
 

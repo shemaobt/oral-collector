@@ -2,6 +2,8 @@ import 'package:drift/drift.dart' show Value;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/database/app_database.dart';
+import '../../../../core/errors/api_exception.dart';
+import '../../../../core/platform/file_ops.dart' as file_ops;
 import '../../../project/presentation/notifiers/project_notifier.dart';
 import '../../../sync/presentation/notifiers/sync_notifier.dart';
 import '../../data/providers.dart';
@@ -10,6 +12,10 @@ import '../../data/server_to_local_recording.dart';
 import '../../domain/entities/server_recording.dart';
 import '../../domain/repositories/recording_api_repository.dart';
 import 'recordings_list_state.dart';
+
+/// Outcome of [RecordingsListNotifier.deleteRecording], so the screen can pick
+/// the right snackbar without re-deriving it from an exception.
+enum DeleteRecordingResult { ok, forbidden, failed }
 
 const _pageSize = 50;
 
@@ -142,6 +148,47 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
         .map((r) => r.id == recordingId ? r.copyWith(title: Value(title)) : r)
         .toList();
     state = state.copyWith(recordings: updated);
+  }
+
+  /// Hard-deletes a recording: remotely (only when it has a [serverId]), then
+  /// the local row and the audio file, then drops it from state. On a remote
+  /// failure for a synced item nothing local is touched, so the row and file
+  /// survive for a retry.
+  Future<DeleteRecordingResult> deleteRecording(
+    LocalRecording recording,
+  ) async {
+    final serverId = recording.serverId;
+    if (serverId != null) {
+      try {
+        await _apiRepo.deleteRecording(serverId);
+      } on ForbiddenException {
+        return DeleteRecordingResult.forbidden;
+      } catch (_) {
+        return DeleteRecordingResult.failed;
+      }
+    }
+    // The list shows the server-converted copy (id == serverId, empty
+    // localFilePath); a locally-created+uploaded row keeps its own local id.
+    // Resolve the real local row so both it and its audio file are removed and
+    // the row can't resurrect on the next merge.
+    final localRow =
+        await _localRepo.getRecordingById(recording.id) ??
+        (serverId != null
+            ? await _localRepo.getRecordingByServerId(serverId)
+            : null);
+    await _localRepo.deleteRecording(localRow?.id ?? recording.id);
+    final path = localRow?.localFilePath ?? recording.localFilePath;
+    if (path.isNotEmpty) {
+      try {
+        await file_ops.deleteFile(path);
+      } on Exception catch (_) {
+        // Best-effort: a missing/locked file must not abort the row delete.
+      }
+    }
+    state = state.copyWith(
+      recordings: state.recordings.where((r) => r.id != recording.id).toList(),
+    );
+    return DeleteRecordingResult.ok;
   }
 
   Future<_FetchResult> _fetchAndMerge(String projectId) async {

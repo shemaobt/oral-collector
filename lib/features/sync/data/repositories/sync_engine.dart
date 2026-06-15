@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
@@ -19,6 +20,28 @@ import '../../domain/repositories/sync_engine.dart';
 import '../services/resumable_upload_service.dart';
 import '../services/upload_downloader.dart';
 
+const List<Duration> _kBackoffLadder = [
+  Duration(seconds: 5),
+  Duration(seconds: 15),
+  Duration(seconds: 30),
+  Duration(seconds: 60),
+];
+
+const double _kBackoffJitterFraction = 0.5;
+
+/// Retry backoff for [attempt] (1-based): the [_kBackoffLadder] rung plus
+/// additive random jitter in `[0, base * _kBackoffJitterFraction]`. The jitter
+/// de-synchronizes retries from devices that failed at the same instant so they
+/// don't realign on one schedule; it never shortens the delay below the rung.
+/// Attempts past the ladder saturate at the last rung.
+Duration backoffWithJitter(int attempt, Random random) {
+  final index = (attempt - 1).clamp(0, _kBackoffLadder.length - 1);
+  final base = _kBackoffLadder[index];
+  final maxJitterMs = (base.inMilliseconds * _kBackoffJitterFraction).round();
+  final jitterMs = maxJitterMs <= 0 ? 0 : random.nextInt(maxJitterMs + 1);
+  return base + Duration(milliseconds: jitterMs);
+}
+
 class SyncEngineImpl implements SyncEngine {
   final LocalRecordingRepository _recordingRepo;
   final LocalStorytellerRepository _storytellerRepo;
@@ -29,13 +52,7 @@ class SyncEngineImpl implements SyncEngine {
   static const int maxRetries = 5;
   static const Duration _apiTimeout = Duration(seconds: 30);
 
-  static const List<Duration> _backoffDurations = [
-    Duration(seconds: 5),
-    Duration(seconds: 15),
-    Duration(seconds: 30),
-    Duration(seconds: 60),
-  ];
-
+  final Random _random = Random();
   bool _isProcessing = false;
 
   SyncEngineImpl({
@@ -57,6 +74,12 @@ class SyncEngineImpl implements SyncEngine {
 
   @override
   bool get isProcessing => _isProcessing;
+
+  bool _isWithinBackoffWindow(int retryCount, DateTime? lastRetryAt) {
+    if (retryCount <= 0 || lastRetryAt == null) return false;
+    final backoff = backoffWithJitter(retryCount, _random);
+    return DateTime.now().difference(lastRetryAt) < backoff;
+  }
 
   @override
   Future<void> processQueue({
@@ -88,15 +111,16 @@ class SyncEngineImpl implements SyncEngine {
       final eligible = <LocalRecording>[];
       for (final recording in pending) {
         if (recording.retryCount >= maxRetries) continue;
+        // A row still in `uploading` is either in flight now or was reclaimed
+        // at startup (resetStuckUploading); the drain must not start a second
+        // attempt for it.
+        if (recording.uploadStatus == 'uploading') continue;
 
-        if (recording.retryCount > 0 && recording.lastRetryAt != null) {
-          final backoffIndex = (recording.retryCount - 1).clamp(
-            0,
-            _backoffDurations.length - 1,
-          );
-          final backoff = _backoffDurations[backoffIndex];
-          final elapsed = DateTime.now().difference(recording.lastRetryAt!);
-          if (elapsed < backoff) continue;
+        if (_isWithinBackoffWindow(
+          recording.retryCount,
+          recording.lastRetryAt,
+        )) {
+          continue;
         }
 
         eligible.add(recording);
@@ -266,6 +290,13 @@ class SyncEngineImpl implements SyncEngine {
               'SyncEngine: skipping recording $id, '
               'referenced storyteller ${recording.storytellerId} is not yet synced',
             );
+            // Undo the optimistic markAsUploading so the row stays drain-eligible
+            // once the storyteller syncs. Without this the uploading-skip in
+            // processQueue would strand it until the next app restart.
+            await _recordingRepo.updateRecording(
+              id,
+              const LocalRecordingsCompanion(uploadStatus: Value('local')),
+            );
             return;
           }
           createBody['storyteller_id'] = resolvedStorytellerId;
@@ -351,15 +382,7 @@ class SyncEngineImpl implements SyncEngine {
   Future<void> _processPendingStorytellers() async {
     final pending = await _storytellerRepo.getPendingSyncs();
     for (final row in pending) {
-      if (row.retryCount > 0 && row.lastRetryAt != null) {
-        final backoffIndex = (row.retryCount - 1).clamp(
-          0,
-          _backoffDurations.length - 1,
-        );
-        final backoff = _backoffDurations[backoffIndex];
-        final elapsed = DateTime.now().difference(row.lastRetryAt!);
-        if (elapsed < backoff) continue;
-      }
+      if (_isWithinBackoffWindow(row.retryCount, row.lastRetryAt)) continue;
 
       final stillOnline = await _connectivity.isOnline;
       if (!stillOnline) return;

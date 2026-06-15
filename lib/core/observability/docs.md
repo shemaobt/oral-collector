@@ -22,11 +22,24 @@ Path: @/lib/core/observability
   the only caller of `installGlobalErrorHandlers`.
 - `errorReporterProvider` is the single seam for swapping reporters. The app-root
   `ProviderContainer` reads it once in `main()`; feature code that wants to report
-  manually would read the same provider rather than constructing a reporter.
-- It is distinct from [/lib/core/errors/](../errors/), which holds typed
-  domain/API failures (e.g. `ApiException`) that flow through normal `Result`/
-  exception paths. Observability is the catch-all for *uncaught* errors and
-  future telemetry, not domain error modeling.
+  manually reads the same provider rather than constructing a reporter.
+- Two feeds reach the reporter (ENG-173). The **global** hooks
+  (`installGlobalErrorHandlers` + `runZonedGuarded`) catch what escapes; **domain**
+  notifiers and auth screens now also report from their own `on Exception` catch
+  arms — `ref.read(errorReporterProvider).reportError(e, st)` — before storing the
+  raw exception in state for the UI to translate. The diagnostic detail goes to the
+  reporter; the typed exception goes to the UI. See the `error` invariant in
+  [../auth/docs.md](../auth/docs.md) and [../errors/docs.md](../errors/docs.md).
+- Notifiers never telemeter a 401: it is the expected token-refresh flow, not a
+  fault, so reporting it would be noise. Notifiers with an `on UnauthorizedException`
+  arm (project/genre/stats/invite) catch it there (driving `handleUnauthorized`), so
+  it never reaches the generic report. Those without that arm (member/storyteller/
+  admin) route reporting through a `_reportUnexpected` guard that skips
+  `UnauthorizedException` while still surfacing the error to the UI.
+- It is distinct from [/lib/core/errors/](../errors/), which holds the typed
+  domain/API failures (the `AppException` hierarchy) that flow through normal
+  exception paths. Observability is the telemetry sink — fed both by *uncaught*
+  errors and by the domain catch arms above — not domain error modeling.
 - The interface is deliberately shaped after `sentry_flutter` so a deferred
   Sentry adapter can be a thin pass-through, swapped purely via
   `errorReporterProvider.overrideWithValue(...)` with no call-site changes.

@@ -1,9 +1,13 @@
 import 'dart:async';
+import 'dart:io';
 
+import 'package:drift/drift.dart' show Value;
+import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:oral_collector/core/database/app_database.dart';
+import 'package:oral_collector/core/errors/api_exception.dart';
 import 'package:oral_collector/features/project/domain/entities/project.dart';
 import 'package:oral_collector/features/project/presentation/notifiers/project_notifier.dart';
 import 'package:oral_collector/features/project/presentation/notifiers/project_state.dart';
@@ -575,6 +579,231 @@ void main() {
 
         fetchGate.complete([_makeServerRecording('new-0')]);
         await fetch;
+      },
+    );
+  });
+
+  group('RecordingsListNotifier.deleteRecording', () {
+    late Directory tmpDir;
+    late AppDatabase db;
+    late LocalRecordingRepository realLocal;
+
+    setUp(() {
+      tmpDir = Directory.systemTemp.createTempSync('eng120_del_');
+      db = AppDatabase.forTesting(NativeDatabase.memory());
+      realLocal = LocalRecordingRepository(db);
+    });
+
+    tearDown(() async {
+      await db.close();
+      if (tmpDir.existsSync()) tmpDir.deleteSync(recursive: true);
+    });
+
+    // Real Drift repo (in-memory) + mock API: exercises the actual row lookup
+    // and delete, so an id/serverId mismatch surfaces instead of being mocked
+    // away.
+    ProviderContainer realContainer() => ProviderContainer(
+      overrides: [
+        recordingApiRepositoryProvider.overrideWithValue(api),
+        localRecordingRepositoryProvider.overrideWithValue(realLocal),
+        projectNotifierProvider.overrideWith(
+          () =>
+              _FakeProjectNotifier(ProjectState(activeProject: activeProject)),
+        ),
+        syncNotifierProvider.overrideWith(
+          () => _FakeSyncNotifier(initialOnline: true),
+        ),
+      ],
+    );
+
+    File seedFile(String name) =>
+        File('${tmpDir.path}/$name')..writeAsStringSync('audio-bytes');
+
+    Future<void> insertRow({
+      required String id,
+      String? serverId,
+      required String localFilePath,
+    }) {
+      return realLocal.insertRecording(
+        LocalRecordingsCompanion.insert(
+          id: id,
+          projectId: 'proj-1',
+          genreId: 'genre-1',
+          localFilePath: localFilePath,
+          recordedAt: DateTime(2026, 1, 1),
+          serverId: Value(serverId),
+          uploadStatus: Value(serverId == null ? 'local' : 'uploaded'),
+        ),
+      );
+    }
+
+    Future<RecordingsListNotifier> seeded(
+      ProviderContainer container,
+      List<ServerRecording> server,
+    ) async {
+      when(
+        () => api.listRecordings(
+          'proj-1',
+          offset: 0,
+          limit: any(named: 'limit'),
+          userId: any(named: 'userId'),
+          storytellerId: any(named: 'storytellerId'),
+        ),
+      ).thenAnswer((_) async => server);
+      final notifier = container.read(recordingsListNotifierProvider.notifier);
+      await notifier.fetchRecordings();
+      return notifier;
+    }
+
+    test(
+      'synced from the list (local id differs from serverId): deletes the real '
+      'row and its audio file, no resurrection',
+      () async {
+        final file = seedFile('rec.m4a');
+        // A locally-created+uploaded row keeps its local uuid; serverId is the
+        // server's id. The list shows the server copy (id == serverId, empty
+        // localFilePath).
+        await insertRow(
+          id: 'local-uuid',
+          serverId: 'srv-1',
+          localFilePath: file.path,
+        );
+        when(() => api.deleteRecording('srv-1')).thenAnswer((_) async => true);
+
+        final container = realContainer();
+        addTearDown(container.dispose);
+        final notifier = await seeded(container, [
+          _makeServerRecording('srv-1'),
+        ]);
+        final listed = container
+            .read(recordingsListNotifierProvider)
+            .recordings
+            .single;
+        expect(listed.id, 'srv-1');
+        expect(listed.localFilePath, isEmpty);
+
+        final result = await notifier.deleteRecording(listed);
+
+        expect(result, DeleteRecordingResult.ok);
+        verify(() => api.deleteRecording('srv-1')).called(1);
+        expect(file.existsSync(), isFalse);
+        expect(await realLocal.getRecordingByServerId('srv-1'), isNull);
+        expect(await realLocal.getAllRecordings('proj-1'), isEmpty);
+        expect(
+          container.read(recordingsListNotifierProvider).recordings,
+          isEmpty,
+        );
+      },
+    );
+
+    test(
+      'local-only (no serverId): skips the API, deletes the row and the file',
+      () async {
+        final file = seedFile('local.m4a');
+        await insertRow(id: 'loc-1', localFilePath: file.path);
+
+        final container = realContainer();
+        addTearDown(container.dispose);
+        final notifier = await seeded(container, const []);
+        final listed = container
+            .read(recordingsListNotifierProvider)
+            .recordings
+            .single;
+
+        final result = await notifier.deleteRecording(listed);
+
+        expect(result, DeleteRecordingResult.ok);
+        verifyNever(() => api.deleteRecording(any()));
+        expect(file.existsSync(), isFalse);
+        expect(await realLocal.getAllRecordings('proj-1'), isEmpty);
+        expect(
+          container.read(recordingsListNotifierProvider).recordings,
+          isEmpty,
+        );
+      },
+    );
+
+    test('forbidden: keeps the row, the file, and the list item', () async {
+      final file = seedFile('rec.m4a');
+      await insertRow(id: 'srv-3', serverId: 'srv-3', localFilePath: file.path);
+      when(
+        () => api.deleteRecording('srv-3'),
+      ).thenThrow(const ForbiddenException());
+
+      final container = realContainer();
+      addTearDown(container.dispose);
+      final notifier = await seeded(container, [_makeServerRecording('srv-3')]);
+      final listed = container
+          .read(recordingsListNotifierProvider)
+          .recordings
+          .single;
+
+      final result = await notifier.deleteRecording(listed);
+
+      expect(result, DeleteRecordingResult.forbidden);
+      expect(file.existsSync(), isTrue);
+      expect(await realLocal.getRecordingByServerId('srv-3'), isNotNull);
+      expect(
+        container
+            .read(recordingsListNotifierProvider)
+            .recordings
+            .map((r) => r.id),
+        ['srv-3'],
+      );
+    });
+
+    test(
+      'remote failure: keeps the row, the file, and the list item',
+      () async {
+        final file = seedFile('rec.m4a');
+        await insertRow(
+          id: 'srv-4',
+          serverId: 'srv-4',
+          localFilePath: file.path,
+        );
+        when(
+          () => api.deleteRecording('srv-4'),
+        ).thenThrow(Exception('network'));
+
+        final container = realContainer();
+        addTearDown(container.dispose);
+        final notifier = await seeded(container, [
+          _makeServerRecording('srv-4'),
+        ]);
+        final listed = container
+            .read(recordingsListNotifierProvider)
+            .recordings
+            .single;
+
+        final result = await notifier.deleteRecording(listed);
+
+        expect(result, DeleteRecordingResult.failed);
+        expect(file.existsSync(), isTrue);
+        expect(await realLocal.getRecordingByServerId('srv-4'), isNotNull);
+      },
+    );
+
+    test(
+      'missing audio file path: the file delete is a no-op, the row is still '
+      'deleted',
+      () async {
+        await insertRow(
+          id: 'loc-5',
+          localFilePath: '${tmpDir.path}/never-created.m4a',
+        );
+
+        final container = realContainer();
+        addTearDown(container.dispose);
+        final notifier = await seeded(container, const []);
+        final listed = container
+            .read(recordingsListNotifierProvider)
+            .recordings
+            .single;
+
+        final result = await notifier.deleteRecording(listed);
+
+        expect(result, DeleteRecordingResult.ok);
+        expect(await realLocal.getAllRecordings('proj-1'), isEmpty);
       },
     );
   });

@@ -55,6 +55,14 @@ Path: @/lib/core/platform
   loading it whole. The container-header parsers under
   [/lib/features/recording/data/services/audio_metadata/](../../features/recording/data/services/audio_metadata/)
   depend on this to probe arbitrarily large imports cheaply.
+- `ffmpeg_ops.dart` (facade over `ffmpeg_ops_native.dart` /
+  `ffmpeg_ops_web.dart`) exposes `compressToM4a(input, output)` — the WAV→M4A
+  transcode the finalization and file-import paths run before deleting the
+  source WAV. The native variant runs the ffmpeg command, then **verifies the
+  output exists and is non-empty** (`file_ops.fileExists` + `fileLength > 0`)
+  before returning `true`; a success return code alone is not trusted. The web
+  variant throws `UnsupportedError`. A `runner` parameter (default = the real
+  `executeFFmpegCommand`) is a test seam.
 - `ForegroundServiceArbiter` is all static state: a single `_owner`
   (`none` / `recording` / `upload`) plus a `_queue` mutex.
 - `takeOver(owner, isRunning, stop, start)` is the hand-off primitive: it
@@ -95,6 +103,19 @@ Path: @/lib/core/platform
   service, so there is intentionally one arbiter for the whole app, not one
   per Riverpod scope. `resetForTest` clears `_owner` and `_queue` between
   tests.
+- **`compressToM4a == true` is a license to delete the source (ENG-140
+  F18).** Both callers treat a `true` return as proof a real m4a landed and
+  then delete the source WAV:
+  [/lib/features/recording/data/services/recording_finalization_service.dart](../../features/recording/data/services/recording_finalization_service.dart)
+  deletes the intermediate `sourcePath`, and
+  [/lib/features/recording/presentation/file_import_screen.dart](../../features/recording/presentation/file_import_screen.dart)
+  deletes the copied `destPath`. ffmpeg can exit 0 with a missing or empty
+  output (release-mode / permission edge cases), which previously caused
+  permanent audio loss. The post-run `fileExists` + `fileLength > 0` check
+  makes the contract `compressToM4a == true` ⇒ a non-empty m4a exists on disk.
+  This mirrors the identical guard in
+  [/lib/features/recording/data/services/recording_concat_service.dart](../../features/recording/data/services/recording_concat_service.dart),
+  which already verified its concat output before returning a path.
 - **The arbiter only tracks ownership; the plugin tracks liveness.** Callers
   pass `FlutterForegroundTask.isRunningService` as `isRunning`, so the
   arbiter never assumes the service is up just because it recorded an owner

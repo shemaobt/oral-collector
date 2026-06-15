@@ -67,6 +67,14 @@ Path: @/lib/features/recording/data/repositories
   the returned list in that order (FIFO). `createdAt` is the row-insertion
   timestamp (true enqueue order); `id` is a stable tiebreaker. This is a
   load-bearing ordering invariant — see Things to Know.
+- `getPendingUploads` matches `uploadStatus IN ('local', 'failed',
+  'uploading')` — it intentionally still surfaces `uploading` rows so the
+  upload-queue UI and the home counters can show in-flight work. The sync
+  engine, however, excludes `uploading` from its own eligibility filter so it
+  never re-dispatches a row that is in flight or was just reclaimed by
+  `resetStuckUploading`. That filter lives only in the engine, not in this
+  query — see Things to Know and
+  [/lib/features/sync/docs.md](../../../sync/docs.md).
 - `watchRecordingById` is a `watchSingleOrNull` query with `.distinct()`
   appended. Drift invalidates query streams at the table level, so every
   write to `local_recordings` re-runs this query and re-emits even when the
@@ -104,10 +112,26 @@ Path: @/lib/features/recording/data/repositories
   to swap the file and reset upload state (`md5Hash`, `uploadedBytes`,
   `resumableSessionUri`, `retryCount` → defaults; `uploadStatus` →
   `'local'`).
+- `deleteRecording(id)` is a plain physical row delete (a single Drift
+  `delete().go()`); there is no tombstone column. It only removes the
+  Drift row — it does **not** delete the audio file or call the server.
+  The user-initiated hard-delete flow that combines the remote delete, this
+  row delete, and the physical audio-file delete is orchestrated by
+  `RecordingsListNotifier.deleteRecording` (ENG-120), not here — see
+  [../../presentation/notifiers/docs.md](../../presentation/notifiers/docs.md).
+  `deleteStaleRecordings(projectId)` is the separate user-triggered "clear
+  stale" sweep that bulk-deletes `failed` and `uploading` rows for a project.
 - Lifecycle helpers: `markAsUploading`, `markAsUploaded(id, serverId,
-  gcsUrl)`, `markAsFailed`, `resetRetryCount`. These mutate only
-  upload-state columns; they never touch user-content metadata, which is
-  the contract that makes the offline-edit story safe.
+  gcsUrl)`, `markAsFailed`, `resetRetryCount`, and `resetStuckUploading`.
+  These mutate only upload-state columns; they never touch user-content
+  metadata, which is the contract that makes the offline-edit story safe.
+  `resetStuckUploading` is the startup crash-recovery helper: it flips every
+  row orphaned in `uploading` back to `local`, rewriting **only**
+  `uploadStatus` so `retryCount`, `lastRetryAt`, `resumableSessionUri`,
+  `serverId`, and `uploadedBytes` survive and the upload resumes from its
+  saved offset. It is called once from
+  [/lib/main.dart](../../../../main.dart) before the sync queue goes live —
+  see Things to Know.
 - `RecordingApiRepositoryImpl` translates between HTTP and the
   `ServerRecording` DTO from
   [../../domain/entities/server_recording.dart](../../domain/entities/server_recording.dart).
@@ -145,6 +169,19 @@ Path: @/lib/features/recording/data/repositories
   metadata.** After upload, server-side enrichment (e.g. `user_id`
   resolution) is reconciled later by the detail screen's heal path
   (`buildHealMetadataCompanion`), not by the upload pipeline.
+- **`resetStuckUploading` is the non-destructive crash-recovery path, and it
+  lands on `local` for a reason (ENG-119).** A mid-upload crash strands a row
+  in `uploading`. The helper rewrites only `uploadStatus`, leaving the
+  resumable offset (`resumableSessionUri`, `uploadedBytes`), `serverId`, and
+  the retry budget (`retryCount`, `lastRetryAt`) intact so the next drain
+  resumes rather than restarts. It deliberately targets `local`, not
+  `failed`, because `deleteStaleRecordings` (the user-triggered "clear stale"
+  cleanup) deletes both `failed` and `uploading` rows — landing on `local`
+  keeps a recoverable recording out of that destructive sweep. Because it
+  matches only `uploading` (a native-only status; web uses `web_uploading`),
+  it is a no-op on web. The drain's complementary exclusion of `uploading`
+  rows and the startup invocation order live in
+  [/lib/features/sync/docs.md](../../../sync/docs.md).
 - **The pending-upload order is `createdAt ASC, id ASC`, and the queue is
   drained in that order (ENG-122).** Ordering by `recordedAt` (wall-clock
   recording time) is wrong for a FIFO queue: a batch import stamps many rows

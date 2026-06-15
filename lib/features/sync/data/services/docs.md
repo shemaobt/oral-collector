@@ -28,6 +28,11 @@ Path: @/lib/features/sync/data/services
   ordering of its own, so the upload order is whatever the repository query
   defines; see
   [/lib/features/recording/data/repositories/docs.md](../../../recording/data/repositories/docs.md).
+  The engine does, however, apply its own **eligibility filter** over that
+  list — it skips rows past the retry ceiling, rows inside their (jittered)
+  backoff window, and rows already in `uploading` — so not every returned row
+  is dispatched on a given pass; see
+  [/lib/features/sync/docs.md](../../docs.md).
 - `UploadForegroundService` shares the single Android foreground service
   with recording. It does not call the plugin directly for lifecycle; it
   goes through [/lib/core/platform/foreground_service_arbiter.dart](../../../../core/platform/foreground_service_arbiter.dart)
