@@ -4,6 +4,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../genre/domain/entities/genre.dart';
 import '../notifiers/admin_notifier.dart';
 import 'admin_genre_card.dart';
@@ -49,14 +50,14 @@ class GenresSection extends ConsumerWidget {
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: SpacingScale.s12),
         if (genres.isEmpty)
           Card(
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(RadiusScale.r16),
             ),
             child: Padding(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(SpacingScale.s24),
               child: Center(child: Text(l10n.admin_noGenres)),
             ),
           )
@@ -91,7 +92,7 @@ class GenresSection extends ConsumerWidget {
                     ? l10n.admin_required
                     : null,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: SpacingScale.s12),
               TextFormField(
                 controller: descController,
                 decoration: InputDecoration(
