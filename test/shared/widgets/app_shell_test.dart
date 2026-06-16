@@ -170,7 +170,78 @@ Future<void> _pumpShell(
   await tester.pumpAndSettle();
 }
 
+Future<void> _pumpAtTextScale(
+  WidgetTester tester, {
+  required Size size,
+  required double scale,
+}) async {
+  tester.view.physicalSize = size;
+  tester.view.devicePixelRatio = 1.0;
+  addTearDown(tester.view.reset);
+
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        recordingSessionNotifierProvider.overrideWith(
+          () => _FakeRecordingSessionNotifier(const RecordingState()),
+        ),
+        authNotifierProvider.overrideWith(
+          () => _FakeAuthNotifier(const AuthState(currentUser: _testUser)),
+        ),
+        pendingRecordingDecisionProvider.overrideWith((_) => null),
+        inviteNotifierProvider.overrideWith(_FakeInviteNotifier.new),
+        roleNotifierProvider.overrideWith(_FakeRoleNotifier.new),
+      ],
+      child: MaterialApp.router(
+        routerConfig: _buildRouter(),
+        locale: const Locale('en'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: TextScaler.linear(scale)),
+          child: child!,
+        ),
+      ),
+    ),
+  );
+  await tester.pumpAndSettle();
+}
+
 void main() {
+  group('text-scale resilience (ENG-178)', () {
+    for (final scale in const [1.0, 1.3, 2.0]) {
+      testWidgets('mobile bottom nav has no overflow at ${scale}x', (
+        tester,
+      ) async {
+        await _pumpAtTextScale(
+          tester,
+          size: const Size(400, 800),
+          scale: scale,
+        );
+        expect(tester.takeException(), isNull);
+      });
+
+      testWidgets('wide sidebar has no overflow at ${scale}x', (tester) async {
+        await _pumpAtTextScale(
+          tester,
+          size: const Size(1024, 800),
+          scale: scale,
+        );
+        expect(tester.takeException(), isNull);
+      });
+    }
+
+    testWidgets('record tab stays reachable in bottom nav at 2.0x', (
+      tester,
+    ) async {
+      await _pumpAtTextScale(tester, size: const Size(400, 800), scale: 2.0);
+      expect(find.bySemanticsLabel('Record tab'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  });
+
   testWidgets(
     'tapping a tab while finalizing shows snackbar and does not navigate',
     (tester) async {
