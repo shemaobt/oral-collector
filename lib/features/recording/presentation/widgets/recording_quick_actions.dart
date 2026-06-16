@@ -4,6 +4,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 
 class RecordingQuickActions extends StatelessWidget {
   const RecordingQuickActions({
@@ -45,7 +46,7 @@ class RecordingQuickActions extends StatelessWidget {
             fontWeight: FontWeight.w700,
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: SpacingScale.s12),
         Wrap(
           spacing: 10,
           runSpacing: 10,

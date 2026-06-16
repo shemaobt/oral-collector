@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../genre/domain/entities/genre.dart';
 import '../../../storyteller/domain/entities/storyteller.dart';
@@ -65,10 +66,15 @@ class BulkMetadataBar extends StatelessWidget {
           data: theme.copyWith(dividerColor: AppColors.transparent),
           child: ExpansionTile(
             tilePadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 4,
+              horizontal: SpacingScale.s16,
+              vertical: SpacingScale.s4,
             ),
-            childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            childrenPadding: const EdgeInsets.fromLTRB(
+              SpacingScale.s16,
+              0,
+              SpacingScale.s16,
+              SpacingScale.s16,
+            ),
             leading: Icon(LucideIcons.copy, size: 18, color: colors.accent),
             title: Text(
               l10n.import_setForAll,
@@ -86,7 +92,7 @@ class BulkMetadataBar extends StatelessWidget {
                 : null,
             children: [
               _buildFields(context, showSubcategory),
-              const SizedBox(height: 12),
+              const SizedBox(height: SpacingScale.s12),
               SizedBox(
                 width: double.infinity,
                 child: FilledButton.icon(
@@ -102,7 +108,7 @@ class BulkMetadataBar extends StatelessWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(SpacingScale.s16),
       decoration: BoxDecoration(
         color: colors.surfaceAlt.withValues(alpha: 0.55),
         borderRadius: BorderRadius.circular(14),
@@ -114,7 +120,7 @@ class BulkMetadataBar extends StatelessWidget {
           Row(
             children: [
               Icon(LucideIcons.copy, size: 16, color: colors.accent),
-              const SizedBox(width: 8),
+              const SizedBox(width: SpacingScale.s8),
               Text(
                 l10n.import_setForAll,
                 style: theme.textTheme.titleSmall?.copyWith(
@@ -123,9 +129,9 @@ class BulkMetadataBar extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: SpacingScale.s12),
           _buildFields(context, showSubcategory),
-          const SizedBox(height: 12),
+          const SizedBox(height: SpacingScale.s12),
           Align(
             alignment: Alignment.centerRight,
             child: FilledButton.icon(

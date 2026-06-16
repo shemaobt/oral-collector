@@ -63,7 +63,10 @@ class SegmentCard extends StatelessWidget {
 
     return AnimatedContainer(
       duration: DurationScale.ms200,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 14,
+        vertical: SpacingScale.s12,
+      ),
       decoration: BoxDecoration(
         color: isExcluded
             ? colors.error.withValues(alpha: isDark ? 0.08 : 0.04)
@@ -72,7 +75,7 @@ class SegmentCard extends StatelessWidget {
             : isDark
             ? colors.surfaceAlt.withValues(alpha: 0.4)
             : colors.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(RadiusScale.r12),
         border: Border.all(
           color: isExcluded
               ? colors.error.withValues(alpha: 0.2)
@@ -104,7 +107,7 @@ class SegmentCard extends StatelessWidget {
             color: isExcluded
                 ? colors.error.withValues(alpha: isDark ? 0.15 : 0.08)
                 : colors.accent.withValues(alpha: isDark ? 0.2 : 0.1),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(RadiusScale.r8),
           ),
           alignment: Alignment.center,
           child: Text(
@@ -116,7 +119,7 @@ class SegmentCard extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: SpacingScale.s12),
 
         Expanded(
           child: Column(
@@ -147,12 +150,15 @@ class SegmentCard extends StatelessWidget {
         ),
 
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          padding: const EdgeInsets.symmetric(
+            horizontal: SpacingScale.s8,
+            vertical: 3,
+          ),
           decoration: BoxDecoration(
             color: isExcluded
                 ? colors.error.withValues(alpha: 0.08)
                 : colors.accent.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(RadiusScale.r8),
           ),
           child: Text(
             duration,
@@ -246,7 +252,7 @@ class SegmentCard extends StatelessWidget {
                 height: 28,
                 decoration: BoxDecoration(
                   color: colors.surfaceAlt.withValues(alpha: 0.6),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(RadiusScale.r8),
                   border: Border.all(
                     color: colors.border.withValues(alpha: 0.4),
                   ),
@@ -299,12 +305,15 @@ class _TaxonomyChip extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(RadiusScale.r8),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        padding: const EdgeInsets.symmetric(
+          horizontal: SpacingScale.s8,
+          vertical: 6,
+        ),
         decoration: BoxDecoration(
           color: bg,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(RadiusScale.r8),
           border: Border.all(color: borderClr),
         ),
         child: Row(

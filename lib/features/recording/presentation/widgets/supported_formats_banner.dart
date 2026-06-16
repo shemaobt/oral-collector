@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../data/supported_audio_formats.dart';
 
@@ -43,12 +44,12 @@ class SupportedFormatsBanner extends StatelessWidget {
             ),
           ),
           if (onDismiss != null) ...[
-            const SizedBox(width: 8),
+            const SizedBox(width: SpacingScale.s8),
             InkWell(
               onTap: onDismiss,
               borderRadius: BorderRadius.circular(6),
               child: Padding(
-                padding: const EdgeInsets.all(4),
+                padding: const EdgeInsets.all(SpacingScale.s4),
                 child: Icon(
                   LucideIcons.x,
                   size: dense ? 14 : 16,

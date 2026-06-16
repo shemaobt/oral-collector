@@ -682,14 +682,14 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
     final colors = AppColors.of(context);
     return Center(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(SpacingScale.s24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (_isAnalyzing) ...[
               const CircularProgressIndicator(),
-              const SizedBox(height: 16),
+              const SizedBox(height: SpacingScale.s16),
               Text(
                 l10n.import_analyzing,
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
@@ -698,19 +698,19 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
               ),
             ] else ...[
               Icon(LucideIcons.fileAudio, size: 64, color: colors.border),
-              const SizedBox(height: 16),
+              const SizedBox(height: SpacingScale.s16),
               Text(
                 l10n.import_selectFile,
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                   color: colors.foreground.withValues(alpha: 0.6),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: SpacingScale.s20),
               ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 420),
                 child: const SupportedFormatsBanner(),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: SpacingScale.s24),
               ElevatedButton.icon(
                 onPressed: _pickFile,
                 icon: const Icon(LucideIcons.folderOpen),

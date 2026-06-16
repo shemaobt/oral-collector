@@ -41,7 +41,7 @@ class _SavingRecordingLabelState extends State<SavingRecordingLabel>
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         _BouncingDots(controller: _controller, color: colors.accent),
-        const SizedBox(width: 8),
+        const SizedBox(width: SpacingScale.s8),
         Text(
           AppLocalizations.of(context).recording_savingRecording,
           style: theme.textTheme.bodyMedium?.copyWith(

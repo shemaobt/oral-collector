@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 
 class EditVolumeControl extends StatelessWidget {
   const EditVolumeControl({
@@ -55,10 +56,10 @@ class EditVolumeControl extends StatelessWidget {
     final isClipping = peakAfterGain >= -1;
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
+      padding: const EdgeInsets.fromLTRB(14, 10, 14, SpacingScale.s12),
       decoration: BoxDecoration(
         color: colors.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(RadiusScale.r12),
         border: Border.all(color: colors.border.withValues(alpha: 0.4)),
       ),
       child: Column(
@@ -76,7 +77,7 @@ class EditVolumeControl extends StatelessWidget {
               const Spacer(),
               if (gainDb > 0)
                 Padding(
-                  padding: const EdgeInsets.only(right: 8),
+                  padding: const EdgeInsets.only(right: SpacingScale.s8),
                   child: Text(
                     boostOnSaveLabel,
                     style: theme.textTheme.labelSmall?.copyWith(
@@ -132,7 +133,7 @@ class EditVolumeControl extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: SpacingScale.s4),
           Row(
             children: [
               Text(
@@ -146,12 +147,12 @@ class EditVolumeControl extends StatelessWidget {
               if (isClipping)
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
+                    horizontal: SpacingScale.s8,
                     vertical: 2,
                   ),
                   decoration: BoxDecoration(
                     color: colors.error.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(RadiusScale.r8),
                   ),
                   child: Text(
                     clippingLabel.toUpperCase(),

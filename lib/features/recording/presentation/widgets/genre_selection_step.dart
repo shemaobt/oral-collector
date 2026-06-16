@@ -4,6 +4,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/l10n/content_l10n.dart';
 import '../../../../core/theme/color_hex.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../../shared/utils/genre_helpers.dart';
 import '../../../../shared/widgets/app_shell.dart';
 import '../../../genre/domain/entities/genre.dart';
@@ -26,7 +27,7 @@ class GenreSelectionStep extends StatelessWidget {
     if (genres.isEmpty) {
       return Center(
         child: Padding(
-          padding: const EdgeInsets.all(32),
+          padding: const EdgeInsets.all(SpacingScale.s32),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -35,7 +36,7 @@ class GenreSelectionStep extends StatelessWidget {
                 size: 64,
                 color: theme.colorScheme.outline,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: SpacingScale.s16),
               Text(
                 l10n.recording_noGenres,
                 style: theme.textTheme.bodyLarge?.copyWith(
@@ -50,9 +51,9 @@ class GenreSelectionStep extends StatelessWidget {
 
     return GridView.builder(
       padding: EdgeInsets.fromLTRB(
-        16,
-        16,
-        16,
+        SpacingScale.s16,
+        SpacingScale.s16,
+        SpacingScale.s16,
         AppShell.scrollPaddingFor(context),
       ),
       gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
@@ -72,7 +73,7 @@ class GenreSelectionStep extends StatelessWidget {
           child: InkWell(
             onTap: () => onSelect(genre),
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(SpacingScale.s16),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -85,7 +86,7 @@ class GenreSelectionStep extends StatelessWidget {
                     ),
                     child: Icon(icon, size: 28, color: color),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: SpacingScale.s12),
                   Text(
                     localizedGenreName(l10n, genre.name),
                     style: theme.textTheme.titleSmall?.copyWith(

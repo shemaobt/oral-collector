@@ -9,6 +9,7 @@ import '../../../../core/l10n/content_l10n.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/tokens.dart';
 import '../../../features/auth/data/providers/role_provider.dart';
 import '../../../shared/preview_helpers.dart';
 import '../../../shared/utils/format.dart';
@@ -319,7 +320,7 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
                         backgroundColor: Theme.of(context).colorScheme.surface,
                         shape: const RoundedRectangleBorder(
                           borderRadius: BorderRadius.vertical(
-                            top: Radius.circular(20),
+                            top: Radius.circular(RadiusScale.r20),
                           ),
                         ),
                         builder: (_) =>
@@ -336,7 +337,12 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
 
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                    padding: const EdgeInsets.fromLTRB(
+                      SpacingScale.s16,
+                      SpacingScale.s12,
+                      SpacingScale.s16,
+                      SpacingScale.s4,
+                    ),
                     child: TextField(
                       controller: _searchController,
                       onChanged: (value) => ref
@@ -363,19 +369,19 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
                         filled: true,
                         fillColor: colors.surfaceAlt,
                         contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12,
+                          horizontal: SpacingScale.s12,
                           vertical: 10,
                         ),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(RadiusScale.r12),
                           borderSide: BorderSide.none,
                         ),
                         enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(RadiusScale.r12),
                           borderSide: BorderSide.none,
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(RadiusScale.r12),
                           borderSide: BorderSide(
                             color: colors.accent,
                             width: 1.5,
@@ -390,7 +396,12 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
 
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                    padding: const EdgeInsets.fromLTRB(
+                      SpacingScale.s16,
+                      SpacingScale.s16,
+                      SpacingScale.s16,
+                      SpacingScale.s8,
+                    ),
                     child: Row(
                       children: [
                         Text(
@@ -430,7 +441,7 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
                             ),
                             style: TextButton.styleFrom(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
+                                horizontal: SpacingScale.s8,
                               ),
                               visualDensity: VisualDensity.compact,
                             ),
@@ -463,9 +474,9 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
                       )
                     : SliverPadding(
                         padding: EdgeInsets.fromLTRB(
-                          16,
+                          SpacingScale.s16,
                           0,
-                          16,
+                          SpacingScale.s16,
                           AppShell.scrollPaddingFor(context),
                         ),
                         sliver: SliverList.separated(
@@ -496,10 +507,14 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
                               },
                               background: Container(
                                 alignment: Alignment.centerRight,
-                                padding: const EdgeInsets.only(right: 24),
+                                padding: const EdgeInsets.only(
+                                  right: SpacingScale.s24,
+                                ),
                                 decoration: BoxDecoration(
                                   color: colors.error.withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.circular(16),
+                                  borderRadius: BorderRadius.circular(
+                                    RadiusScale.r16,
+                                  ),
                                 ),
                                 child: Icon(
                                   LucideIcons.trash2,
@@ -543,11 +558,11 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
                 if (!listState.isLoading && listState.isLoadingMore)
                   const SliverToBoxAdapter(
                     child: Padding(
-                      padding: EdgeInsets.symmetric(vertical: 24),
+                      padding: EdgeInsets.symmetric(vertical: SpacingScale.s24),
                       child: Center(
                         child: SizedBox(
-                          width: 24,
-                          height: 24,
+                          width: SpacingScale.s24,
+                          height: SpacingScale.s24,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         ),
                       ),

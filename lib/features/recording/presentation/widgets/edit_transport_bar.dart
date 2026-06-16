@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 
 class EditTransportBar extends StatelessWidget {
   const EditTransportBar({
@@ -41,10 +42,13 @@ class EditTransportBar extends StatelessWidget {
         !isPlaying && canSplitAtPosition && onSplitAtPosition != null;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(
+        horizontal: SpacingScale.s12,
+        vertical: SpacingScale.s8,
+      ),
       decoration: BoxDecoration(
         color: colors.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(RadiusScale.r12),
         border: Border.all(color: colors.border.withValues(alpha: 0.4)),
       ),
       child: Row(
@@ -69,7 +73,7 @@ class EditTransportBar extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: SpacingScale.s12),
           Expanded(
             child: RichText(
               text: TextSpan(
@@ -100,7 +104,9 @@ class EditTransportBar extends StatelessWidget {
               },
               child: Container(
                 height: 36,
-                padding: const EdgeInsets.symmetric(horizontal: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: SpacingScale.s12,
+                ),
                 decoration: BoxDecoration(
                   color: colors.accent.withValues(alpha: 0.14),
                   borderRadius: BorderRadius.circular(10),

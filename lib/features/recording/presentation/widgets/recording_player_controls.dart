@@ -4,6 +4,7 @@ import 'package:just_audio/just_audio.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/utils/format.dart';
 import '../notifiers/recording_player_notifier.dart';
@@ -29,13 +30,13 @@ class RecordingPlayerControls extends ConsumerWidget {
             Row(
               children: [
                 _PlayPauseButton(player: player, onTap: notifier.togglePlay),
-                const SizedBox(width: 12),
+                const SizedBox(width: SpacingScale.s12),
                 Expanded(
                   child: _SeekSlider(player: player, notifier: notifier),
                 ),
               ],
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: SpacingScale.s4),
             Row(
               children: [
                 const SizedBox(width: 60),
@@ -80,8 +81,8 @@ class _PlayPauseButton extends StatelessWidget {
               onTap: onTap,
               customBorder: const CircleBorder(),
               child: SizedBox(
-                width: 48.0,
-                height: 48.0,
+                width: SpacingScale.s48,
+                height: SpacingScale.s48,
                 child: Center(
                   child: Icon(
                     showPlay ? LucideIcons.play : LucideIcons.pause,

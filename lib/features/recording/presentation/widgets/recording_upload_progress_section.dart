@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/utils/format.dart';
 import '../../../sync/presentation/notifiers/sync_notifier.dart';
@@ -26,11 +27,11 @@ class RecordingUploadProgressSection extends ConsumerWidget {
     final progress = (syncState.syncProgress / 100).clamp(0.0, 1.0);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: SpacingScale.s16),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: colors.accent.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(RadiusScale.r12),
         border: Border.all(color: colors.accent.withValues(alpha: 0.2)),
       ),
       child: Column(
@@ -39,7 +40,7 @@ class RecordingUploadProgressSection extends ConsumerWidget {
           Row(
             children: [
               Icon(LucideIcons.uploadCloud, size: 16, color: colors.accent),
-              const SizedBox(width: 8),
+              const SizedBox(width: SpacingScale.s8),
               Text(
                 l10n.recording_statusUploading,
                 style: theme.textTheme.labelLarge?.copyWith(
@@ -59,7 +60,7 @@ class RecordingUploadProgressSection extends ConsumerWidget {
           ),
           const SizedBox(height: 10),
           ClipRRect(
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(RadiusScale.r4),
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 8,
@@ -67,7 +68,7 @@ class RecordingUploadProgressSection extends ConsumerWidget {
               valueColor: AlwaysStoppedAnimation(colors.accent),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: SpacingScale.s8),
           Wrap(
             spacing: 12,
             runSpacing: 4,

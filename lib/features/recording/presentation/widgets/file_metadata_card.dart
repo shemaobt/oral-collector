@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/utils/format.dart';
 import '../../../genre/domain/entities/genre.dart';
@@ -45,7 +46,7 @@ class FileMetadataCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: colors.card,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(RadiusScale.r16),
         border: Border.all(
           color: hasError
               ? colors.error.withValues(alpha: 0.5)
@@ -59,7 +60,10 @@ class FileMetadataCard extends StatelessWidget {
           if (hasError)
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              padding: const EdgeInsets.symmetric(
+                horizontal: SpacingScale.s12,
+                vertical: 6,
+              ),
               decoration: BoxDecoration(
                 color: colors.error.withValues(alpha: 0.1),
                 borderRadius: const BorderRadius.only(
@@ -93,7 +97,7 @@ class FileMetadataCard extends StatelessWidget {
                       size: 16,
                       color: colors.secondary,
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: SpacingScale.s8),
                     Expanded(
                       child: Text(
                         entry.fileName,
@@ -106,7 +110,7 @@ class FileMetadataCard extends StatelessWidget {
                     ),
                     InkWell(
                       onTap: onRemove,
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(RadiusScale.r8),
                       child: Padding(
                         padding: const EdgeInsets.all(6),
                         child: Icon(
@@ -118,7 +122,7 @@ class FileMetadataCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: SpacingScale.s4),
                 Row(
                   children: [
                     Icon(
@@ -126,7 +130,7 @@ class FileMetadataCard extends StatelessWidget {
                       size: 12,
                       color: colors.foreground.withValues(alpha: 0.5),
                     ),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: SpacingScale.s4),
                     Text(
                       formatDurationHMS(entry.durationSeconds),
                       style: theme.textTheme.labelSmall?.copyWith(
@@ -154,8 +158,8 @@ class FileMetadataCard extends StatelessWidget {
                     labelText: l10n.recording_descriptionHint,
                     isDense: true,
                     contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 12,
+                      horizontal: SpacingScale.s12,
+                      vertical: SpacingScale.s12,
                     ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),

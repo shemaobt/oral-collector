@@ -5,6 +5,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/l10n/content_l10n.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../genre/presentation/notifiers/genre_notifier.dart';
 import '../../domain/entities/register.dart';
 import 'secondary_classification_fields.dart';
@@ -68,7 +69,7 @@ class _ClassifyRecordingDialogState
       title: Row(
         children: [
           Icon(LucideIcons.tag, size: 20, color: colors.secondary),
-          const SizedBox(width: 8),
+          const SizedBox(width: SpacingScale.s8),
           Text(l10n.classify_title),
         ],
       ),
@@ -87,7 +88,7 @@ class _ClassifyRecordingDialogState
                   letterSpacing: 0.8,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: SpacingScale.s8),
               Text(
                 l10n.moveCategory_genre,
                 style: theme.textTheme.bodySmall?.copyWith(
@@ -95,14 +96,14 @@ class _ClassifyRecordingDialogState
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: SpacingScale.s4),
               DropdownButtonFormField<String>(
                 isExpanded: true,
                 initialValue: _selectedGenreId,
                 decoration: const InputDecoration(
                   isDense: true,
                   contentPadding: EdgeInsets.symmetric(
-                    horizontal: 12,
+                    horizontal: SpacingScale.s12,
                     vertical: 10,
                   ),
                 ),
@@ -126,7 +127,7 @@ class _ClassifyRecordingDialogState
                   });
                 },
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: SpacingScale.s16),
 
               if (subcategories.isNotEmpty) ...[
                 Text(
@@ -136,7 +137,7 @@ class _ClassifyRecordingDialogState
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: SpacingScale.s4),
                 DropdownButtonFormField<String>(
                   isExpanded: true,
                   initialValue:
@@ -146,7 +147,7 @@ class _ClassifyRecordingDialogState
                   decoration: const InputDecoration(
                     isDense: true,
                     contentPadding: EdgeInsets.symmetric(
-                      horizontal: 12,
+                      horizontal: SpacingScale.s12,
                       vertical: 10,
                     ),
                   ),
@@ -165,7 +166,7 @@ class _ClassifyRecordingDialogState
                     });
                   },
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: SpacingScale.s16),
               ],
 
               Text(
@@ -175,14 +176,14 @@ class _ClassifyRecordingDialogState
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: SpacingScale.s4),
               DropdownButtonFormField<String>(
                 isExpanded: true,
                 initialValue: _selectedRegisterId,
                 decoration: const InputDecoration(
                   isDense: true,
                   contentPadding: EdgeInsets.symmetric(
-                    horizontal: 12,
+                    horizontal: SpacingScale.s12,
                     vertical: 10,
                   ),
                 ),
@@ -201,12 +202,12 @@ class _ClassifyRecordingDialogState
                   });
                 },
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: SpacingScale.s12),
               Theme(
                 data: theme.copyWith(dividerColor: AppColors.transparent),
                 child: ExpansionTile(
                   tilePadding: EdgeInsets.zero,
-                  childrenPadding: const EdgeInsets.only(top: 8),
+                  childrenPadding: const EdgeInsets.only(top: SpacingScale.s8),
                   initiallyExpanded: _showSecondary,
                   onExpansionChanged: (expanded) {
                     setState(() {

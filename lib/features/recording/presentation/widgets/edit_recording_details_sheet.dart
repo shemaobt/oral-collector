@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 
 class EditRecordingDetailsResult {
   const EditRecordingDetailsResult({
@@ -92,9 +93,16 @@ class _EditRecordingDetailsSheetState
       child: Container(
         decoration: BoxDecoration(
           color: colors.background,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(RadiusScale.r20),
+          ),
         ),
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+        padding: const EdgeInsets.fromLTRB(
+          SpacingScale.s20,
+          SpacingScale.s12,
+          SpacingScale.s20,
+          SpacingScale.s24,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -126,7 +134,7 @@ class _EditRecordingDetailsSheetState
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: SpacingScale.s12),
             Text(
               l10n.recording_title,
               style: theme.textTheme.labelMedium?.copyWith(
@@ -150,20 +158,20 @@ class _EditRecordingDetailsSheetState
                 filled: true,
                 fillColor: colors.surfaceAlt,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(RadiusScale.r12),
                   borderSide: BorderSide.none,
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(RadiusScale.r12),
                   borderSide: BorderSide.none,
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(RadiusScale.r12),
                   borderSide: BorderSide(color: colors.accent, width: 1.5),
                 ),
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 14,
-                  vertical: 12,
+                  vertical: SpacingScale.s12,
                 ),
               ),
               onChanged: (_) {
@@ -193,24 +201,24 @@ class _EditRecordingDetailsSheetState
                 filled: true,
                 fillColor: colors.surfaceAlt,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(RadiusScale.r12),
                   borderSide: BorderSide.none,
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(RadiusScale.r12),
                   borderSide: BorderSide.none,
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(RadiusScale.r12),
                   borderSide: BorderSide(color: colors.accent, width: 1.5),
                 ),
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 14,
-                  vertical: 12,
+                  vertical: SpacingScale.s12,
                 ),
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: SpacingScale.s20),
             SizedBox(
               height: 52,
               child: ElevatedButton(
