@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:oral_collector/core/errors/api_exception.dart';
+import 'package:oral_collector/core/observability/error_reporter.dart';
 import 'package:oral_collector/features/admin/data/providers.dart';
 import 'package:oral_collector/features/admin/domain/entities/admin_stats.dart';
 import 'package:oral_collector/features/admin/domain/repositories/admin_repository.dart';
@@ -13,15 +15,57 @@ import 'package:oral_collector/features/recording/domain/entities/recording.dart
 
 class MockAdminRepository extends Mock implements AdminRepository {}
 
+class _RecordingReporter implements ErrorReporter {
+  final List<Object> reported = [];
+
+  @override
+  void reportError(
+    Object error,
+    StackTrace? stackTrace, {
+    Map<String, String>? tags,
+    Map<String, Object?>? context,
+    ErrorLevel level = ErrorLevel.error,
+  }) {
+    reported.add(error);
+  }
+
+  @override
+  void addBreadcrumb(
+    String message, {
+    String? category,
+    ErrorLevel level = ErrorLevel.info,
+    Map<String, Object?>? data,
+  }) {}
+
+  @override
+  void setUser({
+    String? id,
+    String? username,
+    String? email,
+    Map<String, Object?>? data,
+  }) {}
+
+  @override
+  void clearUser() {}
+
+  @override
+  void setTag(String key, String value) {}
+}
+
 void main() {
   late ProviderContainer container;
   late MockAdminRepository repo;
+  late _RecordingReporter reporter;
 
   setUp(() {
     repo = MockAdminRepository();
+    reporter = _RecordingReporter();
     when(() => repo.fetchCleaningQueue()).thenAnswer((_) async => []);
     container = ProviderContainer(
-      overrides: [adminRepositoryProvider.overrideWithValue(repo)],
+      overrides: [
+        adminRepositoryProvider.overrideWithValue(repo),
+        errorReporterProvider.overrideWithValue(reporter),
+      ],
     );
   });
 
@@ -97,7 +141,8 @@ void main() {
     });
 
     test(
-      'a single failing fetch is isolated: the other slots still load',
+      'a single failing fetch is isolated and reported: the other slots still '
+      'load',
       () async {
         final projectsFixture = [
           const Project(id: 'p1', name: 'Proj', languageId: 'l1'),
@@ -105,9 +150,10 @@ void main() {
         final genresFixture = <Genre>[];
         final queueFixture = <Recording>[];
 
+        final statsErr = Exception('stats down');
         when(
           () => repo.fetchStats(),
-        ).thenAnswer((_) => Future<AdminStats>.error(Exception('stats down')));
+        ).thenAnswer((_) => Future<AdminStats>.error(statsErr));
         when(
           () => repo.fetchAllProjects(),
         ).thenAnswer((_) async => projectsFixture);
@@ -127,6 +173,32 @@ void main() {
         expect(state.cleaningQueue, same(queueFixture));
         expect(state.stats, isNull);
         expect(state.isLoading, isFalse);
+        expect(reporter.reported, contains(statsErr));
+      },
+    );
+
+    test(
+      'reports unexpected fetch failures but suppresses UnauthorizedException',
+      () async {
+        final boom = Exception('projects down');
+        when(() => repo.fetchStats()).thenAnswer(
+          (_) => Future<AdminStats>.error(const UnauthorizedException()),
+        );
+        when(
+          () => repo.fetchAllProjects(),
+        ).thenAnswer((_) => Future<List<Project>>.error(boom));
+        when(() => repo.fetchAllGenres()).thenAnswer((_) async => <Genre>[]);
+        when(
+          () => repo.fetchCleaningQueue(),
+        ).thenAnswer((_) async => <Recording>[]);
+
+        await container.read(adminNotifierProvider.notifier).fetchAll();
+
+        expect(reporter.reported, contains(boom));
+        expect(
+          reporter.reported,
+          isNot(contains(isA<UnauthorizedException>())),
+        );
       },
     );
   });

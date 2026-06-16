@@ -3,12 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/errors/api_exception.dart';
 import '../../../../core/observability/error_reporter.dart';
 import '../../../../core/util/bounded_concurrency.dart';
-import '../../../genre/domain/entities/genre.dart';
 import '../../../genre/domain/entities/genre_update.dart';
-import '../../../project/domain/entities/project.dart';
-import '../../../recording/domain/entities/recording.dart';
 import '../../data/providers.dart';
-import '../../domain/entities/admin_stats.dart';
 import '../../domain/repositories/admin_repository.dart';
 import 'admin_state.dart';
 
@@ -26,19 +22,10 @@ class AdminNotifier extends Notifier<AdminState> {
     state = state.copyWith(isLoading: true, clearError: true);
 
     final (stats, projects, genres, cleaningQueue) = await (
-      _repo.fetchStats().then<AdminStats?>((v) => v).catchError((_) => null),
-      _repo
-          .fetchAllProjects()
-          .then<List<Project>?>((v) => v)
-          .catchError((_) => null),
-      _repo
-          .fetchAllGenres()
-          .then<List<Genre>?>((v) => v)
-          .catchError((_) => null),
-      _repo
-          .fetchCleaningQueue()
-          .then<List<Recording>?>((v) => v)
-          .catchError((_) => null),
+      _guarded(_repo.fetchStats()),
+      _guarded(_repo.fetchAllProjects()),
+      _guarded(_repo.fetchAllGenres()),
+      _guarded(_repo.fetchCleaningQueue()),
     ).wait;
 
     state = AdminState(
@@ -174,6 +161,14 @@ class AdminNotifier extends Notifier<AdminState> {
       return false;
     }
   }
+
+  // Degrades a failed slot to null so one failing fetch doesn't drop the other
+  // three, while still reporting it to telemetry with its stack.
+  Future<T?> _guarded<T>(Future<T> future) =>
+      future.then<T?>((v) => v).catchError((Object e, StackTrace st) {
+        _reportUnexpected(e, st);
+        return null;
+      });
 
   void _reportUnexpected(Object error, StackTrace stackTrace) {
     // 401 é sessão expirada esperada (tratada por refresh/login alhures);

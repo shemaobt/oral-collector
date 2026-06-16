@@ -257,6 +257,19 @@ Path: @/lib/features/recording/presentation/notifiers
   `localFilePath`. This is what makes the hard delete actually remove the
   row + audio for a list-synced recording on every platform, generalizing
   the web-orphan fix above.
+- **`RecordingsListNotifier`'s fallback catches report, they don't swallow
+  (ENG-102).** The paths that intentionally degrade rather than fail the screen —
+  the offline/error fall-back to the full local set in `fetchRecordings`, the
+  `loadMore` pagination error, the local-read fall-backs, the remote-delete
+  failure that maps to `DeleteRecordingResult.failed`, and the best-effort audio
+  file delete — route their error through a private `_reportUnexpected(error, st)`
+  to `errorReporterProvider`
+  ([/lib/core/observability/docs.md](../../../../core/observability/docs.md)) with
+  the stack preserved, *then* take the fallback. The fallback behavior is
+  unchanged; the report is the only visibility, since these paths deliberately do
+  not surface to the UI. `_reportUnexpected` skips `UnauthorizedException` (the
+  expected token-refresh flow). Do not reintroduce a bare `catch (_)` here — a
+  silently-swallowed failure on these paths is invisible to telemetry.
 - **This is a hard delete, not a tombstone.** `deleteRecording` removes
   the row and audio outright; there is no soft-delete / tombstone marker.
   The durable cross-device delete case (delete on device A propagating to

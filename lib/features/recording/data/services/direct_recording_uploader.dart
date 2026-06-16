@@ -205,25 +205,21 @@ class DirectRecordingUploader {
       ),
     );
 
-    try {
-      final result = await _resumableUploadService.uploadFromSource(
-        recordingId: shadowId,
-        serverId: serverId,
-        source: source,
-        format: meta.format,
-        onProgress: onProgress,
+    final result = await _resumableUploadService.uploadFromSource(
+      recordingId: shadowId,
+      serverId: serverId,
+      source: source,
+      format: meta.format,
+      onProgress: onProgress,
+    );
+    if (!result.success) {
+      throw _UploaderException(
+        'Resumable upload failed: ${result.error ?? 'unknown'}',
       );
-      if (!result.success) {
-        throw _UploaderException(
-          'Resumable upload failed: ${result.error ?? 'unknown'}',
-        );
-      }
-
-      await _confirm(serverId, crc32c: result.clientCrc32c);
-      await _recordingRepo.deleteRecording(shadowId);
-    } catch (e) {
-      rethrow;
     }
+
+    await _confirm(serverId, crc32c: result.clientCrc32c);
+    await _recordingRepo.deleteRecording(shadowId);
   }
 
   Future<void> _confirm(String serverId, {required String? crc32c}) async {
