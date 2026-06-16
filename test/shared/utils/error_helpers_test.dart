@@ -134,13 +134,16 @@ void main() {
       'Forbidden': l10n.error_noPermission,
       'File has no bytes': l10n.error_importNoBytes,
       'File is empty': l10n.error_importNoBytes,
-      'Recording not found': l10n.error_importNoBytes,
       'ffmpeg failed': l10n.error_ffmpegProcessingFailed,
       'Concatenation failed': l10n.error_ffmpegProcessingFailed,
       'Audio processing error': l10n.error_ffmpegProcessingFailed,
       'Download failed': l10n.error_downloadFailed,
-      // Quirk conhecido: erro de upload genérico reusa a mensagem de imagem.
-      'Upload failed': l10n.error_imageUploadFailed,
+      // ENG-184: upload genérico é falha de transporte, não a mensagem de imagem.
+      // Caminho web real ("Resumable upload failed: <result.error>"): quando
+      // result.error era "Recording not found", o regex casava o ramo de
+      // import-vazio antes do de upload e mostrava "This file is empty".
+      'Upload failed': l10n.error_serverFailure,
+      'Resumable upload failed: Recording not found': l10n.error_serverFailure,
       'Failed to list projects': l10n.error_serverFailure,
       'Server error occurred': l10n.error_serverFailure,
       'Client error': l10n.error_serverFailure,
@@ -235,14 +238,25 @@ void main() {
   group(
     'reroute: friendlyErrorFor usa o tipo, não o regex sobre toString()',
     () {
-      test('ServerException tipada resolve via switch, não via fallback', () {
-        const e = ServerException(statusCode: 503);
-        final typed = friendlyErrorFor(e, l10n);
-        final viaToString = friendlyErrorMessage(e.toString(), l10n);
-        expect(typed, l10n.error_serverFailure);
-        expect(viaToString, l10n.error_generic);
-        expect(typed, isNot(equals(viaToString)));
-      });
+      // Leaves cujo toString() diagnóstico cairia em error_generic pelo regex:
+      // se friendlyErrorFor stringificasse antes de despachar, estes pegariam.
+      // O esperado é uma constante literal (não messageForException), para o
+      // teste não usar o próprio SUT como oráculo.
+      final divergent = <(AppException, String)>[
+        (const NetworkException(), l10n.error_network),
+        (const ConflictException(), l10n.error_serverFailure),
+        (const ServerException(statusCode: 503), l10n.error_serverFailure),
+      ];
+
+      for (final (e, expected) in divergent) {
+        test('${e.runtimeType} resolve via switch, não via fallback', () {
+          final typed = friendlyErrorFor(e, l10n);
+          final viaToString = friendlyErrorMessage(e.toString(), l10n);
+          expect(typed, expected);
+          expect(viaToString, l10n.error_generic);
+          expect(typed, isNot(equals(viaToString)));
+        });
+      }
     },
   );
 }
