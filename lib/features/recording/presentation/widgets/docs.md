@@ -178,6 +178,32 @@ Path: @/lib/features/recording/presentation/widgets
   that pumps this state at 1.0×/1.3×/2.0× on a realistic phone viewport via the
   shared `pumpAtTextScale` / `expectNoOverflow` harness in
   [/test/support/text_scale.dart](/test/support/text_scale.dart).
+- **The rest of the recording feature is text-scale resilient (ENG-179, Wave 2
+  of ENG-177).** Continuing the ENG-171 stance (responsive layout, never a
+  per-screen low clamp), the remaining widgets were audited at 1.0×/1.3×/2.0×
+  with the shared `pumpAtTextScale` / `expectNoOverflow` harness. Only five
+  needed code: `ConfirmationStep` wraps its whole body in a scroll-when-overflow
+  shell (`LayoutBuilder` → `SingleChildScrollView` →
+  `ConstrainedBox(minHeight: maxHeight)`) so the previously-fixed bottom section
+  (title, storyteller picker, description, action buttons) scrolls instead of
+  overflowing the column — `IntrinsicHeight` is deliberately avoided because the
+  waveform's `LayoutBuilder` cannot report intrinsics; `ActionTile`
+  (`recording_quick_actions.dart`) drops its fixed `height: 76` for a
+  `ConstrainedBox(minHeight: 76)` + `Column(mainAxisSize: min)` so labels grow
+  downward (width stays 80, parent `Wrap` reflows); the header `Row`s of
+  `segment_taxonomy_sheet.dart` and `input_device_picker_sheet.dart` wrap their
+  title `Text` in `Expanded` to kill a horizontal overflow at scale; and
+  `recording_hero_player.dart`'s error box swaps its fixed `height: 64` for a
+  `ConstrainedBox(minHeight: 64)` so a long localized error message (the worst
+  case is the `fileNotFound` string, longer in pt than en) can grow a second
+  line instead of clipping — pinned by tests at both error branches in en + pt.
+  The audit intentionally left several targets unchanged after the harness
+  proved them safe: the confirmation **waveform `Stack`** is pure graphics (no
+  text → `TextScaler` cannot overflow it, so its fixed `height: 100` stays), the
+  `edit_recording_details_sheet.dart` save button and the
+  `filters_icon_button.dart` count badge (a `Stack(clipBehavior: none)`) do not
+  overflow, and `active_filter_chips.dart` already ellipsizes. Those keep a
+  text-scale regression test but no production change.
 - **`ConfirmationStep` is parameterized for the recovery reuse (ENG-80).**
   Two optional params let the recovery screen host the same widget
   without duplicating the save logic: `onSaved` runs in place of the
