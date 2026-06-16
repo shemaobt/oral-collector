@@ -44,13 +44,19 @@ Path: @/lib/core/errors
   typed leaf through the brittle string fallback and leaking custom messages /
   response bodies. Translation is exclusively the UI's job (`friendlyErrorFor`
   / `showErrorSnackBar`), so a typed leaf always reaches `messageForException`.
-  ENG-100 finished this boundary by routing the last widget catch-sites that
-  still called `friendlyErrorMessage(e.toString())` directly (file-import,
-  trim-split, confirmation-step upload) through `friendlyErrorFor` instead: no
-  widget forces the regex path anymore, so `friendlyErrorMessage` is reached
-  only via `friendlyErrorFor`'s fallback arm for genuinely untyped errors. That
-  retained-but-legacy fallback (and its private `_humanizeDetail`) is pinned by
-  characterization tests
+  ENG-100 routed the widget catch-sites it found that still called
+  `friendlyErrorMessage(e.toString())` directly (file-import, trim-split,
+  confirmation-step upload) through `friendlyErrorFor`, and ENG-104 finished the
+  job for the remaining screen catch-sites that were still bypassing the typed
+  path another way — passing `e.toString()`, a hardcoded English string, or an
+  *already-localized* string (e.g.
+  `recording_downloadFailed(e.toString())`) straight into `showErrorSnackBar` /
+  raw `ScaffoldMessenger`. All of those now hand the **typed object** (`e`, or
+  the notifier's `state.error`) to `showErrorSnackBar`, so a typed leaf reaches
+  `messageForException` and `friendlyErrorMessage` is reached only via
+  `friendlyErrorFor`'s fallback arm for genuinely untyped errors. That
+  retained-but-legacy fallback (and its private `_humanizeDetail`) is now pinned
+  by characterization tests
   ([../../../test/shared/utils/error_helpers_test.dart](../../../test/shared/utils/error_helpers_test.dart))
   so its input→output mapping is locked; it is **not** retired, since untyped
   `throw Exception('Failed to X')` repo call-sites still depend on it for
@@ -144,5 +150,29 @@ Path: @/lib/core/errors
 - **No dedicated `NotFoundException`.** 404 maps to `ValidationException`
   because 404 is sometimes non-exceptional (e.g. a delete treats it as
   success), so a 404-specific leaf was deliberately left out of scope.
+- **Screens hand `showErrorSnackBar` the typed object, never a string
+  (ENG-104).** The single display entry point is
+  [../../shared/widgets/error_snack_bar.dart](../../shared/widgets/error_snack_bar.dart)'s
+  `showErrorSnackBar(context, Object)`; call sites pass the caught exception `e`
+  or the notifier's `state.error`. Passing `e.toString()` discards the type and
+  forces the regex fallback. Passing an **already-localized** string is worse: the
+  fallback's substring rules re-map it — any message containing "permission" or
+  "forbidden" collapses to `error_noPermission`, "timeout" to `error_timeout`,
+  etc. — so a correctly-localized message can be silently rewritten into the wrong
+  one. Localization happens exactly once, inside `friendlyErrorFor`. This is also
+  why the hardcoded English permission string in project-settings was deleted:
+  `ForbiddenException` now localizes through the type switch to `error_noPermission`.
+- **A notifier mutation does not rethrow — screens must read `state.error`
+  after the await (ENG-104).** The notifiers capture failures into their
+  `Object?` `error` field and return normally (e.g. `updateProject` in
+  [../../features/project/presentation/notifiers/project_notifier.dart](../../features/project/presentation/notifiers/project_notifier.dart);
+  same shape as `fetchProjects` and the other notifier mutations). A `try/catch`
+  around such a call is therefore dead code, and an unguarded happy path will
+  show a false success. The contract for a notifier-driven screen action is:
+  `await` the mutation, then check `state.error` (surface it via
+  `showErrorSnackBar`) before treating the action as succeeded. The project-save
+  screen was fixed to follow this — it previously caught nothing and showed a
+  false "updated" toast on failure (regression pinned by
+  [../../../test/features/project/presentation/project_settings_save_error_test.dart](../../../test/features/project/presentation/project_settings_save_error_test.dart)).
 
 Created and maintained by Nori.

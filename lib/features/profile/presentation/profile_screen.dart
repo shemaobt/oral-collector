@@ -65,10 +65,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       }
     } catch (e) {
       if (mounted) {
-        showErrorSnackBar(
-          context,
-          AppLocalizations.of(context).profile_photoFailed(e.toString()),
-        );
+        showErrorSnackBar(context, e);
       }
     }
   }
