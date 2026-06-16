@@ -507,333 +507,355 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
         child: ColoredBox(
           color: colors.background,
           child: SafeArea(
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(top: SpacingScale.s20),
-                  child: Text(
-                    formatDurationMinSec(widget.result.durationSeconds),
-                    style: theme.textTheme.displayLarge?.copyWith(
-                      color: colors.foreground,
-                      fontWeight: FontWeight.w200,
-                      fontSize: 48,
-                      fontFeatures: [const FontFeature.tabularFigures()],
-                    ),
-                  ),
-                ),
-
-                Padding(
-                  padding: const EdgeInsets.only(top: 6),
-                  child: widget.genreId == kUnclassifiedGenreId
-                      ? Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: SpacingScale.s12,
-                            vertical: SpacingScale.s4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: colors.warning.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(
-                              RadiusScale.r16,
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                LucideIcons.tag,
-                                size: 12,
-                                color: colors.warning,
-                              ),
-                              const SizedBox(width: SpacingScale.s4),
-                              Text(
-                                l10n.quickRecord_classifyLater,
-                                style: theme.textTheme.labelSmall?.copyWith(
-                                  color: colors.warning,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
-                      : tagLabel.isNotEmpty
-                      ? Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: SpacingScale.s12,
-                            vertical: SpacingScale.s4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: colors.surfaceAlt,
-                            borderRadius: BorderRadius.circular(
-                              RadiusScale.r16,
-                            ),
-                          ),
-                          child: Text(
-                            tagLabel,
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: colors.secondary,
-                            ),
-                          ),
-                        )
-                      : const SizedBox.shrink(),
-                ),
-
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: SpacingScale.s20,
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const SizedBox(height: SpacingScale.s12),
-                        _buildWaveformPlayer(colors, amplitudes),
-                        const SizedBox(height: 6),
-                        Text(
-                          '${formatPositionMS(_position)} / ${formatDurationMinSec(widget.result.durationSeconds)}',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: colors.secondary,
+            child: LayoutBuilder(
+              builder: (context, constraints) => SingleChildScrollView(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(top: SpacingScale.s20),
+                        child: Text(
+                          formatDurationMinSec(widget.result.durationSeconds),
+                          style: theme.textTheme.displayLarge?.copyWith(
+                            color: colors.foreground,
+                            fontWeight: FontWeight.w200,
+                            fontSize: 48,
                             fontFeatures: [const FontFeature.tabularFigures()],
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                Padding(
-                  padding: const EdgeInsets.only(bottom: SpacingScale.s12),
-                  child: GestureDetector(
-                    onTap: _togglePlayback,
-                    child: Container(
-                      width: 56,
-                      height: 56,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: colors.accent,
-                        boxShadow: [
-                          BoxShadow(
-                            color: colors.accent.withValues(alpha: 0.3),
-                            blurRadius: 16,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
                       ),
-                      child: Icon(
-                        _isPlaying ? LucideIcons.pause : LucideIcons.play,
-                        color: Colors.white,
-                        size: 24,
-                      ),
-                    ),
-                  ),
-                ),
 
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    SpacingScale.s20,
-                    0,
-                    SpacingScale.s20,
-                    AppShell.scrollBottomPadding,
-                  ),
-                  child: Column(
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          color: colors.surfaceAlt,
-                          borderRadius: BorderRadius.circular(14),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 6),
+                        child: widget.genreId == kUnclassifiedGenreId
+                            ? Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: SpacingScale.s12,
+                                  vertical: SpacingScale.s4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: colors.warning.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(
+                                    RadiusScale.r16,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      LucideIcons.tag,
+                                      size: 12,
+                                      color: colors.warning,
+                                    ),
+                                    const SizedBox(width: SpacingScale.s4),
+                                    Text(
+                                      l10n.quickRecord_classifyLater,
+                                      style: theme.textTheme.labelSmall
+                                          ?.copyWith(
+                                            color: colors.warning,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : tagLabel.isNotEmpty
+                            ? Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: SpacingScale.s12,
+                                  vertical: SpacingScale.s4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: colors.surfaceAlt,
+                                  borderRadius: BorderRadius.circular(
+                                    RadiusScale.r16,
+                                  ),
+                                ),
+                                child: Text(
+                                  tagLabel,
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    color: colors.secondary,
+                                  ),
+                                ),
+                              )
+                            : const SizedBox.shrink(),
+                      ),
+
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: SpacingScale.s20,
                         ),
-                        padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
-                        child: Row(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(
-                              LucideIcons.type,
-                              size: 20,
-                              color: colors.secondary,
-                            ),
-                            const SizedBox(width: SpacingScale.s12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    l10n.recording_title,
-                                    style: theme.textTheme.labelSmall?.copyWith(
-                                      color: colors.secondary,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  TextField(
-                                    controller: _titleController,
-                                    maxLines: 1,
-                                    textInputAction: TextInputAction.next,
-                                    textCapitalization:
-                                        TextCapitalization.sentences,
-                                    style: theme.textTheme.bodyMedium?.copyWith(
-                                      fontWeight: FontWeight.w500,
-                                      color: colors.foreground,
-                                    ),
-                                    decoration: const InputDecoration(
-                                      isDense: true,
-                                      filled: false,
-                                      fillColor: Colors.transparent,
-                                      border: InputBorder.none,
-                                      enabledBorder: InputBorder.none,
-                                      focusedBorder: InputBorder.none,
-                                      contentPadding: EdgeInsets.zero,
-                                    ),
-                                  ),
+                            const SizedBox(height: SpacingScale.s12),
+                            _buildWaveformPlayer(colors, amplitudes),
+                            const SizedBox(height: 6),
+                            Text(
+                              '${formatPositionMS(_position)} / ${formatDurationMinSec(widget.result.durationSeconds)}',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: colors.secondary,
+                                fontFeatures: [
+                                  const FontFeature.tabularFigures(),
                                 ],
                               ),
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(height: SpacingScale.s12),
-                      StorytellerPicker(
-                        projectId:
-                            ref
-                                .read(projectNotifierProvider)
-                                .activeProject
-                                ?.id ??
-                            '',
-                        selected: _selectedStoryteller,
-                        onChanged: (s) =>
-                            setState(() => _selectedStoryteller = s),
-                        showAddNew: true,
-                      ),
-                      if (_selectedStoryteller == null)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 6),
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              l10n.storyteller_required,
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: colors.error,
-                              ),
-                            ),
-                          ),
+
+                      Padding(
+                        padding: const EdgeInsets.only(
+                          bottom: SpacingScale.s12,
                         ),
-                      const SizedBox(height: SpacingScale.s12),
-                      TextField(
-                        controller: _descriptionController,
-                        minLines: 2,
-                        maxLines: 4,
-                        keyboardType: TextInputType.multiline,
-                        textCapitalization: TextCapitalization.sentences,
-                        decoration: InputDecoration(
-                          hintText: l10n.recording_descriptionHint,
-                          hintStyle: TextStyle(color: colors.secondary),
-                          filled: true,
-                          fillColor: colors.surfaceAlt,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(
-                              RadiusScale.r12,
-                            ),
-                            borderSide: BorderSide.none,
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(
-                              RadiusScale.r12,
-                            ),
-                            borderSide: BorderSide.none,
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(
-                              RadiusScale.r12,
-                            ),
-                            borderSide: BorderSide(
+                        child: GestureDetector(
+                          onTap: _togglePlayback,
+                          child: Container(
+                            width: 56,
+                            height: 56,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
                               color: colors.accent,
-                              width: 1.5,
-                            ),
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: SpacingScale.s16,
-                            vertical: 14,
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: SpacingScale.s16),
-
-                      SizedBox(
-                        width: double.infinity,
-                        height: 52,
-                        child: ElevatedButton(
-                          onPressed: (_isSaving || _selectedStoryteller == null)
-                              ? null
-                              : _save,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: colors.accent,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            elevation: 0,
-                          ),
-                          child: _isSaving
-                              ? const SizedBox(
-                                  width: SpacingScale.s20,
-                                  height: SpacingScale.s20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : Text(
-                                  l10n.recording_saveRecording,
-                                  style: theme.textTheme.titleSmall?.copyWith(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: colors.accent.withValues(alpha: 0.3),
+                                  blurRadius: 16,
+                                  offset: const Offset(0, 4),
                                 ),
+                              ],
+                            ),
+                            child: Icon(
+                              _isPlaying ? LucideIcons.pause : LucideIcons.play,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                          ),
                         ),
                       ),
 
-                      if (widget.showReRecord) ...[
-                        const SizedBox(height: SpacingScale.s8),
-                        SizedBox(
-                          width: double.infinity,
-                          height: 52,
-                          child: OutlinedButton(
-                            onPressed: _isSaving
-                                ? null
-                                : () {
-                                    _player?.stop();
-                                    widget.onReRecord();
-                                  },
-                            style: OutlinedButton.styleFrom(
-                              side: BorderSide(
-                                color: colors.border.withValues(alpha: 0.5),
-                              ),
-                              shape: RoundedRectangleBorder(
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          SpacingScale.s20,
+                          0,
+                          SpacingScale.s20,
+                          AppShell.scrollBottomPadding,
+                        ),
+                        child: Column(
+                          children: [
+                            Container(
+                              decoration: BoxDecoration(
+                                color: colors.surfaceAlt,
                                 borderRadius: BorderRadius.circular(14),
                               ),
-                            ),
-                            child: Text(
-                              l10n.recording_recordAgain,
-                              style: theme.textTheme.titleSmall?.copyWith(
-                                color: colors.foreground,
-                                fontWeight: FontWeight.w500,
+                              padding: const EdgeInsets.fromLTRB(
+                                14,
+                                10,
+                                14,
+                                10,
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    LucideIcons.type,
+                                    size: 20,
+                                    color: colors.secondary,
+                                  ),
+                                  const SizedBox(width: SpacingScale.s12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          l10n.recording_title,
+                                          style: theme.textTheme.labelSmall
+                                              ?.copyWith(
+                                                color: colors.secondary,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                        ),
+                                        TextField(
+                                          controller: _titleController,
+                                          maxLines: 1,
+                                          textInputAction: TextInputAction.next,
+                                          textCapitalization:
+                                              TextCapitalization.sentences,
+                                          style: theme.textTheme.bodyMedium
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.w500,
+                                                color: colors.foreground,
+                                              ),
+                                          decoration: const InputDecoration(
+                                            isDense: true,
+                                            filled: false,
+                                            fillColor: Colors.transparent,
+                                            border: InputBorder.none,
+                                            enabledBorder: InputBorder.none,
+                                            focusedBorder: InputBorder.none,
+                                            contentPadding: EdgeInsets.zero,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ),
-                        ),
-                      ],
+                            const SizedBox(height: SpacingScale.s12),
+                            StorytellerPicker(
+                              projectId:
+                                  ref
+                                      .read(projectNotifierProvider)
+                                      .activeProject
+                                      ?.id ??
+                                  '',
+                              selected: _selectedStoryteller,
+                              onChanged: (s) =>
+                                  setState(() => _selectedStoryteller = s),
+                              showAddNew: true,
+                            ),
+                            if (_selectedStoryteller == null)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 6),
+                                child: Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    l10n.storyteller_required,
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      color: colors.error,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            const SizedBox(height: SpacingScale.s12),
+                            TextField(
+                              controller: _descriptionController,
+                              minLines: 2,
+                              maxLines: 4,
+                              keyboardType: TextInputType.multiline,
+                              textCapitalization: TextCapitalization.sentences,
+                              decoration: InputDecoration(
+                                hintText: l10n.recording_descriptionHint,
+                                hintStyle: TextStyle(color: colors.secondary),
+                                filled: true,
+                                fillColor: colors.surfaceAlt,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(
+                                    RadiusScale.r12,
+                                  ),
+                                  borderSide: BorderSide.none,
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(
+                                    RadiusScale.r12,
+                                  ),
+                                  borderSide: BorderSide.none,
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(
+                                    RadiusScale.r12,
+                                  ),
+                                  borderSide: BorderSide(
+                                    color: colors.accent,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: SpacingScale.s16,
+                                  vertical: 14,
+                                ),
+                              ),
+                            ),
 
-                      const SizedBox(height: SpacingScale.s4),
+                            const SizedBox(height: SpacingScale.s16),
 
-                      TextButton(
-                        onPressed: _isSaving ? null : _discard,
-                        style: TextButton.styleFrom(
-                          foregroundColor: colors.error,
+                            SizedBox(
+                              width: double.infinity,
+                              height: 52,
+                              child: ElevatedButton(
+                                onPressed:
+                                    (_isSaving || _selectedStoryteller == null)
+                                    ? null
+                                    : _save,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: colors.accent,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                  elevation: 0,
+                                ),
+                                child: _isSaving
+                                    ? const SizedBox(
+                                        width: SpacingScale.s20,
+                                        height: SpacingScale.s20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: Colors.white,
+                                        ),
+                                      )
+                                    : Text(
+                                        l10n.recording_saveRecording,
+                                        style: theme.textTheme.titleSmall
+                                            ?.copyWith(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                      ),
+                              ),
+                            ),
+
+                            if (widget.showReRecord) ...[
+                              const SizedBox(height: SpacingScale.s8),
+                              SizedBox(
+                                width: double.infinity,
+                                height: 52,
+                                child: OutlinedButton(
+                                  onPressed: _isSaving
+                                      ? null
+                                      : () {
+                                          _player?.stop();
+                                          widget.onReRecord();
+                                        },
+                                  style: OutlinedButton.styleFrom(
+                                    side: BorderSide(
+                                      color: colors.border.withValues(
+                                        alpha: 0.5,
+                                      ),
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(14),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    l10n.recording_recordAgain,
+                                    style: theme.textTheme.titleSmall?.copyWith(
+                                      color: colors.foreground,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+
+                            const SizedBox(height: SpacingScale.s4),
+
+                            TextButton(
+                              onPressed: _isSaving ? null : _discard,
+                              style: TextButton.styleFrom(
+                                foregroundColor: colors.error,
+                              ),
+                              child: Text(l10n.recording_discard),
+                            ),
+                          ],
                         ),
-                        child: Text(l10n.recording_discard),
                       ),
                     ],
                   ),
                 ),
-              ],
+              ),
             ),
           ),
         ),

@@ -128,10 +128,12 @@ class _SegmentTaxonomySheetState extends ConsumerState<SegmentTaxonomySheet> {
                       children: [
                         Icon(LucideIcons.tag, size: 18, color: colors.accent),
                         const SizedBox(width: 8),
-                        Text(
-                          l10n.trim_classifySegment,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
+                        Expanded(
+                          child: Text(
+                            l10n.trim_classifySegment,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
                       ],

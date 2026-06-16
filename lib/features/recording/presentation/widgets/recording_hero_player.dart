@@ -128,11 +128,12 @@ class RecordingHeroPlayer extends ConsumerWidget {
         RecordingPlayerError.fileNotFound => l10n.recording_audioFileNotFound,
         RecordingPlayerError.loadFailed => l10n.recording_audioLoadFailed,
       };
-      return SizedBox(
-        height: 64,
+      return ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 64),
         child: Center(
           child: Text(
             message,
+            textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: colors.error,
               fontSize: 14.0,

@@ -52,9 +52,11 @@ class _InputDevicePickerSheetState
               children: [
                 Icon(LucideIcons.mic, size: 20, color: colors.foreground),
                 const SizedBox(width: 10),
-                Text(
-                  l10n.recording_selectMicrophone,
-                  style: theme.textTheme.titleMedium,
+                Expanded(
+                  child: Text(
+                    l10n.recording_selectMicrophone,
+                    style: theme.textTheme.titleMedium,
+                  ),
                 ),
               ],
             ),
