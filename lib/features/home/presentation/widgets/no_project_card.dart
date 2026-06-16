@@ -3,6 +3,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 
 class NoProjectCard extends StatelessWidget {
   const NoProjectCard({super.key, required this.onBrowse});
@@ -16,9 +17,14 @@ class NoProjectCard extends StatelessWidget {
     final colors = AppColors.of(context);
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
+      padding: const EdgeInsets.fromLTRB(
+        SpacingScale.s16,
+        SpacingScale.s24,
+        SpacingScale.s16,
+        0,
+      ),
       child: Container(
-        padding: const EdgeInsets.all(28),
+        padding: const EdgeInsets.all(SpacingScale.s28),
         decoration: BoxDecoration(
           color: colors.surfaceAlt,
           borderRadius: BorderRadius.circular(22),
@@ -31,7 +37,7 @@ class NoProjectCard extends StatelessWidget {
               size: 48,
               color: colors.secondary.withValues(alpha: 0.5),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: SpacingScale.s12),
             Text(
               l10n.home_noProjectTitle,
               textAlign: TextAlign.center,
@@ -39,7 +45,7 @@ class NoProjectCard extends StatelessWidget {
                 color: colors.secondary,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: SpacingScale.s16),
             FilledButton.icon(
               onPressed: onBrowse,
               icon: const Icon(LucideIcons.search, size: 18),
@@ -48,7 +54,7 @@ class NoProjectCard extends StatelessWidget {
                 backgroundColor: colors.accent,
                 foregroundColor: AppColors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(RadiusScale.r12),
                 ),
               ),
             ),

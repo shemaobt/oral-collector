@@ -194,7 +194,7 @@ class _ExpandableRecordFabState extends State<ExpandableRecordFab>
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(RadiusScale.r8),
               ),
               child: Text(
                 label,

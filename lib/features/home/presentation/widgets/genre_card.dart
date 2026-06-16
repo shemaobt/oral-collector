@@ -5,6 +5,7 @@ import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/l10n/content_l10n.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_palettes.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../../shared/utils/format.dart';
 import '../../../../shared/utils/genre_helpers.dart';
 import '../../../genre/domain/entities/genre.dart';
@@ -43,19 +44,19 @@ class GenreCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(RadiusScale.r20),
         border: isDark
             ? null
             : Border.all(color: accent.withValues(alpha: 0.18)),
       ),
       child: Material(
         color: cardBg,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(RadiusScale.r20),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(RadiusScale.r20),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(SpacingScale.s16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -70,7 +71,7 @@ class GenreCard extends StatelessWidget {
                   ),
                   child: Icon(icon, size: 20, color: accent),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: SpacingScale.s12),
 
                 Text(
                   localizedGenreName(l10n, genre.name),
