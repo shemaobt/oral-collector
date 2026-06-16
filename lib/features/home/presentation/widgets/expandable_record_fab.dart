@@ -115,7 +115,7 @@ class _ExpandableRecordFabState extends State<ExpandableRecordFab>
               label: l10n.a11y_startRecording,
               button: true,
               child: Material(
-                color: Colors.transparent,
+                color: AppColors.transparent,
                 shape: const CircleBorder(),
                 child: InkWell(
                   onTap: _toggle,
@@ -152,7 +152,7 @@ class _ExpandableRecordFabState extends State<ExpandableRecordFab>
                         _isOpen ? LucideIcons.x : LucideIcons.mic,
                         key: ValueKey(_isOpen),
                         size: 26,
-                        color: Colors.white,
+                        color: AppColors.white,
                       ),
                     ),
                   ),
@@ -222,7 +222,7 @@ class _ExpandableRecordFabState extends State<ExpandableRecordFab>
                     ),
                   ],
                 ),
-                child: Icon(icon, size: 20, color: Colors.white),
+                child: Icon(icon, size: 20, color: AppColors.white),
               ),
             ),
           ],

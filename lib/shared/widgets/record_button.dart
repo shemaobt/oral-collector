@@ -105,7 +105,7 @@ class _RecordButtonState extends State<RecordButton>
       label: semanticLabel,
       button: true,
       child: Material(
-        color: Colors.transparent,
+        color: AppColors.transparent,
         shape: const CircleBorder(),
         child: InkWell(
           onTap: widget.onTap,
@@ -130,8 +130,16 @@ class _RecordButtonState extends State<RecordButton>
             ),
             child: Center(
               child: isPaused
-                  ? const Icon(LucideIcons.pause, color: Colors.white, size: 34)
-                  : const Icon(LucideIcons.mic, color: Colors.white, size: 34),
+                  ? const Icon(
+                      LucideIcons.pause,
+                      color: AppColors.white,
+                      size: 34,
+                    )
+                  : const Icon(
+                      LucideIcons.mic,
+                      color: AppColors.white,
+                      size: 34,
+                    ),
             ),
           ),
         ),

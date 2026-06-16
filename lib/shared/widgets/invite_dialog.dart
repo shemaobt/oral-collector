@@ -253,7 +253,7 @@ class _InviteDialogState extends ConsumerState<InviteDialog> {
           onPressed: _selectedUser != null && !_isSubmitting ? _submit : null,
           style: ElevatedButton.styleFrom(
             backgroundColor: colors.primary,
-            foregroundColor: Colors.white,
+            foregroundColor: AppColors.white,
           ),
           child: _isSubmitting
               ? const SizedBox(
@@ -261,7 +261,7 @@ class _InviteDialogState extends ConsumerState<InviteDialog> {
                   height: 20,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: Colors.white,
+                    color: AppColors.white,
                   ),
                 )
               : Text(l10n.invite_sendInvite),

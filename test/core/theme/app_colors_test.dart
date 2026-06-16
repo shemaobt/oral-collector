@@ -172,4 +172,21 @@ void main() {
       expect(resolved.primary, AppColors.dark.primary);
     });
   });
+
+  group('Neutral anchors and long-tail tokens', () {
+    // Value-lock tripwire (pixel-identical refactor, ENG-183): these mirror raw
+    // literals migrated out of widgets. Values must stay identical.
+    test('neutral anchors are the pure ARGB primitives', () {
+      expect(AppColors.white.toARGB32(), 0xFFFFFFFF);
+      expect(AppColors.black.toARGB32(), 0xFF000000);
+      expect(AppColors.transparent.toARGB32(), 0x00000000);
+    });
+
+    test('long-tail semantic tokens match the migrated literals', () {
+      expect(AppColors.meterWarning.toARGB32(), 0xFFE0A526);
+      expect(AppColors.warningContainer.toARGB32(), 0xFFFFEDCC);
+      expect(AppColors.onWarningContainer.toARGB32(), 0xFF8A5A00);
+      expect(AppColors.authHeroAccent.toARGB32(), 0xFFFFB380);
+    });
+  });
 }

@@ -3,6 +3,9 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_palettes.dart';
+
 class ScrollingWaveform extends StatefulWidget {
   const ScrollingWaveform({
     super.key,
@@ -79,8 +82,9 @@ class _ScrollingWaveformState extends State<ScrollingWaveform> {
             painter: _ScrollingWaveformPainter(
               amplitudes: _amplitudes,
               revision: _revision,
-              barColor: widget.barColor ?? Colors.black,
-              cursorColor: widget.cursorColor ?? const Color(0xFFD45200),
+              barColor: widget.barColor ?? AppColors.black,
+              cursorColor:
+                  widget.cursorColor ?? AppPalettes.waveformCursorDefault,
             ),
           );
         },

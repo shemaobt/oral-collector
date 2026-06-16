@@ -406,7 +406,7 @@ class _InheritTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: selected
               ? colors.secondary.withValues(alpha: 0.08)
-              : Colors.transparent,
+              : AppColors.transparent,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: selected

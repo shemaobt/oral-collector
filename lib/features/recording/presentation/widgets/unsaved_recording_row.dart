@@ -150,7 +150,7 @@ class _PlayButton extends StatelessWidget {
           child: const SizedBox(
             width: 44,
             height: 44,
-            child: Icon(LucideIcons.play, color: Colors.white, size: 20),
+            child: Icon(LucideIcons.play, color: AppColors.white, size: 20),
           ),
         ),
       ),

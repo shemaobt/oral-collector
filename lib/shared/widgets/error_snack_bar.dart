@@ -20,13 +20,13 @@ void showErrorSnackBar(BuildContext context, Object rawError) {
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.15),
+                color: AppColors.white.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(
                 LucideIcons.alertTriangle,
                 size: 18,
-                color: Colors.white,
+                color: AppColors.white,
               ),
             ),
             const SizedBox(width: 12),
@@ -34,7 +34,7 @@ void showErrorSnackBar(BuildContext context, Object rawError) {
               child: Text(
                 message,
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: Colors.white,
+                  color: AppColors.white,
                   fontWeight: FontWeight.w500,
                   height: 1.3,
                 ),

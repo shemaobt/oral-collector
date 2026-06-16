@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../../l10n/app_localizations.dart';
+import '../../../../core/theme/app_colors.dart';
 
 class HeroPanel extends StatelessWidget {
   const HeroPanel({super.key});
@@ -22,8 +23,8 @@ class HeroPanel extends StatelessWidget {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Colors.black.withValues(alpha: 0.05),
-                  Colors.black.withValues(alpha: 0.50),
+                  AppColors.black.withValues(alpha: 0.05),
+                  AppColors.black.withValues(alpha: 0.50),
                 ],
                 stops: const [0.2, 1.0],
               ),
@@ -54,7 +55,7 @@ class HeroPanel extends StatelessWidget {
                     l10n.auth_oralCollector,
                     style: textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w700,
-                      color: Colors.white.withValues(alpha: 0.9),
+                      color: AppColors.white.withValues(alpha: 0.9),
                     ),
                   ),
                 ],
@@ -63,7 +64,7 @@ class HeroPanel extends StatelessWidget {
               Text(
                 l10n.auth_heroTagline,
                 style: textTheme.headlineLarge?.copyWith(
-                  color: Colors.white,
+                  color: AppColors.white,
                   height: 1.2,
                 ),
               ),
@@ -71,7 +72,7 @@ class HeroPanel extends StatelessWidget {
               Text(
                 l10n.auth_byShema,
                 style: textTheme.bodySmall?.copyWith(
-                  color: Colors.white.withValues(alpha: 0.6),
+                  color: AppColors.white.withValues(alpha: 0.6),
                 ),
               ),
             ],

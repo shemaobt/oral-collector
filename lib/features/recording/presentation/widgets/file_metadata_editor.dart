@@ -467,14 +467,14 @@ class FileMetadataEditor extends StatelessWidget {
                               height: 16,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                color: Colors.white,
+                                color: AppColors.white,
                               ),
                             )
                           : const Icon(LucideIcons.download, size: 16),
                       label: Text(l10n.import_importNFiles(entries.length)),
                       style: FilledButton.styleFrom(
                         backgroundColor: colors.success,
-                        foregroundColor: Colors.white,
+                        foregroundColor: AppColors.white,
                       ),
                     ),
                   ),

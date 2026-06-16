@@ -3,21 +3,10 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_palettes.dart';
 import '../../../../shared/utils/format.dart';
 import '../../domain/entities/project.dart';
 import 'language_chip_row.dart';
-
-const projectAccentColors = [
-  Color(0xFFD45200),
-  Color(0xFF1A8A78),
-  Color(0xFF477A12),
-  Color(0xFF8B5CF6),
-  Color(0xFFE0A526),
-  Color(0xFF2563EB),
-];
-
-Color projectAccentForIndex(int index) =>
-    projectAccentColors[index % projectAccentColors.length];
 
 class ProjectCard extends StatelessWidget {
   const ProjectCard({
@@ -39,12 +28,12 @@ class ProjectCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = AppColors.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final cardAccent = projectAccentForIndex(colorIndex);
+    final cardAccent = AppPalettes.projectAccent(colorIndex);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Material(
-        color: Colors.transparent,
+        color: AppColors.transparent,
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(20),
@@ -61,7 +50,7 @@ class ProjectCard extends StatelessWidget {
                     ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.06),
+                  color: AppColors.black.withValues(alpha: isDark ? 0.3 : 0.06),
                   blurRadius: 16,
                   offset: const Offset(0, 4),
                 ),

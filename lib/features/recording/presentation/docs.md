@@ -203,7 +203,7 @@ Path: @/lib/features/recording/presentation
   raw `ScaffoldMessenger`/`SnackBar` from an interpolated `e`). The delegated
   delete path is the exception: it does not throw but returns a
   `DeleteRecordingResult`, and a `forbidden` result is shown in the semantic
-  `warning` color (`AppColors.of(context).warning`), not a raw `Colors.orange`.
+  `warning` color (`AppColors.of(context).warning`), so it adapts to dark mode.
 - **The "download for edit" UX dialog gating.** `_ensureLocalFile` first
   asks the user for confirmation (`recording_downloadAudio`) before
   pulling the bytes. If the user cancels, no write happens; if the

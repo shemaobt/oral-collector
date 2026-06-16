@@ -14,7 +14,7 @@ class AvoidHardcodedColor extends DartLintRule {
     problemMessage:
         'Hardcoded Color constructor. Use a color token from '
         'lib/core/theme (AppColors / AppColorSet) instead.',
-    errorSeverity: ErrorSeverity.INFO,
+    errorSeverity: ErrorSeverity.WARNING,
   );
 
   @override
@@ -23,7 +23,7 @@ class AvoidHardcodedColor extends DartLintRule {
     ErrorReporter reporter,
     CustomLintContext context,
   ) {
-    if (isThemeFile(resolver.path)) return;
+    if (isColorLintExempt(resolver.path)) return;
     context.registry.addInstanceCreationExpression((node) {
       final type = node.staticType;
       if (type == null) return;

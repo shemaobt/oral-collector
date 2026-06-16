@@ -21,7 +21,7 @@ Future<EditRecordingDetailsResult?> showEditRecordingDetailsSheet(
   return showModalBottomSheet<EditRecordingDetailsResult>(
     context: context,
     isScrollControlled: true,
-    backgroundColor: Colors.transparent,
+    backgroundColor: AppColors.transparent,
     builder: (ctx) => _EditRecordingDetailsSheet(
       initialTitle: initialTitle,
       initialDescription: initialDescription,
@@ -217,7 +217,7 @@ class _EditRecordingDetailsSheetState
                 onPressed: _onSave,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: colors.accent,
-                  foregroundColor: Colors.white,
+                  foregroundColor: AppColors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),
                   ),
@@ -226,7 +226,7 @@ class _EditRecordingDetailsSheetState
                 child: Text(
                   l10n.recording_saveChanges,
                   style: theme.textTheme.titleSmall?.copyWith(
-                    color: Colors.white,
+                    color: AppColors.white,
                     fontWeight: FontWeight.w600,
                   ),
                 ),

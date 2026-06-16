@@ -52,7 +52,7 @@ class FiltersIconButton extends StatelessWidget {
                       '$count',
                       textAlign: TextAlign.center,
                       style: const TextStyle(
-                        color: Colors.white,
+                        color: AppColors.white,
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
                       ),

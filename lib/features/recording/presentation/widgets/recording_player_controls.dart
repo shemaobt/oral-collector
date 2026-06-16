@@ -85,7 +85,7 @@ class _PlayPauseButton extends StatelessWidget {
                 child: Center(
                   child: Icon(
                     showPlay ? LucideIcons.play : LucideIcons.pause,
-                    color: Colors.white,
+                    color: AppColors.white,
                     size: 22.0,
                   ),
                 ),

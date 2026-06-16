@@ -12,7 +12,7 @@ class AvoidMaterialColors extends DartLintRule {
     problemMessage:
         'Bare Colors.* (Material palette). Use a color token from '
         'lib/core/theme (AppColors / AppColorSet) instead.',
-    errorSeverity: ErrorSeverity.INFO,
+    errorSeverity: ErrorSeverity.WARNING,
   );
 
   @override
@@ -21,7 +21,7 @@ class AvoidMaterialColors extends DartLintRule {
     ErrorReporter reporter,
     CustomLintContext context,
   ) {
-    if (isThemeFile(resolver.path)) return;
+    if (isColorLintExempt(resolver.path)) return;
     context.registry.addPrefixedIdentifier((node) {
       if (node.prefix.name != 'Colors') return; // ignora AppColors etc.
       reporter.atNode(node, _code);

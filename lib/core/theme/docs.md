@@ -12,6 +12,12 @@ Path: @/lib/core/theme
   `app_durations.dart` / [app_opacity.dart](app_opacity.dart) /
   [context_tokens.dart](context_tokens.dart), re-exported by
   [tokens.dart](tokens.dart)).
+- This directory is the **single source of all `Color` construction** in the
+  app. Alongside the themed palette it also holds the non-themed color machinery:
+  the categorical/index-addressed decorative accent palettes
+  ([app_palettes.dart](app_palettes.dart)) and the runtime hex-string parser
+  ([color_hex.dart](color_hex.dart)). Both live here because the `obt_lints`
+  rules forbid raw `Color(...)` everywhere outside this folder.
 - All token families follow one **hybrid** pattern: a source-of-truth scale
   (semantic color constants assembled into `AppColorSet`; `const` scales
   `SpacingScale` / `RadiusScale` / `DurationScale` / `OpacityScale`), a thin
@@ -71,12 +77,19 @@ Path: @/lib/core/theme
   unavailable, so it reads the same canonical scales those resolvers fall back
   to). This closes the prior "second source of truth" where the builders
   duplicated radii/spacing literals next to the scales.
-- This directory is the **only** place raw `Color(...)` / bare `Colors.*` are
-  allowed: the `obt_lints` custom_lint plugin
+- This directory (plus `test/`) is the **only** place raw `Color(...)` / bare
+  `Colors.*` are allowed: the `obt_lints` custom_lint plugin
   ([/packages/obt_lints/docs.md](/packages/obt_lints/docs.md), ENG-159) flags
-  them everywhere else and exempts `lib/core/theme/**` by path, so the palette
-  here stays the design-token source of truth. The rule ships staged at `info`
-  (ADR-0007), so it is currently advisory, not blocking.
+  them everywhere else and exempts these paths, so the palette here stays the
+  design-token source of truth. ENG-183 burned the rest of the app's color
+  literals down to **zero** outside this folder and promoted both rules
+  `info`→`warning` (ADR-0007). To absorb that migration `AppColors` gained the
+  neutral anchors `white`/`black`/`transparent` (pure primitives, distinct from
+  the off-white `brandBranco` / near-black `brandPreto` brand tokens) plus a few
+  long-tail semantic tokens (`meterWarning`, the `warningContainer` /
+  `onWarningContainer` storage-banner pair, `authHeroAccent`); the categorical
+  decorative accents moved to `AppPalettes` ([app_palettes.dart](app_palettes.dart),
+  ENG-116) and the runtime hex parser to [color_hex.dart](color_hex.dart).
 - Token values and contracts are pinned by tests under
   [/test/core/theme/](/test/core/theme) (colors in `app_colors_test.dart`;
   spacing/radii/durations/opacity, the `context.*` accessor, the resolved
@@ -113,6 +126,26 @@ SpacingScale/RadiusScale/DurationScale/OpacityScale ─► AppSpacing/AppRadii/A
   spacing/radii/opacity, `lerpDuration` for motion) guarded with `if (other is!
   T) return this;`. [app_theme.dart](app_theme.dart) also builds the typography
   and the component themes.
+- **`AppPalettes`** ([app_palettes.dart](app_palettes.dart)) holds the
+  categorical accent palettes that were previously inline `Color(0x…)` arrays in
+  feature widgets — the genre-card and project-card accent lists plus the hero
+  genre-card accent and the default scrolling-waveform cursor. It exposes the
+  two `const List<Color>` palettes and pure helpers `genreAccent(int)` /
+  `projectAccent(int)` that pick by list position, cycling via `index % length`.
+  These are addressed by *index*, not by a `ColorScheme` role, so they are
+  non-semantic and do not belong in `AppColorSet`. Deliberately a plain
+  `abstract class` of `static const` — **not** a `ThemeExtension` — because the
+  palettes are single-theme and fixed (value-identical), so `lerp`/`copyWith`
+  would be dead weight.
+- **`parseHexColor`** ([color_hex.dart](color_hex.dart)) turns a `#RRGGBB` /
+  `RRGGBB` string into an opaque `Color`, returning a fallback (`AppColors.primary`
+  by default) on null/malformed input. It lives here, not with the genre helpers,
+  because its `Color(int.parse(...))` construction is raw color construction —
+  allowed only under this folder. Its input is runtime data (e.g. a genre's
+  server-supplied color), not a hardcoded literal. Callers are the
+  genre/subcategory selection steps and the genre detail screen; the icon mapper
+  it used to share a file with stays in
+  [/lib/shared/utils/genre_helpers.dart](/lib/shared/utils/genre_helpers.dart).
 
 ### Things to Know
 
@@ -199,8 +232,10 @@ SpacingScale/RadiusScale/DurationScale/OpacityScale ─► AppSpacing/AppRadii/A
 - **Deferred, per ADR-0002.** Off-grid normalization (e.g. the button `vertical:
   14` literal). (ENG-115 — [app_theme.dart](app_theme.dart) consuming the `const`
   radii/spacing/opacity scales instead of inlining its own literals — is done;
-  the `Color(0x…)` / bare `Colors.*` lint rule (ENG-76 / ENG-159) has now shipped
-  as the `obt_lints` plugin, [/packages/obt_lints/docs.md](/packages/obt_lints/docs.md).)
+  the `Color(0x…)` / bare `Colors.*` lint rule (ENG-76 / ENG-159) shipped as the
+  `obt_lints` plugin, [/packages/obt_lints/docs.md](/packages/obt_lints/docs.md),
+  and ENG-183/ENG-116 then burned the app's color literals down to zero outside
+  this folder and promoted both rules to `warning`.)
 - **Adding a token field is a multi-point edit** — thread it through the
   constructor, `copyWith`, `lerp`, `==`, `hashCode`, and the registered
   instances, or the equality/interpolation contracts break.

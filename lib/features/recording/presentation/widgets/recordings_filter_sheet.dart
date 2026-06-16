@@ -308,9 +308,11 @@ class _RecordingsFilterSheetState extends ConsumerState<RecordingsFilterSheet> {
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: colors.accent,
-                  foregroundColor: Colors.white,
+                  foregroundColor: AppColors.white,
                   disabledBackgroundColor: colors.accent.withValues(alpha: 0.3),
-                  disabledForegroundColor: Colors.white.withValues(alpha: 0.8),
+                  disabledForegroundColor: AppColors.white.withValues(
+                    alpha: 0.8,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),

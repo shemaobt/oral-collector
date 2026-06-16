@@ -70,13 +70,13 @@ class StatusFilterBar extends StatelessWidget {
                   Icon(
                     icon,
                     size: 14,
-                    color: isSelected ? Colors.white : colors.secondary,
+                    color: isSelected ? AppColors.white : colors.secondary,
                   ),
                   const SizedBox(width: 6),
                   Text(
                     label,
                     style: theme.textTheme.labelMedium?.copyWith(
-                      color: isSelected ? Colors.white : colors.secondary,
+                      color: isSelected ? AppColors.white : colors.secondary,
                       fontWeight: isSelected
                           ? FontWeight.w700
                           : FontWeight.w500,

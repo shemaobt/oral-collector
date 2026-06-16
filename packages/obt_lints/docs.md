@@ -28,14 +28,17 @@ Path: @/packages/obt_lints
   `custom_lint: rules:` block lists the two rule names.
 - It enforces the design-token invariant owned by [/lib/core/theme/](/lib/core/theme)
   (see [/lib/core/theme/docs.md](/lib/core/theme/docs.md)): raw `Color(...)` /
-  `Colors.*` are allowed **only** inside that directory, which is the
-  `AppColors`/`AppColorSet` palette and the `ThemeData` builders. Everywhere
+  `Colors.*` are allowed **only** inside that directory — the
+  `AppColors`/`AppColorSet` palette, the `ThemeData` builders, the `AppPalettes`
+  decorative accents, and the `color_hex.dart` parser — plus `test/`. Everywhere
   else, app code is expected to read semantic tokens (`AppColors.of(context)`).
+  ENG-183 burned the rest of the app down to zero such literals.
 - CI runs it two ways in [/.github/workflows/lint.yml](/.github/workflows/lint.yml):
   a dedicated **blocking** `obt_lints` job runs this package's fixtures, while
   the pre-existing app-wide `dart run custom_lint` step (which also runs these
-  rules over `lib/`) stays **non-blocking** (`continue-on-error`) during the
-  staging period.
+  rules over `lib/`) stays **non-blocking** (`continue-on-error`) — by deliberate
+  choice even after the rules were promoted to `warning`, since `custom_lint`
+  does not run under `flutter analyze` (see Things to Know).
 - This package depends only on the analyzer toolchain (`analyzer`,
   `analyzer_plugin`, `custom_lint_builder`); it does not import app code. The
   dependency arrow points one way: the app depends on the plugin, not vice versa.
@@ -45,7 +48,7 @@ Path: @/packages/obt_lints
 ```
 app pubspec dev_dep ─► createPlugin() ─► getLintRules() ─► [AvoidHardcodedColor, AvoidMaterialColors]
 analysis_options (plugins + custom_lint.rules)        each rule.run():
-                                                        if isThemeFile(resolver.path) → return
+                                                        if isColorLintExempt(resolver.path) → return
                                                         register AST visitor → reporter.atNode(node)
 ```
 
@@ -53,11 +56,12 @@ analysis_options (plugins + custom_lint.rules)        each rule.run():
   `createPlugin()` returning a `PluginBase` whose `getLintRules` returns both
   rules unconditionally; which rules are *active* is decided by the consumer's
   `custom_lint: rules:` block, not here.
-- **Theme exemption.** Both rules early-return when
-  `isThemeFile(resolver.path)` is true. `isThemeFile`
+- **Path exemption.** Both rules early-return when
+  `isColorLintExempt(resolver.path)` is true. `isColorLintExempt`
   ([lib/src/theme_path.dart](lib/src/theme_path.dart)) normalizes backslashes and
-  tests for the substring `/lib/core/theme/`, so the design-token files can use
-  raw colors freely.
+  tests for the substrings `/lib/core/theme/` (the design-token files, which may
+  use raw colors freely) **or** `/test/` (fixtures and golden setups, exempted in
+  ENG-183). It matches the `/test/` path segment, not the `_test.dart` suffix.
 - **`avoid_hardcoded_color`** visits instance-creation expressions and flags a
   node whose static type `isExactlyType` of `dart:ui#Color` (a `TypeChecker`
   built from that URL). "Exactly" is deliberate: it matches `Color` and its
@@ -67,16 +71,27 @@ analysis_options (plugins + custom_lint.rules)        each rule.run():
 - **`avoid_material_colors`** visits prefixed identifiers and flags any whose
   prefix name is `Colors`, so `AppColors.…` and member access on a token
   instance do not match.
-- **Severity.** Both rules emit `LintCode` with `ErrorSeverity.INFO` — the
-  staged level (see Things to Know).
+- **Severity.** Both rules emit `LintCode` with `ErrorSeverity.WARNING` —
+  promoted from `INFO` in ENG-183 once the baseline was clean (see Things to
+  Know). Because these are `custom_lint` rules, severity lives here in the
+  plugin's `LintCode`, not in the app's `analyzer: errors:`.
 
 ### Things to Know
 
-- **Staged at `info`, promoted per rule.** Per [ADR-0007](/docs/adr/ADR-0007-lint-baseline.md)
-  there is a pre-existing violation baseline in `lib/` to burn down before any
-  rule moves from `info` to `warning`/`error` and before the app-wide
-  `dart run custom_lint` CI step becomes blocking. Promotion is per rule, not all
-  at once.
+- **Promoted to `warning`, but the CI step is still non-blocking.** Per
+  [ADR-0007](/docs/adr/ADR-0007-lint-baseline.md) both rules began at `info` with
+  a pre-existing violation baseline in `lib/`. ENG-183/ENG-116 burned that
+  baseline down to **zero** outside `lib/core/theme/**` (neutral anchors and a
+  few long-tail tokens added to `AppColors`, the categorical accents moved to
+  `AppPalettes`, and the one dynamic parser moved to
+  [/lib/core/theme/color_hex.dart](/lib/core/theme/color_hex.dart)) and promoted
+  both rules `info`→`warning`. Severity and CI-gating are **separate** levers,
+  though: these are `custom_lint` rules, so `flutter analyze` never runs them and
+  promoting their `LintCode` does not touch `analyzer: errors:`. The app-wide
+  `dart run custom_lint` step therefore stays **non-blocking**
+  (`continue-on-error`) by deliberate choice — the `warning` shows in the IDE and
+  in that non-fatal step. Flipping `continue-on-error` to blocking is the
+  remaining step to full enforcement.
 - **The fixtures *are* the rule tests.** The [example/](example) sub-package is a
   standalone package (its own [example/pubspec.yaml](example/pubspec.yaml) with a
   path dep back on this plugin) holding `// expect_lint:` fixtures. `dart run
@@ -88,10 +103,10 @@ analysis_options (plugins + custom_lint.rules)        each rule.run():
   member access on a token), while [example/lib/core/theme/exempt_fixture.dart](example/lib/core/theme/exempt_fixture.dart)
   sits under `lib/core/theme/` with no annotations, so the run fails if the
   exemption ever stops working.
-- **`test/` is currently NOT exempt.** `isThemeFile` only matches
-  `/lib/core/theme/`, so raw colors in `test/` are flagged like any other
-  non-theme file. There is a test-directory violation baseline left to burn down
-  alongside the `lib/` one before promotion.
+- **`test/` is exempt (ENG-183).** `isColorLintExempt` matches `/test/` as well
+  as `/lib/core/theme/`, so fixtures and golden setups may use raw colors
+  directly. It matches the `/test/` path *segment*, not the `_test.dart` suffix,
+  so a `*_test.dart` file outside a `test/` directory would still be flagged.
 - **The exemption is purely path-based.** It keys off the resolved file path
   substring, not package or import structure — moving the token files out of
   `/lib/core/theme/` would silently start flagging them.

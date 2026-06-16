@@ -692,7 +692,7 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
                   width: 20,
                   height: 20,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: AppColors.white,
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
@@ -723,20 +723,20 @@ class _StorageBanner extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      color: const Color(0xFFFFEDCC),
+      color: AppColors.warningContainer,
       child: Row(
         children: [
           const Icon(
             LucideIcons.alertTriangle,
             size: 16,
-            color: Color(0xFF8A5A00),
+            color: AppColors.onWarningContainer,
           ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               message,
               style: const TextStyle(
-                color: Color(0xFF8A5A00),
+                color: AppColors.onWarningContainer,
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
               ),
@@ -822,7 +822,7 @@ class _BackToListButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     return Material(
-      color: Colors.transparent,
+      color: AppColors.transparent,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(20),

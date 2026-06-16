@@ -62,7 +62,7 @@ class BulkMetadataBar extends StatelessWidget {
           side: BorderSide(color: colors.border.withValues(alpha: 0.4)),
         ),
         child: Theme(
-          data: theme.copyWith(dividerColor: Colors.transparent),
+          data: theme.copyWith(dividerColor: AppColors.transparent),
           child: ExpansionTile(
             tilePadding: const EdgeInsets.symmetric(
               horizontal: 16,

@@ -124,7 +124,7 @@ class _MicCounterBadge extends StatelessWidget {
               child: Text(
                 count > 99 ? '99+' : '$count',
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: Colors.white,
+                  color: AppColors.white,
                   fontWeight: FontWeight.w700,
                   height: 1.0,
                 ),
@@ -157,7 +157,7 @@ class _ReviewButton extends StatelessWidget {
           child: Text(
             label,
             style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: Colors.white,
+              color: AppColors.white,
               fontWeight: FontWeight.w600,
             ),
           ),

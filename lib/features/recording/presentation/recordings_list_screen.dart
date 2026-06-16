@@ -245,7 +245,7 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
                 label: l10n.recordings_importAudio,
                 button: true,
                 child: Material(
-                  color: Colors.transparent,
+                  color: AppColors.transparent,
                   shape: const CircleBorder(),
                   child: InkWell(
                     onTap: () => context.push('/import-file'),
@@ -280,7 +280,7 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
                         child: Icon(
                           LucideIcons.filePlus,
                           size: 26,
-                          color: Colors.white,
+                          color: AppColors.white,
                         ),
                       ),
                     ),

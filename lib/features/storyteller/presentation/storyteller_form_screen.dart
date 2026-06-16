@@ -236,9 +236,11 @@ class _StorytellerFormScreenState extends ConsumerState<StorytellerFormScreen> {
                 onPressed: _canSubmit ? _submit : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: colors.accent,
-                  foregroundColor: Colors.white,
+                  foregroundColor: AppColors.white,
                   disabledBackgroundColor: colors.accent.withValues(alpha: 0.3),
-                  disabledForegroundColor: Colors.white.withValues(alpha: 0.8),
+                  disabledForegroundColor: AppColors.white.withValues(
+                    alpha: 0.8,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),
                   ),
@@ -253,7 +255,7 @@ class _StorytellerFormScreenState extends ConsumerState<StorytellerFormScreen> {
                         width: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Colors.white,
+                          color: AppColors.white,
                         ),
                       )
                     : Text(

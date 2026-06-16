@@ -209,7 +209,7 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
             onPressed: () => Navigator.of(ctx).pop(true),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.of(context).error,
-              foregroundColor: Colors.white,
+              foregroundColor: AppColors.white,
             ),
             child: Text(l10n.common_remove),
           ),
@@ -353,7 +353,7 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
                         height: 18,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Colors.white,
+                          color: AppColors.white,
                         ),
                       )
                     : const Icon(LucideIcons.save, size: 16),
