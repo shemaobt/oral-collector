@@ -7,6 +7,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/tokens.dart';
 import '../../../shared/preview_helpers.dart';
 import '../../../shared/widgets/app_shell.dart';
 import '../../../shared/widgets/empty_state.dart';
@@ -121,9 +122,9 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
           if (isTablet) {
             return GridView.builder(
               padding: EdgeInsets.fromLTRB(
-                20,
-                20,
-                20,
+                SpacingScale.s20,
+                SpacingScale.s20,
+                SpacingScale.s20,
                 AppShell.scrollPaddingFor(context),
               ),
               gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
@@ -147,9 +148,9 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
 
           return ListView.builder(
             padding: EdgeInsets.fromLTRB(
-              20,
-              12,
-              20,
+              SpacingScale.s20,
+              SpacingScale.s12,
+              SpacingScale.s20,
               AppShell.scrollPaddingFor(context),
             ),
             itemCount: state.projects.length,

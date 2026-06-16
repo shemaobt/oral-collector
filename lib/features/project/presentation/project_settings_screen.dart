@@ -312,7 +312,7 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
               letterSpacing: 0.2,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: SpacingScale.s12),
           TextFormField(
             controller: _nameController,
             decoration: InputDecoration(
@@ -327,7 +327,7 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
             },
             onChanged: (_) => _onFieldChanged(),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: SpacingScale.s12),
           TextFormField(
             controller: _descriptionController,
             decoration: InputDecoration(
@@ -389,7 +389,7 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
                 label: Text(l10n.common_invite),
                 style: TextButton.styleFrom(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
+                    horizontal: SpacingScale.s12,
                     vertical: 6,
                   ),
                   textStyle: theme.textTheme.labelMedium?.copyWith(
@@ -399,12 +399,12 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
               ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: SpacingScale.s8),
         MemberList(
           projectId: widget.projectId,
           onRemove: _isManager ? _confirmRemoveMember : null,
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: SpacingScale.s16),
         OutlinedButton.icon(
           onPressed: () =>
               context.push('/project/${widget.projectId}/storytellers'),
@@ -434,7 +434,12 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
               },
             ),
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
+              padding: const EdgeInsets.fromLTRB(
+                SpacingScale.s20,
+                SpacingScale.s20,
+                SpacingScale.s20,
+                SpacingScale.s40,
+              ),
               sliver: SliverLayoutBuilder(
                 builder: (context, constraints) {
                   final isWide = constraints.crossAxisExtent >= 700;
@@ -448,12 +453,12 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
                             memberCount: memberCount,
                             storytellerCount: _project!.storytellerCount,
                           ),
-                          const SizedBox(height: 28),
+                          const SizedBox(height: SpacingScale.s28),
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Expanded(child: detailsColumn),
-                              const SizedBox(width: 32),
+                              const SizedBox(width: SpacingScale.s32),
                               Expanded(child: teamColumn),
                             ],
                           ),
@@ -470,10 +475,10 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
                         storytellerCount: _project!.storytellerCount,
                       ),
                       if (_isManager) ...[
-                        const SizedBox(height: 28),
+                        const SizedBox(height: SpacingScale.s28),
                         detailsColumn,
                       ],
-                      const SizedBox(height: 28),
+                      const SizedBox(height: SpacingScale.s28),
                       teamColumn,
                     ]),
                   );
