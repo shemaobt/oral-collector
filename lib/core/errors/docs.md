@@ -49,11 +49,19 @@ Path: @/lib/core/errors
   trim-split, confirmation-step upload) through `friendlyErrorFor` instead: no
   widget forces the regex path anymore, so `friendlyErrorMessage` is reached
   only via `friendlyErrorFor`'s fallback arm for genuinely untyped errors. That
-  retained-but-legacy fallback (and its private `_humanizeDetail`) is now pinned
-  by characterization tests
+  retained-but-legacy fallback (and its private `_humanizeDetail`) is pinned by
+  characterization tests
   ([../../../test/shared/utils/error_helpers_test.dart](../../../test/shared/utils/error_helpers_test.dart))
-  so its input→output mapping is locked before it is eventually retired.
-  See the `error` invariant in [../auth/docs.md](../auth/docs.md).
+  so its input→output mapping is locked; it is **not** retired, since untyped
+  `throw Exception('Failed to X')` repo call-sites still depend on it for
+  specific copy and migrate toward the typed boundary in later waves. ENG-184
+  corrected two branches those tests had pinned: `'upload failed'` no longer
+  reuses the image key (now `error_serverFailure`, since a generic transport
+  failure is not an image upload) and `'recording not found'` no longer maps to
+  the import-empty key. ENG-184 also added a regression guard proving divergent
+  typed leaves (Network/Conflict/Server) resolve via `messageForException` and
+  never through the regex-over-`toString()` path. See the `error` invariant in
+  [../auth/docs.md](../auth/docs.md).
 - `UnauthorizedException` is the one leaf the app branches on by type, not just
   for display: [../auth/auth_notifier.dart](../auth/auth_notifier.dart) catches
   it to drive session-expiry/refresh handling. See [../auth/docs.md](../auth/docs.md)
