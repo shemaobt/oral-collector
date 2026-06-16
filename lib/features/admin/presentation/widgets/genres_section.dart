@@ -28,11 +28,15 @@ class GenresSection extends ConsumerWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              l10n.admin_genresAndSubcategories,
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+            Flexible(
+              child: Text(
+                l10n.admin_genresAndSubcategories,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
             FilledButton.icon(
               onPressed: () => _showAddGenreDialog(context, ref),

@@ -151,7 +151,6 @@ class _StatTile extends StatelessWidget {
                 fontWeight: FontWeight.w800,
                 color: data.color,
                 height: 1.1,
-                fontSize: 20,
               ),
             ),
           ),

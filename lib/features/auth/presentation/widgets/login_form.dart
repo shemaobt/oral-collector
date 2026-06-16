@@ -157,8 +157,9 @@ class LoginForm extends StatelessWidget {
         ),
         const SizedBox(height: 24),
 
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+        Wrap(
+          alignment: WrapAlignment.center,
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: [
             Text(
               l10n.auth_noAccount,
