@@ -27,7 +27,7 @@ class GenreFilterChip extends StatelessWidget {
         decoration: BoxDecoration(
           color: isSelected
               ? colors.primary.withValues(alpha: 0.12)
-              : Colors.transparent,
+              : AppColors.transparent,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected

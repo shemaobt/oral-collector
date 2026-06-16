@@ -3,10 +3,15 @@
 - Status: Accepted
 - Date: 2026-06-04
 - Epic: E1 (Architecture & Standards)
-- Related: ENG-89, ENG-90, ENG-156, ENG-159, ADR-0000, ADR-0002, ADR-0004
+- Related: ENG-89, ENG-90, ENG-156, ENG-159, ENG-183, ENG-116, ADR-0000, ADR-0002, ADR-0004
 - Update (2026-06-15, ENG-159): the deferred custom rule from item 5 shipped as
   the `obt_lints` plugin — `avoid_hardcoded_color` + `avoid_material_colors`,
   staged at `info` and non-blocking, exempting `lib/core/theme/**`.
+- Update (2026-06-16, ENG-183/ENG-116): baseline burned down to zero outside
+  `lib/core/theme/**`; both rules promoted `info`→`warning` (in the plugin's
+  `LintCode`, not `analyzer: errors:`) and `test/` is now exempt. The
+  `dart run custom_lint` step stays non-blocking by choice — see "Promoted in
+  ENG-183" below.
 
 ## Context
 
@@ -80,6 +85,21 @@ analyzer does not apply this rule to `test/` — with 0 current violations becau
 the codebase already guards async gaps with `context.mounted`. Still staged at
 `info`: `unawaited_futures` (40); `riverpod_lint`'s
 `avoid_public_notifier_properties` (14) stays non-blocking.
+
+**Promoted in ENG-183 (2026-06-16).** Burned down the `obt_lints` baseline (~21
+`Color(0x…)` + ~127 bare `Colors.*` across `lib/`) to **zero** outside
+`lib/core/theme/**`: neutral anchors (`AppColors.white`/`black`/`transparent`)
+and a few long-tail semantic tokens were added to `AppColors`, the categorical
+accent palettes moved to `AppPalettes` (ENG-116), and the one dynamic
+`Color(int.parse(...))` parser moved into `lib/core/theme/color_hex.dart`. Both
+rules were promoted `info`→`warning`, but these are **custom_lint** rules, so
+severity lives in the plugin's `LintCode.errorSeverity` (not `analyzer:
+errors:`) and custom_lint does **not** run under `flutter analyze`. The
+`dart run custom_lint` step is therefore left **non-blocking**
+(`continue-on-error`) by deliberate choice: the `warning` is surfaced in the IDE
+and in the (non-fatal) CI step, but does not yet wall the build. The rules also
+now exempt `test/` (fixtures legitimately use raw colors). Flipping
+`continue-on-error` to blocking is the remaining step to full enforcement.
 
 ## Consequences
 

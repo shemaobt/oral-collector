@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../core/auth/auth_notifier.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_snack_bar.dart';
@@ -169,7 +170,7 @@ class _StorytellersListScreenState
               color: Theme.of(context).colorScheme.error,
               alignment: Alignment.centerRight,
               padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: const Icon(LucideIcons.trash2, color: Colors.white),
+              child: const Icon(LucideIcons.trash2, color: AppColors.white),
             ),
             child: tile,
           );

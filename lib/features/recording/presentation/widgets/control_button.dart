@@ -39,7 +39,7 @@ class ControlButton extends StatelessWidget {
                 color: isDark ? colors.surfaceAlt : colors.foreground,
                 boxShadow: [
                   BoxShadow(
-                    color: (isDark ? Colors.black : colors.foreground)
+                    color: (isDark ? AppColors.black : colors.foreground)
                         .withValues(alpha: 0.15),
                     blurRadius: 12,
                     offset: const Offset(0, 4),

@@ -118,7 +118,7 @@ class _CleaningSectionState extends ConsumerState<CleaningSection> {
                           height: 18,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: Colors.white,
+                            color: AppColors.white,
                           ),
                         )
                       : const Icon(LucideIcons.sparkles, size: 18),

@@ -3,11 +3,21 @@
 - Status: Accepted
 - Date: 2026-06-05
 - Epic: E2 (Design System & UI Componentization)
-- Related: ENG-106, ENG-115, ENG-162, ENG-163, ENG-76, ENG-159, ENG-90, ADR-0000, ADR-0007
+- Related: ENG-106, ENG-115, ENG-162, ENG-163, ENG-76, ENG-159, ENG-183, ENG-116, ENG-90, ADR-0000, ADR-0007
 - Update (2026-06-15, ENG-159): the deferred `Color(0x…)`/`Colors.*` lint rule
   from item 7 shipped as the `obt_lints` plugin (`avoid_hardcoded_color` +
   `avoid_material_colors`), staged at `info`/non-blocking, exempting
   `lib/core/theme/**`.
+- Update (2026-06-16, ENG-183/ENG-116): the color-token conversion from item 7
+  landed, value-identical. `AppColors` gained neutral anchors
+  (`white`/`black`/`transparent`, distinct from the off-white/near-black brand
+  tokens) plus long-tail semantic tokens; the categorical accent palettes
+  (genre/project/hero/waveform) are centralized in `AppPalettes`
+  (`lib/core/theme/app_palettes.dart`) as index-addressed `static const` lists
+  with `genreAccent(i)`/`projectAccent(i)` helpers (plain `static const`, not a
+  `ThemeExtension`, since the palettes are single-theme/fixed); the dynamic
+  hex→`Color` parser moved to `lib/core/theme/color_hex.dart`. obt_lints then
+  promoted (ADR-0007).
 
 ## Context
 

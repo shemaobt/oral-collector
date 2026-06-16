@@ -276,8 +276,8 @@ class _Minimap extends StatelessWidget {
                   viewportColor: colors.accent.withValues(alpha: 0.18),
                   viewportBorder: colors.accent.withValues(alpha: 0.6),
                   bgColor: isDark
-                      ? Colors.white.withValues(alpha: 0.04)
-                      : Colors.black.withValues(alpha: 0.03),
+                      ? AppColors.white.withValues(alpha: 0.04)
+                      : AppColors.black.withValues(alpha: 0.03),
                 ),
                 size: Size.infinite,
               ),

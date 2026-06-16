@@ -713,7 +713,7 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
                 label: Text(l10n.import_chooseFile),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: colors.primary,
-                  foregroundColor: Colors.white,
+                  foregroundColor: AppColors.white,
                   minimumSize: const Size(160, 48),
                 ),
               ),

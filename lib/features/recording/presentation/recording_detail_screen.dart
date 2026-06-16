@@ -1243,7 +1243,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
         if (!isUnclassified && hasSecondary) ...[
           const SizedBox(height: SpacingScale.s8),
           Material(
-            color: Colors.transparent,
+            color: AppColors.transparent,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(RadiusScale.r8),
               side: BorderSide(

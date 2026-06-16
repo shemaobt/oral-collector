@@ -4,7 +4,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/l10n/content_l10n.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../shared/utils/genre_helpers.dart';
+import '../../../../core/theme/color_hex.dart';
 import '../../../../shared/widgets/app_shell.dart';
 import '../../../genre/domain/entities/genre.dart';
 
@@ -154,7 +154,7 @@ class SubcategorySelectionStep extends StatelessWidget {
               onPressed: selectedSubcategoryId != null ? onNext : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor: colors.accent,
-                foregroundColor: Colors.white,
+                foregroundColor: AppColors.white,
                 disabledBackgroundColor: theme.colorScheme.outline.withValues(
                   alpha: 0.3,
                 ),

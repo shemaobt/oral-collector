@@ -129,7 +129,7 @@ class RegisterSelectionStep extends StatelessWidget {
               onPressed: selectedRegisterId != null ? onNext : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor: colors.accent,
-                foregroundColor: Colors.white,
+                foregroundColor: AppColors.white,
                 disabledBackgroundColor: theme.colorScheme.outline.withValues(
                   alpha: 0.3,
                 ),

@@ -3,6 +3,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/l10n/content_l10n.dart';
+import '../../../../core/theme/color_hex.dart';
 import '../../../../shared/utils/genre_helpers.dart';
 import '../../../../shared/widgets/app_shell.dart';
 import '../../../genre/domain/entities/genre.dart';

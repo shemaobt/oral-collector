@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../../l10n/app_localizations.dart';
+import '../../../../core/theme/app_colors.dart';
 
 class LoginMobileHero extends StatelessWidget {
   const LoginMobileHero({
@@ -42,8 +43,8 @@ class LoginMobileHero extends StatelessWidget {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.black.withValues(alpha: 0.10),
-                    Colors.black.withValues(alpha: 0.55),
+                    AppColors.black.withValues(alpha: 0.10),
+                    AppColors.black.withValues(alpha: 0.55),
                   ],
                   stops: const [0.3, 1.0],
                 ),
@@ -69,7 +70,7 @@ class LoginMobileHero extends StatelessWidget {
                   l10n.auth_oralCollector,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     fontWeight: FontWeight.w700,
-                    color: Colors.white.withValues(alpha: 0.9),
+                    color: AppColors.white.withValues(alpha: 0.9),
                   ),
                 ),
               ],
@@ -86,7 +87,7 @@ class LoginMobileHero extends StatelessWidget {
                   TextSpan(
                     text: l10n.auth_welcomeBack,
                     style: theme.textTheme.displayLarge?.copyWith(
-                      color: Colors.white,
+                      color: AppColors.white,
                       height: 1.15,
                     ),
                   ),

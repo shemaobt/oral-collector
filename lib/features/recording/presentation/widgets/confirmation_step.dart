@@ -627,7 +627,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
                             ),
                             child: Icon(
                               _isPlaying ? LucideIcons.pause : LucideIcons.play,
-                              color: Colors.white,
+                              color: AppColors.white,
                               size: 24,
                             ),
                           ),
@@ -690,7 +690,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
                                           decoration: const InputDecoration(
                                             isDense: true,
                                             filled: false,
-                                            fillColor: Colors.transparent,
+                                            fillColor: AppColors.transparent,
                                             border: InputBorder.none,
                                             enabledBorder: InputBorder.none,
                                             focusedBorder: InputBorder.none,
@@ -781,7 +781,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
                                     : _save,
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: colors.accent,
-                                  foregroundColor: Colors.white,
+                                  foregroundColor: AppColors.white,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(14),
                                   ),
@@ -793,14 +793,14 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
                                         height: SpacingScale.s20,
                                         child: CircularProgressIndicator(
                                           strokeWidth: 2,
-                                          color: Colors.white,
+                                          color: AppColors.white,
                                         ),
                                       )
                                     : Text(
                                         l10n.recording_saveRecording,
                                         style: theme.textTheme.titleSmall
                                             ?.copyWith(
-                                              color: Colors.white,
+                                              color: AppColors.white,
                                               fontWeight: FontWeight.w600,
                                             ),
                                       ),

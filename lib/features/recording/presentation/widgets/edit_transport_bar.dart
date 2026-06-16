@@ -65,7 +65,7 @@ class EditTransportBar extends StatelessWidget {
               child: Icon(
                 isPlaying ? LucideIcons.pause : LucideIcons.play,
                 size: 16,
-                color: Colors.white,
+                color: AppColors.white,
               ),
             ),
           ),

@@ -17,7 +17,7 @@ Future<bool?> showCreateProjectSheet(BuildContext context) {
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
-    backgroundColor: Colors.transparent,
+    backgroundColor: AppColors.transparent,
     constraints: const BoxConstraints(maxWidth: 600),
     builder: (_) => const _CreateProjectSheet(),
   );
@@ -62,7 +62,7 @@ class _CreateProjectSheetState extends ConsumerState<_CreateProjectSheet> {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
       constraints: const BoxConstraints(maxWidth: 600),
       builder: (_) => _LanguagePickerSheet(
         languages: languages,
@@ -254,7 +254,7 @@ class _CreateProjectSheetState extends ConsumerState<_CreateProjectSheet> {
                               height: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                color: Colors.white,
+                                color: AppColors.white,
                               ),
                             )
                           : Text(l10n.project_createProject),
@@ -453,7 +453,7 @@ class _LanguagePickerSheetState extends State<_LanguagePickerSheet> {
                                 height: 20,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  color: Colors.white,
+                                  color: AppColors.white,
                                 ),
                               )
                             : Text(l10n.project_addLanguage),

@@ -363,7 +363,7 @@ class _SidebarNavItem extends StatelessWidget {
       label: AppLocalizations.of(context).a11y_tabLabel(label),
       selected: isSelected,
       child: Material(
-        color: Colors.transparent,
+        color: AppColors.transparent,
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(10),
@@ -376,7 +376,7 @@ class _SidebarNavItem extends StatelessWidget {
             decoration: BoxDecoration(
               color: isSelected
                   ? colors.accent.withValues(alpha: 0.1)
-                  : Colors.transparent,
+                  : AppColors.transparent,
               borderRadius: BorderRadius.circular(10),
             ),
             child: expanded
@@ -462,7 +462,7 @@ class _SidebarUserRow extends StatelessWidget {
                   ),
                 ),
                 Material(
-                  color: Colors.transparent,
+                  color: AppColors.transparent,
                   child: InkWell(
                     onTap: onLogout,
                     borderRadius: BorderRadius.circular(RadiusScale.r8),
@@ -484,7 +484,7 @@ class _SidebarUserRow extends StatelessWidget {
                 avatar,
                 const SizedBox(height: SpacingScale.s8),
                 Material(
-                  color: Colors.transparent,
+                  color: AppColors.transparent,
                   child: InkWell(
                     onTap: onLogout,
                     borderRadius: BorderRadius.circular(RadiusScale.r8),
@@ -522,7 +522,7 @@ class _SidebarCollapseToggle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.transparent,
+      color: AppColors.transparent,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(10),
@@ -606,7 +606,7 @@ class _FloatingNavBar extends StatelessWidget {
           borderRadius: BorderRadius.circular(34),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.30 : 0.10),
+              color: AppColors.black.withValues(alpha: isDark ? 0.30 : 0.10),
               blurRadius: 20,
               offset: const Offset(0, 4),
             ),
@@ -623,7 +623,7 @@ class _FloatingNavBar extends StatelessWidget {
                 color: navBg,
                 borderRadius: BorderRadius.circular(34),
                 border: Border.all(
-                  color: (isDark ? Colors.white : colors.border).withValues(
+                  color: (isDark ? AppColors.white : colors.border).withValues(
                     alpha: isDark ? 0.08 : 0.25,
                   ),
                 ),
@@ -656,7 +656,7 @@ class _FloatingNavBar extends StatelessWidget {
                           ).a11y_tabLabel(tab.label),
                           selected: isSelected,
                           child: Material(
-                            color: Colors.transparent,
+                            color: AppColors.transparent,
                             child: InkWell(
                               onTap: () => onTabTapped(i),
                               borderRadius: BorderRadius.circular(26),

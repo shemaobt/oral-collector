@@ -174,6 +174,21 @@ abstract class AppColors {
   static const Color darkWarning = Color(0xFFE0A458);
   static const Color darkBorder = Color(0xFF5A5440);
 
+  // Neutral anchors. Pure white/black/transparent differ from the off-white
+  // (brandBranco) and near-black (brandPreto) brand tokens, so they stand alone
+  // (ENG-183); migrated 1:1 from Colors.white/black/transparent call sites.
+  static const Color white = Color(0xFFFFFFFF);
+  static const Color black = Color(0xFF000000);
+  static const Color transparent = Color(0x00000000);
+
+  // Long-tail semantic tokens migrated from inline literals (ENG-183).
+  static const Color meterWarning = Color(0xFFE0A526); // volume meter caution
+  static const Color warningContainer = Color(0xFFFFEDCC); // storage banner bg
+  static const Color onWarningContainer = Color(
+    0xFF8A5A00,
+  ); // storage banner fg
+  static const Color authHeroAccent = Color(0xFFFFB380); // signup hero accent
+
   static AppColorSet of(BuildContext context) {
     final theme = Theme.of(context);
     return theme.extension<AppColorSet>() ??

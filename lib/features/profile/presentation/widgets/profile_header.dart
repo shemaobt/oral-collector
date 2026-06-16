@@ -72,7 +72,7 @@ class ProfileHeader extends StatelessWidget {
                   height: 104,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.black.withValues(alpha: 0.5),
+                    color: AppColors.black.withValues(alpha: 0.5),
                   ),
                   child: const Center(
                     child: SizedBox(
@@ -80,7 +80,7 @@ class ProfileHeader extends StatelessWidget {
                       height: 28,
                       child: CircularProgressIndicator(
                         strokeWidth: 2.5,
-                        color: Colors.white,
+                        color: AppColors.white,
                       ),
                     ),
                   ),
@@ -109,7 +109,7 @@ class ProfileHeader extends StatelessWidget {
                       child: Icon(
                         LucideIcons.camera,
                         size: 14,
-                        color: Colors.white,
+                        color: AppColors.white,
                       ),
                     ),
                   ),

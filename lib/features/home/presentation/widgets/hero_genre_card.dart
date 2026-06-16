@@ -4,6 +4,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/l10n/content_l10n.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_palettes.dart';
 import '../../../../shared/utils/format.dart';
 import '../../../../shared/utils/genre_helpers.dart';
 import '../../../genre/domain/entities/genre.dart';
@@ -22,7 +23,7 @@ class HeroGenreCard extends StatelessWidget {
   final GenreStat? genreStat;
   final VoidCallback onTap;
 
-  static const _heroColor = Color(0xFF3D8E80);
+  static const _heroColor = AppPalettes.heroGenreAccent;
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +36,7 @@ class HeroGenreCard extends StatelessWidget {
     final dur = genreStat?.totalDurationSeconds ?? 0;
 
     final bg = Color.lerp(
-      isDark ? colors.card : Colors.white,
+      isDark ? colors.card : AppColors.white,
       _heroColor,
       isDark ? 0.22 : 0.22,
     )!;
@@ -63,9 +64,8 @@ class HeroGenreCard extends StatelessWidget {
                     width: 58,
                     height: 58,
                     decoration: BoxDecoration(
-                      color: (isDark ? colors.card : Colors.white).withValues(
-                        alpha: 0.75,
-                      ),
+                      color: (isDark ? colors.card : AppColors.white)
+                          .withValues(alpha: 0.75),
                       borderRadius: BorderRadius.circular(18),
                     ),
                     child: Icon(icon, size: 28, color: _heroColor),
@@ -102,7 +102,7 @@ class HeroGenreCard extends StatelessWidget {
                               text: '$count',
                               color: _heroColor,
                               isDark: isDark,
-                              bgBase: isDark ? colors.card : Colors.white,
+                              bgBase: isDark ? colors.card : AppColors.white,
                             ),
                             const SizedBox(width: 8),
                             MiniStatBadge(
@@ -110,7 +110,7 @@ class HeroGenreCard extends StatelessWidget {
                               text: formatDurationCompact(dur),
                               color: _heroColor,
                               isDark: isDark,
-                              bgBase: isDark ? colors.card : Colors.white,
+                              bgBase: isDark ? colors.card : AppColors.white,
                             ),
                           ],
                         ),

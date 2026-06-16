@@ -181,7 +181,7 @@ class SegmentCard extends StatelessWidget {
               isPlaying ? LucideIcons.square : LucideIcons.play,
               size: 14,
               color: isPlaying
-                  ? (isDark ? Colors.black : Colors.white)
+                  ? (isDark ? AppColors.black : AppColors.white)
                   : colors.accent,
             ),
           ),

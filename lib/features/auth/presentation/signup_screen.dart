@@ -187,8 +187,8 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          Colors.black.withValues(alpha: 0.08),
-                          Colors.black.withValues(alpha: 0.55),
+                          AppColors.black.withValues(alpha: 0.08),
+                          AppColors.black.withValues(alpha: 0.55),
                         ],
                         stops: const [0.25, 1.0],
                       ),
@@ -202,7 +202,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     onPressed: () => context.go('/login'),
                     tooltip: l10n.auth_backToSignIn,
                     style: IconButton.styleFrom(
-                      backgroundColor: Colors.black.withValues(alpha: 0.3),
+                      backgroundColor: AppColors.black.withValues(alpha: 0.3),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -210,7 +210,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     ),
                     icon: const Icon(
                       LucideIcons.arrowLeft,
-                      color: Colors.white,
+                      color: AppColors.white,
                       size: 20,
                     ),
                   ),
@@ -225,14 +225,14 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                         TextSpan(
                           text: l10n.auth_createNewline,
                           style: theme.textTheme.displayLarge?.copyWith(
-                            color: Colors.white,
+                            color: AppColors.white,
                             height: 1.15,
                           ),
                         ),
                         TextSpan(
                           text: l10n.auth_account,
                           style: theme.textTheme.displayLarge?.copyWith(
-                            color: const Color(0xFFFFB380),
+                            color: AppColors.authHeroAccent,
                             height: 1.15,
                           ),
                         ),
@@ -429,7 +429,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
             onPressed: authState.isLoading ? null : _handleSignup,
             style: ElevatedButton.styleFrom(
               backgroundColor: colors.accent,
-              foregroundColor: Colors.white,
+              foregroundColor: AppColors.white,
               elevation: 0,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),
@@ -442,7 +442,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     height: 24,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: Colors.white,
+                      color: AppColors.white,
                     ),
                   )
                 : Text(l10n.auth_continueButton),

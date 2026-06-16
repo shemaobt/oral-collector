@@ -41,7 +41,7 @@ class EditVolumeControl extends StatelessWidget {
     if (peakAfterGain >= -1) {
       meterColor = colors.error;
     } else if (peakAfterGain >= -3) {
-      meterColor = const Color(0xFFE0A526);
+      meterColor = AppColors.meterWarning;
     } else {
       meterColor = colors.success;
     }

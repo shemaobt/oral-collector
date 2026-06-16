@@ -206,7 +206,7 @@ class _MoveCategoryDialogState extends ConsumerState<MoveCategoryDialog> {
               ],
               const SizedBox(height: 12),
               Theme(
-                data: theme.copyWith(dividerColor: Colors.transparent),
+                data: theme.copyWith(dividerColor: AppColors.transparent),
                 child: ExpansionTile(
                   tilePadding: EdgeInsets.zero,
                   childrenPadding: const EdgeInsets.only(top: 8),

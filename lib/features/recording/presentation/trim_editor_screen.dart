@@ -1294,7 +1294,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
                         height: 18,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: isDark ? Colors.black : Colors.white,
+                          color: isDark ? AppColors.black : AppColors.white,
                         ),
                       )
                     : Icon(
@@ -1314,13 +1314,13 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: colors.accent,
-                  foregroundColor: isDark ? Colors.black : Colors.white,
+                  foregroundColor: isDark ? AppColors.black : AppColors.white,
                   disabledBackgroundColor: colors.accent.withValues(
                     alpha: 0.25,
                   ),
                   disabledForegroundColor: isDark
-                      ? Colors.black.withValues(alpha: 0.3)
-                      : Colors.white.withValues(alpha: 0.4),
+                      ? AppColors.black.withValues(alpha: 0.3)
+                      : AppColors.white.withValues(alpha: 0.4),
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(RadiusScale.r12),

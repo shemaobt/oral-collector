@@ -46,7 +46,7 @@ class NoProjectCard extends StatelessWidget {
               label: Text(l10n.home_browseProjects),
               style: FilledButton.styleFrom(
                 backgroundColor: colors.accent,
-                foregroundColor: Colors.white,
+                foregroundColor: AppColors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
