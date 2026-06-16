@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../sync/presentation/notifiers/sync_notifier.dart';
 import '../../domain/entities/storyteller.dart';
@@ -21,7 +22,9 @@ Future<Storyteller?> showStorytellerPickerSheet(
     useSafeArea: true,
     backgroundColor: Theme.of(context).colorScheme.surface,
     shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      borderRadius: BorderRadius.vertical(
+        top: Radius.circular(RadiusScale.r20),
+      ),
     ),
     builder: (_) =>
         _StorytellerPickerSheet(projectId: projectId, showAddNew: showAddNew),
@@ -61,18 +64,18 @@ class StorytellerPicker extends ConsumerWidget {
 
     return InkWell(
       onTap: () => _open(context, ref),
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(RadiusScale.r12),
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: colors.surfaceAlt,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(RadiusScale.r12),
           border: Border.all(color: colors.border.withValues(alpha: 0.4)),
         ),
         child: Row(
           children: [
             Icon(LucideIcons.user, size: 18, color: colors.secondary),
-            const SizedBox(width: 12),
+            const SizedBox(width: SpacingScale.s12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -178,7 +181,12 @@ class _StorytellerPickerSheetState
         return Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+              padding: const EdgeInsets.fromLTRB(
+                SpacingScale.s20,
+                SpacingScale.s16,
+                SpacingScale.s20,
+                SpacingScale.s8,
+              ),
               child: Row(
                 children: [
                   Expanded(
@@ -195,7 +203,7 @@ class _StorytellerPickerSheetState
               ),
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+              padding: const EdgeInsets.symmetric(horizontal: SpacingScale.s20),
               child: TextField(
                 decoration: InputDecoration(
                   hintText: l10n.storyteller_searchPlaceholder,
@@ -206,7 +214,7 @@ class _StorytellerPickerSheetState
             ),
             if (state.storytellers.isEmpty && !isOnline)
               Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(SpacingScale.s16),
                 child: Text(
                   l10n.storyteller_offlineNoCache,
                   style: TextStyle(color: colors.error),
@@ -220,7 +228,7 @@ class _StorytellerPickerSheetState
                   if (widget.showAddNew)
                     ListTile(
                       contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 24,
+                        horizontal: SpacingScale.s24,
                       ),
                       leading: CircleAvatar(
                         radius: 20,
@@ -238,7 +246,7 @@ class _StorytellerPickerSheetState
                     ),
                   if (state.isLoading && list.isEmpty)
                     const Padding(
-                      padding: EdgeInsets.all(32),
+                      padding: EdgeInsets.all(SpacingScale.s32),
                       child: Center(child: CircularProgressIndicator()),
                     ),
                   ...list.map(
