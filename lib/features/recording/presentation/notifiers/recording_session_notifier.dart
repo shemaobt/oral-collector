@@ -832,7 +832,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
     );
     if (!started) return false;
     _liveActivityActive = true;
-    _liveActivityUrlSub?.cancel();
+    unawaited(_liveActivityUrlSub?.cancel());
     _liveActivityUrlSub = RecordingLiveActivity.instance.urlSchemeStream.listen(
       (event) {
         final host = event.host;

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -42,10 +44,12 @@ Future<void> _pumpAppWithGuard(
     ),
   );
 
-  navKey.currentState!.push(
-    MaterialPageRoute<void>(
-      builder: (_) => const RecordingNavigationGuard(
-        child: Scaffold(body: Center(child: Text('recording'))),
+  unawaited(
+    navKey.currentState!.push(
+      MaterialPageRoute<void>(
+        builder: (_) => const RecordingNavigationGuard(
+          child: Scaffold(body: Center(child: Text('recording'))),
+        ),
       ),
     ),
   );

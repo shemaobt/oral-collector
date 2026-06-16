@@ -102,7 +102,7 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
   }
 
   Future<void> _handleStop(RecordingSessionNotifier notifier) async {
-    HapticFeedback.heavyImpact();
+    unawaited(HapticFeedback.heavyImpact());
     final result = await notifier.stopRecording();
     if (!mounted) return;
     if (result != null) {
@@ -129,7 +129,7 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
       if (!mounted || proceed != true) return;
     }
 
-    HapticFeedback.mediumImpact();
+    unawaited(HapticFeedback.mediumImpact());
     await notifier.startRecording(
       widget.genreId,
       widget.subcategoryId,
@@ -180,7 +180,7 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
   Future<void> _handleCancelPendingResume(
     RecordingSessionNotifier notifier,
   ) async {
-    HapticFeedback.selectionClick();
+    unawaited(HapticFeedback.selectionClick());
     await notifier.cancelPendingResume();
   }
 

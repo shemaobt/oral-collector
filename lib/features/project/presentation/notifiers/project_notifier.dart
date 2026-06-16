@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -76,10 +78,12 @@ class ProjectNotifier extends Notifier<ProjectState> {
       // Fire-and-forget: handleUnauthorized pode propagar uma falha transitória
       // de refresh (ENG-141); aqui ela é ignorada (sessão preservada). Só
       // Exceptions, não Errors, para não mascarar bugs.
-      ref
-          .read(authNotifierProvider.notifier)
-          .handleUnauthorized()
-          .catchError((_) => false, test: (e) => e is Exception);
+      unawaited(
+        ref
+            .read(authNotifierProvider.notifier)
+            .handleUnauthorized()
+            .catchError((_) => false, test: (e) => e is Exception),
+      );
     } on Exception catch (e, st) {
       ref.read(errorReporterProvider).reportError(e, st);
       state = state.copyWith(isLoading: false, error: e);

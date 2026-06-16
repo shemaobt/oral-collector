@@ -90,7 +90,7 @@ class _OralCollectorAppState extends ConsumerState<OralCollectorApp> {
     ref.read(appDatabaseProvider);
 
     Future.microtask(() async {
-      ref.read(authNotifierProvider.notifier).tryAutoLogin();
+      unawaited(ref.read(authNotifierProvider.notifier).tryAutoLogin());
 
       // Reclaim recordings orphaned in `uploading` by a mid-upload crash so the
       // queue drains them again; must run before sync/listeners go live.
@@ -101,7 +101,7 @@ class _OralCollectorAppState extends ConsumerState<OralCollectorApp> {
       // first processQueue() trigger reads a stuck-true flag and short-circuits
       // every chunk with pausedByRecording until the next state change.
       if (!kIsWeb) {
-        RecordingTrash.pruneOldTrash(maxAgeHours: 24);
+        unawaited(RecordingTrash.pruneOldTrash(maxAgeHours: 24));
         await ref.read(recoveryCoordinatorProvider).scanOnStartup();
         await RecordingLiveActivity.instance.endAll();
       }

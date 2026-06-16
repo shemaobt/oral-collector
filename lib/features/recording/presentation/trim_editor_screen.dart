@@ -677,7 +677,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
   }
 
   Future<void> _stopPreview() async {
-    _previewSub?.cancel();
+    unawaited(_previewSub?.cancel());
     _previewSub = null;
     await _player?.pause();
     if (mounted) setState(() => _playingSegment = null);
@@ -877,7 +877,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
     await persister.persist(parent: recording, segments: specs);
 
     if (mounted) {
-      HapticFeedback.mediumImpact();
+      unawaited(HapticFeedback.mediumImpact());
       final l10n = AppLocalizations.of(context);
       final msg = _decision.mode == TrimSaveMode.boostOnly
           ? l10n.trim_boostApplied
