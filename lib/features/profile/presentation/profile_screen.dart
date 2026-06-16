@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -65,10 +67,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       }
     } catch (e) {
       if (mounted) {
-        showErrorSnackBar(
-          context,
-          AppLocalizations.of(context).profile_photoFailed(e.toString()),
-        );
+        showErrorSnackBar(context, e);
       }
     }
   }
@@ -148,7 +147,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             .acceptInvite(invite.id);
         if (!context.mounted) return;
         if (accepted) {
-          ref.read(projectNotifierProvider.notifier).fetchProjects();
+          unawaited(ref.read(projectNotifierProvider.notifier).fetchProjects());
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(l10n.profile_joinedSuccess(invite.projectName)),

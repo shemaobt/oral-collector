@@ -3,15 +3,20 @@
 import '../../../../core/network/api_error_handler.dart';
 import '../../../../core/network/authenticated_client.dart';
 import '../../../../core/network/response_decoder.dart';
+import '../../../../core/observability/error_reporter.dart';
 import '../../../../core/serialization/parse_list.dart';
 import '../../domain/entities/storyteller.dart';
 import '../../domain/repositories/storyteller_repository.dart';
 
 class StorytellerApiRepositoryImpl implements StorytellerRepository {
   final AuthenticatedClient _client;
+  final ErrorReporter _reporter;
 
-  StorytellerApiRepositoryImpl({required AuthenticatedClient client})
-    : _client = client;
+  StorytellerApiRepositoryImpl({
+    required AuthenticatedClient client,
+    required ErrorReporter reporter,
+  }) : _client = client,
+       _reporter = reporter;
 
   @override
   Future<List<Storyteller>> listByProject(String projectId) async {
@@ -22,6 +27,7 @@ class StorytellerApiRepositoryImpl implements StorytellerRepository {
       decodeList(response),
       Storyteller.fromJson,
       context: 'listByProject',
+      onSkip: _reporter.parseSkipSink(context: 'listByProject'),
     );
   }
 

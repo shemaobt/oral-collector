@@ -330,7 +330,7 @@ class _LanguagePickerSheetState extends State<_LanguagePickerSheet> {
     } on Exception catch (e) {
       if (!mounted) return;
       setState(() => _isCreatingLanguage = false);
-      showErrorSnackBar(context, e.toString());
+      showErrorSnackBar(context, e);
     }
   }
 

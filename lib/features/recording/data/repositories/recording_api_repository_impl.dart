@@ -5,6 +5,7 @@ import '../../../../core/errors/app_exception.dart' show ParseException;
 import '../../../../core/network/api_error_handler.dart';
 import '../../../../core/network/authenticated_client.dart';
 import '../../../../core/network/response_decoder.dart';
+import '../../../../core/observability/error_reporter.dart';
 import '../../../../core/serialization/parse_list.dart';
 import '../../../../core/serialization/safe_read.dart';
 import '../../domain/entities/server_recording.dart';
@@ -13,9 +14,13 @@ import '../../domain/repositories/recording_api_repository.dart';
 
 class RecordingApiRepositoryImpl implements RecordingApiRepository {
   final AuthenticatedClient _client;
+  final ErrorReporter _reporter;
 
-  RecordingApiRepositoryImpl({required AuthenticatedClient client})
-    : _client = client;
+  RecordingApiRepositoryImpl({
+    required AuthenticatedClient client,
+    required ErrorReporter reporter,
+  }) : _client = client,
+       _reporter = reporter;
 
   @override
   Future<ServerRecording> getRecording(String serverId) async {
@@ -48,6 +53,7 @@ class RecordingApiRepositoryImpl implements RecordingApiRepository {
       decodeList(response),
       ServerRecording.fromJson,
       context: 'listRecordings',
+      onSkip: _reporter.parseSkipSink(context: 'listRecordings'),
     );
   }
 

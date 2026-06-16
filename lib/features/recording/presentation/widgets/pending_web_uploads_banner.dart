@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,6 +9,7 @@ import '../../../../core/database/app_database.dart';
 import '../../../../core/platform/web_file_picker.dart' as web_picker;
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/utils/format.dart';
+import '../../../../shared/widgets/error_snack_bar.dart';
 import '../../data/providers.dart';
 import '../notifiers/recordings_list_notifier.dart';
 
@@ -96,12 +99,12 @@ class _PendingWebUploadsBannerState
 
       await ref.read(localRecordingRepositoryProvider).deleteRecording(row.id);
       await _load();
-      ref.read(recordingsListNotifierProvider.notifier).fetchRecordings();
+      unawaited(
+        ref.read(recordingsListNotifierProvider.notifier).fetchRecordings(),
+      );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.import_saveError(e.toString()))),
-        );
+        showErrorSnackBar(context, e);
       }
     } finally {
       if (mounted) {

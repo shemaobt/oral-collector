@@ -1,5 +1,9 @@
+import 'dart:developer' as developer;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../serialization/parse_list.dart';
 
 /// Severity for reported errors/breadcrumbs. Vendor-neutral; maps cleanly onto
 /// SentryLevel when a real adapter replaces the Noop default (ADR-0006).
@@ -96,5 +100,30 @@ void installGlobalErrorHandlers(ErrorReporter reporter) {
     debugPrint('Uncaught error: $error\n$stack');
     reporter.reportError(error, stack, level: ErrorLevel.fatal);
     return true;
+  };
+}
+
+/// Bridges a [parseList] skip into telemetry (ENG-166). Keeps the local
+/// `developer.log` trace (visible in debug) and adds a warning-level report so
+/// records dropped by the page policy become observable once a real adapter
+/// replaces the Noop default. Pass the same `context` used in the parseList call.
+///
+/// The sink must not throw: `parseList` does not guard the `onSkip` call, so a
+/// throwing reporter would propagate and blank the page it is meant to protect.
+extension ParseSkipReporting on ErrorReporter {
+  SkipCallback parseSkipSink({String? context}) => (error, stackTrace, index) {
+    developer.log(
+      'parseList[${context ?? '?'}]: skipped element #$index',
+      name: 'parseList',
+      level: 900,
+      error: error,
+      stackTrace: stackTrace,
+    );
+    reportError(
+      error,
+      stackTrace,
+      level: ErrorLevel.warning,
+      context: {if (context != null) 'parseContext': context, 'index': index},
+    );
   };
 }

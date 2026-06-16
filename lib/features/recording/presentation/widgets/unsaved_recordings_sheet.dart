@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -116,7 +118,7 @@ class UnsavedRecordingsSheet extends ConsumerWidget {
     WidgetRef ref,
     InterruptedSession session,
   ) async {
-    HapticFeedback.selectionClick();
+    unawaited(HapticFeedback.selectionClick());
     final notifier = ref.read(recordingSessionNotifierProvider.notifier);
     final ok = await notifier.loadInterruptedSession(session.sessionId);
     if (!context.mounted) return;
@@ -130,7 +132,7 @@ class UnsavedRecordingsSheet extends ConsumerWidget {
     WidgetRef ref,
     InterruptedSession session,
   ) async {
-    HapticFeedback.selectionClick();
+    unawaited(HapticFeedback.selectionClick());
     final notifier = ref.read(interruptedSessionsNotifierProvider.notifier);
     final result = await notifier.save(session.sessionId);
     if (!context.mounted) return;
@@ -178,7 +180,7 @@ class UnsavedRecordingsSheet extends ConsumerWidget {
       ),
     );
     if (confirmed != true || !context.mounted) return;
-    HapticFeedback.mediumImpact();
+    unawaited(HapticFeedback.mediumImpact());
     final notifier = ref.read(interruptedSessionsNotifierProvider.notifier);
     await notifier.discard(session.sessionId);
   }
@@ -210,7 +212,7 @@ class UnsavedRecordingsSheet extends ConsumerWidget {
       ),
     );
     if (confirmed != true || !context.mounted) return;
-    HapticFeedback.mediumImpact();
+    unawaited(HapticFeedback.mediumImpact());
     final notifier = ref.read(interruptedSessionsNotifierProvider.notifier);
     final ids = ref
         .read(interruptedSessionsProvider)

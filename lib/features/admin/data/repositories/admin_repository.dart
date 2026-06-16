@@ -1,6 +1,7 @@
 import '../../../../core/network/api_error_handler.dart';
 import '../../../../core/network/authenticated_client.dart';
 import '../../../../core/network/response_decoder.dart';
+import '../../../../core/observability/error_reporter.dart';
 import '../../../../core/serialization/parse_list.dart';
 import '../../../genre/domain/entities/genre.dart';
 import '../../../genre/domain/entities/genre_update.dart';
@@ -11,8 +12,13 @@ import '../../domain/repositories/admin_repository.dart';
 
 class AdminRepositoryImpl implements AdminRepository {
   final AuthenticatedClient _client;
+  final ErrorReporter _reporter;
 
-  AdminRepositoryImpl({required AuthenticatedClient client}) : _client = client;
+  AdminRepositoryImpl({
+    required AuthenticatedClient client,
+    required ErrorReporter reporter,
+  }) : _client = client,
+       _reporter = reporter;
 
   @override
   Future<AdminStats> fetchStats() async {
@@ -27,6 +33,7 @@ class AdminRepositoryImpl implements AdminRepository {
       decodeList(response),
       Project.fromJson,
       context: 'fetchAllProjects',
+      onSkip: _reporter.parseSkipSink(context: 'fetchAllProjects'),
     );
   }
 
@@ -37,6 +44,7 @@ class AdminRepositoryImpl implements AdminRepository {
       decodeList(response),
       Genre.fromJson,
       context: 'fetchAllGenres',
+      onSkip: _reporter.parseSkipSink(context: 'fetchAllGenres'),
     );
   }
 
@@ -106,6 +114,7 @@ class AdminRepositoryImpl implements AdminRepository {
       decodeList(response),
       Recording.fromJson,
       context: 'fetchCleaningQueue',
+      onSkip: _reporter.parseSkipSink(context: 'fetchCleaningQueue'),
     );
   }
 

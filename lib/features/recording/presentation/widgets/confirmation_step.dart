@@ -239,7 +239,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
 
   Future<void> _togglePlayback() async {
     if (_player == null) return;
-    HapticFeedback.lightImpact();
+    unawaited(HapticFeedback.lightImpact());
     if (_isPlaying) {
       await _player!.pause();
     } else {
@@ -320,7 +320,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
       }
 
       if (mounted) {
-        HapticFeedback.mediumImpact();
+        unawaited(HapticFeedback.mediumImpact());
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(l10n.recording_saved)));
@@ -426,7 +426,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
       } catch (_) {}
 
       if (mounted) {
-        HapticFeedback.mediumImpact();
+        unawaited(HapticFeedback.mediumImpact());
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(l10n.recording_saved)));
