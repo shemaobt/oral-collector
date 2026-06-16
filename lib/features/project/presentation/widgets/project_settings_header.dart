@@ -5,6 +5,7 @@ import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/utils/format.dart';
 import '../../domain/entities/project.dart';
+import 'language_chip_row.dart';
 import 'project_stat_chip.dart';
 
 class ProjectSettingsHeader extends StatelessWidget {
@@ -25,8 +26,15 @@ class ProjectSettingsHeader extends StatelessWidget {
     final colors = AppColors.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
+    // The expanded header has fixed top/bottom padding (52 + 16); only the text
+    // content grows with the system font, so scale that portion to avoid
+    // clipping the title/language row at large text sizes (ENG-180).
+    final textScale = MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 2.0);
+    const fixedPadding = 52.0 + 16.0;
+    final expandedHeight = fixedPadding + (140 - fixedPadding) * textScale;
+
     return SliverAppBar(
-      expandedHeight: 140,
+      expandedHeight: expandedHeight,
       pinned: true,
       leading: IconButton(
         icon: Container(
@@ -72,44 +80,11 @@ class ProjectSettingsHeader extends StatelessWidget {
                   ),
                   if (project.languageName != null) ...[
                     const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        Icon(
-                          LucideIcons.globe,
-                          size: 14,
-                          color: colors.secondary,
-                        ),
-                        const SizedBox(width: 5),
-                        Text(
-                          project.languageName!,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: colors.secondary,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        if (project.languageCode != null) ...[
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 7,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: colors.accent.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(5),
-                            ),
-                            child: Text(
-                              project.languageCode!.toUpperCase(),
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: colors.accent,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 10,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ],
+                    LanguageChipRow.header(
+                      languageName: project.languageName!,
+                      languageCode: project.languageCode,
+                      colors: colors,
+                      theme: theme,
                     ),
                   ],
                 ],

@@ -71,8 +71,12 @@ Path: @/lib/shared/widgets
   - **Fixed nav-chrome heights are intentionally preserved** (bottom bar / nav
     item in `app_shell.dart`, the 96px toolbar in `screen_header.dart`). They
     clip rather than grow, keeping the base design; content adapts *within* the
-    fixed chrome. This mirrors the recording flow's resilience approach
-    ([/lib/features/recording/presentation/widgets](/lib/features/recording/presentation/widgets)).
+    fixed chrome. This mirrors the resilience approach in the feature screens:
+    the recording flow
+    ([/lib/features/recording/presentation/widgets](/lib/features/recording/presentation/widgets))
+    and, since ENG-180, the profile + project widgets
+    ([/lib/features/profile/presentation/widgets](/lib/features/profile/presentation/widgets),
+    [/lib/features/project/presentation/widgets](/lib/features/project/presentation/widgets)).
   - `screen_header.dart` needed no change — its title/subtitle already ellipsize
     and fit the toolbar within the 2.0× ceiling; only regression guards were
     added.
