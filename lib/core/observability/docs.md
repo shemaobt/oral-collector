@@ -23,13 +23,22 @@ Path: @/lib/core/observability
 - `errorReporterProvider` is the single seam for swapping reporters. The app-root
   `ProviderContainer` reads it once in `main()`; feature code that wants to report
   manually reads the same provider rather than constructing a reporter.
-- Two feeds reach the reporter (ENG-173). The **global** hooks
-  (`installGlobalErrorHandlers` + `runZonedGuarded`) catch what escapes; **domain**
-  notifiers and auth screens now also report from their own `on Exception` catch
-  arms — `ref.read(errorReporterProvider).reportError(e, st)` — before storing the
-  raw exception in state for the UI to translate. The diagnostic detail goes to the
-  reporter; the typed exception goes to the UI. See the `error` invariant in
+- Three feeds reach the reporter. The **global** hooks (ENG-173,
+  `installGlobalErrorHandlers` + `runZonedGuarded`) catch what escapes; **domain**
+  notifiers and auth screens (ENG-173) now also report from their own `on Exception`
+  catch arms — `ref.read(errorReporterProvider).reportError(e, st)` — before storing
+  the raw exception in state for the UI to translate. The diagnostic detail goes to
+  the reporter; the typed exception goes to the UI. See the `error` invariant in
   [../auth/docs.md](../auth/docs.md) and [../errors/docs.md](../errors/docs.md).
+- The third feed is the **serialization page policy** (ENG-166). List-returning
+  repositories route each `parseList` skip into the reporter via the
+  `parseSkipSink` adapter, so a record dropped by ADR-0008 skip-and-log becomes
+  observable. It reports at `ErrorLevel.warning` (a dropped row is non-fatal
+  degradation), distinct from the `fatal` global hooks, with the parseList
+  `context` string and the offending element index attached. The adapter also
+  keeps the local `developer.log` trace, so debug visibility is unchanged and the
+  change is additive/zero-cost under the Noop default. See
+  [../serialization/docs.md](../serialization/docs.md).
 - Notifiers never telemeter a 401: it is the expected token-refresh flow, not a
   fault, so reporting it would be noise. Notifiers with an `on UnauthorizedException`
   arm (project/genre/stats/invite) catch it there (driving `handleUnauthorized`), so
@@ -63,6 +72,11 @@ Path: @/lib/core/observability
   `onError` also forwards as `fatal`. The same container is handed to the widget
   tree via `UncontrolledProviderScope` (not `ProviderScope`) so the handlers and
   the tree share one reporter.
+- The `ParseSkipReporting` extension (also in `error_reporter.dart`) exposes
+  `parseSkipSink({context})`, which bridges a `parseList` `SkipCallback` to
+  `reportError`. List repositories inject the reporter by constructor and pass the
+  returned callback as `onSkip` on every `parseList` call (ENG-166); see
+  [../serialization/docs.md](../serialization/docs.md).
 
 ### Things to Know
 

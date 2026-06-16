@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:mocktail/mocktail.dart';
 import 'package:oral_collector/core/errors/app_exception.dart';
 import 'package:oral_collector/core/network/authenticated_client.dart';
+import 'package:oral_collector/core/observability/error_reporter.dart';
 import 'package:oral_collector/features/recording/data/repositories/recording_api_repository_impl.dart';
 import 'package:oral_collector/features/recording/domain/entities/split_segment_request.dart';
 
@@ -16,7 +17,10 @@ void main() {
 
   setUp(() {
     client = _MockClient();
-    repo = RecordingApiRepositoryImpl(client: client);
+    repo = RecordingApiRepositoryImpl(
+      client: client,
+      reporter: const NoopErrorReporter(),
+    );
   });
 
   void stubBody(Map<String, dynamic> body) {

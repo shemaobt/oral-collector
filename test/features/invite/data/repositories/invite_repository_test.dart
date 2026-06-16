@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:mocktail/mocktail.dart';
 import 'package:oral_collector/core/errors/app_exception.dart';
 import 'package:oral_collector/core/network/authenticated_client.dart';
+import 'package:oral_collector/core/observability/error_reporter.dart';
 import 'package:oral_collector/features/invite/data/repositories/invite_repository.dart';
 
 class _MockClient extends Mock implements AuthenticatedClient {}
@@ -13,7 +14,10 @@ void main() {
 
   setUp(() {
     client = _MockClient();
-    repo = InviteRepositoryImpl(client: client);
+    repo = InviteRepositoryImpl(
+      client: client,
+      reporter: const NoopErrorReporter(),
+    );
   });
 
   test('acceptInvite throws UnauthorizedException on 401', () async {

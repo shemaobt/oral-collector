@@ -123,9 +123,17 @@ Path: @/lib/core/serialization
 - `parseList`'s per-element `catch` is intentionally **broad** (`Error` *and*
   `Exception`): the `fromJson` factories it drives still force-cast, so a bad
   element surfaces as an `Error` that escapes `on Exception`, and the collection
-  boundary is where it is contained. Skips log via `dart:developer` at warning
-  level by default; an injectable `onSkip` callback overrides the sink (tests use
-  it to assert which indices were dropped).
+  boundary is where it is contained. The skip is routed through the injectable
+  `onSkip` callback; the built-in default just logs via `dart:developer` at
+  warning level. In **production** every list-returning repository passes
+  `onSkip: reporter.parseSkipSink(context: ...)` (the observability adapter,
+  ENG-166), so a skipped record is **both** logged locally and reported to the
+  pluggable `ErrorReporter` at `ErrorLevel.warning`. The `dart:developer`-only
+  default now applies only to callers that pass no `onSkip` (and tests still use
+  `onSkip` to assert which indices were dropped). The motivation:
+  `dart:developer.log` is a no-op in release, so the default alone made release
+  drops invisible — routing through the reporter restores skip-and-log in
+  production. See [../observability/docs.md](../observability/docs.md).
 
 ### Things to Know
 
@@ -145,6 +153,10 @@ Path: @/lib/core/serialization
   page policy now lives in the element-isolating `parseList` and its call sites
   (per [ADR-0008](../../../docs/adr/ADR-0008-data-serialization.md)), which logs
   each skipped element on purpose — exactly the side effect the readers refuse.
+  At the repository call sites, that skip now **also** feeds telemetry: the
+  injected `onSkip` reports each dropped row to the `ErrorReporter` at warning
+  level (ENG-166), so the page policy is observable in release, not just logged
+  locally. See [../observability/docs.md](../observability/docs.md).
 - **The first wave is wired (ENG-148); migration is still partial.** Two
   complementary moves landed: the enumerated quick-win casts now route through
   these readers, so a malformed payload surfaces as a catchable `ParseException`
