@@ -22,6 +22,7 @@ import '../../../core/platform/file_ops.dart' as file_ops;
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../shared/utils/format.dart';
+import '../../../shared/widgets/error_snack_bar.dart';
 import '../../auth/data/providers/role_provider.dart';
 import '../../genre/presentation/notifiers/genre_notifier.dart';
 import '../../project/presentation/notifiers/member_notifier.dart';
@@ -488,10 +489,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     } catch (e) {
       if (mounted) {
         Navigator.of(context).pop();
-        final l10n = AppLocalizations.of(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.recording_downloadFailed(e.toString()))),
-        );
+        showErrorSnackBar(context, e);
       }
       return false;
     }
@@ -612,9 +610,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
       } catch (e) {
         if (mounted) {
           Navigator.of(context).pop();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${l10n.recording_exportShareFailed}: $e')),
-          );
+          showErrorSnackBar(context, e);
         }
       }
       return;

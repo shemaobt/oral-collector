@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../l10n/app_localizations.dart';
-import '../../../core/errors/api_exception.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../shared/widgets/empty_state.dart';
@@ -113,7 +112,7 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
       });
     } on Exception catch (e) {
       if (!mounted) return;
-      showErrorSnackBar(context, e.toString());
+      showErrorSnackBar(context, e);
     }
   }
 
@@ -161,6 +160,11 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
       if (!mounted) return;
 
       final updatedState = ref.read(projectNotifierProvider);
+      if (updatedState.error != null) {
+        showErrorSnackBar(context, updatedState.error!);
+        return;
+      }
+
       final updated = updatedState.projects
           .where((p) => p.id == widget.projectId)
           .firstOrNull;
@@ -176,15 +180,6 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
           content: Text(AppLocalizations.of(context).projectSettings_updated),
         ),
       );
-    } on ForbiddenException {
-      if (!mounted) return;
-      showErrorSnackBar(
-        context,
-        'You don\'t have permission to update this project.',
-      );
-    } on Exception catch (e) {
-      if (!mounted) return;
-      showErrorSnackBar(context, e.toString());
     } finally {
       if (mounted) {
         setState(() => _isSaving = false);
