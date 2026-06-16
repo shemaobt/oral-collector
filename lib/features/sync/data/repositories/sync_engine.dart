@@ -42,6 +42,10 @@ Duration backoffWithJitter(int attempt, Random random) {
   return base + Duration(milliseconds: jitterMs);
 }
 
+/// Outcome of a single `_uploadRecording` attempt. `processQueue` uses it to
+/// decide whether to re-probe connectivity (only on [failed]).
+enum _UploadOutcome { uploaded, skipped, failed }
+
 class SyncEngineImpl implements SyncEngine {
   final LocalRecordingRepository _recordingRepo;
   final LocalStorytellerRepository _storytellerRepo;
@@ -128,43 +132,61 @@ class SyncEngineImpl implements SyncEngine {
 
       if (maxConcurrency <= 1) {
         for (final recording in eligible) {
-          final stillOnline = await _connectivity.isOnline;
-          if (!stillOnline) break;
+          // The Wi-Fi-only policy is a network-TYPE constraint: a Wi-Fi→cellular
+          // switch keeps uploads succeeding, so it can't be inferred from an
+          // upload outcome — it must be re-checked per item. Reachability
+          // (isOnline), by contrast, surfaces as an upload failure, so it is
+          // sampled once at the gate and only re-probed after a failure
+          // (ENG-125).
+          if (wifiOnly && !await _connectivity.isOnWifi) break;
 
-          if (wifiOnly) {
-            final stillWifi = await _connectivity.isOnWifi;
-            if (!stillWifi) break;
-          }
-
-          await _uploadRecording(
+          final outcome = await _uploadRecording(
             recording.id,
             recording.localFilePath,
             deleteAfterUpload: deleteAfterUpload,
             onProgress: onProgress,
           );
+
+          if (outcome == _UploadOutcome.failed &&
+              !await _connectivity.isOnline) {
+            break;
+          }
         }
       } else {
         var index = 0;
         final active = <Future<void>>[];
+        // Set once we should stop the pass (Wi-Fi-only policy broken, or an
+        // upload failed and a re-probe confirms we are offline); it stops
+        // admitting new uploads while the in-flight ones drain.
+        var stopAdmitting = false;
 
         while (index < eligible.length || active.isNotEmpty) {
-          while (index < eligible.length && active.length < maxConcurrency) {
-            final stillOnline = await _connectivity.isOnline;
-            if (!stillOnline) break;
-
-            if (wifiOnly) {
-              final stillWifi = await _connectivity.isOnWifi;
-              if (!stillWifi) break;
+          while (!stopAdmitting &&
+              index < eligible.length &&
+              active.length < maxConcurrency) {
+            // Re-check the Wi-Fi-only policy per admit: a Wi-Fi→cellular switch
+            // keeps uploads succeeding, so it can't be inferred from outcomes
+            // (see the serial loop for the isOnline/isOnWifi rationale).
+            if (wifiOnly && !await _connectivity.isOnWifi) {
+              stopAdmitting = true;
+              break;
             }
-
             final recording = eligible[index++];
             late final Future<void> entry;
-            entry = _uploadRecording(
-              recording.id,
-              recording.localFilePath,
-              deleteAfterUpload: deleteAfterUpload,
-              onProgress: onProgress,
-            ).whenComplete(() => active.remove(entry));
+            entry =
+                _uploadRecording(
+                      recording.id,
+                      recording.localFilePath,
+                      deleteAfterUpload: deleteAfterUpload,
+                      onProgress: onProgress,
+                    )
+                    .then((outcome) async {
+                      if (outcome == _UploadOutcome.failed &&
+                          !await _connectivity.isOnline) {
+                        stopAdmitting = true;
+                      }
+                    })
+                    .whenComplete(() => active.remove(entry));
             active.add(entry);
           }
 
@@ -218,7 +240,7 @@ class SyncEngineImpl implements SyncEngine {
     return null;
   }
 
-  Future<void> _uploadRecording(
+  Future<_UploadOutcome> _uploadRecording(
     String id,
     String localFilePath, {
     bool deleteAfterUpload = false,
@@ -229,7 +251,7 @@ class SyncEngineImpl implements SyncEngine {
       final resolvedPath = await _resolveFilePath(localFilePath);
       if (resolvedPath == null) {
         await _recordingRepo.markAsFailed(id, incrementRetry: false);
-        return;
+        return _UploadOutcome.skipped;
       }
       if (resolvedPath != localFilePath) {
         await _recordingRepo.updateRecording(
@@ -239,7 +261,7 @@ class SyncEngineImpl implements SyncEngine {
       }
 
       final recording = await _recordingRepo.getRecordingById(id);
-      if (recording == null) return;
+      if (recording == null) return _UploadOutcome.skipped;
 
       await _recordingRepo.markAsUploading(id);
 
@@ -297,7 +319,7 @@ class SyncEngineImpl implements SyncEngine {
               id,
               const LocalRecordingsCompanion(uploadStatus: Value('local')),
             );
-            return;
+            return _UploadOutcome.skipped;
           }
           createBody['storyteller_id'] = resolvedStorytellerId;
         }
@@ -330,7 +352,7 @@ class SyncEngineImpl implements SyncEngine {
           id,
           const LocalRecordingsCompanion(uploadStatus: Value('local')),
         );
-        return;
+        return _UploadOutcome.skipped;
       }
 
       if (!uploadResult.success) {
@@ -357,6 +379,7 @@ class SyncEngineImpl implements SyncEngine {
       if (deleteAfterUpload && !kIsWeb) {
         await file_ops.deleteFile(resolvedPath);
       }
+      return _UploadOutcome.uploaded;
     } on AppException catch (e, st) {
       // Retry decision by the typed flag (ENG-103), not by exception subtype.
       if (e.retryable) {
@@ -377,6 +400,7 @@ class SyncEngineImpl implements SyncEngine {
       debugPrint('SyncEngine: unexpected error uploading $id: $e\n$st');
       await _recordingRepo.markAsFailed(id);
     }
+    return _UploadOutcome.failed;
   }
 
   Future<void> _processPendingStorytellers() async {

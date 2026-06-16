@@ -27,17 +27,21 @@ class RecordingSplitPersister {
     required LocalRecording parent,
     required List<SplitSegmentSpec> segments,
   }) async {
-    final ids = await localRepo.splitRecording(
+    // One transaction: insert the children and delete the parent row together,
+    // so a failure can't leave orphaned children beside a surviving parent.
+    final ids = await localRepo.splitRecordingReplacingParent(
       parent: parent,
       segments: segments,
     );
 
+    // Archive the (now-orphaned) parent audio AFTER the split commits. The trash
+    // callback only reads the parent object/file, so it doesn't need the row;
+    // running it post-commit means a split failure never leaves the parent's
+    // audio moved out from under a surviving row.
     final trash = trashParent;
     if (trash != null) {
       await trash(parent);
     }
-
-    await localRepo.deleteRecording(parent.id);
 
     final serverId = parent.serverId;
     if (serverId != null && serverId.isNotEmpty) {
