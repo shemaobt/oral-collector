@@ -1,6 +1,7 @@
 import '../../../../core/network/api_error_handler.dart';
 import '../../../../core/network/authenticated_client.dart';
 import '../../../../core/network/response_decoder.dart';
+import '../../../../core/observability/error_reporter.dart';
 import '../../../../core/serialization/parse_list.dart';
 import '../../domain/entities/language.dart';
 import '../../domain/entities/project.dart';
@@ -11,9 +12,13 @@ import '../../domain/repositories/project_repository.dart';
 
 class ProjectRepositoryImpl implements ProjectRepository {
   final AuthenticatedClient _client;
+  final ErrorReporter _reporter;
 
-  ProjectRepositoryImpl({required AuthenticatedClient client})
-    : _client = client;
+  ProjectRepositoryImpl({
+    required AuthenticatedClient client,
+    required ErrorReporter reporter,
+  }) : _client = client,
+       _reporter = reporter;
 
   @override
   Future<Language> createLanguage({
@@ -34,6 +39,7 @@ class ProjectRepositoryImpl implements ProjectRepository {
       decodeList(response),
       Language.fromJson,
       context: 'listLanguages',
+      onSkip: _reporter.parseSkipSink(context: 'listLanguages'),
     );
   }
 
@@ -44,6 +50,7 @@ class ProjectRepositoryImpl implements ProjectRepository {
       decodeList(response),
       Project.fromJson,
       context: 'listProjects',
+      onSkip: _reporter.parseSkipSink(context: 'listProjects'),
     );
   }
 
@@ -79,6 +86,7 @@ class ProjectRepositoryImpl implements ProjectRepository {
       decodeList(response),
       ProjectMember.fromJson,
       context: 'listMembers',
+      onSkip: _reporter.parseSkipSink(context: 'listMembers'),
     );
   }
 
