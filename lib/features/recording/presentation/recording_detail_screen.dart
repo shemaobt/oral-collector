@@ -411,9 +411,11 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     }
 
     if (ref.read(syncNotifierProvider).isOnline) {
-      ref
-          .read(statsNotifierProvider.notifier)
-          .fetchGenreStats(recording.projectId);
+      unawaited(
+        ref
+            .read(statsNotifierProvider.notifier)
+            .fetchGenreStats(recording.projectId),
+      );
     }
 
     if (context.canPop()) {
@@ -457,12 +459,14 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
 
     if (shouldDownload != true || !mounted) return false;
 
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const PopScope(
-        canPop: false,
-        child: Center(child: CircularProgressIndicator()),
+    unawaited(
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const PopScope(
+          canPop: false,
+          child: Center(child: CircularProgressIndicator()),
+        ),
       ),
     );
 
@@ -526,7 +530,9 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
 
     if (kIsWeb && recording.serverId != null) {
       if (!mounted) return;
-      context.push('/recording/${recording.serverId ?? recording.id}/trim');
+      unawaited(
+        context.push('/recording/${recording.serverId ?? recording.id}/trim'),
+      );
       return;
     }
 
@@ -573,12 +579,14 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
         );
         return;
       }
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (_) => const PopScope(
-          canPop: false,
-          child: Center(child: CircularProgressIndicator()),
+      unawaited(
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (_) => const PopScope(
+            canPop: false,
+            child: Center(child: CircularProgressIndicator()),
+          ),
         ),
       );
       try {
@@ -714,12 +722,14 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     }
 
     if (!mounted) return;
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const PopScope(
-        canPop: false,
-        child: Center(child: CircularProgressIndicator()),
+    unawaited(
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const PopScope(
+          canPop: false,
+          child: Center(child: CircularProgressIndicator()),
+        ),
       ),
     );
 
@@ -867,9 +877,11 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     }
 
     if (ref.read(syncNotifierProvider).isOnline) {
-      ref
-          .read(statsNotifierProvider.notifier)
-          .fetchGenreStats(recording.projectId);
+      unawaited(
+        ref
+            .read(statsNotifierProvider.notifier)
+            .fetchGenreStats(recording.projectId),
+      );
     }
 
     await _loadRecording();
@@ -966,9 +978,11 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     }
 
     if (ref.read(syncNotifierProvider).isOnline) {
-      ref
-          .read(statsNotifierProvider.notifier)
-          .fetchGenreStats(recording.projectId);
+      unawaited(
+        ref
+            .read(statsNotifierProvider.notifier)
+            .fetchGenreStats(recording.projectId),
+      );
     }
 
     await _loadRecording();

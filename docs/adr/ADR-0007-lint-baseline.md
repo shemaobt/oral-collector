@@ -3,7 +3,7 @@
 - Status: Accepted
 - Date: 2026-06-04
 - Epic: E1 (Architecture & Standards)
-- Related: ENG-89, ENG-90, ENG-156, ENG-159, ADR-0000, ADR-0002, ADR-0004
+- Related: ENG-89, ENG-90, ENG-156, ENG-157, ENG-159, ADR-0000, ADR-0002, ADR-0004
 - Update (2026-06-15, ENG-159): the deferred custom rule from item 5 shipped as
   the `obt_lints` plugin — `avoid_hardcoded_color` + `avoid_material_colors`,
   staged at `info` and non-blocking, exempting `lib/core/theme/**`.
@@ -78,8 +78,22 @@ intentional-violation pass confirms each promoted rule now fails analyze:
 `use_build_context_synchronously` reports as `error` in `lib/` — note the
 analyzer does not apply this rule to `test/` — with 0 current violations because
 the codebase already guards async gaps with `context.mounted`. Still staged at
-`info`: `unawaited_futures` (40); `riverpod_lint`'s
-`avoid_public_notifier_properties` (14) stays non-blocking.
+`info`: `riverpod_lint`'s `avoid_public_notifier_properties` (14) stays
+non-blocking (`unawaited_futures` was promoted later, in ENG-157 below).
+
+**Promoted in ENG-157 (2026-06-16).** Burned down `unawaited_futures` (42
+violations — 41 in `lib/`, one in `test/`) and promoted it to `warning` via
+`analyzer: errors:`. Every site was an intentional fire-and-forget, wrapped in
+`unawaited(...)` — the established pattern (the codebase already had 16 such
+calls and zero `// ignore: unawaited_futures`), never a missing `await` — so
+behavior is unchanged and the full suite (1028 tests) stays green. `warning`
+(not `error`) mirrors the ENG-156 split: only the pure correctness bug
+(`use_build_context_synchronously`) is `error`; this rule is mostly explicit
+fire-and-forget. Note the analyzer **does** apply `unawaited_futures` to `test/`
+(unlike `use_build_context_synchronously`). An intentional-violation pass
+confirms it now fails `flutter analyze --no-fatal-infos` (exit 1) as a `warning`.
+Still staged at `info`: `riverpod_lint`'s `avoid_public_notifier_properties` (14)
+stays non-blocking.
 
 ## Consequences
 

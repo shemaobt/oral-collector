@@ -12,13 +12,14 @@ include: package:flutter_lints/flutter.yaml
 analyzer:
   plugins:
     - custom_lint
-  # ENG-156 / ADR-0007: promoted after burn-down to 0 violations. Enforced even
-  # under `flutter analyze --no-fatal-infos`; unawaited_futures stays at `info`.
+  # ENG-156/ENG-157 / ADR-0007: promoted after burn-down to 0 violations.
+  # Enforced even under `flutter analyze --no-fatal-infos`.
   errors:
     use_build_context_synchronously: error
     directives_ordering: warning
     prefer_const_constructors: warning
     prefer_final_locals: warning
+    unawaited_futures: warning
   exclude:
     - '**/*.g.dart'
     - '**/*.freezed.dart'
@@ -40,7 +41,7 @@ linter:
   # producing the lint.
   rules:
     # Strict baseline (ENG-89 / ADR-0007). Severities promoted in `analyzer:
-    # errors:` above (ENG-156); unawaited_futures stays staged at `info`.
+    # errors:` above (ENG-156, ENG-157).
     use_build_context_synchronously: true
     unawaited_futures: true
     prefer_const_constructors: true

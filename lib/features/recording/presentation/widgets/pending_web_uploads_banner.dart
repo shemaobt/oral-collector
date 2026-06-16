@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -97,7 +99,9 @@ class _PendingWebUploadsBannerState
 
       await ref.read(localRecordingRepositoryProvider).deleteRecording(row.id);
       await _load();
-      ref.read(recordingsListNotifierProvider.notifier).fetchRecordings();
+      unawaited(
+        ref.read(recordingsListNotifierProvider.notifier).fetchRecordings(),
+      );
     } catch (e) {
       if (mounted) {
         showErrorSnackBar(context, e);

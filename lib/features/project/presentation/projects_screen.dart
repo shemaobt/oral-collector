@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -169,7 +171,7 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
   Future<void> _showCreateProjectDialog() async {
     final created = await showCreateProjectSheet(context);
     if (created == true && mounted) {
-      ref.read(projectNotifierProvider.notifier).fetchProjects();
+      unawaited(ref.read(projectNotifierProvider.notifier).fetchProjects());
     }
   }
 }

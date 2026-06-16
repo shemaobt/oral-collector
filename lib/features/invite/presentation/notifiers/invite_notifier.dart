@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/auth/auth_notifier.dart';
@@ -27,10 +29,12 @@ class InviteNotifier extends Notifier<InviteState> {
       // Fire-and-forget: handleUnauthorized pode propagar uma falha transitória
       // de refresh (ENG-141); aqui ela é ignorada (sessão preservada). Só
       // Exceptions, não Errors, para não mascarar bugs.
-      ref
-          .read(authNotifierProvider.notifier)
-          .handleUnauthorized()
-          .catchError((_) => false, test: (e) => e is Exception);
+      unawaited(
+        ref
+            .read(authNotifierProvider.notifier)
+            .handleUnauthorized()
+            .catchError((_) => false, test: (e) => e is Exception),
+      );
     } on Exception catch (e, st) {
       ref.read(errorReporterProvider).reportError(e, st);
       state = state.copyWith(isLoading: false, error: e);
@@ -46,10 +50,12 @@ class InviteNotifier extends Notifier<InviteState> {
       );
       return true;
     } on UnauthorizedException {
-      ref
-          .read(authNotifierProvider.notifier)
-          .handleUnauthorized()
-          .catchError((_) => false, test: (e) => e is Exception);
+      unawaited(
+        ref
+            .read(authNotifierProvider.notifier)
+            .handleUnauthorized()
+            .catchError((_) => false, test: (e) => e is Exception),
+      );
       return false;
     } on Exception catch (e, st) {
       ref.read(errorReporterProvider).reportError(e, st);
@@ -67,10 +73,12 @@ class InviteNotifier extends Notifier<InviteState> {
       );
       return true;
     } on UnauthorizedException {
-      ref
-          .read(authNotifierProvider.notifier)
-          .handleUnauthorized()
-          .catchError((_) => false, test: (e) => e is Exception);
+      unawaited(
+        ref
+            .read(authNotifierProvider.notifier)
+            .handleUnauthorized()
+            .catchError((_) => false, test: (e) => e is Exception),
+      );
       return false;
     } on Exception catch (e, st) {
       ref.read(errorReporterProvider).reportError(e, st);

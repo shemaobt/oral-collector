@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -523,11 +525,14 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
                                   await context.push(
                                     '/recording/${recording.id}',
                                   );
-                                  ref
-                                      .read(
-                                        recordingsListNotifierProvider.notifier,
-                                      )
-                                      .fetchRecordings();
+                                  unawaited(
+                                    ref
+                                        .read(
+                                          recordingsListNotifierProvider
+                                              .notifier,
+                                        )
+                                        .fetchRecordings(),
+                                  );
                                 },
                               ),
                             );

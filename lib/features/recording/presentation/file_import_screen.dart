@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cross_file/cross_file.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:file_picker/file_picker.dart';
@@ -110,7 +112,7 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
         );
         if (sources.isEmpty) {
           if (mounted && _entries.isEmpty) {
-            Navigator.of(context).maybePop();
+            unawaited(Navigator.of(context).maybePop());
           }
           return;
         }
@@ -126,7 +128,7 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
         );
         if (result == null || result.files.isEmpty) {
           if (mounted && _entries.isEmpty) {
-            Navigator.of(context).maybePop();
+            unawaited(Navigator.of(context).maybePop());
           }
           return;
         }
@@ -152,7 +154,7 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
           SnackBar(content: Text(l10n.import_pickError(friendly))),
         );
         if (_entries.isEmpty) {
-          Navigator.of(context).maybePop();
+          unawaited(Navigator.of(context).maybePop());
         }
       }
     }
@@ -178,7 +180,7 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
           SnackBar(content: Text(l10n.import_pickError(friendly))),
         );
         if (_entries.isEmpty) {
-          Navigator.of(context).maybePop();
+          unawaited(Navigator.of(context).maybePop());
         }
       }
     }
@@ -265,7 +267,7 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
     if (newEntries.isEmpty) {
       _showRejectedSnack(rejected);
       if (_entries.isEmpty) {
-        Navigator.of(context).maybePop();
+        unawaited(Navigator.of(context).maybePop());
       } else {
         setState(() => _isAnalyzing = false);
       }
@@ -468,12 +470,14 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
       );
 
       if (!kIsWeb) {
-        ref.read(syncNotifierProvider.notifier).processQueue();
+        unawaited(ref.read(syncNotifierProvider.notifier).processQueue());
       }
-      ref.read(recordingsListNotifierProvider.notifier).fetchRecordings();
+      unawaited(
+        ref.read(recordingsListNotifierProvider.notifier).fetchRecordings(),
+      );
 
       if (mounted) {
-        Navigator.of(context).maybePop();
+        unawaited(Navigator.of(context).maybePop());
       }
     } catch (e) {
       if (mounted) {
