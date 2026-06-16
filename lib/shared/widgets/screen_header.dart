@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/tokens.dart';
 
 class ScreenHeader extends StatelessWidget implements PreferredSizeWidget {
   const ScreenHeader({
@@ -43,7 +44,10 @@ class ScreenHeader extends StatelessWidget implements PreferredSizeWidget {
       scrolledUnderElevation: 0,
       shape: const RoundedRectangleBorder(),
       title: _HeaderTitle(title: title, subtitle: subtitle),
-      actions: [if (actions != null) ...actions!, const SizedBox(width: 8)],
+      actions: [
+        if (actions != null) ...actions!,
+        const SizedBox(width: SpacingScale.s8),
+      ],
       bottom: bottom,
       flexibleSpace: _HeaderBackground(
         icon: icon,
@@ -97,7 +101,10 @@ class ScreenHeaderSliver extends StatelessWidget {
       scrolledUnderElevation: 0,
       shape: const RoundedRectangleBorder(),
       title: _HeaderTitle(title: title, subtitle: subtitle),
-      actions: [if (actions != null) ...actions!, const SizedBox(width: 8)],
+      actions: [
+        if (actions != null) ...actions!,
+        const SizedBox(width: SpacingScale.s8),
+      ],
       bottom: bottom,
       flexibleSpace: _HeaderBackground(
         icon: icon,

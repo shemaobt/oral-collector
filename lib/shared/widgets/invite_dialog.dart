@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/tokens.dart';
 import '../../features/project/presentation/notifiers/member_notifier.dart';
 import '../../features/user/data/user_lookup_provider.dart';
 import '../../features/user/data/user_search_repository.dart';
@@ -128,7 +129,7 @@ class _InviteDialogState extends ConsumerState<InviteDialog> {
                   prefixIcon: const Icon(LucideIcons.search, size: 18),
                   suffixIcon: _isSearching
                       ? const Padding(
-                          padding: EdgeInsets.all(12),
+                          padding: EdgeInsets.all(SpacingScale.s12),
                           child: SizedBox(
                             width: 18,
                             height: 18,
@@ -145,7 +146,7 @@ class _InviteDialogState extends ConsumerState<InviteDialog> {
                   constraints: const BoxConstraints(maxHeight: 200),
                   child: ListView.builder(
                     shrinkWrap: true,
-                    padding: const EdgeInsets.only(top: 8),
+                    padding: const EdgeInsets.only(top: SpacingScale.s8),
                     itemCount: _results.length,
                     itemBuilder: (context, index) {
                       final user = _results[index];
@@ -167,7 +168,7 @@ class _InviteDialogState extends ConsumerState<InviteDialog> {
                             ? Text(user.email, style: theme.textTheme.bodySmall)
                             : null,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(RadiusScale.r8),
                         ),
                         onTap: () => _selectUser(user),
                       );
@@ -178,7 +179,7 @@ class _InviteDialogState extends ConsumerState<InviteDialog> {
                   _results.isEmpty &&
                   _searchController.text.trim().length >= 2)
                 Padding(
-                  padding: const EdgeInsets.only(top: 12),
+                  padding: const EdgeInsets.only(top: SpacingScale.s12),
                   child: Text(
                     l10n.invite_noUsersFound,
                     style: theme.textTheme.bodySmall?.copyWith(
@@ -190,7 +191,7 @@ class _InviteDialogState extends ConsumerState<InviteDialog> {
             ] else ...[
               Card(
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(RadiusScale.r12),
                   side: BorderSide(color: colors.accent.withValues(alpha: 0.3)),
                 ),
                 child: ListTile(
@@ -220,7 +221,7 @@ class _InviteDialogState extends ConsumerState<InviteDialog> {
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: SpacingScale.s16),
               DropdownButtonFormField<String>(
                 initialValue: _selectedRole,
                 decoration: InputDecoration(labelText: l10n.invite_roleLabel),
@@ -257,8 +258,8 @@ class _InviteDialogState extends ConsumerState<InviteDialog> {
           ),
           child: _isSubmitting
               ? const SizedBox(
-                  width: 20,
-                  height: 20,
+                  width: SpacingScale.s20,
+                  height: SpacingScale.s20,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
                     color: AppColors.white,

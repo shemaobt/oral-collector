@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/tokens.dart';
 import '../../l10n/app_localizations.dart';
 
 class UploadStatusBadge extends StatefulWidget {
@@ -121,7 +122,7 @@ class _UploadStatusBadgeState extends State<UploadStatusBadge>
               mainAxisSize: MainAxisSize.min,
               children: [
                 iconWidget,
-                const SizedBox(width: 4),
+                const SizedBox(width: SpacingScale.s4),
                 Flexible(
                   child: Text(
                     label,
@@ -139,12 +140,12 @@ class _UploadStatusBadgeState extends State<UploadStatusBadge>
           ),
         ),
         if (widget.status == 'failed' && widget.onRetry != null) ...[
-          const SizedBox(width: 4),
+          const SizedBox(width: SpacingScale.s4),
           TextButton(
             onPressed: widget.onRetry,
             style: TextButton.styleFrom(
               minimumSize: const Size(44, 36),
-              padding: const EdgeInsets.symmetric(horizontal: 8),
+              padding: const EdgeInsets.symmetric(horizontal: SpacingScale.s8),
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
             child: Text(

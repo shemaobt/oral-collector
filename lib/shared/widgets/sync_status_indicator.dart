@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/tokens.dart';
 import '../../features/sync/presentation/notifiers/sync_notifier.dart';
 import '../../l10n/app_localizations.dart';
 
@@ -20,7 +21,7 @@ class SyncStatusIndicator extends ConsumerWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.only(right: 8),
+      padding: const EdgeInsets.only(right: SpacingScale.s8),
       child: ActionChip(
         avatar: Icon(LucideIcons.uploadCloud, size: 16, color: colors.accent),
         label: Text(
@@ -32,7 +33,9 @@ class SyncStatusIndicator extends ConsumerWidget {
         ),
         backgroundColor: colors.accent.withValues(alpha: 0.1),
         side: BorderSide(color: colors.accent.withValues(alpha: 0.2)),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(RadiusScale.r20),
+        ),
         onPressed: () => ref.read(syncNotifierProvider.notifier).syncAll(),
       ),
     );

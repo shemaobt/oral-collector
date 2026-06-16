@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/tokens.dart';
 
 class EmptyState extends StatelessWidget {
   const EmptyState({
@@ -27,7 +28,7 @@ class EmptyState extends StatelessWidget {
           constraints: BoxConstraints(minHeight: constraints.maxHeight),
           child: IntrinsicHeight(
             child: Padding(
-              padding: const EdgeInsets.all(32),
+              padding: const EdgeInsets.all(SpacingScale.s32),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -44,7 +45,7 @@ class EmptyState extends StatelessWidget {
                       color: colors.accent.withValues(alpha: 0.6),
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: SpacingScale.s20),
                   Text(
                     title,
                     style: theme.textTheme.titleMedium?.copyWith(
@@ -53,9 +54,11 @@ class EmptyState extends StatelessWidget {
                     textAlign: TextAlign.center,
                   ),
                   if (description != null) ...[
-                    const SizedBox(height: 8),
+                    const SizedBox(height: SpacingScale.s8),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: SpacingScale.s16,
+                      ),
                       child: Text(
                         description!,
                         textAlign: TextAlign.center,
@@ -66,7 +69,10 @@ class EmptyState extends StatelessWidget {
                       ),
                     ),
                   ],
-                  if (action != null) ...[const SizedBox(height: 24), action!],
+                  if (action != null) ...[
+                    const SizedBox(height: SpacingScale.s24),
+                    action!,
+                  ],
                 ],
               ),
             ),
