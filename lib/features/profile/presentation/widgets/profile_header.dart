@@ -125,12 +125,16 @@ class ProfileHeader extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                user?.displayName ??
-                    AppLocalizations.of(context).profile_setYourName,
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: user?.displayName != null ? null : colors.secondary,
+              Flexible(
+                child: Text(
+                  user?.displayName ??
+                      AppLocalizations.of(context).profile_setYourName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: user?.displayName != null ? null : colors.secondary,
+                  ),
                 ),
               ),
               const SizedBox(width: 6),
@@ -158,23 +162,27 @@ class ProfileHeader extends StatelessWidget {
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            InfoBadge(
-              icon: LucideIcons.calendar,
-              label: formatMemberSince(
-                user?.createdAt,
-                AppLocalizations.of(context),
+            Flexible(
+              child: InfoBadge(
+                icon: LucideIcons.calendar,
+                label: formatMemberSince(
+                  user?.createdAt,
+                  AppLocalizations.of(context),
+                ),
+                colors: colors,
+                theme: theme,
               ),
-              colors: colors,
-              theme: theme,
             ),
             if (user?.isPlatformAdmin ?? false) ...[
               const SizedBox(width: 8),
-              InfoBadge(
-                icon: LucideIcons.shield,
-                label: AppLocalizations.of(context).profile_adminBadge,
-                colors: colors,
-                theme: theme,
-                accentColor: colors.accent,
+              Flexible(
+                child: InfoBadge(
+                  icon: LucideIcons.shield,
+                  label: AppLocalizations.of(context).profile_adminBadge,
+                  colors: colors,
+                  theme: theme,
+                  accentColor: colors.accent,
+                ),
               ),
             ],
           ],

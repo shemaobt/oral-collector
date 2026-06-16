@@ -5,6 +5,7 @@ import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/utils/format.dart';
 import '../../domain/entities/project.dart';
+import 'language_chip_row.dart';
 
 const projectAccentColors = [
   Color(0xFFD45200),
@@ -119,50 +120,11 @@ class ProjectCard extends StatelessWidget {
                                 ),
                                 const SizedBox(height: 4),
                                 if (project.languageName != null)
-                                  Row(
-                                    children: [
-                                      Icon(
-                                        LucideIcons.globe,
-                                        size: 13,
-                                        color: colors.secondary,
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        project.languageName!,
-                                        style: theme.textTheme.bodySmall
-                                            ?.copyWith(
-                                              color: colors.secondary,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                      ),
-                                      if (project.languageCode != null) ...[
-                                        const SizedBox(width: 6),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 6,
-                                            vertical: 1,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: colors.border.withValues(
-                                              alpha: 0.2,
-                                            ),
-                                            borderRadius: BorderRadius.circular(
-                                              4,
-                                            ),
-                                          ),
-                                          child: Text(
-                                            project.languageCode!.toUpperCase(),
-                                            style: theme.textTheme.labelSmall
-                                                ?.copyWith(
-                                                  color: colors.secondary,
-                                                  fontSize: 10,
-                                                  fontWeight: FontWeight.w600,
-                                                  letterSpacing: 0.5,
-                                                ),
-                                          ),
-                                        ),
-                                      ],
-                                    ],
+                                  LanguageChipRow.card(
+                                    languageName: project.languageName!,
+                                    languageCode: project.languageCode,
+                                    colors: colors,
+                                    theme: theme,
                                   ),
                               ],
                             ),

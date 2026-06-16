@@ -35,7 +35,11 @@ Path: @/lib/core/theme
   reads, so pathological system font settings (>2×) cannot break layouts
   app-wide. Per-screen responsive layout (e.g. the Quick Recording ready state
   in
-  [/lib/features/recording/presentation/widgets/recording_step.dart](/lib/features/recording/presentation/widgets/recording_step.dart))
+  [/lib/features/recording/presentation/widgets/recording_step.dart](/lib/features/recording/presentation/widgets/recording_step.dart),
+  and the profile + project feature widgets in
+  [/lib/features/profile/presentation/widgets](/lib/features/profile/presentation/widgets)
+  /
+  [/lib/features/project/presentation/widgets](/lib/features/project/presentation/widgets))
   handles scale *up to* that ceiling.
 - Colors reach widgets two ways: Material components are styled from raw color
   constants baked into `ThemeData`, while app code reads semantic tokens via
@@ -124,8 +128,20 @@ SpacingScale/RadiusScale/DurationScale/OpacityScale ─► AppSpacing/AppRadii/A
   responsive layout — both in each feature screen and, since ENG-178, in the
   cross-cutting shared widget library
   ([/lib/shared/widgets/docs.md](/lib/shared/widgets/docs.md): scroll-when-overflow,
-  `Flexible`+ellipsis, preserved fixed chrome). Tests pump screens against this
-  ceiling via [/test/support/text_scale.dart](/test/support/text_scale.dart).
+  `Flexible`+ellipsis, preserved fixed chrome). ENG-180 (Wave 3) extended this
+  to the high-visibility profile + project feature widgets
+  ([/lib/features/profile/presentation/widgets](/lib/features/profile/presentation/widgets),
+  [/lib/features/project/presentation/widgets](/lib/features/project/presentation/widgets)),
+  under one guiding principle: **let text grow/wrap where space allows; ellipsize
+  only where width is locked** (a name beside a fixed chip or icon). Two
+  techniques recur there: a shared `LanguageChipRow` (globe + `Flexible`,
+  ellipsizing name + optional code chip) replaces the formerly-inline language
+  rows so the name truncates instead of overflowing; and a **scale-aware
+  `SliverAppBar` `expandedHeight`** (fixed top/bottom padding plus the
+  text-bearing portion multiplied by the system `textScaler`) so the expanded
+  project-settings header grows vertically with the font instead of clipping its
+  title/language row. Tests pump screens against this ceiling via
+  [/test/support/text_scale.dart](/test/support/text_scale.dart).
 - **Color/brightness invariant.** A registered `AppColorSet`'s brightness must
   match its `ThemeData.brightness` — `of()` prefers the extension and ignores
   brightness when one is present, so a mismatched pairing would hand back colors
