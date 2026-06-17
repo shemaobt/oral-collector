@@ -49,8 +49,7 @@ Path: @/lib/core/errors
   confirmation-step upload) through `friendlyErrorFor`, and ENG-104 finished the
   job for the remaining screen catch-sites that were still bypassing the typed
   path another way — passing `e.toString()`, a hardcoded English string, or an
-  *already-localized* string (e.g.
-  `recording_downloadFailed(e.toString())`) straight into `showErrorSnackBar` /
+  *already-localized* string straight into `showErrorSnackBar` /
   raw `ScaffoldMessenger`. All of those now hand the **typed object** (`e`, or
   the notifier's `state.error`) to `showErrorSnackBar`, so a typed leaf reaches
   `messageForException` and `friendlyErrorMessage` is reached only via
@@ -159,7 +158,11 @@ Path: @/lib/core/errors
   fallback's substring rules re-map it — any message containing "permission" or
   "forbidden" collapses to `error_noPermission`, "timeout" to `error_timeout`,
   etc. — so a correctly-localized message can be silently rewritten into the wrong
-  one. Localization happens exactly once, inside `friendlyErrorFor`. This is also
+  one. Localization happens exactly once, inside `friendlyErrorFor`. An optional
+  `template` (`String Function(String friendly)`) wraps that mapped message with a
+  contextual prefix (e.g. `import_pickError`, `recording_uploadFailed`) without
+  re-entering the regex; the recording-share `Result.error` paths route through it
+  instead of embedding the raw `result.error` (ENG-186). This is also
   why the hardcoded English permission string in project-settings was deleted:
   `ForbiddenException` now localizes through the type switch to `error_noPermission`.
 - **A notifier mutation does not rethrow — screens must read `state.error`

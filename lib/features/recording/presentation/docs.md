@@ -196,11 +196,21 @@ Path: @/lib/features/recording/presentation
 - **Online-first then mirror locally.** Edits always call the server
   first; if the server call fails, the local row is not changed (so we do
   not generate phantom local edits). Errors are surfaced through the shared
-  `showErrorSnackBar(context, e)` helper
+  `showErrorSnackBar` helper
   ([/lib/shared/widgets/error_snack_bar.dart](../../../shared/widgets/error_snack_bar.dart)),
   which is handed the **typed** caught exception so it localizes via the type
-  switch (ENG-104; the download and share/export catch-sites no longer build a
-  raw `ScaffoldMessenger`/`SnackBar` from an interpolated `e`). The delegated
+  switch (ENG-104; the throwing catch-sites no longer build a raw
+  `ScaffoldMessenger`/`SnackBar` from an interpolated `e`). The share/export
+  path is the odd one out: it does not throw but inspects a `Result.error`
+  string, which previously got string-interpolated straight into a raw
+  `SnackBar`. ENG-186 routed those `Result.error` branches through the same
+  helper, which shows only the localized `recording_exportShareFailed` message.
+  `AudioExporter`'s raw reason is technical/English and already logged; routing
+  it through the friendly mapper would mis-fire import-oriented branches (a
+  `file not found` reason becomes an import message), so it is intentionally not
+  surfaced. See
+  [/lib/core/errors/docs.md](../../../core/errors/docs.md) for the `template`
+  contract. The delegated
   delete path is the exception: it does not throw but returns a
   `DeleteRecordingResult`, and a `forbidden` result is shown in the semantic
   `warning` color (`AppColors.of(context).warning`), so it adapts to dark mode.

@@ -16,10 +16,10 @@ import '../../../../core/platform/file_ops.dart' as file_ops;
 import '../../../../core/platform/file_source.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/tokens.dart';
-import '../../../../shared/utils/error_helpers.dart';
 import '../../../../shared/utils/format.dart';
 import '../../../../shared/utils/recording_title.dart';
 import '../../../../shared/widgets/app_shell.dart';
+import '../../../../shared/widgets/error_snack_bar.dart';
 import '../../../../shared/widgets/waveform_visualizer.dart';
 import '../../../project/presentation/notifiers/project_notifier.dart';
 import '../../../storyteller/domain/entities/storyteller.dart';
@@ -332,10 +332,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
       }
     } catch (e) {
       if (mounted) {
-        final friendly = friendlyErrorFor(e, l10n);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.recording_uploadFailed(friendly))),
-        );
+        showErrorSnackBar(context, e, template: l10n.recording_uploadFailed);
         setState(() => _isSaving = false);
       }
     }
@@ -434,10 +431,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
       }
     } catch (e) {
       if (mounted) {
-        final friendly = friendlyErrorFor(e, l10n);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.recording_uploadFailed(friendly))),
-        );
+        showErrorSnackBar(context, e, template: l10n.recording_uploadFailed);
         setState(() => _isSaving = false);
       }
     }

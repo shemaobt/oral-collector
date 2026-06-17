@@ -393,9 +393,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get projectSettings_updated => '项目已更新';
 
   @override
-  String get projectSettings_noPermission => '您没有权限更新此项目';
-
-  @override
   String get projectSettings_team => '团队';
 
   @override
@@ -541,11 +538,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get recording_downloadAudioMessage => '音频文件未存储在此设备上。是否要下载以进行剪辑？';
-
-  @override
-  String recording_downloadFailed(String error) {
-    return '下载失败：$error';
-  }
 
   @override
   String get recording_audioNotAvailable => '音频文件不可用';
@@ -983,11 +975,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get profile_photoUpdated => '头像已更新';
-
-  @override
-  String profile_photoFailed(String error) {
-    return '更新头像失败：$error';
-  }
 
   @override
   String get profile_editName => '编辑显示名称';

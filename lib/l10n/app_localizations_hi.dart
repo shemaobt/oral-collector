@@ -402,10 +402,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get projectSettings_updated => 'प्रोजेक्ट अपडेट हुआ';
 
   @override
-  String get projectSettings_noPermission =>
-      'आपको इस प्रोजेक्ट को अपडेट करने की अनुमति नहीं है';
-
-  @override
   String get projectSettings_team => 'टीम';
 
   @override
@@ -554,11 +550,6 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get recording_downloadAudioMessage =>
       'ऑडियो फ़ाइल इस डिवाइस पर संग्रहीत नहीं है। क्या आप इसे ट्रिम करने के लिए डाउनलोड करना चाहते हैं?';
-
-  @override
-  String recording_downloadFailed(String error) {
-    return 'डाउनलोड विफल: $error';
-  }
 
   @override
   String get recording_audioNotAvailable => 'ऑडियो फ़ाइल उपलब्ध नहीं है';
@@ -1028,11 +1019,6 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get profile_photoUpdated => 'प्रोफ़ाइल फ़ोटो अपडेट हुई';
-
-  @override
-  String profile_photoFailed(String error) {
-    return 'फ़ोटो अपडेट करने में विफल: $error';
-  }
 
   @override
   String get profile_editName => 'प्रदर्शन नाम संपादित करें';
