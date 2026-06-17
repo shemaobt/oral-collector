@@ -28,26 +28,28 @@ class RoleState {
   }
 }
 
+final isPlatformAdminProvider = Provider<bool>(
+  (ref) =>
+      ref.watch(authNotifierProvider).currentUser?.isPlatformAdmin ?? false,
+);
+
 final roleNotifierProvider = NotifierProvider<RoleNotifier, RoleState>(
   RoleNotifier.new,
+);
+
+final canCreateProjectProvider = Provider<bool>(
+  (ref) =>
+      ref.watch(isPlatformAdminProvider) ||
+      ref.watch(roleNotifierProvider).hasAnyManagerRole,
 );
 
 class RoleNotifier extends Notifier<RoleState> {
   @override
   RoleState build() => const RoleState();
 
-  bool get isPlatformAdmin {
-    final user = ref.read(authNotifierProvider).currentUser;
-    return user?.isPlatformAdmin ?? false;
-  }
-
   bool canManageProject(String projectId) {
-    if (isPlatformAdmin) return true;
+    if (ref.read(isPlatformAdminProvider)) return true;
     return state.isProjectManager(projectId);
-  }
-
-  bool get canCreateProject {
-    return isPlatformAdmin || state.hasAnyManagerRole;
   }
 
   Future<void> fetchRoleForProject(String projectId) async {

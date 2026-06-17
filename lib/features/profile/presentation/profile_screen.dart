@@ -306,8 +306,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       ],
     );
 
-    final adminSection =
-        (kIsWeb && ref.read(roleNotifierProvider.notifier).isPlatformAdmin)
+    final adminSection = (kIsWeb && ref.read(isPlatformAdminProvider))
         ? Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
