@@ -103,5 +103,30 @@ void main() {
       expect(result, <String>['a', 'b']);
       expect(reporter.errors, isEmpty);
     });
+
+    test('parseContext entra no context quando fornecido e some quando '
+        'nulo', () {
+      final withCtx = _RecordingReporter();
+      parseList(
+        <Map<String, dynamic>>[
+          {'id': 1},
+        ],
+        _readId,
+        context: 'listX',
+        onSkip: withCtx.parseSkipSink(context: 'listX'),
+      );
+      expect(withCtx.contexts.single?['parseContext'], 'listX');
+
+      final noCtx = _RecordingReporter();
+      parseList(
+        <Map<String, dynamic>>[
+          {'id': 1},
+        ],
+        _readId,
+        context: 'listX',
+        onSkip: noCtx.parseSkipSink(),
+      );
+      expect(noCtx.contexts.single?.containsKey('parseContext'), isFalse);
+    });
   });
 }

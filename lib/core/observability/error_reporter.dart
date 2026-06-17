@@ -123,7 +123,7 @@ extension ParseSkipReporting on ErrorReporter {
       error,
       stackTrace,
       level: ErrorLevel.warning,
-      context: {if (context != null) 'parseContext': context, 'index': index},
+      context: {'parseContext': ?context, 'index': index},
     );
   };
 }
