@@ -18,7 +18,7 @@ class RecordingPlayerControls extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final notifier = ref.read(recordingPlayerProvider(recordingId).notifier);
-    final player = notifier.player;
+    final player = notifier.audioPlayer();
 
     return PlaybackKeyHandler(
       onSpace: notifier.togglePlay,

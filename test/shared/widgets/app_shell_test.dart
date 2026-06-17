@@ -20,14 +20,14 @@ import 'package:oral_collector/shared/widgets/app_shell.dart';
 class _FakeRecordingSessionNotifier extends RecordingSessionNotifier {
   _FakeRecordingSessionNotifier(this._initial);
   final RecordingState _initial;
-  int discardCallCount = 0;
+  int _discardCallCount = 0;
 
   @override
   RecordingState build() => _initial;
 
   @override
   Future<void> discardRecording() async {
-    discardCallCount++;
+    _discardCallCount++;
     state = const RecordingState();
   }
 }
@@ -35,14 +35,14 @@ class _FakeRecordingSessionNotifier extends RecordingSessionNotifier {
 class _FakeAuthNotifier extends AuthNotifier {
   _FakeAuthNotifier(this._initial);
   final AuthState _initial;
-  int logoutCallCount = 0;
+  int _logoutCallCount = 0;
 
   @override
   AuthState build() => _initial;
 
   @override
   Future<void> logout() async {
-    logoutCallCount++;
+    _logoutCallCount++;
     state = const AuthState();
   }
 }
@@ -58,9 +58,6 @@ class _FakeInviteNotifier extends InviteNotifier {
 class _FakeRoleNotifier extends RoleNotifier {
   @override
   RoleState build() => const RoleState();
-
-  @override
-  bool get isPlatformAdmin => false;
 }
 
 const _testUser = User(
@@ -382,8 +379,8 @@ void main() {
 
         final l10n = AppLocalizationsEn();
         expect(find.text(l10n.recording_blockNavTitle), findsOneWidget);
-        expect(auth.logoutCallCount, 0);
-        expect(rec.discardCallCount, 0);
+        expect(auth._logoutCallCount, 0);
+        expect(rec._discardCallCount, 0);
         expect(find.text('login page'), findsNothing);
       },
     );
@@ -405,8 +402,8 @@ void main() {
         await tester.tap(find.text(l10n.common_cancel));
         await tester.pumpAndSettle();
 
-        expect(auth.logoutCallCount, 0);
-        expect(rec.discardCallCount, 0);
+        expect(auth._logoutCallCount, 0);
+        expect(rec._discardCallCount, 0);
         expect(find.text('login page'), findsNothing);
       },
     );
@@ -428,8 +425,8 @@ void main() {
         await tester.tap(find.text(l10n.recording_blockNavDiscardAndLeave));
         await tester.pumpAndSettle();
 
-        expect(rec.discardCallCount, 1);
-        expect(auth.logoutCallCount, 1);
+        expect(rec._discardCallCount, 1);
+        expect(auth._logoutCallCount, 1);
         expect(find.text('login page'), findsOneWidget);
       },
     );
@@ -447,7 +444,7 @@ void main() {
 
         final l10n = AppLocalizationsEn();
         expect(find.text(l10n.recording_blockNavTitle), findsNothing);
-        expect(auth.logoutCallCount, 1);
+        expect(auth._logoutCallCount, 1);
         expect(find.text('login page'), findsOneWidget);
       },
     );

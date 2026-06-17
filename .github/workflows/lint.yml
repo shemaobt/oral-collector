@@ -28,11 +28,10 @@ jobs:
 
       - name: Custom lint (riverpod_lint)
         run: dart run custom_lint
-        continue-on-error: true
 
   # Testa as regras de obt_lints (ENG-159) de forma isolada e BLOQUEANTE, via
-  # fixtures // expect_lint no example/. O step app-wide acima segue não-bloqueante
-  # (baseline de info a ser queimado antes de promover — ADR-0007).
+  # fixtures // expect_lint no example/. O step app-wide acima também é bloqueante
+  # desde ENG-158 (baseline de avoid_public_notifier_properties zerado — ADR-0007).
   obt_lints:
     runs-on: ubuntu-latest
     steps:

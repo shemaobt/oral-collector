@@ -24,7 +24,7 @@ const _bannerText = 'Recording continued in background';
 class _SpyRecordingSessionNotifier extends RecordingSessionNotifier {
   _SpyRecordingSessionNotifier(this._initial);
   final RecordingState _initial;
-  int reactivateCount = 0;
+  int _reactivateCount = 0;
 
   @override
   RecordingState build() => _initial;
@@ -33,7 +33,7 @@ class _SpyRecordingSessionNotifier extends RecordingSessionNotifier {
   // we only record that the widget asked for a re-activation.
   @override
   Future<void> reactivateAudioSession() async {
-    reactivateCount++;
+    _reactivateCount++;
   }
 }
 
@@ -127,7 +127,7 @@ void main() {
       _drive(tester, _backgroundRoundTrip);
       await tester.pump();
 
-      expect(spy.reactivateCount, 1);
+      expect(spy._reactivateCount, 1);
       expect(find.text(_bannerText), findsOneWidget);
 
       // Unmount to cancel the 3s banner timer via dispose.
@@ -152,7 +152,7 @@ void main() {
       ]);
       await tester.pump();
 
-      expect(spy.reactivateCount, 0);
+      expect(spy._reactivateCount, 0);
       expect(find.text(_bannerText), findsNothing);
 
       await tester.pumpWidget(const SizedBox());
@@ -170,7 +170,7 @@ void main() {
     _drive(tester, _backgroundRoundTrip);
     await tester.pump();
 
-    expect(spy.reactivateCount, 0);
+    expect(spy._reactivateCount, 0);
     expect(find.text(_bannerText), findsNothing);
 
     await tester.pumpWidget(const SizedBox());
@@ -188,11 +188,11 @@ void main() {
 
     _drive(tester, _backgroundRoundTrip);
     await tester.pump();
-    expect(spy.reactivateCount, 1);
+    expect(spy._reactivateCount, 1);
 
     _drive(tester, _backgroundRoundTrip);
     await tester.pump();
-    expect(spy.reactivateCount, 2);
+    expect(spy._reactivateCount, 2);
 
     await tester.pumpWidget(const SizedBox());
     await tester.pump();

@@ -30,8 +30,11 @@ Path: @/lib/features/recording/presentation/widgets
   (replace, classify, move, etc.) live on
   [../recording_detail_screen.dart](../recording_detail_screen.dart);
   the widgets surface user intent via callbacks.
-- Audio playback widgets read the `AudioPlayer` off
-  `recordingPlayerProvider(recordingId).notifier.player` (see
+- Audio playback widgets read the `AudioPlayer` by calling
+  `recordingPlayerProvider(recordingId).notifier.audioPlayer()` — a
+  method, not a field, because `riverpod_lint`'s
+  `avoid_public_notifier_properties` (a blocking gate since ENG-158)
+  bans public notifier fields/getters (see
   [../notifiers/docs.md](../notifiers/docs.md)). The widgets never
   construct an `AudioPlayer` themselves — that is the notifier's
   responsibility.
@@ -52,8 +55,9 @@ Path: @/lib/features/recording/presentation/widgets
   recreate it.
 - `RecordingPlayerControls` renders the play/pause button, slider,
   position label, and duration label. It reads the long-lived
-  `AudioPlayer` off the notifier and wires the slider's `onChanged` to
-  `notifier.seek`; the play/pause button calls `notifier.togglePlay`.
+  `AudioPlayer` via `notifier.audioPlayer()` and wires the slider's
+  `onChanged` to `notifier.seek`; the play/pause button calls
+  `notifier.togglePlay`.
   The space-bar shortcut is provided by `PlaybackKeyHandler`, which
   is web-only.
 - The taxonomy-edit dialogs (classify, move category, secondary

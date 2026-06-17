@@ -3,7 +3,7 @@
 - Status: Accepted
 - Date: 2026-06-04
 - Epic: E1 (Architecture & Standards)
-- Related: ENG-89, ENG-90, ENG-156, ENG-157, ENG-159, ENG-183, ENG-116, ADR-0000, ADR-0002, ADR-0004
+- Related: ENG-89, ENG-90, ENG-156, ENG-157, ENG-158, ENG-159, ENG-183, ENG-116, ADR-0000, ADR-0002, ADR-0004
 - Update (2026-06-15, ENG-159): the deferred custom rule from item 5 shipped as
   the `obt_lints` plugin — `avoid_hardcoded_color` + `avoid_material_colors`,
   staged at `info` and non-blocking, exempting `lib/core/theme/**`.
@@ -12,6 +12,10 @@
   `LintCode`, not `analyzer: errors:`) and `test/` is now exempt. The
   `dart run custom_lint` step stays non-blocking by choice — see "Promoted in
   ENG-183" below.
+- Update (2026-06-17, ENG-158): `avoid_public_notifier_properties` baseline
+  burned down to zero and `dart run custom_lint` is now **blocking** in CI and
+  the pre-commit hook (full enforcement) — supersedes the ENG-183 "stays
+  non-blocking" note. See "Promoted in ENG-158" below.
 
 ## Context
 
@@ -114,6 +118,31 @@ errors:`) and custom_lint does **not** run under `flutter analyze`. The
 and in the (non-fatal) CI step, but does not yet wall the build. The rules also
 now exempt `test/` (fixtures legitimately use raw colors). Flipping
 `continue-on-error` to blocking is the remaining step to full enforcement.
+
+**Promoted in ENG-158 (2026-06-17).** Burned down `riverpod_lint`'s
+`avoid_public_notifier_properties` to **zero** (15 sites). In `lib/` (4): the two
+derived getters on `RoleNotifier` became top-level providers
+(`isPlatformAdminProvider`, `canCreateProjectProvider`),
+`LocaleNotifier.hasLocalePreference` was inlined to `localeProvider != null` at
+its single call site, and `RecordingPlayerNotifier.player` is re-exposed as an
+`audioPlayer()` method. In `test/` (11): public spy counters and the
+`_FakeSyncNotifier.initialOnline` config field were made private on the test
+doubles. The rule is **body-blind** — it flags any public instance getter or
+field on a notifier subtype (including `late final` fields and pure
+`state`-derived getters), so the fix is always to route data through
+`state`/derived providers or expose it via a method (methods are not flagged).
+With the baseline clean, `continue-on-error` was removed from the
+`dart run custom_lint` step in `.github/workflows/lint.yml` and `|| true` from
+`.githooks/pre-commit`: the step is now **blocking**. `dart run custom_lint`
+exits non-zero on any finding at any severity, so there is no
+`analyzer: errors:` promotion (custom_lint rule severity is not configurable from
+`analysis_options.yaml`). Because a single command gates the **entire**
+custom_lint surface, this also makes the `obt_lints` rules
+(`avoid_hardcoded_color`/`avoid_material_colors`, `warning`) blocking app-wide —
+which ENG-183 had deliberately left non-blocking. Their baseline is already zero
+outside `lib/core/theme/**`, so CI stays green, but new `obt_lints` findings now
+wall the build too. The isolated `obt_lints` fixture job is unchanged. The full
+suite (1067 tests) stays green.
 
 ## Consequences
 

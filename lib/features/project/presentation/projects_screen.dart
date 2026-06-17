@@ -70,7 +70,7 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
     });
 
     final l10n = AppLocalizations.of(context);
-    final canCreate = roleNotifier.canCreateProject;
+    final canCreate = ref.read(canCreateProjectProvider);
     final fabOffset = AppShell.fabBottomOffset(context);
 
     return Scaffold(

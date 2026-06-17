@@ -6,5 +6,5 @@ flutter pub get
 # hook green until rules are promoted. Warnings and errors still block.
 flutter analyze --no-fatal-infos
 dart format --set-exit-if-changed lib/ test/
-# riverpod_lint via custom_lint — non-blocking while the baseline is burned down.
-dart run custom_lint || true
+# riverpod_lint via custom_lint — blocking since ENG-158 (baseline burned down).
+dart run custom_lint

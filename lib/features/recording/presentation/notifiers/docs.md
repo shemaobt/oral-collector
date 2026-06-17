@@ -57,9 +57,13 @@ Path: @/lib/features/recording/presentation/notifiers
   recording id. Its `build(arg)` creates a `just_audio` `AudioPlayer`
   through `audioPlayerFactoryProvider` and registers an `onDispose`
   that releases the player and flags the notifier disposed (see Things
-  to Know). Callers obtain the long-lived player via
-  `ref.read(recordingPlayerProvider(id).notifier).player` and use the
-  notifier's `load` / `togglePlay` / `seek` / `stop` methods. State is
+  to Know). The player is held in a private `_player` field and handed
+  to the widget via an `audioPlayer()` **method**, not a public field:
+  `riverpod_lint`'s `avoid_public_notifier_properties` flags any public
+  instance field/getter on a notifier, but not methods (see Things to
+  Know). Callers obtain the long-lived player via
+  `ref.read(recordingPlayerProvider(id).notifier).audioPlayer()` and use
+  the notifier's `load` / `togglePlay` / `seek` / `stop` methods. State is
   the immutable `RecordingPlayerState` in `recording_player_state.dart`
   (`isLoading`, `errorKind`, `hasAudio`); the error kind is one of
   `fileNotFound` (local missing and no fallback URL) or `loadFailed`
@@ -140,7 +144,7 @@ Path: @/lib/features/recording/presentation/notifiers
   Because the autoDispose provider can be torn down mid-load — the
   detail screen unmounts while `_doLoad` is suspended on path
   resolution or `setFilePath` / `setUrl` — the `onDispose` callback
-  sets `_disposed = true` alongside `player.dispose()`, and every
+  sets `_disposed = true` alongside `_player.dispose()`, and every
   `await` in `_doLoad` (including the top of the `on Object catch`) is
   followed by an early return when disposed. The guard is hand-rolled
   because Riverpod 2.6.1 has no `ref.mounted`, and a post-dispose
@@ -163,6 +167,18 @@ Path: @/lib/features/recording/presentation/notifiers
   `audioPlayerFactoryProvider` and `audioPathResolverProvider` exist so
   the notifier can be unit-tested without `just_audio` plugin channels
   or the filesystem. Production code never overrides them.
+- **Notifiers expose no public fields/getters (ENG-158).**
+  `riverpod_lint`'s `avoid_public_notifier_properties` is body-blind: it
+  flags *any* public instance field or getter on a `Notifier` subtype,
+  regardless of what it reads. As of ENG-158 `dart run custom_lint` is a
+  blocking CI + pre-commit gate (final stage of
+  [/docs/adr/ADR-0007-lint-baseline.md](/docs/adr/ADR-0007-lint-baseline.md)),
+  so anything a widget needs off a notifier must flow through `state`,
+  through a derived top-level provider, or through a **method**. That is
+  why the long-lived `AudioPlayer` is reached via `audioPlayer()` rather
+  than the former public `player` field — derived audio state already
+  lives on `RecordingPlayerState`, but the player object itself (needed
+  for the widget's `StreamBuilder`s) has nowhere to live but a method.
 - **A failed finalize keeps the recording recoverable — on both stop
   paths.** Finalization (FFmpeg concat + IO under
   [../../data/services/recording_finalization_service.dart](../../data/services/recording_finalization_service.dart))
