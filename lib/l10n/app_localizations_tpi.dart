@@ -399,10 +399,6 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get projectSettings_updated => 'Projek i apdet pinis';
 
   @override
-  String get projectSettings_noPermission =>
-      'Yu no gat pemisin bilong apdet dispela projek';
-
-  @override
   String get projectSettings_team => 'Tim';
 
   @override
@@ -551,11 +547,6 @@ class AppLocalizationsTpi extends AppLocalizations {
   @override
   String get recording_downloadAudioMessage =>
       'Audio fail i no stap long dispela divais. Yu laik kisim i kam daun bilong katim?';
-
-  @override
-  String recording_downloadFailed(String error) {
-    return 'No inap kisim i kam daun: $error';
-  }
 
   @override
   String get recording_audioNotAvailable => 'Audio fail i no stap';
@@ -1012,11 +1003,6 @@ class AppLocalizationsTpi extends AppLocalizations {
 
   @override
   String get profile_photoUpdated => 'Profail foto i apdet pinis';
-
-  @override
-  String profile_photoFailed(String error) {
-    return 'No inap apdet foto: $error';
-  }
 
   @override
   String get profile_editName => 'Senisim nem bilong yu';

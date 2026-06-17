@@ -605,14 +605,13 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
         );
         if (mounted) Navigator.of(context).pop();
         if (!result.success && mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                result.error != null
-                    ? '${l10n.recording_exportShareFailed}: ${result.error}'
-                    : l10n.recording_exportShareFailed,
-              ),
-            ),
+          // O motivo de AudioExporter é técnico/inglês (já registrado em log);
+          // mapeá-lo dispararia ramos de import (ex.: "file not found"), então
+          // ao usuário mostramos só a mensagem localizada de share.
+          showErrorSnackBar(
+            context,
+            '',
+            template: (_) => l10n.recording_exportShareFailed,
           );
         }
       } catch (e) {
@@ -642,14 +641,10 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
       sharePositionOrigin: _shareAnchorRect(),
     );
     if (!result.success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            result.error != null
-                ? '${l10n.recording_exportShareFailed}: ${result.error}'
-                : l10n.recording_exportShareFailed,
-          ),
-        ),
+      showErrorSnackBar(
+        context,
+        '',
+        template: (_) => l10n.recording_exportShareFailed,
       );
     }
   }
