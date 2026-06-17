@@ -7,6 +7,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../core/auth/auth_notifier.dart';
 import '../../../core/l10n/locale_provider.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/tokens.dart';
 import '../../../shared/preview_helpers.dart';
 import '../../../shared/widgets/app_shell.dart';
 import '../../../shared/widgets/locale_picker_sheet.dart';
@@ -69,7 +70,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           context: context,
           isDismissible: false,
           shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            borderRadius: BorderRadius.vertical(
+              top: Radius.circular(RadiusScale.r24),
+            ),
           ),
           constraints: const BoxConstraints(maxWidth: 600),
           builder: (_) => const LocalePickerSheet(),
@@ -109,7 +112,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(RadiusScale.r24),
+        ),
       ),
       constraints: const BoxConstraints(maxWidth: 600),
       builder: (ctx) {
@@ -218,7 +223,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: SpacingScale.s20,
+                ),
                 child: Row(
                   children: [
                     UserAvatar(
@@ -236,12 +243,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
+                padding: const EdgeInsets.fromLTRB(
+                  SpacingScale.s20,
+                  18,
+                  SpacingScale.s20,
+                  0,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(greeting, style: theme.textTheme.headlineLarge),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: SpacingScale.s4),
                     Text(
                       l10n.home_subtitle,
                       style: theme.textTheme.bodyMedium?.copyWith(
@@ -267,7 +279,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 }
                 return SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                    padding: const EdgeInsets.fromLTRB(
+                      SpacingScale.s16,
+                      SpacingScale.s16,
+                      SpacingScale.s16,
+                      0,
+                    ),
                     child: UnsavedRecordingsBanner(
                       sessions: interrupted,
                       onReview: () => UnsavedRecordingsSheet.show(
@@ -290,7 +307,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ? () => _showProjectSwitcher(context)
                         : null,
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 22, 20, 0),
+                      padding: const EdgeInsets.fromLTRB(
+                        SpacingScale.s20,
+                        22,
+                        SpacingScale.s20,
+                        0,
+                      ),
                       child: Row(
                         children: [
                           Icon(
@@ -309,10 +331,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             ),
                           ),
                           if (activeProject.languageName != null) ...[
-                            const SizedBox(width: 8),
+                            const SizedBox(width: SpacingScale.s8),
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
+                                horizontal: SpacingScale.s8,
                                 vertical: 3,
                               ),
                               decoration: BoxDecoration(
@@ -367,7 +389,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const CircularProgressIndicator(),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: SpacingScale.s16),
                       Text(l10n.home_loadingProjects),
                     ],
                   ),
@@ -376,7 +398,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             else if (activeProject != null && genreState.genres.isNotEmpty) ...[
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 28, 20, 0),
+                  padding: const EdgeInsets.fromLTRB(
+                    SpacingScale.s20,
+                    SpacingScale.s28,
+                    SpacingScale.s20,
+                    0,
+                  ),
                   child: Row(
                     children: [
                       Text(
@@ -389,7 +416,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 10,
-                          vertical: 4,
+                          vertical: SpacingScale.s4,
                         ),
                         decoration: BoxDecoration(
                           color: colors.foreground.withValues(
@@ -421,9 +448,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               if (genreState.genres.length > 1)
                 SliverPadding(
                   padding: EdgeInsets.fromLTRB(
-                    16,
+                    SpacingScale.s16,
                     0,
-                    16,
+                    SpacingScale.s16,
                     AppShell.scrollPaddingFor(context),
                   ),
                   sliver: SliverGrid(
@@ -460,7 +487,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         size: 56,
                         color: colors.secondary.withValues(alpha: 0.5),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: SpacingScale.s16),
                       Text(
                         l10n.home_noGenres,
                         style: theme.textTheme.bodyLarge?.copyWith(
@@ -478,7 +505,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const CircularProgressIndicator(),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: SpacingScale.s16),
                       Text(l10n.home_loadingGenres),
                     ],
                   ),

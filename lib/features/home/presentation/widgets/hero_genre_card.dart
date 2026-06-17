@@ -5,6 +5,7 @@ import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/l10n/content_l10n.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_palettes.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../../shared/utils/format.dart';
 import '../../../../shared/utils/genre_helpers.dart';
 import '../../../genre/domain/entities/genre.dart';
@@ -42,7 +43,12 @@ class HeroGenreCard extends StatelessWidget {
     )!;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+      padding: const EdgeInsets.fromLTRB(
+        SpacingScale.s16,
+        14,
+        SpacingScale.s16,
+        SpacingScale.s12,
+      ),
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(22),
@@ -57,7 +63,7 @@ class HeroGenreCard extends StatelessWidget {
             onTap: onTap,
             borderRadius: BorderRadius.circular(22),
             child: Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(SpacingScale.s20),
               child: Row(
                 children: [
                   Container(
@@ -104,7 +110,7 @@ class HeroGenreCard extends StatelessWidget {
                               isDark: isDark,
                               bgBase: isDark ? colors.card : AppColors.white,
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: SpacingScale.s8),
                             MiniStatBadge(
                               icon: LucideIcons.clock,
                               text: formatDurationCompact(dur),

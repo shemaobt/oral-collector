@@ -268,7 +268,12 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
                         ),
                       if (hasInterruptedAndReady)
                         Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                          padding: const EdgeInsets.fromLTRB(
+                            SpacingScale.s16,
+                            SpacingScale.s16,
+                            SpacingScale.s16,
+                            0,
+                          ),
                           child: UnsavedRecordingsBanner(
                             sessions: interrupted,
                             onReview: () => _openRecoverySheet(),
@@ -276,7 +281,7 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
                         )
                       else ...[
                         Padding(
-                          padding: const EdgeInsets.only(top: 24),
+                          padding: const EdgeInsets.only(top: SpacingScale.s24),
                           child: SizedBox(
                             width: double.infinity,
                             child: FittedBox(
@@ -306,7 +311,9 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
                               children: [
                                 if (!recState.isPaused)
                                   Padding(
-                                    padding: const EdgeInsets.only(right: 8),
+                                    padding: const EdgeInsets.only(
+                                      right: SpacingScale.s8,
+                                    ),
                                     child: _PulsingDot(color: colors.accent),
                                   ),
                                 Text(
@@ -338,15 +345,19 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
                           ),
                         if (!isActive && !isFinalizing && tagLabel.isNotEmpty)
                           Padding(
-                            padding: const EdgeInsets.only(top: 8),
+                            padding: const EdgeInsets.only(
+                              top: SpacingScale.s8,
+                            ),
                             child: Container(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 4,
+                                horizontal: SpacingScale.s12,
+                                vertical: SpacingScale.s4,
                               ),
                               decoration: BoxDecoration(
                                 color: colors.surfaceAlt,
-                                borderRadius: BorderRadius.circular(16),
+                                borderRadius: BorderRadius.circular(
+                                  RadiusScale.r16,
+                                ),
                               ),
                               child: Text(
                                 tagLabel,
@@ -368,7 +379,9 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
                         _buildBottomControls(colors, notifier, recState),
                       if (isFinalizing)
                         Padding(
-                          padding: const EdgeInsets.only(bottom: 32),
+                          padding: const EdgeInsets.only(
+                            bottom: SpacingScale.s32,
+                          ),
                           child: FinalizingStatusCard(
                             stage: recState.finalizationStage,
                             degraded: recState.finalizationDegraded,
@@ -390,9 +403,9 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
     final sensitivity = ref.watch(noiseSensitivityProvider);
     return Column(
       children: [
-        const SizedBox(height: 24),
+        const SizedBox(height: SpacingScale.s24),
         _buildInputSourceRow(colors),
-        const SizedBox(height: 12),
+        const SizedBox(height: SpacingScale.s12),
         _buildSensitivitySelector(colors, sensitivity),
         Expanded(
           child: Center(
@@ -406,7 +419,10 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
           ),
         ),
         Padding(
-          padding: const EdgeInsets.only(top: 8, bottom: 24),
+          padding: const EdgeInsets.only(
+            top: SpacingScale.s8,
+            bottom: SpacingScale.s24,
+          ),
           child: Text(
             AppLocalizations.of(context).recording_tapToRecord,
             textAlign: TextAlign.center,
@@ -440,7 +456,10 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
         );
       },
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        padding: const EdgeInsets.symmetric(
+          horizontal: SpacingScale.s16,
+          vertical: 6,
+        ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -472,7 +491,7 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
                 ],
               ),
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: SpacingScale.s4),
             Padding(
               padding: const EdgeInsets.only(top: 2),
               child: Icon(
@@ -521,7 +540,7 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: SpacingScale.s16),
       child: Row(
         children: [
           Icon(LucideIcons.mic, size: 14, color: colors.secondary),
@@ -546,14 +565,14 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
                     current,
                     l10n.recording_sensitivityLow,
                   ),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: SpacingScale.s4),
                   _sensitivityChip(
                     colors,
                     NoiseSensitivity.medium,
                     current,
                     l10n.recording_sensitivityMed,
                   ),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: SpacingScale.s4),
                   _sensitivityChip(
                     colors,
                     NoiseSensitivity.high,
@@ -583,10 +602,13 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
       },
       child: AnimatedContainer(
         duration: DurationScale.ms200,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        padding: const EdgeInsets.symmetric(
+          horizontal: SpacingScale.s12,
+          vertical: 6,
+        ),
         decoration: BoxDecoration(
           color: isSelected ? colors.foreground : colors.surfaceAlt,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(RadiusScale.r12),
         ),
         child: Text(
           label,
@@ -640,7 +662,7 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
     RecordingState recState,
   ) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 40),
+      padding: const EdgeInsets.only(bottom: SpacingScale.s40),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -653,7 +675,7 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
                 ? notifier.resumeRecording()
                 : notifier.pauseRecording(),
           ),
-          const SizedBox(width: 48),
+          const SizedBox(width: SpacingScale.s48),
 
           _buildStopButton(colors, () => _handleStop(notifier)),
         ],
@@ -677,7 +699,7 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
               width: 64,
               height: 64,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(RadiusScale.r20),
                 color: colors.accent,
                 boxShadow: [
                   BoxShadow(
@@ -693,12 +715,12 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
                   height: 20,
                   decoration: BoxDecoration(
                     color: AppColors.white,
-                    borderRadius: BorderRadius.circular(4),
+                    borderRadius: BorderRadius.circular(RadiusScale.r4),
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: SpacingScale.s8),
             Text(
               AppLocalizations.of(context).recording_stop,
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
@@ -722,7 +744,10 @@ class _StorageBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      padding: const EdgeInsets.symmetric(
+        horizontal: SpacingScale.s16,
+        vertical: 10,
+      ),
       color: AppColors.warningContainer,
       child: Row(
         children: [
@@ -731,7 +756,7 @@ class _StorageBanner extends StatelessWidget {
             size: 16,
             color: AppColors.onWarningContainer,
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: SpacingScale.s8),
           Expanded(
             child: Text(
               message,
@@ -758,12 +783,15 @@ class _InfoBanner extends StatelessWidget {
     final colors = AppColors.of(context);
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(
+        horizontal: SpacingScale.s16,
+        vertical: SpacingScale.s8,
+      ),
       color: colors.surfaceAlt,
       child: Row(
         children: [
           Icon(LucideIcons.info, size: 16, color: colors.secondary),
-          const SizedBox(width: 8),
+          const SizedBox(width: SpacingScale.s8),
           Expanded(
             child: Text(
               message,
@@ -788,7 +816,10 @@ class _CheckpointChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 10,
+        vertical: SpacingScale.s4,
+      ),
       decoration: BoxDecoration(
         color: colors.foreground.withValues(alpha: 0.92),
         borderRadius: BorderRadius.circular(14),
@@ -825,9 +856,12 @@ class _BackToListButton extends StatelessWidget {
       color: AppColors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(RadiusScale.r20),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          padding: const EdgeInsets.symmetric(
+            horizontal: SpacingScale.s12,
+            vertical: 6,
+          ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [

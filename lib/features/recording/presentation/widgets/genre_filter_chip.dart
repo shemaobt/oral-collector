@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 
 class GenreFilterChip extends StatelessWidget {
   const GenreFilterChip({
@@ -23,12 +24,15 @@ class GenreFilterChip extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        padding: const EdgeInsets.symmetric(
+          horizontal: SpacingScale.s12,
+          vertical: 6,
+        ),
         decoration: BoxDecoration(
           color: isSelected
               ? colors.primary.withValues(alpha: 0.12)
               : AppColors.transparent,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(RadiusScale.r16),
           border: Border.all(
             color: isSelected
                 ? colors.primary.withValues(alpha: 0.4)

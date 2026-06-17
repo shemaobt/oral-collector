@@ -3,6 +3,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 
 class LoginForm extends StatelessWidget {
   const LoginForm({
@@ -44,7 +45,7 @@ class LoginForm extends StatelessWidget {
             color: colors.foreground,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: SpacingScale.s8),
         TextFormField(
           controller: emailController,
           keyboardType: TextInputType.emailAddress,
@@ -68,7 +69,7 @@ class LoginForm extends StatelessWidget {
             return null;
           },
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: SpacingScale.s20),
 
         Text(
           l10n.auth_passwordLabel,
@@ -77,7 +78,7 @@ class LoginForm extends StatelessWidget {
             color: colors.foreground,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: SpacingScale.s8),
         TextFormField(
           controller: passwordController,
           obscureText: obscurePassword,
@@ -109,14 +110,14 @@ class LoginForm extends StatelessWidget {
           },
           onFieldSubmitted: (_) => onLogin(),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: SpacingScale.s8),
         Align(
           alignment: Alignment.centerRight,
           child: TextButton(
             onPressed: onForgotPassword,
             style: TextButton.styleFrom(
               minimumSize: const Size(44, 36),
-              padding: const EdgeInsets.symmetric(horizontal: 4),
+              padding: const EdgeInsets.symmetric(horizontal: SpacingScale.s4),
             ),
             child: Text(
               l10n.auth_forgotPassword,
@@ -127,7 +128,7 @@ class LoginForm extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: SpacingScale.s20),
 
         SizedBox(
           width: double.infinity,
@@ -145,8 +146,8 @@ class LoginForm extends StatelessWidget {
             ),
             child: isLoading
                 ? const SizedBox(
-                    width: 24,
-                    height: 24,
+                    width: SpacingScale.s24,
+                    height: SpacingScale.s24,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
                       color: AppColors.white,
@@ -155,7 +156,7 @@ class LoginForm extends StatelessWidget {
                 : Text(l10n.auth_signIn),
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: SpacingScale.s24),
 
         Wrap(
           alignment: WrapAlignment.center,
@@ -171,7 +172,9 @@ class LoginForm extends StatelessWidget {
               onPressed: onGoToSignup,
               style: TextButton.styleFrom(
                 minimumSize: const Size(44, 44),
-                padding: const EdgeInsets.symmetric(horizontal: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: SpacingScale.s8,
+                ),
               ),
               child: Text(
                 l10n.auth_signUp,

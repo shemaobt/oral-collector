@@ -5,6 +5,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/l10n/content_l10n.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../genre/presentation/notifiers/genre_notifier.dart';
 import 'secondary_classification_fields.dart';
 
@@ -115,7 +116,7 @@ class _MoveCategoryDialogState extends ConsumerState<MoveCategoryDialog> {
       title: Row(
         children: [
           Icon(LucideIcons.folderInput, size: 20, color: colors.secondary),
-          const SizedBox(width: 8),
+          const SizedBox(width: SpacingScale.s8),
           Text(l10n.moveCategory_title),
         ],
       ),
@@ -133,7 +134,7 @@ class _MoveCategoryDialogState extends ConsumerState<MoveCategoryDialog> {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: SpacingScale.s4),
               DropdownButtonFormField<String>(
                 initialValue: genreExists
                     ? _selectedGenreId
@@ -141,7 +142,7 @@ class _MoveCategoryDialogState extends ConsumerState<MoveCategoryDialog> {
                 decoration: const InputDecoration(
                   isDense: true,
                   contentPadding: EdgeInsets.symmetric(
-                    horizontal: 12,
+                    horizontal: SpacingScale.s12,
                     vertical: 10,
                   ),
                 ),
@@ -164,7 +165,7 @@ class _MoveCategoryDialogState extends ConsumerState<MoveCategoryDialog> {
                   });
                 },
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: SpacingScale.s16),
 
               if (subcategories.isNotEmpty) ...[
                 Text(
@@ -174,7 +175,7 @@ class _MoveCategoryDialogState extends ConsumerState<MoveCategoryDialog> {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: SpacingScale.s4),
                 DropdownButtonFormField<String>(
                   isExpanded: true,
                   initialValue:
@@ -184,7 +185,7 @@ class _MoveCategoryDialogState extends ConsumerState<MoveCategoryDialog> {
                   decoration: const InputDecoration(
                     isDense: true,
                     contentPadding: EdgeInsets.symmetric(
-                      horizontal: 12,
+                      horizontal: SpacingScale.s12,
                       vertical: 10,
                     ),
                   ),
@@ -204,12 +205,12 @@ class _MoveCategoryDialogState extends ConsumerState<MoveCategoryDialog> {
                   },
                 ),
               ],
-              const SizedBox(height: 12),
+              const SizedBox(height: SpacingScale.s12),
               Theme(
                 data: theme.copyWith(dividerColor: AppColors.transparent),
                 child: ExpansionTile(
                   tilePadding: EdgeInsets.zero,
-                  childrenPadding: const EdgeInsets.only(top: 8),
+                  childrenPadding: const EdgeInsets.only(top: SpacingScale.s8),
                   initiallyExpanded: _showSecondary,
                   onExpansionChanged: (expanded) {
                     setState(() {

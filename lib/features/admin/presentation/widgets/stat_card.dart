@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 
 class StatCardData {
   final IconData icon;
@@ -25,9 +26,11 @@ class StatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(RadiusScale.r16),
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(SpacingScale.s16),
         child: Row(
           children: [
             CircleAvatar(
@@ -35,7 +38,7 @@ class StatCard extends StatelessWidget {
               backgroundColor: data.color.withValues(alpha: 0.1),
               child: Icon(data.icon, color: data.color),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: SpacingScale.s16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

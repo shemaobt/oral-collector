@@ -3,6 +3,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../../shared/utils/format.dart';
 import '../../domain/entities/project.dart';
 import 'language_chip_row.dart';
@@ -65,7 +66,12 @@ class ProjectSettingsHeader extends StatelessWidget {
           ),
           child: SafeArea(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 52, 20, 16),
+              padding: const EdgeInsets.fromLTRB(
+                SpacingScale.s20,
+                52,
+                SpacingScale.s20,
+                SpacingScale.s16,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.end,
@@ -153,7 +159,7 @@ class ProjectSettingsStatsRow extends StatelessWidget {
     return Row(
       children: [
         for (var i = 0; i < chips.length; i++) ...[
-          if (i > 0) const SizedBox(width: 8),
+          if (i > 0) const SizedBox(width: SpacingScale.s8),
           chips[i],
         ],
       ],

@@ -4,6 +4,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../../shared/utils/format.dart';
 import '../../../recording/domain/entities/recording.dart';
 import '../notifiers/admin_notifier.dart';
@@ -109,7 +110,7 @@ class _CleaningSectionState extends ConsumerState<CleaningSection> {
             ),
             if (_selectedIds.isNotEmpty)
               Padding(
-                padding: const EdgeInsets.only(right: 8),
+                padding: const EdgeInsets.only(right: SpacingScale.s8),
                 child: FilledButton.icon(
                   onPressed: _isCleaning ? null : _cleanSelected,
                   icon: _isCleaning
@@ -138,20 +139,23 @@ class _CleaningSectionState extends ConsumerState<CleaningSection> {
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: SpacingScale.s8),
 
         Card(
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(RadiusScale.r12),
           ),
           color: colors.info.withValues(alpha: 0.1),
           elevation: 0,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: const EdgeInsets.symmetric(
+              horizontal: SpacingScale.s12,
+              vertical: SpacingScale.s8,
+            ),
             child: Row(
               children: [
                 Icon(LucideIcons.monitor, size: 16, color: colors.info),
-                const SizedBox(width: 8),
+                const SizedBox(width: SpacingScale.s8),
                 Expanded(
                   child: Text(
                     l10n.admin_cleaningWebOnly,
@@ -164,15 +168,15 @@ class _CleaningSectionState extends ConsumerState<CleaningSection> {
             ),
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: SpacingScale.s12),
 
         if (widget.recordings.isEmpty)
           Card(
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(RadiusScale.r16),
             ),
             child: Padding(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(SpacingScale.s24),
               child: Center(child: Text(l10n.admin_noCleaningRecordings)),
             ),
           )
@@ -192,7 +196,9 @@ class _CleaningSectionState extends ConsumerState<CleaningSection> {
         widget.recordings.isNotEmpty;
 
     return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(RadiusScale.r16),
+      ),
       clipBehavior: Clip.antiAlias,
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
@@ -243,7 +249,9 @@ class _CleaningSectionState extends ConsumerState<CleaningSection> {
                     onPressed: () => _cleanSingle(recording.id),
                     style: FilledButton.styleFrom(
                       minimumSize: const Size(0, 36),
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: SpacingScale.s12,
+                      ),
                     ),
                     child: Text(AppLocalizations.of(context).admin_clean),
                   ),
@@ -266,7 +274,7 @@ class _CleaningSectionState extends ConsumerState<CleaningSection> {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.only(bottom: SpacingScale.s8),
           child: Row(
             children: [
               Checkbox(
@@ -285,11 +293,11 @@ class _CleaningSectionState extends ConsumerState<CleaningSection> {
           final isSelected = _selectedIds.contains(recording.id);
           return Card(
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(RadiusScale.r16),
             ),
-            margin: const EdgeInsets.only(bottom: 8),
+            margin: const EdgeInsets.only(bottom: SpacingScale.s8),
             child: Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(SpacingScale.s12),
               child: Row(
                 children: [
                   Checkbox(
@@ -306,7 +314,7 @@ class _CleaningSectionState extends ConsumerState<CleaningSection> {
                           style: Theme.of(context).textTheme.titleSmall
                               ?.copyWith(fontWeight: FontWeight.w600),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: SpacingScale.s4),
                         Row(
                           children: [
                             AdminMiniStat(
@@ -315,7 +323,7 @@ class _CleaningSectionState extends ConsumerState<CleaningSection> {
                                 recording.durationSeconds,
                               ),
                             ),
-                            const SizedBox(width: 12),
+                            const SizedBox(width: SpacingScale.s12),
                             AdminMiniStat(
                               icon: LucideIcons.hardDrive,
                               value: formatFileSize(recording.fileSizeBytes),
@@ -329,7 +337,9 @@ class _CleaningSectionState extends ConsumerState<CleaningSection> {
                     onPressed: () => _cleanSingle(recording.id),
                     style: FilledButton.styleFrom(
                       minimumSize: const Size(0, 40),
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: SpacingScale.s12,
+                      ),
                     ),
                     child: Text(AppLocalizations.of(context).admin_clean),
                   ),

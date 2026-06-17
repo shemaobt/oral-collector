@@ -3,6 +3,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../../shared/utils/format.dart';
 import '../../../../shared/widgets/user_avatar.dart';
 import '../../../auth/domain/entities/user.dart';
@@ -76,8 +77,8 @@ class ProfileHeader extends StatelessWidget {
                   ),
                   child: const Center(
                     child: SizedBox(
-                      width: 28,
-                      height: 28,
+                      width: SpacingScale.s28,
+                      height: SpacingScale.s28,
                       child: CircularProgressIndicator(
                         strokeWidth: 2.5,
                         color: AppColors.white,
@@ -118,7 +119,7 @@ class ProfileHeader extends StatelessWidget {
           ),
         ),
 
-        const SizedBox(height: 16),
+        const SizedBox(height: SpacingScale.s16),
 
         GestureDetector(
           onTap: onEditName,
@@ -147,7 +148,7 @@ class ProfileHeader extends StatelessWidget {
           ),
         ),
 
-        const SizedBox(height: 4),
+        const SizedBox(height: SpacingScale.s4),
 
         if (user?.email != null)
           Text(
@@ -157,7 +158,7 @@ class ProfileHeader extends StatelessWidget {
             ),
           ),
 
-        const SizedBox(height: 8),
+        const SizedBox(height: SpacingScale.s8),
 
         Row(
           mainAxisSize: MainAxisSize.min,
@@ -174,7 +175,7 @@ class ProfileHeader extends StatelessWidget {
               ),
             ),
             if (user?.isPlatformAdmin ?? false) ...[
-              const SizedBox(width: 8),
+              const SizedBox(width: SpacingScale.s8),
               Flexible(
                 child: InfoBadge(
                   icon: LucideIcons.shield,

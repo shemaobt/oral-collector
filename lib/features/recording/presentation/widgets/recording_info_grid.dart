@@ -4,6 +4,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 
 class RecordingInfoGrid extends StatelessWidget {
   const RecordingInfoGrid({
@@ -81,7 +82,7 @@ class InfoTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(SpacingScale.s12),
       decoration: BoxDecoration(
         color: colors.surfaceAlt.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(14),
@@ -91,7 +92,7 @@ class InfoTile extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(icon, size: 16, color: colors.secondary),
-          const SizedBox(height: 8),
+          const SizedBox(height: SpacingScale.s8),
           Text(
             value,
             style: theme.textTheme.titleSmall?.copyWith(

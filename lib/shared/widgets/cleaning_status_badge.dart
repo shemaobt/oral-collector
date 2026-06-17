@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/tokens.dart';
 import '../../l10n/app_localizations.dart';
 import '../utils/cleaning_status_style.dart';
 
@@ -98,7 +99,7 @@ class _CleaningStatusBadgeState extends State<CleaningStatusBadge>
         mainAxisSize: MainAxisSize.min,
         children: [
           iconWidget,
-          const SizedBox(width: 4),
+          const SizedBox(width: SpacingScale.s4),
           Flexible(
             child: Text(
               label,

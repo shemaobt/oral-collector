@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'trim_waveform.dart';
 
@@ -62,9 +63,14 @@ class TrimWaveformPanel extends StatelessWidget {
         color: isDark
             ? colors.surfaceAlt.withValues(alpha: 0.5)
             : colors.surfaceAlt.withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(RadiusScale.r16),
       ),
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+      padding: const EdgeInsets.fromLTRB(
+        SpacingScale.s16,
+        SpacingScale.s12,
+        SpacingScale.s16,
+        14,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -90,13 +96,13 @@ class TrimWaveformPanel extends StatelessWidget {
                   },
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
+                      horizontal: SpacingScale.s8,
+                      vertical: SpacingScale.s4,
                     ),
-                    margin: const EdgeInsets.only(left: 8),
+                    margin: const EdgeInsets.only(left: SpacingScale.s8),
                     decoration: BoxDecoration(
                       color: colors.accent.withValues(alpha: 0.14),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(RadiusScale.r8),
                     ),
                     child: Row(
                       children: [
@@ -105,7 +111,7 @@ class TrimWaveformPanel extends StatelessWidget {
                           size: 12,
                           color: colors.accent,
                         ),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: SpacingScale.s4),
                         Text(
                           '${zoom.toStringAsFixed(1)}x',
                           style: theme.textTheme.labelSmall?.copyWith(
@@ -124,7 +130,7 @@ class TrimWaveformPanel extends StatelessWidget {
                     onClearAll();
                   },
                   child: Padding(
-                    padding: const EdgeInsets.only(left: 8),
+                    padding: const EdgeInsets.only(left: SpacingScale.s8),
                     child: Text(
                       AppLocalizations.of(context).filter_clearAll,
                       style: theme.textTheme.labelSmall?.copyWith(
@@ -135,10 +141,10 @@ class TrimWaveformPanel extends StatelessWidget {
                 ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: SpacingScale.s8),
           if (isZoomed)
             Padding(
-              padding: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.only(bottom: SpacingScale.s8),
               child: _Minimap(
                 key: kTrimMinimapKey,
                 bars: waveformBars,
@@ -174,7 +180,7 @@ class TrimWaveformPanel extends StatelessWidget {
             panFraction: panFraction,
             onZoomPanChanged: onZoomPanChanged,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: SpacingScale.s8),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -192,7 +198,7 @@ class TrimWaveformPanel extends StatelessWidget {
                 ),
                 decoration: BoxDecoration(
                   color: colors.accent.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(RadiusScale.r12),
                 ),
                 child: Text(
                   hasSplits
@@ -245,7 +251,7 @@ class _Minimap extends StatelessWidget {
       label: semanticsLabel,
       container: true,
       child: SizedBox(
-        height: 24,
+        height: SpacingScale.s24,
         child: LayoutBuilder(
           builder: (context, constraints) {
             final width = constraints.maxWidth;

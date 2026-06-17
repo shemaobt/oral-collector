@@ -18,6 +18,12 @@
   `ThemeExtension`, since the palettes are single-theme/fixed); the dynamic
   hex→`Color` parser moved to `lib/core/theme/color_hex.dart`. obt_lints then
   promoted (ADR-0007).
+- Update (2026-06-16, ENG-163): the long-tail call-site migration from item 6
+  landed, value-identical. The remaining on-grid spacing/radii direct-argument
+  literals (`EdgeInsets`/`SizedBox`/`BorderRadius`/`Radius`) across the feature
+  and shared widgets now consume the `const` scale, preserving `const`; off-grid
+  normalization stays deferred (ENG-162). No motion `Duration`s remained on the
+  long tail — ENG-106 had already migrated them all.
 
 ## Context
 

@@ -5,6 +5,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../../shared/utils/cleaning_status_style.dart';
 
 class RecordingStatusSection extends StatelessWidget {
@@ -33,10 +34,10 @@ class RecordingStatusSection extends StatelessWidget {
       l10n,
     );
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(SpacingScale.s16),
       decoration: BoxDecoration(
         color: colors.card,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(RadiusScale.r16),
         border: Border.all(color: colors.border.withValues(alpha: 0.15)),
       ),
       child: Column(
@@ -62,7 +63,7 @@ class RecordingStatusSection extends StatelessWidget {
                       minimumSize: Size.zero,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 10,
-                        vertical: 4,
+                        vertical: SpacingScale.s4,
                       ),
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
@@ -196,11 +197,11 @@ class StatusRow extends StatelessWidget {
           height: 32,
           decoration: BoxDecoration(
             color: iconColor.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(RadiusScale.r8),
           ),
           child: Center(child: Icon(icon, size: 16, color: iconColor)),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: SpacingScale.s12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

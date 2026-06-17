@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/utils/format.dart';
 import '../../data/services/recovery_coordinator.dart';
@@ -38,7 +39,10 @@ class UnsavedRecordingRow extends StatelessWidget {
         '${formatRelativeTime(context, session.startedAt, localeTag)}';
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: const EdgeInsets.symmetric(
+        horizontal: SpacingScale.s16,
+        vertical: 14,
+      ),
       child: Row(
         children: [
           _PlayButton(onTap: onResume),
@@ -62,7 +66,7 @@ class UnsavedRecordingRow extends StatelessWidget {
                       ),
                     ),
                     if (showNewBadge) ...[
-                      const SizedBox(width: 8),
+                      const SizedBox(width: SpacingScale.s8),
                       _NewBadge(label: l10n.recovery_newBadge),
                     ],
                   ],
@@ -79,7 +83,7 @@ class UnsavedRecordingRow extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: SpacingScale.s8),
           _SavePill(label: l10n.recovery_save, onTap: onSave),
           PopupMenuButton<_RowAction>(
             icon: Icon(
@@ -170,7 +174,7 @@ class _SavePill extends StatelessWidget {
     final theme = Theme.of(context);
     return Material(
       color: colors.surfaceAlt,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(RadiusScale.r16),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
@@ -201,7 +205,7 @@ class _NewBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
         color: colors.accent.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(RadiusScale.r4),
       ),
       child: Text(
         label,

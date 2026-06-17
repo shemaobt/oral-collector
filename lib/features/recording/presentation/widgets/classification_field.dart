@@ -4,6 +4,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/l10n/content_l10n.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../genre/domain/entities/genre.dart';
 import '../../../storyteller/domain/entities/storyteller.dart';
@@ -203,7 +204,7 @@ class ClassificationField extends StatelessWidget {
       decoration: InputDecoration(
         isDense: dense,
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: 12,
+          horizontal: SpacingScale.s12,
           vertical: 10,
         ),
         errorText: hasError ? l10n.import_fieldRequired : null,
@@ -244,7 +245,10 @@ class ClassificationField extends StatelessWidget {
     required String label,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      padding: const EdgeInsets.symmetric(
+        horizontal: SpacingScale.s12,
+        vertical: SpacingScale.s12,
+      ),
       decoration: BoxDecoration(
         color: colors.surfaceAlt.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(10),
@@ -310,7 +314,10 @@ class StorytellerFieldCell extends ConsumerWidget {
       },
       borderRadius: BorderRadius.circular(10),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        padding: const EdgeInsets.symmetric(
+          horizontal: SpacingScale.s12,
+          vertical: 10,
+        ),
         decoration: BoxDecoration(
           color: colors.surfaceAlt,
           borderRadius: BorderRadius.circular(10),
@@ -319,7 +326,7 @@ class StorytellerFieldCell extends ConsumerWidget {
         child: Row(
           children: [
             Icon(LucideIcons.user, size: 14, color: colors.secondary),
-            const SizedBox(width: 8),
+            const SizedBox(width: SpacingScale.s8),
             Expanded(
               child: Text(
                 selected?.name ?? l10n.storyteller_selectHint,

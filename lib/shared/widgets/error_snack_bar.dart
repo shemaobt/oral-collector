@@ -3,6 +3,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/tokens.dart';
 import '../utils/error_helpers.dart';
 
 void showErrorSnackBar(BuildContext context, Object rawError) {
@@ -21,7 +22,7 @@ void showErrorSnackBar(BuildContext context, Object rawError) {
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
                 color: AppColors.white.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(RadiusScale.r8),
               ),
               child: const Icon(
                 LucideIcons.alertTriangle,
@@ -29,7 +30,7 @@ void showErrorSnackBar(BuildContext context, Object rawError) {
                 color: AppColors.white,
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: SpacingScale.s12),
             Expanded(
               child: Text(
                 message,
@@ -45,8 +46,16 @@ void showErrorSnackBar(BuildContext context, Object rawError) {
         backgroundColor: colors.error,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        margin: const EdgeInsets.fromLTRB(
+          SpacingScale.s16,
+          0,
+          SpacingScale.s16,
+          SpacingScale.s16,
+        ),
+        padding: const EdgeInsets.symmetric(
+          horizontal: SpacingScale.s16,
+          vertical: 14,
+        ),
         duration: const Duration(seconds: 4),
       ),
     );

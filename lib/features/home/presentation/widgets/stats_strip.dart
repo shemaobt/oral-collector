@@ -3,6 +3,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../../shared/utils/format.dart';
 
 class StatsStrip extends StatelessWidget {
@@ -63,7 +64,12 @@ class StatsStrip extends StatelessWidget {
     ];
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      padding: const EdgeInsets.fromLTRB(
+        SpacingScale.s16,
+        SpacingScale.s16,
+        SpacingScale.s16,
+        0,
+      ),
       child: LayoutBuilder(
         builder: (context, constraints) {
           const spacing = 10.0;
@@ -137,11 +143,11 @@ class _StatTile extends StatelessWidget {
             height: 28,
             decoration: BoxDecoration(
               color: data.color.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(RadiusScale.r8),
             ),
             child: Icon(data.icon, size: 16, color: data.color),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: SpacingScale.s8),
           FittedBox(
             fit: BoxFit.scaleDown,
             child: Text(

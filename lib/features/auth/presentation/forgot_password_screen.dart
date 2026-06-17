@@ -7,6 +7,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../core/auth/providers.dart';
 import '../../../core/observability/error_reporter.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/tokens.dart';
 import '../../../shared/widgets/error_snack_bar.dart';
 
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
@@ -66,7 +67,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 28),
+            padding: const EdgeInsets.symmetric(horizontal: SpacingScale.s28),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 400),
               child: _emailSent
@@ -94,25 +95,25 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             height: 56,
             decoration: BoxDecoration(
               color: colors.accent.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(RadiusScale.r16),
             ),
             child: Icon(LucideIcons.keyRound, color: colors.accent, size: 28),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: SpacingScale.s24),
           Text(
             l10n.auth_resetPassword,
             style: theme.textTheme.displayLarge?.copyWith(
               color: colors.foreground,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: SpacingScale.s8),
           Text(
             l10n.auth_forgotPasswordSubtitle,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: colors.secondary,
             ),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: SpacingScale.s32),
           Text(
             l10n.auth_emailLabel,
             style: theme.textTheme.bodySmall?.copyWith(
@@ -120,7 +121,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               color: colors.foreground,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: SpacingScale.s8),
           TextFormField(
             controller: _emailController,
             keyboardType: TextInputType.emailAddress,
@@ -145,7 +146,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             },
             onFieldSubmitted: (_) => _handleSubmit(),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: SpacingScale.s32),
           SizedBox(
             width: double.infinity,
             height: 54,
@@ -162,8 +163,8 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               ),
               child: _isLoading
                   ? const SizedBox(
-                      width: 24,
-                      height: 24,
+                      width: SpacingScale.s24,
+                      height: SpacingScale.s24,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
                         color: AppColors.white,
@@ -172,7 +173,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                   : Text(l10n.auth_sendResetLink),
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: SpacingScale.s24),
           Center(
             child: TextButton(
               onPressed: () => context.go('/login'),
@@ -206,7 +207,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           ),
           child: Icon(LucideIcons.mailCheck, color: colors.accent, size: 32),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: SpacingScale.s24),
         Text(
           l10n.auth_checkYourEmail,
           style: theme.textTheme.displayLarge?.copyWith(
@@ -214,9 +215,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           ),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: SpacingScale.s12),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
+          padding: const EdgeInsets.symmetric(horizontal: SpacingScale.s8),
           child: Text(
             l10n.auth_resetEmailSent(_emailController.text.trim()),
             style: theme.textTheme.bodyMedium?.copyWith(
@@ -226,7 +227,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             textAlign: TextAlign.center,
           ),
         ),
-        const SizedBox(height: 32),
+        const SizedBox(height: SpacingScale.s32),
         SizedBox(
           width: double.infinity,
           height: 54,
@@ -248,7 +249,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             child: Text(l10n.auth_resendEmail),
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: SpacingScale.s24),
         TextButton(
           onPressed: () => context.go('/login'),
           child: Text(

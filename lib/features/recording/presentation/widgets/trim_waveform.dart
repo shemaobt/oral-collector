@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../../l10n/app_localizations.dart';
 
 class TrimWaveform extends StatefulWidget {
@@ -303,7 +304,7 @@ class _SplitWaveformPainter extends CustomPainter {
 
     final waveRect = RRect.fromRectAndRadius(
       Rect.fromLTRB(0, waveTop, size.width, waveBottom),
-      const Radius.circular(12),
+      const Radius.circular(RadiusScale.r12),
     );
     canvas.save();
     canvas.clipRRect(waveRect);

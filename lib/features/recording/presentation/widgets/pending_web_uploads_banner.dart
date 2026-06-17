@@ -7,6 +7,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/database/app_database.dart';
 import '../../../../core/platform/web_file_picker.dart' as web_picker;
+import '../../../../core/theme/tokens.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/utils/format.dart';
 import '../../../../shared/widgets/error_snack_bar.dart';
@@ -133,16 +134,21 @@ class _PendingWebUploadsBannerState
       children: [
         for (final row in _pending)
           Card(
-            margin: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+            margin: const EdgeInsets.fromLTRB(
+              SpacingScale.s12,
+              SpacingScale.s8,
+              SpacingScale.s12,
+              0,
+            ),
             child: Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(SpacingScale.s12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Row(
                     children: [
                       const Icon(LucideIcons.uploadCloud, size: 18),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: SpacingScale.s8),
                       Expanded(
                         child: Text(
                           l10n.import_resumePromptTitle,
@@ -160,20 +166,20 @@ class _PendingWebUploadsBannerState
                     style: theme.textTheme.bodySmall,
                   ),
                   if (row.uploadedBytes > 0 && row.fileSizeBytes > 0) ...[
-                    const SizedBox(height: 8),
+                    const SizedBox(height: SpacingScale.s8),
                     LinearProgressIndicator(
                       value: (row.uploadedBytes / row.fileSizeBytes).clamp(
                         0.0,
                         1.0,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: SpacingScale.s4),
                     Text(
                       '${formatFileSize(row.uploadedBytes)} / ${formatFileSize(row.fileSizeBytes)}',
                       style: theme.textTheme.labelSmall,
                     ),
                   ],
-                  const SizedBox(height: 8),
+                  const SizedBox(height: SpacingScale.s8),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
@@ -183,15 +189,15 @@ class _PendingWebUploadsBannerState
                             : () => _discard(row),
                         child: Text(l10n.common_discard),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: SpacingScale.s8),
                       FilledButton(
                         onPressed: _resuming.contains(row.id)
                             ? null
                             : () => _resume(row),
                         child: _resuming.contains(row.id)
                             ? const SizedBox(
-                                width: 16,
-                                height: 16,
+                                width: SpacingScale.s16,
+                                height: SpacingScale.s16,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
                                 ),

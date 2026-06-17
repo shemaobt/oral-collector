@@ -4,6 +4,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_palettes.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../../shared/utils/format.dart';
 import '../../domain/entities/project.dart';
 import 'language_chip_row.dart';
@@ -31,17 +32,17 @@ class ProjectCard extends StatelessWidget {
     final cardAccent = AppPalettes.projectAccent(colorIndex);
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.only(bottom: SpacingScale.s16),
       child: Material(
         color: AppColors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(RadiusScale.r20),
           child: Container(
             clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
               color: colors.card,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(RadiusScale.r20),
               border: isActive
                   ? Border.all(color: colors.accent, width: 2)
                   : Border.all(
@@ -68,7 +69,12 @@ class ProjectCard extends StatelessWidget {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 16, 16, 20),
+                  padding: const EdgeInsets.fromLTRB(
+                    SpacingScale.s20,
+                    SpacingScale.s16,
+                    SpacingScale.s16,
+                    SpacingScale.s20,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -80,7 +86,9 @@ class ProjectCard extends StatelessWidget {
                             height: 44,
                             decoration: BoxDecoration(
                               color: cardAccent.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(
+                                RadiusScale.r12,
+                              ),
                             ),
                             child: Center(
                               child: Text(
@@ -107,7 +115,7 @@ class ProjectCard extends StatelessWidget {
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                 ),
-                                const SizedBox(height: 4),
+                                const SizedBox(height: SpacingScale.s4),
                                 if (project.languageName != null)
                                   LanguageChipRow.card(
                                     languageName: project.languageName!,
@@ -125,7 +133,7 @@ class ProjectCard extends StatelessWidget {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: SpacingScale.s16),
                       Wrap(
                         spacing: 10,
                         runSpacing: 8,
@@ -161,11 +169,13 @@ class ProjectCard extends StatelessWidget {
                             Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 10,
-                                vertical: 4,
+                                vertical: SpacingScale.s4,
                               ),
                               decoration: BoxDecoration(
                                 color: colors.accent.withValues(alpha: 0.15),
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(
+                                  RadiusScale.r8,
+                                ),
                               ),
                               child: Text(
                                 l10n.project_active,
@@ -207,16 +217,19 @@ class ProjectStatChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(
+        horizontal: SpacingScale.s8,
+        vertical: SpacingScale.s4,
+      ),
       decoration: BoxDecoration(
         color: colors.surfaceAlt.withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(RadiusScale.r8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 13, color: colors.secondary),
-          const SizedBox(width: 4),
+          const SizedBox(width: SpacingScale.s4),
           Text(
             value,
             style: theme.textTheme.labelSmall?.copyWith(

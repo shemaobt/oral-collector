@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 
 class HeroPanel extends StatelessWidget {
   const HeroPanel({super.key});
@@ -43,7 +44,7 @@ class HeroPanel extends StatelessWidget {
               Row(
                 children: [
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(RadiusScale.r12),
                     child: Image.asset(
                       'assets/app_icon.png',
                       width: 40,
@@ -60,7 +61,7 @@ class HeroPanel extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: SpacingScale.s20),
               Text(
                 l10n.auth_heroTagline,
                 style: textTheme.headlineLarge?.copyWith(
@@ -68,7 +69,7 @@ class HeroPanel extends StatelessWidget {
                   height: 1.2,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: SpacingScale.s8),
               Text(
                 l10n.auth_byShema,
                 style: textTheme.bodySmall?.copyWith(

@@ -3,6 +3,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../invite/domain/entities/invite.dart';
 
 class InviteTile extends StatelessWidget {
@@ -23,7 +24,10 @@ class InviteTile extends StatelessWidget {
     final colors = AppColors.of(context);
     final l10n = AppLocalizations.of(context);
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(
+        horizontal: SpacingScale.s16,
+        vertical: SpacingScale.s12,
+      ),
       child: Row(
         children: [
           CircleAvatar(
@@ -35,7 +39,7 @@ class InviteTile extends StatelessWidget {
               color: theme.colorScheme.tertiary,
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: SpacingScale.s12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -58,7 +62,7 @@ class InviteTile extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: SpacingScale.s8),
           SizedBox(
             height: 36,
             child: OutlinedButton(
@@ -66,19 +70,23 @@ class InviteTile extends StatelessWidget {
               style: OutlinedButton.styleFrom(
                 foregroundColor: colors.error,
                 side: BorderSide(color: colors.error.withValues(alpha: 0.5)),
-                padding: const EdgeInsets.symmetric(horizontal: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: SpacingScale.s12,
+                ),
               ),
               child: Text(l10n.profile_decline),
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: SpacingScale.s8),
           SizedBox(
             height: 36,
             child: FilledButton(
               onPressed: onAccept,
               style: FilledButton.styleFrom(
                 backgroundColor: theme.colorScheme.primary,
-                padding: const EdgeInsets.symmetric(horizontal: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: SpacingScale.s12,
+                ),
               ),
               child: Text(l10n.profile_accept),
             ),

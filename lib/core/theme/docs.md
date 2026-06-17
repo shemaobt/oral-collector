@@ -65,11 +65,12 @@ Path: @/lib/core/theme
 - Spacing/radii/motion/opacity consumers reference the `const` scale directly
   (e.g. `SpacingScale.s16`, `RadiusScale.r12`, `DurationScale.ms200`,
   `OpacityScale.o40`) or the `context.spacing` / `.radii` / `.durations` /
-  `.opacity` accessor. Migrated call sites include the recording screens and the
-  app chrome
-  ([/lib/shared/widgets/app_shell.dart](/lib/shared/widgets/app_shell.dart)),
-  plus UI motion durations across many widgets — all value-identical literal
-  swaps, no behavior change.
+  `.opacity` accessor. The on-grid spacing/radii call-site migration is now
+  app-wide across [/lib/features](/lib/features) and
+  [/lib/shared/widgets](/lib/shared/widgets) (ENG-106 seeded it on the densest
+  screens and app chrome; ENG-163 finished the long tail), plus UI motion
+  durations across many widgets — all value-identical literal swaps, no behavior
+  change.
 - [app_theme.dart](app_theme.dart) is now itself a consumer of the `const`
   scales: its component themes read `RadiusScale` / `SpacingScale` /
   `OpacityScale` directly rather than repeating literals, because there is no
@@ -230,8 +231,10 @@ SpacingScale/RadiusScale/DurationScale/OpacityScale ─► AppSpacing/AppRadii/A
   sets `themeAnimationDuration: Duration.zero`, so theme switches snap; the
   interpolation exists to satisfy the contract and enable future animation.
 - **Deferred, per ADR-0002.** Off-grid normalization (e.g. the button `vertical:
-  14` literal). (ENG-115 — [app_theme.dart](app_theme.dart) consuming the `const`
-  radii/spacing/opacity scales instead of inlining its own literals — is done;
+  14` literal) is the remaining open item, tracked as ENG-162. (The on-grid
+  call-site migration is closed: ENG-115 — [app_theme.dart](app_theme.dart)
+  consuming the `const` radii/spacing/opacity scales instead of inlining its own
+  literals — and ENG-163 — the app-wide widget-tree long tail — are both done;
   the `Color(0x…)` / bare `Colors.*` lint rule (ENG-76 / ENG-159) shipped as the
   `obt_lints` plugin, [/packages/obt_lints/docs.md](/packages/obt_lints/docs.md),
   and ENG-183/ENG-116 then burned the app's color literals down to zero outside

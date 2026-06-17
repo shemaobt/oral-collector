@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/tokens.dart';
+
 class SectionHeader extends StatelessWidget {
   const SectionHeader({super.key, required this.title});
 
@@ -8,7 +10,7 @@ class SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(left: 4),
+      padding: const EdgeInsets.only(left: SpacingScale.s4),
       child: Text(
         title,
         style: Theme.of(

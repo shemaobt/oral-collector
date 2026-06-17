@@ -5,6 +5,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/l10n/content_l10n.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../genre/domain/entities/genre.dart';
 import '../../../genre/domain/entities/genre_update.dart';
 import '../notifiers/admin_notifier.dart';
@@ -24,10 +25,12 @@ class AdminGenreCard extends ConsumerWidget {
     final colors = AppColors.of(context);
     final l10n = AppLocalizations.of(context);
     return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(RadiusScale.r16),
+      ),
+      margin: const EdgeInsets.only(bottom: SpacingScale.s12),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(SpacingScale.s16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -42,7 +45,7 @@ class AdminGenreCard extends ConsumerWidget {
                     color: colors.primary,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: SpacingScale.s12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -89,12 +92,15 @@ class AdminGenreCard extends ConsumerWidget {
             ),
 
             if (genre.subcategories.isNotEmpty) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: SpacingScale.s8),
               const Divider(height: 1),
-              const SizedBox(height: 8),
+              const SizedBox(height: SpacingScale.s8),
               ...genre.subcategories.map(
                 (sub) => Padding(
-                  padding: const EdgeInsets.only(left: 48, bottom: 4),
+                  padding: const EdgeInsets.only(
+                    left: SpacingScale.s48,
+                    bottom: SpacingScale.s4,
+                  ),
                   child: Row(
                     children: [
                       Icon(
@@ -102,7 +108,7 @@ class AdminGenreCard extends ConsumerWidget {
                         size: 14,
                         color: colors.border,
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: SpacingScale.s8),
                       Expanded(
                         child: Text(
                           localizedSubcategoryName(l10n, sub.name),
@@ -162,7 +168,7 @@ class AdminGenreCard extends ConsumerWidget {
                     ? l10n.admin_required
                     : null,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: SpacingScale.s12),
               TextFormField(
                 controller: descController,
                 decoration: InputDecoration(

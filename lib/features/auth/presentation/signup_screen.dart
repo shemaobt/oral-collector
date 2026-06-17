@@ -7,6 +7,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../core/auth/auth_notifier.dart';
 import '../../../core/auth/auth_state.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/tokens.dart';
 import '../../../shared/preview_helpers.dart';
 import '../../../shared/widgets/error_snack_bar.dart';
 import 'widgets/hero_panel.dart';
@@ -93,7 +94,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     return SafeArea(
       child: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 48),
+          padding: const EdgeInsets.symmetric(horizontal: SpacingScale.s48),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 460),
             child: Form(
@@ -103,14 +104,14 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(RadiusScale.r16),
                     child: Image.asset(
                       'assets/app_icon.png',
                       width: 52,
                       height: 52,
                     ),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: SpacingScale.s32),
                   Text.rich(
                     TextSpan(
                       children: [
@@ -129,14 +130,14 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: SpacingScale.s8),
                   Text(
                     l10n.auth_signUpSubtitle,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: colors.secondary,
                     ),
                   ),
-                  const SizedBox(height: 40),
+                  const SizedBox(height: SpacingScale.s40),
                   _buildFormFields(authState, colors, theme, l10n),
                 ],
               ),
@@ -204,7 +205,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     style: IconButton.styleFrom(
                       backgroundColor: AppColors.black.withValues(alpha: 0.3),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(RadiusScale.r12),
                       ),
                       minimumSize: const Size(44, 44),
                     ),
@@ -244,7 +245,12 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(28, 24, 28, 24),
+            padding: const EdgeInsets.fromLTRB(
+              SpacingScale.s28,
+              SpacingScale.s24,
+              SpacingScale.s28,
+              SpacingScale.s24,
+            ),
             child: Form(
               key: _formKey,
               child: Column(
@@ -256,7 +262,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       color: colors.secondary,
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: SpacingScale.s24),
                   _buildFormFields(authState, colors, theme, l10n),
                 ],
               ),
@@ -283,7 +289,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
             color: colors.foreground,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: SpacingScale.s8),
         TextFormField(
           controller: _displayNameController,
           textInputAction: TextInputAction.next,
@@ -302,7 +308,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
             return null;
           },
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: SpacingScale.s16),
         Text(
           l10n.auth_emailLabel,
           style: theme.textTheme.bodySmall?.copyWith(
@@ -310,7 +316,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
             color: colors.foreground,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: SpacingScale.s8),
         TextFormField(
           controller: _emailController,
           keyboardType: TextInputType.emailAddress,
@@ -334,7 +340,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
             return null;
           },
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: SpacingScale.s16),
         Text(
           l10n.auth_passwordLabel,
           style: theme.textTheme.bodySmall?.copyWith(
@@ -342,7 +348,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
             color: colors.foreground,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: SpacingScale.s8),
         TextFormField(
           controller: _passwordController,
           obscureText: _obscurePassword,
@@ -377,7 +383,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
             return null;
           },
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: SpacingScale.s16),
         Text(
           l10n.auth_confirmPasswordLabel,
           style: theme.textTheme.bodySmall?.copyWith(
@@ -385,7 +391,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
             color: colors.foreground,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: SpacingScale.s8),
         TextFormField(
           controller: _confirmPasswordController,
           obscureText: _obscureConfirmPassword,
@@ -421,7 +427,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
           },
           onFieldSubmitted: (_) => _handleSignup(),
         ),
-        const SizedBox(height: 28),
+        const SizedBox(height: SpacingScale.s28),
         SizedBox(
           width: double.infinity,
           height: 54,
@@ -438,8 +444,8 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
             ),
             child: authState.isLoading
                 ? const SizedBox(
-                    width: 24,
-                    height: 24,
+                    width: SpacingScale.s24,
+                    height: SpacingScale.s24,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
                       color: AppColors.white,
@@ -448,7 +454,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 : Text(l10n.auth_continueButton),
           ),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: SpacingScale.s20),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -462,7 +468,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
               onPressed: () => context.go('/login'),
               style: TextButton.styleFrom(
                 minimumSize: const Size(44, 44),
-                padding: const EdgeInsets.symmetric(horizontal: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: SpacingScale.s8,
+                ),
               ),
               child: Text(
                 l10n.auth_signIn,
@@ -474,7 +482,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: SpacingScale.s16),
       ],
     );
   }

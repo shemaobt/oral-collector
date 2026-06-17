@@ -3,6 +3,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../notifiers/recording_session_state.dart';
 
 class FinalizingOverlay extends StatelessWidget {
@@ -39,7 +40,9 @@ class FinalizingOverlay extends StatelessWidget {
           child: SafeArea(
             child: Center(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 32),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: SpacingScale.s32,
+                ),
                 child: hasError
                     ? _ErrorContent(
                         colors: colors,
@@ -84,21 +87,21 @@ class _ProgressContent extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         SizedBox(
-          width: 28,
-          height: 28,
+          width: SpacingScale.s28,
+          height: SpacingScale.s28,
           child: CircularProgressIndicator(
             strokeWidth: 2.5,
             color: colors.accent,
           ),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: SpacingScale.s20),
         Text(
           _stageText(l10n, stage),
           textAlign: TextAlign.center,
           style: theme.textTheme.bodyLarge?.copyWith(color: colors.foreground),
         ),
         if (degraded) ...[
-          const SizedBox(height: 8),
+          const SizedBox(height: SpacingScale.s8),
           Text(
             l10n.recording_finalizationDegradedHint,
             textAlign: TextAlign.center,
@@ -129,7 +132,7 @@ class _ErrorContent extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(LucideIcons.alertTriangle, size: 40, color: colors.accent),
-        const SizedBox(height: 16),
+        const SizedBox(height: SpacingScale.s16),
         Text(
           l10n.recording_finalizationFailed,
           textAlign: TextAlign.center,
@@ -138,13 +141,13 @@ class _ErrorContent extends StatelessWidget {
             fontWeight: FontWeight.w600,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: SpacingScale.s8),
         Text(
           l10n.recording_finalizationFailedBody,
           textAlign: TextAlign.center,
           style: theme.textTheme.bodyMedium?.copyWith(color: colors.secondary),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: SpacingScale.s24),
         FilledButton.tonal(
           onPressed: onDiscard,
           child: Text(l10n.recording_discardAndReturn),
