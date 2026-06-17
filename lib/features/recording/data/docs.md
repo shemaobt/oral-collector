@@ -126,10 +126,16 @@ Path: @/lib/features/recording/data
   segmented recorder, the foreground task, recovery & trash services, the
   resumable / direct uploaders, the audio path resolver used by the
   detail-screen player, and `RecordingSplitPersister` — the post-FFmpeg
-  pipeline of a trim/split save (writes children, trashes parent,
-  deletes parent locally + remotely, triggers upload queue). It is the
-  one place that wires the "split is saved → children start uploading"
-  causation, so the trim editor never has to think about sync.
+  pipeline of a trim/split save. It is the one place that wires the "split is
+  saved → children start uploading" causation, so the trim editor never has to
+  think about sync. The pipeline is ordered for crash safety (ENG-125): it
+  **atomically** inserts the children and deletes the parent row via
+  `LocalRecordingRepository.splitRecordingReplacingParent` (one Drift
+  transaction), then **archives the parent's audio** (`trashParent`, a file
+  move that can't be rolled back — running it after the commit means a split
+  failure never strands a trashed file), then runs the best-effort remote
+  delete and `triggerUpload()` **outside** the transaction. See Things to Know
+  and [./repositories/docs.md](repositories/docs.md).
 - `services/audio_path_resolver.dart` exposes the pure async
   `resolveRecordingPath(storedPath)`. It returns the first existing path
   among: the stored path itself, the application documents directory
@@ -201,12 +207,27 @@ Path: @/lib/features/recording/data
   uses `Value.absent()` (not `Value(null)`) for fields it chooses not to
   touch. A local edit, even an empty string written intentionally by the
   user, can never be clobbered by a server refresh.
-- **The split write path** (`LocalRecordingRepository.splitRecording`)
-  still hand-builds child rows because each child has a mix of inherited,
-  segment-specific, and reset fields. It follows the propagation table in
+- **The split write path** (the `LocalRecordingRepository` `splitRecording*`
+  helpers) still hand-builds child rows because each child has a mix of
+  inherited, segment-specific, and reset fields. It follows the propagation
+  table in
   [/docs/recording-split-semantics.md](../../../../docs/recording-split-semantics.md);
   divergence between that table and the implementation breaks ENG-64-class
-  invariants.
+  invariants. `RecordingSplitPersister` saves through the **atomic**
+  `splitRecordingReplacingParent` (insert children + delete parent in one
+  transaction); the plain `splitRecording` only inserts children — see
+  [./repositories/docs.md](repositories/docs.md).
+- **The split persister's step order is load-bearing for crash safety
+  (ENG-125).** `RecordingSplitPersister.persist` runs the
+  insert-children-and-delete-parent step as a single transaction first, so a
+  throw leaves neither orphaned children nor a surviving parent. It then
+  archives the parent file (`trashParent`) **after** the commit — a file move
+  can't be rolled back, so doing it post-commit means a split failure never
+  moves the audio out from under a surviving row (the trash callback only reads
+  the parent object/file, never the child rows or the DB). The best-effort
+  remote delete and `triggerUpload()` stay **outside** the transaction —
+  neither is rollback-safe, and a remote-delete failure is swallowed so the
+  local replace still stands.
 - **Adding a new nullable metadata column to `LocalRecordings`** requires
   four updates in lockstep: extend `serverRecordingToLocal`,
   `LocalRecordingRepository.splitRecording`, `buildHealMetadataCompanion`,

@@ -370,6 +370,170 @@ void main() {
     });
   });
 
+  group('processQueue - connectivity sampling (ENG-125 F14)', () {
+    test(
+      'samples connectivity once per pass regardless of eligible count',
+      () async {
+        final testFile = File('${tempDir.path}/f14a.m4a');
+        testFile.writeAsBytesSync(Uint8List(1024));
+
+        when(() => mockConnectivity.isOnline).thenAnswer((_) async => true);
+
+        final recs = [
+          makeRecording(id: 'rec-1', localFilePath: testFile.path),
+          makeRecording(id: 'rec-2', localFilePath: testFile.path),
+          makeRecording(id: 'rec-3', localFilePath: testFile.path),
+        ];
+        when(() => mockRepo.getPendingUploads()).thenAnswer((_) async => recs);
+        for (final id in ['rec-1', 'rec-2', 'rec-3']) {
+          stubRepoForUpload(testFile.path, id: id);
+        }
+
+        final httpClient = buildSuccessClient();
+        final engine = buildEngine(httpClient);
+
+        await engine.processQueue();
+
+        // All three eligible recordings are still uploaded ...
+        verify(() => mockRepo.markAsUploaded('rec-1', any(), any())).called(1);
+        verify(() => mockRepo.markAsUploaded('rec-2', any(), any())).called(1);
+        verify(() => mockRepo.markAsUploaded('rec-3', any(), any())).called(1);
+        // ... while connectivity is probed a single time for the whole pass,
+        // not once per item.
+        verify(() => mockConnectivity.isOnline).called(1);
+        // wifiOnly defaults to false, so WiFi must never be probed at all.
+        verifyNever(() => mockConnectivity.isOnWifi);
+        httpClient.close();
+      },
+    );
+
+    test('stops the pass after an upload fails and connectivity has since '
+        'dropped', () async {
+      final testFile = File('${tempDir.path}/f14b.m4a');
+      testFile.writeAsBytesSync(Uint8List(1024));
+
+      // Online for the pass-level gate, offline on the post-failure re-probe.
+      var onlineCalls = 0;
+      when(() => mockConnectivity.isOnline).thenAnswer((_) async {
+        onlineCalls++;
+        return onlineCalls <= 1;
+      });
+
+      final recs = [
+        makeRecording(id: 'rec-1', localFilePath: testFile.path),
+        makeRecording(id: 'rec-2', localFilePath: testFile.path),
+        makeRecording(id: 'rec-3', localFilePath: testFile.path),
+      ];
+      when(() => mockRepo.getPendingUploads()).thenAnswer((_) async => recs);
+      for (final id in ['rec-1', 'rec-2', 'rec-3']) {
+        stubRepoForUpload(testFile.path, id: id);
+      }
+
+      // Every upload fails at create (500 -> retryable failure).
+      final httpClient = createStatusOnCreate(500);
+      final engine = buildEngine(httpClient);
+
+      await engine.processQueue();
+
+      // The first recording is still attempted (no per-item pre-probe blocks
+      // it) ...
+      verify(() => mockRepo.markAsUploading('rec-1')).called(1);
+      // ... but once it fails and the re-probe shows offline, the rest of the
+      // pass is skipped.
+      verifyNever(() => mockRepo.markAsUploading('rec-2'));
+      verifyNever(() => mockRepo.markAsUploading('rec-3'));
+      httpClient.close();
+    });
+
+    test(
+      'stops uploading when wifiOnly and WiFi drops to cellular mid-pass',
+      () async {
+        final testFile = File('${tempDir.path}/f14c.m4a');
+        testFile.writeAsBytesSync(Uint8List(1024));
+
+        // Stays reachable the whole time, so uploads would otherwise succeed over
+        // cellular. WiFi is present for the gate + the first item, then drops.
+        when(() => mockConnectivity.isOnline).thenAnswer((_) async => true);
+        var wifiCalls = 0;
+        when(() => mockConnectivity.isOnWifi).thenAnswer((_) async {
+          wifiCalls++;
+          return wifiCalls <= 2;
+        });
+
+        final recs = [
+          makeRecording(id: 'rec-1', localFilePath: testFile.path),
+          makeRecording(id: 'rec-2', localFilePath: testFile.path),
+          makeRecording(id: 'rec-3', localFilePath: testFile.path),
+        ];
+        when(() => mockRepo.getPendingUploads()).thenAnswer((_) async => recs);
+        for (final id in ['rec-1', 'rec-2', 'rec-3']) {
+          stubRepoForUpload(testFile.path, id: id);
+        }
+
+        // Every upload SUCCEEDS — the regression this guards against is the rest
+        // of the queue leaking onto cellular because successes hide the drop.
+        final httpClient = buildSuccessClient();
+        final engine = buildEngine(httpClient);
+
+        await engine.processQueue(wifiOnly: true);
+
+        verify(() => mockRepo.markAsUploading('rec-1')).called(1);
+        verifyNever(() => mockRepo.markAsUploading('rec-2'));
+        verifyNever(() => mockRepo.markAsUploading('rec-3'));
+        httpClient.close();
+      },
+    );
+
+    test('stops admitting over cellular when wifiOnly and WiFi drops '
+        '(maxConcurrency > 1)', () async {
+      final files = <File>[];
+      final recs = <LocalRecording>[];
+      for (var i = 0; i < 5; i++) {
+        final f = File('${tempDir.path}/f14d_$i.m4a')
+          ..writeAsBytesSync(Uint8List(1024));
+        files.add(f);
+        recs.add(makeRecording(id: 'rec-$i', localFilePath: f.path));
+      }
+
+      when(() => mockConnectivity.isOnline).thenAnswer((_) async => true);
+      // WiFi for the gate + the first concurrent batch of 3 admits, then drops.
+      var wifiCalls = 0;
+      when(() => mockConnectivity.isOnWifi).thenAnswer((_) async {
+        wifiCalls++;
+        return wifiCalls <= 4;
+      });
+
+      when(() => mockRepo.getPendingUploads()).thenAnswer((_) async => recs);
+      for (var i = 0; i < 5; i++) {
+        stubRepoForUpload(files[i].path, id: 'rec-$i');
+      }
+
+      var serverIdCounter = 0;
+      final httpClient = MockClient((request) async {
+        final path = request.url.path;
+        if (request.method == 'POST' && path == '/api/oc/recordings') {
+          serverIdCounter++;
+          return http.Response(jsonEncode({'id': 'srv-$serverIdCounter'}), 201);
+        }
+        if (request.url.host == 'storage.googleapis.com') {
+          return http.Response('', 200);
+        }
+        if (request.method == 'POST' && path.contains('/confirm-upload')) {
+          return http.Response('', 200);
+        }
+        return http.Response('Not Found', 404);
+      });
+      final engine = buildEngine(httpClient);
+
+      await engine.processQueue(wifiOnly: true, maxConcurrency: 3);
+
+      // Once WiFi drops, no further uploads are admitted over cellular.
+      verifyNever(() => mockRepo.markAsUploading('rec-3'));
+      verifyNever(() => mockRepo.markAsUploading('rec-4'));
+      httpClient.close();
+    }, timeout: const Timeout(Duration(seconds: 10)));
+  });
+
   group('processQueue - retry/backoff', () {
     test('skips recordings with retryCount >= 5', () async {
       final testFile = File('${tempDir.path}/maxretry.m4a');

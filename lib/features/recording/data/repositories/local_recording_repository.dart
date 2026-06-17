@@ -256,17 +256,25 @@ class LocalRecordingRepository {
     return rows > 0;
   }
 
-  /// Inserts one child row per segment, propagating parent metadata per the
-  /// contract in `docs/recording-split-semantics.md`. See ENG-64.
-  ///
-  /// Defense in depth: throws [ArgumentError] when a segment override would
-  /// collide with the parent's secondary classification of the same kind.
-  /// The server enforces `secondary != primary` and would reject the upload
-  /// with a 422; the UI is expected to block this case before reaching here.
+  /// Inserts the split children for [parent] in their own transaction. See
+  /// ENG-64; for the atomic variant that also removes the parent row, use
+  /// [splitRecordingReplacingParent].
   Future<List<String>> splitRecording({
     required LocalRecording parent,
     required List<SplitSegmentSpec> segments,
   }) async {
+    _assertNoSecondaryCollision(parent, segments);
+    return _db.transaction(() => _insertSplitChildren(parent, segments));
+  }
+
+  /// Defense in depth: throws [ArgumentError] when a segment override would
+  /// collide with the parent's secondary classification of the same kind.
+  /// The server enforces `secondary != primary` and would reject the upload
+  /// with a 422; the UI is expected to block this case before reaching here.
+  void _assertNoSecondaryCollision(
+    LocalRecording parent,
+    List<SplitSegmentSpec> segments,
+  ) {
     for (final seg in segments) {
       if (seg.genreOverride != null &&
           seg.genreOverride!.isNotEmpty &&
@@ -293,50 +301,75 @@ class LocalRecordingRepository {
         );
       }
     }
+  }
+
+  /// Atomically replaces [parent] with its split children: inserts one child
+  /// row per segment and deletes the parent row in a single transaction, so a
+  /// partial failure can never leave orphaned children alongside a surviving
+  /// parent. See ENG-125.
+  Future<List<String>> splitRecordingReplacingParent({
+    required LocalRecording parent,
+    required List<SplitSegmentSpec> segments,
+  }) async {
+    _assertNoSecondaryCollision(parent, segments);
     return _db.transaction(() async {
-      final ids = <String>[];
-      for (final seg in segments) {
-        await _db
-            .into(_db.localRecordings)
-            .insert(
-              LocalRecordingsCompanion(
-                id: Value(seg.id),
-                projectId: Value(parent.projectId),
-                genreId: Value(
-                  (seg.genreOverride != null && seg.genreOverride!.isNotEmpty)
-                      ? seg.genreOverride!
-                      : parent.genreId,
-                ),
-                subcategoryId:
-                    (seg.subcategoryOverride != null &&
-                        seg.subcategoryOverride!.isNotEmpty)
-                    ? Value(seg.subcategoryOverride)
-                    : Value(parent.subcategoryId),
-                registerId:
-                    (seg.registerOverride != null &&
-                        seg.registerOverride!.isNotEmpty)
-                    ? Value(seg.registerOverride)
-                    : Value(parent.registerId),
-                secondaryGenreId: Value(parent.secondaryGenreId),
-                secondarySubcategoryId: Value(parent.secondarySubcategoryId),
-                secondaryRegisterId: Value(parent.secondaryRegisterId),
-                storytellerId: Value(parent.storytellerId),
-                userId: Value(parent.userId),
-                title: Value(seg.title),
-                description: Value(parent.description),
-                durationSeconds: Value(seg.durationSeconds),
-                fileSizeBytes: Value(seg.fileSizeBytes),
-                format: Value(parent.format),
-                localFilePath: Value(seg.localFilePath),
-                uploadStatus: const Value('local'),
-                cleaningStatus: const Value('none'),
-                recordedAt: Value(parent.recordedAt),
-              ),
-            );
-        ids.add(seg.id);
-      }
+      final ids = await _insertSplitChildren(parent, segments);
+      await (_db.delete(
+        _db.localRecordings,
+      )..where((t) => t.id.equals(parent.id))).go();
       return ids;
     });
+  }
+
+  /// Inserts one child row per segment, propagating parent metadata per the
+  /// contract in `docs/recording-split-semantics.md`. Runs in the caller's
+  /// transaction; does not open its own.
+  Future<List<String>> _insertSplitChildren(
+    LocalRecording parent,
+    List<SplitSegmentSpec> segments,
+  ) async {
+    final ids = <String>[];
+    for (final seg in segments) {
+      await _db
+          .into(_db.localRecordings)
+          .insert(
+            LocalRecordingsCompanion(
+              id: Value(seg.id),
+              projectId: Value(parent.projectId),
+              genreId: Value(
+                (seg.genreOverride != null && seg.genreOverride!.isNotEmpty)
+                    ? seg.genreOverride!
+                    : parent.genreId,
+              ),
+              subcategoryId:
+                  (seg.subcategoryOverride != null &&
+                      seg.subcategoryOverride!.isNotEmpty)
+                  ? Value(seg.subcategoryOverride)
+                  : Value(parent.subcategoryId),
+              registerId:
+                  (seg.registerOverride != null &&
+                      seg.registerOverride!.isNotEmpty)
+                  ? Value(seg.registerOverride)
+                  : Value(parent.registerId),
+              secondaryGenreId: Value(parent.secondaryGenreId),
+              secondarySubcategoryId: Value(parent.secondarySubcategoryId),
+              secondaryRegisterId: Value(parent.secondaryRegisterId),
+              storytellerId: Value(parent.storytellerId),
+              userId: Value(parent.userId),
+              title: Value(seg.title),
+              description: Value(parent.description),
+              durationSeconds: Value(seg.durationSeconds),
+              fileSizeBytes: Value(seg.fileSizeBytes),
+              format: Value(parent.format),
+              localFilePath: Value(seg.localFilePath),
+              uploadStatus: const Value('local'),
+              cleaningStatus: const Value('none'),
+              recordedAt: Value(parent.recordedAt),
+            ),
+          );
+      ids.add(seg.id);
+    }
+    return ids;
   }
 
   Future<bool> markAsFailed(String id, {bool incrementRetry = true}) async {
