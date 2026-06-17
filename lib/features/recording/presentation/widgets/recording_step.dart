@@ -546,6 +546,7 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: SpacingScale.s16),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Icon(LucideIcons.mic, size: 14, color: colors.secondary),
           const SizedBox(width: SpacingScale.s8),
@@ -558,33 +559,30 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
           ),
           const SizedBox(width: SpacingScale.s8),
           Flexible(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _sensitivityChip(
-                    colors,
-                    NoiseSensitivity.low,
-                    current,
-                    l10n.recording_sensitivityLow,
-                  ),
-                  const SizedBox(width: SpacingScale.s4),
-                  _sensitivityChip(
-                    colors,
-                    NoiseSensitivity.medium,
-                    current,
-                    l10n.recording_sensitivityMed,
-                  ),
-                  const SizedBox(width: SpacingScale.s4),
-                  _sensitivityChip(
-                    colors,
-                    NoiseSensitivity.high,
-                    current,
-                    l10n.recording_sensitivityHigh,
-                  ),
-                ],
-              ),
+            child: Wrap(
+              spacing: SpacingScale.s4,
+              runSpacing: SpacingScale.s4,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                _sensitivityChip(
+                  colors,
+                  NoiseSensitivity.low,
+                  current,
+                  l10n.recording_sensitivityLow,
+                ),
+                _sensitivityChip(
+                  colors,
+                  NoiseSensitivity.medium,
+                  current,
+                  l10n.recording_sensitivityMed,
+                ),
+                _sensitivityChip(
+                  colors,
+                  NoiseSensitivity.high,
+                  current,
+                  l10n.recording_sensitivityHigh,
+                ),
+              ],
             ),
           ),
         ],
