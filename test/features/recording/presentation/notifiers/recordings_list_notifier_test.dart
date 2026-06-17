@@ -8,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:oral_collector/core/database/app_database.dart';
 import 'package:oral_collector/core/errors/api_exception.dart';
+import 'package:oral_collector/core/observability/error_reporter.dart';
 import 'package:oral_collector/features/project/domain/entities/project.dart';
 import 'package:oral_collector/features/project/presentation/notifiers/project_notifier.dart';
 import 'package:oral_collector/features/project/presentation/notifiers/project_state.dart';
@@ -22,6 +23,45 @@ import 'package:oral_collector/features/sync/presentation/notifiers/sync_state.d
 class _MockApi extends Mock implements RecordingApiRepository {}
 
 class _MockLocal extends Mock implements LocalRecordingRepository {}
+
+class _RecordingReporter implements ErrorReporter {
+  final List<Object> reported = [];
+  final List<StackTrace?> stackTraces = [];
+
+  @override
+  void reportError(
+    Object error,
+    StackTrace? stackTrace, {
+    Map<String, String>? tags,
+    Map<String, Object?>? context,
+    ErrorLevel level = ErrorLevel.error,
+  }) {
+    reported.add(error);
+    stackTraces.add(stackTrace);
+  }
+
+  @override
+  void addBreadcrumb(
+    String message, {
+    String? category,
+    ErrorLevel level = ErrorLevel.info,
+    Map<String, Object?>? data,
+  }) {}
+
+  @override
+  void setUser({
+    String? id,
+    String? username,
+    String? email,
+    Map<String, Object?>? data,
+  }) {}
+
+  @override
+  void clearUser() {}
+
+  @override
+  void setTag(String key, String value) {}
+}
 
 class _FakeSyncNotifier extends SyncNotifier {
   _FakeSyncNotifier({required this.initialOnline});
@@ -78,6 +118,7 @@ ServerRecording _makeServerRecording(String id) => ServerRecording(
 void main() {
   late _MockApi api;
   late _MockLocal local;
+  late _RecordingReporter reporter;
 
   final activeProject = const Project(
     id: 'proj-1',
@@ -95,12 +136,14 @@ void main() {
       syncNotifierProvider.overrideWith(
         () => _FakeSyncNotifier(initialOnline: online),
       ),
+      errorReporterProvider.overrideWithValue(reporter),
     ],
   );
 
   setUp(() {
     api = _MockApi();
     local = _MockLocal();
+    reporter = _RecordingReporter();
   });
 
   group('RecordingsListNotifier.fetchRecordings — offline', () {
@@ -613,6 +656,7 @@ void main() {
         syncNotifierProvider.overrideWith(
           () => _FakeSyncNotifier(initialOnline: true),
         ),
+        errorReporterProvider.overrideWithValue(reporter),
       ],
     );
 
@@ -761,9 +805,8 @@ void main() {
           serverId: 'srv-4',
           localFilePath: file.path,
         );
-        when(
-          () => api.deleteRecording('srv-4'),
-        ).thenThrow(Exception('network'));
+        final netErr = Exception('network');
+        when(() => api.deleteRecording('srv-4')).thenThrow(netErr);
 
         final container = realContainer();
         addTearDown(container.dispose);
@@ -780,6 +823,7 @@ void main() {
         expect(result, DeleteRecordingResult.failed);
         expect(file.existsSync(), isTrue);
         expect(await realLocal.getRecordingByServerId('srv-4'), isNotNull);
+        expect(reporter.reported, contains(netErr));
       },
     );
 
@@ -806,5 +850,153 @@ void main() {
         expect(await realLocal.getAllRecordings('proj-1'), isEmpty);
       },
     );
+  });
+
+  group('error reporting', () {
+    test(
+      'reports the server-fetch failure before falling back to local',
+      () async {
+        final boom = Exception('server boom');
+        when(
+          () => api.listRecordings(
+            'proj-1',
+            offset: 0,
+            limit: any(named: 'limit'),
+            userId: any(named: 'userId'),
+            storytellerId: any(named: 'storytellerId'),
+          ),
+        ).thenThrow(boom);
+        when(
+          () => local.getAllRecordings('proj-1'),
+        ).thenAnswer((_) async => [_makeRecording('local-1')]);
+
+        final container = makeContainer(online: true);
+        addTearDown(container.dispose);
+        await container
+            .read(recordingsListNotifierProvider.notifier)
+            .fetchRecordings();
+
+        final state = container.read(recordingsListNotifierProvider);
+        expect(state.recordings.map((r) => r.id), ['local-1']);
+        expect(reporter.reported, contains(boom));
+        expect(reporter.stackTraces.last, isNotNull);
+      },
+    );
+
+    test('reports an unexpected server-fetch failure but suppresses '
+        'UnauthorizedException', () async {
+      // Control: a non-401 failure on this path IS reported.
+      when(
+        () => api.listRecordings(
+          'proj-1',
+          offset: 0,
+          limit: any(named: 'limit'),
+          userId: any(named: 'userId'),
+          storytellerId: any(named: 'storytellerId'),
+        ),
+      ).thenThrow(Exception('boom'));
+      when(
+        () => local.getAllRecordings('proj-1'),
+      ).thenAnswer((_) async => const []);
+
+      final container = makeContainer(online: true);
+      addTearDown(container.dispose);
+      final notifier = container.read(recordingsListNotifierProvider.notifier);
+      await notifier.fetchRecordings();
+      expect(reporter.reported, isNotEmpty);
+
+      // A 401 on the same path is suppressed — not vacuously: we just proved
+      // the path reports.
+      reporter.reported.clear();
+      when(
+        () => api.listRecordings(
+          'proj-1',
+          offset: 0,
+          limit: any(named: 'limit'),
+          userId: any(named: 'userId'),
+          storytellerId: any(named: 'storytellerId'),
+        ),
+      ).thenThrow(const UnauthorizedException());
+      await notifier.fetchRecordings();
+      expect(reporter.reported, isEmpty);
+    });
+
+    test('reports a loadMore pagination failure', () async {
+      when(
+        () => api.listRecordings(
+          'proj-1',
+          offset: 0,
+          limit: any(named: 'limit'),
+          userId: any(named: 'userId'),
+          storytellerId: any(named: 'storytellerId'),
+        ),
+      ).thenAnswer(
+        (_) async => List.generate(50, (i) => _makeServerRecording('s$i')),
+      );
+      when(
+        () => local.getAllRecordings('proj-1'),
+      ).thenAnswer((_) async => const []);
+
+      final container = makeContainer(online: true);
+      addTearDown(container.dispose);
+      final notifier = container.read(recordingsListNotifierProvider.notifier);
+      await notifier.fetchRecordings();
+
+      final boom = Exception('page boom');
+      when(
+        () => api.listRecordings(
+          'proj-1',
+          offset: 50,
+          limit: any(named: 'limit'),
+          userId: any(named: 'userId'),
+          storytellerId: any(named: 'storytellerId'),
+        ),
+      ).thenThrow(boom);
+      await notifier.loadMore();
+
+      expect(reporter.reported, contains(boom));
+      expect(
+        container.read(recordingsListNotifierProvider).isLoadingMore,
+        isFalse,
+      );
+    });
+
+    test('reports a local-read failure during the online merge', () async {
+      final boom = Exception('local read boom');
+      when(
+        () => api.listRecordings(
+          'proj-1',
+          offset: 0,
+          limit: any(named: 'limit'),
+          userId: any(named: 'userId'),
+          storytellerId: any(named: 'storytellerId'),
+        ),
+      ).thenAnswer((_) async => [_makeServerRecording('srv-1')]);
+      when(() => local.getAllRecordings('proj-1')).thenThrow(boom);
+
+      final container = makeContainer(online: true);
+      addTearDown(container.dispose);
+      await container
+          .read(recordingsListNotifierProvider.notifier)
+          .fetchRecordings();
+
+      final state = container.read(recordingsListNotifierProvider);
+      expect(state.recordings.any((r) => r.id == 'srv-1'), isTrue);
+      expect(reporter.reported, contains(boom));
+    });
+
+    test('reports a local-read failure while offline', () async {
+      final boom = Exception('offline local boom');
+      when(() => local.getAllRecordings('proj-1')).thenThrow(boom);
+
+      final container = makeContainer(online: false);
+      addTearDown(container.dispose);
+      await container
+          .read(recordingsListNotifierProvider.notifier)
+          .fetchRecordings();
+
+      expect(reporter.reported, contains(boom));
+      expect(container.read(recordingsListNotifierProvider).isLoading, isFalse);
+    });
   });
 }

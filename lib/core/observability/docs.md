@@ -39,12 +39,22 @@ Path: @/lib/core/observability
   keeps the local `developer.log` trace, so debug visibility is unchanged and the
   change is additive/zero-cost under the Noop default. See
   [../serialization/docs.md](../serialization/docs.md).
+- A fourth feed (ENG-102) is the **silent-fallback** catches that previously
+  swallowed errors outright. The recordings-list notifier
+  ([../../features/recording/presentation/notifiers/docs.md](../../features/recording/presentation/notifiers/docs.md))
+  and the sync notifier's best-effort file ops now report to the reporter
+  (stack preserved) on the way through their fallback, but — unlike the
+  state-storing arms above — they do **not** surface anything to the UI: the
+  intentional fallback (degrade to local, return 0/null, finish the row delete)
+  is unchanged, and the report is the *only* visibility these paths have.
 - Notifiers never telemeter a 401: it is the expected token-refresh flow, not a
   fault, so reporting it would be noise. Notifiers with an `on UnauthorizedException`
   arm (project/genre/stats/invite) catch it there (driving `handleUnauthorized`), so
   it never reaches the generic report. Those without that arm (member/storyteller/
-  admin) route reporting through a `_reportUnexpected` guard that skips
-  `UnauthorizedException` while still surfacing the error to the UI.
+  admin/recordings-list) route reporting through a `_reportUnexpected` guard that
+  skips `UnauthorizedException`; whether the error also reaches the UI depends on
+  the arm — state-storing arms surface the raw exception, silent-fallback arms do
+  not.
 - It is distinct from [/lib/core/errors/](../errors/), which holds the typed
   domain/API failures (the `AppException` hierarchy) that flow through normal
   exception paths. Observability is the telemetry sink — fed both by *uncaught*

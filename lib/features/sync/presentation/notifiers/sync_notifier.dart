@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart' show Locale, WidgetsBinding;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/l10n/locale_provider.dart';
+import '../../../../core/observability/error_reporter.dart';
 import '../../../../core/platform/disk_space.dart' as disk_space;
 import '../../../../core/platform/file_ops.dart' as file_ops;
 import '../../../../l10n/app_localizations.dart';
@@ -154,7 +155,9 @@ class SyncNotifier extends Notifier<SyncState> {
       if (await file_ops.fileExists(path)) {
         return await file_ops.fileLength(path);
       }
-    } on Exception catch (_) {}
+    } on Exception catch (e, st) {
+      ref.read(errorReporterProvider).reportError(e, st);
+    }
     return 0;
   }
 
@@ -185,7 +188,9 @@ class SyncNotifier extends Notifier<SyncState> {
   Future<void> _deleteQuietly(String path) async {
     try {
       await file_ops.deleteFile(path);
-    } on Exception catch (_) {}
+    } on Exception catch (e, st) {
+      ref.read(errorReporterProvider).reportError(e, st);
+    }
   }
 
   bool _isProcessing = false;

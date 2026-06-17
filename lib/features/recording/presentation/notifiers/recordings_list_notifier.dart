@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/database/app_database.dart';
 import '../../../../core/errors/api_exception.dart';
+import '../../../../core/observability/error_reporter.dart';
 import '../../../../core/platform/file_ops.dart' as file_ops;
 import '../../../project/presentation/notifiers/project_notifier.dart';
 import '../../../sync/presentation/notifiers/sync_notifier.dart';
@@ -77,7 +78,8 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
         isLoading: false,
         hasMore: result.hasMore,
       );
-    } catch (_) {
+    } catch (e, st) {
+      _reportUnexpected(e, st);
       final local = await _loadLocal(projectId);
       if (gen != _fetchGeneration) return;
       _serverOffset = 0;
@@ -137,7 +139,8 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
         isLoadingMore: false,
         hasMore: hasMore,
       );
-    } catch (_) {
+    } catch (e, st) {
+      _reportUnexpected(e, st);
       if (gen != _fetchGeneration) return;
       state = state.copyWith(isLoadingMore: false);
     }
@@ -163,7 +166,8 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
         await _apiRepo.deleteRecording(serverId);
       } on ForbiddenException {
         return DeleteRecordingResult.forbidden;
-      } catch (_) {
+      } catch (e, st) {
+        _reportUnexpected(e, st);
         return DeleteRecordingResult.failed;
       }
     }
@@ -181,8 +185,9 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
     if (path.isNotEmpty) {
       try {
         await file_ops.deleteFile(path);
-      } on Exception catch (_) {
+      } on Exception catch (e, st) {
         // Best-effort: a missing/locked file must not abort the row delete.
+        _reportUnexpected(e, st);
       }
     }
     state = state.copyWith(
@@ -202,7 +207,8 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
     List<LocalRecording> localRecordings;
     try {
       localRecordings = await _localRepo.getAllRecordings(projectId);
-    } catch (_) {
+    } catch (e, st) {
+      _reportUnexpected(e, st);
       localRecordings = const [];
     }
 
@@ -230,7 +236,8 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
   Future<List<LocalRecording>?> _loadLocal(String projectId) async {
     try {
       return await _localRepo.getAllRecordings(projectId);
-    } catch (_) {
+    } catch (e, st) {
+      _reportUnexpected(e, st);
       return null;
     }
   }
@@ -300,5 +307,12 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
     await _localRepo.deleteStaleRecordings(projectId);
     await fetchRecordings();
     return serverDeleted;
+  }
+
+  void _reportUnexpected(Object error, StackTrace stackTrace) {
+    // 401 é sessão expirada esperada (tratada por refresh/login alhures);
+    // só erros inesperados vão à telemetria.
+    if (error is UnauthorizedException) return;
+    ref.read(errorReporterProvider).reportError(error, stackTrace);
   }
 }
