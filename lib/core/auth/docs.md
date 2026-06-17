@@ -79,7 +79,9 @@ Path: @/lib/core/auth
   preserved. `handleUnauthorized` clears tokens + resets state only on `false`.
 - **Tokens and cached user.** Stored under fixed keys in secure storage; a
   successful refresh re-stores both tokens and re-fetches `getMe`. The cached user
-  enables offline-first restore in `tryAutoLogin`.
+  enables offline-first restore in `tryAutoLogin`. Every secret write (`_storeTokens`
+  for the access/refresh tokens, `_storeUser` for the cached user) routes through
+  `_writeIdempotent`, which makes the write update-safe (below).
 
 ### Things to Know
 
@@ -98,5 +100,39 @@ Path: @/lib/core/auth
   resetting state to `const AuthState()` clears `currentUser`, which the router
   and shells observe to redirect to login — there is no separate "session expired"
   flag.
+- **Secret writes are idempotent (ENG-188), because the iOS Keychain survives the
+  app.** `_writeIdempotent` wraps the secure-storage `write`. The Darwin plugin's
+  `write` is itself an upsert (a `containsKey` precheck → `SecItemUpdate` on hit,
+  else `SecItemAdd`), so a plain same-accessibility re-login normally takes the
+  update path. The collision arises because `containsKey`'s lookup query includes
+  `kSecAttrAccessible`: if the stored item's accessibility differs from the current
+  query's — notably after ENG-128 / ADR-0005 moved the keys to
+  `first_unlock_this_device` — `containsKey` **false-negatives** the still-present
+  item (Keychain uniqueness is service+account, not accessibility), the plugin
+  falls through to `SecItemAdd` on an item that already exists, and that surfaces as
+  `errSecDuplicateItem` (OSStatus `-25299`). On that specific `PlatformException`
+  (matched by `details == -25299` or the message carrying `-25299`/"already exists")
+  the helper deletes the key and rewrites it; any other `PlatformException` is
+  rethrown. Before this, a second-or-later correct-password `login` caught the
+  collision into `state.error` and surfaced only the generic snackbar — every login
+  after the first failed — and `tryAutoLogin`'s `_storeUser` refresh failed the same
+  silent way (only erasing the simulator cleared it).
+- **The collision repair is off the happy path, by design.** The happy path is a
+  plain `write`; the delete-then-rewrite runs **only** on a real `-25299`, so it
+  adds no `delete` call in the normal flow and does not perturb the delete-call
+  accounting the ENG-136/141 refresh tests assert on.
+- **The rewrite preserves ADR-0005 device-binding and recovers the
+  accessibility-migration case.** It reuses the same provider `IOSOptions`
+  (`KeychainAccessibility.first_unlock_this_device`) from
+  [../providers/secure_storage_provider.dart](../providers/secure_storage_provider.dart),
+  so the rewritten item keeps its accessibility / background-readability;
+  `secure_storage_provider.dart` is unchanged. Crucially, the plugin's `delete`
+  (`performDelete`) is **accessibility-agnostic** — it nils the accessibility level
+  and deletes across both synchronizable states — so the delete clears the stale
+  item *regardless* of the accessibility it was stored under (e.g. a pre-ENG-128
+  level), and the subsequent retry `SecItemAdd` succeeds. The recovery is
+  **trigger-agnostic**: it keys off the `-25299` error, not off any specific cause,
+  so it covers the migration path even though the exact production trigger was never
+  reproduced on a physical device.
 
 Created and maintained by Nori.

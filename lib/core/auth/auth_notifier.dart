@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -20,6 +21,7 @@ class AuthNotifier extends Notifier<AuthState> {
   static const _accessTokenKey = 'access_token';
   static const _refreshTokenKey = 'refresh_token';
   static const _cachedUserKey = 'cached_user';
+  static const _errSecDuplicateItem = -25299;
 
   FlutterSecureStorage get _storage => ref.read(secureStorageProvider);
   AuthRepository get _repo => ref.read(authRepositoryProvider);
@@ -164,8 +166,8 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 
   Future<void> _storeTokens(String accessToken, String refreshToken) async {
-    await _storage.write(key: _accessTokenKey, value: accessToken);
-    await _storage.write(key: _refreshTokenKey, value: refreshToken);
+    await _writeIdempotent(_accessTokenKey, accessToken);
+    await _writeIdempotent(_refreshTokenKey, refreshToken);
   }
 
   Future<void> _clearTokens() async {
@@ -175,7 +177,25 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 
   Future<void> _storeUser(User user) =>
-      _storage.write(key: _cachedUserKey, value: jsonEncode(user.toJson()));
+      _writeIdempotent(_cachedUserKey, jsonEncode(user.toJson()));
+
+  // errSecDuplicateItem: o write do plugin faz upsert, mas quando seu precheck
+  // containsKey não casa o item existente (ex.: a accessibility mudou — ENG-128)
+  // ele cai no SecItemAdd e colide. O delete do plugin é accessibility-agnóstico,
+  // então remover + regravar recupera; outras PlatformException propagam.
+  Future<void> _writeIdempotent(String key, String value) async {
+    try {
+      await _storage.write(key: key, value: value);
+    } on PlatformException catch (e) {
+      final isDuplicate =
+          e.details == _errSecDuplicateItem ||
+          (e.message?.contains('$_errSecDuplicateItem') ?? false) ||
+          (e.message?.toLowerCase().contains('already exists') ?? false);
+      if (!isDuplicate) rethrow;
+      await _storage.delete(key: key);
+      await _storage.write(key: key, value: value);
+    }
+  }
 
   Future<User?> _readCachedUser() async {
     final raw = await _storage.read(key: _cachedUserKey);
