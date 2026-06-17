@@ -176,7 +176,14 @@ SpacingScale/RadiusScale/DurationScale/OpacityScale ─► AppSpacing/AppRadii/A
   `SliverAppBar` `expandedHeight`** (fixed top/bottom padding plus the
   text-bearing portion multiplied by the system `textScaler`) so the expanded
   project-settings header grows vertically with the font instead of clipping its
-  title/language row. Tests pump screens against this ceiling via
+  title/language row. A third recurs in the home expandable-record FAB (ENG-185,
+  a follow-up to ENG-181): a fixed-size corner box with hardcoded `Transform`
+  offsets was replaced by an intrinsic, bottom-anchored layout whose action
+  labels are width-capped by a `ConstrainedBox` and **wrap (never ellipsize)**,
+  so long locales stay fully legible. Its failure mode is the one to watch for —
+  clipping inside a `Stack` throws *no* overflow exception, so the regression is
+  silent and must be caught by geometry assertions, not `expectNoOverflow`. Tests
+  pump screens against this ceiling via
   [/test/support/text_scale.dart](/test/support/text_scale.dart).
 - **Color/brightness invariant.** A registered `AppColorSet`'s brightness must
   match its `ThemeData.brightness` — `of()` prefers the extension and ignores
