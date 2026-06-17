@@ -89,10 +89,10 @@ class _PendingWebUploadsBannerState
 
       if (!result.success) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(l10n.import_saveError(result.error ?? 'unknown')),
-            ),
+          showErrorSnackBar(
+            context,
+            result.error ?? 'unknown',
+            template: l10n.recording_uploadFailed,
           );
         }
         return;
