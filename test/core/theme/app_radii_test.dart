@@ -10,6 +10,8 @@ void main() {
       expect(RadiusScale.r16, 16);
       expect(RadiusScale.r20, 20);
       expect(RadiusScale.r24, 24);
+      expect(RadiusScale.r28, 28);
+      expect(RadiusScale.r32, 32);
     });
   });
 
@@ -19,6 +21,8 @@ void main() {
       expect(radii.r4, RadiusScale.r4);
       expect(radii.r12, RadiusScale.r12);
       expect(radii.r24, RadiusScale.r24);
+      expect(radii.r28, RadiusScale.r28);
+      expect(radii.r32, RadiusScale.r32);
     });
 
     test('copyWith overrides only the named field', () {

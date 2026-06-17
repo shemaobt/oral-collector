@@ -56,7 +56,10 @@ class StatusFilterBar extends StatelessWidget {
             child: AnimatedContainer(
               duration: DurationScale.ms200,
               curve: Curves.easeOut,
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              padding: const EdgeInsets.symmetric(
+                horizontal: SpacingScale.s16,
+                vertical: SpacingScale.s8,
+              ),
               decoration: BoxDecoration(
                 color: isSelected
                     ? colors.accent
@@ -77,7 +80,7 @@ class StatusFilterBar extends StatelessWidget {
                     size: 14,
                     color: isSelected ? AppColors.white : colors.secondary,
                   ),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: SpacingScale.s8),
                   Text(
                     label,
                     style: theme.textTheme.labelMedium?.copyWith(

@@ -988,9 +988,9 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
           canSplitAtPosition: _canSplitAtPlayhead,
           onSplitAtPosition: _addSplitAtPlayhead,
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: SpacingScale.s8),
         Padding(
-          padding: const EdgeInsets.only(bottom: 10),
+          padding: const EdgeInsets.only(bottom: SpacingScale.s8),
           child: EditVolumeControl(
             gainDb: _gainDb,
             peakAmplitude: _visiblePeak(),
@@ -1064,7 +1064,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
                 ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: SpacingScale.s8),
           ...List.generate(_segmentCount, (i) {
             final isPlaying = _playingSegment == i;
             final isExcluded = _excludedSegments.contains(i);
@@ -1120,7 +1120,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
             ),
             decoration: BoxDecoration(
               border: Border.all(color: colors.border.withValues(alpha: 0.2)),
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(RadiusScale.r16),
             ),
             child: Column(
               children: [
@@ -1274,7 +1274,9 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
                   side: BorderSide(
                     color: colors.border.withValues(alpha: isDark ? 0.4 : 0.35),
                   ),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: SpacingScale.s16,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(RadiusScale.r12),
                   ),
@@ -1321,7 +1323,9 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
                   disabledForegroundColor: isDark
                       ? AppColors.black.withValues(alpha: 0.3)
                       : AppColors.white.withValues(alpha: 0.4),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: SpacingScale.s16,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(RadiusScale.r12),
                   ),

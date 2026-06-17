@@ -102,7 +102,7 @@ class ProjectCard extends StatelessWidget {
                               ),
                             ),
                           ),
-                          const SizedBox(width: 14),
+                          const SizedBox(width: SpacingScale.s16),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -135,7 +135,7 @@ class ProjectCard extends StatelessWidget {
                       ),
                       const SizedBox(height: SpacingScale.s16),
                       Wrap(
-                        spacing: 10,
+                        spacing: SpacingScale.s8,
                         runSpacing: 8,
                         crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
@@ -168,7 +168,7 @@ class ProjectCard extends StatelessWidget {
                           if (isActive) ...[
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
+                                horizontal: SpacingScale.s8,
                                 vertical: SpacingScale.s4,
                               ),
                               decoration: BoxDecoration(

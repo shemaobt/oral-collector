@@ -26,7 +26,7 @@ class GenreFilterChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(
           horizontal: SpacingScale.s12,
-          vertical: 6,
+          vertical: SpacingScale.s8,
         ),
         decoration: BoxDecoration(
           color: isSelected

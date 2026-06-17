@@ -59,7 +59,7 @@ class BulkMetadataBar extends StatelessWidget {
         elevation: 0,
         color: colors.surfaceAlt.withValues(alpha: 0.6),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(RadiusScale.r16),
           side: BorderSide(color: colors.border.withValues(alpha: 0.4)),
         ),
         child: Theme(
@@ -111,7 +111,7 @@ class BulkMetadataBar extends StatelessWidget {
       padding: const EdgeInsets.all(SpacingScale.s16),
       decoration: BoxDecoration(
         color: colors.surfaceAlt.withValues(alpha: 0.55),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(RadiusScale.r16),
         border: Border.all(color: colors.border.withValues(alpha: 0.4)),
       ),
       child: Column(
@@ -184,7 +184,7 @@ class BulkMetadataBar extends StatelessWidget {
         children: [
           for (int i = 0; i < columns.length; i++) ...[
             columns[i],
-            if (i < columns.length - 1) const SizedBox(height: 10),
+            if (i < columns.length - 1) const SizedBox(height: SpacingScale.s8),
           ],
         ],
       );

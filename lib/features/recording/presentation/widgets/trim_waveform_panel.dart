@@ -69,7 +69,7 @@ class TrimWaveformPanel extends StatelessWidget {
         SpacingScale.s16,
         SpacingScale.s12,
         SpacingScale.s16,
-        14,
+        SpacingScale.s16,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -77,7 +77,7 @@ class TrimWaveformPanel extends StatelessWidget {
           Row(
             children: [
               Icon(LucideIcons.scissors, size: 14, color: colors.accent),
-              const SizedBox(width: 6),
+              const SizedBox(width: SpacingScale.s8),
               Expanded(
                 child: Text(
                   hasSplits
@@ -193,7 +193,7 @@ class TrimWaveformPanel extends StatelessWidget {
               ),
               Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
+                  horizontal: SpacingScale.s8,
                   vertical: 3,
                 ),
                 decoration: BoxDecoration(
@@ -318,7 +318,7 @@ class _MinimapPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final rect = RRect.fromRectAndRadius(
       Offset.zero & size,
-      const Radius.circular(6),
+      const Radius.circular(RadiusScale.r8),
     );
     canvas.save();
     canvas.clipRRect(rect);

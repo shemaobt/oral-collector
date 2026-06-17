@@ -168,8 +168,8 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
               children: [
                 ClipRRect(
                   borderRadius: const BorderRadius.only(
-                    bottomLeft: Radius.circular(36),
-                    bottomRight: Radius.circular(36),
+                    bottomLeft: Radius.circular(RadiusScale.r32),
+                    bottomRight: Radius.circular(RadiusScale.r32),
                   ),
                   child: Image.asset(
                     'assets/hero_woman.png',
@@ -181,8 +181,8 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   child: DecoratedBox(
                     decoration: BoxDecoration(
                       borderRadius: const BorderRadius.only(
-                        bottomLeft: Radius.circular(36),
-                        bottomRight: Radius.circular(36),
+                        bottomLeft: Radius.circular(RadiusScale.r32),
+                        bottomRight: Radius.circular(RadiusScale.r32),
                       ),
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
@@ -438,7 +438,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
               foregroundColor: AppColors.white,
               elevation: 0,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(RadiusScale.r16),
               ),
               textStyle: theme.textTheme.labelLarge,
             ),

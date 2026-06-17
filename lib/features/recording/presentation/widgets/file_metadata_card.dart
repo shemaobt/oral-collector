@@ -62,7 +62,7 @@ class FileMetadataCard extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(
                 horizontal: SpacingScale.s12,
-                vertical: 6,
+                vertical: SpacingScale.s8,
               ),
               decoration: BoxDecoration(
                 color: colors.error.withValues(alpha: 0.1),
@@ -74,7 +74,7 @@ class FileMetadataCard extends StatelessWidget {
               child: Row(
                 children: [
                   Icon(LucideIcons.alertCircle, size: 14, color: colors.error),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: SpacingScale.s8),
                   Text(
                     l10n.import_fieldRequired,
                     style: theme.textTheme.labelSmall?.copyWith(
@@ -86,7 +86,7 @@ class FileMetadataCard extends StatelessWidget {
               ),
             ),
           Padding(
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.all(SpacingScale.s16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -112,7 +112,7 @@ class FileMetadataCard extends StatelessWidget {
                       onTap: onRemove,
                       borderRadius: BorderRadius.circular(RadiusScale.r8),
                       child: Padding(
-                        padding: const EdgeInsets.all(6),
+                        padding: const EdgeInsets.all(SpacingScale.s8),
                         child: Icon(
                           LucideIcons.x,
                           size: 16,
@@ -138,7 +138,7 @@ class FileMetadataCard extends StatelessWidget {
                         fontFeatures: const [FontFeature.tabularFigures()],
                       ),
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: SpacingScale.s8),
                     Text(
                       '${entry.format.toUpperCase()} · ${formatFileSize(entry.sizeBytes)}',
                       style: theme.textTheme.labelSmall?.copyWith(
@@ -147,7 +147,7 @@ class FileMetadataCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: SpacingScale.s16),
                 TextField(
                   controller: entry.descriptionController,
                   minLines: 2,
@@ -162,20 +162,20 @@ class FileMetadataCard extends StatelessWidget {
                       vertical: SpacingScale.s12,
                     ),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(RadiusScale.r8),
                       borderSide: BorderSide(
                         color: colors.border.withValues(alpha: 0.5),
                       ),
                     ),
                     enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(RadiusScale.r8),
                       borderSide: BorderSide(
                         color: colors.border.withValues(alpha: 0.5),
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: SpacingScale.s8),
                 ClassificationField.genre(
                   value: entry.genreId,
                   onChanged: onGenreChanged,
@@ -183,7 +183,7 @@ class FileMetadataCard extends StatelessWidget {
                   hasError: hasError && entry.genreId == null,
                 ),
                 if (showSubcategory) ...[
-                  const SizedBox(height: 10),
+                  const SizedBox(height: SpacingScale.s8),
                   ClassificationField.subcategory(
                     value: entry.subcategoryId,
                     onChanged: onSubcategoryChanged,
@@ -192,13 +192,13 @@ class FileMetadataCard extends StatelessWidget {
                     hasError: hasError && entry.subcategoryId == null,
                   ),
                 ],
-                const SizedBox(height: 10),
+                const SizedBox(height: SpacingScale.s8),
                 ClassificationField.register(
                   value: entry.registerId,
                   onChanged: onRegisterChanged,
                   hasError: hasError && entry.registerId == null,
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: SpacingScale.s8),
                 StorytellerFieldCell(
                   projectId: projectId,
                   selected: entry.storyteller,

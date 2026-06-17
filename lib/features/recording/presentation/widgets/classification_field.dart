@@ -189,7 +189,7 @@ class ClassificationField extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 14, color: colors.secondary),
-          const SizedBox(width: 6),
+          const SizedBox(width: SpacingScale.s8),
           Flexible(
             child: Text(
               hint,
@@ -205,7 +205,7 @@ class ClassificationField extends StatelessWidget {
         isDense: dense,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: SpacingScale.s12,
-          vertical: 10,
+          vertical: SpacingScale.s8,
         ),
         errorText: hasError ? l10n.import_fieldRequired : null,
         errorStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -214,7 +214,7 @@ class ClassificationField extends StatelessWidget {
           color: colors.error,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(RadiusScale.r8),
           borderSide: BorderSide(
             color: hasError
                 ? colors.error
@@ -222,14 +222,14 @@ class ClassificationField extends StatelessWidget {
           ),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(RadiusScale.r8),
           borderSide: BorderSide(
             color: hasError ? colors.error : colors.accent,
             width: 1.5,
           ),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(RadiusScale.r8),
           borderSide: BorderSide(color: colors.error),
         ),
       ),
@@ -251,7 +251,7 @@ class ClassificationField extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: colors.surfaceAlt.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(RadiusScale.r8),
         border: Border.all(color: colors.border.withValues(alpha: 0.3)),
       ),
       child: Row(
@@ -261,7 +261,7 @@ class ClassificationField extends StatelessWidget {
             size: 14,
             color: colors.foreground.withValues(alpha: 0.35),
           ),
-          const SizedBox(width: 6),
+          const SizedBox(width: SpacingScale.s8),
           Text(
             label,
             style: TextStyle(
@@ -312,15 +312,15 @@ class StorytellerFieldCell extends ConsumerWidget {
         );
         if (result != null) onChanged(result);
       },
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(RadiusScale.r8),
       child: Container(
         padding: const EdgeInsets.symmetric(
           horizontal: SpacingScale.s12,
-          vertical: 10,
+          vertical: SpacingScale.s8,
         ),
         decoration: BoxDecoration(
           color: colors.surfaceAlt,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(RadiusScale.r8),
           border: Border.all(color: colors.border.withValues(alpha: 0.5)),
         ),
         child: Row(

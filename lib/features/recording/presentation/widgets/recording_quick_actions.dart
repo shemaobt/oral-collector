@@ -48,8 +48,8 @@ class RecordingQuickActions extends StatelessWidget {
         ),
         const SizedBox(height: SpacingScale.s12),
         Wrap(
-          spacing: 10,
-          runSpacing: 10,
+          spacing: SpacingScale.s8,
+          runSpacing: SpacingScale.s8,
           children: [
             ActionTile(
               icon: LucideIcons.scissors,
@@ -120,10 +120,10 @@ class ActionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: color.withValues(alpha: 0.08),
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(RadiusScale.r16),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(RadiusScale.r16),
         child: SizedBox(
           width: 80,
           child: ConstrainedBox(
@@ -133,7 +133,7 @@ class ActionTile extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(icon, size: 22, color: color),
-                const SizedBox(height: 6),
+                const SizedBox(height: SpacingScale.s8),
                 Text(
                   label,
                   style: theme.textTheme.labelSmall?.copyWith(

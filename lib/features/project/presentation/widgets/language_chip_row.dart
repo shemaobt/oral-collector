@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 
 /// A globe icon + language name + optional language-code chip. The name is
 /// [Flexible] and ellipsizes so the row never overflows when it runs out of
@@ -17,7 +18,10 @@ class LanguageChipRow extends StatelessWidget {
   }) : _iconSize = 13,
        _nameGap = 4,
        _chipGap = 6,
-       _chipPadding = const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+       _chipPadding = const EdgeInsets.symmetric(
+         horizontal: SpacingScale.s8,
+         vertical: 1,
+       ),
        _chipRadius = 4,
        _accentChip = false;
 

@@ -214,7 +214,7 @@ class _RecordingsFilterSheetState extends ConsumerState<RecordingsFilterSheet> {
         });
       },
       child: Container(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(SpacingScale.s16),
         decoration: BoxDecoration(
           color: colors.surfaceAlt,
           borderRadius: BorderRadius.circular(RadiusScale.r12),

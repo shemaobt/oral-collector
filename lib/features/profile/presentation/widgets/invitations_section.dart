@@ -126,7 +126,7 @@ class _ErrorCard extends StatelessWidget {
             padding: const EdgeInsets.all(SpacingScale.s8),
             decoration: BoxDecoration(
               color: errorColor.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(RadiusScale.r8),
             ),
             child: Icon(LucideIcons.wifiOff, size: 18, color: errorColor),
           ),

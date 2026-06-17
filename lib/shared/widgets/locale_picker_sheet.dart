@@ -107,7 +107,7 @@ class LocalePickerSheet extends ConsumerWidget {
                       color: isSelected
                           ? colors.accent.withValues(alpha: 0.12)
                           : colors.surfaceAlt,
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(RadiusScale.r8),
                     ),
                     child: Center(
                       child: Text(

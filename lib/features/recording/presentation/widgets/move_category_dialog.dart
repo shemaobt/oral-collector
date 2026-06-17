@@ -143,7 +143,7 @@ class _MoveCategoryDialogState extends ConsumerState<MoveCategoryDialog> {
                   isDense: true,
                   contentPadding: EdgeInsets.symmetric(
                     horizontal: SpacingScale.s12,
-                    vertical: 10,
+                    vertical: SpacingScale.s8,
                   ),
                 ),
                 items: genres
@@ -186,7 +186,7 @@ class _MoveCategoryDialogState extends ConsumerState<MoveCategoryDialog> {
                     isDense: true,
                     contentPadding: EdgeInsets.symmetric(
                       horizontal: SpacingScale.s12,
-                      vertical: 10,
+                      vertical: SpacingScale.s8,
                     ),
                   ),
                   hint: Text(l10n.moveCategory_selectSubcategory),

@@ -27,7 +27,7 @@ class NoProjectCard extends StatelessWidget {
         padding: const EdgeInsets.all(SpacingScale.s28),
         decoration: BoxDecoration(
           color: colors.surfaceAlt,
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(RadiusScale.r24),
           border: Border.all(color: colors.border),
         ),
         child: Column(

@@ -28,7 +28,7 @@ class RecordingUploadProgressSection extends ConsumerWidget {
 
     return Container(
       margin: const EdgeInsets.only(bottom: SpacingScale.s16),
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(SpacingScale.s16),
       decoration: BoxDecoration(
         color: colors.accent.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(RadiusScale.r12),
@@ -58,7 +58,7 @@ class RecordingUploadProgressSection extends ConsumerWidget {
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: SpacingScale.s8),
           ClipRRect(
             borderRadius: BorderRadius.circular(RadiusScale.r4),
             child: LinearProgressIndicator(

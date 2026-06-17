@@ -63,7 +63,7 @@ class EditTransportBar extends StatelessWidget {
               height: 40,
               decoration: BoxDecoration(
                 color: colors.accent,
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(RadiusScale.r8),
               ),
               alignment: Alignment.center,
               child: Icon(
@@ -109,7 +109,7 @@ class EditTransportBar extends StatelessWidget {
                 ),
                 decoration: BoxDecoration(
                   color: colors.accent.withValues(alpha: 0.14),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(RadiusScale.r8),
                   border: Border.all(
                     color: colors.accent.withValues(alpha: 0.45),
                   ),
@@ -119,7 +119,7 @@ class EditTransportBar extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(LucideIcons.scissors, size: 14, color: colors.accent),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: SpacingScale.s8),
                     Text(
                       _fmt(position),
                       style: theme.textTheme.labelSmall?.copyWith(

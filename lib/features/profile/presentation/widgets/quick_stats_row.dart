@@ -28,7 +28,7 @@ class QuickStatsRow extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: SpacingScale.s8,
-        vertical: 14,
+        vertical: SpacingScale.s16,
       ),
       decoration: BoxDecoration(
         color: colors.card,

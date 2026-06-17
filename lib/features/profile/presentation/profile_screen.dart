@@ -278,7 +278,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 title: Text(l10n.profile_appVersion),
                 trailing: Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
+                    horizontal: SpacingScale.s8,
                     vertical: SpacingScale.s4,
                   ),
                   decoration: BoxDecoration(

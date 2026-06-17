@@ -273,8 +273,8 @@ class FileMetadataEditor extends StatelessWidget {
                   hintText: entry.fileName,
                   isDense: true,
                   contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 10,
+                    horizontal: SpacingScale.s8,
+                    vertical: SpacingScale.s8,
                   ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(RadiusScale.r8),
@@ -400,7 +400,7 @@ class FileMetadataEditor extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(
             SpacingScale.s16,
-            10,
+            SpacingScale.s8,
             SpacingScale.s16,
             SpacingScale.s12,
           ),
@@ -433,7 +433,7 @@ class FileMetadataEditor extends StatelessWidget {
                   backgroundColor: colors.border.withValues(alpha: 0.2),
                   valueColor: AlwaysStoppedAnimation(colors.success),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: SpacingScale.s8),
                 Text(
                   '$saveProgress / ${entries.length}',
                   style: theme.textTheme.labelSmall?.copyWith(
@@ -451,7 +451,7 @@ class FileMetadataEditor extends StatelessWidget {
                   backgroundColor: colors.border.withValues(alpha: 0.2),
                   valueColor: AlwaysStoppedAnimation(colors.accent),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: SpacingScale.s8),
                 Text(
                   '${formatFileSize(currentFileBytesSent)} / ${formatFileSize(currentFileBytesTotal)}',
                   style: theme.textTheme.labelSmall?.copyWith(

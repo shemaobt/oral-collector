@@ -38,7 +38,7 @@ class RecordingInfoGrid extends StatelessWidget {
             theme: theme,
           ),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: SpacingScale.s8),
         Expanded(
           child: InfoTile(
             icon: LucideIcons.hardDrive,
@@ -48,7 +48,7 @@ class RecordingInfoGrid extends StatelessWidget {
             theme: theme,
           ),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: SpacingScale.s8),
         Expanded(
           child: InfoTile(
             icon: LucideIcons.fileAudio,
@@ -85,7 +85,7 @@ class InfoTile extends StatelessWidget {
       padding: const EdgeInsets.all(SpacingScale.s12),
       decoration: BoxDecoration(
         color: colors.surfaceAlt.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(RadiusScale.r16),
         border: Border.all(color: colors.border.withValues(alpha: 0.15)),
       ),
       child: Column(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 
 class StatItem extends StatelessWidget {
   const StatItem({
@@ -26,7 +27,7 @@ class StatItem extends StatelessWidget {
       child: Column(
         children: [
           Icon(icon, size: 18, color: color),
-          const SizedBox(height: 6),
+          const SizedBox(height: SpacingScale.s8),
           Text(
             value,
             style: theme.textTheme.titleSmall?.copyWith(

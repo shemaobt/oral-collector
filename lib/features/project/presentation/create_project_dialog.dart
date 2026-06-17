@@ -210,7 +210,9 @@ class _CreateProjectSheetState extends ConsumerState<_CreateProjectSheet> {
                               ),
                               decoration: BoxDecoration(
                                 color: colors.accent.withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(6),
+                                borderRadius: BorderRadius.circular(
+                                  RadiusScale.r8,
+                                ),
                               ),
                               child: Text(
                                 _selectedLanguage!.code.toUpperCase(),
@@ -555,7 +557,9 @@ class _LanguagePickerSheetState extends State<_LanguagePickerSheet> {
                               height: 40,
                               decoration: BoxDecoration(
                                 color: colors.info.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(10),
+                                borderRadius: BorderRadius.circular(
+                                  RadiusScale.r8,
+                                ),
                               ),
                               child: Icon(
                                 LucideIcons.plus,
@@ -585,7 +589,9 @@ class _LanguagePickerSheetState extends State<_LanguagePickerSheet> {
                               color: isSelected
                                   ? colors.accent.withValues(alpha: 0.12)
                                   : colors.surfaceAlt,
-                              borderRadius: BorderRadius.circular(10),
+                              borderRadius: BorderRadius.circular(
+                                RadiusScale.r8,
+                              ),
                             ),
                             child: Center(
                               child: Text(

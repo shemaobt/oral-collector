@@ -140,7 +140,7 @@ class LoginForm extends StatelessWidget {
               foregroundColor: AppColors.white,
               elevation: 0,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(RadiusScale.r16),
               ),
               textStyle: theme.textTheme.labelLarge,
             ),
@@ -158,33 +158,36 @@ class LoginForm extends StatelessWidget {
         ),
         const SizedBox(height: SpacingScale.s24),
 
-        Wrap(
-          alignment: WrapAlignment.center,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: [
-            Text(
-              l10n.auth_noAccount,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: colors.secondary,
-              ),
-            ),
-            TextButton(
-              onPressed: onGoToSignup,
-              style: TextButton.styleFrom(
-                minimumSize: const Size(44, 44),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: SpacingScale.s8,
-                ),
-              ),
-              child: Text(
-                l10n.auth_signUp,
+        SizedBox(
+          width: double.infinity,
+          child: Wrap(
+            alignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              Text(
+                l10n.auth_noAccount,
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: colors.accent,
+                  color: colors.secondary,
                 ),
               ),
-            ),
-          ],
+              TextButton(
+                onPressed: onGoToSignup,
+                style: TextButton.styleFrom(
+                  minimumSize: const Size(44, 44),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: SpacingScale.s8,
+                  ),
+                ),
+                child: Text(
+                  l10n.auth_signUp,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: colors.accent,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );

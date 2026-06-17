@@ -24,7 +24,7 @@ void showErrorSnackBar(
         content: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(6),
+              padding: const EdgeInsets.all(SpacingScale.s8),
               decoration: BoxDecoration(
                 color: AppColors.white.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(RadiusScale.r8),
@@ -50,7 +50,9 @@ void showErrorSnackBar(
         ),
         backgroundColor: colors.error,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(RadiusScale.r16),
+        ),
         margin: const EdgeInsets.fromLTRB(
           SpacingScale.s16,
           0,
@@ -59,7 +61,7 @@ void showErrorSnackBar(
         ),
         padding: const EdgeInsets.symmetric(
           horizontal: SpacingScale.s16,
-          vertical: 14,
+          vertical: SpacingScale.s16,
         ),
         duration: const Duration(seconds: 4),
       ),

@@ -67,7 +67,7 @@ class GenreCard extends StatelessWidget {
                     color: (isDark ? colors.card : AppColors.white).withValues(
                       alpha: 0.80,
                     ),
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(RadiusScale.r16),
                   ),
                   child: Icon(icon, size: 20, color: accent),
                 ),
@@ -94,7 +94,7 @@ class GenreCard extends StatelessWidget {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: SpacingScale.s8),
                     Icon(LucideIcons.clock, size: 11, color: colors.secondary),
                     const SizedBox(width: 3),
                     Text(

@@ -46,7 +46,7 @@ class FiltersIconButton extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: colors.accent,
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(RadiusScale.r8),
                     ),
                     constraints: const BoxConstraints(minWidth: 16),
                     child: Text(

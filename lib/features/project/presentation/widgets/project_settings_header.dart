@@ -39,7 +39,7 @@ class ProjectSettingsHeader extends StatelessWidget {
       pinned: true,
       leading: IconButton(
         icon: Container(
-          padding: const EdgeInsets.all(6),
+          padding: const EdgeInsets.all(SpacingScale.s8),
           decoration: BoxDecoration(
             color: colors.card.withValues(alpha: 0.8),
             shape: BoxShape.circle,
@@ -85,7 +85,7 @@ class ProjectSettingsHeader extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   if (project.languageName != null) ...[
-                    const SizedBox(height: 6),
+                    const SizedBox(height: SpacingScale.s8),
                     LanguageChipRow.header(
                       languageName: project.languageName!,
                       languageCode: project.languageCode,

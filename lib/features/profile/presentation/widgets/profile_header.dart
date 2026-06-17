@@ -138,7 +138,7 @@ class ProfileHeader extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: SpacingScale.s8),
               Icon(
                 LucideIcons.pencil,
                 size: 16,

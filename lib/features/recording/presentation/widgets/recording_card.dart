@@ -137,7 +137,7 @@ class RecordingCard extends ConsumerWidget {
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
+                    horizontal: SpacingScale.s16,
                     vertical: SpacingScale.s12,
                   ),
                   child: Column(
@@ -181,7 +181,7 @@ class RecordingCard extends ConsumerWidget {
                             ),
                           ),
                           if (recording.hasSecondary) ...[
-                            const SizedBox(width: 6),
+                            const SizedBox(width: SpacingScale.s8),
                             Tooltip(
                               message: l10n.recording_alsoClassifiedAsTooltip,
                               child: Icon(
@@ -231,7 +231,7 @@ class RecordingCard extends ConsumerWidget {
                               ],
                             ),
                           ),
-                          const SizedBox(width: 6),
+                          const SizedBox(width: SpacingScale.s8),
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: SpacingScale.s8,
@@ -263,7 +263,7 @@ class RecordingCard extends ConsumerWidget {
                             ),
                           ),
                           if (isUnclassified) ...[
-                            const SizedBox(width: 6),
+                            const SizedBox(width: SpacingScale.s8),
                             Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: SpacingScale.s8,
@@ -337,7 +337,7 @@ class RecordingCard extends ConsumerWidget {
                         ),
                       ],
                       if (isPausedByRecording) ...[
-                        const SizedBox(height: 6),
+                        const SizedBox(height: SpacingScale.s8),
                         Row(
                           children: [
                             Icon(

@@ -137,7 +137,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
               foregroundColor: AppColors.white,
               elevation: 0,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(RadiusScale.r16),
               ),
               textStyle: theme.textTheme.labelLarge,
             ),
@@ -206,7 +206,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
               foregroundColor: AppColors.white,
               elevation: 0,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(RadiusScale.r16),
               ),
               textStyle: theme.textTheme.labelLarge,
             ),
@@ -345,7 +345,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                 foregroundColor: AppColors.white,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(RadiusScale.r16),
                 ),
                 textStyle: theme.textTheme.labelLarge,
               ),

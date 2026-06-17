@@ -370,7 +370,7 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
                         fillColor: colors.surfaceAlt,
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: SpacingScale.s12,
-                          vertical: 10,
+                          vertical: SpacingScale.s8,
                         ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(RadiusScale.r12),
@@ -482,7 +482,7 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
                         sliver: SliverList.separated(
                           itemCount: filtered.length,
                           separatorBuilder: (_, _) =>
-                              const SizedBox(height: 10),
+                              const SizedBox(height: SpacingScale.s8),
                           itemBuilder: (context, index) {
                             final recording = filtered[index];
                             final rawGenre = ref

@@ -41,7 +41,7 @@ class GenreFilterBar extends StatelessWidget {
           ),
           ...genres.map(
             (g) => Padding(
-              padding: const EdgeInsets.only(left: 6),
+              padding: const EdgeInsets.only(left: SpacingScale.s8),
               child: GenreFilterChip(
                 label: localizedGenreName(l10n, g.name),
                 isSelected: selectedGenreId == g.id,

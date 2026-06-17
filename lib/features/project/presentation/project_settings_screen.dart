@@ -338,7 +338,7 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
             maxLines: 3,
             onChanged: (_) => _onFieldChanged(),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: SpacingScale.s16),
           AnimatedOpacity(
             opacity: _isEdited ? 1.0 : 0.0,
             duration: DurationScale.ms200,
@@ -390,7 +390,7 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
                 style: TextButton.styleFrom(
                   padding: const EdgeInsets.symmetric(
                     horizontal: SpacingScale.s12,
-                    vertical: 6,
+                    vertical: SpacingScale.s8,
                   ),
                   textStyle: theme.textTheme.labelMedium?.copyWith(
                     fontWeight: FontWeight.w600,

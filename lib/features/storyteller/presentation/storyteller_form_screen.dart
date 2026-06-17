@@ -243,7 +243,7 @@ class _StorytellerFormScreenState extends ConsumerState<StorytellerFormScreen> {
                     alpha: 0.8,
                   ),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(RadiusScale.r16),
                   ),
                   elevation: 0,
                   textStyle: Theme.of(

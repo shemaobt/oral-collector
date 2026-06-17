@@ -119,8 +119,8 @@ class _UploadQueueContent extends ConsumerWidget {
                 Row(
                   children: [
                     SizedBox(
-                      width: 14,
-                      height: 14,
+                      width: SpacingScale.s16,
+                      height: SpacingScale.s16,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
                         value: syncState.syncProgress / 100,
