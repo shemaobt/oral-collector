@@ -29,7 +29,7 @@ class FinalizingStatusCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 22),
+      padding: const EdgeInsets.symmetric(horizontal: SpacingScale.s24),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -41,9 +41,9 @@ class FinalizingStatusCard extends StatelessWidget {
             ),
             padding: const EdgeInsets.fromLTRB(
               SpacingScale.s16,
-              14,
               SpacingScale.s16,
-              14,
+              SpacingScale.s16,
+              SpacingScale.s16,
             ),
             child: Row(
               children: [
@@ -60,7 +60,7 @@ class FinalizingStatusCard extends StatelessWidget {
                     color: colors.accent,
                   ),
                 ),
-                const SizedBox(width: 14),
+                const SizedBox(width: SpacingScale.s16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -90,7 +90,7 @@ class FinalizingStatusCard extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: SpacingScale.s8),
           ClipRRect(
             borderRadius: BorderRadius.circular(3),
             child: SizedBox(

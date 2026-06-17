@@ -124,12 +124,15 @@ class _StatTile extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
+      padding: const EdgeInsets.symmetric(
+        vertical: SpacingScale.s16,
+        horizontal: SpacingScale.s8,
+      ),
       decoration: BoxDecoration(
         color: isDark
             ? colors.foreground.withValues(alpha: 0.05)
             : colors.surfaceAlt,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(RadiusScale.r16),
         border: isDark
             ? null
             : Border.all(color: colors.border.withValues(alpha: 0.25)),

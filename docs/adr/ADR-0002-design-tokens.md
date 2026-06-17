@@ -24,6 +24,14 @@
   and shared widgets now consume the `const` scale, preserving `const`; off-grid
   normalization stays deferred (ENG-162). No motion `Duration`s remained on the
   long tail — ENG-106 had already migrated them all.
+- Update (2026-06-17, ENG-162): off-grid normalization landed (behavior-changing).
+  `RadiusScale` gained `r28`/`r32`; the off-grid spacing/radii literals
+  (6,10,14,22,26,34 + radius 36) snap to the nearest token by round-half-to-even
+  (ties → the 8pt line: 6→8, 10→8, 14→16, 22→24, 26→24, 34→32, radius 36→32) via
+  the reproducible AST codemod `tool/snap_off_grid.dart`
+  (`--dry-run`/`--write`/`--verify`); the policy + completeness are pinned by
+  `test/core/theme/off_grid_snap_test.dart`. A few non-enumerated stragglers
+  (e.g. radius 15, spacing 36 on fixed-size boxes) stay out of scope.
 
 ## Context
 
@@ -68,9 +76,10 @@ and land with (or after) the color tokens so violations have a migration target.
    can be added later if needed.
 
 4. **Grid policy.** Only on-grid values get tokens — spacing
-   {4,8,12,16,20,24,28,32,40,48}, radii {4,8,12,16,20,24}. Off-grid stragglers
-   (6,10,14,22,26,34) and other non-grid values (e.g. radius 36) are **not**
-   tokenized; normalizing them is a separate, behavior-changing follow-up.
+   {4,8,12,16,20,24,28,32,40,48}, radii {4,8,12,16,20,24} (extended with 28/32 in
+   ENG-162). Off-grid stragglers (6,10,14,22,26,34) and other non-grid values
+   (e.g. radius 36) were left raw here and normalized in the behavior-changing
+   follow-up ENG-162 (see update above).
    Durations cover motion timings only ({120,150,200,250,300,900,1100,1200} ms);
    snackbar/feedback display durations (seconds-based), logic timers, and I/O
    timeouts are excluded.

@@ -116,7 +116,7 @@ class _UploadStatusBadgeState extends State<UploadStatusBadge>
             padding: EdgeInsets.symmetric(horizontal: hPad, vertical: vPad),
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: BorderRadius.circular(RadiusScale.r8),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,

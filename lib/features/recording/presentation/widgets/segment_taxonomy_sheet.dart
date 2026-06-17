@@ -112,7 +112,7 @@ class _SegmentTaxonomySheetState extends ConsumerState<SegmentTaxonomySheet> {
               Padding(
                 padding: const EdgeInsets.fromLTRB(
                   SpacingScale.s20,
-                  14,
+                  SpacingScale.s16,
                   SpacingScale.s20,
                   0,
                 ),
@@ -163,7 +163,7 @@ class _SegmentTaxonomySheetState extends ConsumerState<SegmentTaxonomySheet> {
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: SpacingScale.s8),
                       _InheritTile(
                         selected: _genreId == null,
                         label: l10n.trim_inheritLabel,
@@ -172,10 +172,12 @@ class _SegmentTaxonomySheetState extends ConsumerState<SegmentTaxonomySheet> {
                           _subcategoryId = null;
                         }),
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: SpacingScale.s8),
                       ...allGenres.map(
                         (g) => Padding(
-                          padding: const EdgeInsets.only(bottom: 6),
+                          padding: const EdgeInsets.only(
+                            bottom: SpacingScale.s8,
+                          ),
                           child: _OptionTile(
                             selected: _genreId == g.id,
                             label: localizedGenreName(l10n, g.name),
@@ -197,16 +199,18 @@ class _SegmentTaxonomySheetState extends ConsumerState<SegmentTaxonomySheet> {
                             fontWeight: FontWeight.w700,
                           ),
                         ),
-                        const SizedBox(height: 6),
+                        const SizedBox(height: SpacingScale.s8),
                         _InheritTile(
                           selected: _subcategoryId == null,
                           label: l10n.trim_inheritLabel,
                           onTap: () => setState(() => _subcategoryId = null),
                         ),
-                        const SizedBox(height: 6),
+                        const SizedBox(height: SpacingScale.s8),
                         ...subcategories.map(
                           (s) => Padding(
-                            padding: const EdgeInsets.only(bottom: 6),
+                            padding: const EdgeInsets.only(
+                              bottom: SpacingScale.s8,
+                            ),
                             child: _OptionTile(
                               selected: _subcategoryId == s.id,
                               label: localizedSubcategoryName(l10n, s.name),
@@ -224,16 +228,18 @@ class _SegmentTaxonomySheetState extends ConsumerState<SegmentTaxonomySheet> {
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: SpacingScale.s8),
                       _InheritTile(
                         selected: _registerId == null,
                         label: l10n.trim_inheritLabel,
                         onTap: () => setState(() => _registerId = null),
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: SpacingScale.s8),
                       ...kRegisters.map(
                         (r) => Padding(
-                          padding: const EdgeInsets.only(bottom: 6),
+                          padding: const EdgeInsets.only(
+                            bottom: SpacingScale.s8,
+                          ),
                           child: _OptionTile(
                             selected: _registerId == r.id,
                             label: localizedRegisterName(l10n, r.name),
@@ -264,7 +270,7 @@ class _SegmentTaxonomySheetState extends ConsumerState<SegmentTaxonomySheet> {
                         child: Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: SpacingScale.s12,
-                            vertical: 10,
+                            vertical: SpacingScale.s8,
                           ),
                           decoration: BoxDecoration(
                             color: theme.colorScheme.errorContainer.withValues(
@@ -365,15 +371,15 @@ class _OptionTile extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(RadiusScale.r8),
       child: Container(
         padding: const EdgeInsets.symmetric(
-          horizontal: 14,
+          horizontal: SpacingScale.s16,
           vertical: SpacingScale.s12,
         ),
         decoration: BoxDecoration(
           color: selected ? colors.accent.withValues(alpha: 0.12) : colors.card,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(RadiusScale.r8),
           border: Border.all(
             color: selected
                 ? colors.accent.withValues(alpha: 0.5)
@@ -418,17 +424,17 @@ class _InheritTile extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(RadiusScale.r8),
       child: Container(
         padding: const EdgeInsets.symmetric(
-          horizontal: 14,
+          horizontal: SpacingScale.s16,
           vertical: SpacingScale.s12,
         ),
         decoration: BoxDecoration(
           color: selected
               ? colors.secondary.withValues(alpha: 0.08)
               : AppColors.transparent,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(RadiusScale.r8),
           border: Border.all(
             color: selected
                 ? colors.secondary.withValues(alpha: 0.4)

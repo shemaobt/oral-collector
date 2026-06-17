@@ -117,7 +117,7 @@ class _EditRecordingDetailsSheetState
                 ),
               ),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: SpacingScale.s16),
             Row(
               children: [
                 Expanded(
@@ -142,7 +142,7 @@ class _EditRecordingDetailsSheetState
                 fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: SpacingScale.s8),
             TextField(
               controller: _titleController,
               autofocus: true,
@@ -170,7 +170,7 @@ class _EditRecordingDetailsSheetState
                   borderSide: BorderSide(color: colors.accent, width: 1.5),
                 ),
                 contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 14,
+                  horizontal: SpacingScale.s16,
                   vertical: SpacingScale.s12,
                 ),
               ),
@@ -180,7 +180,7 @@ class _EditRecordingDetailsSheetState
                 }
               },
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: SpacingScale.s16),
             Text(
               l10n.recording_description,
               style: theme.textTheme.labelMedium?.copyWith(
@@ -188,7 +188,7 @@ class _EditRecordingDetailsSheetState
                 fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: SpacingScale.s8),
             TextField(
               controller: _descriptionController,
               minLines: 3,
@@ -213,7 +213,7 @@ class _EditRecordingDetailsSheetState
                   borderSide: BorderSide(color: colors.accent, width: 1.5),
                 ),
                 contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 14,
+                  horizontal: SpacingScale.s16,
                   vertical: SpacingScale.s12,
                 ),
               ),
@@ -227,7 +227,7 @@ class _EditRecordingDetailsSheetState
                   backgroundColor: colors.accent,
                   foregroundColor: AppColors.white,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(RadiusScale.r16),
                   ),
                   elevation: 0,
                 ),

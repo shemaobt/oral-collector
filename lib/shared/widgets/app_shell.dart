@@ -366,18 +366,18 @@ class _SidebarNavItem extends StatelessWidget {
         color: AppColors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(RadiusScale.r8),
           child: AnimatedContainer(
             duration: DurationScale.ms200,
             padding: EdgeInsets.symmetric(
               horizontal: expanded ? 12 : 0,
-              vertical: 10,
+              vertical: SpacingScale.s8,
             ),
             decoration: BoxDecoration(
               color: isSelected
                   ? colors.accent.withValues(alpha: 0.1)
                   : AppColors.transparent,
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(RadiusScale.r8),
             ),
             child: expanded
                 ? Row(
@@ -444,13 +444,13 @@ class _SidebarUserRow extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: colors.surfaceAlt.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(RadiusScale.r8),
       ),
       child: expanded
           ? Row(
               children: [
                 avatar,
-                const SizedBox(width: 10),
+                const SizedBox(width: SpacingScale.s8),
                 Expanded(
                   child: Text(
                     displayName ?? email ?? '',
@@ -525,11 +525,11 @@ class _SidebarCollapseToggle extends StatelessWidget {
       color: AppColors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(RadiusScale.r8),
         child: Padding(
           padding: EdgeInsets.symmetric(
             horizontal: expanded ? 12 : 0,
-            vertical: 10,
+            vertical: SpacingScale.s8,
           ),
           child: expanded
               ? Row(
@@ -597,13 +597,13 @@ class _FloatingNavBar extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.fromLTRB(
         SpacingScale.s16,
-        6,
+        SpacingScale.s8,
         SpacingScale.s16,
         bottomPadding > 16 ? bottomPadding - 16 : 2,
       ),
       child: Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(34),
+          borderRadius: BorderRadius.circular(RadiusScale.r32),
           boxShadow: [
             BoxShadow(
               color: AppColors.black.withValues(alpha: isDark ? 0.30 : 0.10),
@@ -613,7 +613,7 @@ class _FloatingNavBar extends StatelessWidget {
           ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(34),
+          borderRadius: BorderRadius.circular(RadiusScale.r32),
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 28, sigmaY: 28),
             child: Container(
@@ -621,7 +621,7 @@ class _FloatingNavBar extends StatelessWidget {
               padding: const EdgeInsets.all(SpacingScale.s8),
               decoration: BoxDecoration(
                 color: navBg,
-                borderRadius: BorderRadius.circular(34),
+                borderRadius: BorderRadius.circular(RadiusScale.r32),
                 border: Border.all(
                   color: (isDark ? AppColors.white : colors.border).withValues(
                     alpha: isDark ? 0.08 : 0.25,
@@ -659,7 +659,9 @@ class _FloatingNavBar extends StatelessWidget {
                             color: AppColors.transparent,
                             child: InkWell(
                               onTap: () => onTabTapped(i),
-                              borderRadius: BorderRadius.circular(26),
+                              borderRadius: BorderRadius.circular(
+                                RadiusScale.r24,
+                              ),
                               child: AnimatedContainer(
                                 duration: DurationScale.ms300,
                                 curve: Curves.easeInOut,
@@ -669,7 +671,9 @@ class _FloatingNavBar extends StatelessWidget {
                                 height: 52,
                                 decoration: BoxDecoration(
                                   color: isSelected ? colors.accent : itemBg,
-                                  borderRadius: BorderRadius.circular(26),
+                                  borderRadius: BorderRadius.circular(
+                                    RadiusScale.r24,
+                                  ),
                                 ),
                                 child: _NavItemContent(
                                   icon: tab.icon,

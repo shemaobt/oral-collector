@@ -191,7 +191,10 @@ class _ExpandableRecordFabState extends State<ExpandableRecordFab>
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              padding: const EdgeInsets.symmetric(
+                horizontal: SpacingScale.s8,
+                vertical: SpacingScale.s8,
+              ),
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(RadiusScale.r8),
@@ -205,7 +208,7 @@ class _ExpandableRecordFabState extends State<ExpandableRecordFab>
                 ),
               ),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: SpacingScale.s8),
             GestureDetector(
               onTap: onTap,
               child: Container(

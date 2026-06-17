@@ -49,7 +49,7 @@ class RecordingStatusSection extends StatelessWidget {
               fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: SpacingScale.s16),
           StatusRow(
             icon: _uploadIcon(),
             iconColor: _uploadColor(),
@@ -62,7 +62,7 @@ class RecordingStatusSection extends StatelessWidget {
                     style: TextButton.styleFrom(
                       minimumSize: Size.zero,
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
+                        horizontal: SpacingScale.s8,
                         vertical: SpacingScale.s4,
                       ),
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -80,7 +80,7 @@ class RecordingStatusSection extends StatelessWidget {
             theme: theme,
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 10),
+            padding: const EdgeInsets.symmetric(vertical: SpacingScale.s8),
             child: Divider(
               height: 1,
               color: colors.border.withValues(alpha: 0.15),
@@ -96,7 +96,7 @@ class RecordingStatusSection extends StatelessWidget {
             theme: theme,
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 10),
+            padding: const EdgeInsets.symmetric(vertical: SpacingScale.s8),
             child: Divider(
               height: 1,
               color: colors.border.withValues(alpha: 0.15),

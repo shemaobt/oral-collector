@@ -196,7 +196,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                           size: 16,
                           color: isSelected ? colors.accent : colors.secondary,
                         ),
-                        const SizedBox(width: 6),
+                        const SizedBox(width: SpacingScale.s8),
                         Text(section.label),
                       ],
                     ),
@@ -210,7 +210,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                     ),
                     showCheckmark: false,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(RadiusScale.r8),
                       side: BorderSide(
                         color: isSelected
                             ? colors.accent.withValues(alpha: 0.3)

@@ -45,23 +45,23 @@ class HeroGenreCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         SpacingScale.s16,
-        14,
+        SpacingScale.s16,
         SpacingScale.s16,
         SpacingScale.s12,
       ),
       child: Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(RadiusScale.r24),
           border: isDark
               ? null
               : Border.all(color: _heroColor.withValues(alpha: 0.18)),
         ),
         child: Material(
           color: bg,
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(RadiusScale.r24),
           child: InkWell(
             onTap: onTap,
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: BorderRadius.circular(RadiusScale.r24),
             child: Padding(
               padding: const EdgeInsets.all(SpacingScale.s20),
               child: Row(
@@ -99,7 +99,7 @@ class HeroGenreCard extends StatelessWidget {
                             ),
                           ),
                         ],
-                        const SizedBox(height: 10),
+                        const SizedBox(height: SpacingScale.s8),
 
                         Row(
                           children: [

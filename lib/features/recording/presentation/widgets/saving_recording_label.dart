@@ -63,8 +63,8 @@ class _BouncingDots extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 22,
-      height: 14,
+      width: SpacingScale.s24,
+      height: SpacingScale.s16,
       child: AnimatedBuilder(
         animation: controller,
         builder: (context, _) {

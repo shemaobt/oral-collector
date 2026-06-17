@@ -51,7 +51,7 @@ class HeroPanel extends StatelessWidget {
                       height: 40,
                     ),
                   ),
-                  const SizedBox(width: 14),
+                  const SizedBox(width: SpacingScale.s16),
                   Text(
                     l10n.auth_oralCollector,
                     style: textTheme.titleMedium?.copyWith(

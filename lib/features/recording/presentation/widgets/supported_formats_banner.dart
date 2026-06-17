@@ -47,7 +47,7 @@ class SupportedFormatsBanner extends StatelessWidget {
             const SizedBox(width: SpacingScale.s8),
             InkWell(
               onTap: onDismiss,
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: BorderRadius.circular(RadiusScale.r8),
               child: Padding(
                 padding: const EdgeInsets.all(SpacingScale.s4),
                 child: Icon(

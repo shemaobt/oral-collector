@@ -157,7 +157,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 foregroundColor: AppColors.white,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(RadiusScale.r16),
                 ),
                 textStyle: theme.textTheme.labelLarge,
               ),
@@ -242,7 +242,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               foregroundColor: colors.foreground,
               side: BorderSide(color: colors.border),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(RadiusScale.r16),
               ),
               textStyle: theme.textTheme.labelLarge,
             ),

@@ -60,7 +60,7 @@ class _InputDevicePickerSheetState
             child: Row(
               children: [
                 Icon(LucideIcons.mic, size: 20, color: colors.foreground),
-                const SizedBox(width: 10),
+                const SizedBox(width: SpacingScale.s8),
                 Expanded(
                   child: Text(
                     l10n.recording_selectMicrophone,
@@ -201,7 +201,7 @@ class _DeviceRow extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.symmetric(
             horizontal: SpacingScale.s24,
-            vertical: 14,
+            vertical: SpacingScale.s16,
           ),
           child: Row(
             children: [

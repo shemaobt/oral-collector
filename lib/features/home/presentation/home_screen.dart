@@ -309,7 +309,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(
                         SpacingScale.s20,
-                        22,
+                        SpacingScale.s24,
                         SpacingScale.s20,
                         0,
                       ),
@@ -320,7 +320,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             size: 18,
                             color: colors.accent,
                           ),
-                          const SizedBox(width: 10),
+                          const SizedBox(width: SpacingScale.s8),
                           Flexible(
                             child: Text(
                               activeProject.name,
@@ -341,7 +341,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 color: colors.primary.withValues(
                                   alpha: isDark ? 0.2 : 0.1,
                                 ),
-                                borderRadius: BorderRadius.circular(6),
+                                borderRadius: BorderRadius.circular(
+                                  RadiusScale.r8,
+                                ),
                               ),
                               child: Text(
                                 activeProject.languageName!,
@@ -353,7 +355,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             ),
                           ],
                           if (projectState.projects.length > 1) ...[
-                            const SizedBox(width: 6),
+                            const SizedBox(width: SpacingScale.s8),
                             Icon(
                               LucideIcons.chevronDown,
                               size: 16,
@@ -415,14 +417,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       const Spacer(),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
+                          horizontal: SpacingScale.s8,
                           vertical: SpacingScale.s4,
                         ),
                         decoration: BoxDecoration(
                           color: colors.foreground.withValues(
                             alpha: isDark ? 0.12 : 0.08,
                           ),
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(RadiusScale.r8),
                         ),
                         child: Text(
                           '${genreState.genres.length}',

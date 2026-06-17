@@ -60,10 +60,10 @@ class StatusBanner extends StatelessWidget {
         0,
       ),
       child: Container(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(SpacingScale.s16),
         decoration: BoxDecoration(
           color: tint.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(RadiusScale.r16),
           border: Border.all(color: tint.withValues(alpha: 0.25)),
         ),
         child: Row(

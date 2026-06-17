@@ -63,12 +63,12 @@ class SyncSettingsCard extends ConsumerWidget {
             trailing: syncState.pendingCount > 0
                 ? Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
+                      horizontal: SpacingScale.s8,
                       vertical: SpacingScale.s4,
                     ),
                     decoration: BoxDecoration(
                       color: colors.accent.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(RadiusScale.r8),
                     ),
                     child: Text(
                       l10n.profile_pendingCount(syncState.pendingCount),
@@ -89,7 +89,7 @@ class SyncSettingsCard extends ConsumerWidget {
                     height: 36,
                     decoration: BoxDecoration(
                       color: colors.accent.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(RadiusScale.r8),
                     ),
                     child: Center(
                       child: SizedBox(
@@ -110,7 +110,7 @@ class SyncSettingsCard extends ConsumerWidget {
             ),
             subtitle: syncState.uploadingId != null
                 ? Padding(
-                    padding: const EdgeInsets.only(top: 6),
+                    padding: const EdgeInsets.only(top: SpacingScale.s8),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(RadiusScale.r4),
                       child: LinearProgressIndicator(
@@ -207,12 +207,12 @@ class _DeviceStorageTile extends ConsumerWidget {
                 )
               : 0.0;
           return Padding(
-            padding: const EdgeInsets.only(top: 6),
+            padding: const EdgeInsets.only(top: SpacingScale.s8),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(l10n.settings_deviceStorageSubtitle(used, free)),
-                const SizedBox(height: 6),
+                const SizedBox(height: SpacingScale.s8),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(RadiusScale.r4),
                   child: LinearProgressIndicator(
@@ -227,7 +227,7 @@ class _DeviceStorageTile extends ConsumerWidget {
           );
         },
         loading: () => const Padding(
-          padding: EdgeInsets.only(top: 6),
+          padding: EdgeInsets.only(top: SpacingScale.s8),
           child: SizedBox(
             height: SpacingScale.s4,
             child: LinearProgressIndicator(),

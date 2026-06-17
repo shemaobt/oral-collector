@@ -135,7 +135,7 @@ class _SecondaryClassificationFieldsState
             isDense: true,
             contentPadding: EdgeInsets.symmetric(
               horizontal: SpacingScale.s12,
-              vertical: 10,
+              vertical: SpacingScale.s8,
             ),
           ),
           hint: Text(l10n.recording_selectGenre),
@@ -156,7 +156,7 @@ class _SecondaryClassificationFieldsState
           },
         ),
         if (sameAsPrimary) ...[
-          const SizedBox(height: 6),
+          const SizedBox(height: SpacingScale.s8),
           Text(
             l10n.classify_secondarySameAsPrimary,
             style: theme.textTheme.bodySmall?.copyWith(
@@ -183,7 +183,7 @@ class _SecondaryClassificationFieldsState
               isDense: true,
               contentPadding: EdgeInsets.symmetric(
                 horizontal: SpacingScale.s12,
-                vertical: 10,
+                vertical: SpacingScale.s8,
               ),
             ),
             hint: Text(l10n.moveCategory_selectSubcategory),
@@ -219,7 +219,7 @@ class _SecondaryClassificationFieldsState
             isDense: true,
             contentPadding: EdgeInsets.symmetric(
               horizontal: SpacingScale.s12,
-              vertical: 10,
+              vertical: SpacingScale.s8,
             ),
           ),
           hint: Text(l10n.classify_selectRegister),

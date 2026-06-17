@@ -305,7 +305,9 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
                         ),
                         if (isActive && !isFinalizing)
                           Padding(
-                            padding: const EdgeInsets.only(top: 6),
+                            padding: const EdgeInsets.only(
+                              top: SpacingScale.s8,
+                            ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -330,14 +332,16 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
                           ),
                         if (isFinalizing)
                           const Padding(
-                            padding: EdgeInsets.only(top: 10),
+                            padding: EdgeInsets.only(top: SpacingScale.s8),
                             child: SavingRecordingLabel(),
                           ),
                         if (isActive &&
                             (recState.isPendingResume ||
                                 recState.wasResumedSession))
                           Padding(
-                            padding: const EdgeInsets.only(top: 10),
+                            padding: const EdgeInsets.only(
+                              top: SpacingScale.s8,
+                            ),
                             child: _BackToListButton(
                               label: l10n.recovery_backToList,
                               onTap: () => _handleCancelPendingResume(notifier),
@@ -458,7 +462,7 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
       child: Padding(
         padding: const EdgeInsets.symmetric(
           horizontal: SpacingScale.s16,
-          vertical: 6,
+          vertical: SpacingScale.s8,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -468,12 +472,12 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
               padding: const EdgeInsets.only(top: 2),
               child: Icon(LucideIcons.mic2, size: 14, color: colors.secondary),
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: SpacingScale.s8),
             Flexible(
               child: Wrap(
                 alignment: WrapAlignment.center,
                 crossAxisAlignment: WrapCrossAlignment.center,
-                spacing: 6,
+                spacing: SpacingScale.s8,
                 runSpacing: 2,
                 children: [
                   Text(
@@ -544,7 +548,7 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
       child: Row(
         children: [
           Icon(LucideIcons.mic, size: 14, color: colors.secondary),
-          const SizedBox(width: 6),
+          const SizedBox(width: SpacingScale.s8),
           Text(
             l10n.recording_sensitivity,
             maxLines: 1,
@@ -552,7 +556,7 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
               color: colors.secondary,
             ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: SpacingScale.s8),
           Flexible(
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
@@ -604,7 +608,7 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
         duration: DurationScale.ms200,
         padding: const EdgeInsets.symmetric(
           horizontal: SpacingScale.s12,
-          vertical: 6,
+          vertical: SpacingScale.s8,
         ),
         decoration: BoxDecoration(
           color: isSelected ? colors.foreground : colors.surfaceAlt,
@@ -746,7 +750,7 @@ class _StorageBanner extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(
         horizontal: SpacingScale.s16,
-        vertical: 10,
+        vertical: SpacingScale.s8,
       ),
       color: AppColors.warningContainer,
       child: Row(
@@ -817,18 +821,18 @@ class _CheckpointChip extends StatelessWidget {
     final colors = AppColors.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: 10,
+        horizontal: SpacingScale.s8,
         vertical: SpacingScale.s4,
       ),
       decoration: BoxDecoration(
         color: colors.foreground.withValues(alpha: 0.92),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(RadiusScale.r16),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(LucideIcons.checkCircle2, size: 12, color: colors.background),
-          const SizedBox(width: 6),
+          const SizedBox(width: SpacingScale.s8),
           Text(
             label,
             style: TextStyle(
@@ -860,13 +864,13 @@ class _BackToListButton extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.symmetric(
             horizontal: SpacingScale.s12,
-            vertical: 6,
+            vertical: SpacingScale.s8,
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(LucideIcons.arrowLeft, size: 14, color: colors.secondary),
-              const SizedBox(width: 6),
+              const SizedBox(width: SpacingScale.s8),
               Text(
                 label,
                 style: TextStyle(

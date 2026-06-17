@@ -78,6 +78,10 @@ dev_dependencies:
   flutter_launcher_icons: ^0.14.3
   drift_dev: 2.29.0 # Pinned to match drift (ENG-165); generates schema fixtures.
   build_runner: ^2.4.14
+  # AST codemod for off-grid token normalization (ENG-162). Pinned to the
+  # already-resolved transitive version so it can't perturb the
+  # analyzer<->custom_lint<->drift_dev solve.
+  analyzer: 7.6.0
   mocktail: ^1.0.4
   custom_lint: ^0.7.6
   riverpod_lint: ^2.6.5

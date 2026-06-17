@@ -238,7 +238,10 @@ class _Handle extends StatelessWidget {
       child: Container(
         width: 36,
         height: 4,
-        margin: const EdgeInsets.only(top: 10, bottom: SpacingScale.s4),
+        margin: const EdgeInsets.only(
+          top: SpacingScale.s8,
+          bottom: SpacingScale.s4,
+        ),
         decoration: BoxDecoration(
           color: color,
           borderRadius: BorderRadius.circular(2),

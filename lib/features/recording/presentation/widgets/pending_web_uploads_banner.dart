@@ -157,7 +157,7 @@ class _PendingWebUploadsBannerState
                       ),
                     ],
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: SpacingScale.s8),
                   Text(
                     l10n.import_resumePromptBody(
                       row.title ?? _filenameFromPath(row.localFilePath),

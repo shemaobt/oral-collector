@@ -46,7 +46,7 @@ class ReplaceAudioDialog extends StatelessWidget {
           if (wasUploaded) ...[
             const SizedBox(height: SpacingScale.s12),
             Container(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(SpacingScale.s8),
               decoration: BoxDecoration(
                 color: colors.error.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(RadiusScale.r8),

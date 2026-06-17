@@ -58,7 +58,7 @@ class _PreviewButtonState extends State<PreviewButton> {
         style: FilledButton.styleFrom(
           backgroundColor: colors.accent.withValues(alpha: isDark ? 0.18 : 0.1),
           foregroundColor: colors.accent,
-          padding: const EdgeInsets.symmetric(vertical: 14),
+          padding: const EdgeInsets.symmetric(vertical: SpacingScale.s16),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(RadiusScale.r12),
           ),

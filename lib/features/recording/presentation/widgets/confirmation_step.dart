@@ -527,7 +527,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
                       ),
 
                       Padding(
-                        padding: const EdgeInsets.only(top: 6),
+                        padding: const EdgeInsets.only(top: SpacingScale.s8),
                         child: widget.genreId == kUnclassifiedGenreId
                             ? Container(
                                 padding: const EdgeInsets.symmetric(
@@ -591,7 +591,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
                           children: [
                             const SizedBox(height: SpacingScale.s12),
                             _buildWaveformPlayer(colors, amplitudes),
-                            const SizedBox(height: 6),
+                            const SizedBox(height: SpacingScale.s8),
                             Text(
                               '${formatPositionMS(_position)} / ${formatDurationMinSec(widget.result.durationSeconds)}',
                               style: theme.textTheme.bodySmall?.copyWith(
@@ -646,13 +646,15 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
                             Container(
                               decoration: BoxDecoration(
                                 color: colors.surfaceAlt,
-                                borderRadius: BorderRadius.circular(14),
+                                borderRadius: BorderRadius.circular(
+                                  RadiusScale.r16,
+                                ),
                               ),
                               padding: const EdgeInsets.fromLTRB(
-                                14,
-                                10,
-                                14,
-                                10,
+                                SpacingScale.s16,
+                                SpacingScale.s8,
+                                SpacingScale.s16,
+                                SpacingScale.s8,
                               ),
                               child: Row(
                                 children: [
@@ -718,7 +720,9 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
                             ),
                             if (_selectedStoryteller == null)
                               Padding(
-                                padding: const EdgeInsets.only(top: 6),
+                                padding: const EdgeInsets.only(
+                                  top: SpacingScale.s8,
+                                ),
                                 child: Align(
                                   alignment: Alignment.centerLeft,
                                   child: Text(
@@ -764,7 +768,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
                                 ),
                                 contentPadding: const EdgeInsets.symmetric(
                                   horizontal: SpacingScale.s16,
-                                  vertical: 14,
+                                  vertical: SpacingScale.s16,
                                 ),
                               ),
                             ),
@@ -783,7 +787,9 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
                                   backgroundColor: colors.accent,
                                   foregroundColor: AppColors.white,
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(14),
+                                    borderRadius: BorderRadius.circular(
+                                      RadiusScale.r16,
+                                    ),
                                   ),
                                   elevation: 0,
                                 ),
@@ -826,7 +832,9 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
                                       ),
                                     ),
                                     shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(14),
+                                      borderRadius: BorderRadius.circular(
+                                        RadiusScale.r16,
+                                      ),
                                     ),
                                   ),
                                   child: Text(

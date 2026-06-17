@@ -41,9 +41,9 @@ class UnsavedRecordingsBanner extends StatelessWidget {
       ),
       padding: const EdgeInsets.fromLTRB(
         SpacingScale.s12,
-        10,
+        SpacingScale.s8,
         SpacingScale.s12,
-        10,
+        SpacingScale.s8,
       ),
       child: Row(
         children: [
@@ -120,11 +120,14 @@ class _MicCounterBadge extends StatelessWidget {
             top: -2,
             right: -2,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              padding: const EdgeInsets.symmetric(
+                horizontal: SpacingScale.s8,
+                vertical: 2,
+              ),
               constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
               decoration: BoxDecoration(
                 color: accent,
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(RadiusScale.r8),
               ),
               alignment: Alignment.center,
               child: Text(

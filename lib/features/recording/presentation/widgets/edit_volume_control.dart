@@ -56,7 +56,12 @@ class EditVolumeControl extends StatelessWidget {
     final isClipping = peakAfterGain >= -1;
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(14, 10, 14, SpacingScale.s12),
+      padding: const EdgeInsets.fromLTRB(
+        SpacingScale.s16,
+        SpacingScale.s8,
+        SpacingScale.s16,
+        SpacingScale.s12,
+      ),
       decoration: BoxDecoration(
         color: colors.card,
         borderRadius: BorderRadius.circular(RadiusScale.r12),

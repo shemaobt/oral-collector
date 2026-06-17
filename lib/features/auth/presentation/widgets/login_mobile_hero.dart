@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 
 class LoginMobileHero extends StatelessWidget {
   const LoginMobileHero({
@@ -26,8 +27,8 @@ class LoginMobileHero extends StatelessWidget {
         children: [
           ClipRRect(
             borderRadius: const BorderRadius.only(
-              bottomLeft: Radius.circular(36),
-              bottomRight: Radius.circular(36),
+              bottomLeft: Radius.circular(RadiusScale.r32),
+              bottomRight: Radius.circular(RadiusScale.r32),
             ),
             child: Image.asset('assets/hero_heart.png', fit: BoxFit.cover),
           ),
@@ -36,8 +37,8 @@ class LoginMobileHero extends StatelessWidget {
             child: DecoratedBox(
               decoration: BoxDecoration(
                 borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(36),
-                  bottomRight: Radius.circular(36),
+                  bottomLeft: Radius.circular(RadiusScale.r32),
+                  bottomRight: Radius.circular(RadiusScale.r32),
                 ),
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
@@ -58,14 +59,14 @@ class LoginMobileHero extends StatelessWidget {
             child: Row(
               children: [
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(RadiusScale.r8),
                   child: Image.asset(
                     'assets/app_icon.png',
                     width: 32,
                     height: 32,
                   ),
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: SpacingScale.s8),
                 Text(
                   l10n.auth_oralCollector,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(

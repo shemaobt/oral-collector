@@ -41,12 +41,12 @@ class UnsavedRecordingRow extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: SpacingScale.s16,
-        vertical: 14,
+        vertical: SpacingScale.s16,
       ),
       child: Row(
         children: [
           _PlayButton(onTap: onResume),
-          const SizedBox(width: 14),
+          const SizedBox(width: SpacingScale.s16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -109,7 +109,7 @@ class UnsavedRecordingRow extends StatelessWidget {
                 child: Row(
                   children: [
                     Icon(LucideIcons.play, size: 16, color: colors.secondary),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: SpacingScale.s8),
                     Text(l10n.recovery_resume),
                   ],
                 ),
@@ -119,7 +119,7 @@ class UnsavedRecordingRow extends StatelessWidget {
                 child: Row(
                   children: [
                     Icon(LucideIcons.trash2, size: 16, color: colors.error),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: SpacingScale.s8),
                     Text(
                       l10n.recovery_discard,
                       style: TextStyle(color: colors.error),
@@ -179,7 +179,10 @@ class _SavePill extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+          padding: const EdgeInsets.symmetric(
+            horizontal: SpacingScale.s16,
+            vertical: 7,
+          ),
           child: Text(
             label,
             style: theme.textTheme.labelLarge?.copyWith(
@@ -202,7 +205,10 @@ class _NewBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      padding: const EdgeInsets.symmetric(
+        horizontal: SpacingScale.s8,
+        vertical: 2,
+      ),
       decoration: BoxDecoration(
         color: colors.accent.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(RadiusScale.r4),

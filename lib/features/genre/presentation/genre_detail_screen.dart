@@ -67,7 +67,7 @@ class GenreDetailScreen extends ConsumerWidget {
           Container(
             margin: const EdgeInsets.only(right: SpacingScale.s16),
             padding: const EdgeInsets.symmetric(
-              horizontal: 10,
+              horizontal: SpacingScale.s8,
               vertical: SpacingScale.s4,
             ),
             decoration: BoxDecoration(

@@ -64,7 +64,7 @@ class SegmentCard extends StatelessWidget {
     return AnimatedContainer(
       duration: DurationScale.ms200,
       padding: const EdgeInsets.symmetric(
-        horizontal: 14,
+        horizontal: SpacingScale.s16,
         vertical: SpacingScale.s12,
       ),
       decoration: BoxDecoration(
@@ -89,7 +89,7 @@ class SegmentCard extends StatelessWidget {
         children: [
           _buildMainRow(theme, fgAlpha, l10n),
           if (showTaxonomyRow) ...[
-            const SizedBox(height: 10),
+            const SizedBox(height: SpacingScale.s8),
             _buildTaxonomyRow(theme),
           ],
         ],
@@ -169,7 +169,7 @@ class SegmentCard extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(width: 6),
+        const SizedBox(width: SpacingScale.s8),
 
         GestureDetector(
           onTap: onPlayPause,
@@ -180,7 +180,7 @@ class SegmentCard extends StatelessWidget {
               color: isPlaying
                   ? colors.accent
                   : colors.accent.withValues(alpha: isDark ? 0.18 : 0.1),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(RadiusScale.r8),
             ),
             alignment: Alignment.center,
             child: Icon(
@@ -192,7 +192,7 @@ class SegmentCard extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(width: 6),
+        const SizedBox(width: SpacingScale.s8),
 
         GestureDetector(
           onTap: onToggleExclude,
@@ -203,7 +203,7 @@ class SegmentCard extends StatelessWidget {
               color: isExcluded
                   ? colors.accent.withValues(alpha: isDark ? 0.18 : 0.1)
                   : colors.error.withValues(alpha: isDark ? 0.15 : 0.08),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(RadiusScale.r8),
             ),
             alignment: Alignment.center,
             child: Icon(
@@ -230,7 +230,7 @@ class SegmentCard extends StatelessWidget {
             onTap: onClassify,
           ),
         ),
-        const SizedBox(width: 6),
+        const SizedBox(width: SpacingScale.s8),
         Expanded(
           child: _TaxonomyChip(
             icon: LucideIcons.mic,
@@ -242,7 +242,7 @@ class SegmentCard extends StatelessWidget {
           ),
         ),
         if (canCopyFromPrevious && onCopyFromPrevious != null) ...[
-          const SizedBox(width: 6),
+          const SizedBox(width: SpacingScale.s8),
           Tooltip(
             message: copyFromPreviousLabel,
             child: GestureDetector(
@@ -309,7 +309,7 @@ class _TaxonomyChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(
           horizontal: SpacingScale.s8,
-          vertical: 6,
+          vertical: SpacingScale.s8,
         ),
         decoration: BoxDecoration(
           color: bg,

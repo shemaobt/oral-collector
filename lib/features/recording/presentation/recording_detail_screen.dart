@@ -1212,7 +1212,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
           canEdit: _canEditRecording,
           onEdit: _openEditDetails,
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: SpacingScale.s16),
         Row(
           children: [
             Icon(
@@ -1220,7 +1220,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
               size: 14,
               color: isUnclassified ? colors.warning : colors.accent,
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: SpacingScale.s8),
             Flexible(
               child: Text(
                 genreBreadcrumb,
@@ -1237,7 +1237,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
           Row(
             children: [
               Icon(LucideIcons.volume2, size: 14, color: colors.secondary),
-              const SizedBox(width: 6),
+              const SizedBox(width: SpacingScale.s8),
               Flexible(
                 child: Text(
                   registerName,
@@ -1265,7 +1265,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
               onTap: _canEditRecording ? _editSecondaryClassification : null,
               child: Padding(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
+                  horizontal: SpacingScale.s8,
                   vertical: SpacingScale.s8,
                 ),
                 child: Row(
@@ -1276,7 +1276,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
                       size: 13,
                       color: colors.foreground.withValues(alpha: 0.55),
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: SpacingScale.s8),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1348,7 +1348,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
           ),
         ],
         if (!isUnclassified && !hasSecondary && _canEditRecording) ...[
-          const SizedBox(height: 6),
+          const SizedBox(height: SpacingScale.s8),
           Align(
             alignment: Alignment.centerLeft,
             child: TextButton.icon(
@@ -1369,7 +1369,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
           ),
         ],
         if (recording.splitFromId != null) ...[
-          const SizedBox(height: 6),
+          const SizedBox(height: SpacingScale.s8),
           Row(
             children: [
               Icon(
@@ -1377,7 +1377,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
                 size: 13,
                 color: colors.foreground.withValues(alpha: 0.55),
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: SpacingScale.s8),
               Flexible(
                 child: Text(
                   (recording.splitIndex != null &&
@@ -1456,7 +1456,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
 
     final secondaryCollisionBanner = hasSecondaryCollision
         ? Container(
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.all(SpacingScale.s16),
             decoration: BoxDecoration(
               color: theme.colorScheme.errorContainer.withValues(alpha: 0.35),
               borderRadius: BorderRadius.circular(RadiusScale.r12),
@@ -1471,7 +1471,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
                   size: 18,
                   color: theme.colorScheme.error,
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: SpacingScale.s8),
                 Expanded(
                   child: Text(
                     l10n.recording_secondaryCollisionBanner,
@@ -1492,7 +1492,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
                     foregroundColor: theme.colorScheme.error,
                     padding: const EdgeInsets.symmetric(
                       horizontal: SpacingScale.s12,
-                      vertical: 6,
+                      vertical: SpacingScale.s8,
                     ),
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -1512,7 +1512,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
 
     final classifyBanner = isUnclassified
         ? Container(
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.all(SpacingScale.s16),
             decoration: BoxDecoration(
               color: colors.warning.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(RadiusScale.r12),
@@ -1521,7 +1521,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
             child: Row(
               children: [
                 Icon(LucideIcons.alertCircle, size: 18, color: colors.warning),
-                const SizedBox(width: 10),
+                const SizedBox(width: SpacingScale.s8),
                 Expanded(
                   child: Text(
                     l10n.classify_banner,
@@ -1538,7 +1538,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
                     foregroundColor: colors.warning,
                     padding: const EdgeInsets.symmetric(
                       horizontal: SpacingScale.s12,
-                      vertical: 6,
+                      vertical: SpacingScale.s8,
                     ),
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -1743,7 +1743,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
                 expandedHeight: 260,
                 pinned: true,
                 leading: Padding(
-                  padding: const EdgeInsets.all(6),
+                  padding: const EdgeInsets.all(SpacingScale.s8),
                   child: Material(
                     color: colors.card.withValues(alpha: 0.6),
                     shape: const CircleBorder(),
@@ -1754,7 +1754,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
                 actions: [
                   if (menuButton != null)
                     Padding(
-                      padding: const EdgeInsets.only(right: 6),
+                      padding: const EdgeInsets.only(right: SpacingScale.s8),
                       child: Material(
                         color: colors.card.withValues(alpha: 0.6),
                         shape: const CircleBorder(),

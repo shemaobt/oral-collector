@@ -65,11 +65,13 @@ Path: @/lib/core/theme
 - Spacing/radii/motion/opacity consumers reference the `const` scale directly
   (e.g. `SpacingScale.s16`, `RadiusScale.r12`, `DurationScale.ms200`,
   `OpacityScale.o40`) or the `context.spacing` / `.radii` / `.durations` /
-  `.opacity` accessor. The on-grid spacing/radii call-site migration is now
-  app-wide across [/lib/features](/lib/features) and
-  [/lib/shared/widgets](/lib/shared/widgets) (ENG-106 seeded it on the densest
-  screens and app chrome; ENG-163 finished the long tail), plus UI motion
-  durations across many widgets — all value-identical literal swaps, no behavior
+  `.opacity` accessor. The spacing/radii call-site migration is now app-wide
+  across [/lib/features](/lib/features) and [/lib/shared/widgets](/lib/shared/widgets):
+  ENG-106 seeded the on-grid swaps on the densest screens and app chrome, ENG-163
+  finished the value-identical long tail, and ENG-162 then ran the
+  behavior-changing pass that snapped the off-grid stragglers onto tokens (see
+  Grid policy and Migration in Things to Know). UI motion durations are migrated
+  across many widgets too — those were value-identical swaps with no behavior
   change.
 - [app_theme.dart](app_theme.dart) is now itself a consumer of the `const`
   scales: its component themes read `RadiusScale` / `SpacingScale` /
@@ -181,13 +183,14 @@ SpacingScale/RadiusScale/DurationScale/OpacityScale ─► AppSpacing/AppRadii/A
   brightness when one is present, so a mismatched pairing would hand back colors
   for the wrong mode. The builders pair light↔`AppColors.light`,
   dark↔`AppColors.dark`.
-- **Grid policy.** Only on-grid values are tokenized: spacing
-  {4,8,12,16,20,24,28,32,40,48}px and radii {4,8,12,16,20,24}px. Off-grid
-  stragglers (6/10/14/22/26/34, radius 36) are deliberately **not** tokens —
-  normalizing them is a separate, behavior-changing follow-up. In particular the
-  off-grid `vertical: 14` in the elevated/filled button padding stays a raw
-  literal even though the surrounding `horizontal: SpacingScale.s28` was
-  tokenized.
+- **Grid policy.** The token scales are spacing {4,8,12,16,20,24,28,32,40,48}px
+  and radii {4,8,12,16,20,24,28,32}px. The radius scale gained `r28`/`r32` in
+  ENG-162 so it reaches parity with the spacing scale through 32; that extension
+  exists specifically to give the snapped off-grid radii (34→32, 36→32) a real
+  token to land on. Off-grid call-site literals were the deliberate stragglers
+  ENG-106/ENG-163 left raw (those passes only swapped literals already equal to a
+  token); ENG-162 then normalized the enumerated off-grid set onto the nearest
+  token (see Migration below).
 - **Opacity is not on the 4px grid.** `OpacityScale` is a named set of the
   distinct alpha values the theme actually uses (`o06`…`o70`), not a generated
   scale, so it has no on/off-grid policy — a value gets a token only because a
@@ -218,11 +221,33 @@ SpacingScale/RadiusScale/DurationScale/OpacityScale ─► AppSpacing/AppRadii/A
   `Colors.white` literal value-for-value.)
 - **`DurationScale` is motion-only.** I/O timeouts, logic timers, and
   snackbar/feedback display durations are excluded and remain raw `Duration`s.
-- **Migration is pure.** Only literals already equal to a token value AND the
-  direct argument of an `EdgeInsets` / `SizedBox` / `BorderRadius` / `Radius` /
-  `Duration` constructor were swapped; literals inside expressions are left
-  (e.g. `EdgeInsets.symmetric(horizontal: expanded ? 10 : 0, vertical:
-  SpacingScale.s8)`).
+- **Two migration passes, two contracts.** The *value-identical* passes
+  (ENG-106/ENG-163, motion durations) swapped only literals already equal to a
+  token value AND the direct argument of an `EdgeInsets` / `SizedBox` /
+  `BorderRadius` / `Radius` / `Duration` constructor — no rendered change. ENG-162
+  is the *behavior-changing* pass: it snaps the enumerated off-grid set
+  {6,10,14,22,26,34, radius 36} onto the nearest token, so those sites move by a
+  pixel or two. The snap map and tie-break are the single source of truth in
+  [/tool/off_grid_snap_policy.dart](/tool/off_grid_snap_policy.dart): nearest
+  token, and on an exact tie the multiple of 8 wins (round-half-to-even on the
+  4px grid), giving spacing 6→s8, 10→s8, 14→s16, 22→s24, 26→s24, 34→s32 and the
+  extra radius 36→r32. The policy is pinned by
+  [/test/core/theme/off_grid_snap_test.dart](/test/core/theme/off_grid_snap_test.dart),
+  which re-derives the maps from `nearestToken` so a wrong direction or a
+  non-token target fails.
+- **Both passes only touch direct constructor arguments — literals inside
+  expressions stay raw** (e.g. `EdgeInsets.symmetric(horizontal: expanded ? 10 :
+  0, vertical: SpacingScale.s8)`). ENG-162 enforces this structurally via an AST
+  codemod ([/tool/snap_off_grid.dart](/tool/snap_off_grid.dart),
+  `package:analyzer` unresolved parse) that rewrites a literal only when it is a
+  direct argument of the spacing/radii constructors (and the spacing-denoting
+  named args `spacing`/`runSpacing`/`mainAxisSpacing`/`crossAxisSpacing`,
+  `SizedBox` width/height, `Gap`). So `Icon(size: 14)`, `fontSize: 14`, counts,
+  and durations are left alone because they are not those constructors. The
+  codemod has `--dry-run` / `--write` / `--verify` modes and is dev-only tooling
+  (not shipped); `analyzer` is a pinned dev_dependency for it. The completeness
+  guarantee that no in-policy off-grid literal survives is the codemod's
+  `--verify`, not a unit test.
 - **Naming.** Colors are semantic; spacing/radii/durations/opacity are
   value-encoded (`sN` / `rN` / `msN` = the literal px or ms; `oNN` = the alpha's
   two decimal digits, e.g. `o40` = 0.4, `o06` = 0.06); no `md`/`lg` aliases
@@ -230,15 +255,22 @@ SpacingScale/RadiusScale/DurationScale/OpacityScale ─► AppSpacing/AppRadii/A
 - **`lerp` is effectively dormant in production** — [../../main.dart](../../main.dart)
   sets `themeAnimationDuration: Duration.zero`, so theme switches snap; the
   interpolation exists to satisfy the contract and enable future animation.
-- **Deferred, per ADR-0002.** Off-grid normalization (e.g. the button `vertical:
-  14` literal) is the remaining open item, tracked as ENG-162. (The on-grid
-  call-site migration is closed: ENG-115 — [app_theme.dart](app_theme.dart)
-  consuming the `const` radii/spacing/opacity scales instead of inlining its own
-  literals — and ENG-163 — the app-wide widget-tree long tail — are both done;
-  the `Color(0x…)` / bare `Colors.*` lint rule (ENG-76 / ENG-159) shipped as the
+- **Token migration is now closed; a few literals stay raw on purpose.** Off-grid
+  normalization (ENG-162) is done, so the spacing/radii token program — ENG-106
+  (seed), ENG-115 ([app_theme.dart](app_theme.dart) consuming the `const` scales
+  instead of inlining literals), ENG-163 (value-identical long tail), ENG-162
+  (off-grid behavior-changing) — is closed. Two sets of literals are intentionally
+  left raw: (1) the `lib/core/theme/` builder literals themselves, e.g. the
+  elevated/filled-button `vertical: 14` padding in [app_theme.dart](app_theme.dart)
+  — the ENG-162 codemod excludes this folder (and `l10n/`, generated `*.g.dart` /
+  `*.freezed.dart`), since it is the token source of truth, not a consumer; and
+  (2) non-enumerated stragglers outside the snapped set, e.g. radius 15 and
+  `spacing 36` on fixed-size boxes (the codemod reports these as out-of-policy and
+  leaves them, because 36 is a radius-only snap, never a spacing token). The
+  `Color(0x…)` / bare `Colors.*` lint rule (ENG-76 / ENG-159) shipped as the
   `obt_lints` plugin, [/packages/obt_lints/docs.md](/packages/obt_lints/docs.md),
   and ENG-183/ENG-116 then burned the app's color literals down to zero outside
-  this folder and promoted both rules to `warning`.)
+  this folder and promoted both rules to `warning`.
 - **Adding a token field is a multi-point edit** — thread it through the
   constructor, `copyWith`, `lerp`, `==`, `hashCode`, and the registered
   instances, or the equality/interpolation contracts break.

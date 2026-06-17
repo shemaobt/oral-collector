@@ -48,7 +48,7 @@ class RecordingAboutSection extends StatelessWidget {
                   fontStyle: hasTitle ? FontStyle.normal : FontStyle.italic,
                 ),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: SpacingScale.s8),
               Text(
                 hasDescription
                     ? description!.trim()
