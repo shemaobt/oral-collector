@@ -45,8 +45,8 @@ Path: @/lib/features/recording/data/repositories
   in tests.
 - The split contract is shared with the backend (see
   [/docs/recording-split-semantics.md](../../../../../docs/recording-split-semantics.md));
-  both `LocalRecordingRepository.splitRecording` and the server's
-  `persist_split_segments` must implement the same propagation table.
+  both `LocalRecordingRepository.splitRecordingReplacingParent` and the
+  server's `persist_split_segments` must implement the same propagation table.
 - Test sites:
   [/test/features/recording/data/repositories/local_recording_repository_split_test.dart](../../../../../test/features/recording/data/repositories/local_recording_repository_split_test.dart),
   [/test/features/recording/data/repositories/local_recording_repository_replace_test.dart](../../../../../test/features/recording/data/repositories/local_recording_repository_replace_test.dart),
@@ -100,25 +100,21 @@ Path: @/lib/features/recording/data/repositories
   `recording.toCompanion(false).copyWith(localFilePath: Value(...))`, which
   forwards every column on the Drift schema. This eliminates the
   hand-picked-subset pattern that caused ENG-64.
-- `splitRecording({parent, segments})` inserts one child row per segment
-  inside a transaction (children only; the parent row is left intact). The
-  companion is built explicitly to encode the three-source rule (inherit /
-  segment-specific / reset) defined in
+- `splitRecordingReplacingParent({parent, segments})` is the **atomic**
+  replace used by the trim/split save (ENG-125): it inserts one child row per
+  segment and deletes the parent row in **one** Drift transaction, so a partial
+  failure can never strand orphaned children beside a surviving parent. The
+  child companions are built explicitly to encode the three-source rule
+  (inherit / segment-specific / reset) defined in
   [/docs/recording-split-semantics.md](../../../../../docs/recording-split-semantics.md).
   Before inserting, validates that no segment override collides with the
-  parent's secondary classification of the same kind — throws
-  `ArgumentError` if it does, since the server would reject the upload
-  with 422. The UI is expected to block this case earlier. The child-insert
-  loop and the collision check are extracted into the private helpers
-  `_insertSplitChildren` and `_assertNoSecondaryCollision` so the atomic
-  variant below can reuse both.
-- `splitRecordingReplacingParent({parent, segments})` is the **atomic**
-  replace used by the trim/split save (ENG-125): it inserts the children and
-  deletes the parent row in **one** Drift transaction, so a partial failure
-  can never strand orphaned children beside a surviving parent. The persister
+  parent's secondary classification of the same kind — throws `ArgumentError`
+  if it does, since the server would reject the upload with 422; the UI is
+  expected to block this case earlier. The child-insert loop and the collision
+  check live in the private helpers `_insertSplitChildren` and
+  `_assertNoSecondaryCollision`. The persister
   ([../services/recording_split_persister.dart](../services/recording_split_persister.dart))
-  calls this instead of `splitRecording` + a separate `deleteRecording` — see
-  Things to Know and [../docs.md](../docs.md).
+  calls this — see Things to Know and [../docs.md](../docs.md).
 - `replaceAudio` is used by the "replace audio" flow on the detail screen
   to swap the file and reset upload state (`md5Hash`, `uploadedBytes`,
   `resumableSessionUri`, `retryCount` → defaults; `uploadStatus` →
@@ -172,18 +168,12 @@ Path: @/lib/features/recording/data/repositories
   and reset upload-state fields. `cacheDownloadedAudio` instead carries
   every field verbatim from the in-memory `LocalRecording`. Choosing the
   right helper at the call site matters.
-- **`splitRecordingReplacingParent` is atomic; `splitRecording` is not (ENG-125).**
-  The trim/split save must end with the children present and the parent gone.
-  Doing those as two statements (insert in a transaction, then delete) left a
-  failure window where a crash between them orphaned the children AND left the
-  parent — both then appeared in the queue. `splitRecordingReplacingParent`
-  folds both writes into a single transaction so a throw rolls back the
-  children too. The plain `splitRecording` (children only, parent untouched)
-  wraps the same `_insertSplitChildren` core but leaves the parent in place.
-  The trim/split save now uses the atomic variant, so `splitRecording` has no
-  production caller today; it is retained as the children-only primitive and
-  is covered by the ENG-64 propagation tests
-  (`local_recording_repository_split_test.dart`).
+- **`splitRecordingReplacingParent` is atomic (ENG-125).** The trim/split save
+  must end with the children present and the parent gone. Doing those as two
+  statements (insert in a transaction, then delete) left a failure window where
+  a crash between them orphaned the children AND left the parent — both then
+  appeared in the queue. `splitRecordingReplacingParent` folds both writes into
+  a single transaction so a throw rolls back the children too.
 - **Repositories never read Riverpod.** All dependencies come through the
   constructor. This keeps them testable with an in-memory
   `AppDatabase.forTesting(NativeDatabase.memory())`, which is how the

@@ -207,16 +207,16 @@ Path: @/lib/features/recording/data
   uses `Value.absent()` (not `Value(null)`) for fields it chooses not to
   touch. A local edit, even an empty string written intentionally by the
   user, can never be clobbered by a server refresh.
-- **The split write path** (the `LocalRecordingRepository` `splitRecording*`
-  helpers) still hand-builds child rows because each child has a mix of
+- **The split write path** (the `LocalRecordingRepository`
+  `splitRecordingReplacingParent` writer and its `_insertSplitChildren` core)
+  still hand-builds child rows because each child has a mix of
   inherited, segment-specific, and reset fields. It follows the propagation
   table in
   [/docs/recording-split-semantics.md](../../../../docs/recording-split-semantics.md);
   divergence between that table and the implementation breaks ENG-64-class
   invariants. `RecordingSplitPersister` saves through the **atomic**
   `splitRecordingReplacingParent` (insert children + delete parent in one
-  transaction); the plain `splitRecording` only inserts children — see
-  [./repositories/docs.md](repositories/docs.md).
+  transaction) — see [./repositories/docs.md](repositories/docs.md).
 - **The split persister's step order is load-bearing for crash safety
   (ENG-125).** `RecordingSplitPersister.persist` runs the
   insert-children-and-delete-parent step as a single transaction first, so a
@@ -230,8 +230,8 @@ Path: @/lib/features/recording/data
   local replace still stands.
 - **Adding a new nullable metadata column to `LocalRecordings`** requires
   four updates in lockstep: extend `serverRecordingToLocal`,
-  `LocalRecordingRepository.splitRecording`, `buildHealMetadataCompanion`,
-  and the tests under
+  `LocalRecordingRepository.splitRecordingReplacingParent`,
+  `buildHealMetadataCompanion`, and the tests under
   [/test/features/recording/data/](../../../../test/features/recording/data/).
   The checklist is reproduced at the bottom of
   [/docs/recording-split-semantics.md](../../../../docs/recording-split-semantics.md).
