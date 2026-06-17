@@ -38,7 +38,8 @@ Path: @/lib/features/recording/presentation
 - The trim editor at
   [./trim_editor_screen.dart](./trim_editor_screen.dart) consumes the
   same data layer and writes split children through
-  `LocalRecordingRepository.splitRecording`, following the propagation
+  `LocalRecordingRepository.splitRecordingReplacingParent`, following the
+  propagation
   contract documented in
   [/docs/recording-split-semantics.md](../../../../docs/recording-split-semantics.md).
 - Cross-feature dependencies: storyteller resolution

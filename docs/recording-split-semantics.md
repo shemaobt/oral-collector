@@ -2,7 +2,7 @@
 
 When a recording is split into N child segments, every field on the child rows comes from one of three sources: **inherited from parent**, **segment-specific**, or **reset to default**. This document is the single source of truth for that mapping.
 
-Two implementations write child rows independently — the Flutter client (`_saveSplitLocally` → `LocalRecordingRepository.splitRecording`, native mobile) and the backend (`persist_split_segments` in `tripod-api`, web). Both implementations must follow this table. Both test suites assert against it.
+Two implementations write child rows independently — the Flutter client (`_saveSplitLocally` → `LocalRecordingRepository.splitRecordingReplacingParent`, native mobile) and the backend (`persist_split_segments` in `tripod-api`, web). Both implementations must follow this table. Both test suites assert against it.
 
 ## Field propagation table
 
@@ -70,7 +70,7 @@ For rows already corrupted on a device before this fix landed, the detail screen
 If you add a new `nullable` metadata column to `LocalRecordings`:
 
 1. Make sure `serverRecordingToLocal` carries it from the server DTO.
-2. Make sure `splitRecording` propagates it from parent to children (and update the table above).
+2. Make sure `splitRecordingReplacingParent` propagates it from parent to children — the propagation lives in its `_insertSplitChildren` core (and update the table above).
 3. Make sure `buildHealMetadataCompanion` heals it when the server has a value and the local row is empty.
 4. Add the column to the cache tests in `local_recording_repository_cache_download_test.dart` and the heal tests in `recording_heal_companion_test.dart`.
 
@@ -83,7 +83,7 @@ Enforcement points on the client:
 - `SegmentTaxonomySheet` (trim editor's per-segment override picker) receives the parent's `secondaryGenreId/SubcategoryId/RegisterId` and disables the save button + shows an inline error when the chosen primary collides.
 - `MoveCategoryDialog` already auto-clears the dialog's `_secondary` when the user picks a primary that matches the current secondary, and gates save on `_secondary.genreId != _selectedGenreId`.
 - `ClassifyRecordingDialog` and `_SecondaryEditDialog` both gate save on `secondary != primary`.
-- `LocalRecordingRepository`'s split methods (`splitRecording` / `splitRecordingReplacingParent`) throw `ArgumentError` when a segment override would collide with the parent's secondary of the same kind. This is defense in depth — reaching it means a UI path slipped past validation and the regression should be fixed at the UI layer.
+- `LocalRecordingRepository.splitRecordingReplacingParent` throws `ArgumentError` when a segment override would collide with the parent's secondary of the same kind. This is defense in depth — reaching it means a UI path slipped past validation and the regression should be fixed at the UI layer.
 - `RecordingDetailScreen` shows a red banner with a "Clear secondary" button when a row that's already on the device violates the invariant (rows persisted before this enforcement landed). The user resolves manually; the client never auto-strips data the user once entered.
 
 ## Upload trigger after split (client)

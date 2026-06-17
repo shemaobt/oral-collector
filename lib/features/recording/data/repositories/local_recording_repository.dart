@@ -256,17 +256,6 @@ class LocalRecordingRepository {
     return rows > 0;
   }
 
-  /// Inserts the split children for [parent] in their own transaction. See
-  /// ENG-64; for the atomic variant that also removes the parent row, use
-  /// [splitRecordingReplacingParent].
-  Future<List<String>> splitRecording({
-    required LocalRecording parent,
-    required List<SplitSegmentSpec> segments,
-  }) async {
-    _assertNoSecondaryCollision(parent, segments);
-    return _db.transaction(() => _insertSplitChildren(parent, segments));
-  }
-
   /// Defense in depth: throws [ArgumentError] when a segment override would
   /// collide with the parent's secondary classification of the same kind.
   /// The server enforces `secondary != primary` and would reject the upload
@@ -400,8 +389,8 @@ class LocalRecordingRepository {
   }
 }
 
-/// Per-segment input for [LocalRecordingRepository.splitRecording]. Fields
-/// that vary per child; the rest are inherited from the parent.
+/// Per-segment input for [LocalRecordingRepository.splitRecordingReplacingParent].
+/// Fields that vary per child; the rest are inherited from the parent.
 class SplitSegmentSpec {
   final String id;
   final String title;
