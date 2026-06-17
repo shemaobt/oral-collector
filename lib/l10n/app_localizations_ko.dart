@@ -393,9 +393,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get projectSettings_updated => '프로젝트가 업데이트되었습니다';
 
   @override
-  String get projectSettings_noPermission => '이 프로젝트를 업데이트할 권한이 없습니다';
-
-  @override
   String get projectSettings_team => '팀';
 
   @override
@@ -543,11 +540,6 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get recording_downloadAudioMessage =>
       '오디오 파일이 이 기기에 저장되어 있지 않습니다. 자르기 위해 다운로드하시겠습니까?';
-
-  @override
-  String recording_downloadFailed(String error) {
-    return '다운로드 실패: $error';
-  }
 
   @override
   String get recording_audioNotAvailable => '오디오 파일을 사용할 수 없습니다';
@@ -988,11 +980,6 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get profile_photoUpdated => '프로필 사진이 업데이트되었습니다';
-
-  @override
-  String profile_photoFailed(String error) {
-    return '사진 업데이트 실패: $error';
-  }
 
   @override
   String get profile_editName => '표시 이름 편집';

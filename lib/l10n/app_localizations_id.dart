@@ -402,10 +402,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get projectSettings_updated => 'Proyek diperbarui';
 
   @override
-  String get projectSettings_noPermission =>
-      'Anda tidak memiliki izin untuk memperbarui proyek ini';
-
-  @override
   String get projectSettings_team => 'Tim';
 
   @override
@@ -554,11 +550,6 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get recording_downloadAudioMessage =>
       'File audio tidak tersimpan di perangkat ini. Apakah Anda ingin mengunduhnya untuk memotong?';
-
-  @override
-  String recording_downloadFailed(String error) {
-    return 'Gagal mengunduh: $error';
-  }
 
   @override
   String get recording_audioNotAvailable => 'File audio tidak tersedia';
@@ -1018,11 +1009,6 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get profile_photoUpdated => 'Foto profil diperbarui';
-
-  @override
-  String profile_photoFailed(String error) {
-    return 'Gagal memperbarui foto: $error';
-  }
 
   @override
   String get profile_editName => 'Edit nama tampilan';

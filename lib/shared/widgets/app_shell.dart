@@ -123,7 +123,7 @@ class _AppShellState extends ConsumerState<AppShell> {
 
   List<_TabItem> _buildWebTabs(AppLocalizations l10n) {
     final tabs = List<_TabItem>.from(AppShell._webBaseTabs(l10n));
-    if (ref.read(roleNotifierProvider.notifier).isPlatformAdmin) {
+    if (ref.read(isPlatformAdminProvider)) {
       tabs.add(
         _TabItem(
           path: '/admin',

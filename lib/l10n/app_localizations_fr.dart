@@ -405,10 +405,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get projectSettings_updated => 'Projet mis à jour';
 
   @override
-  String get projectSettings_noPermission =>
-      'Vous n\'avez pas la permission de mettre à jour ce projet';
-
-  @override
   String get projectSettings_team => 'Équipe';
 
   @override
@@ -561,11 +557,6 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get recording_downloadAudioMessage =>
       'Le fichier audio n\'est pas stocké sur cet appareil. Voulez-vous le télécharger pour le découper ?';
-
-  @override
-  String recording_downloadFailed(String error) {
-    return 'Échec du téléchargement : $error';
-  }
 
   @override
   String get recording_audioNotAvailable => 'Fichier audio non disponible';
@@ -1034,11 +1025,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get profile_photoUpdated => 'Photo de profil mise à jour';
-
-  @override
-  String profile_photoFailed(String error) {
-    return 'Échec de la mise à jour de la photo : $error';
-  }
 
   @override
   String get profile_editName => 'Modifier le nom d\'affichage';

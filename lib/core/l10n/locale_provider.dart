@@ -16,8 +16,6 @@ class LocaleNotifier extends Notifier<Locale?> {
     return null;
   }
 
-  bool get hasLocalePreference => state != null;
-
   Future<void> _loadSaved() async {
     final prefs = await SharedPreferences.getInstance();
     final code = prefs.getString(_kLocaleKey);

@@ -150,7 +150,6 @@
   "projectSettings_saving": "Saving...",
   "projectSettings_saveChanges": "Save Changes",
   "projectSettings_updated": "Project updated",
-  "projectSettings_noPermission": "You do not have permission to update this project",
   "projectSettings_team": "Team",
   "projectSettings_removeMember": "Remove Member",
   "projectSettings_removeMemberConfirm": "Remove {name} from this project?",
@@ -222,14 +221,6 @@
   "recording_moveCategory": "Move Category",
   "recording_downloadAudio": "Download Audio",
   "recording_downloadAudioMessage": "The audio file is not stored on this device. Would you like to download it to trim?",
-  "recording_downloadFailed": "Failed to download: {error}",
-  "@recording_downloadFailed": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
   "recording_audioNotAvailable": "Audio file not available",
   "recording_deleteTitle": "Delete Recording",
   "recording_deleteMessage": "This will permanently delete this recording from your device. If it has been uploaded, it will also be removed from the server. This action cannot be undone.",
@@ -502,14 +493,6 @@
     }
   },
   "profile_photoUpdated": "Profile photo updated",
-  "profile_photoFailed": "Failed to update photo: {error}",
-  "@profile_photoFailed": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
   "profile_editName": "Edit display name",
   "profile_nameHint": "Your name",
   "profile_nameUpdated": "Name updated",

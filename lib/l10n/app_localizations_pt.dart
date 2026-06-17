@@ -401,10 +401,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get projectSettings_updated => 'Projeto atualizado';
 
   @override
-  String get projectSettings_noPermission =>
-      'Você não tem permissão para atualizar este projeto';
-
-  @override
   String get projectSettings_team => 'Equipe';
 
   @override
@@ -555,11 +551,6 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get recording_downloadAudioMessage =>
       'O arquivo de áudio não está armazenado neste dispositivo. Deseja baixá-lo para cortar?';
-
-  @override
-  String recording_downloadFailed(String error) {
-    return 'Falha ao baixar: $error';
-  }
 
   @override
   String get recording_audioNotAvailable => 'Arquivo de áudio não disponível';
@@ -1026,11 +1017,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get profile_photoUpdated => 'Foto de perfil atualizada';
-
-  @override
-  String profile_photoFailed(String error) {
-    return 'Falha ao atualizar foto: $error';
-  }
 
   @override
   String get profile_editName => 'Editar nome de exibição';

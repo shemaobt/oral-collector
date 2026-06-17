@@ -14,12 +14,13 @@ class _MockApi extends Mock implements StorytellerRepository {}
 class _MockLocal extends Mock implements LocalStorytellerRepository {}
 
 class _FakeSyncNotifier extends SyncNotifier {
-  _FakeSyncNotifier({required this.initialOnline});
+  _FakeSyncNotifier({required bool initialOnline})
+    : _initialOnline = initialOnline;
 
-  final bool initialOnline;
+  final bool _initialOnline;
 
   @override
-  SyncState build() => SyncState(isOnline: initialOnline);
+  SyncState build() => SyncState(isOnline: _initialOnline);
 
   void setOnline(bool online) {
     state = state.copyWith(isOnline: online);

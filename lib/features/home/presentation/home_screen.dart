@@ -62,7 +62,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   void _checkFirstLoginLocale() {
     if (!mounted) return;
-    final hasPreference = ref.read(localeProvider.notifier).hasLocalePreference;
+    final hasPreference = ref.read(localeProvider) != null;
     if (!hasPreference) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;

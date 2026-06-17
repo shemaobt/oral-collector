@@ -19,7 +19,7 @@ import '../../../core/platform/file_source.dart';
 import '../../../core/platform/web_file_picker.dart' as web_picker;
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/tokens.dart';
-import '../../../shared/utils/error_helpers.dart';
+import '../../../shared/widgets/error_snack_bar.dart';
 import '../../genre/presentation/notifiers/genre_notifier.dart';
 import '../../project/presentation/notifiers/project_notifier.dart';
 import '../../storyteller/domain/entities/storyteller.dart';
@@ -149,10 +149,7 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
       if (mounted) {
         setState(() => _isAnalyzing = false);
         final l10n = AppLocalizations.of(context);
-        final friendly = friendlyErrorFor(e, l10n);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.import_pickError(friendly))),
-        );
+        showErrorSnackBar(context, e, template: l10n.import_pickError);
         if (_entries.isEmpty) {
           unawaited(Navigator.of(context).maybePop());
         }
@@ -175,10 +172,7 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
       if (mounted) {
         setState(() => _isAnalyzing = false);
         final l10n = AppLocalizations.of(context);
-        final friendly = friendlyErrorFor(e, l10n);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.import_pickError(friendly))),
-        );
+        showErrorSnackBar(context, e, template: l10n.import_pickError);
         if (_entries.isEmpty) {
           unawaited(Navigator.of(context).maybePop());
         }
@@ -483,10 +477,7 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
       if (mounted) {
         setState(() => _isSaving = false);
         final l10n = AppLocalizations.of(context);
-        final friendly = friendlyErrorFor(e, l10n);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.import_saveError(friendly))),
-        );
+        showErrorSnackBar(context, e, template: l10n.import_saveError);
       }
     }
   }

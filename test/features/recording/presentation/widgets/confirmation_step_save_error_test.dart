@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 import 'package:oral_collector/core/database/app_database.dart';
 import 'package:oral_collector/features/project/presentation/notifiers/project_notifier.dart';
@@ -175,6 +176,8 @@ void main() {
 
       expect(find.byType(SnackBar), findsOneWidget);
       expect(find.textContaining('Upload failed'), findsOneWidget);
+      // Routed through the unified showErrorSnackBar -> styled alert icon.
+      expect(find.byIcon(LucideIcons.alertTriangle), findsOneWidget);
 
       final saveButton = tester.widget<ElevatedButton>(
         find.byType(ElevatedButton),

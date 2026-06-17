@@ -401,10 +401,6 @@ class AppLocalizationsSw extends AppLocalizations {
   String get projectSettings_updated => 'Mradi umesasishwa';
 
   @override
-  String get projectSettings_noPermission =>
-      'Huna ruhusa ya kusasisha mradi huu';
-
-  @override
   String get projectSettings_team => 'Timu';
 
   @override
@@ -553,11 +549,6 @@ class AppLocalizationsSw extends AppLocalizations {
   @override
   String get recording_downloadAudioMessage =>
       'Faili ya sauti haipo kwenye kifaa hiki. Ungependa kuipakua ili kuikata?';
-
-  @override
-  String recording_downloadFailed(String error) {
-    return 'Imeshindwa kupakua: $error';
-  }
 
   @override
   String get recording_audioNotAvailable => 'Faili ya sauti haipatikani';
@@ -1014,11 +1005,6 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get profile_photoUpdated => 'Picha ya wasifu imesasishwa';
-
-  @override
-  String profile_photoFailed(String error) {
-    return 'Imeshindwa kusasisha picha: $error';
-  }
 
   @override
   String get profile_editName => 'Hariri jina la kuonyesha';

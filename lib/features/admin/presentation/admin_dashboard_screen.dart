@@ -34,7 +34,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
   void initState() {
     super.initState();
     Future.microtask(() {
-      final isAdmin = ref.read(roleNotifierProvider.notifier).isPlatformAdmin;
+      final isAdmin = ref.read(isPlatformAdminProvider);
       if (!isAdmin) {
         if (mounted) {
           showErrorSnackBar(
