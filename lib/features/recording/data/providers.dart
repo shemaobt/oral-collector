@@ -4,6 +4,7 @@ import '../../../core/database/app_database.dart';
 import '../../../core/database/database_provider.dart';
 import '../../../core/network/authenticated_client.dart';
 import '../../../core/observability/error_reporter.dart';
+import '../../../core/platform/file_ops.dart' as file_ops;
 import '../../sync/data/services/resumable_upload_service.dart';
 import '../domain/repositories/recording_api_repository.dart';
 import 'repositories/local_recording_repository.dart';
@@ -54,3 +55,10 @@ final localRecordingStreamProvider =
       final repo = ref.watch(localRecordingRepositoryProvider);
       return repo.watchRecordingById(id);
     });
+
+/// Injectable file-existence probe so the trim editor's load path can be driven
+/// in widget tests without touching the real filesystem (real dart:io futures
+/// never resolve under the fake-async test zone).
+final fileExistsProvider = Provider<Future<bool> Function(String path)>(
+  (_) => file_ops.fileExists,
+);

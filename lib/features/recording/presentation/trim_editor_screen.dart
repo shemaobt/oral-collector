@@ -13,7 +13,6 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/l10n/content_l10n.dart';
-import '../../../core/platform/file_ops.dart' as file_ops;
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../shared/utils/error_helpers.dart';
@@ -508,7 +507,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
         } catch (_) {}
       } else {
         if (recording.localFilePath.isEmpty ||
-            !await file_ops.fileExists(recording.localFilePath)) {
+            !await ref.read(fileExistsProvider)(recording.localFilePath)) {
           if (mounted) {
             setState(() {
               _recording = recording;
