@@ -55,6 +55,8 @@ class RecordingFinalizationService {
     final dir = await _documentsDirFn();
     String sourcePath;
     var degraded = false;
+    // sourcePath is a concat temp we created, not an original recording.
+    var derived = false;
 
     if (segmentPaths.length == 1) {
       sourcePath = segmentPaths.first;
@@ -95,6 +97,7 @@ class RecordingFinalizationService {
 
       if (concatResult != null) {
         sourcePath = concatResult;
+        derived = true;
         if (deleteSources) {
           for (final p in segmentPaths) {
             unawaited(_deleteFileSafe(p));
@@ -118,10 +121,10 @@ class RecordingFinalizationService {
         ok = false;
       }
       if (ok) {
-        // Reclaim the intermediate concat temp even when keeping sources: a
-        // non-degraded sourcePath is derived, never the recovered file. (When
-        // degraded, sourcePath is an original segment, so keep-sources holds.)
-        if (deleteSources || !degraded) {
+        // Delete sourcePath when the caller wants the sources gone, or when it
+        // is a concat temp we created (never an original recording, so safe to
+        // reclaim even while keeping sources).
+        if (deleteSources || derived) {
           unawaited(_deleteFileSafe(sourcePath));
         }
         return FinalizationOutcome(
