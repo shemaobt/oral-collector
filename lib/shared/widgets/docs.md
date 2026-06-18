@@ -5,7 +5,9 @@ Path: @/lib/shared/widgets
 ### Overview
 
 - The cross-cutting widget library reused across nearly every feature screen:
-  the app chrome (`app_shell.dart`'s responsive nav scaffold and
+  the app chrome (`app_shell.dart`'s responsive nav scaffold, composed from the
+  mobile bottom bar / web sidebar sub-widgets in
+  [app_shell/](app_shell), and
   [screen_header.dart](screen_header.dart)'s gradient `AppBar`/`SliverAppBar`),
   list/section affordances ([empty_state.dart](empty_state.dart),
   `section_header.dart`, `status_banner.dart`), status chips
@@ -43,7 +45,8 @@ Path: @/lib/shared/widgets
 - Stateless composition is the norm; stateful widgets exist only to drive a
   `RotationTransition` while a status is in-flight (the badges' "cleaning" /
   "uploading" spinners create/dispose an `AnimationController` in
-  `didUpdateWidget`) or to track sidebar collapse in `AppShell`.
+  `didUpdateWidget`) or to track collapse state in the web sidebar
+  ([app_shell/web_sidebar.dart](app_shell/web_sidebar.dart)).
 - All color and spacing come from theme tokens, never raw literals (enforced by
   the `obt_lints` plugin outside `lib/core/theme/**`); strings come from
   `AppLocalizations.of(context)`.
@@ -66,10 +69,13 @@ Path: @/lib/shared/widgets
     overflowing when large fonts make it taller than the viewport.
   - **`Flexible` + `maxLines: 1` + `TextOverflow.ellipsis`** for labels under
     width pressure: the status-badge labels and the web sidebar's collapse-toggle
-    label degrade by ellipsizing rather than overflowing. The collapse toggle was
-    the only unprotected text in the sidebar and the single real overflow found.
-  - **Fixed nav-chrome heights are intentionally preserved** (bottom bar / nav
-    item in `app_shell.dart`, the 96px toolbar in `screen_header.dart`). They
+    label (in [app_shell/web_sidebar.dart](app_shell/web_sidebar.dart)) degrade by
+    ellipsizing rather than overflowing. The collapse toggle was the only
+    unprotected text in the sidebar and the single real overflow found.
+  - **Fixed nav-chrome heights are intentionally preserved** (the mobile bottom
+    bar / nav item in
+    [app_shell/floating_nav_bar.dart](app_shell/floating_nav_bar.dart), the 96px
+    toolbar in `screen_header.dart`). They
     clip rather than grow, keeping the base design; content adapts *within* the
     fixed chrome. This mirrors the resilience approach in the feature screens:
     the recording flow
