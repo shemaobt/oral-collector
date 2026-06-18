@@ -302,6 +302,35 @@ void main() {
     );
   });
 
+  group('RecordingsListNotifier.patchRecordingTitle', () {
+    test(
+      'renames only the targeted recording, preserving its other fields',
+      () async {
+        when(
+          () => local.getAllRecordings('proj-1'),
+        ).thenAnswer((_) async => [_makeRecording('r1'), _makeRecording('r2')]);
+
+        final container = makeContainer(online: false);
+        addTearDown(container.dispose);
+        final notifier = container.read(
+          recordingsListNotifierProvider.notifier,
+        );
+        await notifier.fetchRecordings();
+
+        notifier.patchRecordingTitle('r1', 'Renamed');
+
+        final recordings = container
+            .read(recordingsListNotifierProvider)
+            .recordings;
+        final r1 = recordings.firstWhere((r) => r.id == 'r1');
+        final r2 = recordings.firstWhere((r) => r.id == 'r2');
+        expect(r1.title, 'Renamed');
+        expect(r1.uploadStatus, 'local', reason: 'other fields are preserved');
+        expect(r2.title, 'Recording r2', reason: 'siblings are untouched');
+      },
+    );
+  });
+
   group(
     'RecordingsListNotifier.fetchRecordings — offline → online transition',
     () {

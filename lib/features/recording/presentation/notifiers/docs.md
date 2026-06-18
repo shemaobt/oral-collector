@@ -72,19 +72,34 @@ Path: @/lib/features/recording/presentation/notifiers
   `fileNotFound` (local missing and no fallback URL) or `loadFailed`
   (decoder/network error).
 - `RecordingsListNotifier` (`recordings_list_notifier.dart`) owns the
-  paginated list. `fetchRecordings` loads page zero — the server list
-  merged with local-only rows from `LocalRecordingRepository`, deduped
-  by `serverId` — and `loadMore` appends later pages from the
-  `_serverOffset` cursor; offline or on an API error both fall back to
-  the full local set. Status / genre / subcategory / search filtering
-  is computed client-side by `RecordingsListState.filteredRecordings`
-  and never refetches, so only `setUserFilter`, `setStorytellerFilter`,
-  `clearAllFilters`, `clearStaleRecordings`, and pull-to-refresh re-hit
-  the server. `patchRecordingTitle` rerenders after an edit without a
-  full refetch.
-- `deleteRecording(LocalRecording)` is the single owner of the
+  paginated list. As of ENG-197 the state holds `List<LocalRecordingEntity>`
+  (see [./recordings_list_state.dart](recordings_list_state.dart)), not the
+  Drift `LocalRecording` row: every row read from
+  `LocalRecordingRepository.getAllRecordings` (its signature is unchanged — it
+  still returns rows) is mapped through `localRecordingToEntity`
+  ([../../data/local_recording_to_entity.dart](../../data/local_recording_to_entity.dart))
+  at the notifier boundary, and `_convertServerRecordings` composes
+  `serverRecordingToLocal` then `localRecordingToEntity` (server →
+  in-memory row → entity) so the server and local sides land as the same
+  type before merging. `fetchRecordings` loads page zero — the server list
+  merged with local-only entities, deduped by `serverId` — and `loadMore`
+  appends later pages from the `_serverOffset` cursor; offline or on an API
+  error both fall back to the full local set. The merge/dedup logic is byte-for-byte
+  the pre-ENG-197 algorithm, just keyed off entity fields. Status / genre /
+  subcategory / search filtering is computed client-side by
+  `RecordingsListState.filteredRecordings` (`unclassified` reads the entity's
+  `isUnclassified` extension) and never refetches, so only `setUserFilter`,
+  `setStorytellerFilter`, `clearAllFilters`, `clearStaleRecordings`, and
+  pull-to-refresh re-hit the server. `patchRecordingTitle` rerenders after an
+  edit without a full refetch, using the entity's sentinel `copyWith(title: …)`
+  rather than Drift's `Value(...)` wrapper.
+- `deleteRecording(LocalRecordingEntity)` is the single owner of the
   user-initiated **hard delete** for both the list and detail screens
-  (ENG-120). It deletes remotely via the recording API *only* when the
+  (ENG-120). It takes the entity as of ENG-197: the list screen already holds
+  entities, and the detail screen converts its Drift row at the call site via
+  `localRecordingToEntity`
+  ([../../data/local_recording_to_entity.dart](../../data/local_recording_to_entity.dart)).
+  It deletes remotely via the recording API *only* when the
   row has a `serverId` (local-only rows skip the API), hard-deletes the
   Drift row through
   [../../data/repositories/local_recording_repository.dart](../../data/repositories/local_recording_repository.dart),
@@ -288,19 +303,21 @@ Path: @/lib/features/recording/presentation/notifiers
   per-screen code, which (on non-web) deleted the local row even when the
   remote delete failed.
 - **Delete resolves the real local row, never trusting the list item's
-  `id` (ENG-120).** The list shows the server-converted copy of a synced
-  recording (`serverRecordingToLocal` in
+  `id` (ENG-120).** The list holds the server-converted entity of a synced
+  recording — `localRecordingToEntity(serverRecordingToLocal(s))`, where
+  `serverRecordingToLocal` in
   [../../data/server_to_local_recording.dart](../../data/server_to_local_recording.dart)
-  sets `id == serverId` and an empty `localFilePath`), but a row that was
-  created locally and then uploaded keeps its original uuid `id` and only
-  gains a `serverId` (`markAsUploaded` never rewrites `id`). So deleting by
-  `recording.id` would miss that uuid row — orphaning it (resurrects on the
-  next merge) and leaking its audio file (the list copy's path is empty).
-  `deleteRecording` first resolves the true row via `getRecordingById` then
-  `getRecordingByServerId`, and deletes that row's real `id` and real
-  `localFilePath`. This is what makes the hard delete actually remove the
-  row + audio for a list-synced recording on every platform, generalizing
-  the web-orphan fix above.
+  sets `id == serverId` and an empty `localFilePath`, both carried verbatim onto
+  the entity — but a row that was created locally and then uploaded keeps its
+  original uuid `id` and only gains a `serverId` (`markAsUploaded` never rewrites
+  `id`). So deleting by `recording.id` would miss that uuid row — orphaning it
+  (resurrects on the next merge) and leaking its audio file (the list copy's
+  path is empty). `deleteRecording` first resolves the true Drift row via
+  `getRecordingById` then `getRecordingByServerId`, and deletes that row's real
+  `id` and real `localFilePath`. This is what makes the hard delete actually
+  remove the row + audio for a list-synced recording on every platform,
+  generalizing the web-orphan fix above. Note the entity is the *presentation*
+  identity; the row delete still goes through the Drift repository by id.
 - **`RecordingsListNotifier`'s fallback catches report, they don't swallow
   (ENG-102).** The paths that intentionally degrade rather than fail the screen —
   the offline/error fall-back to the full local set in `fetchRecordings`, the

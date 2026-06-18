@@ -1,10 +1,10 @@
-import '../../../../core/database/app_database.dart';
-import '../../data/local_recording_classification.dart';
+import '../../domain/entities/local_recording_entity.dart';
+import '../../domain/entities/local_recording_entity_classification.dart';
 
 enum StatusFilter { all, pending, uploaded, needsCleaning, unclassified }
 
 class RecordingsListState {
-  final List<LocalRecording> recordings;
+  final List<LocalRecordingEntity> recordings;
   final bool isLoading;
   final bool isLoadingMore;
   final bool hasMore;
@@ -29,7 +29,7 @@ class RecordingsListState {
   });
 
   RecordingsListState copyWith({
-    List<LocalRecording>? recordings,
+    List<LocalRecordingEntity>? recordings,
     bool? isLoading,
     bool? isLoadingMore,
     bool? hasMore,
@@ -76,7 +76,7 @@ class RecordingsListState {
     return count;
   }
 
-  List<LocalRecording> get filteredRecordings {
+  List<LocalRecordingEntity> get filteredRecordings {
     var list = recordings;
 
     if (searchQuery.isNotEmpty) {

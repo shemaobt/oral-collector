@@ -1,15 +1,15 @@
-import 'package:drift/drift.dart' show Value;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/database/app_database.dart';
 import '../../../../core/errors/api_exception.dart';
 import '../../../../core/observability/error_reporter.dart';
 import '../../../../core/platform/file_ops.dart' as file_ops;
 import '../../../project/presentation/notifiers/project_notifier.dart';
 import '../../../sync/presentation/notifiers/sync_notifier.dart';
+import '../../data/local_recording_to_entity.dart';
 import '../../data/providers.dart';
 import '../../data/repositories/local_recording_repository.dart';
 import '../../data/server_to_local_recording.dart';
+import '../../domain/entities/local_recording_entity.dart';
 import '../../domain/entities/server_recording.dart';
 import '../../domain/repositories/recording_api_repository.dart';
 import 'recordings_list_state.dart';
@@ -26,7 +26,7 @@ final recordingsListNotifierProvider =
     );
 
 typedef _FetchResult = ({
-  List<LocalRecording> merged,
+  List<LocalRecordingEntity> merged,
   bool hasMore,
   int serverOffset,
 });
@@ -128,11 +128,12 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
       final newServerAsLocal = _convertServerRecordings(
         serverPage,
       ).where((r) => !existingIds.contains(r.id)).toList();
-      final currentRecordings = List<LocalRecording>.from(state.recordings)
-        ..removeWhere(
-          (r) => r.serverId != null && newPageIds.contains(r.serverId),
-        )
-        ..addAll(newServerAsLocal);
+      final currentRecordings =
+          List<LocalRecordingEntity>.from(state.recordings)
+            ..removeWhere(
+              (r) => r.serverId != null && newPageIds.contains(r.serverId),
+            )
+            ..addAll(newServerAsLocal);
 
       state = state.copyWith(
         recordings: currentRecordings,
@@ -148,7 +149,7 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
 
   void patchRecordingTitle(String recordingId, String title) {
     final updated = state.recordings
-        .map((r) => r.id == recordingId ? r.copyWith(title: Value(title)) : r)
+        .map((r) => r.id == recordingId ? r.copyWith(title: title) : r)
         .toList();
     state = state.copyWith(recordings: updated);
   }
@@ -158,7 +159,7 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
   /// failure for a synced item nothing local is touched, so the row and file
   /// survive for a retry.
   Future<DeleteRecordingResult> deleteRecording(
-    LocalRecording recording,
+    LocalRecordingEntity recording,
   ) async {
     final serverId = recording.serverId;
     if (serverId != null) {
@@ -204,9 +205,10 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
       userId: state.selectedUserId,
       storytellerId: state.selectedStorytellerId,
     );
-    List<LocalRecording> localRecordings;
+    List<LocalRecordingEntity> localRecordings;
     try {
-      localRecordings = await _localRepo.getAllRecordings(projectId);
+      final rows = await _localRepo.getAllRecordings(projectId);
+      localRecordings = rows.map(localRecordingToEntity).toList();
     } catch (e, st) {
       _reportUnexpected(e, st);
       localRecordings = const [];
@@ -227,15 +229,18 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
     );
   }
 
-  List<LocalRecording> _convertServerRecordings(
+  List<LocalRecordingEntity> _convertServerRecordings(
     List<ServerRecording> recordings,
   ) {
-    return recordings.map(serverRecordingToLocal).toList();
+    return recordings
+        .map((s) => localRecordingToEntity(serverRecordingToLocal(s)))
+        .toList();
   }
 
-  Future<List<LocalRecording>?> _loadLocal(String projectId) async {
+  Future<List<LocalRecordingEntity>?> _loadLocal(String projectId) async {
     try {
-      return await _localRepo.getAllRecordings(projectId);
+      final rows = await _localRepo.getAllRecordings(projectId);
+      return rows.map(localRecordingToEntity).toList();
     } catch (e, st) {
       _reportUnexpected(e, st);
       return null;
