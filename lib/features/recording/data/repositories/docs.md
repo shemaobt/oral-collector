@@ -81,7 +81,28 @@ Path: @/lib/features/recording/data/repositories
   row is byte-identical; `.distinct()` suppresses those duplicate downstream
   emissions so the detail screen's `ref.listen` does not rebuild on unrelated
   writes. The query still re-executes — table-level invalidation is inherent
-  to Drift and is not removed by `.distinct()`.
+  to Drift and is not removed by `.distinct()`. It returns the raw Drift
+  `LocalRecording` row and remains the source for `localRecordingStreamProvider`
+  (the detail screen); no consumer was repointed by ENG-195.
+- `watchRecordingEntityById` is the row-decoupled sibling added by ENG-195:
+  the same `watchSingleOrNull` query, but it `.map()`s each row to a
+  `LocalRecordingEntity` (via the private `_fromRow`) **before** `.distinct()`.
+  Mapping first is the load-bearing detail — dedup now keys on the entity's
+  hand-written value equality, not the Drift row's generated equality. Because
+  the entity deliberately omits `lastRetryAt`/`md5Hash`, a write touching only
+  those produces an equal entity and `.distinct()` suppresses the re-emission;
+  a change to any content/operational field the entity carries still re-emits.
+  This is additive foundation: it runs in parallel with the row stream and the
+  detail watch will be repointed onto it in a later task (F5b). See
+  [../../domain/docs.md](../../domain/docs.md) for the entity itself and Things
+  to Know.
+- `_fromRow(LocalRecording)` is the private row→entity mapper backing
+  `watchRecordingEntityById`. It mirrors the Storyteller precedent
+  (`_fromRow` private in
+  [../../../storyteller/data/repositories/local_storyteller_repository.dart](../../../storyteller/data/repositories/local_storyteller_repository.dart),
+  with a dual `getById`/`getRowById` read alongside the row read). The write
+  side (`_toCompanion`) was intentionally deferred — no write path was migrated
+  off `LocalRecordingsCompanion`.
 - `insertRecording` is a plain insert; `upsertRecording` is
   `insertOnConflictUpdate` (insert-or-update keyed on the primary key).
   Columns absent from the companion are left untouched on an update, so a
@@ -213,6 +234,14 @@ Path: @/lib/features/recording/data/repositories
   collapse Drift's table-level re-emissions, not to change what the stream
   reports. Any consumer that needs to observe a write which produces an
   identical `LocalRecording` value (there is none today) would not see it.
+- **`watchRecordingEntityById` maps before `.distinct()`, so dedup keys on the
+  entity, not the row (ENG-195).** Where the row stream dedups on Drift's
+  generated row equality, the entity stream dedups on `LocalRecordingEntity`'s
+  hand-written `==`. Since the entity drops `lastRetryAt`/`md5Hash`, a write
+  that touches only those is invisible to this stream by design — a behavioral
+  difference from the row stream, not just a re-emission collapse. This is the
+  reason the entity needs value equality at all: without it, mapping to a fresh
+  object per emission would defeat `.distinct()` entirely.
 - **`upsertRecording` is what makes a failed web import retryable
   (ENG-80).** A large web import inserts a `web_<serverId>` shadow row to
   track resume state; on failure that row is intentionally left behind for
