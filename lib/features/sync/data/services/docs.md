@@ -46,6 +46,10 @@ Path: @/lib/features/sync/data/services
 - `providers.dart` ([../providers.dart](../providers.dart)) exposes
   `uploadForegroundServiceProvider`, `uploadDownloaderProvider`, and
   `syncEngineProvider` consumed by the notifier and coordinator.
+- Diagnostics from the upload transport now flow through the app's logging facade
+  (named `package:logging` loggers) rather than ad-hoc console prints; severe
+  records reach the `ErrorReporter`. See
+  [/lib/core/observability/docs.md](../../../../core/observability/docs.md).
 
 ### Core Implementation
 

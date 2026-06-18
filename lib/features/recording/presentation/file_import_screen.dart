@@ -6,6 +6,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:logging/logging.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -54,6 +55,8 @@ class _Candidate {
 }
 
 class _FileImportScreenState extends ConsumerState<FileImportScreen> {
+  static final _log = Logger('FileImportScreen');
+
   final List<FileImportEntry> _entries = [];
   bool _isAnalyzing = false;
   bool _isSaving = false;
@@ -145,7 +148,7 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
 
       await _analyzeCandidates(candidates);
     } catch (e, st) {
-      debugPrint('FileImportScreen._pickFile failed: $e\n$st');
+      _log.severe('_pickFile failed', e, st);
       if (mounted) {
         setState(() => _isAnalyzing = false);
         final l10n = AppLocalizations.of(context);
@@ -168,7 +171,7 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
       }
       await _analyzeCandidates(candidates);
     } catch (e, st) {
-      debugPrint('FileImportScreen._handleDrop failed: $e\n$st');
+      _log.severe('_handleDrop failed', e, st);
       if (mounted) {
         setState(() => _isAnalyzing = false);
         final l10n = AppLocalizations.of(context);
@@ -225,7 +228,7 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
       );
 
       if (!probeResult.hasDuration) {
-        debugPrint(
+        _log.info(
           'Import rejected ${c.name} (.$ext, ${c.size}B): '
           '${probeResult.diagnostic ?? "no diagnostic"}',
         );

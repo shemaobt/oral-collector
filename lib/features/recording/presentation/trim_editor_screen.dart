@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:logging/logging.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -48,6 +49,8 @@ class TrimEditorScreen extends ConsumerStatefulWidget {
 }
 
 class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
+  static final _log = Logger('TrimEditor');
+
   LocalRecording? _recording;
   bool _isLoading = true;
   bool _isSaving = false;
@@ -440,9 +443,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
   /// widget unmounted); false for a 404 so the caller falls through to the
   /// not-found state with `_recording` still null (ENG-140 F21).
   bool _handleServerLoadError(Object e, StackTrace st) {
-    debugPrint(
-      'TrimEditor: server lookup failed for ${widget.recordingId}: $e\n$st',
-    );
+    _log.warning('server lookup failed for ${widget.recordingId}', e, st);
     if (!mounted) return true;
     if (isRecordingNotFound(e)) return false;
     setState(() {

@@ -20,7 +20,9 @@ Path: @/lib/core/auth
 - [./auth_repository.dart](auth_repository.dart) is the abstract data port (HTTP
   calls live in `lib/features/auth/data/`); [./auth_state.dart](auth_state.dart)
   is the immutable state; [./providers.dart](providers.dart) wires the repository
-  implementation.
+  implementation, injecting the shared **raw** `http.Client`
+  (`httpClientProvider`) — deliberately **not** `AuthenticatedClient`. See the
+  exception bullet in "How it fits" and [../network/docs.md](../network/docs.md).
 
 ### How it fits into the larger codebase
 
@@ -32,6 +34,16 @@ Path: @/lib/core/auth
   injects `handleUnauthorized` as its `TokenRefresher`: every 401 from a feature
   repository routes back here to refresh and (on success) retry. See
   [../network/docs.md](../network/docs.md) for the retry/three-outcome contract.
+- **The auth repository is the one repository that runs on a raw `http.Client`,
+  not `AuthenticatedClient`.** `providers.dart` injects the shared
+  `httpClientProvider` ([../providers/http_client_provider.dart](../providers/http_client_provider.dart))
+  into `AuthRepositoryImpl`. This is permanent because the repository is the token
+  bootstrap (login/signup precede any token), owns the refresh endpoint (which
+  must not self-trigger a refresh), and — critically — depending on
+  `authenticatedClientProvider` here would close a Riverpod cycle:
+  `authenticatedClient` → `authNotifier` (via the `handleUnauthorized` refresher
+  above) → `authRepository` → back to `authenticatedClient`. See
+  [../network/docs.md](../network/docs.md).
 - The boot path is split across the startup gate (ENG-139 F8). `lib/main.dart`
   awaits `appStartupProvider` (which calls `restoreSession`) **before** the
   router is built, so the router's first redirect runs on settled auth state

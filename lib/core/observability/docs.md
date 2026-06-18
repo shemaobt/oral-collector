@@ -4,22 +4,51 @@ Path: @/lib/core/observability
 
 ### Overview
 
-- Pluggable crash/telemetry layer: a vendor-neutral `ErrorReporter` interface, a
-  `NoopErrorReporter` default (drops everything), a Riverpod
-  `errorReporterProvider`, and `installGlobalErrorHandlers`, which routes
-  Flutter's global error hooks through whichever reporter is wired in.
+- Two distinct app-wide observability seams. The **telemetry seam** is a
+  vendor-neutral `ErrorReporter` interface, a `NoopErrorReporter` default (drops
+  everything), a Riverpod `errorReporterProvider`, and `installGlobalErrorHandlers`,
+  which routes Flutter's global error hooks through whichever reporter is wired in.
+  The **diagnostics seam** is the logging facade in
+  [./app_logger.dart](app_logger.dart) (`installLogging`), backed by
+  `package:logging`, which is where general developer diagnostics across the app
+  now flow (replacing scattered `debugPrint`). A one-way bridge connects them:
+  log records at `Level.SEVERE`+ forward into the reporter.
 - Exists because the app previously had no reporting abstraction, no
-  `runZonedGuarded`, and no crash package — its global hooks only called
-  `debugPrint`, a no-op in release, so uncaught production errors were invisible.
-- Default behavior is intentionally identical to before (Noop drops everything);
-  reporting is additive and zero-cost until a real adapter replaces the default.
-  See [/docs/adr/0006-pluggable-error-reporter-telemetry.md](../../../docs/adr/0006-pluggable-error-reporter-telemetry.md).
+  `runZonedGuarded`, and no crash package — its global hooks only echoed to the
+  console (and the rest of the app scattered raw `debugPrint`), so uncaught
+  production errors went to the telemetry void. Note `debugPrint` is **not** a
+  release no-op — it prints in every build mode; only `dart:developer log()` is
+  silenced by the VM in AOT/release, which is why both the global-hook console
+  echoes and the logging facade route through `dart:developer log()`.
+- Default behavior of the reporter is intentionally identical to before (Noop
+  drops everything); reporting is additive and zero-cost until a real adapter
+  replaces the default. See
+  [/docs/adr/0006-pluggable-error-reporter-telemetry.md](../../../docs/adr/0006-pluggable-error-reporter-telemetry.md)
+  for the reporter and
+  [/docs/adr/ADR-0010-logging-facade.md](../../../docs/adr/ADR-0010-logging-facade.md)
+  for the logging facade.
 
 ### How it fits into the larger codebase
 
 - This is the app-wide global error sink. It sits below the feature layers and
   is consumed at process startup by [/lib/main.dart](../../main.dart), which is
-  the only caller of `installGlobalErrorHandlers`.
+  the only caller of `installGlobalErrorHandlers` and `installLogging`. The two
+  are wired back to back in `main()` (handlers first, so the reporter the logging
+  bridge forwards to is the same instance), both reading the one reporter the
+  app-root `ProviderContainer` produces.
+- The **logging facade** ([./app_logger.dart](app_logger.dart)) is the general
+  diagnostics path for the whole app. Feature code logs through named
+  `package:logging` `Logger` instances (e.g. `Logger('SegmentedRecorder')`);
+  every record is echoed to `dart:developer log()` and only records at
+  `Level.SEVERE`+ cross the **one-way bridge** into the reporter
+  (`SHOUT`→`fatal`, `SEVERE`→`error`). This is distinct from the `ErrorReporter`
+  telemetry seam: diagnostics flow *one way into* telemetry, never the reverse.
+  Severe production faults therefore become observable through the same reporter
+  once a real adapter replaces the Noop default, while routine debug/info lines
+  stay local. The recording and sync data layers
+  ([../../features/recording/data/docs.md](../../features/recording/data/docs.md),
+  [../../features/sync/data/services/docs.md](../../features/sync/data/services/docs.md))
+  are the largest emitters.
 - `errorReporterProvider` is the single seam for swapping reporters. The app-root
   `ProviderContainer` reads it once in `main()`; feature code that wants to report
   manually reads the same provider rather than constructing a reporter.
@@ -77,11 +106,22 @@ Path: @/lib/core/observability
   map onto `SentryLevel` later.
 - `NoopErrorReporter` is a `const` implementation whose methods all no-op. It is
   the value behind `errorReporterProvider` and preserves prior release behavior.
-- `installGlobalErrorHandlers(reporter)` wires both global hooks:
-  - `FlutterError.onError` keeps `FlutterError.presentError` + `debugPrint`, then
-    forwards as `ErrorLevel.fatal`.
-  - `PlatformDispatcher.instance.onError` `debugPrint`s, forwards as
+- `installGlobalErrorHandlers(reporter)` wires both global hooks. Their console
+  echo is `dart:developer log()` (self-silencing in AOT/release), **not**
+  `debugPrint` — `debugPrint` prints in release too, so the prior code leaked
+  fatal traces to the production console:
+  - `FlutterError.onError` keeps `FlutterError.presentError`, then echoes via
+    `developer.log` and forwards as `ErrorLevel.fatal`.
+  - `PlatformDispatcher.instance.onError` echoes via `developer.log`, forwards as
     `ErrorLevel.fatal`, and returns `true` (error handled).
+- `installLogging({reporter, level})` ([./app_logger.dart](app_logger.dart))
+  configures `Logger.root` and is **idempotent**: it `clearListeners()` first so
+  repeated calls (and tests) never stack handlers on the shared root logger. The
+  root level defaults to `Level.ALL` in debug and `Level.WARNING` in release (an
+  explicit `level` overrides). Its single `onRecord` listener (1) emits every
+  record to `dart:developer log()` and (2) for `Level.SEVERE`+ forwards to
+  `reporter.reportError(...)` inside a `try`/`catch` that swallows a throwing
+  reporter — see the synchronous-listener invariant in "Things to Know".
 - Startup wiring lives in [/lib/main.dart](../../main.dart): the
   `ProviderContainer` is created *outside* the guarded zone, the reporter is read
   from it, and the entire `main` body runs inside `runZonedGuarded` whose
@@ -116,6 +156,20 @@ Path: @/lib/core/observability
   handlers. A fire-and-forget isolate would not be covered.
 - **The app-root `ProviderContainer` is never disposed** — intentional, it lives
   for the process lifetime.
+- **The logging→reporter bridge runs synchronously inside every `Logger` call,
+  so it must never throw.** `Logger.root.onRecord.listen` fires on the same stack
+  as the code that logged; a `reporter.reportError` that threw would propagate
+  into unrelated callers. The forward is therefore wrapped in a
+  swallow-everything `try`/`catch` — telemetry is best-effort and cannot crash the
+  code emitting a log. This is the system-boundary exception to the app's
+  otherwise-bubble-up error policy.
+- **`installLogging` is idempotent by design.** It clears existing root listeners
+  before attaching its own, so re-wiring (or a test harness calling it per case)
+  cannot stack duplicate handlers on the process-global `Logger.root`.
+- **`debugPrint` is not a release no-op.** It prints in every build mode; only
+  `dart:developer log()` is silenced by the VM under AOT/release. Both the global
+  hooks and the logging facade route through `developer.log` for exactly that
+  reason, so no diagnostics leak to the production console.
 - Behavior is verified by the tests under
   [/test/core/observability/](../../../test/core/observability/): both Flutter
   hooks forward at `fatal`, `PlatformDispatcher.onError` returns `true`, and the

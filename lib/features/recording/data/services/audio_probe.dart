@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:logging/logging.dart';
 
 import '../../../../core/platform/file_source.dart';
 
@@ -16,6 +17,8 @@ export 'audio_probe_result.dart';
 
 class AudioProbe {
   const AudioProbe();
+
+  static final _log = Logger('AudioProbe');
 
   Future<AudioProbeResult> probe({
     required Uint8List? bytes,
@@ -43,7 +46,7 @@ class AudioProbe {
         mime: mime,
       );
     } catch (e, st) {
-      debugPrint('AudioProbe: probeWithPlayer threw for $extension: $e\n$st');
+      _log.warning('probeWithPlayer threw for $extension', e, st);
       playerResult = AudioProbeResult(diagnostic: 'player_exception: $e');
     }
 
@@ -61,9 +64,7 @@ class AudioProbe {
         final head = await source.readHead(64 * 1024);
         headerResult = _probeWavHeader(head);
       } catch (e, st) {
-        debugPrint(
-          'AudioProbe: header read failed for ${source.name}: $e\n$st',
-        );
+        _log.warning('header read failed for ${source.name}', e, st);
       }
     } else if (extension == 'm4a') {
       headerResult = await _tryContainerProbe(source, probeMp4Duration);
@@ -87,9 +88,7 @@ class AudioProbe {
         mime: mime,
       );
     } catch (e, st) {
-      debugPrint(
-        'AudioProbe: probeWithPlayerFromSource threw for $extension: $e\n$st',
-      );
+      _log.warning('probeWithPlayerFromSource threw for $extension', e, st);
       playerResult = AudioProbeResult(diagnostic: 'player_exception: $e');
     }
 
@@ -103,9 +102,7 @@ class AudioProbe {
     try {
       return await probe(source);
     } catch (e, st) {
-      debugPrint(
-        'AudioProbe: container probe failed for ${source.name}: $e\n$st',
-      );
+      _log.warning('container probe failed for ${source.name}', e, st);
       return null;
     }
   }

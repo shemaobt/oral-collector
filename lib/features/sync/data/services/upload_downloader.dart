@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:background_downloader/background_downloader.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:logging/logging.dart';
 import 'package:path/path.dart' as p;
 
 class UploadResult {
@@ -149,6 +150,8 @@ class HttpInlineUploader implements UploadDownloader {
 class BackgroundDownloaderUploader implements UploadDownloader {
   const BackgroundDownloaderUploader();
 
+  static final _log = Logger('BackgroundDownloaderUploader');
+
   @override
   Future<UploadResult> putChunk({
     required String taskId,
@@ -243,7 +246,7 @@ class BackgroundDownloaderUploader implements UploadDownloader {
       // Most often the task already finished or was never enqueued — those are
       // benign. Log unexpected Exception subtypes so a misbehaving plugin
       // doesn't fail silently. Errors (TypeError, StateError) propagate.
-      debugPrint('BackgroundDownloaderUploader.cancel($taskId): $e');
+      _log.warning('cancel($taskId) failed', e);
     }
   }
 
@@ -255,7 +258,7 @@ class BackgroundDownloaderUploader implements UploadDownloader {
         await FileDownloader().cancelTaskWithId(task.taskId);
       }
     } on Exception catch (e) {
-      debugPrint('BackgroundDownloaderUploader.cancelAll: $e');
+      _log.warning('cancelAll failed', e);
     }
   }
 

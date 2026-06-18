@@ -1,6 +1,6 @@
-import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:logging/logging.dart';
 
 import '../../data/services/audio_path_resolver.dart';
 import 'recording_player_state.dart';
@@ -20,6 +20,8 @@ final recordingPlayerProvider = NotifierProvider.autoDispose
 
 class RecordingPlayerNotifier
     extends AutoDisposeFamilyNotifier<RecordingPlayerState, String> {
+  static final _log = Logger('RecordingPlayerNotifier');
+
   late final AudioPlayer _player;
   String? _lastKey;
   Future<void>? _inFlight;
@@ -100,7 +102,7 @@ class RecordingPlayerNotifier
       state = const RecordingPlayerState(isLoading: false, hasAudio: true);
     } on Object catch (e, st) {
       if (_disposed) return;
-      debugPrint('RecordingPlayerNotifier.load failed: $e\n$st');
+      _log.warning('load failed', e, st);
       state = const RecordingPlayerState(
         isLoading: false,
         hasAudio: false,

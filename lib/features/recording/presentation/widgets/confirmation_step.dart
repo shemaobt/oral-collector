@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:logging/logging.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../../l10n/app_localizations.dart';
@@ -72,6 +73,8 @@ class ConfirmationStep extends ConsumerStatefulWidget {
 }
 
 class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
+  static final _log = Logger('ConfirmationStep');
+
   final _descriptionController = TextEditingController();
   final _titleController = TextEditingController();
   AudioPlayer? _player;
@@ -164,7 +167,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
       if (kIsWeb) {
         final bytes = await file_ops.readFileBytes(widget.result.filePath);
         if (bytes.isEmpty) {
-          debugPrint('Recording file is empty at ${widget.result.filePath}');
+          _log.warning('Recording file is empty at ${widget.result.filePath}');
           return;
         }
         final mime = _mimeForFormat(widget.result.format);
@@ -173,7 +176,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
       } else {
         final fileSize = await file_ops.fileLength(widget.result.filePath);
         if (fileSize <= 0) {
-          debugPrint(
+          _log.warning(
             'Recording file is 0 bytes at ${widget.result.filePath} — '
             'microphone likely did not capture audio.',
           );
@@ -182,7 +185,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
         await _player!.setFilePath(widget.result.filePath);
       }
     } catch (e, st) {
-      debugPrint('Player load failed: $e\n$st');
+      _log.warning('Player load failed', e, st);
     }
   }
 

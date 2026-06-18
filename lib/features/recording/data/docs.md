@@ -58,6 +58,12 @@ Path: @/lib/features/recording/data
 - The cross-implementation invariants for split and cache hydration are
   documented in [/docs/recording-split-semantics.md](../../../../docs/recording-split-semantics.md).
   That doc is the source of truth shared with the backend (`tripod-api`).
+- Diagnostics from these services now flow through the app's logging facade
+  (named `package:logging` loggers), not ad-hoc console prints; severe records
+  reach the `ErrorReporter`. See
+  [/lib/core/observability/docs.md](../../../core/observability/docs.md). This is
+  distinct from the explicit best-effort `ErrorReporter` reports called out in
+  Things to Know (finalization temp deletes, the foreground/Live-Activity tick).
 
 ### Core Implementation
 

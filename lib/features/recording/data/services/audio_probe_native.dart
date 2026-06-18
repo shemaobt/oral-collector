@@ -1,9 +1,12 @@
 import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:logging/logging.dart';
 
 import '../../../../core/platform/file_source.dart';
 
 import 'audio_probe.dart';
+
+final _log = Logger('AudioProbe');
 
 String createPlayableBlobUrl(Uint8List bytes, String mime) {
   throw UnsupportedError(
@@ -57,7 +60,7 @@ Future<AudioProbeResult> _probePath({
       diagnostic: 'native_player ok',
     );
   } catch (e, st) {
-    debugPrint('AudioProbe native player failed for .$extension: $e\n$st');
+    _log.warning('native player failed for .$extension', e, st);
     return AudioProbeResult(diagnostic: 'native_player: $e');
   } finally {
     await player.dispose();

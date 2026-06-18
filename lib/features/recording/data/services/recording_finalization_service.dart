@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
+import 'package:logging/logging.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../../../core/observability/error_reporter.dart';
@@ -23,6 +23,8 @@ class FinalizationOutcome {
 }
 
 class RecordingFinalizationService {
+  static final _log = Logger('RecordingFinalizationService');
+
   RecordingFinalizationService({
     required RecordingConcatService concat,
     CompressFn? compressFn,
@@ -73,7 +75,7 @@ class RecordingFinalizationService {
           outputPath: concatPath,
         );
       } catch (e, st) {
-        debugPrint('RecordingFinalizationService: concat failed: $e\n$st');
+        _log.severe('concat failed', e, st);
         concatResult = null;
       }
 
@@ -88,10 +90,7 @@ class RecordingFinalizationService {
             degraded = true;
           }
         } catch (e, st) {
-          debugPrint(
-            'RecordingFinalizationService: pure-dart WAV concat failed: '
-            '$e\n$st',
-          );
+          _log.severe('pure-dart WAV concat failed', e, st);
         }
       }
 
@@ -117,7 +116,7 @@ class RecordingFinalizationService {
       try {
         ok = await _compressFn(sourcePath, m4aPath);
       } catch (e, st) {
-        debugPrint('RecordingFinalizationService: compress failed: $e\n$st');
+        _log.severe('compress failed', e, st);
         ok = false;
       }
       if (ok) {
