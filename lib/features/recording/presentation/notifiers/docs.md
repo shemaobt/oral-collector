@@ -51,7 +51,10 @@ Path: @/lib/features/recording/presentation/notifiers
   [../../data/services/segmented_recorder.dart](../../data/services/segmented_recorder.dart),
   drives the foreground service / live activity, and reconciles crash
   recovery via the services at
-  [../../data/services/](../../data/services/).
+  [../../data/services/](../../data/services/). Its 1 Hz elapsed-timer tick
+  pushes the foreground-service notification and the iOS Live Activity through
+  two `SingleFlightRunner` instances (`single_flight_runner.dart`) rather than
+  bare `unawaited(...)` calls — see Things to Know.
 - `RecordingPlayerNotifier` (`recording_player_notifier.dart`) is an
   `AutoDisposeFamilyNotifier<RecordingPlayerState, String>` keyed by
   recording id. Its `build(arg)` creates a `just_audio` `AudioPlayer`
@@ -193,6 +196,31 @@ Path: @/lib/features/recording/presentation/notifiers
   save handler has no try/catch, so an escaping exception (one half of
   the original ENG-80 bug) would crash the recovery UI and half-handle
   the session.
+- **The 1 Hz platform updates are coalesced, and their errors are
+  reported (ENG-139 F5).** The elapsed-timer tick used to fire
+  `unawaited(_updateForegroundNotification())` / `unawaited(_updateLiveActivity())`
+  every second — a platform channel call slower than the 1 s interval would
+  stack, and any throw became an unhandled async error. Each now runs through a
+  `SingleFlightRunner` (`single_flight_runner.dart`), which holds an `_inFlight`
+  bool and **drops** further `run()` calls while a run is outstanding
+  (at-most-one in flight; coalescing), and routes failures to an `onError` sink
+  wired to `errorReporterProvider`
+  ([/lib/core/observability/docs.md](../../../../core/observability/docs.md))
+  instead of dropping them. The runner is deliberately drop-on-busy, not queue:
+  a missed tick is harmless because the next tick re-pushes the current elapsed
+  value.
+- **`stopRecording` is guarded by a synchronous `_isStopping` reentrancy
+  flag (ENG-139 F6).** A user-initiated stop and a background stop (the Android
+  FGS notification action, or an iOS Live Activity deep-link) can fire
+  near-simultaneously. The guard is set **before any `await`** — `if (_isStopping
+  || !state.isRecording || state.isFinalizing) return null;` then `_isStopping =
+  true;` — so a second entrant bails regardless of how far the first has advanced
+  the state machine, and it is cleared in a `finally` (the web and native stop
+  paths are `await`ed inside the `try` so the flag spans the whole finalize).
+  This is what keeps the two stop sources from double-finalizing the same
+  session. The `state.isRecording`/`isFinalizing` checks alone are insufficient
+  because they can both still read `true` in the window before the first call
+  flips them.
 - **A recovered session is only resolved after the user confirms — no
   silent data loss (ENG-80).** The materialization of a `local_recording`
   row happens *only* in `ConfirmationStep._save` (see

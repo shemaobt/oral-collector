@@ -251,6 +251,43 @@ void main() {
     });
   });
 
+  group('connectivity init race', () {
+    test(
+      'a connectivity change during init is not lost (subscribe before await)',
+      () async {
+        // connectivity_plus exposes a broadcast stream: events emitted before a
+        // listener attaches are dropped (no replay). If the notifier subscribes
+        // only AFTER awaiting the initial isOnline snapshot, a flip during that
+        // await window is missed.
+        final isOnlineGate = Completer<bool>();
+        final connChanges = StreamController<bool>.broadcast();
+        addTearDown(connChanges.close);
+
+        when(
+          () => mockConnectivity.isOnline,
+        ).thenAnswer((_) => isOnlineGate.future);
+        when(
+          () => mockConnectivity.onConnectivityChanged,
+        ).thenAnswer((_) => connChanges.stream);
+
+        container.read(syncNotifierProvider);
+        await Future<void>.delayed(Duration.zero);
+
+        // The device comes online WHILE the initial snapshot is still pending.
+        connChanges.add(true);
+        await Future<void>.delayed(Duration.zero);
+
+        // The snapshot resolves stale (offline) only afterwards; it must not
+        // clobber the fresher event the listener already observed.
+        isOnlineGate.complete(false);
+        await Future<void>.delayed(Duration.zero);
+        await Future<void>.delayed(Duration.zero);
+
+        expect(container.read(syncNotifierProvider).isOnline, true);
+      },
+    );
+  });
+
   group('syncOne', () {
     test('sets uploadingId and progress to 0', () async {
       final recording = makeRecording(id: 'rec-42', fileSizeBytes: 5000);

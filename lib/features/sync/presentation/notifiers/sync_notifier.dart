@@ -23,6 +23,7 @@ final syncNotifierProvider = NotifierProvider<SyncNotifier, SyncState>(
 
 class SyncNotifier extends Notifier<SyncState> {
   StreamSubscription<bool>? _connectivitySub;
+  bool _sawConnectivityEvent = false;
   DateTime? _speedSampleTime;
   int _speedSampleBytes = 0;
   final Map<String, int> _fileProgress = {};
@@ -50,17 +51,24 @@ class SyncNotifier extends Notifier<SyncState> {
   }
 
   Future<void> _initConnectivity() async {
-    final online = await _connectivity.isOnline;
-    state = state.copyWith(isOnline: online);
-
+    // Subscribe before awaiting the snapshot: onConnectivityChanged is a
+    // broadcast stream with no replay, so a flip during the await would be lost.
     _connectivitySub = _connectivity.onConnectivityChanged.listen(
       _onConnectivityChanged,
     );
+
+    final online = await _connectivity.isOnline;
+    // A live event during the await already set a fresher value; don't let the
+    // now-stale snapshot clobber it.
+    if (!_sawConnectivityEvent) {
+      state = state.copyWith(isOnline: online);
+    }
 
     await _refreshPendingCount();
   }
 
   void _onConnectivityChanged(bool online) {
+    _sawConnectivityEvent = true;
     final wasOffline = !state.isOnline;
     state = state.copyWith(isOnline: online);
 

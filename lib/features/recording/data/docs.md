@@ -249,6 +249,27 @@ Path: @/lib/features/recording/data
   the platform player still runs. This preserves native playback of formats
   the browser refuses, and lets `file_import_screen.dart` distinguish
   `unsupportedCodec` from `unreadableContainer` in its rejection message.
+- **The ffmpeg concat scratch list path is per-invocation unique (ENG-139
+  F7).** `RecordingConcatService.concatSegments` writes the ffmpeg
+  `-f concat` input list to a temp file named `concat_<ms>_<rand>.txt` — a
+  cryptographically-random 6-hex suffix on top of the millisecond timestamp.
+  Two concats that start in the same millisecond (back-to-back recordings, a
+  retry) would collide on a timestamp-only name and corrupt each other's
+  ffmpeg input; the suffix removes that race. The service takes injectable
+  `tempDirPath` / `now` / `ffmpegExec` seams purely for test isolation —
+  production passes none and falls back to `getTemporaryDirectory` /
+  `DateTime.now` / `ffmpeg_ops.executeFFmpegCommand`.
+- **Finalization's best-effort temp deletes are fire-and-forget but
+  observable (ENG-139 F20).** `RecordingFinalizationService._deleteFileSafe`
+  still swallows a delete failure so cleanup never blocks or aborts finalize
+  (`file_ops.deleteFile` already tolerates a missing file), but a genuine
+  failure — permission, I/O — is now routed to the injected `ErrorReporter`
+  ([/lib/core/observability/docs.md](../../../core/observability/docs.md))
+  instead of a silent `catch (_) {}`. The constructor takes
+  `reporter` (defaults to `NoopErrorReporter`) and an injectable `deleteFn`;
+  `recordingFinalizationServiceProvider`
+  ([../presentation/notifiers/recording_session_notifier.dart](../presentation/notifiers/recording_session_notifier.dart))
+  wires the real `errorReporterProvider`.
 - **`RecordingFinalizationService.finalize` can keep its sources alive.**
   The `deleteSources` flag (default `true`) controls whether the segment
   files and the intermediate `sourcePath` are deleted after a successful

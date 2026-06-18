@@ -14,8 +14,9 @@ Path: @/lib/core/auth
   is why the plugin and `minSdk` were raised; the options pinning both backends
   live in [../providers/secure_storage_provider.dart](../providers/secure_storage_provider.dart).
 - It is the only place that mutates the session: login/signup/logout, profile
-  and avatar updates, account deletion, boot restore (`tryAutoLogin`), and the
-  401-driven token refresh (`handleUnauthorized`).
+  and avatar updates, account deletion, boot restore (`restoreSession` +
+  `refreshSessionIfOnline`, composed by `tryAutoLogin`), and the 401-driven
+  token refresh (`handleUnauthorized`).
 - [./auth_repository.dart](auth_repository.dart) is the abstract data port (HTTP
   calls live in `lib/features/auth/data/`); [./auth_state.dart](auth_state.dart)
   is the immutable state; [./providers.dart](providers.dart) wires the repository
@@ -31,10 +32,15 @@ Path: @/lib/core/auth
   injects `handleUnauthorized` as its `TokenRefresher`: every 401 from a feature
   repository routes back here to refresh and (on success) retry. See
   [../network/docs.md](../network/docs.md) for the retry/three-outcome contract.
-- The boot path `lib/main.dart` calls `tryAutoLogin`, and the router in
-  [../router/app_router.dart](../router/app_router.dart) and the auth screens
-  watch `authNotifierProvider` for redirect/UI. Clearing `currentUser` (logout,
-  or a refresh that returns `false`) is the signal that drives them back to login.
+- The boot path is split across the startup gate (ENG-139 F8). `lib/main.dart`
+  awaits `appStartupProvider` (which calls `restoreSession`) **before** the
+  router is built, so the router's first redirect runs on settled auth state
+  (no logged-out login flash); only afterward does the bootstrap microtask fire
+  `refreshSessionIfOnline`. See [../startup/docs.md](../startup/docs.md). The
+  router in [../router/app_router.dart](../router/app_router.dart) and the auth
+  screens watch `authNotifierProvider` for redirect/UI; clearing `currentUser`
+  (logout, or a refresh that returns `false`) is the signal that drives them
+  back to login.
 - Several feature notifiers (genre/project/stats and, since ENG-173, invite under
   `lib/features/*/presentation/notifiers/`) call `handleUnauthorized` directly,
   fire-and-forget, when they catch an `UnauthorizedException`. They guard it with
@@ -66,7 +72,8 @@ Path: @/lib/core/auth
   and trigger exactly one token rotation. The slot clears on completion (success,
   `false`, or throw) to allow the next refresh. The real logic is in
   `_doTryRefresh`. Every refresh path funnels through `_tryRefresh`: the
-  `AuthenticatedClient` callback, the three feature notifiers, and `tryAutoLogin`.
+  `AuthenticatedClient` callback, the three feature notifiers, and
+  `refreshSessionIfOnline` (the network half of `tryAutoLogin`).
 - **Why single-flight.** The backend rotates the refresh token on first use and
   invalidates the old one. Concurrent 401s previously each launched their own
   refresh reading the same (soon-stale) refresh token; the first won and the rest
@@ -77,9 +84,22 @@ Path: @/lib/core/auth
   `UnauthorizedException` (expired → caller clears the session), or **propagates**
   any other exception (network/timeout/5xx/parse) as transient so the session is
   preserved. `handleUnauthorized` clears tokens + resets state only on `false`.
+- **Boot restore is split into a local half and a network half (ENG-139 F8).**
+  `restoreSession()` is local-only: it reads the access token and the cached user
+  from secure storage and seeds `currentUser`, never hitting the network. It is
+  wrapped in `try/on Exception` so a Keychain read failure at boot leaves the app
+  logged out rather than wedging the splash — **it never throws.** This is what
+  the startup gate awaits (`appStartupProvider`, [../startup/docs.md](../startup/docs.md))
+  so the router's first redirect sees settled state. `refreshSessionIfOnline()` is
+  the network half: it re-checks the token, gates on `connectivityServiceProvider.isOnline`,
+  and refreshes the cached user against the server (`getMe` via the refresh funnel).
+  It runs after the gate, off the first-frame path, so a slow or offline `getMe`
+  never delays startup. `tryAutoLogin()` now simply composes the two in order
+  (`restoreSession` then `refreshSessionIfOnline`) and remains the single entry
+  point for callers that want both halves.
 - **Tokens and cached user.** Stored under fixed keys in secure storage; a
   successful refresh re-stores both tokens and re-fetches `getMe`. The cached user
-  enables offline-first restore in `tryAutoLogin`. Every secret write (`_storeTokens`
+  enables offline-first restore in `restoreSession`. Every secret write (`_storeTokens`
   for the access/refresh tokens, `_storeUser` for the cached user) routes through
   `_writeIdempotent`, which makes the write update-safe (below).
 
@@ -92,10 +112,17 @@ Path: @/lib/core/auth
   `authNotifierProvider` were autoDispose (or per-scope), `_inFlightRefresh` would
   not be shared and concurrent 401s could rotate the refresh token in parallel
   again.
-- **`tryAutoLogin` is offline-first.** It restores the cached user first, only
+- **Auto-login is offline-first, and the local half must never throw (ENG-139
+  F8).** `restoreSession` restores the cached user first and is the only piece
+  the startup gate blocks on, so it is wrapped to swallow a boot Keychain read
+  failure — a throw there would wedge the splash. `refreshSessionIfOnline` only
   hits the network when online, and on a transient refresh throw it keeps the
   cached session (does not log out). Only a `false` from `_tryRefresh` (real 401)
-  clears tokens at boot.
+  clears tokens at boot. The ordering change is purely about the UI flash: the
+  access token is read from secure storage **per request** by
+  `AuthenticatedClient` ([../network/docs.md](../network/docs.md)), independent of
+  auto-login, so deferring `refreshSessionIfOnline` past first frame never gates
+  uploads or any other authenticated call on auto-login completing.
 - **A real 401 on refresh logs the user out everywhere.** `handleUnauthorized`
   resetting state to `const AuthState()` clears `currentUser`, which the router
   and shells observe to redirect to login — there is no separate "session expired"

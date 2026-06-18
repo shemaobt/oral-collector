@@ -13,6 +13,7 @@ import 'package:record/record.dart';
 
 import '../../../../core/database/app_database.dart';
 import '../../../../core/l10n/locale_provider.dart';
+import '../../../../core/observability/error_reporter.dart';
 import '../../../../core/platform/file_ops.dart' as file_ops;
 import '../../../../core/platform/recording_active_flag.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -31,6 +32,7 @@ import '../../data/services/session_recovery.dart';
 import '../../data/services/storage_guard.dart';
 import 'input_device_notifier.dart';
 import 'recording_session_state.dart';
+import 'single_flight_runner.dart';
 
 final noiseSensitivityProvider = StateProvider<NoiseSensitivity>(
   (ref) => NoiseSensitivity.medium,
@@ -46,6 +48,7 @@ final recordingFinalizationServiceProvider =
     Provider<RecordingFinalizationService>((ref) {
       return RecordingFinalizationService(
         concat: ref.watch(recordingConcatServiceProvider),
+        reporter: ref.watch(errorReporterProvider),
       );
     });
 
@@ -80,6 +83,19 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
   String? _pendingResumeSessionId;
   List<String>? _pendingResumeSegmentPaths;
   Duration? _pendingResumeDuration;
+  bool _isStopping = false;
+
+  // Coalesce the 1 Hz platform updates so a slow channel call can't stack, and
+  // surface their errors instead of dropping the fire-and-forget futures.
+  late final ErrorReporter _platformReporter = ref.read(errorReporterProvider);
+  late final SingleFlightRunner _fgUpdateRunner = SingleFlightRunner(
+    _updateForegroundNotification,
+    onError: (e, st) => _platformReporter.reportError(e, st),
+  );
+  late final SingleFlightRunner _liveActivityRunner = SingleFlightRunner(
+    _updateLiveActivity,
+    onError: (e, st) => _platformReporter.reportError(e, st),
+  );
 
   @override
   RecordingState build() {
@@ -479,16 +495,24 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
   }
 
   Future<RecordingResult?> stopRecording() async {
-    if (!state.isRecording || state.isFinalizing) return null;
+    // Synchronous reentrancy guard: a user stop and a background stop (FGS
+    // action / Live Activity deep-link) can fire near-simultaneously. Set the
+    // flag before any await so the second entrant bails regardless of how far
+    // the state machine has advanced.
+    if (_isStopping || !state.isRecording || state.isFinalizing) return null;
+    _isStopping = true;
+    try {
+      _elapsedTimer?.cancel();
+      _toastTimer?.cancel();
+      final elapsed = state.elapsed;
 
-    _elapsedTimer?.cancel();
-    _toastTimer?.cancel();
-    final elapsed = state.elapsed;
-
-    if (kIsWeb) {
-      return _stopWeb(elapsed);
+      if (kIsWeb) {
+        return await _stopWeb(elapsed);
+      }
+      return await _stopNative(elapsed);
+    } finally {
+      _isStopping = false;
     }
-    return _stopNative(elapsed);
   }
 
   Future<RecordingResult?> _stopNative(Duration fallbackElapsed) async {
@@ -812,8 +836,8 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
       state = state.copyWith(
         elapsed: state.elapsed + const Duration(seconds: 1),
       );
-      unawaited(_updateForegroundNotification());
-      unawaited(_updateLiveActivity());
+      _fgUpdateRunner.run();
+      _liveActivityRunner.run();
     });
   }
 
@@ -921,9 +945,14 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
   }
 
   Future<void> _deleteFileSafe(String path) async {
+    // Best-effort delete stays non-throwing, but surface a genuine failure
+    // (file_ops.deleteFile no-ops on a missing file) instead of swallowing it —
+    // mirrors RecordingFinalizationService._deleteFileSafe.
     try {
       await file_ops.deleteFile(path);
-    } catch (_) {}
+    } catch (e, st) {
+      _platformReporter.reportError(e, st);
+    }
   }
 
   String _newSessionId() {
@@ -937,7 +966,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
     _toastTimer?.cancel();
     _segRecorder?.dispose();
     _segRecorder = null;
-    _disposeWebRecorder();
+    unawaited(_disposeWebRecorder());
     unawaited(_stopLiveActivityIfIOS());
     unawaited(_stopForegroundServiceIfAndroid());
   }
