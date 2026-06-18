@@ -57,6 +57,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
 
   double _zoom = 1.0;
   double _panFraction = 0.0;
+  bool _saving = false;
 
   TrimEditorNotifier get _notifier =>
       ref.read(trimEditorProvider(widget.recordingId).notifier);
@@ -433,6 +434,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
   }
 
   Future<void> _saveSplit() async {
+    if (_saving) return;
     final recording = _state.recording;
     if (recording == null) return;
     if (!_state.decision.canSave) return;
@@ -457,6 +459,9 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
     );
     if (confirmed != true) return;
 
+    // Block re-entry during the stop window before the notifier flips isSaving
+    // (the original disabled the save button via setState before stopping).
+    _saving = true;
     await _stopPreview();
     await _player?.stop();
     if (!mounted) return;
@@ -497,6 +502,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
       case TrimSaveAborted():
         break;
     }
+    _saving = false;
   }
 
   String _fmt(Duration d) {

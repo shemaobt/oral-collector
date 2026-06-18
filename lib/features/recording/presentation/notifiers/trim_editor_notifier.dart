@@ -127,11 +127,13 @@ class TrimEditorNotifier
 
   /// The widget's player/availability check found the audio missing.
   void setUnavailable(String message) {
+    if (_disposed) return;
     state = state.copyWith(errorMessage: message, isLoading: false);
   }
 
   /// The widget finished wiring the player and resolved the total duration.
   void completeLoad({required Duration totalDuration}) {
+    if (_disposed) return;
     state = state.copyWith(totalDuration: totalDuration, isLoading: false);
   }
 
@@ -139,6 +141,7 @@ class TrimEditorNotifier
   /// not-found state, matching the screen's original outer-catch behaviour
   /// (the recording was only committed on a fully successful load).
   void loadFailed() {
+    if (_disposed) return;
     state = state.copyWith(clearRecording: true, isLoading: false);
   }
 
