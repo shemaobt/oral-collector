@@ -33,19 +33,35 @@ class AuthNotifier extends Notifier<AuthState> {
     return const AuthState();
   }
 
-  Future<void> tryAutoLogin() async {
+  /// Local-only session restore (token + cached user). Fast and never throws,
+  /// so the startup gate can await it before the router decides the first route
+  /// without a logged-out flash and without blocking on the network.
+  Future<void> restoreSession() async {
+    try {
+      final accessToken = await _storage.read(key: _accessTokenKey);
+      if (accessToken == null) return;
+
+      final cached = await _readCachedUser();
+      if (cached != null) {
+        state = state.copyWith(currentUser: cached, clearError: true);
+      }
+    } on Exception {
+      // Keychain read failure at boot → stay logged out; the router sends the
+      // user to login rather than wedging the splash.
+    }
+  }
+
+  /// Online half of auto-login: refreshes the cached user against the server.
+  /// Runs after [restoreSession] (and after the startup gate), so a slow or
+  /// offline getMe never delays first frame.
+  Future<void> refreshSessionIfOnline() async {
     final accessToken = await _storage.read(key: _accessTokenKey);
     if (accessToken == null) return;
-
-    final cached = await _readCachedUser();
-    if (cached != null) {
-      state = state.copyWith(currentUser: cached, clearError: true);
-    }
 
     final online = await ref.read(connectivityServiceProvider).isOnline;
     if (!online) return;
 
-    if (cached == null) {
+    if (state.currentUser == null) {
       state = state.copyWith(isLoading: true, clearError: true);
     }
 
@@ -67,6 +83,11 @@ class AuthNotifier extends Notifier<AuthState> {
     } on Exception {
       state = state.copyWith(isLoading: false);
     }
+  }
+
+  Future<void> tryAutoLogin() async {
+    await restoreSession();
+    await refreshSessionIfOnline();
   }
 
   Future<void> login(String email, String password) async {

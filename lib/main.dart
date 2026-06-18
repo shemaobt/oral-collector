@@ -15,6 +15,7 @@ import 'core/l10n/supported_locales.dart';
 import 'core/observability/error_reporter.dart';
 import 'core/platform/file_ops.dart' as platform;
 import 'core/router/app_router.dart';
+import 'core/startup/app_startup.dart';
 import 'core/theme/app_theme.dart';
 import 'features/recording/data/providers.dart';
 import 'features/recording/data/services/recording_live_activity.dart';
@@ -90,7 +91,14 @@ class _OralCollectorAppState extends ConsumerState<OralCollectorApp> {
     ref.read(appDatabaseProvider);
 
     Future.microtask(() async {
-      unawaited(ref.read(authNotifierProvider.notifier).tryAutoLogin());
+      // Local session restore is gated by appStartupProvider (the splash waits
+      // on it). Once it settles, kick the online refresh and the rest of the
+      // post-boot work. Token availability is storage-based, so this ordering
+      // only removes the login flash — it does not gate uploads on auth.
+      await ref.read(appStartupProvider.future);
+      unawaited(
+        ref.read(authNotifierProvider.notifier).refreshSessionIfOnline(),
+      );
 
       // Reclaim recordings orphaned in `uploading` by a mid-upload crash so the
       // queue drains them again; must run before sync/listeners go live.
@@ -137,6 +145,19 @@ class _OralCollectorAppState extends ConsumerState<OralCollectorApp> {
 
   @override
   Widget build(BuildContext context) {
+    // Gate the router on the startup restore so its first redirect sees settled
+    // auth state (no logged-out flash). A restore failure falls through to the
+    // app logged-out — the router then sends the user to login.
+    return ref
+        .watch(appStartupProvider)
+        .when(
+          loading: () => const StartupSplash(),
+          error: (_, _) => _buildApp(),
+          data: (_) => _buildApp(),
+        );
+  }
+
+  Widget _buildApp() {
     final router = ref.watch(routerProvider);
     final locale = ref.watch(localeProvider);
 
