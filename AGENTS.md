@@ -69,6 +69,7 @@ This document defines engineering standards and behaviors for LLM agents working
 - Separate **data access** (repositories that call APIs and optionally local storage) from **presentation** (screens, widgets, navigation).
 - Depend **inward**: presentation depends on data (repositories/providers); data depends on domain (entities). Domain depends on nothing.
 - Prefer **dependency injection** (e.g. Riverpod providers for repositories) so that layers stay testable and swappable.
+- For the cross-cutting synthesis — the HTTP client convention and the deliberate `auth_repository` exception, the notifier data-access convention, and the observability/errors/logging seams — see [`docs/architecture/layering.md`](docs/architecture/layering.md).
 
 **Examples:**
 

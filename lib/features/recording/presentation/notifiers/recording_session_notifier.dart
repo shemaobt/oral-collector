@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
+import 'package:logging/logging.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 
@@ -70,6 +71,8 @@ final pendingRecordingDecisionProvider = StateProvider<RecordingResult?>(
 );
 
 class RecordingSessionNotifier extends Notifier<RecordingState> {
+  static final _log = Logger('RecordingSessionNotifier');
+
   SegmentedRecorder? _segRecorder;
   AudioRecorder? _webRecorder;
   String? _webPendingKey;
@@ -124,11 +127,9 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
     try {
       final session = await AudioSession.instance;
       await session.setActive(true);
-      debugPrint(
-        'RecordingSessionNotifier: audio session re-activated on resume',
-      );
+      _log.info('audio session re-activated on resume');
     } on Exception catch (e) {
-      debugPrint('RecordingSessionNotifier: re-activate failed: $e');
+      _log.warning('re-activate failed', e);
     }
   }
 
@@ -574,7 +575,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
       sessionResult = await recorder.finish();
     } catch (e, st) {
       finishError = e;
-      debugPrint('[stopNative] recorder.finish failed: $e\n$st');
+      _log.severe('[stopNative] recorder.finish failed', e, st);
       sessionResult = await _recoverFromDisk(sessionId);
       if (sessionResult != null) degraded = true;
     }
@@ -658,9 +659,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
       );
     } catch (e, st) {
       error = e;
-      debugPrint(
-        'RecordingSessionNotifier: finalize failed for $sessionId: $e\n$st',
-      );
+      _log.severe('finalize failed for $sessionId', e, st);
     }
 
     if (outcome != null) {
@@ -705,7 +704,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
         documentsDir: dir,
       );
     } catch (e, st) {
-      debugPrint('[stopNative] recoverFromDisk failed: $e\n$st');
+      _log.severe('[stopNative] recoverFromDisk failed', e, st);
       return null;
     }
   }
@@ -733,7 +732,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
     try {
       url = await recorder.stop();
     } catch (e, st) {
-      debugPrint('[stopWeb] recorder.stop failed: $e\n$st');
+      _log.severe('[stopWeb] recorder.stop failed', e, st);
       url = null;
     }
     await _disposeWebRecorder();
@@ -769,7 +768,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
         format: format,
       );
     } catch (e, st) {
-      debugPrint('[stopWeb] download failed: $e\n$st');
+      _log.severe('[stopWeb] download failed', e, st);
       state = state.copyWith(
         finalizationStage: FinalizationStage.idle,
         finalizationErrorKind: FinalizationErrorKind.downloadFailed,

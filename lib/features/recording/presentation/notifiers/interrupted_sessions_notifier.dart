@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:logging/logging.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../../../core/platform/file_ops.dart' as file_ops;
@@ -40,6 +41,8 @@ class PendingRecovery {
 final pendingRecoveryProvider = StateProvider<PendingRecovery?>((_) => null);
 
 class InterruptedSessionsNotifier extends Notifier<void> {
+  static final _log = Logger('InterruptedSessionsNotifier');
+
   @override
   void build() {}
 
@@ -90,9 +93,7 @@ class InterruptedSessionsNotifier extends Notifier<void> {
             deleteSources: false,
           );
     } catch (e, st) {
-      debugPrint(
-        'InterruptedSessionsNotifier: finalize failed for ${session.id}: $e\n$st',
-      );
+      _log.severe('finalize failed for ${session.id}', e, st);
     }
 
     if (outcome == null) {

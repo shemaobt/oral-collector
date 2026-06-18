@@ -2,11 +2,14 @@ import 'dart:js_interop';
 
 import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:logging/logging.dart';
 import 'package:web/web.dart' as web;
 
 import '../../../../core/platform/file_source.dart';
 
 import 'audio_probe.dart';
+
+final _log = Logger('AudioProbe');
 
 const int _maxPlayerProbeBytes = 5 * 1024 * 1024;
 
@@ -43,9 +46,7 @@ Future<AudioProbeResult> probeWithPlayer({
       diagnostic: 'web_player ok',
     );
   } catch (e, st) {
-    debugPrint(
-      'AudioProbe web player failed for .$extension (${bytes.length}B): $e\n$st',
-    );
+    _log.warning('web player failed for .$extension (${bytes.length}B)', e, st);
     return AudioProbeResult(diagnostic: 'web_player: $e');
   } finally {
     revokePlayableBlobUrl(url);
@@ -79,8 +80,10 @@ Future<AudioProbeResult> probeWithPlayerFromSource({
           : 'web_player ok',
     );
   } catch (e, st) {
-    debugPrint(
-      'AudioProbe web player failed for .$extension (${source.length}B): $e\n$st',
+    _log.warning(
+      'web player failed for .$extension (${source.length}B)',
+      e,
+      st,
     );
     return AudioProbeResult(diagnostic: 'web_player: $e');
   } finally {

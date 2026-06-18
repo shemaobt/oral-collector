@@ -29,8 +29,9 @@ Path: @/lib/core/network
 ### How it fits into the larger codebase
 
 - `AuthenticatedClient` (in [./authenticated_client.dart](authenticated_client.dart))
-  is provided via `authenticatedClientProvider` and consumed by feature
-  repositories under `lib/features/*/data/repositories/`. It injects the bearer
+  is provided via `authenticatedClientProvider` and consumed by **every** feature
+  repository under `lib/features/*/data/repositories/` — with one deliberate,
+  permanent exception, the auth repository (below). It injects the bearer
   token, JSON-encodes bodies, and retries once after a 401 **only when** the
   `TokenRefresher` callback (wired to `handleUnauthorized` in
   [../auth/auth_notifier.dart](../auth/auth_notifier.dart)) reports a successful
@@ -41,6 +42,23 @@ Path: @/lib/core/network
   the refresh itself (session truly expired) skips the retry; a transient
   refresh failure (network/timeout/5xx/parse) propagates and also skips the
   retry — see "Things to Know".
+- **The auth repository is the single deliberate exception that does NOT use
+  `AuthenticatedClient`.** `authRepositoryProvider`
+  ([../auth/providers.dart](../auth/providers.dart)) injects a **raw**
+  `http.Client` — the shared `httpClientProvider`
+  ([../providers/http_client_provider.dart](../providers/http_client_provider.dart)),
+  so it still rides the app's connection-timeout / web-vs-IO client, not a
+  per-repository `http.Client()` — into `AuthRepositoryImpl`
+  ([../../features/auth/data/repositories/auth_repository_impl.dart](../../features/auth/data/repositories/auth_repository_impl.dart)).
+  Three reasons make this permanent: (1) it is the **token bootstrap** —
+  login/signup precede the existence of any bearer token, so there is nothing for
+  `AuthenticatedClient` to inject; (2) it **owns the refresh endpoint**, which must
+  not itself trigger a 401-driven refresh or it would recurse; and (3) depending
+  on `authenticatedClientProvider` would close a **Riverpod provider cycle** —
+  `authenticatedClient` reads `authNotifier` (its `TokenRefresher` is
+  `handleUnauthorized`), `authNotifier` reads `authRepository`, so routing
+  `authRepository` back through `authenticatedClient` is a dependency loop. See
+  [../auth/docs.md](../auth/docs.md).
 - The boundary produces the leaves defined in
   [../errors/app_exception.dart](../errors/app_exception.dart); the UI consumes
   them in
@@ -159,9 +177,11 @@ Path: @/lib/core/network
   returns/throws **before** calling the decoder, then uses the decoder only for
   the 2xx safe decode. The known conservative callers are `auth_repository_impl`
   (login/signup keep `Exception('… failed')` so a 401 is not an
-  `UnauthorizedException`), `user_lookup_provider` (404 → `null`), and the stats
-  reads (`StatsRepositoryImpl`, `ProjectRepositoryImpl.getProjectStats`) which
-  return `{}` on non-200.
+  `UnauthorizedException` — and note this repository is also the one that runs on
+  a **raw** `http.Client`, not `AuthenticatedClient`; see "How it fits"),
+  `user_lookup_provider` (404 → `null`), and the stats reads
+  (`StatsRepositoryImpl`, `ProjectRepositoryImpl.getProjectStats`) which return
+  `{}` on non-200.
 - **The 401 retry in `AuthenticatedClient` happens before `guardResponse`,
   and the `TokenRefresher` contract decides between three outcomes.**
   `_withRefresh` calls the refresher on every 401 and, on success, re-issues the

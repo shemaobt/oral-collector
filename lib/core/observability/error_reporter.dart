@@ -84,11 +84,18 @@ final errorReporterProvider = Provider<ErrorReporter>(
 );
 
 /// Routes Flutter's two global error hooks through [reporter], preserving the
-/// existing presentError/debugPrint behavior. Set once, from main().
+/// existing presentError behavior. The console echo uses `dart:developer log()`
+/// (self-silencing in release) rather than `debugPrint` (which prints in
+/// release). Set once, from main().
 void installGlobalErrorHandlers(ErrorReporter reporter) {
   FlutterError.onError = (details) {
     FlutterError.presentError(details);
-    debugPrint('FlutterError: ${details.exception}');
+    developer.log(
+      'FlutterError',
+      name: 'FlutterError',
+      error: details.exception,
+      stackTrace: details.stack,
+    );
     reporter.reportError(
       details.exception,
       details.stack,
@@ -97,7 +104,12 @@ void installGlobalErrorHandlers(ErrorReporter reporter) {
   };
 
   PlatformDispatcher.instance.onError = (error, stack) {
-    debugPrint('Uncaught error: $error\n$stack');
+    developer.log(
+      'Uncaught error',
+      name: 'PlatformDispatcher',
+      error: error,
+      stackTrace: stack,
+    );
     reporter.reportError(error, stack, level: ErrorLevel.fatal);
     return true;
   };

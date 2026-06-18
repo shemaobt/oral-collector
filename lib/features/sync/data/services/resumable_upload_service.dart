@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:logging/logging.dart';
 
 import '../../../../core/config/url_policy.dart';
 import '../../../../core/database/app_database.dart';
@@ -39,6 +40,8 @@ class ResumableUploadResult {
 }
 
 class ResumableUploadService {
+  static final _log = Logger('ResumableUploadService');
+
   final AuthenticatedClient _client;
   final LocalRecordingRepository _recordingRepo;
   final UploadDownloader _downloader;
@@ -577,9 +580,8 @@ class ResumableUploadService {
     // surfaces CRC32C mismatches as a 4xx on confirm-upload.
     final crcBuilder = startOffset == 0 ? Crc32c() : null;
     if (crcBuilder == null) {
-      debugPrint(
-        'ResumableUploadService: resuming from $startOffset, '
-        'skipping client-side CRC32C validation',
+      _log.info(
+        'resuming from $startOffset, skipping client-side CRC32C validation',
       );
     }
 
@@ -683,7 +685,7 @@ class ResumableUploadService {
       final data = decodeObject(response);
       final sessionUri = readString(data, 'session_uri');
       if (!isHttpsUrl(sessionUri)) {
-        debugPrint('ResumableUploadService: rejected non-https session_uri');
+        _log.warning('rejected non-https session_uri');
         return null;
       }
       return sessionUri;

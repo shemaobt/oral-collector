@@ -1,7 +1,7 @@
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:logging/logging.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../../../core/database/app_database.dart';
@@ -46,6 +46,8 @@ class RecoveryCoordinator {
     _ref.onDispose(() => _disposed = true);
   }
 
+  static final _log = Logger('RecoveryCoordinator');
+
   final Ref _ref;
   final WavHeaderRepair _wavRepair;
   final DirectoryResolver _directoryResolver;
@@ -56,9 +58,7 @@ class RecoveryCoordinator {
     try {
       final active = await repo.findActiveSessions();
       if (active.isNotEmpty) {
-        debugPrint(
-          'RecoveryCoordinator: scanOnStartup found ${active.length} active session(s)',
-        );
+        _log.info('scanOnStartup found ${active.length} active session(s)');
       }
       for (final session in active) {
         await _repairInFlightSegments(session, repo);
@@ -114,9 +114,8 @@ class RecoveryCoordinator {
       });
       if (!hasOrphans) continue;
 
-      debugPrint(
-        'RecoveryCoordinator: sweep promoting orphan session ${session.id} '
-        'from completed → crashed',
+      _log.info(
+        'sweep promoting orphan session ${session.id} from completed → crashed',
       );
       await _repairInFlightSegments(session, sessionRepo);
       await sessionRepo.markCrashed(session.id);

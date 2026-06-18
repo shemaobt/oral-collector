@@ -3,7 +3,8 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:drift/drift.dart' show Value;
-import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:logging/logging.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
@@ -47,6 +48,8 @@ Duration backoffWithJitter(int attempt, Random random) {
 enum _UploadOutcome { uploaded, skipped, failed }
 
 class SyncEngineImpl implements SyncEngine {
+  static final _log = Logger('SyncEngine');
+
   final LocalRecordingRepository _recordingRepo;
   final LocalStorytellerRepository _storytellerRepo;
   final ConnectivityService _connectivity;
@@ -308,9 +311,9 @@ class SyncEngineImpl implements SyncEngine {
             recording.storytellerId!,
           );
           if (resolvedStorytellerId == null) {
-            debugPrint(
-              'SyncEngine: skipping recording $id, '
-              'referenced storyteller ${recording.storytellerId} is not yet synced',
+            _log.info(
+              'skipping recording $id, referenced storyteller '
+              '${recording.storytellerId} is not yet synced',
             );
             // Undo the optimistic markAsUploading so the row stays drain-eligible
             // once the storyteller syncs. Without this the uploading-skip in
@@ -383,21 +386,25 @@ class SyncEngineImpl implements SyncEngine {
     } on AppException catch (e, st) {
       // Retry decision by the typed flag (ENG-103), not by exception subtype.
       if (e.retryable) {
-        debugPrint('SyncEngine: retryable upload failure for $id: $e');
+        _log.warning('retryable upload failure for $id', e);
         await _recordingRepo.markAsFailed(id);
       } else {
-        debugPrint('SyncEngine: permanent upload failure for $id: $e\n$st');
+        // Warning, not severe: non-retryable here is dominated by expected
+        // conditions (expired-session 401/403, server validation/conflict), so
+        // keep it off the reporter. Genuinely malformed payloads surface via the
+        // FormatException arm below.
+        _log.warning('permanent upload failure for $id', e, st);
         await _markPermanentlyFailed(id);
       }
     } on FormatException catch (e, st) {
       // Server returned a non-JSON body. Retrying won't help; mark terminal.
-      debugPrint('SyncEngine: response parse error for $id: $e\n$st');
+      _log.severe('response parse error for $id', e, st);
       await _markPermanentlyFailed(id);
     } on Exception catch (e, st) {
       // Transport faults (socket/timeout/filesystem) and other transient
       // Exception subtypes → retry. Programmer errors (Error subtypes like
       // TypeError, StateError) are NOT caught here — they propagate as bugs.
-      debugPrint('SyncEngine: unexpected error uploading $id: $e\n$st');
+      _log.warning('unexpected error uploading $id', e, st);
       await _recordingRepo.markAsFailed(id);
     }
     return _UploadOutcome.failed;
@@ -430,8 +437,8 @@ class SyncEngineImpl implements SyncEngine {
             .timeout(_apiTimeout);
 
         if (response.statusCode != 201 && response.statusCode != 200) {
-          debugPrint(
-            'SyncEngine: storyteller ${row.id} failed '
+          _log.warning(
+            'storyteller ${row.id} failed '
             'with ${response.statusCode}: ${response.body}',
           );
           await _storytellerRepo.markFailed(row.id);
@@ -446,15 +453,13 @@ class SyncEngineImpl implements SyncEngine {
           toId: serverId,
         );
       } on TimeoutException catch (e) {
-        debugPrint('SyncEngine: timeout syncing storyteller ${row.id}: $e');
+        _log.warning('timeout syncing storyteller ${row.id}', e);
         await _storytellerRepo.markFailed(row.id);
       } on SocketException catch (e) {
-        debugPrint(
-          'SyncEngine: socket error syncing storyteller ${row.id}: $e',
-        );
+        _log.warning('socket error syncing storyteller ${row.id}', e);
         await _storytellerRepo.markFailed(row.id);
       } on Exception catch (e) {
-        debugPrint('SyncEngine: error syncing storyteller ${row.id}: $e');
+        _log.warning('error syncing storyteller ${row.id}', e);
         await _storytellerRepo.markFailed(row.id);
       }
     }

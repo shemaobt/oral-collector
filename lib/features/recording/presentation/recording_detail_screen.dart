@@ -3,12 +3,13 @@ import 'dart:io';
 
 import 'package:drift/drift.dart' show Value;
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:just_audio/just_audio.dart';
+import 'package:logging/logging.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -66,6 +67,8 @@ class RecordingDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
+  static final _log = Logger('RecordingDetailScreen');
+
   LocalRecording? _recording;
   bool _isLoading = true;
   Storyteller? _resolvedStoryteller;
@@ -772,7 +775,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
                 fileSizeBytes: newSize,
               );
         } on Exception catch (e) {
-          debugPrint('Replace: failed to sync new metadata to server: $e');
+          _log.warning('replace: failed to sync new metadata to server', e);
         }
         await ref.read(syncNotifierProvider.notifier).resetAndRetry(fresh.id);
       }

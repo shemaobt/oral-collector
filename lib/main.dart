@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer' as developer;
 
 import 'package:background_downloader/background_downloader.dart';
 import 'package:flutter/foundation.dart';
@@ -12,6 +13,7 @@ import 'core/auth/auth_notifier.dart';
 import 'core/database/database_provider.dart';
 import 'core/l10n/locale_provider.dart';
 import 'core/l10n/supported_locales.dart';
+import 'core/observability/app_logger.dart';
 import 'core/observability/error_reporter.dart';
 import 'core/platform/file_ops.dart' as platform;
 import 'core/router/app_router.dart';
@@ -45,6 +47,7 @@ void main() {
       usePathUrlStrategy();
 
       installGlobalErrorHandlers(reporter);
+      installLogging(reporter: reporter);
 
       if (!kIsWeb && platform.isAndroidPlatform) {
         try {
@@ -70,7 +73,12 @@ void main() {
       );
     },
     (error, stack) {
-      debugPrint('Zone error: $error\n$stack');
+      developer.log(
+        'Zone error',
+        name: 'main',
+        error: error,
+        stackTrace: stack,
+      );
       reporter.reportError(error, stack, level: ErrorLevel.fatal);
     },
   );
@@ -123,7 +131,7 @@ class _OralCollectorAppState extends ConsumerState<OralCollectorApp> {
         try {
           await FileDownloader().start();
         } on Exception catch (e) {
-          debugPrint('FileDownloader.start failed: $e');
+          developer.log('FileDownloader.start failed', name: 'main', error: e);
         }
       }
 
