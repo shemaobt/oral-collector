@@ -69,5 +69,6 @@ typedef RecordingSplitPersisterFactory =
 /// Injectable so the trim editor's save path can hand off to a fake persister
 /// in tests; the default forwards to the real constructor.
 final recordingSplitPersisterProvider =
-    Provider<RecordingSplitPersisterFactory>((_) => RecordingSplitPersister.new);
-
+    Provider<RecordingSplitPersisterFactory>(
+      (_) => RecordingSplitPersister.new,
+    );

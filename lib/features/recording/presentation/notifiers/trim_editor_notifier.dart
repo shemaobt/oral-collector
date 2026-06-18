@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:logging/logging.dart';
 
 import '../../../../core/database/app_database.dart';
 import '../../../../shared/utils/recording_title.dart';
@@ -50,6 +51,7 @@ final trimEditorProvider = NotifierProvider.autoDispose
 
 class TrimEditorNotifier
     extends AutoDisposeFamilyNotifier<TrimEditorState, String> {
+  static final _log = Logger('TrimEditorNotifier');
   bool _disposed = false;
 
   @override
@@ -85,9 +87,9 @@ class TrimEditorNotifier
         final server = await _apiRepo.getRecording(arg);
         if (_disposed) return;
         recording = serverRecordingToLocal(server);
-      } catch (e) {
+      } catch (e, st) {
         if (_disposed) return;
-        if (_handleServerLoadError(e)) return;
+        if (_handleServerLoadError(e, st)) return;
       }
     } else {
       recording = await _localRepo.getRecordingById(arg);
@@ -99,9 +101,9 @@ class TrimEditorNotifier
           final server = await _apiRepo.getRecording(arg);
           if (_disposed) return;
           recording = serverRecordingToLocal(server);
-        } catch (e) {
+        } catch (e, st) {
           if (_disposed) return;
-          if (_handleServerLoadError(e)) return;
+          if (_handleServerLoadError(e, st)) return;
         }
       }
     }
@@ -116,7 +118,8 @@ class TrimEditorNotifier
   /// A caught load error is "not found" only for a genuine 404; everything else
   /// surfaces as a real error (ENG-140 F21). Returns true when the caller should
   /// stop (error stored); false for a 404 so it falls through to not-found.
-  bool _handleServerLoadError(Object e) {
+  bool _handleServerLoadError(Object e, StackTrace st) {
+    _log.warning('server lookup failed for $arg', e, st);
     if (isRecordingNotFound(e)) return false;
     state = state.copyWith(isLoading: false, loadError: e);
     return true;
@@ -132,13 +135,22 @@ class TrimEditorNotifier
     state = state.copyWith(totalDuration: totalDuration, isLoading: false);
   }
 
+  /// Player/waveform setup threw after the row resolved; drop back to the
+  /// not-found state, matching the screen's original outer-catch behaviour
+  /// (the recording was only committed on a fully successful load).
+  void loadFailed() {
+    state = state.copyWith(clearRecording: true, isLoading: false);
+  }
+
   void setSplitPoints(List<double> points) {
     final newSegCount = points.length + 1;
-    final pruned = state.excludedSegments
-        .where((i) => i < newSegCount)
-        .toSet();
+    final pruned = state.excludedSegments.where((i) => i < newSegCount).toSet();
     final previousBoundaries = state.boundaries;
-    final newBoundaries = [0.0, ...[...points]..sort(), 1.0];
+    final newBoundaries = [
+      0.0,
+      ...[...points]..sort(),
+      1.0,
+    ];
     state = state.copyWith(
       splitPoints: points,
       excludedSegments: pruned,

@@ -261,6 +261,63 @@ void main() {
       notifierOf(c).setGain(4.5);
       expect(stateOf(c).gainDb, 4.5);
     });
+
+    test('setSegmentTaxonomy applies to all segments or just one', () async {
+      await seed();
+      final c = makeContainer();
+      await notifierOf(c).load(isWeb: false);
+      notifierOf(c).setSplitPoints([0.5]); // 2 segments
+      notifierOf(c).setSegmentTaxonomy(
+        index: 0,
+        applyToAll: true,
+        genreId: 'gAll',
+        subcategoryId: null,
+        registerId: null,
+      );
+      expect(stateOf(c).effectiveGenre(0), 'gAll');
+      expect(stateOf(c).effectiveGenre(1), 'gAll');
+
+      notifierOf(c).setSegmentTaxonomy(
+        index: 1,
+        applyToAll: false,
+        genreId: 'gOne',
+        subcategoryId: null,
+        registerId: null,
+      );
+      expect(stateOf(c).effectiveGenre(0), 'gAll');
+      expect(stateOf(c).effectiveGenre(1), 'gOne');
+    });
+
+    test('copyFromPrevious copies the previous segment override', () async {
+      await seed();
+      final c = makeContainer();
+      await notifierOf(c).load(isWeb: false);
+      notifierOf(c).setSplitPoints([0.5]);
+      notifierOf(c).setSegmentTaxonomy(
+        index: 0,
+        applyToAll: false,
+        genreId: 'gPrev',
+        subcategoryId: null,
+        registerId: null,
+      );
+      notifierOf(c).copyFromPrevious(1);
+      expect(stateOf(c).effectiveGenre(1), 'gPrev');
+    });
+
+    test('clearAllSplits and restoreAllExcluded reset editing state', () async {
+      await seed();
+      final c = makeContainer();
+      await notifierOf(c).load(isWeb: false);
+      notifierOf(c).setSplitPoints([0.3, 0.6]);
+      notifierOf(c).toggleExclude(0);
+      expect(stateOf(c).excludedSegments, isNotEmpty);
+
+      notifierOf(c).restoreAllExcluded();
+      expect(stateOf(c).excludedSegments, isEmpty);
+
+      notifierOf(c).clearAllSplits();
+      expect(stateOf(c).splitPoints, isEmpty);
+    });
   });
 
   group('saveSplit', () {
@@ -270,47 +327,49 @@ void main() {
       notifierOf(c).setSplitPoints([0.5]);
     }
 
-    test('native: exports kept segments and hands them to the persister', () async {
-      final recording = await seed();
-      final exporter = _ExporterSpy.returning([
-        SplitSegmentSpec(
-          id: 'c0',
-          title: 'Story (1/2)',
-          localFilePath: '/out/0.m4a',
-          durationSeconds: 5,
-          fileSizeBytes: 10,
-        ),
-        SplitSegmentSpec(
-          id: 'c1',
-          title: 'Story (2/2)',
-          localFilePath: '/out/1.m4a',
-          durationSeconds: 5,
-          fileSizeBytes: 10,
-        ),
-      ]);
-      _FakePersister? created;
-      final c = makeContainer(
-        exporter: exporter,
-        capturePersister: (p) => created = p,
-      );
-      await prepareEditableState(c);
+    test(
+      'native: exports kept segments and hands them to the persister',
+      () async {
+        final recording = await seed();
+        final exporter = _ExporterSpy.returning(const [
+          SplitSegmentSpec(
+            id: 'c0',
+            title: 'Story (1/2)',
+            localFilePath: '/out/0.m4a',
+            durationSeconds: 5,
+            fileSizeBytes: 10,
+          ),
+          SplitSegmentSpec(
+            id: 'c1',
+            title: 'Story (2/2)',
+            localFilePath: '/out/1.m4a',
+            durationSeconds: 5,
+            fileSizeBytes: 10,
+          ),
+        ]);
+        _FakePersister? created;
+        final c = makeContainer(
+          exporter: exporter,
+          capturePersister: (p) => created = p,
+        );
+        await prepareEditableState(c);
 
-      final outcome = await notifierOf(c).saveSplit(
-        isWeb: false,
-        localeTag: 'en',
-      );
+        final outcome = await notifierOf(
+          c,
+        ).saveSplit(isWeb: false, localeTag: 'en');
 
-      expect(exporter.sourceFilePath, '/audio/in.m4a');
-      expect(exporter.segments, hasLength(2));
-      expect(exporter.boostOnly, isFalse);
-      expect(exporter.parentGenreId, 'g0');
-      expect(created?.persistedParent?.id, recording.id);
-      expect(created?.persistedSegments?.map((s) => s.id), ['c0', 'c1']);
-      expect(outcome, isA<TrimSaveSucceeded>());
-      expect((outcome as TrimSaveSucceeded).mode, TrimSaveMode.split);
-      expect(outcome.keptCount, 2);
-      expect(outcome.excludedCount, 0);
-    });
+        expect(exporter.sourceFilePath, '/audio/in.m4a');
+        expect(exporter.segments, hasLength(2));
+        expect(exporter.boostOnly, isFalse);
+        expect(exporter.parentGenreId, 'g0');
+        expect(created?.persistedParent?.id, recording.id);
+        expect(created?.persistedSegments?.map((s) => s.id), ['c0', 'c1']);
+        expect(outcome, isA<TrimSaveSucceeded>());
+        expect((outcome as TrimSaveSucceeded).mode, TrimSaveMode.split);
+        expect(outcome.keptCount, 2);
+        expect(outcome.excludedCount, 0);
+      },
+    );
 
     test('web: posts split-segment requests to the api', () async {
       await seed(serverId: 'srv-9');
@@ -318,10 +377,9 @@ void main() {
       final c = makeContainer(api: api);
       await prepareEditableState(c);
 
-      final outcome = await notifierOf(c).saveSplit(
-        isWeb: true,
-        localeTag: 'en',
-      );
+      final outcome = await notifierOf(
+        c,
+      ).saveSplit(isWeb: true, localeTag: 'en');
 
       expect(api.splitServerId, 'srv-9');
       expect(api.splitSegments, hasLength(2));
@@ -331,16 +389,44 @@ void main() {
       expect(outcome, isA<TrimSaveSucceeded>());
     });
 
+    test(
+      'native boost-only: exports the whole clip as a single segment',
+      () async {
+        await seed();
+        final exporter = _ExporterSpy.returning(const [
+          SplitSegmentSpec(
+            id: 'c0',
+            title: 'Story',
+            localFilePath: '/out/0.m4a',
+            durationSeconds: 10,
+            fileSizeBytes: 10,
+          ),
+        ]);
+        final c = makeContainer(exporter: exporter, capturePersister: (p) => p);
+        await notifierOf(c).load(isWeb: false);
+        notifierOf(c).completeLoad(totalDuration: const Duration(seconds: 10));
+        notifierOf(c).setGain(3.0); // boost only, no splits
+
+        final outcome = await notifierOf(
+          c,
+        ).saveSplit(isWeb: false, localeTag: 'en');
+
+        expect(exporter.boostOnly, isTrue);
+        expect(exporter.segments, hasLength(1));
+        expect(exporter.gainDb, 3.0);
+        expect((outcome as TrimSaveSucceeded).mode, TrimSaveMode.boostOnly);
+      },
+    );
+
     test('aborts when there is nothing to save', () async {
       await seed();
       final c = makeContainer();
       await notifierOf(c).load(isWeb: false);
       notifierOf(c).completeLoad(totalDuration: const Duration(seconds: 10));
       // No edits -> canSave is false.
-      final outcome = await notifierOf(c).saveSplit(
-        isWeb: false,
-        localeTag: 'en',
-      );
+      final outcome = await notifierOf(
+        c,
+      ).saveSplit(isWeb: false, localeTag: 'en');
       expect(outcome, isA<TrimSaveAborted>());
     });
 
@@ -349,10 +435,9 @@ void main() {
       final c = makeContainer(exporter: _ExporterSpy.throwing());
       await prepareEditableState(c);
 
-      final outcome = await notifierOf(c).saveSplit(
-        isWeb: false,
-        localeTag: 'en',
-      );
+      final outcome = await notifierOf(
+        c,
+      ).saveSplit(isWeb: false, localeTag: 'en');
 
       expect(outcome, isA<TrimSaveFailed>());
       expect(stateOf(c).isSaving, isFalse);

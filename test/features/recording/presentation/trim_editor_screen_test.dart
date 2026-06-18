@@ -78,7 +78,9 @@ void main() {
       () => player.setUrl(any()),
     ).thenAnswer((_) async => const Duration(seconds: 30));
     when(() => player.duration).thenReturn(const Duration(seconds: 30));
-    when(() => player.positionStream).thenAnswer((_) => Stream.value(Duration.zero));
+    when(
+      () => player.positionStream,
+    ).thenAnswer((_) => Stream.value(Duration.zero));
     when(
       () => player.playerStateStream,
     ).thenAnswer((_) => const Stream<PlayerState>.empty());
@@ -189,7 +191,9 @@ void main() {
     await settleLoad(tester);
 
     expect(
-      find.text('Local audio file not available. Download the recording first.'),
+      find.text(
+        'Local audio file not available. Download the recording first.',
+      ),
       findsOneWidget,
     );
   });

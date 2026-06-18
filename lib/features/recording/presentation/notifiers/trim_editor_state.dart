@@ -72,7 +72,8 @@ class TrimEditorState {
 
   String sigAt(double midpointFraction) => _sig(midpointFraction);
 
-  String sigForSegment(int i) => _sig((boundaries[i] + boundaries[i + 1]) / 2.0);
+  String sigForSegment(int i) =>
+      _sig((boundaries[i] + boundaries[i + 1]) / 2.0);
 
   String effectiveGenre(int i) {
     final sig = sigForSegment(i);
@@ -105,6 +106,7 @@ class TrimEditorState {
 
   TrimEditorState copyWith({
     LocalRecording? recording,
+    bool clearRecording = false,
     bool? isLoading,
     bool? isSaving,
     String? errorMessage,
@@ -120,7 +122,7 @@ class TrimEditorState {
     Map<String, String?>? segRegisterBySig,
   }) {
     return TrimEditorState(
-      recording: recording ?? this.recording,
+      recording: clearRecording ? null : (recording ?? this.recording),
       isLoading: isLoading ?? this.isLoading,
       isSaving: isSaving ?? this.isSaving,
       errorMessage: clearErrorMessage

@@ -46,7 +46,9 @@ void main() {
       );
       expect(specs, hasLength(1));
       final s = specs.single;
-      expect(s.id, '${ts}_0_${'genreX'.hashCode}');
+      // id is `<timestamp>_<index>_<parentGenreId hash>`; pin the structure
+      // without re-deriving the hash (which would just mirror the impl).
+      expect(s.id, startsWith('${ts}_0_'));
       expect(s.title, 'My Story');
       expect(s.localFilePath, '/docs/split_${ts}_0.m4a');
       expect(s.durationSeconds, 12.0);
