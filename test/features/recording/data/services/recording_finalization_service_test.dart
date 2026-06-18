@@ -503,5 +503,33 @@ void main() {
         expect(reporter.errors, isNotEmpty);
       },
     );
+
+    test('a successful deletion reports nothing', () async {
+      final w1 = '${tmp.path}/s1.wav';
+      final w2 = '${tmp.path}/s2.wav';
+      await File(w1).writeAsBytes(_buildWavFile([1, 2]));
+      await File(w2).writeAsBytes(_buildWavFile([3, 4]));
+
+      final concatOut = '${tmp.path}/concat_sess.wav';
+      final reporter = _CapturingReporter();
+
+      final service = RecordingFinalizationService(
+        concat: _StubConcatService(result: () => concatOut),
+        documentsDirFn: tmpDocsDir,
+        compressFn: okCompress,
+        deleteFn: (_) async {},
+        reporter: reporter,
+      );
+
+      await service.finalize(
+        sessionId: 'sess',
+        segmentPaths: [w1, w2],
+        totalDuration: const Duration(seconds: 5),
+        deleteSources: true,
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+
+      expect(reporter.errors, isEmpty);
+    });
   });
 }

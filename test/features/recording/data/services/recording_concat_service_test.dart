@@ -22,12 +22,15 @@ void main() {
 
       final listPaths = <String>[];
       Future<bool> fakeFfmpeg(String command) async {
-        final quoted = RegExp(
-          r'"([^"]+)"',
-        ).allMatches(command).map((m) => m.group(1)!).toList();
-        listPaths.add(quoted[0]);
+        // Capture by flag, not by position, so the test doesn't break if the
+        // ffmpeg argument order ever changes.
+        final listPath = RegExp(r'-i "([^"]+)"').firstMatch(command)!.group(1)!;
+        final outputPath = RegExp(
+          r'-c copy "([^"]+)"',
+        ).firstMatch(command)!.group(1)!;
+        listPaths.add(listPath);
         // Produce a non-empty output so the service's existence/size checks pass.
-        File(quoted[1]).writeAsBytesSync([0, 0, 0, 0]);
+        File(outputPath).writeAsBytesSync([0, 0, 0, 0]);
         return true;
       }
 
