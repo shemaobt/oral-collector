@@ -270,23 +270,45 @@ Path: @/lib/features/recording/data
   `recordingFinalizationServiceProvider`
   ([../presentation/notifiers/recording_session_notifier.dart](../presentation/notifiers/recording_session_notifier.dart))
   wires the real `errorReporterProvider`.
-- **`RecordingFinalizationService.finalize` can keep its sources alive.**
-  The `deleteSources` flag (default `true`) controls whether the segment
-  files and the intermediate `sourcePath` are deleted after a successful
-  assemble. The normal stop path leaves it `true`; crash recovery
-  (`InterruptedSessionsNotifier.save`) passes `false` so the segments
-  survive until the user confirms the save on the confirmation screen —
-  only then are they cleaned up by `confirmRecovery`. This is the
-  data-layer half of the ENG-80 no-data-loss invariant; the flow is
-  documented in
+- **`RecordingFinalizationService.finalize` keeps *originals* alive but
+  reclaims its *derived* WAV temp (ENG-176).** The `deleteSources` flag
+  (default `true`) governs only the **original** recordings — the segment
+  files, or the single source segment on the one-segment path. A **derived**
+  concat temp (the file the service itself produces when it combines
+  multiple segments) is never an original; on the WAV path the compress step
+  supersedes it with the final m4a, so it is reclaimed after a successful
+  compress regardless of `deleteSources` (a multi-segment m4a concat needs no
+  compress and is returned as the product itself). The service tracks this
+  with an explicit `derived` flag set true **only** on the branch that
+  assigns `sourcePath` to a concat output (both the ffmpeg and the pure-Dart
+  WAV fallback produce one); the deletion guard is `deleteSources || derived`.
+  The normal stop path leaves `deleteSources` `true`, so everything is
+  cleaned up; crash recovery (`InterruptedSessionsNotifier.save`) passes
+  `false` so the **original** segments — including the lone segment on the
+  single-segment path — survive until the user confirms the save on the
+  confirmation screen, only then cleaned up by `confirmRecovery`. ENG-176
+  was a bug where the old guard keyed off `degraded` (see the WAV-deletion
+  bullet) as a proxy for "derived": on the single-segment path it deleted
+  the original source even with `deleteSources: false`, breaking the
+  re-derive contract, and on the multi-segment pure-Dart fallback it leaked
+  the derived temp. This is the data-layer half of the ENG-80 no-data-loss
+  invariant; the flow is documented in
   [../presentation/notifiers/docs.md](../presentation/notifiers/docs.md).
 - **WAV deletion only happens after `compressToM4a` proves a real output
-  (ENG-140 F18).** When `sourcePath` is a WAV, `finalize` deletes it only
-  on a `true` return from `compressToM4a`
+  (ENG-140 F18), and only for a source the caller authorized (ENG-176).**
+  When `sourcePath` is a WAV, `finalize` deletes it only on a `true` return
+  from `compressToM4a`
   ([/lib/core/platform/ffmpeg_ops.dart](../../../core/platform/ffmpeg_ops.dart)).
-  That contract is now load-bearing: `compressToM4a` verifies the m4a exists
-  and is non-empty before returning `true`, so an ffmpeg exit-0-but-empty edge
-  can no longer make `finalize` delete the only copy of the audio. See
+  That contract is load-bearing: `compressToM4a` verifies the m4a exists and
+  is non-empty before returning `true`, so an ffmpeg exit-0-but-empty edge
+  can no longer make `finalize` delete the only copy of the audio. The
+  *which-file-to-delete* decision is separate and gated on
+  `deleteSources || derived` (ENG-176): `derived` is "this WAV is a concat
+  temp the service created, not an original recording", so a derived temp is
+  reclaimed even while keeping sources, but an original WAV survives a
+  successful compress whenever `deleteSources` is `false`. This supersedes
+  the earlier `!degraded`-as-derived reasoning, which mis-classified the
+  single-segment source as derived. See
   [/lib/core/platform/docs.md](../../../core/platform/docs.md).
 - **`RecoveryCoordinator.refresh()` never touches a torn-down ref (ENG-140
   F22).** `refresh()` reads `findCrashedSessions()` and other providers across

@@ -276,6 +276,72 @@ void main() {
         expect(File(w2).existsSync(), isTrue);
       },
     );
+
+    test('deleteSources=false keeps the single WAV segment after a successful '
+        'compress (single-segment recovery can still re-derive)', () async {
+      final wav = '${tmp.path}/seg.wav';
+      await File(wav).writeAsBytes(_buildWavFile([1, 2, 3]));
+
+      final service = RecordingFinalizationService(
+        concat: _StubConcatService(),
+        documentsDirFn: tmpDocsDir,
+        compressFn: okCompress,
+      );
+
+      final outcome = await service.finalize(
+        sessionId: 'sess',
+        segmentPaths: [wav],
+        totalDuration: const Duration(seconds: 5),
+        deleteSources: false,
+      );
+
+      // Give any (incorrect) unawaited deletion a chance to run before we
+      // assert the source survived.
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+
+      expect(outcome, isNotNull);
+      expect(File(wav).existsSync(), isTrue);
+    });
+
+    test('deleteSources=false reclaims the derived pure-Dart concat temp while '
+        'keeping the original segments', () async {
+      final w1 = '${tmp.path}/s1.wav';
+      final w2 = '${tmp.path}/s2.wav';
+      await File(w1).writeAsBytes(_buildWavFile([1, 2]));
+      await File(w2).writeAsBytes(_buildWavFile([3, 4]));
+
+      // ffmpeg concat "fails" (returns null) so the pure-Dart fallback runs;
+      // its output is a derived temp the service owns, not an original.
+      final service = RecordingFinalizationService(
+        concat: _StubConcatService(result: () => null),
+        documentsDirFn: tmpDocsDir,
+        compressFn: okCompress,
+      );
+
+      final outcome = await service.finalize(
+        sessionId: 'sess',
+        segmentPaths: [w1, w2],
+        totalDuration: const Duration(seconds: 5),
+        deleteSources: false,
+      );
+
+      // Give the fire-and-forget temp reclaim a chance to run.
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+
+      expect(outcome, isNotNull);
+      expect(outcome!.degraded, isTrue);
+      // Originals survive (deleteSources:false)...
+      expect(File(w1).existsSync(), isTrue);
+      expect(File(w2).existsSync(), isTrue);
+      // ...and the derived intermediate is reclaimed: the only files left in
+      // the docs dir are the two originals and the produced recording.
+      final remaining = tmp
+          .listSync()
+          .whereType<File>()
+          .map((f) => f.path)
+          .toSet();
+      expect(remaining, {w1, w2, outcome.result.filePath});
+    });
   });
 
   group('finalize - concat fallbacks', () {
