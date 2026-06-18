@@ -945,9 +945,14 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
   }
 
   Future<void> _deleteFileSafe(String path) async {
+    // Best-effort delete stays non-throwing, but surface a genuine failure
+    // (file_ops.deleteFile no-ops on a missing file) instead of swallowing it —
+    // mirrors RecordingFinalizationService._deleteFileSafe.
     try {
       await file_ops.deleteFile(path);
-    } catch (_) {}
+    } catch (e, st) {
+      _platformReporter.reportError(e, st);
+    }
   }
 
   String _newSessionId() {
