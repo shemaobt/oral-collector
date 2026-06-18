@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../../core/database/app_database.dart';
 import '../../domain/repositories/recording_api_repository.dart';
 import '../repositories/local_recording_repository.dart';
@@ -55,3 +57,18 @@ class RecordingSplitPersister {
     return ids;
   }
 }
+
+typedef RecordingSplitPersisterFactory =
+    RecordingSplitPersister Function({
+      required LocalRecordingRepository localRepo,
+      required RecordingApiRepository apiRepo,
+      required Future<void> Function() triggerUpload,
+      Future<void> Function(LocalRecording parent)? trashParent,
+    });
+
+/// Injectable so the trim editor's save path can hand off to a fake persister
+/// in tests; the default forwards to the real constructor.
+final recordingSplitPersisterProvider =
+    Provider<RecordingSplitPersisterFactory>(
+      (_) => RecordingSplitPersister.new,
+    );

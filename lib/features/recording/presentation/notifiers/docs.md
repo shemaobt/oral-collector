@@ -7,13 +7,18 @@ Path: @/lib/features/recording/presentation/notifiers
 - Riverpod notifiers that own the long-lived state for the recording
   feature's screens: the recording session (segmented capture), the
   recordings list (paginated server + local merge), input device
-  selection, interrupted-session recovery prompts, and the detail
-  screen's audio playback.
+  selection, interrupted-session recovery prompts, the detail screen's
+  audio playback, and the trim editor's editing + split-persist
+  orchestration.
 - Notifiers in this folder hold resources that must survive widget
   rebuilds — the active `Record` instance, the `AudioPlayer` for
   playback, paginator cursors, and crash-recovery state. The detail
   screen's `LayoutBuilder` swaps subtrees on rotation, so anything that
   must persist across that swap lives here, not in widget `State`.
+- The trim editor's notifier is the other reason to be here: extracting
+  the editing state and the split/save orchestration out of the screen
+  isolates that logic so it can be unit-tested headlessly (ENG-193), and
+  keeps the split commit alive even if the screen unmounts mid-save.
 - All providers are registered at the top of their respective notifier
   files and consumed from [/lib/features/recording/presentation/](../)
   screens and widgets.
@@ -42,6 +47,18 @@ Path: @/lib/features/recording/presentation/notifiers
   resources (the `Record` for capture, the `AudioPlayer` for playback)
   live outside the widget tree so they cannot be torn down by widget
   rebuilds.
+- `TrimEditorNotifier` is **headless** — it holds no `BuildContext` and
+  does no navigation or snackbars. It depends on the recording data
+  layer through injectable seams under
+  [../../data/services/](../../data/services/) (the per-segment ffmpeg
+  exporter and the split persister factory) plus `fileExistsProvider` /
+  `waveformLoaderProvider` in [../../data/](../../data/), reads sync
+  state from
+  [/lib/features/sync/presentation/notifiers/sync_notifier.dart](../../../sync/presentation/notifiers/sync_notifier.dart)
+  to kick the upload queue, and returns a result type the screen acts on
+  (see Core Implementation). The seams exist so the device-bound IO is
+  driveable on the host in tests — they are documented under "the trim
+  editor's injectable seams" in [../../data/docs.md](../../data/docs.md).
 
 ### Core Implementation
 
@@ -71,6 +88,40 @@ Path: @/lib/features/recording/presentation/notifiers
   (`isLoading`, `errorKind`, `hasAudio`); the error kind is one of
   `fileNotFound` (local missing and no fallback URL) or `loadFailed`
   (decoder/network error).
+- `TrimEditorNotifier` (`trim_editor_notifier.dart`) is a
+  `NotifierProvider.autoDispose.family<…, String>` keyed by recording id
+  (`trimEditorProvider`). State is the immutable `TrimEditorState`
+  (`trim_editor_state.dart`), which holds the editing fields (split
+  points, excluded segments, per-segment taxonomy, gain, the resolved
+  `LocalRecording`, load flags) plus the pure derivations the screen
+  used to compute inline as getters — segment boundaries/timing, the
+  effective taxonomy, and the save `decision` (`TrimEditDecision` from
+  [../trim_edit_decision.dart](../trim_edit_decision.dart)). The notifier
+  owns:
+  - **Load resolution** of the recording row only (`load`): web fetches
+    the server DTO and maps it via `serverRecordingToLocal`; native
+    tries local-by-id, then local-by-server-id, then an online fetch.
+    A caught server error is "not found" only for a genuine 404
+    (`isRecordingNotFound` in
+    [../trim_load_error.dart](../trim_load_error.dart)); anything else is
+    stored as a real `loadError`. The deliberate split: a resolved
+    recording leaves `isLoading` **true** so the widget can finish the
+    load (see the load-split bullet).
+  - **Editing mutations**: `setSplitPoints` (re-derives boundaries and
+    remaps per-segment taxonomy via the top-level `remapTaxonomyBySig`
+    so a small edit keeps a segment's overrides while a re-split drops
+    them), `toggleExclude` (returns `false` when the "at least one
+    segment" guard blocks the exclusion so the widget surfaces the
+    snackbar), `setSegmentTaxonomy`/`copyFromPrevious`, `setGain`,
+    `clearAllSplits`/`restoreAllExcluded`.
+  - **`saveSplit`**, which returns a sealed `TrimSaveOutcome`
+    (`TrimSaveSucceeded` / `TrimSaveAborted` / `TrimSaveFailed`) so the
+    **widget**, not the notifier, picks the snackbar and navigates. Web
+    delegates to `RecordingApiRepository.splitRecording`; native exports
+    each kept segment through the `LocalSegmentExporter` seam and hands
+    the specs to a `RecordingSplitPersister` built from
+    `recordingSplitPersisterProvider` (see Things to Know for why every
+    dependency is captured before the first `await`).
 - `RecordingsListNotifier` (`recordings_list_notifier.dart`) owns the
   paginated list. `fetchRecordings` loads page zero — the server list
   merged with local-only rows from `LocalRecordingRepository`, deduped
@@ -159,6 +210,48 @@ Path: @/lib/features/recording/presentation/notifiers
   and skips re-running `setFilePath` / `setUrl` if the same source is
   requested again while `hasAudio` is true. This is what makes a
   re-call after a heal, edit, or rotation cheap.
+- **The trim load is deliberately split between notifier and widget
+  (ENG-193).** `TrimEditorNotifier.load` resolves the *row* only and, on
+  success, leaves `isLoading` true; the screen then wires the
+  `AudioPlayer`, runs the file-availability check
+  (`fileExistsProvider`), and resolves the waveform/duration, finishing
+  the load by calling back into the notifier — `completeLoad` (player
+  wired, duration known), `setUnavailable` (audio missing; stores one of
+  the two hardcoded "audio unavailable" messages), or `loadFailed`
+  (player/waveform setup threw). `loadFailed` drops `recording` back to
+  null, matching the screen's original outer-catch contract that a
+  recording was only committed on a fully successful load. The player,
+  the file probe, and the ffmpeg-backed waveform are device-bound and do
+  not resolve under the fake-async widget-test zone, so they stay in the
+  widget behind injectable providers rather than in the headless
+  notifier.
+- **`saveSplit` returns an outcome; the widget owns the UI (ENG-193).**
+  Because the notifier is headless, `saveSplit` resolves to a sealed
+  `TrimSaveOutcome` and never touches `BuildContext`. The screen
+  `switch`es on it: `TrimSaveSucceeded` (carrying `mode` / `keptCount` /
+  `excludedCount`) drives the confirmation snackbar and navigation,
+  `TrimSaveFailed` surfaces the typed error, and `TrimSaveAborted`
+  (recording null, or `decision.canSave` false) is a no-op. This keeps
+  the orchestration unit-testable without pumping a widget.
+- **The native split captures every dependency before the first `await`
+  (ENG-193).** `_saveLocally` reads the exporter, the persister factory,
+  both repositories, and the sync `processQueue` tear-off into locals
+  *before* awaiting the ffmpeg export. The notifier is `autoDispose`, so
+  if the user navigates away mid-export the family entry can be torn
+  down; reading `ref` after the suspension could throw "Cannot use Ref
+  after it has been disposed", yet the split must still commit. Capturing
+  up front decouples the in-flight save from the notifier's lifecycle —
+  the same reasoning behind the `_disposed` guard, applied to the
+  dependencies instead of the state writes.
+- **The trim editor reuses the `_disposed` + `ref.onDispose` guard.**
+  Like `RecordingPlayerNotifier` and
+  [../../data/services/recovery_coordinator.dart](../../data/services/recovery_coordinator.dart),
+  `TrimEditorNotifier` sets `_disposed = true` in `ref.onDispose` and
+  bails after each `await` in `load` before writing `state`, because
+  Riverpod 2.6.1 has no `ref.mounted` and a post-dispose `state =` is a
+  silent stale write. `saveSplit`'s `isSaving` reset on failure is
+  likewise guarded so the captured-dependency split (above) can finish
+  even after disposal.
 - **Path resolution lives in data, not in the notifier.**
   `audioPathResolverProvider` defaults to
   [../../data/services/audio_path_resolver.dart](../../data/services/audio_path_resolver.dart)'s

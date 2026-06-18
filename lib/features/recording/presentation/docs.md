@@ -36,12 +36,15 @@ Path: @/lib/features/recording/presentation
     `localRecordingStreamProvider`, which streams Drift changes back into
     the screen so any external write (sync, heal) re-renders the UI.
 - The trim editor at
-  [./trim_editor_screen.dart](./trim_editor_screen.dart) consumes the
-  same data layer and writes split children through
+  [./trim_editor_screen.dart](./trim_editor_screen.dart) is now a thin
+  widget: its editing state and split/save orchestration live in
+  `TrimEditorNotifier` (see [./notifiers/docs.md](notifiers/docs.md)),
+  which writes split children through
   `LocalRecordingRepository.splitRecordingReplacingParent`, following the
-  propagation
-  contract documented in
+  propagation contract documented in
   [/docs/recording-split-semantics.md](../../../../docs/recording-split-semantics.md).
+  The screen keeps only the audio player, transport playback, and the
+  waveform viewport.
 - Cross-feature dependencies: storyteller resolution
   ([/lib/features/storyteller/](../../storyteller/)), member loading and
   roles
@@ -91,18 +94,25 @@ Path: @/lib/features/recording/presentation
   because the notifier already removed the item from state (no refetch). See
   [./notifiers/docs.md](notifiers/docs.md) for the hard-delete semantics
   and the web-orphan fix.
-- `trim_editor_screen.dart` loads a recording the same way as the detail
-  screen but additionally streams audio from `gcsUrl` on web. After
-  FFmpeg cuts the segments, the editor hands off to
+- `trim_editor_screen.dart` is notifier-backed (ENG-193). It
+  `ref.watch`es `trimEditorProvider(recordingId)` for the editing state
+  and delegates every mutation and the save to `TrimEditorNotifier`
+  (see [./notifiers/docs.md](notifiers/docs.md)). The widget retains
+  only the device-bound pieces: it owns the `AudioPlayer` (built from
+  `audioPlayerFactoryProvider`), the transport playback/seek listeners,
+  and the waveform viewport (zoom/pan). The load is split deliberately —
+  the notifier resolves the recording *row* (web fetch + map, or local
+  resolution with a 404-vs-error fallback), then the widget wires the
+  player, runs the `fileExistsProvider` availability check, loads the
+  waveform peaks (`waveformLoaderProvider`) or synthesizes bars, and
+  finishes the load by calling the notifier's `completeLoad` /
+  `setUnavailable` / `loadFailed`. On save, the notifier exports the
+  segments (native) or calls the server (web), runs the
   [../data/services/recording_split_persister.dart](../data/services/recording_split_persister.dart)
-  which writes the children, archives the parent, deletes the parent
-  locally and (best-effort) remotely, and kicks
-  `SyncNotifier.processQueue` so the new children start uploading without
-  the user having to interact. Prior to that handoff, the editor inlined
-  the same pipeline but forgot the upload trigger, so children sat in
-  `uploadStatus='local'` until the user edited a field on the detail
-  screen (which kicks the queue via the `!hasServerId` branch in
-  `_classifyRecording`).
+  pipeline (which writes the children, archives the parent, deletes it
+  locally and best-effort remotely, and kicks `SyncNotifier.processQueue`
+  so the new children start uploading), and returns a `TrimSaveOutcome`
+  the screen `switch`es on to show the snackbar and navigate.
 - The detail screen's audio playback is owned by
   `RecordingPlayerNotifier` at
   [./notifiers/recording_player_notifier.dart](notifiers/recording_player_notifier.dart).
@@ -243,15 +253,17 @@ Path: @/lib/features/recording/presentation
   the persisted offset (`resumableSessionUri`/`uploadedBytes`) instead of
   crashing or re-uploading what already landed.
 - **The trim loader distinguishes a failed load from a missing recording
-  (ENG-140 F21).** `trim_editor_screen.dart` resolves a server-only recording
-  by calling `apiRepo.getRecording`. A thrown error is no longer swallowed as
-  "not found": only an HTTP 404 (`isRecordingNotFound` in
-  [./trim_load_error.dart](trim_load_error.dart)) falls through to the
-  `trim_notFound` state; any other error (network/timeout/server) sets
-  `_errorMessage` and surfaces. Because a failed load also leaves `_recording`
-  null, the `build` method now checks the error state **before** the
-  not-found state, so a real error is shown instead of a misleading "not
-  found" screen.
+  (ENG-140 F21).** Resolving a server-only recording (now in
+  `TrimEditorNotifier.load` →
+  [./notifiers/docs.md](notifiers/docs.md)) calls `apiRepo.getRecording`.
+  A thrown error is not swallowed as "not found": only an HTTP 404
+  (`isRecordingNotFound` in [./trim_load_error.dart](trim_load_error.dart))
+  falls through to the not-found state; any other error
+  (network/timeout/server) is stored as `loadError` on `TrimEditorState`,
+  which the widget localizes via `friendlyErrorFor`. Because a failed
+  load also leaves `recording` null, the screen's `build` checks the
+  error state **before** the not-found state, so a real error is shown
+  instead of a misleading "not found" screen.
 - **Quick Recording is resilient to large system fonts via responsive
   layout (ENG-171).** The recording-flow "ready" state (in
   [./widgets/recording_step.dart](widgets/recording_step.dart)) reflows under a

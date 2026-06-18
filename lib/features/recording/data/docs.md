@@ -70,7 +70,11 @@ Path: @/lib/features/recording/data
 - `providers.dart` registers all data-layer providers and stays free of
   business logic. `localRecordingStreamProvider` is a family stream keyed
   by recording id; the detail screen listens to it so any write through
-  `LocalRecordingRepository` flows back into the UI.
+  `LocalRecordingRepository` flows back into the UI. It also exposes
+  `fileExistsProvider` — a one-line wrapper over `file_ops.fileExists` —
+  injected so the trim editor's load-path file check is driveable in
+  widget tests (a real `dart:io` future never resolves under the
+  fake-async test zone). See "the trim editor's injectable seams" below.
 - `server_to_local_recording.dart` exposes `serverRecordingToLocal(server)`,
   the single mapper from `ServerRecording` to `LocalRecording`. It exists
   precisely so callers like the detail screen and the trim editor cannot
@@ -142,6 +146,32 @@ Path: @/lib/features/recording/data
   failure never strands a trashed file), then runs the best-effort remote
   delete and `triggerUpload()` **outside** the transaction. See Things to Know
   and [./repositories/docs.md](repositories/docs.md).
+- **The trim editor's injectable seams (ENG-193).** The trim editor's
+  editing + split orchestration moved into `TrimEditorNotifier` (see
+  [../presentation/notifiers/docs.md](../presentation/notifiers/docs.md)),
+  and the device-bound IO the notifier drives was extracted into three
+  seams here so the orchestration is host-testable and the widget is
+  driveable in widget tests:
+  - `services/local_segment_exporter.dart` (`LocalSegmentExporter`
+    typedef + `localSegmentExporterProvider`) wraps the per-segment
+    ffmpeg loop. For each kept segment it runs one of three command
+    variants — boost-only (re-encode the whole file with a volume
+    filter), trim+gain (seek/trim + volume, re-encode to aac), or a
+    plain `-c copy` stream trim — then reads the output file length and
+    returns `List<SplitSegmentSpec>` ready for `RecordingSplitPersister`.
+    The ffmpeg runner, file-length, clock, and documents-dir are
+    injectable so it runs without a device. It is kept free of a direct
+    `dart:io` import so the web bundle still compiles, even though the
+    native save path is its only runtime caller.
+  - `services/waveform_loader.dart` (`WaveformLoader` typedef +
+    `waveformLoaderProvider`) wraps `WaveformExtractor.extractPeaks`. The
+    widget calls it during load so the ffmpeg-backed peak extraction can
+    be faked in widget tests (which cannot run ffmpeg); an empty result
+    lets the caller fall back to a synthetic waveform.
+  - `services/recording_split_persister.dart` additionally exposes a
+    `RecordingSplitPersisterFactory` typedef + `recordingSplitPersisterProvider`
+    so the notifier hands off to a fake persister in tests. The persister
+    pipeline itself is unchanged — only the factory seam is new.
 - `services/audio_path_resolver.dart` exposes the pure async
   `resolveRecordingPath(storedPath)`. It returns the first existing path
   among: the stored path itself, the application documents directory
