@@ -3,6 +3,7 @@ import 'package:drift/drift.dart';
 import '../../../../core/database/app_database.dart';
 import '../../domain/entities/classification.dart';
 import '../../domain/entities/local_recording_entity.dart';
+import '../local_recording_to_entity.dart';
 
 class LocalRecordingRepository {
   final AppDatabase _db;
@@ -450,38 +451,8 @@ class LocalRecordingRepository {
     }
   }
 
-  LocalRecordingEntity _fromRow(LocalRecording row) {
-    return LocalRecordingEntity(
-      id: row.id,
-      projectId: row.projectId,
-      genreId: row.genreId,
-      subcategoryId: row.subcategoryId,
-      title: row.title,
-      description: row.description,
-      durationSeconds: row.durationSeconds,
-      fileSizeBytes: row.fileSizeBytes,
-      format: row.format,
-      localFilePath: row.localFilePath,
-      uploadStatus: row.uploadStatus,
-      serverId: row.serverId,
-      gcsUrl: row.gcsUrl,
-      registerId: row.registerId,
-      secondaryGenreId: row.secondaryGenreId,
-      secondarySubcategoryId: row.secondarySubcategoryId,
-      secondaryRegisterId: row.secondaryRegisterId,
-      storytellerId: row.storytellerId,
-      userId: row.userId,
-      cleaningStatus: row.cleaningStatus,
-      recordedAt: row.recordedAt,
-      createdAt: row.createdAt,
-      retryCount: row.retryCount,
-      resumableSessionUri: row.resumableSessionUri,
-      uploadedBytes: row.uploadedBytes,
-      splitFromId: row.splitFromId,
-      splitIndex: row.splitIndex,
-      splitSegmentCount: row.splitSegmentCount,
-    );
-  }
+  LocalRecordingEntity _fromRow(LocalRecording row) =>
+      localRecordingToEntity(row);
 }
 
 /// Per-segment input for [LocalRecordingRepository.splitRecordingReplacingParent].

@@ -86,7 +86,7 @@ Path: @/lib/features/recording/data/repositories
   (the detail screen); no consumer was repointed by ENG-195.
 - `watchRecordingEntityById` is the row-decoupled sibling added by ENG-195:
   the same `watchSingleOrNull` query, but it `.map()`s each row to a
-  `LocalRecordingEntity` (via the private `_fromRow`) **before** `.distinct()`.
+  `LocalRecordingEntity` (via `_fromRow`) **before** `.distinct()`.
   Mapping first is the load-bearing detail — dedup now keys on the entity's
   hand-written value equality, not the Drift row's generated equality. Because
   the entity deliberately omits `lastRetryAt`/`md5Hash`, a write touching only
@@ -96,9 +96,15 @@ Path: @/lib/features/recording/data/repositories
   detail watch will be repointed onto it in a later task (F5b). See
   [../../domain/docs.md](../../domain/docs.md) for the entity itself and Things
   to Know.
-- `_fromRow(LocalRecording)` is the private row→entity mapper backing
-  `watchRecordingEntityById`. It mirrors the Storyteller precedent
-  (`_fromRow` private in
+- `_fromRow(LocalRecording)` is the private row→entity hook backing
+  `watchRecordingEntityById`; as of ENG-197 it is a one-line delegate to the
+  public `localRecordingToEntity` in
+  [../local_recording_to_entity.dart](../local_recording_to_entity.dart), which
+  is the **single source of truth** for the projection so the watch stream and
+  the recordings-list notifier
+  ([../../presentation/notifiers/docs.md](../../presentation/notifiers/docs.md))
+  cannot diverge on which fields they carry. It mirrors the Storyteller
+  precedent (`_fromRow` private in
   [../../../storyteller/data/repositories/local_storyteller_repository.dart](../../../storyteller/data/repositories/local_storyteller_repository.dart),
   with a dual `getById`/`getRowById` read alongside the row read). The write
   side (`_toCompanion`) was intentionally deferred — no write path was migrated

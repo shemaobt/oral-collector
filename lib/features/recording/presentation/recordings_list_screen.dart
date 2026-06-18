@@ -21,6 +21,7 @@ import '../../../shared/widgets/sync_status_indicator.dart';
 import '../../genre/presentation/notifiers/genre_notifier.dart';
 import '../../project/presentation/notifiers/project_notifier.dart';
 import '../../sync/presentation/notifiers/sync_notifier.dart';
+import '../domain/entities/local_recording_entity.dart';
 import '../domain/entities/register.dart';
 import 'notifiers/recordings_list_notifier.dart';
 import 'notifiers/recordings_list_state.dart';
@@ -33,6 +34,40 @@ import 'widgets/recordings_filter_sheet.dart';
 
 @Preview(name: 'Recordings List', wrapper: previewWrapper)
 Widget recordingsListPreview() => const RecordingsListScreen();
+
+// TEMP seam (ENG-197): the list now holds LocalRecordingEntity, but RecordingCard
+// still takes the Drift LocalRecording row. F2 migrates the card to the entity
+// and deletes this. lastRetryAt/md5Hash are dropped fields the card never reads.
+LocalRecording _entityToCardRow(LocalRecordingEntity e) => LocalRecording(
+  id: e.id,
+  projectId: e.projectId,
+  genreId: e.genreId,
+  subcategoryId: e.subcategoryId,
+  title: e.title,
+  description: e.description,
+  durationSeconds: e.durationSeconds,
+  fileSizeBytes: e.fileSizeBytes,
+  format: e.format,
+  localFilePath: e.localFilePath,
+  uploadStatus: e.uploadStatus,
+  serverId: e.serverId,
+  gcsUrl: e.gcsUrl,
+  registerId: e.registerId,
+  secondaryGenreId: e.secondaryGenreId,
+  secondarySubcategoryId: e.secondarySubcategoryId,
+  secondaryRegisterId: e.secondaryRegisterId,
+  storytellerId: e.storytellerId,
+  userId: e.userId,
+  cleaningStatus: e.cleaningStatus,
+  recordedAt: e.recordedAt,
+  createdAt: e.createdAt,
+  retryCount: e.retryCount,
+  resumableSessionUri: e.resumableSessionUri,
+  uploadedBytes: e.uploadedBytes,
+  splitFromId: e.splitFromId,
+  splitIndex: e.splitIndex,
+  splitSegmentCount: e.splitSegmentCount,
+);
 
 class RecordingsListScreen extends ConsumerStatefulWidget {
   const RecordingsListScreen({
@@ -95,7 +130,7 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
     }
   }
 
-  Future<void> _deleteRecording(LocalRecording recording) async {
+  Future<void> _deleteRecording(LocalRecordingEntity recording) async {
     final l10n = AppLocalizations.of(context);
     final colors = AppColors.of(context);
     final confirmed = await showDialog<bool>(
@@ -522,7 +557,7 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
                                 ),
                               ),
                               child: RecordingCard(
-                                recording: recording,
+                                recording: _entityToCardRow(recording),
                                 genreName: rawGenre != null
                                     ? localizedGenreName(l10n, rawGenre)
                                     : null,

@@ -82,7 +82,10 @@ Path: @/lib/features/recording/presentation
   refresh the screen state.
 - **Delete is the one action both screens delegate, not inline (ENG-120).**
   The list and detail screens each only show the confirm dialog, call
-  `RecordingsListNotifier.deleteRecording(recording)`, and `switch` on the
+  `RecordingsListNotifier.deleteRecording(recording)` (which takes a
+  `LocalRecordingEntity` as of ENG-197 — the list already holds entities, the
+  detail screen converts its Drift row at the call site via
+  `localRecordingToEntity`), and `switch` on the
   returned `DeleteRecordingResult` to pick the snackbar (`forbidden` →
   permission warning in `AppColors.of(context).warning`, `failed` → generic
   failure, `ok` → no snackbar). The notifier owns the whole flow — remote
@@ -171,6 +174,16 @@ Path: @/lib/features/recording/presentation
 
 ### Things to Know
 
+- **The recordings list holds entities; a temporary shim re-hydrates a row
+  for the card (ENG-197).** `recordings_list_screen.dart` reads
+  `RecordingsListState.recordings` as `List<LocalRecordingEntity>`, but
+  `RecordingCard`
+  ([./widgets/recording_card.dart](widgets/recording_card.dart)) still takes a
+  Drift `LocalRecording`. A throwaway top-level `_entityToCardRow(entity)` on
+  the screen reconstructs a `LocalRecording` field-for-field (the dropped
+  `lastRetryAt`/`md5Hash` are fields the card never reads) to bridge the gap.
+  This is staged migration debt: F2/ENG-19x migrates the card to the entity and
+  deletes the shim. Do not grow new consumers of `_entityToCardRow`.
 - **Listener-driven re-renders.** The detail screen keeps a local
   `_recording` field but also listens to
   `localRecordingStreamProvider(widget.recordingId)`. If anything writes

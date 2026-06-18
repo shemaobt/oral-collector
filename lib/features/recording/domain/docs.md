@@ -38,12 +38,35 @@ Path: @/lib/features/recording/domain
   `uploadStatus`, `serverId`, `gcsUrl`, `retryCount`, `resumableSessionUri`,
   `uploadedBytes`, …) plus identity/content/classification fields. It exists
   to begin peeling the recording domain/UI off the Drift-generated
-  `LocalRecording` row. The data layer maps row→entity in the private
-  `_fromRow` and exposes it via `watchRecordingEntityById` (see
-  [../data/repositories/docs.md](../data/repositories/docs.md)). This is
-  additive: it ships in parallel with sibling work and no consumer reads it
-  yet — the recording-detail watch stream is repointed onto it in a later
-  task (F5b).
+  `LocalRecording` row. The row→entity projection has a single public source of
+  truth, `localRecordingToEntity` in
+  [../data/local_recording_to_entity.dart](../data/local_recording_to_entity.dart);
+  the repository's private `_fromRow` and the list notifier both delegate to it
+  (see [../data/docs.md](../data/docs.md) and
+  [../data/repositories/docs.md](../data/repositories/docs.md)).
+- The migration off the row is staged (ENG-195 → ENG-197 → F2/ENG-19x). ENG-197
+  repointed the recordings-list state/notifier
+  ([../presentation/notifiers/docs.md](../presentation/notifiers/docs.md)) onto
+  `List<LocalRecordingEntity>` — the first consumer to actually hold the entity.
+  The recording-detail watch stream is repointed in a later task (F5b), and the
+  list `RecordingCard` still takes a Drift row, bridged by a temporary adapter
+  on the list screen (see [../presentation/docs.md](../presentation/docs.md))
+  until F2 migrates the card.
+- `LocalRecordingEntity.copyWith` uses **sentinel** semantics for nullable
+  fields: passing `null` *clears* a nullable field, omitting it *preserves* the
+  current value. Each nullable parameter defaults to a private `_sentinel`
+  object, and the body uses `identical(arg, _sentinel)` to tell "leave
+  unchanged" apart from an explicit `null`. A plain `value ?? this.value` could
+  not express "clear", which is why the list notifier's `patchRecordingTitle`
+  can use `copyWith(title: …)` directly instead of Drift's `Value(...)` wrapper.
+- `LocalRecordingEntityClassification` (in
+  [./entities/local_recording_entity_classification.dart](entities/local_recording_entity_classification.dart))
+  is the entity-side mirror of the row's `RecordingClassification` extension
+  ([../data/local_recording_classification.dart](../data/local_recording_classification.dart)):
+  it adds `isUnclassified` and delegates to the **same** pure predicates in
+  [./entities/classification.dart](entities/classification.dart), so the entity
+  and the Drift row classify identically. The list state's `unclassified` filter
+  reads this getter.
 - `classification.dart` is **not** an entity type: it is the
   `kUnclassifiedGenreId` sentinel const plus top-level pure predicate
   functions (`recordingHasGenre`, `recordingIsUnclassified`,
@@ -79,10 +102,11 @@ Path: @/lib/features/recording/domain
 - **`LocalRecordingEntity` hand-writes value equality, and that is
   load-bearing (ENG-195).** Unlike the `Storyteller` entity (which has no
   equality override), it overrides `operator ==`/`hashCode` across its whole
-  field set. The data layer maps row→entity *before* `.distinct()` on the
-  watch stream, so dedup keys on this `==` rather than the Drift row's
-  generated equality. Without the override, each emission would be a fresh
-  unequal object and `.distinct()` would never collapse anything.
+  field set — a new pattern for this codebase's entities, demanded by the watch
+  stream. The data layer maps row→entity *before* `.distinct()` on the watch
+  stream, so dedup keys on this `==` rather than the Drift row's generated
+  equality. Without the override, each emission would be a fresh unequal object
+  and `.distinct()` would never collapse anything.
 - **The entity deliberately drops the persistence internals `lastRetryAt`
   and `md5Hash`.** They are not fields the UI reads, and omitting them means
   a write touching only those produces an *equal* entity, which `.distinct()`

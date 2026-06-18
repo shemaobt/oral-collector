@@ -80,6 +80,20 @@ Path: @/lib/features/recording/data
   precisely so callers like the detail screen and the trim editor cannot
   silently diverge on which fields they carry — divergence is the ENG-64
   root cause.
+- `local_recording_to_entity.dart` exposes `localRecordingToEntity(row)`, the
+  single mapper from the Drift `LocalRecording` row to the domain
+  `LocalRecordingEntity`
+  ([../domain/entities/local_recording_entity.dart](../domain/entities/local_recording_entity.dart)),
+  deliberately dropping the persistence internals `lastRetryAt`/`md5Hash`. It is
+  the one source of truth for the row→entity projection (ENG-195): the
+  repository's `_fromRow` (see [./repositories/docs.md](repositories/docs.md))
+  and the recordings-list notifier
+  ([../presentation/notifiers/docs.md](../presentation/notifiers/docs.md)) both
+  delegate to it, so a watch stream and the list cannot carry different fields.
+  The server side composes the two — `localRecordingToEntity(serverRecordingToLocal(s))`
+  — to land server data as the same entity type the local side produces. This
+  is read-only projection; the inverse (`_toCompanion`) was deferred, so writes
+  still build `LocalRecordingsCompanion` directly.
 - `recording_heal_companion.dart` exposes the pure function
   `buildHealMetadataCompanion(local, server)`. It is used in the detail
   screen's online-refresh path to repair rows already corrupted on a device

@@ -32,6 +32,7 @@ import '../../storyteller/data/providers.dart' as storyteller_providers;
 import '../../storyteller/domain/entities/storyteller.dart';
 import '../../sync/presentation/notifiers/sync_notifier.dart';
 import '../data/local_recording_classification.dart';
+import '../data/local_recording_to_entity.dart';
 import '../data/providers.dart';
 import '../data/recording_heal_companion.dart';
 import '../data/server_to_local_recording.dart';
@@ -393,7 +394,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
 
     final result = await ref
         .read(recordingsListNotifierProvider.notifier)
-        .deleteRecording(recording);
+        .deleteRecording(localRecordingToEntity(recording));
     if (!mounted) return;
     switch (result) {
       case DeleteRecordingResult.forbidden:
