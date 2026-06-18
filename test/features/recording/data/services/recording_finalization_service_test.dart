@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:oral_collector/core/observability/error_reporter.dart';
 import 'package:oral_collector/features/recording/data/services/recording_concat_service.dart';
 import 'package:oral_collector/features/recording/data/services/recording_finalization_service.dart';
 import 'package:oral_collector/features/recording/presentation/notifiers/recording_session_state.dart';
@@ -67,6 +68,43 @@ class _StubConcatService implements RecordingConcatService {
     }
     return path;
   }
+}
+
+class _CapturingReporter implements ErrorReporter {
+  final List<Object> errors = [];
+
+  @override
+  void reportError(
+    Object error,
+    StackTrace? stackTrace, {
+    Map<String, String>? tags,
+    Map<String, Object?>? context,
+    ErrorLevel level = ErrorLevel.error,
+  }) {
+    errors.add(error);
+  }
+
+  @override
+  void addBreadcrumb(
+    String message, {
+    String? category,
+    ErrorLevel level = ErrorLevel.info,
+    Map<String, Object?>? data,
+  }) {}
+
+  @override
+  void setUser({
+    String? id,
+    String? username,
+    String? email,
+    Map<String, Object?>? data,
+  }) {}
+
+  @override
+  void clearUser() {}
+
+  @override
+  void setTag(String key, String value) {}
 }
 
 void main() {
@@ -429,5 +467,41 @@ void main() {
 
       expect(outcome!.result.durationSeconds, 12.5);
     });
+  });
+
+  group('finalize - delete observability', () {
+    test(
+      'a failed best-effort source deletion is reported, not swallowed',
+      () async {
+        final w1 = '${tmp.path}/s1.wav';
+        final w2 = '${tmp.path}/s2.wav';
+        await File(w1).writeAsBytes(_buildWavFile([1, 2]));
+        await File(w2).writeAsBytes(_buildWavFile([3, 4]));
+
+        final concatOut = '${tmp.path}/concat_sess.wav';
+        final reporter = _CapturingReporter();
+
+        final service = RecordingFinalizationService(
+          concat: _StubConcatService(result: () => concatOut),
+          documentsDirFn: tmpDocsDir,
+          compressFn: okCompress,
+          deleteFn: (_) async =>
+              throw const FileSystemException('delete failed'),
+          reporter: reporter,
+        );
+
+        await service.finalize(
+          sessionId: 'sess',
+          segmentPaths: [w1, w2],
+          totalDuration: const Duration(seconds: 5),
+          deleteSources: true,
+        );
+
+        // Deletions are fire-and-forget; let them run before asserting.
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+
+        expect(reporter.errors, isNotEmpty);
+      },
+    );
   });
 }

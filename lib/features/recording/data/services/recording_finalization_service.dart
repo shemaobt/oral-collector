@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 
+import '../../../../core/observability/error_reporter.dart';
 import '../../../../core/platform/ffmpeg_ops.dart' as ffmpeg_ops;
 import '../../../../core/platform/file_ops.dart' as file_ops;
 import '../../presentation/notifiers/recording_session_state.dart';
@@ -12,6 +13,7 @@ import 'wav_concat.dart';
 
 typedef CompressFn = Future<bool> Function(String src, String dst);
 typedef DocumentsDirFn = Future<Directory> Function();
+typedef DeleteFn = Future<void> Function(String path);
 
 class FinalizationOutcome {
   const FinalizationOutcome({required this.result, this.degraded = false});
@@ -25,13 +27,19 @@ class RecordingFinalizationService {
     required RecordingConcatService concat,
     CompressFn? compressFn,
     DocumentsDirFn? documentsDirFn,
+    DeleteFn? deleteFn,
+    ErrorReporter reporter = const NoopErrorReporter(),
   }) : _concat = concat,
        _compressFn = compressFn ?? ffmpeg_ops.compressToM4a,
-       _documentsDirFn = documentsDirFn ?? getApplicationDocumentsDirectory;
+       _documentsDirFn = documentsDirFn ?? getApplicationDocumentsDirectory,
+       _deleteFn = deleteFn ?? file_ops.deleteFile,
+       _reporter = reporter;
 
   final RecordingConcatService _concat;
   final CompressFn _compressFn;
   final DocumentsDirFn _documentsDirFn;
+  final DeleteFn _deleteFn;
+  final ErrorReporter _reporter;
 
   Future<FinalizationOutcome?> finalize({
     required String sessionId,
@@ -144,8 +152,13 @@ class RecordingFinalizationService {
   }
 
   Future<void> _deleteFileSafe(String path) async {
+    // Best-effort cleanup stays fire-and-forget, but a real failure (permission,
+    // I/O) must not vanish silently. file_ops tolerates a missing file, so
+    // anything thrown here is a genuine failure worth surfacing.
     try {
-      await file_ops.deleteFile(path);
-    } catch (_) {}
+      await _deleteFn(path);
+    } catch (e, st) {
+      _reporter.reportError(e, st);
+    }
   }
 }
