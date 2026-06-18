@@ -39,14 +39,20 @@ Path: @/lib/core/observability
   keeps the local `developer.log` trace, so debug visibility is unchanged and the
   change is additive/zero-cost under the Noop default. See
   [../serialization/docs.md](../serialization/docs.md).
-- A fourth feed (ENG-102) is the **silent-fallback** catches that previously
-  swallowed errors outright. The recordings-list notifier
-  ([../../features/recording/presentation/notifiers/docs.md](../../features/recording/presentation/notifiers/docs.md))
-  and the sync notifier's best-effort file ops now report to the reporter
-  (stack preserved) on the way through their fallback, but — unlike the
-  state-storing arms above — they do **not** surface anything to the UI: the
-  intentional fallback (degrade to local, return 0/null, finish the row delete)
-  is unchanged, and the report is the *only* visibility these paths have.
+- A fourth feed (ENG-102, extended by ENG-139) is the **silent-fallback /
+  best-effort** catches that previously swallowed errors outright. The
+  recordings-list notifier
+  ([../../features/recording/presentation/notifiers/docs.md](../../features/recording/presentation/notifiers/docs.md)),
+  the sync notifier's best-effort file ops, and — added in ENG-139 —
+  `RecordingFinalizationService`'s best-effort temp deletes (F20) and the
+  recording session's coalesced 1 Hz foreground/Live-Activity updates (F5, via
+  `SingleFlightRunner`'s `onError`) now report to the reporter (stack preserved)
+  on the way through their fallback. Unlike the state-storing arms above, none
+  of these surface anything to the UI: the intentional fallback (degrade to
+  local, return 0/null, finish the row delete, let the temp file leak, drop the
+  missed tick) is unchanged, and the report is the *only* visibility these paths
+  have. See
+  [../../features/recording/data/docs.md](../../features/recording/data/docs.md).
 - Notifiers never telemeter a 401: it is the expected token-refresh flow, not a
   fault, so reporting it would be noise. Notifiers with an `on UnauthorizedException`
   arm (project/genre/stats/invite) catch it there (driving `handleUnauthorized`), so
