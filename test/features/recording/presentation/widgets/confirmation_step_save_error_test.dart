@@ -13,7 +13,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
-import 'package:oral_collector/core/database/app_database.dart';
 import 'package:oral_collector/features/project/presentation/notifiers/project_notifier.dart';
 import 'package:oral_collector/features/project/presentation/notifiers/project_state.dart';
 import 'package:oral_collector/features/recording/data/providers.dart';
@@ -31,8 +30,25 @@ import 'package:oral_collector/l10n/app_localizations.dart';
 
 class _ThrowingRecordingRepository implements LocalRecordingRepository {
   @override
-  Future<void> insertRecording(LocalRecordingsCompanion data) async {
-    throw Exception('insert failed');
+  Future<void> saveRecording({
+    required String id,
+    required String projectId,
+    required String genreId,
+    required String storytellerId,
+    required String title,
+    required double durationSeconds,
+    required int fileSizeBytes,
+    required String format,
+    required String localFilePath,
+    required DateTime recordedAt,
+    String? subcategoryId,
+    String? registerId,
+    String? description,
+    String? userId,
+    String? serverId,
+    String? uploadStatus,
+  }) async {
+    throw Exception('save failed');
   }
 
   @override

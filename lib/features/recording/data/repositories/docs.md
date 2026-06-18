@@ -103,6 +103,23 @@ Path: @/lib/features/recording/data/repositories
   with a dual `getById`/`getRowById` read alongside the row read). The write
   side (`_toCompanion`) was intentionally deferred — no write path was migrated
   off `LocalRecordingsCompanion`.
+- `saveRecording({...named params...})` is the canonical entry point for
+  persisting a **freshly captured** recording: it builds the
+  `LocalRecordingsCompanion` internally from raw named values and delegates to
+  `insertRecording`. Centralizing the companion construction here moved that
+  data-layer concern out of the confirmation flow, which used to assemble the
+  companion inline (ENG-192). It drops empty optional metadata
+  (`subcategoryId`/`registerId`/`description`) to NULL rather than storing
+  empty strings, and leaves `uploadStatus`/`serverId` absent unless provided —
+  so the native save falls back to the schema default `uploadStatus='local'`
+  while the web direct-upload save passes `'uploaded'` + the `serverId`. The
+  sole caller is
+  [../../presentation/widgets/confirmation_step.dart](../../presentation/widgets/confirmation_step.dart)
+  (both its native and web-direct save paths). This is the single shared edit
+  point ENG-95-F4 will re-type onto a `LocalRecordingEntity` domain object plus
+  a deferred entity→companion mapper — the same direction as the read-side
+  `_fromRow`/`watchRecordingEntityById` work below; keeping the Drift companion
+  here for now is intentional.
 - `insertRecording` is a plain insert; `upsertRecording` is
   `insertOnConflictUpdate` (insert-or-update keyed on the primary key).
   Columns absent from the companion are left untouched on an update, so a
