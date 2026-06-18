@@ -32,6 +32,18 @@ Path: @/lib/features/recording/domain
 - The entities — `Recording`, `ServerRecording`, `Register` — are the
   shared vocabulary. `ServerRecording` is the API DTO that the data layer
   maps to the local `LocalRecording` Drift row.
+- `LocalRecordingEntity` (ENG-195) is the row-decoupled domain view of a
+  recording: an immutable (`const` ctor, all-`final`), Drift-free class
+  carrying the operational fields the UI reads (`localFilePath`,
+  `uploadStatus`, `serverId`, `gcsUrl`, `retryCount`, `resumableSessionUri`,
+  `uploadedBytes`, …) plus identity/content/classification fields. It exists
+  to begin peeling the recording domain/UI off the Drift-generated
+  `LocalRecording` row. The data layer maps row→entity in the private
+  `_fromRow` and exposes it via `watchRecordingEntityById` (see
+  [../data/repositories/docs.md](../data/repositories/docs.md)). This is
+  additive: it ships in parallel with sibling work and no consumer reads it
+  yet — the recording-detail watch stream is repointed onto it in a later
+  task (F5b).
 - `classification.dart` is **not** an entity type: it is the
   `kUnclassifiedGenreId` sentinel const plus top-level pure predicate
   functions (`recordingHasGenre`, `recordingIsUnclassified`,
@@ -64,6 +76,26 @@ Path: @/lib/features/recording/domain
 
 ### Things to Know
 
+- **`LocalRecordingEntity` hand-writes value equality, and that is
+  load-bearing (ENG-195).** Unlike the `Storyteller` entity (which has no
+  equality override), it overrides `operator ==`/`hashCode` across its whole
+  field set. The data layer maps row→entity *before* `.distinct()` on the
+  watch stream, so dedup keys on this `==` rather than the Drift row's
+  generated equality. Without the override, each emission would be a fresh
+  unequal object and `.distinct()` would never collapse anything.
+- **The entity deliberately drops the persistence internals `lastRetryAt`
+  and `md5Hash`.** They are not fields the UI reads, and omitting them means
+  a write touching only those produces an *equal* entity, which `.distinct()`
+  then suppresses — quieting the entity stream against pure retry/hash
+  bookkeeping. The fields still live on the Drift row.
+- **`localFilePath` is a non-null `String`; `''` is the sentinel for "not on
+  this device".** Callers check `localFilePath.isEmpty` before touching the
+  file rather than treating absence as null. This matches the Drift column,
+  which is also non-null.
+- **The write side was intentionally deferred.** There is no `_toCompanion`
+  on the entity and no write path was migrated off `LocalRecordingsCompanion`
+  in ENG-195; only the read seam (`_fromRow` + `watchRecordingEntityById`) was
+  added. See [../data/repositories/docs.md](../data/repositories/docs.md).
 - **The `isPlatformAdmin` term is intentionally redundant.**
   `RoleNotifier.canManageProject` already returns true for platform
   admins (it short-circuits on `isPlatformAdmin` before checking

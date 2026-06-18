@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 
 import '../../../../core/database/app_database.dart';
 import '../../domain/entities/classification.dart';
+import '../../domain/entities/local_recording_entity.dart';
 
 class LocalRecordingRepository {
   final AppDatabase _db;
@@ -43,6 +44,16 @@ class LocalRecordingRepository {
     return (_db.select(
       _db.localRecordings,
     )..where((t) => t.id.equals(id))).watchSingleOrNull().distinct();
+  }
+
+  /// Like [watchRecordingById] but emits the row-decoupled domain entity.
+  /// Maps before `.distinct()` so dedup runs on [LocalRecordingEntity]'s value
+  /// equality. The detail watch stream (F5b) will consume this. See ENG-195.
+  Stream<LocalRecordingEntity?> watchRecordingEntityById(String id) {
+    return (_db.select(_db.localRecordings)..where((t) => t.id.equals(id)))
+        .watchSingleOrNull()
+        .map((row) => row == null ? null : _fromRow(row))
+        .distinct();
   }
 
   Future<bool> updateRecording(String id, LocalRecordingsCompanion data) async {
@@ -386,6 +397,39 @@ class LocalRecordingRepository {
           );
       return rows > 0;
     }
+  }
+
+  LocalRecordingEntity _fromRow(LocalRecording row) {
+    return LocalRecordingEntity(
+      id: row.id,
+      projectId: row.projectId,
+      genreId: row.genreId,
+      subcategoryId: row.subcategoryId,
+      title: row.title,
+      description: row.description,
+      durationSeconds: row.durationSeconds,
+      fileSizeBytes: row.fileSizeBytes,
+      format: row.format,
+      localFilePath: row.localFilePath,
+      uploadStatus: row.uploadStatus,
+      serverId: row.serverId,
+      gcsUrl: row.gcsUrl,
+      registerId: row.registerId,
+      secondaryGenreId: row.secondaryGenreId,
+      secondarySubcategoryId: row.secondarySubcategoryId,
+      secondaryRegisterId: row.secondaryRegisterId,
+      storytellerId: row.storytellerId,
+      userId: row.userId,
+      cleaningStatus: row.cleaningStatus,
+      recordedAt: row.recordedAt,
+      createdAt: row.createdAt,
+      retryCount: row.retryCount,
+      resumableSessionUri: row.resumableSessionUri,
+      uploadedBytes: row.uploadedBytes,
+      splitFromId: row.splitFromId,
+      splitIndex: row.splitIndex,
+      splitSegmentCount: row.splitSegmentCount,
+    );
   }
 }
 
