@@ -13,6 +13,57 @@ class LocalRecordingRepository {
     await _db.into(_db.localRecordings).insert(data);
   }
 
+  /// Persists a freshly captured recording. Centralizes the companion
+  /// construction the confirmation flow used to build inline; empty optional
+  /// metadata is dropped rather than stored as empty strings. See ENG-192.
+  Future<void> saveRecording({
+    required String id,
+    required String projectId,
+    required String genreId,
+    required String storytellerId,
+    required String title,
+    required double durationSeconds,
+    required int fileSizeBytes,
+    required String format,
+    required String localFilePath,
+    required DateTime recordedAt,
+    String? subcategoryId,
+    String? registerId,
+    String? description,
+    String? userId,
+    String? serverId,
+    String? uploadStatus,
+  }) async {
+    await insertRecording(
+      LocalRecordingsCompanion(
+        id: Value(id),
+        projectId: Value(projectId),
+        genreId: Value(genreId),
+        storytellerId: Value(storytellerId),
+        title: Value(title),
+        durationSeconds: Value(durationSeconds),
+        fileSizeBytes: Value(fileSizeBytes),
+        format: Value(format),
+        localFilePath: Value(localFilePath),
+        recordedAt: Value(recordedAt),
+        subcategoryId: subcategoryId != null && subcategoryId.isNotEmpty
+            ? Value(subcategoryId)
+            : const Value.absent(),
+        registerId: registerId != null && registerId.isNotEmpty
+            ? Value(registerId)
+            : const Value.absent(),
+        description: description != null && description.isNotEmpty
+            ? Value(description)
+            : const Value.absent(),
+        userId: userId != null ? Value(userId) : const Value.absent(),
+        serverId: serverId != null ? Value(serverId) : const Value.absent(),
+        uploadStatus: uploadStatus != null
+            ? Value(uploadStatus)
+            : const Value.absent(),
+      ),
+    );
+  }
+
   /// Inserts [data], or updates the row in place when its primary key already
   /// exists. Columns absent from [data] are left untouched, so an in-progress
   /// upload's resume state (`resumableSessionUri`, `uploadedBytes`) survives a

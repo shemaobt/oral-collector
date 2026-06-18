@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:drift/drift.dart' show Value;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -12,7 +11,6 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/auth/auth_notifier.dart';
-import '../../../../core/database/app_database.dart';
 import '../../../../core/platform/file_ops.dart' as file_ops;
 import '../../../../core/platform/file_source.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -288,34 +286,21 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
         '${DateTime.now().millisecondsSinceEpoch}_${widget.genreId.hashCode}';
 
     try {
-      await repo.insertRecording(
-        LocalRecordingsCompanion(
-          id: Value(id),
-          projectId: Value(projectId),
-          genreId: Value(widget.genreId),
-          subcategoryId:
-              widget.subcategoryId != null && widget.subcategoryId!.isNotEmpty
-              ? Value(widget.subcategoryId!)
-              : const Value.absent(),
-          registerId: widget.registerId != null && widget.registerId!.isNotEmpty
-              ? Value(widget.registerId!)
-              : const Value.absent(),
-          storytellerId: Value(_selectedStoryteller!.id),
-          userId: currentUserId != null
-              ? Value(currentUserId)
-              : const Value.absent(),
-          title: Value(
-            resolveRecordingTitle(_titleController.text, locale: localeTag),
-          ),
-          description: _descriptionController.text.trim().isNotEmpty
-              ? Value(_descriptionController.text.trim())
-              : const Value.absent(),
-          durationSeconds: Value(widget.result.durationSeconds),
-          fileSizeBytes: Value(fileSize),
-          format: Value(widget.result.format),
-          localFilePath: Value(widget.result.filePath),
-          recordedAt: Value(DateTime.now()),
-        ),
+      await repo.saveRecording(
+        id: id,
+        projectId: projectId,
+        genreId: widget.genreId,
+        storytellerId: _selectedStoryteller!.id,
+        userId: currentUserId,
+        title: resolveRecordingTitle(_titleController.text, locale: localeTag),
+        description: _descriptionController.text.trim(),
+        durationSeconds: widget.result.durationSeconds,
+        fileSizeBytes: fileSize,
+        format: widget.result.format,
+        localFilePath: widget.result.filePath,
+        recordedAt: DateTime.now(),
+        subcategoryId: widget.subcategoryId,
+        registerId: widget.registerId,
       );
 
       if (isOnline) {
@@ -394,34 +379,26 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
       final localId =
           '${recordedAt.millisecondsSinceEpoch}_${widget.genreId.hashCode}';
       try {
-        await localRepo.insertRecording(
-          LocalRecordingsCompanion(
-            id: Value(localId),
-            projectId: Value(projectId),
-            genreId: Value(widget.genreId),
-            subcategoryId: Value(subcategoryId),
-            registerId:
-                widget.registerId != null && widget.registerId!.isNotEmpty
-                ? Value(widget.registerId!)
-                : const Value.absent(),
-            storytellerId: Value(_selectedStoryteller!.id),
-            userId: currentUserId != null
-                ? Value(currentUserId)
-                : const Value.absent(),
-            title: Value(
-              resolveRecordingTitle(_titleController.text, locale: localeTag),
-            ),
-            description: description != null
-                ? Value(description)
-                : const Value.absent(),
-            durationSeconds: Value(widget.result.durationSeconds),
-            fileSizeBytes: Value(bytes.length),
-            format: Value(widget.result.format),
-            localFilePath: const Value(''),
-            uploadStatus: const Value('uploaded'),
-            serverId: Value(serverId),
-            recordedAt: Value(recordedAt),
+        await localRepo.saveRecording(
+          id: localId,
+          projectId: projectId,
+          genreId: widget.genreId,
+          storytellerId: _selectedStoryteller!.id,
+          userId: currentUserId,
+          title: resolveRecordingTitle(
+            _titleController.text,
+            locale: localeTag,
           ),
+          description: description,
+          durationSeconds: widget.result.durationSeconds,
+          fileSizeBytes: bytes.length,
+          format: widget.result.format,
+          localFilePath: '',
+          recordedAt: recordedAt,
+          subcategoryId: subcategoryId,
+          registerId: widget.registerId,
+          uploadStatus: 'uploaded',
+          serverId: serverId,
         );
       } catch (_) {}
 

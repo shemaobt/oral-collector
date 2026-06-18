@@ -69,9 +69,13 @@ Path: @/lib/features/recording/presentation/widgets
   waveform, finalizing overlay, confirmation step) consume
   `recordingSessionNotifierProvider` and visualize the segmented
   recorder's progress; they call back into the notifier for transport
-  actions. `ConfirmationStep` is the only widget that materializes a
-  `local_recording` row (its `_save` writes the Drift row / web upload);
-  it is reused by both the normal recording flow and crash recovery via
+  actions. `ConfirmationStep` is the only widget that triggers persisting a
+  freshly captured `local_recording` row, but it does not build the Drift
+  companion itself: both its save paths (`_save` native, `_saveWebDirect`
+  web-direct) call `LocalRecordingRepository.saveRecording(...)` with raw
+  values, and the repository owns the companion construction (ENG-192 — see
+  [../../data/repositories/docs.md](../../data/repositories/docs.md)). It is
+  reused by both the normal recording flow and crash recovery via
   [../recovery_confirm_screen.dart](../recovery_confirm_screen.dart).
 - List-side widgets (recording card, filter chips, filter bar, filter
   sheet) consume `recordingsListNotifierProvider` and the
