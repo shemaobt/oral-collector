@@ -9,12 +9,10 @@ import 'package:go_router/go_router.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:logging/logging.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:path_provider/path_provider.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/l10n/content_l10n.dart';
-import '../../../core/platform/ffmpeg_ops.dart' as ffmpeg;
 import '../../../core/platform/file_ops.dart' as file_ops;
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/tokens.dart';
@@ -23,13 +21,14 @@ import '../../../shared/utils/recording_title.dart';
 import '../../genre/presentation/notifiers/genre_notifier.dart';
 import '../../sync/presentation/notifiers/sync_notifier.dart';
 import '../data/providers.dart';
-import '../data/repositories/local_recording_repository.dart';
 import '../data/server_to_local_recording.dart';
+import '../data/services/local_segment_exporter.dart';
 import '../data/services/recording_split_persister.dart';
 import '../data/services/recording_trash.dart';
-import '../data/services/waveform_extractor.dart';
+import '../data/services/waveform_loader.dart';
 import '../domain/entities/register.dart';
 import '../domain/entities/split_segment_request.dart';
+import 'notifiers/recording_player_notifier.dart';
 import 'trim_edit_decision.dart';
 import 'trim_load_error.dart';
 import 'widgets/edit_transport_bar.dart';
@@ -185,7 +184,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
   @override
   void initState() {
     super.initState();
-    _player = AudioPlayer();
+    _player = ref.read(audioPlayerFactoryProvider)();
     Future.microtask(_loadRecording);
   }
 
@@ -535,7 +534,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
       List<double> bars;
 
       if (!kIsWeb && recording.localFilePath.isNotEmpty) {
-        final peaks = await WaveformExtractor.extractPeaks(
+        final peaks = await ref.read(waveformLoaderProvider)(
           recording.localFilePath,
           targetCount: barCount,
         );
@@ -543,7 +542,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
           final rng = Random(recording.localFilePath.hashCode);
           bars = List.generate(barCount, (_) => 0.15 + rng.nextDouble() * 0.85);
         } else {
-          bars = peaks.peaks;
+          bars = peaks;
         }
       } else {
         final rng = Random((recording.gcsUrl ?? recording.id).hashCode);
@@ -783,71 +782,36 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
 
   Future<void> _saveSplitLocally(LocalRecording recording) async {
     final localeTag = Localizations.localeOf(context).toString();
-    final dir = await getApplicationDocumentsDirectory();
     final repo = ref.read(localRecordingRepositoryProvider);
-    final now = DateTime.now();
     final originalTitle =
         recording.title ?? defaultRecordingTitle(locale: localeTag);
     final kept = _keptSegmentIndices;
-    final keptTotal = kept.length;
+    final boostOnly = _decision.mode == TrimSaveMode.boostOnly;
 
     // Phase 1: run ffmpeg per kept segment, collect specs. Field-propagation
     // contract lives in docs/recording-split-semantics.md (ENG-64).
-    final specs = <SplitSegmentSpec>[];
-    for (var k = 0; k < keptTotal; k++) {
-      final i = kept[k];
-      final startSec = _segmentStart(i).inMilliseconds / 1000.0;
-      final endSec = _segmentEnd(i).inMilliseconds / 1000.0;
-      final segDuration = endSec - startSec;
-
-      final outputPath =
-          '${dir.path}/split_${now.millisecondsSinceEpoch}_$k.m4a';
-
-      final needReencode = _gainDb.abs() > 0.01;
-      final boostOnly = _decision.mode == TrimSaveMode.boostOnly;
-      final String command;
-      if (boostOnly) {
-        command =
-            '-y -i "${recording.localFilePath}" '
-            '-af "volume=${_gainDb.toStringAsFixed(2)}dB" '
-            '-c:a aac -b:a 128k "$outputPath"';
-      } else if (needReencode) {
-        command =
-            '-y -i "${recording.localFilePath}" -ss $startSec -to $endSec '
-            '-af "volume=${_gainDb.toStringAsFixed(2)}dB" '
-            '-c:a aac -b:a 128k "$outputPath"';
-      } else {
-        command =
-            '-y -i "${recording.localFilePath}" -ss $startSec -to $endSec '
-            '-c copy "$outputPath"';
-      }
-
-      final success = await ffmpeg.executeFFmpegCommand(command);
-      if (!success) {
-        throw Exception('FFmpeg failed on segment ${k + 1}');
-      }
-
-      final fileSize = await file_ops.fileLength(outputPath);
-
-      specs.add(
-        SplitSegmentSpec(
-          id: '${now.millisecondsSinceEpoch}_${k}_${recording.genreId.hashCode}',
-          title: keptTotal == 1
-              ? originalTitle
-              : '$originalTitle (${k + 1}/$keptTotal)',
-          localFilePath: outputPath,
-          durationSeconds: segDuration,
-          fileSizeBytes: fileSize,
+    final exportSegments = [
+      for (final i in kept)
+        SegmentExportSpec(
+          startSeconds: _segmentStart(i).inMilliseconds / 1000.0,
+          endSeconds: _segmentEnd(i).inMilliseconds / 1000.0,
           genreOverride: _effectiveGenre(i),
           subcategoryOverride: _effectiveSubcategory(i),
           registerOverride: _effectiveRegister(i),
         ),
-      );
-    }
+    ];
+    final specs = await ref.read(localSegmentExporterProvider)(
+      sourceFilePath: recording.localFilePath,
+      segments: exportSegments,
+      gainDb: _gainDb,
+      boostOnly: boostOnly,
+      originalTitle: originalTitle,
+      parentGenreId: recording.genreId,
+    );
 
     // Phase 2: persist children, archive the parent, and kick the upload
     // queue so the new children start syncing immediately when online.
-    final persister = RecordingSplitPersister(
+    final persister = ref.read(recordingSplitPersisterProvider)(
       localRepo: repo,
       apiRepo: ref.read(recordingApiRepositoryProvider),
       triggerUpload: ref.read(syncNotifierProvider.notifier).processQueue,
@@ -883,8 +847,8 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
       final msg = _decision.mode == TrimSaveMode.boostOnly
           ? l10n.trim_boostApplied
           : _excludedSegments.isNotEmpty
-          ? l10n.trim_savedSegments(keptTotal, _excludedSegments.length)
-          : l10n.trim_splitInto(keptTotal);
+          ? l10n.trim_savedSegments(kept.length, _excludedSegments.length)
+          : l10n.trim_splitInto(kept.length);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
       if (context.canPop()) {
         context.pop(true);
