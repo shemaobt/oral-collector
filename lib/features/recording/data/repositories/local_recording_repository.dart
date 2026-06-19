@@ -3,6 +3,7 @@ import 'package:drift/drift.dart';
 import '../../../../core/database/app_database.dart';
 import '../../domain/entities/classification.dart';
 import '../../domain/entities/local_recording_entity.dart';
+import '../local_recording_entity_to_companion.dart';
 import '../local_recording_to_entity.dart';
 
 class LocalRecordingRepository {
@@ -14,55 +15,12 @@ class LocalRecordingRepository {
     await _db.into(_db.localRecordings).insert(data);
   }
 
-  /// Persists a freshly captured recording. Centralizes the companion
-  /// construction the confirmation flow used to build inline; empty optional
-  /// metadata is dropped rather than stored as empty strings. See ENG-192.
-  Future<void> saveRecording({
-    required String id,
-    required String projectId,
-    required String genreId,
-    required String storytellerId,
-    required String title,
-    required double durationSeconds,
-    required int fileSizeBytes,
-    required String format,
-    required String localFilePath,
-    required DateTime recordedAt,
-    String? subcategoryId,
-    String? registerId,
-    String? description,
-    String? userId,
-    String? serverId,
-    String? uploadStatus,
-  }) async {
-    await insertRecording(
-      LocalRecordingsCompanion(
-        id: Value(id),
-        projectId: Value(projectId),
-        genreId: Value(genreId),
-        storytellerId: Value(storytellerId),
-        title: Value(title),
-        durationSeconds: Value(durationSeconds),
-        fileSizeBytes: Value(fileSizeBytes),
-        format: Value(format),
-        localFilePath: Value(localFilePath),
-        recordedAt: Value(recordedAt),
-        subcategoryId: subcategoryId != null && subcategoryId.isNotEmpty
-            ? Value(subcategoryId)
-            : const Value.absent(),
-        registerId: registerId != null && registerId.isNotEmpty
-            ? Value(registerId)
-            : const Value.absent(),
-        description: description != null && description.isNotEmpty
-            ? Value(description)
-            : const Value.absent(),
-        userId: userId != null ? Value(userId) : const Value.absent(),
-        serverId: serverId != null ? Value(serverId) : const Value.absent(),
-        uploadStatus: uploadStatus != null
-            ? Value(uploadStatus)
-            : const Value.absent(),
-      ),
-    );
+  /// Persists a freshly captured recording from its domain entity. Delegates to
+  /// [localRecordingEntityToCompanion], which drops empty optional metadata and
+  /// leaves the DB-managed columns to their Drift defaults. See ENG-192,
+  /// ENG-201.
+  Future<void> saveRecording(LocalRecordingEntity entity) async {
+    await insertRecording(localRecordingEntityToCompanion(entity));
   }
 
   /// Inserts [data], or updates the row in place when its primary key already

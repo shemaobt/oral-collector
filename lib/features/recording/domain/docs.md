@@ -51,10 +51,14 @@ Path: @/lib/features/recording/domain
   ENG-198 then re-typed the trim editor's editing state and its split-persist
   path (`TrimEditorState.recording`, `RecordingSplitPersister`, and
   `LocalRecordingRepository.splitRecordingReplacingParent`) onto the entity,
-  the first time it reaches a write-path input (as a read-only `parent`, still
-  no reverse mapper). The recording-detail watch stream is repointed in a later
-  task (F5b), and the list `RecordingCard` still takes a Drift row, bridged by a
-  temporary adapter on the list screen (see
+  the first time it reaches a write-path input (as a read-only `parent`). ENG-201
+  (F4b) then added the first reverse mapper, `localRecordingEntityToCompanion`,
+  and re-typed `saveRecording` onto the entity (see
+  [../data/docs.md](../data/docs.md) and
+  [../data/repositories/docs.md](../data/repositories/docs.md)). The
+  recording-detail watch stream is repointed in a later task (F5b), and the list
+  `RecordingCard` still takes a Drift row, bridged by a temporary adapter on the
+  list screen (see
   [../presentation/docs.md](../presentation/docs.md)) until F2 migrates the
   card.
 - `LocalRecordingEntity.copyWith` uses **sentinel** semantics for nullable
@@ -121,13 +125,15 @@ Path: @/lib/features/recording/domain
   this device".** Callers check `localFilePath.isEmpty` before touching the
   file rather than treating absence as null. This matches the Drift column,
   which is also non-null.
-- **The reverse mapper is still deferred.** There is no `_toCompanion` on the
-  entity and no companion construction has been migrated off
-  `LocalRecordingsCompanion`: ENG-195 added only the read seam (`_fromRow` +
-  `watchRecordingEntityById`), and although ENG-198 re-typed
-  `splitRecordingReplacingParent`'s `parent` to the entity, that consumes the
-  entity as a read-only input and still builds child companions by hand. See
-  [../data/repositories/docs.md](../data/repositories/docs.md).
+- **The reverse mapper is scoped to the save path (ENG-201).** The first
+  entity→companion mapper, `localRecordingEntityToCompanion`
+  ([../data/local_recording_entity_to_companion.dart](../data/local_recording_entity_to_companion.dart)),
+  backs `saveRecording` for a freshly captured row; it is the inverse of
+  `localRecordingToEntity` scoped to the insert companion, not a full serializer.
+  The split write path is deliberately *not* migrated onto it — ENG-198 re-typed
+  `splitRecordingReplacingParent`'s `parent` to the entity but still builds child
+  companions by hand, because each child mixes inherited / segment-specific /
+  reset fields. See [../data/repositories/docs.md](../data/repositories/docs.md).
 - **The `isPlatformAdmin` term is intentionally redundant.**
   `RoleNotifier.canManageProject` already returns true for platform
   admins (it short-circuits on `isPlatformAdmin` before checking

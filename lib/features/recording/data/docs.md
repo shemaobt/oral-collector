@@ -93,16 +93,27 @@ Path: @/lib/features/recording/data
   ([../presentation/notifiers/docs.md](../presentation/notifiers/docs.md)) both
   delegate to it, so a watch stream and the list cannot carry different fields.
   The server side composes the two — `localRecordingToEntity(serverRecordingToLocal(s))`
-  — to land server data as the same entity type the local side produces. The
-  mapper is one-way (row→entity only); the inverse (`_toCompanion`) was
-  deferred, so every write still builds `LocalRecordingsCompanion` directly. As
-  of ENG-198 the entity it produces also feeds the split *write* path as a
-  read-only parent input — `splitRecordingReplacingParent({parent})` and the
-  trim editor's split/save chain now take a `LocalRecordingEntity` (see
+  — to land server data as the same entity type the local side produces. As of
+  ENG-198 the entity it produces also feeds the split *write* path as a read-only
+  parent input — `splitRecordingReplacingParent({parent})` and the trim editor's
+  split/save chain now take a `LocalRecordingEntity` (see
   [./repositories/docs.md](repositories/docs.md) and
-  [../presentation/notifiers/docs.md](../presentation/notifiers/docs.md)) — so
-  the projection is no longer used only by the read/watch streams, even though
-  no reverse entity→companion mapper exists.
+  [../presentation/notifiers/docs.md](../presentation/notifiers/docs.md)) — so the
+  projection is no longer used only by the read/watch streams.
+- `local_recording_entity_to_companion.dart` exposes
+  `localRecordingEntityToCompanion(entity)`, the write-path inverse of
+  `localRecordingToEntity` added by ENG-201 (the F4b step of the row→entity
+  migration). It projects a freshly captured entity onto the **insert/save**
+  `LocalRecordingsCompanion` and backs `LocalRecordingRepository.saveRecording`
+  (see [./repositories/docs.md](repositories/docs.md)). It is scoped to a fresh
+  save, not a full entity serializer: it drops empty optional metadata to NULL,
+  and **deliberately omits** `createdAt`/`retryCount`/`uploadedBytes`/
+  `cleaningStatus` so the Drift column defaults apply on insert (protecting the
+  DB-assigned `createdAt` from an app-side value — see Things to Know there). The
+  split write path keeps building child companions by hand because each child
+  mixes inherited / segment-specific / reset fields (the propagation table in
+  [/docs/recording-split-semantics.md](../../../../docs/recording-split-semantics.md)),
+  so this mapper is not used there.
 - `recording_heal_companion.dart` exposes the pure function
   `buildHealMetadataCompanion(local, server)`. It is used in the detail
   screen's online-refresh path to repair rows already corrupted on a device

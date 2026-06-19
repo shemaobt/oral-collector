@@ -72,8 +72,9 @@ Path: @/lib/features/recording/presentation/widgets
   actions. `ConfirmationStep` is the only widget that triggers persisting a
   freshly captured `local_recording` row, but it does not build the Drift
   companion itself: both its save paths (`_save` native, `_saveWebDirect`
-  web-direct) call `LocalRecordingRepository.saveRecording(...)` with raw
-  values, and the repository owns the companion construction (ENG-192 — see
+  web-direct) construct a `LocalRecordingEntity` and pass it to
+  `LocalRecordingRepository.saveRecording`, and the data layer maps that entity
+  to the companion (ENG-192, ENG-201 — see
   [../../data/repositories/docs.md](../../data/repositories/docs.md)). It is
   reused by both the normal recording flow and crash recovery via
   [../recovery_confirm_screen.dart](../recovery_confirm_screen.dart).
