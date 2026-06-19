@@ -11,9 +11,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:mocktail/mocktail.dart';
 
-import 'package:oral_collector/core/database/app_database.dart';
 import 'package:oral_collector/core/theme/app_colors.dart';
 import 'package:oral_collector/core/theme/app_theme.dart';
+import 'package:oral_collector/features/recording/domain/entities/local_recording_entity.dart';
 import 'package:oral_collector/features/recording/presentation/notifiers/recording_player_notifier.dart';
 import 'package:oral_collector/features/recording/presentation/widgets/recording_hero_player.dart';
 import 'package:oral_collector/l10n/app_localizations.dart';
@@ -23,7 +23,7 @@ class _MockAudioPlayer extends Mock implements AudioPlayer {}
 const _recordingId = 'rec-rotation';
 const _filePath = '/tmp/rec-rotation.m4a';
 
-LocalRecording _recording() => LocalRecording(
+LocalRecordingEntity _recording() => LocalRecordingEntity(
   id: _recordingId,
   projectId: 'proj-1',
   genreId: 'genre-1',
@@ -47,7 +47,7 @@ LocalRecording _recording() => LocalRecording(
 class _DetailLayoutHarness extends StatelessWidget {
   const _DetailLayoutHarness({required this.recording});
 
-  final LocalRecording recording;
+  final LocalRecordingEntity recording;
 
   @override
   Widget build(BuildContext context) {
@@ -90,7 +90,7 @@ class _DetailLayoutHarness extends StatelessWidget {
   }
 }
 
-Widget _harness(ProviderContainer container, LocalRecording recording) {
+Widget _harness(ProviderContainer container, LocalRecordingEntity recording) {
   return UncontrolledProviderScope(
     container: container,
     child: MaterialApp(

@@ -50,15 +50,9 @@ class LocalRecordingRepository {
     )..where((t) => t.serverId.equals(serverId))).getSingleOrNull();
   }
 
-  Stream<LocalRecording?> watchRecordingById(String id) {
-    return (_db.select(
-      _db.localRecordings,
-    )..where((t) => t.id.equals(id))).watchSingleOrNull().distinct();
-  }
-
-  /// Like [watchRecordingById] but emits the row-decoupled domain entity.
-  /// Maps before `.distinct()` so dedup runs on [LocalRecordingEntity]'s value
-  /// equality. The detail watch stream (F5b) will consume this. See ENG-195.
+  /// Watches a single recording as the row-decoupled domain entity. Maps before
+  /// `.distinct()` so dedup runs on [LocalRecordingEntity]'s value equality —
+  /// the detail watch stream consumes this (ENG-199/ENG-200). See ENG-195.
   Stream<LocalRecordingEntity?> watchRecordingEntityById(String id) {
     return (_db.select(_db.localRecordings)..where((t) => t.id.equals(id)))
         .watchSingleOrNull()
@@ -327,10 +321,12 @@ class LocalRecordingRepository {
   /// If a row for [recording.id] already exists locally, only [localFilePath]
   /// is updated so local edits (description, storyteller, secondary
   /// classification) are preserved. Otherwise the full row is inserted from
-  /// [recording.toCompanion], so every metadata field reaches the database
-  /// — the hand-picked-subset bug from ENG-64 cannot recur here.
+  /// every entity field, so all metadata reaches the database — the
+  /// hand-picked-subset bug from ENG-64 cannot recur here. The persistence-only
+  /// columns (`lastRetryAt`, `md5Hash`) are left absent (null), which is correct
+  /// for a server-sourced recording with no prior local row.
   Future<void> cacheDownloadedAudio({
-    required LocalRecording recording,
+    required LocalRecordingEntity recording,
     required String localFilePath,
   }) async {
     await _db.transaction(() async {
@@ -342,10 +338,40 @@ class LocalRecordingRepository {
           LocalRecordingsCompanion(localFilePath: Value(localFilePath)),
         );
       } else {
-        final companion = recording
-            .toCompanion(false)
-            .copyWith(localFilePath: Value(localFilePath));
-        await _db.into(_db.localRecordings).insert(companion);
+        await _db
+            .into(_db.localRecordings)
+            .insert(
+              LocalRecordingsCompanion(
+                id: Value(recording.id),
+                projectId: Value(recording.projectId),
+                genreId: Value(recording.genreId),
+                subcategoryId: Value(recording.subcategoryId),
+                title: Value(recording.title),
+                description: Value(recording.description),
+                durationSeconds: Value(recording.durationSeconds),
+                fileSizeBytes: Value(recording.fileSizeBytes),
+                format: Value(recording.format),
+                localFilePath: Value(localFilePath),
+                uploadStatus: Value(recording.uploadStatus),
+                serverId: Value(recording.serverId),
+                gcsUrl: Value(recording.gcsUrl),
+                registerId: Value(recording.registerId),
+                secondaryGenreId: Value(recording.secondaryGenreId),
+                secondarySubcategoryId: Value(recording.secondarySubcategoryId),
+                secondaryRegisterId: Value(recording.secondaryRegisterId),
+                storytellerId: Value(recording.storytellerId),
+                userId: Value(recording.userId),
+                cleaningStatus: Value(recording.cleaningStatus),
+                recordedAt: Value(recording.recordedAt),
+                createdAt: Value(recording.createdAt),
+                retryCount: Value(recording.retryCount),
+                resumableSessionUri: Value(recording.resumableSessionUri),
+                uploadedBytes: Value(recording.uploadedBytes),
+                splitFromId: Value(recording.splitFromId),
+                splitIndex: Value(recording.splitIndex),
+                splitSegmentCount: Value(recording.splitSegmentCount),
+              ),
+            );
       }
     });
   }

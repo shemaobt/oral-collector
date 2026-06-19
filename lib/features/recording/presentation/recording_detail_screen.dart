@@ -12,7 +12,6 @@ import 'package:path/path.dart' as p;
 import '../../../../core/l10n/content_l10n.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/auth/auth_notifier.dart';
-import '../../../core/database/app_database.dart';
 import '../../../core/platform/file_ops.dart' as file_ops;
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/tokens.dart';
@@ -23,10 +22,10 @@ import '../../genre/presentation/notifiers/genre_notifier.dart';
 import '../../project/presentation/notifiers/stats_notifier.dart';
 import '../../storyteller/domain/entities/storyteller.dart';
 import '../../sync/presentation/notifiers/sync_notifier.dart';
-import '../data/local_recording_classification.dart';
-import '../data/local_recording_to_entity.dart';
 import '../data/services/audio_exporter.dart';
 import '../data/supported_audio_formats.dart';
+import '../domain/entities/local_recording_entity.dart';
+import '../domain/entities/local_recording_entity_classification.dart';
 import '../domain/entities/register.dart';
 import '../domain/recording_edit_policy.dart';
 import 'notifiers/recording_detail_notifier.dart';
@@ -166,7 +165,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
 
     final result = await ref
         .read(recordingsListNotifierProvider.notifier)
-        .deleteRecording(localRecordingToEntity(recording));
+        .deleteRecording(recording);
     if (!mounted) return;
     switch (result) {
       case DeleteRecordingResult.forbidden:
@@ -201,7 +200,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     }
   }
 
-  Future<bool> _ensureLocalFile(LocalRecording recording) async {
+  Future<bool> _ensureLocalFile(LocalRecordingEntity recording) async {
     if (kIsWeb) return false;
 
     final hasLocal =
@@ -616,7 +615,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
   }
 
   Future<void> _persistSecondary({
-    required LocalRecording recording,
+    required LocalRecordingEntity recording,
     required SecondaryValues? values,
     required String successMessage,
   }) async {

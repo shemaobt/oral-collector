@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../../l10n/app_localizations.dart';
-import '../../../../core/database/app_database.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/tokens.dart';
+import '../../domain/entities/local_recording_entity.dart';
 import 'recording_about_section.dart';
 
 /// Title + classification block of the detail screen: the about section, the
@@ -30,7 +30,7 @@ class RecordingClassificationSection extends StatelessWidget {
     required this.onClearSecondary,
   });
 
-  final LocalRecording recording;
+  final LocalRecordingEntity recording;
   final ThemeData theme;
   final AppColorSet colors;
   final String genreBreadcrumb;

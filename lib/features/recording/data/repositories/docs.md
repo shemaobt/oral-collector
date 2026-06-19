@@ -12,7 +12,9 @@ Path: @/lib/features/recording/data/repositories
 - The local repository is the single write site for the `LocalRecordings`
   table and enforces the cache-hydration invariant established by ENG-64:
   any persisted row must carry every recording-level metadata field that
-  exists on the in-memory `LocalRecording` it came from.
+  exists on the in-memory recording it came from (a `LocalRecording` row on the
+  server-mapping/split paths, a `LocalRecordingEntity` on the detail
+  cache-download path).
 - All three repositories are exposed by the providers in
   [../providers.dart](../providers.dart) and are constructor-injected with
   their dependencies (Drift `AppDatabase` and/or
@@ -61,8 +63,8 @@ Path: @/lib/features/recording/data/repositories
 
 - `LocalRecordingRepository` wraps an `AppDatabase` and exposes focused
   query/update methods. Reads include `getRecordingById`,
-  `getRecordingByServerId`, `watchRecordingById` (used by
-  `localRecordingStreamProvider`), `getPendingUploads`,
+  `getRecordingByServerId`, `watchRecordingEntityById` (the entity stream
+  behind `localRecordingStreamProvider`), `getPendingUploads`,
   `getPendingWebUploads`, and the aggregate helpers
   `countRecordings`/`totalDuration`/`getLocalUnclassifiedStats`.
 - `getPendingUploads` / `getPendingWebUploads` define the **upload queue
@@ -79,25 +81,21 @@ Path: @/lib/features/recording/data/repositories
   `resetStuckUploading`. That filter lives only in the engine, not in this
   query — see Things to Know and
   [/lib/features/sync/docs.md](../../../sync/docs.md).
-- `watchRecordingById` is a `watchSingleOrNull` query with `.distinct()`
-  appended. Drift invalidates query streams at the table level, so every
-  write to `local_recordings` re-runs this query and re-emits even when the
-  row is byte-identical; `.distinct()` suppresses those duplicate downstream
-  emissions so the detail screen's `ref.listen` does not rebuild on unrelated
-  writes. The query still re-executes — table-level invalidation is inherent
-  to Drift and is not removed by `.distinct()`. It returns the raw Drift
-  `LocalRecording` row and remains the source for `localRecordingStreamProvider`
-  (the detail screen); no consumer was repointed by ENG-195.
-- `watchRecordingEntityById` is the row-decoupled sibling added by ENG-195:
-  the same `watchSingleOrNull` query, but it `.map()`s each row to a
-  `LocalRecordingEntity` (via `_fromRow`) **before** `.distinct()`.
-  Mapping first is the load-bearing detail — dedup now keys on the entity's
-  hand-written value equality, not the Drift row's generated equality. Because
-  the entity deliberately omits `lastRetryAt`/`md5Hash`, a write touching only
-  those produces an equal entity and `.distinct()` suppresses the re-emission;
-  a change to any content/operational field the entity carries still re-emits.
-  This is additive foundation: it runs in parallel with the row stream and the
-  detail watch will be repointed onto it in a later task (F5b). See
+- `watchRecordingEntityById` is the **single detail watch stream** (ENG-195
+  introduced it; ENG-199/ENG-200 made it the sole one by deleting the former
+  row stream `watchRecordingById`). It is a `watchSingleOrNull` query that
+  `.map()`s each row to a `LocalRecordingEntity` (via `_fromRow`) **before**
+  `.distinct()`. Mapping first is the load-bearing detail — dedup keys on the
+  entity's hand-written value equality, not the Drift row's generated equality.
+  Drift invalidates query streams at the table level, so every write to
+  `local_recordings` re-runs this query even when the row is byte-identical;
+  `.distinct()` suppresses the duplicate downstream emission. Because the entity
+  deliberately omits `lastRetryAt`/`md5Hash`, a write touching only those
+  produces an equal entity and `.distinct()` suppresses the re-emission, so the
+  detail screen no longer rebuilds on upload-bookkeeping churn; a change to any
+  content/operational field the entity carries still re-emits. It backs
+  `localRecordingStreamProvider` ([../docs.md](../docs.md)), which
+  `RecordingDetailNotifier` listens to (native only). See
   [../../domain/docs.md](../../domain/docs.md) for the entity itself and Things
   to Know.
 - `_fromRow(LocalRecording)` is the private row→entity hook backing
@@ -169,14 +167,21 @@ Path: @/lib/features/recording/data/repositories
   id (`web_<serverId>`) reconciles in place instead of hitting `UNIQUE
   constraint failed` — see Things to Know.
 - `cacheDownloadedAudio({recording, localFilePath})` is the canonical
-  entry point for the "download server audio for editing" path. It runs
-  inside a Drift transaction. If a row for `recording.id` already exists,
-  only `localFilePath` is updated — pre-existing local edits to
-  `description`, `storytellerId`, secondary classification, etc., are
-  preserved. If no row exists, it inserts via
-  `recording.toCompanion(false).copyWith(localFilePath: Value(...))`, which
-  forwards every column on the Drift schema. This eliminates the
-  hand-picked-subset pattern that caused ENG-64.
+  entry point for the "download server audio for editing" path. As of
+  ENG-199/ENG-200 `recording` is a `LocalRecordingEntity`
+  ([../../domain/entities/local_recording_entity.dart](../../domain/entities/local_recording_entity.dart)),
+  not the Drift row — the detail tree streams and holds the entity, so this
+  write site takes it directly rather than the caller re-deriving a row. It runs
+  inside a Drift transaction. If a row for `recording.id` already exists, only
+  `localFilePath` is updated — pre-existing local edits to `description`,
+  `storytellerId`, secondary classification, etc., are preserved. If no row
+  exists, it inserts a `LocalRecordingsCompanion` built **inline from every
+  entity field** so all metadata reaches the database — the ENG-64
+  full-metadata-insert guarantee. The only columns left absent are the
+  persistence internals the entity drops (`lastRetryAt`/`md5Hash`); absent →
+  null is correct here because the recording is server-sourced with no prior
+  local row. This is the same exhaustiveness the former `toCompanion(false)`
+  path gave, restated over the entity's fields.
 - `splitRecordingReplacingParent({parent, segments})` is the **atomic**
   replace used by the trim/split save (ENG-125): it inserts one child row per
   segment and deletes the parent row in **one** Drift transaction, so a partial
@@ -251,8 +256,9 @@ Path: @/lib/features/recording/data/repositories
 - **The split write path differs from the cache write path on purpose.**
   Split children inherit some parent fields, override others per segment,
   and reset upload-state fields. `cacheDownloadedAudio` instead carries
-  every field verbatim from the in-memory `LocalRecording`. Choosing the
-  right helper at the call site matters.
+  every field verbatim from the in-memory `LocalRecordingEntity` (minus the
+  dropped `lastRetryAt`/`md5Hash`). Choosing the right helper at the call site
+  matters.
 - **The typed writes' null handling is load-bearing and deliberately NOT
   unified (ENG-194).** Drift's `Value(null)` writes a literal SQL `NULL`
   (clears the column) while `Value.absent()` omits the column from the
@@ -322,18 +328,19 @@ Path: @/lib/features/recording/data/repositories
   [/lib/core/database/app_database.dart](../../../../core/database/app_database.dart)),
   and the pending set is small enough that the uncovered sort is negligible —
   no schema change or new index was added.
-- **`watchRecordingById` carries `.distinct()` (ENG-121).** It exists only to
-  collapse Drift's table-level re-emissions, not to change what the stream
-  reports. Any consumer that needs to observe a write which produces an
-  identical `LocalRecording` value (there is none today) would not see it.
 - **`watchRecordingEntityById` maps before `.distinct()`, so dedup keys on the
-  entity, not the row (ENG-195).** Where the row stream dedups on Drift's
-  generated row equality, the entity stream dedups on `LocalRecordingEntity`'s
-  hand-written `==`. Since the entity drops `lastRetryAt`/`md5Hash`, a write
-  that touches only those is invisible to this stream by design — a behavioral
-  difference from the row stream, not just a re-emission collapse. This is the
-  reason the entity needs value equality at all: without it, mapping to a fresh
-  object per emission would defeat `.distinct()` entirely.
+  entity, not the row (ENG-195; sole detail stream since ENG-199/ENG-200).** The
+  former row stream `watchRecordingById` — which dedup'd on Drift's generated
+  row equality and existed only to collapse table-level re-emissions — was
+  deleted once the detail tree moved to the entity; this is now the only watch
+  stream. It dedups on `LocalRecordingEntity`'s hand-written `==`, and because
+  the entity drops `lastRetryAt`/`md5Hash`, a write that touches only those is
+  invisible to it by design — so a pure upload-bookkeeping write no longer
+  re-renders the detail screen. This is the reason the entity needs value
+  equality at all: without it, mapping to a fresh object per emission would
+  defeat `.distinct()` entirely. `.distinct()` still only collapses re-emissions;
+  the query itself re-executes on every `local_recordings` write (table-level
+  invalidation is inherent to Drift).
 - **`upsertRecording` is what makes a failed web import retryable
   (ENG-80).** A large web import inserts a `web_<serverId>` shadow row to
   track resume state; on failure that row is intentionally left behind for

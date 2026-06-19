@@ -1,14 +1,15 @@
 import 'package:flutter/foundation.dart' show immutable;
 
-import '../../../../core/database/app_database.dart';
 import '../../../storyteller/domain/entities/storyteller.dart';
+import '../../domain/entities/local_recording_entity.dart';
 
 /// Load + resolution state for the recording detail screen, extracted from the
-/// screen so the orchestration can live in [RecordingDetailNotifier]. Keeps the
-/// raw [LocalRecording] row (the swap to LocalRecordingEntity is F5a/ENG-199).
+/// screen so the orchestration can live in [RecordingDetailNotifier]. Holds the
+/// row-decoupled [LocalRecordingEntity] (ENG-199/F5a).
 ///
-/// No value `==`/`hashCode`: there is no `.distinct()` consumer, and identity
-/// equality reproduces the screen's original `setState` (which rebuilt on every
+/// No value `==`/`hashCode`: there is no `.distinct()` consumer here (dedup
+/// lives upstream in `watchRecordingEntityById`), and identity equality
+/// reproduces the screen's original `setState` (which rebuilt on every
 /// mutation), so the rebuild cadence is unchanged.
 @immutable
 class RecordingDetailState {
@@ -18,12 +19,12 @@ class RecordingDetailState {
     this.resolvedStoryteller,
   });
 
-  final LocalRecording? recording;
+  final LocalRecordingEntity? recording;
   final bool isLoading;
   final Storyteller? resolvedStoryteller;
 
   RecordingDetailState copyWith({
-    LocalRecording? recording,
+    LocalRecordingEntity? recording,
     bool clearRecording = false,
     bool? isLoading,
     Storyteller? resolvedStoryteller,

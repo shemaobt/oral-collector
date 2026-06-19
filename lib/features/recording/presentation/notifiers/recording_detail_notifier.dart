@@ -12,6 +12,7 @@ import '../../../project/presentation/notifiers/stats_notifier.dart';
 import '../../../storyteller/data/providers.dart' as storyteller_providers;
 import '../../../storyteller/domain/entities/storyteller.dart';
 import '../../../sync/presentation/notifiers/sync_notifier.dart';
+import '../../data/local_recording_to_entity.dart';
 import '../../data/providers.dart';
 import '../../data/recording_heal_companion.dart';
 import '../../data/repositories/local_recording_repository.dart';
@@ -19,6 +20,7 @@ import '../../data/server_to_local_recording.dart';
 import '../../data/services/audio_downloader.dart';
 import '../../data/services/recording_file_importer.dart';
 import '../../data/use_cases/save_recording_title.dart';
+import '../../domain/entities/local_recording_entity.dart';
 import '../../domain/repositories/recording_api_repository.dart';
 import '../widgets/classify_recording_dialog.dart' show ClassifyResult;
 import '../widgets/move_category_dialog.dart' show MoveCategoryResult;
@@ -50,7 +52,7 @@ class RecordingDetailNotifier
     // Mirror the screen's real-time DB stream: patch an already-loaded recording
     // when the row changes (native only). It does not seed the initial load.
     if (!kIsWeb) {
-      ref.listen<AsyncValue<LocalRecording?>>(
+      ref.listen<AsyncValue<LocalRecordingEntity?>>(
         localRecordingStreamProvider(arg),
         (_, next) {
           final updated = next.valueOrNull;
@@ -134,24 +136,27 @@ class RecordingDetailNotifier
         }
       }
 
+      final entity = recording == null
+          ? null
+          : localRecordingToEntity(recording);
       state = state.copyWith(
-        recording: recording,
-        clearRecording: recording == null,
+        recording: entity,
+        clearRecording: entity == null,
         isLoading: false,
       );
 
-      if (isOnline && recording != null) {
+      if (isOnline && entity != null) {
         await ref
             .read(roleNotifierProvider.notifier)
-            .fetchRoleForProject(recording.projectId);
+            .fetchRoleForProject(entity.projectId);
         if (_disposed) return;
         // Bump so the widget re-reads role-derived permissions (mirrors the
         // screen's empty setState after the role fetch).
         state = state.copyWith();
       }
-      if (recording != null) {
-        await _resolveStoryteller(recording);
-        await _ensureMembersLoaded(recording.projectId);
+      if (entity != null) {
+        await _resolveStoryteller(entity);
+        await _ensureMembersLoaded(entity.projectId);
       }
     } catch (_) {
       if (_disposed) return;
@@ -159,7 +164,7 @@ class RecordingDetailNotifier
     }
   }
 
-  Future<void> _resolveStoryteller(LocalRecording recording) async {
+  Future<void> _resolveStoryteller(LocalRecordingEntity recording) async {
     final id = recording.storytellerId;
     if (id == null || id.isEmpty) {
       if (!_disposed) state = state.copyWith(clearStoryteller: true);
@@ -195,7 +200,7 @@ class RecordingDetailNotifier
   }
 
   Future<void> setStoryteller(
-    LocalRecording recording,
+    LocalRecordingEntity recording,
     Storyteller? storyteller,
   ) async {
     final serverId = recording.serverId ?? recording.id;
@@ -219,7 +224,7 @@ class RecordingDetailNotifier
   /// Saves an edited title and/or description. Title routes through the existing
   /// [saveRecordingTitle] use-case; description through the typed repo write.
   Future<RecordingMutationResult> saveDetails(
-    LocalRecording recording, {
+    LocalRecordingEntity recording, {
     required String title,
     required String description,
   }) async {
@@ -275,7 +280,7 @@ class RecordingDetailNotifier
   }
 
   Future<RecordingMutationResult> toggleCleaningStatus(
-    LocalRecording recording,
+    LocalRecordingEntity recording,
   ) async {
     final newStatus = recording.cleaningStatus == 'none'
         ? 'needs_cleaning'
@@ -306,7 +311,7 @@ class RecordingDetailNotifier
   }
 
   Future<RecordingMutationResult> moveCategory(
-    LocalRecording recording,
+    LocalRecordingEntity recording,
     MoveCategoryResult result,
   ) async {
     final serverId = recording.serverId ?? recording.id;
@@ -353,7 +358,7 @@ class RecordingDetailNotifier
   }
 
   Future<RecordingMutationResult> classify(
-    LocalRecording recording,
+    LocalRecordingEntity recording,
     ClassifyResult result,
   ) async {
     final hasServerId =
@@ -416,7 +421,7 @@ class RecordingDetailNotifier
 
   /// Persists (or clears, when [values] is null) the secondary classification.
   Future<RecordingMutationResult> saveSecondary(
-    LocalRecording recording,
+    LocalRecordingEntity recording,
     SecondaryValues? values,
   ) async {
     final hasServerId =
@@ -458,7 +463,7 @@ class RecordingDetailNotifier
   /// Downloads the recording's audio from GCS and caches it locally, then
   /// reloads. Throws on download failure so the widget can surface the error
   /// (and dismiss its progress dialog) exactly as the screen did inline.
-  Future<void> downloadAndCache(LocalRecording recording) async {
+  Future<void> downloadAndCache(LocalRecordingEntity recording) async {
     final path = await _cacheDownloader(
       url: recording.gcsUrl!,
       format: recording.format,
@@ -474,7 +479,7 @@ class RecordingDetailNotifier
 
   /// Downloads the audio to a temp file for sharing (web export). Throws on
   /// download failure.
-  Future<String> downloadForExport(LocalRecording recording) {
+  Future<String> downloadForExport(LocalRecordingEntity recording) {
     return _exportDownloader(
       url: recording.gcsUrl!,
       recordingId: recording.id,
@@ -487,7 +492,7 @@ class RecordingDetailNotifier
   /// the server when the recording was uploaded, then reloads. Returns false on
   /// failure (the screen showed `recording_replaceFailed`).
   Future<bool> replaceAudio(
-    LocalRecording recording, {
+    LocalRecordingEntity recording, {
     required String sourcePath,
     required String fileName,
     required double durationSeconds,

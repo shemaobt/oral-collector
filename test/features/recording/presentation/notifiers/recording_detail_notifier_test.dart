@@ -18,10 +18,12 @@ import 'package:oral_collector/features/project/presentation/notifiers/member_no
 import 'package:oral_collector/features/project/presentation/notifiers/member_state.dart';
 import 'package:oral_collector/features/project/presentation/notifiers/stats_notifier.dart';
 import 'package:oral_collector/features/project/presentation/notifiers/stats_state.dart';
+import 'package:oral_collector/features/recording/data/local_recording_to_entity.dart';
 import 'package:oral_collector/features/recording/data/providers.dart';
 import 'package:oral_collector/features/recording/data/repositories/local_recording_repository.dart';
 import 'package:oral_collector/features/recording/data/services/audio_downloader.dart';
 import 'package:oral_collector/features/recording/data/services/recording_file_importer.dart';
+import 'package:oral_collector/features/recording/domain/entities/local_recording_entity.dart';
 import 'package:oral_collector/features/recording/domain/entities/server_recording.dart';
 import 'package:oral_collector/features/recording/domain/repositories/recording_api_repository.dart';
 import 'package:oral_collector/features/recording/presentation/notifiers/recording_detail_notifier.dart';
@@ -209,7 +211,7 @@ void main() {
   });
   tearDown(() => db.close());
 
-  Future<LocalRecording> seed({
+  Future<LocalRecordingEntity> seed({
     String genreId = 'genre-1',
     String? subcategoryId = 'sub-1',
     String? registerId = 'reg-1',
@@ -248,7 +250,7 @@ void main() {
         recordedAt: Value(DateTime.utc(2026, 5, 1)),
       ),
     );
-    return (await repo.getRecordingById(recordingId))!;
+    return localRecordingToEntity((await repo.getRecordingById(recordingId))!);
   }
 
   ProviderContainer makeContainer({
@@ -267,7 +269,7 @@ void main() {
         // Avoid the Drift watch stream's pending Timer under flutter_test.
         localRecordingStreamProvider(
           recordingId,
-        ).overrideWith((ref) => const Stream<LocalRecording?>.empty()),
+        ).overrideWith((ref) => const Stream<LocalRecordingEntity?>.empty()),
         recordingApiRepositoryProvider.overrideWithValue(api ?? _FakeApiRepo()),
         syncNotifierProvider.overrideWith(
           () => _SyncNotifier(isOnline, syncSpy ?? _SyncSpy()),
