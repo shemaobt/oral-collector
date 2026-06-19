@@ -14,9 +14,11 @@ import 'package:just_audio/just_audio.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:oral_collector/core/database/app_database.dart';
 import 'package:oral_collector/core/errors/app_exception.dart';
+import 'package:oral_collector/features/recording/data/local_recording_to_entity.dart';
 import 'package:oral_collector/features/recording/data/providers.dart';
 import 'package:oral_collector/features/recording/data/repositories/local_recording_repository.dart';
 import 'package:oral_collector/features/recording/data/services/waveform_loader.dart';
+import 'package:oral_collector/features/recording/domain/entities/local_recording_entity.dart';
 import 'package:oral_collector/features/recording/presentation/notifiers/recording_player_notifier.dart';
 import 'package:oral_collector/features/recording/presentation/notifiers/trim_editor_notifier.dart';
 import 'package:oral_collector/features/recording/presentation/notifiers/trim_editor_state.dart';
@@ -32,7 +34,7 @@ class _MockPlayer extends Mock implements AudioPlayer {}
 
 class _FakeTrimEditorNotifier extends TrimEditorNotifier {
   _FakeTrimEditorNotifier({
-    required LocalRecording recording,
+    required LocalRecordingEntity recording,
     required TrimSaveOutcome outcome,
     bool isSaving = false,
   }) : _recording = recording,
@@ -40,7 +42,7 @@ class _FakeTrimEditorNotifier extends TrimEditorNotifier {
        _isSaving = isSaving;
 
   // Private to satisfy avoid_public_notifier_properties; read in-file by tests.
-  final LocalRecording _recording;
+  final LocalRecordingEntity _recording;
   final TrimSaveOutcome _outcome;
   final bool _isSaving;
   int _saveCalls = 0;
@@ -76,7 +78,7 @@ void main() {
   late LocalRecordingRepository repo;
   late _MockPlayer player;
   late AppLocalizations l10n;
-  late LocalRecording recording;
+  late LocalRecordingEntity recording;
 
   setUpAll(() async {
     l10n = await AppLocalizations.delegate.load(const Locale('en'));
@@ -100,7 +102,9 @@ void main() {
         recordedAt: Value(DateTime.utc(2026, 5, 1)),
       ),
     );
-    recording = (await repo.getRecordingById(_recordingId))!;
+    recording = localRecordingToEntity(
+      (await repo.getRecordingById(_recordingId))!,
+    );
 
     player = _MockPlayer();
     when(() => player.dispose()).thenAnswer((_) async {});

@@ -110,9 +110,13 @@ Path: @/lib/features/recording/data/repositories
   cannot diverge on which fields they carry. It mirrors the Storyteller
   precedent (`_fromRow` private in
   [../../../storyteller/data/repositories/local_storyteller_repository.dart](../../../storyteller/data/repositories/local_storyteller_repository.dart),
-  with a dual `getById`/`getRowById` read alongside the row read). The write
-  side (`_toCompanion`) was intentionally deferred — no write path was migrated
-  off `LocalRecordingsCompanion`.
+  with a dual `getById`/`getRowById` read alongside the row read). The reverse
+  mapper (`_toCompanion`) was intentionally deferred — there is still no
+  entity→companion mapper, so every write builds `LocalRecordingsCompanion`
+  directly. ENG-198 did extend the entity past the read seam by re-typing
+  `splitRecordingReplacingParent`'s `parent` to a `LocalRecordingEntity` (see
+  above), but that is a *read-only* parent input the child build reads off — it
+  did not introduce a reverse mapper or migrate any companion construction.
 - `saveRecording({...named params...})` is the canonical entry point for
   persisting a **freshly captured** recording: it builds the
   `LocalRecordingsCompanion` internally from raw named values and delegates to
@@ -163,8 +167,15 @@ Path: @/lib/features/recording/data/repositories
 - `splitRecordingReplacingParent({parent, segments})` is the **atomic**
   replace used by the trim/split save (ENG-125): it inserts one child row per
   segment and deletes the parent row in **one** Drift transaction, so a partial
-  failure can never strand orphaned children beside a surviving parent. The
-  child companions are built explicitly to encode the three-source rule
+  failure can never strand orphaned children beside a surviving parent. As of
+  ENG-198 `parent` is a `LocalRecordingEntity`
+  ([../../domain/entities/local_recording_entity.dart](../../domain/entities/local_recording_entity.dart)),
+  not the Drift `LocalRecording` row — so the entity's reach now extends past
+  the read seam into this write path's parent input. The propagation is
+  unchanged because the entity carries every field the child build reads
+  (id, projectId, genreId, subcategory/register, secondary*, storyteller/user,
+  description, format, recordedAt); the child companions are still
+  `LocalRecordingsCompanion` built explicitly to encode the three-source rule
   (inherit / segment-specific / reset) defined in
   [/docs/recording-split-semantics.md](../../../../../docs/recording-split-semantics.md).
   Before inserting, validates that no segment override collides with the
@@ -172,7 +183,8 @@ Path: @/lib/features/recording/data/repositories
   if it does, since the server would reject the upload with 422; the UI is
   expected to block this case earlier. The child-insert loop and the collision
   check live in the private helpers `_insertSplitChildren` and
-  `_assertNoSecondaryCollision`. The persister
+  `_assertNoSecondaryCollision`, which likewise take the entity `parent`. The
+  persister
   ([../services/recording_split_persister.dart](../services/recording_split_persister.dart))
   calls this — see Things to Know and [../docs.md](../docs.md).
 - `replaceAudio` is used by the "replace audio" flow on the detail screen

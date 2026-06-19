@@ -93,9 +93,16 @@ Path: @/lib/features/recording/data
   ([../presentation/notifiers/docs.md](../presentation/notifiers/docs.md)) both
   delegate to it, so a watch stream and the list cannot carry different fields.
   The server side composes the two — `localRecordingToEntity(serverRecordingToLocal(s))`
-  — to land server data as the same entity type the local side produces. This
-  is read-only projection; the inverse (`_toCompanion`) was deferred, so writes
-  still build `LocalRecordingsCompanion` directly.
+  — to land server data as the same entity type the local side produces. The
+  mapper is one-way (row→entity only); the inverse (`_toCompanion`) was
+  deferred, so every write still builds `LocalRecordingsCompanion` directly. As
+  of ENG-198 the entity it produces also feeds the split *write* path as a
+  read-only parent input — `splitRecordingReplacingParent({parent})` and the
+  trim editor's split/save chain now take a `LocalRecordingEntity` (see
+  [./repositories/docs.md](repositories/docs.md) and
+  [../presentation/notifiers/docs.md](../presentation/notifiers/docs.md)) — so
+  the projection is no longer used only by the read/watch streams, even though
+  no reverse entity→companion mapper exists.
 - `recording_heal_companion.dart` exposes the pure function
   `buildHealMetadataCompanion(local, server)`. It is used in the detail
   screen's online-refresh path to repair rows already corrupted on a device

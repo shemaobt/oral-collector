@@ -422,7 +422,7 @@ class LocalRecordingRepository {
   /// The server enforces `secondary != primary` and would reject the upload
   /// with a 422; the UI is expected to block this case before reaching here.
   void _assertNoSecondaryCollision(
-    LocalRecording parent,
+    LocalRecordingEntity parent,
     List<SplitSegmentSpec> segments,
   ) {
     for (final seg in segments) {
@@ -458,7 +458,7 @@ class LocalRecordingRepository {
   /// partial failure can never leave orphaned children alongside a surviving
   /// parent. See ENG-125.
   Future<List<String>> splitRecordingReplacingParent({
-    required LocalRecording parent,
+    required LocalRecordingEntity parent,
     required List<SplitSegmentSpec> segments,
   }) async {
     _assertNoSecondaryCollision(parent, segments);
@@ -475,7 +475,7 @@ class LocalRecordingRepository {
   /// contract in `docs/recording-split-semantics.md`. Runs in the caller's
   /// transaction; does not open its own.
   Future<List<String>> _insertSplitChildren(
-    LocalRecording parent,
+    LocalRecordingEntity parent,
     List<SplitSegmentSpec> segments,
   ) async {
     final ids = <String>[];

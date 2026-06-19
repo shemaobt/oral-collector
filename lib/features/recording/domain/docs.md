@@ -44,14 +44,19 @@ Path: @/lib/features/recording/domain
   the repository's private `_fromRow` and the list notifier both delegate to it
   (see [../data/docs.md](../data/docs.md) and
   [../data/repositories/docs.md](../data/repositories/docs.md)).
-- The migration off the row is staged (ENG-195 → ENG-197 → F2/ENG-19x). ENG-197
-  repointed the recordings-list state/notifier
+- The migration off the row is staged (ENG-195 → ENG-197 → ENG-198 →
+  F2/ENG-19x). ENG-197 repointed the recordings-list state/notifier
   ([../presentation/notifiers/docs.md](../presentation/notifiers/docs.md)) onto
   `List<LocalRecordingEntity>` — the first consumer to actually hold the entity.
-  The recording-detail watch stream is repointed in a later task (F5b), and the
-  list `RecordingCard` still takes a Drift row, bridged by a temporary adapter
-  on the list screen (see [../presentation/docs.md](../presentation/docs.md))
-  until F2 migrates the card.
+  ENG-198 then re-typed the trim editor's editing state and its split-persist
+  path (`TrimEditorState.recording`, `RecordingSplitPersister`, and
+  `LocalRecordingRepository.splitRecordingReplacingParent`) onto the entity,
+  the first time it reaches a write-path input (as a read-only `parent`, still
+  no reverse mapper). The recording-detail watch stream is repointed in a later
+  task (F5b), and the list `RecordingCard` still takes a Drift row, bridged by a
+  temporary adapter on the list screen (see
+  [../presentation/docs.md](../presentation/docs.md)) until F2 migrates the
+  card.
 - `LocalRecordingEntity.copyWith` uses **sentinel** semantics for nullable
   fields: passing `null` *clears* a nullable field, omitting it *preserves* the
   current value. Each nullable parameter defaults to a private `_sentinel`
@@ -116,10 +121,13 @@ Path: @/lib/features/recording/domain
   this device".** Callers check `localFilePath.isEmpty` before touching the
   file rather than treating absence as null. This matches the Drift column,
   which is also non-null.
-- **The write side was intentionally deferred.** There is no `_toCompanion`
-  on the entity and no write path was migrated off `LocalRecordingsCompanion`
-  in ENG-195; only the read seam (`_fromRow` + `watchRecordingEntityById`) was
-  added. See [../data/repositories/docs.md](../data/repositories/docs.md).
+- **The reverse mapper is still deferred.** There is no `_toCompanion` on the
+  entity and no companion construction has been migrated off
+  `LocalRecordingsCompanion`: ENG-195 added only the read seam (`_fromRow` +
+  `watchRecordingEntityById`), and although ENG-198 re-typed
+  `splitRecordingReplacingParent`'s `parent` to the entity, that consumes the
+  entity as a read-only input and still builds child companions by hand. See
+  [../data/repositories/docs.md](../data/repositories/docs.md).
 - **The `isPlatformAdmin` term is intentionally redundant.**
   `RoleNotifier.canManageProject` already returns true for platform
   admins (it short-circuits on `isPlatformAdmin` before checking

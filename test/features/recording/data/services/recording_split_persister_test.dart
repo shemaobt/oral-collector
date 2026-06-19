@@ -20,8 +20,10 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:oral_collector/core/database/app_database.dart';
+import 'package:oral_collector/features/recording/data/local_recording_to_entity.dart';
 import 'package:oral_collector/features/recording/data/repositories/local_recording_repository.dart';
 import 'package:oral_collector/features/recording/data/services/recording_split_persister.dart';
+import 'package:oral_collector/features/recording/domain/entities/local_recording_entity.dart';
 import 'package:oral_collector/features/recording/domain/entities/server_recording.dart';
 import 'package:oral_collector/features/recording/domain/entities/split_segment_request.dart';
 import 'package:oral_collector/features/recording/domain/repositories/recording_api_repository.dart';
@@ -44,7 +46,7 @@ void main() {
     await db.close();
   });
 
-  Future<LocalRecording> seedParent({
+  Future<LocalRecordingEntity> seedParent({
     String id = 'parent-1',
     String? serverId,
   }) async {
@@ -67,7 +69,7 @@ void main() {
         recordedAt: Value(DateTime.utc(2026, 5, 1, 10)),
       ),
     );
-    return (await repo.getRecordingById(id))!;
+    return localRecordingToEntity((await repo.getRecordingById(id))!);
   }
 
   SplitSegmentSpec spec({String id = 'c1'}) => SplitSegmentSpec(
@@ -171,7 +173,7 @@ void main() {
       'when a callback is provided', () async {
     final parent = await seedParent();
     final api = _FakeApiRepo();
-    LocalRecording? trashedParent;
+    LocalRecordingEntity? trashedParent;
     bool childPresentDuringTrash = false;
     bool parentRowGoneDuringTrash = false;
     final persister = RecordingSplitPersister(
@@ -244,7 +246,9 @@ void main() {
         recordedAt: Value(DateTime.utc(2026, 5, 1, 10)),
       ),
     );
-    final parent = (await faultyRepo.getRecordingById('parent-1'))!;
+    final parent = localRecordingToEntity(
+      (await faultyRepo.getRecordingById('parent-1'))!,
+    );
     final persister = RecordingSplitPersister(
       localRepo: faultyRepo,
       apiRepo: _FakeApiRepo(),
