@@ -171,25 +171,26 @@ Path: @/lib/features/recording/presentation/notifiers
   derivations the screen used to compute inline as getters — segment
   boundaries/timing, the effective taxonomy, and the save `decision`
   (`TrimEditDecision` from
-  [../trim_edit_decision.dart](../trim_edit_decision.dart)). As of ENG-198
-  the editing state and the split/save chain deal in the domain
-  `LocalRecordingEntity`, not the Drift `LocalRecording` row; the row is
-  resolved as before and mapped **once** at the load boundary via
-  `localRecordingToEntity`
-  ([../../data/local_recording_to_entity.dart](../../data/local_recording_to_entity.dart)),
-  so the presentation layer depends on the entity (see the entity-boundary
-  bullet). The notifier owns:
-  - **Load resolution** of the recording (`load`): it resolves a Drift
-    *row* exactly as before — web fetches the server DTO and maps it via
-    `serverRecordingToLocal`; native tries local-by-id, then
-    local-by-server-id, then an online fetch — then maps that row through
-    `localRecordingToEntity` at the boundary and stores the **entity** in
-    state. A caught server error is "not found" only for a genuine 404
-    (`isRecordingNotFound` in
-    [../trim_load_error.dart](../trim_load_error.dart)); anything else is
-    stored as a real `loadError`. The deliberate split: a resolved
-    recording leaves `isLoading` **true** so the widget can finish the
-    load (see the load-split bullet).
+  [../trim_edit_decision.dart](../trim_edit_decision.dart)). As of ENG-202 the
+  notifier holds **zero** Drift row type: the editing state, the load path, and
+  the split/save chain all deal in the domain `LocalRecordingEntity` — ENG-198
+  migrated the write side and ENG-202 closed the last leak by moving the load's
+  row→entity mapping out of the notifier and into the data layer (see the
+  entity-boundary bullet). The notifier owns:
+  - **Load resolution** of the recording (`load`): it resolves a
+    `LocalRecordingEntity` directly — web fetches the server DTO and maps it via
+    `serverRecordingToEntity`
+    ([../../data/server_to_recording_entity.dart](../../data/server_to_recording_entity.dart));
+    native tries `getRecordingEntityById`, then `getRecordingEntityByServerId`
+    ([../../data/repositories/docs.md](../../data/repositories/docs.md)), then an
+    online fetch via `serverRecordingToEntity`. The fetch order, the null
+    fall-through, and the `_disposed` guards are unchanged from the row version
+    (ENG-193); only the row→entity projection moved into `data/`. A caught server
+    error is "not found" only for a genuine 404 (`isRecordingNotFound` in
+    [../trim_load_error.dart](../trim_load_error.dart)); anything else is stored
+    as a real `loadError`. The deliberate split: a resolved recording leaves
+    `isLoading` **true** so the widget can finish the load (see the load-split
+    bullet).
   - **Editing mutations**: `setSplitPoints` (re-derives boundaries and
     remaps per-segment taxonomy via the top-level `remapTaxonomyBySig`
     so a small edit keeps a segment's overrides while a re-split drops
@@ -328,25 +329,31 @@ Path: @/lib/features/recording/presentation/notifiers
   not resolve under the fake-async widget-test zone, so they stay in the
   widget behind injectable providers rather than in the headless
   notifier.
-- **The trim editor deals in the domain entity, and the row→entity map is
-  one-way (ENG-198 / ENG-95-F4).** `TrimEditorState.recording` and the
-  whole split/save chain (`_saveServerSide` / `_saveLocally`, the
-  `RecordingSplitPersister`, and `splitRecordingReplacingParent`) use the
-  `LocalRecordingEntity`, not the Drift `LocalRecording` row. `load`
-  resolves a row and projects it through the single canonical mapper
-  `localRecordingToEntity`
-  ([../../data/local_recording_to_entity.dart](../../data/local_recording_to_entity.dart))
-  **once** at the boundary, and the dependency flows one way for the split path
-  (presentation depends on the entity, never the row). The split write path has
-  no reverse mapper — it still builds `LocalRecordingsCompanion` children from the
-  entity's fields in the data layer, because each child mixes inherited /
-  segment-specific / reset fields; the entity carries every parent field the
-  child-propagation contract reads, so the behavior is unchanged. (The separate
-  *save* path did get a reverse mapper in ENG-201 —
-  `localRecordingEntityToCompanion`, backing `saveRecording` — but that is the
-  fresh-capture insert, a different write than the split.) This is
-  the same migration that re-typed the recordings list (ENG-197) extended
-  to the trim editor and its split-persist path.
+- **The trim editor holds no Drift row anymore, and the row→entity map is
+  one-way (ENG-198 + ENG-202 / ENG-95-F4).** `TrimEditorState.recording`, the
+  load path, and the whole split/save chain (`_saveServerSide` / `_saveLocally`,
+  the `RecordingSplitPersister`, and `splitRecordingReplacingParent`) all use the
+  `LocalRecordingEntity`, never the Drift `LocalRecording` row — the trim editor
+  was the **last** place the presentation layer touched a raw row, and ENG-202
+  closed it. The row→entity projection now lives entirely in `data/`: `load`
+  calls the repository's entity getters
+  (`getRecordingEntityById`/`getRecordingEntityByServerId`,
+  [../../data/repositories/docs.md](../../data/repositories/docs.md)) and
+  `serverRecordingToEntity`
+  ([../../data/server_to_recording_entity.dart](../../data/server_to_recording_entity.dart)),
+  both of which funnel through the single canonical `localRecordingToEntity`
+  ([../../data/local_recording_to_entity.dart](../../data/local_recording_to_entity.dart)),
+  so the mapping the notifier used to do inline moved down a layer. The
+  dependency flows one way for the split path (presentation depends on the
+  entity, never the row). The split write path has no reverse mapper — it still
+  builds `LocalRecordingsCompanion` children from the entity's fields in the data
+  layer, because each child mixes inherited / segment-specific / reset fields;
+  the entity carries every parent field the child-propagation contract reads, so
+  the behavior is unchanged. (The separate *save* path did get a reverse mapper
+  in ENG-201 — `localRecordingEntityToCompanion`, backing `saveRecording` — but
+  that is the fresh-capture insert, a different write than the split.) This is
+  the same migration that re-typed the recordings list (ENG-197) extended to the
+  trim editor's load and split-persist paths.
 - **`saveSplit` returns an outcome; the widget owns the UI (ENG-193).**
   Because the notifier is headless, `saveSplit` resolves to a sealed
   `TrimSaveOutcome` and never touches `BuildContext`. The screen

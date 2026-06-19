@@ -109,6 +109,15 @@ Path: @/lib/features/recording/data
   cache-download write `cacheDownloadedAudio` (ENG-199/ENG-200, see
   [./repositories/docs.md](repositories/docs.md)) — so the projection is no
   longer used only by the read/watch streams.
+- `server_to_recording_entity.dart` exposes `serverRecordingToEntity(server)`,
+  the one-line composition `localRecordingToEntity(serverRecordingToLocal(s))`
+  promoted to a named mapper (ENG-202). It lands a `ServerRecording` straight as
+  the domain `LocalRecordingEntity` for the server-only load case, so the
+  server→entity projection cannot drift from the two row mappers it composes. The
+  trim editor's load path
+  ([../presentation/notifiers/docs.md](../presentation/notifiers/docs.md)) uses it
+  for recordings that exist only on the server (web load, plus the native
+  server-fetch fallback).
 - `local_recording_entity_to_companion.dart` exposes
   `localRecordingEntityToCompanion(entity)`, the write-path inverse of
   `localRecordingToEntity` added by ENG-201 (the F4b step of the row→entity

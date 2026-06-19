@@ -50,6 +50,22 @@ class LocalRecordingRepository {
     )..where((t) => t.serverId.equals(serverId))).getSingleOrNull();
   }
 
+  /// One-shot, row-decoupled analogue of [getRecordingById]: projects to the
+  /// domain entity so callers (the trim editor load path) never see a Drift
+  /// row. See ENG-202.
+  Future<LocalRecordingEntity?> getRecordingEntityById(String id) async {
+    final row = await getRecordingById(id);
+    return row == null ? null : _fromRow(row);
+  }
+
+  /// Row-decoupled analogue of [getRecordingByServerId]. See ENG-202.
+  Future<LocalRecordingEntity?> getRecordingEntityByServerId(
+    String serverId,
+  ) async {
+    final row = await getRecordingByServerId(serverId);
+    return row == null ? null : _fromRow(row);
+  }
+
   /// Watches a single recording as the row-decoupled domain entity. Maps before
   /// `.distinct()` so dedup runs on [LocalRecordingEntity]'s value equality —
   /// the detail watch stream consumes this (ENG-199/ENG-200). See ENG-195.
