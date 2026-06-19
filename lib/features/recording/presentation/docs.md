@@ -7,34 +7,39 @@ Path: @/lib/features/recording/presentation
 - Holds the user-facing screens for the recording feature: the recordings
   list, the detail screen, the recording flow / quick recording, the trim
   editor, the file import flow, and the supporting notifiers and widgets.
-- The detail screen is the central hub for editing a recording's
-  metadata. It is also the call site of the ENG-64 fix: a server-only
-  recording opened for edit must download the audio and persist the row
-  without dropping any metadata field.
+- The detail screen is the central hub for editing a recording's metadata.
+  As of ENG-194 it is a thin consumer: its load orchestration and mutations live
+  in `RecordingDetailNotifier` (see [./notifiers/docs.md](notifiers/docs.md)),
+  which is also the home of the ENG-64 fix — a server-only recording opened for
+  edit must download the audio and persist the row without dropping any metadata
+  field.
 - All persistence happens through the recording data layer at
-  [../data/](../data/). Screens never write directly to Drift; they read
-  through providers in [../data/providers.dart](../data/providers.dart)
-  and call repository methods.
+  [../data/](../data/). Screens never write directly to Drift; the feature's
+  notifiers read through providers in
+  [../data/providers.dart](../data/providers.dart) and call typed repository
+  methods, and screens forward to the notifiers.
 
 ### How it fits into the larger codebase
 
 - Screens are wired into navigation by the top-level router in
   [/lib/core/router/](../../../core/router/) (e.g. `/recording/:id`,
   `/recording/:id/trim`, the recording flow, the file-import screen).
-- The detail screen depends on:
-  - [../data/recording_heal_companion.dart](../data/recording_heal_companion.dart)
-    for the additive-only metadata heal on online refresh.
-  - [../data/server_to_local_recording.dart](../data/server_to_local_recording.dart)
-    for kIsWeb and offline-miss cases where there is no local row yet.
-  - [../data/repositories/local_recording_repository.dart](../data/repositories/local_recording_repository.dart)
-    for `cacheDownloadedAudio` (the post-download write) and for in-place
-    edits (`updateRecording`). The user-initiated recording delete is no
-    longer issued here from the screen — it is delegated to
-    `RecordingsListNotifier.deleteRecording` (see Core Implementation and
-    [./notifiers/docs.md](notifiers/docs.md)).
-  - [../data/providers.dart](../data/providers.dart) for
-    `localRecordingStreamProvider`, which streams Drift changes back into
-    the screen so any external write (sync, heal) re-renders the UI.
+- The detail screen is now a thin consumer of `RecordingDetailNotifier`
+  (ENG-194), which owns the load orchestration, the metadata/audio mutations,
+  and the `localRecordingStreamProvider` listen (see
+  [./notifiers/docs.md](notifiers/docs.md)). The screen's former direct
+  dependencies — the heal companion
+  ([../data/recording_heal_companion.dart](../data/recording_heal_companion.dart)),
+  `serverRecordingToLocal`
+  ([../data/server_to_local_recording.dart](../data/server_to_local_recording.dart)),
+  the repository writes
+  ([../data/repositories/local_recording_repository.dart](../data/repositories/local_recording_repository.dart)),
+  and `localRecordingStreamProvider`
+  ([../data/providers.dart](../data/providers.dart)) — all moved into the
+  notifier. The screen reads `ref.watch(recordingDetailProvider(id))` for state;
+  the user-initiated delete is still delegated to
+  `RecordingsListNotifier.deleteRecording` (see Core Implementation and
+  [./notifiers/docs.md](notifiers/docs.md)).
 - The trim editor at
   [./trim_editor_screen.dart](./trim_editor_screen.dart) is now a thin
   widget: its editing state and split/save orchestration live in
@@ -59,27 +64,29 @@ Path: @/lib/features/recording/presentation
 
 ### Core Implementation
 
-- `recording_detail_screen.dart` owns the lifecycle for one recording.
-  `_loadRecording()` resolves the row by trying local-by-id, then
-  local-by-server-id, then (online) a server fetch that either heals an
-  existing local row via `buildHealMetadataCompanion(local, server)` or
-  builds an in-memory `LocalRecording` via `serverRecordingToLocal` when
-  nothing is cached. The screen also `ref.listen`s
-  `localRecordingStreamProvider(id)` so a heal or sync write propagates
-  back into local state without manual reloads.
-- `_ensureLocalFile(recording)` is the "download server audio so the user
-  can trim/replace" path. It downloads the file from `recording.gcsUrl`
-  via `http`, writes it to the app documents directory, and persists the
-  cache via `LocalRecordingRepository.cacheDownloadedAudio`. The hand-built
-  insert this method used to do was the ENG-64 corruption site; it is now
-  a single call into the repository.
-- All write actions on the detail screen (`_onStorytellerChanged`,
-  `_saveDescription`, `_toggleCleaningStatus`, `_moveCategory`,
-  `_classifyRecording`, `_persistSecondary`, `_replaceAudio`) follow the
-  same pattern: call the server first, then mirror the change locally via
-  `LocalRecordingRepository.updateRecording` with a narrow companion that
-  touches only the affected fields, then `await _loadRecording()` to
-  refresh the screen state.
+- `recording_detail_screen.dart` is a thin `ConsumerStatefulWidget`
+  (ENG-194). `build` reads `ref.watch(recordingDetailProvider(id))`; `initState`
+  kicks `_notifier.load`. Every write handler is the same shape: show the
+  dialog / sheet / file picker / progress spinner, call a `RecordingDetailNotifier`
+  method, then map the returned `RecordingMutationResult` (or thrown error /
+  `bool`) to a localized snackbar. The load orchestration, the metadata/audio
+  mutations, and the `localRecordingStreamProvider` listen all live in the
+  notifier (see [./notifiers/docs.md](notifiers/docs.md)) — the screen no longer
+  imports `drift`'s `Value`, `http`, `dart:io`, the heal companion, or
+  `serverRecordingToLocal`.
+- What stays in the widget: the dialogs / bottom sheets, the snackbar mapping,
+  the `file_picker` invocation, the share/export UI (`AudioExporter`),
+  `_probeDuration` (it spins up a real `AudioPlayer` to read the picked file's
+  duration), and `_ensureLocalFile`. `_ensureLocalFile` is now only the
+  **confirmation-dialog + progress-spinner shell**: it asks the user
+  (`recording_downloadAudio`), shows a blocking spinner, and delegates the
+  actual GCS download + cache write to `_notifier.downloadAndCache` — the
+  hand-built insert it used to do was the ENG-64 corruption site, and the inline
+  `http.get` is now behind the `audioCacheDownloaderProvider` seam
+  ([../data/services/audio_downloader.dart](../data/services/audio_downloader.dart)).
+- The `_canEditRecording` getter and the per-action client-side authorization
+  it gates are unchanged (see below); it now reads the recording off
+  `ref.read(recordingDetailProvider(id)).recording` instead of a screen field.
 - **Delete is the one action both screens delegate, not inline (ENG-120).**
   The list and detail screens each only show the confirm dialog, call
   `RecordingsListNotifier.deleteRecording(recording)` (which takes a
@@ -119,13 +126,15 @@ Path: @/lib/features/recording/presentation
 - The detail screen's audio playback is owned by
   `RecordingPlayerNotifier` at
   [./notifiers/recording_player_notifier.dart](notifiers/recording_player_notifier.dart).
-  After `_loadRecording` resolves the row, it calls
-  `ref.read(recordingPlayerProvider(id).notifier).load(filePath, url)`;
-  the same call also covers replace-audio and storyteller-change paths,
-  which re-invoke `_loadRecording`. `RecordingHeroPlayer` watches that
-  provider and renders the play controls / loading / error sub-views.
-  Path resolution (stored path → docs dir → `recordings/` subdir) is
-  delegated to
+  Once `RecordingDetailNotifier.load` resolves the row into state, the hero
+  widget `RecordingHeroPlayer`
+  ([./widgets/recording_hero_player.dart](widgets/recording_hero_player.dart))
+  — handed that `recording` — calls
+  `ref.read(recordingPlayerProvider(id).notifier).load(filePath, url)` and
+  watches the provider to render the play controls / loading / error sub-views;
+  the replace-audio and storyteller-change paths re-resolve the row (notifier
+  `load`) which re-drives the hero. Path resolution (stored path → docs dir →
+  `recordings/` subdir) is delegated to
   [../data/services/audio_path_resolver.dart](../data/services/audio_path_resolver.dart).
 - `file_import_screen.dart` is the multi-file import flow: it picks /
   drops candidates, probes each via
@@ -184,27 +193,30 @@ Path: @/lib/features/recording/presentation
   `lastRetryAt`/`md5Hash` are fields the card never reads) to bridge the gap.
   This is staged migration debt: F2/ENG-19x migrates the card to the entity and
   deletes the shim. Do not grow new consumers of `_entityToCardRow`.
-- **Listener-driven re-renders.** The detail screen keeps a local
-  `_recording` field but also listens to
-  `localRecordingStreamProvider(widget.recordingId)`. If anything writes
-  to that Drift row, the listener calls `setState(() => _recording =
-  updated)`. This is what makes the ENG-64 bug user-visible: a corrupt
-  cache insert immediately blanks the description on screen even though
-  the user did not edit anything. Cache writes therefore have to be
-  exhaustive.
-- **Heal runs at most once per online open.** The heal companion in
-  `_loadRecording` is gated by `localHasServerId && (needsGcsRefresh ||
+- **Listener-driven re-renders (now in the notifier, ENG-194).** The
+  recording shown is `RecordingDetailState.recording`, and
+  `RecordingDetailNotifier.build` (native only) `ref.listen`s
+  `localRecordingStreamProvider(id)`; any write to that Drift row patches the
+  row into `state`, which re-renders the watching screen. This is what makes the
+  ENG-64 bug user-visible: a corrupt cache insert immediately blanks the
+  description on screen even though the user did not edit anything. Cache writes
+  therefore still have to be exhaustive — the listen moved off the widget but
+  the hazard is identical.
+- **Heal runs at most once per online open.** The heal companion in the
+  notifier's `load` is gated by `localHasServerId && (needsGcsRefresh ||
   needsUserRefresh)`; rows that already have `gcsUrl` and `userId` are
   not heal-refreshed, which avoids redundant API calls. Inside the heal
   companion itself the corruption marker is `userId IS NULL`: only rows
   that lost userId to the original bug get user-content fields filled
   from the server. Healthy rows never get their description / storyteller
   / secondary classification touched — intentional clears survive.
-- **Web vs native divergence.** On `kIsWeb`, the detail screen does not
-  use Drift at all — it always reads via the API and renders an in-memory
-  `LocalRecording` from `serverRecordingToLocal`. The `_ensureLocalFile`
-  download path is a no-op on web. The trim editor for web routes to a
-  dedicated `/trim` path that uses streamed audio.
+- **Web vs native divergence.** On `kIsWeb`, the detail flow does not use
+  Drift at all — `RecordingDetailNotifier.load` always fetches via the API and
+  renders an in-memory `LocalRecording` from `serverRecordingToLocal`, the
+  per-action local mirror writes are skipped, and the
+  `localRecordingStreamProvider` listen is not registered. The
+  `_ensureLocalFile` download path returns early on web. The trim editor for web
+  routes to a dedicated `/trim` path that uses streamed audio.
 - **Edit controls are role/ownership gated, not just login gated
   (ENG-142).** Every edit affordance on the detail screen flows through
   the one `_canEditRecording` getter, so a single policy decides
@@ -215,12 +227,13 @@ Path: @/lib/features/recording/presentation
   those controls. This is a UX/authorization-surface fix, not a security
   boundary — the server remains the enforcement point and a matching
   server-side check is tracked separately (ENG-81). The getter still
-  short-circuits to non-editable while `_recording` is null (before the
-  row resolves).
+  short-circuits to non-editable while `RecordingDetailState.recording` is null
+  (before the row resolves).
 - **Online-first then mirror locally.** Edits always call the server
-  first; if the server call fails, the local row is not changed (so we do
-  not generate phantom local edits). Errors are surfaced through the shared
-  `showErrorSnackBar` helper
+  first (now inside the notifier's mutations, ENG-194); if the server call
+  fails, the local row is not changed (so we do not generate phantom local
+  edits). The notifier hands the outcome back as a `RecordingMutationResult` and
+  the widget surfaces errors through the shared `showErrorSnackBar` helper
   ([/lib/shared/widgets/error_snack_bar.dart](../../../shared/widgets/error_snack_bar.dart)),
   which is handed the **typed** caught exception so it localizes via the type
   switch (ENG-104; the throwing catch-sites no longer build a raw

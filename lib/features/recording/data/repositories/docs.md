@@ -27,11 +27,15 @@ Path: @/lib/features/recording/data/repositories
   (detail screen, trim editor, classify dialog, confirmation step, file
   import).
 - It is consumed by:
-  - The recording presentation layer:
-    [../../presentation/recording_detail_screen.dart](../../presentation/recording_detail_screen.dart),
-    [../../presentation/trim_editor_screen.dart](../../presentation/trim_editor_screen.dart),
-    [../../presentation/widgets/confirmation_step.dart](../../presentation/widgets/confirmation_step.dart),
-    [../../presentation/file_import_screen.dart](../../presentation/file_import_screen.dart).
+  - The recording presentation layer — increasingly through the feature's
+    notifiers rather than from screens directly: `RecordingDetailNotifier` (the
+    typed classification/metadata writes, ENG-194), `TrimEditorNotifier`
+    (`splitRecordingReplacingParent`, ENG-193), and `RecordingsListNotifier`
+    (`getAllRecordings`, the hard delete) under
+    [../../presentation/notifiers/](../../presentation/notifiers/), plus the
+    screens still calling it directly
+    ([../../presentation/widgets/confirmation_step.dart](../../presentation/widgets/confirmation_step.dart),
+    [../../presentation/file_import_screen.dart](../../presentation/file_import_screen.dart)).
   - The upload pipeline:
     [../services/direct_recording_uploader.dart](../services/direct_recording_uploader.dart)
     and the resumable upload service under
@@ -126,6 +130,18 @@ Path: @/lib/features/recording/data/repositories
   a deferred entity→companion mapper — the same direction as the read-side
   `_fromRow`/`watchRecordingEntityById` work below; keeping the Drift companion
   here for now is intentional.
+- The **typed classification/metadata writes** (ENG-194) — `setStoryteller`,
+  `updateDescription`, `updateCleaningStatus`, `moveCategory`, `classify`, and
+  `updateSecondaryClassification` — replace the inline
+  `LocalRecordingsCompanion` construction the detail screen's presentation layer
+  used to do. Each takes named domain values and builds the narrow companion
+  internally, so the presentation layer no longer imports `drift`'s `Value`.
+  `RecordingDetailNotifier`
+  ([../../presentation/notifiers/docs.md](../../presentation/notifiers/docs.md))
+  is the sole caller. The repository stays **Drift-only** — these writes add no
+  http/file dependency; the GCS download and the file import that the same
+  mutations need live behind seams under [../services/](../services/), not here.
+  Their null handling is intentionally **not unified** — see Things to Know.
 - `insertRecording` is a plain insert; `upsertRecording` is
   `insertOnConflictUpdate` (insert-or-update keyed on the primary key).
   Columns absent from the companion are left untouched on an update, so a
@@ -212,6 +228,24 @@ Path: @/lib/features/recording/data/repositories
   and reset upload-state fields. `cacheDownloadedAudio` instead carries
   every field verbatim from the in-memory `LocalRecording`. Choosing the
   right helper at the call site matters.
+- **The typed writes' null handling is load-bearing and deliberately NOT
+  unified (ENG-194).** Drift's `Value(null)` writes a literal SQL `NULL`
+  (clears the column) while `Value.absent()` omits the column from the
+  `UPDATE` (preserves whatever is stored). The typed writes encode the
+  distinction the inline companions used to:
+  - `classify` omits a null `registerId` (`Value.absent`, **preserve**) — a
+    classify dialog that left the register blank must keep an existing
+    register, not wipe it. A characterization test asserts exactly this.
+  - `moveCategory` (when `clearSecondary` is true) and
+    `updateSecondaryClassification` write the secondary fields as `Value(null)`
+    (**clear**) — these flows intend to drop the secondary classification.
+  - `setStoryteller` maps a `null` storyteller to `Value(null)` (clear) and a
+    present one to `Value(it)`.
+
+  Folding these into one "null means absent" (or one "null means clear") rule
+  would silently break either the preserve case or the clear case. The choice
+  lives in the repository now precisely so it is one auditable place, not
+  re-derived at each presentation call site.
 - **`splitRecordingReplacingParent` is atomic (ENG-125).** The trim/split save
   must end with the children present and the parent gone. Doing those as two
   statements (insert in a transaction, then delete) left a failure window where
