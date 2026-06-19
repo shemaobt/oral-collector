@@ -7,4 +7,9 @@ import 'local_recording_entity.dart';
 extension LocalRecordingEntityClassification on LocalRecordingEntity {
   bool get isUnclassified =>
       recordingIsUnclassified(genreId: genreId, registerId: registerId);
+
+  bool get hasSecondary => recordingHasSecondary(
+    secondaryGenreId: secondaryGenreId,
+    secondaryRegisterId: secondaryRegisterId,
+  );
 }

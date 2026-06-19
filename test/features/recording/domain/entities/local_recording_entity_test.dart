@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:oral_collector/features/recording/domain/entities/local_recording_entity.dart';
+import 'package:oral_collector/features/recording/domain/entities/local_recording_entity_classification.dart';
 
 LocalRecordingEntity _entity() => LocalRecordingEntity(
   id: 'r1',
@@ -42,6 +43,20 @@ void main() {
       final original = _entity();
 
       expect(original.copyWith(), original);
+    });
+  });
+
+  group('LocalRecordingEntity classification', () {
+    test('hasSecondary is set by either secondary genre or register', () {
+      expect(_entity().hasSecondary, isFalse);
+      expect(
+        _entity().copyWith(secondaryGenreId: 'genre-2').hasSecondary,
+        isTrue,
+      );
+      expect(
+        _entity().copyWith(secondaryRegisterId: 'reg-2').hasSecondary,
+        isTrue,
+      );
     });
   });
 }

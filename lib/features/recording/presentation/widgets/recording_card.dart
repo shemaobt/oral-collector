@@ -3,12 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../../l10n/app_localizations.dart';
-import '../../../../core/database/app_database.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/tokens.dart';
 import '../../../../shared/utils/format.dart';
 import '../../../sync/presentation/notifiers/sync_notifier.dart';
-import '../../data/local_recording_classification.dart';
+import '../../domain/entities/local_recording_entity.dart';
+import '../../domain/entities/local_recording_entity_classification.dart';
 import '../notifiers/recording_session_notifier.dart';
 
 class RecordingCard extends ConsumerWidget {
@@ -23,7 +23,7 @@ class RecordingCard extends ConsumerWidget {
     this.onDelete,
   });
 
-  final LocalRecording recording;
+  final LocalRecordingEntity recording;
   final String? genreName;
   final String? subcategoryName;
   final String? registerName;
