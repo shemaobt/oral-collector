@@ -44,20 +44,24 @@ Path: @/lib/features/recording/domain
   the repository's private `_fromRow` and the list notifier both delegate to it
   (see [../data/docs.md](../data/docs.md) and
   [../data/repositories/docs.md](../data/repositories/docs.md)).
-- The migration off the row is staged (ENG-195 → ENG-197 → ENG-198 →
+- The migration off the row is staged (ENG-195 → ENG-197 → ENG-198 → ENG-201 →
   ENG-196 → ENG-199). ENG-197 repointed the recordings-list state/notifier
   ([../presentation/notifiers/docs.md](../presentation/notifiers/docs.md)) onto
   `List<LocalRecordingEntity>` — the first consumer to actually hold the entity.
   ENG-198 then re-typed the trim editor's editing state and its split-persist
   path (`TrimEditorState.recording`, `RecordingSplitPersister`, and
   `LocalRecordingRepository.splitRecordingReplacingParent`) onto the entity,
-  the first time it reaches a write-path input (as a read-only `parent`, still
-  no reverse mapper). ENG-196 then migrated the list's leaf widgets:
-  `RecordingCard` and the per-item pending-web-upload card now take the entity,
-  and the temporary list-screen adapter that re-hydrated a row for the card was
-  deleted (see [../presentation/docs.md](../presentation/docs.md)). The
-  recording-detail watch stream and its section widgets are repointed in a later
-  task (ENG-199).
+  the first time it reaches a write-path input (as a read-only `parent`). ENG-201
+  (F4b) then added the first reverse mapper, `localRecordingEntityToCompanion`,
+  and re-typed `saveRecording` onto the entity (see
+  [../data/docs.md](../data/docs.md) and
+  [../data/repositories/docs.md](../data/repositories/docs.md)). ENG-196 migrated
+  the list's leaf widgets: `RecordingCard` and the per-item pending-web-upload
+  card now take the entity, and the temporary list-screen adapter that
+  re-hydrated a row for the card was deleted (see
+  [../presentation/docs.md](../presentation/docs.md)). The recording-detail watch
+  stream is repointed in a later task (F5b), and the detail-screen section
+  widgets in ENG-199.
 - `LocalRecordingEntity.copyWith` uses **sentinel** semantics for nullable
   fields: passing `null` *clears* a nullable field, omitting it *preserves* the
   current value. Each nullable parameter defaults to a private `_sentinel`
@@ -124,13 +128,15 @@ Path: @/lib/features/recording/domain
   this device".** Callers check `localFilePath.isEmpty` before touching the
   file rather than treating absence as null. This matches the Drift column,
   which is also non-null.
-- **The reverse mapper is still deferred.** There is no `_toCompanion` on the
-  entity and no companion construction has been migrated off
-  `LocalRecordingsCompanion`: ENG-195 added only the read seam (`_fromRow` +
-  `watchRecordingEntityById`), and although ENG-198 re-typed
-  `splitRecordingReplacingParent`'s `parent` to the entity, that consumes the
-  entity as a read-only input and still builds child companions by hand. See
-  [../data/repositories/docs.md](../data/repositories/docs.md).
+- **The reverse mapper is scoped to the save path (ENG-201).** The first
+  entity→companion mapper, `localRecordingEntityToCompanion`
+  ([../data/local_recording_entity_to_companion.dart](../data/local_recording_entity_to_companion.dart)),
+  backs `saveRecording` for a freshly captured row; it is the inverse of
+  `localRecordingToEntity` scoped to the insert companion, not a full serializer.
+  The split write path is deliberately *not* migrated onto it — ENG-198 re-typed
+  `splitRecordingReplacingParent`'s `parent` to the entity but still builds child
+  companions by hand, because each child mixes inherited / segment-specific /
+  reset fields. See [../data/repositories/docs.md](../data/repositories/docs.md).
 - **The `isPlatformAdmin` term is intentionally redundant.**
   `RoleNotifier.canManageProject` already returns true for platform
   admins (it short-circuits on `isPlatformAdmin` before checking

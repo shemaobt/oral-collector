@@ -110,30 +110,43 @@ Path: @/lib/features/recording/data/repositories
   cannot diverge on which fields they carry. It mirrors the Storyteller
   precedent (`_fromRow` private in
   [../../../storyteller/data/repositories/local_storyteller_repository.dart](../../../storyteller/data/repositories/local_storyteller_repository.dart),
-  with a dual `getById`/`getRowById` read alongside the row read). The reverse
-  mapper (`_toCompanion`) was intentionally deferred — there is still no
-  entity→companion mapper, so every write builds `LocalRecordingsCompanion`
-  directly. ENG-198 did extend the entity past the read seam by re-typing
+  with a dual `getById`/`getRowById` read alongside the row read). The first
+  write-path reverse mapper now exists (ENG-201): `localRecordingEntityToCompanion`
+  in [../local_recording_entity_to_companion.dart](../local_recording_entity_to_companion.dart)
+  projects an entity onto the **insert/save** companion and backs `saveRecording`
+  (below). The split write path is still hand-built, however — ENG-198 re-typed
   `splitRecordingReplacingParent`'s `parent` to a `LocalRecordingEntity` (see
-  above), but that is a *read-only* parent input the child build reads off — it
-  did not introduce a reverse mapper or migrate any companion construction.
-- `saveRecording({...named params...})` is the canonical entry point for
-  persisting a **freshly captured** recording: it builds the
-  `LocalRecordingsCompanion` internally from raw named values and delegates to
-  `insertRecording`. Centralizing the companion construction here moved that
-  data-layer concern out of the confirmation flow, which used to assemble the
-  companion inline (ENG-192). It drops empty optional metadata
-  (`subcategoryId`/`registerId`/`description`) to NULL rather than storing
-  empty strings, and leaves `uploadStatus`/`serverId` absent unless provided —
-  so the native save falls back to the schema default `uploadStatus='local'`
-  while the web direct-upload save passes `'uploaded'` + the `serverId`. The
-  sole caller is
-  [../../presentation/widgets/confirmation_step.dart](../../presentation/widgets/confirmation_step.dart)
-  (both its native and web-direct save paths). This is the single shared edit
-  point ENG-95-F4 will re-type onto a `LocalRecordingEntity` domain object plus
-  a deferred entity→companion mapper — the same direction as the read-side
-  `_fromRow`/`watchRecordingEntityById` work below; keeping the Drift companion
-  here for now is intentional.
+  above) but consumes it as a *read-only* parent input the child build reads off,
+  so the per-segment child companions are still encoded explicitly there.
+- `saveRecording(LocalRecordingEntity)` is the canonical entry point for
+  persisting a **freshly captured** recording. As of ENG-201 it takes the domain
+  entity (the F4b step of the ENG-95 row→entity migration, closing the reverse
+  mapper the read-side `_fromRow` work deferred) and its body is a one-liner that
+  hands the entity to `localRecordingEntityToCompanion`
+  ([../local_recording_entity_to_companion.dart](../local_recording_entity_to_companion.dart))
+  and delegates the result to `insertRecording`. Persisted columns are identical
+  to the prior named-parameter version (ENG-192); the mapper reproduces that
+  inline construction exactly. The sole caller is
+  [../../presentation/widgets/confirmation_step.dart](../../presentation/widgets/confirmation_step.dart),
+  which now constructs the entity on both its native and web-direct save paths.
+  The mapper owns the column semantics — see the next bullet and Things to Know.
+- `localRecordingEntityToCompanion(entity)` is the **insert/save** companion
+  projection, the inverse of `localRecordingToEntity`
+  ([../local_recording_to_entity.dart](../local_recording_to_entity.dart)) scoped
+  to a fresh save (not a full entity serializer). Its contract:
+  - empty-string **or** null optional metadata
+    (`subcategoryId`/`registerId`/`description`) maps to `Value.absent()` (NULL),
+    never a stored empty string; null `userId`/`serverId` likewise map to absent.
+  - the core fields — including `uploadStatus` (the entity field is non-nullable)
+    — are always `Value(...)`. The native save passes `uploadStatus: 'local'`
+    explicitly (matching the schema default) and the web direct-upload save passes
+    `'uploaded'` + the `serverId`.
+  - `createdAt`, `retryCount`, `uploadedBytes`, and `cleaningStatus` are
+    **deliberately left absent** so the Drift table defaults
+    (`currentDateAndTime`, 0, 0, `'none'`) apply on insert, *even though the
+    entity carries read-path values for them* — see Things to Know.
+  - fields never set on a fresh save (`gcsUrl`, `secondary*`, `splitFrom*`,
+    `resumableSessionUri`) are not mapped; the NULL result is unchanged.
 - The **typed classification/metadata writes** (ENG-194) — `setStoryteller`,
   `updateDescription`, `updateCleaningStatus`, `moveCategory`, `classify`, and
   `updateSecondaryClassification` — replace the inline
@@ -264,6 +277,16 @@ Path: @/lib/features/recording/data/repositories
   a crash between them orphaned the children AND left the parent — both then
   appeared in the queue. `splitRecordingReplacingParent` folds both writes into
   a single transaction so a throw rolls back the children too.
+- **`saveRecording`'s mapper omits the DB-managed columns on purpose (ENG-201).**
+  `localRecordingEntityToCompanion` leaves `createdAt`, `retryCount`,
+  `uploadedBytes`, and `cleaningStatus` absent so the Drift defaults win on
+  insert — most importantly so `createdAt` is the DB clock (the true enqueue
+  time the pending-upload order depends on), not an app-side timestamp the entity
+  happens to carry. A `LocalRecordingEntity` is non-nullable for those fields, so
+  the confirmation flow has to pass *something*; the mapper drops it rather than
+  let it overwrite the DB clock/counters. A characterization test builds an entity
+  with bogus values for all four and asserts the persisted row still carries the
+  defaults.
 - **Repositories never read Riverpod.** All dependencies come through the
   constructor. This keeps them testable with an in-memory
   `AppDatabase.forTesting(NativeDatabase.memory())`, which is how the
