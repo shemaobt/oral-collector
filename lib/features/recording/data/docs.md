@@ -69,8 +69,10 @@ Path: @/lib/features/recording/data
 
 - `providers.dart` registers all data-layer providers and stays free of
   business logic. `localRecordingStreamProvider` is a family stream keyed
-  by recording id; the detail screen listens to it so any write through
-  `LocalRecordingRepository` flows back into the UI. It also exposes
+  by recording id; `RecordingDetailNotifier`
+  ([../presentation/notifiers/docs.md](../presentation/notifiers/docs.md))
+  listens to it (native only, ENG-194) so any write through
+  `LocalRecordingRepository` flows back into the detail UI. It also exposes
   `fileExistsProvider` — a one-line wrapper over `file_ops.fileExists` —
   injected so the trim editor's load-path file check is driveable in
   widget tests (a real `dart:io` future never resolves under the
@@ -186,6 +188,30 @@ Path: @/lib/features/recording/data
     `RecordingSplitPersisterFactory` typedef + `recordingSplitPersisterProvider`
     so the notifier hands off to a fake persister in tests. The persister
     pipeline itself is unchanged — only the factory seam is new.
+- **The detail screen's injectable IO seams (ENG-194).** The detail screen's
+  orchestration moved into `RecordingDetailNotifier` (see
+  [../presentation/notifiers/docs.md](../presentation/notifiers/docs.md)), and
+  the device-bound IO it used to do inline was extracted into two seams here so
+  the notifier is host-testable. Both mirror the trim-editor seam style
+  (function-typedef + `Provider` returning the default impl) and stay free of a
+  direct `dart:io` import so the web bundle still compiles — all filesystem
+  access goes through the `file_ops` facade
+  ([/lib/core/platform/file_ops.dart](../../../core/platform/file_ops.dart)):
+  - `services/audio_downloader.dart` exposes two function-typedef providers —
+    `audioCacheDownloaderProvider` (`AudioCacheDownloader`) and
+    `audioExportDownloaderProvider` (`AudioExportDownloader`). Each wraps the
+    package-global `http.get` the screen used to call inline (which cannot be
+    intercepted in a unit test) plus the `file_ops` write: the cache downloader
+    fetches the GCS audio and writes it under the app documents dir (for
+    `cacheDownloadedAudio`); the export downloader fetches to a temp file for
+    sharing. Both throw on a non-200 response.
+  - `services/recording_file_importer.dart` exposes
+    `recordingFileImporterProvider` (`RecordingFileImporter`). It copies a
+    picked file into the docs `recordings/` dir and returns `(path, sizeBytes)`;
+    when an `oldPath` is supplied it also trashes the previous file via
+    `RecordingTrash` (`services/recording_trash.dart`) and invalidates its
+    waveform cache via `WaveformExtractor.invalidate`
+    (`services/waveform_extractor.dart`). It backs the notifier's `replaceAudio`.
 - `services/audio_path_resolver.dart` exposes the pure async
   `resolveRecordingPath(storedPath)`. It returns the first existing path
   among: the stored path itself, the application documents directory
@@ -393,11 +419,16 @@ Path: @/lib/features/recording/data
   with `.distinct()` appended (ENG-121). Drift invalidates query streams at
   the table level, so any write through `LocalRecordingRepository` — even to
   an unrelated row — re-runs the query; `.distinct()` drops the re-emission
-  when the resulting `LocalRecording` is identical, so the detail screen's
-  `ref.listen` only rebuilds on real value changes. A write that *does*
-  change the row (including the heal companion or a partial / hand-picked
-  insert) still fires: this is why such an insert is dangerous — the stream
-  re-pushes a `LocalRecording` with missing fields into `setState`, blanking
-  the UI even if the user did not change anything.
+  when the resulting `LocalRecording` is identical, so the listener only
+  re-renders on real value changes. As of ENG-194 the `ref.listen` on this
+  provider lives in `RecordingDetailNotifier.build` (native only), not in the
+  detail screen — it patches the changed row into `RecordingDetailState`
+  (`state.copyWith(recording: …)`) rather than calling the screen's old
+  `setState`, but the rebuild contract is unchanged (the state has identity
+  equality, so the patch re-renders). A write that *does* change the row
+  (including the heal companion or a partial / hand-picked insert) still fires:
+  this is why such an insert is dangerous — the stream re-pushes a
+  `LocalRecording` with missing fields into the displayed state, blanking the UI
+  even if the user did not change anything.
 
 Created and maintained by Nori.

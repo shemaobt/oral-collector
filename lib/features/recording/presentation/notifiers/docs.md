@@ -19,6 +19,12 @@ Path: @/lib/features/recording/presentation/notifiers
   the editing state and the split/save orchestration out of the screen
   isolates that logic so it can be unit-tested headlessly (ENG-193), and
   keeps the split commit alive even if the screen unmounts mid-save.
+- `RecordingDetailNotifier` (ENG-194) is the same extraction applied to the
+  detail screen — the app's largest, critical-path screen: it owns the
+  multi-step load orchestration and all the metadata/audio mutations, so the
+  screen at [../recording_detail_screen.dart](../recording_detail_screen.dart)
+  is a thin consumer that only shows dialogs/sheets/snackbars and forwards to
+  notifier methods.
 - All providers are registered at the top of their respective notifier
   files and consumed from [/lib/features/recording/presentation/](../)
   screens and widgets.
@@ -59,6 +65,19 @@ Path: @/lib/features/recording/presentation/notifiers
   (see Core Implementation). The seams exist so the device-bound IO is
   driveable on the host in tests — they are documented under "the trim
   editor's injectable seams" in [../../data/docs.md](../../data/docs.md).
+- `RecordingDetailNotifier` is **headless** for the same reason: no
+  `BuildContext`, no navigation, no snackbars. Its metadata mutations return a
+  `RecordingMutationResult { success, failed, forbidden }` the widget maps to a
+  localized snackbar (see Core Implementation). Its writes go through typed
+  repository methods on
+  [../../data/repositories/local_recording_repository.dart](../../data/repositories/local_recording_repository.dart)
+  (`setStoryteller`, `classify`, `moveCategory`, …) and through the
+  `RecordingApiRepository`; its device-bound IO (GCS download, file import)
+  lives behind injectable seams in
+  [../../data/services/](../../data/services/) — documented under "the detail
+  screen's injectable IO seams" in [../../data/docs.md](../../data/docs.md).
+  It reads sync/role/member/storyteller/stats notifiers across the project to
+  reproduce the screen's load and refresh behavior.
 
 ### Core Implementation
 
@@ -88,6 +107,43 @@ Path: @/lib/features/recording/presentation/notifiers
   (`isLoading`, `errorKind`, `hasAudio`); the error kind is one of
   `fileNotFound` (local missing and no fallback URL) or `loadFailed`
   (decoder/network error).
+- `RecordingDetailNotifier` (`recording_detail_notifier.dart`) is an
+  `AutoDisposeFamilyNotifier<RecordingDetailState, String>` keyed by recording
+  id (`recordingDetailProvider`), mirroring `TrimEditorNotifier`. State is the
+  immutable `RecordingDetailState` (`recording_detail_state.dart`): the resolved
+  `LocalRecording` row, an `isLoading` flag, and the `resolvedStoryteller`. The
+  swap to `LocalRecordingEntity` is a later wave (F5a/ENG-199); the row type is
+  kept for now. The notifier owns:
+  - **Load orchestration** (`load`), reproducing the screen's old
+    `_loadRecording`: native resolves the row local-by-id → local-by-server-id,
+    then (online, when the row has a serverId but is missing `gcsUrl`/`userId`)
+    heals it via `buildHealMetadataCompanion`
+    ([../../data/recording_heal_companion.dart](../../data/recording_heal_companion.dart)),
+    then (online, still no row) falls back to a server fetch mapped through
+    `serverRecordingToLocal`; web always fetches the server DTO. After the row
+    lands it fetches the project role, resolves the storyteller (local cache
+    then, online, the API), and warms the member cache. The post-fetch role and
+    member steps end with an empty `copyWith()` so the widget re-reads
+    role-derived permissions — the original screen's empty `setState`.
+  - **The `localRecordingStreamProvider` listen** (native only), registered in
+    `build`: when the Drift row changes it patches an already-loaded recording
+    into `state` (it does not seed the initial load), keeping the displayed row
+    fresh on sync/heal writes. This is the listen the detail screen used to own.
+  - **Metadata mutations** — `setStoryteller`, `saveDetails` (title via the
+    `saveRecordingTitle` use-case, description via the typed repo write),
+    `toggleCleaningStatus`, `moveCategory`, `classify`, `saveSecondary` — each
+    calls the server first, mirrors to Drift through a typed
+    `LocalRecordingRepository` write (native only), refreshes genre stats /
+    kicks the sync queue where the screen did, then `await load()`s. The four
+    that can fail visibly (`toggleCleaningStatus`/`moveCategory`/`classify`/
+    `saveSecondary`, plus `saveDetails`) return `RecordingMutationResult` so the
+    widget picks the snackbar (see Things to Know).
+  - **Audio mutations** behind the IO seams: `downloadAndCache` (GCS download +
+    `cacheDownloadedAudio`, throws on failure so the widget dismisses its
+    progress dialog and shows the error), `downloadForExport` (temp download for
+    share, throws), and `replaceAudio` (import the picked file, update the row,
+    sync new metadata + `resetAndRetry` when the recording was uploaded;
+    returns `false` on failure).
 - `TrimEditorNotifier` (`trim_editor_notifier.dart`) is a
   `NotifierProvider.autoDispose.family<…, String>` keyed by recording id
   (`trimEditorProvider`). State is the immutable `TrimEditorState`
@@ -267,6 +323,33 @@ Path: @/lib/features/recording/presentation/notifiers
   silent stale write. `saveSplit`'s `isSaving` reset on failure is
   likewise guarded so the captured-dependency split (above) can finish
   even after disposal.
+- **`RecordingDetailNotifier` is headless; the widget owns every snackbar
+  (ENG-194).** The notifier has no `BuildContext`, so its metadata mutations
+  resolve to a `RecordingMutationResult { success, failed, forbidden }` and the
+  screen `switch`es on it to pick the localized message and color (e.g.
+  `forbidden` → `recording_updateNoPermission` in
+  `AppColors.of(context).warning`; `failed` → the action's generic failure;
+  `success` → the success snackbar or nothing). This is the same headless →
+  result → widget-owns-UI boundary as the trim editor's `TrimSaveOutcome`. The
+  audio paths instead **throw** (`downloadAndCache`, `downloadForExport`) or
+  return a `bool` (`replaceAudio`) because the screen wraps them in a progress
+  dialog it must dismiss; the screen maps those to its own snackbars too.
+- **`RecordingDetailState` has no value `==`/`hashCode` (ENG-194).** Unlike
+  `LocalRecordingEntity` (ENG-195), the state uses identity equality. There is
+  no `.distinct()` consumer, and identity equality reproduces the screen's
+  original `setState`, which rebuilt on every mutation — so the empty
+  `copyWith()` calls after the role/member fetches re-render exactly as the old
+  empty `setState`s did, and the rebuild cadence is unchanged. Do **not** add
+  value equality here expecting it to be inert; it would suppress those
+  intentional no-field rebuilds.
+- **`RecordingDetailNotifier` reuses the `_disposed` + `ref.onDispose` guard
+  (ENG-194).** Like `RecordingPlayerNotifier` and `TrimEditorNotifier`, the
+  autoDispose family entry can be torn down mid-load (the detail screen unmounts
+  while `load` is suspended on a server fetch or a storyteller resolve), so
+  `build` registers `ref.onDispose(() => _disposed = true)` and every `await` in
+  `load`/the mutations bails before the next `state =`. Riverpod 2.6.1 has no
+  `ref.mounted`, and a post-dispose `state =` is a silent stale write plus a
+  spurious observer notification.
 - **Path resolution lives in data, not in the notifier.**
   `audioPathResolverProvider` defaults to
   [../../data/services/audio_path_resolver.dart](../../data/services/audio_path_resolver.dart)'s

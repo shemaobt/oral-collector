@@ -115,6 +115,104 @@ class LocalRecordingRepository {
     return rows > 0;
   }
 
+  // Typed classification/metadata writes (ENG-194): the detail screen used to
+  // build these companions inline in the presentation layer. The null handling
+  // is load-bearing and intentionally NOT unified — `classify` omits a null
+  // register (Value.absent, preserve), while `moveCategory`/secondary write
+  // null (clear).
+
+  Future<bool> setStoryteller(String id, {required String? storytellerId}) {
+    return updateRecording(
+      id,
+      LocalRecordingsCompanion(
+        storytellerId: storytellerId == null
+            ? const Value(null)
+            : Value(storytellerId),
+      ),
+    );
+  }
+
+  Future<bool> updateDescription(String id, String description) {
+    return updateRecording(
+      id,
+      LocalRecordingsCompanion(description: Value(description)),
+    );
+  }
+
+  Future<bool> updateCleaningStatus(String id, String cleaningStatus) {
+    return updateRecording(
+      id,
+      LocalRecordingsCompanion(cleaningStatus: Value(cleaningStatus)),
+    );
+  }
+
+  Future<bool> moveCategory(
+    String id, {
+    required String genreId,
+    required String? subcategoryId,
+    required bool clearSecondary,
+    String? secondaryGenreId,
+    String? secondarySubcategoryId,
+    String? secondaryRegisterId,
+  }) {
+    return updateRecording(
+      id,
+      LocalRecordingsCompanion(
+        genreId: Value(genreId),
+        subcategoryId: Value(subcategoryId),
+        secondaryGenreId: clearSecondary
+            ? const Value(null)
+            : Value(secondaryGenreId),
+        secondarySubcategoryId: clearSecondary
+            ? const Value(null)
+            : Value(secondarySubcategoryId),
+        secondaryRegisterId: clearSecondary
+            ? const Value(null)
+            : Value(secondaryRegisterId),
+      ),
+    );
+  }
+
+  Future<bool> classify(
+    String id, {
+    required String genreId,
+    String? subcategoryId,
+    String? registerId,
+    String? secondaryGenreId,
+    String? secondarySubcategoryId,
+    String? secondaryRegisterId,
+  }) {
+    return updateRecording(
+      id,
+      LocalRecordingsCompanion(
+        genreId: Value(genreId),
+        subcategoryId: Value(subcategoryId),
+        registerId: registerId != null
+            ? Value(registerId)
+            : const Value.absent(),
+        secondaryGenreId: Value(secondaryGenreId),
+        secondarySubcategoryId: Value(secondarySubcategoryId),
+        secondaryRegisterId: Value(secondaryRegisterId),
+      ),
+    );
+  }
+
+  Future<bool> updateSecondaryClassification(
+    String id, {
+    String? genreId,
+    String? subcategoryId,
+    String? registerId,
+  }) {
+    return updateRecording(
+      id,
+      LocalRecordingsCompanion(
+        secondaryGenreId: Value(genreId),
+        secondarySubcategoryId: Value(subcategoryId),
+        secondaryRegisterId: Value(registerId),
+      ),
+    );
+  }
+
   Future<int> reassignStorytellerId({
     required String fromId,
     required String toId,
