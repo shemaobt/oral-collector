@@ -1,13 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
 
-import '../../../../core/database/app_database.dart';
 import '../../../../shared/utils/recording_title.dart';
 import '../../../sync/presentation/notifiers/sync_notifier.dart';
-import '../../data/local_recording_to_entity.dart';
 import '../../data/providers.dart';
 import '../../data/repositories/local_recording_repository.dart';
-import '../../data/server_to_local_recording.dart';
+import '../../data/server_to_recording_entity.dart';
 import '../../data/services/local_segment_exporter.dart';
 import '../../data/services/recording_split_persister.dart';
 import '../../data/services/recording_trash.dart';
@@ -72,7 +70,7 @@ class TrimEditorNotifier
   RecordingSplitPersisterFactory get _persisterFactory =>
       ref.read(recordingSplitPersisterProvider);
 
-  /// Resolves the recording row only. The widget owns the player, the file-
+  /// Resolves the recording only. The widget owns the player, the file-
   /// availability check and the waveform/duration, finishing the load via
   /// [setUnavailable] or [completeLoad] (which is why a resolved recording
   /// keeps `isLoading` true here).
@@ -83,26 +81,26 @@ class TrimEditorNotifier
       clearLoadError: true,
     );
 
-    LocalRecording? row;
+    LocalRecordingEntity? recording;
     if (isWeb) {
       try {
         final server = await _apiRepo.getRecording(arg);
         if (_disposed) return;
-        row = serverRecordingToLocal(server);
+        recording = serverRecordingToEntity(server);
       } catch (e, st) {
         if (_disposed) return;
         if (_handleServerLoadError(e, st)) return;
       }
     } else {
-      row = await _localRepo.getRecordingById(arg);
+      recording = await _localRepo.getRecordingEntityById(arg);
       if (_disposed) return;
-      row ??= await _localRepo.getRecordingByServerId(arg);
+      recording ??= await _localRepo.getRecordingEntityByServerId(arg);
       if (_disposed) return;
-      if (row == null) {
+      if (recording == null) {
         try {
           final server = await _apiRepo.getRecording(arg);
           if (_disposed) return;
-          row = serverRecordingToLocal(server);
+          recording = serverRecordingToEntity(server);
         } catch (e, st) {
           if (_disposed) return;
           if (_handleServerLoadError(e, st)) return;
@@ -110,11 +108,11 @@ class TrimEditorNotifier
       }
     }
 
-    if (row == null) {
+    if (recording == null) {
       state = state.copyWith(isLoading: false);
       return;
     }
-    state = state.copyWith(recording: localRecordingToEntity(row));
+    state = state.copyWith(recording: recording);
   }
 
   /// A caught load error is "not found" only for a genuine 404; everything else

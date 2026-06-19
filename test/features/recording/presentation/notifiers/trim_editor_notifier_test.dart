@@ -117,6 +117,18 @@ class _FakeSyncNotifier extends SyncNotifier {
   Future<void> processQueue() async {}
 }
 
+ServerRecording _serverRecording(String id) => ServerRecording(
+  id: id,
+  projectId: 'proj',
+  genreId: 'g0',
+  durationSeconds: 30,
+  fileSizeBytes: 1000,
+  format: 'm4a',
+  uploadStatus: 'verified',
+  cleaningStatus: 'cleaned',
+  recordedAt: DateTime.utc(2026, 5, 1),
+);
+
 void main() {
   late AppDatabase db;
   late LocalRecordingRepository repo;
@@ -230,6 +242,32 @@ void main() {
       expect(stateOf(c).loadError, same(error));
       expect(stateOf(c).isLoading, isFalse);
       expect(stateOf(c).recording, isNull);
+    });
+
+    test('web: loads the recording from the server', () async {
+      final api = _FakeApiRepo(
+        getRecordingImpl: (_) async => _serverRecording('srv-web'),
+      );
+      final c = makeContainer(api: api);
+      await notifierOf(c).load(isWeb: true);
+
+      expect(stateOf(c).recording?.id, 'srv-web');
+      // The server carries no on-device file, so the server->entity projection
+      // leaves localFilePath empty.
+      expect(stateOf(c).recording?.localFilePath, '');
+      expect(stateOf(c).loadError, isNull);
+    });
+
+    test('native: falls back to the server when no local row exists', () async {
+      final api = _FakeApiRepo(
+        getRecordingImpl: (_) async => _serverRecording('srv-fallback'),
+      );
+      final c = makeContainer(api: api);
+      // No seed: both local lookups miss, so the load fetches from the server.
+      await notifierOf(c).load(isWeb: false);
+
+      expect(stateOf(c).recording?.id, 'srv-fallback');
+      expect(stateOf(c).loadError, isNull);
     });
   });
 

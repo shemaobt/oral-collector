@@ -62,9 +62,23 @@ Path: @/lib/features/recording/data/repositories
 - `LocalRecordingRepository` wraps an `AppDatabase` and exposes focused
   query/update methods. Reads include `getRecordingById`,
   `getRecordingByServerId`, `watchRecordingById` (used by
-  `localRecordingStreamProvider`), `getPendingUploads`,
-  `getPendingWebUploads`, and the aggregate helpers
+  `localRecordingStreamProvider`), their row-decoupled entity siblings
+  `getRecordingEntityById`/`getRecordingEntityByServerId` and
+  `watchRecordingEntityById`, `getPendingUploads`, `getPendingWebUploads`, and
+  the aggregate helpers
   `countRecordings`/`totalDuration`/`getLocalUnclassifiedStats`.
+- `getRecordingEntityById`/`getRecordingEntityByServerId` are the **one-shot,
+  row-decoupled** analogue of `watchRecordingEntityById` (ENG-202): each wraps
+  the matching row getter (`getRecordingById`/`getRecordingByServerId`) and
+  projects through `_fromRow` (→ `localRecordingToEntity`), returning `null` on
+  a miss. They exist so the trim editor's load path
+  ([../../presentation/notifiers/docs.md](../../presentation/notifiers/docs.md))
+  resolves a `LocalRecordingEntity` and never holds a Drift row — the last
+  presentation-layer row leak ENG-95 closed. The plain row getters were **not**
+  removed: the sync engine, the resumable upload service, the sync notifier, and
+  the recordings-list / detail notifiers still read raw rows through them, so
+  both the row and entity reads share the same query and the same `_fromRow`
+  projection.
 - `getPendingUploads` / `getPendingWebUploads` define the **upload queue
   order**: they sort `createdAt ASC, id ASC`, and
   [the sync engine](../../../sync/data/repositories/sync_engine.dart) drains
@@ -100,9 +114,10 @@ Path: @/lib/features/recording/data/repositories
   detail watch will be repointed onto it in a later task (F5b). See
   [../../domain/docs.md](../../domain/docs.md) for the entity itself and Things
   to Know.
-- `_fromRow(LocalRecording)` is the private row→entity hook backing
-  `watchRecordingEntityById`; as of ENG-197 it is a one-line delegate to the
-  public `localRecordingToEntity` in
+- `_fromRow(LocalRecording)` is the private row→entity hook backing the
+  entity reads (`watchRecordingEntityById` and, as of ENG-202, the one-shot
+  `getRecordingEntityById`/`getRecordingEntityByServerId`); as of ENG-197 it is
+  a one-line delegate to the public `localRecordingToEntity` in
   [../local_recording_to_entity.dart](../local_recording_to_entity.dart), which
   is the **single source of truth** for the projection so the watch stream and
   the recordings-list notifier
