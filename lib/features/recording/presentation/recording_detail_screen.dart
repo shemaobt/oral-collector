@@ -35,7 +35,9 @@ import 'notifiers/recordings_list_notifier.dart';
 import 'widgets/classify_recording_dialog.dart';
 import 'widgets/edit_recording_details_sheet.dart';
 import 'widgets/move_category_dialog.dart';
-import 'widgets/recording_about_section.dart';
+import 'widgets/recording_action_banner.dart';
+import 'widgets/recording_action_menu.dart';
+import 'widgets/recording_classification_section.dart';
 import 'widgets/recording_hero_player.dart';
 import 'widgets/recording_info_grid.dart';
 import 'widgets/recording_quick_actions.dart';
@@ -719,202 +721,20 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
         ? breadcrumbParts.join(' > ')
         : l10n.recording_unknownGenre;
 
-    final titleAndGenre = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        RecordingAboutSection(
-          theme: theme,
-          colors: colors,
-          title: recording.title,
-          description: recording.description,
-          canEdit: _canEditRecording,
-          onEdit: _openEditDetails,
-        ),
-        const SizedBox(height: SpacingScale.s16),
-        Row(
-          children: [
-            Icon(
-              isUnclassified ? LucideIcons.tag : LucideIcons.layers,
-              size: 14,
-              color: isUnclassified ? colors.warning : colors.accent,
-            ),
-            const SizedBox(width: SpacingScale.s8),
-            Flexible(
-              child: Text(
-                genreBreadcrumb,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: isUnclassified ? colors.warning : colors.accent,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
-        ),
-        if (registerName != null) ...[
-          const SizedBox(height: SpacingScale.s4),
-          Row(
-            children: [
-              Icon(LucideIcons.volume2, size: 14, color: colors.secondary),
-              const SizedBox(width: SpacingScale.s8),
-              Flexible(
-                child: Text(
-                  registerName,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: colors.secondary,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-        if (!isUnclassified && hasSecondary) ...[
-          const SizedBox(height: SpacingScale.s8),
-          Material(
-            color: AppColors.transparent,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(RadiusScale.r8),
-              side: BorderSide(
-                color: colors.foreground.withValues(alpha: 0.18),
-              ),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onTap: _canEditRecording ? _editSecondaryClassification : null,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: SpacingScale.s8,
-                  vertical: SpacingScale.s8,
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Icon(
-                      LucideIcons.layers,
-                      size: 13,
-                      color: colors.foreground.withValues(alpha: 0.55),
-                    ),
-                    const SizedBox(width: SpacingScale.s8),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            l10n.recording_alsoClassifiedAs,
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: colors.foreground.withValues(alpha: 0.55),
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                          if (secondaryBreadcrumb.isNotEmpty)
-                            Text(
-                              secondaryBreadcrumb,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: colors.foreground.withValues(
-                                  alpha: 0.85,
-                                ),
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          if (secondaryRegisterName != null)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 2),
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    LucideIcons.volume2,
-                                    size: 11,
-                                    color: colors.foreground.withValues(
-                                      alpha: 0.55,
-                                    ),
-                                  ),
-                                  const SizedBox(width: SpacingScale.s4),
-                                  Flexible(
-                                    child: Text(
-                                      secondaryRegisterName,
-                                      style: theme.textTheme.labelSmall
-                                          ?.copyWith(
-                                            color: colors.foreground.withValues(
-                                              alpha: 0.65,
-                                            ),
-                                          ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                    if (_canEditRecording)
-                      IconButton(
-                        icon: const Icon(LucideIcons.x, size: 14),
-                        tooltip: l10n.recording_removeSecondary,
-                        color: colors.foreground.withValues(alpha: 0.6),
-                        onPressed: _clearSecondaryClassification,
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(
-                          minWidth: 28,
-                          minHeight: 28,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-        if (!isUnclassified && !hasSecondary && _canEditRecording) ...[
-          const SizedBox(height: SpacingScale.s8),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: TextButton.icon(
-              onPressed: _editSecondaryClassification,
-              icon: const Icon(LucideIcons.plus, size: 14),
-              label: Text(l10n.recording_addAlternative),
-              style: TextButton.styleFrom(
-                foregroundColor: colors.foreground.withValues(alpha: 0.65),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: SpacingScale.s8,
-                  vertical: SpacingScale.s4,
-                ),
-                minimumSize: Size.zero,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                textStyle: theme.textTheme.labelSmall,
-              ),
-            ),
-          ),
-        ],
-        if (recording.splitFromId != null) ...[
-          const SizedBox(height: SpacingScale.s8),
-          Row(
-            children: [
-              Icon(
-                LucideIcons.scissors,
-                size: 13,
-                color: colors.foreground.withValues(alpha: 0.55),
-              ),
-              const SizedBox(width: SpacingScale.s8),
-              Flexible(
-                child: Text(
-                  (recording.splitIndex != null &&
-                          recording.splitSegmentCount != null)
-                      ? l10n.recording_partOf(
-                          recording.splitIndex! + 1,
-                          recording.splitSegmentCount!,
-                        )
-                      : l10n.recording_splitFrom(recording.splitFromId ?? ''),
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: colors.foreground.withValues(alpha: 0.65),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ],
+    final titleAndGenre = RecordingClassificationSection(
+      recording: recording,
+      theme: theme,
+      colors: colors,
+      genreBreadcrumb: genreBreadcrumb,
+      registerName: registerName,
+      isUnclassified: isUnclassified,
+      hasSecondary: hasSecondary,
+      secondaryBreadcrumb: secondaryBreadcrumb,
+      secondaryRegisterName: secondaryRegisterName,
+      canEdit: _canEditRecording,
+      onEditDetails: _openEditDetails,
+      onEditSecondary: _editSecondaryClassification,
+      onClearSecondary: _clearSecondaryClassification,
     );
 
     final infoGrid = RecordingInfoGrid(
@@ -974,104 +794,34 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
         secondaryRegisterCollides;
 
     final secondaryCollisionBanner = hasSecondaryCollision
-        ? Container(
-            padding: const EdgeInsets.all(SpacingScale.s16),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.errorContainer.withValues(alpha: 0.35),
-              borderRadius: BorderRadius.circular(RadiusScale.r12),
-              border: Border.all(
-                color: theme.colorScheme.error.withValues(alpha: 0.5),
-              ),
+        ? RecordingActionBanner(
+            theme: theme,
+            icon: LucideIcons.alertCircle,
+            message: l10n.recording_secondaryCollisionBanner,
+            actionLabel: l10n.recording_clearSecondary,
+            accentColor: theme.colorScheme.error,
+            backgroundColor: theme.colorScheme.errorContainer.withValues(
+              alpha: 0.35,
             ),
-            child: Row(
-              children: [
-                Icon(
-                  LucideIcons.alertCircle,
-                  size: 18,
-                  color: theme.colorScheme.error,
-                ),
-                const SizedBox(width: SpacingScale.s8),
-                Expanded(
-                  child: Text(
-                    l10n.recording_secondaryCollisionBanner,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.error,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: SpacingScale.s8),
-                FilledButton.tonal(
-                  onPressed: _canEditRecording
-                      ? _clearSecondaryClassification
-                      : null,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: theme.colorScheme.error.withValues(
-                      alpha: 0.12,
-                    ),
-                    foregroundColor: theme.colorScheme.error,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: SpacingScale.s12,
-                      vertical: SpacingScale.s8,
-                    ),
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                  child: Text(
-                    l10n.recording_clearSecondary,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-              ],
+            borderColor: theme.colorScheme.error.withValues(alpha: 0.5),
+            actionBackgroundColor: theme.colorScheme.error.withValues(
+              alpha: 0.12,
             ),
+            onAction: _canEditRecording ? _clearSecondaryClassification : null,
           )
         : null;
 
     final classifyBanner = isUnclassified
-        ? Container(
-            padding: const EdgeInsets.all(SpacingScale.s16),
-            decoration: BoxDecoration(
-              color: colors.warning.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(RadiusScale.r12),
-              border: Border.all(color: colors.warning.withValues(alpha: 0.3)),
-            ),
-            child: Row(
-              children: [
-                Icon(LucideIcons.alertCircle, size: 18, color: colors.warning),
-                const SizedBox(width: SpacingScale.s8),
-                Expanded(
-                  child: Text(
-                    l10n.classify_banner,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: colors.warning,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: SpacingScale.s8),
-                FilledButton.tonal(
-                  onPressed: _classifyRecording,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: colors.warning.withValues(alpha: 0.15),
-                    foregroundColor: colors.warning,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: SpacingScale.s12,
-                      vertical: SpacingScale.s8,
-                    ),
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                  child: Text(
-                    l10n.classify_action,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+        ? RecordingActionBanner(
+            theme: theme,
+            icon: LucideIcons.alertCircle,
+            message: l10n.classify_banner,
+            actionLabel: l10n.classify_action,
+            accentColor: colors.warning,
+            backgroundColor: colors.warning.withValues(alpha: 0.1),
+            borderColor: colors.warning.withValues(alpha: 0.3),
+            actionBackgroundColor: colors.warning.withValues(alpha: 0.15),
+            onAction: _classifyRecording,
           )
         : null;
 
@@ -1109,94 +859,15 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     );
 
     final menuButton = _canEditRecording
-        ? PopupMenuButton<String>(
-            icon: Icon(LucideIcons.moreVertical, color: colors.foreground),
-            onSelected: (value) {
-              switch (value) {
-                case 'trim':
-                  _handleTrim();
-                case 'export':
-                  _handleExportAudio();
-                case 'replace':
-                  _handleReplaceAudio();
-                case 'move':
-                  _moveCategory();
-                case 'classify':
-                  _classifyRecording();
-                case 'delete':
-                  _deleteRecording();
-              }
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'trim',
-                child: Row(
-                  children: [
-                    const Icon(LucideIcons.scissors, size: 18),
-                    const SizedBox(width: SpacingScale.s12),
-                    Text(l10n.recording_splitRecording),
-                  ],
-                ),
-              ),
-              PopupMenuItem(
-                value: 'export',
-                child: Row(
-                  children: [
-                    const Icon(LucideIcons.share2, size: 18),
-                    const SizedBox(width: SpacingScale.s12),
-                    Text(l10n.recording_exportAudio),
-                  ],
-                ),
-              ),
-              if (isUnclassified)
-                PopupMenuItem(
-                  value: 'classify',
-                  child: Row(
-                    children: [
-                      Icon(LucideIcons.tag, size: 18, color: colors.warning),
-                      const SizedBox(width: SpacingScale.s12),
-                      Text(l10n.classify_action),
-                    ],
-                  ),
-                )
-              else
-                PopupMenuItem(
-                  value: 'move',
-                  child: Row(
-                    children: [
-                      const Icon(LucideIcons.folderInput, size: 18),
-                      const SizedBox(width: SpacingScale.s12),
-                      Text(l10n.recording_moveCategory),
-                    ],
-                  ),
-                ),
-              PopupMenuItem(
-                value: 'replace',
-                child: Row(
-                  children: [
-                    Icon(LucideIcons.refreshCw, size: 18, color: colors.error),
-                    const SizedBox(width: SpacingScale.s12),
-                    Text(
-                      l10n.recording_replaceAudio,
-                      style: TextStyle(color: colors.error),
-                    ),
-                  ],
-                ),
-              ),
-              PopupMenuItem(
-                value: 'delete',
-                child: Row(
-                  children: [
-                    Icon(LucideIcons.trash2, size: 18, color: colors.error),
-                    const SizedBox(width: SpacingScale.s12),
-                    Text(
-                      l10n.common_delete,
-                      style: TextStyle(color: colors.error),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+        ? RecordingActionMenu(
+            colors: colors,
+            isUnclassified: isUnclassified,
+            onTrim: _handleTrim,
+            onExport: _handleExportAudio,
+            onReplace: _handleReplaceAudio,
+            onMove: _moveCategory,
+            onClassify: _classifyRecording,
+            onDelete: _deleteRecording,
           )
         : null;
 
