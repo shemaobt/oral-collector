@@ -318,12 +318,15 @@ Path: @/lib/features/recording/presentation/notifiers
   resolves a row and projects it through the single canonical mapper
   `localRecordingToEntity`
   ([../../data/local_recording_to_entity.dart](../../data/local_recording_to_entity.dart))
-  **once** at the boundary; there is deliberately no reverse
-  entity→row/entity→companion mapper, so the dependency flows one way
-  (presentation depends on the entity, never the row). The split write
-  path still builds `LocalRecordingsCompanion` children from the entity's
-  fields in the data layer — the entity carries every parent field the
-  child-propagation contract reads, so the behavior is unchanged. This is
+  **once** at the boundary, and the dependency flows one way for the split path
+  (presentation depends on the entity, never the row). The split write path has
+  no reverse mapper — it still builds `LocalRecordingsCompanion` children from the
+  entity's fields in the data layer, because each child mixes inherited /
+  segment-specific / reset fields; the entity carries every parent field the
+  child-propagation contract reads, so the behavior is unchanged. (The separate
+  *save* path did get a reverse mapper in ENG-201 —
+  `localRecordingEntityToCompanion`, backing `saveRecording` — but that is the
+  fresh-capture insert, a different write than the split.) This is
   the same migration that re-typed the recordings list (ENG-197) extended
   to the trim editor and its split-persist path.
 - **`saveSplit` returns an outcome; the widget owns the UI (ENG-193).**

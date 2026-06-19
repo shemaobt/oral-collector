@@ -29,6 +29,7 @@ import '../../data/providers.dart';
 import '../../data/services/audio_probe.dart';
 import '../../data/services/direct_recording_uploader.dart';
 import '../../domain/entities/classification.dart';
+import '../../domain/entities/local_recording_entity.dart';
 import '../notifiers/recording_session_notifier.dart';
 import '../notifiers/recording_session_state.dart';
 
@@ -284,23 +285,34 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
 
     final id =
         '${DateTime.now().millisecondsSinceEpoch}_${widget.genreId.hashCode}';
+    final recordedAt = DateTime.now();
 
     try {
       await repo.saveRecording(
-        id: id,
-        projectId: projectId,
-        genreId: widget.genreId,
-        storytellerId: _selectedStoryteller!.id,
-        userId: currentUserId,
-        title: resolveRecordingTitle(_titleController.text, locale: localeTag),
-        description: _descriptionController.text.trim(),
-        durationSeconds: widget.result.durationSeconds,
-        fileSizeBytes: fileSize,
-        format: widget.result.format,
-        localFilePath: widget.result.filePath,
-        recordedAt: DateTime.now(),
-        subcategoryId: widget.subcategoryId,
-        registerId: widget.registerId,
+        LocalRecordingEntity(
+          id: id,
+          projectId: projectId,
+          genreId: widget.genreId,
+          storytellerId: _selectedStoryteller!.id,
+          userId: currentUserId,
+          title: resolveRecordingTitle(
+            _titleController.text,
+            locale: localeTag,
+          ),
+          description: _descriptionController.text.trim(),
+          durationSeconds: widget.result.durationSeconds,
+          fileSizeBytes: fileSize,
+          format: widget.result.format,
+          localFilePath: widget.result.filePath,
+          recordedAt: recordedAt,
+          subcategoryId: widget.subcategoryId,
+          registerId: widget.registerId,
+          uploadStatus: 'local',
+          cleaningStatus: 'none',
+          createdAt: recordedAt,
+          retryCount: 0,
+          uploadedBytes: 0,
+        ),
       );
 
       if (isOnline) {
@@ -380,25 +392,31 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
           '${recordedAt.millisecondsSinceEpoch}_${widget.genreId.hashCode}';
       try {
         await localRepo.saveRecording(
-          id: localId,
-          projectId: projectId,
-          genreId: widget.genreId,
-          storytellerId: _selectedStoryteller!.id,
-          userId: currentUserId,
-          title: resolveRecordingTitle(
-            _titleController.text,
-            locale: localeTag,
+          LocalRecordingEntity(
+            id: localId,
+            projectId: projectId,
+            genreId: widget.genreId,
+            storytellerId: _selectedStoryteller!.id,
+            userId: currentUserId,
+            title: resolveRecordingTitle(
+              _titleController.text,
+              locale: localeTag,
+            ),
+            description: description,
+            durationSeconds: widget.result.durationSeconds,
+            fileSizeBytes: bytes.length,
+            format: widget.result.format,
+            localFilePath: '',
+            recordedAt: recordedAt,
+            subcategoryId: subcategoryId,
+            registerId: widget.registerId,
+            uploadStatus: 'uploaded',
+            serverId: serverId,
+            cleaningStatus: 'none',
+            createdAt: recordedAt,
+            retryCount: 0,
+            uploadedBytes: 0,
           ),
-          description: description,
-          durationSeconds: widget.result.durationSeconds,
-          fileSizeBytes: bytes.length,
-          format: widget.result.format,
-          localFilePath: '',
-          recordedAt: recordedAt,
-          subcategoryId: subcategoryId,
-          registerId: widget.registerId,
-          uploadStatus: 'uploaded',
-          serverId: serverId,
         );
       } catch (_) {}
 
