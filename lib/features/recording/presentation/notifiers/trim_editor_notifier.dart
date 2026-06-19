@@ -4,12 +4,14 @@ import 'package:logging/logging.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../shared/utils/recording_title.dart';
 import '../../../sync/presentation/notifiers/sync_notifier.dart';
+import '../../data/local_recording_to_entity.dart';
 import '../../data/providers.dart';
 import '../../data/repositories/local_recording_repository.dart';
 import '../../data/server_to_local_recording.dart';
 import '../../data/services/local_segment_exporter.dart';
 import '../../data/services/recording_split_persister.dart';
 import '../../data/services/recording_trash.dart';
+import '../../domain/entities/local_recording_entity.dart';
 import '../../domain/entities/split_segment_request.dart';
 import '../../domain/repositories/recording_api_repository.dart';
 import '../trim_edit_decision.dart';
@@ -81,26 +83,26 @@ class TrimEditorNotifier
       clearLoadError: true,
     );
 
-    LocalRecording? recording;
+    LocalRecording? row;
     if (isWeb) {
       try {
         final server = await _apiRepo.getRecording(arg);
         if (_disposed) return;
-        recording = serverRecordingToLocal(server);
+        row = serverRecordingToLocal(server);
       } catch (e, st) {
         if (_disposed) return;
         if (_handleServerLoadError(e, st)) return;
       }
     } else {
-      recording = await _localRepo.getRecordingById(arg);
+      row = await _localRepo.getRecordingById(arg);
       if (_disposed) return;
-      recording ??= await _localRepo.getRecordingByServerId(arg);
+      row ??= await _localRepo.getRecordingByServerId(arg);
       if (_disposed) return;
-      if (recording == null) {
+      if (row == null) {
         try {
           final server = await _apiRepo.getRecording(arg);
           if (_disposed) return;
-          recording = serverRecordingToLocal(server);
+          row = serverRecordingToLocal(server);
         } catch (e, st) {
           if (_disposed) return;
           if (_handleServerLoadError(e, st)) return;
@@ -108,11 +110,11 @@ class TrimEditorNotifier
       }
     }
 
-    if (recording == null) {
+    if (row == null) {
       state = state.copyWith(isLoading: false);
       return;
     }
-    state = state.copyWith(recording: recording);
+    state = state.copyWith(recording: localRecordingToEntity(row));
   }
 
   /// A caught load error is "not found" only for a genuine 404; everything else
@@ -286,7 +288,7 @@ class TrimEditorNotifier
     }
   }
 
-  Future<void> _saveServerSide(LocalRecording recording) async {
+  Future<void> _saveServerSide(LocalRecordingEntity recording) async {
     final apiRepo = _apiRepo;
     final serverId = recording.serverId ?? recording.id;
     final kept = state.keptSegmentIndices;
@@ -313,7 +315,10 @@ class TrimEditorNotifier
     await apiRepo.splitRecording(serverId: serverId, segments: segments);
   }
 
-  Future<void> _saveLocally(LocalRecording recording, String localeTag) async {
+  Future<void> _saveLocally(
+    LocalRecordingEntity recording,
+    String localeTag,
+  ) async {
     // Capture every dependency before the first await: the notifier is
     // autoDispose, so reading ref after a suspension could throw, yet the split
     // must still commit even if the user navigates away mid-export.

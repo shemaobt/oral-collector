@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/database/app_database.dart';
+import '../../domain/entities/local_recording_entity.dart';
 import '../../domain/repositories/recording_api_repository.dart';
 import '../repositories/local_recording_repository.dart';
 
@@ -16,7 +16,7 @@ class RecordingSplitPersister {
   final LocalRecordingRepository localRepo;
   final RecordingApiRepository apiRepo;
   final Future<void> Function() triggerUpload;
-  final Future<void> Function(LocalRecording parent)? trashParent;
+  final Future<void> Function(LocalRecordingEntity parent)? trashParent;
 
   const RecordingSplitPersister({
     required this.localRepo,
@@ -26,7 +26,7 @@ class RecordingSplitPersister {
   });
 
   Future<List<String>> persist({
-    required LocalRecording parent,
+    required LocalRecordingEntity parent,
     required List<SplitSegmentSpec> segments,
   }) async {
     // One transaction: insert the children and delete the parent row together,
@@ -63,7 +63,7 @@ typedef RecordingSplitPersisterFactory =
       required LocalRecordingRepository localRepo,
       required RecordingApiRepository apiRepo,
       required Future<void> Function() triggerUpload,
-      Future<void> Function(LocalRecording parent)? trashParent,
+      Future<void> Function(LocalRecordingEntity parent)? trashParent,
     });
 
 /// Injectable so the trim editor's save path can hand off to a fake persister

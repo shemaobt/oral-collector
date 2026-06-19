@@ -14,6 +14,7 @@ import 'package:oral_collector/features/recording/data/providers.dart';
 import 'package:oral_collector/features/recording/data/repositories/local_recording_repository.dart';
 import 'package:oral_collector/features/recording/data/services/local_segment_exporter.dart';
 import 'package:oral_collector/features/recording/data/services/recording_split_persister.dart';
+import 'package:oral_collector/features/recording/domain/entities/local_recording_entity.dart';
 import 'package:oral_collector/features/recording/domain/entities/server_recording.dart';
 import 'package:oral_collector/features/recording/domain/entities/split_segment_request.dart';
 import 'package:oral_collector/features/recording/domain/repositories/recording_api_repository.dart';
@@ -95,12 +96,12 @@ class _FakePersister extends RecordingSplitPersister {
     super.trashParent,
   });
 
-  LocalRecording? persistedParent;
+  LocalRecordingEntity? persistedParent;
   List<SplitSegmentSpec>? persistedSegments;
 
   @override
   Future<List<String>> persist({
-    required LocalRecording parent,
+    required LocalRecordingEntity parent,
     required List<SplitSegmentSpec> segments,
   }) async {
     persistedParent = parent;

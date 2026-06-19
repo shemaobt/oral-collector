@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart' show immutable;
 
-import '../../../../core/database/app_database.dart';
+import '../../domain/entities/local_recording_entity.dart';
 import '../trim_edit_decision.dart';
 
 /// Editing + load state for the trim editor, extracted from the screen so the
@@ -29,7 +29,7 @@ class TrimEditorState {
     this.segRegisterBySig = const {},
   });
 
-  final LocalRecording? recording;
+  final LocalRecordingEntity? recording;
   final bool isLoading;
   final bool isSaving;
 
@@ -105,7 +105,7 @@ class TrimEditorState {
   );
 
   TrimEditorState copyWith({
-    LocalRecording? recording,
+    LocalRecordingEntity? recording,
     bool clearRecording = false,
     bool? isLoading,
     bool? isSaving,

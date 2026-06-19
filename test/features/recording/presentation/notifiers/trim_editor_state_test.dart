@@ -9,7 +9,9 @@ import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:oral_collector/core/database/app_database.dart';
+import 'package:oral_collector/features/recording/data/local_recording_to_entity.dart';
 import 'package:oral_collector/features/recording/data/repositories/local_recording_repository.dart';
+import 'package:oral_collector/features/recording/domain/entities/local_recording_entity.dart';
 import 'package:oral_collector/features/recording/presentation/notifiers/trim_editor_state.dart';
 import 'package:oral_collector/features/recording/presentation/trim_edit_decision.dart';
 
@@ -90,7 +92,7 @@ void main() {
     });
     tearDown(() => db.close());
 
-    Future<LocalRecording> seedParent() async {
+    Future<LocalRecordingEntity> seedParent() async {
       await repo.insertRecording(
         LocalRecordingsCompanion(
           id: const Value('p1'),
@@ -108,7 +110,7 @@ void main() {
           recordedAt: Value(DateTime.utc(2026, 5, 1)),
         ),
       );
-      return (await repo.getRecordingById('p1'))!;
+      return localRecordingToEntity((await repo.getRecordingById('p1'))!);
     }
 
     test('falls back to the parent taxonomy when no per-segment override is '

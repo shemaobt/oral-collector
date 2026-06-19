@@ -93,15 +93,24 @@ Path: @/lib/features/recording/presentation/notifiers
   (`trimEditorProvider`). State is the immutable `TrimEditorState`
   (`trim_editor_state.dart`), which holds the editing fields (split
   points, excluded segments, per-segment taxonomy, gain, the resolved
-  `LocalRecording`, load flags) plus the pure derivations the screen
-  used to compute inline as getters — segment boundaries/timing, the
-  effective taxonomy, and the save `decision` (`TrimEditDecision` from
-  [../trim_edit_decision.dart](../trim_edit_decision.dart)). The notifier
-  owns:
-  - **Load resolution** of the recording row only (`load`): web fetches
-    the server DTO and maps it via `serverRecordingToLocal`; native
-    tries local-by-id, then local-by-server-id, then an online fetch.
-    A caught server error is "not found" only for a genuine 404
+  recording as a `LocalRecordingEntity`, load flags) plus the pure
+  derivations the screen used to compute inline as getters — segment
+  boundaries/timing, the effective taxonomy, and the save `decision`
+  (`TrimEditDecision` from
+  [../trim_edit_decision.dart](../trim_edit_decision.dart)). As of ENG-198
+  the editing state and the split/save chain deal in the domain
+  `LocalRecordingEntity`, not the Drift `LocalRecording` row; the row is
+  resolved as before and mapped **once** at the load boundary via
+  `localRecordingToEntity`
+  ([../../data/local_recording_to_entity.dart](../../data/local_recording_to_entity.dart)),
+  so the presentation layer depends on the entity (see the entity-boundary
+  bullet). The notifier owns:
+  - **Load resolution** of the recording (`load`): it resolves a Drift
+    *row* exactly as before — web fetches the server DTO and maps it via
+    `serverRecordingToLocal`; native tries local-by-id, then
+    local-by-server-id, then an online fetch — then maps that row through
+    `localRecordingToEntity` at the boundary and stores the **entity** in
+    state. A caught server error is "not found" only for a genuine 404
     (`isRecordingNotFound` in
     [../trim_load_error.dart](../trim_load_error.dart)); anything else is
     stored as a real `loadError`. The deliberate split: a resolved
@@ -116,12 +125,17 @@ Path: @/lib/features/recording/presentation/notifiers
     `clearAllSplits`/`restoreAllExcluded`.
   - **`saveSplit`**, which returns a sealed `TrimSaveOutcome`
     (`TrimSaveSucceeded` / `TrimSaveAborted` / `TrimSaveFailed`) so the
-    **widget**, not the notifier, picks the snackbar and navigates. Web
-    delegates to `RecordingApiRepository.splitRecording`; native exports
-    each kept segment through the `LocalSegmentExporter` seam and hands
-    the specs to a `RecordingSplitPersister` built from
-    `recordingSplitPersisterProvider` (see Things to Know for why every
-    dependency is captured before the first `await`).
+    **widget**, not the notifier, picks the snackbar and navigates. Its
+    private `_saveServerSide` / `_saveLocally` take the
+    `LocalRecordingEntity` straight off state. Web delegates to
+    `RecordingApiRepository.splitRecording`; native exports each kept
+    segment through the `LocalSegmentExporter` seam and hands the specs
+    plus the entity `parent` to a `RecordingSplitPersister` built from
+    `recordingSplitPersisterProvider` (the persister and the repository's
+    `splitRecordingReplacingParent` consume the entity as the parent as of
+    ENG-198 — see [../../data/repositories/docs.md](../../data/repositories/docs.md);
+    see Things to Know for why every dependency is captured before the
+    first `await`).
 - `RecordingsListNotifier` (`recordings_list_notifier.dart`) owns the
   paginated list. As of ENG-197 the state holds `List<LocalRecordingEntity>`
   (see [./recordings_list_state.dart](recordings_list_state.dart)), not the
@@ -226,7 +240,7 @@ Path: @/lib/features/recording/presentation/notifiers
   requested again while `hasAudio` is true. This is what makes a
   re-call after a heal, edit, or rotation cheap.
 - **The trim load is deliberately split between notifier and widget
-  (ENG-193).** `TrimEditorNotifier.load` resolves the *row* only and, on
+  (ENG-193).** `TrimEditorNotifier.load` resolves the recording and, on
   success, leaves `isLoading` true; the screen then wires the
   `AudioPlayer`, runs the file-availability check
   (`fileExistsProvider`), and resolves the waveform/duration, finishing
@@ -240,6 +254,22 @@ Path: @/lib/features/recording/presentation/notifiers
   not resolve under the fake-async widget-test zone, so they stay in the
   widget behind injectable providers rather than in the headless
   notifier.
+- **The trim editor deals in the domain entity, and the row→entity map is
+  one-way (ENG-198 / ENG-95-F4).** `TrimEditorState.recording` and the
+  whole split/save chain (`_saveServerSide` / `_saveLocally`, the
+  `RecordingSplitPersister`, and `splitRecordingReplacingParent`) use the
+  `LocalRecordingEntity`, not the Drift `LocalRecording` row. `load`
+  resolves a row and projects it through the single canonical mapper
+  `localRecordingToEntity`
+  ([../../data/local_recording_to_entity.dart](../../data/local_recording_to_entity.dart))
+  **once** at the boundary; there is deliberately no reverse
+  entity→row/entity→companion mapper, so the dependency flows one way
+  (presentation depends on the entity, never the row). The split write
+  path still builds `LocalRecordingsCompanion` children from the entity's
+  fields in the data layer — the entity carries every parent field the
+  child-propagation contract reads, so the behavior is unchanged. This is
+  the same migration that re-typed the recordings list (ENG-197) extended
+  to the trim editor and its split-persist path.
 - **`saveSplit` returns an outcome; the widget owns the UI (ENG-193).**
   Because the notifier is headless, `saveSplit` resolves to a sealed
   `TrimSaveOutcome` and never touches `BuildContext`. The screen
