@@ -183,16 +183,20 @@ Path: @/lib/features/recording/presentation
 
 ### Things to Know
 
-- **The recordings list holds entities; a temporary shim re-hydrates a row
-  for the card (ENG-197).** `recordings_list_screen.dart` reads
-  `RecordingsListState.recordings` as `List<LocalRecordingEntity>`, but
-  `RecordingCard`
-  ([./widgets/recording_card.dart](widgets/recording_card.dart)) still takes a
-  Drift `LocalRecording`. A throwaway top-level `_entityToCardRow(entity)` on
-  the screen reconstructs a `LocalRecording` field-for-field (the dropped
-  `lastRetryAt`/`md5Hash` are fields the card never reads) to bridge the gap.
-  This is staged migration debt: F2/ENG-19x migrates the card to the entity and
-  deletes the shim. Do not grow new consumers of `_entityToCardRow`.
+- **The recordings list and its leaf cards are end-to-end entity-typed
+  (ENG-196).** `recordings_list_screen.dart` reads
+  `RecordingsListState.recordings` as `List<LocalRecordingEntity>` and passes
+  each entity straight into `RecordingCard`
+  ([./widgets/recording_card.dart](widgets/recording_card.dart)), whose
+  `recording` prop is now a `LocalRecordingEntity`. ENG-196 deleted the
+  temporary `_entityToCardRow` shim that ENG-197 used to re-hydrate a Drift row
+  for the card, and dropped the screen's orphaned `app_database.dart` import.
+  The card body is unchanged (the entity carries the same field names); its
+  `isUnclassified` / `hasSecondary` reads now resolve through the entity's
+  classification extension (see [../domain/docs.md](../domain/docs.md)) instead
+  of the row's. The detail-screen widgets (status/info-grid/quick-actions/hero
+  player) and `ConfirmationStep` still take the Drift row — that is later staged
+  work (ENG-199 / F4-F5), not yet migrated.
 - **Listener-driven re-renders (now in the notifier, ENG-194).** The
   recording shown is `RecordingDetailState.recording`, and
   `RecordingDetailNotifier.build` (native only) `ref.listen`s

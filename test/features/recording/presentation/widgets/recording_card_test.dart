@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:oral_collector/core/database/app_database.dart';
+import 'package:lucide_icons/lucide_icons.dart';
+import 'package:oral_collector/features/recording/domain/entities/local_recording_entity.dart';
 import 'package:oral_collector/features/recording/presentation/widgets/recording_card.dart';
 import 'package:oral_collector/features/sync/presentation/notifiers/sync_notifier.dart';
 import 'package:oral_collector/features/sync/presentation/notifiers/sync_state.dart';
@@ -15,10 +16,11 @@ class _FakeSyncNotifier extends SyncNotifier {
   SyncState build() => _initial;
 }
 
-LocalRecording _makeRecording({
+LocalRecordingEntity _makeRecording({
   String id = 'rec-1',
   String uploadStatus = 'uploading',
-}) => LocalRecording(
+  String? secondaryGenreId,
+}) => LocalRecordingEntity(
   id: id,
   projectId: 'proj-1',
   genreId: 'genre-1',
@@ -32,17 +34,19 @@ LocalRecording _makeRecording({
   serverId: null,
   gcsUrl: null,
   registerId: null,
+  secondaryGenreId: secondaryGenreId,
   cleaningStatus: 'none',
   recordedAt: DateTime(2024, 1, 1),
   createdAt: DateTime(2024, 1, 1),
   retryCount: 0,
-  lastRetryAt: null,
   resumableSessionUri: null,
   uploadedBytes: 0,
-  md5Hash: null,
 );
 
-Widget _harness({required LocalRecording recording, required SyncState state}) {
+Widget _harness({
+  required LocalRecordingEntity recording,
+  required SyncState state,
+}) {
   return ProviderScope(
     overrides: [
       syncNotifierProvider.overrideWith(() => _FakeSyncNotifier(state)),
@@ -99,6 +103,34 @@ void main() {
 
       expect(find.byType(LinearProgressIndicator), findsOneWidget);
       expect(find.text('42%'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'shows the also-classified icon when the recording has a secondary '
+    'classification',
+    (tester) async {
+      await tester.pumpWidget(
+        _harness(
+          recording: _makeRecording(secondaryGenreId: 'genre-2'),
+          state: const SyncState(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(LucideIcons.layers), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'hides the also-classified icon when there is no secondary classification',
+    (tester) async {
+      await tester.pumpWidget(
+        _harness(recording: _makeRecording(), state: const SyncState()),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(LucideIcons.layers), findsNothing);
     },
   );
 }

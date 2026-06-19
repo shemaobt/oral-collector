@@ -45,18 +45,19 @@ Path: @/lib/features/recording/domain
   (see [../data/docs.md](../data/docs.md) and
   [../data/repositories/docs.md](../data/repositories/docs.md)).
 - The migration off the row is staged (ENG-195 → ENG-197 → ENG-198 →
-  F2/ENG-19x). ENG-197 repointed the recordings-list state/notifier
+  ENG-196 → ENG-199). ENG-197 repointed the recordings-list state/notifier
   ([../presentation/notifiers/docs.md](../presentation/notifiers/docs.md)) onto
   `List<LocalRecordingEntity>` — the first consumer to actually hold the entity.
   ENG-198 then re-typed the trim editor's editing state and its split-persist
   path (`TrimEditorState.recording`, `RecordingSplitPersister`, and
   `LocalRecordingRepository.splitRecordingReplacingParent`) onto the entity,
   the first time it reaches a write-path input (as a read-only `parent`, still
-  no reverse mapper). The recording-detail watch stream is repointed in a later
-  task (F5b), and the list `RecordingCard` still takes a Drift row, bridged by a
-  temporary adapter on the list screen (see
-  [../presentation/docs.md](../presentation/docs.md)) until F2 migrates the
-  card.
+  no reverse mapper). ENG-196 then migrated the list's leaf widgets:
+  `RecordingCard` and the per-item pending-web-upload card now take the entity,
+  and the temporary list-screen adapter that re-hydrated a row for the card was
+  deleted (see [../presentation/docs.md](../presentation/docs.md)). The
+  recording-detail watch stream and its section widgets are repointed in a later
+  task (ENG-199).
 - `LocalRecordingEntity.copyWith` uses **sentinel** semantics for nullable
   fields: passing `null` *clears* a nullable field, omitting it *preserves* the
   current value. Each nullable parameter defaults to a private `_sentinel`
@@ -68,10 +69,12 @@ Path: @/lib/features/recording/domain
   [./entities/local_recording_entity_classification.dart](entities/local_recording_entity_classification.dart))
   is the entity-side mirror of the row's `RecordingClassification` extension
   ([../data/local_recording_classification.dart](../data/local_recording_classification.dart)):
-  it adds `isUnclassified` and delegates to the **same** pure predicates in
+  it adds `isUnclassified` and `hasSecondary` (the latter added by ENG-196 once
+  `RecordingCard` switched to the entity) and delegates both to the **same** pure
+  predicates in
   [./entities/classification.dart](entities/classification.dart), so the entity
   and the Drift row classify identically. The list state's `unclassified` filter
-  reads this getter.
+  reads `isUnclassified`; the list card reads both.
 - `classification.dart` is **not** an entity type: it is the
   `kUnclassifiedGenreId` sentinel const plus top-level pure predicate
   functions (`recordingHasGenre`, `recordingIsUnclassified`,

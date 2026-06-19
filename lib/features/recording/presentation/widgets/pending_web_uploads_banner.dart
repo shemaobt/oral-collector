@@ -3,16 +3,15 @@ import 'dart:async';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 
-import '../../../../core/database/app_database.dart';
 import '../../../../core/platform/web_file_picker.dart' as web_picker;
-import '../../../../core/theme/tokens.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../../shared/utils/format.dart';
 import '../../../../shared/widgets/error_snack_bar.dart';
+import '../../data/local_recording_to_entity.dart';
 import '../../data/providers.dart';
+import '../../domain/entities/local_recording_entity.dart';
 import '../notifiers/recordings_list_notifier.dart';
+import 'pending_web_upload_card.dart';
 
 class PendingWebUploadsBanner extends ConsumerStatefulWidget {
   const PendingWebUploadsBanner({super.key});
@@ -24,7 +23,7 @@ class PendingWebUploadsBanner extends ConsumerStatefulWidget {
 
 class _PendingWebUploadsBannerState
     extends ConsumerState<PendingWebUploadsBanner> {
-  List<LocalRecording> _pending = const [];
+  List<LocalRecordingEntity> _pending = const [];
   final Set<String> _resuming = {};
 
   @override
@@ -41,11 +40,11 @@ class _PendingWebUploadsBannerState
     final pending = await repo.getPendingWebUploads();
     if (!mounted) return;
     setState(() {
-      _pending = pending;
+      _pending = pending.map(localRecordingToEntity).toList();
     });
   }
 
-  Future<void> _resume(LocalRecording row) async {
+  Future<void> _resume(LocalRecordingEntity row) async {
     final l10n = AppLocalizations.of(context);
     setState(() {
       _resuming.add(row.id);
@@ -116,7 +115,7 @@ class _PendingWebUploadsBannerState
     }
   }
 
-  Future<void> _discard(LocalRecording row) async {
+  Future<void> _discard(LocalRecordingEntity row) async {
     final repo = ref.read(localRecordingRepositoryProvider);
     await repo.deleteRecording(row.id);
     await _load();
@@ -127,96 +126,17 @@ class _PendingWebUploadsBannerState
     if (!kIsWeb || _pending.isEmpty) {
       return const SizedBox.shrink();
     }
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        for (final row in _pending)
-          Card(
-            margin: const EdgeInsets.fromLTRB(
-              SpacingScale.s12,
-              SpacingScale.s8,
-              SpacingScale.s12,
-              0,
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(SpacingScale.s12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(LucideIcons.uploadCloud, size: 18),
-                      const SizedBox(width: SpacingScale.s8),
-                      Expanded(
-                        child: Text(
-                          l10n.import_resumePromptTitle,
-                          style: theme.textTheme.titleSmall,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: SpacingScale.s8),
-                  Text(
-                    l10n.import_resumePromptBody(
-                      row.title ?? _filenameFromPath(row.localFilePath),
-                      formatFileSize(row.fileSizeBytes),
-                    ),
-                    style: theme.textTheme.bodySmall,
-                  ),
-                  if (row.uploadedBytes > 0 && row.fileSizeBytes > 0) ...[
-                    const SizedBox(height: SpacingScale.s8),
-                    LinearProgressIndicator(
-                      value: (row.uploadedBytes / row.fileSizeBytes).clamp(
-                        0.0,
-                        1.0,
-                      ),
-                    ),
-                    const SizedBox(height: SpacingScale.s4),
-                    Text(
-                      '${formatFileSize(row.uploadedBytes)} / ${formatFileSize(row.fileSizeBytes)}',
-                      style: theme.textTheme.labelSmall,
-                    ),
-                  ],
-                  const SizedBox(height: SpacingScale.s8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton(
-                        onPressed: _resuming.contains(row.id)
-                            ? null
-                            : () => _discard(row),
-                        child: Text(l10n.common_discard),
-                      ),
-                      const SizedBox(width: SpacingScale.s8),
-                      FilledButton(
-                        onPressed: _resuming.contains(row.id)
-                            ? null
-                            : () => _resume(row),
-                        child: _resuming.contains(row.id)
-                            ? const SizedBox(
-                                width: SpacingScale.s16,
-                                height: SpacingScale.s16,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : Text(l10n.common_resume),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
+        for (final rec in _pending)
+          PendingWebUploadCard(
+            recording: rec,
+            isResuming: _resuming.contains(rec.id),
+            onResume: () => _resume(rec),
+            onDiscard: () => _discard(rec),
           ),
       ],
     );
-  }
-
-  String _filenameFromPath(String path) {
-    final slash = path.lastIndexOf('/');
-    if (slash < 0) return path;
-    return path.substring(slash + 1);
   }
 }

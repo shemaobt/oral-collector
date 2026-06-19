@@ -8,8 +8,8 @@ Path: @/lib/features/recording/presentation/widgets
   category, classify, replace audio, edit details), sections of the
   detail screen (status, info grid, storyteller, quick actions,
   about, upload progress), recording flow widgets (segment cards,
-  waveforms, finalizing overlays, recording step), the list card, and
-  the hero player + playback controls.
+  waveforms, finalizing overlays, recording step), the list card and the
+  pending-web-upload card, and the hero player + playback controls.
 - These widgets are leaf consumers: they `ref.watch` notifiers and
   data-layer providers but do not own long-lived resources. Anything
   that must survive a widget rebuild (the active `AudioPlayer`, the
@@ -80,7 +80,22 @@ Path: @/lib/features/recording/presentation/widgets
 - List-side widgets (recording card, filter chips, filter bar, filter
   sheet) consume `recordingsListNotifierProvider` and the
   genre/project notifiers; they emit user intent back to
-  `recordings_list_screen.dart`.
+  `recordings_list_screen.dart`. `RecordingCard` takes a
+  `LocalRecordingEntity` (ENG-196), reading its classification via the
+  entity's `isUnclassified` / `hasSecondary` extension (see
+  [../../domain/docs.md](../../domain/docs.md)); it no longer touches Drift
+  or the row-level classification extension.
+- `PendingWebUploadCard` (ENG-196) is the presentational, stateless card for
+  one resumable web upload, rendered once per item by
+  `PendingWebUploadsBanner` ([./pending_web_uploads_banner.dart](pending_web_uploads_banner.dart)).
+  It takes a `LocalRecordingEntity` plus an `isResuming` flag and
+  `onResume` / `onDiscard` callbacks; it owns no state and no providers.
+  It was split out of the banner's inline per-item body precisely because
+  the banner is gated behind `kIsWeb` and so never renders under the CI
+  widget tests (where `kIsWeb` is always false) — extracting the card lets
+  the card's layout be exercised directly on the VM while the banner keeps
+  the platform gate, the repository read, and the resume/discard
+  orchestration.
 
 ### Things to Know
 
