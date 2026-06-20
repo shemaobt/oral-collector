@@ -249,6 +249,18 @@ Path: @/lib/features/recording/data/repositories
   [../../domain/entities/server_recording.dart](../../domain/entities/server_recording.dart).
   Auth is supplied by `AuthenticatedClient` from
   [/lib/core/network/authenticated_client.dart](../../../../core/network/authenticated_client.dart).
+  Its `updateRecording(serverId, request)` is the `PATCH /api/oc/recordings/{id}`
+  partial update: as of ENG-205 the body comes from the request object's
+  `toJson()` rather than being assembled inline from thirteen named parameters,
+  but the wire payload, `guardResponse`, the 403→`ForbiddenException`, and the
+  `statusCode == 200` return are all unchanged. The body shape now lives on
+  [`UpdateRecordingRequest`](../../domain/entities/update_recording_request.dart)
+  (the rationale and the genre `GenreUpdate` precedent are in
+  [../../domain/docs.md](../../domain/docs.md)). The
+  [`saveRecordingTitle`](../use_cases/save_recording_title.dart) use-case and
+  `RecordingDetailNotifier`
+  ([../../presentation/notifiers/docs.md](../../presentation/notifiers/docs.md))
+  are the callers, each wrapping its update fields in the request object.
 - `RecordingSessionRepository` manages the `recording_sessions` Drift
   table used by the segmented recorder for crash recovery (ENG-49/ENG-51).
 

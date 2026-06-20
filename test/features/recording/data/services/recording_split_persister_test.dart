@@ -26,6 +26,7 @@ import 'package:oral_collector/features/recording/data/services/recording_split_
 import 'package:oral_collector/features/recording/domain/entities/local_recording_entity.dart';
 import 'package:oral_collector/features/recording/domain/entities/server_recording.dart';
 import 'package:oral_collector/features/recording/domain/entities/split_segment_request.dart';
+import 'package:oral_collector/features/recording/domain/entities/update_recording_request.dart';
 import 'package:oral_collector/features/recording/domain/repositories/recording_api_repository.dart';
 
 void main() {
@@ -301,21 +302,9 @@ class _FakeApiRepo implements RecordingApiRepository {
 
   @override
   Future<bool> updateRecording(
-    String serverId, {
-    String? title,
-    String? description,
-    String? genreId,
-    String? subcategoryId,
-    String? registerId,
-    String? secondaryGenreId,
-    String? secondarySubcategoryId,
-    String? secondaryRegisterId,
-    bool clearSecondary = false,
-    String? storytellerId,
-    String? cleaningStatus,
-    double? durationSeconds,
-    int? fileSizeBytes,
-  }) => throw UnimplementedError();
+    String serverId,
+    UpdateRecordingRequest request,
+  ) => throw UnimplementedError();
 
   @override
   Future<List<String>> splitRecording({

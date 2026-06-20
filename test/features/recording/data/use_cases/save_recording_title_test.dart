@@ -6,6 +6,7 @@ import 'package:oral_collector/core/database/app_database.dart';
 import 'package:oral_collector/core/errors/api_exception.dart';
 import 'package:oral_collector/features/recording/data/repositories/local_recording_repository.dart';
 import 'package:oral_collector/features/recording/data/use_cases/save_recording_title.dart';
+import 'package:oral_collector/features/recording/domain/entities/update_recording_request.dart';
 import 'package:oral_collector/features/recording/domain/repositories/recording_api_repository.dart';
 
 class _MockApiRepo extends Mock implements RecordingApiRepository {}
@@ -17,6 +18,7 @@ class _FakeCompanion extends Fake implements LocalRecordingsCompanion {}
 void main() {
   setUpAll(() {
     registerFallbackValue(_FakeCompanion());
+    registerFallbackValue(const UpdateRecordingRequest());
   });
 
   late _MockApiRepo apiRepo;
@@ -26,22 +28,7 @@ void main() {
     apiRepo = _MockApiRepo();
     localRepo = _MockLocalRepo();
     when(
-      () => apiRepo.updateRecording(
-        any(),
-        title: any(named: 'title'),
-        description: any(named: 'description'),
-        genreId: any(named: 'genreId'),
-        subcategoryId: any(named: 'subcategoryId'),
-        registerId: any(named: 'registerId'),
-        secondaryGenreId: any(named: 'secondaryGenreId'),
-        secondarySubcategoryId: any(named: 'secondarySubcategoryId'),
-        secondaryRegisterId: any(named: 'secondaryRegisterId'),
-        clearSecondary: any(named: 'clearSecondary'),
-        storytellerId: any(named: 'storytellerId'),
-        cleaningStatus: any(named: 'cleaningStatus'),
-        durationSeconds: any(named: 'durationSeconds'),
-        fileSizeBytes: any(named: 'fileSizeBytes'),
-      ),
+      () => apiRepo.updateRecording(any(), any()),
     ).thenAnswer((_) async => true);
 
     when(
@@ -64,9 +51,7 @@ void main() {
 
       expect(result, SaveTitleResult.emptyRejected);
       verifyNever(() => localRepo.updateRecording(any(), any()));
-      verifyNever(
-        () => apiRepo.updateRecording(any(), title: any(named: 'title')),
-      );
+      verifyNever(() => apiRepo.updateRecording(any(), any()));
     });
 
     test('returns emptyRejected when title is only whitespace', () async {
@@ -83,9 +68,7 @@ void main() {
 
       expect(result, SaveTitleResult.emptyRejected);
       verifyNever(() => localRepo.updateRecording(any(), any()));
-      verifyNever(
-        () => apiRepo.updateRecording(any(), title: any(named: 'title')),
-      );
+      verifyNever(() => apiRepo.updateRecording(any(), any()));
     });
 
     test('returns noChange when trimmed title equals current', () async {
@@ -102,9 +85,7 @@ void main() {
 
       expect(result, SaveTitleResult.noChange);
       verifyNever(() => localRepo.updateRecording(any(), any()));
-      verifyNever(
-        () => apiRepo.updateRecording(any(), title: any(named: 'title')),
-      );
+      verifyNever(() => apiRepo.updateRecording(any(), any()));
     });
 
     test(
@@ -122,9 +103,12 @@ void main() {
         );
 
         expect(result, SaveTitleResult.saved);
-        verify(
-          () => apiRepo.updateRecording('srv-1', title: 'New Title'),
-        ).called(1);
+        final request =
+            verify(
+                  () => apiRepo.updateRecording('srv-1', captureAny()),
+                ).captured.single
+                as UpdateRecordingRequest;
+        expect(request.title, 'New Title');
       },
     );
 
@@ -141,7 +125,12 @@ void main() {
       );
 
       expect(result, SaveTitleResult.saved);
-      verify(() => apiRepo.updateRecording('rec-1', title: 'New')).called(1);
+      final request =
+          verify(
+                () => apiRepo.updateRecording('rec-1', captureAny()),
+              ).captured.single
+              as UpdateRecordingRequest;
+      expect(request.title, 'New');
     });
 
     test(
@@ -160,7 +149,7 @@ void main() {
 
         expect(result, SaveTitleResult.saved);
         verifyInOrder([
-          () => apiRepo.updateRecording('srv-1', title: 'New'),
+          () => apiRepo.updateRecording('srv-1', any()),
           () => localRepo.updateRecording('rec-1', any()),
         ]);
       },
@@ -180,9 +169,7 @@ void main() {
 
       expect(result, SaveTitleResult.saved);
       verify(() => localRepo.updateRecording('rec-1', any())).called(1);
-      verifyNever(
-        () => apiRepo.updateRecording(any(), title: any(named: 'title')),
-      );
+      verifyNever(() => apiRepo.updateRecording(any(), any()));
     });
 
     test(
@@ -201,9 +188,7 @@ void main() {
 
         expect(result, SaveTitleResult.saved);
         verify(() => localRepo.updateRecording('rec-1', any())).called(1);
-        verifyNever(
-          () => apiRepo.updateRecording(any(), title: any(named: 'title')),
-        );
+        verifyNever(() => apiRepo.updateRecording(any(), any()));
       },
     );
 
@@ -211,7 +196,7 @@ void main() {
       'on mobile, when API throws, returns savedLocallyOnly (not failure)',
       () async {
         when(
-          () => apiRepo.updateRecording(any(), title: any(named: 'title')),
+          () => apiRepo.updateRecording(any(), any()),
         ).thenThrow(Exception('network down'));
 
         final result = await saveRecordingTitle(
@@ -234,7 +219,7 @@ void main() {
       'on mobile, ForbiddenException from API is rethrown AND local DB is NOT written',
       () async {
         when(
-          () => apiRepo.updateRecording(any(), title: any(named: 'title')),
+          () => apiRepo.updateRecording(any(), any()),
         ).thenThrow(const ForbiddenException());
 
         await expectLater(

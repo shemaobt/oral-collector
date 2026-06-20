@@ -25,6 +25,7 @@ import 'package:oral_collector/features/recording/data/services/audio_downloader
 import 'package:oral_collector/features/recording/data/services/recording_file_importer.dart';
 import 'package:oral_collector/features/recording/domain/entities/local_recording_entity.dart';
 import 'package:oral_collector/features/recording/domain/entities/server_recording.dart';
+import 'package:oral_collector/features/recording/domain/entities/update_recording_request.dart';
 import 'package:oral_collector/features/recording/domain/repositories/recording_api_repository.dart';
 import 'package:oral_collector/features/recording/presentation/notifiers/recording_detail_notifier.dart';
 import 'package:oral_collector/features/recording/presentation/notifiers/recording_detail_state.dart';
@@ -51,37 +52,25 @@ class _FakeApiRepo implements RecordingApiRepository {
 
   @override
   Future<bool> updateRecording(
-    String serverId, {
-    String? title,
-    String? description,
-    String? genreId,
-    String? subcategoryId,
-    String? registerId,
-    String? secondaryGenreId,
-    String? secondarySubcategoryId,
-    String? secondaryRegisterId,
-    bool clearSecondary = false,
-    String? storytellerId,
-    String? cleaningStatus,
-    double? durationSeconds,
-    int? fileSizeBytes,
-  }) async {
+    String serverId,
+    UpdateRecordingRequest request,
+  ) async {
     updateCalls++;
     lastServerId = serverId;
     lastUpdate = {
-      'title': title,
-      'description': description,
-      'genreId': genreId,
-      'subcategoryId': subcategoryId,
-      'registerId': registerId,
-      'secondaryGenreId': secondaryGenreId,
-      'secondarySubcategoryId': secondarySubcategoryId,
-      'secondaryRegisterId': secondaryRegisterId,
-      'clearSecondary': clearSecondary,
-      'storytellerId': storytellerId,
-      'cleaningStatus': cleaningStatus,
-      'durationSeconds': durationSeconds,
-      'fileSizeBytes': fileSizeBytes,
+      'title': request.title,
+      'description': request.description,
+      'genreId': request.genreId,
+      'subcategoryId': request.subcategoryId,
+      'registerId': request.registerId,
+      'secondaryGenreId': request.secondaryGenreId,
+      'secondarySubcategoryId': request.secondarySubcategoryId,
+      'secondaryRegisterId': request.secondaryRegisterId,
+      'clearSecondary': request.clearSecondary,
+      'storytellerId': request.storytellerId,
+      'cleaningStatus': request.cleaningStatus,
+      'durationSeconds': request.durationSeconds,
+      'fileSizeBytes': request.fileSizeBytes,
     };
     if (updateError != null) throw updateError!;
     return updateResult;

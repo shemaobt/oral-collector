@@ -28,10 +28,26 @@ Path: @/lib/features/recording/domain
 - `RecordingApiRepository` (in [./repositories/](repositories/)) is the
   abstract server contract that `RecordingApiRepositoryImpl` in
   [../data/repositories/docs.md](../data/repositories/docs.md)
-  implements; callers depend on the abstraction so it can be mocked.
+  implements; callers depend on the abstraction so it can be mocked. Its
+  partial-update entry point is `updateRecording(serverId, request)`, where
+  `request` is a [`UpdateRecordingRequest`](entities/update_recording_request.dart)
+  (ENG-205) — see below.
 - The entities — `Recording`, `ServerRecording`, `Register` — are the
   shared vocabulary. `ServerRecording` is the API DTO that the data layer
   maps to the local `LocalRecording` Drift row.
+- [`UpdateRecordingRequest`](entities/update_recording_request.dart) (ENG-205)
+  is the PATCH-body params object for `updateRecording`: a plain `const` class
+  with the thirteen optional update fields and a `toJson()` that builds the
+  wire body. It is the idiomatic mirror of the genre feature's `GenreUpdate`
+  (which backs `updateGenre`) and of
+  [`SplitSegmentRequest`](entities/split_segment_request.dart) — no
+  freezed/equatable, no `==`/`copyWith`. `toJson()` omits a null field (leaves
+  it untouched), while `clearSecondary` sends explicit nulls for the three
+  secondary-classification keys to clear them. It was extracted purely to
+  collapse the thirteen named parameters `updateRecording` used to take into one
+  argument (the `dart_code_linter` `number-of-parameters` gate; the threshold
+  ratchet itself is ENG-208) — the JSON on the wire is byte-identical, so the
+  OC↔API update contract (ENG-81) is unchanged.
 - `LocalRecordingEntity` (ENG-195) is the row-decoupled domain view of a
   recording: an immutable (`const` ctor, all-`final`), Drift-free class
   carrying the operational fields the UI reads (`localFilePath`,

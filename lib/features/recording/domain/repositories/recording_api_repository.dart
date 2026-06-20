@@ -1,5 +1,6 @@
 import '../entities/server_recording.dart';
 import '../entities/split_segment_request.dart';
+import '../entities/update_recording_request.dart';
 
 abstract class RecordingApiRepository {
   Future<ServerRecording> getRecording(String serverId);
@@ -12,22 +13,7 @@ abstract class RecordingApiRepository {
     String? uploadStatus,
   });
   Future<bool> deleteRecording(String serverId);
-  Future<bool> updateRecording(
-    String serverId, {
-    String? title,
-    String? description,
-    String? genreId,
-    String? subcategoryId,
-    String? registerId,
-    String? secondaryGenreId,
-    String? secondarySubcategoryId,
-    String? secondaryRegisterId,
-    bool clearSecondary = false,
-    String? storytellerId,
-    String? cleaningStatus,
-    double? durationSeconds,
-    int? fileSizeBytes,
-  });
+  Future<bool> updateRecording(String serverId, UpdateRecordingRequest request);
 
   Future<List<String>> splitRecording({
     required String serverId,
