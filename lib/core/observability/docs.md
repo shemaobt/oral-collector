@@ -170,6 +170,13 @@ Path: @/lib/core/observability
   `dart:developer log()` is silenced by the VM under AOT/release. Both the global
   hooks and the logging facade route through `developer.log` for exactly that
   reason, so no diagnostics leak to the production console.
+- **Raw `print` / `debugPrint` is banned outside this directory and `test/`.**
+  The `avoid_raw_print` rule in [/packages/obt_lints/](../../../packages/obt_lints)
+  (ENG-190, closing an ADR-0010 follow-up) flags any no-receiver
+  `print`/`debugPrint` call, exempting only files under this folder (the one
+  legitimate spot for a low-level fallback) and `test/`. This is what keeps app
+  code routing diagnostics through the `package:logging` facade above rather than
+  re-scattering raw calls.
 - Behavior is verified by the tests under
   [/test/core/observability/](../../../test/core/observability/): both Flutter
   hooks forward at `fatal`, `PlatformDispatcher.onError` returns `true`, and the

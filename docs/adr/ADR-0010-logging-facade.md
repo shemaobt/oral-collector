@@ -3,7 +3,7 @@
 - Status: Accepted
 - Date: 2026-06-18
 - Epic: E3 (Error Handling & Observability)
-- Related: ENG-96, ADR-0006
+- Related: ENG-96, ENG-190, ADR-0006, ADR-0007
 
 ## Context
 
@@ -60,10 +60,12 @@ backed by the first-party `package:logging`.
 - The facade and the `ErrorReporter` stay distinct concerns with a one-way
   bridge (logging → reporter for severe records), the same shape as the
   `parseSkipSink` bridge.
-- A regression risk remains: nothing yet prevents new raw `debugPrint`/`print`
-  calls. A lint rule banning them outside the facade (mirroring the existing
-  `obt_lints` color ban) is a candidate follow-up, intentionally out of scope
-  here.
+- New raw `debugPrint`/`print` calls are prevented by the `obt_lints`
+  `avoid_raw_print` rule (ENG-190), mirroring the existing color ban: it flags
+  both functions outside `lib/core/observability/**` and `test/`. Note that
+  `debugPrint` is a reassignable top-level *variable*, so the rule matches both
+  the `MethodInvocation` (`print`) and `FunctionExpressionInvocation`
+  (`debugPrint`) AST shapes.
 - `dart:developer log()` output is not asserted in tests (it targets the VM
   service); the facade's behavior is covered through the `ErrorReporter` bridge
   and level gating instead.
