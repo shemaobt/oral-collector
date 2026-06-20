@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../project/presentation/notifiers/member_notifier.dart';
 import '../../../storyteller/domain/entities/storyteller.dart';
@@ -54,7 +55,7 @@ class RecordingStorytellerSection extends ConsumerWidget {
         return Row(
           children: [
             Icon(LucideIcons.userMinus, size: 18, color: colors.secondary),
-            const SizedBox(width: 10),
+            const SizedBox(width: SpacingScale.s8),
             Expanded(
               child: Text(
                 l10n.storyteller_noneAssigned,
@@ -76,7 +77,7 @@ class RecordingStorytellerSection extends ConsumerWidget {
         return Row(
           children: [
             Icon(LucideIcons.userX, size: 18, color: colors.error),
-            const SizedBox(width: 10),
+            const SizedBox(width: SpacingScale.s8),
             Expanded(
               child: Text(
                 l10n.storyteller_unknown,
@@ -95,9 +96,11 @@ class RecordingStorytellerSection extends ConsumerWidget {
       }
 
       final st = resolvedStoryteller!;
-      final sexLabel = st.sex == StorytellerSex.male
-          ? l10n.storyteller_sexMale
-          : l10n.storyteller_sexFemale;
+      final sexLabel = switch (st.sex) {
+        StorytellerSex.male => l10n.storyteller_sexMale,
+        StorytellerSex.female => l10n.storyteller_sexFemale,
+        StorytellerSex.unknown => '—',
+      };
       final parts = <String>[sexLabel];
       if (st.age != null) parts.add(l10n.storyteller_ageYearsShort(st.age!));
       final loc = (st.location ?? '').trim();
@@ -107,13 +110,13 @@ class RecordingStorytellerSection extends ConsumerWidget {
 
       return InkWell(
         onTap: canEdit ? () => _openPicker(context, ref) : null,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(RadiusScale.r8),
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
+          padding: const EdgeInsets.symmetric(vertical: SpacingScale.s4),
           child: Row(
             children: [
               Icon(LucideIcons.user, size: 18, color: colors.accent),
-              const SizedBox(width: 10),
+              const SizedBox(width: SpacingScale.s8),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -147,10 +150,10 @@ class RecordingStorytellerSection extends ConsumerWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(SpacingScale.s16),
       decoration: BoxDecoration(
         color: colors.surfaceAlt,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(RadiusScale.r12),
         border: Border.all(color: colors.border.withValues(alpha: 0.3)),
       ),
       child: Column(
@@ -164,11 +167,11 @@ class RecordingStorytellerSection extends ConsumerWidget {
               letterSpacing: 0.4,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: SpacingScale.s8),
           buildStorytellerBody(),
-          const SizedBox(height: 14),
+          const SizedBox(height: SpacingScale.s16),
           Divider(height: 1, color: colors.border.withValues(alpha: 0.35)),
-          const SizedBox(height: 14),
+          const SizedBox(height: SpacingScale.s16),
           Text(
             l10n.detail_recordedBy,
             style: theme.textTheme.labelSmall?.copyWith(
@@ -177,11 +180,11 @@ class RecordingStorytellerSection extends ConsumerWidget {
               letterSpacing: 0.4,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: SpacingScale.s8),
           Row(
             children: [
               Icon(LucideIcons.mic, size: 18, color: colors.secondary),
-              const SizedBox(width: 10),
+              const SizedBox(width: SpacingScale.s8),
               Expanded(
                 child: Text(
                   authorLabel,

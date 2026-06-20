@@ -4,6 +4,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/tokens.dart';
 import '../../../shared/widgets/app_shell.dart';
 import '../../../shared/widgets/error_snack_bar.dart';
 import '../../sync/presentation/notifiers/sync_notifier.dart';
@@ -17,7 +18,7 @@ Future<bool?> showCreateProjectSheet(BuildContext context) {
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
-    backgroundColor: Colors.transparent,
+    backgroundColor: AppColors.transparent,
     constraints: const BoxConstraints(maxWidth: 600),
     builder: (_) => const _CreateProjectSheet(),
   );
@@ -62,7 +63,7 @@ class _CreateProjectSheetState extends ConsumerState<_CreateProjectSheet> {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
       constraints: const BoxConstraints(maxWidth: 600),
       builder: (_) => _LanguagePickerSheet(
         languages: languages,
@@ -129,10 +130,17 @@ class _CreateProjectSheetState extends ConsumerState<_CreateProjectSheet> {
     return Container(
       decoration: BoxDecoration(
         color: colors.card,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(RadiusScale.r20),
+        ),
       ),
       child: Padding(
-        padding: EdgeInsets.fromLTRB(24, 0, 24, bottomPadding),
+        padding: EdgeInsets.fromLTRB(
+          SpacingScale.s24,
+          0,
+          SpacingScale.s24,
+          bottomPadding,
+        ),
         child: Form(
           key: _formKey,
           child: Column(
@@ -141,7 +149,10 @@ class _CreateProjectSheetState extends ConsumerState<_CreateProjectSheet> {
             children: [
               Center(
                 child: Container(
-                  margin: const EdgeInsets.only(top: 12, bottom: 20),
+                  margin: const EdgeInsets.only(
+                    top: SpacingScale.s12,
+                    bottom: SpacingScale.s20,
+                  ),
                   width: 36,
                   height: 4,
                   decoration: BoxDecoration(
@@ -152,7 +163,7 @@ class _CreateProjectSheetState extends ConsumerState<_CreateProjectSheet> {
               ),
 
               Text(l10n.project_newProject, style: theme.textTheme.titleLarge),
-              const SizedBox(height: 24),
+              const SizedBox(height: SpacingScale.s24),
 
               TextFormField(
                 controller: _nameController,
@@ -170,7 +181,7 @@ class _CreateProjectSheetState extends ConsumerState<_CreateProjectSheet> {
                   return null;
                 },
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: SpacingScale.s16),
 
               GestureDetector(
                 onTap: _pickLanguage,
@@ -180,7 +191,7 @@ class _CreateProjectSheetState extends ConsumerState<_CreateProjectSheet> {
                     suffixIcon: const Icon(LucideIcons.chevronRight, size: 18),
                     errorText: null,
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(RadiusScale.r12),
                     ),
                   ),
                   child: _selectedLanguage != null
@@ -194,12 +205,14 @@ class _CreateProjectSheetState extends ConsumerState<_CreateProjectSheet> {
                             ),
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
+                                horizontal: SpacingScale.s8,
                                 vertical: 2,
                               ),
                               decoration: BoxDecoration(
                                 color: colors.accent.withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(6),
+                                borderRadius: BorderRadius.circular(
+                                  RadiusScale.r8,
+                                ),
                               ),
                               child: Text(
                                 _selectedLanguage!.code.toUpperCase(),
@@ -220,7 +233,7 @@ class _CreateProjectSheetState extends ConsumerState<_CreateProjectSheet> {
                         ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: SpacingScale.s16),
 
               TextFormField(
                 controller: _descriptionController,
@@ -231,7 +244,7 @@ class _CreateProjectSheetState extends ConsumerState<_CreateProjectSheet> {
                 maxLines: 2,
                 textCapitalization: TextCapitalization.sentences,
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: SpacingScale.s24),
 
               Row(
                 children: [
@@ -243,18 +256,18 @@ class _CreateProjectSheetState extends ConsumerState<_CreateProjectSheet> {
                       child: Text(l10n.common_cancel),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: SpacingScale.s12),
                   Expanded(
                     flex: 2,
                     child: ElevatedButton(
                       onPressed: _isSubmitting ? null : _submit,
                       child: _isSubmitting
                           ? const SizedBox(
-                              width: 20,
-                              height: 20,
+                              width: SpacingScale.s20,
+                              height: SpacingScale.s20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                color: Colors.white,
+                                color: AppColors.white,
                               ),
                             )
                           : Text(l10n.project_createProject),
@@ -330,7 +343,7 @@ class _LanguagePickerSheetState extends State<_LanguagePickerSheet> {
     } on Exception catch (e) {
       if (!mounted) return;
       setState(() => _isCreatingLanguage = false);
-      showErrorSnackBar(context, e.toString());
+      showErrorSnackBar(context, e);
     }
   }
 
@@ -351,14 +364,19 @@ class _LanguagePickerSheetState extends State<_LanguagePickerSheet> {
       ),
       decoration: BoxDecoration(
         color: colors.card,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(RadiusScale.r20),
+        ),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Center(
             child: Container(
-              margin: const EdgeInsets.only(top: 12, bottom: 16),
+              margin: const EdgeInsets.only(
+                top: SpacingScale.s12,
+                bottom: SpacingScale.s16,
+              ),
               width: 36,
               height: 4,
               decoration: BoxDecoration(
@@ -369,7 +387,7 @@ class _LanguagePickerSheetState extends State<_LanguagePickerSheet> {
           ),
 
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
+            padding: const EdgeInsets.symmetric(horizontal: SpacingScale.s24),
             child: Row(
               children: [
                 Expanded(
@@ -389,11 +407,16 @@ class _LanguagePickerSheetState extends State<_LanguagePickerSheet> {
               ],
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: SpacingScale.s12),
 
           if (_isAddingNew) ...[
             Padding(
-              padding: EdgeInsets.fromLTRB(24, 0, 24, navBarPadding),
+              padding: EdgeInsets.fromLTRB(
+                SpacingScale.s24,
+                0,
+                SpacingScale.s24,
+                navBarPadding,
+              ),
               child: Form(
                 key: _addFormKey,
                 child: Column(
@@ -405,7 +428,7 @@ class _LanguagePickerSheetState extends State<_LanguagePickerSheet> {
                         color: colors.secondary,
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: SpacingScale.s16),
                     TextFormField(
                       controller: _newNameController,
                       autofocus: true,
@@ -422,7 +445,7 @@ class _LanguagePickerSheetState extends State<_LanguagePickerSheet> {
                         return null;
                       },
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: SpacingScale.s12),
                     TextFormField(
                       controller: _newCodeController,
                       decoration: InputDecoration(
@@ -442,18 +465,18 @@ class _LanguagePickerSheetState extends State<_LanguagePickerSheet> {
                         return null;
                       },
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: SpacingScale.s20),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: _isCreatingLanguage ? null : _createLanguage,
                         child: _isCreatingLanguage
                             ? const SizedBox(
-                                width: 20,
-                                height: 20,
+                                width: SpacingScale.s20,
+                                height: SpacingScale.s20,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  color: Colors.white,
+                                  color: AppColors.white,
                                 ),
                               )
                             : Text(l10n.project_addLanguage),
@@ -465,7 +488,7 @@ class _LanguagePickerSheetState extends State<_LanguagePickerSheet> {
             ),
           ] else ...[
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
+              padding: const EdgeInsets.symmetric(horizontal: SpacingScale.s24),
               child: TextField(
                 controller: _searchController,
                 decoration: InputDecoration(
@@ -482,19 +505,19 @@ class _LanguagePickerSheetState extends State<_LanguagePickerSheet> {
                       : null,
                   isDense: true,
                   contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
+                    horizontal: SpacingScale.s16,
+                    vertical: SpacingScale.s12,
                   ),
                 ),
                 onChanged: (v) => setState(() => _query = v),
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: SpacingScale.s8),
 
             Flexible(
               child: filtered.isEmpty
                   ? Padding(
-                      padding: const EdgeInsets.all(32),
+                      padding: const EdgeInsets.all(SpacingScale.s32),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -503,14 +526,14 @@ class _LanguagePickerSheetState extends State<_LanguagePickerSheet> {
                             size: 36,
                             color: colors.secondary.withValues(alpha: 0.4),
                           ),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: SpacingScale.s12),
                           Text(
                             l10n.project_noLanguagesFound,
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: colors.secondary,
                             ),
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: SpacingScale.s16),
                           TextButton.icon(
                             onPressed: () {
                               _newNameController.text = _query;
@@ -534,7 +557,9 @@ class _LanguagePickerSheetState extends State<_LanguagePickerSheet> {
                               height: 40,
                               decoration: BoxDecoration(
                                 color: colors.info.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(10),
+                                borderRadius: BorderRadius.circular(
+                                  RadiusScale.r8,
+                                ),
                               ),
                               child: Icon(
                                 LucideIcons.plus,
@@ -564,7 +589,9 @@ class _LanguagePickerSheetState extends State<_LanguagePickerSheet> {
                               color: isSelected
                                   ? colors.accent.withValues(alpha: 0.12)
                                   : colors.surfaceAlt,
-                              borderRadius: BorderRadius.circular(10),
+                              borderRadius: BorderRadius.circular(
+                                RadiusScale.r8,
+                              ),
                             ),
                             child: Center(
                               child: Text(

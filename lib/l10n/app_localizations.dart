@@ -872,12 +872,6 @@ abstract class AppLocalizations {
   /// **'Project updated'**
   String get projectSettings_updated;
 
-  /// No description provided for @projectSettings_noPermission.
-  ///
-  /// In en, this message translates to:
-  /// **'You do not have permission to update this project'**
-  String get projectSettings_noPermission;
-
   /// No description provided for @projectSettings_team.
   ///
   /// In en, this message translates to:
@@ -1159,12 +1153,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The audio file is not stored on this device. Would you like to download it to trim?'**
   String get recording_downloadAudioMessage;
-
-  /// No description provided for @recording_downloadFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to download: {error}'**
-  String recording_downloadFailed(String error);
 
   /// No description provided for @recording_audioNotAvailable.
   ///
@@ -1751,13 +1739,13 @@ abstract class AppLocalizations {
   /// No description provided for @import_resumePromptBody.
   ///
   /// In en, this message translates to:
-  /// **'\"{name}\" ({size}) was partially uploaded. Select the same file to continue.'**
+  /// **'\"{name}\" ({size}) was partially uploaded. Select the exact same file (unchanged) to continue.'**
   String import_resumePromptBody(String name, String size);
 
   /// No description provided for @import_resumeSizeMismatch.
   ///
   /// In en, this message translates to:
-  /// **'That file doesn\'t match the paused upload.'**
+  /// **'That\'s a different file. Select the exact same file you were uploading.'**
   String get import_resumeSizeMismatch;
 
   /// No description provided for @import_largeFileWarning.
@@ -1831,12 +1819,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Profile photo updated'**
   String get profile_photoUpdated;
-
-  /// No description provided for @profile_photoFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to update photo: {error}'**
-  String profile_photoFailed(String error);
 
   /// No description provided for @profile_editName.
   ///

@@ -2,6 +2,9 @@ import 'package:drift/drift.dart';
 
 import '../../../../core/database/app_database.dart';
 import '../../domain/entities/classification.dart';
+import '../../domain/entities/local_recording_entity.dart';
+import '../local_recording_entity_to_companion.dart';
+import '../local_recording_to_entity.dart';
 
 class LocalRecordingRepository {
   final AppDatabase _db;
@@ -10,6 +13,14 @@ class LocalRecordingRepository {
 
   Future<void> insertRecording(LocalRecordingsCompanion data) async {
     await _db.into(_db.localRecordings).insert(data);
+  }
+
+  /// Persists a freshly captured recording from its domain entity. Delegates to
+  /// [localRecordingEntityToCompanion], which drops empty optional metadata and
+  /// leaves the DB-managed columns to their Drift defaults. See ENG-192,
+  /// ENG-201.
+  Future<void> saveRecording(LocalRecordingEntity entity) async {
+    await insertRecording(localRecordingEntityToCompanion(entity));
   }
 
   /// Inserts [data], or updates the row in place when its primary key already
@@ -39,10 +50,30 @@ class LocalRecordingRepository {
     )..where((t) => t.serverId.equals(serverId))).getSingleOrNull();
   }
 
-  Stream<LocalRecording?> watchRecordingById(String id) {
-    return (_db.select(
-      _db.localRecordings,
-    )..where((t) => t.id.equals(id))).watchSingleOrNull();
+  /// One-shot, row-decoupled analogue of [getRecordingById]: projects to the
+  /// domain entity so callers (the trim editor load path) never see a Drift
+  /// row. See ENG-202.
+  Future<LocalRecordingEntity?> getRecordingEntityById(String id) async {
+    final row = await getRecordingById(id);
+    return row == null ? null : _fromRow(row);
+  }
+
+  /// Row-decoupled analogue of [getRecordingByServerId]. See ENG-202.
+  Future<LocalRecordingEntity?> getRecordingEntityByServerId(
+    String serverId,
+  ) async {
+    final row = await getRecordingByServerId(serverId);
+    return row == null ? null : _fromRow(row);
+  }
+
+  /// Watches a single recording as the row-decoupled domain entity. Maps before
+  /// `.distinct()` so dedup runs on [LocalRecordingEntity]'s value equality —
+  /// the detail watch stream consumes this (ENG-199/ENG-200). See ENG-195.
+  Stream<LocalRecordingEntity?> watchRecordingEntityById(String id) {
+    return (_db.select(_db.localRecordings)..where((t) => t.id.equals(id)))
+        .watchSingleOrNull()
+        .map((row) => row == null ? null : _fromRow(row))
+        .distinct();
   }
 
   Future<bool> updateRecording(String id, LocalRecordingsCompanion data) async {
@@ -50,6 +81,104 @@ class LocalRecordingRepository {
       _db.localRecordings,
     )..where((t) => t.id.equals(id))).write(data);
     return rows > 0;
+  }
+
+  // Typed classification/metadata writes (ENG-194): the detail screen used to
+  // build these companions inline in the presentation layer. The null handling
+  // is load-bearing and intentionally NOT unified — `classify` omits a null
+  // register (Value.absent, preserve), while `moveCategory`/secondary write
+  // null (clear).
+
+  Future<bool> setStoryteller(String id, {required String? storytellerId}) {
+    return updateRecording(
+      id,
+      LocalRecordingsCompanion(
+        storytellerId: storytellerId == null
+            ? const Value(null)
+            : Value(storytellerId),
+      ),
+    );
+  }
+
+  Future<bool> updateDescription(String id, String description) {
+    return updateRecording(
+      id,
+      LocalRecordingsCompanion(description: Value(description)),
+    );
+  }
+
+  Future<bool> updateCleaningStatus(String id, String cleaningStatus) {
+    return updateRecording(
+      id,
+      LocalRecordingsCompanion(cleaningStatus: Value(cleaningStatus)),
+    );
+  }
+
+  Future<bool> moveCategory(
+    String id, {
+    required String genreId,
+    required String? subcategoryId,
+    required bool clearSecondary,
+    String? secondaryGenreId,
+    String? secondarySubcategoryId,
+    String? secondaryRegisterId,
+  }) {
+    return updateRecording(
+      id,
+      LocalRecordingsCompanion(
+        genreId: Value(genreId),
+        subcategoryId: Value(subcategoryId),
+        secondaryGenreId: clearSecondary
+            ? const Value(null)
+            : Value(secondaryGenreId),
+        secondarySubcategoryId: clearSecondary
+            ? const Value(null)
+            : Value(secondarySubcategoryId),
+        secondaryRegisterId: clearSecondary
+            ? const Value(null)
+            : Value(secondaryRegisterId),
+      ),
+    );
+  }
+
+  Future<bool> classify(
+    String id, {
+    required String genreId,
+    String? subcategoryId,
+    String? registerId,
+    String? secondaryGenreId,
+    String? secondarySubcategoryId,
+    String? secondaryRegisterId,
+  }) {
+    return updateRecording(
+      id,
+      LocalRecordingsCompanion(
+        genreId: Value(genreId),
+        subcategoryId: Value(subcategoryId),
+        registerId: registerId != null
+            ? Value(registerId)
+            : const Value.absent(),
+        secondaryGenreId: Value(secondaryGenreId),
+        secondarySubcategoryId: Value(secondarySubcategoryId),
+        secondaryRegisterId: Value(secondaryRegisterId),
+      ),
+    );
+  }
+
+  Future<bool> updateSecondaryClassification(
+    String id, {
+    String? genreId,
+    String? subcategoryId,
+    String? registerId,
+  }) {
+    return updateRecording(
+      id,
+      LocalRecordingsCompanion(
+        secondaryGenreId: Value(genreId),
+        secondarySubcategoryId: Value(subcategoryId),
+        secondaryRegisterId: Value(registerId),
+      ),
+    );
   }
 
   Future<int> reassignStorytellerId({
@@ -76,14 +205,20 @@ class LocalRecordingRepository {
                 t.uploadStatus.equals('failed') |
                 t.uploadStatus.equals('uploading'),
           )
-          ..orderBy([(t) => OrderingTerm.asc(t.recordedAt)]))
+          ..orderBy([
+            (t) => OrderingTerm.asc(t.createdAt),
+            (t) => OrderingTerm.asc(t.id),
+          ]))
         .get();
   }
 
   Future<List<LocalRecording>> getPendingWebUploads() async {
     return (_db.select(_db.localRecordings)
           ..where((t) => t.uploadStatus.equals('web_uploading'))
-          ..orderBy([(t) => OrderingTerm.asc(t.recordedAt)]))
+          ..orderBy([
+            (t) => OrderingTerm.asc(t.createdAt),
+            (t) => OrderingTerm.asc(t.id),
+          ]))
         .get();
   }
 
@@ -188,14 +323,26 @@ class LocalRecordingRepository {
     return rows > 0;
   }
 
+  /// Hands rows orphaned in `uploading` (the app died mid-upload) back to the
+  /// queue at startup. Only [uploadStatus] is rewritten — retry budget and the
+  /// resumable offset survive, so the upload resumes instead of restarting.
+  /// Target `local` (not `failed`) keeps the row clear of [deleteStaleRecordings].
+  Future<int> resetStuckUploading() async {
+    return (_db.update(_db.localRecordings)
+          ..where((t) => t.uploadStatus.equals('uploading')))
+        .write(const LocalRecordingsCompanion(uploadStatus: Value('local')));
+  }
+
   /// Persists a freshly-downloaded audio file alongside its full metadata.
   /// If a row for [recording.id] already exists locally, only [localFilePath]
   /// is updated so local edits (description, storyteller, secondary
   /// classification) are preserved. Otherwise the full row is inserted from
-  /// [recording.toCompanion], so every metadata field reaches the database
-  /// — the hand-picked-subset bug from ENG-64 cannot recur here.
+  /// every entity field, so all metadata reaches the database — the
+  /// hand-picked-subset bug from ENG-64 cannot recur here. The persistence-only
+  /// columns (`lastRetryAt`, `md5Hash`) are left absent (null), which is correct
+  /// for a server-sourced recording with no prior local row.
   Future<void> cacheDownloadedAudio({
-    required LocalRecording recording,
+    required LocalRecordingEntity recording,
     required String localFilePath,
   }) async {
     await _db.transaction(() async {
@@ -207,10 +354,40 @@ class LocalRecordingRepository {
           LocalRecordingsCompanion(localFilePath: Value(localFilePath)),
         );
       } else {
-        final companion = recording
-            .toCompanion(false)
-            .copyWith(localFilePath: Value(localFilePath));
-        await _db.into(_db.localRecordings).insert(companion);
+        await _db
+            .into(_db.localRecordings)
+            .insert(
+              LocalRecordingsCompanion(
+                id: Value(recording.id),
+                projectId: Value(recording.projectId),
+                genreId: Value(recording.genreId),
+                subcategoryId: Value(recording.subcategoryId),
+                title: Value(recording.title),
+                description: Value(recording.description),
+                durationSeconds: Value(recording.durationSeconds),
+                fileSizeBytes: Value(recording.fileSizeBytes),
+                format: Value(recording.format),
+                localFilePath: Value(localFilePath),
+                uploadStatus: Value(recording.uploadStatus),
+                serverId: Value(recording.serverId),
+                gcsUrl: Value(recording.gcsUrl),
+                registerId: Value(recording.registerId),
+                secondaryGenreId: Value(recording.secondaryGenreId),
+                secondarySubcategoryId: Value(recording.secondarySubcategoryId),
+                secondaryRegisterId: Value(recording.secondaryRegisterId),
+                storytellerId: Value(recording.storytellerId),
+                userId: Value(recording.userId),
+                cleaningStatus: Value(recording.cleaningStatus),
+                recordedAt: Value(recording.recordedAt),
+                createdAt: Value(recording.createdAt),
+                retryCount: Value(recording.retryCount),
+                resumableSessionUri: Value(recording.resumableSessionUri),
+                uploadedBytes: Value(recording.uploadedBytes),
+                splitFromId: Value(recording.splitFromId),
+                splitIndex: Value(recording.splitIndex),
+                splitSegmentCount: Value(recording.splitSegmentCount),
+              ),
+            );
       }
     });
   }
@@ -240,17 +417,14 @@ class LocalRecordingRepository {
     return rows > 0;
   }
 
-  /// Inserts one child row per segment, propagating parent metadata per the
-  /// contract in `docs/recording-split-semantics.md`. See ENG-64.
-  ///
   /// Defense in depth: throws [ArgumentError] when a segment override would
   /// collide with the parent's secondary classification of the same kind.
   /// The server enforces `secondary != primary` and would reject the upload
   /// with a 422; the UI is expected to block this case before reaching here.
-  Future<List<String>> splitRecording({
-    required LocalRecording parent,
-    required List<SplitSegmentSpec> segments,
-  }) async {
+  void _assertNoSecondaryCollision(
+    LocalRecordingEntity parent,
+    List<SplitSegmentSpec> segments,
+  ) {
     for (final seg in segments) {
       if (seg.genreOverride != null &&
           seg.genreOverride!.isNotEmpty &&
@@ -277,50 +451,75 @@ class LocalRecordingRepository {
         );
       }
     }
+  }
+
+  /// Atomically replaces [parent] with its split children: inserts one child
+  /// row per segment and deletes the parent row in a single transaction, so a
+  /// partial failure can never leave orphaned children alongside a surviving
+  /// parent. See ENG-125.
+  Future<List<String>> splitRecordingReplacingParent({
+    required LocalRecordingEntity parent,
+    required List<SplitSegmentSpec> segments,
+  }) async {
+    _assertNoSecondaryCollision(parent, segments);
     return _db.transaction(() async {
-      final ids = <String>[];
-      for (final seg in segments) {
-        await _db
-            .into(_db.localRecordings)
-            .insert(
-              LocalRecordingsCompanion(
-                id: Value(seg.id),
-                projectId: Value(parent.projectId),
-                genreId: Value(
-                  (seg.genreOverride != null && seg.genreOverride!.isNotEmpty)
-                      ? seg.genreOverride!
-                      : parent.genreId,
-                ),
-                subcategoryId:
-                    (seg.subcategoryOverride != null &&
-                        seg.subcategoryOverride!.isNotEmpty)
-                    ? Value(seg.subcategoryOverride)
-                    : Value(parent.subcategoryId),
-                registerId:
-                    (seg.registerOverride != null &&
-                        seg.registerOverride!.isNotEmpty)
-                    ? Value(seg.registerOverride)
-                    : Value(parent.registerId),
-                secondaryGenreId: Value(parent.secondaryGenreId),
-                secondarySubcategoryId: Value(parent.secondarySubcategoryId),
-                secondaryRegisterId: Value(parent.secondaryRegisterId),
-                storytellerId: Value(parent.storytellerId),
-                userId: Value(parent.userId),
-                title: Value(seg.title),
-                description: Value(parent.description),
-                durationSeconds: Value(seg.durationSeconds),
-                fileSizeBytes: Value(seg.fileSizeBytes),
-                format: Value(parent.format),
-                localFilePath: Value(seg.localFilePath),
-                uploadStatus: const Value('local'),
-                cleaningStatus: const Value('none'),
-                recordedAt: Value(parent.recordedAt),
-              ),
-            );
-        ids.add(seg.id);
-      }
+      final ids = await _insertSplitChildren(parent, segments);
+      await (_db.delete(
+        _db.localRecordings,
+      )..where((t) => t.id.equals(parent.id))).go();
       return ids;
     });
+  }
+
+  /// Inserts one child row per segment, propagating parent metadata per the
+  /// contract in `docs/recording-split-semantics.md`. Runs in the caller's
+  /// transaction; does not open its own.
+  Future<List<String>> _insertSplitChildren(
+    LocalRecordingEntity parent,
+    List<SplitSegmentSpec> segments,
+  ) async {
+    final ids = <String>[];
+    for (final seg in segments) {
+      await _db
+          .into(_db.localRecordings)
+          .insert(
+            LocalRecordingsCompanion(
+              id: Value(seg.id),
+              projectId: Value(parent.projectId),
+              genreId: Value(
+                (seg.genreOverride != null && seg.genreOverride!.isNotEmpty)
+                    ? seg.genreOverride!
+                    : parent.genreId,
+              ),
+              subcategoryId:
+                  (seg.subcategoryOverride != null &&
+                      seg.subcategoryOverride!.isNotEmpty)
+                  ? Value(seg.subcategoryOverride)
+                  : Value(parent.subcategoryId),
+              registerId:
+                  (seg.registerOverride != null &&
+                      seg.registerOverride!.isNotEmpty)
+                  ? Value(seg.registerOverride)
+                  : Value(parent.registerId),
+              secondaryGenreId: Value(parent.secondaryGenreId),
+              secondarySubcategoryId: Value(parent.secondarySubcategoryId),
+              secondaryRegisterId: Value(parent.secondaryRegisterId),
+              storytellerId: Value(parent.storytellerId),
+              userId: Value(parent.userId),
+              title: Value(seg.title),
+              description: Value(parent.description),
+              durationSeconds: Value(seg.durationSeconds),
+              fileSizeBytes: Value(seg.fileSizeBytes),
+              format: Value(parent.format),
+              localFilePath: Value(seg.localFilePath),
+              uploadStatus: const Value('local'),
+              cleaningStatus: const Value('none'),
+              recordedAt: Value(parent.recordedAt),
+            ),
+          );
+      ids.add(seg.id);
+    }
+    return ids;
   }
 
   Future<bool> markAsFailed(String id, {bool incrementRetry = true}) async {
@@ -349,10 +548,13 @@ class LocalRecordingRepository {
       return rows > 0;
     }
   }
+
+  LocalRecordingEntity _fromRow(LocalRecording row) =>
+      localRecordingToEntity(row);
 }
 
-/// Per-segment input for [LocalRecordingRepository.splitRecording]. Fields
-/// that vary per child; the rest are inherited from the parent.
+/// Per-segment input for [LocalRecordingRepository.splitRecordingReplacingParent].
+/// Fields that vary per child; the rest are inherited from the parent.
 class SplitSegmentSpec {
   final String id;
   final String title;

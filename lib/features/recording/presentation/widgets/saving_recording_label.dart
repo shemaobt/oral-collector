@@ -41,7 +41,7 @@ class _SavingRecordingLabelState extends State<SavingRecordingLabel>
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         _BouncingDots(controller: _controller, color: colors.accent),
-        const SizedBox(width: 8),
+        const SizedBox(width: SpacingScale.s8),
         Text(
           AppLocalizations.of(context).recording_savingRecording,
           style: theme.textTheme.bodyMedium?.copyWith(
@@ -63,8 +63,8 @@ class _BouncingDots extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 22,
-      height: 14,
+      width: SpacingScale.s24,
+      height: SpacingScale.s16,
       child: AnimatedBuilder(
         animation: controller,
         builder: (context, _) {

@@ -2,6 +2,7 @@ import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
+import 'package:logging/logging.dart';
 
 import '../../../../core/config/recording_config.dart';
 import '../../../../core/platform/foreground_service_arbiter.dart';
@@ -21,6 +22,8 @@ class RecordingForegroundServiceContent {
 
 class RecordingForegroundService {
   RecordingForegroundService();
+
+  static final _log = Logger('RecordingForegroundService');
 
   void Function()? _onStopRequested;
 
@@ -52,7 +55,7 @@ class RecordingForegroundService {
         ),
       );
     } on Exception catch (e) {
-      debugPrint('RecordingForegroundService: init failed: $e');
+      _log.warning('init failed', e);
       return false;
     }
 
@@ -86,7 +89,7 @@ class RecordingForegroundService {
       );
       return true;
     } on Exception catch (e) {
-      debugPrint('RecordingForegroundService: startService failed: $e');
+      _log.warning('startService failed', e);
       return false;
     }
   }
@@ -102,7 +105,7 @@ class RecordingForegroundService {
         notificationText: body,
       );
     } on Exception catch (e) {
-      debugPrint('RecordingForegroundService: updateService failed: $e');
+      _log.warning('updateService failed', e);
     }
   }
 
@@ -119,7 +122,7 @@ class RecordingForegroundService {
         },
       );
     } on Exception catch (e) {
-      debugPrint('RecordingForegroundService: stopService failed: $e');
+      _log.warning('stopService failed', e);
     }
   }
 

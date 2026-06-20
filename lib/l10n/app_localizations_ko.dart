@@ -393,9 +393,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get projectSettings_updated => '프로젝트가 업데이트되었습니다';
 
   @override
-  String get projectSettings_noPermission => '이 프로젝트를 업데이트할 권한이 없습니다';
-
-  @override
   String get projectSettings_team => '팀';
 
   @override
@@ -543,11 +540,6 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get recording_downloadAudioMessage =>
       '오디오 파일이 이 기기에 저장되어 있지 않습니다. 자르기 위해 다운로드하시겠습니까?';
-
-  @override
-  String recording_downloadFailed(String error) {
-    return '다운로드 실패: $error';
-  }
 
   @override
   String get recording_audioNotAvailable => '오디오 파일을 사용할 수 없습니다';
@@ -943,11 +935,11 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String import_resumePromptBody(String name, String size) {
-    return '\"$name\"($size)이(가) 부분적으로 업로드되었습니다. 계속하려면 같은 파일을 선택하세요.';
+    return '\"$name\"($size)이(가) 부분적으로 업로드되었습니다. 계속하려면 변경되지 않은 똑같은 파일을 선택하세요.';
   }
 
   @override
-  String get import_resumeSizeMismatch => '이 파일은 일시 중지된 업로드와 일치하지 않습니다.';
+  String get import_resumeSizeMismatch => '다른 파일입니다. 업로드하던 것과 똑같은 파일을 선택하세요.';
 
   @override
   String import_largeFileWarning(String size) {
@@ -988,11 +980,6 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get profile_photoUpdated => '프로필 사진이 업데이트되었습니다';
-
-  @override
-  String profile_photoFailed(String error) {
-    return '사진 업데이트 실패: $error';
-  }
 
   @override
   String get profile_editName => '표시 이름 편집';

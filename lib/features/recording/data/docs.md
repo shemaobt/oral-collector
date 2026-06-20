@@ -39,7 +39,15 @@ Path: @/lib/features/recording/data
   ([/lib/features/sync/](../../sync/)) reads
   `localRecordingRepositoryProvider` to enumerate pending uploads
   (`getPendingUploads`, `getPendingWebUploads`) and to mark rows as
-  `uploading` / `uploaded` / `failed`. The resumable upload service is
+  `uploading` / `uploaded` / `failed`. Those two queries also define the
+  **order the upload queue is drained in** (`createdAt ASC, id ASC`, FIFO by
+  enqueue time); the sync engine consumes the list in that order (applying its
+  own eligibility filter, which skips `uploading` rows), so the ordering is a
+  contract this folder owns on sync's behalf — see
+  [./repositories/docs.md](repositories/docs.md). The startup crash-recovery
+  reclaim of rows orphaned in `uploading` (`resetStuckUploading`, called from
+  [/lib/main.dart](../../../main.dart)) also lives on this repository — see
+  [./repositories/docs.md](repositories/docs.md). The resumable upload service is
   exported from this folder via `resumableUploadServiceProvider` but its
   implementation lives in
   [/lib/features/sync/data/services/resumable_upload_service.dart](../../sync/data/services/resumable_upload_service.dart).
@@ -50,18 +58,80 @@ Path: @/lib/features/recording/data
 - The cross-implementation invariants for split and cache hydration are
   documented in [/docs/recording-split-semantics.md](../../../../docs/recording-split-semantics.md).
   That doc is the source of truth shared with the backend (`tripod-api`).
+- Diagnostics from these services now flow through the app's logging facade
+  (named `package:logging` loggers), not ad-hoc console prints; severe records
+  reach the `ErrorReporter`. See
+  [/lib/core/observability/docs.md](../../../core/observability/docs.md). This is
+  distinct from the explicit best-effort `ErrorReporter` reports called out in
+  Things to Know (finalization temp deletes, the foreground/Live-Activity tick).
 
 ### Core Implementation
 
 - `providers.dart` registers all data-layer providers and stays free of
   business logic. `localRecordingStreamProvider` is a family stream keyed
-  by recording id; the detail screen listens to it so any write through
-  `LocalRecordingRepository` flows back into the UI.
+  by recording id; as of ENG-199/ENG-200 it is a
+  `StreamProvider.family<LocalRecordingEntity?, String>` backed by
+  `LocalRecordingRepository.watchRecordingEntityById` (the former row stream
+  `watchRecordingById` was deleted with the detail tree's row→entity migration).
+  `RecordingDetailNotifier`
+  ([../presentation/notifiers/docs.md](../presentation/notifiers/docs.md))
+  listens to it (native only, ENG-194) so any write through
+  `LocalRecordingRepository` flows back into the detail UI — and because the
+  entity drops `lastRetryAt`/`md5Hash`, an upload-bookkeeping-only write no
+  longer re-emits (see Things to Know). It also exposes
+  `fileExistsProvider` — a one-line wrapper over `file_ops.fileExists` —
+  injected so the trim editor's load-path file check is driveable in
+  widget tests (a real `dart:io` future never resolves under the
+  fake-async test zone). See "the trim editor's injectable seams" below.
 - `server_to_local_recording.dart` exposes `serverRecordingToLocal(server)`,
   the single mapper from `ServerRecording` to `LocalRecording`. It exists
   precisely so callers like the detail screen and the trim editor cannot
   silently diverge on which fields they carry — divergence is the ENG-64
   root cause.
+- `local_recording_to_entity.dart` exposes `localRecordingToEntity(row)`, the
+  single mapper from the Drift `LocalRecording` row to the domain
+  `LocalRecordingEntity`
+  ([../domain/entities/local_recording_entity.dart](../domain/entities/local_recording_entity.dart)),
+  deliberately dropping the persistence internals `lastRetryAt`/`md5Hash`. It is
+  the one source of truth for the row→entity projection (ENG-195): the
+  repository's `_fromRow` (the entity watch stream, see
+  [./repositories/docs.md](repositories/docs.md)), the recordings-list notifier,
+  and `RecordingDetailNotifier.load` (which resolves a row internally for the
+  heal path, then maps once at the state boundary, ENG-199/ENG-200) all delegate
+  to it, so the watch stream, the list, and the detail screen cannot carry
+  different fields (see
+  [../presentation/notifiers/docs.md](../presentation/notifiers/docs.md)). The
+  server side composes the two — `localRecordingToEntity(serverRecordingToLocal(s))`
+  — to land server data as the same entity type the local side produces. The
+  entity it produces also feeds *write* paths now: the split path as a read-only
+  parent input (ENG-198 — `splitRecordingReplacingParent({parent})` and the trim
+  editor's split/save chain take a `LocalRecordingEntity`) and the detail
+  cache-download write `cacheDownloadedAudio` (ENG-199/ENG-200, see
+  [./repositories/docs.md](repositories/docs.md)) — so the projection is no
+  longer used only by the read/watch streams.
+- `server_to_recording_entity.dart` exposes `serverRecordingToEntity(server)`,
+  the one-line composition `localRecordingToEntity(serverRecordingToLocal(s))`
+  promoted to a named mapper (ENG-202). It lands a `ServerRecording` straight as
+  the domain `LocalRecordingEntity` for the server-only load case, so the
+  server→entity projection cannot drift from the two row mappers it composes. The
+  trim editor's load path
+  ([../presentation/notifiers/docs.md](../presentation/notifiers/docs.md)) uses it
+  for recordings that exist only on the server (web load, plus the native
+  server-fetch fallback).
+- `local_recording_entity_to_companion.dart` exposes
+  `localRecordingEntityToCompanion(entity)`, the write-path inverse of
+  `localRecordingToEntity` added by ENG-201 (the F4b step of the row→entity
+  migration). It projects a freshly captured entity onto the **insert/save**
+  `LocalRecordingsCompanion` and backs `LocalRecordingRepository.saveRecording`
+  (see [./repositories/docs.md](repositories/docs.md)). It is scoped to a fresh
+  save, not a full entity serializer: it drops empty optional metadata to NULL,
+  and **deliberately omits** `createdAt`/`retryCount`/`uploadedBytes`/
+  `cleaningStatus` so the Drift column defaults apply on insert (protecting the
+  DB-assigned `createdAt` from an app-side value — see Things to Know there). The
+  split write path keeps building child companions by hand because each child
+  mixes inherited / segment-specific / reset fields (the propagation table in
+  [/docs/recording-split-semantics.md](../../../../docs/recording-split-semantics.md)),
+  so this mapper is not used there.
 - `recording_heal_companion.dart` exposes the pure function
   `buildHealMetadataCompanion(local, server)`. It is used in the detail
   screen's online-refresh path to repair rows already corrupted on a device
@@ -76,6 +146,16 @@ Path: @/lib/features/recording/data
   `storytellerId=null`) survives a refresh. Server-controlled fields
   (`gcsUrl`, `uploadStatus`) are adopted whenever the server reports a
   `gcsUrl`, independent of the corruption marker.
+- `local_recording_classification.dart` is data-layer glue on the
+  `LocalRecording` row: the `RecordingClassification` extension whose
+  getters (`recording.isUnclassified`, `recording.hasSecondary`, …) read
+  the genre/register ids off the row and delegate to the pure domain
+  predicates in
+  [../domain/entities/classification.dart](../domain/entities/classification.dart).
+  It lives here (not in domain) because the extension legitimately depends
+  on Drift; domain stays Drift-free (ENG-175). Consumers that want the
+  ergonomic getters import this file; callers that only need the
+  `kUnclassifiedGenreId` sentinel import the domain file directly.
 - `supported_audio_formats.dart` is a static list of mime types and file
   extensions used by the file-import flow, plus `kMaxImportFileBytesWeb` (the
   10 GB web import ceiling enforced in
@@ -93,15 +173,81 @@ Path: @/lib/features/recording/data
   in place on failure for the resume banner. That shadow row is written with
   `LocalRecordingRepository.upsertRecording` (not `insertRecording`) so a
   retry of a failed large import reuses the row instead of colliding on its
-  primary key — see ENG-80 in Things to Know.
+  primary key — see ENG-80 in Things to Know. The single-shot path computes its
+  client-side CRC32C **off the UI isolate** via the shared helper in
+  [/lib/core/util/docs.md](../../../core/util/docs.md) (background isolate on
+  native, cooperative chunked yield on web; see ADR-0004), then validates
+  the server's presigned `upload_url` with `isHttpsUrl`
+  ([/lib/core/config/url_policy.dart](../../../core/config/url_policy.dart))
+  before the GCS PUT; a non-https URL throws `_UploaderException`, consistent
+  with how this uploader reports every other failure. The resumable branch
+  delegates that validation to `ResumableUploadService`. The scheme policy and
+  the app-wide no-cleartext-PUT invariant are documented in
+  [/lib/core/network/docs.md](../../../core/network/docs.md).
 - The `services/` subfolder hosts the audio probe, the
   segmented recorder, the foreground task, recovery & trash services, the
   resumable / direct uploaders, the audio path resolver used by the
   detail-screen player, and `RecordingSplitPersister` — the post-FFmpeg
-  pipeline of a trim/split save (writes children, trashes parent,
-  deletes parent locally + remotely, triggers upload queue). It is the
-  one place that wires the "split is saved → children start uploading"
-  causation, so the trim editor never has to think about sync.
+  pipeline of a trim/split save. It is the one place that wires the "split is
+  saved → children start uploading" causation, so the trim editor never has to
+  think about sync. The pipeline is ordered for crash safety (ENG-125): it
+  **atomically** inserts the children and deletes the parent row via
+  `LocalRecordingRepository.splitRecordingReplacingParent` (one Drift
+  transaction), then **archives the parent's audio** (`trashParent`, a file
+  move that can't be rolled back — running it after the commit means a split
+  failure never strands a trashed file), then runs the best-effort remote
+  delete and `triggerUpload()` **outside** the transaction. See Things to Know
+  and [./repositories/docs.md](repositories/docs.md).
+- **The trim editor's injectable seams (ENG-193).** The trim editor's
+  editing + split orchestration moved into `TrimEditorNotifier` (see
+  [../presentation/notifiers/docs.md](../presentation/notifiers/docs.md)),
+  and the device-bound IO the notifier drives was extracted into three
+  seams here so the orchestration is host-testable and the widget is
+  driveable in widget tests:
+  - `services/local_segment_exporter.dart` (`LocalSegmentExporter`
+    typedef + `localSegmentExporterProvider`) wraps the per-segment
+    ffmpeg loop. For each kept segment it runs one of three command
+    variants — boost-only (re-encode the whole file with a volume
+    filter), trim+gain (seek/trim + volume, re-encode to aac), or a
+    plain `-c copy` stream trim — then reads the output file length and
+    returns `List<SplitSegmentSpec>` ready for `RecordingSplitPersister`.
+    The ffmpeg runner, file-length, clock, and documents-dir are
+    injectable so it runs without a device. It is kept free of a direct
+    `dart:io` import so the web bundle still compiles, even though the
+    native save path is its only runtime caller.
+  - `services/waveform_loader.dart` (`WaveformLoader` typedef +
+    `waveformLoaderProvider`) wraps `WaveformExtractor.extractPeaks`. The
+    widget calls it during load so the ffmpeg-backed peak extraction can
+    be faked in widget tests (which cannot run ffmpeg); an empty result
+    lets the caller fall back to a synthetic waveform.
+  - `services/recording_split_persister.dart` additionally exposes a
+    `RecordingSplitPersisterFactory` typedef + `recordingSplitPersisterProvider`
+    so the notifier hands off to a fake persister in tests. The persister
+    pipeline itself is unchanged — only the factory seam is new.
+- **The detail screen's injectable IO seams (ENG-194).** The detail screen's
+  orchestration moved into `RecordingDetailNotifier` (see
+  [../presentation/notifiers/docs.md](../presentation/notifiers/docs.md)), and
+  the device-bound IO it used to do inline was extracted into two seams here so
+  the notifier is host-testable. Both mirror the trim-editor seam style
+  (function-typedef + `Provider` returning the default impl) and stay free of a
+  direct `dart:io` import so the web bundle still compiles — all filesystem
+  access goes through the `file_ops` facade
+  ([/lib/core/platform/file_ops.dart](../../../core/platform/file_ops.dart)):
+  - `services/audio_downloader.dart` exposes two function-typedef providers —
+    `audioCacheDownloaderProvider` (`AudioCacheDownloader`) and
+    `audioExportDownloaderProvider` (`AudioExportDownloader`). Each wraps the
+    package-global `http.get` the screen used to call inline (which cannot be
+    intercepted in a unit test) plus the `file_ops` write: the cache downloader
+    fetches the GCS audio and writes it under the app documents dir (for
+    `cacheDownloadedAudio`); the export downloader fetches to a temp file for
+    sharing. Both throw on a non-200 response.
+  - `services/recording_file_importer.dart` exposes
+    `recordingFileImporterProvider` (`RecordingFileImporter`). It copies a
+    picked file into the docs `recordings/` dir and returns `(path, sizeBytes)`;
+    when an `oldPath` is supplied it also trashes the previous file via
+    `RecordingTrash` (`services/recording_trash.dart`) and invalidates its
+    waveform cache via `WaveformExtractor.invalidate`
+    (`services/waveform_extractor.dart`). It backs the notifier's `replaceAudio`.
 - `services/audio_path_resolver.dart` exposes the pure async
   `resolveRecordingPath(storedPath)`. It returns the first existing path
   among: the stored path itself, the application documents directory
@@ -164,25 +310,42 @@ Path: @/lib/features/recording/data
 ### Things to Know
 
 - **Cache-hydration invariant (ENG-64):** every write into `LocalRecordings`
-  that originates from an in-memory `LocalRecording` must go through
-  `LocalRecordingRepository.cacheDownloadedAudio` (server → local cache) or
-  `serverRecordingToLocal` (server → in-memory). Hand-built
-  `LocalRecordingsCompanion` payloads in caller code are the anti-pattern
-  that caused ENG-64; do not reintroduce them at cache-hydration sites.
+  that originates from an in-memory recording must go through
+  `LocalRecordingRepository.cacheDownloadedAudio` (server → local cache; it takes
+  a `LocalRecordingEntity` as of ENG-199/ENG-200 and builds the full-metadata
+  companion internally) or `serverRecordingToLocal` (server → in-memory row).
+  Hand-built `LocalRecordingsCompanion` payloads in caller code are the
+  anti-pattern that caused ENG-64; do not reintroduce them at cache-hydration
+  sites.
 - **Heal is best-effort and additive only.** `buildHealMetadataCompanion`
   uses `Value.absent()` (not `Value(null)`) for fields it chooses not to
   touch. A local edit, even an empty string written intentionally by the
   user, can never be clobbered by a server refresh.
-- **The split write path** (`LocalRecordingRepository.splitRecording`)
-  still hand-builds child rows because each child has a mix of inherited,
-  segment-specific, and reset fields. It follows the propagation table in
+- **The split write path** (the `LocalRecordingRepository`
+  `splitRecordingReplacingParent` writer and its `_insertSplitChildren` core)
+  still hand-builds child rows because each child has a mix of
+  inherited, segment-specific, and reset fields. It follows the propagation
+  table in
   [/docs/recording-split-semantics.md](../../../../docs/recording-split-semantics.md);
   divergence between that table and the implementation breaks ENG-64-class
-  invariants.
+  invariants. `RecordingSplitPersister` saves through the **atomic**
+  `splitRecordingReplacingParent` (insert children + delete parent in one
+  transaction) — see [./repositories/docs.md](repositories/docs.md).
+- **The split persister's step order is load-bearing for crash safety
+  (ENG-125).** `RecordingSplitPersister.persist` runs the
+  insert-children-and-delete-parent step as a single transaction first, so a
+  throw leaves neither orphaned children nor a surviving parent. It then
+  archives the parent file (`trashParent`) **after** the commit — a file move
+  can't be rolled back, so doing it post-commit means a split failure never
+  moves the audio out from under a surviving row (the trash callback only reads
+  the parent object/file, never the child rows or the DB). The best-effort
+  remote delete and `triggerUpload()` stay **outside** the transaction —
+  neither is rollback-safe, and a remote-delete failure is swallowed so the
+  local replace still stands.
 - **Adding a new nullable metadata column to `LocalRecordings`** requires
   four updates in lockstep: extend `serverRecordingToLocal`,
-  `LocalRecordingRepository.splitRecording`, `buildHealMetadataCompanion`,
-  and the tests under
+  `LocalRecordingRepository.splitRecordingReplacingParent`,
+  `buildHealMetadataCompanion`, and the tests under
   [/test/features/recording/data/](../../../../test/features/recording/data/).
   The checklist is reproduced at the bottom of
   [/docs/recording-split-semantics.md](../../../../docs/recording-split-semantics.md).
@@ -200,16 +363,79 @@ Path: @/lib/features/recording/data
   the platform player still runs. This preserves native playback of formats
   the browser refuses, and lets `file_import_screen.dart` distinguish
   `unsupportedCodec` from `unreadableContainer` in its rejection message.
-- **`RecordingFinalizationService.finalize` can keep its sources alive.**
-  The `deleteSources` flag (default `true`) controls whether the segment
-  files and the intermediate `sourcePath` are deleted after a successful
-  assemble. The normal stop path leaves it `true`; crash recovery
-  (`InterruptedSessionsNotifier.save`) passes `false` so the segments
-  survive until the user confirms the save on the confirmation screen —
-  only then are they cleaned up by `confirmRecovery`. This is the
-  data-layer half of the ENG-80 no-data-loss invariant; the flow is
-  documented in
+- **The ffmpeg concat scratch list path is per-invocation unique (ENG-139
+  F7).** `RecordingConcatService.concatSegments` writes the ffmpeg
+  `-f concat` input list to a temp file named `concat_<ms>_<rand>.txt` — a
+  cryptographically-random 6-hex suffix on top of the millisecond timestamp.
+  Two concats that start in the same millisecond (back-to-back recordings, a
+  retry) would collide on a timestamp-only name and corrupt each other's
+  ffmpeg input; the suffix removes that race. The service takes injectable
+  `tempDirPath` / `now` / `ffmpegExec` seams purely for test isolation —
+  production passes none and falls back to `getTemporaryDirectory` /
+  `DateTime.now` / `ffmpeg_ops.executeFFmpegCommand`.
+- **Finalization's best-effort temp deletes are fire-and-forget but
+  observable (ENG-139 F20).** `RecordingFinalizationService._deleteFileSafe`
+  still swallows a delete failure so cleanup never blocks or aborts finalize
+  (`file_ops.deleteFile` already tolerates a missing file), but a genuine
+  failure — permission, I/O — is now routed to the injected `ErrorReporter`
+  ([/lib/core/observability/docs.md](../../../core/observability/docs.md))
+  instead of a silent `catch (_) {}`. The constructor takes
+  `reporter` (defaults to `NoopErrorReporter`) and an injectable `deleteFn`;
+  `recordingFinalizationServiceProvider`
+  ([../presentation/notifiers/recording_session_notifier.dart](../presentation/notifiers/recording_session_notifier.dart))
+  wires the real `errorReporterProvider`.
+- **`RecordingFinalizationService.finalize` keeps *originals* alive but
+  reclaims its *derived* WAV temp (ENG-176).** The `deleteSources` flag
+  (default `true`) governs only the **original** recordings — the segment
+  files, or the single source segment on the one-segment path. A **derived**
+  concat temp (the file the service itself produces when it combines
+  multiple segments) is never an original; on the WAV path the compress step
+  supersedes it with the final m4a, so it is reclaimed after a successful
+  compress regardless of `deleteSources` (a multi-segment m4a concat needs no
+  compress and is returned as the product itself). The service tracks this
+  with an explicit `derived` flag set true **only** on the branch that
+  assigns `sourcePath` to a concat output (both the ffmpeg and the pure-Dart
+  WAV fallback produce one); the deletion guard is `deleteSources || derived`.
+  The normal stop path leaves `deleteSources` `true`, so everything is
+  cleaned up; crash recovery (`InterruptedSessionsNotifier.save`) passes
+  `false` so the **original** segments — including the lone segment on the
+  single-segment path — survive until the user confirms the save on the
+  confirmation screen, only then cleaned up by `confirmRecovery`. ENG-176
+  was a bug where the old guard keyed off `degraded` (see the WAV-deletion
+  bullet) as a proxy for "derived": on the single-segment path it deleted
+  the original source even with `deleteSources: false`, breaking the
+  re-derive contract, and on the multi-segment pure-Dart fallback it leaked
+  the derived temp. This is the data-layer half of the ENG-80 no-data-loss
+  invariant; the flow is documented in
   [../presentation/notifiers/docs.md](../presentation/notifiers/docs.md).
+- **WAV deletion only happens after `compressToM4a` proves a real output
+  (ENG-140 F18), and only for a source the caller authorized (ENG-176).**
+  When `sourcePath` is a WAV, `finalize` deletes it only on a `true` return
+  from `compressToM4a`
+  ([/lib/core/platform/ffmpeg_ops.dart](../../../core/platform/ffmpeg_ops.dart)).
+  That contract is load-bearing: `compressToM4a` verifies the m4a exists and
+  is non-empty before returning `true`, so an ffmpeg exit-0-but-empty edge
+  can no longer make `finalize` delete the only copy of the audio. The
+  *which-file-to-delete* decision is separate and gated on
+  `deleteSources || derived` (ENG-176): `derived` is "this WAV is a concat
+  temp the service created, not an original recording", so a derived temp is
+  reclaimed even while keeping sources, but an original WAV survives a
+  successful compress whenever `deleteSources` is `false`. This supersedes
+  the earlier `!degraded`-as-derived reasoning, which mis-classified the
+  single-segment source as derived. See
+  [/lib/core/platform/docs.md](../../../core/platform/docs.md).
+- **`RecoveryCoordinator.refresh()` never touches a torn-down ref (ENG-140
+  F22).** `refresh()` reads `findCrashedSessions()` and other providers across
+  several awaits, then writes the derived list to
+  `interruptedSessionsProvider.notifier.state`. Because the coordinator's
+  backing provider can be disposed mid-await (the recovery UI unmounts), the
+  constructor registers `_ref.onDispose(() => _disposed = true)`, the method
+  captures the `interruptedSessionsProvider` notifier **before** the awaits,
+  and the final state write is guarded by `if (_disposed) return`. flutter_riverpod
+  2.6.1 has no `ref.mounted`, and a post-dispose `ref.read` throws "Cannot use
+  Ref after it has been disposed"; this is the same hand-rolled `_disposed`
+  pattern `RecordingPlayerNotifier` uses (see
+  [../presentation/notifiers/docs.md](../presentation/notifiers/docs.md)).
 - **64-bit container fields are read as two uint32 halves.** dart2js has no
   native 64-bit int / `ByteData.getUint64`, so `mp4_box_probe.dart` and
   `ogg_page_probe.dart` reconstruct large durations/granules from two 32-bit
@@ -227,11 +453,26 @@ Path: @/lib/features/recording/data
   `resumableSessionUri`/`uploadedBytes`, the prior resume state is kept and
   the resumable service continues from the persisted offset instead of
   restarting or throwing on the duplicate key.
-- The `localRecordingStreamProvider` is a Drift `watchSingleOrNull` query.
-  Any update via `LocalRecordingRepository` (including the heal companion)
-  will fire the stream, which the detail screen listens to. This is why
-  a partial / hand-picked insert is dangerous: the stream re-pushes a
-  `LocalRecording` with missing fields into `setState`, blanking the UI
-  even if the user did not change anything.
+- The `localRecordingStreamProvider` streams the **domain entity**
+  `LocalRecordingEntity?` as of ENG-199/ENG-200 — it is backed by
+  `LocalRecordingRepository.watchRecordingEntityById`
+  ([./repositories/docs.md](repositories/docs.md)), which `.map()`s the row to the
+  entity **before** the `.distinct()` (ENG-121). Drift invalidates query streams
+  at the table level, so any write through `LocalRecordingRepository` — even to
+  an unrelated row — re-runs the query; `.distinct()` drops the re-emission when
+  the resulting *entity* is value-equal. Because the entity deliberately omits
+  the persistence internals `lastRetryAt`/`md5Hash`, a write that touches only
+  those is value-equal and dropped, so the detail screen no longer re-renders on
+  upload-bookkeeping churn — a behavioral change from the prior row stream, not
+  just a re-emission collapse. As of ENG-194 the `ref.listen` on this provider
+  lives in `RecordingDetailNotifier.build` (native only), not in the detail
+  screen — it patches the changed entity into `RecordingDetailState`
+  (`state.copyWith(recording: …)`) rather than calling the screen's old
+  `setState`, but the rebuild contract is unchanged (the state has identity
+  equality, so the patch re-renders). A write that *does* change a content or
+  operational field the entity carries still fires: this is why a partial /
+  hand-picked insert is still dangerous — the stream re-pushes an entity with
+  missing fields into the displayed state, blanking the UI even if the user did
+  not change anything (the heal companion fills, never blanks).
 
 Created and maintained by Nori.

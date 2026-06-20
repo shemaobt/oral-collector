@@ -1,4 +1,4 @@
-# ADR-0009: Architecture & Dependency Rules
+# ADR-0011: Architecture & Dependency Rules
 
 ## Status
 

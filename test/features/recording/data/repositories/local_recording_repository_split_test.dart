@@ -1,7 +1,8 @@
-/// Tests for LocalRecordingRepository.splitRecording.
+/// Tests for LocalRecordingRepository.splitRecordingReplacingParent.
 ///
 /// Asserts the field-propagation contract documented in
-/// `docs/recording-split-semantics.md`. See ENG-64.
+/// `docs/recording-split-semantics.md` (ENG-64) plus the atomic
+/// parent-replacement behavior (ENG-125).
 library;
 
 import 'package:drift/drift.dart' show Value;
@@ -9,7 +10,9 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:oral_collector/core/database/app_database.dart';
+import 'package:oral_collector/features/recording/data/local_recording_to_entity.dart';
 import 'package:oral_collector/features/recording/data/repositories/local_recording_repository.dart';
+import 'package:oral_collector/features/recording/domain/entities/local_recording_entity.dart';
 
 void main() {
   late AppDatabase db;
@@ -24,7 +27,7 @@ void main() {
     await db.close();
   });
 
-  Future<LocalRecording> seedParent({
+  Future<LocalRecordingEntity> seedParent({
     String id = 'parent-1',
     String? description = 'A story told on a Sunday',
     String? storytellerId = 'storyteller-7',
@@ -64,7 +67,7 @@ void main() {
       ),
     );
     final parent = await repo.getRecordingById(id);
-    return parent!;
+    return localRecordingToEntity(parent!);
   }
 
   SplitSegmentSpec spec({
@@ -93,7 +96,7 @@ void main() {
       'to every child', () async {
     final parent = await seedParent();
 
-    await repo.splitRecording(
+    await repo.splitRecordingReplacingParent(
       parent: parent,
       segments: [
         spec(id: 'c1', title: 'Recording (1/3)', localFilePath: '/o/1.m4a'),
@@ -117,7 +120,7 @@ void main() {
   test('resets cleaningStatus to "none" on every child', () async {
     final parent = await seedParent(cleaningStatus: 'cleaned');
 
-    await repo.splitRecording(
+    await repo.splitRecordingReplacingParent(
       parent: parent,
       segments: [
         spec(id: 'c1'),
@@ -135,7 +138,7 @@ void main() {
       'durationSeconds, fileSizeBytes, and title', () async {
     final parent = await seedParent();
 
-    await repo.splitRecording(
+    await repo.splitRecordingReplacingParent(
       parent: parent,
       segments: [
         spec(
@@ -171,7 +174,7 @@ void main() {
       'md5/uploadedBytes/resumable cleared)', () async {
     final parent = await seedParent();
 
-    await repo.splitRecording(
+    await repo.splitRecordingReplacingParent(
       parent: parent,
       segments: [spec(id: 'c1')],
     );
@@ -191,7 +194,7 @@ void main() {
       '(client deletes parent, so a back-link would dangle)', () async {
     final parent = await seedParent();
 
-    await repo.splitRecording(
+    await repo.splitRecordingReplacingParent(
       parent: parent,
       segments: [
         spec(id: 'c1'),
@@ -209,10 +212,10 @@ void main() {
     expect(c2.splitSegmentCount, isNull);
   });
 
-  test('does not modify the parent row', () async {
+  test('removes the parent row, leaving only the children', () async {
     final parent = await seedParent();
 
-    await repo.splitRecording(
+    await repo.splitRecordingReplacingParent(
       parent: parent,
       segments: [
         spec(id: 'c1'),
@@ -220,14 +223,9 @@ void main() {
       ],
     );
 
-    final after = await repo.getRecordingById(parent.id);
-    expect(after, isNotNull);
-    expect(after!.description, parent.description);
-    expect(after.storytellerId, parent.storytellerId);
-    expect(after.uploadStatus, parent.uploadStatus);
-    expect(after.serverId, parent.serverId);
-    expect(after.localFilePath, parent.localFilePath);
-    expect(after.durationSeconds, parent.durationSeconds);
+    expect(await repo.getRecordingById(parent.id), isNull);
+    expect(await repo.getRecordingById('c1'), isNotNull);
+    expect(await repo.getRecordingById('c2'), isNotNull);
   });
 
   test('null fields on parent stay null on children', () async {
@@ -240,7 +238,7 @@ void main() {
       secondaryRegisterId: null,
     );
 
-    await repo.splitRecording(
+    await repo.splitRecordingReplacingParent(
       parent: parent,
       segments: [spec(id: 'c1')],
     );
@@ -262,7 +260,7 @@ void main() {
       registerId: 'parent-register',
     );
 
-    await repo.splitRecording(
+    await repo.splitRecordingReplacingParent(
       parent: parent,
       segments: [
         spec(
@@ -293,7 +291,7 @@ void main() {
       registerId: 'r',
     );
 
-    await repo.splitRecording(
+    await repo.splitRecordingReplacingParent(
       parent: parent,
       segments: [
         spec(id: 'c1'),
@@ -314,7 +312,7 @@ void main() {
   test('children carry parent recordedAt, projectId, and format', () async {
     final parent = await seedParent(format: 'wav');
 
-    await repo.splitRecording(
+    await repo.splitRecordingReplacingParent(
       parent: parent,
       segments: [spec(id: 'c1')],
     );
@@ -328,7 +326,7 @@ void main() {
   test('returns the ids of the inserted children in order', () async {
     final parent = await seedParent();
 
-    final ids = await repo.splitRecording(
+    final ids = await repo.splitRecordingReplacingParent(
       parent: parent,
       segments: [
         spec(id: 'first'),
@@ -347,7 +345,7 @@ void main() {
       final parent = await seedParent(secondaryGenreId: 'genre-conflict');
 
       expect(
-        () => repo.splitRecording(
+        () => repo.splitRecordingReplacingParent(
           parent: parent,
           segments: [spec(id: 'c1', genreOverride: 'genre-conflict')],
         ),
@@ -361,7 +359,7 @@ void main() {
     final parent = await seedParent(secondarySubcategoryId: 'subcat-conflict');
 
     expect(
-      () => repo.splitRecording(
+      () => repo.splitRecordingReplacingParent(
         parent: parent,
         segments: [spec(id: 'c1', subcategoryOverride: 'subcat-conflict')],
       ),
@@ -374,7 +372,7 @@ void main() {
     final parent = await seedParent(secondaryRegisterId: 'register-conflict');
 
     expect(
-      () => repo.splitRecording(
+      () => repo.splitRecordingReplacingParent(
         parent: parent,
         segments: [spec(id: 'c1', registerOverride: 'register-conflict')],
       ),
@@ -390,7 +388,7 @@ void main() {
       secondaryRegisterId: 'register-secondary',
     );
 
-    await repo.splitRecording(
+    await repo.splitRecordingReplacingParent(
       parent: parent,
       segments: [
         spec(
@@ -414,7 +412,7 @@ void main() {
     () async {
       final parent = await seedParent(secondaryGenreId: null);
 
-      await repo.splitRecording(
+      await repo.splitRecordingReplacingParent(
         parent: parent,
         segments: [spec(id: 'c1', genreOverride: 'any-genre')],
       );

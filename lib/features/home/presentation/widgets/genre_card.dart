@@ -4,6 +4,8 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/l10n/content_l10n.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_palettes.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../../shared/utils/format.dart';
 import '../../../../shared/utils/genre_helpers.dart';
 import '../../../genre/domain/entities/genre.dart';
@@ -23,17 +25,6 @@ class GenreCard extends StatelessWidget {
   final int colorIndex;
   final VoidCallback onTap;
 
-  static const _accents = [
-    Color(0xFF3D8E80),
-    Color(0xFFC25010),
-    Color(0xFF5E7A2B),
-    Color(0xFF9B7040),
-    Color(0xFF4A7FA3),
-    Color(0xFFD06835),
-    Color(0xFF4E8A4A),
-    Color(0xFF8B5E9B),
-  ];
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -41,31 +32,31 @@ class GenreCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final icon = mapGenreIcon(genre.icon);
-    final accent = _accents[colorIndex % _accents.length];
+    final accent = AppPalettes.genreAccent(colorIndex);
     final count = genreStat?.recordingCount ?? 0;
     final dur = genreStat?.totalDurationSeconds ?? 0;
 
     final cardBg = Color.lerp(
-      isDark ? colors.card : Colors.white,
+      isDark ? colors.card : AppColors.white,
       accent,
       isDark ? 0.18 : 0.22,
     )!;
 
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(RadiusScale.r20),
         border: isDark
             ? null
             : Border.all(color: accent.withValues(alpha: 0.18)),
       ),
       child: Material(
         color: cardBg,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(RadiusScale.r20),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(RadiusScale.r20),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(SpacingScale.s16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -73,14 +64,14 @@ class GenreCard extends StatelessWidget {
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    color: (isDark ? colors.card : Colors.white).withValues(
+                    color: (isDark ? colors.card : AppColors.white).withValues(
                       alpha: 0.80,
                     ),
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(RadiusScale.r16),
                   ),
                   child: Icon(icon, size: 20, color: accent),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: SpacingScale.s12),
 
                 Text(
                   localizedGenreName(l10n, genre.name),
@@ -103,7 +94,7 @@ class GenreCard extends StatelessWidget {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: SpacingScale.s8),
                     Icon(LucideIcons.clock, size: 11, color: colors.secondary),
                     const SizedBox(width: 3),
                     Text(

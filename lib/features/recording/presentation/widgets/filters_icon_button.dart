@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../../l10n/app_localizations.dart';
 
 class FiltersIconButton extends StatelessWidget {
@@ -25,7 +26,7 @@ class FiltersIconButton extends StatelessWidget {
         onTap: onTap,
         radius: 22,
         child: Padding(
-          padding: const EdgeInsets.all(8),
+          padding: const EdgeInsets.all(SpacingScale.s8),
           child: Stack(
             clipBehavior: Clip.none,
             children: [
@@ -45,14 +46,14 @@ class FiltersIconButton extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: colors.accent,
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(RadiusScale.r8),
                     ),
                     constraints: const BoxConstraints(minWidth: 16),
                     child: Text(
                       '$count',
                       textAlign: TextAlign.center,
                       style: const TextStyle(
-                        color: Colors.white,
+                        color: AppColors.white,
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
                       ),

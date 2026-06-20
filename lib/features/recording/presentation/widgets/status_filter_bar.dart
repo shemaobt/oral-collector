@@ -36,12 +36,17 @@ class StatusFilterBar extends StatelessWidget {
     ];
 
     return SizedBox(
-      height: 48,
+      height: SpacingScale.s48,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+        padding: const EdgeInsets.fromLTRB(
+          SpacingScale.s16,
+          SpacingScale.s8,
+          SpacingScale.s16,
+          SpacingScale.s8,
+        ),
         itemCount: filters.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 8),
+        separatorBuilder: (_, _) => const SizedBox(width: SpacingScale.s8),
         itemBuilder: (context, index) {
           final (filter, label, icon) = filters[index];
           final isSelected = currentFilter == filter;
@@ -51,12 +56,15 @@ class StatusFilterBar extends StatelessWidget {
             child: AnimatedContainer(
               duration: DurationScale.ms200,
               curve: Curves.easeOut,
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              padding: const EdgeInsets.symmetric(
+                horizontal: SpacingScale.s16,
+                vertical: SpacingScale.s8,
+              ),
               decoration: BoxDecoration(
                 color: isSelected
                     ? colors.accent
                     : colors.surfaceAlt.withValues(alpha: 0.6),
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(RadiusScale.r20),
                 border: Border.all(
                   color: isSelected
                       ? colors.accent
@@ -70,13 +78,13 @@ class StatusFilterBar extends StatelessWidget {
                   Icon(
                     icon,
                     size: 14,
-                    color: isSelected ? Colors.white : colors.secondary,
+                    color: isSelected ? AppColors.white : colors.secondary,
                   ),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: SpacingScale.s8),
                   Text(
                     label,
                     style: theme.textTheme.labelMedium?.copyWith(
-                      color: isSelected ? Colors.white : colors.secondary,
+                      color: isSelected ? AppColors.white : colors.secondary,
                       fontWeight: isSelected
                           ? FontWeight.w700
                           : FontWeight.w500,

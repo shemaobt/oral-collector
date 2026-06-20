@@ -399,10 +399,6 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get projectSettings_updated => 'Projek i apdet pinis';
 
   @override
-  String get projectSettings_noPermission =>
-      'Yu no gat pemisin bilong apdet dispela projek';
-
-  @override
   String get projectSettings_team => 'Tim';
 
   @override
@@ -551,11 +547,6 @@ class AppLocalizationsTpi extends AppLocalizations {
   @override
   String get recording_downloadAudioMessage =>
       'Audio fail i no stap long dispela divais. Yu laik kisim i kam daun bilong katim?';
-
-  @override
-  String recording_downloadFailed(String error) {
-    return 'No inap kisim i kam daun: $error';
-  }
 
   @override
   String get recording_audioNotAvailable => 'Audio fail i no stap';
@@ -966,12 +957,12 @@ class AppLocalizationsTpi extends AppLocalizations {
 
   @override
   String import_resumePromptBody(String name, String size) {
-    return '\"$name\" ($size) i no go pinis. Makim wankain fail bilong go het.';
+    return '\"$name\" ($size) i no go pinis. Makim stret wankain fail (i no senis) bilong go het.';
   }
 
   @override
   String get import_resumeSizeMismatch =>
-      'Dispela fail i no wankain wantaim aplotim i wet.';
+      'Em narapela fail. Makim stret wankain fail yu bin aplotim.';
 
   @override
   String import_largeFileWarning(String size) {
@@ -1012,11 +1003,6 @@ class AppLocalizationsTpi extends AppLocalizations {
 
   @override
   String get profile_photoUpdated => 'Profail foto i apdet pinis';
-
-  @override
-  String profile_photoFailed(String error) {
-    return 'No inap apdet foto: $error';
-  }
 
   @override
   String get profile_editName => 'Senisim nem bilong yu';

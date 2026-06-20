@@ -1,29 +1,31 @@
 import 'dart:convert';
 
 import '../../../../core/errors/api_exception.dart';
+import '../../../../core/errors/app_exception.dart' show ParseException;
 import '../../../../core/network/api_error_handler.dart';
 import '../../../../core/network/authenticated_client.dart';
+import '../../../../core/network/response_decoder.dart';
+import '../../../../core/observability/error_reporter.dart';
 import '../../../../core/serialization/parse_list.dart';
 import '../../../../core/serialization/safe_read.dart';
 import '../../domain/entities/server_recording.dart';
+import '../../domain/entities/split_segment_request.dart';
 import '../../domain/repositories/recording_api_repository.dart';
 
 class RecordingApiRepositoryImpl implements RecordingApiRepository {
   final AuthenticatedClient _client;
+  final ErrorReporter _reporter;
 
-  RecordingApiRepositoryImpl({required AuthenticatedClient client})
-    : _client = client;
+  RecordingApiRepositoryImpl({
+    required AuthenticatedClient client,
+    required ErrorReporter reporter,
+  }) : _client = client,
+       _reporter = reporter;
 
   @override
   Future<ServerRecording> getRecording(String serverId) async {
     final response = await _client.get('/api/oc/recordings/$serverId');
-    guardResponse(response);
-    if (response.statusCode != 200) {
-      throw Exception('Failed to get recording: ${response.body}');
-    }
-    return ServerRecording.fromJson(
-      jsonDecode(response.body) as Map<String, dynamic>,
-    );
+    return ServerRecording.fromJson(decodeObject(response));
   }
 
   @override
@@ -47,14 +49,11 @@ class RecordingApiRepositoryImpl implements RecordingApiRepository {
     };
     final query = params.entries.map((e) => '${e.key}=${e.value}').join('&');
     final response = await _client.get('/api/oc/recordings?$query');
-    guardResponse(response);
-    if (response.statusCode != 200) {
-      throw Exception('Failed to list recordings: ${response.body}');
-    }
     return parseList(
-      jsonDecode(response.body),
+      decodeList(response),
       ServerRecording.fromJson,
       context: 'listRecordings',
+      onSkip: _reporter.parseSkipSink(context: 'listRecordings'),
     );
   }
 
@@ -129,22 +128,18 @@ class RecordingApiRepositoryImpl implements RecordingApiRepository {
     final response = await _client.post(
       '/api/oc/recordings/clear-stale?project_id=$projectId',
     );
-    guardResponse(response);
-    if (response.statusCode != 200) {
-      throw Exception('Failed to clear stale recordings: ${response.body}');
-    }
-    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    final data = decodeObject(response);
     return readIntOrNull(data, 'deleted') ?? 0;
   }
 
   @override
   Future<List<String>> splitRecording({
     required String serverId,
-    required List<Map<String, dynamic>> segments,
+    required List<SplitSegmentRequest> segments,
   }) async {
     final response = await _client.post(
       '/api/oc/recordings/$serverId/split',
-      body: {'segments': segments},
+      body: {'segments': segments.map((s) => s.toJson()).toList()},
     );
     guardResponse(response);
     if (response.statusCode != 200 &&
@@ -155,9 +150,16 @@ class RecordingApiRepositoryImpl implements RecordingApiRepository {
       );
     }
     final data = jsonDecode(response.body);
-    if (data is Map<String, dynamic> && data.containsKey('recording_ids')) {
-      return (data['recording_ids'] as List<dynamic>).cast<String>();
-    }
-    return [];
+    if (data is! Map<String, dynamic>) return const [];
+    final ids = data['recording_ids'];
+    if (ids is! List) return const [];
+    return ids.map((e) {
+      if (e is String) return e;
+      throw ParseException(
+        field: 'recording_ids',
+        expected: 'String',
+        cause: e,
+      );
+    }).toList();
   }
 }

@@ -4,6 +4,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/l10n/content_l10n.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../../shared/widgets/app_shell.dart';
 import '../../domain/entities/register.dart';
 
@@ -28,7 +29,12 @@ class RegisterSelectionStep extends StatelessWidget {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          padding: const EdgeInsets.fromLTRB(
+            SpacingScale.s16,
+            SpacingScale.s16,
+            SpacingScale.s16,
+            SpacingScale.s8,
+          ),
           child: Row(
             children: [
               Container(
@@ -44,7 +50,7 @@ class RegisterSelectionStep extends StatelessWidget {
                   color: colors.accent,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: SpacingScale.s12),
               Expanded(
                 child: Text(
                   l10n.recording_selectRegister,
@@ -57,7 +63,7 @@ class RegisterSelectionStep extends StatelessWidget {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: SpacingScale.s16),
           child: Text(
             l10n.recording_registerDescription,
             style: theme.textTheme.bodySmall?.copyWith(
@@ -65,14 +71,14 @@ class RegisterSelectionStep extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: SpacingScale.s8),
         const Divider(height: 1),
 
         Expanded(
           child: ListView.separated(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(SpacingScale.s16),
             itemCount: kRegisters.length,
-            separatorBuilder: (_, _) => const SizedBox(height: 8),
+            separatorBuilder: (_, _) => const SizedBox(height: SpacingScale.s8),
             itemBuilder: (context, index) {
               final register = kRegisters[index];
               final isSelected = register.id == selectedRegisterId;
@@ -80,7 +86,7 @@ class RegisterSelectionStep extends StatelessWidget {
               return Card(
                 color: isSelected ? colors.accent.withValues(alpha: 0.1) : null,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(RadiusScale.r16),
                   side: isSelected
                       ? BorderSide(color: colors.accent, width: 2)
                       : BorderSide.none,
@@ -89,7 +95,7 @@ class RegisterSelectionStep extends StatelessWidget {
                 child: InkWell(
                   onTap: () => onSelect(register),
                   child: Padding(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(SpacingScale.s16),
                     child: Row(
                       children: [
                         Expanded(
@@ -117,19 +123,19 @@ class RegisterSelectionStep extends StatelessWidget {
 
         Padding(
           padding: const EdgeInsets.fromLTRB(
-            16,
-            16,
-            16,
+            SpacingScale.s16,
+            SpacingScale.s16,
+            SpacingScale.s16,
             AppShell.scrollBottomPadding,
           ),
           child: SizedBox(
             width: double.infinity,
-            height: 48,
+            height: SpacingScale.s48,
             child: ElevatedButton(
               onPressed: selectedRegisterId != null ? onNext : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor: colors.accent,
-                foregroundColor: Colors.white,
+                foregroundColor: AppColors.white,
                 disabledBackgroundColor: theme.colorScheme.outline.withValues(
                   alpha: 0.3,
                 ),

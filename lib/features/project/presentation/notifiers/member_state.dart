@@ -3,7 +3,7 @@ import '../../domain/entities/project_member.dart';
 class MemberState {
   final List<ProjectMember> members;
   final bool isLoading;
-  final String? error;
+  final Object? error;
 
   const MemberState({
     this.members = const [],
@@ -14,7 +14,7 @@ class MemberState {
   MemberState copyWith({
     List<ProjectMember>? members,
     bool? isLoading,
-    String? error,
+    Object? error,
     bool clearError = false,
   }) {
     return MemberState(

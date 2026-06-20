@@ -1,4 +1,5 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -6,9 +7,8 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/l10n/content_l10n.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../core/database/app_database.dart';
-import '../../../core/errors/api_exception.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/tokens.dart';
 import '../../../features/auth/data/providers/role_provider.dart';
 import '../../../shared/preview_helpers.dart';
 import '../../../shared/utils/format.dart';
@@ -20,7 +20,7 @@ import '../../../shared/widgets/sync_status_indicator.dart';
 import '../../genre/presentation/notifiers/genre_notifier.dart';
 import '../../project/presentation/notifiers/project_notifier.dart';
 import '../../sync/presentation/notifiers/sync_notifier.dart';
-import '../data/providers.dart';
+import '../domain/entities/local_recording_entity.dart';
 import '../domain/entities/register.dart';
 import 'notifiers/recordings_list_notifier.dart';
 import 'notifiers/recordings_list_state.dart';
@@ -95,7 +95,7 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
     }
   }
 
-  Future<void> _deleteRecording(LocalRecording recording) async {
+  Future<void> _deleteRecording(LocalRecordingEntity recording) async {
     final l10n = AppLocalizations.of(context);
     final colors = AppColors.of(context);
     final confirmed = await showDialog<bool>(
@@ -118,37 +118,25 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
     );
     if (confirmed != true) return;
 
-    final serverId = recording.serverId ?? recording.id;
-    try {
-      final apiRepo = ref.read(recordingApiRepositoryProvider);
-      await apiRepo.deleteRecording(serverId);
-    } on ForbiddenException {
-      if (mounted) {
+    final result = await ref
+        .read(recordingsListNotifierProvider.notifier)
+        .deleteRecording(recording);
+    if (!mounted) return;
+    switch (result) {
+      case DeleteRecordingResult.ok:
+        break;
+      case DeleteRecordingResult.forbidden:
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(l10n.recording_deleteNoPermission),
-            backgroundColor: Colors.orange,
+            backgroundColor: AppColors.of(context).warning,
           ),
         );
-      }
-      return;
-    } catch (_) {
-      if (kIsWeb) {
-        if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(l10n.recording_deleteFailed)));
-        }
-        return;
-      }
+      case DeleteRecordingResult.failed:
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.recording_deleteFailed)));
     }
-
-    if (!kIsWeb) {
-      final repo = ref.read(localRecordingRepositoryProvider);
-      await repo.deleteRecording(recording.id);
-    }
-
-    ref.read(recordingsListNotifierProvider.notifier).fetchRecordings();
   }
 
   void _refreshAll() {
@@ -258,7 +246,7 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
                 label: l10n.recordings_importAudio,
                 button: true,
                 child: Material(
-                  color: Colors.transparent,
+                  color: AppColors.transparent,
                   shape: const CircleBorder(),
                   child: InkWell(
                     onTap: () => context.push('/import-file'),
@@ -293,7 +281,7 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
                         child: Icon(
                           LucideIcons.filePlus,
                           size: 26,
-                          color: Colors.white,
+                          color: AppColors.white,
                         ),
                       ),
                     ),
@@ -332,7 +320,7 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
                         backgroundColor: Theme.of(context).colorScheme.surface,
                         shape: const RoundedRectangleBorder(
                           borderRadius: BorderRadius.vertical(
-                            top: Radius.circular(20),
+                            top: Radius.circular(RadiusScale.r20),
                           ),
                         ),
                         builder: (_) =>
@@ -349,7 +337,12 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
 
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                    padding: const EdgeInsets.fromLTRB(
+                      SpacingScale.s16,
+                      SpacingScale.s12,
+                      SpacingScale.s16,
+                      SpacingScale.s4,
+                    ),
                     child: TextField(
                       controller: _searchController,
                       onChanged: (value) => ref
@@ -376,19 +369,19 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
                         filled: true,
                         fillColor: colors.surfaceAlt,
                         contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 10,
+                          horizontal: SpacingScale.s12,
+                          vertical: SpacingScale.s8,
                         ),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(RadiusScale.r12),
                           borderSide: BorderSide.none,
                         ),
                         enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(RadiusScale.r12),
                           borderSide: BorderSide.none,
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(RadiusScale.r12),
                           borderSide: BorderSide(
                             color: colors.accent,
                             width: 1.5,
@@ -403,7 +396,12 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
 
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                    padding: const EdgeInsets.fromLTRB(
+                      SpacingScale.s16,
+                      SpacingScale.s16,
+                      SpacingScale.s16,
+                      SpacingScale.s8,
+                    ),
                     child: Row(
                       children: [
                         Text(
@@ -443,7 +441,7 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
                             ),
                             style: TextButton.styleFrom(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
+                                horizontal: SpacingScale.s8,
                               ),
                               visualDensity: VisualDensity.compact,
                             ),
@@ -476,15 +474,15 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
                       )
                     : SliverPadding(
                         padding: EdgeInsets.fromLTRB(
-                          16,
+                          SpacingScale.s16,
                           0,
-                          16,
+                          SpacingScale.s16,
                           AppShell.scrollPaddingFor(context),
                         ),
                         sliver: SliverList.separated(
                           itemCount: filtered.length,
                           separatorBuilder: (_, _) =>
-                              const SizedBox(height: 10),
+                              const SizedBox(height: SpacingScale.s8),
                           itemBuilder: (context, index) {
                             final recording = filtered[index];
                             final rawGenre = ref
@@ -509,10 +507,14 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
                               },
                               background: Container(
                                 alignment: Alignment.centerRight,
-                                padding: const EdgeInsets.only(right: 24),
+                                padding: const EdgeInsets.only(
+                                  right: SpacingScale.s24,
+                                ),
                                 decoration: BoxDecoration(
                                   color: colors.error.withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.circular(16),
+                                  borderRadius: BorderRadius.circular(
+                                    RadiusScale.r16,
+                                  ),
                                 ),
                                 child: Icon(
                                   LucideIcons.trash2,
@@ -538,11 +540,14 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
                                   await context.push(
                                     '/recording/${recording.id}',
                                   );
-                                  ref
-                                      .read(
-                                        recordingsListNotifierProvider.notifier,
-                                      )
-                                      .fetchRecordings();
+                                  unawaited(
+                                    ref
+                                        .read(
+                                          recordingsListNotifierProvider
+                                              .notifier,
+                                        )
+                                        .fetchRecordings(),
+                                  );
                                 },
                               ),
                             );
@@ -553,11 +558,11 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
                 if (!listState.isLoading && listState.isLoadingMore)
                   const SliverToBoxAdapter(
                     child: Padding(
-                      padding: EdgeInsets.symmetric(vertical: 24),
+                      padding: EdgeInsets.symmetric(vertical: SpacingScale.s24),
                       child: Center(
                         child: SizedBox(
-                          width: 24,
-                          height: 24,
+                          width: SpacingScale.s24,
+                          height: SpacingScale.s24,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         ),
                       ),

@@ -6,8 +6,9 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/l10n/content_l10n.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/color_hex.dart';
+import '../../../core/theme/tokens.dart';
 import '../../../shared/utils/format.dart';
-import '../../../shared/utils/genre_helpers.dart';
 import '../../../shared/widgets/status_banner.dart';
 import '../../project/domain/entities/stats.dart';
 import '../../project/presentation/notifiers/stats_notifier.dart';
@@ -64,17 +65,20 @@ class GenreDetailScreen extends ConsumerWidget {
         title: Text(localizedGenreName(l10n, genre.name)),
         actions: [
           Container(
-            margin: const EdgeInsets.only(right: 16),
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            margin: const EdgeInsets.only(right: SpacingScale.s16),
+            padding: const EdgeInsets.symmetric(
+              horizontal: SpacingScale.s8,
+              vertical: SpacingScale.s4,
+            ),
             decoration: BoxDecoration(
               color: colors.info.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(RadiusScale.r12),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(LucideIcons.clock, size: 14, color: colors.secondary),
-                const SizedBox(width: 4),
+                const SizedBox(width: SpacingScale.s4),
                 Text(
                   formatDurationCompact(genreStat?.totalDurationSeconds ?? 0),
                   style: theme.textTheme.labelSmall?.copyWith(
@@ -94,7 +98,7 @@ class GenreDetailScreen extends ConsumerWidget {
             child: genre.subcategories.isEmpty
                 ? Center(
                     child: Padding(
-                      padding: const EdgeInsets.all(32),
+                      padding: const EdgeInsets.all(SpacingScale.s32),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -103,7 +107,7 @@ class GenreDetailScreen extends ConsumerWidget {
                             size: 64,
                             color: colors.border,
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: SpacingScale.s16),
                           Text(
                             l10n.recording_noSubcategories,
                             textAlign: TextAlign.center,
@@ -116,9 +120,10 @@ class GenreDetailScreen extends ConsumerWidget {
                     ),
                   )
                 : ListView.separated(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(SpacingScale.s16),
                     itemCount: genre.subcategories.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 12),
+                    separatorBuilder: (_, _) =>
+                        const SizedBox(height: SpacingScale.s12),
                     itemBuilder: (context, index) {
                       final subcategory = genre.subcategories[index];
                       final subcatStat =
@@ -180,7 +185,7 @@ class _SubcategoryCard extends StatelessWidget {
           );
         },
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(SpacingScale.s16),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -206,7 +211,7 @@ class _SubcategoryCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: SpacingScale.s16),
 
               Expanded(
                 child: Column(
@@ -224,8 +229,8 @@ class _SubcategoryCard extends StatelessWidget {
                         ),
 
                         SizedBox(
-                          width: 40,
-                          height: 40,
+                          width: SpacingScale.s40,
+                          height: SpacingScale.s40,
                           child: IconButton(
                             onPressed: () {
                               context.push(
@@ -243,7 +248,7 @@ class _SubcategoryCard extends StatelessWidget {
                     ),
 
                     if (description != null) ...[
-                      const SizedBox(height: 4),
+                      const SizedBox(height: SpacingScale.s4),
                       Text(
                         description,
                         style: theme.textTheme.bodySmall?.copyWith(
@@ -254,21 +259,21 @@ class _SubcategoryCard extends StatelessWidget {
                       ),
                     ],
 
-                    const SizedBox(height: 8),
+                    const SizedBox(height: SpacingScale.s8),
 
                     Row(
                       children: [
                         Icon(LucideIcons.clock, size: 14, color: colors.border),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: SpacingScale.s4),
                         Text(
                           formatDurationCompact(totalDurationSeconds),
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: colors.foreground.withValues(alpha: 0.6),
                           ),
                         ),
-                        const SizedBox(width: 16),
+                        const SizedBox(width: SpacingScale.s16),
                         Icon(LucideIcons.mic, size: 14, color: colors.border),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: SpacingScale.s4),
                         Text(
                           l10n.genre_recordingCount(recordingCount),
                           style: theme.textTheme.bodySmall?.copyWith(

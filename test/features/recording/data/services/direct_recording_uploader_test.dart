@@ -10,6 +10,7 @@ import 'package:mocktail/mocktail.dart';
 
 import 'package:oral_collector/core/config/env.dart';
 import 'package:oral_collector/core/database/app_database.dart';
+import 'package:oral_collector/core/errors/app_exception.dart';
 import 'package:oral_collector/core/network/authenticated_client.dart';
 import 'package:oral_collector/core/platform/file_source.dart';
 import 'package:oral_collector/features/recording/data/repositories/local_recording_repository.dart';
@@ -165,6 +166,30 @@ void main() {
     );
   });
 
+  test(
+    'throws a catchable ParseException when create returns a non-string id',
+    () async {
+      final bytes = Uint8List(10);
+      final httpClient = MockClient((request) async {
+        if (request.url.path == '/api/oc/recordings') {
+          return http.Response(jsonEncode({'id': 123}), 201);
+        }
+        return http.Response('unexpected', 500);
+      });
+      final auth = AuthenticatedClient(client: httpClient, storage: storage);
+      final uploader = DirectRecordingUploader(
+        client: auth,
+        resumableUploadService: resumable,
+        recordingRepo: repo,
+      );
+
+      await expectLater(
+        uploader.upload(source: sampleSource(bytes), meta: sampleMeta()),
+        throwsA(isA<ParseException>()),
+      );
+    },
+  );
+
   test('throws when GCS PUT fails', () async {
     final bytes = Uint8List(10);
     final httpClient = MockClient((request) async {
@@ -254,5 +279,39 @@ void main() {
 
     expect(serverId, 'srv-A');
     expect(await realRepo.getRecordingById('web_srv-A'), isNull);
+  });
+
+  test('recusa upload-url http inseguro sem fazer PUT', () async {
+    final bytes = Uint8List(10);
+    final calls = <String>[];
+    final httpClient = MockClient((request) async {
+      calls.add('${request.method} ${request.url}');
+      final path = request.url.path;
+      if (request.method == 'POST' && path == '/api/oc/recordings') {
+        return http.Response(jsonEncode({'id': 'srv-abc'}), 201);
+      }
+      if (request.method == 'POST' && path == '/api/oc/recordings/upload-url') {
+        return http.Response(
+          jsonEncode({
+            'upload_url': 'http://evil.com/leak',
+            'content_type': 'audio/mp4',
+          }),
+          200,
+        );
+      }
+      return http.Response('unexpected', 500);
+    });
+    final auth = AuthenticatedClient(client: httpClient, storage: storage);
+    final uploader = DirectRecordingUploader(
+      client: auth,
+      resumableUploadService: resumable,
+      recordingRepo: repo,
+    );
+
+    await expectLater(
+      uploader.upload(source: sampleSource(bytes), meta: sampleMeta()),
+      throwsA(isA<Exception>()),
+    );
+    expect(calls.any((c) => c.startsWith('PUT')), isFalse);
   });
 }

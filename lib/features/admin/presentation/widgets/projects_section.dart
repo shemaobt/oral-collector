@@ -3,6 +3,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../../shared/utils/format.dart';
 import 'admin_mini_stat.dart';
 
@@ -16,9 +17,11 @@ class ProjectsSection extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     if (projects.isEmpty) {
       return Card(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(RadiusScale.r16),
+        ),
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(SpacingScale.s24),
           child: Center(child: Text(l10n.admin_noProjects)),
         ),
       );
@@ -28,7 +31,9 @@ class ProjectsSection extends StatelessWidget {
 
     if (isWide) {
       return Card(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(RadiusScale.r16),
+        ),
         clipBehavior: Clip.antiAlias,
         child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
@@ -72,10 +77,10 @@ class ProjectsSection extends StatelessWidget {
       children: projects.map<Widget>((p) {
         return Card(
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(RadiusScale.r16),
           ),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(SpacingScale.s16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -85,26 +90,26 @@ class ProjectsSection extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: SpacingScale.s4),
                 Text(
                   p.languageName ?? l10n.admin_unknownLanguage,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: AppColors.of(context).secondary,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: SpacingScale.s8),
                 Row(
                   children: [
                     AdminMiniStat(
                       icon: LucideIcons.users,
                       value: '${p.memberCount}',
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: SpacingScale.s16),
                     AdminMiniStat(
                       icon: LucideIcons.mic,
                       value: '${p.recordingCount}',
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: SpacingScale.s16),
                     AdminMiniStat(
                       icon: LucideIcons.clock,
                       value: formatDurationCompact(p.totalDurationSeconds),

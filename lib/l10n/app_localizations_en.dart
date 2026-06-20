@@ -398,10 +398,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get projectSettings_updated => 'Project updated';
 
   @override
-  String get projectSettings_noPermission =>
-      'You do not have permission to update this project';
-
-  @override
   String get projectSettings_team => 'Team';
 
   @override
@@ -550,11 +546,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get recording_downloadAudioMessage =>
       'The audio file is not stored on this device. Would you like to download it to trim?';
-
-  @override
-  String recording_downloadFailed(String error) {
-    return 'Failed to download: $error';
-  }
 
   @override
   String get recording_audioNotAvailable => 'Audio file not available';
@@ -971,12 +962,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String import_resumePromptBody(String name, String size) {
-    return '\"$name\" ($size) was partially uploaded. Select the same file to continue.';
+    return '\"$name\" ($size) was partially uploaded. Select the exact same file (unchanged) to continue.';
   }
 
   @override
   String get import_resumeSizeMismatch =>
-      'That file doesn\'t match the paused upload.';
+      'That\'s a different file. Select the exact same file you were uploading.';
 
   @override
   String import_largeFileWarning(String size) {
@@ -1017,11 +1008,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profile_photoUpdated => 'Profile photo updated';
-
-  @override
-  String profile_photoFailed(String error) {
-    return 'Failed to update photo: $error';
-  }
 
   @override
   String get profile_editName => 'Edit display name';

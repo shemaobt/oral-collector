@@ -30,11 +30,15 @@ Path: @/lib/features/genre/data
   implements the domain contract
   ([/lib/features/genre/domain/repositories/genre_repository.dart](../domain/repositories/genre_repository.dart))
   and talks to the backend through the shared
-  [/lib/core/network/authenticated_client.dart](../../../core/network/authenticated_client.dart),
-  running every response through `guardResponse`
-  ([/lib/core/network/api_error_handler.dart](../../../core/network/api_error_handler.dart))
-  so a 401 surfaces as the same `UnauthorizedException` the notifier hands to
-  [/lib/core/auth/auth_notifier.dart](../../../core/auth/auth_notifier.dart).
+  [/lib/core/network/authenticated_client.dart](../../../core/network/authenticated_client.dart).
+  Its `listGenres` read decodes through `decodeList`
+  ([/lib/core/network/response_decoder.dart](../../../core/network/response_decoder.dart)),
+  which folds the status check into the decode (any non-2xx → typed leaf via
+  `throwForResponse`), so a 401 still surfaces as the same `UnauthorizedException`
+  the notifier hands to
+  [/lib/core/auth/auth_notifier.dart](../../../core/auth/auth_notifier.dart), and
+  a malformed body becomes a catchable `ParseException`. The decoded array is then
+  routed through `parseList` for per-element tolerance.
 - Both backends serialize via `Genre.fromJson` / `Genre.toJson`
   ([/lib/features/genre/domain/entities/genre.dart](../domain/entities/genre.dart)),
   so the on-device cache format is the server's JSON shape and stays in sync

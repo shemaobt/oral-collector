@@ -1,12 +1,14 @@
-import 'dart:convert';
-
 import 'package:drift/drift.dart' show Value;
 import 'package:http/http.dart' as http;
 
+import '../../../../core/config/url_policy.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../core/network/authenticated_client.dart';
+import '../../../../core/network/response_decoder.dart';
 import '../../../../core/platform/file_source.dart';
+import '../../../../core/serialization/safe_read.dart';
 import '../../../../core/util/crc32c.dart';
+import '../../../../core/util/crc32c_async.dart';
 import '../../../sync/data/services/resumable_upload_service.dart';
 import '../repositories/local_recording_repository.dart';
 
@@ -105,8 +107,8 @@ class DirectRecordingUploader {
         'Create failed (${createResponse.statusCode}): ${createResponse.body}',
       );
     }
-    final createData = jsonDecode(createResponse.body) as Map<String, dynamic>;
-    return createData['id'] as String;
+    final createData = decodeObject(createResponse);
+    return readString(createData, 'id');
   }
 
   Future<void> _uploadSingleShot({
@@ -115,7 +117,7 @@ class DirectRecordingUploader {
     required DirectUploadMetadata meta,
   }) async {
     final bytes = await source.readRange(0, source.length);
-    final clientCrc = (Crc32c()..add(bytes)).base64BigEndian;
+    final clientCrc = await crc32cBytesBase64(bytes);
 
     final urlResponse = await _client
         .post(
@@ -128,10 +130,13 @@ class DirectRecordingUploader {
         'Upload URL failed (${urlResponse.statusCode}): ${urlResponse.body}',
       );
     }
-    final urlData = jsonDecode(urlResponse.body) as Map<String, dynamic>;
-    final uploadUrl = urlData['upload_url'] as String;
+    final urlData = decodeObject(urlResponse);
+    final uploadUrl = readString(urlData, 'upload_url');
+    if (!isHttpsUrl(uploadUrl)) {
+      throw _UploaderException('Insecure upload URL (non-https)');
+    }
     final contentType =
-        urlData['content_type'] as String? ?? 'application/octet-stream';
+        readStringOrNull(urlData, 'content_type') ?? 'application/octet-stream';
 
     final putRequest = http.Request('PUT', Uri.parse(uploadUrl));
     putRequest.headers['Content-Type'] = contentType;
@@ -200,25 +205,21 @@ class DirectRecordingUploader {
       ),
     );
 
-    try {
-      final result = await _resumableUploadService.uploadFromSource(
-        recordingId: shadowId,
-        serverId: serverId,
-        source: source,
-        format: meta.format,
-        onProgress: onProgress,
+    final result = await _resumableUploadService.uploadFromSource(
+      recordingId: shadowId,
+      serverId: serverId,
+      source: source,
+      format: meta.format,
+      onProgress: onProgress,
+    );
+    if (!result.success) {
+      throw _UploaderException(
+        'Resumable upload failed: ${result.error ?? 'unknown'}',
       );
-      if (!result.success) {
-        throw _UploaderException(
-          'Resumable upload failed: ${result.error ?? 'unknown'}',
-        );
-      }
-
-      await _confirm(serverId, crc32c: result.clientCrc32c);
-      await _recordingRepo.deleteRecording(shadowId);
-    } catch (e) {
-      rethrow;
     }
+
+    await _confirm(serverId, crc32c: result.clientCrc32c);
+    await _recordingRepo.deleteRecording(shadowId);
   }
 
   Future<void> _confirm(String serverId, {required String? crc32c}) async {

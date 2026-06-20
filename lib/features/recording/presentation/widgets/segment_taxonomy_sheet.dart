@@ -5,6 +5,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/l10n/content_l10n.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../genre/presentation/notifiers/genre_notifier.dart';
 import '../../domain/entities/register.dart';
 
@@ -109,7 +110,12 @@ class _SegmentTaxonomySheetState extends ConsumerState<SegmentTaxonomySheet> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
+                padding: const EdgeInsets.fromLTRB(
+                  SpacingScale.s20,
+                  SpacingScale.s16,
+                  SpacingScale.s20,
+                  0,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -117,7 +123,7 @@ class _SegmentTaxonomySheetState extends ConsumerState<SegmentTaxonomySheet> {
                       child: Container(
                         width: 36,
                         height: 4,
-                        margin: const EdgeInsets.only(bottom: 16),
+                        margin: const EdgeInsets.only(bottom: SpacingScale.s16),
                         decoration: BoxDecoration(
                           color: colors.border.withValues(alpha: 0.6),
                           borderRadius: BorderRadius.circular(2),
@@ -127,22 +133,26 @@ class _SegmentTaxonomySheetState extends ConsumerState<SegmentTaxonomySheet> {
                     Row(
                       children: [
                         Icon(LucideIcons.tag, size: 18, color: colors.accent),
-                        const SizedBox(width: 8),
-                        Text(
-                          l10n.trim_classifySegment,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
+                        const SizedBox(width: SpacingScale.s8),
+                        Expanded(
+                          child: Text(
+                            l10n.trim_classifySegment,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: SpacingScale.s16),
                   ],
                 ),
               ),
               Flexible(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: SpacingScale.s20,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
@@ -153,7 +163,7 @@ class _SegmentTaxonomySheetState extends ConsumerState<SegmentTaxonomySheet> {
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: SpacingScale.s8),
                       _InheritTile(
                         selected: _genreId == null,
                         label: l10n.trim_inheritLabel,
@@ -162,10 +172,12 @@ class _SegmentTaxonomySheetState extends ConsumerState<SegmentTaxonomySheet> {
                           _subcategoryId = null;
                         }),
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: SpacingScale.s8),
                       ...allGenres.map(
                         (g) => Padding(
-                          padding: const EdgeInsets.only(bottom: 6),
+                          padding: const EdgeInsets.only(
+                            bottom: SpacingScale.s8,
+                          ),
                           child: _OptionTile(
                             selected: _genreId == g.id,
                             label: localizedGenreName(l10n, g.name),
@@ -178,7 +190,7 @@ class _SegmentTaxonomySheetState extends ConsumerState<SegmentTaxonomySheet> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: SpacingScale.s16),
                       if (subcategories.isNotEmpty) ...[
                         Text(
                           l10n.moveCategory_subcategory,
@@ -187,16 +199,18 @@ class _SegmentTaxonomySheetState extends ConsumerState<SegmentTaxonomySheet> {
                             fontWeight: FontWeight.w700,
                           ),
                         ),
-                        const SizedBox(height: 6),
+                        const SizedBox(height: SpacingScale.s8),
                         _InheritTile(
                           selected: _subcategoryId == null,
                           label: l10n.trim_inheritLabel,
                           onTap: () => setState(() => _subcategoryId = null),
                         ),
-                        const SizedBox(height: 6),
+                        const SizedBox(height: SpacingScale.s8),
                         ...subcategories.map(
                           (s) => Padding(
-                            padding: const EdgeInsets.only(bottom: 6),
+                            padding: const EdgeInsets.only(
+                              bottom: SpacingScale.s8,
+                            ),
                             child: _OptionTile(
                               selected: _subcategoryId == s.id,
                               label: localizedSubcategoryName(l10n, s.name),
@@ -205,7 +219,7 @@ class _SegmentTaxonomySheetState extends ConsumerState<SegmentTaxonomySheet> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: SpacingScale.s16),
                       ],
                       Text(
                         l10n.classify_register,
@@ -214,16 +228,18 @@ class _SegmentTaxonomySheetState extends ConsumerState<SegmentTaxonomySheet> {
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: SpacingScale.s8),
                       _InheritTile(
                         selected: _registerId == null,
                         label: l10n.trim_inheritLabel,
                         onTap: () => setState(() => _registerId = null),
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: SpacingScale.s8),
                       ...kRegisters.map(
                         (r) => Padding(
-                          padding: const EdgeInsets.only(bottom: 6),
+                          padding: const EdgeInsets.only(
+                            bottom: SpacingScale.s8,
+                          ),
                           child: _OptionTile(
                             selected: _registerId == r.id,
                             label: localizedRegisterName(l10n, r.name),
@@ -231,29 +247,36 @@ class _SegmentTaxonomySheetState extends ConsumerState<SegmentTaxonomySheet> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: SpacingScale.s8),
                     ],
                   ),
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+                padding: const EdgeInsets.fromLTRB(
+                  SpacingScale.s20,
+                  SpacingScale.s8,
+                  SpacingScale.s20,
+                  SpacingScale.s20,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     if (hasCollision)
                       Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.only(
+                          bottom: SpacingScale.s12,
+                        ),
                         child: Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 10,
+                            horizontal: SpacingScale.s12,
+                            vertical: SpacingScale.s8,
                           ),
                           decoration: BoxDecoration(
                             color: theme.colorScheme.errorContainer.withValues(
                               alpha: 0.4,
                             ),
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(RadiusScale.r8),
                             border: Border.all(
                               color: theme.colorScheme.error.withValues(
                                 alpha: 0.5,
@@ -267,7 +290,7 @@ class _SegmentTaxonomySheetState extends ConsumerState<SegmentTaxonomySheet> {
                                 size: 18,
                                 color: theme.colorScheme.error,
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: SpacingScale.s8),
                               Expanded(
                                 child: Text(
                                   l10n.trim_primaryEqualsSecondary,
@@ -292,7 +315,7 @@ class _SegmentTaxonomySheetState extends ConsumerState<SegmentTaxonomySheet> {
                       ),
                       dense: true,
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: SpacingScale.s8),
                     Row(
                       children: [
                         Expanded(
@@ -301,7 +324,7 @@ class _SegmentTaxonomySheetState extends ConsumerState<SegmentTaxonomySheet> {
                             child: Text(l10n.common_cancel),
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: SpacingScale.s12),
                         Expanded(
                           child: FilledButton(
                             onPressed: hasCollision
@@ -348,12 +371,15 @@ class _OptionTile extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(RadiusScale.r8),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        padding: const EdgeInsets.symmetric(
+          horizontal: SpacingScale.s16,
+          vertical: SpacingScale.s12,
+        ),
         decoration: BoxDecoration(
           color: selected ? colors.accent.withValues(alpha: 0.12) : colors.card,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(RadiusScale.r8),
           border: Border.all(
             color: selected
                 ? colors.accent.withValues(alpha: 0.5)
@@ -398,14 +424,17 @@ class _InheritTile extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(RadiusScale.r8),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        padding: const EdgeInsets.symmetric(
+          horizontal: SpacingScale.s16,
+          vertical: SpacingScale.s12,
+        ),
         decoration: BoxDecoration(
           color: selected
               ? colors.secondary.withValues(alpha: 0.08)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
+              : AppColors.transparent,
+          borderRadius: BorderRadius.circular(RadiusScale.r8),
           border: Border.all(
             color: selected
                 ? colors.secondary.withValues(alpha: 0.4)
@@ -420,7 +449,7 @@ class _InheritTile extends StatelessWidget {
               size: 14,
               color: colors.foreground.withValues(alpha: 0.5),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: SpacingScale.s8),
             Expanded(
               child: Text(
                 label,

@@ -3,6 +3,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../notifiers/recording_session_state.dart';
 
 /// Inline status card shown in place of the Pause/Stop controls while the
@@ -28,7 +29,7 @@ class FinalizingStatusCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 22),
+      padding: const EdgeInsets.symmetric(horizontal: SpacingScale.s24),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -36,9 +37,14 @@ class FinalizingStatusCard extends StatelessWidget {
             decoration: BoxDecoration(
               color: colors.surfaceAlt,
               border: Border.all(color: colors.border.withValues(alpha: 0.55)),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(RadiusScale.r16),
             ),
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+            padding: const EdgeInsets.fromLTRB(
+              SpacingScale.s16,
+              SpacingScale.s16,
+              SpacingScale.s16,
+              SpacingScale.s16,
+            ),
             child: Row(
               children: [
                 Container(
@@ -54,7 +60,7 @@ class FinalizingStatusCard extends StatelessWidget {
                     color: colors.accent,
                   ),
                 ),
-                const SizedBox(width: 14),
+                const SizedBox(width: SpacingScale.s16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -79,16 +85,16 @@ class FinalizingStatusCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: SpacingScale.s8),
                 _StageLabel(stage: stage, color: colors.accent, theme: theme),
               ],
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: SpacingScale.s8),
           ClipRRect(
             borderRadius: BorderRadius.circular(3),
             child: SizedBox(
-              height: 4,
+              height: SpacingScale.s4,
               child: LinearProgressIndicator(
                 backgroundColor: colors.border.withValues(alpha: 0.45),
                 valueColor: AlwaysStoppedAnimation<Color>(colors.accent),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/utils/format.dart';
 import '../../../genre/domain/entities/genre.dart';
@@ -45,7 +46,7 @@ class FileMetadataCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: colors.card,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(RadiusScale.r16),
         border: Border.all(
           color: hasError
               ? colors.error.withValues(alpha: 0.5)
@@ -59,7 +60,10 @@ class FileMetadataCard extends StatelessWidget {
           if (hasError)
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              padding: const EdgeInsets.symmetric(
+                horizontal: SpacingScale.s12,
+                vertical: SpacingScale.s8,
+              ),
               decoration: BoxDecoration(
                 color: colors.error.withValues(alpha: 0.1),
                 borderRadius: const BorderRadius.only(
@@ -70,7 +74,7 @@ class FileMetadataCard extends StatelessWidget {
               child: Row(
                 children: [
                   Icon(LucideIcons.alertCircle, size: 14, color: colors.error),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: SpacingScale.s8),
                   Text(
                     l10n.import_fieldRequired,
                     style: theme.textTheme.labelSmall?.copyWith(
@@ -82,7 +86,7 @@ class FileMetadataCard extends StatelessWidget {
               ),
             ),
           Padding(
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.all(SpacingScale.s16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -93,7 +97,7 @@ class FileMetadataCard extends StatelessWidget {
                       size: 16,
                       color: colors.secondary,
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: SpacingScale.s8),
                     Expanded(
                       child: Text(
                         entry.fileName,
@@ -106,9 +110,9 @@ class FileMetadataCard extends StatelessWidget {
                     ),
                     InkWell(
                       onTap: onRemove,
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(RadiusScale.r8),
                       child: Padding(
-                        padding: const EdgeInsets.all(6),
+                        padding: const EdgeInsets.all(SpacingScale.s8),
                         child: Icon(
                           LucideIcons.x,
                           size: 16,
@@ -118,7 +122,7 @@ class FileMetadataCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: SpacingScale.s4),
                 Row(
                   children: [
                     Icon(
@@ -126,7 +130,7 @@ class FileMetadataCard extends StatelessWidget {
                       size: 12,
                       color: colors.foreground.withValues(alpha: 0.5),
                     ),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: SpacingScale.s4),
                     Text(
                       formatDurationHMS(entry.durationSeconds),
                       style: theme.textTheme.labelSmall?.copyWith(
@@ -134,7 +138,7 @@ class FileMetadataCard extends StatelessWidget {
                         fontFeatures: const [FontFeature.tabularFigures()],
                       ),
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: SpacingScale.s8),
                     Text(
                       '${entry.format.toUpperCase()} · ${formatFileSize(entry.sizeBytes)}',
                       style: theme.textTheme.labelSmall?.copyWith(
@@ -143,7 +147,7 @@ class FileMetadataCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: SpacingScale.s16),
                 TextField(
                   controller: entry.descriptionController,
                   minLines: 2,
@@ -154,24 +158,24 @@ class FileMetadataCard extends StatelessWidget {
                     labelText: l10n.recording_descriptionHint,
                     isDense: true,
                     contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 12,
+                      horizontal: SpacingScale.s12,
+                      vertical: SpacingScale.s12,
                     ),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(RadiusScale.r8),
                       borderSide: BorderSide(
                         color: colors.border.withValues(alpha: 0.5),
                       ),
                     ),
                     enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(RadiusScale.r8),
                       borderSide: BorderSide(
                         color: colors.border.withValues(alpha: 0.5),
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: SpacingScale.s8),
                 ClassificationField.genre(
                   value: entry.genreId,
                   onChanged: onGenreChanged,
@@ -179,7 +183,7 @@ class FileMetadataCard extends StatelessWidget {
                   hasError: hasError && entry.genreId == null,
                 ),
                 if (showSubcategory) ...[
-                  const SizedBox(height: 10),
+                  const SizedBox(height: SpacingScale.s8),
                   ClassificationField.subcategory(
                     value: entry.subcategoryId,
                     onChanged: onSubcategoryChanged,
@@ -188,13 +192,13 @@ class FileMetadataCard extends StatelessWidget {
                     hasError: hasError && entry.subcategoryId == null,
                   ),
                 ],
-                const SizedBox(height: 10),
+                const SizedBox(height: SpacingScale.s8),
                 ClassificationField.register(
                   value: entry.registerId,
                   onChanged: onRegisterChanged,
                   hasError: hasError && entry.registerId == null,
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: SpacingScale.s8),
                 StorytellerFieldCell(
                   projectId: projectId,
                   selected: entry.storyteller,

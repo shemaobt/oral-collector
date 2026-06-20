@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/utils/format.dart';
 import '../../data/services/recovery_coordinator.dart';
@@ -38,11 +39,14 @@ class UnsavedRecordingRow extends StatelessWidget {
         '${formatRelativeTime(context, session.startedAt, localeTag)}';
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: const EdgeInsets.symmetric(
+        horizontal: SpacingScale.s16,
+        vertical: SpacingScale.s16,
+      ),
       child: Row(
         children: [
           _PlayButton(onTap: onResume),
-          const SizedBox(width: 14),
+          const SizedBox(width: SpacingScale.s16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -62,7 +66,7 @@ class UnsavedRecordingRow extends StatelessWidget {
                       ),
                     ),
                     if (showNewBadge) ...[
-                      const SizedBox(width: 8),
+                      const SizedBox(width: SpacingScale.s8),
                       _NewBadge(label: l10n.recovery_newBadge),
                     ],
                   ],
@@ -79,7 +83,7 @@ class UnsavedRecordingRow extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: SpacingScale.s8),
           _SavePill(label: l10n.recovery_save, onTap: onSave),
           PopupMenuButton<_RowAction>(
             icon: Icon(
@@ -105,7 +109,7 @@ class UnsavedRecordingRow extends StatelessWidget {
                 child: Row(
                   children: [
                     Icon(LucideIcons.play, size: 16, color: colors.secondary),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: SpacingScale.s8),
                     Text(l10n.recovery_resume),
                   ],
                 ),
@@ -115,7 +119,7 @@ class UnsavedRecordingRow extends StatelessWidget {
                 child: Row(
                   children: [
                     Icon(LucideIcons.trash2, size: 16, color: colors.error),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: SpacingScale.s8),
                     Text(
                       l10n.recovery_discard,
                       style: TextStyle(color: colors.error),
@@ -150,7 +154,7 @@ class _PlayButton extends StatelessWidget {
           child: const SizedBox(
             width: 44,
             height: 44,
-            child: Icon(LucideIcons.play, color: Colors.white, size: 20),
+            child: Icon(LucideIcons.play, color: AppColors.white, size: 20),
           ),
         ),
       ),
@@ -170,12 +174,15 @@ class _SavePill extends StatelessWidget {
     final theme = Theme.of(context);
     return Material(
       color: colors.surfaceAlt,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(RadiusScale.r16),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+          padding: const EdgeInsets.symmetric(
+            horizontal: SpacingScale.s16,
+            vertical: 7,
+          ),
           child: Text(
             label,
             style: theme.textTheme.labelLarge?.copyWith(
@@ -198,10 +205,13 @@ class _NewBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      padding: const EdgeInsets.symmetric(
+        horizontal: SpacingScale.s8,
+        vertical: 2,
+      ),
       decoration: BoxDecoration(
         color: colors.accent.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(RadiusScale.r4),
       ),
       child: Text(
         label,

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,6 +11,7 @@ import '../../../core/auth/auth_notifier.dart';
 import '../../../core/l10n/locale_provider.dart';
 import '../../../core/l10n/supported_locales.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/tokens.dart';
 import '../../../shared/preview_helpers.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/widgets/app_shell.dart';
@@ -65,10 +68,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       }
     } catch (e) {
       if (mounted) {
-        showErrorSnackBar(
-          context,
-          AppLocalizations.of(context).profile_photoFailed(e.toString()),
-        );
+        showErrorSnackBar(context, e);
       }
     }
   }
@@ -148,7 +148,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             .acceptInvite(invite.id);
         if (!context.mounted) return;
         if (accepted) {
-          ref.read(projectNotifierProvider.notifier).fetchProjects();
+          unawaited(ref.read(projectNotifierProvider.notifier).fetchProjects());
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(l10n.profile_joinedSuccess(invite.projectName)),
@@ -186,10 +186,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SectionHeader(title: l10n.profile_language),
-        const SizedBox(height: 8),
+        const SizedBox(height: SpacingScale.s8),
         Card(
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(RadiusScale.r16),
           ),
           child: ListTile(
             leading: IconBox(icon: LucideIcons.globe, color: colors.primary),
@@ -203,7 +203,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               showModalBottomSheet(
                 context: context,
                 shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                  borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(RadiusScale.r24),
+                  ),
                 ),
                 constraints: const BoxConstraints(maxWidth: 600),
                 builder: (_) => const LocalePickerSheet(),
@@ -218,7 +220,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SectionHeader(title: l10n.recording_recordingStep),
-        const SizedBox(height: 8),
+        const SizedBox(height: SpacingScale.s8),
         RecordingSettingsCard(theme: theme, colors: colors),
       ],
     );
@@ -227,7 +229,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SectionHeader(title: l10n.profile_syncStorage),
-        const SizedBox(height: 8),
+        const SizedBox(height: SpacingScale.s8),
         SyncSettingsCard(
           syncState: syncState,
           theme: theme,
@@ -264,10 +266,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SectionHeader(title: l10n.profile_about),
-        const SizedBox(height: 8),
+        const SizedBox(height: SpacingScale.s8),
         Card(
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(RadiusScale.r16),
           ),
           child: Column(
             children: [
@@ -276,14 +278,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 title: Text(l10n.profile_appVersion),
                 trailing: Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
+                    horizontal: SpacingScale.s8,
+                    vertical: SpacingScale.s4,
                   ),
                   decoration: BoxDecoration(
                     color: colors.foreground.withValues(
                       alpha: isDark ? 0.1 : 0.06,
                     ),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(RadiusScale.r8),
                   ),
                   child: Text(
                     '1.0.0',
@@ -304,16 +306,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       ],
     );
 
-    final adminSection =
-        (kIsWeb && ref.read(roleNotifierProvider.notifier).isPlatformAdmin)
+    final adminSection = (kIsWeb && ref.read(isPlatformAdminProvider))
         ? Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SectionHeader(title: l10n.profile_administration),
-              const SizedBox(height: 8),
+              const SizedBox(height: SpacingScale.s8),
               Card(
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(RadiusScale.r16),
                 ),
                 child: ListTile(
                   leading: IconBox(
@@ -338,10 +339,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SectionHeader(title: l10n.profile_account),
-        const SizedBox(height: 8),
+        const SizedBox(height: SpacingScale.s8),
         Card(
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(RadiusScale.r16),
           ),
           child: Column(
             children: [
@@ -399,9 +400,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
           return SingleChildScrollView(
             padding: EdgeInsets.fromLTRB(
-              20,
+              SpacingScale.s20,
               MediaQuery.of(context).padding.top + 8,
-              20,
+              SpacingScale.s20,
               AppShell.scrollPaddingFor(context),
             ),
             child: Center(
@@ -417,7 +418,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       onPickAvatar: _pickAndUploadAvatar,
                       onEditName: _showEditNameDialog,
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: SpacingScale.s24),
                     QuickStatsRow(
                       storageLabel: formatFileSize(
                         ref.read(profileNotifierProvider).storageUsedBytes,
@@ -427,11 +428,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       colors: colors,
                       theme: theme,
                     ),
-                    const SizedBox(height: 28),
+                    const SizedBox(height: SpacingScale.s28),
                     invitationsWidget,
-                    const SizedBox(height: 24),
+                    const SizedBox(height: SpacingScale.s24),
                     languageSection,
-                    const SizedBox(height: 24),
+                    const SizedBox(height: SpacingScale.s24),
                     if (isWide) ...[
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -440,22 +441,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             child: Column(
                               children: [
                                 recordingSettingsSection,
-                                const SizedBox(height: 24),
+                                const SizedBox(height: SpacingScale.s24),
                                 syncSection,
-                                const SizedBox(height: 24),
+                                const SizedBox(height: SpacingScale.s24),
                                 if (adminSection != null) ...[
                                   adminSection,
-                                  const SizedBox(height: 24),
+                                  const SizedBox(height: SpacingScale.s24),
                                 ],
                               ],
                             ),
                           ),
-                          const SizedBox(width: 24),
+                          const SizedBox(width: SpacingScale.s24),
                           Expanded(
                             child: Column(
                               children: [
                                 aboutSection,
-                                const SizedBox(height: 24),
+                                const SizedBox(height: SpacingScale.s24),
                                 accountSection,
                               ],
                             ),
@@ -464,14 +465,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       ),
                     ] else ...[
                       recordingSettingsSection,
-                      const SizedBox(height: 24),
+                      const SizedBox(height: SpacingScale.s24),
                       syncSection,
-                      const SizedBox(height: 24),
+                      const SizedBox(height: SpacingScale.s24),
                       aboutSection,
-                      const SizedBox(height: 24),
+                      const SizedBox(height: SpacingScale.s24),
                       if (adminSection != null) ...[
                         adminSection,
-                        const SizedBox(height: 24),
+                        const SizedBox(height: SpacingScale.s24),
                       ],
                       accountSection,
                     ],
@@ -521,7 +522,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(l10n.profile_typeDelete),
-              const SizedBox(height: 12),
+              const SizedBox(height: SpacingScale.s12),
               TextField(
                 controller: controller,
                 autofocus: true,

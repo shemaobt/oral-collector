@@ -16,7 +16,7 @@ class RecordFab extends StatelessWidget {
       label: AppLocalizations.of(context).a11y_startRecording,
       button: true,
       child: Material(
-        color: Colors.transparent,
+        color: AppColors.transparent,
         shape: const CircleBorder(),
         child: InkWell(
           onTap: onPressed,
@@ -45,7 +45,7 @@ class RecordFab extends StatelessWidget {
               ],
             ),
             child: const Center(
-              child: Icon(LucideIcons.mic, size: 26, color: Colors.white),
+              child: Icon(LucideIcons.mic, size: 26, color: AppColors.white),
             ),
           ),
         ),

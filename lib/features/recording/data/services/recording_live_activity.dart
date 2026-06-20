@@ -3,6 +3,7 @@ import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:live_activities/live_activities.dart';
 import 'package:live_activities/models/url_scheme_data.dart';
+import 'package:logging/logging.dart';
 
 import '../../../../core/config/recording_config.dart';
 
@@ -11,6 +12,8 @@ const recordingLiveActivityUrlScheme = RecordingConfig.liveActivityUrlScheme;
 class RecordingLiveActivity {
   RecordingLiveActivity._();
   static final RecordingLiveActivity instance = RecordingLiveActivity._();
+
+  static final _log = Logger('RecordingLiveActivity');
 
   final LiveActivities _plugin = LiveActivities();
   bool _initialized = false;
@@ -25,7 +28,7 @@ class RecordingLiveActivity {
       if (!supported) return false;
       return await _plugin.areActivitiesEnabled();
     } on Exception catch (e) {
-      debugPrint('RecordingLiveActivity: support check failed: $e');
+      _log.warning('support check failed', e);
       return false;
     }
   }
@@ -58,7 +61,7 @@ class RecordingLiveActivity {
       _activityId = id;
       return true;
     } on Exception catch (e) {
-      debugPrint('RecordingLiveActivity: createActivity failed: $e');
+      _log.warning('createActivity failed', e);
       return false;
     }
   }
@@ -75,7 +78,7 @@ class RecordingLiveActivity {
         'isPaused': isPaused ? 'true' : 'false',
       });
     } on Exception catch (e) {
-      debugPrint('RecordingLiveActivity: updateActivity failed: $e');
+      _log.warning('updateActivity failed', e);
     }
   }
 
@@ -85,7 +88,7 @@ class RecordingLiveActivity {
     try {
       await _plugin.endActivity(id);
     } on Exception catch (e) {
-      debugPrint('RecordingLiveActivity: endActivity failed: $e');
+      _log.warning('endActivity failed', e);
     }
     _activityId = null;
   }
@@ -96,7 +99,7 @@ class RecordingLiveActivity {
       await _ensureInitialized();
       await _plugin.endAllActivities();
     } on Exception catch (e) {
-      debugPrint('RecordingLiveActivity: endAllActivities failed: $e');
+      _log.warning('endAllActivities failed', e);
     }
     _activityId = null;
   }

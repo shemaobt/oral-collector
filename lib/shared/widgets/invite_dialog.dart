@@ -1,40 +1,17 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
-import '../../core/network/authenticated_client.dart';
-import '../../core/serialization/parse_list.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/tokens.dart';
 import '../../features/project/presentation/notifiers/member_notifier.dart';
+import '../../features/user/data/user_lookup_provider.dart';
+import '../../features/user/data/user_search_repository.dart';
 import '../../l10n/app_localizations.dart';
 import 'error_snack_bar.dart';
 import 'user_avatar.dart';
-
-class _SearchResult {
-  final String id;
-  final String email;
-  final String? displayName;
-  final String? avatarUrl;
-
-  const _SearchResult({
-    required this.id,
-    required this.email,
-    this.displayName,
-    this.avatarUrl,
-  });
-
-  factory _SearchResult.fromJson(Map<String, dynamic> json) {
-    return _SearchResult(
-      id: json['id'] as String,
-      email: json['email'] as String,
-      displayName: json['display_name'] as String?,
-      avatarUrl: json['avatar_url'] as String?,
-    );
-  }
-}
 
 class InviteDialog extends ConsumerStatefulWidget {
   const InviteDialog({super.key, required this.projectId});
@@ -48,9 +25,9 @@ class InviteDialog extends ConsumerStatefulWidget {
 class _InviteDialogState extends ConsumerState<InviteDialog> {
   final _searchController = TextEditingController();
   Timer? _debounce;
-  List<_SearchResult> _results = [];
+  List<UserLookup> _results = [];
   bool _isSearching = false;
-  _SearchResult? _selectedUser;
+  UserLookup? _selectedUser;
   String _selectedRole = 'member';
   bool _isSubmitting = false;
 
@@ -78,30 +55,20 @@ class _InviteDialogState extends ConsumerState<InviteDialog> {
 
   Future<void> _searchUsers(String query) async {
     try {
-      final client = ref.read(authenticatedClientProvider);
-      final response = await client.get(
-        '/api/users/search?q=${Uri.encodeQueryComponent(query)}',
-      );
+      final results = await ref
+          .read(userSearchRepositoryProvider)
+          .search(query);
       if (!mounted) return;
-
-      if (response.statusCode == 200) {
-        setState(() {
-          _results = parseList(
-            jsonDecode(response.body),
-            _SearchResult.fromJson,
-            context: 'userSearch',
-          );
-          _isSearching = false;
-        });
-      } else {
-        setState(() => _isSearching = false);
-      }
+      setState(() {
+        _results = results;
+        _isSearching = false;
+      });
     } catch (_) {
       if (mounted) setState(() => _isSearching = false);
     }
   }
 
-  void _selectUser(_SearchResult user) {
+  void _selectUser(UserLookup user) {
     setState(() {
       _selectedUser = user;
       _searchController.clear();
@@ -162,7 +129,7 @@ class _InviteDialogState extends ConsumerState<InviteDialog> {
                   prefixIcon: const Icon(LucideIcons.search, size: 18),
                   suffixIcon: _isSearching
                       ? const Padding(
-                          padding: EdgeInsets.all(12),
+                          padding: EdgeInsets.all(SpacingScale.s12),
                           child: SizedBox(
                             width: 18,
                             height: 18,
@@ -179,7 +146,7 @@ class _InviteDialogState extends ConsumerState<InviteDialog> {
                   constraints: const BoxConstraints(maxHeight: 200),
                   child: ListView.builder(
                     shrinkWrap: true,
-                    padding: const EdgeInsets.only(top: 8),
+                    padding: const EdgeInsets.only(top: SpacingScale.s8),
                     itemCount: _results.length,
                     itemBuilder: (context, index) {
                       final user = _results[index];
@@ -201,7 +168,7 @@ class _InviteDialogState extends ConsumerState<InviteDialog> {
                             ? Text(user.email, style: theme.textTheme.bodySmall)
                             : null,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(RadiusScale.r8),
                         ),
                         onTap: () => _selectUser(user),
                       );
@@ -212,7 +179,7 @@ class _InviteDialogState extends ConsumerState<InviteDialog> {
                   _results.isEmpty &&
                   _searchController.text.trim().length >= 2)
                 Padding(
-                  padding: const EdgeInsets.only(top: 12),
+                  padding: const EdgeInsets.only(top: SpacingScale.s12),
                   child: Text(
                     l10n.invite_noUsersFound,
                     style: theme.textTheme.bodySmall?.copyWith(
@@ -224,7 +191,7 @@ class _InviteDialogState extends ConsumerState<InviteDialog> {
             ] else ...[
               Card(
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(RadiusScale.r12),
                   side: BorderSide(color: colors.accent.withValues(alpha: 0.3)),
                 ),
                 child: ListTile(
@@ -254,7 +221,7 @@ class _InviteDialogState extends ConsumerState<InviteDialog> {
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: SpacingScale.s16),
               DropdownButtonFormField<String>(
                 initialValue: _selectedRole,
                 decoration: InputDecoration(labelText: l10n.invite_roleLabel),
@@ -287,15 +254,15 @@ class _InviteDialogState extends ConsumerState<InviteDialog> {
           onPressed: _selectedUser != null && !_isSubmitting ? _submit : null,
           style: ElevatedButton.styleFrom(
             backgroundColor: colors.primary,
-            foregroundColor: Colors.white,
+            foregroundColor: AppColors.white,
           ),
           child: _isSubmitting
               ? const SizedBox(
-                  width: 20,
-                  height: 20,
+                  width: SpacingScale.s20,
+                  height: SpacingScale.s20,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: Colors.white,
+                    color: AppColors.white,
                   ),
                 )
               : Text(l10n.invite_sendInvite),

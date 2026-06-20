@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:logging/logging.dart';
 
 import '../../../recording/presentation/notifiers/recording_session_notifier.dart';
 import '../../../recording/presentation/notifiers/recording_session_state.dart';
@@ -25,6 +25,8 @@ class BackgroundUploadCoordinator {
   final UploadForegroundService _uploadForegroundService;
   final ResumeTrigger _onResume;
 
+  static final _log = Logger('BackgroundUploadCoordinator');
+
   bool _wasRecording = false;
 
   Future<void> onRecordingStateChanged(RecordingState state) async {
@@ -43,14 +45,14 @@ class BackgroundUploadCoordinator {
     try {
       await _downloader.cancelAll();
     } on Object catch (e) {
-      debugPrint('BackgroundUploadCoordinator: cancelAll failed: $e');
+      _log.warning('cancelAll failed', e);
     }
     // Owner-aware via ForegroundServiceArbiter; safe in any order with
     // recording taking over. No-op off Android / when idle.
     try {
       await _uploadForegroundService.stop();
     } on Object catch (e) {
-      debugPrint('BackgroundUploadCoordinator: stop upload FGS failed: $e');
+      _log.warning('stop upload FGS failed', e);
     }
   }
 
@@ -58,12 +60,12 @@ class BackgroundUploadCoordinator {
     try {
       await _downloader.resumeAfterCancel();
     } on Object catch (e) {
-      debugPrint('BackgroundUploadCoordinator: resumeAfterCancel failed: $e');
+      _log.warning('resumeAfterCancel failed', e);
     }
     try {
       await _onResume();
     } on Object catch (e) {
-      debugPrint('BackgroundUploadCoordinator: resume failed: $e');
+      _log.warning('resume failed', e);
     }
   }
 }

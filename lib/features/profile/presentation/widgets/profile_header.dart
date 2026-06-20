@@ -3,6 +3,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../../shared/utils/format.dart';
 import '../../../../shared/widgets/user_avatar.dart';
 import '../../../auth/domain/entities/user.dart';
@@ -72,15 +73,15 @@ class ProfileHeader extends StatelessWidget {
                   height: 104,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.black.withValues(alpha: 0.5),
+                    color: AppColors.black.withValues(alpha: 0.5),
                   ),
                   child: const Center(
                     child: SizedBox(
-                      width: 28,
-                      height: 28,
+                      width: SpacingScale.s28,
+                      height: SpacingScale.s28,
                       child: CircularProgressIndicator(
                         strokeWidth: 2.5,
-                        color: Colors.white,
+                        color: AppColors.white,
                       ),
                     ),
                   ),
@@ -109,7 +110,7 @@ class ProfileHeader extends StatelessWidget {
                       child: Icon(
                         LucideIcons.camera,
                         size: 14,
-                        color: Colors.white,
+                        color: AppColors.white,
                       ),
                     ),
                   ),
@@ -118,22 +119,26 @@ class ProfileHeader extends StatelessWidget {
           ),
         ),
 
-        const SizedBox(height: 16),
+        const SizedBox(height: SpacingScale.s16),
 
         GestureDetector(
           onTap: onEditName,
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                user?.displayName ??
-                    AppLocalizations.of(context).profile_setYourName,
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: user?.displayName != null ? null : colors.secondary,
+              Flexible(
+                child: Text(
+                  user?.displayName ??
+                      AppLocalizations.of(context).profile_setYourName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: user?.displayName != null ? null : colors.secondary,
+                  ),
                 ),
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: SpacingScale.s8),
               Icon(
                 LucideIcons.pencil,
                 size: 16,
@@ -143,7 +148,7 @@ class ProfileHeader extends StatelessWidget {
           ),
         ),
 
-        const SizedBox(height: 4),
+        const SizedBox(height: SpacingScale.s4),
 
         if (user?.email != null)
           Text(
@@ -153,28 +158,32 @@ class ProfileHeader extends StatelessWidget {
             ),
           ),
 
-        const SizedBox(height: 8),
+        const SizedBox(height: SpacingScale.s8),
 
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            InfoBadge(
-              icon: LucideIcons.calendar,
-              label: formatMemberSince(
-                user?.createdAt,
-                AppLocalizations.of(context),
-              ),
-              colors: colors,
-              theme: theme,
-            ),
-            if (user?.isPlatformAdmin ?? false) ...[
-              const SizedBox(width: 8),
-              InfoBadge(
-                icon: LucideIcons.shield,
-                label: AppLocalizations.of(context).profile_adminBadge,
+            Flexible(
+              child: InfoBadge(
+                icon: LucideIcons.calendar,
+                label: formatMemberSince(
+                  user?.createdAt,
+                  AppLocalizations.of(context),
+                ),
                 colors: colors,
                 theme: theme,
-                accentColor: colors.accent,
+              ),
+            ),
+            if (user?.isPlatformAdmin ?? false) ...[
+              const SizedBox(width: SpacingScale.s8),
+              Flexible(
+                child: InfoBadge(
+                  icon: LucideIcons.shield,
+                  label: AppLocalizations.of(context).profile_adminBadge,
+                  colors: colors,
+                  theme: theme,
+                  accentColor: colors.accent,
+                ),
               ),
             ],
           ],

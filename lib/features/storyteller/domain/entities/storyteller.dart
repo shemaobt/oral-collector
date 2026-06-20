@@ -1,18 +1,25 @@
+import '../../../../core/serialization/safe_read.dart';
+
 enum StorytellerSex {
-  male,
-  female;
+  male('male'),
+  female('female'),
+  unknown('unknown');
 
-  String toJson() => name;
+  const StorytellerSex(this.wire);
 
-  static StorytellerSex fromJson(String value) {
-    switch (value) {
-      case 'male':
-        return StorytellerSex.male;
-      case 'female':
-        return StorytellerSex.female;
-      default:
-        throw ArgumentError('Unknown StorytellerSex: $value');
+  /// String exata de servidor/DB. Byte-idêntica ao encoding `name` legado para
+  /// [male]/[female].
+  final String wire;
+
+  String toWire() => wire;
+
+  /// Tolerante: um valor de wire não reconhecido vira [unknown] em vez de lançar.
+  /// Um enum desconhecido não pode escapar do `on Exception` e blankar uma tela.
+  static StorytellerSex fromWire(String value) {
+    for (final v in StorytellerSex.values) {
+      if (v.wire == value) return v;
     }
+    return StorytellerSex.unknown;
   }
 }
 
@@ -48,17 +55,15 @@ class Storyteller {
       id: json['id'] as String,
       projectId: json['project_id'] as String,
       name: json['name'] as String,
-      sex: StorytellerSex.fromJson(json['sex'] as String),
+      sex: StorytellerSex.fromWire(readString(json, 'sex')),
       age: (json['age'] as num?)?.toInt(),
       location: json['location'] as String?,
       dialect: json['dialect'] as String?,
       externalAcceptanceConfirmed:
           json['external_acceptance_confirmed'] as bool? ?? false,
       createdByUserId: json['created_by_user_id'] as String?,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: json['updated_at'] != null
-          ? DateTime.parse(json['updated_at'] as String)
-          : null,
+      createdAt: readDate(json, 'created_at'),
+      updatedAt: readDateOrNull(json, 'updated_at'),
     );
   }
 
@@ -66,7 +71,7 @@ class Storyteller {
     'id': id,
     'project_id': projectId,
     'name': name,
-    'sex': sex.toJson(),
+    'sex': sex.toWire(),
     'age': age,
     'location': location,
     'dialect': dialect,

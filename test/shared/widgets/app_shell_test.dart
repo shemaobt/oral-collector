@@ -20,14 +20,14 @@ import 'package:oral_collector/shared/widgets/app_shell.dart';
 class _FakeRecordingSessionNotifier extends RecordingSessionNotifier {
   _FakeRecordingSessionNotifier(this._initial);
   final RecordingState _initial;
-  int discardCallCount = 0;
+  int _discardCallCount = 0;
 
   @override
   RecordingState build() => _initial;
 
   @override
   Future<void> discardRecording() async {
-    discardCallCount++;
+    _discardCallCount++;
     state = const RecordingState();
   }
 }
@@ -35,14 +35,14 @@ class _FakeRecordingSessionNotifier extends RecordingSessionNotifier {
 class _FakeAuthNotifier extends AuthNotifier {
   _FakeAuthNotifier(this._initial);
   final AuthState _initial;
-  int logoutCallCount = 0;
+  int _logoutCallCount = 0;
 
   @override
   AuthState build() => _initial;
 
   @override
   Future<void> logout() async {
-    logoutCallCount++;
+    _logoutCallCount++;
     state = const AuthState();
   }
 }
@@ -58,9 +58,6 @@ class _FakeInviteNotifier extends InviteNotifier {
 class _FakeRoleNotifier extends RoleNotifier {
   @override
   RoleState build() => const RoleState();
-
-  @override
-  bool get isPlatformAdmin => false;
 }
 
 const _testUser = User(
@@ -170,7 +167,78 @@ Future<void> _pumpShell(
   await tester.pumpAndSettle();
 }
 
+Future<void> _pumpAtTextScale(
+  WidgetTester tester, {
+  required Size size,
+  required double scale,
+}) async {
+  tester.view.physicalSize = size;
+  tester.view.devicePixelRatio = 1.0;
+  addTearDown(tester.view.reset);
+
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        recordingSessionNotifierProvider.overrideWith(
+          () => _FakeRecordingSessionNotifier(const RecordingState()),
+        ),
+        authNotifierProvider.overrideWith(
+          () => _FakeAuthNotifier(const AuthState(currentUser: _testUser)),
+        ),
+        pendingRecordingDecisionProvider.overrideWith((_) => null),
+        inviteNotifierProvider.overrideWith(_FakeInviteNotifier.new),
+        roleNotifierProvider.overrideWith(_FakeRoleNotifier.new),
+      ],
+      child: MaterialApp.router(
+        routerConfig: _buildRouter(),
+        locale: const Locale('en'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: TextScaler.linear(scale)),
+          child: child!,
+        ),
+      ),
+    ),
+  );
+  await tester.pumpAndSettle();
+}
+
 void main() {
+  group('text-scale resilience (ENG-178)', () {
+    for (final scale in const [1.0, 1.3, 2.0]) {
+      testWidgets('mobile bottom nav has no overflow at ${scale}x', (
+        tester,
+      ) async {
+        await _pumpAtTextScale(
+          tester,
+          size: const Size(400, 800),
+          scale: scale,
+        );
+        expect(tester.takeException(), isNull);
+      });
+
+      testWidgets('wide sidebar has no overflow at ${scale}x', (tester) async {
+        await _pumpAtTextScale(
+          tester,
+          size: const Size(1024, 800),
+          scale: scale,
+        );
+        expect(tester.takeException(), isNull);
+      });
+    }
+
+    testWidgets('record tab stays reachable in bottom nav at 2.0x', (
+      tester,
+    ) async {
+      await _pumpAtTextScale(tester, size: const Size(400, 800), scale: 2.0);
+      expect(find.bySemanticsLabel('Record tab'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  });
+
   testWidgets(
     'tapping a tab while finalizing shows snackbar and does not navigate',
     (tester) async {
@@ -311,8 +379,8 @@ void main() {
 
         final l10n = AppLocalizationsEn();
         expect(find.text(l10n.recording_blockNavTitle), findsOneWidget);
-        expect(auth.logoutCallCount, 0);
-        expect(rec.discardCallCount, 0);
+        expect(auth._logoutCallCount, 0);
+        expect(rec._discardCallCount, 0);
         expect(find.text('login page'), findsNothing);
       },
     );
@@ -334,8 +402,8 @@ void main() {
         await tester.tap(find.text(l10n.common_cancel));
         await tester.pumpAndSettle();
 
-        expect(auth.logoutCallCount, 0);
-        expect(rec.discardCallCount, 0);
+        expect(auth._logoutCallCount, 0);
+        expect(rec._discardCallCount, 0);
         expect(find.text('login page'), findsNothing);
       },
     );
@@ -357,8 +425,8 @@ void main() {
         await tester.tap(find.text(l10n.recording_blockNavDiscardAndLeave));
         await tester.pumpAndSettle();
 
-        expect(rec.discardCallCount, 1);
-        expect(auth.logoutCallCount, 1);
+        expect(rec._discardCallCount, 1);
+        expect(auth._logoutCallCount, 1);
         expect(find.text('login page'), findsOneWidget);
       },
     );
@@ -376,7 +444,7 @@ void main() {
 
         final l10n = AppLocalizationsEn();
         expect(find.text(l10n.recording_blockNavTitle), findsNothing);
-        expect(auth.logoutCallCount, 1);
+        expect(auth._logoutCallCount, 1);
         expect(find.text('login page'), findsOneWidget);
       },
     );

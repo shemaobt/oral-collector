@@ -20,7 +20,7 @@ class CreateProjectFab extends StatelessWidget {
       label: AppLocalizations.of(context).a11y_createProject,
       button: true,
       child: Material(
-        color: Colors.transparent,
+        color: AppColors.transparent,
         shape: const CircleBorder(),
         child: InkWell(
           onTap: onTap,
@@ -44,7 +44,7 @@ class CreateProjectFab extends StatelessWidget {
               ],
             ),
             child: const Center(
-              child: Icon(LucideIcons.plus, size: 26, color: Colors.white),
+              child: Icon(LucideIcons.plus, size: 26, color: AppColors.white),
             ),
           ),
         ),

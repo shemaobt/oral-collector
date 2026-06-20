@@ -8,7 +8,9 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:oral_collector/core/database/app_database.dart';
+import 'package:oral_collector/core/errors/app_exception.dart';
 import 'package:oral_collector/core/network/authenticated_client.dart';
+import 'package:oral_collector/core/platform/file_source.dart';
 import 'package:oral_collector/core/util/crc32c.dart';
 import 'package:oral_collector/features/recording/data/repositories/local_recording_repository.dart';
 import 'package:oral_collector/features/sync/data/services/resumable_upload_service.dart';
@@ -249,6 +251,32 @@ void main() {
       expect(call.end, 1024);
       expect(call.url, 'https://storage.googleapis.com/test');
       expect(call.headers['Content-Type'], 'audio/mp4');
+    });
+
+    test('throws a catchable ParseException when upload-url returns a '
+        'non-string upload_url', () async {
+      final testFile = File('${tempDir.path}/malformed_url.m4a');
+      testFile.writeAsBytesSync(Uint8List(512));
+
+      final mockClient = MockClient((request) async {
+        if (request.url.path.contains('upload-url')) {
+          return http.Response(jsonEncode({'upload_url': 123}), 200);
+        }
+        return http.Response('', 404);
+      });
+
+      final service = buildService(httpClient: mockClient);
+
+      await expectLater(
+        service.upload(
+          recordingId: 'rec-1',
+          serverId: 'srv-1',
+          localFilePath: testFile.path,
+          format: 'm4a',
+          fileSizeBytes: 512,
+        ),
+        throwsA(isA<ParseException>()),
+      );
     });
 
     test('retries once on 403 expired URL', () async {
@@ -1199,6 +1227,153 @@ void main() {
         expect(result.success, isTrue);
         expect(result.clientCrc32c, equals(expectedCrc));
         expect(result.gcsCrc32c, equals(expectedCrc));
+      },
+    );
+  });
+
+  group('HTTPS scheme enforcement (ENG-132)', () {
+    test(
+      'single-PUT falha sem enfileirar chunk quando upload_url é http inseguro',
+      () async {
+        final testFile = File('${tempDir.path}/insecure.m4a');
+        testFile.writeAsBytesSync(Uint8List(1024));
+
+        final mockClient = MockClient((request) async {
+          if (request.url.path.contains('upload-url')) {
+            return http.Response(
+              jsonEncode({
+                'upload_url': 'http://evil.com/leak',
+                'content_type': 'audio/mp4',
+              }),
+              200,
+            );
+          }
+          return http.Response('', 404);
+        });
+
+        final service = buildService(httpClient: mockClient);
+        final result = await service.upload(
+          recordingId: 'rec-1',
+          serverId: 'srv-1',
+          localFilePath: testFile.path,
+          format: 'm4a',
+          fileSizeBytes: 1024,
+        );
+
+        expect(result.success, isFalse);
+        expect(fakeDownloader.calls, isEmpty);
+      },
+    );
+
+    test(
+      'resumable falha sem enfileirar chunk quando session_uri é http inseguro',
+      () async {
+        final testFile = File('${tempDir.path}/insecure-big.m4a');
+        testFile.writeAsBytesSync(Uint8List(1024));
+        const bigSize = 6 * 1024 * 1024;
+
+        when(() => mockRepo.getRecordingById(any())).thenAnswer(
+          (_) async => _seedRecording(
+            id: 'rec-1',
+            fileSizeBytes: bigSize,
+            filePath: testFile.path,
+          ),
+        );
+
+        final mockClient = MockClient((request) async {
+          if (request.url.path.contains('resumable-upload-url')) {
+            return http.Response(
+              jsonEncode({'session_uri': 'http://evil.com/session'}),
+              200,
+            );
+          }
+          return http.Response('', 404);
+        });
+
+        final service = buildService(httpClient: mockClient);
+        final result = await service.upload(
+          recordingId: 'rec-1',
+          serverId: 'srv-1',
+          localFilePath: testFile.path,
+          format: 'm4a',
+          fileSizeBytes: bigSize,
+        );
+
+        expect(result.success, isFalse);
+        expect(fakeDownloader.calls, isEmpty);
+      },
+    );
+
+    test(
+      'uploadFromSource (single-PUT legacy) rejeita upload_url http sem PUT',
+      () async {
+        final requests = <String>[];
+        final mockClient = MockClient((request) async {
+          requests.add('${request.method} ${request.url}');
+          if (request.url.path.contains('upload-url')) {
+            return http.Response(
+              jsonEncode({
+                'upload_url': 'http://evil.com/leak',
+                'content_type': 'audio/mp4',
+              }),
+              200,
+            );
+          }
+          return http.Response('', 404);
+        });
+
+        final service = buildService(httpClient: mockClient);
+        final result = await service.uploadFromSource(
+          recordingId: 'rec-1',
+          serverId: 'srv-1',
+          source: FileSource.fromBytes(
+            Uint8List(1024),
+            name: 'x.m4a',
+            mimeType: 'audio/mp4',
+          ),
+          format: 'm4a',
+        );
+
+        expect(result.success, isFalse);
+        expect(requests.any((r) => r.startsWith('PUT')), isFalse);
+      },
+    );
+
+    test(
+      'session_uri http restaurado do DB é rejeitado sem PUT inseguro',
+      () async {
+        final testFile = File('${tempDir.path}/restored.m4a');
+        testFile.writeAsBytesSync(Uint8List(1024));
+        const bigSize = 6 * 1024 * 1024;
+
+        final requests = <String>[];
+        final mockClient = MockClient((request) async {
+          requests.add('${request.method} ${request.url}');
+          return http.Response('', 404);
+        });
+
+        when(() => mockRepo.getRecordingById(any())).thenAnswer(
+          (_) async => _seedRecording(
+            id: 'rec-1',
+            fileSizeBytes: bigSize,
+            filePath: testFile.path,
+            resumableSessionUri: 'http://evil.com/session',
+            uploadedBytes: 100,
+          ),
+        );
+
+        final service = buildService(httpClient: mockClient);
+        final result = await service.upload(
+          recordingId: 'rec-1',
+          serverId: 'srv-1',
+          localFilePath: testFile.path,
+          format: 'm4a',
+          fileSizeBytes: bigSize,
+        );
+
+        expect(result.success, isFalse);
+        expect(requests.any((r) => r.contains('evil.com')), isFalse);
+        expect(fakeDownloader.calls, isEmpty);
       },
     );
   });

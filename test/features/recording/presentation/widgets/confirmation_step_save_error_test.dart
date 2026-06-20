@@ -11,12 +11,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
-import 'package:oral_collector/core/database/app_database.dart';
 import 'package:oral_collector/features/project/presentation/notifiers/project_notifier.dart';
 import 'package:oral_collector/features/project/presentation/notifiers/project_state.dart';
 import 'package:oral_collector/features/recording/data/providers.dart';
 import 'package:oral_collector/features/recording/data/repositories/local_recording_repository.dart';
+import 'package:oral_collector/features/recording/domain/entities/local_recording_entity.dart';
 import 'package:oral_collector/features/recording/presentation/notifiers/recording_session_state.dart';
 import 'package:oral_collector/features/recording/presentation/widgets/confirmation_step.dart';
 import 'package:oral_collector/features/storyteller/domain/entities/storyteller.dart';
@@ -30,8 +31,8 @@ import 'package:oral_collector/l10n/app_localizations.dart';
 
 class _ThrowingRecordingRepository implements LocalRecordingRepository {
   @override
-  Future<void> insertRecording(LocalRecordingsCompanion data) async {
-    throw Exception('insert failed');
+  Future<void> saveRecording(LocalRecordingEntity entity) async {
+    throw Exception('save failed');
   }
 
   @override
@@ -145,7 +146,7 @@ void main() {
   });
 
   testWidgets(
-    'native save surfaces an error and re-enables the button when the insert fails',
+    'native save surfaces an error and re-enables the button when the save fails',
     (tester) async {
       final container = _container();
       addTearDown(container.dispose);
@@ -163,9 +164,9 @@ void main() {
       await tester.pump(); // resume _open() -> onChanged -> setState
       await tester.pump(); // rebuild with Save enabled
 
-      // Save -> native path -> insertRecording throws. _save() awaits real file
+      // Save -> native path -> saveRecording throws. _save() awaits real file
       // I/O (file_ops.fileLength), which only advances inside runAsync; run the
-      // whole tap there so _save reaches the insert, then pump to render the UI.
+      // whole tap there so _save reaches the save, then pump to render the UI.
       await tester.runAsync(() async {
         await tester.tap(find.byType(ElevatedButton));
         await Future<void>.delayed(const Duration(milliseconds: 200));
@@ -175,6 +176,8 @@ void main() {
 
       expect(find.byType(SnackBar), findsOneWidget);
       expect(find.textContaining('Upload failed'), findsOneWidget);
+      // Routed through the unified showErrorSnackBar -> styled alert icon.
+      expect(find.byIcon(LucideIcons.alertTriangle), findsOneWidget);
 
       final saveButton = tester.widget<ElevatedButton>(
         find.byType(ElevatedButton),

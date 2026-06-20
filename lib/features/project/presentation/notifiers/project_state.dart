@@ -6,7 +6,7 @@ class ProjectState {
   final List<Language> languages;
   final Project? activeProject;
   final bool isLoading;
-  final String? error;
+  final Object? error;
   final DateTime? lastFetched;
 
   const ProjectState({
@@ -23,7 +23,7 @@ class ProjectState {
     List<Language>? languages,
     Project? activeProject,
     bool? isLoading,
-    String? error,
+    Object? error,
     DateTime? lastFetched,
     bool clearActiveProject = false,
     bool clearError = false,

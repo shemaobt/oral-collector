@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer' as developer;
 
 import 'package:background_downloader/background_downloader.dart';
 import 'package:flutter/foundation.dart';
@@ -12,10 +13,13 @@ import 'core/auth/auth_notifier.dart';
 import 'core/database/database_provider.dart';
 import 'core/l10n/locale_provider.dart';
 import 'core/l10n/supported_locales.dart';
+import 'core/observability/app_logger.dart';
 import 'core/observability/error_reporter.dart';
 import 'core/platform/file_ops.dart' as platform;
 import 'core/router/app_router.dart';
+import 'core/startup/app_startup.dart';
 import 'core/theme/app_theme.dart';
+import 'features/recording/data/providers.dart';
 import 'features/recording/data/services/recording_live_activity.dart';
 import 'features/recording/data/services/recording_notification.dart';
 import 'features/recording/data/services/recording_trash.dart';
@@ -43,6 +47,7 @@ void main() {
       usePathUrlStrategy();
 
       installGlobalErrorHandlers(reporter);
+      installLogging(reporter: reporter);
 
       if (!kIsWeb && platform.isAndroidPlatform) {
         try {
@@ -68,7 +73,12 @@ void main() {
       );
     },
     (error, stack) {
-      debugPrint('Zone error: $error\n$stack');
+      developer.log(
+        'Zone error',
+        name: 'main',
+        error: error,
+        stackTrace: stack,
+      );
       reporter.reportError(error, stack, level: ErrorLevel.fatal);
     },
   );
@@ -89,14 +99,25 @@ class _OralCollectorAppState extends ConsumerState<OralCollectorApp> {
     ref.read(appDatabaseProvider);
 
     Future.microtask(() async {
-      ref.read(authNotifierProvider.notifier).tryAutoLogin();
+      // Local session restore is gated by appStartupProvider (the splash waits
+      // on it). Once it settles, kick the online refresh and the rest of the
+      // post-boot work. Token availability is storage-based, so this ordering
+      // only removes the login flash — it does not gate uploads on auth.
+      await ref.read(appStartupProvider.future);
+      unawaited(
+        ref.read(authNotifierProvider.notifier).refreshSessionIfOnline(),
+      );
+
+      // Reclaim recordings orphaned in `uploading` by a mid-upload crash so the
+      // queue drains them again; must run before sync/listeners go live.
+      await ref.read(localRecordingRepositoryProvider).resetStuckUploading();
 
       // Crash-recovery must clear any stale RecordingActiveFlag from a
       // previous run BEFORE the upload listeners go live. Otherwise the very
       // first processQueue() trigger reads a stuck-true flag and short-circuits
       // every chunk with pausedByRecording until the next state change.
       if (!kIsWeb) {
-        RecordingTrash.pruneOldTrash(maxAgeHours: 24);
+        unawaited(RecordingTrash.pruneOldTrash(maxAgeHours: 24));
         await ref.read(recoveryCoordinatorProvider).scanOnStartup();
         await RecordingLiveActivity.instance.endAll();
       }
@@ -110,7 +131,7 @@ class _OralCollectorAppState extends ConsumerState<OralCollectorApp> {
         try {
           await FileDownloader().start();
         } on Exception catch (e) {
-          debugPrint('FileDownloader.start failed: $e');
+          developer.log('FileDownloader.start failed', name: 'main', error: e);
         }
       }
 
@@ -132,6 +153,19 @@ class _OralCollectorAppState extends ConsumerState<OralCollectorApp> {
 
   @override
   Widget build(BuildContext context) {
+    // Gate the router on the startup restore so its first redirect sees settled
+    // auth state (no logged-out flash). A restore failure falls through to the
+    // app logged-out — the router then sends the user to login.
+    return ref
+        .watch(appStartupProvider)
+        .when(
+          loading: () => const StartupSplash(),
+          error: (_, _) => _buildApp(),
+          data: (_) => _buildApp(),
+        );
+  }
+
+  Widget _buildApp() {
     final router = ref.watch(routerProvider);
     final locale = ref.watch(localeProvider);
 
@@ -150,6 +184,10 @@ class _OralCollectorAppState extends ConsumerState<OralCollectorApp> {
         GlobalCupertinoLocalizations.delegate,
       ],
       routerConfig: router,
+      // High ceiling only: never lowers the floor, so low-vision users keep
+      // full up-scaling; bounds pathological OS settings (>2x) app-wide.
+      builder: (context, child) =>
+          MediaQuery.withClampedTextScaling(maxScaleFactor: 2.0, child: child!),
     );
   }
 }

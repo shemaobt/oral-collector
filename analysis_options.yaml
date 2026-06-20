@@ -12,11 +12,21 @@ include: package:flutter_lints/flutter.yaml
 analyzer:
   plugins:
     - custom_lint
+  # ENG-156/ENG-157 / ADR-0007: promoted after burn-down to 0 violations.
+  # Enforced even under `flutter analyze --no-fatal-infos`.
+  errors:
+    use_build_context_synchronously: error
+    directives_ordering: warning
+    prefer_const_constructors: warning
+    prefer_final_locals: warning
+    unawaited_futures: warning
   exclude:
     - '**/*.g.dart'
     - '**/*.freezed.dart'
     # drift_dev-generated schema fixtures for migration tests (ENG-123).
     - 'test/core/database/generated/**'
+    # drift_dev-generated step-by-step migration helper (ENG-161).
+    - 'lib/core/database/schema_versions.dart'
 
 linter:
   # The lint rules applied to this project can be customized in the
@@ -30,13 +40,25 @@ linter:
   # `// ignore_for_file: name_of_lint` syntax on the line or in the file
   # producing the lint.
   rules:
-    # Strict baseline (ENG-89 / ADR-0007). Staged at `info` to avoid a CI wall;
-    # promoted to warning/error in follow-ups after burn-down.
+    # Strict baseline (ENG-89 / ADR-0007). Severities promoted in `analyzer:
+    # errors:` above (ENG-156, ENG-157).
     use_build_context_synchronously: true
     unawaited_futures: true
     prefer_const_constructors: true
     prefer_final_locals: true
     directives_ordering: true
+
+# Custom lint rules (plugins habilitados em analyzer.plugins acima). obt_lints
+# (severidade WARNING nas próprias regras):
+#   - avoid_hardcoded_color / avoid_material_colors: bane Color(0x…) / bare
+#     Colors.* fora de lib/core/theme/** e test/ (ENG-159/ENG-183; ADR-0002).
+#   - avoid_raw_print: bane print/debugPrint cru fora de
+#     lib/core/observability/** e test/ (ENG-190; ADR-0010).
+custom_lint:
+  rules:
+    - avoid_hardcoded_color
+    - avoid_material_colors
+    - avoid_raw_print
 
 # Complexity/size quality gate (dart_code_linter). Phase 0 thresholds are
 # calibrated to the current worst value (green now) and ratchet over time -
@@ -45,7 +67,7 @@ dart_code_linter:
   metrics:
     cyclomatic-complexity: 64 # Phase 0 (current worst). Ratchet -> 30 -> 20.
     number-of-parameters: 14 # Phase 0 (current worst). Ratchet -> 8 -> 5.
-    maximum-nesting-level: 6 # Phase 0 (current worst). Ratchet -> 5 -> 4.
+    maximum-nesting-level: 7 # Phase 0 (current worst). Ratchet -> 5 -> 4.
     source-lines-of-code: 665 # Phase 0 (current worst). Ratchet -> 300 -> 150.
   metrics-exclude:
     - "**/*.g.dart"

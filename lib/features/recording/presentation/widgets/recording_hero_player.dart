@@ -3,9 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
-import '../../../../core/database/app_database.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../domain/entities/local_recording_entity.dart';
 import '../notifiers/recording_player_notifier.dart';
 import '../notifiers/recording_player_state.dart';
 import 'recording_player_controls.dart';
@@ -18,7 +19,7 @@ class RecordingHeroPlayer extends ConsumerWidget {
     required this.theme,
   });
 
-  final LocalRecording recording;
+  final LocalRecordingEntity recording;
   final AppColorSet colors;
   final ThemeData theme;
 
@@ -58,8 +59,16 @@ class RecordingHeroPlayer extends ConsumerWidget {
         top: !isWide,
         child: Padding(
           padding: isWide
-              ? const EdgeInsets.symmetric(horizontal: 24, vertical: 12)
-              : const EdgeInsets.fromLTRB(20, 60, 20, 20),
+              ? const EdgeInsets.symmetric(
+                  horizontal: SpacingScale.s24,
+                  vertical: SpacingScale.s12,
+                )
+              : const EdgeInsets.fromLTRB(
+                  SpacingScale.s20,
+                  60,
+                  SpacingScale.s20,
+                  SpacingScale.s20,
+                ),
           child: isWide
               ? Row(
                   children: [
@@ -76,7 +85,7 @@ class RecordingHeroPlayer extends ConsumerWidget {
                         color: colors.accent,
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: SpacingScale.s16),
                     Expanded(child: _buildPlayer(context, state)),
                   ],
                 )
@@ -96,7 +105,7 @@ class RecordingHeroPlayer extends ConsumerWidget {
                         color: colors.accent,
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: SpacingScale.s20),
                     _buildPlayer(context, state),
                   ],
                 ),
@@ -111,8 +120,8 @@ class RecordingHeroPlayer extends ConsumerWidget {
         height: 72,
         child: Center(
           child: SizedBox(
-            width: 24,
-            height: 24,
+            width: SpacingScale.s24,
+            height: SpacingScale.s24,
             child: CircularProgressIndicator(
               strokeWidth: 2,
               color: colors.primary,
@@ -128,11 +137,12 @@ class RecordingHeroPlayer extends ConsumerWidget {
         RecordingPlayerError.fileNotFound => l10n.recording_audioFileNotFound,
         RecordingPlayerError.loadFailed => l10n.recording_audioLoadFailed,
       };
-      return SizedBox(
-        height: 64,
+      return ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 64),
         child: Center(
           child: Text(
             message,
+            textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: colors.error,
               fontSize: 14.0,
@@ -146,7 +156,10 @@ class RecordingHeroPlayer extends ConsumerWidget {
       final l10n = AppLocalizations.of(context);
       return Text(
         l10n.recording_noAudioAvailable,
-        style: TextStyle(color: colors.secondary, fontSize: 14),
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: colors.secondary,
+          fontSize: 14.0,
+        ),
       );
     }
 

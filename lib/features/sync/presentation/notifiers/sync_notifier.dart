@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart' show Locale, WidgetsBinding;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/l10n/locale_provider.dart';
+import '../../../../core/observability/error_reporter.dart';
 import '../../../../core/platform/disk_space.dart' as disk_space;
 import '../../../../core/platform/file_ops.dart' as file_ops;
 import '../../../../l10n/app_localizations.dart';
@@ -22,6 +23,7 @@ final syncNotifierProvider = NotifierProvider<SyncNotifier, SyncState>(
 
 class SyncNotifier extends Notifier<SyncState> {
   StreamSubscription<bool>? _connectivitySub;
+  bool _sawConnectivityEvent = false;
   DateTime? _speedSampleTime;
   int _speedSampleBytes = 0;
   final Map<String, int> _fileProgress = {};
@@ -49,17 +51,24 @@ class SyncNotifier extends Notifier<SyncState> {
   }
 
   Future<void> _initConnectivity() async {
-    final online = await _connectivity.isOnline;
-    state = state.copyWith(isOnline: online);
-
+    // Subscribe before awaiting the snapshot: onConnectivityChanged is a
+    // broadcast stream with no replay, so a flip during the await would be lost.
     _connectivitySub = _connectivity.onConnectivityChanged.listen(
       _onConnectivityChanged,
     );
+
+    final online = await _connectivity.isOnline;
+    // A live event during the await already set a fresher value; don't let the
+    // now-stale snapshot clobber it.
+    if (!_sawConnectivityEvent) {
+      state = state.copyWith(isOnline: online);
+    }
 
     await _refreshPendingCount();
   }
 
   void _onConnectivityChanged(bool online) {
+    _sawConnectivityEvent = true;
     final wasOffline = !state.isOnline;
     state = state.copyWith(isOnline: online);
 
@@ -145,40 +154,51 @@ class SyncNotifier extends Notifier<SyncState> {
     if (kIsWeb) return 0;
 
     final all = await _recordingRepo.getAllLocalRecordings();
-    var totalBytes = 0;
+    final sizes = await Future.wait(all.map((r) => _fileSize(r.localFilePath)));
+    return sizes.fold<int>(0, (sum, n) => sum + n);
+  }
 
-    for (final recording in all) {
-      try {
-        if (await file_ops.fileExists(recording.localFilePath)) {
-          totalBytes += await file_ops.fileLength(recording.localFilePath);
-        }
-      } on Exception catch (_) {}
+  Future<int> _fileSize(String path) async {
+    try {
+      if (await file_ops.fileExists(path)) {
+        return await file_ops.fileLength(path);
+      }
+    } on Exception catch (e, st) {
+      ref.read(errorReporterProvider).reportError(e, st);
     }
-
-    return totalBytes;
+    return 0;
   }
 
   Future<({int usedBytes, int freeBytes, int totalBytes})>
   getStorageSnapshot() async {
-    final used = await getLocalStorageUsed();
-    final free = await disk_space.getFreeBytes();
-    final total = await disk_space.getTotalBytes();
-    return (usedBytes: used, freeBytes: free, totalBytes: total);
+    final results = await Future.wait([
+      getLocalStorageUsed(),
+      disk_space.getFreeBytes(),
+      disk_space.getTotalBytes(),
+    ]);
+    return (
+      usedBytes: results[0],
+      freeBytes: results[1],
+      totalBytes: results[2],
+    );
   }
 
   Future<void> clearLocalCache() async {
     if (kIsWeb) return;
 
     final all = await _recordingRepo.getAllLocalRecordings();
-
-    for (final recording in all) {
-      try {
-        await file_ops.deleteFile(recording.localFilePath);
-      } on Exception catch (_) {}
-    }
+    await Future.wait(all.map((r) => _deleteQuietly(r.localFilePath)));
 
     await _recordingRepo.deleteAllRecordings();
     await _refreshPendingCount();
+  }
+
+  Future<void> _deleteQuietly(String path) async {
+    try {
+      await file_ops.deleteFile(path);
+    } on Exception catch (e, st) {
+      ref.read(errorReporterProvider).reportError(e, st);
+    }
   }
 
   bool _isProcessing = false;

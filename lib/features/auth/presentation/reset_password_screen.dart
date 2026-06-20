@@ -5,7 +5,10 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/auth/providers.dart';
+import '../../../core/observability/error_reporter.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/tokens.dart';
+import '../../../core/web/url_history.dart';
 import '../../../shared/widgets/error_snack_bar.dart';
 
 class ResetPasswordScreen extends ConsumerStatefulWidget {
@@ -28,6 +31,17 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
   bool _success = false;
 
   @override
+  void initState() {
+    super.initState();
+    // Scrub the token from the address bar as soon as we have it, so it is not
+    // kept in browser history or leaked via Referer. The value is already held
+    // in widget.token, so _handleReset still works after the URL is cleaned.
+    if (widget.token?.isNotEmpty ?? false) {
+      stripUrlQueryParam('token');
+    }
+  }
+
+  @override
   void dispose() {
     _passwordController.dispose();
     _confirmController.dispose();
@@ -37,6 +51,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
   Future<void> _handleReset() async {
     if (!_formKey.currentState!.validate()) return;
 
+    final reporter = ref.read(errorReporterProvider);
     setState(() => _isLoading = true);
 
     try {
@@ -44,13 +59,9 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
           .read(authRepositoryProvider)
           .resetPassword(widget.token!, _passwordController.text);
       if (mounted) setState(() => _success = true);
-    } on Exception catch (e) {
-      if (mounted) {
-        showErrorSnackBar(
-          context,
-          e.toString().replaceFirst('Exception: ', ''),
-        );
-      }
+    } on Exception catch (e, st) {
+      reporter.reportError(e, st);
+      if (mounted) showErrorSnackBar(context, e);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -63,11 +74,11 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
     final l10n = AppLocalizations.of(context);
 
     return Scaffold(
-      appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
+      appBar: AppBar(backgroundColor: AppColors.transparent, elevation: 0),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 28),
+            padding: const EdgeInsets.symmetric(horizontal: SpacingScale.s28),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 400),
               child: widget.token == null || widget.token!.isEmpty
@@ -98,7 +109,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
           ),
           child: Icon(LucideIcons.shieldAlert, color: colors.error, size: 32),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: SpacingScale.s24),
         Text(
           l10n.auth_invalidResetLink,
           style: theme.textTheme.displayLarge?.copyWith(
@@ -106,7 +117,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
           ),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: SpacingScale.s12),
         Text(
           l10n.auth_invalidResetLinkMessage,
           style: theme.textTheme.bodyMedium?.copyWith(
@@ -115,7 +126,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
           ),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 32),
+        const SizedBox(height: SpacingScale.s32),
         SizedBox(
           width: double.infinity,
           height: 54,
@@ -123,17 +134,17 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
             onPressed: () => context.go('/forgot-password'),
             style: ElevatedButton.styleFrom(
               backgroundColor: colors.accent,
-              foregroundColor: Colors.white,
+              foregroundColor: AppColors.white,
               elevation: 0,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(RadiusScale.r16),
               ),
               textStyle: theme.textTheme.labelLarge,
             ),
             child: Text(l10n.auth_requestNewLink),
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: SpacingScale.s16),
         TextButton(
           onPressed: () => context.go('/login'),
           child: Text(
@@ -164,7 +175,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
           ),
           child: Icon(LucideIcons.checkCircle, color: colors.accent, size: 32),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: SpacingScale.s24),
         Text(
           l10n.auth_resetPassword,
           style: theme.textTheme.displayLarge?.copyWith(
@@ -172,9 +183,9 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
           ),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: SpacingScale.s12),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
+          padding: const EdgeInsets.symmetric(horizontal: SpacingScale.s8),
           child: Text(
             l10n.auth_resetSuccess,
             style: theme.textTheme.bodyMedium?.copyWith(
@@ -184,7 +195,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
             textAlign: TextAlign.center,
           ),
         ),
-        const SizedBox(height: 32),
+        const SizedBox(height: SpacingScale.s32),
         SizedBox(
           width: double.infinity,
           height: 54,
@@ -192,10 +203,10 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
             onPressed: () => context.go('/login'),
             style: ElevatedButton.styleFrom(
               backgroundColor: colors.accent,
-              foregroundColor: Colors.white,
+              foregroundColor: AppColors.white,
               elevation: 0,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(RadiusScale.r16),
               ),
               textStyle: theme.textTheme.labelLarge,
             ),
@@ -221,25 +232,25 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
             height: 56,
             decoration: BoxDecoration(
               color: colors.accent.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(RadiusScale.r16),
             ),
             child: Icon(LucideIcons.keyRound, color: colors.accent, size: 28),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: SpacingScale.s24),
           Text(
             l10n.auth_resetPassword,
             style: theme.textTheme.displayLarge?.copyWith(
               color: colors.foreground,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: SpacingScale.s8),
           Text(
             l10n.auth_resetPasswordSubtitle,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: colors.secondary,
             ),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: SpacingScale.s32),
 
           Text(
             l10n.auth_newPassword,
@@ -248,7 +259,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
               color: colors.foreground,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: SpacingScale.s8),
           TextFormField(
             controller: _passwordController,
             obscureText: _obscurePassword,
@@ -280,7 +291,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
               return null;
             },
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: SpacingScale.s20),
 
           Text(
             l10n.auth_confirmNewPassword,
@@ -289,7 +300,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
               color: colors.foreground,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: SpacingScale.s8),
           TextFormField(
             controller: _confirmController,
             obscureText: _obscureConfirm,
@@ -322,7 +333,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
             },
             onFieldSubmitted: (_) => _handleReset(),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: SpacingScale.s32),
 
           SizedBox(
             width: double.infinity,
@@ -331,26 +342,26 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
               onPressed: _isLoading ? null : _handleReset,
               style: ElevatedButton.styleFrom(
                 backgroundColor: colors.accent,
-                foregroundColor: Colors.white,
+                foregroundColor: AppColors.white,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(RadiusScale.r16),
                 ),
                 textStyle: theme.textTheme.labelLarge,
               ),
               child: _isLoading
                   ? const SizedBox(
-                      width: 24,
-                      height: 24,
+                      width: SpacingScale.s24,
+                      height: SpacingScale.s24,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: Colors.white,
+                        color: AppColors.white,
                       ),
                     )
                   : Text(l10n.auth_resetPasswordButton),
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: SpacingScale.s24),
           Center(
             child: TextButton(
               onPressed: () => context.go('/login'),

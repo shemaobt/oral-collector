@@ -1,0 +1,15 @@
+name: obt_lints
+description: Project-internal custom_lint rules for oral_collector (ENG-159).
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.10.3
+
+dependencies:
+  analyzer: ^7.6.0
+  analyzer_plugin: ^0.13.4
+  custom_lint_builder: ^0.7.6
+
+dev_dependencies:
+  flutter_lints: ^6.0.0

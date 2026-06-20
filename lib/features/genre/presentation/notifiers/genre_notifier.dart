@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/auth/auth_notifier.dart';
 import '../../../../core/errors/api_exception.dart';
+import '../../../../core/observability/error_reporter.dart';
 import '../../data/genre_cache.dart';
 import '../../data/providers.dart';
 import '../../domain/repositories/genre_repository.dart';
@@ -45,13 +48,16 @@ class GenreNotifier extends Notifier<GenreState> {
       // Fire-and-forget: handleUnauthorized pode propagar uma falha transitória
       // de refresh (ENG-141); aqui ela é ignorada (sessão preservada). Só
       // Exceptions, não Errors, para não mascarar bugs.
-      ref
-          .read(authNotifierProvider.notifier)
-          .handleUnauthorized()
-          .catchError((_) => false, test: (e) => e is Exception);
-    } on Exception catch (e) {
+      unawaited(
+        ref
+            .read(authNotifierProvider.notifier)
+            .handleUnauthorized()
+            .catchError((_) => false, test: (e) => e is Exception),
+      );
+    } on Exception catch (e, st) {
       state = state.copyWith(isLoading: false);
-      throw Exception(e.toString().replaceFirst('Exception: ', ''));
+      ref.read(errorReporterProvider).reportError(e, st);
+      rethrow;
     }
   }
 

@@ -80,8 +80,7 @@ String friendlyErrorMessage(String raw, AppLocalizations l10n) {
 
   if (lower.contains('has no bytes') ||
       lower.contains('file is empty') ||
-      lower.contains('file not found') ||
-      lower.contains('recording not found')) {
+      lower.contains('file not found')) {
     return l10n.error_importNoBytes;
   }
 
@@ -96,7 +95,7 @@ String friendlyErrorMessage(String raw, AppLocalizations l10n) {
   }
 
   if (lower.contains('upload failed')) {
-    return l10n.error_imageUploadFailed;
+    return l10n.error_serverFailure;
   }
 
   if (lower.startsWith('failed to list') ||

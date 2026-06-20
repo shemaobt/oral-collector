@@ -1,7 +1,6 @@
-import 'dart:convert';
-
 import '../../../../core/network/api_error_handler.dart';
 import '../../../../core/network/authenticated_client.dart';
+import '../../../../core/network/response_decoder.dart';
 import '../../../../core/serialization/safe_read.dart';
 import '../../domain/entities/stats.dart';
 import '../../domain/repositories/stats_repository.dart';
@@ -19,7 +18,7 @@ class StatsRepositoryImpl implements StatsRepository {
     guardResponse(response);
     if (response.statusCode != 200) return {};
 
-    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    final data = decodeObject(response);
     return _parseGenreStats(data);
   }
 

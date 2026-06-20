@@ -8,11 +8,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
+import 'package:logging/logging.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 
 import '../../../../core/database/app_database.dart';
 import '../../../../core/l10n/locale_provider.dart';
+import '../../../../core/observability/error_reporter.dart';
 import '../../../../core/platform/file_ops.dart' as file_ops;
 import '../../../../core/platform/recording_active_flag.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -31,6 +33,7 @@ import '../../data/services/session_recovery.dart';
 import '../../data/services/storage_guard.dart';
 import 'input_device_notifier.dart';
 import 'recording_session_state.dart';
+import 'single_flight_runner.dart';
 
 final noiseSensitivityProvider = StateProvider<NoiseSensitivity>(
   (ref) => NoiseSensitivity.medium,
@@ -46,6 +49,7 @@ final recordingFinalizationServiceProvider =
     Provider<RecordingFinalizationService>((ref) {
       return RecordingFinalizationService(
         concat: ref.watch(recordingConcatServiceProvider),
+        reporter: ref.watch(errorReporterProvider),
       );
     });
 
@@ -67,6 +71,8 @@ final pendingRecordingDecisionProvider = StateProvider<RecordingResult?>(
 );
 
 class RecordingSessionNotifier extends Notifier<RecordingState> {
+  static final _log = Logger('RecordingSessionNotifier');
+
   SegmentedRecorder? _segRecorder;
   AudioRecorder? _webRecorder;
   String? _webPendingKey;
@@ -80,6 +86,19 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
   String? _pendingResumeSessionId;
   List<String>? _pendingResumeSegmentPaths;
   Duration? _pendingResumeDuration;
+  bool _isStopping = false;
+
+  // Coalesce the 1 Hz platform updates so a slow channel call can't stack, and
+  // surface their errors instead of dropping the fire-and-forget futures.
+  late final ErrorReporter _platformReporter = ref.read(errorReporterProvider);
+  late final SingleFlightRunner _fgUpdateRunner = SingleFlightRunner(
+    _updateForegroundNotification,
+    onError: (e, st) => _platformReporter.reportError(e, st),
+  );
+  late final SingleFlightRunner _liveActivityRunner = SingleFlightRunner(
+    _updateLiveActivity,
+    onError: (e, st) => _platformReporter.reportError(e, st),
+  );
 
   @override
   RecordingState build() {
@@ -108,11 +127,9 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
     try {
       final session = await AudioSession.instance;
       await session.setActive(true);
-      debugPrint(
-        'RecordingSessionNotifier: audio session re-activated on resume',
-      );
+      _log.info('audio session re-activated on resume');
     } on Exception catch (e) {
-      debugPrint('RecordingSessionNotifier: re-activate failed: $e');
+      _log.warning('re-activate failed', e);
     }
   }
 
@@ -479,16 +496,24 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
   }
 
   Future<RecordingResult?> stopRecording() async {
-    if (!state.isRecording || state.isFinalizing) return null;
+    // Synchronous reentrancy guard: a user stop and a background stop (FGS
+    // action / Live Activity deep-link) can fire near-simultaneously. Set the
+    // flag before any await so the second entrant bails regardless of how far
+    // the state machine has advanced.
+    if (_isStopping || !state.isRecording || state.isFinalizing) return null;
+    _isStopping = true;
+    try {
+      _elapsedTimer?.cancel();
+      _toastTimer?.cancel();
+      final elapsed = state.elapsed;
 
-    _elapsedTimer?.cancel();
-    _toastTimer?.cancel();
-    final elapsed = state.elapsed;
-
-    if (kIsWeb) {
-      return _stopWeb(elapsed);
+      if (kIsWeb) {
+        return await _stopWeb(elapsed);
+      }
+      return await _stopNative(elapsed);
+    } finally {
+      _isStopping = false;
     }
-    return _stopNative(elapsed);
   }
 
   Future<RecordingResult?> _stopNative(Duration fallbackElapsed) async {
@@ -550,7 +575,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
       sessionResult = await recorder.finish();
     } catch (e, st) {
       finishError = e;
-      debugPrint('[stopNative] recorder.finish failed: $e\n$st');
+      _log.severe('[stopNative] recorder.finish failed', e, st);
       sessionResult = await _recoverFromDisk(sessionId);
       if (sessionResult != null) degraded = true;
     }
@@ -634,9 +659,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
       );
     } catch (e, st) {
       error = e;
-      debugPrint(
-        'RecordingSessionNotifier: finalize failed for $sessionId: $e\n$st',
-      );
+      _log.severe('finalize failed for $sessionId', e, st);
     }
 
     if (outcome != null) {
@@ -681,7 +704,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
         documentsDir: dir,
       );
     } catch (e, st) {
-      debugPrint('[stopNative] recoverFromDisk failed: $e\n$st');
+      _log.severe('[stopNative] recoverFromDisk failed', e, st);
       return null;
     }
   }
@@ -709,7 +732,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
     try {
       url = await recorder.stop();
     } catch (e, st) {
-      debugPrint('[stopWeb] recorder.stop failed: $e\n$st');
+      _log.severe('[stopWeb] recorder.stop failed', e, st);
       url = null;
     }
     await _disposeWebRecorder();
@@ -733,7 +756,9 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
 
     try {
       final bytes = await http.readBytes(Uri.parse(url));
-      final format = _detectWebFormatFromUrl(url);
+      // Web records with a fixed Opus encoder (see _startWeb); record_web
+      // packages Opus into a WebM container, so the format is always 'webm'.
+      const format = 'webm';
       final fullKey = '$pendingKey.$format';
       await file_ops.writeFileBytes(fullKey, bytes);
       state = const RecordingState();
@@ -743,20 +768,13 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
         format: format,
       );
     } catch (e, st) {
-      debugPrint('[stopWeb] download failed: $e\n$st');
+      _log.severe('[stopWeb] download failed', e, st);
       state = state.copyWith(
         finalizationStage: FinalizationStage.idle,
         finalizationErrorKind: FinalizationErrorKind.downloadFailed,
       );
       return null;
     }
-  }
-
-  String _detectWebFormatFromUrl(String url) {
-    final lower = url.toLowerCase();
-    if (lower.endsWith('.mp4') || lower.contains('mp4')) return 'mp4';
-    if (lower.endsWith('.ogg') || lower.contains('ogg')) return 'ogg';
-    return 'webm';
   }
 
   Future<void> discardRecording() async {
@@ -817,8 +835,8 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
       state = state.copyWith(
         elapsed: state.elapsed + const Duration(seconds: 1),
       );
-      unawaited(_updateForegroundNotification());
-      unawaited(_updateLiveActivity());
+      _fgUpdateRunner.run();
+      _liveActivityRunner.run();
     });
   }
 
@@ -837,7 +855,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
     );
     if (!started) return false;
     _liveActivityActive = true;
-    _liveActivityUrlSub?.cancel();
+    unawaited(_liveActivityUrlSub?.cancel());
     _liveActivityUrlSub = RecordingLiveActivity.instance.urlSchemeStream.listen(
       (event) {
         final host = event.host;
@@ -926,9 +944,14 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
   }
 
   Future<void> _deleteFileSafe(String path) async {
+    // Best-effort delete stays non-throwing, but surface a genuine failure
+    // (file_ops.deleteFile no-ops on a missing file) instead of swallowing it —
+    // mirrors RecordingFinalizationService._deleteFileSafe.
     try {
       await file_ops.deleteFile(path);
-    } catch (_) {}
+    } catch (e, st) {
+      _platformReporter.reportError(e, st);
+    }
   }
 
   String _newSessionId() {
@@ -942,7 +965,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
     _toastTimer?.cancel();
     _segRecorder?.dispose();
     _segRecorder = null;
-    _disposeWebRecorder();
+    unawaited(_disposeWebRecorder());
     unawaited(_stopLiveActivityIfIOS());
     unawaited(_stopForegroundServiceIfAndroid());
   }

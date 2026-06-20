@@ -69,6 +69,7 @@ This document defines engineering standards and behaviors for LLM agents working
 - Separate **data access** (repositories that call APIs and optionally local storage) from **presentation** (screens, widgets, navigation).
 - Depend **inward**: presentation depends on data (repositories/providers); data depends on domain (entities). Domain depends on nothing.
 - Prefer **dependency injection** (e.g. Riverpod providers for repositories) so that layers stay testable and swappable.
+- For the cross-cutting synthesis — the HTTP client convention and the deliberate `auth_repository` exception, the notifier data-access convention, and the observability/errors/logging seams — see [`docs/architecture/layering.md`](docs/architecture/layering.md).
 
 **Examples:**
 
@@ -294,7 +295,7 @@ If the repo is **mobile-only**, this file is the single agent guideline. A separ
 ## 15. Quality Gates
 
 Static quality gates run in CI (on every PR) and locally via `make quality`. Run it before opening
-a PR and treat any hard-gate violation as blocking. See [ADR-0009](docs/adr/ADR-0009-architecture-dependency-rules.md)
+a PR and treat any hard-gate violation as blocking. See [ADR-0011](docs/adr/ADR-0011-architecture-dependency-rules.md)
 and `obt/.claude/quality-gates-plan.md`.
 
 - **Code metrics** (`dart_code_linter`, config in `analysis_options.yaml`, enforced by

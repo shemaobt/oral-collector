@@ -8,8 +8,8 @@ Path: @/lib/features/recording/presentation/widgets
   category, classify, replace audio, edit details), sections of the
   detail screen (status, info grid, storyteller, quick actions,
   about, upload progress), recording flow widgets (segment cards,
-  waveforms, finalizing overlays, recording step), the list card, and
-  the hero player + playback controls.
+  waveforms, finalizing overlays, recording step), the list card and the
+  pending-web-upload card, and the hero player + playback controls.
 - These widgets are leaf consumers: they `ref.watch` notifiers and
   data-layer providers but do not own long-lived resources. Anything
   that must survive a widget rebuild (the active `AudioPlayer`, the
@@ -30,8 +30,11 @@ Path: @/lib/features/recording/presentation/widgets
   (replace, classify, move, etc.) live on
   [../recording_detail_screen.dart](../recording_detail_screen.dart);
   the widgets surface user intent via callbacks.
-- Audio playback widgets read the `AudioPlayer` off
-  `recordingPlayerProvider(recordingId).notifier.player` (see
+- Audio playback widgets read the `AudioPlayer` by calling
+  `recordingPlayerProvider(recordingId).notifier.audioPlayer()` — a
+  method, not a field, because `riverpod_lint`'s
+  `avoid_public_notifier_properties` (a blocking gate since ENG-158)
+  bans public notifier fields/getters (see
   [../notifiers/docs.md](../notifiers/docs.md)). The widgets never
   construct an `AudioPlayer` themselves — that is the notifier's
   responsibility.
@@ -52,8 +55,9 @@ Path: @/lib/features/recording/presentation/widgets
   recreate it.
 - `RecordingPlayerControls` renders the play/pause button, slider,
   position label, and duration label. It reads the long-lived
-  `AudioPlayer` off the notifier and wires the slider's `onChanged` to
-  `notifier.seek`; the play/pause button calls `notifier.togglePlay`.
+  `AudioPlayer` via `notifier.audioPlayer()` and wires the slider's
+  `onChanged` to `notifier.seek`; the play/pause button calls
+  `notifier.togglePlay`.
   The space-bar shortcut is provided by `PlaybackKeyHandler`, which
   is web-only.
 - The taxonomy-edit dialogs (classify, move category, secondary
@@ -65,14 +69,34 @@ Path: @/lib/features/recording/presentation/widgets
   waveform, finalizing overlay, confirmation step) consume
   `recordingSessionNotifierProvider` and visualize the segmented
   recorder's progress; they call back into the notifier for transport
-  actions. `ConfirmationStep` is the only widget that materializes a
-  `local_recording` row (its `_save` writes the Drift row / web upload);
-  it is reused by both the normal recording flow and crash recovery via
+  actions. `ConfirmationStep` is the only widget that triggers persisting a
+  freshly captured `local_recording` row, but it does not build the Drift
+  companion itself: both its save paths (`_save` native, `_saveWebDirect`
+  web-direct) construct a `LocalRecordingEntity` and pass it to
+  `LocalRecordingRepository.saveRecording`, and the data layer maps that entity
+  to the companion (ENG-192, ENG-201 — see
+  [../../data/repositories/docs.md](../../data/repositories/docs.md)). It is
+  reused by both the normal recording flow and crash recovery via
   [../recovery_confirm_screen.dart](../recovery_confirm_screen.dart).
 - List-side widgets (recording card, filter chips, filter bar, filter
   sheet) consume `recordingsListNotifierProvider` and the
   genre/project notifiers; they emit user intent back to
-  `recordings_list_screen.dart`.
+  `recordings_list_screen.dart`. `RecordingCard` takes a
+  `LocalRecordingEntity` (ENG-196), reading its classification via the
+  entity's `isUnclassified` / `hasSecondary` extension (see
+  [../../domain/docs.md](../../domain/docs.md)); it no longer touches Drift
+  or the row-level classification extension.
+- `PendingWebUploadCard` (ENG-196) is the presentational, stateless card for
+  one resumable web upload, rendered once per item by
+  `PendingWebUploadsBanner` ([./pending_web_uploads_banner.dart](pending_web_uploads_banner.dart)).
+  It takes a `LocalRecordingEntity` plus an `isResuming` flag and
+  `onResume` / `onDiscard` callbacks; it owns no state and no providers.
+  It was split out of the banner's inline per-item body precisely because
+  the banner is gated behind `kIsWeb` and so never renders under the CI
+  widget tests (where `kIsWeb` is always false) — extracting the card lets
+  the card's layout be exercised directly on the VM while the banner keeps
+  the platform gate, the repository read, and the resume/discard
+  orchestration.
 
 ### Things to Know
 
@@ -101,6 +125,20 @@ Path: @/lib/features/recording/presentation/widgets
   `_canEditRecording` getter delegating to the policy in
   [../../domain/docs.md](../../domain/docs.md). A section showing its
   edit buttons therefore implies the screen already granted edit rights.
+- **Cleaning-status presentation has one source of truth.**
+  `RecordingStatusSection`'s cleaning row no longer maps the status String
+  (none / needs_cleaning / cleaning / cleaned / failed) to its icon / color /
+  label itself; it calls `CleaningStatusStyle.forStatus` from
+  [/lib/shared/utils/cleaning_status_style.dart](/lib/shared/utils/cleaning_status_style.dart),
+  the same mapping consumed by
+  [/lib/shared/widgets/cleaning_status_badge.dart](/lib/shared/widgets/cleaning_status_badge.dart).
+  That object's `isFlagged` flag models the one behavioral divergence between
+  the two consumers: the badge hides non-flagged (none / unknown) statuses,
+  while the status section renders a neutral "not flagged" row for them. Colors
+  come from the resolved `AppColorSet` (`needs_cleaning` → `warning`,
+  `cleaning` → `info`, `cleaned` → `success`, `failed` → `error`), so both
+  surfaces are theme-aware in dark mode. Three private cleaning-mapping helpers
+  on the status section were deleted in favor of this shared mapping.
 - **Waveform widgets are isolated from the player.**
   `scrolling_waveform.dart` and `trim_waveform.dart` consume the
   `WaveformExtractor` service from
@@ -133,6 +171,63 @@ Path: @/lib/features/recording/presentation/widgets
   [../../data/services/segmented_recorder.dart](../../data/services/segmented_recorder.dart),
   which subscribes to the platform `interruptionEventStream` and
   re-activates the session itself.
+- **`ConfirmationStep` cancels its own preview-player stream subscriptions
+  on dispose (ENG-140 F16).** Its inline `AudioPlayer` preview subscribes to
+  `playerStateStream` / `positionStream` / `durationStream`; those handles are
+  stored and `cancel()`-ed in `dispose()` before `_player.dispose()`. just_audio
+  0.9.42 does not close those streams when the player is disposed, so dropping
+  the subscriptions is required to stop their `setState` callbacks from firing
+  on an unmounted widget. (This widget owns a short-lived preview player only;
+  the long-lived detail-screen player still lives in `RecordingPlayerNotifier`.)
+- **The Quick Recording "ready" state is responsive to system text scale,
+  not text-clamped (ENG-171).** `recording_step.dart`'s not-recording layout
+  must survive a large OS font (`MediaQuery` `textScaler`) without overflowing
+  or hiding controls — a user-reported regression where the fixed-size,
+  non-wrapping layout broke under enlarged fonts. The stance is responsive
+  layout, deliberately *not* a per-screen low text-scale clamp (a low clamp was
+  rejected because it hurts low-vision users; only the app-wide *high* ceiling
+  in [/lib/main.dart](/lib/main.dart) applies — see
+  [/lib/core/theme/docs.md](/lib/core/theme/docs.md)). The mechanism is a few
+  reflowing primitives instead of fixed sizes: the sensitivity chips scroll
+  horizontally (label/icon stay pinned), the input-source row wraps its
+  label + device name to a second line instead of truncating it, and both the
+  fixed-size record-ring stack and the elapsed timer sit in a `FittedBox` that
+  scales them down only when space is tight (base size unchanged at 1×). The
+  "tap to record" hint is the last child *inside* the centered ready-content
+  `Column` rather than a fixed sibling, so Column ordering guarantees it cannot
+  overlap the record button under scale. The timer block is shared with the
+  active-recording state, so its `FittedBox` benefits both. This is the first
+  widget slice of the
+  staged app-wide a11y program (ENG-177); regression is pinned by a widget test
+  that pumps this state at 1.0×/1.3×/2.0× on a realistic phone viewport via the
+  shared `pumpAtTextScale` / `expectNoOverflow` harness in
+  [/test/support/text_scale.dart](/test/support/text_scale.dart).
+- **The rest of the recording feature is text-scale resilient (ENG-179, Wave 2
+  of ENG-177).** Continuing the ENG-171 stance (responsive layout, never a
+  per-screen low clamp), the remaining widgets were audited at 1.0×/1.3×/2.0×
+  with the shared `pumpAtTextScale` / `expectNoOverflow` harness. Only five
+  needed code: `ConfirmationStep` wraps its whole body in a scroll-when-overflow
+  shell (`LayoutBuilder` → `SingleChildScrollView` →
+  `ConstrainedBox(minHeight: maxHeight)`) so the previously-fixed bottom section
+  (title, storyteller picker, description, action buttons) scrolls instead of
+  overflowing the column — `IntrinsicHeight` is deliberately avoided because the
+  waveform's `LayoutBuilder` cannot report intrinsics; `ActionTile`
+  (`recording_quick_actions.dart`) drops its fixed `height: 76` for a
+  `ConstrainedBox(minHeight: 76)` + `Column(mainAxisSize: min)` so labels grow
+  downward (width stays 80, parent `Wrap` reflows); the header `Row`s of
+  `segment_taxonomy_sheet.dart` and `input_device_picker_sheet.dart` wrap their
+  title `Text` in `Expanded` to kill a horizontal overflow at scale; and
+  `recording_hero_player.dart`'s error box swaps its fixed `height: 64` for a
+  `ConstrainedBox(minHeight: 64)` so a long localized error message (the worst
+  case is the `fileNotFound` string, longer in pt than en) can grow a second
+  line instead of clipping — pinned by tests at both error branches in en + pt.
+  The audit intentionally left several targets unchanged after the harness
+  proved them safe: the confirmation **waveform `Stack`** is pure graphics (no
+  text → `TextScaler` cannot overflow it, so its fixed `height: 100` stays), the
+  `edit_recording_details_sheet.dart` save button and the
+  `filters_icon_button.dart` count badge (a `Stack(clipBehavior: none)`) do not
+  overflow, and `active_filter_chips.dart` already ellipsizes. Those keep a
+  text-scale regression test but no production change.
 - **`ConfirmationStep` is parameterized for the recovery reuse (ENG-80).**
   Two optional params let the recovery screen host the same widget
   without duplicating the save logic: `onSaved` runs in place of the

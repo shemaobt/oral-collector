@@ -4,7 +4,8 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/l10n/content_l10n.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../shared/utils/genre_helpers.dart';
+import '../../../../core/theme/color_hex.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../../shared/widgets/app_shell.dart';
 import '../../../genre/domain/entities/genre.dart';
 
@@ -32,7 +33,12 @@ class SubcategorySelectionStep extends StatelessWidget {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          padding: const EdgeInsets.fromLTRB(
+            SpacingScale.s16,
+            SpacingScale.s16,
+            SpacingScale.s16,
+            SpacingScale.s8,
+          ),
           child: Row(
             children: [
               Container(
@@ -44,7 +50,7 @@ class SubcategorySelectionStep extends StatelessWidget {
                 ),
                 child: Icon(Icons.category, size: 18, color: color),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: SpacingScale.s12),
               Expanded(
                 child: Text(
                   localizedGenreName(l10n, genre.name),
@@ -69,9 +75,10 @@ class SubcategorySelectionStep extends StatelessWidget {
                   ),
                 )
               : ListView.separated(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(SpacingScale.s16),
                   itemCount: genre.subcategories.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 8),
+                  separatorBuilder: (_, _) =>
+                      const SizedBox(height: SpacingScale.s8),
                   itemBuilder: (context, index) {
                     final subcategory = genre.subcategories[index];
                     final isSelected = subcategory.id == selectedSubcategoryId;
@@ -79,7 +86,7 @@ class SubcategorySelectionStep extends StatelessWidget {
                     return Card(
                       color: isSelected ? color.withValues(alpha: 0.1) : null,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(RadiusScale.r16),
                         side: isSelected
                             ? BorderSide(color: color, width: 2)
                             : BorderSide.none,
@@ -88,7 +95,7 @@ class SubcategorySelectionStep extends StatelessWidget {
                       child: InkWell(
                         onTap: () => onSelect(subcategory),
                         child: Padding(
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(SpacingScale.s16),
                           child: Row(
                             children: [
                               Expanded(
@@ -110,7 +117,7 @@ class SubcategorySelectionStep extends StatelessWidget {
                                           subcategory.name,
                                         )
                                         case final desc?) ...[
-                                      const SizedBox(height: 4),
+                                      const SizedBox(height: SpacingScale.s4),
                                       Text(
                                         desc,
                                         style: theme.textTheme.bodySmall
@@ -142,19 +149,19 @@ class SubcategorySelectionStep extends StatelessWidget {
 
         Padding(
           padding: const EdgeInsets.fromLTRB(
-            16,
-            16,
-            16,
+            SpacingScale.s16,
+            SpacingScale.s16,
+            SpacingScale.s16,
             AppShell.scrollBottomPadding,
           ),
           child: SizedBox(
             width: double.infinity,
-            height: 48,
+            height: SpacingScale.s48,
             child: ElevatedButton(
               onPressed: selectedSubcategoryId != null ? onNext : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor: colors.accent,
-                foregroundColor: Colors.white,
+                foregroundColor: AppColors.white,
                 disabledBackgroundColor: theme.colorScheme.outline.withValues(
                   alpha: 0.3,
                 ),

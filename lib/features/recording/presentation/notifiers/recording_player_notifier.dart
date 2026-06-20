@@ -1,6 +1,6 @@
-import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:logging/logging.dart';
 
 import '../../data/services/audio_path_resolver.dart';
 import 'recording_player_state.dart';
@@ -20,22 +20,29 @@ final recordingPlayerProvider = NotifierProvider.autoDispose
 
 class RecordingPlayerNotifier
     extends AutoDisposeFamilyNotifier<RecordingPlayerState, String> {
-  late final AudioPlayer player;
+  static final _log = Logger('RecordingPlayerNotifier');
+
+  late final AudioPlayer _player;
   String? _lastKey;
   Future<void>? _inFlight;
   bool _disposed = false;
 
   @override
   RecordingPlayerState build(String arg) {
-    player = ref.read(audioPlayerFactoryProvider)();
+    _player = ref.read(audioPlayerFactoryProvider)();
     // Riverpod 2.6.1 has no ref.mounted; flag dispose so post-await writes can
     // bail instead of mutating a disposed (autoDispose) notifier.
     ref.onDispose(() {
       _disposed = true;
-      player.dispose();
+      _player.dispose();
     });
     return const RecordingPlayerState();
   }
+
+  // Exposed as a method (not a field) so the widget can build StreamBuilders on
+  // the player's position/duration/playerState streams without tripping
+  // avoid_public_notifier_properties.
+  AudioPlayer audioPlayer() => _player;
 
   Future<void> load({String? filePath, String? url}) async {
     final key = '${filePath ?? ''}|${url ?? ''}';
@@ -72,13 +79,13 @@ class RecordingPlayerNotifier
         final resolved = await resolver(filePath);
         if (_disposed) return;
         if (resolved != null) {
-          await player.setFilePath(resolved);
+          await _player.setFilePath(resolved);
           if (_disposed) return;
           state = const RecordingPlayerState(isLoading: false, hasAudio: true);
           return;
         }
         if (hasUrl) {
-          await player.setUrl(url);
+          await _player.setUrl(url);
           if (_disposed) return;
           state = const RecordingPlayerState(isLoading: false, hasAudio: true);
           return;
@@ -90,12 +97,12 @@ class RecordingPlayerNotifier
         );
         return;
       }
-      await player.setUrl(url!);
+      await _player.setUrl(url!);
       if (_disposed) return;
       state = const RecordingPlayerState(isLoading: false, hasAudio: true);
     } on Object catch (e, st) {
       if (_disposed) return;
-      debugPrint('RecordingPlayerNotifier.load failed: $e\n$st');
+      _log.warning('load failed', e, st);
       state = const RecordingPlayerState(
         isLoading: false,
         hasAudio: false,
@@ -105,22 +112,22 @@ class RecordingPlayerNotifier
   }
 
   Future<void> togglePlay() async {
-    final current = player.playerState;
+    final current = _player.playerState;
     if (current.processingState == ProcessingState.completed) {
-      await player.seek(Duration.zero);
-      await player.play();
+      await _player.seek(Duration.zero);
+      await _player.play();
     } else if (current.playing) {
-      await player.pause();
+      await _player.pause();
     } else {
-      await player.play();
+      await _player.play();
     }
   }
 
   Future<void> seek(Duration position) async {
-    await player.seek(position);
+    await _player.seek(position);
   }
 
   Future<void> stop() async {
-    await player.stop();
+    await _player.stop();
   }
 }

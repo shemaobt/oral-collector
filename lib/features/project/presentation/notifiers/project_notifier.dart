@@ -1,12 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/auth/auth_notifier.dart';
 import '../../../../core/errors/api_exception.dart';
+import '../../../../core/observability/error_reporter.dart';
 import '../../data/project_cache.dart';
 import '../../data/providers.dart';
 import '../../domain/entities/language.dart';
 import '../../domain/entities/project.dart';
+import '../../domain/entities/project_update.dart';
 import '../../domain/repositories/project_repository.dart';
 import 'project_state.dart';
 
@@ -74,15 +78,15 @@ class ProjectNotifier extends Notifier<ProjectState> {
       // Fire-and-forget: handleUnauthorized pode propagar uma falha transitória
       // de refresh (ENG-141); aqui ela é ignorada (sessão preservada). Só
       // Exceptions, não Errors, para não mascarar bugs.
-      ref
-          .read(authNotifierProvider.notifier)
-          .handleUnauthorized()
-          .catchError((_) => false, test: (e) => e is Exception);
-    } on Exception catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString().replaceFirst('Exception: ', ''),
+      unawaited(
+        ref
+            .read(authNotifierProvider.notifier)
+            .handleUnauthorized()
+            .catchError((_) => false, test: (e) => e is Exception),
       );
+    } on Exception catch (e, st) {
+      ref.read(errorReporterProvider).reportError(e, st);
+      state = state.copyWith(isLoading: false, error: e);
     }
   }
 
@@ -100,10 +104,9 @@ class ProjectNotifier extends Notifier<ProjectState> {
     try {
       final languages = await _repo.listLanguages();
       state = state.copyWith(languages: languages);
-    } on Exception catch (e) {
-      state = state.copyWith(
-        error: e.toString().replaceFirst('Exception: ', ''),
-      );
+    } on Exception catch (e, st) {
+      ref.read(errorReporterProvider).reportError(e, st);
+      state = state.copyWith(error: e);
     }
   }
 
@@ -124,19 +127,17 @@ class ProjectNotifier extends Notifier<ProjectState> {
         projects: [...state.projects, project],
         isLoading: false,
       );
-    } on Exception catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString().replaceFirst('Exception: ', ''),
-      );
+    } on Exception catch (e, st) {
+      ref.read(errorReporterProvider).reportError(e, st);
+      state = state.copyWith(isLoading: false, error: e);
     }
   }
 
-  Future<void> updateProject(String id, Map<String, dynamic> data) async {
+  Future<void> updateProject(String id, ProjectUpdate update) async {
     state = state.copyWith(isLoading: true, clearError: true);
 
     try {
-      final updated = await _repo.updateProject(id, data);
+      final updated = await _repo.updateProject(id, update);
       final updatedList = state.projects.map((p) {
         return p.id == id ? updated : p;
       }).toList();
@@ -150,11 +151,9 @@ class ProjectNotifier extends Notifier<ProjectState> {
         activeProject: activeUpdated,
         isLoading: false,
       );
-    } on Exception catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString().replaceFirst('Exception: ', ''),
-      );
+    } on Exception catch (e, st) {
+      ref.read(errorReporterProvider).reportError(e, st);
+      state = state.copyWith(isLoading: false, error: e);
     }
   }
 

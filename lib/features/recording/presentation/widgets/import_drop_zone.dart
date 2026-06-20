@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 
 class ImportDropZone extends StatefulWidget {
   const ImportDropZone({
@@ -76,10 +77,10 @@ class _DragOverlay extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     return Container(
-      margin: const EdgeInsets.all(16),
+      margin: const EdgeInsets.all(SpacingScale.s16),
       decoration: BoxDecoration(
         color: colors.accent.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(RadiusScale.r16),
       ),
       child: CustomPaint(
         painter: _DashedBorderPainter(
@@ -95,7 +96,7 @@ class _DragOverlay extends StatelessWidget {
             children: [
               Icon(LucideIcons.upload, size: 48, color: colors.accent),
               if (label != null) ...[
-                const SizedBox(height: 12),
+                const SizedBox(height: SpacingScale.s12),
                 Text(
                   label!,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../../../l10n/app_localizations.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 
 class HeroPanel extends StatelessWidget {
   const HeroPanel({super.key});
@@ -22,8 +24,8 @@ class HeroPanel extends StatelessWidget {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Colors.black.withValues(alpha: 0.05),
-                  Colors.black.withValues(alpha: 0.50),
+                  AppColors.black.withValues(alpha: 0.05),
+                  AppColors.black.withValues(alpha: 0.50),
                 ],
                 stops: const [0.2, 1.0],
               ),
@@ -42,36 +44,36 @@ class HeroPanel extends StatelessWidget {
               Row(
                 children: [
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(RadiusScale.r12),
                     child: Image.asset(
                       'assets/app_icon.png',
                       width: 40,
                       height: 40,
                     ),
                   ),
-                  const SizedBox(width: 14),
+                  const SizedBox(width: SpacingScale.s16),
                   Text(
                     l10n.auth_oralCollector,
                     style: textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w700,
-                      color: Colors.white.withValues(alpha: 0.9),
+                      color: AppColors.white.withValues(alpha: 0.9),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: SpacingScale.s20),
               Text(
                 l10n.auth_heroTagline,
                 style: textTheme.headlineLarge?.copyWith(
-                  color: Colors.white,
+                  color: AppColors.white,
                   height: 1.2,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: SpacingScale.s8),
               Text(
                 l10n.auth_byShema,
                 style: textTheme.bodySmall?.copyWith(
-                  color: Colors.white.withValues(alpha: 0.6),
+                  color: AppColors.white.withValues(alpha: 0.6),
                 ),
               ),
             ],

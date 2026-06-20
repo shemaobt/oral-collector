@@ -1,3 +1,5 @@
+import '../../../../core/serialization/safe_read.dart';
+
 class AdminStats {
   final int totalProjects;
   final int totalLanguages;
@@ -15,12 +17,12 @@ class AdminStats {
 
   factory AdminStats.fromJson(Map<String, dynamic> json) {
     return AdminStats(
-      totalProjects: (json['total_projects'] as num?)?.toInt() ?? 0,
-      totalLanguages: (json['total_languages'] as num?)?.toInt() ?? 0,
-      totalRecordings: (json['total_recordings'] as num?)?.toInt() ?? 0,
+      totalProjects: readIntOrNull(json, 'total_projects') ?? 0,
+      totalLanguages: readIntOrNull(json, 'total_languages') ?? 0,
+      totalRecordings: readIntOrNull(json, 'total_recordings') ?? 0,
       totalDurationSeconds:
-          (json['total_duration_seconds'] as num?)?.toDouble() ?? 0,
-      activeUsers: (json['active_users'] as num?)?.toInt() ?? 0,
+          readDoubleOrNull(json, 'total_duration_seconds') ?? 0,
+      activeUsers: readIntOrNull(json, 'active_users') ?? 0,
     );
   }
 

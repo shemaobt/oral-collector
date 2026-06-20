@@ -1,25 +1,24 @@
 import 'dart:async';
 
-import 'package:drift/drift.dart' show Value;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:logging/logging.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/auth/auth_notifier.dart';
-import '../../../../core/database/app_database.dart';
 import '../../../../core/platform/file_ops.dart' as file_ops;
 import '../../../../core/platform/file_source.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/tokens.dart';
-import '../../../../shared/utils/error_helpers.dart';
 import '../../../../shared/utils/format.dart';
 import '../../../../shared/utils/recording_title.dart';
 import '../../../../shared/widgets/app_shell.dart';
+import '../../../../shared/widgets/error_snack_bar.dart';
 import '../../../../shared/widgets/waveform_visualizer.dart';
 import '../../../project/presentation/notifiers/project_notifier.dart';
 import '../../../storyteller/domain/entities/storyteller.dart';
@@ -30,6 +29,7 @@ import '../../data/providers.dart';
 import '../../data/services/audio_probe.dart';
 import '../../data/services/direct_recording_uploader.dart';
 import '../../domain/entities/classification.dart';
+import '../../domain/entities/local_recording_entity.dart';
 import '../notifiers/recording_session_notifier.dart';
 import '../notifiers/recording_session_state.dart';
 
@@ -72,9 +72,14 @@ class ConfirmationStep extends ConsumerStatefulWidget {
 }
 
 class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
+  static final _log = Logger('ConfirmationStep');
+
   final _descriptionController = TextEditingController();
   final _titleController = TextEditingController();
   AudioPlayer? _player;
+  StreamSubscription<PlayerState>? _playerStateSub;
+  StreamSubscription<Duration>? _positionSub;
+  StreamSubscription<Duration?>? _durationSub;
   String? _playerBlobUrl;
   bool _isPlaying = false;
   bool _isSaving = false;
@@ -136,7 +141,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
 
   Future<void> _initPlayer() async {
     _player = AudioPlayer();
-    _player!.playerStateStream.listen((playerState) {
+    _playerStateSub = _player!.playerStateStream.listen((playerState) {
       if (!mounted) return;
       final playing = playerState.playing;
       final completed =
@@ -149,11 +154,11 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
         _player!.pause();
       }
     });
-    _player!.positionStream.listen((pos) {
+    _positionSub = _player!.positionStream.listen((pos) {
       if (!mounted) return;
       setState(() => _position = pos);
     });
-    _player!.durationStream.listen((dur) {
+    _durationSub = _player!.durationStream.listen((dur) {
       if (!mounted || dur == null) return;
       setState(() => _totalDuration = dur);
     });
@@ -161,7 +166,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
       if (kIsWeb) {
         final bytes = await file_ops.readFileBytes(widget.result.filePath);
         if (bytes.isEmpty) {
-          debugPrint('Recording file is empty at ${widget.result.filePath}');
+          _log.warning('Recording file is empty at ${widget.result.filePath}');
           return;
         }
         final mime = _mimeForFormat(widget.result.format);
@@ -170,7 +175,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
       } else {
         final fileSize = await file_ops.fileLength(widget.result.filePath);
         if (fileSize <= 0) {
-          debugPrint(
+          _log.warning(
             'Recording file is 0 bytes at ${widget.result.filePath} — '
             'microphone likely did not capture audio.',
           );
@@ -179,7 +184,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
         await _player!.setFilePath(widget.result.filePath);
       }
     } catch (e, st) {
-      debugPrint('Player load failed: $e\n$st');
+      _log.warning('Player load failed', e, st);
     }
   }
 
@@ -205,6 +210,9 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
   void dispose() {
     _descriptionController.dispose();
     _titleController.dispose();
+    _playerStateSub?.cancel();
+    _positionSub?.cancel();
+    _durationSub?.cancel();
     _player?.dispose();
     final url = _playerBlobUrl;
     if (url != null) {
@@ -233,7 +241,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
 
   Future<void> _togglePlayback() async {
     if (_player == null) return;
-    HapticFeedback.lightImpact();
+    unawaited(HapticFeedback.lightImpact());
     if (_isPlaying) {
       await _player!.pause();
     } else {
@@ -277,35 +285,33 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
 
     final id =
         '${DateTime.now().millisecondsSinceEpoch}_${widget.genreId.hashCode}';
+    final recordedAt = DateTime.now();
 
     try {
-      await repo.insertRecording(
-        LocalRecordingsCompanion(
-          id: Value(id),
-          projectId: Value(projectId),
-          genreId: Value(widget.genreId),
-          subcategoryId:
-              widget.subcategoryId != null && widget.subcategoryId!.isNotEmpty
-              ? Value(widget.subcategoryId!)
-              : const Value.absent(),
-          registerId: widget.registerId != null && widget.registerId!.isNotEmpty
-              ? Value(widget.registerId!)
-              : const Value.absent(),
-          storytellerId: Value(_selectedStoryteller!.id),
-          userId: currentUserId != null
-              ? Value(currentUserId)
-              : const Value.absent(),
-          title: Value(
-            resolveRecordingTitle(_titleController.text, locale: localeTag),
+      await repo.saveRecording(
+        LocalRecordingEntity(
+          id: id,
+          projectId: projectId,
+          genreId: widget.genreId,
+          storytellerId: _selectedStoryteller!.id,
+          userId: currentUserId,
+          title: resolveRecordingTitle(
+            _titleController.text,
+            locale: localeTag,
           ),
-          description: _descriptionController.text.trim().isNotEmpty
-              ? Value(_descriptionController.text.trim())
-              : const Value.absent(),
-          durationSeconds: Value(widget.result.durationSeconds),
-          fileSizeBytes: Value(fileSize),
-          format: Value(widget.result.format),
-          localFilePath: Value(widget.result.filePath),
-          recordedAt: Value(DateTime.now()),
+          description: _descriptionController.text.trim(),
+          durationSeconds: widget.result.durationSeconds,
+          fileSizeBytes: fileSize,
+          format: widget.result.format,
+          localFilePath: widget.result.filePath,
+          recordedAt: recordedAt,
+          subcategoryId: widget.subcategoryId,
+          registerId: widget.registerId,
+          uploadStatus: 'local',
+          cleaningStatus: 'none',
+          createdAt: recordedAt,
+          retryCount: 0,
+          uploadedBytes: 0,
         ),
       );
 
@@ -314,7 +320,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
       }
 
       if (mounted) {
-        HapticFeedback.mediumImpact();
+        unawaited(HapticFeedback.mediumImpact());
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(l10n.recording_saved)));
@@ -326,10 +332,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
       }
     } catch (e) {
       if (mounted) {
-        final friendly = friendlyErrorMessage(e.toString(), l10n);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.recording_uploadFailed(friendly))),
-        );
+        showErrorSnackBar(context, e, template: l10n.recording_uploadFailed);
         setState(() => _isSaving = false);
       }
     }
@@ -388,39 +391,37 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
       final localId =
           '${recordedAt.millisecondsSinceEpoch}_${widget.genreId.hashCode}';
       try {
-        await localRepo.insertRecording(
-          LocalRecordingsCompanion(
-            id: Value(localId),
-            projectId: Value(projectId),
-            genreId: Value(widget.genreId),
-            subcategoryId: Value(subcategoryId),
-            registerId:
-                widget.registerId != null && widget.registerId!.isNotEmpty
-                ? Value(widget.registerId!)
-                : const Value.absent(),
-            storytellerId: Value(_selectedStoryteller!.id),
-            userId: currentUserId != null
-                ? Value(currentUserId)
-                : const Value.absent(),
-            title: Value(
-              resolveRecordingTitle(_titleController.text, locale: localeTag),
+        await localRepo.saveRecording(
+          LocalRecordingEntity(
+            id: localId,
+            projectId: projectId,
+            genreId: widget.genreId,
+            storytellerId: _selectedStoryteller!.id,
+            userId: currentUserId,
+            title: resolveRecordingTitle(
+              _titleController.text,
+              locale: localeTag,
             ),
-            description: description != null
-                ? Value(description)
-                : const Value.absent(),
-            durationSeconds: Value(widget.result.durationSeconds),
-            fileSizeBytes: Value(bytes.length),
-            format: Value(widget.result.format),
-            localFilePath: const Value(''),
-            uploadStatus: const Value('uploaded'),
-            serverId: Value(serverId),
-            recordedAt: Value(recordedAt),
+            description: description,
+            durationSeconds: widget.result.durationSeconds,
+            fileSizeBytes: bytes.length,
+            format: widget.result.format,
+            localFilePath: '',
+            recordedAt: recordedAt,
+            subcategoryId: subcategoryId,
+            registerId: widget.registerId,
+            uploadStatus: 'uploaded',
+            serverId: serverId,
+            cleaningStatus: 'none',
+            createdAt: recordedAt,
+            retryCount: 0,
+            uploadedBytes: 0,
           ),
         );
       } catch (_) {}
 
       if (mounted) {
-        HapticFeedback.mediumImpact();
+        unawaited(HapticFeedback.mediumImpact());
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(l10n.recording_saved)));
@@ -428,10 +429,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
       }
     } catch (e) {
       if (mounted) {
-        final friendly = friendlyErrorMessage(e.toString(), l10n);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.recording_uploadFailed(friendly))),
-        );
+        showErrorSnackBar(context, e, template: l10n.recording_uploadFailed);
         setState(() => _isSaving = false);
       }
     }
@@ -501,333 +499,363 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
         child: ColoredBox(
           color: colors.background,
           child: SafeArea(
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(top: SpacingScale.s20),
-                  child: Text(
-                    formatDurationMinSec(widget.result.durationSeconds),
-                    style: theme.textTheme.displayLarge?.copyWith(
-                      color: colors.foreground,
-                      fontWeight: FontWeight.w200,
-                      fontSize: 48,
-                      fontFeatures: [const FontFeature.tabularFigures()],
-                    ),
-                  ),
-                ),
-
-                Padding(
-                  padding: const EdgeInsets.only(top: 6),
-                  child: widget.genreId == kUnclassifiedGenreId
-                      ? Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: SpacingScale.s12,
-                            vertical: SpacingScale.s4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.amber.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(
-                              RadiusScale.r16,
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                LucideIcons.tag,
-                                size: 12,
-                                color: Colors.amber.shade700,
-                              ),
-                              const SizedBox(width: SpacingScale.s4),
-                              Text(
-                                l10n.quickRecord_classifyLater,
-                                style: theme.textTheme.labelSmall?.copyWith(
-                                  color: Colors.amber.shade700,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
-                      : tagLabel.isNotEmpty
-                      ? Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: SpacingScale.s12,
-                            vertical: SpacingScale.s4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: colors.surfaceAlt,
-                            borderRadius: BorderRadius.circular(
-                              RadiusScale.r16,
-                            ),
-                          ),
-                          child: Text(
-                            tagLabel,
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: colors.secondary,
-                            ),
-                          ),
-                        )
-                      : const SizedBox.shrink(),
-                ),
-
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: SpacingScale.s20,
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const SizedBox(height: SpacingScale.s12),
-                        _buildWaveformPlayer(colors, amplitudes),
-                        const SizedBox(height: 6),
-                        Text(
-                          '${formatPositionMS(_position)} / ${formatDurationMinSec(widget.result.durationSeconds)}',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: colors.secondary,
+            child: LayoutBuilder(
+              builder: (context, constraints) => SingleChildScrollView(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(top: SpacingScale.s20),
+                        child: Text(
+                          formatDurationMinSec(widget.result.durationSeconds),
+                          style: theme.textTheme.displayLarge?.copyWith(
+                            color: colors.foreground,
+                            fontWeight: FontWeight.w200,
+                            fontSize: 48,
                             fontFeatures: [const FontFeature.tabularFigures()],
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                Padding(
-                  padding: const EdgeInsets.only(bottom: SpacingScale.s12),
-                  child: GestureDetector(
-                    onTap: _togglePlayback,
-                    child: Container(
-                      width: 56,
-                      height: 56,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: colors.accent,
-                        boxShadow: [
-                          BoxShadow(
-                            color: colors.accent.withValues(alpha: 0.3),
-                            blurRadius: 16,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
                       ),
-                      child: Icon(
-                        _isPlaying ? LucideIcons.pause : LucideIcons.play,
-                        color: Colors.white,
-                        size: 24,
-                      ),
-                    ),
-                  ),
-                ),
 
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    SpacingScale.s20,
-                    0,
-                    SpacingScale.s20,
-                    AppShell.scrollBottomPadding,
-                  ),
-                  child: Column(
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          color: colors.surfaceAlt,
-                          borderRadius: BorderRadius.circular(14),
+                      Padding(
+                        padding: const EdgeInsets.only(top: SpacingScale.s8),
+                        child: widget.genreId == kUnclassifiedGenreId
+                            ? Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: SpacingScale.s12,
+                                  vertical: SpacingScale.s4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: colors.warning.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(
+                                    RadiusScale.r16,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      LucideIcons.tag,
+                                      size: 12,
+                                      color: colors.warning,
+                                    ),
+                                    const SizedBox(width: SpacingScale.s4),
+                                    Text(
+                                      l10n.quickRecord_classifyLater,
+                                      style: theme.textTheme.labelSmall
+                                          ?.copyWith(
+                                            color: colors.warning,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : tagLabel.isNotEmpty
+                            ? Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: SpacingScale.s12,
+                                  vertical: SpacingScale.s4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: colors.surfaceAlt,
+                                  borderRadius: BorderRadius.circular(
+                                    RadiusScale.r16,
+                                  ),
+                                ),
+                                child: Text(
+                                  tagLabel,
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    color: colors.secondary,
+                                  ),
+                                ),
+                              )
+                            : const SizedBox.shrink(),
+                      ),
+
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: SpacingScale.s20,
                         ),
-                        padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
-                        child: Row(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(
-                              LucideIcons.type,
-                              size: 20,
-                              color: colors.secondary,
-                            ),
-                            const SizedBox(width: SpacingScale.s12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    l10n.recording_title,
-                                    style: theme.textTheme.labelSmall?.copyWith(
-                                      color: colors.secondary,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  TextField(
-                                    controller: _titleController,
-                                    maxLines: 1,
-                                    textInputAction: TextInputAction.next,
-                                    textCapitalization:
-                                        TextCapitalization.sentences,
-                                    style: theme.textTheme.bodyMedium?.copyWith(
-                                      fontWeight: FontWeight.w500,
-                                      color: colors.foreground,
-                                    ),
-                                    decoration: const InputDecoration(
-                                      isDense: true,
-                                      filled: false,
-                                      fillColor: Colors.transparent,
-                                      border: InputBorder.none,
-                                      enabledBorder: InputBorder.none,
-                                      focusedBorder: InputBorder.none,
-                                      contentPadding: EdgeInsets.zero,
-                                    ),
-                                  ),
+                            const SizedBox(height: SpacingScale.s12),
+                            _buildWaveformPlayer(colors, amplitudes),
+                            const SizedBox(height: SpacingScale.s8),
+                            Text(
+                              '${formatPositionMS(_position)} / ${formatDurationMinSec(widget.result.durationSeconds)}',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: colors.secondary,
+                                fontFeatures: [
+                                  const FontFeature.tabularFigures(),
                                 ],
                               ),
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(height: SpacingScale.s12),
-                      StorytellerPicker(
-                        projectId:
-                            ref
-                                .read(projectNotifierProvider)
-                                .activeProject
-                                ?.id ??
-                            '',
-                        selected: _selectedStoryteller,
-                        onChanged: (s) =>
-                            setState(() => _selectedStoryteller = s),
-                        showAddNew: true,
+
+                      Padding(
+                        padding: const EdgeInsets.only(
+                          bottom: SpacingScale.s12,
+                        ),
+                        child: GestureDetector(
+                          onTap: _togglePlayback,
+                          child: Container(
+                            width: 56,
+                            height: 56,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: colors.accent,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: colors.accent.withValues(alpha: 0.3),
+                                  blurRadius: 16,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Icon(
+                              _isPlaying ? LucideIcons.pause : LucideIcons.play,
+                              color: AppColors.white,
+                              size: 24,
+                            ),
+                          ),
+                        ),
                       ),
-                      if (_selectedStoryteller == null)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 6),
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              l10n.storyteller_required,
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: colors.error,
+
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          SpacingScale.s20,
+                          0,
+                          SpacingScale.s20,
+                          AppShell.scrollBottomPadding,
+                        ),
+                        child: Column(
+                          children: [
+                            Container(
+                              decoration: BoxDecoration(
+                                color: colors.surfaceAlt,
+                                borderRadius: BorderRadius.circular(
+                                  RadiusScale.r16,
+                                ),
+                              ),
+                              padding: const EdgeInsets.fromLTRB(
+                                SpacingScale.s16,
+                                SpacingScale.s8,
+                                SpacingScale.s16,
+                                SpacingScale.s8,
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    LucideIcons.type,
+                                    size: 20,
+                                    color: colors.secondary,
+                                  ),
+                                  const SizedBox(width: SpacingScale.s12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          l10n.recording_title,
+                                          style: theme.textTheme.labelSmall
+                                              ?.copyWith(
+                                                color: colors.secondary,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                        ),
+                                        TextField(
+                                          controller: _titleController,
+                                          maxLines: 1,
+                                          textInputAction: TextInputAction.next,
+                                          textCapitalization:
+                                              TextCapitalization.sentences,
+                                          style: theme.textTheme.bodyMedium
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.w500,
+                                                color: colors.foreground,
+                                              ),
+                                          decoration: const InputDecoration(
+                                            isDense: true,
+                                            filled: false,
+                                            fillColor: AppColors.transparent,
+                                            border: InputBorder.none,
+                                            enabledBorder: InputBorder.none,
+                                            focusedBorder: InputBorder.none,
+                                            contentPadding: EdgeInsets.zero,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ),
-                        ),
-                      const SizedBox(height: SpacingScale.s12),
-                      TextField(
-                        controller: _descriptionController,
-                        minLines: 2,
-                        maxLines: 4,
-                        keyboardType: TextInputType.multiline,
-                        textCapitalization: TextCapitalization.sentences,
-                        decoration: InputDecoration(
-                          hintText: l10n.recording_descriptionHint,
-                          hintStyle: TextStyle(color: colors.secondary),
-                          filled: true,
-                          fillColor: colors.surfaceAlt,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(
-                              RadiusScale.r12,
+                            const SizedBox(height: SpacingScale.s12),
+                            StorytellerPicker(
+                              projectId:
+                                  ref
+                                      .read(projectNotifierProvider)
+                                      .activeProject
+                                      ?.id ??
+                                  '',
+                              selected: _selectedStoryteller,
+                              onChanged: (s) =>
+                                  setState(() => _selectedStoryteller = s),
+                              showAddNew: true,
                             ),
-                            borderSide: BorderSide.none,
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(
-                              RadiusScale.r12,
-                            ),
-                            borderSide: BorderSide.none,
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(
-                              RadiusScale.r12,
-                            ),
-                            borderSide: BorderSide(
-                              color: colors.accent,
-                              width: 1.5,
-                            ),
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: SpacingScale.s16,
-                            vertical: 14,
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: SpacingScale.s16),
-
-                      SizedBox(
-                        width: double.infinity,
-                        height: 52,
-                        child: ElevatedButton(
-                          onPressed: (_isSaving || _selectedStoryteller == null)
-                              ? null
-                              : _save,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: colors.accent,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            elevation: 0,
-                          ),
-                          child: _isSaving
-                              ? const SizedBox(
-                                  width: SpacingScale.s20,
-                                  height: SpacingScale.s20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : Text(
-                                  l10n.recording_saveRecording,
-                                  style: theme.textTheme.titleSmall?.copyWith(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w600,
+                            if (_selectedStoryteller == null)
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                  top: SpacingScale.s8,
+                                ),
+                                child: Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    l10n.storyteller_required,
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      color: colors.error,
+                                    ),
                                   ),
                                 ),
-                        ),
-                      ),
-
-                      if (widget.showReRecord) ...[
-                        const SizedBox(height: SpacingScale.s8),
-                        SizedBox(
-                          width: double.infinity,
-                          height: 52,
-                          child: OutlinedButton(
-                            onPressed: _isSaving
-                                ? null
-                                : () {
-                                    _player?.stop();
-                                    widget.onReRecord();
-                                  },
-                            style: OutlinedButton.styleFrom(
-                              side: BorderSide(
-                                color: colors.border.withValues(alpha: 0.5),
                               ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14),
+                            const SizedBox(height: SpacingScale.s12),
+                            TextField(
+                              controller: _descriptionController,
+                              minLines: 2,
+                              maxLines: 4,
+                              keyboardType: TextInputType.multiline,
+                              textCapitalization: TextCapitalization.sentences,
+                              decoration: InputDecoration(
+                                hintText: l10n.recording_descriptionHint,
+                                hintStyle: TextStyle(color: colors.secondary),
+                                filled: true,
+                                fillColor: colors.surfaceAlt,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(
+                                    RadiusScale.r12,
+                                  ),
+                                  borderSide: BorderSide.none,
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(
+                                    RadiusScale.r12,
+                                  ),
+                                  borderSide: BorderSide.none,
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(
+                                    RadiusScale.r12,
+                                  ),
+                                  borderSide: BorderSide(
+                                    color: colors.accent,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: SpacingScale.s16,
+                                  vertical: SpacingScale.s16,
+                                ),
                               ),
                             ),
-                            child: Text(
-                              l10n.recording_recordAgain,
-                              style: theme.textTheme.titleSmall?.copyWith(
-                                color: colors.foreground,
-                                fontWeight: FontWeight.w500,
+
+                            const SizedBox(height: SpacingScale.s16),
+
+                            SizedBox(
+                              width: double.infinity,
+                              height: 52,
+                              child: ElevatedButton(
+                                onPressed:
+                                    (_isSaving || _selectedStoryteller == null)
+                                    ? null
+                                    : _save,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: colors.accent,
+                                  foregroundColor: AppColors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(
+                                      RadiusScale.r16,
+                                    ),
+                                  ),
+                                  elevation: 0,
+                                ),
+                                child: _isSaving
+                                    ? const SizedBox(
+                                        width: SpacingScale.s20,
+                                        height: SpacingScale.s20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: AppColors.white,
+                                        ),
+                                      )
+                                    : Text(
+                                        l10n.recording_saveRecording,
+                                        style: theme.textTheme.titleSmall
+                                            ?.copyWith(
+                                              color: AppColors.white,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                      ),
                               ),
                             ),
-                          ),
-                        ),
-                      ],
 
-                      const SizedBox(height: SpacingScale.s4),
+                            if (widget.showReRecord) ...[
+                              const SizedBox(height: SpacingScale.s8),
+                              SizedBox(
+                                width: double.infinity,
+                                height: 52,
+                                child: OutlinedButton(
+                                  onPressed: _isSaving
+                                      ? null
+                                      : () {
+                                          _player?.stop();
+                                          widget.onReRecord();
+                                        },
+                                  style: OutlinedButton.styleFrom(
+                                    side: BorderSide(
+                                      color: colors.border.withValues(
+                                        alpha: 0.5,
+                                      ),
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(
+                                        RadiusScale.r16,
+                                      ),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    l10n.recording_recordAgain,
+                                    style: theme.textTheme.titleSmall?.copyWith(
+                                      color: colors.foreground,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
 
-                      TextButton(
-                        onPressed: _isSaving ? null : _discard,
-                        style: TextButton.styleFrom(
-                          foregroundColor: colors.error,
+                            const SizedBox(height: SpacingScale.s4),
+
+                            TextButton(
+                              onPressed: _isSaving ? null : _discard,
+                              style: TextButton.styleFrom(
+                                foregroundColor: colors.error,
+                              ),
+                              child: Text(l10n.recording_discard),
+                            ),
+                          ],
                         ),
-                        child: Text(l10n.recording_discard),
                       ),
                     ],
                   ),
                 ),
-              ],
+              ),
             ),
           ),
         ),

@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:cross_file/cross_file.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:logging/logging.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -17,7 +20,7 @@ import '../../../core/platform/file_source.dart';
 import '../../../core/platform/web_file_picker.dart' as web_picker;
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/tokens.dart';
-import '../../../shared/utils/error_helpers.dart';
+import '../../../shared/widgets/error_snack_bar.dart';
 import '../../genre/presentation/notifiers/genre_notifier.dart';
 import '../../project/presentation/notifiers/project_notifier.dart';
 import '../../storyteller/domain/entities/storyteller.dart';
@@ -52,6 +55,8 @@ class _Candidate {
 }
 
 class _FileImportScreenState extends ConsumerState<FileImportScreen> {
+  static final _log = Logger('FileImportScreen');
+
   final List<FileImportEntry> _entries = [];
   bool _isAnalyzing = false;
   bool _isSaving = false;
@@ -110,7 +115,7 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
         );
         if (sources.isEmpty) {
           if (mounted && _entries.isEmpty) {
-            Navigator.of(context).maybePop();
+            unawaited(Navigator.of(context).maybePop());
           }
           return;
         }
@@ -126,7 +131,7 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
         );
         if (result == null || result.files.isEmpty) {
           if (mounted && _entries.isEmpty) {
-            Navigator.of(context).maybePop();
+            unawaited(Navigator.of(context).maybePop());
           }
           return;
         }
@@ -143,16 +148,13 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
 
       await _analyzeCandidates(candidates);
     } catch (e, st) {
-      debugPrint('FileImportScreen._pickFile failed: $e\n$st');
+      _log.severe('_pickFile failed', e, st);
       if (mounted) {
         setState(() => _isAnalyzing = false);
         final l10n = AppLocalizations.of(context);
-        final friendly = friendlyErrorMessage(e.toString(), l10n);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.import_pickError(friendly))),
-        );
+        showErrorSnackBar(context, e, template: l10n.import_pickError);
         if (_entries.isEmpty) {
-          Navigator.of(context).maybePop();
+          unawaited(Navigator.of(context).maybePop());
         }
       }
     }
@@ -169,16 +171,13 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
       }
       await _analyzeCandidates(candidates);
     } catch (e, st) {
-      debugPrint('FileImportScreen._handleDrop failed: $e\n$st');
+      _log.severe('_handleDrop failed', e, st);
       if (mounted) {
         setState(() => _isAnalyzing = false);
         final l10n = AppLocalizations.of(context);
-        final friendly = friendlyErrorMessage(e.toString(), l10n);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.import_pickError(friendly))),
-        );
+        showErrorSnackBar(context, e, template: l10n.import_pickError);
         if (_entries.isEmpty) {
-          Navigator.of(context).maybePop();
+          unawaited(Navigator.of(context).maybePop());
         }
       }
     }
@@ -229,7 +228,7 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
       );
 
       if (!probeResult.hasDuration) {
-        debugPrint(
+        _log.info(
           'Import rejected ${c.name} (.$ext, ${c.size}B): '
           '${probeResult.diagnostic ?? "no diagnostic"}',
         );
@@ -265,7 +264,7 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
     if (newEntries.isEmpty) {
       _showRejectedSnack(rejected);
       if (_entries.isEmpty) {
-        Navigator.of(context).maybePop();
+        unawaited(Navigator.of(context).maybePop());
       } else {
         setState(() => _isAnalyzing = false);
       }
@@ -468,21 +467,20 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
       );
 
       if (!kIsWeb) {
-        ref.read(syncNotifierProvider.notifier).processQueue();
+        unawaited(ref.read(syncNotifierProvider.notifier).processQueue());
       }
-      ref.read(recordingsListNotifierProvider.notifier).fetchRecordings();
+      unawaited(
+        ref.read(recordingsListNotifierProvider.notifier).fetchRecordings(),
+      );
 
       if (mounted) {
-        Navigator.of(context).maybePop();
+        unawaited(Navigator.of(context).maybePop());
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isSaving = false);
         final l10n = AppLocalizations.of(context);
-        final friendly = friendlyErrorMessage(e.toString(), l10n);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.import_saveError(friendly))),
-        );
+        showErrorSnackBar(context, e, template: l10n.import_saveError);
       }
     }
   }
@@ -678,14 +676,14 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
     final colors = AppColors.of(context);
     return Center(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(SpacingScale.s24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (_isAnalyzing) ...[
               const CircularProgressIndicator(),
-              const SizedBox(height: 16),
+              const SizedBox(height: SpacingScale.s16),
               Text(
                 l10n.import_analyzing,
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
@@ -694,26 +692,26 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
               ),
             ] else ...[
               Icon(LucideIcons.fileAudio, size: 64, color: colors.border),
-              const SizedBox(height: 16),
+              const SizedBox(height: SpacingScale.s16),
               Text(
                 l10n.import_selectFile,
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                   color: colors.foreground.withValues(alpha: 0.6),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: SpacingScale.s20),
               ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 420),
                 child: const SupportedFormatsBanner(),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: SpacingScale.s24),
               ElevatedButton.icon(
                 onPressed: _pickFile,
                 icon: const Icon(LucideIcons.folderOpen),
                 label: Text(l10n.import_chooseFile),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: colors.primary,
-                  foregroundColor: Colors.white,
+                  foregroundColor: AppColors.white,
                   minimumSize: const Size(160, 48),
                 ),
               ),

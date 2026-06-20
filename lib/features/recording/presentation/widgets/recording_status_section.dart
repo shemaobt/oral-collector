@@ -3,8 +3,10 @@ import 'package:intl/intl.dart' as intl;
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../../l10n/app_localizations.dart';
-import '../../../../core/database/app_database.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
+import '../../../../shared/utils/cleaning_status_style.dart';
+import '../../domain/entities/local_recording_entity.dart';
 
 class RecordingStatusSection extends StatelessWidget {
   const RecordingStatusSection({
@@ -16,7 +18,7 @@ class RecordingStatusSection extends StatelessWidget {
     this.onRetryUpload,
   });
 
-  final LocalRecording recording;
+  final LocalRecordingEntity recording;
   final AppColorSet colors;
   final ThemeData theme;
   final VoidCallback onToggleCleaning;
@@ -26,11 +28,16 @@ class RecordingStatusSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final locale = Localizations.localeOf(context).languageCode;
+    final cleaningStyle = CleaningStatusStyle.forStatus(
+      recording.cleaningStatus,
+      colors,
+      l10n,
+    );
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(SpacingScale.s16),
       decoration: BoxDecoration(
         color: colors.card,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(RadiusScale.r16),
         border: Border.all(color: colors.border.withValues(alpha: 0.15)),
       ),
       child: Column(
@@ -42,7 +49,7 @@ class RecordingStatusSection extends StatelessWidget {
               fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: SpacingScale.s16),
           StatusRow(
             icon: _uploadIcon(),
             iconColor: _uploadColor(),
@@ -55,8 +62,8 @@ class RecordingStatusSection extends StatelessWidget {
                     style: TextButton.styleFrom(
                       minimumSize: Size.zero,
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
+                        horizontal: SpacingScale.s8,
+                        vertical: SpacingScale.s4,
                       ),
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
@@ -73,23 +80,23 @@ class RecordingStatusSection extends StatelessWidget {
             theme: theme,
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 10),
+            padding: const EdgeInsets.symmetric(vertical: SpacingScale.s8),
             child: Divider(
               height: 1,
               color: colors.border.withValues(alpha: 0.15),
             ),
           ),
           StatusRow(
-            icon: _cleaningIcon(),
-            iconColor: _cleaningColor(),
+            icon: cleaningStyle.icon,
+            iconColor: cleaningStyle.color,
             label: l10n.detail_cleaning,
-            value: _cleaningLabel(l10n),
-            valueColor: _cleaningColor(),
+            value: cleaningStyle.label,
+            valueColor: cleaningStyle.color,
             colors: colors,
             theme: theme,
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 10),
+            padding: const EdgeInsets.symmetric(vertical: SpacingScale.s8),
             child: Divider(
               height: 1,
               color: colors.border.withValues(alpha: 0.15),
@@ -157,51 +164,6 @@ class RecordingStatusSection extends StatelessWidget {
         return l10n.detail_notSynced;
     }
   }
-
-  IconData _cleaningIcon() {
-    switch (recording.cleaningStatus) {
-      case 'cleaned':
-        return LucideIcons.sparkles;
-      case 'cleaning':
-        return LucideIcons.loader;
-      case 'needs_cleaning':
-        return LucideIcons.alertCircle;
-      case 'failed':
-        return LucideIcons.alertTriangle;
-      default:
-        return LucideIcons.minus;
-    }
-  }
-
-  Color _cleaningColor() {
-    switch (recording.cleaningStatus) {
-      case 'cleaned':
-        return colors.success;
-      case 'cleaning':
-        return colors.info;
-      case 'needs_cleaning':
-        return Colors.amber.shade700;
-      case 'failed':
-        return colors.error;
-      default:
-        return colors.secondary;
-    }
-  }
-
-  String _cleaningLabel(AppLocalizations l10n) {
-    switch (recording.cleaningStatus) {
-      case 'cleaned':
-        return l10n.cleaning_cleaned;
-      case 'cleaning':
-        return l10n.cleaning_cleaning;
-      case 'needs_cleaning':
-        return l10n.cleaning_needsCleaning;
-      case 'failed':
-        return l10n.cleaning_cleanFailed;
-      default:
-        return l10n.detail_notFlagged;
-    }
-  }
 }
 
 class StatusRow extends StatelessWidget {
@@ -235,11 +197,11 @@ class StatusRow extends StatelessWidget {
           height: 32,
           decoration: BoxDecoration(
             color: iconColor.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(RadiusScale.r8),
           ),
           child: Center(child: Icon(icon, size: 16, color: iconColor)),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: SpacingScale.s12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

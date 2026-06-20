@@ -59,4 +59,44 @@ void main() {
       );
     },
   );
+
+  test('throws a catchable ParseException when recorded_at is malformed', () {
+    final json = baseJson()..['recorded_at'] = 'not-a-date';
+
+    expect(
+      () => ServerRecording.fromJson(json),
+      throwsA(
+        isA<ParseException>().having((e) => e.field, 'field', 'recorded_at'),
+      ),
+    );
+  });
+
+  test('throws a catchable ParseException when uploaded_at is malformed', () {
+    final json = baseJson()..['uploaded_at'] = 'not-a-date';
+
+    expect(
+      () => ServerRecording.fromJson(json),
+      throwsA(
+        isA<ParseException>().having((e) => e.field, 'field', 'uploaded_at'),
+      ),
+    );
+  });
+
+  test(
+    'throws a catchable ParseException when upload_status is not a String',
+    () {
+      final json = baseJson()..['upload_status'] = 5;
+
+      expect(
+        () => ServerRecording.fromJson(json),
+        throwsA(
+          isA<ParseException>().having(
+            (e) => e.field,
+            'field',
+            'upload_status',
+          ),
+        ),
+      );
+    },
+  );
 }

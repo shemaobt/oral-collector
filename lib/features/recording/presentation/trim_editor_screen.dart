@@ -8,26 +8,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:path_provider/path_provider.dart';
 
 import '../../../../l10n/app_localizations.dart';
-import '../../../core/database/app_database.dart';
 import '../../../core/l10n/content_l10n.dart';
-import '../../../core/platform/ffmpeg_ops.dart' as ffmpeg;
-import '../../../core/platform/file_ops.dart' as file_ops;
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../shared/utils/error_helpers.dart';
-import '../../../shared/utils/recording_title.dart';
 import '../../genre/presentation/notifiers/genre_notifier.dart';
-import '../../sync/presentation/notifiers/sync_notifier.dart';
 import '../data/providers.dart';
-import '../data/repositories/local_recording_repository.dart';
-import '../data/server_to_local_recording.dart';
-import '../data/services/recording_split_persister.dart';
-import '../data/services/recording_trash.dart';
-import '../data/services/waveform_extractor.dart';
+import '../data/services/waveform_loader.dart';
 import '../domain/entities/register.dart';
+import 'notifiers/recording_player_notifier.dart';
+import 'notifiers/trim_editor_notifier.dart';
+import 'notifiers/trim_editor_state.dart';
 import 'trim_edit_decision.dart';
 import 'widgets/edit_transport_bar.dart';
 import 'widgets/edit_volume_control.dart';
@@ -46,20 +39,11 @@ class TrimEditorScreen extends ConsumerStatefulWidget {
 }
 
 class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
-  LocalRecording? _recording;
-  bool _isLoading = true;
-  bool _isSaving = false;
-  String? _errorMessage;
-
+  // Editing + load state lives in TrimEditorNotifier (ENG-193); the widget keeps
+  // only the audio player, transport playback and the waveform viewport.
   AudioPlayer? _player;
-  Duration _totalDuration = Duration.zero;
-
-  List<double> _splitPoints = [];
-
-  Set<int> _excludedSegments = {};
 
   int? _playingSegment;
-
   List<double> _waveformBars = [];
 
   StreamSubscription<Duration>? _previewSub;
@@ -73,115 +57,18 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
 
   double _zoom = 1.0;
   double _panFraction = 0.0;
+  bool _saving = false;
 
-  double _gainDb = 0.0;
-
-  Map<String, String?> _segGenreBySig = {};
-  Map<String, String?> _segSubcatBySig = {};
-  Map<String, String?> _segRegisterBySig = {};
-
-  String _sigAt(double midpointFraction) {
-    return midpointFraction.toStringAsFixed(3);
-  }
-
-  String _sigForSegment(int i) {
-    final mid = (_boundaries[i] + _boundaries[i + 1]) / 2.0;
-    return _sigAt(mid);
-  }
-
-  String _effectiveGenre(int i) {
-    final sig = _sigForSegment(i);
-    final v = _segGenreBySig.containsKey(sig)
-        ? _segGenreBySig[sig]
-        : _recording?.genreId;
-    return v ?? _recording?.genreId ?? '';
-  }
-
-  String? _effectiveSubcategory(int i) {
-    final sig = _sigForSegment(i);
-    return _segSubcatBySig.containsKey(sig)
-        ? _segSubcatBySig[sig]
-        : _recording?.subcategoryId;
-  }
-
-  String? _effectiveRegister(int i) {
-    final sig = _sigForSegment(i);
-    return _segRegisterBySig.containsKey(sig)
-        ? _segRegisterBySig[sig]
-        : _recording?.registerId;
-  }
-
-  Map<String, String?> _remapBySig(
-    Map<String, String?> previous,
-    List<double> previousBoundaries,
-    List<double> newBoundaries,
-  ) {
-    final result = <String, String?>{};
-    final previousSegCount = previousBoundaries.length - 1;
-    final newSegCount = newBoundaries.length - 1;
-    final previousMids = <double>[
-      for (var i = 0; i < previousSegCount; i++)
-        (previousBoundaries[i] + previousBoundaries[i + 1]) / 2.0,
-    ];
-
-    for (var j = 0; j < newSegCount; j++) {
-      final newMid = (newBoundaries[j] + newBoundaries[j + 1]) / 2.0;
-      double bestDist = double.infinity;
-      int? bestIdx;
-      for (var i = 0; i < previousMids.length; i++) {
-        final d = (newMid - previousMids[i]).abs();
-        if (d < bestDist) {
-          bestDist = d;
-          bestIdx = i;
-        }
-      }
-      if (bestIdx == null || bestDist > 0.02) continue;
-      final oldSig = _sigAt(previousMids[bestIdx]);
-      if (!previous.containsKey(oldSig)) continue;
-      final newSig = _sigAt(newMid);
-      result[newSig] = previous[oldSig];
-    }
-    return result;
-  }
-
-  List<double> get _sortedSplits => [..._splitPoints]..sort();
-
-  List<double> get _boundaries {
-    final s = _sortedSplits;
-    return [0.0, ...s, 1.0];
-  }
-
-  int get _segmentCount => _boundaries.length - 1;
-
-  int get _keptCount => _segmentCount - _excludedSegments.length;
-
-  TrimEditDecision get _decision => TrimEditDecision(
-    splitPoints: _splitPoints,
-    excludedSegments: _excludedSegments,
-    gainDb: _gainDb,
-    totalDuration: _totalDuration,
-  );
-
-  Duration _segmentStart(int i) {
-    return Duration(
-      milliseconds: (_boundaries[i] * _totalDuration.inMilliseconds).round(),
-    );
-  }
-
-  Duration _segmentEnd(int i) {
-    return Duration(
-      milliseconds: (_boundaries[i + 1] * _totalDuration.inMilliseconds)
-          .round(),
-    );
-  }
-
-  Duration _segmentDuration(int i) => _segmentEnd(i) - _segmentStart(i);
+  TrimEditorNotifier get _notifier =>
+      ref.read(trimEditorProvider(widget.recordingId).notifier);
+  TrimEditorState get _state =>
+      ref.read(trimEditorProvider(widget.recordingId));
 
   @override
   void initState() {
     super.initState();
-    _player = AudioPlayer();
-    Future.microtask(_loadRecording);
+    _player = ref.read(audioPlayerFactoryProvider)();
+    Future.microtask(_load);
   }
 
   @override
@@ -191,6 +78,72 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
     _transportStateSub?.cancel();
     _player?.dispose();
     super.dispose();
+  }
+
+  /// The notifier resolves the recording row; the widget owns the player, the
+  /// file-availability check and the waveform/duration, finishing the load via
+  /// the notifier's [TrimEditorNotifier.setUnavailable]/[completeLoad].
+  Future<void> _load() async {
+    await _notifier.load(isWeb: kIsWeb);
+    if (!mounted) return;
+    final recording = _state.recording;
+    if (recording == null) return; // notifier set not-found / load error
+
+    try {
+      if (kIsWeb) {
+        if (recording.gcsUrl == null) {
+          _notifier.setUnavailable(
+            'Audio URL not available for this recording.',
+          );
+          return;
+        }
+        try {
+          await _player!.setUrl(recording.gcsUrl!);
+        } catch (_) {}
+      } else {
+        if (recording.localFilePath.isEmpty ||
+            !await ref.read(fileExistsProvider)(recording.localFilePath)) {
+          _notifier.setUnavailable(
+            'Local audio file not available. Download the recording first.',
+          );
+          return;
+        }
+        await _player!.setFilePath(recording.localFilePath);
+      }
+      if (!mounted) return;
+
+      var duration = _player!.duration ?? Duration.zero;
+      if (duration == Duration.zero && recording.durationSeconds > 0) {
+        duration = Duration(
+          milliseconds: (recording.durationSeconds * 1000).round(),
+        );
+      }
+
+      const barCount = 2000;
+      List<double> bars;
+      if (!kIsWeb && recording.localFilePath.isNotEmpty) {
+        final peaks = await ref.read(waveformLoaderProvider)(
+          recording.localFilePath,
+          targetCount: barCount,
+        );
+        if (peaks.isEmpty) {
+          final rng = Random(recording.localFilePath.hashCode);
+          bars = List.generate(barCount, (_) => 0.15 + rng.nextDouble() * 0.85);
+        } else {
+          bars = peaks;
+        }
+      } else {
+        final rng = Random((recording.gcsUrl ?? recording.id).hashCode);
+        bars = List.generate(barCount, (_) => 0.15 + rng.nextDouble() * 0.85);
+      }
+      if (!mounted) return;
+
+      setState(() => _waveformBars = bars);
+      _notifier.completeLoad(totalDuration: duration);
+      _attachTransportListeners();
+    } catch (_) {
+      if (mounted) _notifier.loadFailed();
+    }
   }
 
   void _attachTransportListeners() {
@@ -238,7 +191,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
     if (subcategoryId == null || subcategoryId.isEmpty) return null;
     final genres = ref.read(genreNotifierProvider).genres;
     final genre = genres
-        .where((g) => g.id == (genreId ?? _recording?.genreId))
+        .where((g) => g.id == (genreId ?? _state.recording?.genreId))
         .firstOrNull;
     final sub = genre?.subcategories
         .where((s) => s.id == subcategoryId)
@@ -263,18 +216,18 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
   }
 
   Future<void> _openTaxonomySheet(int index) async {
-    final recording = _recording;
+    final recording = _state.recording;
     if (recording == null) return;
 
-    final sig = _sigForSegment(index);
-    final initialGenre = _segGenreBySig.containsKey(sig)
-        ? _segGenreBySig[sig]
+    final sig = _state.sigForSegment(index);
+    final initialGenre = _state.segGenreBySig.containsKey(sig)
+        ? _state.segGenreBySig[sig]
         : null;
-    final initialSub = _segSubcatBySig.containsKey(sig)
-        ? _segSubcatBySig[sig]
+    final initialSub = _state.segSubcatBySig.containsKey(sig)
+        ? _state.segSubcatBySig[sig]
         : recording.subcategoryId;
-    final initialReg = _segRegisterBySig.containsKey(sig)
-        ? _segRegisterBySig[sig]
+    final initialReg = _state.segRegisterBySig.containsKey(sig)
+        ? _state.segRegisterBySig[sig]
         : recording.registerId;
 
     final result = await showModalBottomSheet<SegmentTaxonomyResult>(
@@ -299,55 +252,24 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
 
     if (result == null || !mounted) return;
 
-    setState(() {
-      if (result.applyToAll) {
-        _segGenreBySig = {
-          for (var i = 0; i < _segmentCount; i++)
-            _sigForSegment(i): result.genreId,
-        };
-        _segSubcatBySig = {
-          for (var i = 0; i < _segmentCount; i++)
-            _sigForSegment(i): result.subcategoryId,
-        };
-        _segRegisterBySig = {
-          for (var i = 0; i < _segmentCount; i++)
-            _sigForSegment(i): result.registerId,
-        };
-      } else {
-        _segGenreBySig = {..._segGenreBySig, sig: result.genreId};
-        _segSubcatBySig = {..._segSubcatBySig, sig: result.subcategoryId};
-        _segRegisterBySig = {..._segRegisterBySig, sig: result.registerId};
-      }
-    });
+    _notifier.setSegmentTaxonomy(
+      index: index,
+      applyToAll: result.applyToAll,
+      genreId: result.genreId,
+      subcategoryId: result.subcategoryId,
+      registerId: result.registerId,
+    );
   }
 
   void _copyFromPrevious(int index) {
-    if (index <= 0) return;
-    final previousSig = _sigForSegment(index - 1);
-    final currentSig = _sigForSegment(index);
-
-    final prevGenre = _segGenreBySig.containsKey(previousSig)
-        ? _segGenreBySig[previousSig]
-        : null;
-    final prevSub = _segSubcatBySig.containsKey(previousSig)
-        ? _segSubcatBySig[previousSig]
-        : _recording?.subcategoryId;
-    final prevReg = _segRegisterBySig.containsKey(previousSig)
-        ? _segRegisterBySig[previousSig]
-        : _recording?.registerId;
-
     HapticFeedback.lightImpact();
-    setState(() {
-      _segGenreBySig = {..._segGenreBySig, currentSig: prevGenre};
-      _segSubcatBySig = {..._segSubcatBySig, currentSig: prevSub};
-      _segRegisterBySig = {..._segRegisterBySig, currentSig: prevReg};
-    });
+    _notifier.copyFromPrevious(index);
   }
 
   void _seekPlayheadTo(double fraction) {
     final player = _player;
     if (player == null) return;
-    final totalMs = _totalDuration.inMilliseconds;
+    final totalMs = _state.totalDuration.inMilliseconds;
     if (totalMs <= 0) return;
     final target = Duration(
       milliseconds: (fraction.clamp(0.0, 1.0) * totalMs).round(),
@@ -405,7 +327,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
   Future<void> _applyPreviewVolume() async {
     final player = _player;
     if (player == null) return;
-    final clamped = _gainDb.clamp(-12.0, 0.0);
+    final clamped = _state.gainDb.clamp(-12.0, 0.0);
     final multiplier = pow(10, clamped / 20).toDouble();
     try {
       await player.setVolume(multiplier.clamp(0.0, 1.0));
@@ -433,113 +355,8 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
     return peak;
   }
 
-  Future<void> _loadRecording() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-    try {
-      LocalRecording? recording;
-
-      if (kIsWeb) {
-        final apiRepo = ref.read(recordingApiRepositoryProvider);
-        final server = await apiRepo.getRecording(widget.recordingId);
-        recording = serverRecordingToLocal(server);
-      } else {
-        final localRepo = ref.read(localRecordingRepositoryProvider);
-
-        recording = await localRepo.getRecordingById(widget.recordingId);
-        recording ??= await localRepo.getRecordingByServerId(
-          widget.recordingId,
-        );
-
-        if (recording == null) {
-          try {
-            final apiRepo = ref.read(recordingApiRepositoryProvider);
-            final server = await apiRepo.getRecording(widget.recordingId);
-            recording = serverRecordingToLocal(server);
-          } catch (_) {}
-        }
-      }
-
-      if (recording == null || !mounted) {
-        if (mounted) setState(() => _isLoading = false);
-        return;
-      }
-
-      if (kIsWeb) {
-        if (recording.gcsUrl == null) {
-          if (mounted) {
-            setState(() {
-              _recording = recording;
-              _isLoading = false;
-              _errorMessage = 'Audio URL not available for this recording.';
-            });
-          }
-          return;
-        }
-        try {
-          await _player!.setUrl(recording.gcsUrl!);
-        } catch (_) {}
-      } else {
-        if (recording.localFilePath.isEmpty ||
-            !await file_ops.fileExists(recording.localFilePath)) {
-          if (mounted) {
-            setState(() {
-              _recording = recording;
-              _isLoading = false;
-              _errorMessage =
-                  'Local audio file not available. Download the recording first.';
-            });
-          }
-          return;
-        }
-        await _player!.setFilePath(recording.localFilePath);
-      }
-
-      var duration = _player!.duration ?? Duration.zero;
-
-      if (duration == Duration.zero && recording.durationSeconds > 0) {
-        duration = Duration(
-          milliseconds: (recording.durationSeconds * 1000).round(),
-        );
-      }
-
-      const barCount = 2000;
-      List<double> bars;
-
-      if (!kIsWeb && recording.localFilePath.isNotEmpty) {
-        final peaks = await WaveformExtractor.extractPeaks(
-          recording.localFilePath,
-          targetCount: barCount,
-        );
-        if (peaks.isEmpty) {
-          final rng = Random(recording.localFilePath.hashCode);
-          bars = List.generate(barCount, (_) => 0.15 + rng.nextDouble() * 0.85);
-        } else {
-          bars = peaks.peaks;
-        }
-      } else {
-        final rng = Random((recording.gcsUrl ?? recording.id).hashCode);
-        bars = List.generate(barCount, (_) => 0.15 + rng.nextDouble() * 0.85);
-      }
-
-      if (mounted) {
-        setState(() {
-          _recording = recording;
-          _totalDuration = duration;
-          _waveformBars = bars;
-          _isLoading = false;
-        });
-        _attachTransportListeners();
-      }
-    } catch (_) {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
   void _addSplitAtPlayhead() {
-    final totalMs = _totalDuration.inMilliseconds;
+    final totalMs = _state.totalDuration.inMilliseconds;
     if (totalMs <= 0) return;
     final fraction = (_transportPosition.inMilliseconds / totalMs).clamp(
       0.0,
@@ -547,75 +364,33 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
     );
     const minGap = 0.03;
     if (fraction <= minGap || fraction >= 1.0 - minGap) return;
-    for (final p in _splitPoints) {
+    for (final p in _state.splitPoints) {
       if ((fraction - p).abs() < minGap) return;
     }
     HapticFeedback.lightImpact();
-    _onSplitPointsChanged([..._splitPoints, fraction]);
+    _notifier.setSplitPoints([..._state.splitPoints, fraction]);
   }
 
   bool get _canSplitAtPlayhead {
-    final totalMs = _totalDuration.inMilliseconds;
+    final totalMs = _state.totalDuration.inMilliseconds;
     if (totalMs <= 0) return false;
     final fraction = _transportPosition.inMilliseconds / totalMs;
     const minGap = 0.03;
     if (fraction <= minGap || fraction >= 1.0 - minGap) return false;
-    for (final p in _splitPoints) {
+    for (final p in _state.splitPoints) {
       if ((fraction - p).abs() < minGap) return false;
     }
     return true;
   }
 
-  void _onSplitPointsChanged(List<double> pts) {
-    final newSegCount = pts.length + 1;
-    final pruned = _excludedSegments.where((i) => i < newSegCount).toSet();
-
-    final previousBoundaries = [..._boundaries];
-    final sortedNew = [...pts]..sort();
-    final newBoundaries = [0.0, ...sortedNew, 1.0];
-    final remappedGenre = _remapBySig(
-      _segGenreBySig,
-      previousBoundaries,
-      newBoundaries,
-    );
-    final remappedSubcat = _remapBySig(
-      _segSubcatBySig,
-      previousBoundaries,
-      newBoundaries,
-    );
-    final remappedReg = _remapBySig(
-      _segRegisterBySig,
-      previousBoundaries,
-      newBoundaries,
-    );
-
-    setState(() {
-      _splitPoints = pts;
-      _excludedSegments = pruned;
-      _segGenreBySig = remappedGenre;
-      _segSubcatBySig = remappedSubcat;
-      _segRegisterBySig = remappedReg;
-    });
-  }
-
   void _toggleExclude(int index) {
     HapticFeedback.lightImpact();
-    setState(() {
-      final updated = Set<int>.from(_excludedSegments);
-      if (updated.contains(index)) {
-        updated.remove(index);
-      } else {
-        if (updated.length >= _segmentCount - 1) {
-          final l10n = AppLocalizations.of(context);
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(l10n.trim_atLeastOneSegment)));
-          return;
-        }
-        updated.add(index);
-      }
-      _excludedSegments = updated;
-    });
+    if (!_notifier.toggleExclude(index)) {
+      final l10n = AppLocalizations.of(context);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.trim_atLeastOneSegment)));
+    }
   }
 
   Future<void> _previewSegment(int index) async {
@@ -632,8 +407,8 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
       if (mounted) setState(() => _isTransportPlaying = false);
     }
 
-    final startTime = _segmentStart(index);
-    final endTime = _segmentEnd(index);
+    final startTime = _state.segmentStart(index);
+    final endTime = _state.segmentEnd(index);
 
     await _applyPreviewVolume();
     await _player!.seek(startTime);
@@ -652,30 +427,24 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
   }
 
   Future<void> _stopPreview() async {
-    _previewSub?.cancel();
+    unawaited(_previewSub?.cancel());
     _previewSub = null;
     await _player?.pause();
     if (mounted) setState(() => _playingSegment = null);
   }
 
-  List<int> get _keptSegmentIndices {
-    return [
-      for (var i = 0; i < _segmentCount; i++)
-        if (!_excludedSegments.contains(i)) i,
-    ];
-  }
-
   Future<void> _saveSplit() async {
-    final recording = _recording;
+    if (_saving) return;
+    final recording = _state.recording;
     if (recording == null) return;
-    if (!_decision.canSave) return;
+    if (!_state.decision.canSave) return;
 
     final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(l10n.trim_saveConfirmTitle),
-        content: Text(l10n.trim_saveConfirmBody(_keptCount)),
+        content: Text(l10n.trim_saveConfirmBody(_state.keptCount)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
@@ -690,181 +459,50 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
     );
     if (confirmed != true) return;
 
-    setState(() => _isSaving = true);
+    // Block re-entry during the stop window before the notifier flips isSaving
+    // (the original disabled the save button via setState before stopping).
+    _saving = true;
+    await _stopPreview();
+    await _player?.stop();
+    if (!mounted) return;
 
-    try {
-      await _stopPreview();
-      await _player?.stop();
+    final localeTag = Localizations.localeOf(context).toString();
+    final outcome = await _notifier.saveSplit(
+      isWeb: kIsWeb,
+      localeTag: localeTag,
+    );
+    if (!mounted) return;
 
-      if (kIsWeb) {
-        await _saveSplitServerSide(recording);
-      } else {
-        await _saveSplitLocally(recording);
-      }
-    } catch (e) {
-      if (mounted) {
-        final l10n = AppLocalizations.of(context);
-        final friendly = friendlyErrorMessage(e.toString(), l10n);
+    switch (outcome) {
+      case TrimSaveSucceeded(
+        :final mode,
+        :final keptCount,
+        :final excludedCount,
+      ):
+        // The local save path haptic-confirms; the server path never did.
+        if (!kIsWeb) unawaited(HapticFeedback.mediumImpact());
+        final msg = mode == TrimSaveMode.boostOnly
+            ? l10n.trim_boostApplied
+            : excludedCount > 0
+            ? l10n.trim_savedSegments(keptCount, excludedCount)
+            : l10n.trim_splitInto(keptCount);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(msg)));
+        if (context.canPop()) {
+          context.pop(true);
+        } else {
+          context.go('/recordings');
+        }
+      case TrimSaveFailed(:final error):
+        final friendly = friendlyErrorFor(error, l10n);
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(l10n.trim_splitError(friendly))));
-        setState(() => _isSaving = false);
-      }
+      case TrimSaveAborted():
+        break;
     }
-  }
-
-  Future<void> _saveSplitServerSide(LocalRecording recording) async {
-    final serverId = recording.serverId ?? recording.id;
-    final kept = _keptSegmentIndices;
-
-    final segments = kept.map((i) {
-      final effGenre = _effectiveGenre(i);
-      final effSubcat = _effectiveSubcategory(i);
-      final effRegister = _effectiveRegister(i);
-      return {
-        'start_seconds': _segmentStart(i).inMilliseconds / 1000.0,
-        'end_seconds': _segmentEnd(i).inMilliseconds / 1000.0,
-        if (effGenre.isNotEmpty) 'genre_id': effGenre,
-        if (effSubcat != null && effSubcat.isNotEmpty)
-          'subcategory_id': effSubcat,
-        if (effRegister != null && effRegister.isNotEmpty)
-          'register_id': effRegister,
-      };
-    }).toList();
-
-    final apiRepo = ref.read(recordingApiRepositoryProvider);
-    final payloadSegments = _gainDb.abs() > 0.01
-        ? segments.map((s) => {...s, 'gain_db': _gainDb}).toList()
-        : segments;
-    await apiRepo.splitRecording(serverId: serverId, segments: payloadSegments);
-
-    if (mounted) {
-      final l10n = AppLocalizations.of(context);
-      final msg = _decision.mode == TrimSaveMode.boostOnly
-          ? l10n.trim_boostApplied
-          : _excludedSegments.isNotEmpty
-          ? l10n.trim_savedSegments(kept.length, _excludedSegments.length)
-          : l10n.trim_splitInto(kept.length);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-      if (context.canPop()) {
-        context.pop(true);
-      } else {
-        context.go('/recordings');
-      }
-    }
-  }
-
-  Future<void> _saveSplitLocally(LocalRecording recording) async {
-    final localeTag = Localizations.localeOf(context).toString();
-    final dir = await getApplicationDocumentsDirectory();
-    final repo = ref.read(localRecordingRepositoryProvider);
-    final now = DateTime.now();
-    final originalTitle =
-        recording.title ?? defaultRecordingTitle(locale: localeTag);
-    final kept = _keptSegmentIndices;
-    final keptTotal = kept.length;
-
-    // Phase 1: run ffmpeg per kept segment, collect specs. Field-propagation
-    // contract lives in docs/recording-split-semantics.md (ENG-64).
-    final specs = <SplitSegmentSpec>[];
-    for (var k = 0; k < keptTotal; k++) {
-      final i = kept[k];
-      final startSec = _segmentStart(i).inMilliseconds / 1000.0;
-      final endSec = _segmentEnd(i).inMilliseconds / 1000.0;
-      final segDuration = endSec - startSec;
-
-      final outputPath =
-          '${dir.path}/split_${now.millisecondsSinceEpoch}_$k.m4a';
-
-      final needReencode = _gainDb.abs() > 0.01;
-      final boostOnly = _decision.mode == TrimSaveMode.boostOnly;
-      final String command;
-      if (boostOnly) {
-        command =
-            '-y -i "${recording.localFilePath}" '
-            '-af "volume=${_gainDb.toStringAsFixed(2)}dB" '
-            '-c:a aac -b:a 128k "$outputPath"';
-      } else if (needReencode) {
-        command =
-            '-y -i "${recording.localFilePath}" -ss $startSec -to $endSec '
-            '-af "volume=${_gainDb.toStringAsFixed(2)}dB" '
-            '-c:a aac -b:a 128k "$outputPath"';
-      } else {
-        command =
-            '-y -i "${recording.localFilePath}" -ss $startSec -to $endSec '
-            '-c copy "$outputPath"';
-      }
-
-      final success = await ffmpeg.executeFFmpegCommand(command);
-      if (!success) {
-        throw Exception('FFmpeg failed on segment ${k + 1}');
-      }
-
-      final fileSize = await file_ops.fileLength(outputPath);
-
-      specs.add(
-        SplitSegmentSpec(
-          id: '${now.millisecondsSinceEpoch}_${k}_${recording.genreId.hashCode}',
-          title: keptTotal == 1
-              ? originalTitle
-              : '$originalTitle (${k + 1}/$keptTotal)',
-          localFilePath: outputPath,
-          durationSeconds: segDuration,
-          fileSizeBytes: fileSize,
-          genreOverride: _effectiveGenre(i),
-          subcategoryOverride: _effectiveSubcategory(i),
-          registerOverride: _effectiveRegister(i),
-        ),
-      );
-    }
-
-    // Phase 2: persist children, archive the parent, and kick the upload
-    // queue so the new children start syncing immediately when online.
-    final persister = RecordingSplitPersister(
-      localRepo: repo,
-      apiRepo: ref.read(recordingApiRepositoryProvider),
-      triggerUpload: ref.read(syncNotifierProvider.notifier).processQueue,
-      trashParent: (parent) => RecordingTrash.putInTrash(
-        sourcePath: parent.localFilePath,
-        metadata: {
-          'id': parent.id,
-          'title': parent.title,
-          'description': parent.description,
-          'projectId': parent.projectId,
-          'genreId': parent.genreId,
-          'subcategoryId': parent.subcategoryId,
-          'registerId': parent.registerId,
-          'secondaryGenreId': parent.secondaryGenreId,
-          'secondarySubcategoryId': parent.secondarySubcategoryId,
-          'secondaryRegisterId': parent.secondaryRegisterId,
-          'storytellerId': parent.storytellerId,
-          'userId': parent.userId,
-          'durationSeconds': parent.durationSeconds,
-          'fileSizeBytes': parent.fileSizeBytes,
-          'format': parent.format,
-          'serverId': parent.serverId,
-          'gcsUrl': parent.gcsUrl,
-          'recordedAt': parent.recordedAt.toIso8601String(),
-        },
-      ),
-    );
-    await persister.persist(parent: recording, segments: specs);
-
-    if (mounted) {
-      HapticFeedback.mediumImpact();
-      final l10n = AppLocalizations.of(context);
-      final msg = _decision.mode == TrimSaveMode.boostOnly
-          ? l10n.trim_boostApplied
-          : _excludedSegments.isNotEmpty
-          ? l10n.trim_savedSegments(keptTotal, _excludedSegments.length)
-          : l10n.trim_splitInto(keptTotal);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-      if (context.canPop()) {
-        context.pop(true);
-      } else {
-        context.go('/recordings');
-      }
-    }
+    _saving = false;
   }
 
   String _fmt(Duration d) {
@@ -887,8 +525,9 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final state = ref.watch(trimEditorProvider(widget.recordingId));
 
-    if (_isLoading) {
+    if (state.isLoading) {
       return Scaffold(
         appBar: AppBar(
           leading: const BackButton(),
@@ -898,17 +537,14 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
       );
     }
 
-    if (_recording == null) {
-      return Scaffold(
-        appBar: AppBar(
-          leading: const BackButton(),
-          title: Text(l10n.trim_title),
-        ),
-        body: Center(child: Text(l10n.trim_notFound)),
-      );
-    }
-
-    if (_errorMessage != null) {
+    // Error takes precedence over not-found: a failed load leaves the recording
+    // null, so checking not-found first would mask the real error (ENG-140 F21).
+    final errorText =
+        state.errorMessage ??
+        (state.loadError != null
+            ? friendlyErrorFor(state.loadError!, l10n)
+            : null);
+    if (errorText != null) {
       return Scaffold(
         appBar: AppBar(
           leading: const BackButton(),
@@ -927,7 +563,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
                 ),
                 const SizedBox(height: SpacingScale.s16),
                 Text(
-                  _errorMessage!,
+                  errorText,
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodyMedium,
                 ),
@@ -938,11 +574,21 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
       );
     }
 
+    if (state.recording == null) {
+      return Scaffold(
+        appBar: AppBar(
+          leading: const BackButton(),
+          title: Text(l10n.trim_title),
+        ),
+        body: Center(child: Text(l10n.trim_notFound)),
+      );
+    }
+
     final colors = AppColors.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final hasSplits = _splitPoints.isNotEmpty;
+    final hasSplits = state.splitPoints.isNotEmpty;
 
-    final totalMs = _totalDuration.inMilliseconds;
+    final totalMs = state.totalDuration.inMilliseconds;
     final hasPosition =
         _transportPosition > Duration.zero || _isTransportPlaying;
     final double? playheadFraction = (hasPosition && totalMs > 0)
@@ -955,37 +601,37 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
         EditTransportBar(
           isPlaying: _isTransportPlaying,
           position: _transportPosition,
-          duration: _totalDuration,
+          duration: state.totalDuration,
           onPlayPause: _toggleTransport,
           canSplitAtPosition: _canSplitAtPlayhead,
           onSplitAtPosition: _addSplitAtPlayhead,
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: SpacingScale.s8),
         Padding(
-          padding: const EdgeInsets.only(bottom: 10),
+          padding: const EdgeInsets.only(bottom: SpacingScale.s8),
           child: EditVolumeControl(
-            gainDb: _gainDb,
+            gainDb: state.gainDb,
             peakAmplitude: _visiblePeak(),
             volumeLabel: l10n.trim_volume,
             clippingLabel: l10n.trim_peakClip,
             boostOnSaveLabel: l10n.trim_boostOnSave,
             onChanged: (v) {
-              setState(() => _gainDb = v);
+              _notifier.setGain(v);
               _applyPreviewVolume();
             },
           ),
         ),
         TrimWaveformPanel(
           waveformBars: _waveformBars,
-          splitPoints: _splitPoints,
-          onSplitPointsChanged: _onSplitPointsChanged,
+          splitPoints: state.splitPoints,
+          onSplitPointsChanged: _notifier.setSplitPoints,
           playingSegment: _playingSegment,
-          excludedSegments: _excludedSegments,
+          excludedSegments: state.excludedSegments,
           hasSplits: hasSplits,
-          keptCount: _keptCount,
-          segmentCount: _segmentCount,
-          totalDurationLabel: _fmt(_totalDuration),
-          totalDurationShortLabel: _fmtShort(_totalDuration),
+          keptCount: state.keptCount,
+          segmentCount: state.segmentCount,
+          totalDurationLabel: _fmt(state.totalDuration),
+          totalDurationShortLabel: _fmtShort(state.totalDuration),
           playheadFraction: playheadFraction,
           onPlayheadSeek: _seekPlayheadTo,
           onSeekAndPlay: _seekAndPlay,
@@ -999,10 +645,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
             _zoom = 1.0;
             _panFraction = 0.0;
           }),
-          onClearAll: () => setState(() {
-            _splitPoints = [];
-            _excludedSegments = {};
-          }),
+          onClearAll: () => _notifier.clearAllSplits(),
         ),
       ],
     );
@@ -1021,11 +664,11 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
                   ),
                 ),
               ),
-              if (_excludedSegments.isNotEmpty)
+              if (state.excludedSegments.isNotEmpty)
                 GestureDetector(
                   onTap: () {
                     HapticFeedback.lightImpact();
-                    setState(() => _excludedSegments = {});
+                    _notifier.restoreAllExcluded();
                   },
                   child: Text(
                     l10n.trim_restoreAll,
@@ -1036,19 +679,19 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
                 ),
             ],
           ),
-          const SizedBox(height: 10),
-          ...List.generate(_segmentCount, (i) {
+          const SizedBox(height: SpacingScale.s8),
+          ...List.generate(state.segmentCount, (i) {
             final isPlaying = _playingSegment == i;
-            final isExcluded = _excludedSegments.contains(i);
-            final effGenre = _effectiveGenre(i);
-            final effSubcat = _effectiveSubcategory(i);
-            final effRegister = _effectiveRegister(i);
+            final isExcluded = state.excludedSegments.contains(i);
+            final effGenre = state.effectiveGenre(i);
+            final effSubcat = state.effectiveSubcategory(i);
+            final effRegister = state.effectiveRegister(i);
             final subName = _subcategoryNameFor(l10n, effSubcat, effGenre);
             final regName = _registerNameFor(l10n, effRegister);
-            final sig = _sigForSegment(i);
-            final hasSubcatOverride = _segSubcatBySig.containsKey(sig);
-            final hasRegOverride = _segRegisterBySig.containsKey(sig);
-            final hasGenreOverride = _segGenreBySig.containsKey(sig);
+            final sig = state.sigForSegment(i);
+            final hasSubcatOverride = state.segSubcatBySig.containsKey(sig);
+            final hasRegOverride = state.segRegisterBySig.containsKey(sig);
+            final hasGenreOverride = state.segGenreBySig.containsKey(sig);
             final genreName = hasGenreOverride
                 ? _genreNameFor(l10n, effGenre)
                 : null;
@@ -1061,10 +704,10 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
               padding: const EdgeInsets.only(bottom: SpacingScale.s8),
               child: SegmentCard(
                 index: i,
-                total: _segmentCount,
-                start: _fmt(_segmentStart(i)),
-                end: _fmt(_segmentEnd(i)),
-                duration: _fmtShort(_segmentDuration(i)),
+                total: state.segmentCount,
+                start: _fmt(state.segmentStart(i)),
+                end: _fmt(state.segmentEnd(i)),
+                duration: _fmtShort(state.segmentDuration(i)),
                 isPlaying: isPlaying,
                 isExcluded: isExcluded,
                 onPlayPause: () => _previewSegment(i),
@@ -1092,7 +735,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
             ),
             decoration: BoxDecoration(
               border: Border.all(color: colors.border.withValues(alpha: 0.2)),
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(RadiusScale.r16),
             ),
             child: Column(
               children: [
@@ -1170,7 +813,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
                             child: segmentsList,
                           ),
                         ),
-                        _buildActionBar(colors, isDark, hasSplits, l10n),
+                        _buildActionBar(colors, isDark, hasSplits, l10n, state),
                       ],
                     ),
                   ),
@@ -1196,7 +839,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
                     ),
                   ),
                 ),
-                _buildActionBar(colors, isDark, hasSplits, l10n),
+                _buildActionBar(colors, isDark, hasSplits, l10n, state),
               ],
             );
           },
@@ -1210,6 +853,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
     bool isDark,
     bool hasSplits,
     AppLocalizations l10n,
+    TrimEditorState state,
   ) {
     return Container(
       padding: const EdgeInsets.fromLTRB(
@@ -1230,7 +874,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
           children: [
             Expanded(
               child: OutlinedButton(
-                onPressed: _isSaving
+                onPressed: state.isSaving
                     ? null
                     : () {
                         if (context.canPop()) {
@@ -1246,7 +890,9 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
                   side: BorderSide(
                     color: colors.border.withValues(alpha: isDark ? 0.4 : 0.35),
                   ),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: SpacingScale.s16,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(RadiusScale.r12),
                   ),
@@ -1257,43 +903,45 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
             const SizedBox(width: SpacingScale.s12),
             Expanded(
               child: ElevatedButton.icon(
-                onPressed: (_isSaving || !_decision.canSave)
+                onPressed: (state.isSaving || !state.decision.canSave)
                     ? null
                     : _saveSplit,
-                icon: _isSaving
+                icon: state.isSaving
                     ? SizedBox(
                         width: 18,
                         height: 18,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: isDark ? Colors.black : Colors.white,
+                          color: isDark ? AppColors.black : AppColors.white,
                         ),
                       )
                     : Icon(
-                        _decision.mode == TrimSaveMode.boostOnly
+                        state.decision.mode == TrimSaveMode.boostOnly
                             ? LucideIcons.volume2
                             : LucideIcons.scissors,
                         size: 16,
                       ),
                 label: Text(
-                  _isSaving
+                  state.isSaving
                       ? l10n.trim_splitting
-                      : _decision.mode == TrimSaveMode.boostOnly
+                      : state.decision.mode == TrimSaveMode.boostOnly
                       ? l10n.trim_applyBoost
                       : hasSplits
-                      ? l10n.trim_saveSegments(_keptCount)
+                      ? l10n.trim_saveSegments(state.keptCount)
                       : l10n.trim_addSplitsFirst,
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: colors.accent,
-                  foregroundColor: isDark ? Colors.black : Colors.white,
+                  foregroundColor: isDark ? AppColors.black : AppColors.white,
                   disabledBackgroundColor: colors.accent.withValues(
                     alpha: 0.25,
                   ),
                   disabledForegroundColor: isDark
-                      ? Colors.black.withValues(alpha: 0.3)
-                      : Colors.white.withValues(alpha: 0.4),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
+                      ? AppColors.black.withValues(alpha: 0.3)
+                      : AppColors.white.withValues(alpha: 0.4),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: SpacingScale.s16,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(RadiusScale.r12),
                   ),

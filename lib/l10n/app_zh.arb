@@ -148,7 +148,6 @@
   "projectSettings_saving": "保存中...",
   "projectSettings_saveChanges": "保存更改",
   "projectSettings_updated": "项目已更新",
-  "projectSettings_noPermission": "您没有权限更新此项目",
   "projectSettings_team": "团队",
   "projectSettings_removeMember": "移除成员",
   "projectSettings_removeMemberConfirm": "确定要将 {name} 从此项目中移除吗？",
@@ -220,14 +219,6 @@
   "recording_moveCategory": "移动分类",
   "recording_downloadAudio": "下载音频",
   "recording_downloadAudioMessage": "音频文件未存储在此设备上。是否要下载以进行剪辑？",
-  "recording_downloadFailed": "下载失败：{error}",
-  "@recording_downloadFailed": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
   "recording_audioNotAvailable": "音频文件不可用",
   "recording_deleteTitle": "删除录音",
   "recording_deleteMessage": "此操作将永久删除设备上的录音。如果已上传，服务器上的录音也将被删除。此操作无法撤消。",
@@ -436,14 +427,6 @@
     }
   },
   "profile_photoUpdated": "头像已更新",
-  "profile_photoFailed": "更新头像失败：{error}",
-  "@profile_photoFailed": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
   "profile_editName": "编辑显示名称",
   "profile_nameHint": "您的姓名",
   "profile_nameUpdated": "名称已更新",
@@ -1170,9 +1153,9 @@
   "import_rejectedTooLarge": "{count, plural, =1{已跳过 1 个超过 10 GB 的文件：{names}} other{已跳过 {count} 个超过 10 GB 的文件：{names}}}",
   "import_rejectedUnreadable": "{count, plural, =1{已跳过 1 个无法读取的文件：{names}} other{已跳过 {count} 个无法读取的文件：{names}}}",
   "import_rejectedUnsupportedCodec": "{count, plural, =1{已跳过 1 个使用不支持的音频编解码器的文件：{names}。请重新导出为 PCM WAV 或 M4A。} other{已跳过 {count} 个使用不支持的音频编解码器的文件：{names}。请重新导出为 PCM WAV 或 M4A。}}",
-  "import_resumePromptBody": "“{name}”（{size}）已部分上传。选择相同文件以继续。",
+  "import_resumePromptBody": "“{name}”（{size}）已部分上传。请选择完全相同（未更改）的文件以继续。",
   "import_resumePromptTitle": "继续中断的上传",
-  "import_resumeSizeMismatch": "该文件与暂停的上传不匹配。",
+  "import_resumeSizeMismatch": "这是另一个文件。请选择您正在上传的那个完全相同的文件。",
   "recordings_dropToImport": "提示：将音频文件拖到此窗口以导入。",
   "recording_uploadEtaRemaining": "剩余约 {eta}",
   "recording_uploadSpeed": "{speed}/秒",

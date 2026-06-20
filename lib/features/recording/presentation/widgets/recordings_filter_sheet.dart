@@ -4,6 +4,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/l10n/content_l10n.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../genre/presentation/notifiers/genre_notifier.dart';
 import '../../../project/presentation/notifiers/member_notifier.dart';
@@ -61,7 +62,12 @@ class _RecordingsFilterSheetState extends ConsumerState<RecordingsFilterSheet> {
         return Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 8, 4),
+              padding: const EdgeInsets.fromLTRB(
+                SpacingScale.s20,
+                SpacingScale.s16,
+                SpacingScale.s8,
+                SpacingScale.s4,
+              ),
               child: Row(
                 children: [
                   Expanded(
@@ -80,18 +86,23 @@ class _RecordingsFilterSheetState extends ConsumerState<RecordingsFilterSheet> {
             Expanded(
               child: ListView(
                 controller: controller,
-                padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+                padding: const EdgeInsets.fromLTRB(
+                  SpacingScale.s20,
+                  SpacingScale.s12,
+                  SpacingScale.s20,
+                  SpacingScale.s20,
+                ),
                 children: [
                   _sectionTitle(theme, l10n.filters_sectionStatus),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: SpacingScale.s8),
                   _buildStatusChips(),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: SpacingScale.s24),
                   _sectionTitle(theme, l10n.filters_sectionGenre),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: SpacingScale.s8),
                   _buildGenreChips(l10n),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: SpacingScale.s24),
                   _sectionTitle(theme, l10n.filters_sectionStoryteller),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: SpacingScale.s8),
                   StorytellerPicker(
                     projectId: widget.projectId,
                     selected: ref
@@ -108,11 +119,11 @@ class _RecordingsFilterSheetState extends ConsumerState<RecordingsFilterSheet> {
                       icon: const Icon(LucideIcons.x, size: 14),
                       label: Text(l10n.filter_storytellerAll),
                     ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: SpacingScale.s24),
                   _sectionTitle(theme, l10n.filters_sectionUser),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: SpacingScale.s8),
                   _buildUserPicker(l10n, colors),
-                  const SizedBox(height: 40),
+                  const SizedBox(height: SpacingScale.s40),
                 ],
               ),
             ),
@@ -190,7 +201,7 @@ class _RecordingsFilterSheetState extends ConsumerState<RecordingsFilterSheet> {
         : (selected.displayName ?? selected.email);
 
     return InkWell(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(RadiusScale.r12),
       onTap: () async {
         final picked = await showProjectMemberPickerSheet(
           context,
@@ -203,16 +214,16 @@ class _RecordingsFilterSheetState extends ConsumerState<RecordingsFilterSheet> {
         });
       },
       child: Container(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(SpacingScale.s16),
         decoration: BoxDecoration(
           color: colors.surfaceAlt,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(RadiusScale.r12),
           border: Border.all(color: colors.border.withValues(alpha: 0.4)),
         ),
         child: Row(
           children: [
             Icon(LucideIcons.mic, size: 18, color: colors.secondary),
-            const SizedBox(width: 12),
+            const SizedBox(width: SpacingScale.s12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -253,7 +264,12 @@ class _RecordingsFilterSheetState extends ConsumerState<RecordingsFilterSheet> {
     AppColorSet colors,
   ) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+      padding: const EdgeInsets.fromLTRB(
+        SpacingScale.s20,
+        SpacingScale.s12,
+        SpacingScale.s20,
+        SpacingScale.s20,
+      ),
       decoration: BoxDecoration(
         color: colors.background,
         border: Border(
@@ -264,7 +280,7 @@ class _RecordingsFilterSheetState extends ConsumerState<RecordingsFilterSheet> {
         children: [
           Expanded(
             child: SizedBox(
-              height: 48,
+              height: SpacingScale.s48,
               child: OutlinedButton(
                 onPressed: () {
                   setState(() {
@@ -281,7 +297,7 @@ class _RecordingsFilterSheetState extends ConsumerState<RecordingsFilterSheet> {
                   ),
                   side: BorderSide(color: colors.border.withValues(alpha: 0.5)),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(RadiusScale.r12),
                   ),
                   textStyle: Theme.of(
                     context,
@@ -291,10 +307,10 @@ class _RecordingsFilterSheetState extends ConsumerState<RecordingsFilterSheet> {
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: SpacingScale.s12),
           Expanded(
             child: SizedBox(
-              height: 48,
+              height: SpacingScale.s48,
               child: ElevatedButton(
                 onPressed: () async {
                   final notifier = ref.read(
@@ -308,11 +324,13 @@ class _RecordingsFilterSheetState extends ConsumerState<RecordingsFilterSheet> {
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: colors.accent,
-                  foregroundColor: Colors.white,
+                  foregroundColor: AppColors.white,
                   disabledBackgroundColor: colors.accent.withValues(alpha: 0.3),
-                  disabledForegroundColor: Colors.white.withValues(alpha: 0.8),
+                  disabledForegroundColor: AppColors.white.withValues(
+                    alpha: 0.8,
+                  ),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(RadiusScale.r12),
                   ),
                   elevation: 0,
                   textStyle: Theme.of(

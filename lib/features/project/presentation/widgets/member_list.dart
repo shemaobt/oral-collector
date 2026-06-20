@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../l10n/app_localizations.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../domain/entities/project_member.dart';
 import '../../presentation/notifiers/member_notifier.dart';
 import 'member_tile.dart';
@@ -19,7 +20,7 @@ class MemberList extends ConsumerWidget {
     if (memberState.isLoading && memberState.members.isEmpty) {
       return const Card(
         child: Padding(
-          padding: EdgeInsets.all(24),
+          padding: EdgeInsets.all(SpacingScale.s24),
           child: Center(child: CircularProgressIndicator()),
         ),
       );
@@ -28,16 +29,20 @@ class MemberList extends ConsumerWidget {
     if (memberState.members.isEmpty) {
       final l10n = AppLocalizations.of(context);
       return Card(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(RadiusScale.r16),
+        ),
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(SpacingScale.s24),
           child: Center(child: Text(l10n.projectSettings_noMembers)),
         ),
       );
     }
 
     return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(RadiusScale.r16),
+      ),
       child: Column(
         children: [
           for (int i = 0; i < memberState.members.length; i++) ...[

@@ -3,11 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../../l10n/app_localizations.dart';
-import '../../../../core/database/app_database.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../../shared/utils/format.dart';
 import '../../../sync/presentation/notifiers/sync_notifier.dart';
-import '../../domain/entities/classification.dart';
+import '../../domain/entities/local_recording_entity.dart';
+import '../../domain/entities/local_recording_entity_classification.dart';
 import '../notifiers/recording_session_notifier.dart';
 
 class RecordingCard extends ConsumerWidget {
@@ -22,7 +23,7 @@ class RecordingCard extends ConsumerWidget {
     this.onDelete,
   });
 
-  final LocalRecording recording;
+  final LocalRecordingEntity recording;
   final String? genreName;
   final String? subcategoryName;
   final String? registerName;
@@ -115,7 +116,7 @@ class RecordingCard extends ConsumerWidget {
 
     return Material(
       color: colors.card,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(RadiusScale.r16),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
@@ -128,16 +129,16 @@ class RecordingCard extends ConsumerWidget {
                 decoration: BoxDecoration(
                   color: statusColor,
                   borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(16),
-                    bottomLeft: Radius.circular(16),
+                    topLeft: Radius.circular(RadiusScale.r16),
+                    bottomLeft: Radius.circular(RadiusScale.r16),
                   ),
                 ),
               ),
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 12,
+                    horizontal: SpacingScale.s16,
+                    vertical: SpacingScale.s12,
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -154,7 +155,7 @@ class RecordingCard extends ConsumerWidget {
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: SpacingScale.s8),
                           Text(
                             recordedDate,
                             style: theme.textTheme.labelSmall?.copyWith(
@@ -171,7 +172,7 @@ class RecordingCard extends ConsumerWidget {
                               breadcrumb,
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: isUnclassified
-                                    ? Colors.amber.shade700
+                                    ? colors.warning
                                     : colors.secondary,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -180,7 +181,7 @@ class RecordingCard extends ConsumerWidget {
                             ),
                           ),
                           if (recording.hasSecondary) ...[
-                            const SizedBox(width: 6),
+                            const SizedBox(width: SpacingScale.s8),
                             Tooltip(
                               message: l10n.recording_alsoClassifiedAsTooltip,
                               child: Icon(
@@ -194,17 +195,19 @@ class RecordingCard extends ConsumerWidget {
                           ],
                         ],
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: SpacingScale.s8),
                       Row(
                         children: [
                           Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
+                              horizontal: SpacingScale.s8,
                               vertical: 3,
                             ),
                             decoration: BoxDecoration(
                               color: colors.primary.withValues(alpha: 0.08),
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(
+                                RadiusScale.r8,
+                              ),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
@@ -214,7 +217,7 @@ class RecordingCard extends ConsumerWidget {
                                   size: 11,
                                   color: colors.primary,
                                 ),
-                                const SizedBox(width: 4),
+                                const SizedBox(width: SpacingScale.s4),
                                 Text(
                                   formattedDuration,
                                   style: theme.textTheme.labelSmall?.copyWith(
@@ -228,15 +231,17 @@ class RecordingCard extends ConsumerWidget {
                               ],
                             ),
                           ),
-                          const SizedBox(width: 6),
+                          const SizedBox(width: SpacingScale.s8),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
+                              horizontal: SpacingScale.s8,
                               vertical: 3,
                             ),
                             decoration: BoxDecoration(
                               color: statusColor.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(
+                                RadiusScale.r8,
+                              ),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
@@ -246,7 +251,7 @@ class RecordingCard extends ConsumerWidget {
                                   size: 11,
                                   color: statusColor,
                                 ),
-                                const SizedBox(width: 4),
+                                const SizedBox(width: SpacingScale.s4),
                                 Text(
                                   _statusLabel(l10n),
                                   style: theme.textTheme.labelSmall?.copyWith(
@@ -258,17 +263,17 @@ class RecordingCard extends ConsumerWidget {
                             ),
                           ),
                           if (isUnclassified) ...[
-                            const SizedBox(width: 6),
+                            const SizedBox(width: SpacingScale.s8),
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
+                                horizontal: SpacingScale.s8,
                                 vertical: 3,
                               ),
                               decoration: BoxDecoration(
-                                color: Colors.amber.shade700.withValues(
-                                  alpha: 0.1,
+                                color: colors.warning.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(
+                                  RadiusScale.r8,
                                 ),
-                                borderRadius: BorderRadius.circular(8),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
@@ -276,13 +281,13 @@ class RecordingCard extends ConsumerWidget {
                                   Icon(
                                     LucideIcons.tag,
                                     size: 11,
-                                    color: Colors.amber.shade700,
+                                    color: colors.warning,
                                   ),
-                                  const SizedBox(width: 4),
+                                  const SizedBox(width: SpacingScale.s4),
                                   Text(
                                     l10n.recording_unclassified,
                                     style: theme.textTheme.labelSmall?.copyWith(
-                                      color: Colors.amber.shade700,
+                                      color: colors.warning,
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
@@ -299,7 +304,7 @@ class RecordingCard extends ConsumerWidget {
                         ],
                       ),
                       if (isUploadingThis) ...[
-                        const SizedBox(height: 8),
+                        const SizedBox(height: SpacingScale.s8),
                         Row(
                           children: [
                             Expanded(
@@ -317,7 +322,7 @@ class RecordingCard extends ConsumerWidget {
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: SpacingScale.s8),
                             Text(
                               '$uploadProgress%',
                               style: theme.textTheme.labelSmall?.copyWith(
@@ -332,7 +337,7 @@ class RecordingCard extends ConsumerWidget {
                         ),
                       ],
                       if (isPausedByRecording) ...[
-                        const SizedBox(height: 6),
+                        const SizedBox(height: SpacingScale.s8),
                         Row(
                           children: [
                             Icon(
@@ -340,7 +345,7 @@ class RecordingCard extends ConsumerWidget {
                               size: 12,
                               color: colors.secondary.withValues(alpha: 0.7),
                             ),
-                            const SizedBox(width: 4),
+                            const SizedBox(width: SpacingScale.s4),
                             Flexible(
                               child: Text(
                                 l10n.upload_pausedWhileRecording,

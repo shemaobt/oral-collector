@@ -1,16 +1,20 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:logging/logging.dart';
 
+import '../../../../core/config/url_policy.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../core/network/authenticated_client.dart';
+import '../../../../core/network/response_decoder.dart';
 import '../../../../core/platform/file_source.dart';
 import '../../../../core/platform/recording_active_flag.dart';
+import '../../../../core/serialization/safe_read.dart';
 import '../../../../core/util/crc32c.dart';
+import '../../../../core/util/crc32c_async.dart';
 import '../../../recording/data/repositories/local_recording_repository.dart';
 import 'upload_downloader.dart';
 
@@ -36,6 +40,8 @@ class ResumableUploadResult {
 }
 
 class ResumableUploadService {
+  static final _log = Logger('ResumableUploadService');
+
   final AuthenticatedClient _client;
   final LocalRecordingRepository _recordingRepo;
   final UploadDownloader _downloader;
@@ -157,11 +163,17 @@ class ResumableUploadService {
         );
       }
 
-      final uploadData =
-          jsonDecode(uploadUrlResponse.body) as Map<String, dynamic>;
-      final uploadUrl = uploadData['upload_url'] as String;
+      final uploadData = decodeObject(uploadUrlResponse);
+      final uploadUrl = readString(uploadData, 'upload_url');
+      if (!isHttpsUrl(uploadUrl)) {
+        return const ResumableUploadResult(
+          success: false,
+          error: 'Insecure upload URL (non-https)',
+        );
+      }
       final contentType =
-          uploadData['content_type'] as String? ?? 'application/octet-stream';
+          readStringOrNull(uploadData, 'content_type') ??
+          'application/octet-stream';
 
       final result = await _downloader.putChunk(
         taskId:
@@ -235,6 +247,15 @@ class ResumableUploadService {
 
     String? sessionUri = recording.resumableSessionUri;
     int startOffset = recording.uploadedBytes;
+
+    if (sessionUri != null &&
+        sessionUri.isNotEmpty &&
+        !isHttpsUrl(sessionUri)) {
+      // A session URI persisted by an older build (or a then-rogue backend)
+      // is treated as missing so a fresh, validated one is minted.
+      sessionUri = null;
+      startOffset = 0;
+    }
 
     if (sessionUri != null && sessionUri.isNotEmpty) {
       final queryOffset = await _queryUploadOffset(sessionUri, fileLength);
@@ -393,13 +414,18 @@ class ResumableUploadService {
     return _ChunkResult.failed;
   }
 
-  Future<String> _computeFileCrc32c(String filePath) async {
+  // Static so it is sendable to the background isolate. Reads the file and
+  // hashes it off the UI isolate (file I/O + CRC). See ADR-0004.
+  static Future<String> _crc32cFileFromPath(String filePath) async {
     final crc = Crc32c();
     await for (final chunk in File(filePath).openRead()) {
       crc.add(chunk);
     }
     return crc.base64BigEndian;
   }
+
+  Future<String> _computeFileCrc32c(String filePath) =>
+      compute(_crc32cFileFromPath, filePath);
 
   Future<ResumableUploadResult> _legacySinglePut({
     required String serverId,
@@ -409,7 +435,7 @@ class ResumableUploadService {
   }) async {
     final bytes = await source.readRange(0, source.length);
     final fileLength = bytes.length;
-    final clientCrc = (Crc32c()..add(bytes)).base64BigEndian;
+    final clientCrc = await crc32cBytesBase64(bytes);
 
     for (var attempt = 0; attempt < 2; attempt++) {
       final uploadUrlResponse = await _client
@@ -426,11 +452,17 @@ class ResumableUploadService {
         );
       }
 
-      final uploadData =
-          jsonDecode(uploadUrlResponse.body) as Map<String, dynamic>;
-      final uploadUrl = uploadData['upload_url'] as String;
+      final uploadData = decodeObject(uploadUrlResponse);
+      final uploadUrl = readString(uploadData, 'upload_url');
+      if (!isHttpsUrl(uploadUrl)) {
+        return const ResumableUploadResult(
+          success: false,
+          error: 'Insecure upload URL (non-https)',
+        );
+      }
       final contentType =
-          uploadData['content_type'] as String? ?? 'application/octet-stream';
+          readStringOrNull(uploadData, 'content_type') ??
+          'application/octet-stream';
 
       final request = http.Request('PUT', Uri.parse(uploadUrl));
       request.headers['Content-Type'] = contentType;
@@ -502,6 +534,13 @@ class ResumableUploadService {
     int startOffset = recording.uploadedBytes;
     final fileLength = source.length;
 
+    if (sessionUri != null &&
+        sessionUri.isNotEmpty &&
+        !isHttpsUrl(sessionUri)) {
+      sessionUri = null;
+      startOffset = 0;
+    }
+
     if (sessionUri != null && sessionUri.isNotEmpty) {
       final queryOffset = await _queryUploadOffset(sessionUri, fileLength);
       if (queryOffset == null) {
@@ -541,9 +580,8 @@ class ResumableUploadService {
     // surfaces CRC32C mismatches as a 4xx on confirm-upload.
     final crcBuilder = startOffset == 0 ? Crc32c() : null;
     if (crcBuilder == null) {
-      debugPrint(
-        'ResumableUploadService: resuming from $startOffset, '
-        'skipping client-side CRC32C validation',
+      _log.info(
+        'resuming from $startOffset, skipping client-side CRC32C validation',
       );
     }
 
@@ -644,8 +682,13 @@ class ResumableUploadService {
 
       if (response.statusCode != 200) return null;
 
-      final data = jsonDecode(response.body) as Map<String, dynamic>;
-      return data['session_uri'] as String;
+      final data = decodeObject(response);
+      final sessionUri = readString(data, 'session_uri');
+      if (!isHttpsUrl(sessionUri)) {
+        _log.warning('rejected non-https session_uri');
+        return null;
+      }
+      return sessionUri;
     } on Exception {
       return null;
     }

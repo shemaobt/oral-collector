@@ -5,6 +5,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../../shared/utils/format.dart';
 import '../../../../shared/widgets/icon_box.dart';
 import '../../../sync/presentation/notifiers/sync_notifier.dart';
@@ -39,7 +40,9 @@ class SyncSettingsCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(RadiusScale.r16),
+      ),
       child: Column(
         children: [
           ListTile(
@@ -60,12 +63,12 @@ class SyncSettingsCard extends ConsumerWidget {
             trailing: syncState.pendingCount > 0
                 ? Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
+                      horizontal: SpacingScale.s8,
+                      vertical: SpacingScale.s4,
                     ),
                     decoration: BoxDecoration(
                       color: colors.accent.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(RadiusScale.r8),
                     ),
                     child: Text(
                       l10n.profile_pendingCount(syncState.pendingCount),
@@ -86,7 +89,7 @@ class SyncSettingsCard extends ConsumerWidget {
                     height: 36,
                     decoration: BoxDecoration(
                       color: colors.accent.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(RadiusScale.r8),
                     ),
                     child: Center(
                       child: SizedBox(
@@ -107,9 +110,9 @@ class SyncSettingsCard extends ConsumerWidget {
             ),
             subtitle: syncState.uploadingId != null
                 ? Padding(
-                    padding: const EdgeInsets.only(top: 6),
+                    padding: const EdgeInsets.only(top: SpacingScale.s8),
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius: BorderRadius.circular(RadiusScale.r4),
                       child: LinearProgressIndicator(
                         value: syncState.syncProgress / 100,
                         backgroundColor: colors.border.withValues(alpha: 0.2),
@@ -204,14 +207,14 @@ class _DeviceStorageTile extends ConsumerWidget {
                 )
               : 0.0;
           return Padding(
-            padding: const EdgeInsets.only(top: 6),
+            padding: const EdgeInsets.only(top: SpacingScale.s8),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(l10n.settings_deviceStorageSubtitle(used, free)),
-                const SizedBox(height: 6),
+                const SizedBox(height: SpacingScale.s8),
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: BorderRadius.circular(RadiusScale.r4),
                   child: LinearProgressIndicator(
                     value: fillRatio,
                     backgroundColor: colors.border.withValues(alpha: 0.2),
@@ -224,8 +227,11 @@ class _DeviceStorageTile extends ConsumerWidget {
           );
         },
         loading: () => const Padding(
-          padding: EdgeInsets.only(top: 6),
-          child: SizedBox(height: 4, child: LinearProgressIndicator()),
+          padding: EdgeInsets.only(top: SpacingScale.s8),
+          child: SizedBox(
+            height: SpacingScale.s4,
+            child: LinearProgressIndicator(),
+          ),
         ),
         error: (_, _) => Text(
           '\u2014',

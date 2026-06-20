@@ -11,6 +11,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:oral_collector/core/database/app_database.dart';
 import 'package:oral_collector/features/recording/data/repositories/local_recording_repository.dart';
+import 'package:oral_collector/features/recording/domain/entities/local_recording_entity.dart';
 
 void main() {
   late AppDatabase db;
@@ -25,7 +26,7 @@ void main() {
     await db.close();
   });
 
-  LocalRecording buildIncoming({
+  LocalRecordingEntity buildIncoming({
     String id = 'rec-1',
     String? description = 'A story told on a Sunday',
     String? storytellerId = 'storyteller-7',
@@ -42,7 +43,7 @@ void main() {
     String localFilePath = '',
   }) {
     final now = DateTime.utc(2026, 5, 1, 10);
-    return LocalRecording(
+    return LocalRecordingEntity(
       id: id,
       projectId: 'project-1',
       genreId: genreId,

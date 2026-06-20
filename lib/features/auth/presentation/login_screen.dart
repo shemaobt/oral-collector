@@ -6,6 +6,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../core/auth/auth_notifier.dart';
 import '../../../core/auth/auth_state.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/tokens.dart';
 import '../../../shared/preview_helpers.dart';
 import '../../../shared/widgets/error_snack_bar.dart';
 import 'widgets/hero_panel.dart';
@@ -93,7 +94,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           ),
 
           Padding(
-            padding: const EdgeInsets.fromLTRB(28, 28, 28, 24),
+            padding: const EdgeInsets.fromLTRB(
+              SpacingScale.s28,
+              SpacingScale.s28,
+              SpacingScale.s28,
+              SpacingScale.s24,
+            ),
             child: Form(
               key: _formKey,
               child: Column(
@@ -105,7 +111,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       color: colors.secondary,
                     ),
                   ),
-                  const SizedBox(height: 28),
+                  const SizedBox(height: SpacingScale.s28),
                   LoginForm(
                     emailController: _emailController,
                     passwordController: _passwordController,
@@ -140,7 +146,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     return SafeArea(
       child: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 48),
+          padding: const EdgeInsets.symmetric(horizontal: SpacingScale.s48),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 460),
             child: Form(
@@ -150,14 +156,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(RadiusScale.r16),
                     child: Image.asset(
                       'assets/app_icon.png',
                       width: 52,
                       height: 52,
                     ),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: SpacingScale.s32),
 
                   Text.rich(
                     TextSpan(
@@ -177,14 +183,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: SpacingScale.s8),
                   Text(
                     l10n.auth_signInSubtitle,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: colors.secondary,
                     ),
                   ),
-                  const SizedBox(height: 40),
+                  const SizedBox(height: SpacingScale.s40),
 
                   LoginForm(
                     emailController: _emailController,

@@ -398,10 +398,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get projectSettings_updated => 'تم تحديث المشروع';
 
   @override
-  String get projectSettings_noPermission =>
-      'ليس لديك صلاحية لتحديث هذا المشروع';
-
-  @override
   String get projectSettings_team => 'الفريق';
 
   @override
@@ -549,11 +545,6 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get recording_downloadAudioMessage =>
       'ملف الصوت غير مخزن على هذا الجهاز. هل تريد تحميله للقص؟';
-
-  @override
-  String recording_downloadFailed(String error) {
-    return 'فشل التحميل: $error';
-  }
 
   @override
   String get recording_audioNotAvailable => 'ملف الصوت غير متاح';
@@ -959,11 +950,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String import_resumePromptBody(String name, String size) {
-    return 'تم رفع \"$name\" ($size) جزئيًا. اختر الملف نفسه للمتابعة.';
+    return 'تم رفع \"$name\" ($size) جزئيًا. اختر الملف نفسه تمامًا (دون تغيير) للمتابعة.';
   }
 
   @override
-  String get import_resumeSizeMismatch => 'هذا الملف لا يطابق الرفع المتوقف.';
+  String get import_resumeSizeMismatch =>
+      'هذا ملف مختلف. اختر الملف نفسه تمامًا الذي كنت ترفعه.';
 
   @override
   String import_largeFileWarning(String size) {
@@ -1004,11 +996,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get profile_photoUpdated => 'تم تحديث صورة الملف الشخصي';
-
-  @override
-  String profile_photoFailed(String error) {
-    return 'فشل في تحديث الصورة: $error';
-  }
 
   @override
   String get profile_editName => 'تعديل اسم العرض';

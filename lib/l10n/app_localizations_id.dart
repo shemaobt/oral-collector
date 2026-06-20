@@ -402,10 +402,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get projectSettings_updated => 'Proyek diperbarui';
 
   @override
-  String get projectSettings_noPermission =>
-      'Anda tidak memiliki izin untuk memperbarui proyek ini';
-
-  @override
   String get projectSettings_team => 'Tim';
 
   @override
@@ -554,11 +550,6 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get recording_downloadAudioMessage =>
       'File audio tidak tersimpan di perangkat ini. Apakah Anda ingin mengunduhnya untuk memotong?';
-
-  @override
-  String recording_downloadFailed(String error) {
-    return 'Gagal mengunduh: $error';
-  }
 
   @override
   String get recording_audioNotAvailable => 'File audio tidak tersedia';
@@ -972,12 +963,12 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String import_resumePromptBody(String name, String size) {
-    return '\"$name\" ($size) terunggah sebagian. Pilih berkas yang sama untuk melanjutkan.';
+    return '\"$name\" ($size) terunggah sebagian. Pilih berkas yang sama persis (tanpa perubahan) untuk melanjutkan.';
   }
 
   @override
   String get import_resumeSizeMismatch =>
-      'Berkas itu tidak cocok dengan unggahan yang dijeda.';
+      'Itu berkas yang berbeda. Pilih berkas yang sama persis dengan yang sedang Anda unggah.';
 
   @override
   String import_largeFileWarning(String size) {
@@ -1018,11 +1009,6 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get profile_photoUpdated => 'Foto profil diperbarui';
-
-  @override
-  String profile_photoFailed(String error) {
-    return 'Gagal memperbarui foto: $error';
-  }
 
   @override
   String get profile_editName => 'Edit nama tampilan';

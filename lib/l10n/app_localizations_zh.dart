@@ -393,9 +393,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get projectSettings_updated => '项目已更新';
 
   @override
-  String get projectSettings_noPermission => '您没有权限更新此项目';
-
-  @override
   String get projectSettings_team => '团队';
 
   @override
@@ -541,11 +538,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get recording_downloadAudioMessage => '音频文件未存储在此设备上。是否要下载以进行剪辑？';
-
-  @override
-  String recording_downloadFailed(String error) {
-    return '下载失败：$error';
-  }
 
   @override
   String get recording_audioNotAvailable => '音频文件不可用';
@@ -938,11 +930,11 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String import_resumePromptBody(String name, String size) {
-    return '“$name”（$size）已部分上传。选择相同文件以继续。';
+    return '“$name”（$size）已部分上传。请选择完全相同（未更改）的文件以继续。';
   }
 
   @override
-  String get import_resumeSizeMismatch => '该文件与暂停的上传不匹配。';
+  String get import_resumeSizeMismatch => '这是另一个文件。请选择您正在上传的那个完全相同的文件。';
 
   @override
   String import_largeFileWarning(String size) {
@@ -983,11 +975,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get profile_photoUpdated => '头像已更新';
-
-  @override
-  String profile_photoFailed(String error) {
-    return '更新头像失败：$error';
-  }
 
   @override
   String get profile_editName => '编辑显示名称';

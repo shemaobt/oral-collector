@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/l10n/content_l10n.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../genre/presentation/notifiers/genre_notifier.dart';
 import '../../domain/entities/classification.dart';
 import '../../domain/entities/register.dart';
@@ -118,7 +119,7 @@ class _SecondaryClassificationFieldsState
             fontStyle: FontStyle.italic,
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: SpacingScale.s12),
         Text(
           l10n.classify_secondaryGenre,
           style: theme.textTheme.bodySmall?.copyWith(
@@ -126,13 +127,16 @@ class _SecondaryClassificationFieldsState
             fontWeight: FontWeight.w600,
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: SpacingScale.s4),
         DropdownButtonFormField<String>(
           isExpanded: true,
           initialValue: genres.any((g) => g.id == _genreId) ? _genreId : null,
           decoration: const InputDecoration(
             isDense: true,
-            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: SpacingScale.s12,
+              vertical: SpacingScale.s8,
+            ),
           ),
           hint: Text(l10n.recording_selectGenre),
           items: genres
@@ -152,7 +156,7 @@ class _SecondaryClassificationFieldsState
           },
         ),
         if (sameAsPrimary) ...[
-          const SizedBox(height: 6),
+          const SizedBox(height: SpacingScale.s8),
           Text(
             l10n.classify_secondarySameAsPrimary,
             style: theme.textTheme.bodySmall?.copyWith(
@@ -160,7 +164,7 @@ class _SecondaryClassificationFieldsState
             ),
           ),
         ],
-        const SizedBox(height: 12),
+        const SizedBox(height: SpacingScale.s12),
         if (subcategories.isNotEmpty) ...[
           Text(
             l10n.classify_secondarySubcategory,
@@ -169,7 +173,7 @@ class _SecondaryClassificationFieldsState
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: SpacingScale.s4),
           DropdownButtonFormField<String>(
             isExpanded: true,
             initialValue: subcategories.any((s) => s.id == _subcategoryId)
@@ -178,8 +182,8 @@ class _SecondaryClassificationFieldsState
             decoration: const InputDecoration(
               isDense: true,
               contentPadding: EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 10,
+                horizontal: SpacingScale.s12,
+                vertical: SpacingScale.s8,
               ),
             ),
             hint: Text(l10n.moveCategory_selectSubcategory),
@@ -198,7 +202,7 @@ class _SecondaryClassificationFieldsState
               _emit();
             },
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: SpacingScale.s12),
         ],
         Text(
           l10n.classify_secondaryRegister,
@@ -207,13 +211,16 @@ class _SecondaryClassificationFieldsState
             fontWeight: FontWeight.w600,
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: SpacingScale.s4),
         DropdownButtonFormField<String>(
           isExpanded: true,
           initialValue: _registerId,
           decoration: const InputDecoration(
             isDense: true,
-            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: SpacingScale.s12,
+              vertical: SpacingScale.s8,
+            ),
           ),
           hint: Text(l10n.classify_selectRegister),
           items: kRegisters
@@ -232,7 +239,7 @@ class _SecondaryClassificationFieldsState
           },
         ),
         if (_genreId != null || _registerId != null) ...[
-          const SizedBox(height: 8),
+          const SizedBox(height: SpacingScale.s8),
           Align(
             alignment: Alignment.centerRight,
             child: TextButton.icon(
@@ -241,7 +248,10 @@ class _SecondaryClassificationFieldsState
               label: Text(l10n.classify_clearAlternative),
               style: TextButton.styleFrom(
                 foregroundColor: colors.foreground.withValues(alpha: 0.7),
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: SpacingScale.s8,
+                  vertical: SpacingScale.s4,
+                ),
                 minimumSize: Size.zero,
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),

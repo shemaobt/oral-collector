@@ -1,0 +1,15 @@
+name: obt_lints_example
+description: Fixtures que exercitam as regras de obt_lints via // expect_lint.
+publish_to: none
+
+environment:
+  sdk: ^3.10.3
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  custom_lint: ^0.7.6
+  obt_lints:
+    path: ../

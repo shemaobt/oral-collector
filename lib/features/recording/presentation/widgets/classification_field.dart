@@ -4,6 +4,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/l10n/content_l10n.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../genre/domain/entities/genre.dart';
 import '../../../storyteller/domain/entities/storyteller.dart';
@@ -188,7 +189,7 @@ class ClassificationField extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 14, color: colors.secondary),
-          const SizedBox(width: 6),
+          const SizedBox(width: SpacingScale.s8),
           Flexible(
             child: Text(
               hint,
@@ -203,13 +204,17 @@ class ClassificationField extends StatelessWidget {
       decoration: InputDecoration(
         isDense: dense,
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: 12,
-          vertical: 10,
+          horizontal: SpacingScale.s12,
+          vertical: SpacingScale.s8,
         ),
         errorText: hasError ? l10n.import_fieldRequired : null,
-        errorStyle: const TextStyle(fontSize: 10, height: 0.8),
+        errorStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
+          fontSize: 10,
+          height: 0.8,
+          color: colors.error,
+        ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(RadiusScale.r8),
           borderSide: BorderSide(
             color: hasError
                 ? colors.error
@@ -217,14 +222,14 @@ class ClassificationField extends StatelessWidget {
           ),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(RadiusScale.r8),
           borderSide: BorderSide(
             color: hasError ? colors.error : colors.accent,
             width: 1.5,
           ),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(RadiusScale.r8),
           borderSide: BorderSide(color: colors.error),
         ),
       ),
@@ -240,10 +245,13 @@ class ClassificationField extends StatelessWidget {
     required String label,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      padding: const EdgeInsets.symmetric(
+        horizontal: SpacingScale.s12,
+        vertical: SpacingScale.s12,
+      ),
       decoration: BoxDecoration(
         color: colors.surfaceAlt.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(RadiusScale.r8),
         border: Border.all(color: colors.border.withValues(alpha: 0.3)),
       ),
       child: Row(
@@ -253,7 +261,7 @@ class ClassificationField extends StatelessWidget {
             size: 14,
             color: colors.foreground.withValues(alpha: 0.35),
           ),
-          const SizedBox(width: 6),
+          const SizedBox(width: SpacingScale.s8),
           Text(
             label,
             style: TextStyle(
@@ -304,18 +312,21 @@ class StorytellerFieldCell extends ConsumerWidget {
         );
         if (result != null) onChanged(result);
       },
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(RadiusScale.r8),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        padding: const EdgeInsets.symmetric(
+          horizontal: SpacingScale.s12,
+          vertical: SpacingScale.s8,
+        ),
         decoration: BoxDecoration(
           color: colors.surfaceAlt,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(RadiusScale.r8),
           border: Border.all(color: colors.border.withValues(alpha: 0.5)),
         ),
         child: Row(
           children: [
             Icon(LucideIcons.user, size: 14, color: colors.secondary),
-            const SizedBox(width: 8),
+            const SizedBox(width: SpacingScale.s8),
             Expanded(
               child: Text(
                 selected?.name ?? l10n.storyteller_selectHint,

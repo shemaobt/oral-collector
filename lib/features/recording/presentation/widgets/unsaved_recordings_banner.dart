@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/utils/format.dart';
 import '../../data/services/recovery_coordinator.dart';
@@ -33,12 +34,17 @@ class UnsavedRecordingsBanner extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: colors.accent.withValues(alpha: isDark ? 0.18 : 0.12),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(RadiusScale.r16),
         border: Border.all(
           color: colors.accent.withValues(alpha: isDark ? 0.35 : 0.22),
         ),
       ),
-      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+      padding: const EdgeInsets.fromLTRB(
+        SpacingScale.s12,
+        SpacingScale.s8,
+        SpacingScale.s12,
+        SpacingScale.s8,
+      ),
       child: Row(
         children: [
           _MicCounterBadge(
@@ -46,7 +52,7 @@ class UnsavedRecordingsBanner extends StatelessWidget {
             accent: colors.accent,
             isDark: isDark,
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: SpacingScale.s12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -73,7 +79,7 @@ class UnsavedRecordingsBanner extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: SpacingScale.s8),
           _ReviewButton(label: l10n.recovery_review, onTap: onReview),
         ],
       ),
@@ -95,8 +101,8 @@ class _MicCounterBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 40,
-      height: 40,
+      width: SpacingScale.s40,
+      height: SpacingScale.s40,
       child: Stack(
         clipBehavior: Clip.none,
         children: [
@@ -114,17 +120,20 @@ class _MicCounterBadge extends StatelessWidget {
             top: -2,
             right: -2,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              padding: const EdgeInsets.symmetric(
+                horizontal: SpacingScale.s8,
+                vertical: 2,
+              ),
               constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
               decoration: BoxDecoration(
                 color: accent,
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(RadiusScale.r8),
               ),
               alignment: Alignment.center,
               child: Text(
                 count > 99 ? '99+' : '$count',
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: Colors.white,
+                  color: AppColors.white,
                   fontWeight: FontWeight.w700,
                   height: 1.0,
                 ),
@@ -148,16 +157,19 @@ class _ReviewButton extends StatelessWidget {
     final colors = AppColors.of(context);
     return Material(
       color: colors.accent,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(RadiusScale.r20),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.symmetric(
+            horizontal: SpacingScale.s16,
+            vertical: SpacingScale.s8,
+          ),
           child: Text(
             label,
             style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: Colors.white,
+              color: AppColors.white,
               fontWeight: FontWeight.w600,
             ),
           ),

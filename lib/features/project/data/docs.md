@@ -32,11 +32,13 @@ Path: @/lib/features/project/data
   implement the domain contracts
   ([/lib/features/project/domain/repositories](../domain/repositories)) and talk
   to the backend through the shared
-  [/lib/core/network/authenticated_client.dart](../../../core/network/authenticated_client.dart),
-  running responses through `guardResponse`
+  [/lib/core/network/authenticated_client.dart](../../../core/network/authenticated_client.dart).
+  A 401 still surfaces as the `UnauthorizedException` the notifier hands to
+  [/lib/core/auth/auth_notifier.dart](../../../core/auth/auth_notifier.dart) — via
+  the decode helpers' `throwForResponse` on body-decoding methods, and via
+  `guardResponse`
   ([/lib/core/network/api_error_handler.dart](../../../core/network/api_error_handler.dart))
-  so a 401 surfaces as the `UnauthorizedException` the notifier hands to
-  [/lib/core/auth/auth_notifier.dart](../../../core/auth/auth_notifier.dart).
+  on the no-body/conservative methods (see "Core Implementation").
 - Both the repository and the cache serialize via `Project.fromJson` /
   `toJson` and `Language.fromJson` / `toJson`
   ([/lib/features/project/domain/entities](../domain/entities)), so the
@@ -58,14 +60,37 @@ Path: @/lib/features/project/data
   still force-cast, so a bad cached record raises a cast `Error`, not an
   `Exception` (ENG-148); it narrows once those factories adopt the safe-readers
   in [/lib/core/serialization](../../../core/serialization/docs.md).
-- The repositories are thin request wrappers: they guard the response, fail
-  loudly on unexpected status codes, and map JSON into entities. The
-  list-returning reads route their array through `parseList`
+- The repositories are thin request wrappers that fail loudly on unexpected
+  status codes and map JSON into entities, but the failure path differs by method
+  shape after ENG-153. **Body-decoding** reads/creates (`getProject`,
+  `listProjects`/`listLanguages`/`listMembers`, create/update) go through
+  `decodeObject` / `decodeList`
+  ([/lib/core/network/response_decoder.dart](../../../core/network/response_decoder.dart)),
+  which fold the status check into the decode: any non-2xx becomes a typed
+  `AppException` and a malformed body a catchable `ParseException`, replacing the
+  old bespoke `guardResponse` + `Exception('Failed to …')`. The list reads then
+  wrap the decoded array in `parseList`
   ([/lib/core/serialization](../../../core/serialization/docs.md)), which
-  **skips-and-logs** a malformed element instead of failing the page, while
-  single-object reads (`getProject`, create/update) stay fail-fast. Both differ
-  from the cache above, which drops the whole snapshot on any bad record. They do
-  not cache; caching is the notifier's decision after a successful fetch.
+  **skips-and-logs** a malformed element instead of failing the page; single
+  objects stay fail-fast on a wrong-shaped root. **No-body** mutations
+  (`removeMember`, `inviteMember`) keep `guardResponse` plus the bespoke
+  `Exception`. All differ from the cache above, which drops the whole snapshot
+  on any bad record. The repositories do not cache; caching is the notifier's
+  decision after a successful fetch.
+- The mutation/stats surface is **typed at the repository boundary** (ENG-94):
+  `updateProject`/`createProject` take a `ProjectUpdate`
+  ([../domain/entities/project_update.dart](../domain/entities/project_update.dart))
+  whose `toJson` builds the PATCH body, and `getProjectStats` returns a parsed
+  `ProjectStats`
+  ([../domain/entities/project_stats.dart](../domain/entities/project_stats.dart))
+  instead of a raw `Map` and now routes non-200 through the decoder (no silent
+  `{}`). `ProjectUpdate.toJson` encodes the partial-update distinction: a `null`
+  field is omitted (left untouched) while a `clearDescription` flag emits an
+  explicit `null` to clear it — the wire cannot otherwise tell "leave alone"
+  from "clear". `ProjectStats.fromJson` reads its counters through the
+  safe-readers
+  ([/lib/core/serialization](../../../core/serialization/docs.md)) and its fields
+  are nullable so a caller can fall back to the project's own counts.
 - The notifier hydrates from `ProjectCache.read()` on build (fire-and-forget, so
   cached data appears before the network returns) and persists the enriched
   project list via `ProjectCache.write()` after a successful fetch.
@@ -93,6 +118,16 @@ Path: @/lib/features/project/data
   the server because it backs pull-to-refresh on multiple screens (home and
   projects). Here `lastFetched` serves exclusively the hydration guard, never
   fetch de-duplication.
+- **`getProjectStats` now throws on non-200; "best-effort" lives at the call
+  site, not the repository.** It previously returned an empty `Map` on any
+  non-200, silently hiding the failure. It now routes non-200 through
+  `throwForResponse` ([/lib/core/network](../../../core/network/docs.md)) like
+  the other reads. The settings screen
+  ([../presentation/project_settings_screen.dart](../presentation/project_settings_screen.dart))
+  is the only caller and wraps the stats fetch in its own `try`/`catch`,
+  falling back to the project's own counts so a stats failure no longer fails
+  the whole screen load. Note this stats endpoint lives on
+  `ProjectRepositoryImpl`, distinct from `StatsRepositoryImpl`.
 - **Provider override is the supported injection point.** Tests and any
   alternate backend swap the cache by overriding `projectCacheProvider`; nothing
   else in the app constructs `SharedPreferencesProjectCache` directly.
