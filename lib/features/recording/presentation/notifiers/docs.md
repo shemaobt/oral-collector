@@ -111,24 +111,42 @@ Path: @/lib/features/recording/presentation/notifiers
   `AutoDisposeFamilyNotifier<RecordingDetailState, String>` keyed by recording
   id (`recordingDetailProvider`), mirroring `TrimEditorNotifier`. State is the
   immutable `RecordingDetailState` (`recording_detail_state.dart`): the resolved
-  `LocalRecording` row, an `isLoading` flag, and the `resolvedStoryteller`. The
-  swap to `LocalRecordingEntity` is a later wave (F5a/ENG-199); the row type is
-  kept for now. The notifier owns:
+  recording as a `LocalRecordingEntity` (the row→entity swap landed in
+  ENG-199/ENG-200 / F5a, completing the detail tree migration —
+  [../recording_detail_screen.dart](../recording_detail_screen.dart) and the
+  child section widgets type their `recording` as the entity too), an
+  `isLoading` flag, and the `resolvedStoryteller`. The notifier owns:
   - **Load orchestration** (`load`), reproducing the screen's old
-    `_loadRecording`: native resolves the row local-by-id → local-by-server-id,
-    then (online, when the row has a serverId but is missing `gcsUrl`/`userId`)
-    heals it via `buildHealMetadataCompanion`
+    `_loadRecording`. The resolution stays **row-typed internally** because the
+    heal path and the server fallback still operate on rows: native resolves a
+    `LocalRecording` local-by-id → local-by-server-id, then (online, when the row
+    has a serverId but is missing `gcsUrl`/`userId`) heals it via
+    `buildHealMetadataCompanion`
     ([../../data/recording_heal_companion.dart](../../data/recording_heal_companion.dart)),
     then (online, still no row) falls back to a server fetch mapped through
-    `serverRecordingToLocal`; web always fetches the server DTO. After the row
-    lands it fetches the project role, resolves the storyteller (local cache
-    then, online, the API), and warms the member cache. The post-fetch role and
-    member steps end with an empty `copyWith()` so the widget re-reads
-    role-derived permissions — the original screen's empty `setState`.
+    `serverRecordingToLocal`; web always fetches the server DTO. The resolved row
+    is mapped to the entity **exactly once at the state boundary** via
+    `localRecordingToEntity`
+    ([../../data/local_recording_to_entity.dart](../../data/local_recording_to_entity.dart)),
+    so the entity is the only recording type that leaves the notifier — every
+    mutation/IO method (`setStoryteller`, `saveDetails`, `toggleCleaningStatus`,
+    `moveCategory`, `classify`, `saveSecondary`, `downloadAndCache`,
+    `downloadForExport`, `replaceAudio`) and the private `_resolveStoryteller`
+    take a `LocalRecordingEntity`. After the row lands it fetches the project
+    role, resolves the storyteller (local cache then, online, the API), and warms
+    the member cache. The post-fetch role and member steps end with an empty
+    `copyWith()` so the widget re-reads role-derived permissions — the original
+    screen's empty `setState`.
   - **The `localRecordingStreamProvider` listen** (native only), registered in
-    `build`: when the Drift row changes it patches an already-loaded recording
-    into `state` (it does not seed the initial load), keeping the displayed row
-    fresh on sync/heal writes. This is the listen the detail screen used to own.
+    `build`: the stream now carries `AsyncValue<LocalRecordingEntity?>`
+    (ENG-199/ENG-200), and when it emits it patches an already-loaded recording
+    into `state` (it does not seed the initial load), keeping the displayed
+    entity fresh on sync/heal writes. This is the listen the detail screen used
+    to own. Because the stream maps to the entity **before** its `.distinct()`
+    (see [../../data/repositories/docs.md](../../data/repositories/docs.md)), a
+    DB write that touches only the persistence-only columns the entity drops
+    (`lastRetryAt`/`md5Hash`) is value-equal and never re-emits here, so the
+    detail screen stops rebuilding on upload-bookkeeping churn.
   - **Metadata mutations** — `setStoryteller`, `saveDetails` (title via the
     `saveRecordingTitle` use-case, description via the typed repo write),
     `toggleCleaningStatus`, `moveCategory`, `classify`, `saveSecondary` — each
@@ -374,14 +392,16 @@ Path: @/lib/features/recording/presentation/notifiers
   audio paths instead **throw** (`downloadAndCache`, `downloadForExport`) or
   return a `bool` (`replaceAudio`) because the screen wraps them in a progress
   dialog it must dismiss; the screen maps those to its own snackbars too.
-- **`RecordingDetailState` has no value `==`/`hashCode` (ENG-194).** Unlike
-  `LocalRecordingEntity` (ENG-195), the state uses identity equality. There is
-  no `.distinct()` consumer, and identity equality reproduces the screen's
-  original `setState`, which rebuilt on every mutation — so the empty
-  `copyWith()` calls after the role/member fetches re-render exactly as the old
-  empty `setState`s did, and the rebuild cadence is unchanged. Do **not** add
-  value equality here expecting it to be inert; it would suppress those
-  intentional no-field rebuilds.
+- **`RecordingDetailState` has no value `==`/`hashCode` (ENG-194), even though
+  it now holds a `LocalRecordingEntity` (ENG-199/ENG-200).** The entity carries
+  value equality but the state wrapping it uses identity equality. The dedup that
+  matters lives **upstream** in `watchRecordingEntityById`'s `.distinct()` (which
+  keys on the entity's `==`), so the state has no `.distinct()` consumer of its
+  own; identity equality reproduces the screen's original `setState`, which
+  rebuilt on every mutation — so the empty `copyWith()` calls after the
+  role/member fetches re-render exactly as the old empty `setState`s did, and the
+  rebuild cadence is unchanged. Do **not** add value equality here expecting it
+  to be inert; it would suppress those intentional no-field rebuilds.
 - **`RecordingDetailNotifier` reuses the `_disposed` + `ref.onDispose` guard
   (ENG-194).** Like `RecordingPlayerNotifier` and `TrimEditorNotifier`, the
   autoDispose family entry can be torn down mid-load (the detail screen unmounts

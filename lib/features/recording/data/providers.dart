@@ -1,11 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/database/app_database.dart';
 import '../../../core/database/database_provider.dart';
 import '../../../core/network/authenticated_client.dart';
 import '../../../core/observability/error_reporter.dart';
 import '../../../core/platform/file_ops.dart' as file_ops;
 import '../../sync/data/services/resumable_upload_service.dart';
+import '../domain/entities/local_recording_entity.dart';
 import '../domain/repositories/recording_api_repository.dart';
 import 'repositories/local_recording_repository.dart';
 import 'repositories/recording_api_repository_impl.dart';
@@ -51,9 +51,9 @@ final directRecordingUploaderProvider = Provider<DirectRecordingUploader>((
 });
 
 final localRecordingStreamProvider =
-    StreamProvider.family<LocalRecording?, String>((ref, id) {
+    StreamProvider.family<LocalRecordingEntity?, String>((ref, id) {
       final repo = ref.watch(localRecordingRepositoryProvider);
-      return repo.watchRecordingById(id);
+      return repo.watchRecordingEntityById(id);
     });
 
 /// Injectable file-existence probe so the trim editor's load path can be driven

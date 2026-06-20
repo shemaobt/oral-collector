@@ -19,6 +19,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:oral_collector/core/database/app_database.dart';
 import 'package:oral_collector/features/recording/data/providers.dart';
 import 'package:oral_collector/features/recording/data/repositories/local_recording_repository.dart';
+import 'package:oral_collector/features/recording/domain/entities/local_recording_entity.dart';
 import 'package:oral_collector/features/recording/domain/entities/server_recording.dart';
 import 'package:oral_collector/features/recording/domain/repositories/recording_api_repository.dart';
 import 'package:oral_collector/features/recording/presentation/recording_detail_screen.dart';
@@ -74,7 +75,7 @@ void main() {
         // an empty stream is enough here.
         localRecordingStreamProvider(
           recordingId,
-        ).overrideWith((ref) => const Stream<LocalRecording?>.empty()),
+        ).overrideWith((ref) => const Stream<LocalRecordingEntity?>.empty()),
         recordingApiRepositoryProvider.overrideWithValue(_FakeApiRepo()),
         syncNotifierProvider.overrideWith(_OfflineSyncNotifier.new),
       ],

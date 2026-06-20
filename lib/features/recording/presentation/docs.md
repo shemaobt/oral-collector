@@ -194,18 +194,31 @@ Path: @/lib/features/recording/presentation
   The card body is unchanged (the entity carries the same field names); its
   `isUnclassified` / `hasSecondary` reads now resolve through the entity's
   classification extension (see [../domain/docs.md](../domain/docs.md)) instead
-  of the row's. The detail-screen widgets (status/info-grid/quick-actions/hero
-  player) and `ConfirmationStep` still take the Drift row — that is later staged
-  work (ENG-199 / F4-F5), not yet migrated.
+  of the row's. As of ENG-199/ENG-200 the **detail tree is migrated too**: the
+  detail-screen section widgets (status / info-grid / quick-actions / hero player
+  / classification section) type their `recording` as `LocalRecordingEntity`, the
+  screen's own `_ensureLocalFile` / `_persistSecondary` / `_deleteRecording`
+  paths deal in the entity (`_deleteRecording` no longer wraps with
+  `localRecordingToEntity` — the state already holds the entity), and the screen
+  imports the entity's classification extension
+  ([../domain/entities/local_recording_entity_classification.dart](../domain/entities/local_recording_entity_classification.dart))
+  rather than the row's. With this the recording feature's UI is entity-typed
+  end to end except where the data layer still needs a row (the heal/server
+  resolution inside `RecordingDetailNotifier.load`, the split child-companion
+  build).
 - **Listener-driven re-renders (now in the notifier, ENG-194).** The
-  recording shown is `RecordingDetailState.recording`, and
-  `RecordingDetailNotifier.build` (native only) `ref.listen`s
-  `localRecordingStreamProvider(id)`; any write to that Drift row patches the
-  row into `state`, which re-renders the watching screen. This is what makes the
-  ENG-64 bug user-visible: a corrupt cache insert immediately blanks the
-  description on screen even though the user did not edit anything. Cache writes
-  therefore still have to be exhaustive — the listen moved off the widget but
-  the hazard is identical.
+  recording shown is `RecordingDetailState.recording`, a `LocalRecordingEntity`
+  (ENG-199/ENG-200), and `RecordingDetailNotifier.build` (native only)
+  `ref.listen`s `localRecordingStreamProvider(id)`, which now carries
+  `LocalRecordingEntity?`; a write that changes a content/operational field the
+  entity carries patches the entity into `state`, which re-renders the watching
+  screen. A write touching only the persistence-only columns the entity drops
+  (`lastRetryAt`/`md5Hash`) is deduped upstream and never re-emits, so the screen
+  no longer rebuilds on upload-bookkeeping churn (see
+  [../data/repositories/docs.md](../data/repositories/docs.md)). The re-render
+  hazard is otherwise identical: this is what makes the ENG-64 bug user-visible —
+  a corrupt cache insert immediately blanks the description on screen even though
+  the user did not edit anything, so cache writes still have to be exhaustive.
 - **Heal runs at most once per online open.** The heal companion in the
   notifier's `load` is gated by `localHasServerId && (needsGcsRefresh ||
   needsUserRefresh)`; rows that already have `gcsUrl` and `userId` are

@@ -3,10 +3,10 @@ import 'package:intl/intl.dart' as intl;
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../../l10n/app_localizations.dart';
-import '../../../../core/database/app_database.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/tokens.dart';
 import '../../../../shared/utils/cleaning_status_style.dart';
+import '../../domain/entities/local_recording_entity.dart';
 
 class RecordingStatusSection extends StatelessWidget {
   const RecordingStatusSection({
@@ -18,7 +18,7 @@ class RecordingStatusSection extends StatelessWidget {
     this.onRetryUpload,
   });
 
-  final LocalRecording recording;
+  final LocalRecordingEntity recording;
   final AppColorSet colors;
   final ThemeData theme;
   final VoidCallback onToggleCleaning;

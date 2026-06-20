@@ -69,10 +69,16 @@ Path: @/lib/features/recording/data
 
 - `providers.dart` registers all data-layer providers and stays free of
   business logic. `localRecordingStreamProvider` is a family stream keyed
-  by recording id; `RecordingDetailNotifier`
+  by recording id; as of ENG-199/ENG-200 it is a
+  `StreamProvider.family<LocalRecordingEntity?, String>` backed by
+  `LocalRecordingRepository.watchRecordingEntityById` (the former row stream
+  `watchRecordingById` was deleted with the detail tree's row→entity migration).
+  `RecordingDetailNotifier`
   ([../presentation/notifiers/docs.md](../presentation/notifiers/docs.md))
   listens to it (native only, ENG-194) so any write through
-  `LocalRecordingRepository` flows back into the detail UI. It also exposes
+  `LocalRecordingRepository` flows back into the detail UI — and because the
+  entity drops `lastRetryAt`/`md5Hash`, an upload-bookkeeping-only write no
+  longer re-emits (see Things to Know). It also exposes
   `fileExistsProvider` — a one-line wrapper over `file_ops.fileExists` —
   injected so the trim editor's load-path file check is driveable in
   widget tests (a real `dart:io` future never resolves under the
@@ -88,18 +94,21 @@ Path: @/lib/features/recording/data
   ([../domain/entities/local_recording_entity.dart](../domain/entities/local_recording_entity.dart)),
   deliberately dropping the persistence internals `lastRetryAt`/`md5Hash`. It is
   the one source of truth for the row→entity projection (ENG-195): the
-  repository's `_fromRow` (see [./repositories/docs.md](repositories/docs.md))
-  and the recordings-list notifier
-  ([../presentation/notifiers/docs.md](../presentation/notifiers/docs.md)) both
-  delegate to it, so a watch stream and the list cannot carry different fields.
-  The server side composes the two — `localRecordingToEntity(serverRecordingToLocal(s))`
-  — to land server data as the same entity type the local side produces. As of
-  ENG-198 the entity it produces also feeds the split *write* path as a read-only
-  parent input — `splitRecordingReplacingParent({parent})` and the trim editor's
-  split/save chain now take a `LocalRecordingEntity` (see
-  [./repositories/docs.md](repositories/docs.md) and
-  [../presentation/notifiers/docs.md](../presentation/notifiers/docs.md)) — so the
-  projection is no longer used only by the read/watch streams.
+  repository's `_fromRow` (the entity watch stream, see
+  [./repositories/docs.md](repositories/docs.md)), the recordings-list notifier,
+  and `RecordingDetailNotifier.load` (which resolves a row internally for the
+  heal path, then maps once at the state boundary, ENG-199/ENG-200) all delegate
+  to it, so the watch stream, the list, and the detail screen cannot carry
+  different fields (see
+  [../presentation/notifiers/docs.md](../presentation/notifiers/docs.md)). The
+  server side composes the two — `localRecordingToEntity(serverRecordingToLocal(s))`
+  — to land server data as the same entity type the local side produces. The
+  entity it produces also feeds *write* paths now: the split path as a read-only
+  parent input (ENG-198 — `splitRecordingReplacingParent({parent})` and the trim
+  editor's split/save chain take a `LocalRecordingEntity`) and the detail
+  cache-download write `cacheDownloadedAudio` (ENG-199/ENG-200, see
+  [./repositories/docs.md](repositories/docs.md)) — so the projection is no
+  longer used only by the read/watch streams.
 - `server_to_recording_entity.dart` exposes `serverRecordingToEntity(server)`,
   the one-line composition `localRecordingToEntity(serverRecordingToLocal(s))`
   promoted to a named mapper (ENG-202). It lands a `ServerRecording` straight as
@@ -301,11 +310,13 @@ Path: @/lib/features/recording/data
 ### Things to Know
 
 - **Cache-hydration invariant (ENG-64):** every write into `LocalRecordings`
-  that originates from an in-memory `LocalRecording` must go through
-  `LocalRecordingRepository.cacheDownloadedAudio` (server → local cache) or
-  `serverRecordingToLocal` (server → in-memory). Hand-built
-  `LocalRecordingsCompanion` payloads in caller code are the anti-pattern
-  that caused ENG-64; do not reintroduce them at cache-hydration sites.
+  that originates from an in-memory recording must go through
+  `LocalRecordingRepository.cacheDownloadedAudio` (server → local cache; it takes
+  a `LocalRecordingEntity` as of ENG-199/ENG-200 and builds the full-metadata
+  companion internally) or `serverRecordingToLocal` (server → in-memory row).
+  Hand-built `LocalRecordingsCompanion` payloads in caller code are the
+  anti-pattern that caused ENG-64; do not reintroduce them at cache-hydration
+  sites.
 - **Heal is best-effort and additive only.** `buildHealMetadataCompanion`
   uses `Value.absent()` (not `Value(null)`) for fields it chooses not to
   touch. A local edit, even an empty string written intentionally by the
@@ -442,20 +453,26 @@ Path: @/lib/features/recording/data
   `resumableSessionUri`/`uploadedBytes`, the prior resume state is kept and
   the resumable service continues from the persisted offset instead of
   restarting or throwing on the duplicate key.
-- The `localRecordingStreamProvider` is a Drift `watchSingleOrNull` query
-  with `.distinct()` appended (ENG-121). Drift invalidates query streams at
-  the table level, so any write through `LocalRecordingRepository` — even to
-  an unrelated row — re-runs the query; `.distinct()` drops the re-emission
-  when the resulting `LocalRecording` is identical, so the listener only
-  re-renders on real value changes. As of ENG-194 the `ref.listen` on this
-  provider lives in `RecordingDetailNotifier.build` (native only), not in the
-  detail screen — it patches the changed row into `RecordingDetailState`
+- The `localRecordingStreamProvider` streams the **domain entity**
+  `LocalRecordingEntity?` as of ENG-199/ENG-200 — it is backed by
+  `LocalRecordingRepository.watchRecordingEntityById`
+  ([./repositories/docs.md](repositories/docs.md)), which `.map()`s the row to the
+  entity **before** the `.distinct()` (ENG-121). Drift invalidates query streams
+  at the table level, so any write through `LocalRecordingRepository` — even to
+  an unrelated row — re-runs the query; `.distinct()` drops the re-emission when
+  the resulting *entity* is value-equal. Because the entity deliberately omits
+  the persistence internals `lastRetryAt`/`md5Hash`, a write that touches only
+  those is value-equal and dropped, so the detail screen no longer re-renders on
+  upload-bookkeeping churn — a behavioral change from the prior row stream, not
+  just a re-emission collapse. As of ENG-194 the `ref.listen` on this provider
+  lives in `RecordingDetailNotifier.build` (native only), not in the detail
+  screen — it patches the changed entity into `RecordingDetailState`
   (`state.copyWith(recording: …)`) rather than calling the screen's old
   `setState`, but the rebuild contract is unchanged (the state has identity
-  equality, so the patch re-renders). A write that *does* change the row
-  (including the heal companion or a partial / hand-picked insert) still fires:
-  this is why such an insert is dangerous — the stream re-pushes a
-  `LocalRecording` with missing fields into the displayed state, blanking the UI
-  even if the user did not change anything.
+  equality, so the patch re-renders). A write that *does* change a content or
+  operational field the entity carries still fires: this is why a partial /
+  hand-picked insert is still dangerous — the stream re-pushes an entity with
+  missing fields into the displayed state, blanking the UI even if the user did
+  not change anything (the heal companion fills, never blanks).
 
 Created and maintained by Nori.

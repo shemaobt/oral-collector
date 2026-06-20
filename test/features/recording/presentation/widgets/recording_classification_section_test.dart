@@ -5,7 +5,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:oral_collector/core/database/app_database.dart';
 import 'package:oral_collector/core/theme/app_colors.dart';
+import 'package:oral_collector/features/recording/data/local_recording_to_entity.dart';
 import 'package:oral_collector/features/recording/data/repositories/local_recording_repository.dart';
+import 'package:oral_collector/features/recording/domain/entities/local_recording_entity.dart';
 import 'package:oral_collector/features/recording/presentation/widgets/recording_classification_section.dart';
 import 'package:oral_collector/l10n/app_localizations.dart';
 import 'package:oral_collector/l10n/app_localizations_en.dart';
@@ -45,7 +47,7 @@ void main() {
   });
   tearDown(() => db.close());
 
-  Future<LocalRecording> seed({
+  Future<LocalRecordingEntity> seed({
     String? splitFromId,
     int? splitIndex,
     int? splitSegmentCount,
@@ -66,11 +68,11 @@ void main() {
         splitSegmentCount: Value(splitSegmentCount),
       ),
     );
-    return (await repo.getRecordingById('rec-1'))!;
+    return localRecordingToEntity((await repo.getRecordingById('rec-1'))!);
   }
 
   RecordingClassificationSection section(
-    LocalRecording rec, {
+    LocalRecordingEntity rec, {
     bool isUnclassified = false,
     bool hasSecondary = false,
     bool canEdit = true,

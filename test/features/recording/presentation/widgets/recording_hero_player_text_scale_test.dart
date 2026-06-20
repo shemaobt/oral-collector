@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:oral_collector/core/database/app_database.dart';
 import 'package:oral_collector/core/theme/app_colors.dart';
+import 'package:oral_collector/features/recording/domain/entities/local_recording_entity.dart';
 import 'package:oral_collector/features/recording/presentation/notifiers/recording_player_notifier.dart';
 import 'package:oral_collector/features/recording/presentation/widgets/recording_hero_player.dart';
 
@@ -17,10 +17,10 @@ class _MockAudioPlayer extends Mock implements AudioPlayer {}
 Future<String?> _identityResolver(String p) async => p;
 Future<String?> _nullResolver(String p) async => null;
 
-LocalRecording _recording({
+LocalRecordingEntity _recording({
   String localFilePath = '/tmp/rec.m4a',
   String gcsUrl = 'https://example.com/rec.m4a',
-}) => LocalRecording(
+}) => LocalRecordingEntity(
   id: 'rec-hero',
   projectId: 'proj-1',
   genreId: 'genre-1',
@@ -42,7 +42,7 @@ Future<void> _pump(
   WidgetTester tester,
   double scale, {
   required _MockAudioPlayer mock,
-  required LocalRecording recording,
+  required LocalRecordingEntity recording,
   Future<String?> Function(String) resolver = _identityResolver,
   Locale locale = const Locale('en'),
 }) async {

@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
-import '../../../../core/database/app_database.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/tokens.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../domain/entities/local_recording_entity.dart';
 import '../notifiers/recording_player_notifier.dart';
 import '../notifiers/recording_player_state.dart';
 import 'recording_player_controls.dart';
@@ -19,7 +19,7 @@ class RecordingHeroPlayer extends ConsumerWidget {
     required this.theme,
   });
 
-  final LocalRecording recording;
+  final LocalRecordingEntity recording;
   final AppColorSet colors;
   final ThemeData theme;
 

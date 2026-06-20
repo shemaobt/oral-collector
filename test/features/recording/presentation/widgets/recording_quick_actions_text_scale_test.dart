@@ -2,13 +2,13 @@
 // font (MediaQuery textScaler) without overflowing the fixed tile box.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:oral_collector/core/database/app_database.dart';
 import 'package:oral_collector/core/theme/app_colors.dart';
+import 'package:oral_collector/features/recording/domain/entities/local_recording_entity.dart';
 import 'package:oral_collector/features/recording/presentation/widgets/recording_quick_actions.dart';
 
 import '../../../../support/text_scale.dart';
 
-LocalRecording _recording() => LocalRecording(
+LocalRecordingEntity _recording() => LocalRecordingEntity(
   id: 'rec-1',
   projectId: 'proj-1',
   genreId: 'genre-1',
