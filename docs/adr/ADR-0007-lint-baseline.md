@@ -3,7 +3,7 @@
 - Status: Accepted
 - Date: 2026-06-04
 - Epic: E1 (Architecture & Standards)
-- Related: ENG-89, ENG-90, ENG-156, ENG-157, ENG-158, ENG-159, ENG-183, ENG-116, ADR-0000, ADR-0002, ADR-0004
+- Related: ENG-89, ENG-90, ENG-156, ENG-157, ENG-158, ENG-159, ENG-183, ENG-116, ENG-190, ADR-0000, ADR-0002, ADR-0004, ADR-0010
 - Update (2026-06-15, ENG-159): the deferred custom rule from item 5 shipped as
   the `obt_lints` plugin — `avoid_hardcoded_color` + `avoid_material_colors`,
   staged at `info` and non-blocking, exempting `lib/core/theme/**`.
@@ -16,6 +16,11 @@
   burned down to zero and `dart run custom_lint` is now **blocking** in CI and
   the pre-commit hook (full enforcement) — supersedes the ENG-183 "stays
   non-blocking" note. See "Promoted in ENG-158" below.
+- Update (2026-06-20, ENG-190): added a third `obt_lints` rule, `avoid_raw_print`
+  — bans raw `print`/`debugPrint` outside `lib/core/observability/**` and `test/`
+  (ADR-0010). Baseline was already zero, so it shipped enforced at `warning` with
+  no `info` staging; the blocking `dart run custom_lint` gate (ENG-158) walls new
+  violations app-wide.
 
 ## Context
 
