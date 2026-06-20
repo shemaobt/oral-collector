@@ -86,6 +86,7 @@ dev_dependencies:
   mocktail: ^1.0.4
   custom_lint: ^0.7.6
   riverpod_lint: ^2.6.5
+  dart_code_linter: ^3.1.1
   # Regras de lint internas do projeto (ENG-159).
   obt_lints:
     path: packages/obt_lints
