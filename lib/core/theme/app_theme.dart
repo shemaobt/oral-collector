@@ -116,6 +116,120 @@ abstract class AppTheme {
     );
   }
 
+  static ElevatedButtonThemeData _lightElevatedButtonTheme() {
+    return ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        minimumSize: const Size(0, 52),
+        padding: const EdgeInsets.symmetric(
+          horizontal: SpacingScale.s28,
+          vertical: 14,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(RadiusScale.r12),
+        ),
+        textStyle: const TextStyle(
+          fontFamily: _fontFamily,
+          fontSize: 15,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+
+  static FilledButtonThemeData _lightFilledButtonTheme() {
+    return FilledButtonThemeData(
+      style: FilledButton.styleFrom(
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        minimumSize: const Size(0, 52),
+        padding: const EdgeInsets.symmetric(
+          horizontal: SpacingScale.s28,
+          vertical: 14,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(RadiusScale.r12),
+        ),
+        textStyle: const TextStyle(
+          fontFamily: _fontFamily,
+          fontSize: 15,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+
+  static OutlinedButtonThemeData _lightOutlinedButtonTheme() {
+    return OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        foregroundColor: AppColors.primary,
+        minimumSize: const Size(0, 52),
+        side: BorderSide(
+          color: AppColors.primary.withValues(alpha: OpacityScale.o60),
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(RadiusScale.r12),
+        ),
+        textStyle: const TextStyle(
+          fontFamily: _fontFamily,
+          fontSize: 15,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+
+  static TextButtonThemeData _lightTextButtonTheme() {
+    return TextButtonThemeData(
+      style: TextButton.styleFrom(
+        foregroundColor: AppColors.primary,
+        minimumSize: const Size(0, 48),
+        textStyle: const TextStyle(
+          fontFamily: _fontFamily,
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+
+  static InputDecorationTheme _lightInputDecorationTheme() {
+    return InputDecorationTheme(
+      filled: true,
+      fillColor: AppColors.card,
+      floatingLabelBehavior: FloatingLabelBehavior.auto,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(RadiusScale.r12),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(RadiusScale.r12),
+        borderSide: BorderSide(
+          color: AppColors.border.withValues(alpha: OpacityScale.o70),
+        ),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(RadiusScale.r12),
+        borderSide: const BorderSide(color: AppColors.primary, width: 2),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(RadiusScale.r12),
+        borderSide: const BorderSide(color: AppColors.error),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(RadiusScale.r12),
+        borderSide: const BorderSide(color: AppColors.error, width: 2),
+      ),
+      hintStyle: TextStyle(
+        color: AppColors.secondary.withValues(alpha: OpacityScale.o60),
+      ),
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: SpacingScale.s16,
+        vertical: SpacingScale.s16,
+      ),
+    );
+  }
+
   static ThemeData get lightTheme {
     final textTheme = _buildTextTheme(
       ThemeData.light().textTheme.apply(fontFamily: _fontFamily),
@@ -187,105 +301,11 @@ abstract class AppTheme {
           ),
         ),
       ),
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
-          minimumSize: const Size(0, 52),
-          padding: const EdgeInsets.symmetric(
-            horizontal: SpacingScale.s28,
-            vertical: 14,
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(RadiusScale.r12),
-          ),
-          textStyle: const TextStyle(
-            fontFamily: _fontFamily,
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ),
-      filledButtonTheme: FilledButtonThemeData(
-        style: FilledButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
-          minimumSize: const Size(0, 52),
-          padding: const EdgeInsets.symmetric(
-            horizontal: SpacingScale.s28,
-            vertical: 14,
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(RadiusScale.r12),
-          ),
-          textStyle: const TextStyle(
-            fontFamily: _fontFamily,
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ),
-      outlinedButtonTheme: OutlinedButtonThemeData(
-        style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.primary,
-          minimumSize: const Size(0, 52),
-          side: BorderSide(
-            color: AppColors.primary.withValues(alpha: OpacityScale.o60),
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(RadiusScale.r12),
-          ),
-          textStyle: const TextStyle(
-            fontFamily: _fontFamily,
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ),
-      textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(
-          foregroundColor: AppColors.primary,
-          minimumSize: const Size(0, 48),
-          textStyle: const TextStyle(
-            fontFamily: _fontFamily,
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ),
-      inputDecorationTheme: InputDecorationTheme(
-        filled: true,
-        fillColor: AppColors.card,
-        floatingLabelBehavior: FloatingLabelBehavior.auto,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(RadiusScale.r12),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(RadiusScale.r12),
-          borderSide: BorderSide(
-            color: AppColors.border.withValues(alpha: OpacityScale.o70),
-          ),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(RadiusScale.r12),
-          borderSide: const BorderSide(color: AppColors.primary, width: 2),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(RadiusScale.r12),
-          borderSide: const BorderSide(color: AppColors.error),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(RadiusScale.r12),
-          borderSide: const BorderSide(color: AppColors.error, width: 2),
-        ),
-        hintStyle: TextStyle(
-          color: AppColors.secondary.withValues(alpha: OpacityScale.o60),
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: SpacingScale.s16,
-          vertical: SpacingScale.s16,
-        ),
-      ),
+      elevatedButtonTheme: _lightElevatedButtonTheme(),
+      filledButtonTheme: _lightFilledButtonTheme(),
+      outlinedButtonTheme: _lightOutlinedButtonTheme(),
+      textButtonTheme: _lightTextButtonTheme(),
+      inputDecorationTheme: _lightInputDecorationTheme(),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: AppColors.card,
         selectedItemColor: AppColors.accent,

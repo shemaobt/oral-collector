@@ -595,61 +595,6 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
         ? (_transportPosition.inMilliseconds / totalMs).clamp(0.0, 1.0)
         : null;
 
-    final waveformPanel = Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        EditTransportBar(
-          isPlaying: _isTransportPlaying,
-          position: _transportPosition,
-          duration: state.totalDuration,
-          onPlayPause: _toggleTransport,
-          canSplitAtPosition: _canSplitAtPlayhead,
-          onSplitAtPosition: _addSplitAtPlayhead,
-        ),
-        const SizedBox(height: SpacingScale.s8),
-        Padding(
-          padding: const EdgeInsets.only(bottom: SpacingScale.s8),
-          child: EditVolumeControl(
-            gainDb: state.gainDb,
-            peakAmplitude: _visiblePeak(),
-            volumeLabel: l10n.trim_volume,
-            clippingLabel: l10n.trim_peakClip,
-            boostOnSaveLabel: l10n.trim_boostOnSave,
-            onChanged: (v) {
-              _notifier.setGain(v);
-              _applyPreviewVolume();
-            },
-          ),
-        ),
-        TrimWaveformPanel(
-          waveformBars: _waveformBars,
-          splitPoints: state.splitPoints,
-          onSplitPointsChanged: _notifier.setSplitPoints,
-          playingSegment: _playingSegment,
-          excludedSegments: state.excludedSegments,
-          hasSplits: hasSplits,
-          keptCount: state.keptCount,
-          segmentCount: state.segmentCount,
-          totalDurationLabel: _fmt(state.totalDuration),
-          totalDurationShortLabel: _fmtShort(state.totalDuration),
-          playheadFraction: playheadFraction,
-          onPlayheadSeek: _seekPlayheadTo,
-          onSeekAndPlay: _seekAndPlay,
-          zoom: _zoom,
-          panFraction: _panFraction,
-          onZoomPanChanged: (v) => setState(() {
-            _zoom = v.zoom;
-            _panFraction = v.panFraction;
-          }),
-          onResetZoom: () => setState(() {
-            _zoom = 1.0;
-            _panFraction = 0.0;
-          }),
-          onClearAll: () => _notifier.clearAllSplits(),
-        ),
-      ],
-    );
-
     final segmentsList = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -795,7 +740,12 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
                     flex: 3,
                     child: SingleChildScrollView(
                       padding: const EdgeInsets.all(SpacingScale.s24),
-                      child: waveformPanel,
+                      child: _buildWaveformPanel(
+                        l10n,
+                        state,
+                        hasSplits,
+                        playheadFraction,
+                      ),
                     ),
                   ),
                   Expanded(
@@ -832,7 +782,12 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        waveformPanel,
+                        _buildWaveformPanel(
+                          l10n,
+                          state,
+                          hasSplits,
+                          playheadFraction,
+                        ),
                         const SizedBox(height: SpacingScale.s20),
                         segmentsList,
                       ],
@@ -845,6 +800,68 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
           },
         ),
       ),
+    );
+  }
+
+  Widget _buildWaveformPanel(
+    AppLocalizations l10n,
+    TrimEditorState state,
+    bool hasSplits,
+    double? playheadFraction,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        EditTransportBar(
+          isPlaying: _isTransportPlaying,
+          position: _transportPosition,
+          duration: state.totalDuration,
+          onPlayPause: _toggleTransport,
+          canSplitAtPosition: _canSplitAtPlayhead,
+          onSplitAtPosition: _addSplitAtPlayhead,
+        ),
+        const SizedBox(height: SpacingScale.s8),
+        Padding(
+          padding: const EdgeInsets.only(bottom: SpacingScale.s8),
+          child: EditVolumeControl(
+            gainDb: state.gainDb,
+            peakAmplitude: _visiblePeak(),
+            volumeLabel: l10n.trim_volume,
+            clippingLabel: l10n.trim_peakClip,
+            boostOnSaveLabel: l10n.trim_boostOnSave,
+            onChanged: (v) {
+              _notifier.setGain(v);
+              _applyPreviewVolume();
+            },
+          ),
+        ),
+        TrimWaveformPanel(
+          waveformBars: _waveformBars,
+          splitPoints: state.splitPoints,
+          onSplitPointsChanged: _notifier.setSplitPoints,
+          playingSegment: _playingSegment,
+          excludedSegments: state.excludedSegments,
+          hasSplits: hasSplits,
+          keptCount: state.keptCount,
+          segmentCount: state.segmentCount,
+          totalDurationLabel: _fmt(state.totalDuration),
+          totalDurationShortLabel: _fmtShort(state.totalDuration),
+          playheadFraction: playheadFraction,
+          onPlayheadSeek: _seekPlayheadTo,
+          onSeekAndPlay: _seekAndPlay,
+          zoom: _zoom,
+          panFraction: _panFraction,
+          onZoomPanChanged: (v) => setState(() {
+            _zoom = v.zoom;
+            _panFraction = v.panFraction;
+          }),
+          onResetZoom: () => setState(() {
+            _zoom = 1.0;
+            _panFraction = 0.0;
+          }),
+          onClearAll: () => _notifier.clearAllSplits(),
+        ),
+      ],
     );
   }
 

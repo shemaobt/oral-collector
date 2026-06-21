@@ -242,52 +242,7 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
       floatingActionButton: activeProject != null
           ? Padding(
               padding: EdgeInsets.only(bottom: fabOffset - 70),
-              child: Semantics(
-                label: l10n.recordings_importAudio,
-                button: true,
-                child: Material(
-                  color: AppColors.transparent,
-                  shape: const CircleBorder(),
-                  child: InkWell(
-                    onTap: () => context.push('/import-file'),
-                    customBorder: const CircleBorder(),
-                    child: Container(
-                      width: 62,
-                      height: 62,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            colors.accent,
-                            colors.accent.withValues(alpha: 0.85),
-                          ],
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: colors.accent.withValues(alpha: 0.4),
-                            blurRadius: 20,
-                            offset: const Offset(0, 6),
-                          ),
-                          BoxShadow(
-                            color: colors.accent.withValues(alpha: 0.15),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: const Center(
-                        child: Icon(
-                          LucideIcons.filePlus,
-                          size: 26,
-                          color: AppColors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+              child: const _ImportFab(),
             )
           : null,
       body: activeProject == null
@@ -336,59 +291,18 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
                 const SliverToBoxAdapter(child: PendingWebUploadsBanner()),
 
                 SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      SpacingScale.s16,
-                      SpacingScale.s12,
-                      SpacingScale.s16,
-                      SpacingScale.s4,
-                    ),
-                    child: TextField(
-                      controller: _searchController,
-                      onChanged: (value) => ref
+                  child: _SearchField(
+                    controller: _searchController,
+                    hasQuery: listState.searchQuery.isNotEmpty,
+                    onChanged: (value) => ref
+                        .read(recordingsListNotifierProvider.notifier)
+                        .setSearchQuery(value),
+                    onClear: () {
+                      _searchController.clear();
+                      ref
                           .read(recordingsListNotifierProvider.notifier)
-                          .setSearchQuery(value),
-                      textInputAction: TextInputAction.search,
-                      decoration: InputDecoration(
-                        hintText: l10n.recordings_searchHint,
-                        prefixIcon: const Icon(LucideIcons.search, size: 18),
-                        suffixIcon: listState.searchQuery.isNotEmpty
-                            ? IconButton(
-                                icon: const Icon(LucideIcons.x, size: 16),
-                                onPressed: () {
-                                  _searchController.clear();
-                                  ref
-                                      .read(
-                                        recordingsListNotifierProvider.notifier,
-                                      )
-                                      .setSearchQuery('');
-                                },
-                              )
-                            : null,
-                        isDense: true,
-                        filled: true,
-                        fillColor: colors.surfaceAlt,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: SpacingScale.s12,
-                          vertical: SpacingScale.s8,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(RadiusScale.r12),
-                          borderSide: BorderSide.none,
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(RadiusScale.r12),
-                          borderSide: BorderSide.none,
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(RadiusScale.r12),
-                          borderSide: BorderSide(
-                            color: colors.accent,
-                            width: 1.5,
-                          ),
-                        ),
-                      ),
-                    ),
+                          .setSearchQuery('');
+                    },
                   ),
                 ),
 
@@ -570,6 +484,121 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
                   ),
               ],
             ),
+    );
+  }
+}
+
+class _ImportFab extends StatelessWidget {
+  const _ImportFab();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final colors = AppColors.of(context);
+    return Semantics(
+      label: l10n.recordings_importAudio,
+      button: true,
+      child: Material(
+        color: AppColors.transparent,
+        shape: const CircleBorder(),
+        child: InkWell(
+          onTap: () => context.push('/import-file'),
+          customBorder: const CircleBorder(),
+          child: Container(
+            width: 62,
+            height: 62,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [colors.accent, colors.accent.withValues(alpha: 0.85)],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: colors.accent.withValues(alpha: 0.4),
+                  blurRadius: 20,
+                  offset: const Offset(0, 6),
+                ),
+                BoxShadow(
+                  color: colors.accent.withValues(alpha: 0.15),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: const Center(
+              child: Icon(
+                LucideIcons.filePlus,
+                size: 26,
+                color: AppColors.white,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SearchField extends StatelessWidget {
+  const _SearchField({
+    required this.controller,
+    required this.hasQuery,
+    required this.onChanged,
+    required this.onClear,
+  });
+
+  final TextEditingController controller;
+  final bool hasQuery;
+  final ValueChanged<String> onChanged;
+  final VoidCallback onClear;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final colors = AppColors.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        SpacingScale.s16,
+        SpacingScale.s12,
+        SpacingScale.s16,
+        SpacingScale.s4,
+      ),
+      child: TextField(
+        controller: controller,
+        onChanged: onChanged,
+        textInputAction: TextInputAction.search,
+        decoration: InputDecoration(
+          hintText: l10n.recordings_searchHint,
+          prefixIcon: const Icon(LucideIcons.search, size: 18),
+          suffixIcon: hasQuery
+              ? IconButton(
+                  icon: const Icon(LucideIcons.x, size: 16),
+                  onPressed: onClear,
+                )
+              : null,
+          isDense: true,
+          filled: true,
+          fillColor: colors.surfaceAlt,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: SpacingScale.s12,
+            vertical: SpacingScale.s8,
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(RadiusScale.r12),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(RadiusScale.r12),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(RadiusScale.r12),
+            borderSide: BorderSide(color: colors.accent, width: 1.5),
+          ),
+        ),
+      ),
     );
   }
 }
