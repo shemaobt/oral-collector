@@ -60,15 +60,15 @@ custom_lint:
     - avoid_material_colors
     - avoid_raw_print
 
-# Complexity/size quality gate (dart_code_linter). Phase 0 thresholds are
-# calibrated to the current worst value (green now) and ratchet over time -
-# see obt/.claude/quality-gates-plan.md. Generated code is excluded.
+# Complexity/size quality gate (dart_code_linter). Thresholds are locked to the
+# current worst value (green now) and ratchet over time - see
+# obt/.claude/quality-gates-plan.md. Generated code is excluded.
 dart_code_linter:
   metrics:
-    cyclomatic-complexity: 63 # Phase 0 = current worst (friendlyErrorMessage). Ratchet -> 30 -> 20.
-    number-of-parameters: 14 # Phase 0 (current worst). Ratchet -> 8 -> 5.
-    maximum-nesting-level: 7 # Phase 0 (current worst). Ratchet -> 5 -> 4.
-    source-lines-of-code: 379 # Phase 0 = current worst (_ConfirmationStepState.build). Ratchet -> 300 -> 150.
+    cyclomatic-complexity: 34 # current worst (_SplitWaveformPainter.paint). Ratchet -> 30 (ENG-210) -> 20.
+    number-of-parameters: 10 # current worst (exportLocalSegments). Ratchet -> 8 (ENG-209) -> 5.
+    maximum-nesting-level: 5 # current worst. Ratchet -> 4.
+    source-lines-of-code: 300 # Phase 1 met (real worst 294). Ratchet -> 150.
   metrics-exclude:
     - "**/*.g.dart"
     - test/**
