@@ -300,7 +300,7 @@ and `obt/.claude/quality-gates-plan.md`.
 
 - **Code metrics** (`dart_code_linter`, config in `analysis_options.yaml`, enforced by
   `scripts/check_metrics.sh`): cyclomatic complexity, source lines of code, nesting level, and
-  number of parameters. **Hard gate.** Phase 0 thresholds equal the current worst value (green now)
+  number of parameters. **Hard gate.** Thresholds equal the current worst value (green now)
   and ratchet down over time. Generated code (`*.g.dart`) is excluded.
 - **Import cycles** (`layerlens --fail-on-cycles`): **advisory** — reported in CI, does not block.
   The codebase has known cycles documented in ADR-0009.
