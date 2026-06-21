@@ -10,6 +10,7 @@ import '../../../../core/serialization/parse_list.dart';
 import '../../../../core/serialization/safe_read.dart';
 import '../../domain/entities/server_recording.dart';
 import '../../domain/entities/split_segment_request.dart';
+import '../../domain/entities/update_recording_request.dart';
 import '../../domain/repositories/recording_api_repository.dart';
 
 class RecordingApiRepositoryImpl implements RecordingApiRepository {
@@ -71,50 +72,12 @@ class RecordingApiRepositoryImpl implements RecordingApiRepository {
 
   @override
   Future<bool> updateRecording(
-    String serverId, {
-    String? title,
-    String? description,
-    String? genreId,
-    String? subcategoryId,
-    String? registerId,
-    String? secondaryGenreId,
-    String? secondarySubcategoryId,
-    String? secondaryRegisterId,
-    bool clearSecondary = false,
-    String? storytellerId,
-    String? cleaningStatus,
-    double? durationSeconds,
-    int? fileSizeBytes,
-  }) async {
-    final body = <String, dynamic>{};
-    if (title != null) body['title'] = title;
-    if (description != null) body['description'] = description;
-    if (genreId != null) body['genre_id'] = genreId;
-    if (subcategoryId != null) body['subcategory_id'] = subcategoryId;
-    if (registerId != null) body['register_id'] = registerId;
-    if (clearSecondary) {
-      body['secondary_genre_id'] = null;
-      body['secondary_subcategory_id'] = null;
-      body['secondary_register_id'] = null;
-    } else {
-      if (secondaryGenreId != null) {
-        body['secondary_genre_id'] = secondaryGenreId;
-      }
-      if (secondarySubcategoryId != null) {
-        body['secondary_subcategory_id'] = secondarySubcategoryId;
-      }
-      if (secondaryRegisterId != null) {
-        body['secondary_register_id'] = secondaryRegisterId;
-      }
-    }
-    if (storytellerId != null) body['storyteller_id'] = storytellerId;
-    if (cleaningStatus != null) body['cleaning_status'] = cleaningStatus;
-    if (durationSeconds != null) body['duration_seconds'] = durationSeconds;
-    if (fileSizeBytes != null) body['file_size_bytes'] = fileSizeBytes;
-
+    String serverId,
+    UpdateRecordingRequest request,
+  ) async {
     final response = await _client.patch(
       '/api/oc/recordings/$serverId',
-      body: body,
+      body: request.toJson(),
     );
     guardResponse(response);
     if (response.statusCode == 403) {

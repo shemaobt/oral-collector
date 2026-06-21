@@ -21,6 +21,7 @@ import '../../data/services/audio_downloader.dart';
 import '../../data/services/recording_file_importer.dart';
 import '../../data/use_cases/save_recording_title.dart';
 import '../../domain/entities/local_recording_entity.dart';
+import '../../domain/entities/update_recording_request.dart';
 import '../../domain/repositories/recording_api_repository.dart';
 import '../widgets/classify_recording_dialog.dart' show ClassifyResult;
 import '../widgets/move_category_dialog.dart' show MoveCategoryResult;
@@ -207,7 +208,7 @@ class RecordingDetailNotifier
     try {
       await _apiRepo.updateRecording(
         serverId,
-        storytellerId: storyteller?.id ?? '',
+        UpdateRecordingRequest(storytellerId: storyteller?.id ?? ''),
       );
     } on Exception catch (_) {}
     if (_disposed) return;
@@ -263,7 +264,10 @@ class RecordingDetailNotifier
       try {
         if (kIsWeb) {
           final serverId = recording.serverId ?? arg;
-          await _apiRepo.updateRecording(serverId, description: description);
+          await _apiRepo.updateRecording(
+            serverId,
+            UpdateRecordingRequest(description: description),
+          );
         } else {
           await localRepo!.updateDescription(arg, description);
         }
@@ -291,7 +295,7 @@ class RecordingDetailNotifier
       try {
         final success = await _apiRepo.updateRecording(
           serverId,
-          cleaningStatus: newStatus,
+          UpdateRecordingRequest(cleaningStatus: newStatus),
         );
         if (_disposed) return RecordingMutationResult.success;
         if (!success) return RecordingMutationResult.failed;
@@ -318,12 +322,14 @@ class RecordingDetailNotifier
     try {
       final success = await _apiRepo.updateRecording(
         serverId,
-        genreId: result.genreId,
-        subcategoryId: result.subcategoryId,
-        secondaryGenreId: result.secondaryGenreId,
-        secondarySubcategoryId: result.secondarySubcategoryId,
-        secondaryRegisterId: result.secondaryRegisterId,
-        clearSecondary: result.clearSecondary,
+        UpdateRecordingRequest(
+          genreId: result.genreId,
+          subcategoryId: result.subcategoryId,
+          secondaryGenreId: result.secondaryGenreId,
+          secondarySubcategoryId: result.secondarySubcategoryId,
+          secondaryRegisterId: result.secondaryRegisterId,
+          clearSecondary: result.clearSecondary,
+        ),
       );
       if (_disposed) return RecordingMutationResult.success;
       if (!success) return RecordingMutationResult.failed;
@@ -374,13 +380,15 @@ class RecordingDetailNotifier
       try {
         final success = await _apiRepo.updateRecording(
           recording.serverId!,
-          genreId: result.genreId,
-          subcategoryId: result.subcategoryId,
-          registerId: result.registerId,
-          secondaryGenreId: result.secondaryGenreId,
-          secondarySubcategoryId: result.secondarySubcategoryId,
-          secondaryRegisterId: result.secondaryRegisterId,
-          clearSecondary: clearSecondary,
+          UpdateRecordingRequest(
+            genreId: result.genreId,
+            subcategoryId: result.subcategoryId,
+            registerId: result.registerId,
+            secondaryGenreId: result.secondaryGenreId,
+            secondarySubcategoryId: result.secondarySubcategoryId,
+            secondaryRegisterId: result.secondaryRegisterId,
+            clearSecondary: clearSecondary,
+          ),
         );
         if (_disposed) return RecordingMutationResult.success;
         if (!success) return RecordingMutationResult.failed;
@@ -432,10 +440,12 @@ class RecordingDetailNotifier
       try {
         final success = await _apiRepo.updateRecording(
           recording.serverId!,
-          secondaryGenreId: values?.genreId,
-          secondarySubcategoryId: values?.subcategoryId,
-          secondaryRegisterId: values?.registerId,
-          clearSecondary: clearSecondary,
+          UpdateRecordingRequest(
+            secondaryGenreId: values?.genreId,
+            secondarySubcategoryId: values?.subcategoryId,
+            secondaryRegisterId: values?.registerId,
+            clearSecondary: clearSecondary,
+          ),
         );
         if (_disposed) return RecordingMutationResult.success;
         if (!success) return RecordingMutationResult.failed;
@@ -523,8 +533,10 @@ class RecordingDetailNotifier
         try {
           await _apiRepo.updateRecording(
             serverId,
-            durationSeconds: durationSeconds,
-            fileSizeBytes: imported.sizeBytes,
+            UpdateRecordingRequest(
+              durationSeconds: durationSeconds,
+              fileSizeBytes: imported.sizeBytes,
+            ),
           );
         } on Exception catch (e) {
           _log.warning('replace: failed to sync new metadata to server', e);

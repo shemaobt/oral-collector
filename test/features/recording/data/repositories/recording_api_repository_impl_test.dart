@@ -8,6 +8,7 @@ import 'package:oral_collector/core/network/authenticated_client.dart';
 import 'package:oral_collector/core/observability/error_reporter.dart';
 import 'package:oral_collector/features/recording/data/repositories/recording_api_repository_impl.dart';
 import 'package:oral_collector/features/recording/domain/entities/split_segment_request.dart';
+import 'package:oral_collector/features/recording/domain/entities/update_recording_request.dart';
 
 class _MockClient extends Mock implements AuthenticatedClient {}
 
@@ -117,6 +118,76 @@ void main() {
       await expectLater(
         repo.splitRecording(serverId: 's-1', segments: segments),
         throwsA(isA<UnauthorizedException>()),
+      );
+    });
+  });
+
+  group('updateRecording', () {
+    void stubPatch({int status = 200}) {
+      when(
+        () => client.patch(any(), body: any(named: 'body')),
+      ).thenAnswer((_) async => http.Response('', status));
+    }
+
+    test('PATCHes the recording path with the request payload', () async {
+      stubPatch();
+
+      await repo.updateRecording(
+        's-1',
+        const UpdateRecordingRequest(
+          title: 'New title',
+          genreId: 'g-1',
+          clearSecondary: true,
+          durationSeconds: 3.5,
+          fileSizeBytes: 99,
+        ),
+      );
+
+      final captured = verify(
+        () => client.patch(captureAny(), body: captureAny(named: 'body')),
+      ).captured;
+      expect(captured[0], '/api/oc/recordings/s-1');
+      expect(captured[1], {
+        'title': 'New title',
+        'genre_id': 'g-1',
+        'secondary_genre_id': null,
+        'secondary_subcategory_id': null,
+        'secondary_register_id': null,
+        'duration_seconds': 3.5,
+        'file_size_bytes': 99,
+      });
+    });
+
+    test('returns true on 200', () async {
+      stubPatch();
+
+      expect(
+        await repo.updateRecording(
+          's-1',
+          const UpdateRecordingRequest(title: 't'),
+        ),
+        isTrue,
+      );
+    });
+
+    test('returns false on a non-200, non-error status', () async {
+      stubPatch(status: 500);
+
+      expect(
+        await repo.updateRecording(
+          's-1',
+          const UpdateRecordingRequest(title: 't'),
+        ),
+        isFalse,
+      );
+    });
+
+    test('throws ForbiddenException on 403', () async {
+      stubPatch(status: 403);
+
+      await expectLater(
+        repo.updateRecording('s-1', const UpdateRecordingRequest(title: 't')),
+        throwsA(isA<ForbiddenException>()),
       );
     });
   });
