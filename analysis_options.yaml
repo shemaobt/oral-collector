@@ -65,10 +65,10 @@ custom_lint:
 # see obt/.claude/quality-gates-plan.md. Generated code is excluded.
 dart_code_linter:
   metrics:
-    cyclomatic-complexity: 64 # Phase 0 (current worst). Ratchet -> 30 -> 20.
+    cyclomatic-complexity: 63 # Phase 0 = current worst (friendlyErrorMessage). Ratchet -> 30 -> 20.
     number-of-parameters: 14 # Phase 0 (current worst). Ratchet -> 8 -> 5.
     maximum-nesting-level: 7 # Phase 0 (current worst). Ratchet -> 5 -> 4.
-    source-lines-of-code: 665 # Phase 0 (current worst). Ratchet -> 300 -> 150.
+    source-lines-of-code: 379 # Phase 0 = current worst (_ConfirmationStepState.build). Ratchet -> 300 -> 150.
   metrics-exclude:
     - "**/*.g.dart"
     - test/**
