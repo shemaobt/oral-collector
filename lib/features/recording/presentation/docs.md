@@ -220,8 +220,9 @@ Path: @/lib/features/recording/presentation
   a corrupt cache insert immediately blanks the description on screen even though
   the user did not edit anything, so cache writes still have to be exhaustive.
 - **Heal runs at most once per online open.** The heal companion in the
-  notifier's `load` is gated by `localHasServerId && (needsGcsRefresh ||
-  needsUserRefresh)`; rows that already have `gcsUrl` and `userId` are
+  notifier's `load` is gated on the resolved row having a non-empty
+  `serverId` *and* either missing its `gcsUrl` (while uploaded/verified) or
+  missing its `userId`; rows that already have `gcsUrl` and `userId` are
   not heal-refreshed, which avoids redundant API calls. Inside the heal
   companion itself the corruption marker is `userId IS NULL`: only rows
   that lost userId to the original bug get user-content fields filled

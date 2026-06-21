@@ -98,32 +98,21 @@ class RecordingDetailNotifier
         recording ??= await _localRepo.getRecordingByServerId(arg);
         if (_disposed) return;
 
-        final localHasServerId =
-            recording != null &&
-            recording.serverId != null &&
-            recording.serverId!.isNotEmpty;
-        final needsGcsRefresh =
-            recording != null &&
-            (recording.gcsUrl == null || recording.gcsUrl!.isEmpty) &&
-            (recording.uploadStatus == 'uploaded' ||
-                recording.uploadStatus == 'verified');
-        final needsUserRefresh =
-            recording != null &&
-            (recording.userId == null || recording.userId!.isEmpty);
-
+        final current = recording;
         if (isOnline &&
-            localHasServerId &&
-            (needsGcsRefresh || needsUserRefresh)) {
+            current != null &&
+            _hasServerId(current) &&
+            (_needsGcsRefresh(current) || _needsUserRefresh(current))) {
           try {
-            final server = await _apiRepo.getRecording(recording.serverId!);
+            final server = await _apiRepo.getRecording(current.serverId!);
             if (_disposed) return;
             final updates = buildHealMetadataCompanion(
-              local: recording,
+              local: current,
               server: server,
             );
-            await _localRepo.updateRecording(recording.id, updates);
+            await _localRepo.updateRecording(current.id, updates);
             if (_disposed) return;
-            recording = await _localRepo.getRecordingById(recording.id);
+            recording = await _localRepo.getRecordingById(current.id);
             if (_disposed) return;
           } catch (_) {}
         }
@@ -164,6 +153,16 @@ class RecordingDetailNotifier
       state = state.copyWith(isLoading: false);
     }
   }
+
+  bool _hasServerId(LocalRecording r) =>
+      r.serverId != null && r.serverId!.isNotEmpty;
+
+  bool _needsGcsRefresh(LocalRecording r) =>
+      (r.gcsUrl == null || r.gcsUrl!.isEmpty) &&
+      const {'uploaded', 'verified'}.contains(r.uploadStatus);
+
+  bool _needsUserRefresh(LocalRecording r) =>
+      r.userId == null || r.userId!.isEmpty;
 
   Future<void> _resolveStoryteller(LocalRecordingEntity recording) async {
     final id = recording.storytellerId;

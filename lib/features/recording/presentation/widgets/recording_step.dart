@@ -188,6 +188,35 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
     UnsavedRecordingsSheet.show(context);
   }
 
+  void _onAutoStopped(RecordingState? prev, RecordingState next) {
+    final result = next.autoStoppedResult;
+    if (result == null) return;
+    if (prev?.autoStoppedResult == result) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref.read(recordingSessionNotifierProvider.notifier).acknowledgeAutoStop();
+      widget.onRecordingComplete(result);
+    });
+  }
+
+  void _onStopError(RecordingState? prev, RecordingState next) {
+    final error = next.lastStopError;
+    if (error == null) return;
+    if (prev?.lastStopError == error) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref
+          .read(recordingSessionNotifierProvider.notifier)
+          .acknowledgeLastStopError();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context).recording_recoveryFailed),
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -196,32 +225,11 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
     final recState = ref.watch(recordingSessionNotifierProvider);
     final notifier = ref.read(recordingSessionNotifierProvider.notifier);
 
-    ref.listen<RecordingState>(recordingSessionNotifierProvider, (prev, next) {
-      final result = next.autoStoppedResult;
-      if (result == null) return;
-      if (prev?.autoStoppedResult == result) return;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        notifier.acknowledgeAutoStop();
-        widget.onRecordingComplete(result);
-      });
-    });
-
-    ref.listen<RecordingState>(recordingSessionNotifierProvider, (prev, next) {
-      final error = next.lastStopError;
-      if (error == null) return;
-      if (prev?.lastStopError == error) return;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        notifier.acknowledgeLastStopError();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.recording_recoveryFailed),
-            duration: const Duration(seconds: 4),
-          ),
-        );
-      });
-    });
+    ref.listen<RecordingState>(
+      recordingSessionNotifierProvider,
+      _onAutoStopped,
+    );
+    ref.listen<RecordingState>(recordingSessionNotifierProvider, _onStopError);
 
     final isFinalizing = recState.isFinalizing;
     final hasError = recState.hasFinalizationError;
