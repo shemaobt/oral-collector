@@ -641,6 +641,62 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     }
   }
 
+  bool _hasSecondaryCollision(LocalRecordingEntity recording) {
+    final secondaryGenreCollides =
+        recording.secondaryGenreId != null &&
+        recording.secondaryGenreId!.isNotEmpty &&
+        recording.genreId == recording.secondaryGenreId;
+    final secondarySubcategoryCollides =
+        recording.secondarySubcategoryId != null &&
+        recording.secondarySubcategoryId!.isNotEmpty &&
+        recording.subcategoryId == recording.secondarySubcategoryId;
+    final secondaryRegisterCollides =
+        recording.secondaryRegisterId != null &&
+        recording.secondaryRegisterId!.isNotEmpty &&
+        recording.registerId == recording.secondaryRegisterId;
+    return secondaryGenreCollides ||
+        secondarySubcategoryCollides ||
+        secondaryRegisterCollides;
+  }
+
+  Widget? _buildSecondaryCollisionBanner(
+    BuildContext context,
+    LocalRecordingEntity recording,
+  ) {
+    if (!_hasSecondaryCollision(recording)) return null;
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
+    return RecordingActionBanner(
+      theme: theme,
+      icon: LucideIcons.alertCircle,
+      message: l10n.recording_secondaryCollisionBanner,
+      actionLabel: l10n.recording_clearSecondary,
+      accentColor: theme.colorScheme.error,
+      backgroundColor: theme.colorScheme.errorContainer.withValues(alpha: 0.35),
+      borderColor: theme.colorScheme.error.withValues(alpha: 0.5),
+      actionBackgroundColor: theme.colorScheme.error.withValues(alpha: 0.12),
+      onAction: _canEditRecording ? _clearSecondaryClassification : null,
+    );
+  }
+
+  Widget? _buildClassifyBanner(BuildContext context, bool isUnclassified) {
+    if (!isUnclassified) return null;
+    final theme = Theme.of(context);
+    final colors = AppColors.of(context);
+    final l10n = AppLocalizations.of(context);
+    return RecordingActionBanner(
+      theme: theme,
+      icon: LucideIcons.alertCircle,
+      message: l10n.classify_banner,
+      actionLabel: l10n.classify_action,
+      accentColor: colors.warning,
+      backgroundColor: colors.warning.withValues(alpha: 0.1),
+      borderColor: colors.warning.withValues(alpha: 0.3),
+      actionBackgroundColor: colors.warning.withValues(alpha: 0.15),
+      onAction: _classifyRecording,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(recordingDetailProvider(widget.recordingId));
@@ -775,54 +831,12 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
       isUnclassified: isUnclassified,
     );
 
-    final secondaryGenreCollides =
-        recording.secondaryGenreId != null &&
-        recording.secondaryGenreId!.isNotEmpty &&
-        recording.genreId == recording.secondaryGenreId;
-    final secondarySubcategoryCollides =
-        recording.secondarySubcategoryId != null &&
-        recording.secondarySubcategoryId!.isNotEmpty &&
-        recording.subcategoryId == recording.secondarySubcategoryId;
-    final secondaryRegisterCollides =
-        recording.secondaryRegisterId != null &&
-        recording.secondaryRegisterId!.isNotEmpty &&
-        recording.registerId == recording.secondaryRegisterId;
-    final hasSecondaryCollision =
-        secondaryGenreCollides ||
-        secondarySubcategoryCollides ||
-        secondaryRegisterCollides;
+    final secondaryCollisionBanner = _buildSecondaryCollisionBanner(
+      context,
+      recording,
+    );
 
-    final secondaryCollisionBanner = hasSecondaryCollision
-        ? RecordingActionBanner(
-            theme: theme,
-            icon: LucideIcons.alertCircle,
-            message: l10n.recording_secondaryCollisionBanner,
-            actionLabel: l10n.recording_clearSecondary,
-            accentColor: theme.colorScheme.error,
-            backgroundColor: theme.colorScheme.errorContainer.withValues(
-              alpha: 0.35,
-            ),
-            borderColor: theme.colorScheme.error.withValues(alpha: 0.5),
-            actionBackgroundColor: theme.colorScheme.error.withValues(
-              alpha: 0.12,
-            ),
-            onAction: _canEditRecording ? _clearSecondaryClassification : null,
-          )
-        : null;
-
-    final classifyBanner = isUnclassified
-        ? RecordingActionBanner(
-            theme: theme,
-            icon: LucideIcons.alertCircle,
-            message: l10n.classify_banner,
-            actionLabel: l10n.classify_action,
-            accentColor: colors.warning,
-            backgroundColor: colors.warning.withValues(alpha: 0.1),
-            borderColor: colors.warning.withValues(alpha: 0.3),
-            actionBackgroundColor: colors.warning.withValues(alpha: 0.15),
-            onAction: _classifyRecording,
-          )
-        : null;
+    final classifyBanner = _buildClassifyBanner(context, isUnclassified);
 
     final storytellerSection = RecordingStorytellerSection(
       projectId: recording.projectId,

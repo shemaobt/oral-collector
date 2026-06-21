@@ -470,15 +470,8 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final colors = AppColors.of(context);
-
-    final tagParts = <String>[];
-    if (widget.genreName != null) tagParts.add(widget.genreName!);
-    if (widget.subcategoryName != null) tagParts.add(widget.subcategoryName!);
-    if (widget.registerName != null) tagParts.add(widget.registerName!);
-    final tagLabel = tagParts.join(' / ');
 
     final seed = widget.result.durationSeconds.hashCode;
     final amplitudes = List.generate(
@@ -518,60 +511,11 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
                         ),
                       ),
 
-                      Padding(
-                        padding: const EdgeInsets.only(top: SpacingScale.s8),
-                        child: widget.genreId == kUnclassifiedGenreId
-                            ? Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: SpacingScale.s12,
-                                  vertical: SpacingScale.s4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: colors.warning.withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.circular(
-                                    RadiusScale.r16,
-                                  ),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      LucideIcons.tag,
-                                      size: 12,
-                                      color: colors.warning,
-                                    ),
-                                    const SizedBox(width: SpacingScale.s4),
-                                    Text(
-                                      l10n.quickRecord_classifyLater,
-                                      style: theme.textTheme.labelSmall
-                                          ?.copyWith(
-                                            color: colors.warning,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                    ),
-                                  ],
-                                ),
-                              )
-                            : tagLabel.isNotEmpty
-                            ? Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: SpacingScale.s12,
-                                  vertical: SpacingScale.s4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: colors.surfaceAlt,
-                                  borderRadius: BorderRadius.circular(
-                                    RadiusScale.r16,
-                                  ),
-                                ),
-                                child: Text(
-                                  tagLabel,
-                                  style: theme.textTheme.labelSmall?.copyWith(
-                                    color: colors.secondary,
-                                  ),
-                                ),
-                              )
-                            : const SizedBox.shrink(),
+                      _ClassificationTag(
+                        genreId: widget.genreId,
+                        genreName: widget.genreName,
+                        subcategoryName: widget.subcategoryName,
+                        registerName: widget.registerName,
                       ),
 
                       Padding(
@@ -635,219 +579,34 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
                         ),
                         child: Column(
                           children: [
-                            Container(
-                              decoration: BoxDecoration(
-                                color: colors.surfaceAlt,
-                                borderRadius: BorderRadius.circular(
-                                  RadiusScale.r16,
-                                ),
-                              ),
-                              padding: const EdgeInsets.fromLTRB(
-                                SpacingScale.s16,
-                                SpacingScale.s8,
-                                SpacingScale.s16,
-                                SpacingScale.s8,
-                              ),
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    LucideIcons.type,
-                                    size: 20,
-                                    color: colors.secondary,
-                                  ),
-                                  const SizedBox(width: SpacingScale.s12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Text(
-                                          l10n.recording_title,
-                                          style: theme.textTheme.labelSmall
-                                              ?.copyWith(
-                                                color: colors.secondary,
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                        ),
-                                        TextField(
-                                          controller: _titleController,
-                                          maxLines: 1,
-                                          textInputAction: TextInputAction.next,
-                                          textCapitalization:
-                                              TextCapitalization.sentences,
-                                          style: theme.textTheme.bodyMedium
-                                              ?.copyWith(
-                                                fontWeight: FontWeight.w500,
-                                                color: colors.foreground,
-                                              ),
-                                          decoration: const InputDecoration(
-                                            isDense: true,
-                                            filled: false,
-                                            fillColor: AppColors.transparent,
-                                            border: InputBorder.none,
-                                            enabledBorder: InputBorder.none,
-                                            focusedBorder: InputBorder.none,
-                                            contentPadding: EdgeInsets.zero,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: SpacingScale.s12),
-                            StorytellerPicker(
+                            _DetailsForm(
+                              titleController: _titleController,
+                              descriptionController: _descriptionController,
+                              selectedStoryteller: _selectedStoryteller,
+                              onStorytellerChanged: (s) =>
+                                  setState(() => _selectedStoryteller = s),
                               projectId:
                                   ref
                                       .read(projectNotifierProvider)
                                       .activeProject
                                       ?.id ??
                                   '',
-                              selected: _selectedStoryteller,
-                              onChanged: (s) =>
-                                  setState(() => _selectedStoryteller = s),
-                              showAddNew: true,
                             ),
-                            if (_selectedStoryteller == null)
-                              Padding(
-                                padding: const EdgeInsets.only(
-                                  top: SpacingScale.s8,
-                                ),
-                                child: Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Text(
-                                    l10n.storyteller_required,
-                                    style: theme.textTheme.labelSmall?.copyWith(
-                                      color: colors.error,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            const SizedBox(height: SpacingScale.s12),
-                            TextField(
-                              controller: _descriptionController,
-                              minLines: 2,
-                              maxLines: 4,
-                              keyboardType: TextInputType.multiline,
-                              textCapitalization: TextCapitalization.sentences,
-                              decoration: InputDecoration(
-                                hintText: l10n.recording_descriptionHint,
-                                hintStyle: TextStyle(color: colors.secondary),
-                                filled: true,
-                                fillColor: colors.surfaceAlt,
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(
-                                    RadiusScale.r12,
-                                  ),
-                                  borderSide: BorderSide.none,
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(
-                                    RadiusScale.r12,
-                                  ),
-                                  borderSide: BorderSide.none,
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(
-                                    RadiusScale.r12,
-                                  ),
-                                  borderSide: BorderSide(
-                                    color: colors.accent,
-                                    width: 1.5,
-                                  ),
-                                ),
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: SpacingScale.s16,
-                                  vertical: SpacingScale.s16,
-                                ),
-                              ),
-                            ),
-
                             const SizedBox(height: SpacingScale.s16),
-
-                            SizedBox(
-                              width: double.infinity,
-                              height: 52,
-                              child: ElevatedButton(
-                                onPressed:
-                                    (_isSaving || _selectedStoryteller == null)
-                                    ? null
-                                    : _save,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: colors.accent,
-                                  foregroundColor: AppColors.white,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(
-                                      RadiusScale.r16,
-                                    ),
-                                  ),
-                                  elevation: 0,
-                                ),
-                                child: _isSaving
-                                    ? const SizedBox(
-                                        width: SpacingScale.s20,
-                                        height: SpacingScale.s20,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: AppColors.white,
-                                        ),
-                                      )
-                                    : Text(
-                                        l10n.recording_saveRecording,
-                                        style: theme.textTheme.titleSmall
-                                            ?.copyWith(
-                                              color: AppColors.white,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                      ),
-                              ),
-                            ),
-
-                            if (widget.showReRecord) ...[
-                              const SizedBox(height: SpacingScale.s8),
-                              SizedBox(
-                                width: double.infinity,
-                                height: 52,
-                                child: OutlinedButton(
-                                  onPressed: _isSaving
-                                      ? null
-                                      : () {
-                                          _player?.stop();
-                                          widget.onReRecord();
-                                        },
-                                  style: OutlinedButton.styleFrom(
-                                    side: BorderSide(
-                                      color: colors.border.withValues(
-                                        alpha: 0.5,
-                                      ),
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(
-                                        RadiusScale.r16,
-                                      ),
-                                    ),
-                                  ),
-                                  child: Text(
-                                    l10n.recording_recordAgain,
-                                    style: theme.textTheme.titleSmall?.copyWith(
-                                      color: colors.foreground,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-
-                            const SizedBox(height: SpacingScale.s4),
-
-                            TextButton(
-                              onPressed: _isSaving ? null : _discard,
-                              style: TextButton.styleFrom(
-                                foregroundColor: colors.error,
-                              ),
-                              child: Text(l10n.recording_discard),
+                            _ActionButtons(
+                              isSaving: _isSaving,
+                              onSave:
+                                  (_isSaving || _selectedStoryteller == null)
+                                  ? null
+                                  : _save,
+                              showReRecord: widget.showReRecord,
+                              onReRecord: _isSaving
+                                  ? null
+                                  : () {
+                                      _player?.stop();
+                                      widget.onReRecord();
+                                    },
+                              onDiscard: _isSaving ? null : _discard,
                             ),
                           ],
                         ),
@@ -914,5 +673,299 @@ class _ProgressClipper extends CustomClipper<Rect> {
   @override
   bool shouldReclip(covariant _ProgressClipper oldClipper) {
     return oldClipper.progress != progress;
+  }
+}
+
+class _ClassificationTag extends StatelessWidget {
+  const _ClassificationTag({
+    required this.genreId,
+    required this.genreName,
+    required this.subcategoryName,
+    required this.registerName,
+  });
+
+  final String genreId;
+  final String? genreName;
+  final String? subcategoryName;
+  final String? registerName;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final colors = AppColors.of(context);
+
+    final tagParts = <String>[];
+    if (genreName != null) tagParts.add(genreName!);
+    if (subcategoryName != null) tagParts.add(subcategoryName!);
+    if (registerName != null) tagParts.add(registerName!);
+    final tagLabel = tagParts.join(' / ');
+
+    return Padding(
+      padding: const EdgeInsets.only(top: SpacingScale.s8),
+      child: genreId == kUnclassifiedGenreId
+          ? Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: SpacingScale.s12,
+                vertical: SpacingScale.s4,
+              ),
+              decoration: BoxDecoration(
+                color: colors.warning.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(RadiusScale.r16),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(LucideIcons.tag, size: 12, color: colors.warning),
+                  const SizedBox(width: SpacingScale.s4),
+                  Text(
+                    l10n.quickRecord_classifyLater,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: colors.warning,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            )
+          : tagLabel.isNotEmpty
+          ? Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: SpacingScale.s12,
+                vertical: SpacingScale.s4,
+              ),
+              decoration: BoxDecoration(
+                color: colors.surfaceAlt,
+                borderRadius: BorderRadius.circular(RadiusScale.r16),
+              ),
+              child: Text(
+                tagLabel,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: colors.secondary,
+                ),
+              ),
+            )
+          : const SizedBox.shrink(),
+    );
+  }
+}
+
+class _DetailsForm extends StatelessWidget {
+  const _DetailsForm({
+    required this.titleController,
+    required this.descriptionController,
+    required this.selectedStoryteller,
+    required this.onStorytellerChanged,
+    required this.projectId,
+  });
+
+  final TextEditingController titleController;
+  final TextEditingController descriptionController;
+  final Storyteller? selectedStoryteller;
+  final ValueChanged<Storyteller?> onStorytellerChanged;
+  final String projectId;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final colors = AppColors.of(context);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            color: colors.surfaceAlt,
+            borderRadius: BorderRadius.circular(RadiusScale.r16),
+          ),
+          padding: const EdgeInsets.fromLTRB(
+            SpacingScale.s16,
+            SpacingScale.s8,
+            SpacingScale.s16,
+            SpacingScale.s8,
+          ),
+          child: Row(
+            children: [
+              Icon(LucideIcons.type, size: 20, color: colors.secondary),
+              const SizedBox(width: SpacingScale.s12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      l10n.recording_title,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: colors.secondary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    TextField(
+                      controller: titleController,
+                      maxLines: 1,
+                      textInputAction: TextInputAction.next,
+                      textCapitalization: TextCapitalization.sentences,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w500,
+                        color: colors.foreground,
+                      ),
+                      decoration: const InputDecoration(
+                        isDense: true,
+                        filled: false,
+                        fillColor: AppColors.transparent,
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: SpacingScale.s12),
+        StorytellerPicker(
+          projectId: projectId,
+          selected: selectedStoryteller,
+          onChanged: onStorytellerChanged,
+          showAddNew: true,
+        ),
+        if (selectedStoryteller == null)
+          Padding(
+            padding: const EdgeInsets.only(top: SpacingScale.s8),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                l10n.storyteller_required,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: colors.error,
+                ),
+              ),
+            ),
+          ),
+        const SizedBox(height: SpacingScale.s12),
+        TextField(
+          controller: descriptionController,
+          minLines: 2,
+          maxLines: 4,
+          keyboardType: TextInputType.multiline,
+          textCapitalization: TextCapitalization.sentences,
+          decoration: InputDecoration(
+            hintText: l10n.recording_descriptionHint,
+            hintStyle: TextStyle(color: colors.secondary),
+            filled: true,
+            fillColor: colors.surfaceAlt,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(RadiusScale.r12),
+              borderSide: BorderSide.none,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(RadiusScale.r12),
+              borderSide: BorderSide.none,
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(RadiusScale.r12),
+              borderSide: BorderSide(color: colors.accent, width: 1.5),
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: SpacingScale.s16,
+              vertical: SpacingScale.s16,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ActionButtons extends StatelessWidget {
+  const _ActionButtons({
+    required this.isSaving,
+    required this.onSave,
+    required this.showReRecord,
+    required this.onReRecord,
+    required this.onDiscard,
+  });
+
+  final bool isSaving;
+  final VoidCallback? onSave;
+  final bool showReRecord;
+  final VoidCallback? onReRecord;
+  final VoidCallback? onDiscard;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final colors = AppColors.of(context);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          width: double.infinity,
+          height: 52,
+          child: ElevatedButton(
+            onPressed: onSave,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: colors.accent,
+              foregroundColor: AppColors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(RadiusScale.r16),
+              ),
+              elevation: 0,
+            ),
+            child: isSaving
+                ? const SizedBox(
+                    width: SpacingScale.s20,
+                    height: SpacingScale.s20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppColors.white,
+                    ),
+                  )
+                : Text(
+                    l10n.recording_saveRecording,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      color: AppColors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+          ),
+        ),
+        if (showReRecord) ...[
+          const SizedBox(height: SpacingScale.s8),
+          SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: OutlinedButton(
+              onPressed: onReRecord,
+              style: OutlinedButton.styleFrom(
+                side: BorderSide(color: colors.border.withValues(alpha: 0.5)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(RadiusScale.r16),
+                ),
+              ),
+              child: Text(
+                l10n.recording_recordAgain,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  color: colors.foreground,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ),
+        ],
+        const SizedBox(height: SpacingScale.s4),
+        TextButton(
+          onPressed: onDiscard,
+          style: TextButton.styleFrom(foregroundColor: colors.error),
+          child: Text(l10n.recording_discard),
+        ),
+      ],
+    );
   }
 }

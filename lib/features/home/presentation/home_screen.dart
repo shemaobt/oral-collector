@@ -162,7 +162,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         !projectState.isLoading && projectState.projects.isEmpty;
     final theme = Theme.of(context);
     final colors = AppColors.of(context);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     // Re-fetch remote data when connectivity is restored
     ref.listen(syncNotifierProvider.select((s) => s.isOnline), (prev, next) {
@@ -241,29 +240,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
 
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  SpacingScale.s20,
-                  18,
-                  SpacingScale.s20,
-                  0,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(greeting, style: theme.textTheme.headlineLarge),
-                    const SizedBox(height: SpacingScale.s4),
-                    Text(
-                      l10n.home_subtitle,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: colors.secondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            SliverToBoxAdapter(child: _GreetingHeader(greeting: greeting)),
 
             if (isOffline)
               SliverToBoxAdapter(child: StatusBanner.offline(l10n)),
@@ -299,73 +276,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
             if (activeProject != null) ...[
               SliverToBoxAdapter(
-                child: Semantics(
-                  label: l10n.home_switchProject,
-                  button: projectState.projects.length > 1,
-                  child: InkWell(
-                    onTap: projectState.projects.length > 1
-                        ? () => _showProjectSwitcher(context)
-                        : null,
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(
-                        SpacingScale.s20,
-                        SpacingScale.s24,
-                        SpacingScale.s20,
-                        0,
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            LucideIcons.folderOpen,
-                            size: 18,
-                            color: colors.accent,
-                          ),
-                          const SizedBox(width: SpacingScale.s8),
-                          Flexible(
-                            child: Text(
-                              activeProject.name,
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w700,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          if (activeProject.languageName != null) ...[
-                            const SizedBox(width: SpacingScale.s8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: SpacingScale.s8,
-                                vertical: 3,
-                              ),
-                              decoration: BoxDecoration(
-                                color: colors.primary.withValues(
-                                  alpha: isDark ? 0.2 : 0.1,
-                                ),
-                                borderRadius: BorderRadius.circular(
-                                  RadiusScale.r8,
-                                ),
-                              ),
-                              child: Text(
-                                activeProject.languageName!,
-                                style: theme.textTheme.labelSmall?.copyWith(
-                                  color: colors.primary,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ],
-                          if (projectState.projects.length > 1) ...[
-                            const SizedBox(width: SpacingScale.s8),
-                            Icon(
-                              LucideIcons.chevronDown,
-                              size: 16,
-                              color: colors.secondary,
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ),
+                child: _ProjectPickerRow(
+                  projectName: activeProject.name,
+                  languageName: activeProject.languageName,
+                  projectCount: projectState.projects.length,
+                  onShowSwitcher: () => _showProjectSwitcher(context),
                 ),
               ),
 
@@ -399,43 +314,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               )
             else if (activeProject != null && genreState.genres.isNotEmpty) ...[
               SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    SpacingScale.s20,
-                    SpacingScale.s28,
-                    SpacingScale.s20,
-                    0,
-                  ),
-                  child: Row(
-                    children: [
-                      Text(
-                        l10n.home_genres,
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      const Spacer(),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: SpacingScale.s8,
-                          vertical: SpacingScale.s4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: colors.foreground.withValues(
-                            alpha: isDark ? 0.12 : 0.08,
-                          ),
-                          borderRadius: BorderRadius.circular(RadiusScale.r8),
-                        ),
-                        child: Text(
-                          '${genreState.genres.length}',
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                child: _GenresHeader(genreCount: genreState.genres.length),
               ),
 
               SliverToBoxAdapter(
@@ -515,6 +394,170 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _GreetingHeader extends StatelessWidget {
+  const _GreetingHeader({required this.greeting});
+
+  final String greeting;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final colors = AppColors.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        SpacingScale.s20,
+        18,
+        SpacingScale.s20,
+        0,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(greeting, style: theme.textTheme.headlineLarge),
+          const SizedBox(height: SpacingScale.s4),
+          Text(
+            l10n.home_subtitle,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: colors.secondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProjectPickerRow extends StatelessWidget {
+  const _ProjectPickerRow({
+    required this.projectName,
+    required this.languageName,
+    required this.projectCount,
+    required this.onShowSwitcher,
+  });
+
+  final String projectName;
+  final String? languageName;
+  final int projectCount;
+  final VoidCallback onShowSwitcher;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final colors = AppColors.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final hasMultiple = projectCount > 1;
+    return Semantics(
+      label: l10n.home_switchProject,
+      button: hasMultiple,
+      child: InkWell(
+        onTap: hasMultiple ? onShowSwitcher : null,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            SpacingScale.s20,
+            SpacingScale.s24,
+            SpacingScale.s20,
+            0,
+          ),
+          child: Row(
+            children: [
+              Icon(LucideIcons.folderOpen, size: 18, color: colors.accent),
+              const SizedBox(width: SpacingScale.s8),
+              Flexible(
+                child: Text(
+                  projectName,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (languageName != null) ...[
+                const SizedBox(width: SpacingScale.s8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: SpacingScale.s8,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: colors.primary.withValues(alpha: isDark ? 0.2 : 0.1),
+                    borderRadius: BorderRadius.circular(RadiusScale.r8),
+                  ),
+                  child: Text(
+                    languageName!,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: colors.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+              if (hasMultiple) ...[
+                const SizedBox(width: SpacingScale.s8),
+                Icon(
+                  LucideIcons.chevronDown,
+                  size: 16,
+                  color: colors.secondary,
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _GenresHeader extends StatelessWidget {
+  const _GenresHeader({required this.genreCount});
+
+  final int genreCount;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final colors = AppColors.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        SpacingScale.s20,
+        SpacingScale.s28,
+        SpacingScale.s20,
+        0,
+      ),
+      child: Row(
+        children: [
+          Text(
+            l10n.home_genres,
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const Spacer(),
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: SpacingScale.s8,
+              vertical: SpacingScale.s4,
+            ),
+            decoration: BoxDecoration(
+              color: colors.foreground.withValues(alpha: isDark ? 0.12 : 0.08),
+              borderRadius: BorderRadius.circular(RadiusScale.r8),
+            ),
+            child: Text(
+              '$genreCount',
+              style: theme.textTheme.labelSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
