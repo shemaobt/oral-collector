@@ -259,4 +259,113 @@ void main() {
       }
     },
   );
+
+  // ENG-204: caracterização dos ramos/edges ainda não fixados antes do refactor
+  // que troca o if-chain por uma tabela de matchers ordenada. Fixa o status quo.
+  group('friendlyErrorMessage: ramos adicionais (ENG-204)', () {
+    final cases = <String, String>{
+      // Rede — tokens soltos e o AND `socket`+`failed`.
+      'Connection reset by peer': l10n.error_network,
+      'No address associated with hostname': l10n.error_network,
+      'Failed host lookup: api':
+          l10n.error_network, // rede antes do balde server
+      'Socket operation failed': l10n.error_network, // socket && failed
+      // Conexão segura — tokens soltos.
+      'SSL handshake aborted': l10n.error_secureConnection,
+      'bad certificate': l10n.error_secureConnection,
+      // Import.
+      'File not found': l10n.error_importNoBytes,
+      // Balde server — cada prefixo startsWith é um ponto de decisão distinto.
+      'Failed to fetch projects': l10n.error_serverFailure,
+      'Failed to load data': l10n.error_serverFailure,
+      'Failed to create project': l10n.error_serverFailure,
+      'Failed to recreate session': l10n.error_serverFailure,
+      'Failed to update settings': l10n.error_serverFailure, // não é profile
+      'Failed to delete recording': l10n.error_serverFailure,
+      'Failed to remove member': l10n.error_serverFailure,
+      'Failed to send invite': l10n.error_serverFailure,
+      'Failed to accept invite': l10n.error_serverFailure,
+      'Failed to decline invite': l10n.error_serverFailure,
+      'Failed to trigger cleaning': l10n.error_serverFailure,
+      'Failed to clear cache': l10n.error_serverFailure,
+      'password reset failed': l10n.error_serverFailure,
+      'reset password failed': l10n.error_serverFailure,
+      'auth error occurred': l10n.error_serverFailure,
+      'Operation failed (404)': l10n.error_serverFailure, // regex failed(NNN)
+    };
+
+    cases.forEach((input, expected) {
+      test('"$input"', () {
+        expect(friendlyErrorMessage(input, l10n), expected);
+      });
+    });
+
+    test('`socket` sozinho (sem `failed`) NÃO casa rede -> verbatim', () {
+      expect(friendlyErrorMessage('socket opened', l10n), 'socket opened');
+    });
+
+    test(
+      'remove o prefixo "ClientException...:" antes de devolver verbatim',
+      () {
+        expect(
+          friendlyErrorMessage('ClientException: Some detail here', l10n),
+          'Some detail here',
+        );
+      },
+    );
+  });
+
+  group('friendlyErrorMessage: ordem JSON x ramos planos (ENG-204)', () {
+    test('JSON detail intercepta antes do ramo plano "login failed"', () {
+      // detail desconhecido e curto volta verbatim; se o ramo plano "login
+      // failed" rodasse antes, viria error_invalidCredentials.
+      expect(
+        friendlyErrorMessage('Login failed: {"detail":"Account locked"}', l10n),
+        'Account locked',
+      );
+    });
+
+    test('regex JSON roda sobre o texto já sem o prefixo "Exception:"', () {
+      expect(
+        friendlyErrorMessage(
+          'Exception: Login failed: {"detail":"user not found"}',
+          l10n,
+        ),
+        l10n.error_userNotFound,
+      );
+    });
+
+    test('detail não-String: JSON cai no ramo plano "login failed"', () {
+      // o regex casa e o JSON decodifica, mas detail não é String: o caminho
+      // JSON não resolve e o loop segue para o ramo plano "login failed".
+      expect(
+        friendlyErrorMessage('Login failed: {"detail": 42}', l10n),
+        l10n.error_invalidCredentials,
+      );
+    });
+  });
+
+  group('friendlyErrorMessage: _humanizeDetail edges (ENG-204)', () {
+    test('detail "duplicate" -> error_accountExists', () {
+      expect(
+        friendlyErrorMessage('failed: {"detail":"duplicate key"}', l10n),
+        l10n.error_accountExists,
+      );
+    });
+
+    test('detail >= 100 chars -> error_generic', () {
+      final longDetail = 'a' * 110;
+      expect(
+        friendlyErrorMessage('failed: {"detail":"$longDetail"}', l10n),
+        l10n.error_generic,
+      );
+    });
+
+    test('detail curto contendo "{" -> error_generic', () {
+      expect(
+        friendlyErrorMessage('failed: {"detail":"weird {brace}"}', l10n),
+        l10n.error_generic,
+      );
+    });
+  });
 }
