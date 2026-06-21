@@ -211,8 +211,17 @@ Path: @/lib/features/recording/data
     filter), trim+gain (seek/trim + volume, re-encode to aac), or a
     plain `-c copy` stream trim — then reads the output file length and
     returns `List<SplitSegmentSpec>` ready for `RecordingSplitPersister`.
-    The ffmpeg runner, file-length, clock, and documents-dir are
-    injectable so it runs without a device. It is kept free of a direct
+    Its per-call data inputs (source path, the `SegmentExportSpec`s, gain,
+    boost-only flag, original title, parent genre id) are grouped into a
+    single `ExportLocalSegmentsRequest` value object passed as the lone
+    positional argument — the same params-object pattern as
+    `UpdateRecordingRequest`/`SplitSegmentRequest`
+    ([../domain/docs.md](../domain/docs.md)), adopted to keep the function's
+    parameter count under the `dart_code_linter` `number-of-parameters` gate
+    (ENG-209; the threshold ratchet itself is ENG-208). The four injectable
+    IO seams — the ffmpeg runner, file-length, clock, and documents-dir —
+    deliberately stay as named parameters (they are test seams, not caller
+    data) so it still runs without a device. It is kept free of a direct
     `dart:io` import so the web bundle still compiles, even though the
     native save path is its only runtime caller.
   - `services/waveform_loader.dart` (`WaveformLoader` typedef +

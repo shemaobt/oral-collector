@@ -69,20 +69,15 @@ class _ExporterSpy {
   String? originalTitle;
   String? parentGenreId;
 
-  Future<List<SplitSegmentSpec>> call({
-    required String sourceFilePath,
-    required List<SegmentExportSpec> segments,
-    required double gainDb,
-    required bool boostOnly,
-    required String originalTitle,
-    required String parentGenreId,
-  }) async {
-    this.sourceFilePath = sourceFilePath;
-    this.segments = segments;
-    this.gainDb = gainDb;
-    this.boostOnly = boostOnly;
-    this.originalTitle = originalTitle;
-    this.parentGenreId = parentGenreId;
+  Future<List<SplitSegmentSpec>> call(
+    ExportLocalSegmentsRequest request,
+  ) async {
+    sourceFilePath = request.sourceFilePath;
+    segments = request.segments;
+    gainDb = request.gainDb;
+    boostOnly = request.boostOnly;
+    originalTitle = request.originalTitle;
+    parentGenreId = request.parentGenreId;
     if (throwOnCall) throw Exception('ffmpeg failed');
     return cannedSpecs;
   }

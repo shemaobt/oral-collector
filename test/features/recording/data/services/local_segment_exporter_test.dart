@@ -17,18 +17,20 @@ void main() {
         'suffix on the single child title', () async {
       final commands = <String>[];
       final specs = await exportLocalSegments(
-        sourceFilePath: '/audio/in.m4a',
-        segments: const [
-          SegmentExportSpec(
-            startSeconds: 0.0,
-            endSeconds: 12.0,
-            genreOverride: 'g1',
-          ),
-        ],
-        gainDb: 3.0,
-        boostOnly: true,
-        originalTitle: 'My Story',
-        parentGenreId: 'genreX',
+        const ExportLocalSegmentsRequest(
+          sourceFilePath: '/audio/in.m4a',
+          segments: [
+            SegmentExportSpec(
+              startSeconds: 0.0,
+              endSeconds: 12.0,
+              genreOverride: 'g1',
+            ),
+          ],
+          gainDb: 3.0,
+          boostOnly: true,
+          originalTitle: 'My Story',
+          parentGenreId: 'genreX',
+        ),
         runner: (cmd) async {
           commands.add(cmd);
           return true;
@@ -60,23 +62,25 @@ void main() {
         'indexed titles', () async {
       final commands = <String>[];
       final specs = await exportLocalSegments(
-        sourceFilePath: '/audio/in.m4a',
-        segments: const [
-          SegmentExportSpec(
-            startSeconds: 0.0,
-            endSeconds: 5.5,
-            subcategoryOverride: 'sub1',
-          ),
-          SegmentExportSpec(
-            startSeconds: 5.5,
-            endSeconds: 10.0,
-            registerOverride: 'reg1',
-          ),
-        ],
-        gainDb: -2.0,
-        boostOnly: false,
-        originalTitle: 'Tale',
-        parentGenreId: 'g',
+        const ExportLocalSegmentsRequest(
+          sourceFilePath: '/audio/in.m4a',
+          segments: [
+            SegmentExportSpec(
+              startSeconds: 0.0,
+              endSeconds: 5.5,
+              subcategoryOverride: 'sub1',
+            ),
+            SegmentExportSpec(
+              startSeconds: 5.5,
+              endSeconds: 10.0,
+              registerOverride: 'reg1',
+            ),
+          ],
+          gainDb: -2.0,
+          boostOnly: false,
+          originalTitle: 'Tale',
+          parentGenreId: 'g',
+        ),
         runner: (cmd) async {
           commands.add(cmd);
           return true;
@@ -102,12 +106,14 @@ void main() {
     test('split without gain emits a stream-copy trim command', () async {
       final commands = <String>[];
       await exportLocalSegments(
-        sourceFilePath: '/a.m4a',
-        segments: const [SegmentExportSpec(startSeconds: 1.0, endSeconds: 2.0)],
-        gainDb: 0.0,
-        boostOnly: false,
-        originalTitle: 'X',
-        parentGenreId: 'g',
+        const ExportLocalSegmentsRequest(
+          sourceFilePath: '/a.m4a',
+          segments: [SegmentExportSpec(startSeconds: 1.0, endSeconds: 2.0)],
+          gainDb: 0.0,
+          boostOnly: false,
+          originalTitle: 'X',
+          parentGenreId: 'g',
+        ),
         runner: (cmd) async {
           commands.add(cmd);
           return true;
@@ -126,12 +132,14 @@ void main() {
     test('throws when the ffmpeg runner reports failure', () async {
       await expectLater(
         exportLocalSegments(
-          sourceFilePath: '/a.m4a',
-          segments: const [SegmentExportSpec(startSeconds: 0, endSeconds: 1)],
-          gainDb: 0.0,
-          boostOnly: false,
-          originalTitle: 'X',
-          parentGenreId: 'g',
+          const ExportLocalSegmentsRequest(
+            sourceFilePath: '/a.m4a',
+            segments: [SegmentExportSpec(startSeconds: 0, endSeconds: 1)],
+            gainDb: 0.0,
+            boostOnly: false,
+            originalTitle: 'X',
+            parentGenreId: 'g',
+          ),
           runner: (_) async => false,
           fileLength: (_) async => 1,
           clock: () => fixedNow,

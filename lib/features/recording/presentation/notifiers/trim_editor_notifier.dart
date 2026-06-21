@@ -343,12 +343,14 @@ class TrimEditorNotifier
     ];
 
     final specs = await exporter(
-      sourceFilePath: recording.localFilePath,
-      segments: exportSegments,
-      gainDb: state.gainDb,
-      boostOnly: boostOnly,
-      originalTitle: originalTitle,
-      parentGenreId: recording.genreId,
+      ExportLocalSegmentsRequest(
+        sourceFilePath: recording.localFilePath,
+        segments: exportSegments,
+        gainDb: state.gainDb,
+        boostOnly: boostOnly,
+        originalTitle: originalTitle,
+        parentGenreId: recording.genreId,
+      ),
     );
 
     final persister = persisterFactory(
