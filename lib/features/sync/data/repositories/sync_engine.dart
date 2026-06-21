@@ -134,76 +134,105 @@ class SyncEngineImpl implements SyncEngine {
       }
 
       if (maxConcurrency <= 1) {
-        for (final recording in eligible) {
-          // The Wi-Fi-only policy is a network-TYPE constraint: a Wi-Fi→cellular
-          // switch keeps uploads succeeding, so it can't be inferred from an
-          // upload outcome — it must be re-checked per item. Reachability
-          // (isOnline), by contrast, surfaces as an upload failure, so it is
-          // sampled once at the gate and only re-probed after a failure
-          // (ENG-125).
-          if (wifiOnly && !await _connectivity.isOnWifi) break;
-
-          final outcome = await _uploadRecording(
-            recording.id,
-            recording.localFilePath,
-            deleteAfterUpload: deleteAfterUpload,
-            onProgress: onProgress,
-          );
-
-          if (outcome == _UploadOutcome.failed &&
-              !await _connectivity.isOnline) {
-            break;
-          }
-        }
+        await _drainSerially(
+          eligible,
+          wifiOnly: wifiOnly,
+          deleteAfterUpload: deleteAfterUpload,
+          onProgress: onProgress,
+        );
       } else {
-        var index = 0;
-        final active = <Future<void>>[];
-        // Set once we should stop the pass (Wi-Fi-only policy broken, or an
-        // upload failed and a re-probe confirms we are offline); it stops
-        // admitting new uploads while the in-flight ones drain.
-        var stopAdmitting = false;
-
-        while (index < eligible.length || active.isNotEmpty) {
-          while (!stopAdmitting &&
-              index < eligible.length &&
-              active.length < maxConcurrency) {
-            // Re-check the Wi-Fi-only policy per admit: a Wi-Fi→cellular switch
-            // keeps uploads succeeding, so it can't be inferred from outcomes
-            // (see the serial loop for the isOnline/isOnWifi rationale).
-            if (wifiOnly && !await _connectivity.isOnWifi) {
-              stopAdmitting = true;
-              break;
-            }
-            final recording = eligible[index++];
-            late final Future<void> entry;
-            entry =
-                _uploadRecording(
-                      recording.id,
-                      recording.localFilePath,
-                      deleteAfterUpload: deleteAfterUpload,
-                      onProgress: onProgress,
-                    )
-                    .then((outcome) async {
-                      if (outcome == _UploadOutcome.failed &&
-                          !await _connectivity.isOnline) {
-                        stopAdmitting = true;
-                      }
-                    })
-                    .whenComplete(() => active.remove(entry));
-            active.add(entry);
-          }
-
-          if (active.isNotEmpty) {
-            await Future.any(active);
-          } else {
-            break;
-          }
-        }
+        await _drainConcurrently(
+          eligible,
+          maxConcurrency: maxConcurrency,
+          wifiOnly: wifiOnly,
+          deleteAfterUpload: deleteAfterUpload,
+          onProgress: onProgress,
+        );
       }
     } finally {
       _isProcessing = false;
     }
   }
+
+  Future<void> _drainSerially(
+    List<LocalRecording> eligible, {
+    required bool wifiOnly,
+    required bool deleteAfterUpload,
+    void Function(String recordingId, int bytesSent, int totalBytes)?
+    onProgress,
+  }) async {
+    for (final recording in eligible) {
+      // The Wi-Fi-only policy is a network-TYPE constraint: a Wi-Fi→cellular
+      // switch keeps uploads succeeding, so it can't be inferred from an
+      // upload outcome — it must be re-checked per item. Reachability
+      // (isOnline), by contrast, surfaces as an upload failure, so it is
+      // sampled once at the gate and only re-probed after a failure
+      // (ENG-125).
+      if (wifiOnly && !await _connectivity.isOnWifi) break;
+
+      final outcome = await _uploadRecording(
+        recording.id,
+        recording.localFilePath,
+        deleteAfterUpload: deleteAfterUpload,
+        onProgress: onProgress,
+      );
+
+      if (await _failedAndOffline(outcome)) break;
+    }
+  }
+
+  Future<void> _drainConcurrently(
+    List<LocalRecording> eligible, {
+    required int maxConcurrency,
+    required bool wifiOnly,
+    required bool deleteAfterUpload,
+    void Function(String recordingId, int bytesSent, int totalBytes)?
+    onProgress,
+  }) async {
+    var index = 0;
+    final active = <Future<void>>[];
+    // Set once we should stop the pass (Wi-Fi-only policy broken, or an
+    // upload failed and a re-probe confirms we are offline); it stops
+    // admitting new uploads while the in-flight ones drain.
+    var stopAdmitting = false;
+
+    while (index < eligible.length || active.isNotEmpty) {
+      while (!stopAdmitting &&
+          index < eligible.length &&
+          active.length < maxConcurrency) {
+        // Re-check the Wi-Fi-only policy per admit: a Wi-Fi→cellular switch
+        // keeps uploads succeeding, so it can't be inferred from outcomes
+        // (see the serial loop for the isOnline/isOnWifi rationale).
+        if (wifiOnly && !await _connectivity.isOnWifi) {
+          stopAdmitting = true;
+          break;
+        }
+        final recording = eligible[index++];
+        late final Future<void> entry;
+        entry =
+            _uploadRecording(
+                  recording.id,
+                  recording.localFilePath,
+                  deleteAfterUpload: deleteAfterUpload,
+                  onProgress: onProgress,
+                )
+                .then((outcome) async {
+                  if (await _failedAndOffline(outcome)) stopAdmitting = true;
+                })
+                .whenComplete(() => active.remove(entry));
+        active.add(entry);
+      }
+
+      if (active.isNotEmpty) {
+        await Future.any(active);
+      } else {
+        break;
+      }
+    }
+  }
+
+  Future<bool> _failedAndOffline(_UploadOutcome outcome) async =>
+      outcome == _UploadOutcome.failed && !await _connectivity.isOnline;
 
   @override
   Future<void> uploadSingle(
