@@ -24,34 +24,51 @@ class SegmentExportSpec {
   final String? registerOverride;
 }
 
+/// Bundles the per-call inputs to [exportLocalSegments] (everything the caller
+/// resolves before any platform IO). Grouping them keeps the function's
+/// parameter list small; the injectable IO seams stay as named parameters.
+class ExportLocalSegmentsRequest {
+  const ExportLocalSegmentsRequest({
+    required this.sourceFilePath,
+    required this.segments,
+    required this.gainDb,
+    required this.boostOnly,
+    required this.originalTitle,
+    required this.parentGenreId,
+  });
+
+  final String sourceFilePath;
+  final List<SegmentExportSpec> segments;
+  final double gainDb;
+  final bool boostOnly;
+  final String originalTitle;
+  final String parentGenreId;
+}
+
 /// Runs ffmpeg per kept segment and returns the [SplitSegmentSpec]s ready for
 /// `RecordingSplitPersister`. Isolated from the widget so the orchestration can
 /// be unit-tested without a device (ffmpeg/file-length/clock/documents-dir are
 /// injectable). Kept free of a direct `dart:io` import so it stays web-safe to
 /// compile — the native save path is the only caller at runtime.
 typedef LocalSegmentExporter =
-    Future<List<SplitSegmentSpec>> Function({
-      required String sourceFilePath,
-      required List<SegmentExportSpec> segments,
-      required double gainDb,
-      required bool boostOnly,
-      required String originalTitle,
-      required String parentGenreId,
-    });
+    Future<List<SplitSegmentSpec>> Function(ExportLocalSegmentsRequest request);
 
-Future<List<SplitSegmentSpec>> exportLocalSegments({
-  required String sourceFilePath,
-  required List<SegmentExportSpec> segments,
-  required double gainDb,
-  required bool boostOnly,
-  required String originalTitle,
-  required String parentGenreId,
+Future<List<SplitSegmentSpec>> exportLocalSegments(
+  ExportLocalSegmentsRequest request, {
   ffmpeg.FFmpegRunner runner = ffmpeg.executeFFmpegCommand,
   Future<int> Function(String path) fileLength = file_ops.fileLength,
   DateTime Function() clock = DateTime.now,
   Future<String> Function() documentsDirectoryPath =
       _defaultDocumentsDirectoryPath,
 }) async {
+  final ExportLocalSegmentsRequest(
+    :sourceFilePath,
+    :segments,
+    :gainDb,
+    :boostOnly,
+    :originalTitle,
+    :parentGenreId,
+  ) = request;
   final dirPath = await documentsDirectoryPath();
   final now = clock();
   final keptTotal = segments.length;

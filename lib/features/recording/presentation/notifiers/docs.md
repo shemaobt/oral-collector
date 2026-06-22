@@ -204,8 +204,11 @@ Path: @/lib/features/recording/presentation/notifiers
     private `_saveServerSide` / `_saveLocally` take the
     `LocalRecordingEntity` straight off state. Web delegates to
     `RecordingApiRepository.splitRecording`; native exports each kept
-    segment through the `LocalSegmentExporter` seam and hands the specs
-    plus the entity `parent` to a `RecordingSplitPersister` built from
+    segment through the `LocalSegmentExporter` seam — wrapping the source
+    path, the `SegmentExportSpec`s, gain, boost-only flag, title, and parent
+    genre id in a single `ExportLocalSegmentsRequest` value object (ENG-209;
+    see [../../data/docs.md](../../data/docs.md)) — and hands the resulting
+    specs plus the entity `parent` to a `RecordingSplitPersister` built from
     `recordingSplitPersisterProvider` (the persister and the repository's
     `splitRecordingReplacingParent` consume the entity as the parent as of
     ENG-198 — see [../../data/repositories/docs.md](../../data/repositories/docs.md);
