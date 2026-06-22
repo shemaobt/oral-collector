@@ -41,13 +41,20 @@ import 'package:oral_collector/features/sync/presentation/notifiers/sync_state.d
 const recordingId = 'rec-1';
 
 class _FakeApiRepo implements RecordingApiRepository {
-  _FakeApiRepo({this.updateResult = true, this.updateError});
+  _FakeApiRepo({
+    this.updateResult = true,
+    this.updateError,
+    this.getRecordingResult,
+  });
 
   bool updateResult;
   Object? updateError;
+  ServerRecording? getRecordingResult;
 
   int updateCalls = 0;
+  int getRecordingCalls = 0;
   String? lastServerId;
+  String? lastGetServerId;
   Map<String, Object?> lastUpdate = const {};
 
   @override
@@ -77,8 +84,13 @@ class _FakeApiRepo implements RecordingApiRepository {
   }
 
   @override
-  Future<ServerRecording> getRecording(String serverId) =>
-      throw StateError('getRecording not expected');
+  Future<ServerRecording> getRecording(String serverId) async {
+    getRecordingCalls++;
+    lastGetServerId = serverId;
+    final result = getRecordingResult;
+    if (result == null) throw StateError('getRecording not expected');
+    return result;
+  }
 
   @override
   dynamic noSuchMethod(Invocation invocation) =>
@@ -305,6 +317,80 @@ void main() {
       expect(stateOf(c).recording, isNull);
       expect(stateOf(c).isLoading, isFalse);
     });
+
+    test(
+      'heals the gcs url from the server when online and uploaded',
+      () async {
+        await seed(
+          serverId: 'srv-1',
+          gcsUrl: '',
+          uploadStatus: 'uploaded',
+          userId: 'u1',
+        );
+        final api = _FakeApiRepo(
+          getRecordingResult: ServerRecording(
+            id: 'srv-1',
+            projectId: 'proj',
+            genreId: 'genre-1',
+            durationSeconds: 30,
+            fileSizeBytes: 1000,
+            format: 'm4a',
+            gcsUrl: 'https://gcs/healed.m4a',
+            uploadStatus: 'verified',
+            cleaningStatus: 'none',
+            userId: 'u1',
+            recordedAt: DateTime.utc(2026, 5, 1),
+          ),
+        );
+        final c = makeContainer(isOnline: true, api: api);
+
+        await notifierOf(c).load();
+
+        expect(api.getRecordingCalls, 1);
+        expect(api.lastGetServerId, 'srv-1');
+        final row = (await repo.getRecordingById(recordingId))!;
+        expect(row.gcsUrl, 'https://gcs/healed.m4a');
+        expect(row.uploadStatus, 'verified');
+      },
+    );
+
+    test('does not call the server when local metadata is complete', () async {
+      await seed(
+        serverId: 'srv-1',
+        gcsUrl: 'https://gcs/in.m4a',
+        uploadStatus: 'uploaded',
+        userId: 'u1',
+      );
+      final api = _FakeApiRepo();
+      final c = makeContainer(isOnline: true, api: api);
+
+      await notifierOf(c).load();
+
+      expect(api.getRecordingCalls, 0);
+      expect(
+        (await repo.getRecordingById(recordingId))!.gcsUrl,
+        'https://gcs/in.m4a',
+      );
+    });
+
+    test(
+      'does not heal while offline even if metadata is incomplete',
+      () async {
+        await seed(
+          serverId: 'srv-1',
+          gcsUrl: '',
+          uploadStatus: 'uploaded',
+          userId: 'u1',
+        );
+        final api = _FakeApiRepo();
+        final c = makeContainer(api: api);
+
+        await notifierOf(c).load();
+
+        expect(api.getRecordingCalls, 0);
+        expect((await repo.getRecordingById(recordingId))!.gcsUrl, '');
+      },
+    );
   });
 
   group('setStoryteller', () {

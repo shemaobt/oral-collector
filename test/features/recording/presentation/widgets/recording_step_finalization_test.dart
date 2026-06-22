@@ -36,6 +36,7 @@ class _FakeInputDeviceNotifier extends InputDeviceNotifier {
 Widget _wrap({
   required RecordingState state,
   _MutableRecordingSessionNotifier? notifier,
+  ValueChanged<RecordingResult>? onComplete,
 }) {
   final notif = notifier ?? _MutableRecordingSessionNotifier(state);
   return ProviderScope(
@@ -58,7 +59,7 @@ Widget _wrap({
           subcategoryId: 's1',
           genreName: 'Genre',
           subcategoryName: 'Sub',
-          onRecordingComplete: (_) {},
+          onRecordingComplete: onComplete ?? (_) {},
         ),
       ),
     ),
@@ -249,5 +250,62 @@ void main() {
     await tester.pump();
     final popScope = tester.widget<PopScope>(find.byType(PopScope).first);
     expect(popScope.canPop, isTrue);
+  });
+
+  testWidgets('an auto-stopped result fires onRecordingComplete', (
+    tester,
+  ) async {
+    final notifier = _MutableRecordingSessionNotifier(const RecordingState());
+    RecordingResult? completed;
+    await tester.pumpWidget(
+      _wrap(
+        state: const RecordingState(),
+        notifier: notifier,
+        onComplete: (result) => completed = result,
+      ),
+    );
+    await tester.pump();
+
+    notifier.setStateForTest(
+      const RecordingState(
+        autoStoppedResult: RecordingResult(
+          filePath: '/tmp/auto.m4a',
+          durationSeconds: 12,
+        ),
+      ),
+    );
+    await tester.pump(); // ref.listen fires, schedules the post-frame callback
+    await tester.pump(); // post-frame callback runs
+
+    expect(completed, isNotNull);
+    expect(completed!.filePath, '/tmp/auto.m4a');
+  });
+
+  testWidgets('a stop error surfaces the recovery-failed snackbar', (
+    tester,
+  ) async {
+    final notifier = _MutableRecordingSessionNotifier(const RecordingState());
+    await tester.pumpWidget(
+      _wrap(state: const RecordingState(), notifier: notifier),
+    );
+    await tester.pump();
+
+    notifier.setStateForTest(
+      const RecordingState(
+        lastStopError: RecordingStopError(
+          kind: RecordingStopErrorKind.finalizationFailed,
+          recoverable: false,
+        ),
+      ),
+    );
+    await tester.pump(); // ref.listen fires, schedules the post-frame callback
+    await tester.pump(); // post-frame callback calls showSnackBar
+    await tester.pump(const Duration(milliseconds: 750)); // snackbar slides in
+
+    expect(find.text('Recovery failed'), findsOneWidget);
+
+    // Unmount to cancel the snackbar's auto-dismiss timer.
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump();
   });
 }

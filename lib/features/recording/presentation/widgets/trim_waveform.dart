@@ -316,31 +316,14 @@ class _SplitWaveformPainter extends CustomPainter {
       ..style = PaintingStyle.fill;
     canvas.drawRect(Rect.fromLTRB(0, waveTop, size.width, waveBottom), bgPaint);
 
-    for (var i = 0; i < segmentCount; i++) {
-      final left = _fullToLocal(boundaries[i], size.width);
-      final right = _fullToLocal(boundaries[i + 1], size.width);
-      if (right < 0 || left > size.width) continue;
-
-      final isExcluded = excludedSegments.contains(i);
-      final isPlaying = playingSegment == i;
-      final isEven = i.isEven;
-
-      Color tint;
-      if (isExcluded) {
-        tint = errorColor.withValues(alpha: isDark ? 0.15 : 0.08);
-      } else if (isPlaying) {
-        tint = accentColor.withValues(alpha: isDark ? 0.22 : 0.14);
-      } else if (isEven) {
-        tint = accentColor.withValues(alpha: isDark ? 0.08 : 0.05);
-      } else {
-        tint = accentColor.withValues(alpha: isDark ? 0.14 : 0.09);
-      }
-
-      canvas.drawRect(
-        Rect.fromLTRB(left, waveTop, right, waveBottom),
-        Paint()..color = tint,
-      );
-    }
+    _drawSegmentTints(
+      canvas,
+      size,
+      waveTop,
+      waveBottom,
+      boundaries,
+      segmentCount,
+    );
 
     _drawBars(canvas, size, waveTop, waveBottom, boundaries, segmentCount);
 
@@ -422,6 +405,41 @@ class _SplitWaveformPainter extends CustomPainter {
           ),
         );
       }
+    }
+  }
+
+  void _drawSegmentTints(
+    Canvas canvas,
+    Size size,
+    double waveTop,
+    double waveBottom,
+    List<double> boundaries,
+    int segmentCount,
+  ) {
+    for (var i = 0; i < segmentCount; i++) {
+      final left = _fullToLocal(boundaries[i], size.width);
+      final right = _fullToLocal(boundaries[i + 1], size.width);
+      if (right < 0 || left > size.width) continue;
+
+      final isExcluded = excludedSegments.contains(i);
+      final isPlaying = playingSegment == i;
+      final isEven = i.isEven;
+
+      Color tint;
+      if (isExcluded) {
+        tint = errorColor.withValues(alpha: isDark ? 0.15 : 0.08);
+      } else if (isPlaying) {
+        tint = accentColor.withValues(alpha: isDark ? 0.22 : 0.14);
+      } else if (isEven) {
+        tint = accentColor.withValues(alpha: isDark ? 0.08 : 0.05);
+      } else {
+        tint = accentColor.withValues(alpha: isDark ? 0.14 : 0.09);
+      }
+
+      canvas.drawRect(
+        Rect.fromLTRB(left, waveTop, right, waveBottom),
+        Paint()..color = tint,
+      );
     }
   }
 
