@@ -65,8 +65,8 @@ custom_lint:
 # obt/.claude/quality-gates-plan.md. Generated code is excluded.
 dart_code_linter:
   metrics:
-    cyclomatic-complexity: 34 # current worst (_SplitWaveformPainter.paint). Ratchet -> 30 (ENG-210) -> 20.
-    number-of-parameters: 10 # current worst (exportLocalSegments). Ratchet -> 8 (ENG-209) -> 5.
+    cyclomatic-complexity: 30 # current worst (LocalRecordingEntity.==, RecordingState.copyWith). Ratchet -> 20.
+    number-of-parameters: 8 # current worst (saveRecordingTitle). Ratchet -> 5.
     maximum-nesting-level: 5 # current worst. Ratchet -> 4.
     source-lines-of-code: 300 # Phase 1 met (real worst 294). Ratchet -> 150.
   metrics-exclude:
