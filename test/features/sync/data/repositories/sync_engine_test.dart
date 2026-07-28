@@ -840,7 +840,7 @@ void main() {
       httpClient.close();
     });
 
-    test('409 marca como falha não-retryable', () async {
+    test('409 marca como conflito de título, não falha genérica', () async {
       final testFile = File('${tempDir.path}/conflict.m4a');
       testFile.writeAsBytesSync(Uint8List(1024));
 
@@ -857,7 +857,15 @@ void main() {
 
       verifyNever(() => mockRepo.markAsFailed('rec-1'));
       verifyNever(() => mockRepo.markAsUploaded(any(), any(), any()));
-      expectPermanentFailRec1();
+
+      final statuses =
+          verify(() => mockRepo.updateRecording('rec-1', captureAny())).captured
+              .cast<LocalRecordingsCompanion>()
+              .where((c) => c.uploadStatus.present)
+              .map((c) => c.uploadStatus.value)
+              .toList();
+      expect(statuses, contains('failed_conflict'));
+      expect(statuses, isNot(contains('failed')));
       httpClient.close();
     });
 

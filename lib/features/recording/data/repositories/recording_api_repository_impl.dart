@@ -37,6 +37,7 @@ class RecordingApiRepositoryImpl implements RecordingApiRepository {
     String? userId,
     String? storytellerId,
     String? uploadStatus,
+    String? title,
   }) async {
     final params = <String, String>{
       'project_id': projectId,
@@ -47,8 +48,11 @@ class RecordingApiRepositoryImpl implements RecordingApiRepository {
         'storyteller_id': storytellerId,
       if (uploadStatus != null && uploadStatus.isNotEmpty)
         'upload_status': uploadStatus,
+      if (title != null && title.isNotEmpty) 'title': title,
     };
-    final query = params.entries.map((e) => '${e.key}=${e.value}').join('&');
+    final query = params.entries
+        .map((e) => '${e.key}=${Uri.encodeQueryComponent(e.value)}')
+        .join('&');
     final response = await _client.get('/api/oc/recordings?$query');
     return parseList(
       decodeList(response),

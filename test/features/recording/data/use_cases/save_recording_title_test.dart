@@ -4,6 +4,8 @@ import 'package:mocktail/mocktail.dart';
 
 import 'package:oral_collector/core/database/app_database.dart';
 import 'package:oral_collector/core/errors/api_exception.dart';
+import 'package:oral_collector/core/errors/app_exception.dart'
+    show ConflictException;
 import 'package:oral_collector/features/recording/data/repositories/local_recording_repository.dart';
 import 'package:oral_collector/features/recording/data/use_cases/save_recording_title.dart';
 import 'package:oral_collector/features/recording/domain/entities/update_recording_request.dart';
@@ -234,6 +236,31 @@ void main() {
             localRepo: localRepo,
           ),
           throwsA(isA<ForbiddenException>()),
+        );
+
+        verifyNever(() => localRepo.updateRecording(any(), any()));
+      },
+    );
+
+    test(
+      'on mobile, ConflictException from API is rethrown AND local DB is NOT written',
+      () async {
+        when(
+          () => apiRepo.updateRecording(any(), any()),
+        ).thenThrow(const ConflictException());
+
+        await expectLater(
+          saveRecordingTitle(
+            recordingId: 'rec-1',
+            currentTitle: 'Old',
+            serverId: 'srv-1',
+            newTitle: 'New',
+            isWeb: false,
+            isOnline: true,
+            apiRepo: apiRepo,
+            localRepo: localRepo,
+          ),
+          throwsA(isA<ConflictException>()),
         );
 
         verifyNever(() => localRepo.updateRecording(any(), any()));

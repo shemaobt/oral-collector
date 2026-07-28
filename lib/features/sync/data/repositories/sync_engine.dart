@@ -9,7 +9,8 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import '../../../../core/database/app_database.dart';
-import '../../../../core/errors/app_exception.dart' show AppException;
+import '../../../../core/errors/app_exception.dart'
+    show AppException, ConflictException;
 import '../../../../core/network/authenticated_client.dart';
 import '../../../../core/network/response_decoder.dart';
 import '../../../../core/platform/file_ops.dart' as file_ops;
@@ -412,6 +413,13 @@ class SyncEngineImpl implements SyncEngine {
         await file_ops.deleteFile(resolvedPath);
       }
       return _UploadOutcome.uploaded;
+    } on ConflictException catch (e) {
+      // Ahead of the generic AppException arm: the backend deduplicates on
+      // (project_id, title), so a 409 means the title is taken. Terminal like
+      // any non-retryable failure, but kept distinguishable so the UI can offer
+      // a rename instead of a generic "upload failed".
+      _log.warning('title conflict for $id', e);
+      await _markPermanentlyFailed(id, status: 'failed_conflict');
     } on AppException catch (e, st) {
       // Retry decision by the typed flag (ENG-103), not by exception subtype.
       if (e.retryable) {
@@ -508,11 +516,14 @@ class SyncEngineImpl implements SyncEngine {
     return null;
   }
 
-  Future<void> _markPermanentlyFailed(String id) async {
+  Future<void> _markPermanentlyFailed(
+    String id, {
+    String status = 'failed',
+  }) async {
     await _recordingRepo.updateRecording(
       id,
       LocalRecordingsCompanion(
-        uploadStatus: const Value('failed'),
+        uploadStatus: Value(status),
         retryCount: const Value(maxRetries),
         lastRetryAt: Value(DateTime.now()),
       ),
