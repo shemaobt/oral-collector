@@ -13,20 +13,27 @@ void main() {
       expect(result, 'My Recording');
     });
 
-    test('returns default title when input is empty', () {
-      final result = resolveRecordingTitle('', locale: 'en');
+    // The default title carries the current second, so a single reference read
+    // races the call whenever the clock ticks between the two. Bracketing the
+    // call pins it without loosening the assertion.
+    void expectDefaultTitle(String? input) {
+      final before = defaultRecordingTitle(locale: 'en');
+      final result = resolveRecordingTitle(input, locale: 'en');
+      final after = defaultRecordingTitle(locale: 'en');
       expect(result, isNotEmpty);
-      expect(result, defaultRecordingTitle(locale: 'en'));
+      expect(result, anyOf(before, after));
+    }
+
+    test('returns default title when input is empty', () {
+      expectDefaultTitle('');
     });
 
     test('returns default title when input is whitespace only', () {
-      final result = resolveRecordingTitle('   ', locale: 'en');
-      expect(result, defaultRecordingTitle(locale: 'en'));
+      expectDefaultTitle('   ');
     });
 
     test('returns default title when input is null', () {
-      final result = resolveRecordingTitle(null, locale: 'en');
-      expect(result, defaultRecordingTitle(locale: 'en'));
+      expectDefaultTitle(null);
     });
   });
 
