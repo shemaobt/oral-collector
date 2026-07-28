@@ -67,8 +67,8 @@ Path: @/lib/features/recording/presentation/notifiers
   editor's injectable seams" in [../../data/docs.md](../../data/docs.md).
 - `RecordingDetailNotifier` is **headless** for the same reason: no
   `BuildContext`, no navigation, no snackbars. Its metadata mutations return a
-  `RecordingMutationResult { success, failed, forbidden }` the widget maps to a
-  localized snackbar (see Core Implementation). Its writes go through typed
+  `RecordingMutationResult { success, failed, forbidden, titleConflict }` the
+  widget maps to a localized snackbar (see Core Implementation). Its writes go through typed
   repository methods on
   [../../data/repositories/local_recording_repository.dart](../../data/repositories/local_recording_repository.dart)
   (`setStoryteller`, `classify`, `moveCategory`, …) and through the
@@ -155,7 +155,12 @@ Path: @/lib/features/recording/presentation/notifiers
     kicks the sync queue where the screen did, then `await load()`s. The four
     that can fail visibly (`toggleCleaningStatus`/`moveCategory`/`classify`/
     `saveSecondary`, plus `saveDetails`) return `RecordingMutationResult` so the
-    widget picks the snackbar (see Things to Know).
+    widget picks the snackbar (see Things to Know). `titleConflict` comes only
+    from `saveDetails`: the 409 the backend raises for a title already used in
+    the project (ENG-71). Nothing is written when it fires, so the row keeps its
+    old title and its `failed_conflict` status, and the rename banner stays up
+    for another attempt. The other handlers treat it as a plain failure because
+    only a title edit can produce it.
   - **Audio mutations** behind the IO seams: `downloadAndCache` (GCS download +
     `cacheDownloadedAudio`, throws on failure so the widget dismisses its
     progress dialog and shows the error), `downloadForExport` (temp download for
@@ -386,9 +391,9 @@ Path: @/lib/features/recording/presentation/notifiers
   even after disposal.
 - **`RecordingDetailNotifier` is headless; the widget owns every snackbar
   (ENG-194).** The notifier has no `BuildContext`, so its metadata mutations
-  resolve to a `RecordingMutationResult { success, failed, forbidden }` and the
-  screen `switch`es on it to pick the localized message and color (e.g.
-  `forbidden` → `recording_updateNoPermission` in
+  resolve to a `RecordingMutationResult { success, failed, forbidden,
+  titleConflict }` and the screen `switch`es on it to pick the localized message
+  and color (e.g. `forbidden` → `recording_updateNoPermission` in
   `AppColors.of(context).warning`; `failed` → the action's generic failure;
   `success` → the success snackbar or nothing). This is the same headless →
   result → widget-owns-UI boundary as the trim editor's `TrimSaveOutcome`. The

@@ -118,8 +118,12 @@ class _FakeProjectStorytellersNotifier extends ProjectStorytellersNotifier {
 }
 
 class _FakeSyncNotifier extends SyncNotifier {
+  _FakeSyncNotifier({required bool online}) : _online = online;
+
+  final bool _online;
+
   @override
-  SyncState build() => const SyncState(isOnline: true);
+  SyncState build() => SyncState(isOnline: _online);
 
   @override
   Future<void> processQueue() async {}
@@ -143,6 +147,7 @@ const _result = RecordingResult(
 ProviderContainer _container({
   required LocalRecordingRepository repo,
   required _TitleLookupApiRepo api,
+  bool isOnline = true,
 }) {
   return ProviderContainer(
     overrides: [
@@ -155,7 +160,9 @@ ProviderContainer _container({
           ),
         ),
       ),
-      syncNotifierProvider.overrideWith(_FakeSyncNotifier.new),
+      syncNotifierProvider.overrideWith(
+        () => _FakeSyncNotifier(online: isOnline),
+      ),
       localRecordingRepositoryProvider.overrideWithValue(repo),
       recordingApiRepositoryProvider.overrideWithValue(api),
     ],
@@ -265,6 +272,29 @@ void main() {
     await tester.pump();
   });
 
+  testWidgets('being offline never blocks the save', (tester) async {
+    // The server would answer "taken", but offline the lookup is skipped
+    // entirely: no round trip can happen, and losing the recording to a check
+    // that cannot run would be far worse than a late 409.
+    final repo = _RecordingRepositorySpy();
+    final container = _container(
+      repo: repo,
+      api: _TitleLookupApiRepo(taken: true),
+      isOnline: false,
+    );
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(_harness(container));
+    await tester.pump();
+    await _pickStorytellerAndSave(tester);
+
+    expect(repo.saved, hasLength(1));
+    expect(find.textContaining('already exists'), findsNothing);
+
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump();
+  });
+
   testWidgets('saves anyway when the title lookup fails', (tester) async {
     final repo = _RecordingRepositorySpy();
     final container = _container(
@@ -338,6 +368,24 @@ void main() {
       await pumpReady(tester);
 
       await tester.enterText(_titleField, 'Taken');
+      await tester.pump();
+
+      expect(find.text('Name already used'), findsOneWidget);
+      expect(_saveButton(tester).onPressed, isNull);
+
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump();
+    });
+
+    testWidgets('a trailing space does not sneak a taken title past', (
+      tester,
+    ) async {
+      // The save persists the resolved (trimmed) title, so the inline check has
+      // to judge that same string — otherwise "Taken " passes and then collides.
+      await seed('Taken');
+      await pumpReady(tester);
+
+      await tester.enterText(_titleField, 'Taken ');
       await tester.pump();
 
       expect(find.text('Name already used'), findsOneWidget);

@@ -157,12 +157,18 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
     if (!mounted) return;
     setState(() {
       _existingTitles = recordings.map((r) => r.title).toList();
-      _titleConflict = isTitleTaken(_existingTitles, _titleController.text);
+      _titleConflict = _titleTakenLocally(_titleController.text);
     });
   }
 
+  /// Judges the title the save would actually persist, not the raw text: `_save`
+  /// stores `resolveRecordingTitle(...)`, so comparing the raw value lets
+  /// `"Taken "` slip past the inline warning and collide once trimmed.
+  bool _titleTakenLocally(String value) =>
+      isTitleTaken(_existingTitles, resolveRecordingTitle(value));
+
   void _onTitleChanged(String value) {
-    final conflict = isTitleTaken(_existingTitles, value);
+    final conflict = _titleTakenLocally(value);
     if (conflict != _titleConflict) {
       setState(() => _titleConflict = conflict);
     }

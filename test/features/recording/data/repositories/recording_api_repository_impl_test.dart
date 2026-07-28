@@ -190,5 +190,17 @@ void main() {
         throwsA(isA<ForbiddenException>()),
       );
     });
+
+    test('throws ConflictException on 409', () async {
+      // The backend deduplicates on (project_id, title): a rename onto a taken
+      // title is rejected with 409. Returning false here would be indistinguish-
+      // able from any other failure and callers would save locally anyway.
+      stubPatch(status: 409);
+
+      await expectLater(
+        repo.updateRecording('s-1', const UpdateRecordingRequest(title: 't')),
+        throwsA(isA<ConflictException>()),
+      );
+    });
   });
 }

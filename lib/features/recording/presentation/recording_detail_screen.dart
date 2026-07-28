@@ -102,13 +102,21 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
       description: result.description,
     );
     if (!mounted) return;
+    final l10n = AppLocalizations.of(context);
     if (outcome == RecordingMutationResult.forbidden) {
-      final l10n = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(l10n.recording_updateNoPermission),
           backgroundColor: AppColors.of(context).warning,
         ),
+      );
+    } else if (outcome == RecordingMutationResult.titleConflict) {
+      // The new name is taken too; the recording stays conflicted so the banner
+      // keeps offering another rename.
+      showErrorSnackBar(
+        context,
+        '',
+        template: (_) => l10n.recording_duplicateTitleMessage(result.title),
       );
     }
   }
@@ -127,7 +135,9 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
             backgroundColor: AppColors.of(context).warning,
           ),
         );
-      case RecordingMutationResult.failed:
+      // Only a title edit can clash; elsewhere it reads as a plain failure.
+      case RecordingMutationResult.failed ||
+          RecordingMutationResult.titleConflict:
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(l10n.recording_cleaningStatusFailed)),
         );
@@ -523,7 +533,9 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
             backgroundColor: AppColors.of(context).warning,
           ),
         );
-      case RecordingMutationResult.failed:
+      // Only a title edit can clash; elsewhere it reads as a plain failure.
+      case RecordingMutationResult.failed ||
+          RecordingMutationResult.titleConflict:
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(l10n.recording_updateFailed)));
@@ -556,7 +568,9 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
             backgroundColor: AppColors.of(context).warning,
           ),
         );
-      case RecordingMutationResult.failed:
+      // Only a title edit can clash; elsewhere it reads as a plain failure.
+      case RecordingMutationResult.failed ||
+          RecordingMutationResult.titleConflict:
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(l10n.recording_updateFailed)));
@@ -630,7 +644,9 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
             backgroundColor: AppColors.of(context).warning,
           ),
         );
-      case RecordingMutationResult.failed:
+      // Only a title edit can clash; elsewhere it reads as a plain failure.
+      case RecordingMutationResult.failed ||
+          RecordingMutationResult.titleConflict:
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(l10n.recording_updateFailed)));

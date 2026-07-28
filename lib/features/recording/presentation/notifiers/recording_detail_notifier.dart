@@ -6,6 +6,7 @@ import 'package:logging/logging.dart';
 
 import '../../../../core/database/app_database.dart';
 import '../../../../core/errors/api_exception.dart';
+import '../../../../core/errors/app_exception.dart' show ConflictException;
 import '../../../auth/data/providers/role_provider.dart';
 import '../../../project/presentation/notifiers/member_notifier.dart';
 import '../../../project/presentation/notifiers/stats_notifier.dart';
@@ -32,7 +33,7 @@ import 'recordings_list_notifier.dart';
 /// Outcome the headless notifier hands back to the widget for the metadata
 /// mutations (move/classify/secondary/cleaning/edit). The notifier has no
 /// BuildContext, so the widget maps each result to its own localized snackbar.
-enum RecordingMutationResult { success, failed, forbidden }
+enum RecordingMutationResult { success, failed, forbidden, titleConflict }
 
 final recordingDetailProvider = NotifierProvider.autoDispose
     .family<RecordingDetailNotifier, RecordingDetailState, String>(
@@ -265,6 +266,11 @@ class RecordingDetailNotifier
         }
       } on ForbiddenException {
         return RecordingMutationResult.forbidden;
+      } on ConflictException {
+        // The new title is taken too. Nothing was written locally, so the row
+        // keeps its old title and its failed_conflict status — the banner stays
+        // and the user can pick another name.
+        return RecordingMutationResult.titleConflict;
       }
     }
 

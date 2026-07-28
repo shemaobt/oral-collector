@@ -13,6 +13,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:oral_collector/core/database/app_database.dart';
 import 'package:oral_collector/core/database/database_provider.dart';
 import 'package:oral_collector/core/errors/api_exception.dart';
+import 'package:oral_collector/core/errors/app_exception.dart'
+    show ConflictException;
 import 'package:oral_collector/features/auth/data/providers/role_provider.dart';
 import 'package:oral_collector/features/project/presentation/notifiers/member_notifier.dart';
 import 'package:oral_collector/features/project/presentation/notifiers/member_state.dart';
@@ -479,6 +481,30 @@ void main() {
         expect(row.uploadStatus, 'local');
       },
     );
+
+    test('a rename the server also rejects reports the clash and leaves the '
+        'recording recoverable', () async {
+      // Second conflict: the user renamed a name-clashed recording onto
+      // another title that is already taken in the project.
+      final recording = await seed(
+        uploadStatus: 'failed_conflict',
+        serverId: 'srv-1',
+      );
+      final api = _FakeApiRepo(updateError: const ConflictException());
+      final c = makeContainer(isOnline: true, api: api);
+
+      final outcome = await notifierOf(
+        c,
+      ).saveDetails(recording, title: 'Also Taken', description: 'initial');
+
+      expect(outcome, RecordingMutationResult.titleConflict);
+      final row = (await repo.getRecordingById(recordingId))!;
+      // The local row must not claim a title the server refused...
+      expect(row.title, 'Story');
+      // ...and the recording stays conflicted, so the rename banner is still
+      // there and the user can try another name.
+      expect(row.uploadStatus, 'failed_conflict');
+    });
 
     test(
       'renaming an uploaded recording leaves its upload state alone',

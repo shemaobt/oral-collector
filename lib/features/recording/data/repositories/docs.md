@@ -257,7 +257,12 @@ Path: @/lib/features/recording/data/repositories
   partial update: as of ENG-205 the body comes from the request object's
   `toJson()` rather than being assembled inline from thirteen named parameters,
   but the wire payload, `guardResponse`, the 403→`ForbiddenException`, and the
-  `statusCode == 200` return are all unchanged. The body shape now lives on
+  `statusCode == 200` return are all unchanged. **A 409 throws
+  `ConflictException` (ENG-71)** instead of falling through to that boolean:
+  the backend deduplicates on `(project_id, title)`, and a bare `false` is
+  indistinguishable from any other failure, so `saveRecordingTitle` used to
+  write the refused title into the local row and report success — device and
+  server silently diverging. The body shape now lives on
   [`UpdateRecordingRequest`](../../domain/entities/update_recording_request.dart)
   (the rationale and the genre `GenreUpdate` precedent are in
   [../../domain/docs.md](../../domain/docs.md)). The

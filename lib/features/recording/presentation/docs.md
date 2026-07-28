@@ -190,7 +190,14 @@ Path: @/lib/features/recording/presentation
   sync engine, which parks the row in `uploadStatus='failed_conflict'`; the
   detail screen then renders a `RecordingActionBanner` whose action opens the
   edit-details sheet, and `RecordingDetailNotifier.saveDetails` requeues the
-  row via `resetAndRetry` once the title actually changes. `RecordingCard` and
+  row via `resetAndRetry` once the title actually changes. **If the new title is
+  taken as well**, the `PATCH` 409s, `saveDetails` returns
+  `RecordingMutationResult.titleConflict` and `_openEditDetails` shows
+  `recording_duplicateTitleMessage` for the attempted name; nothing is written,
+  so the row stays `failed_conflict` and the banner keeps offering another
+  rename. The inline "already used" warning compares
+  `resolveRecordingTitle(text)` — the string the save actually persists — so a
+  trailing space cannot slip a duplicate past it. `RecordingCard` and
   `RecordingStatusSection` give `failed_conflict` its own label
   (`recording_statusNameConflict`) instead of the generic failure label, and
   `RecordingsListState`'s *pending* filter includes it so a conflicted

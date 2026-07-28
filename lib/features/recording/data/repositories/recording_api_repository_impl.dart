@@ -4,6 +4,7 @@ import '../../../../core/errors/api_exception.dart';
 import '../../../../core/errors/app_exception.dart' show ParseException;
 import '../../../../core/network/api_error_handler.dart';
 import '../../../../core/network/authenticated_client.dart';
+import '../../../../core/network/error_boundary.dart' show throwForResponse;
 import '../../../../core/network/response_decoder.dart';
 import '../../../../core/observability/error_reporter.dart';
 import '../../../../core/serialization/parse_list.dart';
@@ -86,6 +87,12 @@ class RecordingApiRepositoryImpl implements RecordingApiRepository {
     guardResponse(response);
     if (response.statusCode == 403) {
       throw const ForbiddenException();
+    }
+    // The backend deduplicates on (project_id, title). A rename onto a taken
+    // title must stay distinguishable: callers save locally on a plain `false`,
+    // which would leave the device disagreeing with the server. (ENG-71)
+    if (response.statusCode == 409) {
+      throwForResponse(response);
     }
     return response.statusCode == 200;
   }
