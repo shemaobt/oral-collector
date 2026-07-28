@@ -25,6 +25,37 @@ bool recordingHasSecondaryGenre(String? secondaryGenreId) =>
 bool recordingHasSecondaryRegister(String? secondaryRegisterId) =>
     secondaryRegisterId != null && secondaryRegisterId.isNotEmpty;
 
+// Só o trio inteiro colide: (Formal, Narrativa, Mito) e (Formal, Narrativa,
+// Lenda) são um par legítimo. Secundário todo nulo nunca colide, mesmo com um
+// primário também todo nulo.
+bool secondaryEqualsPrimary({
+  required String? primaryRegisterId,
+  required String? primaryGenreId,
+  required String? primarySubcategoryId,
+  required String? secondaryRegisterId,
+  required String? secondaryGenreId,
+  required String? secondarySubcategoryId,
+}) {
+  if (secondaryRegisterId == null &&
+      secondaryGenreId == null &&
+      secondarySubcategoryId == null) {
+    return false;
+  }
+  return primaryRegisterId == secondaryRegisterId &&
+      primaryGenreId == secondaryGenreId &&
+      primarySubcategoryId == secondarySubcategoryId;
+}
+
+class SegmentClassificationCollisionException implements Exception {
+  const SegmentClassificationCollisionException(this.segmentId);
+
+  final String segmentId;
+
+  @override
+  String toString() =>
+      'SegmentClassificationCollisionException(segment: $segmentId)';
+}
+
 bool recordingHasSecondary({
   required String? secondaryGenreId,
   required String? secondaryRegisterId,

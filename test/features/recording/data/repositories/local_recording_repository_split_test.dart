@@ -12,6 +12,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:oral_collector/core/database/app_database.dart';
 import 'package:oral_collector/features/recording/data/local_recording_to_entity.dart';
 import 'package:oral_collector/features/recording/data/repositories/local_recording_repository.dart';
+import 'package:oral_collector/features/recording/domain/entities/classification.dart';
 import 'package:oral_collector/features/recording/domain/entities/local_recording_entity.dart';
 
 void main() {
@@ -338,46 +339,58 @@ void main() {
     expect(ids, ['first', 'second', 'third']);
   });
 
-  test(
-    'throws ArgumentError when a segment genreOverride collides with '
-    'parent.secondaryGenreId — the server rejects primary==secondary',
-    () async {
-      final parent = await seedParent(secondaryGenreId: 'genre-conflict');
-
-      expect(
-        () => repo.splitRecordingReplacingParent(
-          parent: parent,
-          segments: [spec(id: 'c1', genreOverride: 'genre-conflict')],
-        ),
-        throwsArgumentError,
-      );
-    },
-  );
-
-  test('throws ArgumentError when a segment subcategoryOverride collides with '
-      'parent.secondarySubcategoryId', () async {
-    final parent = await seedParent(secondarySubcategoryId: 'subcat-conflict');
-
-    expect(
-      () => repo.splitRecordingReplacingParent(
-        parent: parent,
-        segments: [spec(id: 'c1', subcategoryOverride: 'subcat-conflict')],
-      ),
-      throwsArgumentError,
+  test('throws SegmentClassificationCollisionException and persists nothing '
+      'when a segment resolves to the parent secondary triple', () async {
+    final parent = await seedParent(
+      secondaryRegisterId: 'register-conflict',
+      secondaryGenreId: 'genre-conflict',
+      secondarySubcategoryId: 'subcat-conflict',
     );
+
+    await expectLater(
+      repo.splitRecordingReplacingParent(
+        parent: parent,
+        segments: [
+          spec(
+            id: 'c1',
+            registerOverride: 'register-conflict',
+            genreOverride: 'genre-conflict',
+            subcategoryOverride: 'subcat-conflict',
+          ),
+        ],
+      ),
+      throwsA(isA<SegmentClassificationCollisionException>()),
+    );
+
+    expect(await repo.getRecordingById('c1'), isNull);
+    expect(await repo.getRecordingById('parent-1'), isNotNull);
   });
 
-  test('throws ArgumentError when a segment registerOverride collides with '
-      'parent.secondaryRegisterId', () async {
-    final parent = await seedParent(secondaryRegisterId: 'register-conflict');
-
-    expect(
-      () => repo.splitRecordingReplacingParent(
-        parent: parent,
-        segments: [spec(id: 'c1', registerOverride: 'register-conflict')],
-      ),
-      throwsArgumentError,
+  test('persists the child when a segment shares the parent secondary genre '
+      'but differs in subcategory', () async {
+    final parent = await seedParent(
+      secondaryRegisterId: 'register-conflict',
+      secondaryGenreId: 'genre-conflict',
+      secondarySubcategoryId: 'subcat-myth',
     );
+
+    await repo.splitRecordingReplacingParent(
+      parent: parent,
+      segments: [
+        spec(
+          id: 'c1',
+          registerOverride: 'register-conflict',
+          genreOverride: 'genre-conflict',
+          subcategoryOverride: 'subcat-legend',
+        ),
+      ],
+    );
+
+    final c1 = await repo.getRecordingById('c1');
+    expect(c1, isNotNull);
+    expect(c1!.genreId, 'genre-conflict');
+    expect(c1.subcategoryId, 'subcat-legend');
+    expect(c1.registerId, 'register-conflict');
   });
 
   test('does NOT throw when override differs from the parent secondary of the '
