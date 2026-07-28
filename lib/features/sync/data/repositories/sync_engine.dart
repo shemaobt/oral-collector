@@ -9,8 +9,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import '../../../../core/database/app_database.dart';
-import '../../../../core/errors/app_exception.dart'
-    show AppException, ConflictException;
+import '../../../../core/errors/app_exception.dart' show AppException;
 import '../../../../core/network/authenticated_client.dart';
 import '../../../../core/network/response_decoder.dart';
 import '../../../../core/platform/file_ops.dart' as file_ops;
@@ -360,6 +359,17 @@ class SyncEngineImpl implements SyncEngine {
             .post('/api/oc/recordings', body: createBody)
             .timeout(_apiTimeout);
 
+        // Only *this* call deduplicates on (project_id, title), so only a 409
+        // here is a name clash. Handled inline rather than in a catch arm: a
+        // 409 raised anywhere else below (confirm-upload) has no rename that
+        // could clear it, and parking those rows in failed_conflict would offer
+        // the user an exit that leads straight back here.
+        if (createResponse.statusCode == 409) {
+          _log.warning('title conflict for $id');
+          await _markPermanentlyFailed(id, status: 'failed_conflict');
+          return _UploadOutcome.failed;
+        }
+
         final createData = decodeObject(createResponse);
         serverId = readString(createData, 'id');
 
@@ -413,13 +423,6 @@ class SyncEngineImpl implements SyncEngine {
         await file_ops.deleteFile(resolvedPath);
       }
       return _UploadOutcome.uploaded;
-    } on ConflictException catch (e) {
-      // Ahead of the generic AppException arm: the backend deduplicates on
-      // (project_id, title), so a 409 means the title is taken. Terminal like
-      // any non-retryable failure, but kept distinguishable so the UI can offer
-      // a rename instead of a generic "upload failed".
-      _log.warning('title conflict for $id', e);
-      await _markPermanentlyFailed(id, status: 'failed_conflict');
     } on AppException catch (e, st) {
       // Retry decision by the typed flag (ENG-103), not by exception subtype.
       if (e.retryable) {

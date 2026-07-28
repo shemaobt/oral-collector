@@ -49,6 +49,15 @@ void main() {
     expect(requested.queryParameters.keys, isNot(contains('b')));
   });
 
+  test('encodes a space as %20, not +', () async {
+    // Every default recording title contains a space. '+' only means space in
+    // application/x-www-form-urlencoded; a query-string parser that reads the
+    // URI spec literally would hand the backend a title with a '+' in it.
+    await repo.listRecordings('p-1', title: 'My Recording');
+
+    expect(requested.query, contains('title=My%20Recording'));
+  });
+
   test('percent-encodes other filter values too', () async {
     await repo.listRecordings('p-1', userId: 'u&1', storytellerId: 's=2');
 

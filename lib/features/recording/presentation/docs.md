@@ -184,7 +184,11 @@ Path: @/lib/features/recording/presentation
   and stops with a snackbar so the user can rename. **That lookup is
   best-effort by contract**: offline, with no active project, or on any API
   failure it answers `false` and the save proceeds exactly as before — losing a
-  recording to a flaky lookup would be far worse than a late 409. The web
+  recording to a flaky lookup would be far worse than a late 409. That includes
+  a **30 s timeout** on the call, matching the upload paths' `_apiTimeout`: the
+  save blocks on this answer and the shared HTTP client bounds only the connect
+  phase, so a connected-but-silent server would otherwise hold the saving
+  spinner up forever. The web
   direct-upload path additionally catches `ConflictException` from the create
   call and shows the same message. On native the create happens later in the
   sync engine, which parks the row in `uploadStatus='failed_conflict'`; the

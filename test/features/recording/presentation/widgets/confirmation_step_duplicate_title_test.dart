@@ -11,6 +11,8 @@
 // Driving the real StorytellerPicker bottom sheet is necessary because the
 // Save handler bails out unless a storyteller is selected, and that selection
 // is private widget state only reachable through the picker UI.
+import 'dart:async';
+
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -59,10 +61,14 @@ class _RecordingRepositorySpy implements LocalRecordingRepository {
 /// Stands in for the dedup-aware backend: echoes the queried title back as an
 /// existing recording when [taken], or fails the lookup when [failure] is set.
 class _TitleLookupApiRepo implements RecordingApiRepository {
-  _TitleLookupApiRepo({this.taken = false, this.failure});
+  _TitleLookupApiRepo({this.taken = false, this.failure, this.hang = false});
 
   final bool taken;
   final Object? failure;
+
+  /// A connected-but-silent server: the request is accepted and simply never
+  /// answered, which no error path can rescue.
+  final bool hang;
 
   @override
   Future<List<ServerRecording>> listRecordings(
@@ -74,6 +80,7 @@ class _TitleLookupApiRepo implements RecordingApiRepository {
     String? uploadStatus,
     String? title,
   }) async {
+    if (hang) return Completer<List<ServerRecording>>().future;
     final error = failure;
     if (error != null) throw error;
     if (!taken) return const [];
@@ -309,6 +316,38 @@ void main() {
 
     expect(repo.saved, hasLength(1));
     expect(find.text('Recording saved'), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump();
+  });
+
+  testWidgets('a server that never answers does not block the save', (
+    tester,
+  ) async {
+    final repo = _RecordingRepositorySpy();
+    final container = _container(
+      repo: repo,
+      api: _TitleLookupApiRepo(hang: true),
+    );
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(_harness(container));
+    await tester.pump();
+    await _pickStoryteller(tester);
+
+    await tester.tap(find.byType(ElevatedButton));
+    await tester.pump();
+    expect(repo.saved, isEmpty, reason: 'the lookup is still in flight');
+
+    // Nothing will ever complete the lookup, so it has to give up on its own.
+    await tester.pump(const Duration(seconds: 31));
+    await tester.runAsync(() async {
+      await Future<void>.delayed(const Duration(milliseconds: 200));
+    });
+    await tester.pump();
+    await tester.pump();
+
+    expect(repo.saved, hasLength(1));
 
     await tester.pumpWidget(const SizedBox());
     await tester.pump();

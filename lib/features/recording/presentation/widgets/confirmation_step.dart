@@ -34,6 +34,9 @@ import '../../domain/entities/local_recording_entity.dart';
 import '../notifiers/recording_session_notifier.dart';
 import '../notifiers/recording_session_state.dart';
 
+/// Matches the 30 s `_apiTimeout` the upload paths use for their own API calls.
+const _titleLookupTimeout = Duration(seconds: 30);
+
 class ConfirmationStep extends ConsumerStatefulWidget {
   const ConfirmationStep({
     super.key,
@@ -297,7 +300,10 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
   /// The backend deduplicates on (project_id, title), so a clash would silently
   /// overwrite the earlier recording. Best-effort by design: offline or on any
   /// API failure this answers false and the save proceeds untouched — losing a
-  /// recording to a flaky lookup would be far worse than a late 409.
+  /// recording to a flaky lookup would be far worse than a late 409. The
+  /// timeout is part of that: the save blocks on this answer, and the HTTP
+  /// client only bounds the connect phase, so a connected-but-silent server
+  /// would otherwise hold the spinner up forever.
   Future<bool> _titleTakenOnServer(String projectId, String title) async {
     if (projectId.isEmpty || !ref.read(syncNotifierProvider).isOnline) {
       return false;
@@ -305,7 +311,8 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
     try {
       final matches = await ref
           .read(recordingApiRepositoryProvider)
-          .listRecordings(projectId, title: title, limit: 1);
+          .listRecordings(projectId, title: title, limit: 1)
+          .timeout(_titleLookupTimeout);
       return isTitleTaken(matches.map((r) => r.title), title);
     } catch (_) {
       return false;

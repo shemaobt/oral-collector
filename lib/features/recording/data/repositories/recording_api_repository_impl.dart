@@ -51,8 +51,11 @@ class RecordingApiRepositoryImpl implements RecordingApiRepository {
         'upload_status': uploadStatus,
       if (title != null && title.isNotEmpty) 'title': title,
     };
+    // encodeComponent, not encodeQueryComponent: the latter writes a space as
+    // `+`, which only means space in form-encoded bodies. `%20` is unambiguous
+    // to any parser, and every default recording title contains a space.
     final query = params.entries
-        .map((e) => '${e.key}=${Uri.encodeQueryComponent(e.value)}')
+        .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
         .join('&');
     final response = await _client.get('/api/oc/recordings?$query');
     return parseList(
