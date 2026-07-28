@@ -798,10 +798,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get trim_classifySegment => 'Classificar segmento';
 
   @override
-  String get trim_primaryEqualsSecondary =>
-      'A classificação primária não pode ser igual à secundária da gravação.';
-
-  @override
   String get trim_volume => 'Volume';
 
   @override
@@ -1916,10 +1912,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get classify_secondaryRegister => 'Registro secundário';
-
-  @override
-  String get classify_secondarySameAsPrimary =>
-      'O gênero secundário deve ser diferente do predominante.';
 
   @override
   String get classify_clearAlternative => 'Limpar alternativa';

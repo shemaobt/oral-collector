@@ -326,5 +326,27 @@ Path: @/lib/features/recording/presentation
   where the player lived inside a `StatefulWidget` State and was
   disposed by this swap mid-playback; the fix hoists it into
   `RecordingPlayerNotifier`.
+- **Secondary-classification collision is prevented, not validated
+  (ENG-72).** A secondary classification is invalid only when its whole
+  `(register, genre, subcategory)` triple is identical to the primary
+  triple — sharing the genre while differing in subcategory is a
+  legitimate pair. The pickers therefore hide the one option that would
+  complete an identical triple instead of letting the user build it and
+  then complaining:
+  [./widgets/secondary_classification_fields.dart](widgets/secondary_classification_fields.dart)
+  for classify / move / the detail screen's `_SecondaryEditDialog`, and
+  [./widgets/segment_taxonomy_sheet.dart](widgets/segment_taxonomy_sheet.dart)
+  for per-segment overrides in the trim editor. There is no inline "same
+  as primary" error and the segment sheet's save button is never
+  disabled. Call sites must thread the **full** primary triple into the
+  pickers — with only the genre id the hide-logic under-restricts and a
+  colliding triple gets through. The one surface that still warns is the
+  detail screen's red banner (`_hasSecondaryCollision`), which targets
+  rows persisted before the rule existed and is resolved manually with
+  "Clear secondary". The predicate behind all of these is
+  `secondaryEqualsPrimary(...)` in
+  [../domain/entities/classification.dart](../domain/entities/classification.dart);
+  see
+  [/docs/recording-split-semantics.md](../../../../docs/recording-split-semantics.md).
 
 Created and maintained by Nori.

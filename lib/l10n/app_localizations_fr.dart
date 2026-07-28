@@ -804,10 +804,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get trim_classifySegment => 'Classer le segment';
 
   @override
-  String get trim_primaryEqualsSecondary =>
-      'La classification primaire ne peut pas correspondre à la classification secondaire de l\'enregistrement.';
-
-  @override
   String get trim_volume => 'Volume';
 
   @override
@@ -1928,10 +1924,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get classify_secondaryRegister => 'Registre secondaire';
-
-  @override
-  String get classify_secondarySameAsPrimary =>
-      'Le genre secondaire doit être différent du genre prédominant.';
 
   @override
   String get classify_clearAlternative => 'Effacer l\'alternative';
