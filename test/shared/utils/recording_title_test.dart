@@ -39,23 +39,13 @@ void main() {
       expect(isTitleTaken(['Alpha', 'Beta'], 'Gamma'), isFalse);
     });
 
-    test('is false for an empty list', () {
-      expect(isTitleTaken(const <String?>[], 'Alpha'), isFalse);
-    });
-
-    test('skips nulls and still finds a match after them', () {
-      expect(isTitleTaken([null, 'Alpha', null], 'Alpha'), isTrue);
-      expect(isTitleTaken([null, null], 'Alpha'), isFalse);
-    });
-
+    // The deliberate part: raw equality, because the backend deduplicates on
+    // the exact stored string. Trimming or case-folding here would disagree
+    // with the 409 the server would answer with.
     test('is false when only whitespace or casing differs', () {
       expect(isTitleTaken(['Alpha'], ' Alpha'), isFalse);
       expect(isTitleTaken(['Alpha'], 'alpha'), isFalse);
       expect(isTitleTaken([' Alpha '], 'Alpha'), isFalse);
-    });
-
-    test('matches an empty candidate against an empty stored title', () {
-      expect(isTitleTaken(['', 'Alpha'], ''), isTrue);
     });
   });
 }

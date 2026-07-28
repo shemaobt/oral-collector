@@ -858,14 +858,25 @@ void main() {
       verifyNever(() => mockRepo.markAsFailed('rec-1'));
       verifyNever(() => mockRepo.markAsUploaded(any(), any(), any()));
 
-      final statuses =
+      final written =
           verify(() => mockRepo.updateRecording('rec-1', captureAny())).captured
               .cast<LocalRecordingsCompanion>()
               .where((c) => c.uploadStatus.present)
-              .map((c) => c.uploadStatus.value)
               .toList();
-      expect(statuses, contains('failed_conflict'));
-      expect(statuses, isNot(contains('failed')));
+      expect(
+        written.map((c) => c.uploadStatus.value),
+        contains('failed_conflict'),
+      );
+      expect(
+        written.map((c) => c.uploadStatus.value),
+        isNot(contains('failed')),
+      );
+      // Same permanent-failure write as the other terminal statuses: the retry
+      // budget is spent too, so nothing but a rename can move the row.
+      final conflict = written.firstWhere(
+        (c) => c.uploadStatus.value == 'failed_conflict',
+      );
+      expect(conflict.retryCount.value, SyncEngineImpl.maxRetries);
       httpClient.close();
     });
 

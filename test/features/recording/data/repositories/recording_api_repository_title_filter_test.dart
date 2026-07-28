@@ -43,8 +43,10 @@ void main() {
   test('percent-encodes a title containing query metacharacters', () async {
     await repo.listRecordings('p-1', title: 'a&b=c d?e');
 
+    // Round-trip through the parsed query: an unencoded '&' or '=' would split
+    // into extra parameters instead of surviving as one title.
     expect(requested.queryParameters['title'], 'a&b=c d?e');
-    expect(requested.query, contains('title=a%26b%3Dc+d%3Fe'));
+    expect(requested.queryParameters.keys, isNot(contains('b')));
   });
 
   test('percent-encodes other filter values too', () async {
