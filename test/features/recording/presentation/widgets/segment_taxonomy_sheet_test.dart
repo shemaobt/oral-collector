@@ -89,13 +89,6 @@ Widget _harness({
   );
 }
 
-Finder _saveButtonFinder() => find.widgetWithText(FilledButton, 'Save');
-
-bool _isSaveEnabled(WidgetTester tester) {
-  final button = tester.widget<FilledButton>(_saveButtonFinder());
-  return button.onPressed != null;
-}
-
 Future<void> _tapOption(WidgetTester tester, String label) async {
   await tester.ensureVisible(find.text(label));
   await tester.pumpAndSettle();
@@ -104,20 +97,6 @@ Future<void> _tapOption(WidgetTester tester, String label) async {
 }
 
 void main() {
-  testWidgets(
-    'save is enabled when the user has not changed anything from the inherit defaults',
-    (tester) async {
-      await tester.pumpWidget(
-        _harness(
-          parentGenreId: 'g-primary',
-          parentSecondaryGenreId: 'g-secondary',
-        ),
-      );
-      await tester.pumpAndSettle();
-      expect(_isSaveEnabled(tester), isTrue);
-    },
-  );
-
   testWidgets(
     'the parent secondary genre is not offered when the segment already '
     'matches the secondary subcategory and register',
@@ -154,22 +133,31 @@ void main() {
   );
 
   testWidgets(
-    'the parent secondary genre stays hidden while a subcategory override '
-    'differs, because picking a genre drops that override',
+    'the parent secondary genre stays hidden under a subcategory override, '
+    'because picking a genre drops that override',
     (tester) async {
+      // The parent's secondary differs from its primary only in the register,
+      // so the segment reaches the secondary triple by overriding the register.
       await tester.pumpWidget(
         _harness(
           parentGenreId: 'g-primary',
           parentSubcategoryId: 'sub-A',
-          parentSecondaryGenreId: 'g-secondary',
+          parentRegisterId: 'formal',
+          parentSecondaryGenreId: 'g-primary',
           parentSecondarySubcategoryId: 'sub-A',
+          parentSecondaryRegisterId: 'ceremonial',
         ),
       );
       await tester.pumpAndSettle();
 
+      // Overriding the subcategory frees the secondary register.
+      expect(find.text('Ceremonial'), findsNothing);
       await _tapOption(tester, 'Trickster story');
+      await _tapOption(tester, 'Ceremonial');
 
-      expect(find.text('Song'), findsNothing);
+      // Picking Folktale would drop the subcategory override and land back on
+      // the inherited sub-A, completing the secondary triple.
+      expect(find.text('Folktale'), findsNothing);
     },
   );
 
@@ -227,8 +215,8 @@ void main() {
   );
 
   testWidgets(
-    'save stays enabled for a segment sharing the parent secondary genre but '
-    'with a different subcategory (ENG-72)',
+    'a segment may take the parent secondary genre, which then hides only the '
+    'secondary subcategory (ENG-72)',
     (tester) async {
       await tester.pumpWidget(
         _harness(
@@ -241,21 +229,24 @@ void main() {
       await tester.pumpAndSettle();
 
       await _tapOption(tester, 'Song');
-      await _tapOption(tester, 'Work song');
 
-      expect(_isSaveEnabled(tester), isTrue);
+      expect(find.text('Lullaby'), findsNothing);
+      expect(find.text('Work song'), findsOneWidget);
     },
   );
 
-  testWidgets(
-    'parent without any secondary classification: any primary selection is valid',
-    (tester) async {
-      await tester.pumpWidget(_harness(parentGenreId: 'g-primary'));
-      await tester.pumpAndSettle();
+  testWidgets('a parent without any secondary classification hides nothing', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_harness(parentGenreId: 'g-primary'));
+    await tester.pumpAndSettle();
 
-      await _tapOption(tester, 'Song');
+    expect(find.text('Folktale'), findsOneWidget);
+    expect(find.text('Song'), findsOneWidget);
 
-      expect(_isSaveEnabled(tester), isTrue);
-    },
-  );
+    await _tapOption(tester, 'Song');
+
+    expect(find.text('Lullaby'), findsOneWidget);
+    expect(find.text('Work song'), findsOneWidget);
+  });
 }

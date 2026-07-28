@@ -393,8 +393,8 @@ void main() {
     expect(c1.registerId, 'register-conflict');
   });
 
-  test('does NOT throw when override differs from the parent secondary of the '
-      'same kind', () async {
+  test('does NOT throw when every override differs from the parent secondary '
+      'triple', () async {
     final parent = await seedParent(
       secondaryGenreId: 'genre-secondary',
       secondarySubcategoryId: 'subcat-secondary',
@@ -420,19 +420,16 @@ void main() {
     expect(c1.registerId, 'register-other');
   });
 
-  test(
-    'does NOT throw when the parent has no secondary of that kind set',
-    () async {
-      final parent = await seedParent(secondaryGenreId: null);
+  test('does NOT throw when the parent has no secondary genre set', () async {
+    final parent = await seedParent(secondaryGenreId: null);
 
-      await repo.splitRecordingReplacingParent(
-        parent: parent,
-        segments: [spec(id: 'c1', genreOverride: 'any-genre')],
-      );
+    await repo.splitRecordingReplacingParent(
+      parent: parent,
+      segments: [spec(id: 'c1', genreOverride: 'any-genre')],
+    );
 
-      final c1 = await repo.getRecordingById('c1');
-      expect(c1, isNotNull);
-      expect(c1!.genreId, 'any-genre');
-    },
-  );
+    final c1 = await repo.getRecordingById('c1');
+    expect(c1, isNotNull);
+    expect(c1!.genreId, 'any-genre');
+  });
 }

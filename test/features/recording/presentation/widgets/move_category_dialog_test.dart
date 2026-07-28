@@ -265,8 +265,8 @@ void main() {
   );
 
   testWidgets(
-    'a secondary under the primary genre is movable once its register differs '
-    'from the primary triple (ENG-72)',
+    'a secondary sharing the primary genre is movable while the triple differs, '
+    'and a register change is carried into the result (ENG-72)',
     (tester) async {
       MoveCategoryResult? captured;
       await tester.pumpWidget(
@@ -283,8 +283,9 @@ void main() {
       await tester.tap(find.text('open'));
       await tester.pumpAndSettle();
 
-      // The secondary already shares the primary genre; changing only its
-      // register keeps the two triples distinct, so Move stays available.
+      // The secondary shares the primary genre and register but not its
+      // subcategory, so the triples already differ. Move additionally needs an
+      // edit to enable, which the register change below provides.
       final registerField = find.widgetWithText(
         DropdownButtonFormField<String>,
         'Formal / Official',

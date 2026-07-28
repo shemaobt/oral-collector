@@ -257,6 +257,23 @@ void main() {
       );
     });
 
+    test(
+      'false quando nem o primário nem o secundário estão classificados',
+      () {
+        expect(
+          secondaryEqualsPrimary(
+            primaryRegisterId: null,
+            primaryGenreId: null,
+            primarySubcategoryId: null,
+            secondaryRegisterId: null,
+            secondaryGenreId: null,
+            secondarySubcategoryId: null,
+          ),
+          isFalse,
+        );
+      },
+    );
+
     test('true quando nulos coincidem nos campos opcionais', () {
       expect(
         secondaryEqualsPrimary(
