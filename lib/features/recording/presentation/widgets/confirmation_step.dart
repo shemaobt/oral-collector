@@ -87,6 +87,8 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
   Duration _position = Duration.zero;
   Duration _totalDuration = Duration.zero;
   Storyteller? _selectedStoryteller;
+  List<String?> _existingTitles = const [];
+  bool _titleConflict = false;
 
   // Captured in initState so dispose() can clear the marker without touching
   // `ref` — flutter_riverpod 2.x invalidates `ref` before State.dispose runs
@@ -111,6 +113,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
     );
     _initPlayer();
     Future.microtask(_prefetchStorytellers);
+    Future.microtask(_loadExistingTitles);
     // Defer until after the current build/layout pass: Riverpod forbids
     // mutating providers inside widget lifecycle callbacks, and initState
     // runs inside a build when this widget is mounted under a LayoutBuilder
@@ -137,6 +140,31 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
     final state = ref.read(projectStorytellersNotifierProvider);
     if (state.projectId != projectId || state.storytellers.isEmpty) {
       ref.read(projectStorytellersNotifierProvider.notifier).fetch(projectId);
+    }
+  }
+
+  /// The local half of the duplicate-title guard: the titles already stored on
+  /// this device answer while the user types, and keep working offline where
+  /// [_titleTakenOnServer] cannot. Skipped on web, where the local mirror is
+  /// written best-effort and may not hold the project's recordings.
+  Future<void> _loadExistingTitles() async {
+    if (!mounted || kIsWeb) return;
+    final projectId = ref.read(projectNotifierProvider).activeProject?.id;
+    if (projectId == null || projectId.isEmpty) return;
+    final recordings = await ref
+        .read(localRecordingRepositoryProvider)
+        .getAllRecordings(projectId);
+    if (!mounted) return;
+    setState(() {
+      _existingTitles = recordings.map((r) => r.title).toList();
+      _titleConflict = isTitleTaken(_existingTitles, _titleController.text);
+    });
+  }
+
+  void _onTitleChanged(String value) {
+    final conflict = isTitleTaken(_existingTitles, value);
+    if (conflict != _titleConflict) {
+      setState(() => _titleConflict = conflict);
     }
   }
 
@@ -621,6 +649,8 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
                           children: [
                             _DetailsForm(
                               titleController: _titleController,
+                              onTitleChanged: _onTitleChanged,
+                              titleConflict: _titleConflict,
                               descriptionController: _descriptionController,
                               selectedStoryteller: _selectedStoryteller,
                               onStorytellerChanged: (s) =>
@@ -636,7 +666,9 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
                             _ActionButtons(
                               isSaving: _isSaving,
                               onSave:
-                                  (_isSaving || _selectedStoryteller == null)
+                                  (_isSaving ||
+                                      _selectedStoryteller == null ||
+                                      _titleConflict)
                                   ? null
                                   : _save,
                               showReRecord: widget.showReRecord,
@@ -793,6 +825,8 @@ class _ClassificationTag extends StatelessWidget {
 class _DetailsForm extends StatelessWidget {
   const _DetailsForm({
     required this.titleController,
+    required this.onTitleChanged,
+    required this.titleConflict,
     required this.descriptionController,
     required this.selectedStoryteller,
     required this.onStorytellerChanged,
@@ -800,6 +834,8 @@ class _DetailsForm extends StatelessWidget {
   });
 
   final TextEditingController titleController;
+  final ValueChanged<String> onTitleChanged;
+  final bool titleConflict;
   final TextEditingController descriptionController;
   final Storyteller? selectedStoryteller;
   final ValueChanged<Storyteller?> onStorytellerChanged;
@@ -843,6 +879,7 @@ class _DetailsForm extends StatelessWidget {
                     ),
                     TextField(
                       controller: titleController,
+                      onChanged: onTitleChanged,
                       maxLines: 1,
                       textInputAction: TextInputAction.next,
                       textCapitalization: TextCapitalization.sentences,
@@ -866,6 +903,19 @@ class _DetailsForm extends StatelessWidget {
             ],
           ),
         ),
+        if (titleConflict)
+          Padding(
+            padding: const EdgeInsets.only(top: SpacingScale.s8),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                l10n.recording_duplicateTitleTitle,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: colors.error,
+                ),
+              ),
+            ),
+          ),
         const SizedBox(height: SpacingScale.s12),
         StorytellerPicker(
           projectId: projectId,

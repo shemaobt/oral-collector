@@ -11,11 +11,13 @@
 // Driving the real StorytellerPicker bottom sheet is necessary because the
 // Save handler bails out unless a storyteller is selected, and that selection
 // is private widget state only reachable through the picker UI.
+import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:oral_collector/core/database/app_database.dart';
 import 'package:oral_collector/features/project/domain/entities/project.dart';
 import 'package:oral_collector/features/project/presentation/notifiers/project_notifier.dart';
 import 'package:oral_collector/features/project/presentation/notifiers/project_state.dart';
@@ -44,6 +46,10 @@ class _RecordingRepositorySpy implements LocalRecordingRepository {
   Future<void> saveRecording(LocalRecordingEntity entity) async {
     saved.add(entity);
   }
+
+  @override
+  Future<List<LocalRecording>> getAllRecordings(String projectId) async =>
+      const [];
 
   @override
   dynamic noSuchMethod(Invocation invocation) =>
@@ -135,7 +141,7 @@ const _result = RecordingResult(
 );
 
 ProviderContainer _container({
-  required _RecordingRepositorySpy repo,
+  required LocalRecordingRepository repo,
   required _TitleLookupApiRepo api,
 }) {
   return ProviderContainer(
@@ -185,7 +191,7 @@ Widget _harness(ProviderContainer container) {
   );
 }
 
-Future<void> _pickStorytellerAndSave(WidgetTester tester) async {
+Future<void> _pickStoryteller(WidgetTester tester) async {
   await tester.tap(find.byType(StorytellerPicker));
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 400)); // open animation
@@ -194,6 +200,15 @@ Future<void> _pickStorytellerAndSave(WidgetTester tester) async {
   await tester.pump(const Duration(milliseconds: 400)); // close animation
   await tester.pump(); // resume _open() -> onChanged -> setState
   await tester.pump(); // rebuild with Save enabled
+}
+
+ElevatedButton _saveButton(WidgetTester tester) =>
+    tester.widget<ElevatedButton>(find.byType(ElevatedButton));
+
+Finder get _titleField => find.byType(TextField).first;
+
+Future<void> _pickStorytellerAndSave(WidgetTester tester) async {
+  await _pickStoryteller(tester);
 
   // _save awaits real file I/O and the title lookup, which only advance inside
   // runAsync; run the whole tap there, then pump to render the resulting UI.
@@ -267,5 +282,112 @@ void main() {
 
     await tester.pumpWidget(const SizedBox());
     await tester.pump();
+  });
+
+  // The local half of the same protection: the titles already stored on this
+  // device are compared while the user types, so the clash surfaces inline —
+  // and offline, where the server lookup above can never answer.
+  group('titles already stored on this device', () {
+    late AppDatabase db;
+    late LocalRecordingRepository repo;
+
+    setUp(() {
+      db = AppDatabase.forTesting(NativeDatabase.memory());
+      repo = LocalRecordingRepository(db);
+    });
+
+    tearDown(() async {
+      await db.close();
+    });
+
+    Future<void> seed(String title, {String projectId = _projectId}) =>
+        repo.saveRecording(
+          LocalRecordingEntity(
+            id: 'local-$projectId-$title',
+            projectId: projectId,
+            genreId: 'g1',
+            title: title,
+            durationSeconds: 5,
+            fileSizeBytes: 10,
+            format: 'm4a',
+            localFilePath: '/tmp/seeded.m4a',
+            uploadStatus: 'local',
+            cleaningStatus: 'none',
+            recordedAt: DateTime(2026, 1, 1),
+            createdAt: DateTime(2026, 1, 1),
+            retryCount: 0,
+            uploadedBytes: 0,
+          ),
+        );
+
+    Future<void> pumpReady(WidgetTester tester) async {
+      final container = _container(repo: repo, api: _TitleLookupApiRepo());
+      addTearDown(container.dispose);
+      await tester.runAsync(() async {
+        await tester.pumpWidget(_harness(container));
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+      });
+      await tester.pump();
+      await _pickStoryteller(tester);
+    }
+
+    testWidgets('blocks the save while the typed title is already used', (
+      tester,
+    ) async {
+      await seed('Taken');
+      await pumpReady(tester);
+
+      await tester.enterText(_titleField, 'Taken');
+      await tester.pump();
+
+      expect(find.text('Name already used'), findsOneWidget);
+      expect(_saveButton(tester).onPressed, isNull);
+
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump();
+    });
+
+    testWidgets('clears the warning once the title is free again', (
+      tester,
+    ) async {
+      await seed('Taken');
+      await pumpReady(tester);
+
+      await tester.enterText(_titleField, 'Taken');
+      await tester.pump();
+      await tester.enterText(_titleField, 'Something else');
+      await tester.pump();
+
+      expect(find.text('Name already used'), findsNothing);
+      expect(_saveButton(tester).onPressed, isNotNull);
+
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump();
+    });
+
+    testWidgets('a title used in another project does not block the save', (
+      tester,
+    ) async {
+      await seed('Taken', projectId: 'other-project');
+      await pumpReady(tester);
+
+      await tester.enterText(_titleField, 'Taken');
+      await tester.pump();
+
+      expect(find.text('Name already used'), findsNothing);
+      expect(_saveButton(tester).onPressed, isNotNull);
+
+      await tester.runAsync(() async {
+        await tester.tap(find.byType(ElevatedButton));
+        await Future<void>.delayed(const Duration(milliseconds: 200));
+      });
+      await tester.pump();
+
+      final stored = await repo.getAllRecordings(_projectId);
+      expect(stored.map((r) => r.title), contains('Taken'));
+
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump();
+    });
   });
 }
