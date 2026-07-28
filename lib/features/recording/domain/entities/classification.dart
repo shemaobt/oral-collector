@@ -25,9 +25,14 @@ bool recordingHasSecondaryGenre(String? secondaryGenreId) =>
 bool recordingHasSecondaryRegister(String? secondaryRegisterId) =>
     secondaryRegisterId != null && secondaryRegisterId.isNotEmpty;
 
+/// Linhas do Drift guardam ausência ora como null, ora como ''; o resto deste
+/// arquivo trata os dois como ausente.
+String? blankToNull(String? value) =>
+    (value == null || value.isEmpty) ? null : value;
+
 // Só o trio inteiro colide: (Formal, Narrativa, Mito) e (Formal, Narrativa,
-// Lenda) são um par legítimo. Secundário todo nulo nunca colide, mesmo com um
-// primário também todo nulo.
+// Lenda) são um par legítimo. Secundário todo ausente nunca colide, mesmo com
+// um primário também todo ausente.
 bool secondaryEqualsPrimary({
   required String? primaryRegisterId,
   required String? primaryGenreId,
@@ -36,14 +41,17 @@ bool secondaryEqualsPrimary({
   required String? secondaryGenreId,
   required String? secondarySubcategoryId,
 }) {
-  if (secondaryRegisterId == null &&
-      secondaryGenreId == null &&
-      secondarySubcategoryId == null) {
+  final secondaryRegister = blankToNull(secondaryRegisterId);
+  final secondaryGenre = blankToNull(secondaryGenreId);
+  final secondarySubcategory = blankToNull(secondarySubcategoryId);
+  if (secondaryRegister == null &&
+      secondaryGenre == null &&
+      secondarySubcategory == null) {
     return false;
   }
-  return primaryRegisterId == secondaryRegisterId &&
-      primaryGenreId == secondaryGenreId &&
-      primarySubcategoryId == secondarySubcategoryId;
+  return blankToNull(primaryRegisterId) == secondaryRegister &&
+      blankToNull(primaryGenreId) == secondaryGenre &&
+      blankToNull(primarySubcategoryId) == secondarySubcategory;
 }
 
 class SegmentClassificationCollisionException implements Exception {

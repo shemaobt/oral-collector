@@ -60,6 +60,10 @@ class _SecondaryClassificationFieldsState
     _genreId = widget.initial?.genreId;
     _subcategoryId = widget.initial?.subcategoryId;
     _registerId = widget.initial?.registerId;
+    // A row stored before the rule existed can already carry a secondary
+    // identical to its primary, so the reset has to run on construction too or
+    // the form opens with values it does not show (ENG-72).
+    _resetCollisionAndEmit();
   }
 
   @override
@@ -70,6 +74,12 @@ class _SecondaryClassificationFieldsState
         widget.primaryRegisterId == oldWidget.primaryRegisterId) {
       return;
     }
+    _resetCollisionAndEmit();
+  }
+
+  /// Re-emits after the frame because the reset can run while an ancestor is
+  /// building.
+  void _resetCollisionAndEmit() {
     final before = (_genreId, _subcategoryId, _registerId);
     _clearCollidingField();
     if (before != (_genreId, _subcategoryId, _registerId)) {
@@ -117,8 +127,6 @@ class _SecondaryClassificationFieldsState
       _registerId = null;
     } else if (_genreId != null) {
       _genreId = null;
-      _subcategoryId = null;
-    } else {
       _subcategoryId = null;
     }
   }

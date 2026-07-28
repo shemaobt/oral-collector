@@ -340,10 +340,17 @@ Path: @/lib/features/recording/presentation
   as primary" error and the segment sheet's save button is never
   disabled. Call sites must thread the **full** primary triple into the
   pickers — with only the genre id the hide-logic under-restricts and a
-  colliding triple gets through. The one surface that still warns is the
-  detail screen's red banner (`_hasSecondaryCollision`), which targets
-  rows persisted before the rule existed and is resolved manually with
-  "Clear secondary". The predicate behind all of these is
+  colliding triple gets through, which is why those parameters are
+  `required` even where they are nullable. The two surfaces that still
+  warn both target **legacy rows** — the app can no longer create a
+  colliding row, but the database can already hold one: the detail
+  screen's red banner (`_hasSecondaryCollision`), resolved manually with
+  "Clear secondary", and `TrimEditorScreen`, which refuses to open for
+  such a row (the split is impossible for every segment, and the FFmpeg
+  export runs before the persist would reject it). The picker itself
+  resets a colliding field on **construction** as well as on a primary
+  change, so opening it on a legacy row does not show a blank field that
+  secretly still holds the old value. The predicate behind all of these is
   `secondaryEqualsPrimary(...)` in
   [../domain/entities/classification.dart](../domain/entities/classification.dart);
   see

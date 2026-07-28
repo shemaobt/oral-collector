@@ -102,8 +102,11 @@ Path: @/lib/features/recording/domain
   `secondaryEqualsPrimary(...)` — the one definition of a
   secondary-classification collision (whole `(register, genre,
   subcategory)` triple identical, ENG-72) shared by the pickers, the
-  detail-screen banner and the split guard — and the
-  `SegmentClassificationCollisionException` that guard throws. The ergonomic
+  detail-screen banner, the trim editor's entry guard and the split
+  guard — and the `SegmentClassificationCollisionException` that guard
+  throws. Like its siblings it treats `''` as absent (`blankToNull`,
+  exported for the pickers), because callers hand it raw nullable
+  columns straight off a Drift row. The ergonomic
   `RecordingClassification` extension that reads those ids off a
   `LocalRecording` row lives in the data layer
   ([../data/local_recording_classification.dart](../data/local_recording_classification.dart))

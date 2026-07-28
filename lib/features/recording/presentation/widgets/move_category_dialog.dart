@@ -41,7 +41,7 @@ class MoveCategoryDialog extends ConsumerStatefulWidget {
     super.key,
     required this.currentGenreId,
     this.currentSubcategoryId,
-    this.currentPrimaryRegisterId,
+    required this.currentPrimaryRegisterId,
     this.currentSecondaryGenreId,
     this.currentSecondarySubcategoryId,
     this.currentSecondaryRegisterId,

@@ -287,5 +287,35 @@ void main() {
         isTrue,
       );
     });
+
+    // Linhas vindas do Drift trazem '' onde o resto do arquivo trata ausência
+    // como null; o vazio tem que contar como ausente aqui também.
+    test('true quando um lado usa vazio e o outro nulo no mesmo campo', () {
+      expect(
+        secondaryEqualsPrimary(
+          primaryRegisterId: 'reg_1',
+          primaryGenreId: 'gen_1',
+          primarySubcategoryId: null,
+          secondaryRegisterId: 'reg_1',
+          secondaryGenreId: 'gen_1',
+          secondarySubcategoryId: '',
+        ),
+        isTrue,
+      );
+    });
+
+    test('false quando o secundário é todo vazio', () {
+      expect(
+        secondaryEqualsPrimary(
+          primaryRegisterId: '',
+          primaryGenreId: '',
+          primarySubcategoryId: '',
+          secondaryRegisterId: '',
+          secondaryGenreId: '',
+          secondarySubcategoryId: '',
+        ),
+        isFalse,
+      );
+    });
   });
 }

@@ -43,7 +43,11 @@ Future<void> _pump(WidgetTester tester, double scale) async {
         () => _FakeGenreNotifier(GenreState(genres: _genres)),
       ),
     ],
-    child: const SegmentTaxonomySheet(parentGenreId: 'g-primary'),
+    child: const SegmentTaxonomySheet(
+      parentGenreId: 'g-primary',
+      parentSubcategoryId: null,
+      parentRegisterId: null,
+    ),
   );
   await tester.pumpAndSettle();
 }

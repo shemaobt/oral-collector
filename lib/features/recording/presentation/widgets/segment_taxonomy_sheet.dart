@@ -7,6 +7,7 @@ import '../../../../core/l10n/content_l10n.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/tokens.dart';
 import '../../../genre/presentation/notifiers/genre_notifier.dart';
+import '../../domain/entities/classification.dart';
 import '../../domain/entities/register.dart';
 
 class SegmentTaxonomyResult {
@@ -27,8 +28,8 @@ class SegmentTaxonomySheet extends ConsumerStatefulWidget {
   const SegmentTaxonomySheet({
     super.key,
     required this.parentGenreId,
-    this.parentSubcategoryId,
-    this.parentRegisterId,
+    required this.parentSubcategoryId,
+    required this.parentRegisterId,
     this.parentSecondaryGenreId,
     this.parentSecondarySubcategoryId,
     this.parentSecondaryRegisterId,
@@ -66,10 +67,7 @@ class _SegmentTaxonomySheetState extends ConsumerState<SegmentTaxonomySheet> {
     _registerId = widget.initialRegisterId;
   }
 
-  static String? _blankToNull(String? value) =>
-      (value == null || value.isEmpty) ? null : value;
-
-  static bool _same(String? a, String? b) => _blankToNull(a) == _blankToNull(b);
+  static bool _same(String? a, String? b) => blankToNull(a) == blankToNull(b);
 
   /// A segment's effective classification is its override falling back to the
   /// parent's value, which is what the split guard compares.
@@ -84,13 +82,13 @@ class _SegmentTaxonomySheetState extends ConsumerState<SegmentTaxonomySheet> {
   String? get _hiddenGenreId =>
       _same(widget.parentSubcategoryId, widget.parentSecondarySubcategoryId) &&
           _same(_effectiveRegisterId, widget.parentSecondaryRegisterId)
-      ? _blankToNull(widget.parentSecondaryGenreId)
+      ? blankToNull(widget.parentSecondaryGenreId)
       : null;
 
   String? get _hiddenSubcategoryId =>
       _same(_effectiveGenreId, widget.parentSecondaryGenreId) &&
           _same(_effectiveRegisterId, widget.parentSecondaryRegisterId)
-      ? _blankToNull(widget.parentSecondarySubcategoryId)
+      ? blankToNull(widget.parentSecondarySubcategoryId)
       : null;
 
   String? get _hiddenRegisterId =>
@@ -99,13 +97,13 @@ class _SegmentTaxonomySheetState extends ConsumerState<SegmentTaxonomySheet> {
             _subcategoryId ?? widget.parentSubcategoryId,
             widget.parentSecondarySubcategoryId,
           )
-      ? _blankToNull(widget.parentSecondaryRegisterId)
+      ? blankToNull(widget.parentSecondaryRegisterId)
       : null;
 
   /// The inherit option is withheld when the value it would apply is the
   /// hidden one.
   static bool _inheritAllowed(String? parentValue, String? hiddenValue) =>
-      hiddenValue == null || _blankToNull(parentValue) != hiddenValue;
+      hiddenValue == null || blankToNull(parentValue) != hiddenValue;
 
   @override
   Widget build(BuildContext context) {
