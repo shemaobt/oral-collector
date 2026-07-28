@@ -112,7 +112,12 @@ class _SyncNotifier extends SyncNotifier {
   @override
   Future<void> processQueue() async => _spy.processQueueCalls++;
   @override
-  Future<void> resetAndRetry(String id) async => _spy.resetAndRetryCalls++;
+  Future<void> resetAndRetry(String id) async {
+    _spy.resetAndRetryCalls++;
+    // Mirrors the real notifier's first step so the row's queue state is
+    // observable in the DB instead of only in the spy counter.
+    await ref.read(localRecordingRepositoryProvider).resetRetryCount(id);
+  }
 }
 
 class _FakeMemberNotifier extends MemberNotifier {
@@ -458,6 +463,39 @@ void main() {
       expect((await repo.getRecordingById(recordingId))!.title, 'A New Title');
       expect(listSpy.patchedTitle, 'A New Title');
     });
+
+    test(
+      'renaming a title-conflict recording puts it back in the queue',
+      () async {
+        final recording = await seed(uploadStatus: 'failed_conflict');
+        final c = makeContainer();
+
+        await notifierOf(
+          c,
+        ).saveDetails(recording, title: 'A Free Name', description: 'initial');
+
+        final row = (await repo.getRecordingById(recordingId))!;
+        expect(row.title, 'A Free Name');
+        expect(row.uploadStatus, 'local');
+      },
+    );
+
+    test(
+      'renaming an uploaded recording leaves its upload state alone',
+      () async {
+        final recording = await seed(uploadStatus: 'uploaded');
+        final c = makeContainer();
+
+        await notifierOf(
+          c,
+        ).saveDetails(recording, title: 'A New Title', description: 'initial');
+
+        expect(
+          (await repo.getRecordingById(recordingId))!.uploadStatus,
+          'uploaded',
+        );
+      },
+    );
   });
 
   group('toggleCleaningStatus', () {

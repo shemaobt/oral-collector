@@ -275,6 +275,16 @@
   "recording_statusUploading": "Uploading",
   "recording_statusFailed": "Failed",
   "recording_statusLocal": "Local",
+  "recording_statusNameConflict": "Name conflict",
+  "recording_duplicateTitleTitle": "Name already used",
+  "recording_duplicateTitleMessage": "An audio named \"{title}\" already exists in this project. Choose another name.",
+  "@recording_duplicateTitleMessage": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "recordings_clearStale": "Clear failed",
   "recordings_clearStaleMessage": "This will permanently delete all recordings with failed or stuck upload status from the server. This cannot be undone.",
   "recordings_clearedCount": "{count, plural, =0{No stale recordings found} =1{Cleared 1 recording} other{Cleared {count} recordings}}",

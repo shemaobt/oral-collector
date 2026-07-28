@@ -679,6 +679,28 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     );
   }
 
+  /// The upload was rejected because the title is already taken in this
+  /// project; the only way forward is a rename, which requeues the upload.
+  Widget? _buildTitleConflictBanner(
+    BuildContext context,
+    LocalRecordingEntity recording,
+  ) {
+    if (recording.uploadStatus != 'failed_conflict') return null;
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
+    return RecordingActionBanner(
+      theme: theme,
+      icon: LucideIcons.alertCircle,
+      message: l10n.recording_duplicateTitleMessage(recording.title ?? ''),
+      actionLabel: l10n.recording_editDetails,
+      accentColor: theme.colorScheme.error,
+      backgroundColor: theme.colorScheme.errorContainer.withValues(alpha: 0.35),
+      borderColor: theme.colorScheme.error.withValues(alpha: 0.5),
+      actionBackgroundColor: theme.colorScheme.error.withValues(alpha: 0.12),
+      onAction: _canEditRecording ? _openEditDetails : null,
+    );
+  }
+
   Widget? _buildClassifyBanner(BuildContext context, bool isUnclassified) {
     if (!isUnclassified) return null;
     final theme = Theme.of(context);
@@ -838,6 +860,8 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
 
     final classifyBanner = _buildClassifyBanner(context, isUnclassified);
 
+    final titleConflictBanner = _buildTitleConflictBanner(context, recording);
+
     final storytellerSection = RecordingStorytellerSection(
       projectId: recording.projectId,
       storytellerId: recording.storytellerId,
@@ -851,6 +875,10 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         RecordingUploadProgressSection(recordingId: recording.id),
+        if (titleConflictBanner != null) ...[
+          titleConflictBanner,
+          const SizedBox(height: SpacingScale.s16),
+        ],
         if (secondaryCollisionBanner != null) ...[
           secondaryCollisionBanner,
           const SizedBox(height: SpacingScale.s16),

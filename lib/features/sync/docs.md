@@ -33,7 +33,7 @@ Several Drift columns hold a free-text status string (no DB-level enum). The val
 
 | Column (client / server) | Where | Values |
 |---|---|---|
-| `uploadStatus` / `upload_status` | recordings | **client:** `local`, `uploading`, `uploaded`, `verified`, `failed`, `web_uploading` (web). **server:** uppercase, e.g. `VERIFIED`. `local` and `web_uploading` are client-only and never sent by the server. |
+| `uploadStatus` / `upload_status` | recordings | **client:** `local`, `uploading`, `uploaded`, `verified`, `failed`, `failed_conflict`, `web_uploading` (web). **server:** uppercase, e.g. `VERIFIED`. `local`, `failed_conflict` and `web_uploading` are client-only and never sent by the server. |
 | `cleaningStatus` / `cleaning_status` | recordings | **client:** `none`, `needs_cleaning`; reads `cleaned` from the server. **server:** uppercase enum, e.g. `CleaningStatus.NONE`. |
 | `syncStatus` | storytellers (client-only queue) | `synced`, `uploading`, `failed`. The server tracks storytellers by id/timestamps, not this column. |
 | `status` | recording_sessions (client-only recovery) | `active`, `completed`. |
@@ -42,6 +42,7 @@ Several Drift columns hold a free-text status string (no DB-level enum). The val
 - **A client `uploaded`/`verified` means "left the device and the server accepted the request" — NOT "durably stored and visible to other clients."** Server-confirmed durability is tracked by the server's own status; the client only ever reads what the server DTO mapper pulls from `upload_status` / `cleaning_status` (`serverRecordingToLocal` in `@/lib/features/recording/data/server_to_local_recording.dart`). Don't treat a local terminal status as proof of server-side completion.
 - **Casing crosses the boundary.** The client writes lowercase (`verified`); the server emits uppercase (`VERIFIED`). Any comparison that spans the two must normalize, or go through the safe-readers that map the server DTO into the client's lowercase set (`@/lib/core/serialization/docs.md`).
 - The drain-eligibility filter in `processQueue` keys off the client `uploadStatus`: `uploading` is skipped; `local` / `failed` are eligible subject to backoff.
+- **`failed_conflict` is a terminal status with a user-driven exit (ENG-71).** The backend deduplicates `POST /api/oc/recordings` by `(project_id, title)`; a 409 on create surfaces as `ConflictException` and the engine parks the row via the same permanent-failure path as `failed`, but under `failed_conflict` so the UI can tell a name clash from a generic upload failure. `getPendingUploads` does not match it, so retrying alone can never clear it — only a rename can. Renaming through `RecordingDetailNotifier.saveDetails` calls `resetAndRetry`, which puts the row back to `local` with a fresh retry budget. The list's *pending* filter and the pending badge still count it, on purpose: a conflicted recording must stay visible and actionable rather than vanish. `deleteStaleRecordings` (the "Clear failed" action) matches `failed` / `uploading` exactly, so it will not destroy a conflicted recording.
 
 ### Things to Know
 

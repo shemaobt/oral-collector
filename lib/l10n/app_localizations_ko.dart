@@ -667,6 +667,17 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recording_statusLocal => '로컬';
 
   @override
+  String get recording_statusNameConflict => '이름 충돌';
+
+  @override
+  String get recording_duplicateTitleTitle => '이미 사용 중인 이름';
+
+  @override
+  String recording_duplicateTitleMessage(String title) {
+    return '이 프로젝트에 \"$title\" 이름의 오디오가 이미 있습니다. 다른 이름을 선택하세요.';
+  }
+
+  @override
   String get recordings_clearStale => '실패 항목 삭제';
 
   @override

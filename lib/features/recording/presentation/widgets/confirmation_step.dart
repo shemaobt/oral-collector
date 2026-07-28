@@ -11,6 +11,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/auth/auth_notifier.dart';
+import '../../../../core/errors/app_exception.dart' show ConflictException;
 import '../../../../core/platform/file_ops.dart' as file_ops;
 import '../../../../core/platform/file_source.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -259,6 +260,33 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
     );
   }
 
+  /// The backend deduplicates on (project_id, title), so a clash would silently
+  /// overwrite the earlier recording. Best-effort by design: offline or on any
+  /// API failure this answers false and the save proceeds untouched — losing a
+  /// recording to a flaky lookup would be far worse than a late 409.
+  Future<bool> _titleTakenOnServer(String projectId, String title) async {
+    if (projectId.isEmpty || !ref.read(syncNotifierProvider).isOnline) {
+      return false;
+    }
+    try {
+      final matches = await ref
+          .read(recordingApiRepositoryProvider)
+          .listRecordings(projectId, title: title, limit: 1);
+      return isTitleTaken(matches.map((r) => r.title), title);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  void _showDuplicateTitleMessage(String title) {
+    final l10n = AppLocalizations.of(context);
+    showErrorSnackBar(
+      context,
+      '',
+      template: (_) => l10n.recording_duplicateTitleMessage(title),
+    );
+  }
+
   Future<void> _save() async {
     if (_selectedStoryteller == null) return;
     setState(() => _isSaving = true);
@@ -267,6 +295,18 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
     final projectState = ref.read(projectNotifierProvider);
     final projectId = projectState.activeProject?.id ?? '';
     final currentUserId = ref.read(authNotifierProvider).currentUser?.id;
+    final resolvedTitle = resolveRecordingTitle(
+      _titleController.text,
+      locale: localeTag,
+    );
+
+    if (await _titleTakenOnServer(projectId, resolvedTitle)) {
+      if (!mounted) return;
+      setState(() => _isSaving = false);
+      _showDuplicateTitleMessage(resolvedTitle);
+      return;
+    }
+    if (!mounted) return;
 
     if (kIsWeb) {
       await _saveWebDirect(projectId, currentUserId, localeTag);
@@ -295,10 +335,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
           genreId: widget.genreId,
           storytellerId: _selectedStoryteller!.id,
           userId: currentUserId,
-          title: resolveRecordingTitle(
-            _titleController.text,
-            locale: localeTag,
-          ),
+          title: resolvedTitle,
           description: _descriptionController.text.trim(),
           durationSeconds: widget.result.durationSeconds,
           fileSizeBytes: fileSize,
@@ -346,6 +383,10 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
     final l10n = AppLocalizations.of(context);
     final uploader = ref.read(directRecordingUploaderProvider);
     final localRepo = ref.read(localRecordingRepositoryProvider);
+    final resolvedTitle = resolveRecordingTitle(
+      _titleController.text,
+      locale: localeTag,
+    );
     try {
       final bytes = await file_ops.readFileBytes(widget.result.filePath);
       if (bytes.isEmpty) {
@@ -376,10 +417,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
           registerId: widget.registerId,
           storytellerId: _selectedStoryteller!.id,
           userId: currentUserId,
-          title: resolveRecordingTitle(
-            _titleController.text,
-            locale: localeTag,
-          ),
+          title: resolvedTitle,
           description: description,
           durationSeconds: widget.result.durationSeconds,
           fileSizeBytes: bytes.length,
@@ -398,10 +436,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
             genreId: widget.genreId,
             storytellerId: _selectedStoryteller!.id,
             userId: currentUserId,
-            title: resolveRecordingTitle(
-              _titleController.text,
-              locale: localeTag,
-            ),
+            title: resolvedTitle,
             description: description,
             durationSeconds: widget.result.durationSeconds,
             fileSizeBytes: bytes.length,
@@ -426,6 +461,11 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
           context,
         ).showSnackBar(SnackBar(content: Text(l10n.recording_saved)));
         context.go('/home');
+      }
+    } on ConflictException {
+      if (mounted) {
+        _showDuplicateTitleMessage(resolvedTitle);
+        setState(() => _isSaving = false);
       }
     } catch (e) {
       if (mounted) {

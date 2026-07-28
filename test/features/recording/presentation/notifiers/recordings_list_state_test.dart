@@ -8,6 +8,7 @@ LocalRecordingEntity _entity({
   String? registerId = 'reg-1',
   String? title,
   String? description,
+  String uploadStatus = 'local',
 }) => LocalRecordingEntity(
   id: id,
   projectId: 'proj-1',
@@ -19,7 +20,7 @@ LocalRecordingEntity _entity({
   fileSizeBytes: 1024,
   format: 'm4a',
   localFilePath: '/tmp/$id.m4a',
-  uploadStatus: 'local',
+  uploadStatus: uploadStatus,
   cleaningStatus: 'none',
   recordedAt: DateTime(2026, 1, 1),
   createdAt: DateTime(2026, 1, 1),
@@ -75,6 +76,18 @@ void main() {
       );
 
       expect(state.filteredRecordings.map((r) => r.id), ['a', 'b']);
+    });
+
+    test('pending filter keeps a recording whose title clashed on upload', () {
+      final conflict = _entity(id: 'x', uploadStatus: 'failed_conflict');
+      final uploaded = _entity(id: 'u', uploadStatus: 'uploaded');
+
+      final state = RecordingsListState(
+        recordings: [conflict, uploaded],
+        selectedFilter: StatusFilter.pending,
+      );
+
+      expect(state.filteredRecordings.map((r) => r.id), ['x']);
     });
   });
 }

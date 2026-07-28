@@ -253,6 +253,15 @@ class RecordingDetailNotifier
           ref
               .read(recordingsListNotifierProvider.notifier)
               .patchRecordingTitle(arg, title);
+          // A row parked in failed_conflict is terminal until the clashing
+          // title changes; the rename is what makes it uploadable again, so
+          // hand it straight back to the queue instead of leaving it stuck.
+          if (recording.uploadStatus == 'failed_conflict') {
+            await ref
+                .read(syncNotifierProvider.notifier)
+                .resetAndRetry(recording.id);
+            if (_disposed) return RecordingMutationResult.success;
+          }
         }
       } on ForbiddenException {
         return RecordingMutationResult.forbidden;

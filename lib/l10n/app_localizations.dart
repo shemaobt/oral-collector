@@ -1376,6 +1376,24 @@ abstract class AppLocalizations {
   /// **'Local'**
   String get recording_statusLocal;
 
+  /// No description provided for @recording_statusNameConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'Name conflict'**
+  String get recording_statusNameConflict;
+
+  /// No description provided for @recording_duplicateTitleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Name already used'**
+  String get recording_duplicateTitleTitle;
+
+  /// No description provided for @recording_duplicateTitleMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'An audio named \"{title}\" already exists in this project. Choose another name.'**
+  String recording_duplicateTitleMessage(String title);
+
   /// No description provided for @recordings_clearStale.
   ///
   /// In en, this message translates to:

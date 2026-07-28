@@ -95,6 +95,10 @@ Path: @/lib/features/recording/data/repositories
   `resetStuckUploading`. That filter lives only in the engine, not in this
   query — see Things to Know and
   [/lib/features/sync/docs.md](../../../sync/docs.md).
+  `failed_conflict` (ENG-71) is deliberately absent from the matched set: a
+  duplicate title is terminal until the user renames the recording, and the
+  rename routes through `resetRetryCount`, which flips the row back to `local`
+  and so back into this query.
 - `watchRecordingEntityById` is the **single detail watch stream** (ENG-195
   introduced it; ENG-199/ENG-200 made it the sole one by deleting the former
   row stream `watchRecordingById`). It is a `watchSingleOrNull` query that

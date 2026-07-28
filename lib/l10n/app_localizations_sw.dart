@@ -685,6 +685,17 @@ class AppLocalizationsSw extends AppLocalizations {
   String get recording_statusLocal => 'Ya Ndani';
 
   @override
+  String get recording_statusNameConflict => 'Mgongano wa jina';
+
+  @override
+  String get recording_duplicateTitleTitle => 'Jina limekwisha tumika';
+
+  @override
+  String recording_duplicateTitleMessage(String title) {
+    return 'Sauti yenye jina \"$title\" tayari ipo katika mradi huu. Chagua jina lingine.';
+  }
+
+  @override
   String get recordings_clearStale => 'Futa zilizoshindwa';
 
   @override

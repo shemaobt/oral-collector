@@ -175,6 +175,26 @@ Path: @/lib/features/recording/presentation
   `RoleNotifier.canManageProject(recording.projectId)`, and
   `recording.userId`. See [../domain/docs.md](../domain/docs.md) for the
   rule and its rationale.
+- **Duplicate titles are handled at both ends of the save (ENG-71).** The
+  backend deduplicates `POST /api/oc/recordings` by `(project_id, title)`, so
+  before saving, `ConfirmationStep._save` asks the server whether the resolved
+  title is already taken (`listRecordings(..., title:, limit: 1)` plus
+  `isTitleTaken` from
+  [../../../shared/utils/recording_title.dart](../../../shared/utils/recording_title.dart))
+  and stops with a snackbar so the user can rename. **That lookup is
+  best-effort by contract**: offline, with no active project, or on any API
+  failure it answers `false` and the save proceeds exactly as before — losing a
+  recording to a flaky lookup would be far worse than a late 409. The web
+  direct-upload path additionally catches `ConflictException` from the create
+  call and shows the same message. On native the create happens later in the
+  sync engine, which parks the row in `uploadStatus='failed_conflict'`; the
+  detail screen then renders a `RecordingActionBanner` whose action opens the
+  edit-details sheet, and `RecordingDetailNotifier.saveDetails` requeues the
+  row via `resetAndRetry` once the title actually changes. `RecordingCard` and
+  `RecordingStatusSection` give `failed_conflict` its own label
+  (`recording_statusNameConflict`) instead of the generic failure label, and
+  `RecordingsListState`'s *pending* filter includes it so a conflicted
+  recording stays visible and actionable.
 - `notifiers/` holds the Riverpod notifiers for the recording list,
   recording flow, and detail-screen playback (see
   [./notifiers/docs.md](notifiers/docs.md)); `widgets/` holds the

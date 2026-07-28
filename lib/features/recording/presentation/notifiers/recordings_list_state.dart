@@ -117,6 +117,7 @@ class RecordingsListState {
               (r) =>
                   r.uploadStatus == 'local' ||
                   r.uploadStatus == 'failed' ||
+                  r.uploadStatus == 'failed_conflict' ||
                   r.uploadStatus == 'uploading',
             )
             .toList();
