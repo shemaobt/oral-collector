@@ -17,6 +17,7 @@ import '../../../shared/utils/error_helpers.dart';
 import '../../genre/presentation/notifiers/genre_notifier.dart';
 import '../data/providers.dart';
 import '../data/services/waveform_loader.dart';
+import '../domain/entities/classification.dart';
 import '../domain/entities/register.dart';
 import 'notifiers/recording_player_notifier.dart';
 import 'notifiers/trim_editor_notifier.dart';
@@ -88,6 +89,24 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
     if (!mounted) return;
     final recording = _state.recording;
     if (recording == null) return; // notifier set not-found / load error
+
+    // A row whose secondary triple already equals its primary cannot be split
+    // at all: every child inherits that triple and the split guard rejects it.
+    // Refusing here costs nothing; letting the editor open costs a full ffmpeg
+    // export before the failure surfaces (ENG-72).
+    if (secondaryEqualsPrimary(
+      primaryRegisterId: recording.registerId,
+      primaryGenreId: recording.genreId,
+      primarySubcategoryId: recording.subcategoryId,
+      secondaryRegisterId: recording.secondaryRegisterId,
+      secondaryGenreId: recording.secondaryGenreId,
+      secondarySubcategoryId: recording.secondarySubcategoryId,
+    )) {
+      _notifier.setUnavailable(
+        AppLocalizations.of(context).recording_secondaryCollisionBanner,
+      );
+      return;
+    }
 
     try {
       if (kIsWeb) {
@@ -241,6 +260,8 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
       ),
       builder: (ctx) => SegmentTaxonomySheet(
         parentGenreId: recording.genreId,
+        parentSubcategoryId: recording.subcategoryId,
+        parentRegisterId: recording.registerId,
         parentSecondaryGenreId: recording.secondaryGenreId,
         parentSecondarySubcategoryId: recording.secondarySubcategoryId,
         parentSecondaryRegisterId: recording.secondaryRegisterId,

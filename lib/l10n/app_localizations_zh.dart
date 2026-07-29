@@ -762,9 +762,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get trim_classifySegment => '分类片段';
 
   @override
-  String get trim_primaryEqualsSecondary => '主分类不能与录音的次分类相同。';
-
-  @override
   String get trim_volume => '音量';
 
   @override
@@ -1835,9 +1832,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get classify_secondaryRegister => '次要语域';
-
-  @override
-  String get classify_secondarySameAsPrimary => '次要类型必须与主要类型不同。';
 
   @override
   String get classify_clearAlternative => '清除替代';

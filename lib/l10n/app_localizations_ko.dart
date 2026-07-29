@@ -766,9 +766,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get trim_classifySegment => '세그먼트 분류';
 
   @override
-  String get trim_primaryEqualsSecondary => '기본 분류는 녹음의 보조 분류와 같을 수 없습니다.';
-
-  @override
   String get trim_volume => '볼륨';
 
   @override
@@ -1842,9 +1839,6 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get classify_secondaryRegister => '보조 사용역';
-
-  @override
-  String get classify_secondarySameAsPrimary => '보조 장르는 주요 장르와 달라야 합니다.';
 
   @override
   String get classify_clearAlternative => '대체 지우기';

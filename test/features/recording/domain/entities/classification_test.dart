@@ -185,4 +185,137 @@ void main() {
       );
     });
   });
+
+  group('secondaryEqualsPrimary', () {
+    test('true quando o trio inteiro é idêntico', () {
+      expect(
+        secondaryEqualsPrimary(
+          primaryRegisterId: 'reg_1',
+          primaryGenreId: 'gen_1',
+          primarySubcategoryId: 'sub_1',
+          secondaryRegisterId: 'reg_1',
+          secondaryGenreId: 'gen_1',
+          secondarySubcategoryId: 'sub_1',
+        ),
+        isTrue,
+      );
+    });
+
+    test('false quando só o registro difere', () {
+      expect(
+        secondaryEqualsPrimary(
+          primaryRegisterId: 'reg_1',
+          primaryGenreId: 'gen_1',
+          primarySubcategoryId: 'sub_1',
+          secondaryRegisterId: 'reg_2',
+          secondaryGenreId: 'gen_1',
+          secondarySubcategoryId: 'sub_1',
+        ),
+        isFalse,
+      );
+    });
+
+    test('false quando só o gênero difere', () {
+      expect(
+        secondaryEqualsPrimary(
+          primaryRegisterId: 'reg_1',
+          primaryGenreId: 'gen_1',
+          primarySubcategoryId: 'sub_1',
+          secondaryRegisterId: 'reg_1',
+          secondaryGenreId: 'gen_2',
+          secondarySubcategoryId: 'sub_1',
+        ),
+        isFalse,
+      );
+    });
+
+    test('false quando só a subcategoria difere (Mito vs Lenda)', () {
+      expect(
+        secondaryEqualsPrimary(
+          primaryRegisterId: 'reg_1',
+          primaryGenreId: 'gen_1',
+          primarySubcategoryId: 'sub_mito',
+          secondaryRegisterId: 'reg_1',
+          secondaryGenreId: 'gen_1',
+          secondarySubcategoryId: 'sub_lenda',
+        ),
+        isFalse,
+      );
+    });
+
+    test('false quando o secundário é todo nulo e o primário preenchido', () {
+      expect(
+        secondaryEqualsPrimary(
+          primaryRegisterId: 'reg_1',
+          primaryGenreId: 'gen_1',
+          primarySubcategoryId: 'sub_1',
+          secondaryRegisterId: null,
+          secondaryGenreId: null,
+          secondarySubcategoryId: null,
+        ),
+        isFalse,
+      );
+    });
+
+    test(
+      'false quando nem o primário nem o secundário estão classificados',
+      () {
+        expect(
+          secondaryEqualsPrimary(
+            primaryRegisterId: null,
+            primaryGenreId: null,
+            primarySubcategoryId: null,
+            secondaryRegisterId: null,
+            secondaryGenreId: null,
+            secondarySubcategoryId: null,
+          ),
+          isFalse,
+        );
+      },
+    );
+
+    test('true quando nulos coincidem nos campos opcionais', () {
+      expect(
+        secondaryEqualsPrimary(
+          primaryRegisterId: null,
+          primaryGenreId: 'gen_1',
+          primarySubcategoryId: null,
+          secondaryRegisterId: null,
+          secondaryGenreId: 'gen_1',
+          secondarySubcategoryId: null,
+        ),
+        isTrue,
+      );
+    });
+
+    // Linhas vindas do Drift trazem '' onde o resto do arquivo trata ausência
+    // como null; o vazio tem que contar como ausente aqui também.
+    test('true quando um lado usa vazio e o outro nulo no mesmo campo', () {
+      expect(
+        secondaryEqualsPrimary(
+          primaryRegisterId: 'reg_1',
+          primaryGenreId: 'gen_1',
+          primarySubcategoryId: null,
+          secondaryRegisterId: 'reg_1',
+          secondaryGenreId: 'gen_1',
+          secondarySubcategoryId: '',
+        ),
+        isTrue,
+      );
+    });
+
+    test('false quando o secundário é todo vazio', () {
+      expect(
+        secondaryEqualsPrimary(
+          primaryRegisterId: '',
+          primaryGenreId: '',
+          primarySubcategoryId: '',
+          secondaryRegisterId: '',
+          secondaryGenreId: '',
+          secondarySubcategoryId: '',
+        ),
+        isFalse,
+      );
+    });
+  });
 }

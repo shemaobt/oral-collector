@@ -25,6 +25,45 @@ bool recordingHasSecondaryGenre(String? secondaryGenreId) =>
 bool recordingHasSecondaryRegister(String? secondaryRegisterId) =>
     secondaryRegisterId != null && secondaryRegisterId.isNotEmpty;
 
+/// Linhas do Drift guardam ausência ora como null, ora como ''; o resto deste
+/// arquivo trata os dois como ausente.
+String? blankToNull(String? value) =>
+    (value == null || value.isEmpty) ? null : value;
+
+// Só o trio inteiro colide: (Formal, Narrativa, Mito) e (Formal, Narrativa,
+// Lenda) são um par legítimo. Secundário todo ausente nunca colide, mesmo com
+// um primário também todo ausente.
+bool secondaryEqualsPrimary({
+  required String? primaryRegisterId,
+  required String? primaryGenreId,
+  required String? primarySubcategoryId,
+  required String? secondaryRegisterId,
+  required String? secondaryGenreId,
+  required String? secondarySubcategoryId,
+}) {
+  final secondaryRegister = blankToNull(secondaryRegisterId);
+  final secondaryGenre = blankToNull(secondaryGenreId);
+  final secondarySubcategory = blankToNull(secondarySubcategoryId);
+  if (secondaryRegister == null &&
+      secondaryGenre == null &&
+      secondarySubcategory == null) {
+    return false;
+  }
+  return blankToNull(primaryRegisterId) == secondaryRegister &&
+      blankToNull(primaryGenreId) == secondaryGenre &&
+      blankToNull(primarySubcategoryId) == secondarySubcategory;
+}
+
+class SegmentClassificationCollisionException implements Exception {
+  const SegmentClassificationCollisionException(this.segmentId);
+
+  final String segmentId;
+
+  @override
+  String toString() =>
+      'SegmentClassificationCollisionException(segment: $segmentId)';
+}
+
 bool recordingHasSecondary({
   required String? secondaryGenreId,
   required String? secondaryRegisterId,

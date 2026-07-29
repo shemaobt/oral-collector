@@ -29,12 +29,16 @@ class SecondaryValues {
 
 class SecondaryClassificationFields extends ConsumerStatefulWidget {
   final String? primaryGenreId;
+  final String? primarySubcategoryId;
+  final String? primaryRegisterId;
   final SecondaryValues? initial;
   final ValueChanged<SecondaryValues?> onChanged;
 
   const SecondaryClassificationFields({
     super.key,
     required this.primaryGenreId,
+    required this.primarySubcategoryId,
+    required this.primaryRegisterId,
     required this.onChanged,
     this.initial,
   });
@@ -56,13 +60,72 @@ class _SecondaryClassificationFieldsState
     _genreId = widget.initial?.genreId;
     _subcategoryId = widget.initial?.subcategoryId;
     _registerId = widget.initial?.registerId;
+    // A row stored before the rule existed can already carry a secondary
+    // identical to its primary, so the reset has to run on construction too or
+    // the form opens with values it does not show (ENG-72).
+    _resetCollisionAndEmit();
   }
 
   @override
   void didUpdateWidget(SecondaryClassificationFields oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.primaryGenreId != oldWidget.primaryGenreId &&
-        _genreId == widget.primaryGenreId) {
+    if (widget.primaryGenreId == oldWidget.primaryGenreId &&
+        widget.primarySubcategoryId == oldWidget.primarySubcategoryId &&
+        widget.primaryRegisterId == oldWidget.primaryRegisterId) {
+      return;
+    }
+    _resetCollisionAndEmit();
+  }
+
+  /// Re-emits after the frame because the reset can run while an ancestor is
+  /// building.
+  void _resetCollisionAndEmit() {
+    final before = (_genreId, _subcategoryId, _registerId);
+    _clearCollidingField();
+    if (before != (_genreId, _subcategoryId, _registerId)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _emit();
+      });
+    }
+  }
+
+  // Each field hides the primary's value only when the other two already match
+  // it, so the user can never assemble an identical triple (ENG-72).
+  String? get _hiddenGenreId =>
+      _subcategoryId == widget.primarySubcategoryId &&
+          _registerId == widget.primaryRegisterId
+      ? widget.primaryGenreId
+      : null;
+
+  String? get _hiddenSubcategoryId =>
+      _genreId == widget.primaryGenreId &&
+          _registerId == widget.primaryRegisterId
+      ? widget.primarySubcategoryId
+      : null;
+
+  String? get _hiddenRegisterId =>
+      _genreId == widget.primaryGenreId &&
+          _subcategoryId == widget.primarySubcategoryId
+      ? widget.primaryRegisterId
+      : null;
+
+  /// A collision only becomes reachable when the primary moves under a
+  /// selection the user already made, or when picking a genre resets the
+  /// subcategory. Clearing a single field breaks it; the register goes first
+  /// so the genre and subcategory the user chose survive.
+  void _clearCollidingField() {
+    final collides = secondaryEqualsPrimary(
+      primaryRegisterId: widget.primaryRegisterId,
+      primaryGenreId: widget.primaryGenreId,
+      primarySubcategoryId: widget.primarySubcategoryId,
+      secondaryRegisterId: _registerId,
+      secondaryGenreId: _genreId,
+      secondarySubcategoryId: _subcategoryId,
+    );
+    if (!collides) return;
+    if (_registerId != null) {
+      _registerId = null;
+    } else if (_genreId != null) {
       _genreId = null;
       _subcategoryId = null;
     }
@@ -97,16 +160,20 @@ class _SecondaryClassificationFieldsState
     final colors = AppColors.of(context);
     final theme = Theme.of(context);
     final genreState = ref.watch(genreNotifierProvider);
+    final hiddenGenreId = _hiddenGenreId;
     final genres = genreState.genres
-        .where(
-          (g) => g.id != widget.primaryGenreId && g.id != kUnclassifiedGenreId,
-        )
+        .where((g) => g.id != kUnclassifiedGenreId && g.id != hiddenGenreId)
         .toList();
 
     final selectedGenre = genres.where((g) => g.id == _genreId).firstOrNull;
-    final subcategories = selectedGenre?.subcategories ?? [];
-
-    final sameAsPrimary = _genreId != null && _genreId == widget.primaryGenreId;
+    final hiddenSubcategoryId = _hiddenSubcategoryId;
+    final subcategories = (selectedGenre?.subcategories ?? [])
+        .where((s) => s.id != hiddenSubcategoryId)
+        .toList();
+    final hiddenRegisterId = _hiddenRegisterId;
+    final registers = kRegisters
+        .where((r) => r.id != hiddenRegisterId)
+        .toList();
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -151,19 +218,11 @@ class _SecondaryClassificationFieldsState
             setState(() {
               _genreId = value;
               _subcategoryId = null;
+              _clearCollidingField();
             });
             _emit();
           },
         ),
-        if (sameAsPrimary) ...[
-          const SizedBox(height: SpacingScale.s8),
-          Text(
-            l10n.classify_secondarySameAsPrimary,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.error,
-            ),
-          ),
-        ],
         const SizedBox(height: SpacingScale.s12),
         if (subcategories.isNotEmpty) ...[
           Text(
@@ -214,7 +273,9 @@ class _SecondaryClassificationFieldsState
         const SizedBox(height: SpacingScale.s4),
         DropdownButtonFormField<String>(
           isExpanded: true,
-          initialValue: _registerId,
+          initialValue: registers.any((r) => r.id == _registerId)
+              ? _registerId
+              : null,
           decoration: const InputDecoration(
             isDense: true,
             contentPadding: EdgeInsets.symmetric(
@@ -223,7 +284,7 @@ class _SecondaryClassificationFieldsState
             ),
           ),
           hint: Text(l10n.classify_selectRegister),
-          items: kRegisters
+          items: registers
               .map(
                 (r) => DropdownMenuItem(
                   value: r.id,

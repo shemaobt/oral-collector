@@ -49,6 +49,7 @@ final _genres = [
 Widget _harness({
   required String currentGenreId,
   String? currentSubcategoryId,
+  String? currentPrimaryRegisterId,
   String? currentSecondaryGenreId,
   String? currentSecondarySubcategoryId,
   String? currentSecondaryRegisterId,
@@ -73,6 +74,7 @@ Widget _harness({
                 builder: (_) => MoveCategoryDialog(
                   currentGenreId: currentGenreId,
                   currentSubcategoryId: currentSubcategoryId,
+                  currentPrimaryRegisterId: currentPrimaryRegisterId,
                   currentSecondaryGenreId: currentSecondaryGenreId,
                   currentSecondarySubcategoryId: currentSecondarySubcategoryId,
                   currentSecondaryRegisterId: currentSecondaryRegisterId,
@@ -259,6 +261,50 @@ void main() {
 
       expect(captured?.clearSecondary, isTrue);
       expect(captured?.secondaryGenreId, isNull);
+    },
+  );
+
+  testWidgets(
+    'a secondary sharing the primary genre is movable while the triple differs, '
+    'and a register change is carried into the result (ENG-72)',
+    (tester) async {
+      MoveCategoryResult? captured;
+      await tester.pumpWidget(
+        _harness(
+          currentGenreId: 'g-primary',
+          currentSubcategoryId: 'sub-A',
+          currentPrimaryRegisterId: 'formal',
+          currentSecondaryGenreId: 'g-primary',
+          currentSecondarySubcategoryId: 'sub-B',
+          currentSecondaryRegisterId: 'formal',
+          onResult: (r) => captured = r,
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+
+      // The secondary shares the primary genre and register but not its
+      // subcategory, so the triples already differ. Move additionally needs an
+      // edit to enable, which the register change below provides.
+      final registerField = find.widgetWithText(
+        DropdownButtonFormField<String>,
+        'Formal / Official',
+      );
+      await tester.ensureVisible(registerField);
+      await tester.pumpAndSettle();
+      await tester.tap(registerField);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Ceremonial').last);
+      await tester.pumpAndSettle();
+
+      expect(_isMoveEnabled(tester, l10n), isTrue);
+
+      await tester.tap(find.text(l10n.common_move));
+      await tester.pumpAndSettle();
+
+      expect(captured?.secondaryGenreId, 'g-primary');
+      expect(captured?.secondarySubcategoryId, 'sub-B');
+      expect(captured?.secondaryRegisterId, 'ceremonial');
     },
   );
 }

@@ -8,6 +8,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/tokens.dart';
 import '../../../genre/domain/entities/genre.dart';
 import '../../../genre/presentation/notifiers/genre_notifier.dart';
+import '../../domain/entities/classification.dart';
 import 'secondary_classification_fields.dart';
 
 class MoveCategoryResult {
@@ -31,6 +32,7 @@ class MoveCategoryResult {
 class MoveCategoryDialog extends ConsumerStatefulWidget {
   final String currentGenreId;
   final String? currentSubcategoryId;
+  final String? currentPrimaryRegisterId;
   final String? currentSecondaryGenreId;
   final String? currentSecondarySubcategoryId;
   final String? currentSecondaryRegisterId;
@@ -39,6 +41,7 @@ class MoveCategoryDialog extends ConsumerStatefulWidget {
     super.key,
     required this.currentGenreId,
     this.currentSubcategoryId,
+    required this.currentPrimaryRegisterId,
     this.currentSecondaryGenreId,
     this.currentSecondarySubcategoryId,
     this.currentSecondaryRegisterId,
@@ -117,7 +120,15 @@ class _MoveCategoryDialogState extends ConsumerState<MoveCategoryDialog> {
   bool get _secondaryValid =>
       !_showSecondary ||
       _secondary == null ||
-      (_secondary!.isValid && _secondary!.genreId != _selectedGenreId);
+      (_secondary!.isValid &&
+          !secondaryEqualsPrimary(
+            primaryRegisterId: widget.currentPrimaryRegisterId,
+            primaryGenreId: _selectedGenreId,
+            primarySubcategoryId: _selectedSubcategoryId,
+            secondaryRegisterId: _secondary!.registerId,
+            secondaryGenreId: _secondary!.genreId,
+            secondarySubcategoryId: _secondary!.subcategoryId,
+          ));
 
   bool get _shouldClearSecondary =>
       !_showSecondary &&
@@ -131,9 +142,6 @@ class _MoveCategoryDialogState extends ConsumerState<MoveCategoryDialog> {
     setState(() {
       _selectedGenreId = value;
       _selectedSubcategoryId = null;
-      if (_secondary?.genreId == value) {
-        _secondary = null;
-      }
     });
   }
 
@@ -237,6 +245,8 @@ class _MoveCategoryDialogState extends ConsumerState<MoveCategoryDialog> {
               _SecondaryExpansion(
                 expanded: _showSecondary,
                 primaryGenreId: _selectedGenreId,
+                primarySubcategoryId: _selectedSubcategoryId,
+                primaryRegisterId: widget.currentPrimaryRegisterId,
                 initial: _secondary,
                 onExpansionChanged: _onSecondaryExpansionChanged,
                 onChanged: _onSecondaryChanged,
@@ -316,6 +326,8 @@ class _SecondaryExpansion extends StatelessWidget {
   const _SecondaryExpansion({
     required this.expanded,
     required this.primaryGenreId,
+    required this.primarySubcategoryId,
+    required this.primaryRegisterId,
     required this.initial,
     required this.onExpansionChanged,
     required this.onChanged,
@@ -323,6 +335,8 @@ class _SecondaryExpansion extends StatelessWidget {
 
   final bool expanded;
   final String primaryGenreId;
+  final String? primarySubcategoryId;
+  final String? primaryRegisterId;
   final SecondaryValues? initial;
   final ValueChanged<bool> onExpansionChanged;
   final ValueChanged<SecondaryValues?> onChanged;
@@ -349,6 +363,8 @@ class _SecondaryExpansion extends StatelessWidget {
         children: [
           SecondaryClassificationFields(
             primaryGenreId: primaryGenreId,
+            primarySubcategoryId: primarySubcategoryId,
+            primaryRegisterId: primaryRegisterId,
             initial: initial,
             onChanged: onChanged,
           ),

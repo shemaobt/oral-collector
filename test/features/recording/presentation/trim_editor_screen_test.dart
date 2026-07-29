@@ -90,12 +90,24 @@ void main() {
     await db.close();
   });
 
-  Future<void> seed({required String localFilePath}) async {
+  Future<void> seed({
+    required String localFilePath,
+    String? registerId,
+    String? subcategoryId,
+    String? secondaryGenreId,
+    String? secondarySubcategoryId,
+    String? secondaryRegisterId,
+  }) async {
     await repo.insertRecording(
       LocalRecordingsCompanion(
         id: const Value(recordingId),
         projectId: const Value('project-1'),
         genreId: const Value('genre-1'),
+        subcategoryId: Value(subcategoryId),
+        registerId: Value(registerId),
+        secondaryGenreId: Value(secondaryGenreId),
+        secondarySubcategoryId: Value(secondarySubcategoryId),
+        secondaryRegisterId: Value(secondaryRegisterId),
         title: const Value('A Story'),
         durationSeconds: const Value(30.0),
         fileSizeBytes: const Value(100000),
@@ -212,5 +224,27 @@ void main() {
     expect(find.byType(CircularProgressIndicator), findsNothing);
     expect(find.text(l10n.trim_notFound), findsNothing);
     expect(find.byIcon(LucideIcons.downloadCloud), findsNothing);
+  });
+
+  testWidgets('a legacy row whose secondary equals its primary cannot be '
+      'split, and says why instead of opening the editor (ENG-72)', (
+    tester,
+  ) async {
+    // Every segment inherits the parent's triple, so every segment would
+    // collide: the split is impossible until the secondary is fixed.
+    await seed(
+      localFilePath: '/audio/present.m4a',
+      registerId: 'formal',
+      subcategoryId: 'sub-A',
+      secondaryGenreId: 'genre-1',
+      secondarySubcategoryId: 'sub-A',
+      secondaryRegisterId: 'formal',
+    );
+    final api = _FakeApiRepo((_) async => throw StateError('not expected'));
+    await pumpScreen(tester, api: api, fileExists: true);
+    await settleLoad(tester);
+
+    expect(find.text(l10n.recording_secondaryCollisionBanner), findsOneWidget);
+    expect(find.text(l10n.trim_instructions), findsNothing);
   });
 }

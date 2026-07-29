@@ -778,10 +778,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get trim_classifySegment => 'تصنيف المقطع';
 
   @override
-  String get trim_primaryEqualsSecondary =>
-      'لا يمكن أن يتطابق التصنيف الأساسي مع التصنيف الثانوي للتسجيل.';
-
-  @override
   String get trim_volume => 'مستوى الصوت';
 
   @override
@@ -1872,10 +1868,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get classify_secondaryRegister => 'السجل الثانوي';
-
-  @override
-  String get classify_secondarySameAsPrimary =>
-      'يجب أن يختلف النوع الثانوي عن النوع السائد.';
 
   @override
   String get classify_clearAlternative => 'مسح البديل';

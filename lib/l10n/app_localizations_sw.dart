@@ -787,10 +787,6 @@ class AppLocalizationsSw extends AppLocalizations {
   String get trim_classifySegment => 'Ainisha sehemu';
 
   @override
-  String get trim_primaryEqualsSecondary =>
-      'Uainishaji msingi hauwezi kufanana na uainishaji wa pili wa rekodi.';
-
-  @override
   String get trim_volume => 'Sauti';
 
   @override
@@ -1895,10 +1891,6 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get classify_secondaryRegister => 'Rejista ya pili';
-
-  @override
-  String get classify_secondarySameAsPrimary =>
-      'Aina ya pili lazima iwe tofauti na aina kuu.';
 
   @override
   String get classify_clearAlternative => 'Futa mbadala';

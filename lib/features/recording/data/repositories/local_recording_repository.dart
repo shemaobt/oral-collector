@@ -417,8 +417,10 @@ class LocalRecordingRepository {
     return rows > 0;
   }
 
-  /// Defense in depth: throws [ArgumentError] when a segment override would
-  /// collide with the parent's secondary classification of the same kind.
+  /// Defense in depth: throws [SegmentClassificationCollisionException] when a
+  /// child's effective primary triple would be identical to the secondary
+  /// triple it inherits from [parent]. Só o trio inteiro colide (ENG-72):
+  /// mesmo gênero com subcategoria diferente é um par legítimo.
   /// The server enforces `secondary != primary` and would reject the upload
   /// with a 422; the UI is expected to block this case before reaching here.
   void _assertNoSecondaryCollision(
@@ -426,32 +428,24 @@ class LocalRecordingRepository {
     List<SplitSegmentSpec> segments,
   ) {
     for (final seg in segments) {
-      if (seg.genreOverride != null &&
-          seg.genreOverride!.isNotEmpty &&
-          seg.genreOverride == parent.secondaryGenreId) {
-        throw ArgumentError(
-          'Segment ${seg.id} genreOverride "${seg.genreOverride}" collides '
-          'with parent.secondaryGenreId. UI must prevent this.',
-        );
-      }
-      if (seg.subcategoryOverride != null &&
-          seg.subcategoryOverride!.isNotEmpty &&
-          seg.subcategoryOverride == parent.secondarySubcategoryId) {
-        throw ArgumentError(
-          'Segment ${seg.id} subcategoryOverride "${seg.subcategoryOverride}" '
-          'collides with parent.secondarySubcategoryId. UI must prevent this.',
-        );
-      }
-      if (seg.registerOverride != null &&
-          seg.registerOverride!.isNotEmpty &&
-          seg.registerOverride == parent.secondaryRegisterId) {
-        throw ArgumentError(
-          'Segment ${seg.id} registerOverride "${seg.registerOverride}" '
-          'collides with parent.secondaryRegisterId. UI must prevent this.',
-        );
+      if (secondaryEqualsPrimary(
+        primaryRegisterId: _effective(seg.registerOverride, parent.registerId),
+        primaryGenreId: _effective(seg.genreOverride, parent.genreId),
+        primarySubcategoryId: _effective(
+          seg.subcategoryOverride,
+          parent.subcategoryId,
+        ),
+        secondaryRegisterId: parent.secondaryRegisterId,
+        secondaryGenreId: parent.secondaryGenreId,
+        secondarySubcategoryId: parent.secondarySubcategoryId,
+      )) {
+        throw SegmentClassificationCollisionException(seg.id);
       }
     }
   }
+
+  static String? _effective(String? override, String? inherited) =>
+      (override != null && override.isNotEmpty) ? override : inherited;
 
   /// Atomically replaces [parent] with its split children: inserts one child
   /// row per segment and deletes the parent row in a single transaction, so a

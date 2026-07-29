@@ -74,17 +74,22 @@ If you add a new `nullable` metadata column to `LocalRecordings`:
 3. Make sure `buildHealMetadataCompanion` heals it when the server has a value and the local row is empty.
 4. Add the column to the cache tests in `local_recording_repository_cache_download_test.dart` and the heal tests in `recording_heal_companion_test.dart`.
 
-## Collision invariant: primary ≠ secondary
+## Collision invariant: the secondary triple ≠ the primary triple
 
-The server enforces that `secondary_genre_id`, `secondary_subcategory_id`, and `secondary_register_id` differ from their primary counterparts. The client mirrors that invariant locally so we never POST/PATCH a body the server would reject with a 422 — the validation happens at the point of user input, not at the network boundary, so the user sees the problem immediately instead of after a failed sync.
+The server enforces that a secondary classification is not a duplicate of the primary one. The unit of comparison is the **whole triple** `(register, genre, subcategory)`, not the individual fields (ENG-72): `(Formal, Narrative, Myth)` + `(Formal, Narrative, Legend)` is a legitimate pair and must stay expressible. Only an identical triple collides. A secondary that is entirely unset never collides, even against an equally unset primary — and "unset" means `null` **or** `''`, because Drift rows use both.
+
+The single source of truth is `secondaryEqualsPrimary(...)` in [/lib/features/recording/domain/entities/classification.dart](../lib/features/recording/domain/entities/classification.dart). Every surface below calls it rather than re-deriving the comparison.
+
+The client mirrors the invariant locally so we never POST/PATCH a body the server would reject with a 422. It does so by **prevention**: the pickers never offer the option that would complete an identical triple, so the invalid state is unreachable and there is no inline error to show.
 
 Enforcement points on the client:
 
-- `SegmentTaxonomySheet` (trim editor's per-segment override picker) receives the parent's `secondaryGenreId/SubcategoryId/RegisterId` and disables the save button + shows an inline error when the chosen primary collides.
-- `MoveCategoryDialog` already auto-clears the dialog's `_secondary` when the user picks a primary that matches the current secondary, and gates save on `_secondary.genreId != _selectedGenreId`.
-- `ClassifyRecordingDialog` and `_SecondaryEditDialog` both gate save on `secondary != primary`.
-- `LocalRecordingRepository.splitRecordingReplacingParent` throws `ArgumentError` when a segment override would collide with the parent's secondary of the same kind. This is defense in depth — reaching it means a UI path slipped past validation and the regression should be fixed at the UI layer.
-- `RecordingDetailScreen` shows a red banner with a "Clear secondary" button when a row that's already on the device violates the invariant (rows persisted before this enforcement landed). The user resolves manually; the client never auto-strips data the user once entered.
+- `SecondaryClassificationFields` (the shared secondary picker behind `ClassifyRecordingDialog`, `MoveCategoryDialog` and the detail screen's `_SecondaryEditDialog`) receives the full primary triple — `primaryGenreId`, `primarySubcategoryId`, `primaryRegisterId`. Each of its three dropdowns hides the primary's value for that field, and only when the other two fields already match the primary. When a value becomes hidden — because the primary moved, or because the widget was **constructed** on a legacy row that already collides — that field resets and re-emits, so the form never holds a value it does not display. Call sites must pass the whole triple, which the `required` parameters enforce: passing only the genre id would let a colliding triple through.
+- The three dialogs additionally gate their submit button on `secondaryEqualsPrimary` as a backstop; under normal editing it never fires.
+- `SegmentTaxonomySheet` (trim editor's per-segment override picker) receives the parent's primary *and* secondary triples and hides options the same way, comparing the segment's **effective** triple (override falling back to the parent's value) against the parent's secondary triple. Its "Inherit" option is withheld when the value it would apply is the hidden one. Save is never disabled.
+- `TrimEditorScreen` refuses to open at all for a parent that already violates the invariant, showing the same "primary and secondary are the same" message the detail banner uses. Such a parent cannot be split under any selection — every child inherits the colliding triple — and the export runs *before* the persist, so opening the editor would cost a full FFmpeg export before the failure surfaced.
+- `LocalRecordingRepository.splitRecordingReplacingParent` throws `SegmentClassificationCollisionException` when a child's effective primary triple would equal the secondary triple it inherits from the parent. This is defense in depth — reaching it means a UI path slipped past prevention and the regression should be fixed at the UI layer.
+- `RecordingDetailScreen` shows a red banner with a "Clear secondary" button when a row already on the device violates the invariant (rows persisted before this enforcement landed). The user resolves manually; the client never auto-strips data the user once entered.
 
 ## Upload trigger after split (client)
 

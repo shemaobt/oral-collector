@@ -98,7 +98,15 @@ Path: @/lib/features/recording/domain
 - `classification.dart` is **not** an entity type: it is the
   `kUnclassifiedGenreId` sentinel const plus top-level pure predicate
   functions (`recordingHasGenre`, `recordingIsUnclassified`,
-  `recordingHasSecondary`, …) keyed on ids. The ergonomic
+  `recordingHasSecondary`, …) keyed on ids, plus
+  `secondaryEqualsPrimary(...)` — the one definition of a
+  secondary-classification collision (whole `(register, genre,
+  subcategory)` triple identical, ENG-72) shared by the pickers, the
+  detail-screen banner, the trim editor's entry guard and the split
+  guard — and the `SegmentClassificationCollisionException` that guard
+  throws. Like its siblings it treats `''` as absent (`blankToNull`,
+  exported for the pickers), because callers hand it raw nullable
+  columns straight off a Drift row. The ergonomic
   `RecordingClassification` extension that reads those ids off a
   `LocalRecording` row lives in the data layer
   ([../data/local_recording_classification.dart](../data/local_recording_classification.dart))

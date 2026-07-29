@@ -211,10 +211,19 @@ Path: @/lib/features/recording/data/repositories
   `LocalRecordingsCompanion` built explicitly to encode the three-source rule
   (inherit / segment-specific / reset) defined in
   [/docs/recording-split-semantics.md](../../../../../docs/recording-split-semantics.md).
-  Before inserting, validates that no segment override collides with the
-  parent's secondary classification of the same kind — throws `ArgumentError`
-  if it does, since the server would reject the upload with 422; the UI is
-  expected to block this case earlier. The child-insert loop and the collision
+  Before inserting, validates that no child's **effective primary triple**
+  (`register, genre, subcategory`, each override falling back to the parent's
+  value) is identical to the secondary triple the child inherits from the
+  parent — throws `SegmentClassificationCollisionException` if it is, since the
+  server would reject the upload with 422; the UI is expected to block this
+  case earlier. Only the whole triple collides (ENG-72): a child sharing the
+  parent's secondary genre but under a different subcategory is legitimate, and
+  the check is deliberately *not* made against the parent's primary triple — a
+  child with no overrides inherits that triple verbatim, so such a check would
+  reject every ordinary split. The predicate is the shared
+  `secondaryEqualsPrimary(...)` in
+  [../../domain/entities/classification.dart](../../domain/entities/classification.dart).
+  The child-insert loop and the collision
   check live in the private helpers `_insertSplitChildren` and
   `_assertNoSecondaryCollision`, which likewise take the entity `parent`. The
   persister

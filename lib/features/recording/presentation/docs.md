@@ -326,5 +326,34 @@ Path: @/lib/features/recording/presentation
   where the player lived inside a `StatefulWidget` State and was
   disposed by this swap mid-playback; the fix hoists it into
   `RecordingPlayerNotifier`.
+- **Secondary-classification collision is prevented, not validated
+  (ENG-72).** A secondary classification is invalid only when its whole
+  `(register, genre, subcategory)` triple is identical to the primary
+  triple — sharing the genre while differing in subcategory is a
+  legitimate pair. The pickers therefore hide the one option that would
+  complete an identical triple instead of letting the user build it and
+  then complaining:
+  [./widgets/secondary_classification_fields.dart](widgets/secondary_classification_fields.dart)
+  for classify / move / the detail screen's `_SecondaryEditDialog`, and
+  [./widgets/segment_taxonomy_sheet.dart](widgets/segment_taxonomy_sheet.dart)
+  for per-segment overrides in the trim editor. There is no inline "same
+  as primary" error and the segment sheet's save button is never
+  disabled. Call sites must thread the **full** primary triple into the
+  pickers — with only the genre id the hide-logic under-restricts and a
+  colliding triple gets through, which is why those parameters are
+  `required` even where they are nullable. The two surfaces that still
+  warn both target **legacy rows** — the app can no longer create a
+  colliding row, but the database can already hold one: the detail
+  screen's red banner (`_hasSecondaryCollision`), resolved manually with
+  "Clear secondary", and `TrimEditorScreen`, which refuses to open for
+  such a row (the split is impossible for every segment, and the FFmpeg
+  export runs before the persist would reject it). The picker itself
+  resets a colliding field on **construction** as well as on a primary
+  change, so opening it on a legacy row does not show a blank field that
+  secretly still holds the old value. The predicate behind all of these is
+  `secondaryEqualsPrimary(...)` in
+  [../domain/entities/classification.dart](../domain/entities/classification.dart);
+  see
+  [/docs/recording-split-semantics.md](../../../../docs/recording-split-semantics.md).
 
 Created and maintained by Nori.

@@ -24,6 +24,7 @@ import '../../storyteller/domain/entities/storyteller.dart';
 import '../../sync/presentation/notifiers/sync_notifier.dart';
 import '../data/services/audio_exporter.dart';
 import '../data/supported_audio_formats.dart';
+import '../domain/entities/classification.dart';
 import '../domain/entities/local_recording_entity.dart';
 import '../domain/entities/local_recording_entity_classification.dart';
 import '../domain/entities/register.dart';
@@ -504,6 +505,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
       builder: (context) => MoveCategoryDialog(
         currentGenreId: recording.genreId,
         currentSubcategoryId: recording.subcategoryId,
+        currentPrimaryRegisterId: recording.registerId,
         currentSecondaryGenreId: recording.secondaryGenreId,
         currentSecondarySubcategoryId: recording.secondarySubcategoryId,
         currentSecondaryRegisterId: recording.secondaryRegisterId,
@@ -588,6 +590,8 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
       context: context,
       builder: (context) => _SecondaryEditDialog(
         primaryGenreId: recording.genreId,
+        primarySubcategoryId: recording.subcategoryId,
+        primaryRegisterId: recording.registerId,
         initial: initial,
       ),
     );
@@ -641,23 +645,15 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     }
   }
 
-  bool _hasSecondaryCollision(LocalRecordingEntity recording) {
-    final secondaryGenreCollides =
-        recording.secondaryGenreId != null &&
-        recording.secondaryGenreId!.isNotEmpty &&
-        recording.genreId == recording.secondaryGenreId;
-    final secondarySubcategoryCollides =
-        recording.secondarySubcategoryId != null &&
-        recording.secondarySubcategoryId!.isNotEmpty &&
-        recording.subcategoryId == recording.secondarySubcategoryId;
-    final secondaryRegisterCollides =
-        recording.secondaryRegisterId != null &&
-        recording.secondaryRegisterId!.isNotEmpty &&
-        recording.registerId == recording.secondaryRegisterId;
-    return secondaryGenreCollides ||
-        secondarySubcategoryCollides ||
-        secondaryRegisterCollides;
-  }
+  bool _hasSecondaryCollision(LocalRecordingEntity recording) =>
+      secondaryEqualsPrimary(
+        primaryRegisterId: recording.registerId,
+        primaryGenreId: recording.genreId,
+        primarySubcategoryId: recording.subcategoryId,
+        secondaryRegisterId: recording.secondaryRegisterId,
+        secondaryGenreId: recording.secondaryGenreId,
+        secondarySubcategoryId: recording.secondarySubcategoryId,
+      );
 
   Widget? _buildSecondaryCollisionBanner(
     BuildContext context,
@@ -995,9 +991,16 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
 
 class _SecondaryEditDialog extends StatefulWidget {
   final String primaryGenreId;
+  final String? primarySubcategoryId;
+  final String? primaryRegisterId;
   final SecondaryValues? initial;
 
-  const _SecondaryEditDialog({required this.primaryGenreId, this.initial});
+  const _SecondaryEditDialog({
+    required this.primaryGenreId,
+    this.primarySubcategoryId,
+    this.primaryRegisterId,
+    this.initial,
+  });
 
   @override
   State<_SecondaryEditDialog> createState() => _SecondaryEditDialogState();
@@ -1019,7 +1022,15 @@ class _SecondaryEditDialogState extends State<_SecondaryEditDialog> {
     final hadInitial = widget.initial != null;
     final isValid =
         _values == null ||
-        (_values!.isValid && _values!.genreId != widget.primaryGenreId);
+        (_values!.isValid &&
+            !secondaryEqualsPrimary(
+              primaryRegisterId: widget.primaryRegisterId,
+              primaryGenreId: widget.primaryGenreId,
+              primarySubcategoryId: widget.primarySubcategoryId,
+              secondaryRegisterId: _values!.registerId,
+              secondaryGenreId: _values!.genreId,
+              secondarySubcategoryId: _values!.subcategoryId,
+            ));
     final hasChanged =
         (_values?.genreId != widget.initial?.genreId) ||
         (_values?.subcategoryId != widget.initial?.subcategoryId) ||
@@ -1038,6 +1049,8 @@ class _SecondaryEditDialogState extends State<_SecondaryEditDialog> {
         child: SingleChildScrollView(
           child: SecondaryClassificationFields(
             primaryGenreId: widget.primaryGenreId,
+            primarySubcategoryId: widget.primarySubcategoryId,
+            primaryRegisterId: widget.primaryRegisterId,
             initial: widget.initial,
             onChanged: (v) => setState(() => _values = v),
           ),

@@ -7,6 +7,7 @@ import '../../../../core/l10n/content_l10n.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/tokens.dart';
 import '../../../genre/presentation/notifiers/genre_notifier.dart';
+import '../../domain/entities/classification.dart';
 import '../../domain/entities/register.dart';
 import 'secondary_classification_fields.dart';
 
@@ -62,7 +63,15 @@ class _ClassifyRecordingDialogState
     final secondaryValid =
         !_showSecondary ||
         _secondary == null ||
-        (_secondary!.isValid && _secondary!.genreId != _selectedGenreId);
+        (_secondary!.isValid &&
+            !secondaryEqualsPrimary(
+              primaryRegisterId: _selectedRegisterId,
+              primaryGenreId: _selectedGenreId,
+              primarySubcategoryId: _selectedSubcategoryId,
+              secondaryRegisterId: _secondary!.registerId,
+              secondaryGenreId: _secondary!.genreId,
+              secondarySubcategoryId: _secondary!.subcategoryId,
+            ));
     final isValid = primaryValid && secondaryValid;
 
     return AlertDialog(
@@ -121,9 +130,6 @@ class _ClassifyRecordingDialogState
                   setState(() {
                     _selectedGenreId = value;
                     _selectedSubcategoryId = null;
-                    if (_secondary?.genreId == value) {
-                      _secondary = null;
-                    }
                   });
                 },
               ),
@@ -229,6 +235,8 @@ class _ClassifyRecordingDialogState
                   children: [
                     SecondaryClassificationFields(
                       primaryGenreId: _selectedGenreId,
+                      primarySubcategoryId: _selectedSubcategoryId,
+                      primaryRegisterId: _selectedRegisterId,
                       initial: _secondary,
                       onChanged: (values) {
                         setState(() {

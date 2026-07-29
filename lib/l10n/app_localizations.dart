@@ -1526,12 +1526,6 @@ abstract class AppLocalizations {
   /// **'Classify segment'**
   String get trim_classifySegment;
 
-  /// No description provided for @trim_primaryEqualsSecondary.
-  ///
-  /// In en, this message translates to:
-  /// **'Primary classification cannot match the recording\'s secondary classification.'**
-  String get trim_primaryEqualsSecondary;
-
   /// No description provided for @trim_volume.
   ///
   /// In en, this message translates to:
@@ -3457,12 +3451,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Secondary register'**
   String get classify_secondaryRegister;
-
-  /// No description provided for @classify_secondarySameAsPrimary.
-  ///
-  /// In en, this message translates to:
-  /// **'Secondary genre must differ from the predominant genre.'**
-  String get classify_secondarySameAsPrimary;
 
   /// No description provided for @classify_clearAlternative.
   ///
