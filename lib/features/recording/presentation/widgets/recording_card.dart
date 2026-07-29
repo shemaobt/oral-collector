@@ -39,6 +39,7 @@ class RecordingCard extends ConsumerWidget {
       case 'uploading':
         return colors.accent;
       case 'failed':
+      case 'failed_conflict':
         return colors.error;
       default:
         return colors.border;
@@ -54,6 +55,8 @@ class RecordingCard extends ConsumerWidget {
         return LucideIcons.upload;
       case 'failed':
         return LucideIcons.cloudOff;
+      case 'failed_conflict':
+        return LucideIcons.alertCircle;
       default:
         return LucideIcons.smartphone;
     }
@@ -68,6 +71,8 @@ class RecordingCard extends ConsumerWidget {
         return l10n.recording_statusUploading;
       case 'failed':
         return l10n.recording_statusFailed;
+      case 'failed_conflict':
+        return l10n.recording_statusNameConflict;
       default:
         return l10n.recording_statusLocal;
     }

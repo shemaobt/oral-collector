@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 
 import '../../../../core/config/url_policy.dart';
 import '../../../../core/database/app_database.dart';
+import '../../../../core/errors/app_exception.dart' show ConflictException;
 import '../../../../core/network/authenticated_client.dart';
 import '../../../../core/network/response_decoder.dart';
 import '../../../../core/platform/file_source.dart';
@@ -102,6 +103,11 @@ class DirectRecordingUploader {
     final createResponse = await _client
         .post('/api/oc/recordings', body: createBody)
         .timeout(_apiTimeout);
+    // The backend deduplicates on (project_id, title); a 409 is a name clash,
+    // not a generic create failure, so it has to stay distinguishable.
+    if (createResponse.statusCode == 409) {
+      throw const ConflictException();
+    }
     if (createResponse.statusCode != 201) {
       throw _UploaderException(
         'Create failed (${createResponse.statusCode}): ${createResponse.body}',

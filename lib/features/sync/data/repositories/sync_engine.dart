@@ -359,6 +359,17 @@ class SyncEngineImpl implements SyncEngine {
             .post('/api/oc/recordings', body: createBody)
             .timeout(_apiTimeout);
 
+        // Only *this* call deduplicates on (project_id, title), so only a 409
+        // here is a name clash. Handled inline rather than in a catch arm: a
+        // 409 raised anywhere else below (confirm-upload) has no rename that
+        // could clear it, and parking those rows in failed_conflict would offer
+        // the user an exit that leads straight back here.
+        if (createResponse.statusCode == 409) {
+          _log.warning('title conflict for $id');
+          await _markPermanentlyFailed(id, status: 'failed_conflict');
+          return _UploadOutcome.failed;
+        }
+
         final createData = decodeObject(createResponse);
         serverId = readString(createData, 'id');
 
@@ -508,11 +519,14 @@ class SyncEngineImpl implements SyncEngine {
     return null;
   }
 
-  Future<void> _markPermanentlyFailed(String id) async {
+  Future<void> _markPermanentlyFailed(
+    String id, {
+    String status = 'failed',
+  }) async {
     await _recordingRepo.updateRecording(
       id,
       LocalRecordingsCompanion(
-        uploadStatus: const Value('failed'),
+        uploadStatus: Value(status),
         retryCount: const Value(maxRetries),
         lastRetryAt: Value(DateTime.now()),
       ),

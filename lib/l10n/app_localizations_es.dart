@@ -693,6 +693,17 @@ class AppLocalizationsEs extends AppLocalizations {
   String get recording_statusLocal => 'Local';
 
   @override
+  String get recording_statusNameConflict => 'Conflicto de nombre';
+
+  @override
+  String get recording_duplicateTitleTitle => 'Nombre ya usado';
+
+  @override
+  String recording_duplicateTitleMessage(String title) {
+    return 'Ya existe un audio llamado \"$title\" en este proyecto. Elige otro nombre.';
+  }
+
+  @override
   String get recordings_clearStale => 'Limpiar fallidos';
 
   @override

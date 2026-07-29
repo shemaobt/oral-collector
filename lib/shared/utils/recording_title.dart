@@ -14,3 +14,8 @@ String resolveRecordingTitle(String? input, {String? locale}) {
   if (trimmed.isEmpty) return defaultRecordingTitle(locale: locale);
   return trimmed;
 }
+
+// Raw equality on purpose: the backend deduplicates on the exact stored string,
+// so trimming or case-folding here would disagree with the server's 409.
+bool isTitleTaken(Iterable<String?> existing, String candidate) =>
+    existing.contains(candidate);

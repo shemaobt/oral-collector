@@ -687,6 +687,17 @@ class AppLocalizationsHi extends AppLocalizations {
   String get recording_statusLocal => 'स्थानीय';
 
   @override
+  String get recording_statusNameConflict => 'नाम विरोध';
+
+  @override
+  String get recording_duplicateTitleTitle => 'नाम पहले से उपयोग में है';
+
+  @override
+  String recording_duplicateTitleMessage(String title) {
+    return 'इस प्रोजेक्ट में \"$title\" नाम का ऑडियो पहले से मौजूद है। दूसरा नाम चुनें।';
+  }
+
+  @override
   String get recordings_clearStale => 'विफल साफ़ करें';
 
   @override

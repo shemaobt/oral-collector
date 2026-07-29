@@ -840,7 +840,7 @@ void main() {
       httpClient.close();
     });
 
-    test('409 marca como falha não-retryable', () async {
+    test('409 marca como conflito de título, não falha genérica', () async {
       final testFile = File('${tempDir.path}/conflict.m4a');
       testFile.writeAsBytesSync(Uint8List(1024));
 
@@ -857,7 +857,85 @@ void main() {
 
       verifyNever(() => mockRepo.markAsFailed('rec-1'));
       verifyNever(() => mockRepo.markAsUploaded(any(), any(), any()));
-      expectPermanentFailRec1();
+
+      final written =
+          verify(() => mockRepo.updateRecording('rec-1', captureAny())).captured
+              .cast<LocalRecordingsCompanion>()
+              .where((c) => c.uploadStatus.present)
+              .toList();
+      expect(
+        written.map((c) => c.uploadStatus.value),
+        contains('failed_conflict'),
+      );
+      expect(
+        written.map((c) => c.uploadStatus.value),
+        isNot(contains('failed')),
+      );
+      // Same permanent-failure write as the other terminal statuses: the retry
+      // budget is spent too, so nothing but a rename can move the row.
+      final conflict = written.firstWhere(
+        (c) => c.uploadStatus.value == 'failed_conflict',
+      );
+      expect(conflict.retryCount.value, SyncEngineImpl.maxRetries);
+      httpClient.close();
+    });
+
+    test('409 no confirm-upload não vira conflito de título', () async {
+      // Only the create call deduplicates on (project_id, title). The row is
+      // already created by the time confirm-upload runs, so a rename would skip
+      // the create branch and hit the same 409 again — parking it in
+      // failed_conflict offers the user an exit that leads nowhere.
+      final testFile = File('${tempDir.path}/confirm_conflict.m4a');
+      testFile.writeAsBytesSync(Uint8List(1024));
+
+      final rec = makeRecording(localFilePath: testFile.path);
+
+      when(() => mockConnectivity.isOnline).thenAnswer((_) async => true);
+      when(() => mockRepo.getPendingUploads()).thenAnswer((_) async => [rec]);
+      stubRepoForUpload(testFile.path);
+
+      final httpClient = MockClient((request) async {
+        final path = request.url.path;
+
+        if (request.method == 'POST' && path == '/api/oc/recordings') {
+          return http.Response(jsonEncode({'id': 'srv-1'}), 201);
+        }
+        if (request.method == 'POST' &&
+            path == '/api/oc/recordings/upload-url') {
+          return http.Response(
+            jsonEncode({
+              'upload_url': 'https://storage.googleapis.com/test',
+              'content_type': 'audio/mp4',
+            }),
+            200,
+          );
+        }
+        if (request.url.host == 'storage.googleapis.com') {
+          return http.Response('', 200);
+        }
+        if (request.method == 'POST' && path.contains('/confirm-upload')) {
+          return http.Response('already confirmed', 409);
+        }
+        return http.Response('Not Found', 404);
+      });
+      final engine = buildEngine(httpClient);
+
+      await engine.processQueue();
+
+      verifyNever(() => mockRepo.markAsUploaded(any(), any(), any()));
+
+      final written =
+          verify(() => mockRepo.updateRecording('rec-1', captureAny())).captured
+              .cast<LocalRecordingsCompanion>()
+              .where((c) => c.uploadStatus.present)
+              .toList();
+      // The generic permanent-failure status, reachable by "Clear failed" and
+      // not advertising a rename that would change nothing.
+      expect(written.map((c) => c.uploadStatus.value), contains('failed'));
+      expect(
+        written.map((c) => c.uploadStatus.value),
+        isNot(contains('failed_conflict')),
+      );
       httpClient.close();
     });
 

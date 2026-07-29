@@ -677,6 +677,17 @@ class AppLocalizationsAr extends AppLocalizations {
   String get recording_statusLocal => 'محلي';
 
   @override
+  String get recording_statusNameConflict => 'تعارض في الاسم';
+
+  @override
+  String get recording_duplicateTitleTitle => 'الاسم مستخدم بالفعل';
+
+  @override
+  String recording_duplicateTitleMessage(String title) {
+    return 'يوجد بالفعل تسجيل صوتي باسم \"$title\" في هذا المشروع. اختر اسماً آخر.';
+  }
+
+  @override
   String get recordings_clearStale => 'مسح الفاشلة';
 
   @override

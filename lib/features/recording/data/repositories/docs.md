@@ -95,6 +95,10 @@ Path: @/lib/features/recording/data/repositories
   `resetStuckUploading`. That filter lives only in the engine, not in this
   query — see Things to Know and
   [/lib/features/sync/docs.md](../../../sync/docs.md).
+  `failed_conflict` (ENG-71) is deliberately absent from the matched set: a
+  duplicate title is terminal until the user renames the recording, and the
+  rename routes through `resetRetryCount`, which flips the row back to `local`
+  and so back into this query.
 - `watchRecordingEntityById` is the **single detail watch stream** (ENG-195
   introduced it; ENG-199/ENG-200 made it the sole one by deleting the former
   row stream `watchRecordingById`). It is a `watchSingleOrNull` query that
@@ -262,7 +266,12 @@ Path: @/lib/features/recording/data/repositories
   partial update: as of ENG-205 the body comes from the request object's
   `toJson()` rather than being assembled inline from thirteen named parameters,
   but the wire payload, `guardResponse`, the 403→`ForbiddenException`, and the
-  `statusCode == 200` return are all unchanged. The body shape now lives on
+  `statusCode == 200` return are all unchanged. **A 409 throws
+  `ConflictException` (ENG-71)** instead of falling through to that boolean:
+  the backend deduplicates on `(project_id, title)`, and a bare `false` is
+  indistinguishable from any other failure, so `saveRecordingTitle` used to
+  write the refused title into the local row and report success — device and
+  server silently diverging. The body shape now lives on
   [`UpdateRecordingRequest`](../../domain/entities/update_recording_request.dart)
   (the rationale and the genre `GenreUpdate` precedent are in
   [../../domain/docs.md](../../domain/docs.md)). The

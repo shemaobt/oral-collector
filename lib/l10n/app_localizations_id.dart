@@ -686,6 +686,17 @@ class AppLocalizationsId extends AppLocalizations {
   String get recording_statusLocal => 'Lokal';
 
   @override
+  String get recording_statusNameConflict => 'Konflik nama';
+
+  @override
+  String get recording_duplicateTitleTitle => 'Nama sudah digunakan';
+
+  @override
+  String recording_duplicateTitleMessage(String title) {
+    return 'Audio bernama \"$title\" sudah ada di proyek ini. Pilih nama lain.';
+  }
+
+  @override
   String get recordings_clearStale => 'Bersihkan yang gagal';
 
   @override

@@ -298,6 +298,7 @@ class _FakeApiRepo implements RecordingApiRepository {
     String? userId,
     String? storytellerId,
     String? uploadStatus,
+    String? title,
   }) => throw UnimplementedError();
 
   @override

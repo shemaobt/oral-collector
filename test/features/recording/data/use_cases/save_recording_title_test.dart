@@ -1,10 +1,19 @@
 import 'package:drift/drift.dart' show Value;
+import 'package:drift/native.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:oral_collector/core/database/app_database.dart';
 import 'package:oral_collector/core/errors/api_exception.dart';
+import 'package:oral_collector/core/errors/app_exception.dart'
+    show ConflictException;
+import 'package:oral_collector/core/network/authenticated_client.dart';
+import 'package:oral_collector/core/observability/error_reporter.dart';
 import 'package:oral_collector/features/recording/data/repositories/local_recording_repository.dart';
+import 'package:oral_collector/features/recording/data/repositories/recording_api_repository_impl.dart';
 import 'package:oral_collector/features/recording/data/use_cases/save_recording_title.dart';
 import 'package:oral_collector/features/recording/domain/entities/update_recording_request.dart';
 import 'package:oral_collector/features/recording/domain/repositories/recording_api_repository.dart';
@@ -12,6 +21,8 @@ import 'package:oral_collector/features/recording/domain/repositories/recording_
 class _MockApiRepo extends Mock implements RecordingApiRepository {}
 
 class _MockLocalRepo extends Mock implements LocalRecordingRepository {}
+
+class _MockSecureStorage extends Mock implements FlutterSecureStorage {}
 
 class _FakeCompanion extends Fake implements LocalRecordingsCompanion {}
 
@@ -237,6 +248,56 @@ void main() {
         );
 
         verifyNever(() => localRepo.updateRecording(any(), any()));
+      },
+    );
+
+    test(
+      'on mobile, a 409 rename is rethrown AND the stored title is untouched',
+      () async {
+        // Driven through the real API repository over a 409 response and a real
+        // Drift row: a stub that throws would pass even if the HTTP layer never
+        // produced the conflict, which is exactly how this regressed once.
+        final db = AppDatabase.forTesting(NativeDatabase.memory());
+        addTearDown(db.close);
+        final realLocalRepo = LocalRecordingRepository(db);
+        await realLocalRepo.insertRecording(
+          LocalRecordingsCompanion(
+            id: const Value('rec-1'),
+            projectId: const Value('proj-1'),
+            genreId: const Value('genre-1'),
+            title: const Value('Old'),
+            localFilePath: const Value('/tmp/rec-1.m4a'),
+            recordedAt: Value(DateTime.utc(2026, 1, 1)),
+          ),
+        );
+
+        final storage = _MockSecureStorage();
+        when(
+          () => storage.read(key: any(named: 'key')),
+        ).thenAnswer((_) async => 'test-token');
+        final realApiRepo = RecordingApiRepositoryImpl(
+          client: AuthenticatedClient(
+            client: MockClient((_) async => http.Response('', 409)),
+            storage: storage,
+          ),
+          reporter: const NoopErrorReporter(),
+        );
+
+        await expectLater(
+          saveRecordingTitle(
+            recordingId: 'rec-1',
+            currentTitle: 'Old',
+            serverId: 'srv-1',
+            newTitle: 'Taken On The Server',
+            isWeb: false,
+            isOnline: true,
+            apiRepo: realApiRepo,
+            localRepo: realLocalRepo,
+          ),
+          throwsA(isA<ConflictException>()),
+        );
+
+        expect((await realLocalRepo.getRecordingById('rec-1'))!.title, 'Old');
       },
     );
 

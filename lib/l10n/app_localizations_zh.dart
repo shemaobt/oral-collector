@@ -663,6 +663,17 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recording_statusLocal => '本地';
 
   @override
+  String get recording_statusNameConflict => '名称冲突';
+
+  @override
+  String get recording_duplicateTitleTitle => '名称已被使用';
+
+  @override
+  String recording_duplicateTitleMessage(String title) {
+    return '此项目中已存在名为“$title”的音频。请另选一个名称。';
+  }
+
+  @override
   String get recordings_clearStale => '清除失败项';
 
   @override

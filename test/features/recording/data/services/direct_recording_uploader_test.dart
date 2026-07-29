@@ -166,6 +166,27 @@ void main() {
     );
   });
 
+  test('surfaces a ConflictException when create returns 409', () async {
+    final bytes = Uint8List(10);
+    final httpClient = MockClient((request) async {
+      if (request.url.path == '/api/oc/recordings') {
+        return http.Response('title already used', 409);
+      }
+      return http.Response('unexpected', 500);
+    });
+    final auth = AuthenticatedClient(client: httpClient, storage: storage);
+    final uploader = DirectRecordingUploader(
+      client: auth,
+      resumableUploadService: resumable,
+      recordingRepo: repo,
+    );
+
+    await expectLater(
+      uploader.upload(source: sampleSource(bytes), meta: sampleMeta()),
+      throwsA(isA<ConflictException>()),
+    );
+  });
+
   test(
     'throws a catchable ParseException when create returns a non-string id',
     () async {

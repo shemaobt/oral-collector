@@ -133,4 +133,20 @@ void main() {
       expect(find.byIcon(LucideIcons.layers), findsNothing);
     },
   );
+
+  testWidgets('a title-conflict recording shows its own status label', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _harness(
+        recording: _makeRecording(uploadStatus: 'failed_conflict'),
+        state: const SyncState(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Name conflict'), findsOneWidget);
+    expect(find.text('Failed'), findsNothing);
+    expect(find.text('Local'), findsNothing);
+  });
 }
