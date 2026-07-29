@@ -1007,8 +1007,14 @@ abstract class AppLocalizations {
   /// No description provided for @recording_descriptionHint.
   ///
   /// In en, this message translates to:
-  /// **'Add a short description (optional)'**
+  /// **'Describe this recording'**
   String get recording_descriptionHint;
+
+  /// No description provided for @recording_descriptionTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Please describe this recording in at least {count} characters'**
+  String recording_descriptionTooShort(int count);
 
   /// No description provided for @recording_descriptionEmpty.
   ///

@@ -471,7 +471,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get recording_titleHint => 'रिकॉर्डिंग का शीर्षक';
 
   @override
-  String get recording_descriptionHint => 'संक्षिप्त विवरण जोड़ें (वैकल्पिक)';
+  String get recording_descriptionHint => 'इस रिकॉर्डिंग का वर्णन करें';
+
+  @override
+  String recording_descriptionTooShort(int count) {
+    return 'कृपया इस रिकॉर्डिंग का वर्णन कम से कम $count अक्षरों में करें';
+  }
 
   @override
   String get recording_descriptionEmpty => 'विवरण जोड़ें';

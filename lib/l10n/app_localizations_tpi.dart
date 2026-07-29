@@ -469,7 +469,12 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get recording_titleHint => 'Nem bilong rekoding';
 
   @override
-  String get recording_descriptionHint => 'Raitim liklik stori (sapos yu laik)';
+  String get recording_descriptionHint => 'Raitim stori bilong dispela rekod';
+
+  @override
+  String recording_descriptionTooShort(int count) {
+    return 'Raitim stori bilong dispela rekod, i mas gat $count leta o moa';
+  }
 
   @override
   String get recording_descriptionEmpty => 'Raitim stori';

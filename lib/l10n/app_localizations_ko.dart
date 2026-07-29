@@ -462,7 +462,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recording_titleHint => '녹음 제목';
 
   @override
-  String get recording_descriptionHint => '짧은 설명 추가 (선택 사항)';
+  String get recording_descriptionHint => '이 녹음을 설명해 주세요';
+
+  @override
+  String recording_descriptionTooShort(int count) {
+    return '이 녹음을 최소 $count자 이상으로 설명해 주세요';
+  }
 
   @override
   String get recording_descriptionEmpty => '설명 추가';

@@ -205,7 +205,12 @@ Widget _harness(ProviderContainer container) {
   );
 }
 
+/// Fills everything the Save handler insists on before it will run: a
+/// storyteller (private widget state, only reachable through the picker UI) and
+/// — since ENG-354 — a description long enough to be worth storing.
 Future<void> _pickStoryteller(WidgetTester tester) async {
+  await tester.enterText(_descriptionField, _validDescription);
+  await tester.pump();
   await tester.tap(find.byType(StorytellerPicker));
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 400)); // open animation
@@ -220,6 +225,9 @@ ElevatedButton _saveButton(WidgetTester tester) =>
     tester.widget<ElevatedButton>(find.byType(ElevatedButton));
 
 Finder get _titleField => find.byType(TextField).first;
+Finder get _descriptionField => find.byType(TextField).last;
+
+const _validDescription = 'A folk tale about the river spirits.';
 
 Future<void> _pickStorytellerAndSave(WidgetTester tester) async {
   await _pickStoryteller(tester);

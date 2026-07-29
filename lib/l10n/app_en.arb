@@ -179,7 +179,15 @@
   "recording_noSubcategories": "No subcategories available",
   "recording_registerDescription": "Choose the speech register that best describes the tone and formality of this recording.",
   "recording_titleHint": "Recording title",
-  "recording_descriptionHint": "Add a short description (optional)",
+  "recording_descriptionHint": "Describe this recording",
+  "recording_descriptionTooShort": "Please describe this recording in at least {count} characters",
+  "@recording_descriptionTooShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "recording_descriptionEmpty": "Add description",
   "recording_titleEmpty": "Add title",
   "recording_titleRequired": "Title cannot be empty",

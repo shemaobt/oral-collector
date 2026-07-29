@@ -471,7 +471,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get recording_titleHint => 'Judul rekaman';
 
   @override
-  String get recording_descriptionHint => 'Tambah deskripsi singkat (opsional)';
+  String get recording_descriptionHint => 'Jelaskan rekaman ini';
+
+  @override
+  String recording_descriptionTooShort(int count) {
+    return 'Jelaskan rekaman ini dengan minimal $count karakter';
+  }
 
   @override
   String get recording_descriptionEmpty => 'Tambah deskripsi';

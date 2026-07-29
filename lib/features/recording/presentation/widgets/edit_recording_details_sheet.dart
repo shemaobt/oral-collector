@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/tokens.dart';
+import '../../../../shared/utils/recording_description.dart';
 
 class EditRecordingDetailsResult {
   const EditRecordingDetailsResult({
@@ -49,6 +50,7 @@ class _EditRecordingDetailsSheetState
   late final TextEditingController _titleController;
   late final TextEditingController _descriptionController;
   String? _titleError;
+  String? _descriptionError;
 
   @override
   void initState() {
@@ -73,12 +75,18 @@ class _EditRecordingDetailsSheetState
       setState(() => _titleError = l10n.recording_titleRequired);
       return;
     }
-    Navigator.of(context).pop(
-      EditRecordingDetailsResult(
-        title: title,
-        description: _descriptionController.text.trim(),
-      ),
-    );
+    final description = _descriptionController.text.trim();
+    if (!isDescriptionSufficient(description)) {
+      setState(
+        () => _descriptionError = l10n.recording_descriptionTooShort(
+          minDescriptionGraphemes,
+        ),
+      );
+      return;
+    }
+    Navigator.of(
+      context,
+    ).pop(EditRecordingDetailsResult(title: title, description: description));
   }
 
   @override
@@ -198,6 +206,7 @@ class _EditRecordingDetailsSheetState
               style: theme.textTheme.bodyMedium,
               decoration: InputDecoration(
                 hintText: l10n.recording_descriptionHint,
+                errorText: _descriptionError,
                 filled: true,
                 fillColor: colors.surfaceAlt,
                 border: OutlineInputBorder(
@@ -217,6 +226,11 @@ class _EditRecordingDetailsSheetState
                   vertical: SpacingScale.s12,
                 ),
               ),
+              onChanged: (_) {
+                if (_descriptionError != null) {
+                  setState(() => _descriptionError = null);
+                }
+              },
             ),
             const SizedBox(height: SpacingScale.s20),
             SizedBox(

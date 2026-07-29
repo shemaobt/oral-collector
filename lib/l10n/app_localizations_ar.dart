@@ -467,7 +467,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get recording_titleHint => 'عنوان التسجيل';
 
   @override
-  String get recording_descriptionHint => 'أضف وصفاً قصيراً (اختياري)';
+  String get recording_descriptionHint => 'صف هذا التسجيل';
+
+  @override
+  String recording_descriptionTooShort(int count) {
+    return 'يرجى وصف هذا التسجيل بما لا يقل عن $count حرفاً';
+  }
 
   @override
   String get recording_descriptionEmpty => 'أضف وصفاً';

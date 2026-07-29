@@ -471,7 +471,12 @@ class AppLocalizationsSw extends AppLocalizations {
   String get recording_titleHint => 'Kichwa cha rekodi';
 
   @override
-  String get recording_descriptionHint => 'Ongeza maelezo mafupi (si lazima)';
+  String get recording_descriptionHint => 'Eleza rekodi hii';
+
+  @override
+  String recording_descriptionTooShort(int count) {
+    return 'Eleza rekodi hii kwa angalau herufi $count';
+  }
 
   @override
   String get recording_descriptionEmpty => 'Ongeza maelezo';

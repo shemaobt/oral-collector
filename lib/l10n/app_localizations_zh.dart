@@ -461,7 +461,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recording_titleHint => '录音标题';
 
   @override
-  String get recording_descriptionHint => '添加简短描述（选填）';
+  String get recording_descriptionHint => '描述这段录音';
+
+  @override
+  String recording_descriptionTooShort(int count) {
+    return '请用至少 $count 个字描述这段录音';
+  }
 
   @override
   String get recording_descriptionEmpty => '添加描述';

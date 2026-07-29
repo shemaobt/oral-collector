@@ -78,6 +78,20 @@ Path: @/lib/features/recording/presentation/widgets
   [../../data/repositories/docs.md](../../data/repositories/docs.md)). It is
   reused by both the normal recording flow and crash recovery via
   [../recovery_confirm_screen.dart](../recovery_confirm_screen.dart).
+- A description is mandatory to save (ENG-354). The rule lives in
+  `isDescriptionSufficient` /
+  [../../../../shared/utils/recording_description.dart](../../../../shared/utils/recording_description.dart)
+  and is measured in extended grapheme clusters, so no writing system pays more
+  for the same amount of text. Two widgets gate on it, and both call that one
+  predicate rather than re-implementing the comparison:
+  `ConfirmationStep._save` (the sole route into `_saveWebDirect`, so one guard
+  covers the native and the web-direct paths alike) and
+  `_EditRecordingDetailsSheetState._onSave`. Both surface the failure inline —
+  `errorText` on the description field, cleared as the user types — and neither
+  disables its Save button, matching how the sheet already treats a missing
+  title. The rule applies on create and on edit only: recordings saved before
+  ENG-354 are grandfathered, nothing migrates, and the Drift column stays
+  nullable.
 - List-side widgets (recording card, filter chips, filter bar, filter
   sheet) consume `recordingsListNotifierProvider` and the
   genre/project notifiers; they emit user intent back to
