@@ -247,17 +247,22 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
           c.source.filePath ??
           'web_import_${DateTime.now().microsecondsSinceEpoch}_${i}_${c.name}';
 
-      newEntries.add(
-        FileImportEntry(
-          id: '${DateTime.now().microsecondsSinceEpoch}_$i',
-          path: syntheticPath,
-          fileName: c.name,
-          sizeBytes: c.size,
-          format: ext,
-          durationSeconds: probeResult.durationSeconds!,
-          source: c.source,
-        ),
+      final entry = FileImportEntry(
+        id: '${DateTime.now().microsecondsSinceEpoch}_$i',
+        path: syntheticPath,
+        fileName: c.name,
+        sizeBytes: c.size,
+        format: ext,
+        durationSeconds: probeResult.durationSeconds!,
+        source: c.source,
       );
+      // The description has no onChanged of its own in either layout, so the
+      // controller is where typing reaches the screen. Dropped when the entry
+      // disposes its controllers.
+      entry.descriptionController.addListener(
+        () => _onDescriptionChanged(entry),
+      );
+      newEntries.add(entry);
     }
 
     if (!mounted) return;
@@ -298,6 +303,13 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
     if (_isEntryValid(e)) {
       _errorEntryIds.remove(e.id);
     }
+  }
+
+  /// Rebuilds so the inline description message re-evaluates while the user
+  /// types, the way the confirmation step and the edit sheet already behave.
+  void _onDescriptionChanged(FileImportEntry entry) {
+    if (!_errorEntryIds.contains(entry.id)) return;
+    setState(() => _clearErrorIfResolved(entry));
   }
 
   void _updateEntryGenre(String id, String? value) {
@@ -426,6 +438,9 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
       return;
     }
 
+    if (_errorEntryIds.isNotEmpty) {
+      setState(_errorEntryIds.clear);
+    }
     await _save();
   }
 

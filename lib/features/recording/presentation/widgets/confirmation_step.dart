@@ -11,7 +11,6 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/auth/auth_notifier.dart';
-import '../../../../core/errors/app_exception.dart' show ConflictException;
 import '../../../../core/platform/file_ops.dart' as file_ops;
 import '../../../../core/platform/file_source.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -520,14 +519,13 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
         ).showSnackBar(SnackBar(content: Text(l10n.recording_saved)));
         context.go('/home');
       }
-    } on ConflictException {
-      if (mounted) {
-        _showDuplicateTitleMessage(resolvedTitle);
-        setState(() => _isSaving = false);
-      }
     } catch (e) {
       if (mounted) {
-        showErrorSnackBar(context, e, template: l10n.recording_uploadFailed);
+        if (isDuplicateRecordingTitle(e)) {
+          _showDuplicateTitleMessage(resolvedTitle);
+        } else {
+          showErrorSnackBar(context, e, template: l10n.recording_uploadFailed);
+        }
         setState(() => _isSaving = false);
       }
     }

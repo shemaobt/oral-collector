@@ -194,6 +194,22 @@ Path: @/lib/features/recording/data
   private `_UploaderException` remains only for failures that are *not* an
   API status: the GCS PUT, a CRC32C mismatch, a non-https upload URL, and a
   failed resumable transfer — all genuinely transient, all correctly retried.
+  **A 409 is only a taken title when it comes from the create call.** The
+  backend deduplicates `POST /api/oc/recordings` on `(project_id, title)`, so
+  that one 409 is a name clash the user can resolve by renaming; it is tagged
+  inline at that call site with `code: kDuplicateRecordingTitleCode` and read
+  back through the top-level predicate `isDuplicateRecordingTitle`. A 409 from
+  upload-url or confirm-upload means something else entirely (typically
+  "already confirmed") — the bytes are already in GCS and the recording is
+  already registered, so offering a rename would advertise an exit that leads
+  nowhere. Those fall through to the generic non-retryable handling as a plain
+  `ConflictException`. This is the same discrimination `SyncEngine` makes at
+  the same call site, and for the same reason
+  ([/lib/features/sync/docs.md](../../sync/docs.md)); routing all three calls
+  through `throwForResponse` briefly erased it, because it made every 409 a
+  `ConflictException` and `ConfirmationStep._saveWebDirect` caught that type
+  around the whole upload. Callers must use the predicate, never
+  `on ConflictException`.
   The scheme policy and
   the app-wide no-cleartext-PUT invariant are documented in
   [/lib/core/network/docs.md](../../../core/network/docs.md).

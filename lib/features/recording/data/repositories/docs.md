@@ -215,6 +215,20 @@ Path: @/lib/features/recording/data/repositories
   `LocalRecordingsCompanion` built explicitly to encode the three-source rule
   (inherit / segment-specific / reset) defined in
   [/docs/recording-split-semantics.md](../../../../../docs/recording-split-semantics.md).
+  **A split can mint rows that would not pass the ENG-354 description gate, and
+  that is accepted.** The child companions copy `description` straight from the
+  parent (`description: Value(parent.description)`), so splitting a *legacy*
+  recording — one saved before ENG-354, whose description is null or too short —
+  produces N children with the same insufficient description. Nothing here
+  re-checks `isDescriptionSufficient`: the gate is an edit-time UI rule on
+  create and edit (see
+  [../../presentation/widgets/docs.md](../../presentation/widgets/docs.md)), not
+  a repository invariant, and blocking a split would cost the user the trim they
+  just made over a field they can fill in afterwards. The children surface in
+  the list screen's `missingDescription` filter, which is exactly what that
+  filter is for. So the rule "every recording created after ENG-354 has a
+  description" holds for the *save* paths only — split children inherit
+  whatever the legacy parent had.
   Before inserting, validates that no child's **effective primary triple**
   (`register, genre, subcategory`, each override falling back to the parent's
   value) is identical to the secondary triple the child inherits from the

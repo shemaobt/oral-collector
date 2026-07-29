@@ -99,7 +99,17 @@ Path: @/lib/features/recording/presentation/widgets
   show. `FileMetadataCard` (narrow) and the `FileMetadataEditor` data table
   (wide) each hang it off the description field's `errorText`, gated on the
   same `hasError` flag the classification fields already use — so the message
-  appears when the user presses save and clears on the next press. The wide
+  appears when the user presses save. It then clears **while the user types**,
+  matching the other two surfaces: neither description field has an `onChanged`
+  in either layout, so `_FileImportScreenState` attaches a listener to each
+  entry's `descriptionController` when the entry is created and rebuilds from
+  there (`_onDescriptionChanged`). The rebuild is what re-evaluates
+  `descriptionErrorText`; the row's `hasError` flag itself is only dropped once
+  `_clearErrorIfResolved` finds the *whole* entry valid, exactly as the
+  genre / subcategory / register / bulk handlers do — so a fixed description
+  can clear its own message while the row stays flagged for a missing genre.
+  `_onSavePressed` also clears every flag on its success branch, so nothing
+  stays marked red through a save that was allowed to proceed. The wide
   table gained a description column with ENG-354; before that it had no
   description input at all, which would have left the gate unsatisfiable on a
   desktop-width screen.
