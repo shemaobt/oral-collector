@@ -253,55 +253,54 @@ void main() {
     },
   );
 
-  testWidgets(
-    'when a primary change would collapse the secondary onto it, only the '
-    'now-hidden field is cleared and its siblings keep their values',
-    (tester) async {
-      final primary = ValueNotifier<_Primary>((
-        genreId: 'g-primary',
-        subcategoryId: 'sub-B',
-        registerId: 'formal',
-      ));
-      addTearDown(primary.dispose);
-      SecondaryValues? emitted;
+  testWidgets('when a primary change would collapse the secondary onto it, the '
+      'subcategory is cleared and the genre and register survive', (
+    tester,
+  ) async {
+    final primary = ValueNotifier<_Primary>((
+      genreId: 'g-primary',
+      subcategoryId: 'sub-B',
+      registerId: 'formal',
+    ));
+    addTearDown(primary.dispose);
+    SecondaryValues? emitted;
 
-      await tester.pumpWidget(
-        _harness(
-          primary: primary,
-          initial: const SecondaryValues(
-            genreId: 'g-primary',
-            subcategoryId: 'sub-A',
-            registerId: 'formal',
-          ),
-          onChanged: (values) => emitted = values,
+    await tester.pumpWidget(
+      _harness(
+        primary: primary,
+        initial: const SecondaryValues(
+          genreId: 'g-primary',
+          subcategoryId: 'sub-A',
+          registerId: 'formal',
         ),
-      );
-      await tester.pumpAndSettle();
+        onChanged: (values) => emitted = values,
+      ),
+    );
+    await tester.pumpAndSettle();
 
-      // The secondary is legitimate: same genre and register as the primary,
-      // different subcategory.
-      expect(find.text('Folktale'), findsOneWidget);
-      expect(find.text('Origin myth'), findsOneWidget);
-      expect(find.text('Formal / Official'), findsOneWidget);
+    // The secondary is legitimate: same genre and register as the primary,
+    // different subcategory.
+    expect(find.text('Folktale'), findsOneWidget);
+    expect(find.text('Origin myth'), findsOneWidget);
+    expect(find.text('Formal / Official'), findsOneWidget);
 
-      // The primary moves onto the secondary's subcategory, which would make
-      // the two triples identical.
-      primary.value = (
-        genreId: 'g-primary',
-        subcategoryId: 'sub-A',
-        registerId: 'formal',
-      );
-      await tester.pumpAndSettle();
+    // The primary moves onto the secondary's subcategory, which would make
+    // the two triples identical.
+    primary.value = (
+      genreId: 'g-primary',
+      subcategoryId: 'sub-A',
+      registerId: 'formal',
+    );
+    await tester.pumpAndSettle();
 
-      expect(find.text('Formal / Official'), findsNothing);
-      expect(find.text('Select register'), findsOneWidget);
-      expect(find.text('Folktale'), findsOneWidget);
-      expect(find.text('Origin myth'), findsOneWidget);
-      expect(emitted?.registerId, isNull);
-      expect(emitted?.genreId, 'g-primary');
-      expect(emitted?.subcategoryId, 'sub-A');
-    },
-  );
+    expect(find.text('Origin myth'), findsNothing);
+    expect(find.text('Select subcategory'), findsOneWidget);
+    expect(find.text('Folktale'), findsOneWidget);
+    expect(find.text('Formal / Official'), findsOneWidget);
+    expect(emitted?.subcategoryId, isNull);
+    expect(emitted?.genreId, 'g-primary');
+    expect(emitted?.registerId, 'formal');
+  });
 
   testWidgets(
     'a row whose stored secondary already equals the primary opens with only '
@@ -332,19 +331,51 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Folktale'), findsOneWidget);
-      expect(find.text('Origin myth'), findsOneWidget);
+      expect(find.text('Origin myth'), findsNothing);
+      expect(find.text('Formal / Official'), findsOneWidget);
+      expect(emitted?.genreId, 'g-primary');
+      expect(emitted?.subcategoryId, isNull);
+      expect(emitted?.registerId, 'formal');
+    },
+  );
+
+  testWidgets(
+    'with no subcategory to drop, the colliding secondary loses its register '
+    'and keeps its genre',
+    (tester) async {
+      final primary = ValueNotifier<_Primary>((
+        genreId: 'g-primary',
+        subcategoryId: null,
+        registerId: 'formal',
+      ));
+      addTearDown(primary.dispose);
+      SecondaryValues? emitted;
+
+      await tester.pumpWidget(
+        _harness(
+          primary: primary,
+          initial: const SecondaryValues(
+            genreId: 'g-primary',
+            registerId: 'formal',
+          ),
+          onChanged: (values) => emitted = values,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Folktale'), findsOneWidget);
+      expect(find.text('Formal / Official'), findsNothing);
       expect(find.text('Select register'), findsOneWidget);
       expect(emitted?.genreId, 'g-primary');
-      expect(emitted?.subcategoryId, 'sub-A');
       expect(emitted?.registerId, isNull);
     },
   );
 
-  testWidgets('when the colliding secondary has no register, the genre and its '
-      'subcategory are cleared together', (tester) async {
+  testWidgets('with neither a subcategory nor a register to drop, the '
+      'colliding secondary loses its genre', (tester) async {
     final primary = ValueNotifier<_Primary>((
-      genreId: 'g-primary',
-      subcategoryId: 'sub-B',
+      genreId: 'g-secondary',
+      subcategoryId: null,
       registerId: null,
     ));
     addTearDown(primary.dispose);
@@ -354,10 +385,7 @@ void main() {
     await tester.pumpWidget(
       _harness(
         primary: primary,
-        initial: const SecondaryValues(
-          genreId: 'g-primary',
-          subcategoryId: 'sub-A',
-        ),
+        initial: const SecondaryValues(genreId: 'g-primary'),
         onChanged: (values) {
           emitted = values;
           emittedCount++;
@@ -367,20 +395,17 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Folktale'), findsOneWidget);
-    expect(find.text('Origin myth'), findsOneWidget);
 
-    // The primary moves onto the secondary's subcategory: with no register
-    // to drop, the genre and subcategory go together.
+    // The primary moves onto the secondary's genre, the only field it has.
     primary.value = (
       genreId: 'g-primary',
-      subcategoryId: 'sub-A',
+      subcategoryId: null,
       registerId: null,
     );
     await tester.pumpAndSettle();
 
     expect(find.text('Select Genre'), findsOneWidget);
     expect(find.text('Folktale'), findsNothing);
-    expect(find.text('Origin myth'), findsNothing);
     expect(find.text('Select subcategory'), findsNothing);
     expect(emittedCount, greaterThan(0));
     expect(emitted, isNull);
