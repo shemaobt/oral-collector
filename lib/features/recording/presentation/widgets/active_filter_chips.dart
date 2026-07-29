@@ -27,6 +27,8 @@ class ActiveFilterChips extends ConsumerWidget {
         return l10n.filter_needsCleaning;
       case StatusFilter.unclassified:
         return l10n.filter_unclassified;
+      case StatusFilter.missingDescription:
+        return l10n.filter_missingDescription;
     }
   }
 

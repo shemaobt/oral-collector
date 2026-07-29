@@ -1761,6 +1761,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get filter_unclassified => 'अवर्गीकृत';
 
   @override
+  String get filter_missingDescription => 'विवरण नहीं है';
+
+  @override
   String get filter_allGenres => 'सभी विधाएँ';
 
   @override

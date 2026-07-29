@@ -1725,6 +1725,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get filter_unclassified => 'غير مصنف';
 
   @override
+  String get filter_missingDescription => 'بدون وصف';
+
+  @override
   String get filter_allGenres => 'جميع الأنواع';
 
   @override

@@ -1744,6 +1744,9 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get filter_unclassified => 'I no makim kain yet';
 
   @override
+  String get filter_missingDescription => 'I no gat stori';
+
+  @override
   String get filter_allGenres => 'Olgeta kain';
 
   @override

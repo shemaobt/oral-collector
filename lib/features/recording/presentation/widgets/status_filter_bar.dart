@@ -33,6 +33,11 @@ class StatusFilterBar extends StatelessWidget {
         LucideIcons.sparkles,
       ),
       (StatusFilter.unclassified, l10n.filter_unclassified, LucideIcons.tag),
+      (
+        StatusFilter.missingDescription,
+        l10n.filter_missingDescription,
+        LucideIcons.fileText,
+      ),
     ];
 
     return SizedBox(

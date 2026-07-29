@@ -855,6 +855,7 @@
   "filter_uploaded": "Uploaded",
   "filter_needsCleaning": "Needs Cleaning",
   "filter_unclassified": "Unclassified",
+  "filter_missingDescription": "Missing description",
   "filter_allGenres": "All genres",
   "detail_duration": "Duration",
   "detail_size": "Size",

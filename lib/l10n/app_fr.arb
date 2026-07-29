@@ -612,6 +612,7 @@
   },
   "recordings_clearFailed": "Échec de la suppression des enregistrements",
   "filter_unclassified": "Non classifié",
+  "filter_missingDescription": "Sans description",
   "quickRecord_title": "Enregistrement Rapide",
   "quickRecord_subtitle": "Classer plus tard",
   "quickRecord_classifyLater": "Classer plus tard",

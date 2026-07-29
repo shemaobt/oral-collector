@@ -236,7 +236,14 @@ Path: @/lib/features/recording/presentation/notifiers
   the pre-ENG-197 algorithm, just keyed off entity fields. Status / genre /
   subcategory / search filtering is computed client-side by
   `RecordingsListState.filteredRecordings` (`unclassified` reads the entity's
-  `isUnclassified` extension) and never refetches, so only `setUserFilter`,
+  `isUnclassified` extension; `missingDescription`, added by ENG-354, negates
+  `isDescriptionSufficient` from
+  [../../../../shared/utils/recording_description.dart](../../../../shared/utils/recording_description.dart)
+  — the same predicate the save gates use, so a recording the filter surfaces
+  is exactly one the editor would reject; recordings predating ENG-354 stay
+  valid and are never blocked, and this filter exists purely so the user can
+  find and fix them at their own pace) and never refetches, so only
+  `setUserFilter`,
   `setStorytellerFilter`, `clearAllFilters`, `clearStaleRecordings`, and
   pull-to-refresh re-hit the server. `patchRecordingTitle` rerenders after an
   edit without a full refetch, using the entity's sentinel `copyWith(title: …)`

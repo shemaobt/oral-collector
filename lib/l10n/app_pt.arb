@@ -586,6 +586,7 @@
   "filter_uploaded": "Enviados",
   "filter_needsCleaning": "Precisa de Limpeza",
   "filter_unclassified": "Não Classificado",
+  "filter_missingDescription": "Sem descrição",
   "filter_allGenres": "Todos os gêneros",
   "detail_duration": "Duração",
   "detail_size": "Tamanho",

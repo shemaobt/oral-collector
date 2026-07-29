@@ -1771,6 +1771,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get filter_unclassified => 'Sin clasificar';
 
   @override
+  String get filter_missingDescription => 'Sin descripción';
+
+  @override
   String get filter_allGenres => 'Todos los géneros';
 
   @override

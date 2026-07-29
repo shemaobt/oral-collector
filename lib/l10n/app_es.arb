@@ -612,6 +612,7 @@
   },
   "recordings_clearFailed": "Error al limpiar grabaciones",
   "filter_unclassified": "Sin clasificar",
+  "filter_missingDescription": "Sin descripción",
   "quickRecord_title": "Grabación Rápida",
   "quickRecord_subtitle": "Clasificar después",
   "quickRecord_classifyLater": "Clasificar después",

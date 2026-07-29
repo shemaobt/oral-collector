@@ -612,6 +612,7 @@
   },
   "recordings_clearFailed": "فشل في مسح التسجيلات",
   "filter_unclassified": "غير مصنف",
+  "filter_missingDescription": "بدون وصف",
   "quickRecord_title": "تسجيل سريع",
   "quickRecord_subtitle": "تصنيف لاحقاً",
   "quickRecord_classifyLater": "تصنيف لاحقاً",

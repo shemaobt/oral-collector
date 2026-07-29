@@ -612,6 +612,7 @@
   },
   "recordings_clearFailed": "Imeshindwa kufuta rekodi",
   "filter_unclassified": "Haijainishwa",
+  "filter_missingDescription": "Hakuna maelezo",
   "quickRecord_title": "Rekodi Haraka",
   "quickRecord_subtitle": "Ainisha baadaye",
   "quickRecord_classifyLater": "Ainisha baadaye",

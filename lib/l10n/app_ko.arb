@@ -612,6 +612,7 @@
   },
   "recordings_clearFailed": "녹음 삭제에 실패했습니다",
   "filter_unclassified": "미분류",
+  "filter_missingDescription": "설명 없음",
   "quickRecord_title": "빠른 녹음",
   "quickRecord_subtitle": "나중에 분류",
   "quickRecord_classifyLater": "나중에 분류",

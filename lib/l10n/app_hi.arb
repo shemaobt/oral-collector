@@ -612,6 +612,7 @@
   },
   "recordings_clearFailed": "रिकॉर्डिंग्स साफ़ करने में विफल",
   "filter_unclassified": "अवर्गीकृत",
+  "filter_missingDescription": "विवरण नहीं है",
   "quickRecord_title": "त्वरित रिकॉर्ड",
   "quickRecord_subtitle": "बाद में वर्गीकृत करें",
   "quickRecord_classifyLater": "बाद में वर्गीकृत करें",

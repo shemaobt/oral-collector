@@ -1761,6 +1761,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get filter_unclassified => 'Belum diklasifikasi';
 
   @override
+  String get filter_missingDescription => 'Tanpa deskripsi';
+
+  @override
   String get filter_allGenres => 'Semua genre';
 
   @override

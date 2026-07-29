@@ -612,6 +612,7 @@
   },
   "recordings_clearFailed": "Gagal membersihkan rekaman",
   "filter_unclassified": "Belum diklasifikasi",
+  "filter_missingDescription": "Tanpa deskripsi",
   "quickRecord_title": "Rekam Cepat",
   "quickRecord_subtitle": "Klasifikasi nanti",
   "quickRecord_classifyLater": "Klasifikasi nanti",

@@ -92,6 +92,17 @@ Path: @/lib/features/recording/presentation/widgets
   title. The rule applies on create and on edit only: recordings saved before
   ENG-354 are grandfathered, nothing migrates, and the Drift column stays
   nullable.
+- The file-import surfaces gate on the same predicate through
+  [../file_import_validation.dart](../file_import_validation.dart):
+  `isImportEntryValid` folds the description rule in beside genre / register /
+  subcategory, and `descriptionErrorText` renders the one message both layouts
+  show. `FileMetadataCard` (narrow) and the `FileMetadataEditor` data table
+  (wide) each hang it off the description field's `errorText`, gated on the
+  same `hasError` flag the classification fields already use — so the message
+  appears when the user presses save and clears on the next press. The wide
+  table gained a description column with ENG-354; before that it had no
+  description input at all, which would have left the gate unsatisfiable on a
+  desktop-width screen.
 - List-side widgets (recording card, filter chips, filter bar, filter
   sheet) consume `recordingsListNotifierProvider` and the
   genre/project notifiers; they emit user intent back to

@@ -3158,6 +3158,12 @@ abstract class AppLocalizations {
   /// **'Unclassified'**
   String get filter_unclassified;
 
+  /// No description provided for @filter_missingDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Missing description'**
+  String get filter_missingDescription;
+
   /// No description provided for @filter_allGenres.
   ///
   /// In en, this message translates to:

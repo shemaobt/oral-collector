@@ -612,6 +612,7 @@
   },
   "recordings_clearFailed": "No inap klinim ol rekoding",
   "filter_unclassified": "I no makim kain yet",
+  "filter_missingDescription": "I no gat stori",
   "quickRecord_title": "Rekodim Hariap",
   "quickRecord_subtitle": "Makim kain bihain",
   "quickRecord_classifyLater": "Makim kain bihain",

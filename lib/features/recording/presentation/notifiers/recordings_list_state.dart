@@ -1,7 +1,15 @@
+import '../../../../shared/utils/recording_description.dart';
 import '../../domain/entities/local_recording_entity.dart';
 import '../../domain/entities/local_recording_entity_classification.dart';
 
-enum StatusFilter { all, pending, uploaded, needsCleaning, unclassified }
+enum StatusFilter {
+  all,
+  pending,
+  uploaded,
+  needsCleaning,
+  unclassified,
+  missingDescription,
+}
 
 class RecordingsListState {
   final List<LocalRecordingEntity> recordings;
@@ -127,6 +135,10 @@ class RecordingsListState {
         list = list.where((r) => r.cleaningStatus == 'needs_cleaning').toList();
       case StatusFilter.unclassified:
         list = list.where((r) => r.isUnclassified).toList();
+      case StatusFilter.missingDescription:
+        list = list
+            .where((r) => !isDescriptionSufficient(r.description))
+            .toList();
     }
 
     return list;

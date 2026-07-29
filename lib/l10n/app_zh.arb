@@ -775,6 +775,7 @@
   "filter_uploaded": "已上传",
   "filter_needsCleaning": "需要清理",
   "filter_unclassified": "未分类",
+  "filter_missingDescription": "缺少描述",
   "filter_allGenres": "所有体裁",
   "detail_duration": "时长",
   "detail_size": "大小",

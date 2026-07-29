@@ -1698,6 +1698,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get filter_unclassified => '미분류';
 
   @override
+  String get filter_missingDescription => '설명 없음';
+
+  @override
   String get filter_allGenres => '모든 장르';
 
   @override

@@ -1691,6 +1691,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get filter_unclassified => '未分类';
 
   @override
+  String get filter_missingDescription => '缺少描述';
+
+  @override
   String get filter_allGenres => '所有体裁';
 
   @override

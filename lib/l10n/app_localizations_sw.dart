@@ -1748,6 +1748,9 @@ class AppLocalizationsSw extends AppLocalizations {
   String get filter_unclassified => 'Haijainishwa';
 
   @override
+  String get filter_missingDescription => 'Hakuna maelezo';
+
+  @override
   String get filter_allGenres => 'Aina zote';
 
   @override
