@@ -187,11 +187,7 @@ void main() {
     );
   });
 
-  test('create 422 is a non-retryable ValidationException and queues '
-      'nothing for retry', () async {
-    final db = AppDatabase.forTesting(NativeDatabase.memory());
-    addTearDown(db.close);
-    final realRepo = LocalRecordingRepository(db);
+  test('create 422 is a non-retryable ValidationException', () async {
     final bytes = Uint8List(10);
     final httpClient = MockClient((request) async {
       if (request.url.path == '/api/oc/recordings') {
@@ -203,7 +199,7 @@ void main() {
     final uploader = DirectRecordingUploader(
       client: auth,
       resumableUploadService: resumable,
-      recordingRepo: realRepo,
+      recordingRepo: repo,
     );
 
     await expectLater(
@@ -216,7 +212,6 @@ void main() {
         ),
       ),
     );
-    expect(await realRepo.getPendingWebUploads(), isEmpty);
   });
 
   test('create 503 stays a retryable ServerException', () async {

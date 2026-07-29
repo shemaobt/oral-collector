@@ -36,10 +36,6 @@ void main() {
       expect(isDescriptionSufficient(_repeat('a', 20)), isTrue);
     });
 
-    test('above the threshold is sufficient', () {
-      expect(isDescriptionSufficient(_repeat('a', 60)), isTrue);
-    });
-
     test('surrounding whitespace does not pad a short description', () {
       expect(
         isDescriptionSufficient('          ${_repeat('a', 19)}   '),

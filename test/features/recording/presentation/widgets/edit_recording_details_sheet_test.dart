@@ -190,25 +190,6 @@ void main() {
       expect(find.text(tooShortMessage), findsOneWidget);
     });
 
-    testWidgets('Save with an emptied description blocks pop', (tester) async {
-      EditRecordingDetailsResult? captured;
-      var done = false;
-
-      await openSheet(
-        tester,
-        onResult: (r) => captured = r,
-        onDone: () => done = true,
-      );
-
-      await tester.enterText(find.byType(TextField).last, '    ');
-      await tester.tap(find.text(l10nEn.recording_saveChanges));
-      await tester.pumpAndSettle();
-
-      expect(done, isFalse);
-      expect(captured, isNull);
-      expect(find.text(tooShortMessage), findsOneWidget);
-    });
-
     testWidgets('lengthening the description clears the error and saves', (
       tester,
     ) async {

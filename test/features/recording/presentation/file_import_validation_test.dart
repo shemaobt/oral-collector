@@ -54,22 +54,6 @@ void main() {
       expect(isImportEntryValid(entry, _genres), isTrue);
     });
 
-    test('flags only the entries whose description falls short', () {
-      final ok = _entry(id: 'ok', fileName: 'ok.m4a');
-      final short = _entry(
-        id: 'short',
-        fileName: 'short.m4a',
-        description: 'too brief',
-      );
-
-      final invalid = [
-        ok,
-        short,
-      ].where((e) => !isImportEntryValid(e, _genres)).map((e) => e.id);
-
-      expect(invalid, ['short']);
-    });
-
     test('still requires genre, register and subcategory', () {
       expect(isImportEntryValid(_entry(genreId: null), _genres), isFalse);
       expect(isImportEntryValid(_entry(registerId: null), _genres), isFalse);

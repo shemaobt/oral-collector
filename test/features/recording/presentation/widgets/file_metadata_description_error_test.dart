@@ -82,17 +82,16 @@ Future<void> _setSurface(WidgetTester tester, Size size) async {
 
 void main() {
   group('file import description error', () {
-    testWidgets('names the entry whose description falls short', (
+    testWidgets('names only the flagged entry, not every short one', (
       tester,
     ) async {
       await _setSurface(tester, const Size(500, 1600));
       final short = _entry(id: 'short', description: 'too brief');
-      final ok = _entry(
-        id: 'ok',
-        description: 'Grandmother Ama retells the flood story at dusk.',
-      );
+      // Equally short, but not flagged: the screen only flags entries when the
+      // user presses save, so this one must stay silent until then.
+      final notYetFlagged = _entry(id: 'quiet', description: 'also brief');
 
-      await tester.pumpWidget(_harness([short, ok], {'short'}));
+      await tester.pumpWidget(_harness([short, notYetFlagged], {'short'}));
       await tester.pump();
 
       expect(find.text(_tooShortMessage), findsOneWidget);

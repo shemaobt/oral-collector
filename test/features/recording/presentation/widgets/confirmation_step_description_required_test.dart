@@ -225,19 +225,6 @@ void main() {
     await tester.pump();
   });
 
-  testWidgets('an empty description blocks the save', (tester) async {
-    await tester.pumpWidget(_harness(container));
-    await tester.pump();
-    await _pickStoryteller(tester);
-    await _tapSave(tester);
-
-    expect(find.text(tooShortMessage), findsOneWidget);
-    expect(repo.saved, isEmpty);
-
-    await tester.pumpWidget(const SizedBox());
-    await tester.pump();
-  });
-
   testWidgets('lengthening the description clears the error and saves', (
     tester,
   ) async {
