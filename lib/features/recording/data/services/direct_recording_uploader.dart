@@ -3,8 +3,8 @@ import 'package:http/http.dart' as http;
 
 import '../../../../core/config/url_policy.dart';
 import '../../../../core/database/app_database.dart';
-import '../../../../core/errors/app_exception.dart' show ConflictException;
 import '../../../../core/network/authenticated_client.dart';
+import '../../../../core/network/error_boundary.dart' show throwForResponse;
 import '../../../../core/network/response_decoder.dart';
 import '../../../../core/platform/file_source.dart';
 import '../../../../core/serialization/safe_read.dart';
@@ -103,15 +103,10 @@ class DirectRecordingUploader {
     final createResponse = await _client
         .post('/api/oc/recordings', body: createBody)
         .timeout(_apiTimeout);
-    // The backend deduplicates on (project_id, title); a 409 is a name clash,
-    // not a generic create failure, so it has to stay distinguishable.
-    if (createResponse.statusCode == 409) {
-      throw const ConflictException();
-    }
+    // Shared status table: 4xx (dedupe 409, validation 422) -> non-retryable
+    // typed failure, 5xx -> retryable ServerException.
     if (createResponse.statusCode != 201) {
-      throw _UploaderException(
-        'Create failed (${createResponse.statusCode}): ${createResponse.body}',
-      );
+      throwForResponse(createResponse);
     }
     final createData = decodeObject(createResponse);
     return readString(createData, 'id');
@@ -132,9 +127,7 @@ class DirectRecordingUploader {
         )
         .timeout(_apiTimeout);
     if (urlResponse.statusCode != 200) {
-      throw _UploaderException(
-        'Upload URL failed (${urlResponse.statusCode}): ${urlResponse.body}',
-      );
+      throwForResponse(urlResponse);
     }
     final urlData = decodeObject(urlResponse);
     final uploadUrl = readString(urlData, 'upload_url');
@@ -236,9 +229,7 @@ class DirectRecordingUploader {
         .post('/api/oc/recordings/$serverId/confirm-upload', body: confirmBody)
         .timeout(_apiTimeout);
     if (confirmResponse.statusCode != 200) {
-      throw _UploaderException(
-        'Confirm failed (${confirmResponse.statusCode}): ${confirmResponse.body}',
-      );
+      throwForResponse(confirmResponse);
     }
   }
 }

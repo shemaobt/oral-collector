@@ -187,6 +187,61 @@ void main() {
     );
   });
 
+  test('create 422 is a non-retryable ValidationException and queues '
+      'nothing for retry', () async {
+    final db = AppDatabase.forTesting(NativeDatabase.memory());
+    addTearDown(db.close);
+    final realRepo = LocalRecordingRepository(db);
+    final bytes = Uint8List(10);
+    final httpClient = MockClient((request) async {
+      if (request.url.path == '/api/oc/recordings') {
+        return http.Response('{"detail":"description is required"}', 422);
+      }
+      return http.Response('unexpected', 500);
+    });
+    final auth = AuthenticatedClient(client: httpClient, storage: storage);
+    final uploader = DirectRecordingUploader(
+      client: auth,
+      resumableUploadService: resumable,
+      recordingRepo: realRepo,
+    );
+
+    await expectLater(
+      uploader.upload(source: sampleSource(bytes), meta: sampleMeta()),
+      throwsA(
+        isA<ValidationException>().having(
+          (e) => e.retryable,
+          'retryable',
+          isFalse,
+        ),
+      ),
+    );
+    expect(await realRepo.getPendingWebUploads(), isEmpty);
+  });
+
+  test('create 503 stays a retryable ServerException', () async {
+    final bytes = Uint8List(10);
+    final httpClient = MockClient((request) async {
+      if (request.url.path == '/api/oc/recordings') {
+        return http.Response('gateway down', 503);
+      }
+      return http.Response('unexpected', 500);
+    });
+    final auth = AuthenticatedClient(client: httpClient, storage: storage);
+    final uploader = DirectRecordingUploader(
+      client: auth,
+      resumableUploadService: resumable,
+      recordingRepo: repo,
+    );
+
+    await expectLater(
+      uploader.upload(source: sampleSource(bytes), meta: sampleMeta()),
+      throwsA(
+        isA<ServerException>().having((e) => e.retryable, 'retryable', isTrue),
+      ),
+    );
+  });
+
   test(
     'throws a catchable ParseException when create returns a non-string id',
     () async {

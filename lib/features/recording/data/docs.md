@@ -179,9 +179,22 @@ Path: @/lib/features/recording/data
   native, cooperative chunked yield on web; see ADR-0004), then validates
   the server's presigned `upload_url` with `isHttpsUrl`
   ([/lib/core/config/url_policy.dart](../../../core/config/url_policy.dart))
-  before the GCS PUT; a non-https URL throws `_UploaderException`, consistent
-  with how this uploader reports every other failure. The resumable branch
-  delegates that validation to `ResumableUploadService`. The scheme policy and
+  before the GCS PUT; a non-https URL throws `_UploaderException`. The
+  resumable branch delegates that validation to `ResumableUploadService`.
+  **Failure classification (ENG-354).** Every call this uploader makes to
+  *our own* API — create, upload-url, confirm-upload — routes a non-success
+  status through `throwForResponse`
+  ([/lib/core/network/error_boundary.dart](../../../core/network/error_boundary.dart)),
+  the same status table `SyncEngine` gets for free via `decodeObject`. So a
+  4xx the server will keep rejecting (409 dedupe, 422 missing description)
+  surfaces as a typed non-retryable `AppException`, and a 5xx surfaces as a
+  retryable `ServerException`. Callers branch on `AppException.retryable`
+  (ENG-103), never on the exception subtype, so a create the backend refuses
+  ends the attempt instead of being requeued as a transient fault. The
+  private `_UploaderException` remains only for failures that are *not* an
+  API status: the GCS PUT, a CRC32C mismatch, a non-https upload URL, and a
+  failed resumable transfer — all genuinely transient, all correctly retried.
+  The scheme policy and
   the app-wide no-cleartext-PUT invariant are documented in
   [/lib/core/network/docs.md](../../../core/network/docs.md).
 - The `services/` subfolder hosts the audio probe, the
