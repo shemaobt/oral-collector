@@ -368,16 +368,6 @@ class SyncEngineImpl implements SyncEngine {
           return _UploadOutcome.failed;
         }
 
-        // Second line of defence, scoped to this one call and to the case the
-        // pre-flight above already screens for. Any other 422 keeps falling
-        // through to the generic non-retryable handling, because 422 alone does
-        // not mean "description".
-        if (createResponse.statusCode == 422 &&
-            !isDescriptionSufficient(recording.description)) {
-          await _markPermanentlyFailed(id, status: 'failed_description');
-          return _UploadOutcome.failed;
-        }
-
         final createData = decodeObject(createResponse);
         serverId = readString(createData, 'id');
 
