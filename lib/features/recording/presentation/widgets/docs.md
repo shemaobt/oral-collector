@@ -78,6 +78,44 @@ Path: @/lib/features/recording/presentation/widgets
   [../../data/repositories/docs.md](../../data/repositories/docs.md)). It is
   reused by both the normal recording flow and crash recovery via
   [../recovery_confirm_screen.dart](../recovery_confirm_screen.dart).
+- A description is mandatory to save (ENG-354). The rule lives in
+  `isDescriptionSufficient` /
+  [../../../../shared/utils/recording_description.dart](../../../../shared/utils/recording_description.dart)
+  and is measured in extended grapheme clusters, so no writing system pays more
+  for the same amount of text. Two widgets gate on it, and both call that one
+  predicate rather than re-implementing the comparison:
+  `ConfirmationStep._save` (the sole route into `_saveWebDirect`, so one guard
+  covers the native and the web-direct paths alike) and
+  `_EditRecordingDetailsSheetState._onSave`. Both surface the failure inline —
+  `errorText` on the description field, cleared as the user types — and neither
+  disables its Save button, matching how the sheet already treats a missing
+  title. The widget gates are the only *save-time* enforcement: recordings saved
+  before ENG-354 are grandfathered in the database, nothing migrates, and the
+  Drift column stays nullable. They are not grandfathered on the wire — the API
+  requires the description on create, so the sync engine pre-flights the same
+  predicate and parks such a row in `uploadStatus='failed_description'` until the
+  edit sheet fixes it (see [/lib/features/sync/docs.md](../../../sync/docs.md)).
+- The file-import surfaces gate on the same predicate through
+  [../file_import_validation.dart](../file_import_validation.dart):
+  `isImportEntryValid` folds the description rule in beside genre / register /
+  subcategory, and `descriptionErrorText` renders the one message both layouts
+  show. `FileMetadataCard` (narrow) and the `FileMetadataEditor` data table
+  (wide) each hang it off the description field's `errorText`, gated on the
+  same `hasError` flag the classification fields already use — so the message
+  appears when the user presses save. It then clears **while the user types**,
+  matching the other two surfaces: neither description field has an `onChanged`
+  in either layout, so `_FileImportScreenState` attaches a listener to each
+  entry's `descriptionController` when the entry is created and rebuilds from
+  there (`_onDescriptionChanged`). The rebuild is what re-evaluates
+  `descriptionErrorText`; the row's `hasError` flag itself is only dropped once
+  `_clearErrorIfResolved` finds the *whole* entry valid, exactly as the
+  genre / subcategory / register / bulk handlers do — so a fixed description
+  can clear its own message while the row stays flagged for a missing genre.
+  `_onSavePressed` also clears every flag on its success branch, so nothing
+  stays marked red through a save that was allowed to proceed. The wide
+  table gained a description column with ENG-354; before that it had no
+  description input at all, which would have left the gate unsatisfiable on a
+  desktop-width screen.
 - List-side widgets (recording card, filter chips, filter bar, filter
   sheet) consume `recordingsListNotifierProvider` and the
   genre/project notifiers; they emit user intent back to

@@ -467,7 +467,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get recording_titleHint => 'عنوان التسجيل';
 
   @override
-  String get recording_descriptionHint => 'أضف وصفاً قصيراً (اختياري)';
+  String get recording_descriptionHint => 'صف هذا التسجيل';
+
+  @override
+  String recording_descriptionTooShort(int count) {
+    return 'يرجى وصف هذا التسجيل بما لا يقل عن $count حرفاً';
+  }
 
   @override
   String get recording_descriptionEmpty => 'أضف وصفاً';
@@ -678,6 +683,13 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get recording_statusNameConflict => 'تعارض في الاسم';
+
+  @override
+  String get recording_statusDescriptionTooShort => 'الوصف قصير جدًا';
+
+  @override
+  String get recording_descriptionGapMessage =>
+      'لا يمكن رفع هذا التسجيل حتى تضيف وصفًا أطول.';
 
   @override
   String get recording_duplicateTitleTitle => 'الاسم مستخدم بالفعل';
@@ -1718,6 +1730,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get filter_unclassified => 'غير مصنف';
+
+  @override
+  String get filter_missingDescription => 'بدون وصف';
 
   @override
   String get filter_allGenres => 'جميع الأنواع';

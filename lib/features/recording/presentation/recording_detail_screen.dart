@@ -713,6 +713,28 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     );
   }
 
+  /// The upload never left the device because the description is missing or too
+  /// short for the create rule; lengthening it requeues the recording.
+  Widget? _buildDescriptionGapBanner(
+    BuildContext context,
+    LocalRecordingEntity recording,
+  ) {
+    if (recording.uploadStatus != 'failed_description') return null;
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
+    return RecordingActionBanner(
+      theme: theme,
+      icon: LucideIcons.alertCircle,
+      message: l10n.recording_descriptionGapMessage,
+      actionLabel: l10n.recording_editDetails,
+      accentColor: theme.colorScheme.error,
+      backgroundColor: theme.colorScheme.errorContainer.withValues(alpha: 0.35),
+      borderColor: theme.colorScheme.error.withValues(alpha: 0.5),
+      actionBackgroundColor: theme.colorScheme.error.withValues(alpha: 0.12),
+      onAction: _canEditRecording ? _openEditDetails : null,
+    );
+  }
+
   Widget? _buildClassifyBanner(BuildContext context, bool isUnclassified) {
     if (!isUnclassified) return null;
     final theme = Theme.of(context);
@@ -874,6 +896,8 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
 
     final titleConflictBanner = _buildTitleConflictBanner(context, recording);
 
+    final descriptionGapBanner = _buildDescriptionGapBanner(context, recording);
+
     final storytellerSection = RecordingStorytellerSection(
       projectId: recording.projectId,
       storytellerId: recording.storytellerId,
@@ -889,6 +913,10 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
         RecordingUploadProgressSection(recordingId: recording.id),
         if (titleConflictBanner != null) ...[
           titleConflictBanner,
+          const SizedBox(height: SpacingScale.s16),
+        ],
+        if (descriptionGapBanner != null) ...[
+          descriptionGapBanner,
           const SizedBox(height: SpacingScale.s16),
         ],
         if (secondaryCollisionBanner != null) ...[

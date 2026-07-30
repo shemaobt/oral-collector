@@ -471,8 +471,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String get recording_titleHint => 'Título da gravação';
 
   @override
-  String get recording_descriptionHint =>
-      'Adicionar uma descrição curta (opcional)';
+  String get recording_descriptionHint => 'Descreva esta gravação';
+
+  @override
+  String recording_descriptionTooShort(int count) {
+    return 'Descreva esta gravação com pelo menos $count caracteres';
+  }
 
   @override
   String get recording_descriptionEmpty => 'Adicionar descrição';
@@ -690,6 +694,13 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get recording_statusNameConflict => 'Conflito de nome';
+
+  @override
+  String get recording_statusDescriptionTooShort => 'Descrição muito curta';
+
+  @override
+  String get recording_descriptionGapMessage =>
+      'Esta gravação não pode ser enviada até você adicionar uma descrição mais longa.';
 
   @override
   String get recording_duplicateTitleTitle => 'Nome já utilizado';
@@ -1760,6 +1771,9 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get filter_unclassified => 'Não Classificado';
+
+  @override
+  String get filter_missingDescription => 'Sem descrição';
 
   @override
   String get filter_allGenres => 'Todos os gêneros';

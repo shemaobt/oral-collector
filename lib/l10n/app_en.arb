@@ -179,7 +179,15 @@
   "recording_noSubcategories": "No subcategories available",
   "recording_registerDescription": "Choose the speech register that best describes the tone and formality of this recording.",
   "recording_titleHint": "Recording title",
-  "recording_descriptionHint": "Add a short description (optional)",
+  "recording_descriptionHint": "Describe this recording",
+  "recording_descriptionTooShort": "Please describe this recording in at least {count} characters",
+  "@recording_descriptionTooShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "recording_descriptionEmpty": "Add description",
   "recording_titleEmpty": "Add title",
   "recording_titleRequired": "Title cannot be empty",
@@ -276,6 +284,8 @@
   "recording_statusFailed": "Failed",
   "recording_statusLocal": "Local",
   "recording_statusNameConflict": "Name conflict",
+  "recording_statusDescriptionTooShort": "Description too short",
+  "recording_descriptionGapMessage": "This recording can't be uploaded until you add a longer description.",
   "recording_duplicateTitleTitle": "Name already used",
   "recording_duplicateTitleMessage": "An audio named \"{title}\" already exists in this project. Choose another name.",
   "@recording_duplicateTitleMessage": {
@@ -847,6 +857,7 @@
   "filter_uploaded": "Uploaded",
   "filter_needsCleaning": "Needs Cleaning",
   "filter_unclassified": "Unclassified",
+  "filter_missingDescription": "Missing description",
   "filter_allGenres": "All genres",
   "detail_duration": "Duration",
   "detail_size": "Size",

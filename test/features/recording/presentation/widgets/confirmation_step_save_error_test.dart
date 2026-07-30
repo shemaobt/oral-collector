@@ -164,6 +164,14 @@ void main() {
       await tester.pump(); // resume _open() -> onChanged -> setState
       await tester.pump(); // rebuild with Save enabled
 
+      // A description is required since ENG-354, and the save never reaches the
+      // repository without one.
+      await tester.enterText(
+        find.byType(TextField).last,
+        'A folk tale about the river spirits.',
+      );
+      await tester.pump();
+
       // Save -> native path -> saveRecording throws. _save() awaits real file
       // I/O (file_ops.fileLength), which only advances inside runAsync; run the
       // whole tap there so _save reaches the save, then pump to render the UI.

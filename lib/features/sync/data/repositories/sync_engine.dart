@@ -14,6 +14,7 @@ import '../../../../core/network/authenticated_client.dart';
 import '../../../../core/network/response_decoder.dart';
 import '../../../../core/platform/file_ops.dart' as file_ops;
 import '../../../../core/serialization/safe_read.dart';
+import '../../../../shared/utils/recording_description.dart';
 import '../../../recording/data/repositories/local_recording_repository.dart';
 import '../../../storyteller/data/repositories/local_storyteller_repository.dart';
 import '../../domain/repositories/connectivity_service.dart';
@@ -302,6 +303,18 @@ class SyncEngineImpl implements SyncEngine {
       if (recording.serverId != null && recording.serverId!.isNotEmpty) {
         serverId = recording.serverId!;
       } else {
+        // Pre-flight, not a diagnosis of the refusal: the create call requires
+        // a sufficient description and the client owns the same rule, so a row
+        // that predates it (or a split child that inherited a short parent
+        // description) is refused here instead of spending a round-trip to be
+        // told. Deliberately not inferred from the 422 — other things 422 on
+        // this endpoint, and a wrong explanation is worse than none.
+        if (!isDescriptionSufficient(recording.description)) {
+          _log.warning('description too short to create $id');
+          await _markPermanentlyFailed(id, status: 'failed_description');
+          return _UploadOutcome.failed;
+        }
+
         final subcategoryId =
             (recording.subcategoryId != null &&
                 recording.subcategoryId!.isNotEmpty)
@@ -318,22 +331,7 @@ class SyncEngineImpl implements SyncEngine {
           'format': recording.format,
           'recorded_at': recording.recordedAt.toUtc().toIso8601String(),
         };
-        if (recording.registerId != null && recording.registerId!.isNotEmpty) {
-          createBody['register_id'] = recording.registerId;
-        }
-        if (recording.secondaryGenreId != null &&
-            recording.secondaryGenreId!.isNotEmpty) {
-          createBody['secondary_genre_id'] = recording.secondaryGenreId;
-        }
-        if (recording.secondarySubcategoryId != null &&
-            recording.secondarySubcategoryId!.isNotEmpty) {
-          createBody['secondary_subcategory_id'] =
-              recording.secondarySubcategoryId;
-        }
-        if (recording.secondaryRegisterId != null &&
-            recording.secondaryRegisterId!.isNotEmpty) {
-          createBody['secondary_register_id'] = recording.secondaryRegisterId;
-        }
+        _addOptionalCreateFields(createBody, recording);
         if (recording.storytellerId != null &&
             recording.storytellerId!.isNotEmpty) {
           final resolvedStorytellerId = await _resolveStorytellerServerId(
@@ -517,6 +515,22 @@ class SyncEngineImpl implements SyncEngine {
       return row.id;
     }
     return null;
+  }
+
+  /// Adds the create-call fields the API treats as optional. Absent and empty
+  /// are both omitted, so an empty local string never becomes a foreign key.
+  void _addOptionalCreateFields(
+    Map<String, dynamic> body,
+    LocalRecording recording,
+  ) {
+    void put(String key, String? value) {
+      if (value != null && value.isNotEmpty) body[key] = value;
+    }
+
+    put('register_id', recording.registerId);
+    put('secondary_genre_id', recording.secondaryGenreId);
+    put('secondary_subcategory_id', recording.secondarySubcategoryId);
+    put('secondary_register_id', recording.secondaryRegisterId);
   }
 
   Future<void> _markPermanentlyFailed(

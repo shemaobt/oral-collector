@@ -61,6 +61,27 @@ void main() {
       },
     );
 
+    test('missing-description filter keeps only recordings without enough said '
+        'about them', () {
+      final described = _entity(
+        id: 'd',
+        description: 'Grandmother Ama retells the flood story at dusk.',
+      );
+      final tooShort = _entity(id: 's', description: 'a flood story');
+      final blank = _entity(id: 'b', description: '   ');
+      final absent = _entity(id: 'n');
+
+      final state = RecordingsListState(
+        recordings: [described, tooShort, blank, absent],
+        selectedFilter: StatusFilter.missingDescription,
+      );
+
+      expect(
+        state.filteredRecordings.map((r) => r.id),
+        unorderedEquals(['s', 'b', 'n']),
+      );
+    });
+
     test('search query matches title and description, case-insensitively', () {
       final byTitle = _entity(id: 'a', title: 'Hello world');
       final byDescription = _entity(
@@ -88,6 +109,18 @@ void main() {
       );
 
       expect(state.filteredRecordings.map((r) => r.id), ['x']);
+    });
+
+    test('pending filter keeps a recording blocked on a short description', () {
+      final blocked = _entity(id: 'd', uploadStatus: 'failed_description');
+      final uploaded = _entity(id: 'u', uploadStatus: 'uploaded');
+
+      final state = RecordingsListState(
+        recordings: [blocked, uploaded],
+        selectedFilter: StatusFilter.pending,
+      );
+
+      expect(state.filteredRecordings.map((r) => r.id), ['d']);
     });
   });
 }

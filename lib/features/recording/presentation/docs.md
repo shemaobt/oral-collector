@@ -162,6 +162,19 @@ Path: @/lib/features/recording/presentation
   `kIsWeb` is always false under test, so the branch-selecting orchestration
   is extracted to a headless-testable function while the screen keeps only
   the platform calls.
+- Import validation lives in the same kind of seam:
+  [./file_import_validation.dart](file_import_validation.dart) holds
+  `isImportEntryValid` (genre, register, subcategory-when-the-genre-has-one,
+  and — since ENG-354 — a description that passes `isDescriptionSufficient`
+  from
+  [../../../shared/utils/recording_description.dart](../../../shared/utils/recording_description.dart)).
+  `_onSavePressed` is the only route into `_save`, and it is **all-or-nothing**:
+  if any entry fails, every failing entry is flagged, the first is scrolled
+  into view, a snackbar reports how many files are short, and nothing is
+  written. A batch is never partially imported over a validation failure — the
+  entries stay on screen so the user can fix them and press save again. Import
+  is the one screen where the description gate can reject several items at
+  once, hence the per-entry inline error rather than a single banner.
 - The `_canEditRecording` getter on the detail screen is the single
   client-side authorization chokepoint for the recording. It gates the
   "⋮" popup menu (split/trim, export, replace, move, classify, delete)
@@ -206,6 +219,20 @@ Path: @/lib/features/recording/presentation
   (`recording_statusNameConflict`) instead of the generic failure label, and
   `RecordingsListState`'s *pending* filter includes it so a conflicted
   recording stays visible and actionable.
+- **A recording the create rule refuses for its description gets the same
+  treatment (ENG-354).** The sync engine pre-flights `isDescriptionSufficient`
+  before the create call and parks the row in
+  `uploadStatus='failed_description'` without issuing the request, so a legacy
+  recording (or a split child that inherited a short parent description) stops
+  being a silent permanent failure. `_buildDescriptionGapBanner` renders a
+  `RecordingActionBanner` with `recording_descriptionGapMessage` whose action
+  opens the edit-details sheet — which validates with the same predicate — and
+  `RecordingDetailNotifier.saveDetails` calls `resetAndRetry` after the
+  description write so the row rejoins the queue. `RecordingCard` and
+  `RecordingStatusSection` give it its own label
+  (`recording_statusDescriptionTooShort`), and the *pending* filter includes it.
+  The status section's plain retry affordance deliberately does **not**, since a
+  bare retry would hit the same pre-flight.
 - `notifiers/` holds the Riverpod notifiers for the recording list,
   recording flow, and detail-screen playback (see
   [./notifiers/docs.md](notifiers/docs.md)); `widgets/` holds the

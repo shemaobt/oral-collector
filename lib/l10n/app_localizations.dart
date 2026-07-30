@@ -1007,8 +1007,14 @@ abstract class AppLocalizations {
   /// No description provided for @recording_descriptionHint.
   ///
   /// In en, this message translates to:
-  /// **'Add a short description (optional)'**
+  /// **'Describe this recording'**
   String get recording_descriptionHint;
+
+  /// No description provided for @recording_descriptionTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Please describe this recording in at least {count} characters'**
+  String recording_descriptionTooShort(int count);
 
   /// No description provided for @recording_descriptionEmpty.
   ///
@@ -1381,6 +1387,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Name conflict'**
   String get recording_statusNameConflict;
+
+  /// No description provided for @recording_statusDescriptionTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Description too short'**
+  String get recording_statusDescriptionTooShort;
+
+  /// No description provided for @recording_descriptionGapMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This recording can\'t be uploaded until you add a longer description.'**
+  String get recording_descriptionGapMessage;
 
   /// No description provided for @recording_duplicateTitleTitle.
   ///
@@ -3151,6 +3169,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unclassified'**
   String get filter_unclassified;
+
+  /// No description provided for @filter_missingDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Missing description'**
+  String get filter_missingDescription;
 
   /// No description provided for @filter_allGenres.
   ///

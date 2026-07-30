@@ -469,7 +469,12 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get recording_titleHint => 'Nem bilong rekoding';
 
   @override
-  String get recording_descriptionHint => 'Raitim liklik stori (sapos yu laik)';
+  String get recording_descriptionHint => 'Raitim stori bilong dispela rekod';
+
+  @override
+  String recording_descriptionTooShort(int count) {
+    return 'Raitim stori bilong dispela rekod, i mas gat $count leta o moa';
+  }
 
   @override
   String get recording_descriptionEmpty => 'Raitim stori';
@@ -684,6 +689,13 @@ class AppLocalizationsTpi extends AppLocalizations {
 
   @override
   String get recording_statusNameConflict => 'Nem i pait';
+
+  @override
+  String get recording_statusDescriptionTooShort => 'Stori i sotpela tumas';
+
+  @override
+  String get recording_descriptionGapMessage =>
+      'Yu no inap salim dispela rekod inap yu putim wanpela longpela stori.';
 
   @override
   String get recording_duplicateTitleTitle => 'Nem i stap pinis';
@@ -1737,6 +1749,9 @@ class AppLocalizationsTpi extends AppLocalizations {
 
   @override
   String get filter_unclassified => 'I no makim kain yet';
+
+  @override
+  String get filter_missingDescription => 'I no gat stori';
 
   @override
   String get filter_allGenres => 'Olgeta kain';

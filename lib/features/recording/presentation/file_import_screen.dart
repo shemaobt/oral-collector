@@ -32,6 +32,7 @@ import '../data/services/direct_recording_uploader.dart';
 import '../data/supported_audio_formats.dart';
 import 'file_import_entry.dart';
 import 'file_import_rejection.dart';
+import 'file_import_validation.dart';
 import 'import_save_runner.dart';
 import 'notifiers/recordings_list_notifier.dart';
 import 'widgets/file_metadata_editor.dart';
@@ -246,17 +247,22 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
           c.source.filePath ??
           'web_import_${DateTime.now().microsecondsSinceEpoch}_${i}_${c.name}';
 
-      newEntries.add(
-        FileImportEntry(
-          id: '${DateTime.now().microsecondsSinceEpoch}_$i',
-          path: syntheticPath,
-          fileName: c.name,
-          sizeBytes: c.size,
-          format: ext,
-          durationSeconds: probeResult.durationSeconds!,
-          source: c.source,
-        ),
+      final entry = FileImportEntry(
+        id: '${DateTime.now().microsecondsSinceEpoch}_$i',
+        path: syntheticPath,
+        fileName: c.name,
+        sizeBytes: c.size,
+        format: ext,
+        durationSeconds: probeResult.durationSeconds!,
+        source: c.source,
       );
+      // The description has no onChanged of its own in either layout, so the
+      // controller is where typing reaches the screen. Dropped when the entry
+      // disposes its controllers.
+      entry.descriptionController.addListener(
+        () => _onDescriptionChanged(entry),
+      );
+      newEntries.add(entry);
     }
 
     if (!mounted) return;
@@ -289,22 +295,21 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
     );
   }
 
-  bool _isEntryValid(FileImportEntry e) {
-    if (e.genreId == null || e.genreId!.isEmpty) return false;
-    if (e.registerId == null || e.registerId!.isEmpty) return false;
-    final genres = ref.read(genreNotifierProvider).genres;
-    final genre = genres.where((g) => g.id == e.genreId).firstOrNull;
-    if (genre != null && genre.subcategories.isNotEmpty) {
-      if (e.subcategoryId == null || e.subcategoryId!.isEmpty) return false;
-    }
-    return true;
-  }
+  bool _isEntryValid(FileImportEntry e) =>
+      isImportEntryValid(e, ref.read(genreNotifierProvider).genres);
 
   void _clearErrorIfResolved(FileImportEntry e) {
     if (!_errorEntryIds.contains(e.id)) return;
     if (_isEntryValid(e)) {
       _errorEntryIds.remove(e.id);
     }
+  }
+
+  /// Rebuilds so the inline description message re-evaluates while the user
+  /// types, the way the confirmation step and the edit sheet already behave.
+  void _onDescriptionChanged(FileImportEntry entry) {
+    if (!_errorEntryIds.contains(entry.id)) return;
+    setState(() => _clearErrorIfResolved(entry));
   }
 
   void _updateEntryGenre(String id, String? value) {
@@ -433,6 +438,9 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
       return;
     }
 
+    if (_errorEntryIds.isNotEmpty) {
+      setState(_errorEntryIds.clear);
+    }
     await _save();
   }
 

@@ -149,4 +149,18 @@ void main() {
     expect(find.text('Failed'), findsNothing);
     expect(find.text('Local'), findsNothing);
   });
+
+  testWidgets('a recording blocked on its description says so', (tester) async {
+    await tester.pumpWidget(
+      _harness(
+        recording: _makeRecording(uploadStatus: 'failed_description'),
+        state: const SyncState(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Description too short'), findsOneWidget);
+    expect(find.text('Failed'), findsNothing);
+    expect(find.text('Local'), findsNothing);
+  });
 }

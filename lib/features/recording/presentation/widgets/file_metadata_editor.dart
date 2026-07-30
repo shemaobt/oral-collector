@@ -9,6 +9,7 @@ import '../../../../shared/utils/format.dart';
 import '../../../genre/domain/entities/genre.dart';
 import '../../../storyteller/domain/entities/storyteller.dart';
 import '../file_import_entry.dart';
+import '../file_import_validation.dart';
 import 'bulk_metadata_bar.dart';
 import 'classification_field.dart';
 import 'file_metadata_card.dart';
@@ -223,6 +224,7 @@ class FileMetadataEditor extends StatelessWidget {
                   ),
               columns: [
                 DataColumn(label: Text(l10n.recording_titleHint)),
+                DataColumn(label: Text(l10n.recording_descriptionHint)),
                 DataColumn(label: Text(l10n.detail_duration)),
                 DataColumn(label: Text(l10n.moveCategory_genre)),
                 if (anyGenreHasSubcategories)
@@ -291,6 +293,44 @@ class FileMetadataEditor extends StatelessWidget {
                 ),
                 style: theme.textTheme.bodySmall,
               ),
+            ),
+          ),
+        ),
+        DataCell(
+          SizedBox(
+            width: 260,
+            child: TextField(
+              controller: entry.descriptionController,
+              textCapitalization: TextCapitalization.sentences,
+              decoration: InputDecoration(
+                hintText: AppLocalizations.of(
+                  context,
+                ).recording_descriptionHint,
+                errorText: descriptionErrorText(
+                  AppLocalizations.of(context),
+                  entry,
+                  hasError,
+                ),
+                errorMaxLines: 2,
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: SpacingScale.s8,
+                  vertical: SpacingScale.s8,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(RadiusScale.r8),
+                  borderSide: BorderSide(
+                    color: colors.border.withValues(alpha: 0.5),
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(RadiusScale.r8),
+                  borderSide: BorderSide(
+                    color: colors.border.withValues(alpha: 0.5),
+                  ),
+                ),
+              ),
+              style: theme.textTheme.bodySmall,
             ),
           ),
         ),

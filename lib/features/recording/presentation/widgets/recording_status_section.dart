@@ -130,6 +130,7 @@ class RecordingStatusSection extends StatelessWidget {
       case 'failed':
         return LucideIcons.cloudOff;
       case 'failed_conflict':
+      case 'failed_description':
         return LucideIcons.alertCircle;
       default:
         return LucideIcons.smartphone;
@@ -145,6 +146,7 @@ class RecordingStatusSection extends StatelessWidget {
         return colors.accent;
       case 'failed':
       case 'failed_conflict':
+      case 'failed_description':
         return colors.error;
       default:
         return colors.secondary;
@@ -164,6 +166,8 @@ class RecordingStatusSection extends StatelessWidget {
         return l10n.detail_uploadFailed;
       case 'failed_conflict':
         return l10n.recording_statusNameConflict;
+      case 'failed_description':
+        return l10n.recording_statusDescriptionTooShort;
       default:
         if (recording.retryCount > 0) return l10n.detail_pendingRetried;
         return l10n.detail_notSynced;

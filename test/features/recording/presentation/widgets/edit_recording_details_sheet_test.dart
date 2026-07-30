@@ -4,6 +4,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:oral_collector/features/recording/presentation/widgets/edit_recording_details_sheet.dart';
 import 'package:oral_collector/l10n/app_localizations.dart';
 import 'package:oral_collector/l10n/app_localizations_en.dart';
+import 'package:oral_collector/shared/utils/recording_description.dart';
+
+/// Comfortably past [minDescriptionGraphemes]; ENG-354 made the field required.
+const _validDescription = 'A folk tale about the river spirits.';
 
 Widget _hostApp({
   required String initialTitle,
@@ -79,7 +83,7 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.enterText(find.byType(TextField).first, 'New title');
-    await tester.enterText(find.byType(TextField).last, 'New desc');
+    await tester.enterText(find.byType(TextField).last, _validDescription);
 
     await tester.tap(find.text(l10nEn.recording_saveChanges));
     await tester.pumpAndSettle();
@@ -87,7 +91,7 @@ void main() {
     expect(done, isTrue);
     expect(captured, isNotNull);
     expect(captured!.title, 'New title');
-    expect(captured!.description, 'New desc');
+    expect(captured!.description, _validDescription);
   });
 
   testWidgets('Cancel returns null', (tester) async {
@@ -122,7 +126,7 @@ void main() {
     await tester.pumpWidget(
       _hostApp(
         initialTitle: 'Old',
-        initialDescription: '',
+        initialDescription: _validDescription,
         onResult: (r) => captured = r,
         onDone: () => done = true,
       ),
@@ -138,5 +142,80 @@ void main() {
     expect(done, isFalse, reason: 'sheet should still be open');
     expect(captured, isNull);
     expect(find.text(l10nEn.recording_titleRequired), findsOneWidget);
+  });
+
+  // ENG-354: the description carries the same weight as the title now — an
+  // edit may not strip a recording back down to an unusable one-liner.
+  group('description is required', () {
+    final tooShortMessage = l10nEn.recording_descriptionTooShort(
+      minDescriptionGraphemes,
+    );
+
+    Future<void> openSheet(
+      WidgetTester tester, {
+      required void Function(EditRecordingDetailsResult?) onResult,
+      required VoidCallback onDone,
+      String initialDescription = _validDescription,
+    }) async {
+      await tester.pumpWidget(
+        _hostApp(
+          initialTitle: 'Old',
+          initialDescription: initialDescription,
+          onResult: onResult,
+          onDone: onDone,
+        ),
+      );
+      await tester.tap(find.byType(ElevatedButton));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('Save with a too-short description blocks pop and explains', (
+      tester,
+    ) async {
+      EditRecordingDetailsResult? captured;
+      var done = false;
+
+      await openSheet(
+        tester,
+        onResult: (r) => captured = r,
+        onDone: () => done = true,
+      );
+
+      await tester.enterText(find.byType(TextField).last, 'Too short');
+      await tester.tap(find.text(l10nEn.recording_saveChanges));
+      await tester.pumpAndSettle();
+
+      expect(done, isFalse, reason: 'sheet should still be open');
+      expect(captured, isNull);
+      expect(find.text(tooShortMessage), findsOneWidget);
+    });
+
+    testWidgets('lengthening the description clears the error and saves', (
+      tester,
+    ) async {
+      EditRecordingDetailsResult? captured;
+      var done = false;
+
+      await openSheet(
+        tester,
+        initialDescription: '',
+        onResult: (r) => captured = r,
+        onDone: () => done = true,
+      );
+
+      await tester.tap(find.text(l10nEn.recording_saveChanges));
+      await tester.pumpAndSettle();
+      expect(find.text(tooShortMessage), findsOneWidget);
+
+      await tester.enterText(find.byType(TextField).last, _validDescription);
+      await tester.pumpAndSettle();
+      expect(find.text(tooShortMessage), findsNothing);
+
+      await tester.tap(find.text(l10nEn.recording_saveChanges));
+      await tester.pumpAndSettle();
+
+      expect(done, isTrue);
+      expect(captured!.description, _validDescription);
+    });
   });
 }

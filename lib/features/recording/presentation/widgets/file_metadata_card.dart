@@ -8,6 +8,7 @@ import '../../../../shared/utils/format.dart';
 import '../../../genre/domain/entities/genre.dart';
 import '../../../storyteller/domain/entities/storyteller.dart';
 import '../file_import_entry.dart';
+import '../file_import_validation.dart';
 import 'classification_field.dart';
 
 class FileMetadataCard extends StatelessWidget {
@@ -156,6 +157,7 @@ class FileMetadataCard extends StatelessWidget {
                   textCapitalization: TextCapitalization.sentences,
                   decoration: InputDecoration(
                     labelText: l10n.recording_descriptionHint,
+                    errorText: descriptionErrorText(l10n, entry, hasError),
                     isDense: true,
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: SpacingScale.s12,

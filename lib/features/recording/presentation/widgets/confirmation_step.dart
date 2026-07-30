@@ -11,12 +11,12 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/auth/auth_notifier.dart';
-import '../../../../core/errors/app_exception.dart' show ConflictException;
 import '../../../../core/platform/file_ops.dart' as file_ops;
 import '../../../../core/platform/file_source.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/tokens.dart';
 import '../../../../shared/utils/format.dart';
+import '../../../../shared/utils/recording_description.dart';
 import '../../../../shared/utils/recording_title.dart';
 import '../../../../shared/widgets/app_shell.dart';
 import '../../../../shared/widgets/error_snack_bar.dart';
@@ -92,6 +92,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
   Storyteller? _selectedStoryteller;
   List<String?> _existingTitles = const [];
   bool _titleConflict = false;
+  String? _descriptionError;
 
   // Captured in initState so dispose() can clear the marker without touching
   // `ref` — flutter_riverpod 2.x invalidates `ref` before State.dispose runs
@@ -114,6 +115,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
     _pendingDecisionController = ref.read(
       pendingRecordingDecisionProvider.notifier,
     );
+    _descriptionController.addListener(_clearDescriptionError);
     _initPlayer();
     Future.microtask(_prefetchStorytellers);
     Future.microtask(_loadExistingTitles);
@@ -169,6 +171,12 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
   /// `"Taken "` slip past the inline warning and collide once trimmed.
   bool _titleTakenLocally(String value) =>
       isTitleTaken(_existingTitles, resolveRecordingTitle(value));
+
+  void _clearDescriptionError() {
+    if (_descriptionError != null) {
+      setState(() => _descriptionError = null);
+    }
+  }
 
   void _onTitleChanged(String value) {
     final conflict = _titleTakenLocally(value);
@@ -330,6 +338,15 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
 
   Future<void> _save() async {
     if (_selectedStoryteller == null) return;
+    final l10n = AppLocalizations.of(context);
+    if (!isDescriptionSufficient(_descriptionController.text)) {
+      setState(
+        () => _descriptionError = l10n.recording_descriptionTooShort(
+          minDescriptionGraphemes,
+        ),
+      );
+      return;
+    }
     setState(() => _isSaving = true);
 
     final localeTag = Localizations.localeOf(context).toString();
@@ -357,7 +374,6 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
     final repo = ref.read(localRecordingRepositoryProvider);
     final syncNotifier = ref.read(syncNotifierProvider.notifier);
     final isOnline = ref.read(syncNotifierProvider).isOnline;
-    final l10n = AppLocalizations.of(context);
 
     int fileSize = 0;
     try {
@@ -503,14 +519,13 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
         ).showSnackBar(SnackBar(content: Text(l10n.recording_saved)));
         context.go('/home');
       }
-    } on ConflictException {
-      if (mounted) {
-        _showDuplicateTitleMessage(resolvedTitle);
-        setState(() => _isSaving = false);
-      }
     } catch (e) {
       if (mounted) {
-        showErrorSnackBar(context, e, template: l10n.recording_uploadFailed);
+        if (isDuplicateRecordingTitle(e)) {
+          _showDuplicateTitleMessage(resolvedTitle);
+        } else {
+          showErrorSnackBar(context, e, template: l10n.recording_uploadFailed);
+        }
         setState(() => _isSaving = false);
       }
     }
@@ -665,6 +680,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
                               onTitleChanged: _onTitleChanged,
                               titleConflict: _titleConflict,
                               descriptionController: _descriptionController,
+                              descriptionError: _descriptionError,
                               selectedStoryteller: _selectedStoryteller,
                               onStorytellerChanged: (s) =>
                                   setState(() => _selectedStoryteller = s),
@@ -841,6 +857,7 @@ class _DetailsForm extends StatelessWidget {
     required this.onTitleChanged,
     required this.titleConflict,
     required this.descriptionController,
+    required this.descriptionError,
     required this.selectedStoryteller,
     required this.onStorytellerChanged,
     required this.projectId,
@@ -850,6 +867,7 @@ class _DetailsForm extends StatelessWidget {
   final ValueChanged<String> onTitleChanged;
   final bool titleConflict;
   final TextEditingController descriptionController;
+  final String? descriptionError;
   final Storyteller? selectedStoryteller;
   final ValueChanged<Storyteller?> onStorytellerChanged;
   final String projectId;
@@ -959,6 +977,7 @@ class _DetailsForm extends StatelessWidget {
           decoration: InputDecoration(
             hintText: l10n.recording_descriptionHint,
             hintStyle: TextStyle(color: colors.secondary),
+            errorText: descriptionError,
             filled: true,
             fillColor: colors.surfaceAlt,
             border: OutlineInputBorder(

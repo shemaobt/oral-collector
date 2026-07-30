@@ -471,7 +471,12 @@ class AppLocalizationsSw extends AppLocalizations {
   String get recording_titleHint => 'Kichwa cha rekodi';
 
   @override
-  String get recording_descriptionHint => 'Ongeza maelezo mafupi (si lazima)';
+  String get recording_descriptionHint => 'Eleza rekodi hii';
+
+  @override
+  String recording_descriptionTooShort(int count) {
+    return 'Eleza rekodi hii kwa angalau herufi $count';
+  }
 
   @override
   String get recording_descriptionEmpty => 'Ongeza maelezo';
@@ -686,6 +691,13 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get recording_statusNameConflict => 'Mgongano wa jina';
+
+  @override
+  String get recording_statusDescriptionTooShort => 'Maelezo ni mafupi sana';
+
+  @override
+  String get recording_descriptionGapMessage =>
+      'Rekodi hii haiwezi kupakiwa hadi uongeze maelezo marefu zaidi.';
 
   @override
   String get recording_duplicateTitleTitle => 'Jina limekwisha tumika';
@@ -1741,6 +1753,9 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get filter_unclassified => 'Haijainishwa';
+
+  @override
+  String get filter_missingDescription => 'Hakuna maelezo';
 
   @override
   String get filter_allGenres => 'Aina zote';

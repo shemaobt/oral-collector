@@ -1,10 +1,12 @@
-/// The two queries that make `failed_conflict` a safe terminal status (ENG-71).
+/// The two queries that make the user-exit terminal statuses safe:
+/// `failed_conflict` (ENG-71) and `failed_description` (ENG-354).
 ///
-/// A recording parked in `failed_conflict` was rejected by the backend's
-/// (project_id, title) dedup. Only a rename can clear it, so it must stay out
-/// of the upload queue — otherwise it re-uploads forever and 409s every time —
-/// and it must survive the destructive "Clear failed" cleanup, which is the
-/// only user action that deletes rows wholesale.
+/// A recording parked in either was refused for a reason no retry can change —
+/// a title the backend already has, or a description the create rule rejects.
+/// Only the user can clear it, so it must stay out of the upload queue —
+/// otherwise it re-uploads forever and is refused every time — and it must
+/// survive the destructive "Clear failed" cleanup, which is the only user
+/// action that deletes rows wholesale.
 library;
 
 import 'package:drift/drift.dart' show Value;
@@ -40,24 +42,30 @@ void main() {
     );
   }
 
-  test('getPendingUploads never queues a title-conflicted recording', () async {
+  test(
+    'getPendingUploads never queues a recording awaiting the user',
+    () async {
+      await insert('conflicted', 'failed_conflict');
+      await insert('undescribed', 'failed_description');
+      await insert('retryable', 'failed');
+
+      final pending = await repo.getPendingUploads();
+
+      expect(pending.map((r) => r.id), ['retryable']);
+    },
+  );
+
+  test('deleteStaleRecordings keeps a recording awaiting the user', () async {
     await insert('conflicted', 'failed_conflict');
-    await insert('retryable', 'failed');
-
-    final pending = await repo.getPendingUploads();
-
-    expect(pending.map((r) => r.id), ['retryable']);
-  });
-
-  test('deleteStaleRecordings keeps a title-conflicted recording', () async {
-    await insert('conflicted', 'failed_conflict');
+    await insert('undescribed', 'failed_description');
     await insert('stale', 'failed');
 
     final deleted = await repo.deleteStaleRecordings('proj-1');
 
     expect(deleted, 1);
-    expect((await repo.getAllRecordings('proj-1')).map((r) => r.id), [
-      'conflicted',
-    ]);
+    expect(
+      (await repo.getAllRecordings('proj-1')).map((r) => r.id),
+      unorderedEquals(['conflicted', 'undescribed']),
+    );
   });
 }

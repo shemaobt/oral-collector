@@ -166,7 +166,7 @@ void main() {
     );
   });
 
-  test('surfaces a ConflictException when create returns 409', () async {
+  test('a 409 from create is reported as a taken title', () async {
     final bytes = Uint8List(10);
     final httpClient = MockClient((request) async {
       if (request.url.path == '/api/oc/recordings') {
@@ -183,7 +183,104 @@ void main() {
 
     await expectLater(
       uploader.upload(source: sampleSource(bytes), meta: sampleMeta()),
-      throwsA(isA<ConflictException>()),
+      throwsA(
+        allOf(isA<ConflictException>(), predicate(isDuplicateRecordingTitle)),
+      ),
+    );
+  });
+
+  // ENG-354 regression: a 409 on confirm-upload means the recording is already
+  // registered and its bytes are already in GCS. Reporting it as a taken title
+  // would offer the user a rename that fixes nothing.
+  test('a 409 from confirm-upload is not reported as a taken title', () async {
+    final bytes = Uint8List(10);
+    final httpClient = MockClient((request) async {
+      final path = request.url.path;
+      if (request.method == 'POST' && path == '/api/oc/recordings') {
+        return http.Response(jsonEncode({'id': 'srv-abc'}), 201);
+      }
+      if (request.method == 'POST' && path == '/api/oc/recordings/upload-url') {
+        return http.Response(
+          jsonEncode({
+            'upload_url': 'https://storage.googleapis.com/bucket/object',
+            'content_type': 'audio/mp4',
+          }),
+          200,
+        );
+      }
+      if (request.method == 'PUT') {
+        return http.Response('', 200);
+      }
+      if (path == '/api/oc/recordings/srv-abc/confirm-upload') {
+        return http.Response('already confirmed', 409);
+      }
+      return http.Response('unexpected', 500);
+    });
+    final auth = AuthenticatedClient(client: httpClient, storage: storage);
+    final uploader = DirectRecordingUploader(
+      client: auth,
+      resumableUploadService: resumable,
+      recordingRepo: repo,
+    );
+
+    await expectLater(
+      uploader.upload(source: sampleSource(bytes), meta: sampleMeta()),
+      throwsA(
+        allOf(
+          isA<ConflictException>(),
+          isNot(predicate(isDuplicateRecordingTitle)),
+        ),
+      ),
+    );
+  });
+
+  test('create 422 is a non-retryable ValidationException', () async {
+    final bytes = Uint8List(10);
+    final httpClient = MockClient((request) async {
+      if (request.url.path == '/api/oc/recordings') {
+        return http.Response('{"detail":"description is required"}', 422);
+      }
+      return http.Response('unexpected', 500);
+    });
+    final auth = AuthenticatedClient(client: httpClient, storage: storage);
+    final uploader = DirectRecordingUploader(
+      client: auth,
+      resumableUploadService: resumable,
+      recordingRepo: repo,
+    );
+
+    await expectLater(
+      uploader.upload(source: sampleSource(bytes), meta: sampleMeta()),
+      throwsA(
+        isA<ValidationException>().having(
+          (e) => e.retryable,
+          'retryable',
+          isFalse,
+        ),
+      ),
+    );
+  });
+
+  test('create 503 stays a retryable ServerException', () async {
+    final bytes = Uint8List(10);
+    final httpClient = MockClient((request) async {
+      if (request.url.path == '/api/oc/recordings') {
+        return http.Response('gateway down', 503);
+      }
+      return http.Response('unexpected', 500);
+    });
+    final auth = AuthenticatedClient(client: httpClient, storage: storage);
+    final uploader = DirectRecordingUploader(
+      client: auth,
+      resumableUploadService: resumable,
+      recordingRepo: repo,
+    );
+
+    await expectLater(
+      uploader.upload(source: sampleSource(bytes), meta: sampleMeta()),
+      throwsA(
+        isA<ServerException>().having((e) => e.retryable, 'retryable', isTrue),
+      ),
     );
   });
 

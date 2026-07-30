@@ -461,7 +461,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recording_titleHint => '录音标题';
 
   @override
-  String get recording_descriptionHint => '添加简短描述（选填）';
+  String get recording_descriptionHint => '描述这段录音';
+
+  @override
+  String recording_descriptionTooShort(int count) {
+    return '请用至少 $count 个字描述这段录音';
+  }
 
   @override
   String get recording_descriptionEmpty => '添加描述';
@@ -664,6 +669,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get recording_statusNameConflict => '名称冲突';
+
+  @override
+  String get recording_statusDescriptionTooShort => '描述太短';
+
+  @override
+  String get recording_descriptionGapMessage => '补充更长的描述后才能上传这段录音。';
 
   @override
   String get recording_duplicateTitleTitle => '名称已被使用';
@@ -1684,6 +1695,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get filter_unclassified => '未分类';
+
+  @override
+  String get filter_missingDescription => '缺少描述';
 
   @override
   String get filter_allGenres => '所有体裁';

@@ -471,7 +471,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get recording_titleHint => 'Judul rekaman';
 
   @override
-  String get recording_descriptionHint => 'Tambah deskripsi singkat (opsional)';
+  String get recording_descriptionHint => 'Jelaskan rekaman ini';
+
+  @override
+  String recording_descriptionTooShort(int count) {
+    return 'Jelaskan rekaman ini dengan minimal $count karakter';
+  }
 
   @override
   String get recording_descriptionEmpty => 'Tambah deskripsi';
@@ -687,6 +692,13 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get recording_statusNameConflict => 'Konflik nama';
+
+  @override
+  String get recording_statusDescriptionTooShort => 'Deskripsi terlalu pendek';
+
+  @override
+  String get recording_descriptionGapMessage =>
+      'Rekaman ini tidak dapat diunggah sampai Anda menambahkan deskripsi yang lebih panjang.';
 
   @override
   String get recording_duplicateTitleTitle => 'Nama sudah digunakan';
@@ -1754,6 +1766,9 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get filter_unclassified => 'Belum diklasifikasi';
+
+  @override
+  String get filter_missingDescription => 'Tanpa deskripsi';
 
   @override
   String get filter_allGenres => 'Semua genre';

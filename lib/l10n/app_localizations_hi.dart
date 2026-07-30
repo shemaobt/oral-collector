@@ -471,7 +471,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get recording_titleHint => 'रिकॉर्डिंग का शीर्षक';
 
   @override
-  String get recording_descriptionHint => 'संक्षिप्त विवरण जोड़ें (वैकल्पिक)';
+  String get recording_descriptionHint => 'इस रिकॉर्डिंग का वर्णन करें';
+
+  @override
+  String recording_descriptionTooShort(int count) {
+    return 'कृपया इस रिकॉर्डिंग का वर्णन कम से कम $count अक्षरों में करें';
+  }
 
   @override
   String get recording_descriptionEmpty => 'विवरण जोड़ें';
@@ -688,6 +693,13 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get recording_statusNameConflict => 'नाम विरोध';
+
+  @override
+  String get recording_statusDescriptionTooShort => 'विवरण बहुत छोटा है';
+
+  @override
+  String get recording_descriptionGapMessage =>
+      'इस रिकॉर्डिंग को अपलोड नहीं किया जा सकता जब तक आप एक लंबा विवरण नहीं जोड़ते।';
 
   @override
   String get recording_duplicateTitleTitle => 'नाम पहले से उपयोग में है';
@@ -1754,6 +1766,9 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get filter_unclassified => 'अवर्गीकृत';
+
+  @override
+  String get filter_missingDescription => 'विवरण नहीं है';
 
   @override
   String get filter_allGenres => 'सभी विधाएँ';

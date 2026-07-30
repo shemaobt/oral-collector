@@ -152,6 +152,7 @@ class _RecordingsFilterSheetState extends ConsumerState<RecordingsFilterSheet> {
       (StatusFilter.uploaded, l10n.filter_uploaded),
       (StatusFilter.needsCleaning, l10n.filter_needsCleaning),
       (StatusFilter.unclassified, l10n.filter_unclassified),
+      (StatusFilter.missingDescription, l10n.filter_missingDescription),
     ];
     return Wrap(
       spacing: 8,
