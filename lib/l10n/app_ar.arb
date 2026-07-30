@@ -243,6 +243,8 @@
   "recording_statusFailed": "فشل",
   "recording_statusLocal": "محلي",
   "recording_statusNameConflict": "تعارض في الاسم",
+  "recording_statusDescriptionTooShort": "الوصف قصير جدًا",
+  "recording_descriptionGapMessage": "لا يمكن رفع هذا التسجيل حتى تضيف وصفًا أطول.",
   "recording_duplicateTitleTitle": "الاسم مستخدم بالفعل",
   "recording_duplicateTitleMessage": "يوجد بالفعل تسجيل صوتي باسم \"{title}\" في هذا المشروع. اختر اسماً آخر.",
   "trim_title": "تحرير التسجيل",

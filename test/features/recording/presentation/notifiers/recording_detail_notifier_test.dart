@@ -507,6 +507,50 @@ void main() {
     });
 
     test(
+      'lengthening the description of a blocked recording requeues it',
+      () async {
+        // A recording that predates the create-time description rule was parked
+        // in failed_description by the upload pre-flight. Fixing the
+        // description is the exit; it must not stay stuck.
+        final recording = await seed(uploadStatus: 'failed_description');
+        final c = makeContainer();
+
+        await notifierOf(c).saveDetails(
+          recording,
+          title: 'Story',
+          description: 'A description with enough substance to be accepted',
+        );
+
+        final row = (await repo.getRecordingById(recordingId))!;
+        expect(
+          row.description,
+          'A description with enough substance to be accepted',
+        );
+        expect(row.uploadStatus, 'local');
+      },
+    );
+
+    test(
+      'lengthening the description of an uploaded recording leaves its upload '
+      'state alone',
+      () async {
+        final recording = await seed(uploadStatus: 'uploaded');
+        final c = makeContainer();
+
+        await notifierOf(c).saveDetails(
+          recording,
+          title: 'Story',
+          description: 'A description with enough substance to be accepted',
+        );
+
+        expect(
+          (await repo.getRecordingById(recordingId))!.uploadStatus,
+          'uploaded',
+        );
+      },
+    );
+
+    test(
       'renaming an uploaded recording leaves its upload state alone',
       () async {
         final recording = await seed(uploadStatus: 'uploaded');

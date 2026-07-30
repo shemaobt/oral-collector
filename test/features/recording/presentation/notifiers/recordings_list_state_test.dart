@@ -110,5 +110,17 @@ void main() {
 
       expect(state.filteredRecordings.map((r) => r.id), ['x']);
     });
+
+    test('pending filter keeps a recording blocked on a short description', () {
+      final blocked = _entity(id: 'd', uploadStatus: 'failed_description');
+      final uploaded = _entity(id: 'u', uploadStatus: 'uploaded');
+
+      final state = RecordingsListState(
+        recordings: [blocked, uploaded],
+        selectedFilter: StatusFilter.pending,
+      );
+
+      expect(state.filteredRecordings.map((r) => r.id), ['d']);
+    });
   });
 }

@@ -284,6 +284,8 @@
   "recording_statusFailed": "Failed",
   "recording_statusLocal": "Local",
   "recording_statusNameConflict": "Name conflict",
+  "recording_statusDescriptionTooShort": "Description too short",
+  "recording_descriptionGapMessage": "This recording can't be uploaded until you add a longer description.",
   "recording_duplicateTitleTitle": "Name already used",
   "recording_duplicateTitleMessage": "An audio named \"{title}\" already exists in this project. Choose another name.",
   "@recording_duplicateTitleMessage": {

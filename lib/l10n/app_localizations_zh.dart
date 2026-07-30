@@ -671,6 +671,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recording_statusNameConflict => '名称冲突';
 
   @override
+  String get recording_statusDescriptionTooShort => '描述太短';
+
+  @override
+  String get recording_descriptionGapMessage => '补充更长的描述后才能上传这段录音。';
+
+  @override
   String get recording_duplicateTitleTitle => '名称已被使用';
 
   @override

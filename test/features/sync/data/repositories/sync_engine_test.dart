@@ -59,6 +59,9 @@ LocalRecording makeRecording({
   String genreId = 'genre-1',
   String? subcategoryId,
   String? title = 'Test Recording',
+  // Long enough to satisfy the create-time description rule (ENG-354), which is
+  // what every recording the app saves carries.
+  String? description = 'A description with enough substance to be accepted',
   double durationSeconds = 60.0,
   int fileSizeBytes = 1024,
   String format = 'm4a',
@@ -82,6 +85,7 @@ LocalRecording makeRecording({
     genreId: genreId,
     subcategoryId: subcategoryId,
     title: title,
+    description: description,
     durationSeconds: durationSeconds,
     fileSizeBytes: fileSizeBytes,
     format: format,
@@ -201,8 +205,16 @@ void main() {
     });
   }
 
-  void stubRepoForUpload(String filePath, {String id = 'rec-1'}) {
-    final rec = makeRecording(id: id, localFilePath: filePath);
+  void stubRepoForUpload(
+    String filePath, {
+    String id = 'rec-1',
+    String? description = 'A description with enough substance to be accepted',
+  }) {
+    final rec = makeRecording(
+      id: id,
+      localFilePath: filePath,
+      description: description,
+    );
 
     when(() => mockRepo.getRecordingById(id)).thenAnswer((_) async => rec);
     when(() => mockRepo.markAsUploading(id)).thenAnswer((_) async => true);
@@ -240,6 +252,14 @@ void main() {
       reason: 'deve marcar falha permanente (não-retryable)',
     );
   }
+
+  /// Every `uploadStatus` the engine wrote for `rec-1`, in write order.
+  List<String> capturedStatusesForRec1() =>
+      verify(() => mockRepo.updateRecording('rec-1', captureAny())).captured
+          .cast<LocalRecordingsCompanion>()
+          .where((c) => c.uploadStatus.present)
+          .map((c) => c.uploadStatus.value)
+          .toList();
 
   MockClient createStatusOnCreate(int status) {
     return MockClient((request) async {
@@ -936,6 +956,128 @@ void main() {
         written.map((c) => c.uploadStatus.value),
         isNot(contains('failed_conflict')),
       );
+      httpClient.close();
+    });
+
+    test(
+      'descrição insuficiente não chega a ser enviada ao servidor',
+      () async {
+        // A recording that predates the create-time description rule (ENG-354).
+        // The client owns the same rule, so it can refuse before spending a
+        // round-trip — and park the row where the UI can explain the block.
+        final testFile = File('${tempDir.path}/short_description.m4a');
+        testFile.writeAsBytesSync(Uint8List(1024));
+
+        final rec = makeRecording(
+          localFilePath: testFile.path,
+          description: 'too short',
+        );
+
+        when(() => mockConnectivity.isOnline).thenAnswer((_) async => true);
+        when(() => mockRepo.getPendingUploads()).thenAnswer((_) async => [rec]);
+        stubRepoForUpload(testFile.path, description: 'too short');
+
+        var createCalls = 0;
+        final httpClient = MockClient((request) async {
+          if (request.method == 'POST' &&
+              request.url.path == '/api/oc/recordings') {
+            createCalls++;
+          }
+          return http.Response(jsonEncode({'id': 'srv-1'}), 201);
+        });
+        final engine = buildEngine(httpClient);
+
+        await engine.processQueue();
+
+        expect(
+          createCalls,
+          0,
+          reason: 'o create é recusado localmente, sem round-trip',
+        );
+        verifyNever(() => mockRepo.markAsUploaded(any(), any(), any()));
+
+        final written = capturedStatusesForRec1();
+        expect(written, contains('failed_description'));
+        expect(
+          written,
+          isNot(contains('failed')),
+          reason: 'não pode virar a falha genérica, que não explica nada',
+        );
+        httpClient.close();
+      },
+    );
+
+    test('descrição suficiente segue o fluxo normal de upload', () async {
+      // The guard against over-blocking: the pre-flight must only stop the
+      // recordings the server would refuse anyway.
+      final testFile = File('${tempDir.path}/long_description.m4a');
+      testFile.writeAsBytesSync(Uint8List(1024));
+
+      final rec = makeRecording(localFilePath: testFile.path);
+
+      when(() => mockConnectivity.isOnline).thenAnswer((_) async => true);
+      when(() => mockRepo.getPendingUploads()).thenAnswer((_) async => [rec]);
+      stubRepoForUpload(testFile.path);
+
+      var createCalls = 0;
+      final httpClient = MockClient((request) async {
+        final path = request.url.path;
+        if (request.method == 'POST' && path == '/api/oc/recordings') {
+          createCalls++;
+          return http.Response(jsonEncode({'id': 'srv-1'}), 201);
+        }
+        if (request.method == 'POST' &&
+            path == '/api/oc/recordings/upload-url') {
+          return http.Response(
+            jsonEncode({
+              'upload_url': 'https://storage.googleapis.com/test',
+              'content_type': 'audio/mp4',
+            }),
+            200,
+          );
+        }
+        if (request.url.host == 'storage.googleapis.com') {
+          return http.Response('', 200);
+        }
+        if (request.method == 'POST' && path.contains('/confirm-upload')) {
+          return http.Response(
+            jsonEncode({'gcs_url': 'https://gcs/a.m4a'}),
+            200,
+          );
+        }
+        return http.Response('Not Found', 404);
+      });
+      final engine = buildEngine(httpClient);
+
+      await engine.processQueue();
+
+      expect(createCalls, 1);
+      verify(() => mockRepo.markAsUploaded('rec-1', 'srv-1', any())).called(1);
+      expect(capturedStatusesForRec1(), isNot(contains('failed_description')));
+      httpClient.close();
+    });
+
+    test('422 que não é sobre a descrição continua falha genérica', () async {
+      // Other things 422 on this endpoint (a foreign key the caller got wrong).
+      // The status must not claim the description is the problem.
+      final testFile = File('${tempDir.path}/unprocessable.m4a');
+      testFile.writeAsBytesSync(Uint8List(1024));
+
+      final rec = makeRecording(localFilePath: testFile.path);
+
+      when(() => mockConnectivity.isOnline).thenAnswer((_) async => true);
+      when(() => mockRepo.getPendingUploads()).thenAnswer((_) async => [rec]);
+      stubRepoForUpload(testFile.path);
+
+      final httpClient = createStatusOnCreate(422);
+      final engine = buildEngine(httpClient);
+
+      await engine.processQueue();
+
+      verifyNever(() => mockRepo.markAsUploaded(any(), any(), any()));
+      final written = capturedStatusesForRec1();
+      expect(written, contains('failed'));
+      expect(written, isNot(contains('failed_description')));
       httpClient.close();
     });
 

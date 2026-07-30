@@ -89,9 +89,12 @@ Path: @/lib/features/recording/presentation/widgets
   `_EditRecordingDetailsSheetState._onSave`. Both surface the failure inline —
   `errorText` on the description field, cleared as the user types — and neither
   disables its Save button, matching how the sheet already treats a missing
-  title. The rule applies on create and on edit only: recordings saved before
-  ENG-354 are grandfathered, nothing migrates, and the Drift column stays
-  nullable.
+  title. The widget gates are the only *save-time* enforcement: recordings saved
+  before ENG-354 are grandfathered in the database, nothing migrates, and the
+  Drift column stays nullable. They are not grandfathered on the wire — the API
+  requires the description on create, so the sync engine pre-flights the same
+  predicate and parks such a row in `uploadStatus='failed_description'` until the
+  edit sheet fixes it (see [/lib/features/sync/docs.md](../../../sync/docs.md)).
 - The file-import surfaces gate on the same predicate through
   [../file_import_validation.dart](../file_import_validation.dart):
   `isImportEntryValid` folds the description rule in beside genre / register /

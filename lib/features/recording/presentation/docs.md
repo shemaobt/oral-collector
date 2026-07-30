@@ -219,6 +219,20 @@ Path: @/lib/features/recording/presentation
   (`recording_statusNameConflict`) instead of the generic failure label, and
   `RecordingsListState`'s *pending* filter includes it so a conflicted
   recording stays visible and actionable.
+- **A recording the create rule refuses for its description gets the same
+  treatment (ENG-354).** The sync engine pre-flights `isDescriptionSufficient`
+  before the create call and parks the row in
+  `uploadStatus='failed_description'` without issuing the request, so a legacy
+  recording (or a split child that inherited a short parent description) stops
+  being a silent permanent failure. `_buildDescriptionGapBanner` renders a
+  `RecordingActionBanner` with `recording_descriptionGapMessage` whose action
+  opens the edit-details sheet — which validates with the same predicate — and
+  `RecordingDetailNotifier.saveDetails` calls `resetAndRetry` after the
+  description write so the row rejoins the queue. `RecordingCard` and
+  `RecordingStatusSection` give it its own label
+  (`recording_statusDescriptionTooShort`), and the *pending* filter includes it.
+  The status section's plain retry affordance deliberately does **not**, since a
+  bare retry would hit the same pre-flight.
 - `notifiers/` holds the Riverpod notifiers for the recording list,
   recording flow, and detail-screen playback (see
   [./notifiers/docs.md](notifiers/docs.md)); `widgets/` holds the

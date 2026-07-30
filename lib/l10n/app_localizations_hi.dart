@@ -695,6 +695,13 @@ class AppLocalizationsHi extends AppLocalizations {
   String get recording_statusNameConflict => 'नाम विरोध';
 
   @override
+  String get recording_statusDescriptionTooShort => 'विवरण बहुत छोटा है';
+
+  @override
+  String get recording_descriptionGapMessage =>
+      'इस रिकॉर्डिंग को अपलोड नहीं किया जा सकता जब तक आप एक लंबा विवरण नहीं जोड़ते।';
+
+  @override
   String get recording_duplicateTitleTitle => 'नाम पहले से उपयोग में है';
 
   @override

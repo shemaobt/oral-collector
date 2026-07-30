@@ -694,6 +694,13 @@ class AppLocalizationsId extends AppLocalizations {
   String get recording_statusNameConflict => 'Konflik nama';
 
   @override
+  String get recording_statusDescriptionTooShort => 'Deskripsi terlalu pendek';
+
+  @override
+  String get recording_descriptionGapMessage =>
+      'Rekaman ini tidak dapat diunggah sampai Anda menambahkan deskripsi yang lebih panjang.';
+
+  @override
   String get recording_duplicateTitleTitle => 'Nama sudah digunakan';
 
   @override

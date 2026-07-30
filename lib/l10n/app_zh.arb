@@ -274,6 +274,8 @@
   "recording_statusFailed": "失败",
   "recording_statusLocal": "本地",
   "recording_statusNameConflict": "名称冲突",
+  "recording_statusDescriptionTooShort": "描述太短",
+  "recording_descriptionGapMessage": "补充更长的描述后才能上传这段录音。",
   "recording_duplicateTitleTitle": "名称已被使用",
   "recording_duplicateTitleMessage": "此项目中已存在名为“{title}”的音频。请另选一个名称。",
   "recordings_clearStale": "清除失败项",

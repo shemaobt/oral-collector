@@ -243,6 +243,8 @@
   "recording_statusFailed": "Imeshindwa",
   "recording_statusLocal": "Ya Ndani",
   "recording_statusNameConflict": "Mgongano wa jina",
+  "recording_statusDescriptionTooShort": "Maelezo ni mafupi sana",
+  "recording_descriptionGapMessage": "Rekodi hii haiwezi kupakiwa hadi uongeze maelezo marefu zaidi.",
   "recording_duplicateTitleTitle": "Jina limekwisha tumika",
   "recording_duplicateTitleMessage": "Sauti yenye jina \"{title}\" tayari ipo katika mradi huu. Chagua jina lingine.",
   "trim_title": "Hariri Rekodi",

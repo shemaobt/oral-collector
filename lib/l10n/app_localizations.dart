@@ -1388,6 +1388,18 @@ abstract class AppLocalizations {
   /// **'Name conflict'**
   String get recording_statusNameConflict;
 
+  /// No description provided for @recording_statusDescriptionTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Description too short'**
+  String get recording_statusDescriptionTooShort;
+
+  /// No description provided for @recording_descriptionGapMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This recording can\'t be uploaded until you add a longer description.'**
+  String get recording_descriptionGapMessage;
+
   /// No description provided for @recording_duplicateTitleTitle.
   ///
   /// In en, this message translates to:

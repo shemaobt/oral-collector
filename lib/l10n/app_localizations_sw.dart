@@ -693,6 +693,13 @@ class AppLocalizationsSw extends AppLocalizations {
   String get recording_statusNameConflict => 'Mgongano wa jina';
 
   @override
+  String get recording_statusDescriptionTooShort => 'Maelezo ni mafupi sana';
+
+  @override
+  String get recording_descriptionGapMessage =>
+      'Rekodi hii haiwezi kupakiwa hadi uongeze maelezo marefu zaidi.';
+
+  @override
   String get recording_duplicateTitleTitle => 'Jina limekwisha tumika';
 
   @override

@@ -675,6 +675,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recording_statusNameConflict => '이름 충돌';
 
   @override
+  String get recording_statusDescriptionTooShort => '설명이 너무 짧습니다';
+
+  @override
+  String get recording_descriptionGapMessage =>
+      '설명을 더 길게 작성해야 이 녹음을 업로드할 수 있습니다.';
+
+  @override
   String get recording_duplicateTitleTitle => '이미 사용 중인 이름';
 
   @override

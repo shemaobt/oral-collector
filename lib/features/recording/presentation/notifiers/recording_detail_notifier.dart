@@ -289,6 +289,15 @@ class RecordingDetailNotifier
       } on ForbiddenException {
         return RecordingMutationResult.forbidden;
       }
+      // A row parked in failed_description is terminal until the description
+      // grows; the edit is what makes it uploadable again, so hand it straight
+      // back to the queue instead of leaving it stuck.
+      if (recording.uploadStatus == 'failed_description') {
+        await ref
+            .read(syncNotifierProvider.notifier)
+            .resetAndRetry(recording.id);
+        if (_disposed) return RecordingMutationResult.success;
+      }
     }
 
     if (titleChanged || descriptionChanged) {

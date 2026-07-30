@@ -685,6 +685,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get recording_statusNameConflict => 'تعارض في الاسم';
 
   @override
+  String get recording_statusDescriptionTooShort => 'الوصف قصير جدًا';
+
+  @override
+  String get recording_descriptionGapMessage =>
+      'لا يمكن رفع هذا التسجيل حتى تضيف وصفًا أطول.';
+
+  @override
   String get recording_duplicateTitleTitle => 'الاسم مستخدم بالفعل';
 
   @override

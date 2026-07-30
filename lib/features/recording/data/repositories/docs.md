@@ -95,10 +95,13 @@ Path: @/lib/features/recording/data/repositories
   `resetStuckUploading`. That filter lives only in the engine, not in this
   query — see Things to Know and
   [/lib/features/sync/docs.md](../../../sync/docs.md).
-  `failed_conflict` (ENG-71) is deliberately absent from the matched set: a
-  duplicate title is terminal until the user renames the recording, and the
-  rename routes through `resetRetryCount`, which flips the row back to `local`
-  and so back into this query.
+  `failed_conflict` (ENG-71) and `failed_description` (ENG-354) are both
+  deliberately absent from the matched set: a duplicate title is terminal until
+  the user renames the recording, and a description the create rule rejects is
+  terminal until the user lengthens it. Both exits route through
+  `resetRetryCount`, which flips the row back to `local` and so back into this
+  query. `deleteStaleRecordings` matches `failed` / `uploading` only, so neither
+  is destroyed by "Clear failed" while it waits on the user.
 - `watchRecordingEntityById` is the **single detail watch stream** (ENG-195
   introduced it; ENG-199/ENG-200 made it the sole one by deleting the former
   row stream `watchRecordingById`). It is a `watchSingleOrNull` query that
@@ -228,7 +231,11 @@ Path: @/lib/features/recording/data/repositories
   the list screen's `missingDescription` filter, which is exactly what that
   filter is for. So the rule "every recording created after ENG-354 has a
   description" holds for the *save* paths only — split children inherit
-  whatever the legacy parent had.
+  whatever the legacy parent had. Such a child is not silently stranded: the
+  sync engine pre-flights the same predicate before the create call and parks
+  the row in `uploadStatus='failed_description'`, which the detail screen
+  explains and the edit sheet clears (see
+  [/lib/features/sync/docs.md](../../../sync/docs.md)).
   Before inserting, validates that no child's **effective primary triple**
   (`register, genre, subcategory`, each override falling back to the parent's
   value) is identical to the secondary triple the child inherits from the

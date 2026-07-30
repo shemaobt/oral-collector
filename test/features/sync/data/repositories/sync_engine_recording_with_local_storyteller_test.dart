@@ -80,6 +80,9 @@ void main() {
         projectId: const Value('proj-1'),
         genreId: const Value('g-1'),
         title: const Value('Rec'),
+        // Long enough for the create-time description rule (ENG-354), which
+        // would otherwise stop this recording before the storyteller logic runs.
+        description: const Value('A description with enough substance'),
         durationSeconds: const Value(10.0),
         fileSizeBytes: const Value(1024),
         format: const Value('m4a'),

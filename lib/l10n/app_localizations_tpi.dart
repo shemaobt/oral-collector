@@ -691,6 +691,13 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get recording_statusNameConflict => 'Nem i pait';
 
   @override
+  String get recording_statusDescriptionTooShort => 'Stori i sotpela tumas';
+
+  @override
+  String get recording_descriptionGapMessage =>
+      'Yu no inap salim dispela rekod inap yu putim wanpela longpela stori.';
+
+  @override
   String get recording_duplicateTitleTitle => 'Nem i stap pinis';
 
   @override

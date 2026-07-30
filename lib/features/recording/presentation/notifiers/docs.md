@@ -160,7 +160,12 @@ Path: @/lib/features/recording/presentation/notifiers
     the project (ENG-71). Nothing is written when it fires, so the row keeps its
     old title and its `failed_conflict` status, and the rename banner stays up
     for another attempt. The other handlers treat it as a plain failure because
-    only a title edit can produce it.
+    only a title edit can produce it. `saveDetails` owns the symmetric exit for
+    `failed_description` (ENG-354): after the description write it calls
+    `resetAndRetry` when the row was parked there, so a lengthened description
+    puts the recording back in the queue instead of leaving it stuck. Unlike the
+    rename there is no server-side second refusal to guard against — the
+    description is only sent at create time — so the requeue is unconditional.
   - **Audio mutations** behind the IO seams: `downloadAndCache` (GCS download +
     `cacheDownloadedAudio`, throws on failure so the widget dismisses its
     progress dialog and shows the error), `downloadForExport` (temp download for
@@ -240,9 +245,11 @@ Path: @/lib/features/recording/presentation/notifiers
   `isDescriptionSufficient` from
   [../../../../shared/utils/recording_description.dart](../../../../shared/utils/recording_description.dart)
   — the same predicate the save gates use, so a recording the filter surfaces
-  is exactly one the editor would reject; recordings predating ENG-354 stay
-  valid and are never blocked, and this filter exists purely so the user can
-  find and fix them at their own pace) and never refetches, so only
+  is exactly one the editor would reject; recordings predating ENG-354 keep
+  their local row untouched, but they **cannot upload** until the description is
+  fixed — the sync engine pre-flights the same predicate and parks them in
+  `uploadStatus='failed_description'`, so this filter is how the user finds them
+  and the detail banner is how they clear them) and never refetches, so only
   `setUserFilter`,
   `setStorytellerFilter`, `clearAllFilters`, `clearStaleRecordings`, and
   pull-to-refresh re-hit the server. `patchRecordingTitle` rerenders after an

@@ -243,6 +243,8 @@
   "recording_statusFailed": "विफल",
   "recording_statusLocal": "स्थानीय",
   "recording_statusNameConflict": "नाम विरोध",
+  "recording_statusDescriptionTooShort": "विवरण बहुत छोटा है",
+  "recording_descriptionGapMessage": "इस रिकॉर्डिंग को अपलोड नहीं किया जा सकता जब तक आप एक लंबा विवरण नहीं जोड़ते।",
   "recording_duplicateTitleTitle": "नाम पहले से उपयोग में है",
   "recording_duplicateTitleMessage": "इस प्रोजेक्ट में \"{title}\" नाम का ऑडियो पहले से मौजूद है। दूसरा नाम चुनें।",
   "trim_title": "रिकॉर्डिंग संपादित करें",

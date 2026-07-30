@@ -243,6 +243,8 @@
   "recording_statusFailed": "Fallido",
   "recording_statusLocal": "Local",
   "recording_statusNameConflict": "Conflicto de nombre",
+  "recording_statusDescriptionTooShort": "Descripción demasiado corta",
+  "recording_descriptionGapMessage": "Esta grabación no se puede subir hasta que añadas una descripción más larga.",
   "recording_duplicateTitleTitle": "Nombre ya usado",
   "recording_duplicateTitleMessage": "Ya existe un audio llamado \"{title}\" en este proyecto. Elige otro nombre.",
   "trim_title": "Editar Grabación",

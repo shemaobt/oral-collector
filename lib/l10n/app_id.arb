@@ -243,6 +243,8 @@
   "recording_statusFailed": "Gagal",
   "recording_statusLocal": "Lokal",
   "recording_statusNameConflict": "Konflik nama",
+  "recording_statusDescriptionTooShort": "Deskripsi terlalu pendek",
+  "recording_descriptionGapMessage": "Rekaman ini tidak dapat diunggah sampai Anda menambahkan deskripsi yang lebih panjang.",
   "recording_duplicateTitleTitle": "Nama sudah digunakan",
   "recording_duplicateTitleMessage": "Audio bernama \"{title}\" sudah ada di proyek ini. Pilih nama lain.",
   "trim_title": "Edit Rekaman",

@@ -702,6 +702,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get recording_statusNameConflict => 'Conflit de nom';
 
   @override
+  String get recording_statusDescriptionTooShort => 'Description trop courte';
+
+  @override
+  String get recording_descriptionGapMessage =>
+      'Cet enregistrement ne peut pas être envoyé tant que vous n\'ajoutez pas une description plus longue.';
+
+  @override
   String get recording_duplicateTitleTitle => 'Nom déjà utilisé';
 
   @override

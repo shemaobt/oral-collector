@@ -244,6 +244,8 @@
   "recording_statusFailed": "Falha",
   "recording_statusLocal": "Local",
   "recording_statusNameConflict": "Conflito de nome",
+  "recording_statusDescriptionTooShort": "Descrição muito curta",
+  "recording_descriptionGapMessage": "Esta gravação não pode ser enviada até você adicionar uma descrição mais longa.",
   "recording_duplicateTitleTitle": "Nome já utilizado",
   "recording_duplicateTitleMessage": "Já existe um áudio chamado \"{title}\" neste projeto. Escolha outro nome.",
   "recordings_clearStale": "Limpar falhas",
