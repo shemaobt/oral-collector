@@ -132,4 +132,40 @@ void main() {
       expect(captured?.secondaryRegisterId, 'formal');
     },
   );
+
+  testWidgets(
+    'Classify stays enabled when the primary moves onto the secondary, which '
+    'gives up its subcategory rather than its register',
+    (tester) async {
+      ClassifyResult? captured;
+      await tester.pumpWidget(_harness(onResult: (r) => captured = r));
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+
+      await _pickFromDropdown(tester, 0, 'Folktale');
+      await _pickFromDropdown(tester, 1, 'Origin myth');
+      await _pickFromDropdown(tester, 2, 'Formal / Official');
+
+      await tester.tap(find.text(l10n.classify_addAlternativeTitle));
+      await tester.pumpAndSettle();
+
+      await _pickFromDropdown(tester, 3, 'Folktale');
+      await _pickFromDropdown(tester, 4, 'Trickster story');
+      await _pickFromDropdown(tester, 5, 'Formal / Official');
+
+      // The primary moves onto the secondary's subcategory, which would make
+      // the two triples identical.
+      await _pickFromDropdown(tester, 1, 'Trickster story');
+
+      expect(_isClassifyEnabled(tester, l10n), isTrue);
+
+      await tester.tap(find.text(l10n.classify_action));
+      await tester.pumpAndSettle();
+
+      expect(captured?.subcategoryId, 'sub-B');
+      expect(captured?.secondaryGenreId, 'g-primary');
+      expect(captured?.secondarySubcategoryId, isNull);
+      expect(captured?.secondaryRegisterId, 'formal');
+    },
+  );
 }

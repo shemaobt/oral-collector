@@ -111,8 +111,10 @@ class _SecondaryClassificationFieldsState
 
   /// A collision only becomes reachable when the primary moves under a
   /// selection the user already made, or when picking a genre resets the
-  /// subcategory. Clearing a single field breaks it; the register goes first
-  /// so the genre and subcategory the user chose survive.
+  /// subcategory. Clearing a single field breaks it; the subcategory goes
+  /// first because it is the only field a valid secondary can do without, so
+  /// Save stays usable. The register is the next cheapest, and the genre only
+  /// goes when it is all the secondary has left.
   void _clearCollidingField() {
     final collides = secondaryEqualsPrimary(
       primaryRegisterId: widget.primaryRegisterId,
@@ -123,11 +125,14 @@ class _SecondaryClassificationFieldsState
       secondarySubcategoryId: _subcategoryId,
     );
     if (!collides) return;
-    if (_registerId != null) {
-      _registerId = null;
-    } else if (_genreId != null) {
-      _genreId = null;
+    if (_subcategoryId != null) {
       _subcategoryId = null;
+    } else if (_registerId != null) {
+      _registerId = null;
+    } else {
+      // A collision with no subcategory and no register leaves the genre as
+      // the only field holding a value.
+      _genreId = null;
     }
   }
 
