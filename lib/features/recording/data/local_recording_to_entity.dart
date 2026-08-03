@@ -1,5 +1,6 @@
 import '../../../core/database/app_database.dart';
 import '../domain/entities/local_recording_entity.dart';
+import '../domain/entities/review_flag.dart';
 
 /// Single source of truth for the Drift row → domain entity projection. The
 /// repository watch streams and the list notifier both go through this so they
@@ -35,5 +36,6 @@ LocalRecordingEntity localRecordingToEntity(LocalRecording row) {
     splitFromId: row.splitFromId,
     splitIndex: row.splitIndex,
     splitSegmentCount: row.splitSegmentCount,
+    reviewFlags: decodeReviewFlags(row.reviewFlagsJson),
   );
 }

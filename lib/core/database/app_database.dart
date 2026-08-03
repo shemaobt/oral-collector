@@ -47,6 +47,12 @@ class LocalRecordings extends Table {
   IntColumn get splitIndex => integer().nullable()();
   IntColumn get splitSegmentCount => integer().nullable()();
 
+  /// Server-reported review flags, JSON-encoded (ENG-374). Stored so a device
+  /// reading its local rows offline still knows what each recording owes;
+  /// encoded as text like `RecordingSessions.segmentPathsJson` rather than
+  /// through a converter, which is the existing shape for a list in this schema.
+  TextColumn get reviewFlagsJson => text().withDefault(const Constant('[]'))();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -132,7 +138,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 11;
+  int get schemaVersion => 12;
 
   @override
   MigrationStrategy get migration =>
@@ -233,5 +239,11 @@ final OnUpgrade _upgrade = stepByStep(
     await m.create(schema.idxRecordingsServerId);
     await m.create(schema.idxRecordingsStorytellerId);
     await m.create(schema.idxStorytellersProjectId);
+  },
+  from11To12: (m, schema) async {
+    await m.addColumn(
+      schema.localRecordings,
+      schema.localRecordings.reviewFlagsJson,
+    );
   },
 );

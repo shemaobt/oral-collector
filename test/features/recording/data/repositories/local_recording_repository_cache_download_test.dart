@@ -12,6 +12,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:oral_collector/core/database/app_database.dart';
 import 'package:oral_collector/features/recording/data/repositories/local_recording_repository.dart';
 import 'package:oral_collector/features/recording/domain/entities/local_recording_entity.dart';
+import 'package:oral_collector/features/recording/domain/entities/review_flag.dart';
 
 void main() {
   late AppDatabase db;
@@ -41,6 +42,7 @@ void main() {
     int? splitIndex,
     int? splitSegmentCount,
     String localFilePath = '',
+    List<ReviewFlag> reviewFlags = const [],
   }) {
     final now = DateTime.utc(2026, 5, 1, 10);
     return LocalRecordingEntity(
@@ -71,6 +73,7 @@ void main() {
       splitFromId: splitFromId,
       splitIndex: splitIndex,
       splitSegmentCount: splitSegmentCount,
+      reviewFlags: reviewFlags,
     );
   }
 
@@ -178,6 +181,47 @@ void main() {
     expect(saved!.splitFromId, 'parent-99');
     expect(saved.splitIndex, 2);
     expect(saved.splitSegmentCount, 5);
+  });
+
+  test('what the recording still owes reaches the row, so it survives '
+      'offline', () async {
+    final incoming = buildIncoming(
+      reviewFlags: const [
+        ReviewFlag(code: 'missing_classification', origin: 'system'),
+        ReviewFlag(code: 'missing_storyteller', origin: 'system'),
+      ],
+    );
+
+    await repo.cacheDownloadedAudio(
+      recording: incoming,
+      localFilePath: '/local/cache/rec-1.m4a',
+    );
+
+    final saved = await repo.getRecordingEntityById('rec-1');
+    expect(saved, isNotNull);
+    expect(saved!.reviewFlags, incoming.reviewFlags);
+  });
+
+  test('a row whose flags are no longer readable still yields the '
+      'recording', () async {
+    await repo.cacheDownloadedAudio(
+      recording: buildIncoming(
+        reviewFlags: const [
+          ReviewFlag(code: 'missing_storyteller', origin: 'system'),
+        ],
+      ),
+      localFilePath: '/local/cache/rec-1.m4a',
+    );
+
+    await db.customStatement(
+      "UPDATE local_recordings SET review_flags_json = 'not json at all' "
+      "WHERE id = 'rec-1'",
+    );
+
+    final saved = await repo.getRecordingEntityById('rec-1');
+    expect(saved, isNotNull);
+    expect(saved!.title, 'Recording title');
+    expect(saved.reviewFlags, isEmpty);
   });
 
   test('is idempotent across repeated calls with different paths', () async {

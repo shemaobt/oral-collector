@@ -81,6 +81,7 @@ LocalRecording makeRecording({
 }) {
   return LocalRecording(
     id: id,
+    reviewFlagsJson: '[]',
     projectId: projectId,
     genreId: genreId,
     subcategoryId: subcategoryId,

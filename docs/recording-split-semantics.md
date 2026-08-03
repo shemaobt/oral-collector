@@ -40,6 +40,7 @@ Two implementations write child rows independently — the Flutter client (`_sav
 | `recordedAt` / `recorded_at` | inherit | parent.recordedAt |
 | `retryCount` (client) | reset | `0` |
 | `lastRetryAt` (client) | reset | `null` |
+| `reviewFlagsJson` (client-only column) | reset | `'[]'` — a child is a new local recording, so it starts owing nothing; the server has not evaluated it yet |
 | `uploaded_at` (server) | new value | `datetime.now(UTC)` — server already has the file in GCS |
 | `createdAt` / `created_at` | new value | "now" |
 | `updated_at` (server) | new value | "now" |

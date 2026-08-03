@@ -88,6 +88,7 @@ class _FakeProjectNotifier extends ProjectNotifier {
 
 LocalRecording _makeRecording(String id) => LocalRecording(
   id: id,
+  reviewFlagsJson: '[]',
   projectId: 'proj-1',
   genreId: 'genre-1',
   title: 'Recording $id',

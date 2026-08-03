@@ -7,6 +7,7 @@ void main() {
     test('carries every recording-level field from the row', () {
       final row = LocalRecording(
         id: 'id-1',
+        reviewFlagsJson: '[]',
         projectId: 'proj-1',
         genreId: 'genre-1',
         subcategoryId: 'subcat-1',

@@ -3,6 +3,7 @@ import 'package:drift/drift.dart';
 import '../../../../core/database/app_database.dart';
 import '../../domain/entities/classification.dart';
 import '../../domain/entities/local_recording_entity.dart';
+import '../../domain/entities/review_flag.dart';
 import '../local_recording_entity_to_companion.dart';
 import '../local_recording_to_entity.dart';
 
@@ -386,6 +387,9 @@ class LocalRecordingRepository {
                 splitFromId: Value(recording.splitFromId),
                 splitIndex: Value(recording.splitIndex),
                 splitSegmentCount: Value(recording.splitSegmentCount),
+                reviewFlagsJson: Value(
+                  encodeReviewFlags(recording.reviewFlags),
+                ),
               ),
             );
       }
