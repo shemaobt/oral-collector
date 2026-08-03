@@ -1,4 +1,6 @@
+import '../../../../core/serialization/parse_list.dart';
 import '../../../../core/serialization/safe_read.dart';
+import 'review_flag.dart';
 
 class ServerRecording {
   final String id;
@@ -24,6 +26,7 @@ class ServerRecording {
   final String? splitFromId;
   final int? splitIndex;
   final int? splitSegmentCount;
+  final List<ReviewFlag> reviewFlags;
 
   const ServerRecording({
     required this.id,
@@ -49,7 +52,34 @@ class ServerRecording {
     this.splitFromId,
     this.splitIndex,
     this.splitSegmentCount,
+    this.reviewFlags = const [],
   });
+
+  /// A server that predates ENG-373 omits the key, and a serializer may send it
+  /// as null; neither is a broken payload, so both read as "owes nothing".
+  ///
+  /// A value that is not a list at all reads the same way. [parseList] would
+  /// throw for that shape, and the throw would escape `fromJson` and cost the
+  /// caller the entire recording — dropped from the list, or a failed detail
+  /// load. The flags are advisory, so losing them must never cost the user the
+  /// recording they describe. Malformed *elements* are still dropped
+  /// individually by [parseList], which is the same policy one level down.
+  ///
+  /// No `onSkip` reporter is passed here (ENG-166): this runs inside a
+  /// `fromJson` factory that is itself handed to an outer `parseList` as a
+  /// tear-off, so no reporter can reach it without changing the factory's
+  /// signature. Deliberate, not forgotten.
+  static List<ReviewFlag> _readReviewFlags(Map<String, dynamic> json) {
+    final raw = json['review_flags'];
+    if (raw is! List) return const [];
+    return List.unmodifiable(
+      parseList(
+        raw,
+        ReviewFlag.fromJson,
+        context: 'ServerRecording.reviewFlags',
+      ),
+    );
+  }
 
   factory ServerRecording.fromJson(Map<String, dynamic> json) {
     return ServerRecording(
@@ -76,6 +106,7 @@ class ServerRecording {
       splitFromId: json['split_from_id'] as String?,
       splitIndex: (json['split_index'] as num?)?.toInt(),
       splitSegmentCount: (json['split_segment_count'] as num?)?.toInt(),
+      reviewFlags: _readReviewFlags(json),
     );
   }
 }

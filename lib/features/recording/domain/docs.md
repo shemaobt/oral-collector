@@ -35,6 +35,25 @@ Path: @/lib/features/recording/domain
 - The entities — `Recording`, `ServerRecording`, `Register` — are the
   shared vocabulary. `ServerRecording` is the API DTO that the data layer
   maps to the local `LocalRecording` Drift row.
+- `ReviewFlag` ([./entities/review_flag.dart](entities/review_flag.dart),
+  ENG-374) models one thing the server says a recording still owes (e.g. no
+  classification, an insufficient description, no narrator). `code`/`origin`
+  are free strings rather than an enum, so a code this build has never heard
+  of still round-trips. The same file exposes `decodeReviewFlags`/
+  `encodeReviewFlags`, the JSON-text codec the data layer uses to persist the
+  list on the Drift row (see [../data/docs.md](../data/docs.md)).
+  `ServerRecording.reviewFlags` reads the API's `review_flags` array; a
+  missing key, a `null`, or any non-list value all read as "no flags" instead
+  of throwing, and a malformed element inside an otherwise-good list is
+  dropped individually via `parseList`
+  ([/lib/core/serialization/parse_list.dart](../../../core/serialization/parse_list.dart))
+  — the flags are advisory, so a parsing hiccup must never cost the recording
+  itself. `LocalRecordingEntity.reviewFlags` (default `const []`) is the read
+  side the UI will consume; it participates in `copyWith`, `==`, and
+  `hashCode` like every other field. The admin-facing `Recording` DTO
+  ([./entities/recording.dart](entities/recording.dart)) deliberately does
+  not carry this field — it belongs to a different feature and no admin
+  screen reads pending review state.
 - [`UpdateRecordingRequest`](entities/update_recording_request.dart) (ENG-205)
   is the PATCH-body params object for `updateRecording`: a plain `const` class
   with the thirteen optional update fields and a `toJson()` that builds the
@@ -143,6 +162,28 @@ Path: @/lib/features/recording/domain
   stream, so dedup keys on this `==` rather than the Drift row's generated
   equality. Without the override, each emission would be a fresh unequal object
   and `.distinct()` would never collapse anything.
+- **The equality check is split into private grouped comparisons
+  (`_sameSubject`, `_sameClassification`, `_sameAudio`, `_sameUpload`,
+  `_sameSplit`, ENG-374).** Adding `reviewFlags` pushed `operator ==` over the
+  `dart_code_linter` cyclomatic-complexity gate (the ratchet itself is
+  ENG-208). The grouping is by what each field describes, not by any
+  difference in comparison strategy — every field still participates in one
+  `&&` chain. `reviewFlags` needs its own helper, `_sameFlags`, for a
+  different reason: a `List` compares by identity, so two structurally
+  identical entities would otherwise read as unequal and the watch stream's
+  `.distinct()` would rebuild on every emission. `_sameFlags` is
+  order-sensitive, which relies on the server always emitting the flags in a
+  stable order.
+- **Two known gaps in `reviewFlags`, both deferred to the UI-facing PRs
+  (ENG-374 is data-plumbing only).** First, only the *insert* branch of
+  `LocalRecordingRepository.cacheDownloadedAudio` writes the field (see
+  [../data/repositories/docs.md](../data/repositories/docs.md)); a recording
+  this device already made and uploaded already has a local row, so it takes
+  the *update* branch (which only ever touches `localFilePath`) and its flags
+  stay at the `'[]'` default. Second, nothing clears a flag locally when the
+  user fixes what it flagged — online this is invisible because the entity is
+  rebuilt fresh from the server's response on every load, but an offline
+  device can show a stale flag after the underlying issue is already fixed.
 - **The entity deliberately drops the persistence internals `lastRetryAt`
   and `md5Hash`.** They are not fields the UI reads, and omitting them means
   a write touching only those produces an *equal* entity, which `.distinct()`

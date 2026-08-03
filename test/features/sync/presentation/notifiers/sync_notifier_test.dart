@@ -56,6 +56,7 @@ LocalRecording makeRecording({
   String localFilePath = '/tmp/test.m4a',
 }) => LocalRecording(
   id: id,
+  reviewFlagsJson: '[]',
   projectId: 'proj-1',
   genreId: 'genre-1',
   subcategoryId: null,

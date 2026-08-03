@@ -203,7 +203,12 @@ Path: @/lib/features/recording/data/repositories
   persistence internals the entity drops (`lastRetryAt`/`md5Hash`); absent →
   null is correct here because the recording is server-sourced with no prior
   local row. This is the same exhaustiveness the former `toCompanion(false)`
-  path gave, restated over the entity's fields.
+  path gave, restated over the entity's fields. As of ENG-374 the insert also
+  encodes `recording.reviewFlags` into `reviewFlagsJson`; the update branch
+  does not touch that column, so a recording this device already made and
+  uploaded — which already has a local row and so always takes the update
+  branch — keeps the `'[]'` default no matter what the server later reports.
+  That write path is a follow-up (see Things to Know).
 - `splitRecordingReplacingParent({parent, segments})` is the **atomic**
   replace used by the trim/split save (ENG-125): it inserts one child row per
   segment and deletes the parent row in **one** Drift transaction, so a partial
@@ -407,6 +412,14 @@ Path: @/lib/features/recording/data/repositories
   defeat `.distinct()` entirely. `.distinct()` still only collapses re-emissions;
   the query itself re-executes on every `local_recordings` write (table-level
   invalidation is inherent to Drift).
+- **`cacheDownloadedAudio` only writes `reviewFlags` on the insert branch
+  (ENG-374).** The update branch touches only `localFilePath` by design (see
+  above), so a device that made and already uploaded a recording — and
+  therefore already has a local row — never gets that column refreshed here;
+  its `reviewFlagsJson` stays at the `'[]'` default regardless of what the
+  server reports later. Writing flags on the update branch, and clearing a
+  flag once the user fixes what it names, are both left to the UI-facing
+  follow-up PRs — nothing in this repository invalidates a stale flag today.
 - **`upsertRecording` is what makes a failed web import retryable
   (ENG-80).** A large web import inserts a `web_<serverId>` shadow row to
   track resume state; on failure that row is intentionally left behind for

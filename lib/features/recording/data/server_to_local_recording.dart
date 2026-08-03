@@ -1,4 +1,5 @@
 import '../../../core/database/app_database.dart';
+import '../domain/entities/review_flag.dart';
 import '../domain/entities/server_recording.dart';
 
 /// Builds a [LocalRecording] from a [ServerRecording] preserving every
@@ -37,5 +38,6 @@ LocalRecording serverRecordingToLocal(ServerRecording server) {
     splitFromId: server.splitFromId,
     splitIndex: server.splitIndex,
     splitSegmentCount: server.splitSegmentCount,
+    reviewFlagsJson: encodeReviewFlags(server.reviewFlags),
   );
 }

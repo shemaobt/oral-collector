@@ -87,12 +87,19 @@ Path: @/lib/features/recording/data
   the single mapper from `ServerRecording` to `LocalRecording`. It exists
   precisely so callers like the detail screen and the trim editor cannot
   silently diverge on which fields they carry — divergence is the ENG-64
-  root cause.
+  root cause. As of ENG-374 it also carries `reviewFlags`, JSON-encoding the
+  list into the `reviewFlagsJson` column via `encodeReviewFlags`
+  ([../domain/entities/review_flag.dart](../domain/entities/review_flag.dart)).
 - `local_recording_to_entity.dart` exposes `localRecordingToEntity(row)`, the
   single mapper from the Drift `LocalRecording` row to the domain
   `LocalRecordingEntity`
   ([../domain/entities/local_recording_entity.dart](../domain/entities/local_recording_entity.dart)),
-  deliberately dropping the persistence internals `lastRetryAt`/`md5Hash`. It is
+  deliberately dropping the persistence internals `lastRetryAt`/`md5Hash`. As
+  of ENG-374 it decodes `row.reviewFlagsJson` back into `List<ReviewFlag>` via
+  `decodeReviewFlags`, which reads an empty or invalid string as no flags
+  rather than throwing — a row from a build older than the column, or one
+  whose text is somehow no longer valid JSON, must not take the whole
+  recording down with it. It is
   the one source of truth for the row→entity projection (ENG-195): the
   repository's `_fromRow` (the entity watch stream, see
   [./repositories/docs.md](repositories/docs.md)), the recordings-list notifier,
@@ -387,6 +394,10 @@ Path: @/lib/features/recording/data
   [/test/features/recording/data/](../../../../test/features/recording/data/).
   The checklist is reproduced at the bottom of
   [/docs/recording-split-semantics.md](../../../../docs/recording-split-semantics.md).
+  `reviewFlagsJson` (ENG-374) is not this kind of column — it is
+  server-owned advisory state with a non-null default, not device-entered
+  metadata, so it is exempt from healing and from split propagation (a split
+  child resets it to `'[]'` — see the propagation table in that doc).
 - **The header probe exists to survive the web player's 5 MB cap.** On web
   the player slices only the first 5 MB; progressive phone recorders
   (Samsung/Android) write the MP4/M4A `moov` index at the END of the file, so
