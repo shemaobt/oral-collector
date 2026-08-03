@@ -233,6 +233,50 @@ Path: @/lib/features/recording/presentation
   (`recording_statusDescriptionTooShort`), and the *pending* filter includes it.
   The status section's plain retry affordance deliberately does **not**, since a
   bare retry would hit the same pre-flight.
+- **The "what does this recording still owe" prompt is a guided flow, not a
+  banner (ENG-374).** The detail screen no longer renders a classify banner.
+  `Scaffold.body` is now a `Stack`: the base layer is the existing wide/phone
+  `LayoutBuilder` split (unchanged), and the top layer is `CompleteFichaOverlay`
+  ([./widgets/complete_ficha_overlay.dart](widgets/complete_ficha_overlay.dart)),
+  which `Positioned`s the pill (`CompleteFichaPill`,
+  [./widgets/complete_ficha_pill.dart](widgets/complete_ficha_pill.dart))
+  outside every scrollable so it stays reachable regardless of scroll
+  position. The overlay owns all three of the pill's placement rules, because
+  each of them is about something else already occupying that corner of the
+  screen: it adds `MediaQuery.paddingOf(context).bottom` to its offset (the
+  `Scaffold` body runs under the home indicator, and the pill would otherwise
+  reach into the system gesture area); it uses a much larger offset on the wide
+  layout, where the docked player strip sits at the bottom edge and a pill
+  landing on it would put an `InkWell` over the seek slider; and it constrains
+  the pill with a `Padding` + `Flexible` pair, since `Positioned(left: 0,
+  right: 0)` pins the `Row` but a `Row` still hands *unbounded* width to a
+  non-flexible child, which is what let the count badge spill off-screen under
+  a large font. The phone layout's bottom scroll reserve comes from the same
+  place (`CompleteFichaOverlay.scrollReserve`, 96px plus the gesture inset) so
+  the last card clears the pill. The pill is gated on `_canEditRecording` (a user who
+  cannot edit never sees it, not even the count) and renders nothing when
+  there is nothing open. Its count and the sheet it opens both come from
+  `recordingPendencies(recording)`
+  ([../domain/entities/review_pendency.dart](../domain/entities/review_pendency.dart)),
+  the one function that turns the server's flags (once the recording has a
+  `serverId`) or the local classification/description/storyteller fields
+  (before that) into an ordered list of steps. Tapping the pill opens
+  `CompleteFichaSheet`
+  ([./widgets/complete_ficha_sheet.dart](widgets/complete_ficha_sheet.dart)) in
+  a modal bottom sheet; `_onFichaStep` routes each step to the existing editor
+  (`_classifyRecording`, `_openEditDetails`, or the new `_pickStoryteller`,
+  which now owns opening `showStorytellerPickerSheet` directly — the section
+  widget takes an `onEditStoryteller` callback instead of building its own
+  picker call, so the sheet and the section's "assign"/"reassign" controls
+  share one entry point). The step list itself is frozen at open time so the
+  sheet's ordering never reshuffles under the user's finger; only which steps
+  count as *resolved* is recomputed, by a `Consumer` that re-reads
+  `recordingDetailProvider` and diffs against the frozen list on every
+  rebuild — a step is crossed off only once it drops out of a fresh
+  `recordingPendencies` read. Because that requires the entity to be rebuilt
+  from the server, this works online (every successful edit reloads it) but
+  **cannot complete a step while offline** — the edit call fails before the
+  entity is ever refreshed.
 - `notifiers/` holds the Riverpod notifiers for the recording list,
   recording flow, and detail-screen playback (see
   [./notifiers/docs.md](notifiers/docs.md)); `widgets/` holds the
@@ -384,6 +428,20 @@ Path: @/lib/features/recording/presentation
   where the player lived inside a `StatefulWidget` State and was
   disposed by this swap mid-playback; the fix hoists it into
   `RecordingPlayerNotifier`.
+- **The guided-completion flow is tested through its widgets, never through the
+  screen (ENG-374).** `RecordingDetailScreen` cannot be pumped in its loaded
+  state in a widget test — the hero player takes near-unbounded height under
+  the test font (see above) — so `_onFichaStep`'s wiring to the real
+  `_classifyRecording`/`_openEditDetails`/`_pickStoryteller` handlers stays
+  unverified by any test. Everything geometric was pulled out into
+  `CompleteFichaOverlay` precisely so it *could* be tested: its placement
+  against a wide-layout player strip and against the home-indicator inset is
+  covered in
+  [/test/features/recording/presentation/widgets/complete_ficha_overlay_test.dart](../../../../test/features/recording/presentation/widgets/complete_ficha_overlay_test.dart),
+  and both widgets are covered at 1.0x/1.5x/2.0x (en, fr, pt) in
+  `complete_ficha_pill_text_scale_test.dart` and
+  `complete_ficha_sheet_text_scale_test.dart`. Behaviour lives in
+  [/test/features/recording/presentation/widgets/complete_ficha_test.dart](../../../../test/features/recording/presentation/widgets/complete_ficha_test.dart).
 - **Secondary-classification collision is prevented, not validated
   (ENG-72).** A secondary classification is invalid only when its whole
   `(register, genre, subcategory)` triple is identical to the primary

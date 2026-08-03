@@ -1883,10 +1883,6 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get classify_action => 'Makim Kain';
 
   @override
-  String get classify_banner =>
-      'Dispela rekoding i no gat kain yet. Paitim Makim Kain bilong putim kain na rejista.';
-
-  @override
   String get classify_success => 'Rekoding i gat kain pinis';
 
   @override
@@ -2644,4 +2640,48 @@ class AppLocalizationsTpi extends AppLocalizations {
 
   @override
   String get liveActivity_uploadingStatus => 'Aplotim';
+
+  @override
+  String get recording_completeFicha => 'Pinisim ol samting';
+
+  @override
+  String get recording_completeFichaTitle => 'Pinisim ol samting';
+
+  @override
+  String recording_completeFichaSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count samting i no stap yet. Yu ken putim nau o kam bek bihain.',
+      one: '1 samting i no stap yet. Yu ken putim nau o kam bek bihain.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recording_completeFichaStart => 'Statim';
+
+  @override
+  String get recording_completeFichaContinue => 'Go het';
+
+  @override
+  String get recording_pendencyClassification => 'I no makim kain yet';
+
+  @override
+  String get recording_pendencyClassificationContext =>
+      'Kain na rejista i soim wanem kain stori dispela i stap.';
+
+  @override
+  String get recording_pendencyDescription => 'Stori i sotpela tumas';
+
+  @override
+  String get recording_pendencyDescriptionContext =>
+      'Sampela toktok long wanem samting i kamap long rekoding.';
+
+  @override
+  String get recording_pendencyStoryteller => 'I no gat stori man';
+
+  @override
+  String get recording_pendencyStorytellerContext =>
+      'Husat i tokim dispela stori.';
 }

@@ -12,6 +12,7 @@ class AppColorSet extends ThemeExtension<AppColorSet> {
   final Color infoText;
   final Color success;
   final Color successText;
+  final Color onPrimary;
   final Color warning;
   final Color border;
   final Color error;
@@ -28,6 +29,7 @@ class AppColorSet extends ThemeExtension<AppColorSet> {
     required this.infoText,
     required this.success,
     required this.successText,
+    required this.onPrimary,
     required this.warning,
     required this.border,
     required this.error,
@@ -46,6 +48,7 @@ class AppColorSet extends ThemeExtension<AppColorSet> {
     Color? infoText,
     Color? success,
     Color? successText,
+    Color? onPrimary,
     Color? warning,
     Color? border,
     Color? error,
@@ -62,6 +65,7 @@ class AppColorSet extends ThemeExtension<AppColorSet> {
       infoText: infoText ?? this.infoText,
       success: success ?? this.success,
       successText: successText ?? this.successText,
+      onPrimary: onPrimary ?? this.onPrimary,
       warning: warning ?? this.warning,
       border: border ?? this.border,
       error: error ?? this.error,
@@ -83,6 +87,7 @@ class AppColorSet extends ThemeExtension<AppColorSet> {
       infoText: Color.lerp(infoText, other.infoText, t)!,
       success: Color.lerp(success, other.success, t)!,
       successText: Color.lerp(successText, other.successText, t)!,
+      onPrimary: Color.lerp(onPrimary, other.onPrimary, t)!,
       warning: Color.lerp(warning, other.warning, t)!,
       border: Color.lerp(border, other.border, t)!,
       error: Color.lerp(error, other.error, t)!,
@@ -104,6 +109,7 @@ class AppColorSet extends ThemeExtension<AppColorSet> {
         other.infoText == infoText &&
         other.success == success &&
         other.successText == successText &&
+        other.onPrimary == onPrimary &&
         other.warning == warning &&
         other.border == border &&
         other.error == error;
@@ -122,6 +128,7 @@ class AppColorSet extends ThemeExtension<AppColorSet> {
     infoText,
     success,
     successText,
+    onPrimary,
     warning,
     border,
     error,
@@ -148,6 +155,12 @@ abstract class AppColors {
   static const Color infoText = Color(0xFF4D6F68);
   static const Color success = brandVerdeClaro;
   static const Color successText = Color(0xFF5D6233);
+
+  /// Text and icons drawn on top of [primary]. The off-white brand tone, not
+  /// pure white: `colorScheme.onPrimary` is #FFFFFF and reads colder than the
+  /// palette everywhere primary is used as a filled surface.
+  static const Color onPrimary = brandBranco;
+  static const Color darkOnPrimary = darkBackground;
   static const Color warning = Color(0xFFFFA000);
   static const Color border = brandAreia;
   static const Color error = Color(0xFFB91C1C);
@@ -207,6 +220,7 @@ abstract class AppColors {
     infoText: infoText,
     success: success,
     successText: successText,
+    onPrimary: onPrimary,
     warning: warning,
     border: border,
     error: error,
@@ -224,6 +238,7 @@ abstract class AppColors {
     infoText: darkInfoText,
     success: darkSuccess,
     successText: darkSuccessText,
+    onPrimary: darkOnPrimary,
     warning: darkWarning,
     border: darkBorder,
     error: error,

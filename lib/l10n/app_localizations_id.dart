@@ -1900,10 +1900,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get classify_action => 'Klasifikasi';
 
   @override
-  String get classify_banner =>
-      'Rekaman ini belum diklasifikasi. Ketuk Klasifikasi untuk menambahkan genre dan register.';
-
-  @override
   String get classify_success => 'Rekaman diklasifikasi';
 
   @override
@@ -2666,4 +2662,48 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get liveActivity_uploadingStatus => 'Mengunggah';
+
+  @override
+  String get recording_completeFicha => 'Lengkapi detail';
+
+  @override
+  String get recording_completeFichaTitle => 'Lengkapi detail';
+
+  @override
+  String recording_completeFichaSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count bidang masih kosong. Isi sekarang atau lanjutkan nanti.',
+      one: '1 bidang masih kosong. Isi sekarang atau lanjutkan nanti.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recording_completeFichaStart => 'Mulai';
+
+  @override
+  String get recording_completeFichaContinue => 'Lanjutkan';
+
+  @override
+  String get recording_pendencyClassification => 'Belum diklasifikasi';
+
+  @override
+  String get recording_pendencyClassificationContext =>
+      'Genre dan register menunjukkan jenis cerita ini.';
+
+  @override
+  String get recording_pendencyDescription => 'Deskripsi terlalu singkat';
+
+  @override
+  String get recording_pendencyDescriptionContext =>
+      'Beberapa kata tentang apa yang terjadi dalam rekaman.';
+
+  @override
+  String get recording_pendencyStoryteller => 'Belum ada pencerita';
+
+  @override
+  String get recording_pendencyStorytellerContext =>
+      'Siapa yang menceritakan kisah ini.';
 }

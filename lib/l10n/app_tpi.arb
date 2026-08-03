@@ -620,7 +620,6 @@
   "quickRecord_classifyLater": "Makim kain bihain",
   "classify_title": "Makim Kain bilong Rekoding",
   "classify_action": "Makim Kain",
-  "classify_banner": "Dispela rekoding i no gat kain yet. Paitim Makim Kain bilong putim kain na rejista.",
   "classify_success": "Rekoding i gat kain pinis",
   "classify_register": "Rejista",
   "classify_selectRegister": "Makim rejista",
@@ -970,5 +969,16 @@
   "upload_pausedWhileRecording": "Aplotim i wet taim rekodim",
   "liveActivity_recordingStatus": "Rekodim",
   "liveActivity_recordingPausedStatus": "Rekodim i wet",
-  "liveActivity_uploadingStatus": "Aplotim"
+  "liveActivity_uploadingStatus": "Aplotim",
+  "recording_completeFicha": "Pinisim ol samting",
+  "recording_completeFichaTitle": "Pinisim ol samting",
+  "recording_completeFichaSubtitle": "{count, plural, =1{1 samting i no stap yet. Yu ken putim nau o kam bek bihain.} other{{count} samting i no stap yet. Yu ken putim nau o kam bek bihain.}}",
+  "recording_completeFichaStart": "Statim",
+  "recording_completeFichaContinue": "Go het",
+  "recording_pendencyClassification": "I no makim kain yet",
+  "recording_pendencyClassificationContext": "Kain na rejista i soim wanem kain stori dispela i stap.",
+  "recording_pendencyDescription": "Stori i sotpela tumas",
+  "recording_pendencyDescriptionContext": "Sampela toktok long wanem samting i kamap long rekoding.",
+  "recording_pendencyStoryteller": "I no gat stori man",
+  "recording_pendencyStorytellerContext": "Husat i tokim dispela stori."
 }

@@ -1918,10 +1918,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get classify_action => 'Classer';
 
   @override
-  String get classify_banner =>
-      'Cet enregistrement n\'est pas classé. Appuyez sur Classer pour ajouter un genre et un registre.';
-
-  @override
   String get classify_success => 'Enregistrement classé';
 
   @override
@@ -2694,4 +2690,50 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get liveActivity_uploadingStatus => 'Téléversement';
+
+  @override
+  String get recording_completeFicha => 'Compléter la fiche';
+
+  @override
+  String get recording_completeFichaTitle => 'Complétez la fiche';
+
+  @override
+  String recording_completeFichaSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count champs restent à remplir. Remplissez-les maintenant ou revenez plus tard.',
+      one:
+          '1 champ reste à remplir. Remplissez-le maintenant ou revenez plus tard.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recording_completeFichaStart => 'Commencer';
+
+  @override
+  String get recording_completeFichaContinue => 'Continuer';
+
+  @override
+  String get recording_pendencyClassification => 'Pas de classification';
+
+  @override
+  String get recording_pendencyClassificationContext =>
+      'Le genre et le registre indiquent de quel type de récit il s\'agit.';
+
+  @override
+  String get recording_pendencyDescription => 'Description trop courte';
+
+  @override
+  String get recording_pendencyDescriptionContext =>
+      'Quelques mots sur ce qui se passe dans l\'enregistrement.';
+
+  @override
+  String get recording_pendencyStoryteller => 'Pas de narrateur';
+
+  @override
+  String get recording_pendencyStorytellerContext =>
+      'Qui raconte cette histoire.';
 }

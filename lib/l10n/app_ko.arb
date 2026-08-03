@@ -620,7 +620,6 @@
   "quickRecord_classifyLater": "나중에 분류",
   "classify_title": "녹음 분류",
   "classify_action": "분류",
-  "classify_banner": "이 녹음은 분류되지 않았습니다. 분류를 탭하여 장르와 사용역을 추가하세요.",
   "classify_success": "녹음이 분류되었습니다",
   "classify_register": "사용역",
   "classify_selectRegister": "사용역 선택",
@@ -970,5 +969,16 @@
   "upload_pausedWhileRecording": "녹음 중 업로드 일시 중지됨",
   "liveActivity_recordingStatus": "녹음 중",
   "liveActivity_recordingPausedStatus": "녹음 일시 중지",
-  "liveActivity_uploadingStatus": "업로드 중"
+  "liveActivity_uploadingStatus": "업로드 중",
+  "recording_completeFicha": "정보 완성하기",
+  "recording_completeFichaTitle": "정보 완성하기",
+  "recording_completeFichaSubtitle": "{count, plural, =1{항목 1개가 남아 있습니다. 지금 채우거나 나중에 이어서 하세요.} other{항목 {count}개가 남아 있습니다. 지금 채우거나 나중에 이어서 하세요.}}",
+  "recording_completeFichaStart": "시작",
+  "recording_completeFichaContinue": "계속",
+  "recording_pendencyClassification": "미분류",
+  "recording_pendencyClassificationContext": "장르와 사용역이 이 이야기의 종류를 알려 줍니다.",
+  "recording_pendencyDescription": "설명이 너무 짧음",
+  "recording_pendencyDescriptionContext": "녹음에서 무슨 일이 일어나는지 몇 마디로 적어 주세요.",
+  "recording_pendencyStoryteller": "화자 없음",
+  "recording_pendencyStorytellerContext": "이 이야기를 들려주는 사람입니다."
 }

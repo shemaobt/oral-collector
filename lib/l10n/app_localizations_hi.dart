@@ -1900,10 +1900,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get classify_action => 'वर्गीकृत करें';
 
   @override
-  String get classify_banner =>
-      'यह रिकॉर्डिंग अवर्गीकृत है। शैली और रजिस्टर जोड़ने के लिए वर्गीकृत करें पर टैप करें।';
-
-  @override
   String get classify_success => 'रिकॉर्डिंग वर्गीकृत हो गई';
 
   @override
@@ -2665,4 +2661,48 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get liveActivity_uploadingStatus => 'अपलोड हो रहा है';
+
+  @override
+  String get recording_completeFicha => 'विवरण पूरा करें';
+
+  @override
+  String get recording_completeFichaTitle => 'विवरण पूरा करें';
+
+  @override
+  String recording_completeFichaSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count फ़ील्ड अभी बाकी हैं। इन्हें अभी भरें या बाद में पूरा करें।',
+      one: '1 फ़ील्ड अभी बाकी है। इसे अभी भरें या बाद में पूरा करें।',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recording_completeFichaStart => 'शुरू करें';
+
+  @override
+  String get recording_completeFichaContinue => 'जारी रखें';
+
+  @override
+  String get recording_pendencyClassification => 'कोई वर्गीकरण नहीं';
+
+  @override
+  String get recording_pendencyClassificationContext =>
+      'विधा और भाषा शैली बताती हैं कि यह किस तरह की कहानी है।';
+
+  @override
+  String get recording_pendencyDescription => 'विवरण बहुत छोटा है';
+
+  @override
+  String get recording_pendencyDescriptionContext =>
+      'रिकॉर्डिंग में क्या होता है, इस बारे में कुछ शब्द।';
+
+  @override
+  String get recording_pendencyStoryteller => 'कोई कथाकार नहीं';
+
+  @override
+  String get recording_pendencyStorytellerContext => 'यह कहानी कौन सुनाता है।';
 }

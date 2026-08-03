@@ -57,11 +57,29 @@ Path: @/lib/core/theme
   for legible text-on-tint; `warning` and `error` are single tokens with no text
   pair (callers tint both icon and label with the one color). `warning` is the
   caution/attention color (amber/orange): it backs the unclassified affordances
-  (FABs, badges, breadcrumbs, the classify banner), `ForbiddenException`
+  (FABs, badges, breadcrumbs), `ForbiddenException`
   permission snackbars, and the `needs_cleaning` cleaning state via
   [/lib/shared/utils/cleaning_status_style.dart](/lib/shared/utils/cleaning_status_style.dart).
   It replaced the previously hardcoded `Colors.amber.shade700` / `Colors.orange`
-  literals so those surfaces now adapt to dark mode.
+  literals so those surfaces now adapt to dark mode. The recording detail
+  screen's classify banner used to be one of the warning-tinted unclassified
+  affordances; ENG-374 replaced it with the guided completion pill/sheet
+  described in
+  [/lib/features/recording/presentation/docs.md](/lib/features/recording/presentation/docs.md),
+  which is deliberately primary-toned instead — an unfinished ficha is framed
+  as work left to do, not a warning.
+- `onPrimary` (ENG-374) is the content color for text/icons drawn on a
+  `primary`-filled surface, e.g. the recording detail screen's
+  `CompleteFichaPill`/`CompleteFichaSheet`
+  ([/lib/features/recording/presentation/widgets/complete_ficha_pill.dart](/lib/features/recording/presentation/widgets/complete_ficha_pill.dart)).
+  It is deliberately a different token from
+  `Theme.of(context).colorScheme.onPrimary` (the Material `ColorScheme` field
+  set in [app_theme.dart](app_theme.dart), still pure `Colors.white` in both
+  themes — see the typography bullet below): `AppColorSet.onPrimary` is the
+  off-white brand tone `brandBranco` (`darkOnPrimary` in dark mode is
+  `darkBackground`), because pure white reads colder than the rest of the
+  palette wherever `primary` is used as a filled app surface rather than the
+  `ColorScheme`'s own chrome.
 - Spacing/radii/motion/opacity consumers reference the `const` scale directly
   (e.g. `SpacingScale.s16`, `RadiusScale.r12`, `DurationScale.ms200`,
   `OpacityScale.o40`) or the `context.spacing` / `.radii` / `.durations` /
@@ -225,7 +243,8 @@ SpacingScale/RadiusScale/DurationScale/OpacityScale ─► AppSpacing/AppRadii/A
   the same reason styles used on a colored chrome — e.g. nav items / badges on the
   primary surface — `copyWith(color: colorScheme.onPrimary)`; `onPrimary` is the
   one token that is pure white in both light and dark, so it preserves a former
-  `Colors.white` literal value-for-value.)
+  `Colors.white` literal value-for-value. This is the `ColorScheme` field, not
+  the `AppColorSet.onPrimary` semantic token added in ENG-374 — see above.)
 - **`DurationScale` is motion-only.** I/O timeouts, logic timers, and
   snackbar/feedback display durations are excluded and remain raw `Duration`s.
 - **Two migration passes, two contracts.** The *value-identical* passes

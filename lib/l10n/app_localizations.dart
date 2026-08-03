@@ -3434,12 +3434,6 @@ abstract class AppLocalizations {
   /// **'Classify'**
   String get classify_action;
 
-  /// No description provided for @classify_banner.
-  ///
-  /// In en, this message translates to:
-  /// **'This recording is unclassified. Tap Classify to add a genre and register.'**
-  String get classify_banner;
-
   /// No description provided for @classify_success.
   ///
   /// In en, this message translates to:
@@ -4717,6 +4711,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Uploading'**
   String get liveActivity_uploadingStatus;
+
+  /// Label on the pill that opens the guided completion flow for a recording's ficha (ENG-374).
+  ///
+  /// In en, this message translates to:
+  /// **'Complete details'**
+  String get recording_completeFicha;
+
+  /// Title of the guided completion sheet (ENG-374).
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the details'**
+  String get recording_completeFichaTitle;
+
+  /// Subtitle of the guided completion sheet: how many steps it holds, plus the reassurance that the user may leave and return.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 detail is still open. Fill it in now, or come back to it later.} other{{count} details are still open. Fill them in now, or come back to them later.}}'**
+  String recording_completeFichaSubtitle(int count);
+
+  /// Primary action of the completion sheet when no step has been resolved yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get recording_completeFichaStart;
+
+  /// Primary action of the completion sheet once at least one step has been resolved.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get recording_completeFichaContinue;
+
+  /// Step title: the recording has no genre/register yet. Names the gap, never blames the user.
+  ///
+  /// In en, this message translates to:
+  /// **'No classification'**
+  String get recording_pendencyClassification;
+
+  /// Step context line explaining why the classification matters.
+  ///
+  /// In en, this message translates to:
+  /// **'Genre and register say what kind of story this is.'**
+  String get recording_pendencyClassificationContext;
+
+  /// Step title: the recording's description does not meet the minimum.
+  ///
+  /// In en, this message translates to:
+  /// **'Description too short'**
+  String get recording_pendencyDescription;
+
+  /// Step context line explaining what the description should contain.
+  ///
+  /// In en, this message translates to:
+  /// **'A few words about what happens in the recording.'**
+  String get recording_pendencyDescriptionContext;
+
+  /// Step title: no storyteller is assigned to the recording.
+  ///
+  /// In en, this message translates to:
+  /// **'No storyteller'**
+  String get recording_pendencyStoryteller;
+
+  /// Step context line explaining what the storyteller field is for.
+  ///
+  /// In en, this message translates to:
+  /// **'Who tells this story.'**
+  String get recording_pendencyStorytellerContext;
 }
 
 class _AppLocalizationsDelegate

@@ -620,7 +620,6 @@
   "quickRecord_classifyLater": "Classer plus tard",
   "classify_title": "Classer l'Enregistrement",
   "classify_action": "Classer",
-  "classify_banner": "Cet enregistrement n'est pas classé. Appuyez sur Classer pour ajouter un genre et un registre.",
   "classify_success": "Enregistrement classé",
   "classify_register": "Registre",
   "classify_selectRegister": "Sélectionner le registre",
@@ -970,5 +969,16 @@
   "upload_pausedWhileRecording": "Téléversement en pause pendant l'enregistrement",
   "liveActivity_recordingStatus": "Enregistrement",
   "liveActivity_recordingPausedStatus": "Enregistrement en pause",
-  "liveActivity_uploadingStatus": "Téléversement"
+  "liveActivity_uploadingStatus": "Téléversement",
+  "recording_completeFicha": "Compléter la fiche",
+  "recording_completeFichaTitle": "Complétez la fiche",
+  "recording_completeFichaSubtitle": "{count, plural, =1{1 champ reste à remplir. Remplissez-le maintenant ou revenez plus tard.} other{{count} champs restent à remplir. Remplissez-les maintenant ou revenez plus tard.}}",
+  "recording_completeFichaStart": "Commencer",
+  "recording_completeFichaContinue": "Continuer",
+  "recording_pendencyClassification": "Pas de classification",
+  "recording_pendencyClassificationContext": "Le genre et le registre indiquent de quel type de récit il s'agit.",
+  "recording_pendencyDescription": "Description trop courte",
+  "recording_pendencyDescriptionContext": "Quelques mots sur ce qui se passe dans l'enregistrement.",
+  "recording_pendencyStoryteller": "Pas de narrateur",
+  "recording_pendencyStorytellerContext": "Qui raconte cette histoire."
 }

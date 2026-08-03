@@ -620,7 +620,6 @@
   "quickRecord_classifyLater": "बाद में वर्गीकृत करें",
   "classify_title": "रिकॉर्डिंग वर्गीकृत करें",
   "classify_action": "वर्गीकृत करें",
-  "classify_banner": "यह रिकॉर्डिंग अवर्गीकृत है। शैली और रजिस्टर जोड़ने के लिए वर्गीकृत करें पर टैप करें।",
   "classify_success": "रिकॉर्डिंग वर्गीकृत हो गई",
   "classify_register": "रजिस्टर",
   "classify_selectRegister": "रजिस्टर चुनें",
@@ -970,5 +969,16 @@
   "upload_pausedWhileRecording": "रिकॉर्डिंग के दौरान अपलोड रोका गया",
   "liveActivity_recordingStatus": "रिकॉर्डिंग",
   "liveActivity_recordingPausedStatus": "रिकॉर्डिंग रोकी गई",
-  "liveActivity_uploadingStatus": "अपलोड हो रहा है"
+  "liveActivity_uploadingStatus": "अपलोड हो रहा है",
+  "recording_completeFicha": "विवरण पूरा करें",
+  "recording_completeFichaTitle": "विवरण पूरा करें",
+  "recording_completeFichaSubtitle": "{count, plural, =1{1 फ़ील्ड अभी बाकी है। इसे अभी भरें या बाद में पूरा करें।} other{{count} फ़ील्ड अभी बाकी हैं। इन्हें अभी भरें या बाद में पूरा करें।}}",
+  "recording_completeFichaStart": "शुरू करें",
+  "recording_completeFichaContinue": "जारी रखें",
+  "recording_pendencyClassification": "कोई वर्गीकरण नहीं",
+  "recording_pendencyClassificationContext": "विधा और भाषा शैली बताती हैं कि यह किस तरह की कहानी है।",
+  "recording_pendencyDescription": "विवरण बहुत छोटा है",
+  "recording_pendencyDescriptionContext": "रिकॉर्डिंग में क्या होता है, इस बारे में कुछ शब्द।",
+  "recording_pendencyStoryteller": "कोई कथाकार नहीं",
+  "recording_pendencyStorytellerContext": "यह कहानी कौन सुनाता है।"
 }

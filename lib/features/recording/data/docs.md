@@ -153,16 +153,6 @@ Path: @/lib/features/recording/data
   `storytellerId=null`) survives a refresh. Server-controlled fields
   (`gcsUrl`, `uploadStatus`) are adopted whenever the server reports a
   `gcsUrl`, independent of the corruption marker.
-- `local_recording_classification.dart` is data-layer glue on the
-  `LocalRecording` row: the `RecordingClassification` extension whose
-  getters (`recording.isUnclassified`, `recording.hasSecondary`, …) read
-  the genre/register ids off the row and delegate to the pure domain
-  predicates in
-  [../domain/entities/classification.dart](../domain/entities/classification.dart).
-  It lives here (not in domain) because the extension legitimately depends
-  on Drift; domain stays Drift-free (ENG-175). Consumers that want the
-  ergonomic getters import this file; callers that only need the
-  `kUnclassifiedGenreId` sentinel import the domain file directly.
 - `supported_audio_formats.dart` is a static list of mime types and file
   extensions used by the file-import flow, plus `kMaxImportFileBytesWeb` (the
   10 GB web import ceiling enforced in
