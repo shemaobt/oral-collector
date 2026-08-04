@@ -1,0 +1,27 @@
+name: Joãozinho Review
+
+# Fires when @joaocarvoli is requested as a reviewer. All logic and the review
+# spec live in shemaobt/.github — edit there, not here.
+
+on:
+  pull_request:
+    types: [review_requested]
+
+permissions:
+  contents: read
+  pull-requests: write
+  id-token: write
+
+concurrency:
+  group: joaozinho-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  joaozinho:
+    uses: shemaobt/.github/.github/workflows/joaozinho-review.yml@main
+    with:
+      lens_pack: flutter-dart
+      app_id: ${{ vars.JOAOZINHO_APP_ID }}
+    secrets:
+      app_private_key: ${{ secrets.JOAOZINHO_APP_PRIVATE_KEY }}
+      claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
