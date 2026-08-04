@@ -28,15 +28,6 @@ void main() {
       expect(formatted, contains('16:20:08'));
     });
 
-    test('the weekday is gone, leaving only the clock', () {
-      // The card's date column already places the recording in time; the
-      // weekday here was a second reading of the same instant (ENG-382).
-      expect(
-        formatUntitledRecordingTime(afternoon, 'en'),
-        isNot(contains('Tuesday')),
-      );
-    });
-
     test('seconds survive, so recordings from one session stay distinct', () {
       final oneSecondLater = DateTime(2026, 3, 10, 16, 20, 9);
 

@@ -43,6 +43,15 @@ void main() {
       expect(c.error.toARGB32(), 0xFFB91C1C);
       expect(c.warning.toARGB32(), 0xFFE0A458);
     });
+
+    test('chipSurface is its own colour in light and surfaceAlt in dark', () {
+      // ENG-382 weighed retiring chipSurface and kept it on this measurement:
+      // the two tokens coincide in dark, so a card repainted with surfaceAlt
+      // would look right there and shift the chip a shade in light. Folding
+      // the field away is the change this test exists to catch.
+      expect(AppColors.light.chipSurface, isNot(AppColors.light.surfaceAlt));
+      expect(AppColors.dark.chipSurface, AppColors.dark.surfaceAlt);
+    });
   });
 
   group('AppColorSet ThemeExtension contract', () {

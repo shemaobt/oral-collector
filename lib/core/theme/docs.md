@@ -87,7 +87,12 @@ Path: @/lib/core/theme
   color reads as quieter than that panel tone; before this it was a fixed
   light constant living outside `AppColorSet`, which would have stayed light
   in dark mode. Its dark value is the existing `darkSurfaceAlt`, not a new
-  constant — no separate dark tone was specified.
+  constant — no separate dark tone was specified. ENG-382 weighed retiring the
+  token and kept it on that asymmetry, which
+  [/test/core/theme/app_colors_test.dart](/test/core/theme/app_colors_test.dart)
+  now pins: coinciding with `surfaceAlt` in dark and differing from it in
+  light is the whole reason the field exists, and a dark-mode check alone
+  would pass on a card that had swapped the token away.
 - Spacing/radii/motion/opacity consumers reference the `const` scale directly
   (e.g. `SpacingScale.s16`, `RadiusScale.r12`, `DurationScale.ms200`,
   `OpacityScale.o40`) or the `context.spacing` / `.radii` / `.durations` /

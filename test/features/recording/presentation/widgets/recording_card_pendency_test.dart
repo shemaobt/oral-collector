@@ -218,18 +218,4 @@ void main() {
       expect(text.semanticsLabel, isNull);
     });
   });
-
-  group('the title', () {
-    testWidgets('an untitled recording falls back to when it was made', (
-      tester,
-    ) async {
-      await pumpCard(tester, recording(title: null));
-
-      // The fallback has to identify the recording among its siblings, so it
-      // carries the time, not just a generic word.
-      // 'en' renders a 12-hour clock, so this also pins that the fallback
-      // follows the locale rather than a hard-coded 24-hour format.
-      expect(find.textContaining('4:20:08'), findsOneWidget);
-    });
-  });
 }

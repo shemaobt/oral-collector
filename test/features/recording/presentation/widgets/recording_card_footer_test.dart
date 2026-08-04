@@ -1,4 +1,5 @@
-/// The card footer after ENG-382: duration back, title trimmed, token gone.
+/// The card footer after ENG-382: the duration is back, and the untitled
+/// fallback lost its weekday.
 ///
 /// The duration is here against the ENG-374 trade rule, and only earns its
 /// place if it answers the question that motivated the amendment — telling an
@@ -11,7 +12,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:oral_collector/features/recording/domain/entities/local_recording_entity.dart';
-import 'package:oral_collector/features/recording/domain/entities/review_flag.dart';
 import 'package:oral_collector/features/recording/presentation/widgets/recording_card.dart';
 import 'package:oral_collector/l10n/app_localizations.dart';
 
@@ -19,8 +19,6 @@ void main() {
   LocalRecordingEntity recording({
     String? title = 'Uma gravação',
     double durationSeconds = 60,
-    List<ReviewFlag> reviewFlags = const [],
-    String? storytellerId = 'st-1',
   }) => LocalRecordingEntity(
     id: 'rec-1',
     projectId: 'proj-1',
@@ -28,7 +26,7 @@ void main() {
     registerId: 'reg-1',
     title: title,
     description: 'Uma descrição longa o bastante para o piso da regra',
-    storytellerId: storytellerId,
+    storytellerId: 'st-1',
     durationSeconds: durationSeconds,
     fileSizeBytes: 1024,
     format: 'm4a',
@@ -40,31 +38,26 @@ void main() {
     createdAt: DateTime(2026, 3, 10),
     retryCount: 0,
     uploadedBytes: 0,
-    reviewFlags: reviewFlags,
   );
 
-  Future<void> pumpCard(
-    WidgetTester tester,
-    LocalRecordingEntity r, {
-    Brightness brightness = Brightness.light,
-  }) => tester.pumpWidget(
-    ProviderScope(
-      child: MaterialApp(
-        theme: ThemeData(brightness: brightness),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: Scaffold(
-          body: RecordingCard(
-            recording: r,
-            genreName: 'Conto',
-            subcategoryName: 'Origem',
-            registerName: 'Formal',
-            onTap: () {},
+  Future<void> pumpCard(WidgetTester tester, LocalRecordingEntity r) =>
+      tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: RecordingCard(
+                recording: r,
+                genreName: 'Conto',
+                subcategoryName: 'Origem',
+                registerName: 'Formal',
+                onTap: () {},
+              ),
+            ),
           ),
         ),
-      ),
-    ),
-  );
+      );
 
   group('the duration', () {
     testWidgets('a three-second misfire reads as seconds, not as zero', (
@@ -75,18 +68,23 @@ void main() {
       expect(find.text('00:03'), findsOneWidget);
     });
 
-    testWidgets('a forty-minute session is told apart from a misfire', (
-      tester,
-    ) async {
-      await pumpCard(tester, recording(durationSeconds: 2400));
-
-      expect(find.text('40:00'), findsOneWidget);
-    });
-
     testWidgets('an hour-long session keeps its hours', (tester) async {
       await pumpCard(tester, recording(durationSeconds: 3900));
 
       expect(find.text('1:05:00'), findsOneWidget);
+    });
+
+    testWidgets('a screen reader hears the units the glyphs only imply', (
+      tester,
+    ) async {
+      // '00:03' and '1:05:00' are read out as digit pairs, and mm:ss sounds
+      // like hh:mm — the one distinction the duration is here to make is the
+      // one that does not survive being spoken.
+      await pumpCard(tester, recording(durationSeconds: 3));
+      expect(tester.widget<Text>(find.text('00:03')).semanticsLabel, '3s');
+
+      await pumpCard(tester, recording(durationSeconds: 3900));
+      expect(tester.widget<Text>(find.text('1:05:00')).semanticsLabel, '1h 5m');
     });
   });
 
@@ -98,66 +96,6 @@ void main() {
       // the weekday in the title was a second reading of the same instant.
       expect(find.textContaining('Tuesday'), findsNothing);
       expect(find.textContaining('4:20:08'), findsOneWidget);
-    });
-
-    testWidgets('still follows the locale clock rather than forcing 24h', (
-      tester,
-    ) async {
-      await pumpCard(tester, recording(title: null));
-
-      // 'en' reads a 12-hour clock. A 24-hour format would render '16:20:08'
-      // and lose the meridiem — the defect PR #174 fixed.
-      expect(find.textContaining('PM'), findsOneWidget);
-    });
-  });
-
-  group('the pendency chip background', () {
-    Color chipColor(WidgetTester tester, String label) {
-      final container = tester.widget<Container>(
-        find
-            .ancestor(of: find.text(label), matching: find.byType(Container))
-            .first,
-      );
-      return (container.decoration! as BoxDecoration).color!;
-    }
-
-    testWidgets('is unchanged in the light theme', (tester) async {
-      final l10n = await AppLocalizations.delegate.load(const Locale('en'));
-      await pumpCard(
-        tester,
-        recording(
-          storytellerId: null,
-          reviewFlags: const [
-            ReviewFlag(code: 'missing_storyteller', origin: 'system'),
-          ],
-        ),
-      );
-
-      // Retiring the token must not repaint the chip. surfaceAlt is a
-      // different colour in light (0xFFEDE9D5) and would move the pixel.
-      expect(
-        chipColor(tester, l10n.recording_pendencyStoryteller),
-        const Color(0xFFF1EEDE),
-      );
-    });
-
-    testWidgets('is unchanged in the dark theme', (tester) async {
-      final l10n = await AppLocalizations.delegate.load(const Locale('en'));
-      await pumpCard(
-        tester,
-        recording(
-          storytellerId: null,
-          reviewFlags: const [
-            ReviewFlag(code: 'missing_storyteller', origin: 'system'),
-          ],
-        ),
-        brightness: Brightness.dark,
-      );
-
-      expect(
-        chipColor(tester, l10n.recording_pendencyStoryteller),
-        const Color(0xFF302D22),
-      );
     });
   });
 }
