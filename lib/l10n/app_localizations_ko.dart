@@ -1786,6 +1786,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get projectStats_members => '구성원';
 
   @override
+  String get projectStats_needsDetails => '정보 필요';
+
+  @override
   String get project_active => '활성';
 
   @override

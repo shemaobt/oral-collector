@@ -148,6 +148,25 @@ void main() {
     });
   });
 
+  group('the codes the server actually sends', () {
+    // These strings are the contract with the API, and the project screen
+    // reaches them with nothing but a bare code from the stats aggregate — no
+    // recording to fall back on. A typo here shows up as a label that silently
+    // never renders, so spell each one out.
+    const vocabulary = <String, PendencyKind?>{
+      'missing_classification': PendencyKind.classification,
+      'insufficient_description': PendencyKind.description,
+      'missing_storyteller': PendencyKind.storyteller,
+      'awaiting_transcription': null,
+    };
+
+    vocabulary.forEach((code, kind) {
+      test('$code resolves to $kind', () {
+        expect(pendencyKindForCode(code), kind);
+      });
+    });
+  });
+
   test('the order is stable, so the steps do not shuffle between reads', () {
     final pendencies = recordingPendencies(
       recording(

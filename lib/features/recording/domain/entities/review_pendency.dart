@@ -57,3 +57,11 @@ List<PendencyKind> _fromFields(LocalRecordingEntity recording) => [
   if (!isDescriptionSufficient(recording.description)) PendencyKind.description,
   if (blankToNull(recording.storytellerId) == null) PendencyKind.storyteller,
 ];
+
+/// The kind a server flag code names, or null when this build cannot act on it.
+///
+/// Exposed because the project screen receives bare codes from the stats
+/// aggregate — it has no recording to hand to [recordingPendencies] — and needs
+/// to reach the same labels the guided flow uses. Keeping the map itself
+/// private means both surfaces still resolve a code exactly one way.
+PendencyKind? pendencyKindForCode(String code) => _knownCodes[code];

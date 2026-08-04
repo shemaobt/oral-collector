@@ -1813,6 +1813,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get projectStats_members => 'الأعضاء';
 
   @override
+  String get projectStats_needsDetails => 'بيانات ناقصة';
+
+  @override
   String get project_active => 'نشط';
 
   @override

@@ -1855,6 +1855,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get projectStats_members => 'Membros';
 
   @override
+  String get projectStats_needsDetails => 'Faltam detalhes';
+
+  @override
   String get project_active => 'Ativo';
 
   @override

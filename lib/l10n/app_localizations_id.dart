@@ -1849,6 +1849,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get projectStats_members => 'Anggota';
 
   @override
+  String get projectStats_needsDetails => 'Perlu detail';
+
+  @override
   String get project_active => 'Aktif';
 
   @override

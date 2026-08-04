@@ -804,6 +804,7 @@
   "projectStats_recordings": "录音",
   "projectStats_duration": "时长",
   "projectStats_members": "成员",
+  "projectStats_needsDetails": "待完善",
   "project_active": "活跃",
   "recording_paused": "已暂停",
   "recording_recording": "录音中",

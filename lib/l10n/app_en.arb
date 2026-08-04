@@ -884,6 +884,10 @@
   "projectStats_recordings": "Recordings",
   "projectStats_duration": "Duration",
   "projectStats_members": "Members",
+  "projectStats_needsDetails": "Needs details",
+  "@projectStats_needsDetails": {
+    "description": "Stat chip label under the number of recordings that still have at least one open field (ENG-374)."
+  },
   "project_active": "Active",
   "recording_paused": "Paused",
   "recording_recording": "Recording",

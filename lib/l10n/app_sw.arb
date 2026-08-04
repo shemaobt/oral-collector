@@ -590,6 +590,7 @@
   "projectStats_recordings": "Rekodi",
   "projectStats_duration": "Muda",
   "projectStats_members": "Wanachama",
+  "projectStats_needsDetails": "Zinahitaji maelezo",
   "project_active": "Hai",
   "recording_paused": "Imesimamishwa",
   "recording_recording": "Inarekodi",
