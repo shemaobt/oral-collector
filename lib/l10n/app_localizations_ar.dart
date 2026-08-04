@@ -2660,4 +2660,17 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get recording_pendencyStorytellerContext => 'من يروي هذه القصة.';
+
+  @override
+  String recording_pendencyCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count حقل بحاجة إلى تعبئة',
+      many: '$count حقلاً بحاجة إلى تعبئة',
+      few: '$count حقول بحاجة إلى تعبئة',
+      two: 'حقلان بحاجة إلى تعبئة',
+    );
+    return '$_temp0';
+  }
 }

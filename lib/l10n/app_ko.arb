@@ -980,5 +980,6 @@
   "recording_pendencyDescription": "설명이 너무 짧음",
   "recording_pendencyDescriptionContext": "녹음에서 무슨 일이 일어나는지 몇 마디로 적어 주세요.",
   "recording_pendencyStoryteller": "화자 없음",
-  "recording_pendencyStorytellerContext": "이 이야기를 들려주는 사람입니다."
+  "recording_pendencyStorytellerContext": "이 이야기를 들려주는 사람입니다.",
+  "recording_pendencyCount": "{count, plural, other{입력할 항목 {count}개}}"
 }

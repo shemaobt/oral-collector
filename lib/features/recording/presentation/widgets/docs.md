@@ -127,6 +127,54 @@ Path: @/lib/features/recording/presentation/widgets
   entity's `isUnclassified` / `hasSecondary` extension (see
   [../../domain/docs.md](../../domain/docs.md)); it no longer touches Drift
   or the row-level classification extension.
+- `RecordingCard` (ENG-374, "card V3") was redesigned around one question —
+  "which recordings still need me?" — which cost the duration chip (and the
+  `formattedDuration` constructor param `recordings_list_screen.dart` used to
+  compute) and the standalone "unclassified" chip, and bought a description
+  line plus a pendency chip. The upload-status chip lost its text to make
+  room: `_statusIcon` still renders at 13px, but that glyph now sits inside a
+  `SizedBox.square(dimension: 24)` so its `Tooltip` has a touchable hit
+  target, and `_statusLabel` still exists — it feeds that `Tooltip` and the
+  icon's `semanticLabel` instead of painted text, so the state is not lost,
+  only moved off-screen, matching the design's requirement that colour never
+  be the only signal for status. `_visibleDescription` reads
+  `recording.description`, trims it, and only then applies `blankToNull` —
+  `blankToNull` alone disagreed with `isDescriptionSufficient` about whether
+  a whitespace-only string counts as present, and the card used to draw
+  quotation marks around three spaces. When the trimmed description falls
+  short of `isDescriptionSufficient`
+  ([/lib/shared/utils/recording_description.dart](/lib/shared/utils/recording_description.dart)),
+  `RecordingDescriptionLine` wraps it in curly quotes (`“ ”`, not ASCII `"`,
+  to avoid a description that already contains a straight quote rendering as
+  `""like this""`) rather than hiding it. The quotes are not localized per
+  script because neither `intl` nor `flutter_localizations` exposes CLDR's
+  quotation-mark data; that reasoning is a comment on the widget itself.
+  `RecordingDescriptionLine` is public (not private) so a test can assert the
+  line's absence by type instead of hunting for stray quotation marks — the
+  same reasoning as `PendingWebUploadCard`'s split, below. `_FooterRow`'s
+  `_pendencyLabel` calls `recordingPendencies`
+  ([../../domain/entities/review_pendency.dart](../../domain/entities/review_pendency.dart)),
+  the same function `CompleteFichaPill`/`CompleteFichaSheet` read (see
+  below), and shows at most one chip: a single open field is named, two or
+  more collapse into `recording_pendencyCount(n)`. A title-less recording
+  falls back to `formatWeekdayTime`
+  ([/lib/shared/utils/format.dart](/lib/shared/utils/format.dart)), in
+  italics, instead of a generic "Untitled" label — the fallback carries
+  seconds because untitled recordings tend to arrive in bursts from the same
+  session, and minute precision would not tell siblings apart. `build()` was
+  split entirely into row-level widget classes — `_TitleRow`, `_BreadcrumbRow`,
+  `_FooterRow`, `RecordingDescriptionLine`, and a few more — rather than
+  private build-returning methods, a convention local to this file; each
+  resolves its own `l10n`/theme off its own `BuildContext` instead of taking
+  them as parameters. The split happened because the redesign pushed the file
+  past the `dart_code_linter` SLOC gate's ceiling of 300 lines — before the
+  description line was even added. `_statusAccent` (not `_statusIconColor`)
+  returns `Color?`, null for the local (not-yet-uploaded) state that owns no
+  colour of its own; each caller picks its own fallback instead of the two
+  comparing colour values to infer which state produced them — the rail falls
+  back to `colors.border`, the icon to `colors.secondary`. The chip's
+  background is the themed `colors.chipSurface`
+  (ENG-374; see [/lib/core/theme/docs.md](/lib/core/theme/docs.md)).
 - `CompleteFichaOverlay`/`CompleteFichaPill`/`CompleteFichaSheet`
   ([complete_ficha_overlay.dart](complete_ficha_overlay.dart) /
   [complete_ficha_pill.dart](complete_ficha_pill.dart) /
@@ -163,6 +211,28 @@ Path: @/lib/features/recording/presentation/widgets
 
 ### Things to Know
 
+- **`RecordingCard`'s room is a trade, not free space (ENG-374, card V3).**
+  The description line only fits because the upload-status chip gave up its
+  visible text; the duration chip and the standalone "unclassified" chip are
+  simply gone. Reintroducing the duration chip, restoring text on the
+  status chip, or adding a second pendency chip will overflow the row
+  again. `recording_card_text_scale_test.dart` pins the fullest possible
+  card (long title, long description, a two-field pendency count, an
+  in-progress upload) at 1.0x/1.5x/2.0x in en and fr to catch that; the test
+  was checked against a real regression by briefly removing the breadcrumb's
+  `Flexible` while writing it.
+- **`failed_conflict` and `failed_description` must keep distinct icons on
+  `RecordingCard`.** `_statusIcon` gives them `LucideIcons.copy` and
+  `LucideIcons.fileText`; they used to share `LucideIcons.alertCircle`, which
+  made the two states visually identical once the label moved from painted
+  text into the icon's tooltip/semantics — on this card the icon shape is the
+  only signal a sighted user gets for which of the two blocked a recording.
+  `RecordingStatusSection`
+  ([recording_status_section.dart](recording_status_section.dart)) keeps both
+  on `LucideIcons.alertCircle` deliberately, because there the icon sits next
+  to its own text label and does not need to carry the distinction alone —
+  the two surfaces disagreeing on iconography for the same states is known,
+  not a bug, and aligning them would be a separate change.
 - **The hero player is not the owner of playback state.** The
   `AudioPlayer` lives in `RecordingPlayerNotifier` (an
   `AutoDisposeFamilyNotifier` keyed by recording id). The hero player

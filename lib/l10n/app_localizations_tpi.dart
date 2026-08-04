@@ -2684,4 +2684,14 @@ class AppLocalizationsTpi extends AppLocalizations {
   @override
   String get recording_pendencyStorytellerContext =>
       'Husat i tokim dispela stori.';
+
+  @override
+  String recording_pendencyCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count samting i mas pulapim',
+    );
+    return '$_temp0';
+  }
 }

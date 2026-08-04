@@ -4777,6 +4777,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Who tells this story.'**
   String get recording_pendencyStorytellerContext;
+
+  /// List card chip when a recording owes more than one field. Counts the gap instead of naming each one, so the card keeps a single chip.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, other{{count} fields to fill}}'**
+  String recording_pendencyCount(int count);
 }
 
 class _AppLocalizationsDelegate

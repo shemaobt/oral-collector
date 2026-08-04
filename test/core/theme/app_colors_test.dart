@@ -89,6 +89,7 @@ void main() {
           success: Color.lerp(light.success, dark.success, 0.5)!,
           successText: Color.lerp(light.successText, dark.successText, 0.5)!,
           onPrimary: Color.lerp(light.onPrimary, dark.onPrimary, 0.5)!,
+          chipSurface: Color.lerp(light.chipSurface, dark.chipSurface, 0.5)!,
           border: Color.lerp(light.border, dark.border, 0.5)!,
           error: Color.lerp(light.error, dark.error, 0.5)!,
           warning: Color.lerp(light.warning, dark.warning, 0.5)!,

@@ -980,5 +980,6 @@
   "recording_pendencyDescription": "Description trop courte",
   "recording_pendencyDescriptionContext": "Quelques mots sur ce qui se passe dans l'enregistrement.",
   "recording_pendencyStoryteller": "Pas de narrateur",
-  "recording_pendencyStorytellerContext": "Qui raconte cette histoire."
+  "recording_pendencyStorytellerContext": "Qui raconte cette histoire.",
+  "recording_pendencyCount": "{count, plural, other{{count} champs à compléter}}"
 }

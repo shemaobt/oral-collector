@@ -11,7 +11,6 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../features/auth/data/providers/role_provider.dart';
 import '../../../shared/preview_helpers.dart';
-import '../../../shared/utils/format.dart';
 import '../../../shared/widgets/app_shell.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/screen_header.dart';
@@ -446,9 +445,6 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
                                 registerName: rawReg != null
                                     ? localizedRegisterName(l10n, rawReg)
                                     : null,
-                                formattedDuration: formatDurationLong(
-                                  recording.durationSeconds,
-                                ),
                                 onDelete: () => _deleteRecording(recording),
                                 onTap: () async {
                                   await context.push(

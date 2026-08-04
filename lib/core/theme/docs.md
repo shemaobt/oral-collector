@@ -80,6 +80,14 @@ Path: @/lib/core/theme
   `darkBackground`), because pure white reads colder than the rest of the
   palette wherever `primary` is used as a filled app surface rather than the
   `ColorScheme`'s own chrome.
+- `chipSurface` (ENG-374, card V3) backs the recording list card's pendency
+  chip
+  ([/lib/features/recording/presentation/widgets/recording_card.dart](/lib/features/recording/presentation/widgets/recording_card.dart)).
+  It is its own token rather than a reuse of `surfaceAlt` because the design's
+  color reads as quieter than that panel tone; before this it was a fixed
+  light constant living outside `AppColorSet`, which would have stayed light
+  in dark mode. Its dark value is the existing `darkSurfaceAlt`, not a new
+  constant — no separate dark tone was specified.
 - Spacing/radii/motion/opacity consumers reference the `const` scale directly
   (e.g. `SpacingScale.s16`, `RadiusScale.r12`, `DurationScale.ms200`,
   `OpacityScale.o40`) or the `context.spacing` / `.radii` / `.durations` /

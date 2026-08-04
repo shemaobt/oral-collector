@@ -59,6 +59,10 @@ Path: @/lib/features/recording/domain
   storyteller fields, into the ordered list of steps the guided completion
   flow walks the user through
   ([../presentation/widgets/complete_ficha_sheet.dart](../presentation/widgets/complete_ficha_sheet.dart)).
+  `RecordingCard` (card V3, ENG-374 PR-C) is a second consumer: the list card's
+  pendency chip names the list's length the same way the sheet's step list
+  does, collapsing to a count once more than one field is open (see
+  [../presentation/widgets/docs.md](../presentation/widgets/docs.md)).
   The rule: once a recording has a `serverId`, the server's flags decide what
   it owes — even where they disagree with the local fields, since the server
   may apply a rule this build predates — and a flag `code` this build has no

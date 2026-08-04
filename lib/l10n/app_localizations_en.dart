@@ -2697,4 +2697,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recording_pendencyStorytellerContext => 'Who tells this story.';
+
+  @override
+  String recording_pendencyCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count fields to fill',
+    );
+    return '$_temp0';
+  }
 }

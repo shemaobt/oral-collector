@@ -2691,4 +2691,14 @@ class AppLocalizationsSw extends AppLocalizations {
   @override
   String get recording_pendencyStorytellerContext =>
       'Ni nani anayesimulia hadithi hii.';
+
+  @override
+  String recording_pendencyCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Sehemu $count za kujaza',
+    );
+    return '$_temp0';
+  }
 }
