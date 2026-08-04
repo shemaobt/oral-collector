@@ -7,6 +7,7 @@ import 'package:logging/logging.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../core/errors/api_exception.dart';
 import '../../../../core/errors/app_exception.dart' show ConflictException;
+import '../../../../core/observability/error_reporter.dart';
 import '../../../auth/data/providers/role_provider.dart';
 import '../../../project/presentation/notifiers/member_notifier.dart';
 import '../../../project/presentation/notifiers/stats_notifier.dart';
@@ -22,6 +23,7 @@ import '../../data/services/audio_downloader.dart';
 import '../../data/services/recording_file_importer.dart';
 import '../../data/use_cases/save_recording_title.dart';
 import '../../domain/entities/local_recording_entity.dart';
+import '../../domain/entities/review_flag.dart';
 import '../../domain/entities/update_recording_request.dart';
 import '../../domain/repositories/recording_api_repository.dart';
 import '../widgets/classify_recording_dialog.dart' show ClassifyResult;
@@ -200,13 +202,36 @@ class RecordingDetailNotifier
     }
   }
 
+  /// Stores what the server said the recording still owes after a write it
+  /// accepted (ENG-379).
+  ///
+  /// The pendency rule reads these off the local row for any recording the
+  /// server knows about, and `load()` re-reads that row on native — so this has
+  /// to land before the reload or the screen shows the state from before the
+  /// edit. A null [flags] means the response said nothing about them and the
+  /// stored answer stands.
+  ///
+  /// Best-effort by design: the edit itself already succeeded on the server, and
+  /// failing to cache its flags must not undo that or be reported to the user as
+  /// a failed save. Reported rather than swallowed (ENG-102).
+  Future<void> _storeReviewFlags(String id, List<ReviewFlag>? flags) async {
+    if (kIsWeb || flags == null || _disposed) return;
+    try {
+      await _localRepo.updateReviewFlags(id, flags);
+    } catch (e, st) {
+      if (_disposed) return;
+      ref.read(errorReporterProvider).reportError(e, st);
+    }
+  }
+
   Future<void> setStoryteller(
     LocalRecordingEntity recording,
     Storyteller? storyteller,
   ) async {
     final serverId = recording.serverId ?? recording.id;
+    UpdateRecordingOutcome? outcome;
     try {
-      await _apiRepo.updateRecording(
+      outcome = await _apiRepo.updateRecording(
         serverId,
         UpdateRecordingRequest(storytellerId: storyteller?.id ?? ''),
       );
@@ -217,6 +242,8 @@ class RecordingDetailNotifier
         recording.id,
         storytellerId: storyteller?.id,
       );
+      if (_disposed) return;
+      await _storeReviewFlags(recording.id, outcome?.reviewFlags);
       if (_disposed) return;
     }
     await load();
@@ -316,12 +343,12 @@ class RecordingDetailNotifier
 
     if (recording.uploadStatus == 'uploaded' || kIsWeb) {
       try {
-        final success = await _apiRepo.updateRecording(
+        final outcome = await _apiRepo.updateRecording(
           serverId,
           UpdateRecordingRequest(cleaningStatus: newStatus),
         );
         if (_disposed) return RecordingMutationResult.success;
-        if (!success) return RecordingMutationResult.failed;
+        if (!outcome.success) return RecordingMutationResult.failed;
       } on ForbiddenException {
         return RecordingMutationResult.forbidden;
       } catch (_) {
@@ -342,8 +369,9 @@ class RecordingDetailNotifier
     MoveCategoryResult result,
   ) async {
     final serverId = recording.serverId ?? recording.id;
+    List<ReviewFlag>? serverFlags;
     try {
-      final success = await _apiRepo.updateRecording(
+      final outcome = await _apiRepo.updateRecording(
         serverId,
         UpdateRecordingRequest(
           genreId: result.genreId,
@@ -355,7 +383,8 @@ class RecordingDetailNotifier
         ),
       );
       if (_disposed) return RecordingMutationResult.success;
-      if (!success) return RecordingMutationResult.failed;
+      if (!outcome.success) return RecordingMutationResult.failed;
+      serverFlags = outcome.reviewFlags;
     } on ForbiddenException {
       return RecordingMutationResult.forbidden;
     } catch (_) {
@@ -372,6 +401,8 @@ class RecordingDetailNotifier
         secondarySubcategoryId: result.secondarySubcategoryId,
         secondaryRegisterId: result.secondaryRegisterId,
       );
+      if (_disposed) return RecordingMutationResult.success;
+      await _storeReviewFlags(recording.id, serverFlags);
       if (_disposed) return RecordingMutationResult.success;
     }
 
@@ -399,9 +430,10 @@ class RecordingDetailNotifier
         (recording.secondaryGenreId != null ||
             recording.secondaryRegisterId != null);
 
+    List<ReviewFlag>? serverFlags;
     if (hasServerId) {
       try {
-        final success = await _apiRepo.updateRecording(
+        final outcome = await _apiRepo.updateRecording(
           recording.serverId!,
           UpdateRecordingRequest(
             genreId: result.genreId,
@@ -414,7 +446,8 @@ class RecordingDetailNotifier
           ),
         );
         if (_disposed) return RecordingMutationResult.success;
-        if (!success) return RecordingMutationResult.failed;
+        if (!outcome.success) return RecordingMutationResult.failed;
+        serverFlags = outcome.reviewFlags;
       } on ForbiddenException {
         return RecordingMutationResult.forbidden;
       } catch (_) {
@@ -432,6 +465,8 @@ class RecordingDetailNotifier
         secondarySubcategoryId: result.secondarySubcategoryId,
         secondaryRegisterId: result.secondaryRegisterId,
       );
+      if (_disposed) return RecordingMutationResult.success;
+      await _storeReviewFlags(recording.id, serverFlags);
       if (_disposed) return RecordingMutationResult.success;
 
       if (!hasServerId && ref.read(syncNotifierProvider).isOnline) {
@@ -459,9 +494,10 @@ class RecordingDetailNotifier
         recording.serverId != null && recording.serverId!.isNotEmpty;
     final clearSecondary = values == null;
 
+    List<ReviewFlag>? serverFlags;
     if (hasServerId) {
       try {
-        final success = await _apiRepo.updateRecording(
+        final outcome = await _apiRepo.updateRecording(
           recording.serverId!,
           UpdateRecordingRequest(
             secondaryGenreId: values?.genreId,
@@ -471,7 +507,8 @@ class RecordingDetailNotifier
           ),
         );
         if (_disposed) return RecordingMutationResult.success;
-        if (!success) return RecordingMutationResult.failed;
+        if (!outcome.success) return RecordingMutationResult.failed;
+        serverFlags = outcome.reviewFlags;
       } on ForbiddenException {
         return RecordingMutationResult.forbidden;
       } catch (_) {
@@ -486,6 +523,8 @@ class RecordingDetailNotifier
         subcategoryId: values?.subcategoryId,
         registerId: values?.registerId,
       );
+      if (_disposed) return RecordingMutationResult.success;
+      await _storeReviewFlags(recording.id, serverFlags);
       if (_disposed) return RecordingMutationResult.success;
     }
 

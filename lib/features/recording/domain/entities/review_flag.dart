@@ -32,6 +32,27 @@ class ReviewFlag {
   int get hashCode => Object.hash(code, origin);
 }
 
+/// Reads `review_flags` off any server payload that carries it, or null when
+/// the payload does not carry it at all.
+///
+/// The null is the point (ENG-379). Every write endpoint recomputes the flags
+/// and returns them, so a caller can store what came back — but a server that
+/// predates that, or a response that is not a recording, simply has no key. If
+/// that read as "owes nothing" the client would wipe real flags on every edit.
+/// An explicitly empty list is a different answer and comes back as `const []`.
+///
+/// Never throws: a malformed *element* is dropped by [parseList], and a value
+/// that is not a list at all reads as absent rather than raising. Callers use
+/// this on paths where the flags are advisory and the recording is not — losing
+/// the flags must never cost the user the upload or the edit that carried them.
+List<ReviewFlag>? readReviewFlagsOrNull(Map<String, dynamic> json) {
+  final raw = json['review_flags'];
+  if (raw is! List) return null;
+  return List.unmodifiable(
+    parseList(raw, ReviewFlag.fromJson, context: 'review_flags'),
+  );
+}
+
 /// Reads the flags back off a Drift row. A row written by an older build, or
 /// one whose text is no longer valid JSON, reads as "owes nothing" rather than
 /// taking the recording down with it — the flags are advisory, and losing them

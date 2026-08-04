@@ -3,7 +3,8 @@
 /// The breadcrumb, the action menu and the quick actions all ask this getter.
 /// Routing it through `recordingPendencies` means the pill, the sheet and the
 /// rest of the screen can never disagree about whether a recording still needs
-/// classifying.
+/// classifying — including on who decides: the server once it knows the
+/// recording, the local columns until then (ENG-379).
 library;
 
 import 'package:flutter_test/flutter_test.dart';
@@ -43,21 +44,29 @@ void main() {
     );
   });
 
-  test('and still reads that way after it uploads', () {
-    // Uploading writes serverId and leaves the row's flags empty. The answer
-    // must not change just because the recording now exists on the server.
+  test('and still reads that way after it uploads, because the flags came '
+      'back with it', () {
+    // Uploading writes serverId, and from that moment the stored flags answer
+    // (ENG-379). The upload stores what the server sent back, so the answer
+    // does not change just because the recording now exists on the server.
     expect(
       recording(
         serverId: 'srv-1',
         genreId: 'unclassified',
         registerId: null,
+        reviewFlags: const [
+          ReviewFlag(code: 'missing_classification', origin: 'system'),
+        ],
       ).isUnclassified,
       isTrue,
     );
   });
 
-  test('a classified recording reads as classified even while the server '
-      'still carries a stale flag', () {
+  test('a recording the server still flags needs classifying, whatever the '
+      'local columns hold', () {
+    // ENG-379 turned this around: the server recomputes on every write and the
+    // row stores the answer, so filled-in local columns cannot overrule a flag
+    // that is still open.
     final entity = recording(
       serverId: 'srv-1',
       reviewFlags: const [
@@ -65,7 +74,11 @@ void main() {
       ],
     );
 
-    expect(entity.isUnclassified, isFalse);
+    expect(entity.isUnclassified, isTrue);
+  });
+
+  test('a recording the server has stopped flagging is classified', () {
+    expect(recording(serverId: 'srv-1').isUnclassified, isFalse);
   });
 
   test('a missing register alone leaves it unclassified', () {

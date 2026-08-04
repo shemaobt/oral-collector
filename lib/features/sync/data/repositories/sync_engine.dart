@@ -16,6 +16,7 @@ import '../../../../core/platform/file_ops.dart' as file_ops;
 import '../../../../core/serialization/safe_read.dart';
 import '../../../../shared/utils/recording_description.dart';
 import '../../../recording/data/repositories/local_recording_repository.dart';
+import '../../../recording/domain/entities/review_flag.dart';
 import '../../../storyteller/data/repositories/local_storyteller_repository.dart';
 import '../../domain/repositories/connectivity_service.dart';
 import '../../domain/repositories/sync_engine.dart';
@@ -371,9 +372,27 @@ class SyncEngineImpl implements SyncEngine {
         final createData = decodeObject(createResponse);
         serverId = readString(createData, 'id');
 
+        // The create response is the first and only time the server states what
+        // this recording still owes, and it recomputes before answering
+        // (ENG-373). Stored in the same write as the `serverId` on purpose: the
+        // two facts arrive together, and from the moment the `serverId` lands
+        // the flags are what the pendency rule reads (ENG-379) — a second,
+        // later write would leave a window where an uploaded recording reads as
+        // complete. Extending `markAsUploaded` would open exactly that window,
+        // and would lose the flags entirely when the transfer fails even though
+        // the server already knows them.
+        //
+        // `readReviewFlagsOrNull` cannot throw, so joining it to the `serverId`
+        // write adds no way for this to cost the upload.
+        final createdFlags = readReviewFlagsOrNull(createData);
         await _recordingRepo.updateRecording(
           id,
-          LocalRecordingsCompanion(serverId: Value(serverId)),
+          LocalRecordingsCompanion(
+            serverId: Value(serverId),
+            reviewFlagsJson: createdFlags == null
+                ? const Value.absent()
+                : Value(encodeReviewFlags(createdFlags)),
+          ),
         );
       }
 

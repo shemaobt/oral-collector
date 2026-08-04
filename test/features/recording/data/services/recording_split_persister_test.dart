@@ -302,7 +302,7 @@ class _FakeApiRepo implements RecordingApiRepository {
   }) => throw UnimplementedError();
 
   @override
-  Future<bool> updateRecording(
+  Future<UpdateRecordingOutcome> updateRecording(
     String serverId,
     UpdateRecordingRequest request,
   ) => throw UnimplementedError();

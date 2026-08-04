@@ -16,26 +16,39 @@ const Map<String, PendencyKind> _knownCodes = {
 
 /// What [recording] still owes, in a fixed order.
 ///
-/// **The fields decide, for every kind this build knows how to check.** That is
-/// deliberately not "the server owns review state, the client displays it",
-/// and the reason is concrete rather than philosophical:
+/// **The server decides for any recording it knows about** (ENG-379). It
+/// recomputes on every write and returns the result, and it may apply a rule
+/// this build predates — following the local columns there would mean
+/// overruling the only party that can know.
 ///
-/// * A recording made on this device and uploaded keeps its local row. The
-///   upload writes `serverId` and nothing else, so its `reviewFlags` stay empty
-///   even though the server has an opinion. Trusting the flags there would make
-///   the pill vanish the moment an upload succeeds, on a recording that is
-///   still unclassified — losing the very prompt this feature exists to give.
-/// * Nothing clears a flag on the local row when the user fixes the field it
-///   named. Trusting the flags would leave a step open after the user completed
-///   it, and send them back into the same editor from the sheet's own button.
+/// A recording that has never been uploaded has no server answer, so its own
+/// fields answer for it. Without that, a recording captured minutes ago would
+/// read as complete while the person who made it is still standing there,
+/// which is the moment this feature exists for.
 ///
-/// The fields have neither problem: they are what the user just edited, and
-/// they are right offline. The server's flags still ride along on the entity
-/// and are the right source the day the server reports something this build
-/// cannot compute — see [_unknownCodes]. Revisit this the moment that happens,
-/// or once the local row keeps the server's flags current.
-List<PendencyKind> recordingPendencies(LocalRecordingEntity recording) =>
-    _fromFields(recording);
+/// This is only safe because the local row is kept current: the upload and
+/// every edit store the flags the server sent back. ENG-374 shipped without
+/// that, so the flags were empty on a recording this device had just uploaded
+/// and stale after an edit — which is why it derived locally instead. Read
+/// those two write paths before trusting this again.
+///
+/// Offline needs no special case: editing is online-first, so a failed call
+/// leaves the row untouched and the stored flags cannot go stale.
+List<PendencyKind> recordingPendencies(LocalRecordingEntity recording) {
+  final serverId = recording.serverId;
+  if (serverId == null || serverId.isEmpty) return _fromFields(recording);
+  return _fromFlags(recording);
+}
+
+List<PendencyKind> _fromFlags(LocalRecordingEntity recording) {
+  final kinds = <PendencyKind>{};
+  for (final flag in recording.reviewFlags) {
+    final kind = _knownCodes[flag.code];
+    if (kind != null) kinds.add(kind);
+  }
+  // Reading order, not wire order: the sheet numbers these steps.
+  return PendencyKind.values.where(kinds.contains).toList();
+}
 
 /// Codes the server sent that this build has no way to check or act on.
 ///

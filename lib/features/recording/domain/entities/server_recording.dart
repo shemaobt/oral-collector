@@ -1,4 +1,3 @@
-import '../../../../core/serialization/parse_list.dart';
 import '../../../../core/serialization/safe_read.dart';
 import 'review_flag.dart';
 
@@ -55,31 +54,19 @@ class ServerRecording {
     this.reviewFlags = const [],
   });
 
-  /// A server that predates ENG-373 omits the key, and a serializer may send it
-  /// as null; neither is a broken payload, so both read as "owes nothing".
+  /// A server that predates ENG-373 omits the key, a serializer may send it as
+  /// null, and a broken payload may send something that is not a list; none of
+  /// those is worth losing the recording over, so all three read as "owes
+  /// nothing" here. The caller of a *write* endpoint needs to tell absent from
+  /// empty — it stores what came back — and uses [readReviewFlagsOrNull]
+  /// directly for that (ENG-379).
   ///
-  /// A value that is not a list at all reads the same way. [parseList] would
-  /// throw for that shape, and the throw would escape `fromJson` and cost the
-  /// caller the entire recording — dropped from the list, or a failed detail
-  /// load. The flags are advisory, so losing them must never cost the user the
-  /// recording they describe. Malformed *elements* are still dropped
-  /// individually by [parseList], which is the same policy one level down.
-  ///
-  /// No `onSkip` reporter is passed here (ENG-166): this runs inside a
-  /// `fromJson` factory that is itself handed to an outer `parseList` as a
-  /// tear-off, so no reporter can reach it without changing the factory's
-  /// signature. Deliberate, not forgotten.
-  static List<ReviewFlag> _readReviewFlags(Map<String, dynamic> json) {
-    final raw = json['review_flags'];
-    if (raw is! List) return const [];
-    return List.unmodifiable(
-      parseList(
-        raw,
-        ReviewFlag.fromJson,
-        context: 'ServerRecording.reviewFlags',
-      ),
-    );
-  }
+  /// No `onSkip` reporter reaches this (ENG-166): it runs inside a `fromJson`
+  /// factory that is itself handed to an outer `parseList` as a tear-off, so no
+  /// reporter can get here without changing the factory's signature.
+  /// Deliberate, not forgotten.
+  static List<ReviewFlag> _readReviewFlags(Map<String, dynamic> json) =>
+      readReviewFlagsOrNull(json) ?? const [];
 
   factory ServerRecording.fromJson(Map<String, dynamic> json) {
     return ServerRecording(

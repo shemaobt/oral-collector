@@ -26,6 +26,8 @@ import 'package:oral_collector/features/recording/data/repositories/local_record
 import 'package:oral_collector/features/recording/data/services/audio_downloader.dart';
 import 'package:oral_collector/features/recording/data/services/recording_file_importer.dart';
 import 'package:oral_collector/features/recording/domain/entities/local_recording_entity.dart';
+import 'package:oral_collector/features/recording/domain/entities/review_flag.dart';
+import 'package:oral_collector/features/recording/domain/entities/review_pendency.dart';
 import 'package:oral_collector/features/recording/domain/entities/server_recording.dart';
 import 'package:oral_collector/features/recording/domain/entities/update_recording_request.dart';
 import 'package:oral_collector/features/recording/domain/repositories/recording_api_repository.dart';
@@ -47,9 +49,11 @@ class _FakeApiRepo implements RecordingApiRepository {
     this.updateResult = true,
     this.updateError,
     this.getRecordingResult,
+    this.updateReviewFlags,
   });
 
   bool updateResult;
+  List<ReviewFlag>? updateReviewFlags;
   Object? updateError;
   ServerRecording? getRecordingResult;
 
@@ -60,7 +64,7 @@ class _FakeApiRepo implements RecordingApiRepository {
   Map<String, Object?> lastUpdate = const {};
 
   @override
-  Future<bool> updateRecording(
+  Future<UpdateRecordingOutcome> updateRecording(
     String serverId,
     UpdateRecordingRequest request,
   ) async {
@@ -82,7 +86,7 @@ class _FakeApiRepo implements RecordingApiRepository {
       'fileSizeBytes': request.fileSizeBytes,
     };
     if (updateError != null) throw updateError!;
-    return updateResult;
+    return (success: updateResult, reviewFlags: updateReviewFlags);
   }
 
   @override
@@ -233,6 +237,7 @@ void main() {
     String description = 'initial',
     String localFilePath = '/audio/in.m4a',
     String? gcsUrl = 'https://gcs/in.m4a',
+    List<ReviewFlag> reviewFlags = const [],
   }) async {
     await repo.insertRecording(
       LocalRecordingsCompanion(
@@ -256,6 +261,7 @@ void main() {
         uploadStatus: Value(uploadStatus),
         cleaningStatus: Value(cleaningStatus),
         recordedAt: Value(DateTime.utc(2026, 5, 1)),
+        reviewFlagsJson: Value(encodeReviewFlags(reviewFlags)),
       ),
     );
     return localRecordingToEntity((await repo.getRecordingById(recordingId))!);
@@ -429,6 +435,121 @@ void main() {
       await notifierOf(c).setStoryteller(recording, null);
 
       expect((await repo.getRecordingById(recordingId))!.storytellerId, isNull);
+    });
+  });
+
+  // ENG-379: the pendency rule reads the stored flags for any recording the
+  // server knows about, so an edit that clears a pendency on the server has to
+  // land in the row. Every one of these mutations already had the answer in the
+  // response it threw away.
+  group('review flags from the write response', () {
+    Future<List<PendencyKind>> storedPendencies() async =>
+        recordingPendencies((await repo.getRecordingEntityById(recordingId))!);
+
+    test('assigning a storyteller stops the recording owing one', () async {
+      final recording = await seed(
+        serverId: 'srv-1',
+        reviewFlags: const [
+          ReviewFlag(code: 'missing_storyteller', origin: 'system'),
+        ],
+      );
+      final c = makeContainer(api: _FakeApiRepo(updateReviewFlags: const []));
+
+      await notifierOf(c).setStoryteller(
+        recording,
+        Storyteller(
+          id: 'st-9',
+          projectId: 'proj',
+          name: 'Ana',
+          sex: StorytellerSex.female,
+          externalAcceptanceConfirmed: false,
+          createdAt: DateTime.utc(2026, 1, 1),
+        ),
+      );
+
+      expect(await storedPendencies(), isEmpty);
+    });
+
+    test('classifying stops the recording owing a classification', () async {
+      final recording = await seed(
+        serverId: 'srv-1',
+        reviewFlags: const [
+          ReviewFlag(code: 'missing_classification', origin: 'system'),
+        ],
+      );
+      final c = makeContainer(api: _FakeApiRepo(updateReviewFlags: const []));
+
+      await notifierOf(c).classify(
+        recording,
+        const ClassifyResult(
+          genreId: 'genre-2',
+          subcategoryId: 'sub-2',
+          registerId: 'reg-2',
+        ),
+      );
+
+      expect(await storedPendencies(), isEmpty);
+    });
+
+    test('moving a recording to another category stops it owing one', () async {
+      final recording = await seed(
+        serverId: 'srv-1',
+        reviewFlags: const [
+          ReviewFlag(code: 'missing_classification', origin: 'system'),
+        ],
+      );
+      final c = makeContainer(api: _FakeApiRepo(updateReviewFlags: const []));
+
+      await notifierOf(c).moveCategory(
+        recording,
+        const MoveCategoryResult(genreId: 'genre-2', subcategoryId: 'sub-2'),
+      );
+
+      expect(await storedPendencies(), isEmpty);
+    });
+
+    test(
+      'saving a secondary classification takes the flags that came back',
+      () async {
+        final recording = await seed(
+          serverId: 'srv-1',
+          reviewFlags: const [
+            ReviewFlag(code: 'missing_classification', origin: 'system'),
+          ],
+        );
+        final c = makeContainer(
+          api: _FakeApiRepo(
+            updateReviewFlags: const [
+              ReviewFlag(code: 'missing_storyteller', origin: 'system'),
+            ],
+          ),
+        );
+
+        await notifierOf(c).saveSecondary(
+          recording,
+          const SecondaryValues(genreId: 'genre-3', registerId: 'reg-3'),
+        );
+
+        expect(await storedPendencies(), [PendencyKind.storyteller]);
+      },
+    );
+
+    test('a server that says nothing about the flags leaves the stored ones '
+        'alone', () async {
+      final recording = await seed(
+        serverId: 'srv-1',
+        reviewFlags: const [
+          ReviewFlag(code: 'missing_storyteller', origin: 'system'),
+        ],
+      );
+      final c = makeContainer(api: _FakeApiRepo());
+
+      await notifierOf(c).classify(
+        recording,
+        const ClassifyResult(genreId: 'genre-2', subcategoryId: 'sub-2'),
+      );
+
+      expect(await storedPendencies(), [PendencyKind.storyteller]);
     });
   });
 

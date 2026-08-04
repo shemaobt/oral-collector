@@ -164,6 +164,42 @@ void main() {
     expect(saved.secondaryGenreId, 'g-local-edit');
   });
 
+  test('the update branch takes the server flags but still leaves local edits '
+      'alone', () async {
+    await repo.cacheDownloadedAudio(
+      recording: buildIncoming(
+        description: 'edited offline',
+        storytellerId: 's-local-edit',
+        secondaryGenreId: 'g-local-edit',
+        reviewFlags: const [
+          ReviewFlag(code: 'missing_classification', origin: 'system'),
+        ],
+      ),
+      localFilePath: '/old/path.m4a',
+    );
+
+    await repo.cacheDownloadedAudio(
+      recording: buildIncoming(
+        description: 'stale server description',
+        storytellerId: 's-server-stale',
+        secondaryGenreId: 'g-server-stale',
+        reviewFlags: const [
+          ReviewFlag(code: 'missing_storyteller', origin: 'system'),
+        ],
+      ),
+      localFilePath: '/new/path.m4a',
+    );
+
+    final saved = await repo.getRecordingEntityById('rec-1');
+    expect(saved, isNotNull);
+    expect(saved!.reviewFlags, const [
+      ReviewFlag(code: 'missing_storyteller', origin: 'system'),
+    ]);
+    expect(saved.description, 'edited offline');
+    expect(saved.storytellerId, 's-local-edit');
+    expect(saved.secondaryGenreId, 'g-local-edit');
+  });
+
   test('propagates split lineage fields when present on incoming', () async {
     final incoming = buildIncoming(
       splitFromId: 'parent-99',
