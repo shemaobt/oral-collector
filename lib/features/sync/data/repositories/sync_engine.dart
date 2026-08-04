@@ -8,6 +8,7 @@ import 'package:logging/logging.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
+import '../../../../core/config/upload_retry_policy.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../core/errors/app_exception.dart' show AppException;
 import '../../../../core/network/authenticated_client.dart';
@@ -58,7 +59,6 @@ class SyncEngineImpl implements SyncEngine {
   final AuthenticatedClient _client;
   late final ResumableUploadService _uploadService;
 
-  static const int maxRetries = 5;
   static const Duration _apiTimeout = Duration(seconds: 30);
 
   final Random _random = Random();
@@ -119,7 +119,7 @@ class SyncEngineImpl implements SyncEngine {
 
       final eligible = <LocalRecording>[];
       for (final recording in pending) {
-        if (recording.retryCount >= maxRetries) continue;
+        if (recording.retryCount >= kMaxUploadRetries) continue;
         // A row still in `uploading` is either in flight now or was reclaimed
         // at startup (resetStuckUploading); the drain must not start a second
         // attempt for it.
@@ -284,7 +284,13 @@ class SyncEngineImpl implements SyncEngine {
     try {
       final resolvedPath = await _resolveFilePath(localFilePath);
       if (resolvedPath == null) {
-        await _recordingRepo.markAsFailed(id, incrementRetry: false);
+        // Terminal, not a retry: _resolveFilePath has already looked in all
+        // three places the app ever puts a recording, and deletion is a hard
+        // delete, so no later pass will find what this one could not. Marking
+        // it failed without spending a retry (as this used to) left the row
+        // pending forever — reselected on every drain, skipped on every drain.
+        _log.warning('local audio file missing for $id');
+        await _markPermanentlyFailed(id, status: 'failed_missing_file');
         return _UploadOutcome.skipped;
       }
       if (resolvedPath != localFilePath) {
@@ -552,15 +558,21 @@ class SyncEngineImpl implements SyncEngine {
     put('secondary_register_id', recording.secondaryRegisterId);
   }
 
+  /// Writes a status the drain will never pick up again, with the retry budget
+  /// spent to match. Every such status is its own — the generic `failed` is
+  /// reserved for a row that still has attempts left — so the detail screen can
+  /// name what happened and offer the way out. The budget path does not come
+  /// through here: [LocalRecordingRepository.markAsFailed] owns it, because it
+  /// is the one that reads the count.
   Future<void> _markPermanentlyFailed(
     String id, {
-    String status = 'failed',
+    String status = 'failed_exhausted',
   }) async {
     await _recordingRepo.updateRecording(
       id,
       LocalRecordingsCompanion(
         uploadStatus: Value(status),
-        retryCount: const Value(maxRetries),
+        retryCount: const Value(kMaxUploadRetries),
         lastRetryAt: Value(DateTime.now()),
       ),
     );

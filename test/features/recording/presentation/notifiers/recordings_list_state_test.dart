@@ -122,5 +122,32 @@ void main() {
 
       expect(state.filteredRecordings.map((r) => r.id), ['d']);
     });
+
+    // These two left the upload queue on purpose (ENG-377), so this list is the
+    // only place left that can show them. Dropping them here would take a
+    // recording that still exists on the device off the screen entirely.
+    test('pending filter keeps a recording that spent its retries', () {
+      final exhausted = _entity(id: 'e', uploadStatus: 'failed_exhausted');
+      final uploaded = _entity(id: 'u', uploadStatus: 'uploaded');
+
+      final state = RecordingsListState(
+        recordings: [exhausted, uploaded],
+        selectedFilter: StatusFilter.pending,
+      );
+
+      expect(state.filteredRecordings.map((r) => r.id), ['e']);
+    });
+
+    test('pending filter keeps a recording whose audio file is gone', () {
+      final lost = _entity(id: 'm', uploadStatus: 'failed_missing_file');
+      final uploaded = _entity(id: 'u', uploadStatus: 'uploaded');
+
+      final state = RecordingsListState(
+        recordings: [lost, uploaded],
+        selectedFilter: StatusFilter.pending,
+      );
+
+      expect(state.filteredRecordings.map((r) => r.id), ['m']);
+    });
   });
 }

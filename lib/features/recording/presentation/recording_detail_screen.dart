@@ -39,7 +39,6 @@ import 'widgets/complete_ficha_overlay.dart';
 import 'widgets/complete_ficha_sheet.dart';
 import 'widgets/edit_recording_details_sheet.dart';
 import 'widgets/move_category_dialog.dart';
-import 'widgets/recording_action_banner.dart';
 import 'widgets/recording_action_menu.dart';
 import 'widgets/recording_classification_section.dart';
 import 'widgets/recording_hero_player.dart';
@@ -47,6 +46,7 @@ import 'widgets/recording_info_grid.dart';
 import 'widgets/recording_quick_actions.dart';
 import 'widgets/recording_status_section.dart';
 import 'widgets/recording_storyteller_section.dart';
+import 'widgets/recording_upload_banners.dart';
 import 'widgets/recording_upload_progress_section.dart';
 import 'widgets/replace_audio_dialog.dart';
 import 'widgets/secondary_classification_fields.dart';
@@ -677,78 +677,11 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     }
   }
 
-  bool _hasSecondaryCollision(LocalRecordingEntity recording) =>
-      secondaryEqualsPrimary(
-        primaryRegisterId: recording.registerId,
-        primaryGenreId: recording.genreId,
-        primarySubcategoryId: recording.subcategoryId,
-        secondaryRegisterId: recording.secondaryRegisterId,
-        secondaryGenreId: recording.secondaryGenreId,
-        secondarySubcategoryId: recording.secondarySubcategoryId,
-      );
-
-  Widget? _buildSecondaryCollisionBanner(
-    BuildContext context,
-    LocalRecordingEntity recording,
-  ) {
-    if (!_hasSecondaryCollision(recording)) return null;
-    final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context);
-    return RecordingActionBanner(
-      theme: theme,
-      icon: LucideIcons.alertCircle,
-      message: l10n.recording_secondaryCollisionBanner,
-      actionLabel: l10n.recording_clearSecondary,
-      accentColor: theme.colorScheme.error,
-      backgroundColor: theme.colorScheme.errorContainer.withValues(alpha: 0.35),
-      borderColor: theme.colorScheme.error.withValues(alpha: 0.5),
-      actionBackgroundColor: theme.colorScheme.error.withValues(alpha: 0.12),
-      onAction: _canEditRecording ? _clearSecondaryClassification : null,
-    );
-  }
-
-  /// The upload was rejected because the title is already taken in this
-  /// project; the only way forward is a rename, which requeues the upload.
-  Widget? _buildTitleConflictBanner(
-    BuildContext context,
-    LocalRecordingEntity recording,
-  ) {
-    if (recording.uploadStatus != 'failed_conflict') return null;
-    final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context);
-    return RecordingActionBanner(
-      theme: theme,
-      icon: LucideIcons.alertCircle,
-      message: l10n.recording_duplicateTitleMessage(recording.title ?? ''),
-      actionLabel: l10n.recording_editDetails,
-      accentColor: theme.colorScheme.error,
-      backgroundColor: theme.colorScheme.errorContainer.withValues(alpha: 0.35),
-      borderColor: theme.colorScheme.error.withValues(alpha: 0.5),
-      actionBackgroundColor: theme.colorScheme.error.withValues(alpha: 0.12),
-      onAction: _canEditRecording ? _openEditDetails : null,
-    );
-  }
-
-  /// The upload never left the device because the description is missing or too
-  /// short for the create rule; lengthening it requeues the recording.
-  Widget? _buildDescriptionGapBanner(
-    BuildContext context,
-    LocalRecordingEntity recording,
-  ) {
-    if (recording.uploadStatus != 'failed_description') return null;
-    final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context);
-    return RecordingActionBanner(
-      theme: theme,
-      icon: LucideIcons.alertCircle,
-      message: l10n.recording_descriptionGapMessage,
-      actionLabel: l10n.recording_editDetails,
-      accentColor: theme.colorScheme.error,
-      backgroundColor: theme.colorScheme.errorContainer.withValues(alpha: 0.35),
-      borderColor: theme.colorScheme.error.withValues(alpha: 0.5),
-      actionBackgroundColor: theme.colorScheme.error.withValues(alpha: 0.12),
-      onAction: _canEditRecording ? _openEditDetails : null,
-    );
+  Future<void> _retryUpload() async {
+    final recording = _state.recording;
+    if (recording == null) return;
+    await ref.read(syncNotifierProvider.notifier).resetAndRetry(recording.id);
+    await _notifier.load();
   }
 
   Widget _completeFichaOverlay(LocalRecordingEntity recording) {
@@ -906,14 +839,10 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
       onToggleCleaning: _toggleCleaningStatus,
       onRetryUpload:
           recording.uploadStatus == 'failed' ||
+              recording.uploadStatus == 'failed_exhausted' ||
               recording.uploadStatus == 'uploading' ||
               (recording.uploadStatus == 'local' && recording.retryCount > 0)
-          ? () async {
-              await ref
-                  .read(syncNotifierProvider.notifier)
-                  .resetAndRetry(recording.id);
-              await _notifier.load();
-            }
+          ? _retryUpload
           : null,
     );
 
@@ -929,14 +858,14 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
       isUnclassified: isUnclassified,
     );
 
-    final secondaryCollisionBanner = _buildSecondaryCollisionBanner(
-      context,
-      recording,
+    final banners = RecordingUploadBanners(
+      recording: recording,
+      canEdit: _canEditRecording,
+      onEditDetails: _openEditDetails,
+      onRetryUpload: _retryUpload,
+      onDelete: _deleteRecording,
+      onClearSecondary: _clearSecondaryClassification,
     );
-
-    final titleConflictBanner = _buildTitleConflictBanner(context, recording);
-
-    final descriptionGapBanner = _buildDescriptionGapBanner(context, recording);
 
     final storytellerSection = RecordingStorytellerSection(
       storytellerId: recording.storytellerId,
@@ -950,18 +879,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         RecordingUploadProgressSection(recordingId: recording.id),
-        if (titleConflictBanner != null) ...[
-          titleConflictBanner,
-          const SizedBox(height: SpacingScale.s16),
-        ],
-        if (descriptionGapBanner != null) ...[
-          descriptionGapBanner,
-          const SizedBox(height: SpacingScale.s16),
-        ],
-        if (secondaryCollisionBanner != null) ...[
-          secondaryCollisionBanner,
-          const SizedBox(height: SpacingScale.s16),
-        ],
+        banners,
         titleAndGenre,
         const SizedBox(height: SpacingScale.s20),
         storytellerSection,

@@ -702,6 +702,20 @@ class AppLocalizationsHi extends AppLocalizations {
       'इस रिकॉर्डिंग को अपलोड नहीं किया जा सकता जब तक आप एक लंबा विवरण नहीं जोड़ते।';
 
   @override
+  String get recording_statusRetriesExhausted => 'प्रयास समाप्त';
+
+  @override
+  String get recording_statusFileMissing => 'ऑडियो फ़ाइल नहीं मिली';
+
+  @override
+  String get recording_uploadExhaustedMessage =>
+      'कई प्रयासों के बाद अपलोड रुक गया। आप फिर से कोशिश कर सकते हैं।';
+
+  @override
+  String get recording_fileMissingMessage =>
+      'इस रिकॉर्डिंग की ऑडियो फ़ाइल अब इस डिवाइस पर नहीं है, इसलिए इसे अपलोड नहीं किया जा सकता।';
+
+  @override
   String get recording_duplicateTitleTitle => 'नाम पहले से उपयोग में है';
 
   @override

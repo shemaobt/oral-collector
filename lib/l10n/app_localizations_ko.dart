@@ -682,6 +682,20 @@ class AppLocalizationsKo extends AppLocalizations {
       '설명을 더 길게 작성해야 이 녹음을 업로드할 수 있습니다.';
 
   @override
+  String get recording_statusRetriesExhausted => '재시도 횟수 소진';
+
+  @override
+  String get recording_statusFileMissing => '오디오 파일 없음';
+
+  @override
+  String get recording_uploadExhaustedMessage =>
+      '여러 번 시도한 뒤 업로드가 중단되었습니다. 다시 시도할 수 있습니다.';
+
+  @override
+  String get recording_fileMissingMessage =>
+      '이 녹음의 오디오 파일이 이 기기에 더 이상 없어 업로드할 수 없습니다.';
+
+  @override
   String get recording_duplicateTitleTitle => '이미 사용 중인 이름';
 
   @override

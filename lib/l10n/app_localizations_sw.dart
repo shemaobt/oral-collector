@@ -700,6 +700,20 @@ class AppLocalizationsSw extends AppLocalizations {
       'Rekodi hii haiwezi kupakiwa hadi uongeze maelezo marefu zaidi.';
 
   @override
+  String get recording_statusRetriesExhausted => 'Majaribio yamekwisha';
+
+  @override
+  String get recording_statusFileMissing => 'Faili ya sauti haipatikani';
+
+  @override
+  String get recording_uploadExhaustedMessage =>
+      'Upakiaji ulisimama baada ya majaribio kadhaa. Unaweza kujaribu tena.';
+
+  @override
+  String get recording_fileMissingMessage =>
+      'Faili ya sauti ya rekodi hii haipo tena kwenye kifaa hiki, kwa hivyo haiwezi kupakiwa.';
+
+  @override
   String get recording_duplicateTitleTitle => 'Jina limekwisha tumika';
 
   @override

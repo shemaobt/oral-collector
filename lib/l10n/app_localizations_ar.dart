@@ -692,6 +692,20 @@ class AppLocalizationsAr extends AppLocalizations {
       'لا يمكن رفع هذا التسجيل حتى تضيف وصفًا أطول.';
 
   @override
+  String get recording_statusRetriesExhausted => 'نفدت المحاولات';
+
+  @override
+  String get recording_statusFileMissing => 'ملف الصوت مفقود';
+
+  @override
+  String get recording_uploadExhaustedMessage =>
+      'توقف الرفع بعد عدة محاولات. يمكنك إعادة المحاولة.';
+
+  @override
+  String get recording_fileMissingMessage =>
+      'لم يعد ملف الصوت لهذا التسجيل موجودًا على هذا الجهاز، لذا لا يمكن رفعه.';
+
+  @override
   String get recording_duplicateTitleTitle => 'الاسم مستخدم بالفعل';
 
   @override

@@ -238,6 +238,30 @@ Path: @/lib/features/recording/presentation
   filter includes it. The status section's plain retry affordance
   deliberately does **not**, since a bare retry would hit the same
   pre-flight.
+- **The two terminal statuses from ENG-377 follow the same pattern, with
+  different exits.** `failed_exhausted` (the upload spent its retry budget)
+  and `failed_missing_file` (the audio is no longer on the device) leave
+  `getPendingUploads`, so the detail screen and the list are where the user
+  meets them. The exhausted banner offers `detail_retry` wired to
+  `resetAndRetry` — and unlike the two statuses above, `failed_exhausted` *is*
+  included in the status section's plain retry affordance, because a retry is
+  exactly what it is waiting for. The missing-file banner deliberately does
+  not offer a retry: `_resolveFilePath` already looked in all three places the
+  app puts a recording and the app hard-deletes, so another attempt finds the
+  same nothing; the action is `common_delete`, gated on `canEdit` — the same
+  gate `RecordingQuickActions` and `RecordingActionMenu` already put on delete,
+  so the screen answers "who may delete this" the same way in all three places.
+  Retry is gated nowhere, on the same screen, because requeueing an upload the
+  device already owns is not an edit of the recording.
+  Both get their own label on `RecordingCard` and `RecordingStatusSection`
+  (`recording_statusRetriesExhausted`, `recording_statusFileMissing`) and both
+  are matched by the *pending* filter. All five banners
+  (title conflict, description gap, the two ENG-377 additions, and secondary
+  collision) live in `RecordingUploadBanners`
+  ([./widgets/recording_upload_banners.dart](widgets/recording_upload_banners.dart)),
+  one widget the screen drops into `build` — which keeps `build` under the
+  source-lines metric gate as banners are added, and makes the set testable
+  without mounting the hero player.
 - **The "what does this recording still owe" prompt is a guided flow, not a
   banner (ENG-374).** The detail screen no longer renders a classify banner.
   `Scaffold.body` is now a `Stack`: the base layer is the existing wide/phone
@@ -450,6 +474,17 @@ Path: @/lib/features/recording/presentation
   `complete_ficha_pill_text_scale_test.dart` and
   `complete_ficha_sheet_text_scale_test.dart`. Behaviour lives in
   [/test/features/recording/presentation/widgets/complete_ficha_test.dart](../../../../test/features/recording/presentation/widgets/complete_ficha_test.dart).
+  The same constraint used to block any test of the conditional banners, which
+  is why they were moved out of `build` into `RecordingUploadBanners`
+  (ENG-377): the per-status wiring — which message, which action, whether the
+  action is gated — is covered directly in
+  [/test/features/recording/presentation/widgets/recording_upload_banners_test.dart](../../../../test/features/recording/presentation/widgets/recording_upload_banners_test.dart),
+  and `RecordingActionBanner` itself keeps its own generic test
+  ([/test/features/recording/presentation/widgets/recording_action_banner_test.dart](../../../../test/features/recording/presentation/widgets/recording_action_banner_test.dart)).
+  Note what those tests can and cannot pin: a recording has one
+  `uploadStatus`, so the four status banners are mutually exclusive and their
+  relative order is unobservable. The only real ordering fact — an upload
+  banner precedes the secondary-collision warning — is the one asserted.
 - **Secondary-classification collision is prevented, not validated
   (ENG-72).** A secondary classification is invalid only when its whole
   `(register, genre, subcategory)` triple is identical to the primary

@@ -95,13 +95,23 @@ Path: @/lib/features/recording/data/repositories
   `resetStuckUploading`. That filter lives only in the engine, not in this
   query — see Things to Know and
   [/lib/features/sync/docs.md](../../../sync/docs.md).
-  `failed_conflict` (ENG-71) and `failed_description` (ENG-354) are both
+  `failed_conflict` (ENG-71), `failed_description` (ENG-354),
+  `failed_exhausted` and `failed_missing_file` (both ENG-377) are all
   deliberately absent from the matched set: a duplicate title is terminal until
-  the user renames the recording, and a description the create rule rejects is
-  terminal until the user lengthens it. Both exits route through
+  the user renames the recording, a description the create rule rejects is
+  terminal until the user lengthens it, an upload that spent its retry budget
+  is terminal until the user asks for it again, and audio that is no longer on
+  the device is terminal outright. The first three exits route through
   `resetRetryCount`, which flips the row back to `local` and so back into this
-  query. `deleteStaleRecordings` matches `failed` / `uploading` only, so neither
-  is destroyed by "Clear failed" while it waits on the user.
+  query. `deleteStaleRecordings` matches `failed` / `uploading` only, so none of
+  them is destroyed by "Clear failed" while it waits on the user. Not because
+  the audio is still there — `failed_missing_file` has none by definition — but
+  because each row carries the title, description and classification the user
+  typed and the server never received, and the sweep is wholesale.
+  The generic `failed` therefore means one thing only: a retry is still coming.
+  Before ENG-377 it also covered rows whose budget was spent, which this query
+  called pending and the engine's eligibility filter refused — a recording no
+  pass would ever move, counted by every badge that reads this query.
 - `watchRecordingEntityById` is the **single detail watch stream** (ENG-195
   introduced it; ENG-199/ENG-200 made it the sole one by deleting the former
   row stream `watchRecordingById`). It is a `watchSingleOrNull` query that
@@ -273,16 +283,27 @@ Path: @/lib/features/recording/data/repositories
   `deleteStaleRecordings(projectId)` is the separate user-triggered "clear
   stale" sweep that bulk-deletes `failed` and `uploading` rows for a project.
 - Lifecycle helpers: `markAsUploading`, `markAsUploaded(id, serverId,
-  gcsUrl)`, `markAsFailed`, `resetRetryCount`, and `resetStuckUploading`.
-  These mutate only upload-state columns; they never touch user-content
-  metadata, which is the contract that makes the offline-edit story safe.
-  `resetStuckUploading` is the startup crash-recovery helper: it flips every
-  row orphaned in `uploading` back to `local`, rewriting **only**
-  `uploadStatus` so `retryCount`, `lastRetryAt`, `resumableSessionUri`,
-  `serverId`, and `uploadedBytes` survive and the upload resumes from its
-  saved offset. It is called once from
-  [/lib/main.dart](../../../../main.dart) before the sync queue goes live —
-  see Things to Know.
+  gcsUrl)`, `markAsFailed`, `resetRetryCount`, `resetStuckUploading`, and
+  `normalizeExhaustedUploads`. These mutate only upload-state columns; they
+  never touch user-content metadata, which is the contract that makes the
+  offline-edit story safe. `markAsFailed(id)` records one failed attempt **and
+  owns the retry ceiling** (ENG-377): it re-reads the row, increments
+  `retryCount`, and writes `failed_exhausted` instead of `failed` when the new
+  count reaches `kMaxUploadRetries`. It takes no `incrementRetry` flag — that
+  branch existed for the missing-file case, which now writes its own terminal
+  status. `resetStuckUploading` is the startup crash-recovery
+  helper: it flips every row orphaned in `uploading` back to `local`,
+  rewriting **only** `uploadStatus` so `retryCount`, `lastRetryAt`,
+  `resumableSessionUri`, `serverId`, and `uploadedBytes` survive and the
+  upload resumes from its saved offset. `normalizeExhaustedUploads()`
+  (ENG-377) is its sibling startup fix: one `UPDATE` that
+  retires every row still at (`uploadStatus: 'failed'`, `retryCount >=
+  kMaxUploadRetries`) to `failed_exhausted`, so devices that already carry rows
+  stuck in the old shape get healed, not just recordings created after the
+  writer fix. Both are called once from
+  [/lib/main.dart](../../../../main.dart), back to back, before the sync
+  queue goes live — see Things to Know and
+  [/lib/features/sync/docs.md](../../../sync/docs.md).
 - `RecordingApiRepositoryImpl` translates between HTTP and the
   `ServerRecording` DTO from
   [../../domain/entities/server_recording.dart](../../domain/entities/server_recording.dart).
@@ -385,6 +406,51 @@ Path: @/lib/features/recording/data/repositories
   it is a no-op on web. The drain's complementary exclusion of `uploading`
   rows and the startup invocation order live in
   [/lib/features/sync/docs.md](../../../sync/docs.md).
+- **The retry ceiling is decided inside `markAsFailed`, not by its caller
+  (ENG-377).** The sync engine used to read the row, add one, and pick
+  between `markAsFailed` and a terminal write itself. That only worked when
+  the engine had got far enough to read the row: a failure raised earlier —
+  the platform-channel call inside `_resolveFilePath`, the `updateRecording`
+  that rewrites a relocated path, the `getRecordingById` itself — reached the
+  decision with no row in hand, counted from zero, and chose `markAsFailed`,
+  which then incremented from the **database** value. A row at `retryCount: 4`
+  came out as (`failed`, 5): the exact stuck shape ENG-377 exists to remove.
+  Moving the decision here removes the category rather than patching the
+  paths, because this is the method that already re-reads the count. `failed`
+  now means "a retry is still coming" no matter what threw or where.
+- **`normalizeExhaustedUploads` is a one-time data fix, run on every
+  launch, not a schema migration (ENG-377).** Before ENG-377 the writers
+  wrote a spent retry budget as `(uploadStatus: 'failed', retryCount:
+  kMaxUploadRetries)` — a shape `getPendingUploads` still calls pending and the
+  sync engine's own eligibility filter refuses, so the row sat in the badge
+  count forever with nothing able to move it. Fixing the writers (see
+  [/lib/features/sync/docs.md](../../../sync/docs.md)) stops new rows from
+  taking that shape but does nothing for rows already in it, so this method
+  sweeps them to `failed_exhausted` at every startup. The ceiling comes from
+  `kMaxUploadRetries` in
+  [/lib/core/config/upload_retry_policy.dart](../../../../core/config/upload_retry_policy.dart),
+  the one place the engine and this repository both read it from, so the
+  sweep's filter and the writer's decision cannot drift apart.
+  Nothing about the table changes — only rows an older build left behind —
+  which is why this is a normal `UPDATE` rather than a Drift schema step;
+  see [/lib/core/database/docs.md](../../../../core/database/docs.md) for
+  the schema-migration path this deliberately is not.
+- **`deleteStaleRecordings` ("Clear failed") lost most of what it used to
+  clear (ENG-377).** Before ENG-377, a permanently-failed upload sat at the
+  generic `failed` status and was exactly the kind of row this bulk delete
+  was for. Now every permanent failure has its own terminal status —
+  `failed_conflict`, `failed_description`, `failed_exhausted`,
+  `failed_missing_file` — and none of them match `deleteStaleRecordings`'s
+  `failed` / `uploading` filter, on purpose: each carries the title,
+  description and classification the user typed and the server never
+  received. (Not "the audio is still there" — for `failed_missing_file` it is
+  not, and that row is still worth keeping for its metadata.) What is left for the button to catch is
+  a `failed` row still inside its retry budget (deleting it throws away an
+  upload the queue is still going to attempt) and an `uploading` row that
+  was not reclaimed by `resetStuckUploading`. The action was not removed or
+  renamed as part of ENG-377; whether it should widen its match, and eat the
+  same loss of user-entered metadata the new statuses were built to avoid, is
+  left as an open product decision.
 - **The pending-upload order is `createdAt ASC, id ASC`, and the queue is
   drained in that order (ENG-122).** Ordering by `recordedAt` (wall-clock
   recording time) is wrong for a FIFO queue: a batch import stamps many rows

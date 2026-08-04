@@ -64,4 +64,26 @@ void main() {
     expect(find.text('Upload Failed'), findsOneWidget);
     expect(find.text('Description too short'), findsNothing);
   });
+
+  testWidgets('a recording that spent its retries says the attempts ran out', (
+    tester,
+  ) async {
+    await _pump(tester, 'failed_exhausted');
+
+    expect(find.text('Max retries — tap Retry'), findsOneWidget);
+    expect(find.text('Upload Failed'), findsNothing);
+    expect(find.text('Not synced'), findsNothing);
+  });
+
+  testWidgets('a recording whose audio is gone says the file is missing', (
+    tester,
+  ) async {
+    await _pump(tester, 'failed_missing_file');
+
+    expect(find.text('Audio file missing'), findsOneWidget);
+    // Retrying would not bring the file back, so this must not read like the
+    // failures that a retry can clear.
+    expect(find.text('Upload Failed'), findsNothing);
+    expect(find.text('Max retries — tap Retry'), findsNothing);
+  });
 }

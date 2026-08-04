@@ -208,6 +208,16 @@ Path: @/lib/features/recording/presentation/widgets
   the card's layout be exercised directly on the VM while the banner keeps
   the platform gate, the repository read, and the resume/discard
   orchestration.
+- `RecordingUploadBanners` (ENG-377) renders every banner that explains why a
+  recording is not on the server — title conflict, description gap, spent
+  retry budget, missing audio file, secondary-classification collision — in a
+  fixed order, each configured from the shared `RecordingActionBanner`. Split
+  out of `RecordingDetailScreen.build` for the same reason as
+  `PendingWebUploadCard` above: the loaded detail screen cannot be pumped in a
+  widget test, so the wiring was untestable while it lived there. It is
+  presentational — a `LocalRecordingEntity`, a `canEdit` flag and four
+  callbacks, no providers. `canEdit` disables the action but never hides the
+  banner: a viewer who cannot fix the problem should still be told what it is.
 
 ### Things to Know
 
@@ -221,18 +231,22 @@ Path: @/lib/features/recording/presentation/widgets
   in-progress upload) at 1.0x/1.5x/2.0x in en and fr to catch that; the test
   was checked against a real regression by briefly removing the breadcrumb's
   `Flexible` while writing it.
-- **`failed_conflict` and `failed_description` must keep distinct icons on
-  `RecordingCard`.** `_statusIcon` gives them `LucideIcons.copy` and
-  `LucideIcons.fileText`; they used to share `LucideIcons.alertCircle`, which
-  made the two states visually identical once the label moved from painted
-  text into the icon's tooltip/semantics — on this card the icon shape is the
-  only signal a sighted user gets for which of the two blocked a recording.
+- **Every blocked-upload status must keep a distinct icon on
+  `RecordingCard`.** `_statusIcon` gives `failed_conflict` `LucideIcons.copy`,
+  `failed_description` `LucideIcons.fileText`, and (ENG-377)
+  `failed_exhausted` `LucideIcons.alertOctagon` and `failed_missing_file`
+  `LucideIcons.fileX`; the first two used to share `LucideIcons.alertCircle`,
+  which made the two states visually identical once the label moved from
+  painted text into the icon's tooltip/semantics — on this card the icon shape
+  is the only signal a sighted user gets for which of them blocked a recording.
   `RecordingStatusSection`
-  ([recording_status_section.dart](recording_status_section.dart)) keeps both
-  on `LucideIcons.alertCircle` deliberately, because there the icon sits next
-  to its own text label and does not need to carry the distinction alone —
-  the two surfaces disagreeing on iconography for the same states is known,
-  not a bug, and aligning them would be a separate change.
+  ([recording_status_section.dart](recording_status_section.dart)) keeps
+  `failed_conflict` and `failed_description` on `LucideIcons.alertCircle`
+  deliberately, because there the icon sits next to its own text label and does
+  not need to carry the distinction alone — the two surfaces disagreeing on
+  iconography for those states is known, not a bug, and aligning them would be
+  a separate change. The ENG-377 pair matches across both surfaces only because
+  they were written once, not because the surfaces were reconciled.
 - **The hero player is not the owner of playback state.** The
   `AudioPlayer` lives in `RecordingPlayerNotifier` (an
   `AutoDisposeFamilyNotifier` keyed by recording id). The hero player
