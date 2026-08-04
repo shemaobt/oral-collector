@@ -112,9 +112,14 @@ Path: @/lib/features/project/data
   summing the map to answer "how many recordings need attention" over-reports —
   by a plausible amount, which is the kind nobody catches. Anything showing a
   recording count reads `recordings_with_review_flags` and nothing else; the
-  map is only ever a per-code annotation. ENG-377 is an open bug of exactly
-  this shape elsewhere in the repo, so treat the trap as recurring rather than
-  hypothetical.
+  map is only ever a per-code annotation — as of ENG-381 each line of it on
+  the settings screen is also a tap target that opens the recordings list
+  filtered to that one code (server-side; see
+  [/lib/features/recording/presentation/notifiers/docs.md](../../recording/presentation/notifiers/docs.md)),
+  but the headline `recordings_with_review_flags` count stays untappable,
+  since there is no server filter that answers to it. ENG-377 is an open bug
+  of exactly this shape elsewhere in the repo, so treat the trap as recurring
+  rather than hypothetical.
 - **Server-wins-after-fetch invariant.** Build kicks off cache hydration without
   awaiting it, so a slow `read()` can resolve after a fast `fetchProjects()` has
   already populated fresh server data. Hydration bails when the fetch has

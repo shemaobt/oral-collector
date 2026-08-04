@@ -39,13 +39,14 @@ Future<void> _pump(
     tester,
     scale: scale,
     locale: locale,
-    child: const Padding(
-      padding: EdgeInsets.all(8),
+    child: Padding(
+      padding: const EdgeInsets.all(8),
       child: ProjectSettingsStatsSection(
         project: _project,
         memberCount: 888888,
         storytellerCount: 777777,
         stats: _stats,
+        onPendencyTap: (_) {},
       ),
     ),
   );

@@ -270,6 +270,11 @@
   "recordings_selectProjectSubtitle": "Choose a project to view its recordings",
   "recordings_noRecordings": "No recordings yet",
   "recordings_noRecordingsSubtitle": "Tap the microphone to record your first story, or import an audio file.",
+  "recordings_offlineFilterTitle": "Not available offline",
+  "@recordings_offlineFilterTitle": {
+    "description": "Empty-state title when a review-flag filter is applied but the device is offline; the filter is server-computed and has no local equivalent (ENG-381)."
+  },
+  "recordings_offlineFilterDescription": "The server works out which recordings still need details. Reconnect to see them, or remove the filter to browse everything on this device.",
   "recordings_dropToImport": "Tip: drag audio files onto this window to import.",
   "recordings_count": "{count, plural, =1{1 recording} other{{count} recordings}}",
   "@recordings_count": {
@@ -891,6 +896,18 @@
   "projectStats_needsDetails": "Needs details",
   "@projectStats_needsDetails": {
     "description": "Stat chip label under the number of recordings that still have at least one open field (ENG-374)."
+  },
+  "projectStats_showPendency": "Show recordings — {label} ({count})",
+  "@projectStats_showPendency": {
+    "description": "Accessible label for the tappable breakdown line under the review counter; opens the recordings list filtered to that pendency (ENG-381).",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "project_active": "Active",
   "recording_paused": "Paused",

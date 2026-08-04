@@ -1346,6 +1346,18 @@ abstract class AppLocalizations {
   /// **'Tap the microphone to record your first story, or import an audio file.'**
   String get recordings_noRecordingsSubtitle;
 
+  /// Empty-state title when a review-flag filter is applied but the device is offline; the filter is server-computed and has no local equivalent (ENG-381).
+  ///
+  /// In en, this message translates to:
+  /// **'Not available offline'**
+  String get recordings_offlineFilterTitle;
+
+  /// No description provided for @recordings_offlineFilterDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'The server works out which recordings still need details. Reconnect to see them, or remove the filter to browse everything on this device.'**
+  String get recordings_offlineFilterDescription;
+
   /// No description provided for @recordings_dropToImport.
   ///
   /// In en, this message translates to:
@@ -3361,6 +3373,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Needs details'**
   String get projectStats_needsDetails;
+
+  /// Accessible label for the tappable breakdown line under the review counter; opens the recordings list filtered to that pendency (ENG-381).
+  ///
+  /// In en, this message translates to:
+  /// **'Show recordings — {label} ({count})'**
+  String projectStats_showPendency(String label, int count);
 
   /// No description provided for @project_active.
   ///

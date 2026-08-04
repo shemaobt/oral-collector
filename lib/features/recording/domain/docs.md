@@ -73,6 +73,15 @@ Path: @/lib/features/recording/domain
   ([/lib/shared/utils/recording_description.dart](../../../shared/utils/recording_description.dart))
   already expose answer instead — otherwise a recording captured minutes ago
   would read as complete while its maker is still there to finish it.
+  `pendencyKindForCode` and its inverse `reviewFlagCodeFor` (ENG-381) both
+  derive from `_knownCodes` — one forward, one built by inverting the same
+  map — so a code and a kind can never disagree about which one names the
+  other. `reviewFlagCodeFor` is what the recordings-list notifier
+  ([../presentation/notifiers/docs.md](../presentation/notifiers/docs.md))
+  sends as the `review_flag` query parameter when the project settings screen's
+  pendency breakdown is tapped: the enum stays total over the server's closed
+  code set, so a code the server would 422 on is unreachable from this path by
+  construction.
 - [`UpdateRecordingRequest`](entities/update_recording_request.dart) (ENG-205)
   is the PATCH-body params object for `updateRecording`: a plain `const` class
   with the thirteen optional update fields and a `toJson()` that builds the

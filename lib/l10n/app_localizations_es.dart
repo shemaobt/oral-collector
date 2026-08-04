@@ -670,6 +670,13 @@ class AppLocalizationsEs extends AppLocalizations {
       'Toca el micrófono para grabar tu primera historia, o importa un archivo de audio.';
 
   @override
+  String get recordings_offlineFilterTitle => 'No disponible sin conexión';
+
+  @override
+  String get recordings_offlineFilterDescription =>
+      'El servidor es quien determina qué grabaciones todavía necesitan detalles. Vuelve a conectarte para verlas o quita el filtro para ver todo lo que hay en este dispositivo.';
+
+  @override
   String get recordings_dropToImport =>
       'Consejo: arrastra archivos de audio a esta ventana para importarlos.';
 
@@ -1875,6 +1882,11 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get projectStats_needsDetails => 'Faltan detalles';
+
+  @override
+  String projectStats_showPendency(String label, int count) {
+    return 'Ver grabaciones — $label ($count)';
+  }
 
   @override
   String get project_active => 'Activo';

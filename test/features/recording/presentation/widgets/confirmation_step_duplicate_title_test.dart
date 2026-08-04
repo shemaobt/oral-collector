@@ -79,6 +79,7 @@ class _TitleLookupApiRepo implements RecordingApiRepository {
     String? storytellerId,
     String? uploadStatus,
     String? title,
+    String? reviewFlag,
   }) async {
     if (hang) return Completer<List<ServerRecording>>().future;
     final error = failure;

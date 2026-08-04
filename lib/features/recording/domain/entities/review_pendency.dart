@@ -78,3 +78,15 @@ List<PendencyKind> _fromFields(LocalRecordingEntity recording) => [
 /// to reach the same labels the guided flow uses. Keeping the map itself
 /// private means both surfaces still resolve a code exactly one way.
 PendencyKind? pendencyKindForCode(String code) => _knownCodes[code];
+
+final Map<PendencyKind, String> _codeForKind = {
+  for (final entry in _knownCodes.entries) entry.value: entry.key,
+};
+
+/// The wire code for [kind], for callers that send a filter to the server.
+///
+/// Inverted from the same table rather than written out again, so the two
+/// directions cannot disagree. Total by construction: the enum exists to mirror
+/// the server's closed set, so a code the server would reject with a 422 is
+/// unreachable from here.
+String reviewFlagCodeFor(PendencyKind kind) => _codeForKind[kind]!;

@@ -32,6 +32,7 @@ Future<void> _pump(WidgetTester tester, {ProjectStats? stats}) async {
         memberCount: 7,
         storytellerCount: 5,
         stats: stats,
+        onPendencyTap: (_) {},
       ),
     ),
   );
@@ -103,8 +104,17 @@ void main() {
         )
         .dx;
 
+    // The row, not the text: the line is a tap target since ENG-381, so its
+    // trailing chevron is what sits on the right edge.
     expect(
-      tester.getBottomRight(find.text('No storyteller: 3')).dx,
+      tester
+          .getBottomRight(
+            find.ancestor(
+              of: find.text('No storyteller: 3'),
+              matching: find.byType(InkWell),
+            ),
+          )
+          .dx,
       closeTo(chipRight, 1),
     );
     expect(

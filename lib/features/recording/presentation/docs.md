@@ -23,7 +23,15 @@ Path: @/lib/features/recording/presentation
 
 - Screens are wired into navigation by the top-level router in
   [/lib/core/router/](../../../core/router/) (e.g. `/recording/:id`,
-  `/recording/:id/trim`, the recording flow, the file-import screen).
+  `/recording/:id/trim`, the recording flow, the file-import screen). The
+  `/recordings` route also reads an optional `reviewFlag` query parameter
+  (ENG-381), resolved through
+  [../domain/entities/review_pendency.dart](../domain/entities/review_pendency.dart)'s
+  `pendencyKindForCode` so an unrecognized code opens the list unfiltered
+  instead of forwarding a value the server would 422 on; the project settings
+  screen's pendency breakdown is what links here (see
+  [../../project/data/docs.md](../../project/data/docs.md) for the counters it
+  reads).
 - The detail screen is now a thin consumer of `RecordingDetailNotifier`
   (ENG-194), which owns the load orchestration, the metadata/audio mutations,
   and the `localRecordingStreamProvider` listen (see
@@ -340,6 +348,15 @@ Path: @/lib/features/recording/presentation
   end to end except where the data layer still needs a row (the heal/server
   resolution inside `RecordingDetailNotifier.load`, the split child-companion
   build).
+- **The review-flag filter opens on a different empty state when offline
+  (ENG-381).** `recordings_list_screen.dart` checks
+  `isOffline && listState.selectedReviewFlag != null` ahead of the ordinary
+  "no recordings" branch: only the server can say which recordings carry a
+  flag, so an offline device under this filter shows a dedicated "not
+  available offline" `EmptyState` with a clear-filter action, rather than
+  either the device's full local set or a claim that the project has nothing
+  in it. See [./notifiers/docs.md](notifiers/docs.md) for the notifier-side
+  half (`setReviewFlagFilter`, `_localFallback`).
 - **Listener-driven re-renders (now in the notifier, ENG-194).** The
   recording shown is `RecordingDetailState.recording`, a `LocalRecordingEntity`
   (ENG-199/ENG-200), and `RecordingDetailNotifier.build` (native only)

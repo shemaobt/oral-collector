@@ -1,6 +1,7 @@
 import '../../../../shared/utils/recording_description.dart';
 import '../../domain/entities/local_recording_entity.dart';
 import '../../domain/entities/local_recording_entity_classification.dart';
+import '../../domain/entities/review_pendency.dart';
 
 enum StatusFilter {
   all,
@@ -20,6 +21,13 @@ class RecordingsListState {
   final String? selectedSubcategoryId;
   final String? selectedStorytellerId;
   final String? selectedUserId;
+
+  /// The pendency the list is narrowed to, or null for no narrowing.
+  ///
+  /// Held as the enum, not the wire code: the server takes one code out of a
+  /// closed set and answers 422 to anything else, so keeping the closed set in
+  /// the type makes a rejected request unrepresentable.
+  final PendencyKind? selectedReviewFlag;
   final StatusFilter selectedFilter;
   final String searchQuery;
 
@@ -32,6 +40,7 @@ class RecordingsListState {
     this.selectedSubcategoryId,
     this.selectedStorytellerId,
     this.selectedUserId,
+    this.selectedReviewFlag,
     this.selectedFilter = StatusFilter.all,
     this.searchQuery = '',
   });
@@ -45,12 +54,14 @@ class RecordingsListState {
     String? selectedSubcategoryId,
     String? selectedStorytellerId,
     String? selectedUserId,
+    PendencyKind? selectedReviewFlag,
     StatusFilter? selectedFilter,
     String? searchQuery,
     bool clearGenreId = false,
     bool clearSubcategoryId = false,
     bool clearStorytellerId = false,
     bool clearUserId = false,
+    bool clearReviewFlag = false,
   }) {
     return RecordingsListState(
       recordings: recordings ?? this.recordings,
@@ -69,6 +80,9 @@ class RecordingsListState {
       selectedUserId: clearUserId
           ? null
           : (selectedUserId ?? this.selectedUserId),
+      selectedReviewFlag: clearReviewFlag
+          ? null
+          : (selectedReviewFlag ?? this.selectedReviewFlag),
       selectedFilter: selectedFilter ?? this.selectedFilter,
       searchQuery: searchQuery ?? this.searchQuery,
     );
@@ -81,6 +95,7 @@ class RecordingsListState {
     if (selectedSubcategoryId != null) count++;
     if (selectedStorytellerId != null) count++;
     if (selectedUserId != null) count++;
+    if (selectedReviewFlag != null) count++;
     return count;
   }
 

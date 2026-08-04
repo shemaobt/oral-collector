@@ -127,6 +127,13 @@ Path: @/lib/features/recording/presentation/widgets
   entity's `isUnclassified` / `hasSecondary` extension (see
   [../../domain/docs.md](../../domain/docs.md)); it no longer touches Drift
   or the row-level classification extension.
+- `ActiveFilterChips` (`active_filter_chips.dart`) renders one chip per active
+  filter on `RecordingsListState`, each removable back through the matching
+  notifier setter. Its review-flag chip (ENG-381) is the one chip whose
+  presence means the list is server-filtered rather than sieved from the
+  in-memory page — removing it calls `setReviewFlagFilter(null)`, which
+  (see [../notifiers/docs.md](../notifiers/docs.md)) re-fetches from the
+  server rather than just re-computing `filteredRecordings` locally.
 - `RecordingCard` (ENG-374, "card V3") was redesigned around one question —
   "which recordings still need me?" — which cost the duration chip (and the
   `formattedDuration` constructor param `recordings_list_screen.dart` used to

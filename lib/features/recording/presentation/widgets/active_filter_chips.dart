@@ -9,6 +9,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../genre/presentation/notifiers/genre_notifier.dart';
 import '../../../project/presentation/notifiers/member_notifier.dart';
 import '../../../storyteller/presentation/notifiers/project_storytellers_notifier.dart';
+import '../../domain/entities/review_pendency.dart';
 import '../notifiers/recordings_list_notifier.dart';
 import '../notifiers/recordings_list_state.dart';
 
@@ -120,6 +121,20 @@ class ActiveFilterChips extends ConsumerWidget {
       );
     }
 
+    final reviewFlag = state.selectedReviewFlag;
+    if (reviewFlag != null) {
+      // Arriving from the project counter drops the user into an already
+      // narrowed list. Without a chip there is nothing on screen saying so, and
+      // nothing to press to get back to the whole project.
+      chips.add(
+        _buildChip(
+          context,
+          label: _pendencyLabel(l10n, reviewFlag),
+          onRemove: () => notifier.setReviewFlagFilter(null),
+        ),
+      );
+    }
+
     if (state.activeFilterCount >= 2) {
       chips.add(
         TextButton.icon(
@@ -155,6 +170,13 @@ class ActiveFilterChips extends ConsumerWidget {
       ),
     );
   }
+
+  String _pendencyLabel(AppLocalizations l10n, PendencyKind kind) =>
+      switch (kind) {
+        PendencyKind.classification => l10n.recording_pendencyClassification,
+        PendencyKind.description => l10n.recording_pendencyDescription,
+        PendencyKind.storyteller => l10n.recording_pendencyStoryteller,
+      };
 
   Widget _buildChip(
     BuildContext context, {

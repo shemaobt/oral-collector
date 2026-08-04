@@ -664,6 +664,13 @@ class AppLocalizationsHi extends AppLocalizations {
       'अपनी पहली कहानी रिकॉर्ड करने के लिए माइक्रोफ़ोन पर टैप करें, या एक ऑडियो फ़ाइल आयात करें।';
 
   @override
+  String get recordings_offlineFilterTitle => 'ऑफ़लाइन उपलब्ध नहीं';
+
+  @override
+  String get recordings_offlineFilterDescription =>
+      'कौन-सी रिकॉर्डिंग में अब भी विवरण बाकी हैं, यह सर्वर तय करता है। उन्हें देखने के लिए फिर से कनेक्ट करें, या इस डिवाइस की सारी रिकॉर्डिंग देखने के लिए फ़िल्टर हटाएँ।';
+
+  @override
   String get recordings_dropToImport =>
       'सुझाव: आयात करने के लिए ऑडियो फ़ाइलें इस विंडो पर खींचें।';
 
@@ -1864,6 +1871,11 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get projectStats_needsDetails => 'विवरण अधूरा';
+
+  @override
+  String projectStats_showPendency(String label, int count) {
+    return 'रिकॉर्डिंग देखें — $label ($count)';
+  }
 
   @override
   String get project_active => 'सक्रिय';

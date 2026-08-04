@@ -12,6 +12,7 @@ import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_snack_bar.dart';
 import '../../../shared/widgets/invite_dialog.dart';
 import '../../auth/data/providers/role_provider.dart';
+import '../../recording/domain/entities/review_pendency.dart';
 import '../../sync/presentation/notifiers/sync_notifier.dart';
 import '../data/providers.dart';
 import '../domain/entities/project.dart';
@@ -243,6 +244,32 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
     }
   }
 
+  /// Opens the recordings list narrowed to [kind] (ENG-381).
+  ///
+  /// Settings can be opened for any project in the list, but the recordings
+  /// list only ever reads the active one, so pushing straight there from
+  /// another project's settings would answer with the wrong project's
+  /// recordings. The switch happens first, and only when it is needed.
+  ///
+  /// The code travels as a query parameter rather than as `extra`: go_router's
+  /// own documentation warns against `extra`, and it is dropped on a back
+  /// navigation, which would silently widen the list.
+  Future<void> _openPendencyFilter(PendencyKind kind) async {
+    final project = _project;
+    if (project == null) return;
+
+    final active = ref.read(projectNotifierProvider).activeProject;
+    if (active?.id != project.id) {
+      await ref
+          .read(projectNotifierProvider.notifier)
+          .setActiveProject(project);
+    }
+    if (!mounted) return;
+    unawaited(
+      context.push<void>('/recordings?reviewFlag=${reviewFlagCodeFor(kind)}'),
+    );
+  }
+
   Future<void> _showInviteDialog() async {
     final result = await showDialog<bool>(
       context: context,
@@ -458,6 +485,7 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
                             memberCount: memberCount,
                             storytellerCount: _project!.storytellerCount,
                             stats: _stats,
+                            onPendencyTap: _openPendencyFilter,
                           ),
                           const SizedBox(height: SpacingScale.s28),
                           Row(
@@ -480,6 +508,7 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
                         memberCount: memberCount,
                         storytellerCount: _project!.storytellerCount,
                         stats: _stats,
+                        onPendencyTap: _openPendencyFilter,
                       ),
                       if (_isManager) ...[
                         const SizedBox(height: SpacingScale.s28),

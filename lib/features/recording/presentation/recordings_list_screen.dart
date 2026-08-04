@@ -21,6 +21,7 @@ import '../../project/presentation/notifiers/project_notifier.dart';
 import '../../sync/presentation/notifiers/sync_notifier.dart';
 import '../domain/entities/local_recording_entity.dart';
 import '../domain/entities/register.dart';
+import '../domain/entities/review_pendency.dart';
 import 'notifiers/recordings_list_notifier.dart';
 import 'notifiers/recordings_list_state.dart';
 import 'widgets/active_filter_chips.dart';
@@ -38,10 +39,12 @@ class RecordingsListScreen extends ConsumerStatefulWidget {
     super.key,
     this.initialGenreId,
     this.initialSubcategoryId,
+    this.initialReviewFlag,
   });
 
   final String? initialGenreId;
   final String? initialSubcategoryId;
+  final PendencyKind? initialReviewFlag;
 
   @override
   ConsumerState<RecordingsListScreen> createState() =>
@@ -60,11 +63,15 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
     _scrollController.addListener(_onScroll);
     final gid = widget.initialGenreId;
     final sid = widget.initialSubcategoryId;
+    final flag = widget.initialReviewFlag;
     Future.microtask(() {
       if (!mounted) return;
       final notifier = ref.read(recordingsListNotifierProvider.notifier);
       if (gid != null && gid.isNotEmpty) notifier.setGenreFilter(gid);
       if (sid != null && sid.isNotEmpty) notifier.setSubcategoryFilter(sid);
+      // refresh: false — _refreshAll fetches on the next line, and the pendency
+      // filter is a server-side one, so letting it fetch too would ask twice.
+      unawaited(notifier.setReviewFlagFilter(flag, refresh: false));
       _refreshAll();
     });
   }
@@ -370,20 +377,44 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
                       )
                     : filtered.isEmpty
                     ? SliverFillRemaining(
-                        child: ImportDropZone(
-                          onFilesDropped: (files) {
-                            if (!mounted) return;
-                            context.push<void>('/import-file', extra: files);
-                          },
-                          hoverLabel: l10n.import_dropHint,
-                          child: EmptyState(
-                            icon: LucideIcons.mic,
-                            title: l10n.recordings_noRecordings,
-                            description: ImportDropZone.isSupportedPlatform
-                                ? '${l10n.recordings_noRecordingsSubtitle}\n\n${l10n.recordings_dropToImport}'
-                                : l10n.recordings_noRecordingsSubtitle,
-                          ),
-                        ),
+                        child: isOffline && listState.selectedReviewFlag != null
+                            // Not "no recordings": there may well be plenty.
+                            // Only the server knows which ones carry a flag, so
+                            // say that rather than let an empty list read as an
+                            // answer about the project.
+                            ? EmptyState(
+                                icon: LucideIcons.cloudOff,
+                                title: l10n.recordings_offlineFilterTitle,
+                                description:
+                                    l10n.recordings_offlineFilterDescription,
+                                action: FilledButton.icon(
+                                  onPressed: ref
+                                      .read(
+                                        recordingsListNotifierProvider.notifier,
+                                      )
+                                      .clearAllFilters,
+                                  icon: const Icon(LucideIcons.x, size: 18),
+                                  label: Text(l10n.filter_clearAll),
+                                ),
+                              )
+                            : ImportDropZone(
+                                onFilesDropped: (files) {
+                                  if (!mounted) return;
+                                  context.push<void>(
+                                    '/import-file',
+                                    extra: files,
+                                  );
+                                },
+                                hoverLabel: l10n.import_dropHint,
+                                child: EmptyState(
+                                  icon: LucideIcons.mic,
+                                  title: l10n.recordings_noRecordings,
+                                  description:
+                                      ImportDropZone.isSupportedPlatform
+                                      ? '${l10n.recordings_noRecordingsSubtitle}\n\n${l10n.recordings_dropToImport}'
+                                      : l10n.recordings_noRecordingsSubtitle,
+                                ),
+                              ),
                       )
                     : SliverPadding(
                         padding: EdgeInsets.fromLTRB(

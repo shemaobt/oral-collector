@@ -655,6 +655,13 @@ class AppLocalizationsAr extends AppLocalizations {
       'انقر على الميكروفون لتسجيل أول قصة لك، أو استورد ملفاً صوتياً.';
 
   @override
+  String get recordings_offlineFilterTitle => 'غير متاح دون اتصال';
+
+  @override
+  String get recordings_offlineFilterDescription =>
+      'الخادم هو الذي يحدد التسجيلات التي ما زالت تنقصها تفاصيل. أعد الاتصال لعرضها، أو أزل عامل التصفية لتصفح كل ما على هذا الجهاز.';
+
+  @override
   String get recordings_dropToImport =>
       'تلميح: اسحب ملفات الصوت إلى هذه النافذة لاستيرادها.';
 
@@ -1828,6 +1835,11 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get projectStats_needsDetails => 'بيانات ناقصة';
+
+  @override
+  String projectStats_showPendency(String label, int count) {
+    return 'عرض التسجيلات — $label ($count)';
+  }
 
   @override
   String get project_active => 'نشط';

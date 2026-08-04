@@ -671,6 +671,13 @@ class AppLocalizationsFr extends AppLocalizations {
       'Appuyez sur le micro pour enregistrer votre première histoire, ou importez un fichier audio.';
 
   @override
+  String get recordings_offlineFilterTitle => 'Indisponible hors ligne';
+
+  @override
+  String get recordings_offlineFilterDescription =>
+      'C\'est le serveur qui détermine quels enregistrements manquent encore de détails. Reconnectez-vous pour les voir, ou retirez le filtre pour parcourir tout ce qui se trouve sur cet appareil.';
+
+  @override
   String get recordings_dropToImport =>
       'Astuce : faites glisser des fichiers audio sur cette fenêtre pour les importer.';
 
@@ -1882,6 +1889,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get projectStats_needsDetails => 'Détails manquants';
+
+  @override
+  String projectStats_showPendency(String label, int count) {
+    return 'Voir les enregistrements — $label ($count)';
+  }
 
   @override
   String get project_active => 'Actif';

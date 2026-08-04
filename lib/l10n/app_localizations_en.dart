@@ -660,6 +660,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Tap the microphone to record your first story, or import an audio file.';
 
   @override
+  String get recordings_offlineFilterTitle => 'Not available offline';
+
+  @override
+  String get recordings_offlineFilterDescription =>
+      'The server works out which recordings still need details. Reconnect to see them, or remove the filter to browse everything on this device.';
+
+  @override
   String get recordings_dropToImport =>
       'Tip: drag audio files onto this window to import.';
 
@@ -1858,6 +1865,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get projectStats_needsDetails => 'Needs details';
+
+  @override
+  String projectStats_showPendency(String label, int count) {
+    return 'Show recordings — $label ($count)';
+  }
 
   @override
   String get project_active => 'Active';
