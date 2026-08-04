@@ -2,12 +2,17 @@
 ///
 /// The list answers "which recordings need me?" — so the card names the gap
 /// without accusing, shows at most one chip, and never leans on colour alone.
+///
+/// Every fixture here is a recording the server already knows about, so the
+/// chip follows its review flags rather than the local columns (ENG-379); the
+/// columns are set to match only so the rest of the card stays coherent.
 library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:oral_collector/features/recording/domain/entities/local_recording_entity.dart';
+import 'package:oral_collector/features/recording/domain/entities/review_flag.dart';
 import 'package:oral_collector/features/recording/presentation/widgets/recording_card.dart';
 import 'package:oral_collector/l10n/app_localizations.dart';
 
@@ -19,6 +24,7 @@ void main() {
     String? storytellerId = 'st-1',
     String? title = 'Uma gravação',
     String uploadStatus = 'uploaded',
+    List<ReviewFlag> reviewFlags = const [],
   }) => LocalRecordingEntity(
     id: 'rec-1',
     projectId: 'proj-1',
@@ -38,6 +44,7 @@ void main() {
     createdAt: DateTime(2026, 3, 10),
     retryCount: 0,
     uploadedBytes: 0,
+    reviewFlags: reviewFlags,
   );
 
   Future<void> pumpCard(WidgetTester tester, LocalRecordingEntity r) =>
@@ -70,7 +77,15 @@ void main() {
     });
 
     testWidgets('one open field is named, not counted', (tester) async {
-      await pumpCard(tester, recording(storytellerId: null));
+      await pumpCard(
+        tester,
+        recording(
+          storytellerId: null,
+          reviewFlags: const [
+            ReviewFlag(code: 'missing_storyteller', origin: 'system'),
+          ],
+        ),
+      );
 
       final l10n = await AppLocalizations.delegate.load(const Locale('en'));
       // "Sem narrador" tells the user what to do. "1 pendência" does not.
@@ -80,7 +95,14 @@ void main() {
     testWidgets('two open fields collapse into a count', (tester) async {
       await pumpCard(
         tester,
-        recording(storytellerId: null, description: 'curta'),
+        recording(
+          storytellerId: null,
+          description: 'curta',
+          reviewFlags: const [
+            ReviewFlag(code: 'missing_storyteller', origin: 'system'),
+            ReviewFlag(code: 'insufficient_description', origin: 'system'),
+          ],
+        ),
       );
 
       final l10n = await AppLocalizations.delegate.load(const Locale('en'));
@@ -99,6 +121,11 @@ void main() {
           registerId: null,
           description: '',
           storytellerId: null,
+          reviewFlags: const [
+            ReviewFlag(code: 'missing_classification', origin: 'system'),
+            ReviewFlag(code: 'insufficient_description', origin: 'system'),
+            ReviewFlag(code: 'missing_storyteller', origin: 'system'),
+          ],
         ),
       );
 

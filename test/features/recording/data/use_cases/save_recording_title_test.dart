@@ -40,7 +40,7 @@ void main() {
     localRepo = _MockLocalRepo();
     when(
       () => apiRepo.updateRecording(any(), any()),
-    ).thenAnswer((_) async => true);
+    ).thenAnswer((_) async => (success: true, reviewFlags: null));
 
     when(
       () => localRepo.updateRecording(any(), any()),

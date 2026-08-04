@@ -334,10 +334,25 @@ class LocalRecordingRepository {
         .write(const LocalRecordingsCompanion(uploadStatus: Value('local')));
   }
 
+  /// Stores what the server says the recording still owes (ENG-379).
+  ///
+  /// Its own write rather than a field on the typed metadata writes: the flags
+  /// are the server's answer, not the user's edit, and the two arrive from
+  /// different places at different times.
+  Future<bool> updateReviewFlags(String id, List<ReviewFlag> flags) {
+    return updateRecording(
+      id,
+      LocalRecordingsCompanion(
+        reviewFlagsJson: Value(encodeReviewFlags(flags)),
+      ),
+    );
+  }
+
   /// Persists a freshly-downloaded audio file alongside its full metadata.
   /// If a row for [recording.id] already exists locally, only [localFilePath]
-  /// is updated so local edits (description, storyteller, secondary
-  /// classification) are preserved. Otherwise the full row is inserted from
+  /// and the server's review flags are updated, so local edits (description,
+  /// storyteller, secondary classification) are preserved. Otherwise the full
+  /// row is inserted from
   /// every entity field, so all metadata reaches the database — the
   /// hand-picked-subset bug from ENG-64 cannot recur here. The persistence-only
   /// columns (`lastRetryAt`, `md5Hash`) are left absent (null), which is correct
@@ -349,10 +364,19 @@ class LocalRecordingRepository {
     await _db.transaction(() async {
       final existing = await getRecordingById(recording.id);
       if (existing != null) {
+        // The review flags ride along with the path even though the rest of the
+        // server's metadata does not. The narrow update exists to protect local
+        // *edits*; the flags are not an edit — only the server produces them,
+        // and it recomputed them just before answering (ENG-373). Leaving them
+        // stale here would mean a downloaded recording never learns what it
+        // still owes (ENG-379).
         await (_db.update(
           _db.localRecordings,
         )..where((t) => t.id.equals(recording.id))).write(
-          LocalRecordingsCompanion(localFilePath: Value(localFilePath)),
+          LocalRecordingsCompanion(
+            localFilePath: Value(localFilePath),
+            reviewFlagsJson: Value(encodeReviewFlags(recording.reviewFlags)),
+          ),
         );
       } else {
         await _db

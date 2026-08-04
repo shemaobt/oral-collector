@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:http/http.dart' as http;
+
 import '../../../../core/errors/api_exception.dart';
 import '../../../../core/errors/app_exception.dart' show ParseException;
 import '../../../../core/network/api_error_handler.dart';
@@ -9,6 +11,7 @@ import '../../../../core/network/response_decoder.dart';
 import '../../../../core/observability/error_reporter.dart';
 import '../../../../core/serialization/parse_list.dart';
 import '../../../../core/serialization/safe_read.dart';
+import '../../domain/entities/review_flag.dart';
 import '../../domain/entities/server_recording.dart';
 import '../../domain/entities/split_segment_request.dart';
 import '../../domain/entities/update_recording_request.dart';
@@ -79,7 +82,7 @@ class RecordingApiRepositoryImpl implements RecordingApiRepository {
   }
 
   @override
-  Future<bool> updateRecording(
+  Future<UpdateRecordingOutcome> updateRecording(
     String serverId,
     UpdateRecordingRequest request,
   ) async {
@@ -97,7 +100,26 @@ class RecordingApiRepositoryImpl implements RecordingApiRepository {
     if (response.statusCode == 409) {
       throwForResponse(response);
     }
-    return response.statusCode == 200;
+    final success = response.statusCode == 200;
+    return (
+      success: success,
+      reviewFlags: success ? _reviewFlagsOf(response) : null,
+    );
+  }
+
+  /// Only the flags are read back out of an accepted write, never the whole
+  /// [ServerRecording]: that factory force-casts, and a throw here would turn a
+  /// save the server already committed into a failure the user is told about
+  /// (ENG-379). A body that is not an object gives up on the flags and says so
+  /// with null.
+  List<ReviewFlag>? _reviewFlagsOf(http.Response response) {
+    try {
+      return readReviewFlagsOrNull(decodeObject(response));
+    } on FormatException {
+      return null;
+    } on ParseException {
+      return null;
+    }
   }
 
   @override

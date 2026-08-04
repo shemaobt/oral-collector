@@ -158,28 +158,24 @@ void main() {
       });
     });
 
-    test('returns true on 200', () async {
+    test('reports success on 200', () async {
       stubPatch();
 
-      expect(
-        await repo.updateRecording(
-          's-1',
-          const UpdateRecordingRequest(title: 't'),
-        ),
-        isTrue,
+      final outcome = await repo.updateRecording(
+        's-1',
+        const UpdateRecordingRequest(title: 't'),
       );
+      expect(outcome.success, isTrue);
     });
 
-    test('returns false on a non-200, non-error status', () async {
+    test('reports failure on a non-200, non-error status', () async {
       stubPatch(status: 500);
 
-      expect(
-        await repo.updateRecording(
-          's-1',
-          const UpdateRecordingRequest(title: 't'),
-        ),
-        isFalse,
+      final outcome = await repo.updateRecording(
+        's-1',
+        const UpdateRecordingRequest(title: 't'),
       );
+      expect(outcome.success, isFalse);
     });
 
     test('throws ForbiddenException on 403', () async {
