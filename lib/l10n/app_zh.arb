@@ -821,7 +821,6 @@
   "quickRecord_classifyLater": "稍后分类",
   "classify_title": "分类录音",
   "classify_action": "分类",
-  "classify_banner": "此录音尚未分类。点击分类以添加类型和语域。",
   "classify_success": "录音已分类",
   "classify_register": "语域",
   "classify_selectRegister": "选择语域",
@@ -1171,5 +1170,16 @@
   "upload_pausedWhileRecording": "录音时暂停上传",
   "liveActivity_recordingStatus": "录音中",
   "liveActivity_recordingPausedStatus": "录音已暂停",
-  "liveActivity_uploadingStatus": "上传中"
+  "liveActivity_uploadingStatus": "上传中",
+  "recording_completeFicha": "完善信息",
+  "recording_completeFichaTitle": "完善信息",
+  "recording_completeFichaSubtitle": "{count, plural, =1{还有 1 项未填写。可以现在填写，也可以稍后再来。} other{还有 {count} 项未填写。可以现在填写，也可以稍后再来。}}",
+  "recording_completeFichaStart": "开始",
+  "recording_completeFichaContinue": "继续",
+  "recording_pendencyClassification": "未分类",
+  "recording_pendencyClassificationContext": "体裁和语域说明这是哪一类故事。",
+  "recording_pendencyDescription": "描述过短",
+  "recording_pendencyDescriptionContext": "用几句话说明录音中的内容。",
+  "recording_pendencyStoryteller": "未指定讲述者",
+  "recording_pendencyStorytellerContext": "谁讲述了这个故事。"
 }

@@ -7,9 +7,12 @@ Path: @/lib/features/recording/presentation/widgets
 - Shared widgets used by the recording feature screens: dialogs (move
   category, classify, replace audio, edit details), sections of the
   detail screen (status, info grid, storyteller, quick actions,
-  about, upload progress), recording flow widgets (segment cards,
-  waveforms, finalizing overlays, recording step), the list card and the
-  pending-web-upload card, and the hero player + playback controls.
+  about, upload progress), the guided ficha-completion overlay/pill/sheet
+  (`CompleteFichaOverlay`/`CompleteFichaPill`/`CompleteFichaSheet`, ENG-374),
+  recording flow widgets
+  (segment cards, waveforms, finalizing overlays, recording step), the list
+  card and the pending-web-upload card, and the hero player + playback
+  controls.
 - These widgets are leaf consumers: they `ref.watch` notifiers and
   data-layer providers but do not own long-lived resources. Anything
   that must survive a widget rebuild (the active `AudioPlayer`, the
@@ -124,6 +127,28 @@ Path: @/lib/features/recording/presentation/widgets
   entity's `isUnclassified` / `hasSecondary` extension (see
   [../../domain/docs.md](../../domain/docs.md)); it no longer touches Drift
   or the row-level classification extension.
+- `CompleteFichaOverlay`/`CompleteFichaPill`/`CompleteFichaSheet`
+  ([complete_ficha_overlay.dart](complete_ficha_overlay.dart) /
+  [complete_ficha_pill.dart](complete_ficha_pill.dart) /
+  [complete_ficha_sheet.dart](complete_ficha_sheet.dart), ENG-374) are the
+  guided-completion widgets that replaced the detail screen's classify
+  banner: a floating pill showing how many `PendencyKind`s
+  ([../../domain/entities/review_pendency.dart](../../domain/entities/review_pendency.dart))
+  a recording still owes, and the bottom-sheet checklist it opens. All three are
+  presentational — they take the step list, the resolved set, and callbacks —
+  and own no providers; the orchestration (opening the sheet, recomputing
+  what is resolved, routing a tapped step to an editor) lives on
+  [../recording_detail_screen.dart](../recording_detail_screen.dart), see
+  [../docs.md](../docs.md). Two layout rules are load-bearing and easy to undo
+  by accident. The overlay exists as a separate widget so the pill's placement
+  can be tested without the screen (which cannot be pumped loaded), and it is
+  where the safe-area offset, the wide-layout offset above the docked player
+  strip, and the width constraint on the pill all live. The sheet scrolls its
+  step list inside a `Flexible`/`SingleChildScrollView` and keeps the CTA
+  outside it: at 2.0x the steps alone outgrow a phone screen, and a CTA that
+  scrolled with them ended up below the bottom edge with nothing left to bring
+  it back. Its subtitle counts the steps that are still *open*, not the length
+  of the list, and disappears when that count reaches zero.
 - `PendingWebUploadCard` (ENG-196) is the presentational, stateless card for
   one resumable web upload, rendered once per item by
   `PendingWebUploadsBanner` ([./pending_web_uploads_banner.dart](pending_web_uploads_banner.dart)).

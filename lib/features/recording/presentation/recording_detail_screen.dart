@@ -21,6 +21,7 @@ import '../../auth/data/providers/role_provider.dart';
 import '../../genre/presentation/notifiers/genre_notifier.dart';
 import '../../project/presentation/notifiers/stats_notifier.dart';
 import '../../storyteller/domain/entities/storyteller.dart';
+import '../../storyteller/presentation/widgets/storyteller_picker.dart';
 import '../../sync/presentation/notifiers/sync_notifier.dart';
 import '../data/services/audio_exporter.dart';
 import '../data/supported_audio_formats.dart';
@@ -28,11 +29,14 @@ import '../domain/entities/classification.dart';
 import '../domain/entities/local_recording_entity.dart';
 import '../domain/entities/local_recording_entity_classification.dart';
 import '../domain/entities/register.dart';
+import '../domain/entities/review_pendency.dart';
 import '../domain/recording_edit_policy.dart';
 import 'notifiers/recording_detail_notifier.dart';
 import 'notifiers/recording_detail_state.dart';
 import 'notifiers/recordings_list_notifier.dart';
 import 'widgets/classify_recording_dialog.dart';
+import 'widgets/complete_ficha_overlay.dart';
+import 'widgets/complete_ficha_sheet.dart';
 import 'widgets/edit_recording_details_sheet.dart';
 import 'widgets/move_category_dialog.dart';
 import 'widgets/recording_action_banner.dart';
@@ -85,6 +89,18 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     final recording = _state.recording;
     if (recording == null) return;
     await _notifier.setStoryteller(recording, storyteller);
+  }
+
+  Future<void> _pickStoryteller() async {
+    final recording = _state.recording;
+    if (recording == null) return;
+    final picked = await showStorytellerPickerSheet(
+      context,
+      projectId: recording.projectId,
+      showAddNew: true,
+    );
+    if (picked == null) return;
+    await _onStorytellerChanged(picked);
   }
 
   Future<void> _openEditDetails() async {
@@ -735,23 +751,49 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     );
   }
 
-  Widget? _buildClassifyBanner(BuildContext context, bool isUnclassified) {
-    if (!isUnclassified) return null;
-    final theme = Theme.of(context);
-    final colors = AppColors.of(context);
-    final l10n = AppLocalizations.of(context);
-    return RecordingActionBanner(
-      theme: theme,
-      icon: LucideIcons.alertCircle,
-      message: l10n.classify_banner,
-      actionLabel: l10n.classify_action,
-      accentColor: colors.warning,
-      backgroundColor: colors.warning.withValues(alpha: 0.1),
-      borderColor: colors.warning.withValues(alpha: 0.3),
-      actionBackgroundColor: colors.warning.withValues(alpha: 0.15),
-      onAction: _classifyRecording,
+  Widget _completeFichaOverlay(LocalRecordingEntity recording) {
+    return CompleteFichaOverlay(
+      pendencyCount: recordingPendencies(recording).length,
+      onTap: _openCompleteFichaSheet,
     );
   }
+
+  Future<void> _openCompleteFichaSheet() async {
+    final recording = _state.recording;
+    if (recording == null) return;
+    final steps = recordingPendencies(recording);
+    if (steps.isEmpty) return;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.transparent,
+      // The step list is frozen at open time so nothing shifts under the user's
+      // finger; only what is still open is recomputed, to tick steps off as the
+      // user comes back from each editor.
+      builder: (_) => Consumer(
+        builder: (context, sheetRef, _) {
+          final current = sheetRef
+              .watch(recordingDetailProvider(widget.recordingId))
+              .recording;
+          final open = current == null
+              ? const <PendencyKind>[]
+              : recordingPendencies(current);
+          return CompleteFichaSheet(
+            steps: steps,
+            resolved: steps.where((step) => !open.contains(step)).toSet(),
+            onStep: _onFichaStep,
+          );
+        },
+      ),
+    );
+  }
+
+  Future<void> _onFichaStep(PendencyKind kind) => switch (kind) {
+    PendencyKind.classification => _classifyRecording(),
+    PendencyKind.description => _openEditDetails(),
+    PendencyKind.storyteller => _pickStoryteller(),
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -892,19 +934,16 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
       recording,
     );
 
-    final classifyBanner = _buildClassifyBanner(context, isUnclassified);
-
     final titleConflictBanner = _buildTitleConflictBanner(context, recording);
 
     final descriptionGapBanner = _buildDescriptionGapBanner(context, recording);
 
     final storytellerSection = RecordingStorytellerSection(
-      projectId: recording.projectId,
       storytellerId: recording.storytellerId,
       userId: recording.userId,
       resolvedStoryteller: state.resolvedStoryteller,
       canEdit: _canEditRecording,
-      onStorytellerChanged: _canEditRecording ? _onStorytellerChanged : null,
+      onEditStoryteller: _canEditRecording ? _pickStoryteller : null,
     );
 
     final detailContent = Column(
@@ -921,10 +960,6 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
         ],
         if (secondaryCollisionBanner != null) ...[
           secondaryCollisionBanner,
-          const SizedBox(height: SpacingScale.s16),
-        ],
-        if (classifyBanner != null) ...[
-          classifyBanner,
           const SizedBox(height: SpacingScale.s16),
         ],
         titleAndGenre,
@@ -953,109 +988,120 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
         : null;
 
     return Scaffold(
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          if (constraints.maxWidth >= 700) {
-            return Column(
-              children: [
-                AppBar(leading: const BackButton(), actions: [?menuButton]),
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(SpacingScale.s24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        titleAndGenre,
-                        const SizedBox(height: SpacingScale.s24),
-                        Row(
+      body: Stack(
+        children: [
+          LayoutBuilder(
+            builder: (context, constraints) {
+              if (constraints.maxWidth >= 700) {
+                return Column(
+                  children: [
+                    AppBar(leading: const BackButton(), actions: [?menuButton]),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(SpacingScale.s24),
+                        child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  infoGrid,
-                                  const SizedBox(height: SpacingScale.s24),
-                                  quickActions,
-                                ],
-                              ),
+                            titleAndGenre,
+                            const SizedBox(height: SpacingScale.s24),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      infoGrid,
+                                      const SizedBox(height: SpacingScale.s24),
+                                      quickActions,
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: SpacingScale.s24),
+                                Expanded(child: statusSection),
+                              ],
                             ),
-                            const SizedBox(width: SpacingScale.s24),
-                            Expanded(child: statusSection),
                           ],
                         ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                Container(
-                  decoration: BoxDecoration(
-                    color: colors.card,
-                    border: Border(
-                      top: BorderSide(
-                        color: colors.border.withValues(alpha: 0.15),
                       ),
                     ),
-                  ),
-                  child: RecordingHeroPlayer(
-                    recording: recording,
-                    colors: colors,
-                    theme: theme,
-                  ),
-                ),
-              ],
-            );
-          }
 
-          return CustomScrollView(
-            slivers: [
-              SliverAppBar(
-                expandedHeight: 260,
-                pinned: true,
-                leading: Padding(
-                  padding: const EdgeInsets.all(SpacingScale.s8),
-                  child: Material(
-                    color: colors.card.withValues(alpha: 0.6),
-                    shape: const CircleBorder(),
-                    clipBehavior: Clip.antiAlias,
-                    child: BackButton(color: colors.foreground),
-                  ),
-                ),
-                actions: [
-                  if (menuButton != null)
-                    Padding(
-                      padding: const EdgeInsets.only(right: SpacingScale.s8),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: colors.card,
+                        border: Border(
+                          top: BorderSide(
+                            color: colors.border.withValues(alpha: 0.15),
+                          ),
+                        ),
+                      ),
+                      child: RecordingHeroPlayer(
+                        recording: recording,
+                        colors: colors,
+                        theme: theme,
+                      ),
+                    ),
+                  ],
+                );
+              }
+
+              return CustomScrollView(
+                slivers: [
+                  SliverAppBar(
+                    expandedHeight: 260,
+                    pinned: true,
+                    leading: Padding(
+                      padding: const EdgeInsets.all(SpacingScale.s8),
                       child: Material(
                         color: colors.card.withValues(alpha: 0.6),
                         shape: const CircleBorder(),
                         clipBehavior: Clip.antiAlias,
-                        child: menuButton,
+                        child: BackButton(color: colors.foreground),
                       ),
                     ),
+                    actions: [
+                      if (menuButton != null)
+                        Padding(
+                          padding: const EdgeInsets.only(
+                            right: SpacingScale.s8,
+                          ),
+                          child: Material(
+                            color: colors.card.withValues(alpha: 0.6),
+                            shape: const CircleBorder(),
+                            clipBehavior: Clip.antiAlias,
+                            child: menuButton,
+                          ),
+                        ),
+                    ],
+                    flexibleSpace: FlexibleSpaceBar(
+                      background: RecordingHeroPlayer(
+                        recording: recording,
+                        colors: colors,
+                        theme: theme,
+                      ),
+                    ),
+                  ),
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        SpacingScale.s20,
+                        SpacingScale.s20,
+                        SpacingScale.s20,
+                        // Clears the floating "complete details" pill: it
+                        // lives outside this scrollable, so without the
+                        // reserve it covers the last card.
+                        CompleteFichaOverlay.scrollReserve(context),
+                      ),
+                      child: detailContent,
+                    ),
+                  ),
                 ],
-                flexibleSpace: FlexibleSpaceBar(
-                  background: RecordingHeroPlayer(
-                    recording: recording,
-                    colors: colors,
-                    theme: theme,
-                  ),
-                ),
-              ),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    SpacingScale.s20,
-                    SpacingScale.s20,
-                    SpacingScale.s20,
-                    80,
-                  ),
-                  child: detailContent,
-                ),
-              ),
-            ],
-          );
-        },
+              );
+            },
+          ),
+          if (_canEditRecording) _completeFichaOverlay(recording),
+        ],
       ),
     );
   }

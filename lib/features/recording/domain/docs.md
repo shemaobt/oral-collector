@@ -54,6 +54,21 @@ Path: @/lib/features/recording/domain
   ([./entities/recording.dart](entities/recording.dart)) deliberately does
   not carry this field — it belongs to a different feature and no admin
   screen reads pending review state.
+- [`PendencyKind`/`recordingPendencies`](entities/review_pendency.dart)
+  (ENG-374 PR-B) turn `reviewFlags`, plus the classification/description/
+  storyteller fields, into the ordered list of steps the guided completion
+  flow walks the user through
+  ([../presentation/widgets/complete_ficha_sheet.dart](../presentation/widgets/complete_ficha_sheet.dart)).
+  The rule: once a recording has a `serverId`, the server's flags decide what
+  it owes — even where they disagree with the local fields, since the server
+  may apply a rule this build predates — and a flag `code` this build has no
+  editor for (the private `_knownCodes` map in that file) is dropped rather
+  than shown or rendered as raw wire text. A recording with no `serverId` has
+  no server opinion yet, so the same field predicates that `classification.dart`
+  and `isDescriptionSufficient`
+  ([/lib/shared/utils/recording_description.dart](../../../shared/utils/recording_description.dart))
+  already expose answer instead — otherwise a recording captured minutes ago
+  would read as complete while its maker is still there to finish it.
 - [`UpdateRecordingRequest`](entities/update_recording_request.dart) (ENG-205)
   is the PATCH-body params object for `updateRecording`: a plain `const` class
   with the thirteen optional update fields and a `toJson()` that builds the
@@ -106,14 +121,19 @@ Path: @/lib/features/recording/domain
   can use `copyWith(title: …)` directly instead of Drift's `Value(...)` wrapper.
 - `LocalRecordingEntityClassification` (in
   [./entities/local_recording_entity_classification.dart](entities/local_recording_entity_classification.dart))
-  is the entity-side mirror of the row's `RecordingClassification` extension
-  ([../data/local_recording_classification.dart](../data/local_recording_classification.dart)):
-  it adds `isUnclassified` and `hasSecondary` (the latter added by ENG-196 once
-  `RecordingCard` switched to the entity) and delegates both to the **same** pure
-  predicates in
-  [./entities/classification.dart](entities/classification.dart), so the entity
-  and the Drift row classify identically. The list state's `unclassified` filter
-  reads `isUnclassified`; the list card reads both.
+  adds `isUnclassified` and `hasSecondary` to `LocalRecordingEntity`.
+  `hasSecondary` (added by ENG-196 once `RecordingCard` switched to the entity)
+  delegates directly to the pure predicate `recordingHasSecondary` in
+  [./entities/classification.dart](entities/classification.dart). As of
+  ENG-374, `isUnclassified` no longer calls `recordingIsUnclassified`
+  directly — it reads through `recordingPendencies` (above) instead, so it
+  inherits the server-decides rule for any recording the server already knows
+  about, and the breadcrumb/menu/quick-actions warning affordances can never
+  disagree with the guided completion flow about whether a recording is
+  classified. The row-level `RecordingClassification` extension this used to
+  mirror was deleted once the presentation layer finished moving onto the
+  entity (ENG-199/ENG-200) and it lost its last importer. The list state's
+  `unclassified` filter reads `isUnclassified`; the list card reads both.
 - `classification.dart` is **not** an entity type: it is the
   `kUnclassifiedGenreId` sentinel const plus top-level pure predicate
   functions (`recordingHasGenre`, `recordingIsUnclassified`,
@@ -125,12 +145,12 @@ Path: @/lib/features/recording/domain
   guard — and the `SegmentClassificationCollisionException` that guard
   throws. Like its siblings it treats `''` as absent (`blankToNull`,
   exported for the pickers), because callers hand it raw nullable
-  columns straight off a Drift row. The ergonomic
-  `RecordingClassification` extension that reads those ids off a
-  `LocalRecording` row lives in the data layer
-  ([../data/local_recording_classification.dart](../data/local_recording_classification.dart))
-  and delegates to these functions — domain owns the rule, data owns the
-  Drift-bound sugar (ENG-175 / ENG-95 Phase 0).
+  columns straight off a Drift row. The row-level ergonomic extension that
+  used to read those ids off a `LocalRecording` row and delegate to these
+  functions lived in the data layer (ENG-175 / ENG-95 Phase 0); it was
+  deleted in ENG-374 once the entity-side `LocalRecordingEntityClassification`
+  extension (below) became the only caller — domain still owns the rule, but
+  there is no longer a Drift-bound sugar layer on top of it.
 - `recording_edit_policy.dart` is consumed only by the detail screen's
   `_canEditRecording` getter (see
   [../presentation/docs.md](../presentation/docs.md)). It is the single
@@ -174,16 +194,20 @@ Path: @/lib/features/recording/domain
   `.distinct()` would rebuild on every emission. `_sameFlags` is
   order-sensitive, which relies on the server always emitting the flags in a
   stable order.
-- **Two known gaps in `reviewFlags`, both deferred to the UI-facing PRs
-  (ENG-374 is data-plumbing only).** First, only the *insert* branch of
-  `LocalRecordingRepository.cacheDownloadedAudio` writes the field (see
-  [../data/repositories/docs.md](../data/repositories/docs.md)); a recording
-  this device already made and uploaded already has a local row, so it takes
-  the *update* branch (which only ever touches `localFilePath`) and its flags
-  stay at the `'[]'` default. Second, nothing clears a flag locally when the
-  user fixes what it flagged — online this is invisible because the entity is
-  rebuilt fresh from the server's response on every load, but an offline
-  device can show a stale flag after the underlying issue is already fixed.
+- **`reviewFlags` has two known gaps; the guided completion flow (ENG-374
+  PR-B) exposes them rather than fixing them.** First, only the *insert*
+  branch of `LocalRecordingRepository.cacheDownloadedAudio` writes the field
+  (see [../data/repositories/docs.md](../data/repositories/docs.md)); a
+  recording this device already made and uploaded already has a local row,
+  so it takes the *update* branch (which only ever touches `localFilePath`)
+  and its flags stay at the `'[]'` default. Second, nothing clears a flag
+  locally when the user fixes what it flagged. `CompleteFichaSheet`
+  ([../presentation/docs.md](../presentation/docs.md)) marks a step done only
+  once it drops out of a fresh `recordingPendencies` read, and every edit
+  that reaches the server reloads the entity from the server's response — so
+  online this reads as instant progress. Offline, the edit call fails before
+  the entity is ever rebuilt, so there is no way to check a step off without
+  connectivity.
 - **The entity deliberately drops the persistence internals `lastRetryAt`
   and `md5Hash`.** They are not fields the UI reads, and omitting them means
   a write touching only those produces an *equal* entity, which `.distinct()`

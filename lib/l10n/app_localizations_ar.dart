@@ -1864,10 +1864,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get classify_action => 'تصنيف';
 
   @override
-  String get classify_banner =>
-      'هذا التسجيل غير مصنف. انقر على تصنيف لإضافة نوع وسجل.';
-
-  @override
   String get classify_success => 'تم تصنيف التسجيل';
 
   @override
@@ -2621,4 +2617,47 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get liveActivity_uploadingStatus => 'جاري الرفع';
+
+  @override
+  String get recording_completeFicha => 'أكمل البيانات';
+
+  @override
+  String get recording_completeFichaTitle => 'أكمل البيانات';
+
+  @override
+  String recording_completeFichaSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count حقول ما زالت ناقصة. أكملها الآن أو عد إليها لاحقاً.',
+      one: 'حقل واحد ما زال ناقصاً. أكمله الآن أو عد إليه لاحقاً.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recording_completeFichaStart => 'ابدأ';
+
+  @override
+  String get recording_completeFichaContinue => 'متابعة';
+
+  @override
+  String get recording_pendencyClassification => 'غير مصنف';
+
+  @override
+  String get recording_pendencyClassificationContext =>
+      'النوع والسجل يوضحان نوع هذه القصة.';
+
+  @override
+  String get recording_pendencyDescription => 'الوصف قصير جداً';
+
+  @override
+  String get recording_pendencyDescriptionContext =>
+      'بضع كلمات عما يحدث في التسجيل.';
+
+  @override
+  String get recording_pendencyStoryteller => 'بدون راوٍ';
+
+  @override
+  String get recording_pendencyStorytellerContext => 'من يروي هذه القصة.';
 }

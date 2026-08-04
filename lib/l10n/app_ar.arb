@@ -620,7 +620,6 @@
   "quickRecord_classifyLater": "تصنيف لاحقاً",
   "classify_title": "تصنيف التسجيل",
   "classify_action": "تصنيف",
-  "classify_banner": "هذا التسجيل غير مصنف. انقر على تصنيف لإضافة نوع وسجل.",
   "classify_success": "تم تصنيف التسجيل",
   "classify_register": "السجل",
   "classify_selectRegister": "اختر السجل",
@@ -970,5 +969,16 @@
   "upload_pausedWhileRecording": "تم إيقاف الرفع مؤقتًا أثناء التسجيل",
   "liveActivity_recordingStatus": "تسجيل",
   "liveActivity_recordingPausedStatus": "إيقاف التسجيل مؤقتًا",
-  "liveActivity_uploadingStatus": "جاري الرفع"
+  "liveActivity_uploadingStatus": "جاري الرفع",
+  "recording_completeFicha": "أكمل البيانات",
+  "recording_completeFichaTitle": "أكمل البيانات",
+  "recording_completeFichaSubtitle": "{count, plural, =1{حقل واحد ما زال ناقصاً. أكمله الآن أو عد إليه لاحقاً.} other{{count} حقول ما زالت ناقصة. أكملها الآن أو عد إليها لاحقاً.}}",
+  "recording_completeFichaStart": "ابدأ",
+  "recording_completeFichaContinue": "متابعة",
+  "recording_pendencyClassification": "غير مصنف",
+  "recording_pendencyClassificationContext": "النوع والسجل يوضحان نوع هذه القصة.",
+  "recording_pendencyDescription": "الوصف قصير جداً",
+  "recording_pendencyDescriptionContext": "بضع كلمات عما يحدث في التسجيل.",
+  "recording_pendencyStoryteller": "بدون راوٍ",
+  "recording_pendencyStorytellerContext": "من يروي هذه القصة."
 }

@@ -1837,9 +1837,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get classify_action => '분류';
 
   @override
-  String get classify_banner => '이 녹음은 분류되지 않았습니다. 분류를 탭하여 장르와 사용역을 추가하세요.';
-
-  @override
   String get classify_success => '녹음이 분류되었습니다';
 
   @override
@@ -2572,4 +2569,47 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get liveActivity_uploadingStatus => '업로드 중';
+
+  @override
+  String get recording_completeFicha => '정보 완성하기';
+
+  @override
+  String get recording_completeFichaTitle => '정보 완성하기';
+
+  @override
+  String recording_completeFichaSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '항목 $count개가 남아 있습니다. 지금 채우거나 나중에 이어서 하세요.',
+      one: '항목 1개가 남아 있습니다. 지금 채우거나 나중에 이어서 하세요.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recording_completeFichaStart => '시작';
+
+  @override
+  String get recording_completeFichaContinue => '계속';
+
+  @override
+  String get recording_pendencyClassification => '미분류';
+
+  @override
+  String get recording_pendencyClassificationContext =>
+      '장르와 사용역이 이 이야기의 종류를 알려 줍니다.';
+
+  @override
+  String get recording_pendencyDescription => '설명이 너무 짧음';
+
+  @override
+  String get recording_pendencyDescriptionContext =>
+      '녹음에서 무슨 일이 일어나는지 몇 마디로 적어 주세요.';
+
+  @override
+  String get recording_pendencyStoryteller => '화자 없음';
+
+  @override
+  String get recording_pendencyStorytellerContext => '이 이야기를 들려주는 사람입니다.';
 }

@@ -7,25 +7,25 @@ import '../../../../core/theme/tokens.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../project/presentation/notifiers/member_notifier.dart';
 import '../../../storyteller/domain/entities/storyteller.dart';
-import '../../../storyteller/presentation/widgets/storyteller_picker.dart';
 import '../../../user/data/user_lookup_provider.dart';
 
 class RecordingStorytellerSection extends ConsumerWidget {
-  final String projectId;
   final String? storytellerId;
   final String? userId;
   final Storyteller? resolvedStoryteller;
   final bool canEdit;
-  final ValueChanged<Storyteller?>? onStorytellerChanged;
+
+  /// Opens the storyteller picker. Owned by the screen so the guided completion
+  /// flow can assign a storyteller without going through this section.
+  final VoidCallback? onEditStoryteller;
 
   const RecordingStorytellerSection({
     super.key,
-    required this.projectId,
     required this.storytellerId,
     required this.userId,
     required this.resolvedStoryteller,
     required this.canEdit,
-    required this.onStorytellerChanged,
+    required this.onEditStoryteller,
   });
 
   @override
@@ -66,7 +66,7 @@ class RecordingStorytellerSection extends ConsumerWidget {
             ),
             if (canEdit)
               TextButton(
-                onPressed: () => _openPicker(context, ref),
+                onPressed: onEditStoryteller,
                 child: Text(l10n.storyteller_assign),
               ),
           ],
@@ -88,7 +88,7 @@ class RecordingStorytellerSection extends ConsumerWidget {
             ),
             if (canEdit)
               TextButton(
-                onPressed: () => _openPicker(context, ref),
+                onPressed: onEditStoryteller,
                 child: Text(l10n.storyteller_reassign),
               ),
           ],
@@ -109,7 +109,7 @@ class RecordingStorytellerSection extends ConsumerWidget {
       if (dia.isNotEmpty) parts.add(dia);
 
       return InkWell(
-        onTap: canEdit ? () => _openPicker(context, ref) : null,
+        onTap: canEdit ? onEditStoryteller : null,
         borderRadius: BorderRadius.circular(RadiusScale.r8),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: SpacingScale.s4),
@@ -198,16 +198,5 @@ class RecordingStorytellerSection extends ConsumerWidget {
         ],
       ),
     );
-  }
-
-  Future<void> _openPicker(BuildContext context, WidgetRef ref) async {
-    final callback = onStorytellerChanged;
-    if (callback == null) return;
-    final picked = await showStorytellerPickerSheet(
-      context,
-      projectId: projectId,
-      showAddNew: true,
-    );
-    if (picked != null) callback(picked);
   }
 }

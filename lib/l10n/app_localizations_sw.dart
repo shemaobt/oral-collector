@@ -1887,10 +1887,6 @@ class AppLocalizationsSw extends AppLocalizations {
   String get classify_action => 'Ainisha';
 
   @override
-  String get classify_banner =>
-      'Rekodi hii haijaainishwa. Gusa Ainisha ili kuongeza aina na rejista.';
-
-  @override
   String get classify_success => 'Rekodi imeainishwa';
 
   @override
@@ -2651,4 +2647,48 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get liveActivity_uploadingStatus => 'Inapakia';
+
+  @override
+  String get recording_completeFicha => 'Kamilisha maelezo';
+
+  @override
+  String get recording_completeFichaTitle => 'Kamilisha maelezo';
+
+  @override
+  String recording_completeFichaSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Sehemu $count bado hazijajazwa. Jaza sasa au urudi baadaye.',
+      one: 'Sehemu 1 bado haijajazwa. Jaza sasa au urudi baadaye.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recording_completeFichaStart => 'Anza';
+
+  @override
+  String get recording_completeFichaContinue => 'Endelea';
+
+  @override
+  String get recording_pendencyClassification => 'Haijainishwa';
+
+  @override
+  String get recording_pendencyClassificationContext =>
+      'Aina na rejista huonyesha hii ni hadithi ya aina gani.';
+
+  @override
+  String get recording_pendencyDescription => 'Maelezo ni mafupi mno';
+
+  @override
+  String get recording_pendencyDescriptionContext =>
+      'Maneno machache kuhusu kinachotokea katika rekodi.';
+
+  @override
+  String get recording_pendencyStoryteller => 'Hakuna msimulizi';
+
+  @override
+  String get recording_pendencyStorytellerContext =>
+      'Ni nani anayesimulia hadithi hii.';
 }

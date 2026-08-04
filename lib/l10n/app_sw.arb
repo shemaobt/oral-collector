@@ -620,7 +620,6 @@
   "quickRecord_classifyLater": "Ainisha baadaye",
   "classify_title": "Ainisha Rekodi",
   "classify_action": "Ainisha",
-  "classify_banner": "Rekodi hii haijaainishwa. Gusa Ainisha ili kuongeza aina na rejista.",
   "classify_success": "Rekodi imeainishwa",
   "classify_register": "Rejista",
   "classify_selectRegister": "Chagua rejista",
@@ -970,5 +969,16 @@
   "upload_pausedWhileRecording": "Upakiaji umesitishwa wakati wa kurekodi",
   "liveActivity_recordingStatus": "Inarekodi",
   "liveActivity_recordingPausedStatus": "Rekodi imesimama",
-  "liveActivity_uploadingStatus": "Inapakia"
+  "liveActivity_uploadingStatus": "Inapakia",
+  "recording_completeFicha": "Kamilisha maelezo",
+  "recording_completeFichaTitle": "Kamilisha maelezo",
+  "recording_completeFichaSubtitle": "{count, plural, =1{Sehemu 1 bado haijajazwa. Jaza sasa au urudi baadaye.} other{Sehemu {count} bado hazijajazwa. Jaza sasa au urudi baadaye.}}",
+  "recording_completeFichaStart": "Anza",
+  "recording_completeFichaContinue": "Endelea",
+  "recording_pendencyClassification": "Haijainishwa",
+  "recording_pendencyClassificationContext": "Aina na rejista huonyesha hii ni hadithi ya aina gani.",
+  "recording_pendencyDescription": "Maelezo ni mafupi mno",
+  "recording_pendencyDescriptionContext": "Maneno machache kuhusu kinachotokea katika rekodi.",
+  "recording_pendencyStoryteller": "Hakuna msimulizi",
+  "recording_pendencyStorytellerContext": "Ni nani anayesimulia hadithi hii."
 }

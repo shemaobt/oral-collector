@@ -901,7 +901,6 @@
   "quickRecord_classifyLater": "Classify later",
   "classify_title": "Classify Recording",
   "classify_action": "Classify",
-  "classify_banner": "This recording is unclassified. Tap Classify to add a genre and register.",
   "classify_success": "Recording classified",
   "classify_register": "Register",
   "classify_selectRegister": "Select register",
@@ -1330,5 +1329,54 @@
   },
   "@liveActivity_uploadingStatus": {
     "description": "Live Activity (iOS) lock-screen and Dynamic Island short status while an upload is running."
+  },
+  "recording_completeFicha": "Complete details",
+  "@recording_completeFicha": {
+    "description": "Label on the pill that opens the guided completion flow for a recording's ficha (ENG-374)."
+  },
+  "recording_completeFichaTitle": "Complete the details",
+  "@recording_completeFichaTitle": {
+    "description": "Title of the guided completion sheet (ENG-374)."
+  },
+  "recording_completeFichaSubtitle": "{count, plural, =1{1 detail is still open. Fill it in now, or come back to it later.} other{{count} details are still open. Fill them in now, or come back to them later.}}",
+  "@recording_completeFichaSubtitle": {
+    "description": "Subtitle of the guided completion sheet: how many steps it holds, plus the reassurance that the user may leave and return.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recording_completeFichaStart": "Start",
+  "@recording_completeFichaStart": {
+    "description": "Primary action of the completion sheet when no step has been resolved yet."
+  },
+  "recording_completeFichaContinue": "Continue",
+  "@recording_completeFichaContinue": {
+    "description": "Primary action of the completion sheet once at least one step has been resolved."
+  },
+  "recording_pendencyClassification": "No classification",
+  "@recording_pendencyClassification": {
+    "description": "Step title: the recording has no genre/register yet. Names the gap, never blames the user."
+  },
+  "recording_pendencyClassificationContext": "Genre and register say what kind of story this is.",
+  "@recording_pendencyClassificationContext": {
+    "description": "Step context line explaining why the classification matters."
+  },
+  "recording_pendencyDescription": "Description too short",
+  "@recording_pendencyDescription": {
+    "description": "Step title: the recording's description does not meet the minimum."
+  },
+  "recording_pendencyDescriptionContext": "A few words about what happens in the recording.",
+  "@recording_pendencyDescriptionContext": {
+    "description": "Step context line explaining what the description should contain."
+  },
+  "recording_pendencyStoryteller": "No storyteller",
+  "@recording_pendencyStoryteller": {
+    "description": "Step title: no storyteller is assigned to the recording."
+  },
+  "recording_pendencyStorytellerContext": "Who tells this story.",
+  "@recording_pendencyStorytellerContext": {
+    "description": "Step context line explaining what the storyteller field is for."
   }
 }

@@ -620,7 +620,6 @@
   "quickRecord_classifyLater": "Klasifikasi nanti",
   "classify_title": "Klasifikasi Rekaman",
   "classify_action": "Klasifikasi",
-  "classify_banner": "Rekaman ini belum diklasifikasi. Ketuk Klasifikasi untuk menambahkan genre dan register.",
   "classify_success": "Rekaman diklasifikasi",
   "classify_register": "Register",
   "classify_selectRegister": "Pilih register",
@@ -970,5 +969,16 @@
   "upload_pausedWhileRecording": "Unggahan dijeda saat merekam",
   "liveActivity_recordingStatus": "Merekam",
   "liveActivity_recordingPausedStatus": "Rekaman dijeda",
-  "liveActivity_uploadingStatus": "Mengunggah"
+  "liveActivity_uploadingStatus": "Mengunggah",
+  "recording_completeFicha": "Lengkapi detail",
+  "recording_completeFichaTitle": "Lengkapi detail",
+  "recording_completeFichaSubtitle": "{count, plural, =1{1 bidang masih kosong. Isi sekarang atau lanjutkan nanti.} other{{count} bidang masih kosong. Isi sekarang atau lanjutkan nanti.}}",
+  "recording_completeFichaStart": "Mulai",
+  "recording_completeFichaContinue": "Lanjutkan",
+  "recording_pendencyClassification": "Belum diklasifikasi",
+  "recording_pendencyClassificationContext": "Genre dan register menunjukkan jenis cerita ini.",
+  "recording_pendencyDescription": "Deskripsi terlalu singkat",
+  "recording_pendencyDescriptionContext": "Beberapa kata tentang apa yang terjadi dalam rekaman.",
+  "recording_pendencyStoryteller": "Belum ada pencerita",
+  "recording_pendencyStorytellerContext": "Siapa yang menceritakan kisah ini."
 }

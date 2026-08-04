@@ -1829,9 +1829,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get classify_action => '分类';
 
   @override
-  String get classify_banner => '此录音尚未分类。点击分类以添加类型和语域。';
-
-  @override
   String get classify_success => '录音已分类';
 
   @override
@@ -2556,4 +2553,45 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get liveActivity_uploadingStatus => '上传中';
+
+  @override
+  String get recording_completeFicha => '完善信息';
+
+  @override
+  String get recording_completeFichaTitle => '完善信息';
+
+  @override
+  String recording_completeFichaSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '还有 $count 项未填写。可以现在填写，也可以稍后再来。',
+      one: '还有 1 项未填写。可以现在填写，也可以稍后再来。',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recording_completeFichaStart => '开始';
+
+  @override
+  String get recording_completeFichaContinue => '继续';
+
+  @override
+  String get recording_pendencyClassification => '未分类';
+
+  @override
+  String get recording_pendencyClassificationContext => '体裁和语域说明这是哪一类故事。';
+
+  @override
+  String get recording_pendencyDescription => '描述过短';
+
+  @override
+  String get recording_pendencyDescriptionContext => '用几句话说明录音中的内容。';
+
+  @override
+  String get recording_pendencyStoryteller => '未指定讲述者';
+
+  @override
+  String get recording_pendencyStorytellerContext => '谁讲述了这个故事。';
 }
