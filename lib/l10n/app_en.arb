@@ -275,6 +275,11 @@
     "description": "Empty-state title when a review-flag filter is applied but the device is offline; the filter is server-computed and has no local equivalent (ENG-381)."
   },
   "recordings_offlineFilterDescription": "The server works out which recordings still need details. Reconnect to see them, or remove the filter to browse everything on this device.",
+  "recordings_filterErrorTitle": "Couldn't check right now",
+  "@recordings_filterErrorTitle": {
+    "description": "Empty-state title when a review-flag filter is applied and the last fetch failed; an empty list here would otherwise read as 'nothing left to do' (ENG-381)."
+  },
+  "recordings_filterErrorDescription": "The server didn't answer, so we can't say which recordings still need details. Try again, or remove the filter to browse everything on this device.",
   "recordings_dropToImport": "Tip: drag audio files onto this window to import.",
   "recordings_count": "{count, plural, =1{1 recording} other{{count} recordings}}",
   "@recordings_count": {

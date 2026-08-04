@@ -208,6 +208,23 @@ void main() {
         expect(pendencyKindForCode(code), kind);
       });
     });
+
+    test('every kind has a code the server accepts, and it comes back the '
+        'same kind', () {
+      // The filter sent to the server travels this way round (ENG-381), and
+      // the route that reads it back travels the other. A kind whose code the
+      // server does not recognise is a 422 on a tap, so both directions have
+      // to agree for every member of the enum — including one added later.
+      for (final kind in PendencyKind.values) {
+        final code = reviewFlagCodeFor(kind);
+        expect(
+          vocabulary[code],
+          kind,
+          reason: '$kind maps to "$code", which is not a code the API takes',
+        );
+        expect(pendencyKindForCode(code), kind);
+      }
+    });
   });
 
   test('the order is stable, so the steps do not shuffle between reads', () {

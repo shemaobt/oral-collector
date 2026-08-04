@@ -969,6 +969,8 @@
   "import_resumeSizeMismatch": "Itu berkas yang berbeda. Pilih berkas yang sama persis dengan yang sedang Anda unggah.",
   "recordings_offlineFilterTitle": "Tidak tersedia offline",
   "recordings_offlineFilterDescription": "Server yang menentukan rekaman mana yang masih memerlukan detail. Sambungkan kembali untuk melihatnya, atau hapus filter untuk menelusuri semua yang ada di perangkat ini.",
+  "recordings_filterErrorTitle": "Tidak bisa memeriksa sekarang",
+  "recordings_filterErrorDescription": "Server tidak menjawab, jadi kami tidak bisa menyebutkan rekaman mana yang masih memerlukan detail. Coba lagi, atau hapus filter untuk menelusuri semua yang ada di perangkat ini.",
   "recordings_dropToImport": "Tip: seret berkas audio ke jendela ini untuk mengimpor.",
   "upload_completeNotificationTitle": "Unggahan selesai",
   "upload_failedNotificationTitle": "Unggahan gagal",

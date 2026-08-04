@@ -6,6 +6,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/tokens.dart';
 import '../../../../shared/utils/format.dart';
 import '../../../recording/domain/entities/review_pendency.dart';
+import '../../../recording/presentation/pendency_label.dart';
 import '../../domain/entities/project.dart';
 import '../../domain/entities/project_stats.dart';
 import 'language_chip_row.dart';
@@ -253,7 +254,7 @@ class _PendencyBreakdown extends StatelessWidget {
         children: [
           for (final entry in byKind.entries)
             _PendencyBreakdownLine(
-              label: _pendencyLabel(l10n, entry.key),
+              label: pendencyLabel(l10n, entry.key),
               count: entry.value,
               onTap: () => onTap(entry.key),
             ),
@@ -286,32 +287,41 @@ class _PendencyBreakdownLine extends StatelessWidget {
       style: theme.textTheme.labelSmall?.copyWith(color: colors.secondary),
     );
 
-    return Semantics(
-      button: true,
-      label: l10n.projectStats_showPendency(label, count),
-      excludeSemantics: true,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(RadiusScale.r8),
-        child: ConstrainedBox(
-          // A tap target has to be reachable by a thumb, not just by a mouse.
-          constraints: const BoxConstraints(minHeight: 48),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: SpacingScale.s4),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Flexible(child: text),
-                const SizedBox(width: SpacingScale.s4),
-                // Colour alone must not be what says "this does something"
-                // (WCAG 1.4.1): the chevron carries it without depending on
-                // hue, and reads as a way in rather than a decoration.
-                Icon(
-                  LucideIcons.chevronRight,
-                  size: 14,
-                  color: colors.secondary,
+    // The label has to land on the node that carries the tap action, which is
+    // the InkWell's. `excludeSemantics` would throw that node away and leave a
+    // node that says "button" and does nothing when double-tapped; merging
+    // keeps the action and replaces only the visible text.
+    return MergeSemantics(
+      child: Semantics(
+        button: true,
+        label: l10n.projectStats_showPendency(label, count),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(RadiusScale.r8),
+          child: ConstrainedBox(
+            // A tap target has to be reachable by a thumb, not just by a mouse.
+            constraints: const BoxConstraints(minHeight: 48),
+            child: ExcludeSemantics(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: SpacingScale.s4,
                 ),
-              ],
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Flexible(child: text),
+                    const SizedBox(width: SpacingScale.s4),
+                    // Colour alone must not be what says "this does something"
+                    // (WCAG 1.4.1): the chevron carries it without depending on
+                    // hue, and reads as a way in rather than a decoration.
+                    Icon(
+                      LucideIcons.chevronRight,
+                      size: 14,
+                      color: colors.secondary,
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ),
@@ -376,10 +386,3 @@ Map<PendencyKind, int> _breakdownByKind(Map<String, int> counts) {
       if (byKind.containsKey(kind)) kind: byKind[kind]!,
   };
 }
-
-String _pendencyLabel(AppLocalizations l10n, PendencyKind kind) =>
-    switch (kind) {
-      PendencyKind.classification => l10n.recording_pendencyClassification,
-      PendencyKind.description => l10n.recording_pendencyDescription,
-      PendencyKind.storyteller => l10n.recording_pendencyStoryteller,
-    };

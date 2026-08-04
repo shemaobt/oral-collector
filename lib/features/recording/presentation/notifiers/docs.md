@@ -277,6 +277,18 @@ Path: @/lib/features/recording/presentation/notifiers
   local set or the ordinary "no recordings" state. `refresh: false` lets the
   screen's `initState` apply the filter without double-fetching, since
   `_refreshAll` fetches immediately after.
+- `RecordingsListState.fetchFailed` (ENG-381) records whether the last
+  `fetchRecordings` ended in the `catch`. It exists because the local fallback
+  returns the same empty list for "offline under a pendency filter" and "the
+  request threw", which left the screen unable to tell *no recordings* from *I
+  could not find out* — and it picked the reassuring one, painting "no
+  recordings yet / 0 recordings" under a chip saying "No classification" on
+  any 5xx, timeout or 401. Set in the `catch`, cleared on a successful fetch
+  **and** on the offline branch (offline is a separate story the screen tells
+  differently). `loadMore` deliberately does not touch it: a failed second
+  page leaves the first page on screen and still a valid answer. Consumers:
+  the empty state at
+  [../recordings_list_screen.dart](../recordings_list_screen.dart) only.
 - `deleteRecording(LocalRecordingEntity)` is the single owner of the
   user-initiated **hard delete** for both the list and detail screens
   (ENG-120). It takes the entity as of ENG-197: the list screen already holds

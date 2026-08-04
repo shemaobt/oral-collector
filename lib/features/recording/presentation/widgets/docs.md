@@ -133,7 +133,13 @@ Path: @/lib/features/recording/presentation/widgets
   presence means the list is server-filtered rather than sieved from the
   in-memory page — removing it calls `setReviewFlagFilter(null)`, which
   (see [../notifiers/docs.md](../notifiers/docs.md)) re-fetches from the
-  server rather than just re-computing `filteredRecordings` locally.
+  server rather than just re-computing `filteredRecordings` locally. Its label
+  comes from the shared `pendencyLabel` in
+  [../pendency_label.dart](../pendency_label.dart), not a local switch: the
+  project settings breakdown names the same three kinds, and the two copies
+  would drift. That helper sits in `presentation/`, not next to the
+  `PendencyKind` enum it switches on, because a translated string is not
+  domain knowledge — see [../../domain/docs.md](../../domain/docs.md).
 - `RecordingCard` (ENG-374, "card V3") was redesigned around one question —
   "which recordings still need me?" — which cost the duration chip (and the
   `formattedDuration` constructor param `recordings_list_screen.dart` used to

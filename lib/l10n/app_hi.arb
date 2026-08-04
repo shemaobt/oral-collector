@@ -969,6 +969,8 @@
   "import_resumeSizeMismatch": "यह एक अलग फ़ाइल है। ठीक वही फ़ाइल चुनें जिसे आप अपलोड कर रहे थे।",
   "recordings_offlineFilterTitle": "ऑफ़लाइन उपलब्ध नहीं",
   "recordings_offlineFilterDescription": "कौन-सी रिकॉर्डिंग में अब भी विवरण बाकी हैं, यह सर्वर तय करता है। उन्हें देखने के लिए फिर से कनेक्ट करें, या इस डिवाइस की सारी रिकॉर्डिंग देखने के लिए फ़िल्टर हटाएँ।",
+  "recordings_filterErrorTitle": "अभी जाँच नहीं हो सकी",
+  "recordings_filterErrorDescription": "सर्वर से जवाब नहीं मिला, इसलिए यह नहीं बताया जा सकता कि किन रिकॉर्डिंग में अब भी विवरण बाकी हैं। फिर से कोशिश करें, या इस डिवाइस की सारी रिकॉर्डिंग देखने के लिए फ़िल्टर हटाएँ।",
   "recordings_dropToImport": "सुझाव: आयात करने के लिए ऑडियो फ़ाइलें इस विंडो पर खींचें।",
   "upload_completeNotificationTitle": "अपलोड पूर्ण",
   "upload_failedNotificationTitle": "अपलोड विफल",

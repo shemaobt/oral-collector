@@ -667,6 +667,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'The server works out which recordings still need details. Reconnect to see them, or remove the filter to browse everything on this device.';
 
   @override
+  String get recordings_filterErrorTitle => 'Couldn\'t check right now';
+
+  @override
+  String get recordings_filterErrorDescription =>
+      'The server didn\'t answer, so we can\'t say which recordings still need details. Try again, or remove the filter to browse everything on this device.';
+
+  @override
   String get recordings_dropToImport =>
       'Tip: drag audio files onto this window to import.';
 

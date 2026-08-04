@@ -662,6 +662,13 @@ class AppLocalizationsAr extends AppLocalizations {
       'الخادم هو الذي يحدد التسجيلات التي ما زالت تنقصها تفاصيل. أعد الاتصال لعرضها، أو أزل عامل التصفية لتصفح كل ما على هذا الجهاز.';
 
   @override
+  String get recordings_filterErrorTitle => 'تعذّر التحقق الآن';
+
+  @override
+  String get recordings_filterErrorDescription =>
+      'لم يستجب الخادم، لذا لا يمكن تحديد التسجيلات التي ما زالت تنقصها تفاصيل. أعد المحاولة، أو أزل عامل التصفية لتصفح كل ما على هذا الجهاز.';
+
+  @override
   String get recordings_dropToImport =>
       'تلميح: اسحب ملفات الصوت إلى هذه النافذة لاستيرادها.';
 

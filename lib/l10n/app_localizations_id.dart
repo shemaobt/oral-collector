@@ -671,6 +671,13 @@ class AppLocalizationsId extends AppLocalizations {
       'Server yang menentukan rekaman mana yang masih memerlukan detail. Sambungkan kembali untuk melihatnya, atau hapus filter untuk menelusuri semua yang ada di perangkat ini.';
 
   @override
+  String get recordings_filterErrorTitle => 'Tidak bisa memeriksa sekarang';
+
+  @override
+  String get recordings_filterErrorDescription =>
+      'Server tidak menjawab, jadi kami tidak bisa menyebutkan rekaman mana yang masih memerlukan detail. Coba lagi, atau hapus filter untuk menelusuri semua yang ada di perangkat ini.';
+
+  @override
   String get recordings_dropToImport =>
       'Tip: seret berkas audio ke jendela ini untuk mengimpor.';
 

@@ -969,6 +969,8 @@
   "import_resumeSizeMismatch": "Hiyo ni faili tofauti. Chagua faili ileile kabisa uliyokuwa ukipakia.",
   "recordings_offlineFilterTitle": "Haipatikani nje ya mtandao",
   "recordings_offlineFilterDescription": "Seva ndiyo inayobaini rekodi zipi bado zinahitaji maelezo. Unganisha tena ili kuziona, au ondoa kichujio ili kuvinjari kila kitu kilichopo kwenye kifaa hiki.",
+  "recordings_filterErrorTitle": "Imeshindikana kuangalia sasa",
+  "recordings_filterErrorDescription": "Seva haikujibu, kwa hivyo hatuwezi kusema ni rekodi zipi bado zinahitaji maelezo. Jaribu tena, au ondoa kichujio ili kuvinjari kila kitu kilichopo kwenye kifaa hiki.",
   "recordings_dropToImport": "Kidokezo: buruta faili za sauti kwenye dirisha hili ili kuingiza.",
   "upload_completeNotificationTitle": "Upakiaji umekamilika",
   "upload_failedNotificationTitle": "Upakiaji umeshindwa",

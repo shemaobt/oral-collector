@@ -17,6 +17,15 @@ class RecordingsListState {
   final bool isLoading;
   final bool isLoadingMore;
   final bool hasMore;
+
+  /// Whether the last attempt to reach the server ended in an error.
+  ///
+  /// Kept apart from an empty [recordings] because the two mean opposite
+  /// things to the reader: "there is nothing here" is an answer about the
+  /// project, and a 5xx, a timeout or an expired session is not an answer at
+  /// all. Under a server-side filter the difference is the whole message — an
+  /// empty list would otherwise say the work is done.
+  final bool fetchFailed;
   final String? selectedGenreId;
   final String? selectedSubcategoryId;
   final String? selectedStorytellerId;
@@ -36,6 +45,7 @@ class RecordingsListState {
     this.isLoading = true,
     this.isLoadingMore = false,
     this.hasMore = true,
+    this.fetchFailed = false,
     this.selectedGenreId,
     this.selectedSubcategoryId,
     this.selectedStorytellerId,
@@ -50,6 +60,7 @@ class RecordingsListState {
     bool? isLoading,
     bool? isLoadingMore,
     bool? hasMore,
+    bool? fetchFailed,
     String? selectedGenreId,
     String? selectedSubcategoryId,
     String? selectedStorytellerId,
@@ -68,6 +79,7 @@ class RecordingsListState {
       isLoading: isLoading ?? this.isLoading,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
       hasMore: hasMore ?? this.hasMore,
+      fetchFailed: fetchFailed ?? this.fetchFailed,
       selectedGenreId: clearGenreId
           ? null
           : (selectedGenreId ?? this.selectedGenreId),

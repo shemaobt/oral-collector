@@ -969,6 +969,8 @@
   "import_resumeSizeMismatch": "C'est un autre fichier. Sélectionnez exactement le même fichier que celui en cours de téléversement.",
   "recordings_offlineFilterTitle": "Indisponible hors ligne",
   "recordings_offlineFilterDescription": "C'est le serveur qui détermine quels enregistrements manquent encore de détails. Reconnectez-vous pour les voir, ou retirez le filtre pour parcourir tout ce qui se trouve sur cet appareil.",
+  "recordings_filterErrorTitle": "Vérification impossible pour l'instant",
+  "recordings_filterErrorDescription": "Le serveur n'a pas répondu : impossible de dire quels enregistrements manquent encore de détails. Réessayez, ou retirez le filtre pour parcourir tout ce qui se trouve sur cet appareil.",
   "recordings_dropToImport": "Astuce : faites glisser des fichiers audio sur cette fenêtre pour les importer.",
   "upload_completeNotificationTitle": "Téléversement terminé",
   "upload_failedNotificationTitle": "Échec du téléversement",

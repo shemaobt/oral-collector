@@ -677,6 +677,13 @@ class AppLocalizationsEs extends AppLocalizations {
       'El servidor es quien determina qué grabaciones todavía necesitan detalles. Vuelve a conectarte para verlas o quita el filtro para ver todo lo que hay en este dispositivo.';
 
   @override
+  String get recordings_filterErrorTitle => 'No se pudo comprobar ahora';
+
+  @override
+  String get recordings_filterErrorDescription =>
+      'El servidor no respondió, así que no podemos decir qué grabaciones todavía necesitan detalles. Inténtalo de nuevo o quita el filtro para ver todo lo que hay en este dispositivo.';
+
+  @override
   String get recordings_dropToImport =>
       'Consejo: arrastra archivos de audio a esta ventana para importarlos.';
 

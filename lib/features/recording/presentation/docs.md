@@ -348,15 +348,25 @@ Path: @/lib/features/recording/presentation
   end to end except where the data layer still needs a row (the heal/server
   resolution inside `RecordingDetailNotifier.load`, the split child-companion
   build).
-- **The review-flag filter opens on a different empty state when offline
-  (ENG-381).** `recordings_list_screen.dart` checks
-  `isOffline && listState.selectedReviewFlag != null` ahead of the ordinary
-  "no recordings" branch: only the server can say which recordings carry a
-  flag, so an offline device under this filter shows a dedicated "not
-  available offline" `EmptyState` with a clear-filter action, rather than
-  either the device's full local set or a claim that the project has nothing
-  in it. See [./notifiers/docs.md](notifiers/docs.md) for the notifier-side
-  half (`setReviewFlagFilter`, `_localFallback`).
+- **The review-flag filter opens on a different empty state when the server
+  could not answer (ENG-381).** `recordings_list_screen.dart` computes
+  `pendencyUnanswered = selectedReviewFlag != null && recordings.isEmpty &&
+  (isOffline || fetchFailed)` ahead of the ordinary "no recordings" branch and
+  renders `_PendencyFilterUnanswered` instead: only the server can say which
+  recordings carry a flag, so an empty list here is the absence of an answer,
+  not an answer of zero. Two causes, two messages — offline gets "not
+  available offline" and a clear-filter action, a failed fetch gets a
+  "couldn't check right now" and a retry — because blaming the connection for
+  a 5xx, a timeout or an expired session sends the user after a signal they
+  already have. Three details that are load-bearing: the empty-project state
+  would read as "the work is done" seconds after the project screen said three
+  recordings still need details, which is why `fetchFailed` exists on the
+  state at all; the condition reads `recordings`, **not**
+  `filteredRecordings`, so a genre/status/search sieve emptying the list is
+  never blamed on connectivity; and the whole branch is scoped to the pendency
+  filter, since the other filters do have a local answer. See
+  [./notifiers/docs.md](notifiers/docs.md) for the notifier-side half
+  (`setReviewFlagFilter`, `_localFallback`, `fetchFailed`).
 - **Listener-driven re-renders (now in the notifier, ENG-194).** The
   recording shown is `RecordingDetailState.recording`, a `LocalRecordingEntity`
   (ENG-199/ENG-200), and `RecordingDetailNotifier.build` (native only)

@@ -967,6 +967,8 @@
   "import_resumeSizeMismatch": "هذا ملف مختلف. اختر الملف نفسه تمامًا الذي كنت ترفعه.",
   "recordings_offlineFilterTitle": "غير متاح دون اتصال",
   "recordings_offlineFilterDescription": "الخادم هو الذي يحدد التسجيلات التي ما زالت تنقصها تفاصيل. أعد الاتصال لعرضها، أو أزل عامل التصفية لتصفح كل ما على هذا الجهاز.",
+  "recordings_filterErrorTitle": "تعذّر التحقق الآن",
+  "recordings_filterErrorDescription": "لم يستجب الخادم، لذا لا يمكن تحديد التسجيلات التي ما زالت تنقصها تفاصيل. أعد المحاولة، أو أزل عامل التصفية لتصفح كل ما على هذا الجهاز.",
   "recordings_dropToImport": "تلميح: اسحب ملفات الصوت إلى هذه النافذة لاستيرادها.",
   "recording_uploadEtaRemaining": "متبقي ~{eta}",
   "recording_uploadSpeed": "{speed}/ث",

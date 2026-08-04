@@ -238,6 +238,18 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
     final filtered = listState.filteredRecordings;
     final syncState = ref.watch(syncNotifierProvider);
     final isOffline = !syncState.isOnline;
+
+    // An empty list under a pendency filter is only an answer when the server
+    // gave one. Offline, or after a fetch that failed, it is the absence of an
+    // answer — and "no recordings yet" would tell the user the work is done
+    // seconds after the project screen said three recordings still need
+    // details. Read from `recordings`, not `filtered`: a genre, status or
+    // search sieve emptying the list is this device's doing, and blaming the
+    // connection for it sends the user looking for a signal they do not need.
+    final pendencyUnanswered =
+        listState.selectedReviewFlag != null &&
+        listState.recordings.isEmpty &&
+        (isOffline || listState.fetchFailed);
     final activeProject = ref.watch(
       projectNotifierProvider.select((s) => s.activeProject),
     );
@@ -377,26 +389,8 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
                       )
                     : filtered.isEmpty
                     ? SliverFillRemaining(
-                        child: isOffline && listState.selectedReviewFlag != null
-                            // Not "no recordings": there may well be plenty.
-                            // Only the server knows which ones carry a flag, so
-                            // say that rather than let an empty list read as an
-                            // answer about the project.
-                            ? EmptyState(
-                                icon: LucideIcons.cloudOff,
-                                title: l10n.recordings_offlineFilterTitle,
-                                description:
-                                    l10n.recordings_offlineFilterDescription,
-                                action: FilledButton.icon(
-                                  onPressed: ref
-                                      .read(
-                                        recordingsListNotifierProvider.notifier,
-                                      )
-                                      .clearAllFilters,
-                                  icon: const Icon(LucideIcons.x, size: 18),
-                                  label: Text(l10n.filter_clearAll),
-                                ),
-                              )
+                        child: pendencyUnanswered
+                            ? _PendencyFilterUnanswered(offline: isOffline)
                             : ImportDropZone(
                                 onFilesDropped: (files) {
                                   if (!mounted) return;
@@ -626,6 +620,50 @@ class _SearchField extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// What the list says when a pendency filter is on and nothing came back
+/// because nothing could be asked (ENG-381).
+///
+/// Not "no recordings yet": there may well be plenty. Only the server can say
+/// which of them still carry a review flag, so an empty list here is the
+/// absence of an answer rather than an answer of zero.
+class _PendencyFilterUnanswered extends ConsumerWidget {
+  const _PendencyFilterUnanswered({required this.offline});
+
+  /// Whether the connection is the reason. It usually is not: a 5xx, a
+  /// timeout or an expired session all land here with the device online, and
+  /// telling that user to reconnect sends them after a signal they have.
+  final bool offline;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final notifier = ref.read(recordingsListNotifierProvider.notifier);
+
+    return EmptyState(
+      icon: offline ? LucideIcons.cloudOff : LucideIcons.alertTriangle,
+      title: offline
+          ? l10n.recordings_offlineFilterTitle
+          : l10n.recordings_filterErrorTitle,
+      description: offline
+          ? l10n.recordings_offlineFilterDescription
+          : l10n.recordings_filterErrorDescription,
+      // Dropping the filter is the only way forward offline; a failed request
+      // is worth asking again before giving the filter up.
+      action: offline
+          ? FilledButton.icon(
+              onPressed: notifier.clearAllFilters,
+              icon: const Icon(LucideIcons.x, size: 18),
+              label: Text(l10n.filter_clearAll),
+            )
+          : FilledButton.icon(
+              onPressed: notifier.fetchRecordings,
+              icon: const Icon(LucideIcons.refreshCw, size: 18),
+              label: Text(l10n.common_retry),
+            ),
     );
   }
 }

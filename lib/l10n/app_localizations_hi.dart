@@ -671,6 +671,13 @@ class AppLocalizationsHi extends AppLocalizations {
       'कौन-सी रिकॉर्डिंग में अब भी विवरण बाकी हैं, यह सर्वर तय करता है। उन्हें देखने के लिए फिर से कनेक्ट करें, या इस डिवाइस की सारी रिकॉर्डिंग देखने के लिए फ़िल्टर हटाएँ।';
 
   @override
+  String get recordings_filterErrorTitle => 'अभी जाँच नहीं हो सकी';
+
+  @override
+  String get recordings_filterErrorDescription =>
+      'सर्वर से जवाब नहीं मिला, इसलिए यह नहीं बताया जा सकता कि किन रिकॉर्डिंग में अब भी विवरण बाकी हैं। फिर से कोशिश करें, या इस डिवाइस की सारी रिकॉर्डिंग देखने के लिए फ़िल्टर हटाएँ।';
+
+  @override
   String get recordings_dropToImport =>
       'सुझाव: आयात करने के लिए ऑडियो फ़ाइलें इस विंडो पर खींचें।';
 

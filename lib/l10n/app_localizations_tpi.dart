@@ -668,6 +668,13 @@ class AppLocalizationsTpi extends AppLocalizations {
       'Sever i save makim wanem ol rekoding i sot yet long ol tok. Konektim gen bilong lukim ol, o rausim filta bilong lukim olgeta samting i stap long dispela masin.';
 
   @override
+  String get recordings_filterErrorTitle => 'I no inap sekim nau';
+
+  @override
+  String get recordings_filterErrorDescription =>
+      'Sever i no bekim, olsem na mipela i no inap tokim yu wanem ol rekoding i sot yet long ol tok. Traim gen, o rausim filta bilong lukim olgeta samting i stap long dispela masin.';
+
+  @override
   String get recordings_dropToImport =>
       'Tip: pulim ol audio fail i go long dispela windo bilong imotim.';
 

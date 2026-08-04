@@ -71,6 +71,8 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
         recordings: local ?? state.recordings,
         isLoading: false,
         hasMore: false,
+        // Offline is its own story, and the screen tells it differently.
+        fetchFailed: false,
       );
       return;
     }
@@ -83,6 +85,7 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
         recordings: result.merged,
         isLoading: false,
         hasMore: result.hasMore,
+        fetchFailed: false,
       );
     } catch (e, st) {
       _reportUnexpected(e, st);
@@ -93,6 +96,10 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
         recordings: local ?? state.recordings,
         isLoading: false,
         hasMore: false,
+        // The list that comes out of here is not an answer about the project.
+        // Without this the screen cannot tell "nothing to do" from "I could
+        // not find out", and it picks the reassuring one.
+        fetchFailed: true,
       );
     }
   }

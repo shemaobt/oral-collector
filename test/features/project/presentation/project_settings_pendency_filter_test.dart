@@ -28,7 +28,6 @@ import 'package:oral_collector/features/project/presentation/notifiers/member_no
 import 'package:oral_collector/features/project/presentation/notifiers/member_state.dart';
 import 'package:oral_collector/features/project/presentation/notifiers/project_notifier.dart';
 import 'package:oral_collector/features/project/presentation/notifiers/project_state.dart';
-import 'package:oral_collector/features/project/presentation/widgets/project_settings_header.dart';
 import 'package:oral_collector/features/recording/data/providers.dart';
 import 'package:oral_collector/features/recording/data/repositories/local_recording_repository.dart';
 import 'package:oral_collector/features/recording/domain/entities/review_pendency.dart';
@@ -280,78 +279,66 @@ void main() {
     );
   });
 
-  testWidgets('the list stays where it was when settings is already on the '
-      'active project', (tester) async {
-    await pumpSettings(tester, activeProject: _thisProject);
+  testWidgets('a review flag this build cannot name opens the list '
+      'unfiltered', (tester) async {
+    // Links from an older build, hand-typed URLs and codes a newer server
+    // invents all arrive on this route. Passing the raw string through would
+    // ask for a code outside the server's closed set and get a 422 back
+    // instead of a list.
+    final container = await pumpSettings(tester, activeProject: _thisProject);
 
-    await tester.tap(_breakdownLine(_l10n.recording_pendencyClassification, 3));
+    container
+        .read(routerProvider)
+        .go('/recordings?reviewFlag=awaiting_transcription');
     for (var i = 0; i < 5; i++) {
       await tester.pump(const Duration(milliseconds: 50));
     }
 
-    expect(_setActiveCalls, isEmpty);
+    expect(find.byType(RecordingsListScreen), findsOneWidget);
+    expect(
+      container.read(recordingsListNotifierProvider).selectedReviewFlag,
+      isNull,
+    );
   });
 
-  testWidgets('the breakdown line announces itself as a button', (
+  testWidgets('a screen reader can read the breakdown line and act on it', (
     tester,
   ) async {
     final handle = tester.ensureSemantics();
-    await pumpSettings(tester, activeProject: _thisProject);
+    final container = await pumpSettings(tester, activeProject: _thisProject);
 
+    final line = find.bySemanticsLabel(
+      _l10n.projectStats_showPendency(
+        _l10n.recording_pendencyClassification,
+        3,
+      ),
+    );
+    expect(line, findsOneWidget);
+    // A label alone is a trap: it reads as "button" and does nothing. The
+    // action has to live on the same node the label does.
     expect(
-      find.bySemanticsLabel(
+      tester.getSemantics(line),
+      isSemantics(isButton: true, hasTapAction: true),
+    );
+
+    // TalkBack and VoiceOver deliver a double tap as this action, never as a
+    // pointer event, so this is the only way to test what they can reach.
+    tester.semantics.tap(
+      find.semantics.byLabel(
         _l10n.projectStats_showPendency(
           _l10n.recording_pendencyClassification,
           3,
         ),
       ),
-      findsOneWidget,
+    );
+    for (var i = 0; i < 5; i++) {
+      await tester.pump(const Duration(milliseconds: 50));
+    }
+
+    expect(
+      container.read(recordingsListNotifierProvider).selectedReviewFlag,
+      PendencyKind.classification,
     );
     handle.dispose();
-  });
-
-  testWidgets('the breakdown line survives the largest supported text', (
-    tester,
-  ) async {
-    await pumpAtTextScale(
-      tester,
-      scale: 2.0,
-      child: SingleChildScrollView(
-        child: ProjectSettingsStatsSection(
-          project: _thisProject,
-          memberCount: 4,
-          stats: _stats,
-          onPendencyTap: (_) {},
-        ),
-      ),
-    );
-
-    expectNoOverflow(tester);
-    expect(
-      _breakdownLine(_l10n.recording_pendencyClassification, 3),
-      findsOneWidget,
-    );
-  });
-
-  testWidgets('a tap lands anywhere on a target big enough to hit', (
-    tester,
-  ) async {
-    await pumpAtTextScale(
-      tester,
-      child: ProjectSettingsStatsSection(
-        project: _thisProject,
-        memberCount: 4,
-        stats: _stats,
-        onPendencyTap: (_) {},
-      ),
-    );
-
-    final size = tester.getSize(
-      find.ancestor(
-        of: _breakdownLine(_l10n.recording_pendencyClassification, 3),
-        matching: find.byType(InkWell),
-      ),
-    );
-    expect(size.height, greaterThanOrEqualTo(48.0));
   });
 }

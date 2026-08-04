@@ -653,6 +653,13 @@ class AppLocalizationsKo extends AppLocalizations {
       '어떤 녹음에 아직 정보가 빠져 있는지는 서버가 판단합니다. 다시 연결해 확인하거나, 필터를 지우고 이 기기의 모든 녹음을 살펴보세요.';
 
   @override
+  String get recordings_filterErrorTitle => '지금은 확인할 수 없음';
+
+  @override
+  String get recordings_filterErrorDescription =>
+      '서버가 응답하지 않아 어떤 녹음에 정보가 빠져 있는지 알 수 없습니다. 다시 시도하거나, 필터를 지우고 이 기기의 모든 녹음을 살펴보세요.';
+
+  @override
   String get recordings_dropToImport => '팁: 오디오 파일을 이 창으로 끌어 가져오기 하세요.';
 
   @override

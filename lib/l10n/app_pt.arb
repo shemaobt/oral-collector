@@ -239,6 +239,8 @@
   "recordings_noRecordingsSubtitle": "Toque no microfone para gravar sua primeira história, ou importe um arquivo de áudio.",
   "recordings_offlineFilterTitle": "Indisponível offline",
   "recordings_offlineFilterDescription": "O servidor é quem define quais gravações ainda precisam de detalhes. Reconecte-se para vê-las ou remova o filtro para ver tudo o que está neste aparelho.",
+  "recordings_filterErrorTitle": "Não deu para verificar agora",
+  "recordings_filterErrorDescription": "O servidor não respondeu, então não dá para dizer quais gravações ainda precisam de detalhes. Tente de novo ou remova o filtro para ver tudo o que está neste aparelho.",
   "recordings_dropToImport": "Dica: arraste arquivos de áudio para esta janela para importar.",
   "recordings_count": "{count, plural, =0{Nenhuma gravação} =1{1 gravação} other{{count} gravações}}",
   "recording_statusUploaded": "Enviado",

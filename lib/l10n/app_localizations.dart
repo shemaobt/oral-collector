@@ -1358,6 +1358,18 @@ abstract class AppLocalizations {
   /// **'The server works out which recordings still need details. Reconnect to see them, or remove the filter to browse everything on this device.'**
   String get recordings_offlineFilterDescription;
 
+  /// Empty-state title when a review-flag filter is applied and the last fetch failed; an empty list here would otherwise read as 'nothing left to do' (ENG-381).
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t check right now'**
+  String get recordings_filterErrorTitle;
+
+  /// No description provided for @recordings_filterErrorDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'The server didn\'t answer, so we can\'t say which recordings still need details. Try again, or remove the filter to browse everything on this device.'**
+  String get recordings_filterErrorDescription;
+
   /// No description provided for @recordings_dropToImport.
   ///
   /// In en, this message translates to:

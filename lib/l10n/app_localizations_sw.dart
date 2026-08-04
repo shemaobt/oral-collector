@@ -670,6 +670,13 @@ class AppLocalizationsSw extends AppLocalizations {
       'Seva ndiyo inayobaini rekodi zipi bado zinahitaji maelezo. Unganisha tena ili kuziona, au ondoa kichujio ili kuvinjari kila kitu kilichopo kwenye kifaa hiki.';
 
   @override
+  String get recordings_filterErrorTitle => 'Imeshindikana kuangalia sasa';
+
+  @override
+  String get recordings_filterErrorDescription =>
+      'Seva haikujibu, kwa hivyo hatuwezi kusema ni rekodi zipi bado zinahitaji maelezo. Jaribu tena, au ondoa kichujio ili kuvinjari kila kitu kilichopo kwenye kifaa hiki.';
+
+  @override
   String get recordings_dropToImport =>
       'Kidokezo: buruta faili za sauti kwenye dirisha hili ili kuingiza.';
 

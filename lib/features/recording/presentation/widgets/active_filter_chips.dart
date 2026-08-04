@@ -9,9 +9,9 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../genre/presentation/notifiers/genre_notifier.dart';
 import '../../../project/presentation/notifiers/member_notifier.dart';
 import '../../../storyteller/presentation/notifiers/project_storytellers_notifier.dart';
-import '../../domain/entities/review_pendency.dart';
 import '../notifiers/recordings_list_notifier.dart';
 import '../notifiers/recordings_list_state.dart';
+import '../pendency_label.dart';
 
 class ActiveFilterChips extends ConsumerWidget {
   const ActiveFilterChips({super.key});
@@ -129,7 +129,7 @@ class ActiveFilterChips extends ConsumerWidget {
       chips.add(
         _buildChip(
           context,
-          label: _pendencyLabel(l10n, reviewFlag),
+          label: pendencyLabel(l10n, reviewFlag),
           onRemove: () => notifier.setReviewFlagFilter(null),
         ),
       );
@@ -170,13 +170,6 @@ class ActiveFilterChips extends ConsumerWidget {
       ),
     );
   }
-
-  String _pendencyLabel(AppLocalizations l10n, PendencyKind kind) =>
-      switch (kind) {
-        PendencyKind.classification => l10n.recording_pendencyClassification,
-        PendencyKind.description => l10n.recording_pendencyDescription,
-        PendencyKind.storyteller => l10n.recording_pendencyStoryteller,
-      };
 
   Widget _buildChip(
     BuildContext context, {

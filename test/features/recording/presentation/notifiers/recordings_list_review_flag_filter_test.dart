@@ -200,10 +200,87 @@ void main() {
     expect(state.recordings.map((r) => r.id), ['s1']);
   });
 
-  test('an unfiltered list still shows what is on the device', () async {
+  test('the next page asks for the same pendency as the first', () async {
+    // A page 2 fetched without the filter is appended to a list sitting under
+    // a pendency chip, so scrolling silently turns the narrowed list back into
+    // the whole project — and the count that sent the user here stops matching.
+    final firstPage = [for (var i = 0; i < 50; i++) _flagged('s$i')];
     when(
-      () => local.getAllRecordings('proj-1'),
-    ).thenAnswer((_) async => [_localOnly('l1')]);
+      () => api.listRecordings(
+        'proj-1',
+        offset: 0,
+        limit: any(named: 'limit'),
+        userId: any(named: 'userId'),
+        storytellerId: any(named: 'storytellerId'),
+        reviewFlag: any(named: 'reviewFlag'),
+      ),
+    ).thenAnswer((_) async => firstPage);
+    when(
+      () => api.listRecordings(
+        'proj-1',
+        offset: 50,
+        limit: any(named: 'limit'),
+        userId: any(named: 'userId'),
+        storytellerId: any(named: 'storytellerId'),
+        reviewFlag: any(named: 'reviewFlag'),
+      ),
+    ).thenAnswer((_) async => [_flagged('s50')]);
+
+    final container = makeContainer(online: true);
+    addTearDown(container.dispose);
+
+    final notifier = container.read(recordingsListNotifierProvider.notifier);
+    await notifier.setReviewFlagFilter(PendencyKind.storyteller);
+    await notifier.loadMore();
+
+    verify(
+      () => api.listRecordings(
+        'proj-1',
+        offset: 50,
+        limit: any(named: 'limit'),
+        userId: any(named: 'userId'),
+        storytellerId: any(named: 'storytellerId'),
+        reviewFlag: 'missing_storyteller',
+      ),
+    ).called(1);
+    expect(
+      container.read(recordingsListNotifierProvider).recordings,
+      hasLength(51),
+    );
+  });
+
+  test('applying the filter without a refresh leaves the fetch to the '
+      'caller', () async {
+    // The list screen's initState sets the filter and then refreshes
+    // everything itself; fetching here too would ask the server twice on
+    // every arrival from the project screen.
+    final container = makeContainer(online: true);
+    addTearDown(container.dispose);
+
+    await container
+        .read(recordingsListNotifierProvider.notifier)
+        .setReviewFlagFilter(PendencyKind.classification, refresh: false);
+
+    expect(
+      container.read(recordingsListNotifierProvider).selectedReviewFlag,
+      PendencyKind.classification,
+    );
+    verifyNever(
+      () => api.listRecordings(
+        any(),
+        offset: any(named: 'offset'),
+        limit: any(named: 'limit'),
+        userId: any(named: 'userId'),
+        storytellerId: any(named: 'storytellerId'),
+        reviewFlag: any(named: 'reviewFlag'),
+      ),
+    );
+  });
+
+  test('a failed fetch is not the same answer as an empty project', () async {
+    // Without a failure signal the screen reads the empty list as "nothing to
+    // do here", seconds after the project screen said three recordings need
+    // details.
     when(
       () => api.listRecordings(
         'proj-1',
@@ -213,17 +290,60 @@ void main() {
         storytellerId: any(named: 'storytellerId'),
         reviewFlag: any(named: 'reviewFlag'),
       ),
-    ).thenAnswer((_) async => [_flagged('s1')]);
+    ).thenThrow(Exception('500 from the server'));
 
     final container = makeContainer(online: true);
     addTearDown(container.dispose);
 
     await container
         .read(recordingsListNotifierProvider.notifier)
-        .fetchRecordings();
+        .setReviewFlagFilter(PendencyKind.classification);
 
     final state = container.read(recordingsListNotifierProvider);
-    expect(state.recordings.map((r) => r.id), containsAll(['l1', 's1']));
+    expect(state.recordings, isEmpty);
+    expect(state.fetchFailed, isTrue);
+  });
+
+  test('a fetch that works takes the failure back', () async {
+    var shouldThrow = true;
+    when(
+      () => api.listRecordings(
+        'proj-1',
+        offset: any(named: 'offset'),
+        limit: any(named: 'limit'),
+        userId: any(named: 'userId'),
+        storytellerId: any(named: 'storytellerId'),
+        reviewFlag: any(named: 'reviewFlag'),
+      ),
+    ).thenAnswer((_) async {
+      if (shouldThrow) throw Exception('500 from the server');
+      return [_flagged('s1')];
+    });
+
+    final container = makeContainer(online: true);
+    addTearDown(container.dispose);
+
+    final notifier = container.read(recordingsListNotifierProvider.notifier);
+    await notifier.setReviewFlagFilter(PendencyKind.classification);
+    expect(container.read(recordingsListNotifierProvider).fetchFailed, isTrue);
+
+    shouldThrow = false;
+    await notifier.fetchRecordings();
+
+    expect(container.read(recordingsListNotifierProvider).fetchFailed, isFalse);
+  });
+
+  test('going offline is not reported as a failed fetch', () async {
+    // Two different things to tell the user; blaming the connection for a
+    // server error is its own kind of lie.
+    final container = makeContainer(online: false);
+    addTearDown(container.dispose);
+
+    await container
+        .read(recordingsListNotifierProvider.notifier)
+        .setReviewFlagFilter(PendencyKind.classification);
+
+    expect(container.read(recordingsListNotifierProvider).fetchFailed, isFalse);
   });
 
   test(

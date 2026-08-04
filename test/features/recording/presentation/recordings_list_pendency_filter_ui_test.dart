@@ -17,6 +17,7 @@ import 'package:oral_collector/features/project/presentation/notifiers/project_n
 import 'package:oral_collector/features/project/presentation/notifiers/project_state.dart';
 import 'package:oral_collector/features/recording/data/providers.dart';
 import 'package:oral_collector/features/recording/data/repositories/local_recording_repository.dart';
+import 'package:oral_collector/features/recording/domain/entities/local_recording_entity.dart';
 import 'package:oral_collector/features/recording/domain/entities/review_pendency.dart';
 import 'package:oral_collector/features/recording/domain/entities/server_recording.dart';
 import 'package:oral_collector/features/recording/domain/repositories/recording_api_repository.dart';
@@ -75,32 +76,86 @@ class _FakeGenreNotifier extends GenreNotifier {
   Future<void> fetchGenres() async {}
 }
 
-class _OfflineSyncNotifier extends SyncNotifier {
+class _SyncNotifierAt extends SyncNotifier {
+  _SyncNotifierAt({required bool online}) : _online = online;
+
+  final bool _online;
+
   @override
-  SyncState build() => const SyncState(isOnline: false);
+  SyncState build() => SyncState(isOnline: _online);
 
   @override
   Future<void> processQueue() async {}
 }
 
-/// A settled, empty list. The filter is not preset: the screen is expected to
-/// apply the one it was opened with, and a preset would hide it failing to.
+/// Counts refetches. Kept outside the notifier: a public field on a Notifier
+/// trips `avoid_public_notifier_properties`.
+var _fetchCalls = 0;
+
+/// A settled list. The filter is not preset: the screen is expected to apply
+/// the one it was opened with, and a preset would hide it failing to.
 class _SettledListNotifier extends RecordingsListNotifier {
-  @override
-  RecordingsListState build() =>
-      const RecordingsListState(isLoading: false, hasMore: false);
+  _SettledListNotifier(this._initial);
+
+  final RecordingsListState _initial;
 
   @override
-  Future<void> fetchRecordings() async {}
+  RecordingsListState build() => _initial;
+
+  @override
+  Future<void> fetchRecordings() async {
+    _fetchCalls++;
+  }
 }
 
-List<Override> _overrides() => [
+const _settledEmpty = RecordingsListState(isLoading: false, hasMore: false);
+
+LocalRecordingEntity _entity(String id) => LocalRecordingEntity(
+  id: id,
+  projectId: 'p1',
+  genreId: 'g1',
+  title: 'Story $id',
+  durationSeconds: 30,
+  fileSizeBytes: 1024,
+  format: 'm4a',
+  localFilePath: '/tmp/$id.m4a',
+  uploadStatus: 'uploaded',
+  cleaningStatus: 'none',
+  recordedAt: DateTime(2026, 1, 1),
+  createdAt: DateTime(2026, 1, 1),
+  retryCount: 0,
+  uploadedBytes: 0,
+);
+
+List<Override> _overrides({bool online = false}) => [
   recordingApiRepositoryProvider.overrideWithValue(_FakeApi()),
   localRecordingRepositoryProvider.overrideWithValue(_FakeLocal()),
   projectNotifierProvider.overrideWith(_FakeProjectNotifier.new),
   genreNotifierProvider.overrideWith(_FakeGenreNotifier.new),
-  syncNotifierProvider.overrideWith(_OfflineSyncNotifier.new),
+  syncNotifierProvider.overrideWith(() => _SyncNotifierAt(online: online)),
 ];
+
+/// Pumps the list screen already opened on a pendency filter, over [listState].
+Future<void> pumpList(
+  WidgetTester tester, {
+  required RecordingsListState listState,
+  bool online = false,
+}) async {
+  await pumpAtTextScale(
+    tester,
+    overrides: [
+      ..._overrides(online: online),
+      recordingsListNotifierProvider.overrideWith(
+        () => _SettledListNotifier(listState),
+      ),
+    ],
+    child: const RecordingsListScreen(
+      initialReviewFlag: PendencyKind.classification,
+    ),
+  );
+  await tester.pump();
+  await tester.pump();
+}
 
 /// The chips run against the real notifier: the point is that removing the chip
 /// really widens the list, not that a fake was called.
@@ -150,20 +205,66 @@ void main() {
 
   testWidgets('offline under a filter explains itself instead of claiming '
       'there are no recordings', (tester) async {
-    await pumpAtTextScale(
-      tester,
-      overrides: [
-        ..._overrides(),
-        recordingsListNotifierProvider.overrideWith(_SettledListNotifier.new),
-      ],
-      child: const RecordingsListScreen(
-        initialReviewFlag: PendencyKind.classification,
-      ),
-    );
-    await tester.pump();
-    await tester.pump();
+    await pumpList(tester, listState: _settledEmpty);
 
     expect(find.text(_l10n.recordings_offlineFilterTitle), findsOneWidget);
     expect(find.text(_l10n.recordings_noRecordings), findsNothing);
+  });
+
+  testWidgets('a fetch that failed under a filter is not reported as an '
+      'empty project', (tester) async {
+    // Online, with a 5xx or a timeout behind the empty list. Saying "no
+    // recordings yet" here tells the user the work is finished seconds after
+    // the project screen said three recordings still need details.
+    await pumpList(
+      tester,
+      online: true,
+      listState: _settledEmpty.copyWith(fetchFailed: true),
+    );
+
+    expect(find.text(_l10n.recordings_filterErrorTitle), findsOneWidget);
+    expect(find.text(_l10n.recordings_noRecordings), findsNothing);
+    // The connection is not the cause and must not be named as one.
+    expect(find.text(_l10n.recordings_offlineFilterTitle), findsNothing);
+  });
+
+  testWidgets('offline is named as the cause only when it is the cause', (
+    tester,
+  ) async {
+    await pumpList(tester, listState: _settledEmpty);
+
+    expect(find.text(_l10n.recordings_filterErrorTitle), findsNothing);
+  });
+
+  testWidgets('the way out of a failed fetch is to ask again, not to give up '
+      'the filter', (tester) async {
+    await pumpList(
+      tester,
+      online: true,
+      listState: _settledEmpty.copyWith(fetchFailed: true),
+    );
+    final before = _fetchCalls;
+
+    await tester.tap(find.widgetWithText(FilledButton, _l10n.common_retry));
+    await tester.pump();
+
+    expect(_fetchCalls, greaterThan(before));
+  });
+
+  testWidgets('a sieve applied on this device is not blamed on the '
+      'connection', (tester) async {
+    // Offline and filtered, but the list is empty because of the search box,
+    // not because the server could not be reached. Blaming connectivity for a
+    // local filter sends the user to look for a signal they do not need.
+    await pumpList(
+      tester,
+      listState: _settledEmpty.copyWith(
+        recordings: [_entity('r1')],
+        searchQuery: 'nothing matches this',
+      ),
+    );
+
+    expect(find.text(_l10n.recordings_offlineFilterTitle), findsNothing);
+    expect(find.text(_l10n.recordings_noRecordings), findsOneWidget);
   });
 }

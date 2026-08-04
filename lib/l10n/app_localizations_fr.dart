@@ -678,6 +678,14 @@ class AppLocalizationsFr extends AppLocalizations {
       'C\'est le serveur qui détermine quels enregistrements manquent encore de détails. Reconnectez-vous pour les voir, ou retirez le filtre pour parcourir tout ce qui se trouve sur cet appareil.';
 
   @override
+  String get recordings_filterErrorTitle =>
+      'Vérification impossible pour l\'instant';
+
+  @override
+  String get recordings_filterErrorDescription =>
+      'Le serveur n\'a pas répondu : impossible de dire quels enregistrements manquent encore de détails. Réessayez, ou retirez le filtre pour parcourir tout ce qui se trouve sur cet appareil.';
+
+  @override
   String get recordings_dropToImport =>
       'Astuce : faites glisser des fichiers audio sur cette fenêtre pour les importer.';
 

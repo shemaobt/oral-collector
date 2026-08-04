@@ -81,7 +81,20 @@ Path: @/lib/features/recording/domain
   sends as the `review_flag` query parameter when the project settings screen's
   pendency breakdown is tapped: the enum stays total over the server's closed
   code set, so a code the server would 422 on is unreachable from this path by
-  construction.
+  construction. What this file deliberately does **not** own is the *label*:
+  `pendencyLabel(AppLocalizations, PendencyKind)` lives on the presentation
+  side, at
+  [../presentation/pendency_label.dart](../presentation/pendency_label.dart),
+  shared by the project screen's breakdown and the recordings list's filter
+  chip so two switches over one closed enum cannot drift apart. The split is
+  the point: the domain owns what a pendency *is* and which wire code names
+  it, and neither of those knows what language the reader speaks. Keeping the
+  translated string out means `domain/` never imports `AppLocalizations`, and
+  so never imports Flutter — the layer rule in
+  [/docs/adr/ADR-0011-architecture-dependency-rules.md](../../../../docs/adr/ADR-0011-architecture-dependency-rules.md).
+  (`RecordingCard`'s footer keeps its own version — it collapses two or more
+  pendencies into a count, which is a different sentence, not a different
+  name.)
 - [`UpdateRecordingRequest`](entities/update_recording_request.dart) (ENG-205)
   is the PATCH-body params object for `updateRecording`: a plain `const` class
   with the thirteen optional update fields and a `toJson()` that builds the
