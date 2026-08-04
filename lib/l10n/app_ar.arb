@@ -980,5 +980,6 @@
   "recording_pendencyDescription": "الوصف قصير جداً",
   "recording_pendencyDescriptionContext": "بضع كلمات عما يحدث في التسجيل.",
   "recording_pendencyStoryteller": "بدون راوٍ",
-  "recording_pendencyStorytellerContext": "من يروي هذه القصة."
+  "recording_pendencyStorytellerContext": "من يروي هذه القصة.",
+  "recording_pendencyCount": "{count, plural, two{حقلان بحاجة إلى تعبئة} few{{count} حقول بحاجة إلى تعبئة} many{{count} حقلاً بحاجة إلى تعبئة} other{{count} حقل بحاجة إلى تعبئة}}"
 }

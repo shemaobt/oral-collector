@@ -1181,5 +1181,6 @@
   "recording_pendencyDescription": "描述过短",
   "recording_pendencyDescriptionContext": "用几句话说明录音中的内容。",
   "recording_pendencyStoryteller": "未指定讲述者",
-  "recording_pendencyStorytellerContext": "谁讲述了这个故事。"
+  "recording_pendencyStorytellerContext": "谁讲述了这个故事。",
+  "recording_pendencyCount": "{count, plural, other{{count} 个字段待填写}}"
 }

@@ -980,5 +980,6 @@
   "recording_pendencyDescription": "Maelezo ni mafupi mno",
   "recording_pendencyDescriptionContext": "Maneno machache kuhusu kinachotokea katika rekodi.",
   "recording_pendencyStoryteller": "Hakuna msimulizi",
-  "recording_pendencyStorytellerContext": "Ni nani anayesimulia hadithi hii."
+  "recording_pendencyStorytellerContext": "Ni nani anayesimulia hadithi hii.",
+  "recording_pendencyCount": "{count, plural, other{Sehemu {count} za kujaza}}"
 }

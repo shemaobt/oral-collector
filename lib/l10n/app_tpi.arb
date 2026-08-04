@@ -980,5 +980,6 @@
   "recording_pendencyDescription": "Stori i sotpela tumas",
   "recording_pendencyDescriptionContext": "Sampela toktok long wanem samting i kamap long rekoding.",
   "recording_pendencyStoryteller": "I no gat stori man",
-  "recording_pendencyStorytellerContext": "Husat i tokim dispela stori."
+  "recording_pendencyStorytellerContext": "Husat i tokim dispela stori.",
+  "recording_pendencyCount": "{count, plural, other{{count} samting i mas pulapim}}"
 }

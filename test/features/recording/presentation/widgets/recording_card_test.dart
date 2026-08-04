@@ -58,13 +58,20 @@ Widget _harness({
         body: RecordingCard(
           recording: recording,
           genreName: 'Folktale',
-          formattedDuration: '01:00',
           onTap: () {},
         ),
       ),
     ),
   );
 }
+
+/// The status icon, reached through its tooltip. Going through the tooltip is
+/// what ties "this state" to "this glyph" — `find.byIcon` would only prove
+/// some icon exists somewhere on the card.
+Icon _statusIconUnder(WidgetTester tester, String tooltip) =>
+    tester.widget<Icon>(
+      find.descendant(of: find.byTooltip(tooltip), matching: find.byType(Icon)),
+    );
 
 void main() {
   testWidgets('no progress bar when nothing is uploading', (tester) async {
@@ -134,7 +141,17 @@ void main() {
     },
   );
 
-  testWidgets('a title-conflict recording shows its own status label', (
+  // The status chip lost its text in ENG-374 (card V3), so the label now rides
+  // on the icon's tooltip and semantics. Both cases below still have to be
+  // distinguishable from a generic failure — silently collapsing them into
+  // "Failed" is what these tests exist to prevent.
+  //
+  // The label is asserted on the status icon itself rather than through
+  // `find.bySemanticsLabel`: InkWell merges the whole card into one semantics
+  // node, so a card-wide label match would also be satisfied by the pendency
+  // chip — which in English renders the very same string for a missing
+  // description.
+  testWidgets('a title-conflict recording announces its own status', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -145,12 +162,19 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Name conflict'), findsOneWidget);
-    expect(find.text('Failed'), findsNothing);
-    expect(find.text('Local'), findsNothing);
+    expect(find.byTooltip('Name conflict'), findsOneWidget);
+    expect(find.byTooltip('Failed'), findsNothing);
+    expect(find.byTooltip('Local'), findsNothing);
+    expect(
+      _statusIconUnder(tester, 'Name conflict').semanticLabel,
+      'Name conflict',
+      reason: 'colour alone must not be what tells the two failures apart',
+    );
   });
 
-  testWidgets('a recording blocked on its description says so', (tester) async {
+  testWidgets('a recording blocked on its description announces that', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       _harness(
         recording: _makeRecording(uploadStatus: 'failed_description'),
@@ -159,8 +183,80 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Description too short'), findsOneWidget);
-    expect(find.text('Failed'), findsNothing);
-    expect(find.text('Local'), findsNothing);
+    expect(find.byTooltip('Description too short'), findsOneWidget);
+    expect(find.byTooltip('Failed'), findsNothing);
+    expect(find.byTooltip('Local'), findsNothing);
+    expect(
+      _statusIconUnder(tester, 'Description too short').semanticLabel,
+      'Description too short',
+    );
+  });
+
+  // The tooltip is only reachable by hover or long-press. A sighted user
+  // glancing at the list gets shape and colour, and both blocked states share
+  // the colour, so the shape has to be what separates them.
+  testWidgets('each blocked-upload state gets its own glyph', (tester) async {
+    await tester.pumpWidget(
+      _harness(
+        recording: _makeRecording(uploadStatus: 'failed_conflict'),
+        state: const SyncState(),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final conflict = _statusIconUnder(tester, 'Name conflict').icon;
+
+    await tester.pumpWidget(
+      _harness(
+        recording: _makeRecording(uploadStatus: 'failed_description'),
+        state: const SyncState(),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final description = _statusIconUnder(tester, 'Description too short').icon;
+
+    await tester.pumpWidget(
+      _harness(
+        recording: _makeRecording(uploadStatus: 'failed'),
+        state: const SyncState(),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final generic = _statusIconUnder(tester, 'Failed').icon;
+
+    expect(conflict, isNot(description));
+    expect(conflict, isNot(generic));
+    expect(description, isNot(generic));
+  });
+
+  testWidgets('the status tooltip hangs off a touchable target', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _harness(
+        recording: _makeRecording(uploadStatus: 'failed_conflict'),
+        state: const SyncState(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // 13px of glyph is not a long-press target. The label is only reachable if
+    // the thing carrying it is big enough to hit.
+    final size = tester.getSize(find.byTooltip('Name conflict'));
+    expect(size.width, greaterThanOrEqualTo(24));
+    expect(size.height, greaterThanOrEqualTo(24));
+  });
+
+  testWidgets('the status label is no longer visible text', (tester) async {
+    await tester.pumpWidget(
+      _harness(
+        recording: _makeRecording(uploadStatus: 'uploaded'),
+        state: const SyncState(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // The description only fits because the chip gave up its room. Bringing the
+    // text back would take that room again.
+    expect(find.text('Uploaded'), findsNothing);
   });
 }

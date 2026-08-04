@@ -13,6 +13,7 @@ class AppColorSet extends ThemeExtension<AppColorSet> {
   final Color success;
   final Color successText;
   final Color onPrimary;
+  final Color chipSurface;
   final Color warning;
   final Color border;
   final Color error;
@@ -30,6 +31,7 @@ class AppColorSet extends ThemeExtension<AppColorSet> {
     required this.success,
     required this.successText,
     required this.onPrimary,
+    required this.chipSurface,
     required this.warning,
     required this.border,
     required this.error,
@@ -49,6 +51,7 @@ class AppColorSet extends ThemeExtension<AppColorSet> {
     Color? success,
     Color? successText,
     Color? onPrimary,
+    Color? chipSurface,
     Color? warning,
     Color? border,
     Color? error,
@@ -66,6 +69,7 @@ class AppColorSet extends ThemeExtension<AppColorSet> {
       success: success ?? this.success,
       successText: successText ?? this.successText,
       onPrimary: onPrimary ?? this.onPrimary,
+      chipSurface: chipSurface ?? this.chipSurface,
       warning: warning ?? this.warning,
       border: border ?? this.border,
       error: error ?? this.error,
@@ -88,6 +92,7 @@ class AppColorSet extends ThemeExtension<AppColorSet> {
       success: Color.lerp(success, other.success, t)!,
       successText: Color.lerp(successText, other.successText, t)!,
       onPrimary: Color.lerp(onPrimary, other.onPrimary, t)!,
+      chipSurface: Color.lerp(chipSurface, other.chipSurface, t)!,
       warning: Color.lerp(warning, other.warning, t)!,
       border: Color.lerp(border, other.border, t)!,
       error: Color.lerp(error, other.error, t)!,
@@ -110,6 +115,7 @@ class AppColorSet extends ThemeExtension<AppColorSet> {
         other.success == success &&
         other.successText == successText &&
         other.onPrimary == onPrimary &&
+        other.chipSurface == chipSurface &&
         other.warning == warning &&
         other.border == border &&
         other.error == error;
@@ -129,6 +135,7 @@ class AppColorSet extends ThemeExtension<AppColorSet> {
     success,
     successText,
     onPrimary,
+    chipSurface,
     warning,
     border,
     error,
@@ -161,6 +168,12 @@ abstract class AppColors {
   /// palette everywhere primary is used as a filled surface.
   static const Color onPrimary = brandBranco;
   static const Color darkOnPrimary = darkBackground;
+
+  /// Backing for a small informational chip — quieter than [surfaceAlt], which
+  /// reads as a panel. Themed rather than reusing the fixed surfaceContainer
+  /// constants, which stay light and would strand dark text in dark mode.
+  static const Color chipSurface = surfaceContainerHigh;
+  static const Color darkChipSurface = darkSurfaceAlt;
   static const Color warning = Color(0xFFFFA000);
   static const Color border = brandAreia;
   static const Color error = Color(0xFFB91C1C);
@@ -221,6 +234,7 @@ abstract class AppColors {
     success: success,
     successText: successText,
     onPrimary: onPrimary,
+    chipSurface: chipSurface,
     warning: warning,
     border: border,
     error: error,
@@ -239,6 +253,7 @@ abstract class AppColors {
     success: darkSuccess,
     successText: darkSuccessText,
     onPrimary: darkOnPrimary,
+    chipSurface: darkChipSurface,
     warning: darkWarning,
     border: darkBorder,
     error: error,

@@ -19,6 +19,7 @@ const _testColors = AppColorSet(
   success: Color(0xFF008800),
   successText: Color(0xFF005500),
   onPrimary: Color(0xFFFFFFFF),
+  chipSurface: Color(0xFFFFFFFF),
   border: Color(0xFFCCCCCC),
   error: Color(0xFFAA0000),
   warning: Color(0xFFFFAA00),

@@ -2612,4 +2612,14 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get recording_pendencyStorytellerContext => '이 이야기를 들려주는 사람입니다.';
+
+  @override
+  String recording_pendencyCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '입력할 항목 $count개',
+    );
+    return '$_temp0';
+  }
 }

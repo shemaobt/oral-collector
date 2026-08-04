@@ -216,7 +216,10 @@ Path: @/lib/features/recording/presentation
   `resolveRecordingTitle(text)` — the string the save actually persists — so a
   trailing space cannot slip a duplicate past it. `RecordingCard` and
   `RecordingStatusSection` give `failed_conflict` its own label
-  (`recording_statusNameConflict`) instead of the generic failure label, and
+  (`recording_statusNameConflict`) instead of the generic failure label — on
+  `RecordingCard` that label now lives in the status icon's
+  `Tooltip`/`semanticLabel` behind its own glyph (`LucideIcons.copy`) rather
+  than painted text (see [./widgets/docs.md](widgets/docs.md)) — and
   `RecordingsListState`'s *pending* filter includes it so a conflicted
   recording stays visible and actionable.
 - **A recording the create rule refuses for its description gets the same
@@ -230,9 +233,11 @@ Path: @/lib/features/recording/presentation
   `RecordingDetailNotifier.saveDetails` calls `resetAndRetry` after the
   description write so the row rejoins the queue. `RecordingCard` and
   `RecordingStatusSection` give it its own label
-  (`recording_statusDescriptionTooShort`), and the *pending* filter includes it.
-  The status section's plain retry affordance deliberately does **not**, since a
-  bare retry would hit the same pre-flight.
+  (`recording_statusDescriptionTooShort`) — on `RecordingCard` behind the
+  `LucideIcons.fileText` glyph rather than painted text — and the *pending*
+  filter includes it. The status section's plain retry affordance
+  deliberately does **not**, since a bare retry would hit the same
+  pre-flight.
 - **The "what does this recording still owe" prompt is a guided flow, not a
   banner (ENG-374).** The detail screen no longer renders a classify banner.
   `Scaffold.body` is now a `Stack`: the base layer is the existing wide/phone
@@ -293,7 +298,10 @@ Path: @/lib/features/recording/presentation
   `recording` prop is now a `LocalRecordingEntity`. ENG-196 deleted the
   temporary `_entityToCardRow` shim that ENG-197 used to re-hydrate a Drift row
   for the card, and dropped the screen's orphaned `app_database.dart` import.
-  The card body is unchanged (the entity carries the same field names); its
+  The card body itself was unchanged at the time (the entity carries the same
+  field names) — ENG-374 later redesigned it into "card V3" and dropped the
+  `formattedDuration` prop this screen used to compute (see
+  [./widgets/docs.md](widgets/docs.md)). Its
   `isUnclassified` / `hasSecondary` reads now resolve through the entity's
   classification extension (see [../domain/docs.md](../domain/docs.md)) instead
   of the row's. As of ENG-199/ENG-200 the **detail tree is migrated too**: the

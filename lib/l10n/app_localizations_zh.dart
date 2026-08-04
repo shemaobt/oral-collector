@@ -2594,4 +2594,14 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get recording_pendencyStorytellerContext => '谁讲述了这个故事。';
+
+  @override
+  String recording_pendencyCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 个字段待填写',
+    );
+    return '$_temp0';
+  }
 }

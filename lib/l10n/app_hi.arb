@@ -980,5 +980,6 @@
   "recording_pendencyDescription": "विवरण बहुत छोटा है",
   "recording_pendencyDescriptionContext": "रिकॉर्डिंग में क्या होता है, इस बारे में कुछ शब्द।",
   "recording_pendencyStoryteller": "कोई कथाकार नहीं",
-  "recording_pendencyStorytellerContext": "यह कहानी कौन सुनाता है।"
+  "recording_pendencyStorytellerContext": "यह कहानी कौन सुनाता है।",
+  "recording_pendencyCount": "{count, plural, other{{count} फ़ील्ड भरने हैं}}"
 }
