@@ -286,6 +286,10 @@
   "recording_statusNameConflict": "Name conflict",
   "recording_statusDescriptionTooShort": "Description too short",
   "recording_descriptionGapMessage": "This recording can't be uploaded until you add a longer description.",
+  "recording_statusRetriesExhausted": "Attempts used up",
+  "recording_statusFileMissing": "Audio file missing",
+  "recording_uploadExhaustedMessage": "The upload stopped after several attempts. You can try again.",
+  "recording_fileMissingMessage": "The audio file for this recording is no longer on this device, so it can't be uploaded.",
   "recording_duplicateTitleTitle": "Name already used",
   "recording_duplicateTitleMessage": "An audio named \"{title}\" already exists in this project. Choose another name.",
   "@recording_duplicateTitleMessage": {

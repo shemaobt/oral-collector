@@ -3,11 +3,13 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:flutter/services.dart' show MethodChannel;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:oral_collector/core/config/upload_retry_policy.dart';
 import 'package:oral_collector/core/database/app_database.dart';
 import 'package:oral_collector/core/network/authenticated_client.dart';
 import 'package:oral_collector/features/recording/data/repositories/local_recording_repository.dart';
@@ -115,6 +117,13 @@ void main() {
   late MockConnectivity mockConnectivity;
   late MockSecureStorage mockStorage;
 
+  /// Every companion the engine handed to `updateRecording`, per recording id,
+  /// in write order. Recorded at the stub rather than read back through
+  /// `verify(captureAny())`, which fails outright when the engine wrote
+  /// nothing — and "wrote nothing" is exactly what several of these tests are
+  /// asserting.
+  late Map<String, List<LocalRecordingsCompanion>> recordedUpdates;
+
   setUpAll(() {
     registerFallbackValue(FakeLocalRecordingsCompanion());
     registerFallbackValue('');
@@ -122,6 +131,7 @@ void main() {
 
   setUp(() {
     SharedPreferences.setMockInitialValues({});
+    recordedUpdates = {};
     tempDir = Directory.systemTemp.createTempSync('sync_engine_test');
     mockRepo = MockRecordingRepo();
     mockStorytellerRepo = MockStorytellerRepo();
@@ -222,20 +232,23 @@ void main() {
     when(
       () => mockRepo.markAsUploaded(id, any(), any()),
     ).thenAnswer((_) async => true);
-    when(
-      () => mockRepo.markAsFailed(
-        id,
-        incrementRetry: any(named: 'incrementRetry'),
-      ),
-    ).thenAnswer((_) async => true);
-    when(
-      () => mockRepo.updateRecording(id, any()),
-    ).thenAnswer((_) async => true);
+    when(() => mockRepo.markAsFailed(id)).thenAnswer((_) async => true);
+    when(() => mockRepo.updateRecording(id, any())).thenAnswer((
+      invocation,
+    ) async {
+      recordedUpdates
+          .putIfAbsent(id, () => [])
+          .add(invocation.positionalArguments[1] as LocalRecordingsCompanion);
+      return true;
+    });
     when(() => mockRepo.resetRetryCount(id)).thenAnswer((_) async => true);
   }
 
   // A permanent (non-retryable) failure routes through _markPermanentlyFailed,
-  // which writes uploadStatus='failed' with retryCount=maxRetries.
+  // which writes uploadStatus='failed_exhausted' with retryCount=maxRetries.
+  // Not the generic 'failed': that one means a retry is still coming, and a row
+  // wearing it with a spent budget is queued by the counters and refused by the
+  // drain (ENG-377).
   void expectPermanentFailRec1() {
     final captured = verify(
       () => mockRepo.updateRecording('rec-1', captureAny()),
@@ -243,21 +256,21 @@ void main() {
     final hadPermanentFail = captured.any((c) {
       final companion = c as LocalRecordingsCompanion;
       return companion.uploadStatus.present &&
-          companion.uploadStatus.value == 'failed' &&
+          companion.uploadStatus.value == 'failed_exhausted' &&
           companion.retryCount.present &&
-          companion.retryCount.value == SyncEngineImpl.maxRetries;
+          companion.retryCount.value == kMaxUploadRetries;
     });
     expect(
       hadPermanentFail,
       isTrue,
-      reason: 'deve marcar falha permanente (não-retryable)',
+      reason: 'a non-retryable failure must be marked permanent',
     );
   }
 
-  /// Every `uploadStatus` the engine wrote for `rec-1`, in write order.
+  /// Every `uploadStatus` the engine wrote for `rec-1`, in write order. Empty
+  /// when it wrote none.
   List<String> capturedStatusesForRec1() =>
-      verify(() => mockRepo.updateRecording('rec-1', captureAny())).captured
-          .cast<LocalRecordingsCompanion>()
+      (recordedUpdates['rec-1'] ?? const [])
           .where((c) => c.uploadStatus.present)
           .map((c) => c.uploadStatus.value)
           .toList();
@@ -381,12 +394,7 @@ void main() {
       verify(() => mockRepo.markAsUploading('rec-1')).called(1);
       // No markAsUploaded and no markAsFailed — the row reverts to local.
       verifyNever(() => mockRepo.markAsUploaded(any(), any(), any()));
-      verifyNever(
-        () => mockRepo.markAsFailed(
-          any(),
-          incrementRetry: any(named: 'incrementRetry'),
-        ),
-      );
+      verifyNever(() => mockRepo.markAsFailed(any()));
       httpClient.close();
     });
   });
@@ -897,7 +905,7 @@ void main() {
       final conflict = written.firstWhere(
         (c) => c.uploadStatus.value == 'failed_conflict',
       );
-      expect(conflict.retryCount.value, SyncEngineImpl.maxRetries);
+      expect(conflict.retryCount.value, kMaxUploadRetries);
       httpClient.close();
     });
 
@@ -950,9 +958,12 @@ void main() {
               .cast<LocalRecordingsCompanion>()
               .where((c) => c.uploadStatus.present)
               .toList();
-      // The generic permanent-failure status, reachable by "Clear failed" and
-      // not advertising a rename that would change nothing.
-      expect(written.map((c) => c.uploadStatus.value), contains('failed'));
+      // The plain permanent-failure status, which does not advertise a rename
+      // that would change nothing.
+      expect(
+        written.map((c) => c.uploadStatus.value),
+        contains('failed_exhausted'),
+      );
       expect(
         written.map((c) => c.uploadStatus.value),
         isNot(contains('failed_conflict')),
@@ -1077,7 +1088,7 @@ void main() {
 
       verifyNever(() => mockRepo.markAsUploaded(any(), any(), any()));
       final written = capturedStatusesForRec1();
-      expect(written, contains('failed'));
+      expect(written, contains('failed_exhausted'));
       expect(written, isNot(contains('failed_description')));
       httpClient.close();
     });
@@ -1128,6 +1139,102 @@ void main() {
       expectPermanentFailRec1();
       httpClient.close();
     });
+  });
+
+  group('terminal statuses (ENG-377)', () {
+    test('uma falha permanente termina em failed_exhausted', () async {
+      // 'failed' with the retry budget spent is the shape that lit the sync
+      // chip over a queue the engine refuses to touch: the pending query says
+      // yes, the drain filter says no, and nothing on screen can explain it.
+      final testFile = File('${tempDir.path}/exhausted.m4a');
+      testFile.writeAsBytesSync(Uint8List(1024));
+
+      final rec = makeRecording(localFilePath: testFile.path);
+
+      when(() => mockConnectivity.isOnline).thenAnswer((_) async => true);
+      when(() => mockRepo.getPendingUploads()).thenAnswer((_) async => [rec]);
+      stubRepoForUpload(testFile.path);
+
+      final httpClient = createStatusOnCreate(400);
+      final engine = buildEngine(httpClient);
+
+      await engine.processQueue();
+
+      final written = capturedStatusesForRec1();
+      expect(written, contains('failed_exhausted'));
+      expect(
+        written,
+        isNot(contains('failed')),
+        reason: 'the generic failure returns it to a queue that gave up on it',
+      );
+      httpClient.close();
+    });
+
+    test('the retryable path writes no status of its own', () async {
+      // The ceiling is markAsFailed's call, not the engine's: it is the one
+      // that re-reads the count, so it gets the decision right even when the
+      // failure was raised before the engine could read the row. What the
+      // engine owes is to route every retryable failure there and write nothing
+      // itself.
+      final testFile = File('${tempDir.path}/budget_left.m4a');
+      testFile.writeAsBytesSync(Uint8List(1024));
+
+      final rec = makeRecording(
+        localFilePath: testFile.path,
+        retryCount: kMaxUploadRetries - 2,
+      );
+
+      when(() => mockConnectivity.isOnline).thenAnswer((_) async => true);
+      when(() => mockRepo.getPendingUploads()).thenAnswer((_) async => [rec]);
+      stubRepoForUpload(testFile.path);
+      when(
+        () => mockRepo.getRecordingById('rec-1'),
+      ).thenAnswer((_) async => rec);
+
+      final httpClient = createStatusOnCreate(500);
+      final engine = buildEngine(httpClient);
+
+      await engine.processQueue();
+
+      verify(() => mockRepo.markAsFailed('rec-1')).called(1);
+      expect(capturedStatusesForRec1(), isEmpty);
+      httpClient.close();
+    });
+
+    test(
+      'um arquivo local que não existe termina em failed_missing_file',
+      () async {
+        // The opposite dead end: the row was marked failed without spending a
+        // retry, so it never reached the ceiling — reselected on every pass and
+        // skipped on every pass. The three lookups _resolveFilePath does are all
+        // the app has, and it hard-deletes, so the file is not coming back.
+        final docsDir = Directory('${tempDir.path}/docs')..createSync();
+        const channel = MethodChannel('plugins.flutter.io/path_provider');
+        final messenger =
+            TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+        messenger.setMockMethodCallHandler(channel, (_) async => docsDir.path);
+        addTearDown(() => messenger.setMockMethodCallHandler(channel, null));
+
+        final missingPath = '${tempDir.path}/never_written.m4a';
+        final rec = makeRecording(localFilePath: missingPath);
+
+        when(() => mockConnectivity.isOnline).thenAnswer((_) async => true);
+        when(() => mockRepo.getPendingUploads()).thenAnswer((_) async => [rec]);
+        stubRepoForUpload(missingPath);
+
+        final httpClient = buildSuccessClient();
+        final engine = buildEngine(httpClient);
+
+        await engine.processQueue();
+
+        final written = capturedStatusesForRec1();
+        expect(written, contains('failed_missing_file'));
+        expect(written, isNot(contains('failed')));
+        verifyNever(() => mockRepo.markAsFailed(any()));
+        verifyNever(() => mockRepo.markAsUploading(any()));
+        httpClient.close();
+      },
+    );
   });
 
   group('verification polling', () {
@@ -1189,7 +1296,7 @@ void main() {
         // Engine no longer polls a status endpoint; confirm-upload is the
         // single source of truth. A 200 with an unparseable body indicates a
         // server-side protocol violation — retrying won't help, so the row
-        // is marked failed with retryCount=maxRetries (H7).
+        // is marked failed_exhausted with retryCount=maxRetries (H7).
         final testFile = File('${tempDir.path}/poll_fail.m4a');
         testFile.writeAsBytesSync(Uint8List(1024));
 
@@ -1241,9 +1348,9 @@ void main() {
         final hadPermanentFail = captured.any((c) {
           final companion = c as LocalRecordingsCompanion;
           return companion.uploadStatus.present &&
-              companion.uploadStatus.value == 'failed' &&
+              companion.uploadStatus.value == 'failed_exhausted' &&
               companion.retryCount.present &&
-              companion.retryCount.value == SyncEngineImpl.maxRetries;
+              companion.retryCount.value == kMaxUploadRetries;
         });
         expect(
           hadPermanentFail,

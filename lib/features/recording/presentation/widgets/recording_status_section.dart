@@ -3,6 +3,7 @@ import 'package:intl/intl.dart' as intl;
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../../l10n/app_localizations.dart';
+import '../../../../core/config/upload_retry_policy.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/tokens.dart';
 import '../../../../shared/utils/cleaning_status_style.dart';
@@ -129,6 +130,10 @@ class RecordingStatusSection extends StatelessWidget {
         return LucideIcons.upload;
       case 'failed':
         return LucideIcons.cloudOff;
+      case 'failed_exhausted':
+        return LucideIcons.alertOctagon;
+      case 'failed_missing_file':
+        return LucideIcons.fileX;
       case 'failed_conflict':
       case 'failed_description':
         return LucideIcons.alertCircle;
@@ -145,6 +150,8 @@ class RecordingStatusSection extends StatelessWidget {
       case 'uploading':
         return colors.accent;
       case 'failed':
+      case 'failed_exhausted':
+      case 'failed_missing_file':
       case 'failed_conflict':
       case 'failed_description':
         return colors.error;
@@ -159,11 +166,24 @@ class RecordingStatusSection extends StatelessWidget {
       case 'verified':
         return l10n.detail_uploaded;
       case 'uploading':
-        if (recording.retryCount >= 5) return l10n.detail_uploadStuck;
+        if (recording.retryCount >= kMaxUploadRetries) {
+          return l10n.detail_uploadStuck;
+        }
         return l10n.detail_uploading;
       case 'failed':
+        // Rows written by older builds, which are still in the database: the
+        // engine no longer leaves anything here with its budget spent — that
+        // shape is `failed_exhausted` now, and it reads the same line. The 5 is
+        // deliberately a literal and not the shared constant, because it is
+        // what those rows were written against, not policy that still applies.
+        // Raise the ceiling, and a reference to the constant would silently
+        // stop describing them.
         if (recording.retryCount >= 5) return l10n.detail_maxRetries;
         return l10n.detail_uploadFailed;
+      case 'failed_exhausted':
+        return l10n.detail_maxRetries;
+      case 'failed_missing_file':
+        return l10n.recording_statusFileMissing;
       case 'failed_conflict':
         return l10n.recording_statusNameConflict;
       case 'failed_description':

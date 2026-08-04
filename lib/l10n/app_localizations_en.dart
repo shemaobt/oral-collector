@@ -697,6 +697,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'This recording can\'t be uploaded until you add a longer description.';
 
   @override
+  String get recording_statusRetriesExhausted => 'Attempts used up';
+
+  @override
+  String get recording_statusFileMissing => 'Audio file missing';
+
+  @override
+  String get recording_uploadExhaustedMessage =>
+      'The upload stopped after several attempts. You can try again.';
+
+  @override
+  String get recording_fileMissingMessage =>
+      'The audio file for this recording is no longer on this device, so it can\'t be uploaded.';
+
+  @override
   String get recording_duplicateTitleTitle => 'Name already used';
 
   @override

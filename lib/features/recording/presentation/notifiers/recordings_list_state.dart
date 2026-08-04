@@ -127,6 +127,11 @@ class RecordingsListState {
                   r.uploadStatus == 'failed' ||
                   r.uploadStatus == 'failed_conflict' ||
                   r.uploadStatus == 'failed_description' ||
+                  // Out of the upload queue for good (ENG-377), which makes
+                  // this list the only place they can still be seen and acted
+                  // on — the audio is still on the device.
+                  r.uploadStatus == 'failed_exhausted' ||
+                  r.uploadStatus == 'failed_missing_file' ||
                   r.uploadStatus == 'uploading',
             )
             .toList();

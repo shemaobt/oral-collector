@@ -708,6 +708,20 @@ class AppLocalizationsEs extends AppLocalizations {
       'Esta grabación no se puede subir hasta que añadas una descripción más larga.';
 
   @override
+  String get recording_statusRetriesExhausted => 'Intentos agotados';
+
+  @override
+  String get recording_statusFileMissing => 'Falta el archivo de audio';
+
+  @override
+  String get recording_uploadExhaustedMessage =>
+      'La subida se detuvo tras varios intentos. Puedes volver a intentarlo.';
+
+  @override
+  String get recording_fileMissingMessage =>
+      'El archivo de audio de esta grabación ya no está en este dispositivo, así que no se puede subir.';
+
+  @override
   String get recording_duplicateTitleTitle => 'Nombre ya usado';
 
   @override

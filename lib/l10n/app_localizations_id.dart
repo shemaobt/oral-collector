@@ -701,6 +701,20 @@ class AppLocalizationsId extends AppLocalizations {
       'Rekaman ini tidak dapat diunggah sampai Anda menambahkan deskripsi yang lebih panjang.';
 
   @override
+  String get recording_statusRetriesExhausted => 'Percobaan habis';
+
+  @override
+  String get recording_statusFileMissing => 'Berkas audio hilang';
+
+  @override
+  String get recording_uploadExhaustedMessage =>
+      'Unggahan berhenti setelah beberapa percobaan. Anda dapat mencoba lagi.';
+
+  @override
+  String get recording_fileMissingMessage =>
+      'Berkas audio rekaman ini tidak ada lagi di perangkat ini, jadi tidak dapat diunggah.';
+
+  @override
   String get recording_duplicateTitleTitle => 'Nama sudah digunakan';
 
   @override

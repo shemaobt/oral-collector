@@ -677,6 +677,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recording_descriptionGapMessage => '补充更长的描述后才能上传这段录音。';
 
   @override
+  String get recording_statusRetriesExhausted => '重试次数已用完';
+
+  @override
+  String get recording_statusFileMissing => '音频文件丢失';
+
+  @override
+  String get recording_uploadExhaustedMessage => '多次尝试后上传已停止。你可以重试。';
+
+  @override
+  String get recording_fileMissingMessage => '这段录音的音频文件已不在本设备上，因此无法上传。';
+
+  @override
   String get recording_duplicateTitleTitle => '名称已被使用';
 
   @override

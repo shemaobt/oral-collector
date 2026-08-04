@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 
+import '../../../../core/config/upload_retry_policy.dart';
 import '../../../../core/database/app_database.dart';
 import '../../domain/entities/classification.dart';
 import '../../domain/entities/local_recording_entity.dart';
@@ -348,6 +349,32 @@ class LocalRecordingRepository {
     );
   }
 
+  /// Retires rows that already spent their retry budget under the old generic
+  /// `failed` status (ENG-377), at startup.
+  ///
+  /// The writers no longer produce this shape, but that only helps recordings
+  /// made after the update. Devices are carrying these rows now — that is what
+  /// was reported — and each one keeps the pending counter high and the sync
+  /// chip lit over a queue that refuses it. Without this sweep the person who
+  /// reported the bug would install the fix and still see the bug.
+  ///
+  /// Runs on every launch, so it is written to be idempotent: the `failed`
+  /// clause stops matching as soon as a row is retired. Deliberately a data
+  /// normalisation here rather than a schema migration — nothing about the
+  /// table changes, only rows the old code left behind.
+  Future<int> normalizeExhaustedUploads() async {
+    return (_db.update(_db.localRecordings)..where(
+          (t) =>
+              t.uploadStatus.equals('failed') &
+              t.retryCount.isBiggerOrEqualValue(kMaxUploadRetries),
+        ))
+        .write(
+          const LocalRecordingsCompanion(
+            uploadStatus: Value('failed_exhausted'),
+          ),
+        );
+  }
+
   /// Persists a freshly-downloaded audio file alongside its full metadata.
   /// If a row for [recording.id] already exists locally, only [localFilePath]
   /// and the server's review flags are updated, so local edits (description,
@@ -544,31 +571,32 @@ class LocalRecordingRepository {
     return ids;
   }
 
-  Future<bool> markAsFailed(String id, {bool incrementRetry = true}) async {
-    if (incrementRetry) {
-      final recording = await getRecordingById(id);
-      if (recording == null) return false;
+  /// Spends one retry, and retires the row when that was the last one.
+  ///
+  /// The ceiling is decided here rather than by the caller because this is
+  /// where the count is read: an attempt that failed before it could read the
+  /// row would otherwise start counting from zero and leave the row at `failed`
+  /// with a spent budget — queued by [getPendingUploads], refused by the drain,
+  /// forever (ENG-377). `failed` therefore always means a retry is still
+  /// coming, whatever threw and wherever.
+  Future<bool> markAsFailed(String id) async {
+    final recording = await getRecordingById(id);
+    if (recording == null) return false;
 
-      final rows =
-          await (_db.update(
-            _db.localRecordings,
-          )..where((t) => t.id.equals(id))).write(
-            LocalRecordingsCompanion(
-              uploadStatus: const Value('failed'),
-              retryCount: Value(recording.retryCount + 1),
-              lastRetryAt: Value(DateTime.now()),
+    final spent = recording.retryCount + 1;
+    final rows =
+        await (_db.update(
+          _db.localRecordings,
+        )..where((t) => t.id.equals(id))).write(
+          LocalRecordingsCompanion(
+            uploadStatus: Value(
+              spent >= kMaxUploadRetries ? 'failed_exhausted' : 'failed',
             ),
-          );
-      return rows > 0;
-    } else {
-      final rows =
-          await (_db.update(
-            _db.localRecordings,
-          )..where((t) => t.id.equals(id))).write(
-            const LocalRecordingsCompanion(uploadStatus: Value('failed')),
-          );
-      return rows > 0;
-    }
+            retryCount: Value(spent),
+            lastRetryAt: Value(DateTime.now()),
+          ),
+        );
+    return rows > 0;
   }
 
   LocalRecordingEntity _fromRow(LocalRecording row) =>

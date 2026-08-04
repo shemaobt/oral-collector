@@ -1400,6 +1400,30 @@ abstract class AppLocalizations {
   /// **'This recording can\'t be uploaded until you add a longer description.'**
   String get recording_descriptionGapMessage;
 
+  /// No description provided for @recording_statusRetriesExhausted.
+  ///
+  /// In en, this message translates to:
+  /// **'Attempts used up'**
+  String get recording_statusRetriesExhausted;
+
+  /// No description provided for @recording_statusFileMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio file missing'**
+  String get recording_statusFileMissing;
+
+  /// No description provided for @recording_uploadExhaustedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The upload stopped after several attempts. You can try again.'**
+  String get recording_uploadExhaustedMessage;
+
+  /// No description provided for @recording_fileMissingMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The audio file for this recording is no longer on this device, so it can\'t be uploaded.'**
+  String get recording_fileMissingMessage;
+
   /// No description provided for @recording_duplicateTitleTitle.
   ///
   /// In en, this message translates to:

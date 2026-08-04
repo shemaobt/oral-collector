@@ -192,40 +192,72 @@ void main() {
     );
   });
 
+  // These two are out of the upload queue for good (ENG-377), so the card is
+  // where the user meets them. Falling through to "Local" would show a
+  // recording that will never upload as one that simply has not yet.
+  testWidgets('a recording that spent its retries announces that', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _harness(
+        recording: _makeRecording(uploadStatus: 'failed_exhausted'),
+        state: const SyncState(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byTooltip('Attempts used up'), findsOneWidget);
+    expect(find.byTooltip('Local'), findsNothing);
+    expect(
+      _statusIconUnder(tester, 'Attempts used up').semanticLabel,
+      'Attempts used up',
+    );
+  });
+
+  testWidgets('a recording whose audio file is gone announces that', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _harness(
+        recording: _makeRecording(uploadStatus: 'failed_missing_file'),
+        state: const SyncState(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byTooltip('Audio file missing'), findsOneWidget);
+    expect(find.byTooltip('Local'), findsNothing);
+    expect(
+      _statusIconUnder(tester, 'Audio file missing').semanticLabel,
+      'Audio file missing',
+    );
+  });
+
   // The tooltip is only reachable by hover or long-press. A sighted user
-  // glancing at the list gets shape and colour, and both blocked states share
+  // glancing at the list gets shape and colour, and every blocked state shares
   // the colour, so the shape has to be what separates them.
   testWidgets('each blocked-upload state gets its own glyph', (tester) async {
-    await tester.pumpWidget(
-      _harness(
-        recording: _makeRecording(uploadStatus: 'failed_conflict'),
-        state: const SyncState(),
-      ),
-    );
-    await tester.pumpAndSettle();
-    final conflict = _statusIconUnder(tester, 'Name conflict').icon;
+    const states = {
+      'failed': 'Failed',
+      'failed_conflict': 'Name conflict',
+      'failed_description': 'Description too short',
+      'failed_exhausted': 'Attempts used up',
+      'failed_missing_file': 'Audio file missing',
+    };
 
-    await tester.pumpWidget(
-      _harness(
-        recording: _makeRecording(uploadStatus: 'failed_description'),
-        state: const SyncState(),
-      ),
-    );
-    await tester.pumpAndSettle();
-    final description = _statusIconUnder(tester, 'Description too short').icon;
+    final glyphs = <String, IconData>{};
+    for (final entry in states.entries) {
+      await tester.pumpWidget(
+        _harness(
+          recording: _makeRecording(uploadStatus: entry.key),
+          state: const SyncState(),
+        ),
+      );
+      await tester.pumpAndSettle();
+      glyphs[entry.key] = _statusIconUnder(tester, entry.value).icon!;
+    }
 
-    await tester.pumpWidget(
-      _harness(
-        recording: _makeRecording(uploadStatus: 'failed'),
-        state: const SyncState(),
-      ),
-    );
-    await tester.pumpAndSettle();
-    final generic = _statusIconUnder(tester, 'Failed').icon;
-
-    expect(conflict, isNot(description));
-    expect(conflict, isNot(generic));
-    expect(description, isNot(generic));
+    expect(glyphs.values.toSet(), hasLength(states.length));
   });
 
   testWidgets('the status tooltip hangs off a touchable target', (

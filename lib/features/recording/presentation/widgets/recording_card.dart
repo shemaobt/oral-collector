@@ -25,23 +25,30 @@ Color? _statusAccent(String uploadStatus, AppColorSet colors) =>
     switch (uploadStatus) {
       'uploaded' || 'verified' => colors.success,
       'uploading' => colors.accent,
-      'failed' || 'failed_conflict' || 'failed_description' => colors.error,
+      'failed' ||
+      'failed_conflict' ||
+      'failed_description' ||
+      'failed_exhausted' ||
+      'failed_missing_file' => colors.error,
       _ => null,
     };
 
 /// One glyph per state, including one per *kind* of blocked upload.
 ///
-/// `failed_conflict` and `failed_description` share `colors.error`, and their
-/// label only exists in the tooltip and in semantics, so the shape is the
-/// whole of what a sighted user gets to tell them apart: a stack of pages for
-/// a title that clashes with another recording's, a page of text for a
-/// description that is too short to send.
+/// Every blocked state shares `colors.error`, and their label only exists in
+/// the tooltip and in semantics, so the shape is the whole of what a sighted
+/// user gets to tell them apart: a stack of pages for a title that clashes
+/// with another recording's, a page of text for a description that is too
+/// short to send, a stop sign for an upload that ran out of attempts, a
+/// crossed-out page for audio that is no longer on the device.
 IconData _statusIcon(String uploadStatus) => switch (uploadStatus) {
   'uploaded' || 'verified' => LucideIcons.checkCircle2,
   'uploading' => LucideIcons.upload,
   'failed' => LucideIcons.cloudOff,
   'failed_conflict' => LucideIcons.copy,
   'failed_description' => LucideIcons.fileText,
+  'failed_exhausted' => LucideIcons.alertOctagon,
+  'failed_missing_file' => LucideIcons.fileX,
   _ => LucideIcons.smartphone,
 };
 
@@ -52,6 +59,8 @@ String _statusLabel(String uploadStatus, AppLocalizations l10n) =>
       'failed' => l10n.recording_statusFailed,
       'failed_conflict' => l10n.recording_statusNameConflict,
       'failed_description' => l10n.recording_statusDescriptionTooShort,
+      'failed_exhausted' => l10n.recording_statusRetriesExhausted,
+      'failed_missing_file' => l10n.recording_statusFileMissing,
       _ => l10n.recording_statusLocal,
     };
 

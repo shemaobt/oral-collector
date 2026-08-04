@@ -698,6 +698,20 @@ class AppLocalizationsTpi extends AppLocalizations {
       'Yu no inap salim dispela rekod inap yu putim wanpela longpela stori.';
 
   @override
+  String get recording_statusRetriesExhausted => 'Ol traim i pinis';
+
+  @override
+  String get recording_statusFileMissing => 'Odio fail i lus';
+
+  @override
+  String get recording_uploadExhaustedMessage =>
+      'Salim i stop bihain long planti traim. Yu inap traim gen.';
+
+  @override
+  String get recording_fileMissingMessage =>
+      'Odio fail bilong dispela rekod i no stap moa long dispela masin, olsem na yu no inap salim.';
+
+  @override
   String get recording_duplicateTitleTitle => 'Nem i stap pinis';
 
   @override

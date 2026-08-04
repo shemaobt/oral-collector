@@ -112,6 +112,14 @@ class _OralCollectorAppState extends ConsumerState<OralCollectorApp> {
       // queue drains them again; must run before sync/listeners go live.
       await ref.read(localRecordingRepositoryProvider).resetStuckUploading();
 
+      // Retire rows that spent their retry budget under the old generic
+      // `failed` status (ENG-377). Fixing the writers only helps recordings
+      // made after this build; devices are carrying these rows today, and each
+      // one keeps the pending count high over a queue that refuses it.
+      await ref
+          .read(localRecordingRepositoryProvider)
+          .normalizeExhaustedUploads();
+
       // Crash-recovery must clear any stale RecordingActiveFlag from a
       // previous run BEFORE the upload listeners go live. Otherwise the very
       // first processQueue() trigger reads a stuck-true flag and short-circuits

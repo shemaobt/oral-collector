@@ -709,6 +709,20 @@ class AppLocalizationsFr extends AppLocalizations {
       'Cet enregistrement ne peut pas être envoyé tant que vous n\'ajoutez pas une description plus longue.';
 
   @override
+  String get recording_statusRetriesExhausted => 'Tentatives épuisées';
+
+  @override
+  String get recording_statusFileMissing => 'Fichier audio introuvable';
+
+  @override
+  String get recording_uploadExhaustedMessage =>
+      'L\'envoi s\'est arrêté après plusieurs tentatives. Vous pouvez réessayer.';
+
+  @override
+  String get recording_fileMissingMessage =>
+      'Le fichier audio de cet enregistrement n\'est plus sur cet appareil, il ne peut donc pas être envoyé.';
+
+  @override
   String get recording_duplicateTitleTitle => 'Nom déjà utilisé';
 
   @override

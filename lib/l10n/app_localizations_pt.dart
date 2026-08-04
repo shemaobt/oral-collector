@@ -703,6 +703,20 @@ class AppLocalizationsPt extends AppLocalizations {
       'Esta gravação não pode ser enviada até você adicionar uma descrição mais longa.';
 
   @override
+  String get recording_statusRetriesExhausted => 'Tentativas esgotadas';
+
+  @override
+  String get recording_statusFileMissing => 'Arquivo de áudio ausente';
+
+  @override
+  String get recording_uploadExhaustedMessage =>
+      'O envio parou após várias tentativas. Você pode tentar de novo.';
+
+  @override
+  String get recording_fileMissingMessage =>
+      'O arquivo de áudio desta gravação não está mais neste aparelho, então ela não pode ser enviada.';
+
+  @override
   String get recording_duplicateTitleTitle => 'Nome já utilizado';
 
   @override
