@@ -1778,6 +1778,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get projectStats_members => '成员';
 
   @override
+  String get projectStats_needsDetails => '待完善';
+
+  @override
   String get project_active => '活跃';
 
   @override

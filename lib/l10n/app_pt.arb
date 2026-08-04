@@ -615,6 +615,7 @@
   "projectStats_recordings": "Gravações",
   "projectStats_duration": "Duração",
   "projectStats_members": "Membros",
+  "projectStats_needsDetails": "Faltam detalhes",
   "project_active": "Ativo",
   "recording_paused": "Pausado",
   "recording_recording": "Gravando",

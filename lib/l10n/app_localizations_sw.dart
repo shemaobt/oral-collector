@@ -1836,6 +1836,9 @@ class AppLocalizationsSw extends AppLocalizations {
   String get projectStats_members => 'Wanachama';
 
   @override
+  String get projectStats_needsDetails => 'Zinahitaji maelezo';
+
+  @override
   String get project_active => 'Hai';
 
   @override

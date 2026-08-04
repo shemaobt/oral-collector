@@ -1832,6 +1832,9 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get projectStats_members => 'Ol Memba';
 
   @override
+  String get projectStats_needsDetails => 'I no pinis yet';
+
+  @override
   String get project_active => 'Aktiv';
 
   @override

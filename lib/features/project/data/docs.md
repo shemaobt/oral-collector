@@ -87,16 +87,34 @@ Path: @/lib/features/project/data
   `{}`). `ProjectUpdate.toJson` encodes the partial-update distinction: a `null`
   field is omitted (left untouched) while a `clearDescription` flag emits an
   explicit `null` to clear it — the wire cannot otherwise tell "leave alone"
-  from "clear". `ProjectStats.fromJson` reads its counters through the
+  from "clear". `ProjectStats.fromJson` reads its totals through the
   safe-readers
   ([/lib/core/serialization](../../../core/serialization/docs.md)) and its fields
-  are nullable so a caller can fall back to the project's own counts.
+  are nullable so a caller can fall back to the project's own counts. The two
+  **review counters are the exception and read tolerantly**: both
+  `review_flag_counts` and `recordings_with_review_flags` drop a wrong-typed
+  value instead of throwing the `ParseException` the safe-readers would. They
+  shipped after the rest of the endpoint and feed one counter on a screen whose
+  fetch is already best-effort, so losing a counter costs a poorer screen while
+  throwing costs the payload. The tolerance is only worth anything applied to
+  both — one strict field would lose the payload regardless of the other.
 - The notifier hydrates from `ProjectCache.read()` on build (fire-and-forget, so
   cached data appears before the network returns) and persists the enriched
   project list via `ProjectCache.write()` after a successful fetch.
 
 ### Things to Know
 
+- **The two review counters do not sum, and must never be added (ENG-374).**
+  `GET /api/oc/projects/{id}/stats` sends `review_flag_counts` (how many
+  recordings carry each flag code) beside `recordings_with_review_flags` (how
+  many *distinct* recordings carry any flag). A recording with three open
+  fields adds one to each of three codes but only one to the distinct count, so
+  summing the map to answer "how many recordings need attention" over-reports —
+  by a plausible amount, which is the kind nobody catches. Anything showing a
+  recording count reads `recordings_with_review_flags` and nothing else; the
+  map is only ever a per-code annotation. ENG-377 is an open bug of exactly
+  this shape elsewhere in the repo, so treat the trap as recurring rather than
+  hypothetical.
 - **Server-wins-after-fetch invariant.** Build kicks off cache hydration without
   awaiting it, so a slow `read()` can resolve after a fast `fetchProjects()` has
   already populated fresh server data. Hydration bails when the fetch has

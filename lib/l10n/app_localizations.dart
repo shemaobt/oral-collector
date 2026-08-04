@@ -3332,6 +3332,12 @@ abstract class AppLocalizations {
   /// **'Members'**
   String get projectStats_members;
 
+  /// Stat chip label under the number of recordings that still have at least one open field (ENG-374).
+  ///
+  /// In en, this message translates to:
+  /// **'Needs details'**
+  String get projectStats_needsDetails;
+
   /// No description provided for @project_active.
   ///
   /// In en, this message translates to:

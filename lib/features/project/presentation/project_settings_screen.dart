@@ -42,6 +42,10 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
   bool _isSaving = false;
   Project? _project;
 
+  /// Kept apart from [_project] because the review-flag counters have no home
+  /// on a [Project] and stay null when the best-effort stats fetch fails.
+  ProjectStats? _stats;
+
   bool get _isManager => ref
       .read(roleNotifierProvider.notifier)
       .canManageProject(widget.projectId);
@@ -109,6 +113,7 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
 
       setState(() {
         _project = enriched;
+        _stats = stats;
         _nameController.text = enriched.name;
         _descriptionController.text = enriched.description ?? '';
       });
@@ -448,10 +453,11 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
                     return SliverToBoxAdapter(
                       child: Column(
                         children: [
-                          ProjectSettingsStatsRow(
+                          ProjectSettingsStatsSection(
                             project: _project!,
                             memberCount: memberCount,
                             storytellerCount: _project!.storytellerCount,
+                            stats: _stats,
                           ),
                           const SizedBox(height: SpacingScale.s28),
                           Row(
@@ -469,10 +475,11 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
 
                   return SliverList(
                     delegate: SliverChildListDelegate([
-                      ProjectSettingsStatsRow(
+                      ProjectSettingsStatsSection(
                         project: _project!,
                         memberCount: memberCount,
                         storytellerCount: _project!.storytellerCount,
+                        stats: _stats,
                       ),
                       if (_isManager) ...[
                         const SizedBox(height: SpacingScale.s28),

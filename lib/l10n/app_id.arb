@@ -590,6 +590,7 @@
   "projectStats_recordings": "Rekaman",
   "projectStats_duration": "Durasi",
   "projectStats_members": "Anggota",
+  "projectStats_needsDetails": "Perlu detail",
   "project_active": "Aktif",
   "recording_paused": "Dijeda",
   "recording_recording": "Merekam",

@@ -590,6 +590,7 @@
   "projectStats_recordings": "التسجيلات",
   "projectStats_duration": "المدة",
   "projectStats_members": "الأعضاء",
+  "projectStats_needsDetails": "بيانات ناقصة",
   "project_active": "نشط",
   "recording_paused": "متوقف مؤقتاً",
   "recording_recording": "جارٍ التسجيل",

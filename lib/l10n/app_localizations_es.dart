@@ -1860,6 +1860,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get projectStats_members => 'Miembros';
 
   @override
+  String get projectStats_needsDetails => 'Faltan detalles';
+
+  @override
   String get project_active => 'Activo';
 
   @override

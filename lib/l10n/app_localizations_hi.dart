@@ -1849,6 +1849,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get projectStats_members => 'सदस्य';
 
   @override
+  String get projectStats_needsDetails => 'विवरण अधूरा';
+
+  @override
   String get project_active => 'सक्रिय';
 
   @override

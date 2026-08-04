@@ -1867,6 +1867,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get projectStats_members => 'Membres';
 
   @override
+  String get projectStats_needsDetails => 'Détails manquants';
+
+  @override
   String get project_active => 'Actif';
 
   @override

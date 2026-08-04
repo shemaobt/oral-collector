@@ -590,6 +590,7 @@
   "projectStats_recordings": "रिकॉर्डिंग्स",
   "projectStats_duration": "अवधि",
   "projectStats_members": "सदस्य",
+  "projectStats_needsDetails": "विवरण अधूरा",
   "project_active": "सक्रिय",
   "recording_paused": "रुका हुआ",
   "recording_recording": "रिकॉर्डिंग",

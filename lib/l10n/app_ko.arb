@@ -590,6 +590,7 @@
   "projectStats_recordings": "녹음",
   "projectStats_duration": "길이",
   "projectStats_members": "구성원",
+  "projectStats_needsDetails": "정보 필요",
   "project_active": "활성",
   "recording_paused": "일시정지됨",
   "recording_recording": "녹음 중",
