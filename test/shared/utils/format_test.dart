@@ -10,31 +10,39 @@ import 'package:oral_collector/shared/utils/format.dart';
 void main() {
   setUpAll(initializeDateFormatting);
 
-  // Local, not UTC: formatWeekdayTime renders what it is handed.
+  // Local, not UTC: formatUntitledRecordingTime renders what it is handed.
   final afternoon = DateTime(2026, 3, 10, 16, 20, 8);
 
-  group('formatWeekdayTime', () {
+  group('formatUntitledRecordingTime', () {
     test('en gets the 12-hour clock its locale asks for', () {
-      final formatted = formatWeekdayTime(afternoon, 'en');
+      final formatted = formatUntitledRecordingTime(afternoon, 'en');
 
-      expect(formatted, startsWith('Tuesday'));
       expect(formatted, contains('4:20:08'));
       expect(formatted, contains('PM'));
       expect(formatted, isNot(contains('16:20')));
     });
 
     test('pt keeps the 24-hour clock it asks for', () {
-      final formatted = formatWeekdayTime(afternoon, 'pt');
+      final formatted = formatUntitledRecordingTime(afternoon, 'pt');
 
       expect(formatted, contains('16:20:08'));
+    });
+
+    test('the weekday is gone, leaving only the clock', () {
+      // The card's date column already places the recording in time; the
+      // weekday here was a second reading of the same instant (ENG-382).
+      expect(
+        formatUntitledRecordingTime(afternoon, 'en'),
+        isNot(contains('Tuesday')),
+      );
     });
 
     test('seconds survive, so recordings from one session stay distinct', () {
       final oneSecondLater = DateTime(2026, 3, 10, 16, 20, 9);
 
       expect(
-        formatWeekdayTime(afternoon, 'en'),
-        isNot(formatWeekdayTime(oneSecondLater, 'en')),
+        formatUntitledRecordingTime(afternoon, 'en'),
+        isNot(formatUntitledRecordingTime(oneSecondLater, 'en')),
       );
     });
   });

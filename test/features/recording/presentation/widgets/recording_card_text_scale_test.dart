@@ -7,6 +7,11 @@
 /// Arabic is in the matrix for a different reason: it is the one shipped
 /// locale that lays the card out right-to-left, so it is the only one that can
 /// break on direction rather than on length.
+///
+/// ENG-382 put the duration back in the footer, so the worst case now also
+/// carries an hour-long `1:05:00` next to a two-pendency chip. Overflow alone
+/// would not catch a regression that silently drops the duration to buy room,
+/// so the fullest footer asserts the string is still on screen.
 library;
 
 import 'package:flutter/material.dart';
@@ -46,7 +51,7 @@ LocalRecordingEntity _recording({
   title: _longTitle,
   description: _longDescription,
   storytellerId: storytellerId,
-  durationSeconds: 3661,
+  durationSeconds: 3900,
   fileSizeBytes: 1024,
   format: 'm4a',
   localFilePath: '/a.m4a',
@@ -107,6 +112,13 @@ void main() {
           recording: _recording(registerId: null),
         );
         expectNoOverflow(tester);
+        expect(
+          find.text('1:05:00'),
+          findsOneWidget,
+          reason:
+              'the duration must survive the tightest footer, not be '
+              'dropped to make the chip fit',
+        );
       });
     }
   }

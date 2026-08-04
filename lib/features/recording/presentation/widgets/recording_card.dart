@@ -78,6 +78,10 @@ String? _visibleDescription(String? raw) => blankToNull(raw?.trim());
 /// a single pendency chip. Upload state survives as an icon with its old label
 /// moved into semantics — colour alone would say nothing to a screen reader.
 ///
+/// ENG-382 let the duration back into the footer as plain text rather than a
+/// chip: it earns a place by telling an accidental misfire from a real
+/// session, but it re-enters ranked below the description that displaced it.
+///
 /// Every row below is a private widget that reads its own `l10n` off the
 /// context; nothing on this card takes localizations as a parameter.
 class RecordingCard extends ConsumerWidget {
@@ -198,7 +202,7 @@ class _TitleRow extends StatelessWidget {
       children: [
         Expanded(
           child: Text(
-            title ?? formatWeekdayTime(recording.recordedAt, locale),
+            title ?? formatUntitledRecordingTime(recording.recordedAt, locale),
             style: theme.textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.w700,
               fontStyle: title == null ? FontStyle.italic : FontStyle.normal,
@@ -300,6 +304,9 @@ class _FooterRow extends StatelessWidget {
     final colors = AppColors.of(context);
     final statusLabel = _statusLabel(recording.uploadStatus, l10n);
     final pendency = _pendencyLabel(l10n);
+    // The chip is the row's only Expanded, so it absorbs the slack while the
+    // duration keeps its intrinsic width — the ordering that makes the chip,
+    // not the duration, the thing that outranks the other for space.
     return Row(
       children: [
         Tooltip(
@@ -331,6 +338,18 @@ class _FooterRow extends StatelessWidget {
                   child: _PendencyChip(label: pendency),
                 ),
         ),
+        const SizedBox(width: SpacingScale.s8),
+        Text(
+          // Seconds, not the compact hours-and-minutes form: an accidental
+          // three-second misfire and a real forty-second take both read as
+          // "0m" there, and telling those apart is why the duration is back.
+          formatDurationHMS(recording.durationSeconds),
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+            color: colors.secondary.withValues(alpha: 0.7),
+            fontFeatures: const [FontFeature.tabularFigures()],
+          ),
+        ),
+        const SizedBox(width: SpacingScale.s8),
         Icon(LucideIcons.chevronRight, size: 16, color: colors.border),
       ],
     );

@@ -157,11 +157,16 @@ Path: @/lib/features/recording/presentation/widgets
   the same function `CompleteFichaPill`/`CompleteFichaSheet` read (see
   below), and shows at most one chip: a single open field is named, two or
   more collapse into `recording_pendencyCount(n)`. A title-less recording
-  falls back to `formatWeekdayTime`
+  falls back to `formatUntitledRecordingTime`
   ([/lib/shared/utils/format.dart](/lib/shared/utils/format.dart)), in
   italics, instead of a generic "Untitled" label — the fallback carries
   seconds because untitled recordings tend to arrive in bursts from the same
-  session, and minute precision would not tell siblings apart. `build()` was
+  session, and minute precision would not tell siblings apart. It is a clock
+  time only: ENG-382 dropped the weekday the function used to prefix, because
+  the date column on the same row already places the recording in time. The
+  function kept `DateFormat.jms` (not `Hms`) through the rename — the clock
+  convention belongs to the locale, and forcing 24 hours is the defect PR #174
+  fixed for en/ar/hi/ko. `build()` was
   split entirely into row-level widget classes — `_TitleRow`, `_BreadcrumbRow`,
   `_FooterRow`, `RecordingDescriptionLine`, and a few more — rather than
   private build-returning methods, a convention local to this file; each
@@ -174,7 +179,20 @@ Path: @/lib/features/recording/presentation/widgets
   comparing colour values to infer which state produced them — the rail falls
   back to `colors.border`, the icon to `colors.secondary`. The chip's
   background is the themed `colors.chipSurface`
-  (ENG-374; see [/lib/core/theme/docs.md](/lib/core/theme/docs.md)).
+  (ENG-374; see [/lib/core/theme/docs.md](/lib/core/theme/docs.md)). ENG-382
+  weighed retiring that token and kept it: it is not interchangeable with
+  `surfaceAlt`, which coincides in dark (`0xFF302D22`) but differs in light
+  (`0xFFF1EEDE` against `0xFFEDE9D5`), so the field is carrying a real
+  distinction rather than costing one for nothing. ENG-382 did put
+  the duration back in `_FooterRow`, between the chip and the chevron, which
+  amends the ENG-374 trade rule that had banned it — the description keeps the
+  room it won, and the duration is the element ranked below it. It uses
+  `formatDurationHMS`, not `formatDurationCompact`: the compact form is
+  hours-and-minutes only and renders both a three-second misfire and a real
+  forty-second take as `0m`, which is the exact distinction the amendment
+  exists to restore. The chip is the row's only `Expanded`, so it absorbs the
+  slack and the duration keeps its intrinsic width; `recording_card_text_scale_test.dart`
+  pins that the pair survives `fr` at 2.0x with a two-pendency chip.
 - `CompleteFichaOverlay`/`CompleteFichaPill`/`CompleteFichaSheet`
   ([complete_ficha_overlay.dart](complete_ficha_overlay.dart) /
   [complete_ficha_pill.dart](complete_ficha_pill.dart) /

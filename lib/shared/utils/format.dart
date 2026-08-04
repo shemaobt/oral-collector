@@ -141,7 +141,7 @@ String formatRecordingDate(
   return intl.DateFormat.yMMMd(locale).format(date);
 }
 
-/// Weekday and clock time, for a recording that never got a title.
+/// Clock time, for a recording that never got a title.
 ///
 /// Carries the seconds on purpose: untitled recordings arrive in bursts from
 /// the same session, and the fallback has to tell siblings apart.
@@ -153,11 +153,8 @@ String formatRecordingDate(
 /// pass `recordedAt` straight off Drift, which stores local, and the sibling
 /// [formatRecordingDate] makes the same assumption; converting here and not
 /// there would put a shifted clock beside an unshifted date on the same row.
-String formatWeekdayTime(DateTime date, String locale) {
-  final weekday = intl.DateFormat.EEEE(locale).format(date);
-  final time = intl.DateFormat.jms(locale).format(date);
-  return '$weekday $time';
-}
+String formatUntitledRecordingTime(DateTime date, String locale) =>
+    intl.DateFormat.jms(locale).format(date);
 
 String formatTimeAgo(DateTime time, AppLocalizations l10n) {
   final now = DateTime.now();
