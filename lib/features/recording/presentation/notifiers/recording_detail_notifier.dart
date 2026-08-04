@@ -21,6 +21,7 @@ import '../../data/repositories/local_recording_repository.dart';
 import '../../data/server_to_local_recording.dart';
 import '../../data/services/audio_downloader.dart';
 import '../../data/services/recording_file_importer.dart';
+import '../../data/use_cases/save_recording_description.dart';
 import '../../data/use_cases/save_recording_title.dart';
 import '../../domain/entities/local_recording_entity.dart';
 import '../../domain/entities/review_flag.dart';
@@ -303,15 +304,15 @@ class RecordingDetailNotifier
 
     if (descriptionChanged) {
       try {
-        if (kIsWeb) {
-          final serverId = recording.serverId ?? arg;
-          await _apiRepo.updateRecording(
-            serverId,
-            UpdateRecordingRequest(description: description),
-          );
-        } else {
-          await localRepo!.updateDescription(arg, description);
-        }
+        await saveRecordingDescription(
+          recordingId: arg,
+          serverId: recording.serverId,
+          description: description,
+          isWeb: kIsWeb,
+          isOnline: ref.read(syncNotifierProvider).isOnline,
+          apiRepo: _apiRepo,
+          localRepo: localRepo,
+        );
         if (_disposed) return RecordingMutationResult.success;
       } on ForbiddenException {
         return RecordingMutationResult.forbidden;
