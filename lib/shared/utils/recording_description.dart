@@ -13,7 +13,7 @@ const minDescriptionGraphemes = 20;
 
 /// Whether [value] says enough about a recording to be worth storing.
 ///
-/// ponytail: the cross-repo rule normalizes to NFC first; Dart ships no
+/// The cross-repo rule normalizes to NFC first; Dart ships no
 /// Unicode normalizer and this project has no dependency that does. Grapheme
 /// cluster counts are invariant under NFC (composition only ever merges a base
 /// with marks that already cluster with it), so the count agrees with the
