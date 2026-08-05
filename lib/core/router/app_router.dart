@@ -15,6 +15,7 @@ import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/project/presentation/notifiers/project_notifier.dart';
 import '../../features/project/presentation/project_settings_screen.dart';
 import '../../features/project/presentation/projects_screen.dart';
+import '../../features/recording/domain/entities/review_pendency.dart';
 import '../../features/recording/presentation/file_import_screen.dart';
 import '../../features/recording/presentation/quick_recording_screen.dart';
 import '../../features/recording/presentation/recording_detail_screen.dart';
@@ -201,6 +202,12 @@ List<RouteBase> _routesFor(Ref ref) => [
         builder: (context, state) => RecordingsListScreen(
           initialGenreId: state.uri.queryParameters['genreId'],
           initialSubcategoryId: state.uri.queryParameters['subcategoryId'],
+          // Resolved here, not passed on as a raw string: an unknown code
+          // answers null and the list simply opens unfiltered, rather than
+          // sending the server something it would refuse with a 422.
+          initialReviewFlag: pendencyKindForCode(
+            state.uri.queryParameters['reviewFlag'] ?? '',
+          ),
         ),
       ),
       GoRoute(

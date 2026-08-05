@@ -663,6 +663,20 @@ class AppLocalizationsSw extends AppLocalizations {
       'Gusa maikrofoni ili kurekodi hadithi yako ya kwanza, au ingiza faili ya sauti.';
 
   @override
+  String get recordings_offlineFilterTitle => 'Haipatikani nje ya mtandao';
+
+  @override
+  String get recordings_offlineFilterDescription =>
+      'Seva ndiyo inayobaini rekodi zipi bado zinahitaji maelezo. Unganisha tena ili kuziona, au ondoa kichujio ili kuvinjari kila kitu kilichopo kwenye kifaa hiki.';
+
+  @override
+  String get recordings_filterErrorTitle => 'Imeshindikana kuangalia sasa';
+
+  @override
+  String get recordings_filterErrorDescription =>
+      'Seva haikujibu, kwa hivyo hatuwezi kusema ni rekodi zipi bado zinahitaji maelezo. Jaribu tena, au ondoa kichujio ili kuvinjari kila kitu kilichopo kwenye kifaa hiki.';
+
+  @override
   String get recordings_dropToImport =>
       'Kidokezo: buruta faili za sauti kwenye dirisha hili ili kuingiza.';
 
@@ -1851,6 +1865,11 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get projectStats_needsDetails => 'Zinahitaji maelezo';
+
+  @override
+  String projectStats_showPendency(String label, int count) {
+    return 'Onyesha rekodi — $label ($count)';
+  }
 
   @override
   String get project_active => 'Hai';

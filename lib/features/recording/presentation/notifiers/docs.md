@@ -237,7 +237,8 @@ Path: @/lib/features/recording/presentation/notifiers
   type before merging. `fetchRecordings` loads page zero — the server list
   merged with local-only entities, deduped by `serverId` — and `loadMore`
   appends later pages from the `_serverOffset` cursor; offline or on an API
-  error both fall back to the full local set. The merge/dedup logic is byte-for-byte
+  error both fall back to the full local set (see the review-flag exception
+  below). The merge/dedup logic is byte-for-byte
   the pre-ENG-197 algorithm, just keyed off entity fields. Status / genre /
   subcategory / search filtering is computed client-side by
   `RecordingsListState.filteredRecordings` (`unclassified` reads the entity's
@@ -250,11 +251,44 @@ Path: @/lib/features/recording/presentation/notifiers
   fixed — the sync engine pre-flights the same predicate and parks them in
   `uploadStatus='failed_description'`, so this filter is how the user finds them
   and the detail banner is how they clear them) and never refetches, so only
-  `setUserFilter`,
-  `setStorytellerFilter`, `clearAllFilters`, `clearStaleRecordings`, and
+  `setUserFilter`, `setStorytellerFilter`, `setReviewFlagFilter`,
+  `clearAllFilters`, `clearStaleRecordings`, and
   pull-to-refresh re-hit the server. `patchRecordingTitle` rerenders after an
   edit without a full refetch, using the entity's sentinel `copyWith(title: …)`
   rather than Drift's `Value(...)` wrapper.
+- `setReviewFlagFilter(PendencyKind?)` (ENG-381) is the one narrowing filter
+  that is **server-side**, unlike genre/status/subcategory/search: the API
+  accepts exactly one `review_flag` code from the closed
+  [`PendencyKind`](../../domain/entities/review_pendency.dart) enum and 422s on
+  anything else, and there is no "has any pendency" filter to ask for — the
+  headline pendency counter on
+  [project settings](../../../project/presentation/project_settings_screen.dart)
+  stays untappable for the same reason (see
+  [../../../project/data/docs.md](../../../project/data/docs.md) for why the
+  two review counters on that screen must never be summed as a substitute).
+  Setting a flag routes through `_reviewFlagCode` into every `listRecordings`
+  call (`fetchRecordings` and `loadMore`), and while it is set: local-only rows
+  are excluded from the merge (the server's counts only cover
+  `uploaded`/`verified` recordings, so a row that never left the device was
+  never part of the number tapped), and the offline fallback returns an empty
+  list instead of the device's local set (`_localFallback`) — the screen at
+  [../recordings_list_screen.dart](../recordings_list_screen.dart) renders a
+  dedicated "not available offline" empty state rather than either the full
+  local set or the ordinary "no recordings" state. `refresh: false` lets the
+  screen's `initState` apply the filter without double-fetching, since
+  `_refreshAll` fetches immediately after.
+- `RecordingsListState.fetchFailed` (ENG-381) records whether the last
+  `fetchRecordings` ended in the `catch`. It exists because the local fallback
+  returns the same empty list for "offline under a pendency filter" and "the
+  request threw", which left the screen unable to tell *no recordings* from *I
+  could not find out* — and it picked the reassuring one, painting "no
+  recordings yet / 0 recordings" under a chip saying "No classification" on
+  any 5xx, timeout or 401. Set in the `catch`, cleared on a successful fetch
+  **and** on the offline branch (offline is a separate story the screen tells
+  differently). `loadMore` deliberately does not touch it: a failed second
+  page leaves the first page on screen and still a valid answer. Consumers:
+  the empty state at
+  [../recordings_list_screen.dart](../recordings_list_screen.dart) only.
 - `deleteRecording(LocalRecordingEntity)` is the single owner of the
   user-initiated **hard delete** for both the list and detail screens
   (ENG-120). It takes the entity as of ENG-197: the list screen already holds

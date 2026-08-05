@@ -10,6 +10,7 @@ import '../../data/providers.dart';
 import '../../data/repositories/local_recording_repository.dart';
 import '../../data/server_to_local_recording.dart';
 import '../../domain/entities/local_recording_entity.dart';
+import '../../domain/entities/review_pendency.dart';
 import '../../domain/entities/server_recording.dart';
 import '../../domain/repositories/recording_api_repository.dart';
 import 'recordings_list_state.dart';
@@ -45,6 +46,11 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
   @override
   RecordingsListState build() => const RecordingsListState();
 
+  String? get _reviewFlagCode {
+    final kind = state.selectedReviewFlag;
+    return kind == null ? null : reviewFlagCodeFor(kind);
+  }
+
   Future<void> fetchRecordings() async {
     final gen = ++_fetchGeneration;
     final projectId = ref.read(projectNotifierProvider).activeProject?.id;
@@ -58,13 +64,15 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
     state = state.copyWith(isLoading: true, isLoadingMore: false);
 
     if (!ref.read(syncNotifierProvider).isOnline) {
-      final local = await _loadLocal(projectId);
+      final local = await _localFallback(projectId);
       if (gen != _fetchGeneration) return;
       _serverOffset = 0;
       state = state.copyWith(
         recordings: local ?? state.recordings,
         isLoading: false,
         hasMore: false,
+        // Offline is its own story, and the screen tells it differently.
+        fetchFailed: false,
       );
       return;
     }
@@ -77,16 +85,21 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
         recordings: result.merged,
         isLoading: false,
         hasMore: result.hasMore,
+        fetchFailed: false,
       );
     } catch (e, st) {
       _reportUnexpected(e, st);
-      final local = await _loadLocal(projectId);
+      final local = await _localFallback(projectId);
       if (gen != _fetchGeneration) return;
       _serverOffset = 0;
       state = state.copyWith(
         recordings: local ?? state.recordings,
         isLoading: false,
         hasMore: false,
+        // The list that comes out of here is not an answer about the project.
+        // Without this the screen cannot tell "nothing to do" from "I could
+        // not find out", and it picks the reassuring one.
+        fetchFailed: true,
       );
     }
   }
@@ -115,6 +128,7 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
         limit: _pageSize,
         userId: state.selectedUserId,
         storytellerId: state.selectedStorytellerId,
+        reviewFlag: _reviewFlagCode,
       );
       // A fetchRecordings started after us reset the list and offset; applying
       // this page now would append a stale page, so discard it.
@@ -204,15 +218,16 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
       limit: _pageSize,
       userId: state.selectedUserId,
       storytellerId: state.selectedStorytellerId,
+      reviewFlag: _reviewFlagCode,
     );
-    List<LocalRecordingEntity> localRecordings;
-    try {
-      final rows = await _localRepo.getAllRecordings(projectId);
-      localRecordings = rows.map(localRecordingToEntity).toList();
-    } catch (e, st) {
-      _reportUnexpected(e, st);
-      localRecordings = const [];
-    }
+    // A pendency filter takes the server's answer alone. The counts that send
+    // the user here only cover uploaded and verified recordings, so a row that
+    // has never left this phone was never part of the number tapped; merging
+    // the device in would pad the list with recordings the filter never
+    // considered.
+    final localRecordings = state.selectedReviewFlag != null
+        ? const <LocalRecordingEntity>[]
+        : (await _loadLocal(projectId)) ?? const <LocalRecordingEntity>[];
 
     final serverIds = {for (final s in serverRecordings) s.id};
     final localOnly = localRecordings
@@ -245,6 +260,19 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
       _reportUnexpected(e, st);
       return null;
     }
+  }
+
+  /// What to show when the server is out of reach.
+  ///
+  /// Nothing, while a pendency filter is on: only the server can say which
+  /// recordings carry a flag, so falling back to the device would put the whole
+  /// project on screen underneath a filter chip that says otherwise. An empty
+  /// list under a visible filter is legible; a full one silently lies.
+  Future<List<LocalRecordingEntity>?> _localFallback(String projectId) async {
+    if (state.selectedReviewFlag != null) {
+      return const <LocalRecordingEntity>[];
+    }
+    return _loadLocal(projectId);
   }
 
   void setGenreFilter(String? genreId) {
@@ -289,6 +317,26 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
     await fetchRecordings();
   }
 
+  /// Narrows the list to one pendency, or widens it back when [kind] is null.
+  ///
+  /// A server-side filter, unlike genre or status: those sieve the page already
+  /// in memory, which would hide every flagged recording past the first page and
+  /// put a smaller number on screen than the counter that sent the user here.
+  ///
+  /// [refresh] is for the screen's initState, which applies the filter and then
+  /// refreshes everything itself; fetching here too would ask twice.
+  Future<void> setReviewFlagFilter(
+    PendencyKind? kind, {
+    bool refresh = true,
+  }) async {
+    if (kind == null) {
+      state = state.copyWith(clearReviewFlag: true);
+    } else {
+      state = state.copyWith(selectedReviewFlag: kind);
+    }
+    if (refresh) await fetchRecordings();
+  }
+
   Future<void> clearAllFilters() async {
     state = state.copyWith(
       selectedFilter: StatusFilter.all,
@@ -296,6 +344,7 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
       clearSubcategoryId: true,
       clearStorytellerId: true,
       clearUserId: true,
+      clearReviewFlag: true,
     );
     await fetchRecordings();
   }

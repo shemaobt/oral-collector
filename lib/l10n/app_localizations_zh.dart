@@ -642,6 +642,20 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recordings_noRecordingsSubtitle => '点击麦克风录制您的第一个故事，或导入音频文件。';
 
   @override
+  String get recordings_offlineFilterTitle => '离线时不可用';
+
+  @override
+  String get recordings_offlineFilterDescription =>
+      '哪些录音还缺少信息是由服务器判定的。请重新联网查看，或清除筛选以浏览本设备上的全部录音。';
+
+  @override
+  String get recordings_filterErrorTitle => '暂时无法查询';
+
+  @override
+  String get recordings_filterErrorDescription =>
+      '服务器没有响应，因此无法说明哪些录音还缺少信息。请重试，或清除筛选以浏览本设备上的全部录音。';
+
+  @override
   String get recordings_dropToImport => '提示：将音频文件拖到此窗口以导入。';
 
   @override
@@ -1791,6 +1805,11 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get projectStats_needsDetails => '待完善';
+
+  @override
+  String projectStats_showPendency(String label, int count) {
+    return '查看录音 — $label（$count）';
+  }
 
   @override
   String get project_active => '活跃';

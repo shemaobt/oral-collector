@@ -42,6 +42,7 @@ class RecordingApiRepositoryImpl implements RecordingApiRepository {
     String? storytellerId,
     String? uploadStatus,
     String? title,
+    String? reviewFlag,
   }) async {
     final params = <String, String>{
       'project_id': projectId,
@@ -53,6 +54,8 @@ class RecordingApiRepositoryImpl implements RecordingApiRepository {
       if (uploadStatus != null && uploadStatus.isNotEmpty)
         'upload_status': uploadStatus,
       if (title != null && title.isNotEmpty) 'title': title,
+      if (reviewFlag != null && reviewFlag.isNotEmpty)
+        'review_flag': reviewFlag,
     };
     // encodeComponent, not encodeQueryComponent: the latter writes a space as
     // `+`, which only means space in form-encoded bodies. `%20` is unambiguous

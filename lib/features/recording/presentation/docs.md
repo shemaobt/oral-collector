@@ -23,7 +23,15 @@ Path: @/lib/features/recording/presentation
 
 - Screens are wired into navigation by the top-level router in
   [/lib/core/router/](../../../core/router/) (e.g. `/recording/:id`,
-  `/recording/:id/trim`, the recording flow, the file-import screen).
+  `/recording/:id/trim`, the recording flow, the file-import screen). The
+  `/recordings` route also reads an optional `reviewFlag` query parameter
+  (ENG-381), resolved through
+  [../domain/entities/review_pendency.dart](../domain/entities/review_pendency.dart)'s
+  `pendencyKindForCode` so an unrecognized code opens the list unfiltered
+  instead of forwarding a value the server would 422 on; the project settings
+  screen's pendency breakdown is what links here (see
+  [../../project/data/docs.md](../../project/data/docs.md) for the counters it
+  reads).
 - The detail screen is now a thin consumer of `RecordingDetailNotifier`
   (ENG-194), which owns the load orchestration, the metadata/audio mutations,
   and the `localRecordingStreamProvider` listen (see
@@ -340,6 +348,25 @@ Path: @/lib/features/recording/presentation
   end to end except where the data layer still needs a row (the heal/server
   resolution inside `RecordingDetailNotifier.load`, the split child-companion
   build).
+- **The review-flag filter opens on a different empty state when the server
+  could not answer (ENG-381).** `recordings_list_screen.dart` computes
+  `pendencyUnanswered = selectedReviewFlag != null && recordings.isEmpty &&
+  (isOffline || fetchFailed)` ahead of the ordinary "no recordings" branch and
+  renders `_PendencyFilterUnanswered` instead: only the server can say which
+  recordings carry a flag, so an empty list here is the absence of an answer,
+  not an answer of zero. Two causes, two messages — offline gets "not
+  available offline" and a clear-filter action, a failed fetch gets a
+  "couldn't check right now" and a retry — because blaming the connection for
+  a 5xx, a timeout or an expired session sends the user after a signal they
+  already have. Three details that are load-bearing: the empty-project state
+  would read as "the work is done" seconds after the project screen said three
+  recordings still need details, which is why `fetchFailed` exists on the
+  state at all; the condition reads `recordings`, **not**
+  `filteredRecordings`, so a genre/status/search sieve emptying the list is
+  never blamed on connectivity; and the whole branch is scoped to the pendency
+  filter, since the other filters do have a local answer. See
+  [./notifiers/docs.md](notifiers/docs.md) for the notifier-side half
+  (`setReviewFlagFilter`, `_localFallback`, `fetchFailed`).
 - **Listener-driven re-renders (now in the notifier, ENG-194).** The
   recording shown is `RecordingDetailState.recording`, a `LocalRecordingEntity`
   (ENG-199/ENG-200), and `RecordingDetailNotifier.build` (native only)

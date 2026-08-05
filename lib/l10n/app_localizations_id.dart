@@ -664,6 +664,20 @@ class AppLocalizationsId extends AppLocalizations {
       'Ketuk mikrofon untuk merekam cerita pertama Anda, atau impor file audio.';
 
   @override
+  String get recordings_offlineFilterTitle => 'Tidak tersedia offline';
+
+  @override
+  String get recordings_offlineFilterDescription =>
+      'Server yang menentukan rekaman mana yang masih memerlukan detail. Sambungkan kembali untuk melihatnya, atau hapus filter untuk menelusuri semua yang ada di perangkat ini.';
+
+  @override
+  String get recordings_filterErrorTitle => 'Tidak bisa memeriksa sekarang';
+
+  @override
+  String get recordings_filterErrorDescription =>
+      'Server tidak menjawab, jadi kami tidak bisa menyebutkan rekaman mana yang masih memerlukan detail. Coba lagi, atau hapus filter untuk menelusuri semua yang ada di perangkat ini.';
+
+  @override
   String get recordings_dropToImport =>
       'Tip: seret berkas audio ke jendela ini untuk mengimpor.';
 
@@ -1864,6 +1878,11 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get projectStats_needsDetails => 'Perlu detail';
+
+  @override
+  String projectStats_showPendency(String label, int count) {
+    return 'Lihat rekaman — $label ($count)';
+  }
 
   @override
   String get project_active => 'Aktif';

@@ -11,6 +11,7 @@ import '../../../project/presentation/notifiers/member_notifier.dart';
 import '../../../storyteller/presentation/notifiers/project_storytellers_notifier.dart';
 import '../notifiers/recordings_list_notifier.dart';
 import '../notifiers/recordings_list_state.dart';
+import '../pendency_label.dart';
 
 class ActiveFilterChips extends ConsumerWidget {
   const ActiveFilterChips({super.key});
@@ -116,6 +117,20 @@ class ActiveFilterChips extends ConsumerWidget {
           context,
           label: label,
           onRemove: () => notifier.setUserFilter(null),
+        ),
+      );
+    }
+
+    final reviewFlag = state.selectedReviewFlag;
+    if (reviewFlag != null) {
+      // Arriving from the project counter drops the user into an already
+      // narrowed list. Without a chip there is nothing on screen saying so, and
+      // nothing to press to get back to the whole project.
+      chips.add(
+        _buildChip(
+          context,
+          label: pendencyLabel(l10n, reviewFlag),
+          onRemove: () => notifier.setReviewFlagFilter(null),
         ),
       );
     }

@@ -661,6 +661,20 @@ class AppLocalizationsTpi extends AppLocalizations {
       'Presim maikorofon bilong rekodim fes stori bilong yu, o importim wanpela audio fail.';
 
   @override
+  String get recordings_offlineFilterTitle => 'I no stap taim yu no gat net';
+
+  @override
+  String get recordings_offlineFilterDescription =>
+      'Sever i save makim wanem ol rekoding i sot yet long ol tok. Konektim gen bilong lukim ol, o rausim filta bilong lukim olgeta samting i stap long dispela masin.';
+
+  @override
+  String get recordings_filterErrorTitle => 'I no inap sekim nau';
+
+  @override
+  String get recordings_filterErrorDescription =>
+      'Sever i no bekim, olsem na mipela i no inap tokim yu wanem ol rekoding i sot yet long ol tok. Traim gen, o rausim filta bilong lukim olgeta samting i stap long dispela masin.';
+
+  @override
   String get recordings_dropToImport =>
       'Tip: pulim ol audio fail i go long dispela windo bilong imotim.';
 
@@ -1847,6 +1861,11 @@ class AppLocalizationsTpi extends AppLocalizations {
 
   @override
   String get projectStats_needsDetails => 'I no pinis yet';
+
+  @override
+  String projectStats_showPendency(String label, int count) {
+    return 'Lukim ol rekoding — $label ($count)';
+  }
 
   @override
   String get project_active => 'Aktiv';

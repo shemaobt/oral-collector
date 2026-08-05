@@ -27,6 +27,7 @@ abstract class RecordingApiRepository {
     String? storytellerId,
     String? uploadStatus,
     String? title,
+    String? reviewFlag,
   });
   Future<bool> deleteRecording(String serverId);
   Future<UpdateRecordingOutcome> updateRecording(

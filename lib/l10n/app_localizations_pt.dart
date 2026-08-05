@@ -665,6 +665,20 @@ class AppLocalizationsPt extends AppLocalizations {
       'Toque no microfone para gravar sua primeira história, ou importe um arquivo de áudio.';
 
   @override
+  String get recordings_offlineFilterTitle => 'Indisponível offline';
+
+  @override
+  String get recordings_offlineFilterDescription =>
+      'O servidor é quem define quais gravações ainda precisam de detalhes. Reconecte-se para vê-las ou remova o filtro para ver tudo o que está neste aparelho.';
+
+  @override
+  String get recordings_filterErrorTitle => 'Não deu para verificar agora';
+
+  @override
+  String get recordings_filterErrorDescription =>
+      'O servidor não respondeu, então não dá para dizer quais gravações ainda precisam de detalhes. Tente de novo ou remova o filtro para ver tudo o que está neste aparelho.';
+
+  @override
   String get recordings_dropToImport =>
       'Dica: arraste arquivos de áudio para esta janela para importar.';
 
@@ -1870,6 +1884,11 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get projectStats_needsDetails => 'Faltam detalhes';
+
+  @override
+  String projectStats_showPendency(String label, int count) {
+    return 'Ver gravações — $label ($count)';
+  }
 
   @override
   String get project_active => 'Ativo';

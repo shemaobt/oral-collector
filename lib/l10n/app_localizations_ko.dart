@@ -646,6 +646,20 @@ class AppLocalizationsKo extends AppLocalizations {
       '마이크를 탭하여 첫 번째 이야기를 녹음하거나 오디오 파일을 가져오세요.';
 
   @override
+  String get recordings_offlineFilterTitle => '오프라인에서는 볼 수 없음';
+
+  @override
+  String get recordings_offlineFilterDescription =>
+      '어떤 녹음에 아직 정보가 빠져 있는지는 서버가 판단합니다. 다시 연결해 확인하거나, 필터를 지우고 이 기기의 모든 녹음을 살펴보세요.';
+
+  @override
+  String get recordings_filterErrorTitle => '지금은 확인할 수 없음';
+
+  @override
+  String get recordings_filterErrorDescription =>
+      '서버가 응답하지 않아 어떤 녹음에 정보가 빠져 있는지 알 수 없습니다. 다시 시도하거나, 필터를 지우고 이 기기의 모든 녹음을 살펴보세요.';
+
+  @override
   String get recordings_dropToImport => '팁: 오디오 파일을 이 창으로 끌어 가져오기 하세요.';
 
   @override
@@ -1801,6 +1815,11 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get projectStats_needsDetails => '정보 필요';
+
+  @override
+  String projectStats_showPendency(String label, int count) {
+    return '녹음 보기 — $label ($count)';
+  }
 
   @override
   String get project_active => '활성';

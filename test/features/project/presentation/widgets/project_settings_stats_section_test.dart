@@ -9,6 +9,7 @@ import 'package:oral_collector/features/project/domain/entities/project.dart';
 import 'package:oral_collector/features/project/domain/entities/project_stats.dart';
 import 'package:oral_collector/features/project/presentation/widgets/project_settings_header.dart';
 import 'package:oral_collector/features/project/presentation/widgets/project_stat_chip.dart';
+import 'package:oral_collector/features/recording/domain/entities/review_pendency.dart';
 
 import '../../../../support/text_scale.dart';
 
@@ -22,7 +23,11 @@ const _project = Project(
   totalDurationSeconds: 600,
 );
 
-Future<void> _pump(WidgetTester tester, {ProjectStats? stats}) async {
+Future<void> _pump(
+  WidgetTester tester, {
+  ProjectStats? stats,
+  void Function(PendencyKind kind)? onPendencyTap,
+}) async {
   await pumpAtTextScale(
     tester,
     child: Padding(
@@ -32,6 +37,7 @@ Future<void> _pump(WidgetTester tester, {ProjectStats? stats}) async {
         memberCount: 7,
         storytellerCount: 5,
         stats: stats,
+        onPendencyTap: onPendencyTap ?? (_) {},
       ),
     ),
   );
@@ -103,14 +109,62 @@ void main() {
         )
         .dx;
 
+    // The row, not the text: the line is a tap target since ENG-381, so its
+    // trailing chevron is what sits on the right edge.
     expect(
-      tester.getBottomRight(find.text('No storyteller: 3')).dx,
+      tester
+          .getBottomRight(
+            find.ancestor(
+              of: find.text('No storyteller: 3'),
+              matching: find.byType(InkWell),
+            ),
+          )
+          .dx,
       closeTo(chipRight, 1),
     );
     expect(
       tester.getTopLeft(find.text('No classification: 3')).dx,
       greaterThan(tester.getTopLeft(find.text('Recordings')).dx),
     );
+  });
+
+  testWidgets('the whole breakdown line is a tap target, not just its text', (
+    tester,
+  ) async {
+    final taps = <PendencyKind>[];
+    await _pump(
+      tester,
+      stats: const ProjectStats(
+        reviewFlagCounts: {'missing_classification': 3},
+        recordingsWithReviewFlags: 3,
+      ),
+      onPendencyTap: taps.add,
+    );
+
+    final target = find.ancestor(
+      of: find.text('No classification: 3'),
+      matching: find.byType(InkWell),
+    );
+    final box = tester.getRect(target);
+
+    // 48dp is the floor for a thumb; a line of labelSmall is a third of that.
+    expect(box.height, greaterThanOrEqualTo(48.0));
+    // And it has to be at least as wide as what it looks like it covers —
+    // a target narrower than its own label leaves part of the line dead.
+    expect(
+      box.width,
+      greaterThanOrEqualTo(
+        tester.getRect(find.text('No classification: 3')).width,
+      ),
+    );
+
+    // The corners, not the centre: the centre sits on the text and would pass
+    // even if everything around it were inert.
+    await tester.tapAt(box.topLeft + const Offset(1, 1));
+    await tester.tapAt(box.bottomRight - const Offset(1, 1));
+    await tester.pump();
+
+    expect(taps, [PendencyKind.classification, PendencyKind.classification]);
   });
 
   testWidgets('says nothing per code when there is no counter to explain', (

@@ -6,6 +6,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/tokens.dart';
 import '../../../../shared/utils/format.dart';
 import '../../../recording/domain/entities/review_pendency.dart';
+import '../../../recording/presentation/pendency_label.dart';
 import '../../domain/entities/project.dart';
 import '../../domain/entities/project_stats.dart';
 import 'language_chip_row.dart';
@@ -117,6 +118,7 @@ class ProjectSettingsStatsSection extends StatelessWidget {
     required this.memberCount,
     this.storytellerCount = 0,
     this.stats,
+    required this.onPendencyTap,
   });
 
   final Project project;
@@ -127,12 +129,24 @@ class ProjectSettingsStatsSection extends StatelessWidget {
   /// the pendency counter out rather than inventing one.
   final ProjectStats? stats;
 
+  /// Opens the recordings list narrowed to one pendency (ENG-381).
+  ///
+  /// The headline counter above the breakdown stays untappable: the server
+  /// filters by one code at a time and has no "anything outstanding" filter, so
+  /// a target on that number would have to stitch three paged queries together
+  /// and would disagree with the number itself past the first page.
+  final void Function(PendencyKind kind) onPendencyTap;
+
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _AudioStatsRow(project: project, stats: stats),
+        _AudioStatsRow(
+          project: project,
+          stats: stats,
+          onPendencyTap: onPendencyTap,
+        ),
         const SizedBox(height: SpacingScale.s16),
         _TeamStatsRow(
           memberCount: memberCount,
@@ -144,10 +158,15 @@ class ProjectSettingsStatsSection extends StatelessWidget {
 }
 
 class _AudioStatsRow extends StatelessWidget {
-  const _AudioStatsRow({required this.project, required this.stats});
+  const _AudioStatsRow({
+    required this.project,
+    required this.stats,
+    required this.onPendencyTap,
+  });
 
   final Project project;
   final ProjectStats? stats;
+  final void Function(PendencyKind kind) onPendencyTap;
 
   @override
   Widget build(BuildContext context) {
@@ -201,32 +220,112 @@ class _AudioStatsRow extends StatelessWidget {
           ],
         ),
         if (byKind.isNotEmpty) ...[
-          const SizedBox(height: SpacingScale.s8),
-          // Pinned to the right edge, under the counter chip it explains.
-          // Across the full width it read as a partition of the counter, and
-          // these labels do not partition anything: a recording missing both a
-          // classification and a storyteller is counted under both, so three
-          // such recordings show "3", "3" and a headline of 3. Sitting under
-          // the chip, they read as notes on that number rather than its parts.
-          Align(
-            alignment: Alignment.centerRight,
-            child: Wrap(
-              alignment: WrapAlignment.end,
-              spacing: SpacingScale.s12,
-              runSpacing: SpacingScale.s4,
-              children: [
-                for (final entry in byKind.entries)
-                  Text(
-                    '${_pendencyLabel(l10n, entry.key)}: ${entry.value}',
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: colors.secondary,
-                    ),
-                  ),
-              ],
-            ),
-          ),
+          const SizedBox(height: SpacingScale.s4),
+          _PendencyBreakdown(byKind: byKind, onTap: onPendencyTap),
         ],
       ],
+    );
+  }
+}
+
+/// The per-pendency lines under the review counter.
+///
+/// Right-aligned, under the counter chip they explain. Across the full width
+/// they read as a partition of the counter, and these labels do not partition
+/// anything: a recording missing both a classification and a storyteller is
+/// counted under both, so three such recordings show "3", "3" and a headline of
+/// 3. Sitting under the chip, they read as notes on that number instead.
+///
+/// One per line rather than flowed: each is a tap target now, and two 48dp
+/// targets side by side are hard to tell apart and easy to miss.
+class _PendencyBreakdown extends StatelessWidget {
+  const _PendencyBreakdown({required this.byKind, required this.onTap});
+
+  final Map<PendencyKind, int> byKind;
+  final void Function(PendencyKind kind) onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Align(
+      alignment: Alignment.centerRight,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          for (final entry in byKind.entries)
+            _PendencyBreakdownLine(
+              label: pendencyLabel(l10n, entry.key),
+              count: entry.value,
+              onTap: () => onTap(entry.key),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PendencyBreakdownLine extends StatelessWidget {
+  const _PendencyBreakdownLine({
+    required this.label,
+    required this.count,
+    required this.onTap,
+  });
+
+  final String label;
+  final int count;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final colors = AppColors.of(context);
+
+    final text = Text(
+      '$label: $count',
+      textAlign: TextAlign.end,
+      style: theme.textTheme.labelSmall?.copyWith(color: colors.secondary),
+    );
+
+    // The label has to land on the node that carries the tap action, which is
+    // the InkWell's. `excludeSemantics` would throw that node away and leave a
+    // node that says "button" and does nothing when double-tapped; merging
+    // keeps the action and replaces only the visible text.
+    return MergeSemantics(
+      child: Semantics(
+        button: true,
+        label: l10n.projectStats_showPendency(label, count),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(RadiusScale.r8),
+          child: ConstrainedBox(
+            // A tap target has to be reachable by a thumb, not just by a mouse.
+            constraints: const BoxConstraints(minHeight: 48),
+            child: ExcludeSemantics(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: SpacingScale.s4,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Flexible(child: text),
+                    const SizedBox(width: SpacingScale.s4),
+                    // Colour alone must not be what says "this does something"
+                    // (WCAG 1.4.1): the chevron carries it without depending on
+                    // hue, and reads as a way in rather than a decoration.
+                    Icon(
+                      LucideIcons.chevronRight,
+                      size: 14,
+                      color: colors.secondary,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -287,10 +386,3 @@ Map<PendencyKind, int> _breakdownByKind(Map<String, int> counts) {
       if (byKind.containsKey(kind)) kind: byKind[kind]!,
   };
 }
-
-String _pendencyLabel(AppLocalizations l10n, PendencyKind kind) =>
-    switch (kind) {
-      PendencyKind.classification => l10n.recording_pendencyClassification,
-      PendencyKind.description => l10n.recording_pendencyDescription,
-      PendencyKind.storyteller => l10n.recording_pendencyStoryteller,
-    };
