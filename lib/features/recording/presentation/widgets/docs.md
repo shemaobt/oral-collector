@@ -192,6 +192,39 @@ Path: @/lib/features/recording/presentation/widgets
   connection"). The copy deliberately describes the effect and never the
   mechanism — no "client-side" on screen. Covered in Spanish by
   [/test/features/recording/presentation/widgets/recordings_filter_sheet_test.dart](../../../../../test/features/recording/presentation/widgets/recordings_filter_sheet_test.dart).
+- **The card is three rows, and the design package is what makes it three.**
+  Title line (title, upload glyph, date), an optional description line, and a
+  footer (tag, full classification, pendency chip, chevron). The upload glyph
+  moved up from the footer to the title line — it answers "is this one safe
+  yet", a property of the recording the title names — and the classification
+  moved down into the footer, which is what buys the ~76px/~92px heights the
+  package specifies. Two consequences worth knowing before touching either row:
+  the **register** is now part of the classification (`registerName` had been a
+  constructor parameter the list screen filled in and the card silently
+  dropped, so a recording classified down to its register read exactly like one
+  still missing it); and the duration, which ENG-382 had let back in ranked
+  below the chip, now ranks below the classification too and therefore does not
+  render at any phone width. It was **not** deleted — the package says it does
+  not come back, and the ranking is what delivers that, so a wider row still
+  shows it and nothing had to be argued away.
+- **Unclassified is italic in `secondary`, never `warning`.** The design package
+  reserves the warning token for system trouble — a corrupted recording, a
+  failed upload — and the card had been spending it on a field the user simply
+  had not filled in yet, which says something broke when nothing did.
+- **The pendency chip carries the glyph of the field it names**: tag for the
+  classification (the same tag the footer labels the classification with), a
+  page for the description, a struck-through person for the storyteller. Two or
+  more open fields collapse to `recording_pendencyCount(n)`, which has no kind,
+  so it falls back to the neutral dashed circle.
+- **Two width caps, both only ever binding at large text scales.** The chip may
+  take at most `_chipShare` (60%) of what it and the classification divide: it
+  outranks the classification — it is the call to action, and its label cannot
+  be guessed from an ellipsis — but a chip that takes everything leaves the card
+  unable to say which recording it is. The date is capped at `_dateShare` (45%)
+  of the title row: the date is non-flex so the title yields to it at ordinary
+  sizes (a truncated title is still recognisable, a truncated date is not), and
+  without a ceiling the Arabic spelled-out date at 2.0x pushed the title off the
+  card instead of merely shortening it.
 - `RecordingCard` (ENG-374, "card V3") was redesigned around one question —
   "which recordings still need me?" — which cost the duration chip (and the
   `formattedDuration` constructor param `recordings_list_screen.dart` used to
@@ -232,8 +265,8 @@ Path: @/lib/features/recording/presentation/widgets
   function kept `DateFormat.jms` (not `Hms`) through the rename — the clock
   convention belongs to the locale, and forcing 24 hours is the defect PR #174
   fixed for en/ar/hi/ko. `build()` was
-  split entirely into row-level widget classes — `_TitleRow`, `_BreadcrumbRow`,
-  `_FooterRow`, `RecordingDescriptionLine`, and a few more — rather than
+  split entirely into row-level widget classes — `_TitleRow`, `_FooterRow`,
+  `RecordingDescriptionLine`, and a few more — rather than
   private build-returning methods, a convention local to this file; each
   resolves its own `l10n`/theme off its own `BuildContext` instead of taking
   them as parameters. The split happened because the redesign pushed the file
@@ -263,9 +296,10 @@ Path: @/lib/features/recording/presentation/widgets
   only the remainder to the `Expanded` one, so leaving the duration in the row
   unconditionally made the chip — not the duration — pay for every pixel of a
   shortfall (at 390dp and 2.0x the chip's paragraph was cut to 69.5px). So
-  `_FooterRow` takes the width the card measured for it, adds up
-  `_PendencyChip.widthFor` and the duration's own `_textWidth`, and drops the
-  duration from the row entirely when the two do not both fit. Dropping it
+  `_FooterRow` takes the width the card measured for it, adds up the
+  classification's `_textWidth`, `_PendencyChip.widthFor` and the duration's own
+  `_textWidth`, and drops the duration from the row entirely when the three do
+  not all fit. Dropping it
   whole rather than ellipsizing it is deliberate: `1:0…` reads as a wrong
   duration, an absent one reads as nothing. The width is measured by a
   `LayoutBuilder` at the very top of `RecordingCard.build` rather than around
