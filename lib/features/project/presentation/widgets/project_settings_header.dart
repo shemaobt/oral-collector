@@ -375,6 +375,11 @@ class _TeamStatsRow extends StatelessWidget {
 /// is not something to put in front of a field worker. It is dropped from the
 /// breakdown only — the headline counter comes from the server's distinct
 /// count, so a recording held up by an unknown code still shows up there.
+///
+/// A code nobody carries is dropped too. The server sends every known code
+/// whether or not it has carriers, so presence in the map says nothing; only
+/// the count does. Each surviving line is a tap target into the list filtered
+/// by that code, and a line reading zero would be one that leads nowhere.
 Map<PendencyKind, int> _breakdownByKind(Map<String, int> counts) {
   final byKind = <PendencyKind, int>{};
   counts.forEach((code, count) {
@@ -383,6 +388,6 @@ Map<PendencyKind, int> _breakdownByKind(Map<String, int> counts) {
   });
   return {
     for (final kind in PendencyKind.values)
-      if (byKind.containsKey(kind)) kind: byKind[kind]!,
+      if ((byKind[kind] ?? 0) > 0) kind: byKind[kind]!,
   };
 }
