@@ -27,9 +27,11 @@ Future<void> _pump(
   WidgetTester tester, {
   ProjectStats? stats,
   void Function(PendencyKind kind)? onPendencyTap,
+  Locale locale = const Locale('en'),
 }) async {
   await pumpAtTextScale(
     tester,
+    locale: locale,
     child: Padding(
       padding: const EdgeInsets.all(8),
       child: ProjectSettingsStatsSection(
@@ -170,6 +172,27 @@ void main() {
 
     expect(find.text('No classification: 2'), findsOneWidget);
     expect(find.textContaining(': 0'), findsNothing);
+  });
+
+  testWidgets('the breakdown follows the reading direction, not the screen', (
+    tester,
+  ) async {
+    // The counter chip it sits under lives in a Row, so in Arabic that chip
+    // moves to the left. A physically right-aligned breakdown stays behind on
+    // the other side of the screen, explaining a number nowhere near it.
+    await _pump(
+      tester,
+      locale: const Locale('ar'),
+      stats: const ProjectStats(
+        reviewFlagCounts: {'missing_classification': 3},
+        recordingsWithReviewFlags: 3,
+      ),
+    );
+
+    final section = tester.getRect(find.byType(ProjectSettingsStatsSection));
+    final line = tester.getRect(find.byType(InkWell));
+
+    expect(line.left - section.left, lessThan(section.right - line.right));
   });
 
   testWidgets('the whole breakdown line is a tap target, not just its text', (

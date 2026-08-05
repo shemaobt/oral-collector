@@ -2247,7 +2247,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get filters_sheetTitle => '녹음 필터';
 
   @override
-  String get filters_sectionStatus => '업로드 상태';
+  String get filters_sectionStatus => '이 기기의 상태';
+
+  @override
+  String get filters_sectionStatusHint => '화면에 이미 있는 녹음을 걸러 냅니다. 오프라인에서도 됩니다.';
 
   @override
   String get filters_sectionGenre => '장르';
@@ -2257,6 +2260,13 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get filters_sectionUser => '녹음자';
+
+  @override
+  String get filters_sectionPendency => '서버가 알려주는 미완성 항목';
+
+  @override
+  String get filters_sectionPendencyHint =>
+      '어떤 녹음에 아직 정보가 빠져 있는지 서버에 물어봅니다. 연결이 필요합니다.';
 
   @override
   String get filter_apply => '적용';
@@ -2290,6 +2300,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get filter_genreAll => '모든 장르';
+
+  @override
+  String get filter_pendencyAll => '모든 항목';
 
   @override
   String get detail_recordedBy => '녹음자';

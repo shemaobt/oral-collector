@@ -2349,7 +2349,11 @@ class AppLocalizationsEs extends AppLocalizations {
   String get filters_sheetTitle => 'Filtrar grabaciones';
 
   @override
-  String get filters_sectionStatus => 'Estado de subida';
+  String get filters_sectionStatus => 'Estado en este dispositivo';
+
+  @override
+  String get filters_sectionStatusHint =>
+      'Filtra las grabaciones que ya están en pantalla. Funciona sin conexión.';
 
   @override
   String get filters_sectionGenre => 'Género';
@@ -2359,6 +2363,13 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get filters_sectionUser => 'Grabado por';
+
+  @override
+  String get filters_sectionPendency => 'Lo que el servidor dice que falta';
+
+  @override
+  String get filters_sectionPendencyHint =>
+      'Pregunta al servidor qué grabaciones todavía necesitan detalles. Requiere conexión.';
 
   @override
   String get filter_apply => 'Aplicar';
@@ -2392,6 +2403,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get filter_genreAll => 'Cualquier género';
+
+  @override
+  String get filter_pendencyAll => 'Cualquier campo';
 
   @override
   String get detail_recordedBy => 'Grabado por';

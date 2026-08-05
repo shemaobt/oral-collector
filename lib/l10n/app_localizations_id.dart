@@ -2335,7 +2335,11 @@ class AppLocalizationsId extends AppLocalizations {
   String get filters_sheetTitle => 'Saring rekaman';
 
   @override
-  String get filters_sectionStatus => 'Status unggah';
+  String get filters_sectionStatus => 'Status di perangkat ini';
+
+  @override
+  String get filters_sectionStatusHint =>
+      'Menyaring rekaman yang sudah tampil di layar. Berfungsi tanpa koneksi.';
 
   @override
   String get filters_sectionGenre => 'Genre';
@@ -2345,6 +2349,13 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get filters_sectionUser => 'Direkam oleh';
+
+  @override
+  String get filters_sectionPendency => 'Yang menurut server masih kurang';
+
+  @override
+  String get filters_sectionPendencyHint =>
+      'Menanyakan ke server rekaman mana yang masih memerlukan detail. Perlu koneksi.';
 
   @override
   String get filter_apply => 'Terapkan';
@@ -2378,6 +2389,9 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get filter_genreAll => 'Semua genre';
+
+  @override
+  String get filter_pendencyAll => 'Semua bidang';
 
   @override
   String get detail_recordedBy => 'Direkam oleh';

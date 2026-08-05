@@ -2332,7 +2332,11 @@ class AppLocalizationsHi extends AppLocalizations {
   String get filters_sheetTitle => 'रिकॉर्डिंग फ़िल्टर करें';
 
   @override
-  String get filters_sectionStatus => 'अपलोड स्थिति';
+  String get filters_sectionStatus => 'इस डिवाइस पर स्थिति';
+
+  @override
+  String get filters_sectionStatusHint =>
+      'स्क्रीन पर पहले से मौजूद रिकॉर्डिंग को छाँटता है। ऑफ़लाइन भी काम करता है।';
 
   @override
   String get filters_sectionGenre => 'शैली';
@@ -2342,6 +2346,13 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get filters_sectionUser => 'द्वारा रिकॉर्ड';
+
+  @override
+  String get filters_sectionPendency => 'सर्वर के अनुसार क्या बाकी है';
+
+  @override
+  String get filters_sectionPendencyHint =>
+      'सर्वर से पूछता है कि किन रिकॉर्डिंग में अब भी विवरण बाकी हैं। इसके लिए कनेक्शन चाहिए।';
 
   @override
   String get filter_apply => 'लागू करें';
@@ -2375,6 +2386,9 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get filter_genreAll => 'कोई भी शैली';
+
+  @override
+  String get filter_pendencyAll => 'कोई भी विवरण';
 
   @override
   String get detail_recordedBy => 'द्वारा रिकॉर्ड';

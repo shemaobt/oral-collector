@@ -230,7 +230,10 @@ class _AudioStatsRow extends StatelessWidget {
 
 /// The per-pendency lines under the review counter.
 ///
-/// Right-aligned, under the counter chip they explain. Across the full width
+/// Aligned to the end of the reading direction, under the counter chip they
+/// explain — the chip sits in a Row, so in Arabic both move to the left and a
+/// physically right-aligned breakdown would be left explaining a number on the
+/// other side of the screen. Across the full width
 /// they read as a partition of the counter, and these labels do not partition
 /// anything: a recording missing both a classification and a storyteller is
 /// counted under both, so three such recordings show "3", "3" and a headline of
@@ -248,7 +251,7 @@ class _PendencyBreakdown extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return Align(
-      alignment: Alignment.centerRight,
+      alignment: AlignmentDirectional.centerEnd,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [

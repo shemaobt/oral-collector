@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../core/observability/error_reporter.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../shared/widgets/empty_state.dart';
@@ -254,15 +255,28 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
   /// The code travels as a query parameter rather than as `extra`: go_router's
   /// own documentation warns against `extra`, and it is dropped on a back
   /// navigation, which would silently widen the list.
+  ///
+  /// A failed switch stops here rather than pushing anyway: the list reads the
+  /// active project, so navigating would answer with another project's
+  /// recordings. Nothing else would notice — the caller's type is
+  /// `void Function(PendencyKind)`, so the Future is dropped and the tap would
+  /// simply do nothing.
   Future<void> _openPendencyFilter(PendencyKind kind) async {
     final project = _project;
     if (project == null) return;
 
     final active = ref.read(projectNotifierProvider).activeProject;
     if (active?.id != project.id) {
-      await ref
-          .read(projectNotifierProvider.notifier)
-          .setActiveProject(project);
+      try {
+        await ref
+            .read(projectNotifierProvider.notifier)
+            .setActiveProject(project);
+      } on Exception catch (e, st) {
+        ref.read(errorReporterProvider).reportError(e, st);
+        if (!mounted) return;
+        showErrorSnackBar(context, e);
+        return;
+      }
     }
     if (!mounted) return;
     unawaited(

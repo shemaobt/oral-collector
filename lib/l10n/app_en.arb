@@ -1123,10 +1123,25 @@
   },
   "filters_buttonLabel": "Filters",
   "filters_sheetTitle": "Filter recordings",
-  "filters_sectionStatus": "Upload status",
+  "filters_sectionStatus": "Status on this device",
+  "@filters_sectionStatus": {
+    "description": "Section header in the recordings filter sheet for the on-device status chips. Names the device because two of its chips (unclassified, missing description) read almost identically to the pendency chips below, and where the answer comes from is the only difference (ENG-383)."
+  },
+  "filters_sectionStatusHint": "Narrows the recordings already on screen. Works offline.",
+  "@filters_sectionStatusHint": {
+    "description": "Supporting line under the status section header in the recordings filter sheet (ENG-383)."
+  },
   "filters_sectionGenre": "Genre",
   "filters_sectionStoryteller": "Storyteller",
   "filters_sectionUser": "Recorded by",
+  "filters_sectionPendency": "What the server says is missing",
+  "@filters_sectionPendency": {
+    "description": "Section header in the recordings filter sheet for the review-pendency filter. Names the server because the chips below repeat the wording of the status chips above in several languages (ENG-383)."
+  },
+  "filters_sectionPendencyHint": "Asks the server which recordings still need details. Needs a connection.",
+  "@filters_sectionPendencyHint": {
+    "description": "Supporting line under the pendency section header in the recordings filter sheet (ENG-383)."
+  },
   "filter_apply": "Apply",
   "filter_reset": "Reset",
   "filter_clearAll": "Clear all",
@@ -1142,6 +1157,7 @@
   "filter_userAll": "Any user",
   "filter_storytellerAll": "Any storyteller",
   "filter_genreAll": "Any genre",
+  "filter_pendencyAll": "Any field",
   "detail_recordedBy": "Recorded by",
   "detail_storyteller": "Storyteller",
   "recording_unknownUser": "Unknown user",

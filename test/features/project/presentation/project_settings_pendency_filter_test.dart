@@ -11,10 +11,12 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 import 'package:oral_collector/core/auth/auth_notifier.dart';
 import 'package:oral_collector/core/auth/auth_state.dart';
 import 'package:oral_collector/core/database/app_database.dart';
+import 'package:oral_collector/core/observability/error_reporter.dart';
 import 'package:oral_collector/core/router/app_router.dart';
 import 'package:oral_collector/features/auth/data/providers/role_provider.dart';
 import 'package:oral_collector/features/auth/domain/entities/user.dart';
@@ -28,6 +30,7 @@ import 'package:oral_collector/features/project/presentation/notifiers/member_no
 import 'package:oral_collector/features/project/presentation/notifiers/member_state.dart';
 import 'package:oral_collector/features/project/presentation/notifiers/project_notifier.dart';
 import 'package:oral_collector/features/project/presentation/notifiers/project_state.dart';
+import 'package:oral_collector/features/project/presentation/project_settings_screen.dart';
 import 'package:oral_collector/features/recording/data/providers.dart';
 import 'package:oral_collector/features/recording/data/repositories/local_recording_repository.dart';
 import 'package:oral_collector/features/recording/domain/entities/review_pendency.dart';
@@ -74,9 +77,13 @@ class _FakeProjectRepository implements ProjectRepository {
 }
 
 class _FakeProjectNotifier extends ProjectNotifier {
-  _FakeProjectNotifier(this._initial);
+  _FakeProjectNotifier(this._initial, this._error);
 
   final ProjectState _initial;
+
+  /// Thrown instead of switching, standing in for the `SharedPreferences`
+  /// write the real notifier awaits before it assigns state.
+  final Object? _error;
 
   @override
   ProjectState build() => _initial;
@@ -84,8 +91,49 @@ class _FakeProjectNotifier extends ProjectNotifier {
   @override
   Future<void> setActiveProject(Project project) async {
     _setActiveCalls.add(project.id);
+    final error = _error;
+    if (error != null) throw error;
     state = state.copyWith(activeProject: project);
   }
+}
+
+class _RecordingReporter implements ErrorReporter {
+  final List<Object> reported = [];
+  final List<StackTrace?> stacks = [];
+
+  @override
+  void reportError(
+    Object error,
+    StackTrace? stackTrace, {
+    Map<String, String>? tags,
+    Map<String, Object?>? context,
+    ErrorLevel level = ErrorLevel.error,
+  }) {
+    reported.add(error);
+    stacks.add(stackTrace);
+  }
+
+  @override
+  void addBreadcrumb(
+    String message, {
+    String? category,
+    ErrorLevel level = ErrorLevel.info,
+    Map<String, Object?>? data,
+  }) {}
+
+  @override
+  void setUser({
+    String? id,
+    String? username,
+    String? email,
+    Map<String, Object?>? data,
+  }) {}
+
+  @override
+  void clearUser() {}
+
+  @override
+  void setTag(String key, String value) {}
 }
 
 class _FakeRoleNotifier extends RoleNotifier {
@@ -165,6 +213,8 @@ class _FakeLocalRepository implements LocalRecordingRepository {
 Future<ProviderContainer> pumpSettings(
   WidgetTester tester, {
   required Project? activeProject,
+  Object? setActiveError,
+  ErrorReporter? reporter,
 }) async {
   tester.view.physicalSize = kPhoneSize * 3.0;
   tester.view.devicePixelRatio = 3.0;
@@ -185,8 +235,10 @@ Future<ProviderContainer> pumpSettings(
             projects: const [_thisProject, _otherProject],
             activeProject: activeProject,
           ),
+          setActiveError,
         ),
       ),
+      if (reporter != null) errorReporterProvider.overrideWithValue(reporter),
       roleNotifierProvider.overrideWith(_FakeRoleNotifier.new),
       memberNotifierProvider.overrideWith(_FakeMemberNotifier.new),
       recordingApiRepositoryProvider.overrideWithValue(_FakeRecordingApi()),
@@ -277,6 +329,42 @@ void main() {
       container.read(recordingsListNotifierProvider).selectedReviewFlag,
       PendencyKind.classification,
     );
+  });
+
+  testWidgets('a project switch that fails stops there instead of going '
+      'nowhere quietly', (tester) async {
+    // `setActiveProject` awaits SharedPreferences before it assigns state, so a
+    // platform-channel failure is a real path. The dropped Future makes it a
+    // silent one: the tap does nothing at all, and `unawaited_futures` cannot
+    // warn because the callback's type is `void Function(PendencyKind)`.
+    //
+    // Pushing anyway is worse than not pushing: the list only ever reads the
+    // active project, so it would answer with the other project's recordings.
+    final reporter = _RecordingReporter();
+    final container = await pumpSettings(
+      tester,
+      activeProject: _otherProject,
+      setActiveError: Exception('prefs unavailable'),
+      reporter: reporter,
+    );
+
+    await tester.tap(_breakdownLine(_l10n.recording_pendencyClassification, 3));
+    for (var i = 0; i < 5; i++) {
+      await tester.pump(const Duration(milliseconds: 50));
+    }
+
+    expect(find.byType(RecordingsListScreen), findsNothing);
+    expect(find.byType(ProjectSettingsScreen), findsOneWidget);
+    expect(
+      container.read(recordingsListNotifierProvider).selectedReviewFlag,
+      isNull,
+    );
+
+    expect(find.byType(SnackBar), findsOneWidget);
+    expect(find.byIcon(LucideIcons.alertTriangle), findsOneWidget);
+
+    expect(reporter.reported, hasLength(1));
+    expect(reporter.stacks.single, isNotNull);
   });
 
   testWidgets('a review flag this build cannot name opens the list '

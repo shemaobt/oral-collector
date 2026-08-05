@@ -140,6 +140,45 @@ Path: @/lib/features/recording/presentation/widgets
   would drift. That helper sits in `presentation/`, not next to the
   `PendencyKind` enum it switches on, because a translated string is not
   domain knowledge — see [../../domain/docs.md](../../domain/docs.md).
+- `RecordingsFilterSheet` (`recordings_filter_sheet.dart`) must carry every
+  filter `RecordingsListState.activeFilterCount` counts, because that count is
+  the badge on the sheet's own button. It shipped without the pendency one:
+  the badge said "1", the sheet showed nothing selected, and Reset + Apply left
+  the filter standing — only the chip on the list could remove it (ENG-383).
+  The sheet mirrors the notifier's filters into local fields in `initState` and
+  writes them back on Apply, so Reset is a local clear that only takes effect
+  through Apply. Apply calls `setReviewFlagFilter(..., refresh: false)` before
+  the storyteller and user setters: all three are server-side, and those two
+  re-fetch, so the flag is in state by the time the request goes out and one
+  Apply still costs the fetches it already did. Its chips iterate
+  `PendencyKind.values` and label them with the shared `pendencyLabel`, the
+  same helper `ActiveFilterChips` uses.
+- **The subcategory is carried without a control of its own (ENG-383).** It is
+  counted by `activeFilterCount` too, and it is reachable: the genre detail
+  screen navigates to `/recordings?genreId=…&subcategoryId=…`. The sheet mirrors
+  it into a field like every other filter, Reset clears it, and Apply writes it
+  — but it gets no chips, because a subcategory only means something under the
+  genre it arrived with. Picking a *different* genre in the sheet drops it, for
+  the same reason: kept across a genre change it would narrow the list to
+  nothing while the badge counted it.
+- **Two sections in that sheet hold chips that read identically, on purpose.**
+  `filter_unclassified` (status) and `recording_pendencyClassification`
+  (pendency) are word-for-word the same string in ar, es, id, ko, sw, tpi and
+  zh — "Sin clasificar" twice in Spanish — and the description pair overlaps in
+  meaning everywhere. Both stay: the status filter sieves the recordings already
+  in memory and therefore **works offline**, which is how this app is used in
+  the field, while the pendency filter is a question only the server can answer.
+  What distinguishes them is the section, so the section is what the tree and
+  the copy lean on. `FilterSection` (same file, public so tests can scope a
+  finder to one section) groups a header, an optional supporting line and the
+  controls into a real subtree instead of leaving them as siblings; the two
+  colliding sections name where their answer comes from
+  (`filters_sectionStatus` → "Status on this device",
+  `filters_sectionPendency` → "What the server says is missing") and each
+  carries a line saying what it costs ("Works offline" against "Needs a
+  connection"). The copy deliberately describes the effect and never the
+  mechanism — no "client-side" on screen. Covered in Spanish by
+  [/test/features/recording/presentation/widgets/recordings_filter_sheet_test.dart](../../../../../test/features/recording/presentation/widgets/recordings_filter_sheet_test.dart).
 - `RecordingCard` (ENG-374, "card V3") was redesigned around one question —
   "which recordings still need me?" — which cost the duration chip (and the
   `formattedDuration` constructor param `recordings_list_screen.dart` used to

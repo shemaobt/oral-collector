@@ -2231,7 +2231,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get filters_sheetTitle => '筛选录音';
 
   @override
-  String get filters_sectionStatus => '上传状态';
+  String get filters_sectionStatus => '本机状态';
+
+  @override
+  String get filters_sectionStatusHint => '筛选屏幕上已有的录音。离线也能用。';
 
   @override
   String get filters_sectionGenre => '类型';
@@ -2241,6 +2244,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get filters_sectionUser => '录制者';
+
+  @override
+  String get filters_sectionPendency => '服务器提示还缺什么';
+
+  @override
+  String get filters_sectionPendencyHint => '向服务器查询哪些录音还缺少信息。需要联网。';
 
   @override
   String get filter_apply => '应用';
@@ -2274,6 +2283,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get filter_genreAll => '任意类型';
+
+  @override
+  String get filter_pendencyAll => '任意字段';
 
   @override
   String get detail_recordedBy => '录制者';
