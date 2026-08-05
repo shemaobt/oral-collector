@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/utils/format.dart';
 import '../../../genre/domain/entities/genre.dart';
 import '../../../storyteller/domain/entities/storyteller.dart';
 import '../file_import_entry.dart';
+import '../file_import_validation.dart';
 import 'bulk_metadata_bar.dart';
 import 'classification_field.dart';
 import 'file_metadata_card.dart';
@@ -98,16 +100,18 @@ class FileMetadataEditor extends StatelessWidget {
               child: SingleChildScrollView(
                 padding: EdgeInsets.fromLTRB(
                   isWide ? 24 : 16,
-                  16,
+                  SpacingScale.s16,
                   isWide ? 24 : 16,
-                  16,
+                  SpacingScale.s16,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     if (showFormatsBanner)
                       Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.only(
+                          bottom: SpacingScale.s12,
+                        ),
                         child: SupportedFormatsBanner(
                           dense: true,
                           onDismiss: onDismissFormatsBanner,
@@ -115,7 +119,9 @@ class FileMetadataEditor extends StatelessWidget {
                       ),
                     if (entries.length > 1)
                       Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.only(
+                          bottom: SpacingScale.s12,
+                        ),
                         child: BulkMetadataBar(
                           projectId: projectId,
                           genres: genres,
@@ -133,7 +139,9 @@ class FileMetadataEditor extends StatelessWidget {
                       ),
                     if (genresLoading && genres.isEmpty)
                       const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 32),
+                        padding: EdgeInsets.symmetric(
+                          vertical: SpacingScale.s32,
+                        ),
                         child: Center(child: CircularProgressIndicator()),
                       )
                     else if (isWide)
@@ -172,7 +180,7 @@ class FileMetadataEditor extends StatelessWidget {
               onRemove: () => onRemoveEntry(entries[i].id),
             ),
           ),
-          if (i < entries.length - 1) const SizedBox(height: 12),
+          if (i < entries.length - 1) const SizedBox(height: SpacingScale.s12),
         ],
       ],
     );
@@ -191,11 +199,11 @@ class FileMetadataEditor extends StatelessWidget {
       elevation: 0,
       color: colors.card,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(RadiusScale.r16),
         side: BorderSide(color: colors.border.withValues(alpha: 0.4)),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(SpacingScale.s12),
         child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: ConstrainedBox(
@@ -216,6 +224,7 @@ class FileMetadataEditor extends StatelessWidget {
                   ),
               columns: [
                 DataColumn(label: Text(l10n.recording_titleHint)),
+                DataColumn(label: Text(l10n.recording_descriptionHint)),
                 DataColumn(label: Text(l10n.detail_duration)),
                 DataColumn(label: Text(l10n.moveCategory_genre)),
                 if (anyGenreHasSubcategories)
@@ -266,17 +275,17 @@ class FileMetadataEditor extends StatelessWidget {
                   hintText: entry.fileName,
                   isDense: true,
                   contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 10,
+                    horizontal: SpacingScale.s8,
+                    vertical: SpacingScale.s8,
                   ),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(RadiusScale.r8),
                     borderSide: BorderSide(
                       color: colors.border.withValues(alpha: 0.5),
                     ),
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(RadiusScale.r8),
                     borderSide: BorderSide(
                       color: colors.border.withValues(alpha: 0.5),
                     ),
@@ -284,6 +293,44 @@ class FileMetadataEditor extends StatelessWidget {
                 ),
                 style: theme.textTheme.bodySmall,
               ),
+            ),
+          ),
+        ),
+        DataCell(
+          SizedBox(
+            width: 260,
+            child: TextField(
+              controller: entry.descriptionController,
+              textCapitalization: TextCapitalization.sentences,
+              decoration: InputDecoration(
+                hintText: AppLocalizations.of(
+                  context,
+                ).recording_descriptionHint,
+                errorText: descriptionErrorText(
+                  AppLocalizations.of(context),
+                  entry,
+                  hasError,
+                ),
+                errorMaxLines: 2,
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: SpacingScale.s8,
+                  vertical: SpacingScale.s8,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(RadiusScale.r8),
+                  borderSide: BorderSide(
+                    color: colors.border.withValues(alpha: 0.5),
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(RadiusScale.r8),
+                  borderSide: BorderSide(
+                    color: colors.border.withValues(alpha: 0.5),
+                  ),
+                ),
+              ),
+              style: theme.textTheme.bodySmall,
             ),
           ),
         ),
@@ -296,7 +343,7 @@ class FileMetadataEditor extends StatelessWidget {
                 size: 12,
                 color: colors.foreground.withValues(alpha: 0.5),
               ),
-              const SizedBox(width: 4),
+              const SizedBox(width: SpacingScale.s4),
               Text(
                 formatDurationHMS(entry.durationSeconds),
                 style: theme.textTheme.labelSmall?.copyWith(
@@ -391,13 +438,18 @@ class FileMetadataEditor extends StatelessWidget {
       child: SafeArea(
         top: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
+          padding: const EdgeInsets.fromLTRB(
+            SpacingScale.s16,
+            SpacingScale.s8,
+            SpacingScale.s16,
+            SpacingScale.s12,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               if (showCompressToggle)
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
+                  padding: const EdgeInsets.only(bottom: SpacingScale.s4),
                   child: SwitchListTile.adaptive(
                     dense: true,
                     contentPadding: EdgeInsets.zero,
@@ -421,14 +473,14 @@ class FileMetadataEditor extends StatelessWidget {
                   backgroundColor: colors.border.withValues(alpha: 0.2),
                   valueColor: AlwaysStoppedAnimation(colors.success),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: SpacingScale.s8),
                 Text(
                   '$saveProgress / ${entries.length}',
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: colors.foreground.withValues(alpha: 0.6),
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: SpacingScale.s8),
               ],
               if (isSaving && currentFileBytesTotal > 0) ...[
                 LinearProgressIndicator(
@@ -439,14 +491,14 @@ class FileMetadataEditor extends StatelessWidget {
                   backgroundColor: colors.border.withValues(alpha: 0.2),
                   valueColor: AlwaysStoppedAnimation(colors.accent),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: SpacingScale.s8),
                 Text(
                   '${formatFileSize(currentFileBytesSent)} / ${formatFileSize(currentFileBytesTotal)}',
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: colors.foreground.withValues(alpha: 0.6),
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: SpacingScale.s8),
               ],
               Row(
                 children: [
@@ -456,25 +508,25 @@ class FileMetadataEditor extends StatelessWidget {
                       child: Text(l10n.common_cancel),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: SpacingScale.s12),
                   Expanded(
                     flex: 2,
                     child: FilledButton.icon(
                       onPressed: isSaving ? null : onSave,
                       icon: isSaving
                           ? const SizedBox(
-                              width: 16,
-                              height: 16,
+                              width: SpacingScale.s16,
+                              height: SpacingScale.s16,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                color: Colors.white,
+                                color: AppColors.white,
                               ),
                             )
                           : const Icon(LucideIcons.download, size: 16),
                       label: Text(l10n.import_importNFiles(entries.length)),
                       style: FilledButton.styleFrom(
                         backgroundColor: colors.success,
-                        foregroundColor: Colors.white,
+                        foregroundColor: AppColors.white,
                       ),
                     ),
                   ),

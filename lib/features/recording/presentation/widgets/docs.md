@@ -7,9 +7,12 @@ Path: @/lib/features/recording/presentation/widgets
 - Shared widgets used by the recording feature screens: dialogs (move
   category, classify, replace audio, edit details), sections of the
   detail screen (status, info grid, storyteller, quick actions,
-  about, upload progress), recording flow widgets (segment cards,
-  waveforms, finalizing overlays, recording step), the list card, and
-  the hero player + playback controls.
+  about, upload progress), the guided ficha-completion overlay/pill/sheet
+  (`CompleteFichaOverlay`/`CompleteFichaPill`/`CompleteFichaSheet`, ENG-374),
+  recording flow widgets
+  (segment cards, waveforms, finalizing overlays, recording step), the list
+  card and the pending-web-upload card, and the hero player + playback
+  controls.
 - These widgets are leaf consumers: they `ref.watch` notifiers and
   data-layer providers but do not own long-lived resources. Anything
   that must survive a widget rebuild (the active `AudioPlayer`, the
@@ -30,8 +33,11 @@ Path: @/lib/features/recording/presentation/widgets
   (replace, classify, move, etc.) live on
   [../recording_detail_screen.dart](../recording_detail_screen.dart);
   the widgets surface user intent via callbacks.
-- Audio playback widgets read the `AudioPlayer` off
-  `recordingPlayerProvider(recordingId).notifier.player` (see
+- Audio playback widgets read the `AudioPlayer` by calling
+  `recordingPlayerProvider(recordingId).notifier.audioPlayer()` — a
+  method, not a field, because `riverpod_lint`'s
+  `avoid_public_notifier_properties` (a blocking gate since ENG-158)
+  bans public notifier fields/getters (see
   [../notifiers/docs.md](../notifiers/docs.md)). The widgets never
   construct an `AudioPlayer` themselves — that is the notifier's
   responsibility.
@@ -52,8 +58,9 @@ Path: @/lib/features/recording/presentation/widgets
   recreate it.
 - `RecordingPlayerControls` renders the play/pause button, slider,
   position label, and duration label. It reads the long-lived
-  `AudioPlayer` off the notifier and wires the slider's `onChanged` to
-  `notifier.seek`; the play/pause button calls `notifier.togglePlay`.
+  `AudioPlayer` via `notifier.audioPlayer()` and wires the slider's
+  `onChanged` to `notifier.seek`; the play/pause button calls
+  `notifier.togglePlay`.
   The space-bar shortcut is provided by `PlaybackKeyHandler`, which
   is web-only.
 - The taxonomy-edit dialogs (classify, move category, secondary
@@ -65,14 +72,273 @@ Path: @/lib/features/recording/presentation/widgets
   waveform, finalizing overlay, confirmation step) consume
   `recordingSessionNotifierProvider` and visualize the segmented
   recorder's progress; they call back into the notifier for transport
-  actions.
+  actions. `ConfirmationStep` is the only widget that triggers persisting a
+  freshly captured `local_recording` row, but it does not build the Drift
+  companion itself: both its save paths (`_save` native, `_saveWebDirect`
+  web-direct) construct a `LocalRecordingEntity` and pass it to
+  `LocalRecordingRepository.saveRecording`, and the data layer maps that entity
+  to the companion (ENG-192, ENG-201 — see
+  [../../data/repositories/docs.md](../../data/repositories/docs.md)). It is
+  reused by both the normal recording flow and crash recovery via
+  [../recovery_confirm_screen.dart](../recovery_confirm_screen.dart).
+- A description is mandatory to save (ENG-354). The rule lives in
+  `isDescriptionSufficient` /
+  [../../../../shared/utils/recording_description.dart](../../../../shared/utils/recording_description.dart)
+  and is measured in extended grapheme clusters, so no writing system pays more
+  for the same amount of text. Two widgets gate on it, and both call that one
+  predicate rather than re-implementing the comparison:
+  `ConfirmationStep._save` (the sole route into `_saveWebDirect`, so one guard
+  covers the native and the web-direct paths alike) and
+  `_EditRecordingDetailsSheetState._onSave`. Both surface the failure inline —
+  `errorText` on the description field, cleared as the user types — and neither
+  disables its Save button, matching how the sheet already treats a missing
+  title. The widget gates are the only *save-time* enforcement: recordings saved
+  before ENG-354 are grandfathered in the database, nothing migrates, and the
+  Drift column stays nullable. They are not grandfathered on the wire — the API
+  requires the description on create, so the sync engine pre-flights the same
+  predicate and parks such a row in `uploadStatus='failed_description'` until the
+  edit sheet fixes it (see [/lib/features/sync/docs.md](../../../sync/docs.md)).
+- The file-import surfaces gate on the same predicate through
+  [../file_import_validation.dart](../file_import_validation.dart):
+  `isImportEntryValid` folds the description rule in beside genre / register /
+  subcategory, and `descriptionErrorText` renders the one message both layouts
+  show. `FileMetadataCard` (narrow) and the `FileMetadataEditor` data table
+  (wide) each hang it off the description field's `errorText`, gated on the
+  same `hasError` flag the classification fields already use — so the message
+  appears when the user presses save. It then clears **while the user types**,
+  matching the other two surfaces: neither description field has an `onChanged`
+  in either layout, so `_FileImportScreenState` attaches a listener to each
+  entry's `descriptionController` when the entry is created and rebuilds from
+  there (`_onDescriptionChanged`). The rebuild is what re-evaluates
+  `descriptionErrorText`; the row's `hasError` flag itself is only dropped once
+  `_clearErrorIfResolved` finds the *whole* entry valid, exactly as the
+  genre / subcategory / register / bulk handlers do — so a fixed description
+  can clear its own message while the row stays flagged for a missing genre.
+  `_onSavePressed` also clears every flag on its success branch, so nothing
+  stays marked red through a save that was allowed to proceed. The wide
+  table gained a description column with ENG-354; before that it had no
+  description input at all, which would have left the gate unsatisfiable on a
+  desktop-width screen.
 - List-side widgets (recording card, filter chips, filter bar, filter
   sheet) consume `recordingsListNotifierProvider` and the
   genre/project notifiers; they emit user intent back to
-  `recordings_list_screen.dart`.
+  `recordings_list_screen.dart`. `RecordingCard` takes a
+  `LocalRecordingEntity` (ENG-196), reading its classification via the
+  entity's `isUnclassified` / `hasSecondary` extension (see
+  [../../domain/docs.md](../../domain/docs.md)); it no longer touches Drift
+  or the row-level classification extension.
+- `ActiveFilterChips` (`active_filter_chips.dart`) renders one chip per active
+  filter on `RecordingsListState`, each removable back through the matching
+  notifier setter. Its review-flag chip (ENG-381) is the one chip whose
+  presence means the list is server-filtered rather than sieved from the
+  in-memory page — removing it calls `setReviewFlagFilter(null)`, which
+  (see [../notifiers/docs.md](../notifiers/docs.md)) re-fetches from the
+  server rather than just re-computing `filteredRecordings` locally. Its label
+  comes from the shared `pendencyLabel` in
+  [../pendency_label.dart](../pendency_label.dart), not a local switch: the
+  project settings breakdown names the same three kinds, and the two copies
+  would drift. That helper sits in `presentation/`, not next to the
+  `PendencyKind` enum it switches on, because a translated string is not
+  domain knowledge — see [../../domain/docs.md](../../domain/docs.md).
+- `RecordingsFilterSheet` (`recordings_filter_sheet.dart`) must carry every
+  filter `RecordingsListState.activeFilterCount` counts, because that count is
+  the badge on the sheet's own button. It shipped without the pendency one:
+  the badge said "1", the sheet showed nothing selected, and Reset + Apply left
+  the filter standing — only the chip on the list could remove it (ENG-383).
+  The sheet mirrors the notifier's filters into local fields in `initState` and
+  writes them back on Apply, so Reset is a local clear that only takes effect
+  through Apply. Apply calls `setReviewFlagFilter(..., refresh: false)` before
+  the storyteller and user setters: all three are server-side, and those two
+  re-fetch, so the flag is in state by the time the request goes out and one
+  Apply still costs the fetches it already did. Its chips iterate
+  `PendencyKind.values` and label them with the shared `pendencyLabel`, the
+  same helper `ActiveFilterChips` uses.
+- **The subcategory is carried without a control of its own (ENG-383).** It is
+  counted by `activeFilterCount` too, and it is reachable: the genre detail
+  screen navigates to `/recordings?genreId=…&subcategoryId=…`. The sheet mirrors
+  it into a field like every other filter, Reset clears it, and Apply writes it
+  — but it gets no chips, because a subcategory only means something under the
+  genre it arrived with. Picking a *different* genre in the sheet drops it, for
+  the same reason: kept across a genre change it would narrow the list to
+  nothing while the badge counted it.
+- **Two sections in that sheet hold chips that read identically, on purpose.**
+  `filter_unclassified` (status) and `recording_pendencyClassification`
+  (pendency) are word-for-word the same string in ar, es, id, ko, sw, tpi and
+  zh — "Sin clasificar" twice in Spanish — and the description pair overlaps in
+  meaning everywhere. Both stay: the status filter sieves the recordings already
+  in memory and therefore **works offline**, which is how this app is used in
+  the field, while the pendency filter is a question only the server can answer.
+  What distinguishes them is the section, so the section is what the tree and
+  the copy lean on. `FilterSection` (same file, public so tests can scope a
+  finder to one section) groups a header, an optional supporting line and the
+  controls into a real subtree instead of leaving them as siblings; the two
+  colliding sections name where their answer comes from
+  (`filters_sectionStatus` → "Status on this device",
+  `filters_sectionPendency` → "What the server says is missing") and each
+  carries a line saying what it costs ("Works offline" against "Needs a
+  connection"). The copy deliberately describes the effect and never the
+  mechanism — no "client-side" on screen. Covered in Spanish by
+  [/test/features/recording/presentation/widgets/recordings_filter_sheet_test.dart](../../../../../test/features/recording/presentation/widgets/recordings_filter_sheet_test.dart).
+- `RecordingCard` (ENG-374, "card V3") was redesigned around one question —
+  "which recordings still need me?" — which cost the duration chip (and the
+  `formattedDuration` constructor param `recordings_list_screen.dart` used to
+  compute) and the standalone "unclassified" chip, and bought a description
+  line plus a pendency chip. The upload-status chip lost its text to make
+  room: `_statusIcon` still renders at 13px, but that glyph now sits inside a
+  `SizedBox.square(dimension: 24)` so its `Tooltip` has a touchable hit
+  target, and `_statusLabel` still exists — it feeds that `Tooltip` and the
+  icon's `semanticLabel` instead of painted text, so the state is not lost,
+  only moved off-screen, matching the design's requirement that colour never
+  be the only signal for status. `_visibleDescription` reads
+  `recording.description`, trims it, and only then applies `blankToNull` —
+  `blankToNull` alone disagreed with `isDescriptionSufficient` about whether
+  a whitespace-only string counts as present, and the card used to draw
+  quotation marks around three spaces. When the trimmed description falls
+  short of `isDescriptionSufficient`
+  ([/lib/shared/utils/recording_description.dart](/lib/shared/utils/recording_description.dart)),
+  `RecordingDescriptionLine` wraps it in curly quotes (`“ ”`, not ASCII `"`,
+  to avoid a description that already contains a straight quote rendering as
+  `""like this""`) rather than hiding it. The quotes are not localized per
+  script because neither `intl` nor `flutter_localizations` exposes CLDR's
+  quotation-mark data; that reasoning is a comment on the widget itself.
+  `RecordingDescriptionLine` is public (not private) so a test can assert the
+  line's absence by type instead of hunting for stray quotation marks — the
+  same reasoning as `PendingWebUploadCard`'s split, below. `_FooterRow`'s
+  `_pendencyLabel` calls `recordingPendencies`
+  ([../../domain/entities/review_pendency.dart](../../domain/entities/review_pendency.dart)),
+  the same function `CompleteFichaPill`/`CompleteFichaSheet` read (see
+  below), and shows at most one chip: a single open field is named, two or
+  more collapse into `recording_pendencyCount(n)`. A title-less recording
+  falls back to `formatUntitledRecordingTime`
+  ([/lib/shared/utils/format.dart](/lib/shared/utils/format.dart)), in
+  italics, instead of a generic "Untitled" label — the fallback carries
+  seconds because untitled recordings tend to arrive in bursts from the same
+  session, and minute precision would not tell siblings apart. It is a clock
+  time only: ENG-382 dropped the weekday the function used to prefix, because
+  the date column on the same row already places the recording in time. The
+  function kept `DateFormat.jms` (not `Hms`) through the rename — the clock
+  convention belongs to the locale, and forcing 24 hours is the defect PR #174
+  fixed for en/ar/hi/ko. `build()` was
+  split entirely into row-level widget classes — `_TitleRow`, `_BreadcrumbRow`,
+  `_FooterRow`, `RecordingDescriptionLine`, and a few more — rather than
+  private build-returning methods, a convention local to this file; each
+  resolves its own `l10n`/theme off its own `BuildContext` instead of taking
+  them as parameters. The split happened because the redesign pushed the file
+  past the `dart_code_linter` SLOC gate's ceiling of 300 lines — before the
+  description line was even added. `_statusAccent` (not `_statusIconColor`)
+  returns `Color?`, null for the local (not-yet-uploaded) state that owns no
+  colour of its own; each caller picks its own fallback instead of the two
+  comparing colour values to infer which state produced them — the rail falls
+  back to `colors.border`, the icon to `colors.secondary`. The chip's
+  background is the themed `colors.chipSurface`
+  (ENG-374; see [/lib/core/theme/docs.md](/lib/core/theme/docs.md)). ENG-382
+  weighed retiring that token and kept it: it is not interchangeable with
+  `surfaceAlt`, which coincides in dark (`0xFF302D22`) but differs in light
+  (`0xFFF1EEDE` against `0xFFEDE9D5`), so the field is carrying a real
+  distinction rather than costing one for nothing. ENG-382 did put
+  the duration back in `_FooterRow`, between the chip and the chevron, which
+  amends the ENG-374 trade rule that had banned it — the description keeps the
+  room it won, and the duration is the element ranked below it. It uses
+  `formatDurationHMS`, not `formatDurationCompact`: the compact form is
+  hours-and-minutes only and renders both a three-second misfire and a real
+  forty-minute take as `0m`, which is the exact distinction the amendment
+  exists to restore. Its `semanticsLabel` is
+  `formatDurationCompactWithSeconds`, because `00:03` spoken aloud is
+  ambiguous between mm:ss and hh:mm while `3s` names its units.
+  That ranking is enforced by measurement, not by the flex factors: a `Row`
+  sizes its non-flex children at their intrinsic width **first** and hands
+  only the remainder to the `Expanded` one, so leaving the duration in the row
+  unconditionally made the chip — not the duration — pay for every pixel of a
+  shortfall (at 390dp and 2.0x the chip's paragraph was cut to 69.5px). So
+  `_FooterRow` takes the width the card measured for it, adds up
+  `_PendencyChip.widthFor` and the duration's own `_textWidth`, and drops the
+  duration from the row entirely when the two do not both fit. Dropping it
+  whole rather than ellipsizing it is deliberate: `1:0…` reads as a wrong
+  duration, an absent one reads as nothing. The width is measured by a
+  `LayoutBuilder` at the very top of `RecordingCard.build` rather than around
+  the footer, because the rail's `IntrinsicHeight` asks its subtree for
+  intrinsic dimensions and `LayoutBuilder` throws on that query.
+  `recording_card_text_scale_test.dart` pins the ranking: it pumps the card
+  inside the 16dp padding the list really applies, at 320dp as well as 390dp,
+  and asserts geometry — the chip reaches the chevron once the duration
+  yields, and wherever the duration does render the chip's paragraph is
+  uncut. (`find.text` is blind to all of this: it matches `Text.data`
+  whatever the layout did with it.) One overflow at 320dp above 1.0x is
+  neither the footer's nor ENG-382's — `_TitleRow`'s date column overflows
+  there on `dev` too, by the same 26px — so that assertion is scoped to the
+  footer's own rows until the title is fixed on its own issue.
+- `CompleteFichaOverlay`/`CompleteFichaPill`/`CompleteFichaSheet`
+  ([complete_ficha_overlay.dart](complete_ficha_overlay.dart) /
+  [complete_ficha_pill.dart](complete_ficha_pill.dart) /
+  [complete_ficha_sheet.dart](complete_ficha_sheet.dart), ENG-374) are the
+  guided-completion widgets that replaced the detail screen's classify
+  banner: a floating pill showing how many `PendencyKind`s
+  ([../../domain/entities/review_pendency.dart](../../domain/entities/review_pendency.dart))
+  a recording still owes, and the bottom-sheet checklist it opens. All three are
+  presentational — they take the step list, the resolved set, and callbacks —
+  and own no providers; the orchestration (opening the sheet, recomputing
+  what is resolved, routing a tapped step to an editor) lives on
+  [../recording_detail_screen.dart](../recording_detail_screen.dart), see
+  [../docs.md](../docs.md). Two layout rules are load-bearing and easy to undo
+  by accident. The overlay exists as a separate widget so the pill's placement
+  can be tested without the screen (which cannot be pumped loaded), and it is
+  where the safe-area offset, the wide-layout offset above the docked player
+  strip, and the width constraint on the pill all live. The sheet scrolls its
+  step list inside a `Flexible`/`SingleChildScrollView` and keeps the CTA
+  outside it: at 2.0x the steps alone outgrow a phone screen, and a CTA that
+  scrolled with them ended up below the bottom edge with nothing left to bring
+  it back. Its subtitle counts the steps that are still *open*, not the length
+  of the list, and disappears when that count reaches zero.
+- `PendingWebUploadCard` (ENG-196) is the presentational, stateless card for
+  one resumable web upload, rendered once per item by
+  `PendingWebUploadsBanner` ([./pending_web_uploads_banner.dart](pending_web_uploads_banner.dart)).
+  It takes a `LocalRecordingEntity` plus an `isResuming` flag and
+  `onResume` / `onDiscard` callbacks; it owns no state and no providers.
+  It was split out of the banner's inline per-item body precisely because
+  the banner is gated behind `kIsWeb` and so never renders under the CI
+  widget tests (where `kIsWeb` is always false) — extracting the card lets
+  the card's layout be exercised directly on the VM while the banner keeps
+  the platform gate, the repository read, and the resume/discard
+  orchestration.
+- `RecordingUploadBanners` (ENG-377) renders every banner that explains why a
+  recording is not on the server — title conflict, description gap, spent
+  retry budget, missing audio file, secondary-classification collision — in a
+  fixed order, each configured from the shared `RecordingActionBanner`. Split
+  out of `RecordingDetailScreen.build` for the same reason as
+  `PendingWebUploadCard` above: the loaded detail screen cannot be pumped in a
+  widget test, so the wiring was untestable while it lived there. It is
+  presentational — a `LocalRecordingEntity`, a `canEdit` flag and four
+  callbacks, no providers. `canEdit` disables the action but never hides the
+  banner: a viewer who cannot fix the problem should still be told what it is.
 
 ### Things to Know
 
+- **`RecordingCard`'s room is a trade, not free space (ENG-374, card V3).**
+  The description line only fits because the upload-status chip gave up its
+  visible text; the duration chip and the standalone "unclassified" chip are
+  simply gone. Reintroducing the duration chip, restoring text on the
+  status chip, or adding a second pendency chip will overflow the row
+  again. `recording_card_text_scale_test.dart` pins the fullest possible
+  card (long title, long description, a two-field pendency count, an
+  in-progress upload) at 1.0x/1.5x/2.0x in en and fr to catch that; the test
+  was checked against a real regression by briefly removing the breadcrumb's
+  `Flexible` while writing it.
+- **Every blocked-upload status must keep a distinct icon on
+  `RecordingCard`.** `_statusIcon` gives `failed_conflict` `LucideIcons.copy`,
+  `failed_description` `LucideIcons.fileText`, and (ENG-377)
+  `failed_exhausted` `LucideIcons.alertOctagon` and `failed_missing_file`
+  `LucideIcons.fileX`; the first two used to share `LucideIcons.alertCircle`,
+  which made the two states visually identical once the label moved from
+  painted text into the icon's tooltip/semantics — on this card the icon shape
+  is the only signal a sighted user gets for which of them blocked a recording.
+  `RecordingStatusSection`
+  ([recording_status_section.dart](recording_status_section.dart)) keeps
+  `failed_conflict` and `failed_description` on `LucideIcons.alertCircle`
+  deliberately, because there the icon sits next to its own text label and does
+  not need to carry the distinction alone — the two surfaces disagreeing on
+  iconography for those states is known, not a bug, and aligning them would be
+  a separate change. The ENG-377 pair matches across both surfaces only because
+  they were written once, not because the surfaces were reconciled.
 - **The hero player is not the owner of playback state.** The
   `AudioPlayer` lives in `RecordingPlayerNotifier` (an
   `AutoDisposeFamilyNotifier` keyed by recording id). The hero player
@@ -91,6 +357,27 @@ Path: @/lib/features/recording/presentation/widgets
   locally" invariant in one place — see
   [../docs.md](../docs.md) and
   [../../data/repositories/docs.md](../../data/repositories/docs.md).
+- **The detail-screen sections do not decide who may edit.** The
+  `canEdit` flag passed into `RecordingAboutSection`,
+  `RecordingQuickActions`, and `RecordingStorytellerSection` only toggles
+  control visibility; the actual role/ownership decision is the screen's
+  `_canEditRecording` getter delegating to the policy in
+  [../../domain/docs.md](../../domain/docs.md). A section showing its
+  edit buttons therefore implies the screen already granted edit rights.
+- **Cleaning-status presentation has one source of truth.**
+  `RecordingStatusSection`'s cleaning row no longer maps the status String
+  (none / needs_cleaning / cleaning / cleaned / failed) to its icon / color /
+  label itself; it calls `CleaningStatusStyle.forStatus` from
+  [/lib/shared/utils/cleaning_status_style.dart](/lib/shared/utils/cleaning_status_style.dart),
+  the same mapping consumed by
+  [/lib/shared/widgets/cleaning_status_badge.dart](/lib/shared/widgets/cleaning_status_badge.dart).
+  That object's `isFlagged` flag models the one behavioral divergence between
+  the two consumers: the badge hides non-flagged (none / unknown) statuses,
+  while the status section renders a neutral "not flagged" row for them. Colors
+  come from the resolved `AppColorSet` (`needs_cleaning` → `warning`,
+  `cleaning` → `info`, `cleaned` → `success`, `failed` → `error`), so both
+  surfaces are theme-aware in dark mode. Three private cleaning-mapping helpers
+  on the status section were deleted in favor of this shared mapping.
 - **Waveform widgets are isolated from the player.**
   `scrolling_waveform.dart` and `trim_waveform.dart` consume the
   `WaveformExtractor` service from
@@ -100,5 +387,96 @@ Path: @/lib/features/recording/presentation/widgets
   returns `child` as-is. The Focus + space-bar shortcut is meant to
   match desktop-browser audio player conventions; mobile does not get
   it.
+- **"Returned from background" is detected by a real-background flag,
+  not the previous lifecycle state.** `recording_step.dart` re-activates
+  the capture audio session on resume (otherwise the mic comes back
+  dead on Android 14+). The framework synthesizes intermediate states,
+  so the return path is always `paused → hidden → inactive → resumed` —
+  the state immediately before `resumed` is *always* `inactive`, never
+  `paused`. The widget therefore latches a flag whenever it sees
+  `hidden`/`paused` and only acts on the following `resumed` (and only
+  while `isRecording`), calling
+  `recordingSessionNotifierProvider.notifier.reactivateAudioSession()`
+  and showing the "continued in background" banner for 3s. A bare
+  `inactive` blip (e.g. opening iOS control center, which never reaches
+  background) leaves the flag unset, so it neither re-activates nor
+  shows the banner — this avoids the false positive a `previous ==
+  inactive` check would produce.
+- **This widget's resume path is distinct from OS-interruption
+  recovery.** The foreground/background re-activation above is owned by
+  the widget and the session notifier. Re-activation after an OS audio
+  interruption (phone calls, another app grabbing audio) is a separate
+  path inside
+  [../../data/services/segmented_recorder.dart](../../data/services/segmented_recorder.dart),
+  which subscribes to the platform `interruptionEventStream` and
+  re-activates the session itself.
+- **`ConfirmationStep` cancels its own preview-player stream subscriptions
+  on dispose (ENG-140 F16).** Its inline `AudioPlayer` preview subscribes to
+  `playerStateStream` / `positionStream` / `durationStream`; those handles are
+  stored and `cancel()`-ed in `dispose()` before `_player.dispose()`. just_audio
+  0.9.42 does not close those streams when the player is disposed, so dropping
+  the subscriptions is required to stop their `setState` callbacks from firing
+  on an unmounted widget. (This widget owns a short-lived preview player only;
+  the long-lived detail-screen player still lives in `RecordingPlayerNotifier`.)
+- **The Quick Recording "ready" state is responsive to system text scale,
+  not text-clamped (ENG-171).** `recording_step.dart`'s not-recording layout
+  must survive a large OS font (`MediaQuery` `textScaler`) without overflowing
+  or hiding controls — a user-reported regression where the fixed-size,
+  non-wrapping layout broke under enlarged fonts. The stance is responsive
+  layout, deliberately *not* a per-screen low text-scale clamp (a low clamp was
+  rejected because it hurts low-vision users; only the app-wide *high* ceiling
+  in [/lib/main.dart](/lib/main.dart) applies — see
+  [/lib/core/theme/docs.md](/lib/core/theme/docs.md)). The mechanism is a few
+  reflowing primitives instead of fixed sizes: the sensitivity chips scroll
+  horizontally (label/icon stay pinned), the input-source row wraps its
+  label + device name to a second line instead of truncating it, and both the
+  fixed-size record-ring stack and the elapsed timer sit in a `FittedBox` that
+  scales them down only when space is tight (base size unchanged at 1×). The
+  "tap to record" hint is the last child *inside* the centered ready-content
+  `Column` rather than a fixed sibling, so Column ordering guarantees it cannot
+  overlap the record button under scale. The timer block is shared with the
+  active-recording state, so its `FittedBox` benefits both. This is the first
+  widget slice of the
+  staged app-wide a11y program (ENG-177); regression is pinned by a widget test
+  that pumps this state at 1.0×/1.3×/2.0× on a realistic phone viewport via the
+  shared `pumpAtTextScale` / `expectNoOverflow` harness in
+  [/test/support/text_scale.dart](/test/support/text_scale.dart).
+- **The rest of the recording feature is text-scale resilient (ENG-179, Wave 2
+  of ENG-177).** Continuing the ENG-171 stance (responsive layout, never a
+  per-screen low clamp), the remaining widgets were audited at 1.0×/1.3×/2.0×
+  with the shared `pumpAtTextScale` / `expectNoOverflow` harness. Only five
+  needed code: `ConfirmationStep` wraps its whole body in a scroll-when-overflow
+  shell (`LayoutBuilder` → `SingleChildScrollView` →
+  `ConstrainedBox(minHeight: maxHeight)`) so the previously-fixed bottom section
+  (title, storyteller picker, description, action buttons) scrolls instead of
+  overflowing the column — `IntrinsicHeight` is deliberately avoided because the
+  waveform's `LayoutBuilder` cannot report intrinsics; `ActionTile`
+  (`recording_quick_actions.dart`) drops its fixed `height: 76` for a
+  `ConstrainedBox(minHeight: 76)` + `Column(mainAxisSize: min)` so labels grow
+  downward (width stays 80, parent `Wrap` reflows); the header `Row`s of
+  `segment_taxonomy_sheet.dart` and `input_device_picker_sheet.dart` wrap their
+  title `Text` in `Expanded` to kill a horizontal overflow at scale; and
+  `recording_hero_player.dart`'s error box swaps its fixed `height: 64` for a
+  `ConstrainedBox(minHeight: 64)` so a long localized error message (the worst
+  case is the `fileNotFound` string, longer in pt than en) can grow a second
+  line instead of clipping — pinned by tests at both error branches in en + pt.
+  The audit intentionally left several targets unchanged after the harness
+  proved them safe: the confirmation **waveform `Stack`** is pure graphics (no
+  text → `TextScaler` cannot overflow it, so its fixed `height: 100` stays), the
+  `edit_recording_details_sheet.dart` save button and the
+  `filters_icon_button.dart` count badge (a `Stack(clipBehavior: none)`) do not
+  overflow, and `active_filter_chips.dart` already ellipsizes. Those keep a
+  text-scale regression test but no production change.
+- **`ConfirmationStep` is parameterized for the recovery reuse (ENG-80).**
+  Two optional params let the recovery screen host the same widget
+  without duplicating the save logic: `onSaved` runs in place of the
+  default `go('/home')` after the row is written (recovery uses it to
+  mark the session recovered and route to `/recordings`), and
+  `showReRecord` hides the "record again" button (recovery has no live
+  segments to re-capture). Because the save row is created here, the
+  recovery flow must reach this screen — routing straight to the list
+  after finalize was the original ENG-80 data-loss bug. See
+  [../notifiers/docs.md](../notifiers/docs.md) for the deferred-resolution
+  invariant.
 
 Created and maintained by Nori.

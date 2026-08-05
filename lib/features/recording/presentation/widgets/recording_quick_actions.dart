@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../../l10n/app_localizations.dart';
-import '../../../../core/database/app_database.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
+import '../../domain/entities/local_recording_entity.dart';
 
 class RecordingQuickActions extends StatelessWidget {
   const RecordingQuickActions({
@@ -19,7 +20,7 @@ class RecordingQuickActions extends StatelessWidget {
     this.isUnclassified = false,
   });
 
-  final LocalRecording recording;
+  final LocalRecordingEntity recording;
   final AppColorSet colors;
   final ThemeData theme;
   final bool canEdit;
@@ -45,10 +46,10 @@ class RecordingQuickActions extends StatelessWidget {
             fontWeight: FontWeight.w700,
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: SpacingScale.s12),
         Wrap(
-          spacing: 10,
-          runSpacing: 10,
+          spacing: SpacingScale.s8,
+          runSpacing: SpacingScale.s8,
           children: [
             ActionTile(
               icon: LucideIcons.scissors,
@@ -65,7 +66,7 @@ class RecordingQuickActions extends StatelessWidget {
               label: cleaningIsActive
                   ? l10n.action_clearFlag
                   : l10n.action_flagClean,
-              color: cleaningIsActive ? colors.success : Colors.amber.shade700,
+              color: cleaningIsActive ? colors.success : colors.warning,
               colors: colors,
               theme: theme,
               onTap: onToggleCleaning,
@@ -76,7 +77,7 @@ class RecordingQuickActions extends StatelessWidget {
                     ? LucideIcons.tag
                     : LucideIcons.folderInput,
                 label: isUnclassified ? l10n.classify_action : l10n.action_move,
-                color: isUnclassified ? Colors.amber.shade700 : colors.info,
+                color: isUnclassified ? colors.warning : colors.info,
                 colors: colors,
                 theme: theme,
                 onTap: onMoveCategory,
@@ -119,27 +120,30 @@ class ActionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: color.withValues(alpha: 0.08),
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(RadiusScale.r16),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(RadiusScale.r16),
         child: SizedBox(
           width: 80,
-          height: 76,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 22, color: color),
-              const SizedBox(height: 6),
-              Text(
-                label,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.w600,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 76),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, size: 22, color: color),
+                const SizedBox(height: SpacingScale.s8),
+                Text(
+                  label,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: color,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-                textAlign: TextAlign.center,
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

@@ -1,12 +1,15 @@
-/// Tests for SegmentTaxonomySheet primary-vs-secondary collision validation.
+/// Tests for SegmentTaxonomySheet's collision prevention (ENG-72).
 ///
 /// The trim editor opens this sheet to let the user override a segment's
 /// primary classification (genre, subcategory, register). Domain invariant:
-/// the chosen primary cannot equal the parent recording's already-set
-/// secondary classification of the same kind, because the server enforces
-/// `secondary != primary` and would reject the upload with a 422. The sheet
-/// must block save when the user picks a colliding value and show an inline
-/// explanation.
+/// the segment's *effective* primary triple — its overrides falling back to
+/// the parent's values — cannot be identical to the secondary triple it
+/// inherits from the parent, because the server enforces
+/// `secondary != primary` and would reject the upload with a 422. Sharing one
+/// or two fields with the parent's secondary is legitimate.
+///
+/// The sheet prevents rather than validates: it hides the one option that
+/// would complete an identical triple, so save is always available.
 library;
 
 import 'package:flutter/material.dart';
@@ -48,6 +51,8 @@ final _genres = [
 
 Widget _harness({
   required String parentGenreId,
+  String? parentSubcategoryId,
+  String? parentRegisterId,
   String? parentSecondaryGenreId,
   String? parentSecondarySubcategoryId,
   String? parentSecondaryRegisterId,
@@ -64,46 +69,37 @@ Widget _harness({
     child: MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: Scaffold(
-        body: SegmentTaxonomySheet(
-          parentGenreId: parentGenreId,
-          parentSecondaryGenreId: parentSecondaryGenreId,
-          parentSecondarySubcategoryId: parentSecondarySubcategoryId,
-          parentSecondaryRegisterId: parentSecondaryRegisterId,
-          initialGenreId: initialGenreId,
-          initialSubcategoryId: initialSubcategoryId,
-          initialRegisterId: initialRegisterId,
+      locale: const Locale('en'),
+      home: Builder(
+        builder: (context) => Scaffold(
+          body: SegmentTaxonomySheet(
+            parentGenreId: parentGenreId,
+            parentSubcategoryId: parentSubcategoryId,
+            parentRegisterId: parentRegisterId,
+            parentSecondaryGenreId: parentSecondaryGenreId,
+            parentSecondarySubcategoryId: parentSecondarySubcategoryId,
+            parentSecondaryRegisterId: parentSecondaryRegisterId,
+            initialGenreId: initialGenreId,
+            initialSubcategoryId: initialSubcategoryId,
+            initialRegisterId: initialRegisterId,
+          ),
         ),
       ),
     ),
   );
 }
 
-Finder _saveButtonFinder() => find.widgetWithText(FilledButton, 'Save');
-
-bool _isSaveEnabled(WidgetTester tester) {
-  final button = tester.widget<FilledButton>(_saveButtonFinder());
-  return button.onPressed != null;
+Future<void> _tapOption(WidgetTester tester, String label) async {
+  await tester.ensureVisible(find.text(label));
+  await tester.pumpAndSettle();
+  await tester.tap(find.text(label));
+  await tester.pumpAndSettle();
 }
 
 void main() {
   testWidgets(
-    'save is enabled when the user has not changed anything from the inherit defaults',
-    (tester) async {
-      await tester.pumpWidget(
-        _harness(
-          parentGenreId: 'g-primary',
-          parentSecondaryGenreId: 'g-secondary',
-        ),
-      );
-      await tester.pumpAndSettle();
-      expect(_isSaveEnabled(tester), isTrue);
-    },
-  );
-
-  testWidgets(
-    'save is disabled when the user selects a primary genre that equals the '
-    'parent secondary genre',
+    'the parent secondary genre is not offered when the segment already '
+    'matches the secondary subcategory and register',
     (tester) async {
       await tester.pumpWidget(
         _harness(
@@ -113,58 +109,61 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Song'));
-      await tester.pumpAndSettle();
-
-      expect(_isSaveEnabled(tester), isFalse);
+      expect(find.text('Song'), findsNothing);
+      expect(find.text('Folktale'), findsOneWidget);
     },
   );
 
   testWidgets(
-    'shows an inline error message when the selected primary genre collides '
-    'with the parent secondary genre',
+    'the parent secondary genre stays offered while the segment subcategory '
+    'differs from the secondary subcategory',
     (tester) async {
       await tester.pumpWidget(
         _harness(
           parentGenreId: 'g-primary',
+          parentSubcategoryId: 'sub-A',
           parentSecondaryGenreId: 'g-secondary',
+          parentSecondarySubcategoryId: 'sub-S1',
         ),
       );
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Song'));
-      await tester.pumpAndSettle();
-
-      expect(
-        find.textContaining('secondary', findRichText: true),
-        findsAtLeastNWidgets(1),
-      );
+      expect(find.text('Song'), findsOneWidget);
     },
   );
 
-  testWidgets('save re-enables after the user picks a non-colliding genre', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      _harness(
-        parentGenreId: 'g-primary',
-        parentSecondaryGenreId: 'g-secondary',
-      ),
-    );
-    await tester.pumpAndSettle();
+  testWidgets(
+    'the parent secondary genre stays hidden under a subcategory override, '
+    'because picking a genre drops that override',
+    (tester) async {
+      // The parent's secondary differs from its primary only in the register,
+      // so the segment reaches the secondary triple by overriding the register.
+      await tester.pumpWidget(
+        _harness(
+          parentGenreId: 'g-primary',
+          parentSubcategoryId: 'sub-A',
+          parentRegisterId: 'formal',
+          parentSecondaryGenreId: 'g-primary',
+          parentSecondarySubcategoryId: 'sub-A',
+          parentSecondaryRegisterId: 'ceremonial',
+        ),
+      );
+      await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Song'));
-    await tester.pumpAndSettle();
-    expect(_isSaveEnabled(tester), isFalse);
+      // Overriding the subcategory frees the secondary register.
+      expect(find.text('Ceremonial'), findsNothing);
+      await _tapOption(tester, 'Trickster story');
+      await _tapOption(tester, 'Ceremonial');
 
-    await tester.tap(find.text('Folktale'));
-    await tester.pumpAndSettle();
-    expect(_isSaveEnabled(tester), isTrue);
-  });
+      // Picking Folktale would drop the subcategory override and land back on
+      // the inherited sub-A, completing the secondary triple.
+      expect(find.text('Folktale'), findsNothing);
+    },
+  );
 
   testWidgets(
-    'save is disabled when the selected primary subcategory equals the '
-    'parent secondary subcategory (under the same genre)',
+    'the parent secondary subcategory is not offered when the segment already '
+    'matches the secondary genre and register',
     (tester) async {
       await tester.pumpWidget(
         _harness(
@@ -175,44 +174,79 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Origin myth'));
-      await tester.pumpAndSettle();
-
-      expect(_isSaveEnabled(tester), isFalse);
+      expect(find.text('Origin myth'), findsNothing);
+      expect(find.text('Trickster story'), findsOneWidget);
     },
   );
 
   testWidgets(
-    'save is disabled when the selected register equals the parent secondary '
-    'register',
+    'the parent secondary register is not offered when the segment already '
+    'matches the secondary genre and subcategory',
     (tester) async {
       await tester.pumpWidget(
         _harness(
           parentGenreId: 'g-primary',
+          parentSecondaryGenreId: 'g-primary',
           parentSecondaryRegisterId: 'ceremonial',
         ),
       );
       await tester.pumpAndSettle();
 
-      await tester.ensureVisible(find.text('Ceremonial'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Ceremonial'));
-      await tester.pumpAndSettle();
-
-      expect(_isSaveEnabled(tester), isFalse);
+      expect(find.text('Ceremonial'), findsNothing);
+      expect(find.text('Intimate'), findsOneWidget);
     },
   );
 
   testWidgets(
-    'parent without any secondary classification: any primary selection is valid',
+    'the parent secondary register stays offered while the segment genre '
+    'differs from the secondary genre',
     (tester) async {
-      await tester.pumpWidget(_harness(parentGenreId: 'g-primary'));
+      await tester.pumpWidget(
+        _harness(
+          parentGenreId: 'g-primary',
+          parentSecondaryGenreId: 'g-secondary',
+          parentSecondaryRegisterId: 'ceremonial',
+        ),
+      );
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Song'));
-      await tester.pumpAndSettle();
-
-      expect(_isSaveEnabled(tester), isTrue);
+      expect(find.text('Ceremonial'), findsOneWidget);
     },
   );
+
+  testWidgets(
+    'a segment may take the parent secondary genre, which then hides only the '
+    'secondary subcategory (ENG-72)',
+    (tester) async {
+      await tester.pumpWidget(
+        _harness(
+          parentGenreId: 'g-primary',
+          parentSubcategoryId: 'sub-A',
+          parentSecondaryGenreId: 'g-secondary',
+          parentSecondarySubcategoryId: 'sub-S1',
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await _tapOption(tester, 'Song');
+
+      expect(find.text('Lullaby'), findsNothing);
+      expect(find.text('Work song'), findsOneWidget);
+    },
+  );
+
+  testWidgets('a parent without any secondary classification hides nothing', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_harness(parentGenreId: 'g-primary'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Folktale'), findsOneWidget);
+    expect(find.text('Song'), findsOneWidget);
+
+    await _tapOption(tester, 'Song');
+
+    expect(find.text('Lullaby'), findsOneWidget);
+    expect(find.text('Work song'), findsOneWidget);
+  });
 }

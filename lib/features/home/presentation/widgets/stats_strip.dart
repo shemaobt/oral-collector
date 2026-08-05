@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
-import '../../../../core/theme/app_colors.dart';
-import '../../../../shared/utils/format.dart';
 import '../../../../../l10n/app_localizations.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
+import '../../../../shared/utils/format.dart';
 
 class StatsStrip extends StatelessWidget {
   const StatsStrip({
@@ -58,12 +59,17 @@ class StatsStrip extends StatelessWidget {
           value: '$unclassifiedCount',
           label: l10n.filter_unclassified,
           icon: LucideIcons.tag,
-          color: Colors.amber.shade700,
+          color: colors.warning,
         ),
     ];
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      padding: const EdgeInsets.fromLTRB(
+        SpacingScale.s16,
+        SpacingScale.s16,
+        SpacingScale.s16,
+        0,
+      ),
       child: LayoutBuilder(
         builder: (context, constraints) {
           const spacing = 10.0;
@@ -118,12 +124,15 @@ class _StatTile extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
+      padding: const EdgeInsets.symmetric(
+        vertical: SpacingScale.s16,
+        horizontal: SpacingScale.s8,
+      ),
       decoration: BoxDecoration(
         color: isDark
             ? colors.foreground.withValues(alpha: 0.05)
             : colors.surfaceAlt,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(RadiusScale.r16),
         border: isDark
             ? null
             : Border.all(color: colors.border.withValues(alpha: 0.25)),
@@ -137,11 +146,11 @@ class _StatTile extends StatelessWidget {
             height: 28,
             decoration: BoxDecoration(
               color: data.color.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(RadiusScale.r8),
             ),
             child: Icon(data.icon, size: 16, color: data.color),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: SpacingScale.s8),
           FittedBox(
             fit: BoxFit.scaleDown,
             child: Text(
@@ -151,7 +160,6 @@ class _StatTile extends StatelessWidget {
                 fontWeight: FontWeight.w800,
                 color: data.color,
                 height: 1.1,
-                fontSize: 20,
               ),
             ),
           ),

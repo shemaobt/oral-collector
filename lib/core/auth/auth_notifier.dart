@@ -1,11 +1,13 @@
 import 'dart:convert';
 
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../../features/auth/domain/entities/user.dart';
 import '../../features/sync/data/providers.dart';
 import '../errors/api_exception.dart';
+import '../observability/error_reporter.dart';
 import '../providers/secure_storage_provider.dart';
 import 'auth_repository.dart';
 import 'auth_state.dart';
@@ -19,28 +21,47 @@ class AuthNotifier extends Notifier<AuthState> {
   static const _accessTokenKey = 'access_token';
   static const _refreshTokenKey = 'refresh_token';
   static const _cachedUserKey = 'cached_user';
+  static const _errSecDuplicateItem = -25299;
 
   FlutterSecureStorage get _storage => ref.read(secureStorageProvider);
   AuthRepository get _repo => ref.read(authRepositoryProvider);
+
+  Future<bool>? _inFlightRefresh;
 
   @override
   AuthState build() {
     return const AuthState();
   }
 
-  Future<void> tryAutoLogin() async {
+  /// Local-only session restore (token + cached user). Fast and never throws,
+  /// so the startup gate can await it before the router decides the first route
+  /// without a logged-out flash and without blocking on the network.
+  Future<void> restoreSession() async {
+    try {
+      final accessToken = await _storage.read(key: _accessTokenKey);
+      if (accessToken == null) return;
+
+      final cached = await _readCachedUser();
+      if (cached != null) {
+        state = state.copyWith(currentUser: cached, clearError: true);
+      }
+    } on Exception {
+      // Keychain read failure at boot → stay logged out; the router sends the
+      // user to login rather than wedging the splash.
+    }
+  }
+
+  /// Online half of auto-login: refreshes the cached user against the server.
+  /// Runs after [restoreSession] (and after the startup gate), so a slow or
+  /// offline getMe never delays first frame.
+  Future<void> refreshSessionIfOnline() async {
     final accessToken = await _storage.read(key: _accessTokenKey);
     if (accessToken == null) return;
-
-    final cached = await _readCachedUser();
-    if (cached != null) {
-      state = state.copyWith(currentUser: cached, clearError: true);
-    }
 
     final online = await ref.read(connectivityServiceProvider).isOnline;
     if (!online) return;
 
-    if (cached == null) {
+    if (state.currentUser == null) {
       state = state.copyWith(isLoading: true, clearError: true);
     }
 
@@ -49,14 +70,24 @@ class AuthNotifier extends Notifier<AuthState> {
       await _storeUser(user);
       state = state.copyWith(currentUser: user, isLoading: false);
     } on UnauthorizedException {
-      final refreshed = await _tryRefresh();
-      if (!refreshed) {
-        await _clearTokens();
-        state = const AuthState();
+      try {
+        final refreshed = await _tryRefresh();
+        if (!refreshed) {
+          await _clearTokens();
+          state = const AuthState();
+        }
+      } on Exception {
+        // Refresh transitório no boot: preserva a sessão em cache (offline-first).
+        state = state.copyWith(isLoading: false);
       }
     } on Exception {
       state = state.copyWith(isLoading: false);
     }
+  }
+
+  Future<void> tryAutoLogin() async {
+    await restoreSession();
+    await refreshSessionIfOnline();
   }
 
   Future<void> login(String email, String password) async {
@@ -67,11 +98,9 @@ class AuthNotifier extends Notifier<AuthState> {
       await _storeTokens(result.accessToken, result.refreshToken);
       await _storeUser(result.user);
       state = state.copyWith(currentUser: result.user, isLoading: false);
-    } on Exception catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString().replaceFirst('Exception: ', ''),
-      );
+    } on Exception catch (e, st) {
+      ref.read(errorReporterProvider).reportError(e, st);
+      state = state.copyWith(isLoading: false, error: e);
     }
   }
 
@@ -87,11 +116,9 @@ class AuthNotifier extends Notifier<AuthState> {
       await _storeTokens(result.accessToken, result.refreshToken);
       await _storeUser(result.user);
       state = state.copyWith(currentUser: result.user, isLoading: false);
-    } on Exception catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString().replaceFirst('Exception: ', ''),
-      );
+    } on Exception catch (e, st) {
+      ref.read(errorReporterProvider).reportError(e, st);
+      state = state.copyWith(isLoading: false, error: e);
     }
   }
 
@@ -105,11 +132,9 @@ class AuthNotifier extends Notifier<AuthState> {
       final user = await _repo.updateMe(accessToken, displayName: displayName);
       await _storeUser(user);
       state = state.copyWith(currentUser: user, isLoading: false);
-    } on Exception catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString().replaceFirst('Exception: ', ''),
-      );
+    } on Exception catch (e, st) {
+      ref.read(errorReporterProvider).reportError(e, st);
+      state = state.copyWith(isLoading: false, error: e);
     }
   }
 
@@ -124,11 +149,9 @@ class AuthNotifier extends Notifier<AuthState> {
       final user = await _repo.updateMe(accessToken, avatarUrl: imageUrl);
       await _storeUser(user);
       state = state.copyWith(currentUser: user, isLoading: false);
-    } on Exception catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString().replaceFirst('Exception: ', ''),
-      );
+    } on Exception catch (e, st) {
+      ref.read(errorReporterProvider).reportError(e, st);
+      state = state.copyWith(isLoading: false, error: e);
       rethrow;
     }
   }
@@ -152,11 +175,9 @@ class AuthNotifier extends Notifier<AuthState> {
       await _repo.deleteAccount(accessToken);
       await _clearTokens();
       state = const AuthState();
-    } on Exception catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString().replaceFirst('Exception: ', ''),
-      );
+    } on Exception catch (e, st) {
+      ref.read(errorReporterProvider).reportError(e, st);
+      state = state.copyWith(isLoading: false, error: e);
     }
   }
 
@@ -166,8 +187,8 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 
   Future<void> _storeTokens(String accessToken, String refreshToken) async {
-    await _storage.write(key: _accessTokenKey, value: accessToken);
-    await _storage.write(key: _refreshTokenKey, value: refreshToken);
+    await _writeIdempotent(_accessTokenKey, accessToken);
+    await _writeIdempotent(_refreshTokenKey, refreshToken);
   }
 
   Future<void> _clearTokens() async {
@@ -177,19 +198,47 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 
   Future<void> _storeUser(User user) =>
-      _storage.write(key: _cachedUserKey, value: jsonEncode(user.toJson()));
+      _writeIdempotent(_cachedUserKey, jsonEncode(user.toJson()));
+
+  // errSecDuplicateItem: o write do plugin faz upsert, mas quando seu precheck
+  // containsKey não casa o item existente (ex.: a accessibility mudou — ENG-128)
+  // ele cai no SecItemAdd e colide. O delete do plugin é accessibility-agnóstico,
+  // então remover + regravar recupera; outras PlatformException propagam.
+  Future<void> _writeIdempotent(String key, String value) async {
+    try {
+      await _storage.write(key: key, value: value);
+    } on PlatformException catch (e) {
+      final isDuplicate =
+          e.details == _errSecDuplicateItem ||
+          (e.message?.contains('$_errSecDuplicateItem') ?? false) ||
+          (e.message?.toLowerCase().contains('already exists') ?? false);
+      if (!isDuplicate) rethrow;
+      await _storage.delete(key: key);
+      await _storage.write(key: key, value: value);
+    }
+  }
 
   Future<User?> _readCachedUser() async {
     final raw = await _storage.read(key: _cachedUserKey);
     if (raw == null) return null;
     try {
       return User.fromJson(jsonDecode(raw) as Map<String, dynamic>);
-    } on Exception {
-      return null;
+    } catch (_) {
+      return null; // corrupt cached user → treat as no cache (incl. cast Errors)
     }
   }
 
-  Future<bool> _tryRefresh() async {
+  // Single-flight: concurrent callers share ONE in-flight refresh, so N
+  // simultaneous 401s trigger a single token rotation (ENG-136). Must stay
+  // non-async: the slot has to be assigned before any await, or the race
+  // returns.
+  Future<bool> _tryRefresh() {
+    return _inFlightRefresh ??= _doTryRefresh().whenComplete(
+      () => _inFlightRefresh = null,
+    );
+  }
+
+  Future<bool> _doTryRefresh() async {
     try {
       final refreshToken = await _storage.read(key: _refreshTokenKey);
       if (refreshToken == null) return false;
@@ -203,8 +252,8 @@ class AuthNotifier extends Notifier<AuthState> {
       return true;
     } on UnauthorizedException {
       return false;
-    } on Exception {
-      return true;
     }
+    // Outras exceções (rede/timeout/5xx/parse) são transitórias: propagam para a
+    // request falhar como erro de rede, preservando a sessão (ENG-141).
   }
 }

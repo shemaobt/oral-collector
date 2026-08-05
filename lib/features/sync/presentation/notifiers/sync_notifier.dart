@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart' show Locale, WidgetsBinding;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/l10n/locale_provider.dart';
+import '../../../../core/observability/error_reporter.dart';
 import '../../../../core/platform/disk_space.dart' as disk_space;
 import '../../../../core/platform/file_ops.dart' as file_ops;
 import '../../../../l10n/app_localizations.dart';
@@ -22,6 +23,7 @@ final syncNotifierProvider = NotifierProvider<SyncNotifier, SyncState>(
 
 class SyncNotifier extends Notifier<SyncState> {
   StreamSubscription<bool>? _connectivitySub;
+  bool _sawConnectivityEvent = false;
   DateTime? _speedSampleTime;
   int _speedSampleBytes = 0;
   final Map<String, int> _fileProgress = {};
@@ -49,17 +51,24 @@ class SyncNotifier extends Notifier<SyncState> {
   }
 
   Future<void> _initConnectivity() async {
-    final online = await _connectivity.isOnline;
-    state = state.copyWith(isOnline: online);
-
+    // Subscribe before awaiting the snapshot: onConnectivityChanged is a
+    // broadcast stream with no replay, so a flip during the await would be lost.
     _connectivitySub = _connectivity.onConnectivityChanged.listen(
       _onConnectivityChanged,
     );
+
+    final online = await _connectivity.isOnline;
+    // A live event during the await already set a fresher value; don't let the
+    // now-stale snapshot clobber it.
+    if (!_sawConnectivityEvent) {
+      state = state.copyWith(isOnline: online);
+    }
 
     await _refreshPendingCount();
   }
 
   void _onConnectivityChanged(bool online) {
+    _sawConnectivityEvent = true;
     final wasOffline = !state.isOnline;
     state = state.copyWith(isOnline: online);
 
@@ -73,44 +82,55 @@ class SyncNotifier extends Notifier<SyncState> {
   }
 
   Future<void> syncOne(String recordingId) async {
-    state = state.copyWith(uploadingId: recordingId, syncProgress: 0);
-    _fileProgress.clear();
-
+    // Shared upload guard: syncOne and processQueue are mutually exclusive so
+    // they cannot interleave shared state or start/stop the foreground service
+    // concurrently. Bail if an upload op is already running. resetAndRetry must
+    // NOT acquire this guard — it calls syncOne, and a re-entrant acquire would
+    // make the inner syncOne bail and silently skip the upload.
+    if (_isProcessing) return;
+    _isProcessing = true;
     try {
-      final recording = await _recordingRepo.getRecordingById(recordingId);
-      if (recording == null) return;
+      state = state.copyWith(uploadingId: recordingId, syncProgress: 0);
+      _fileProgress.clear();
 
-      state = state.copyWith(
-        currentFileName: recording.title,
-        totalQueueSizeBytes: recording.fileSizeBytes,
-        totalUploadedBytes: 0,
-        uploadSpeedBps: 0,
-      );
+      try {
+        final recording = await _recordingRepo.getRecordingById(recordingId);
+        if (recording == null) return;
 
-      _speedSampleTime = DateTime.now();
-      _speedSampleBytes = 0;
+        state = state.copyWith(
+          currentFileName: recording.title,
+          totalQueueSizeBytes: recording.fileSizeBytes,
+          totalUploadedBytes: 0,
+          uploadSpeedBps: 0,
+        );
 
-      await _syncEngine.uploadSingle(
-        recordingId,
-        deleteAfterUpload: state.autoRemoveAfterUpload,
-        onProgress: _onUploadProgress,
-      );
+        _speedSampleTime = DateTime.now();
+        _speedSampleBytes = 0;
 
-      state = state.copyWith(
-        syncProgress: 100,
-        clearUploadingId: true,
-        clearCurrentFileName: true,
-        lastSyncAt: DateTime.now(),
-      );
-    } on Exception {
-      state = state.copyWith(
-        clearUploadingId: true,
-        clearCurrentFileName: true,
-        syncProgress: 0,
-      );
+        await _syncEngine.uploadSingle(
+          recordingId,
+          deleteAfterUpload: state.autoRemoveAfterUpload,
+          onProgress: _onUploadProgress,
+        );
+
+        state = state.copyWith(
+          syncProgress: 100,
+          clearUploadingId: true,
+          clearCurrentFileName: true,
+          lastSyncAt: DateTime.now(),
+        );
+      } on Exception {
+        state = state.copyWith(
+          clearUploadingId: true,
+          clearCurrentFileName: true,
+          syncProgress: 0,
+        );
+      }
+
+      await _refreshPendingCount();
+    } finally {
+      _isProcessing = false;
     }
-
-    await _refreshPendingCount();
   }
 
   Future<void> retryFailed() async {
@@ -134,48 +154,59 @@ class SyncNotifier extends Notifier<SyncState> {
     if (kIsWeb) return 0;
 
     final all = await _recordingRepo.getAllLocalRecordings();
-    var totalBytes = 0;
+    final sizes = await Future.wait(all.map((r) => _fileSize(r.localFilePath)));
+    return sizes.fold<int>(0, (sum, n) => sum + n);
+  }
 
-    for (final recording in all) {
-      try {
-        if (await file_ops.fileExists(recording.localFilePath)) {
-          totalBytes += await file_ops.fileLength(recording.localFilePath);
-        }
-      } on Exception catch (_) {}
+  Future<int> _fileSize(String path) async {
+    try {
+      if (await file_ops.fileExists(path)) {
+        return await file_ops.fileLength(path);
+      }
+    } on Exception catch (e, st) {
+      ref.read(errorReporterProvider).reportError(e, st);
     }
-
-    return totalBytes;
+    return 0;
   }
 
   Future<({int usedBytes, int freeBytes, int totalBytes})>
   getStorageSnapshot() async {
-    final used = await getLocalStorageUsed();
-    final free = await disk_space.getFreeBytes();
-    final total = await disk_space.getTotalBytes();
-    return (usedBytes: used, freeBytes: free, totalBytes: total);
+    final results = await Future.wait([
+      getLocalStorageUsed(),
+      disk_space.getFreeBytes(),
+      disk_space.getTotalBytes(),
+    ]);
+    return (
+      usedBytes: results[0],
+      freeBytes: results[1],
+      totalBytes: results[2],
+    );
   }
 
   Future<void> clearLocalCache() async {
     if (kIsWeb) return;
 
     final all = await _recordingRepo.getAllLocalRecordings();
-
-    for (final recording in all) {
-      try {
-        await file_ops.deleteFile(recording.localFilePath);
-      } on Exception catch (_) {}
-    }
+    await Future.wait(all.map((r) => _deleteQuietly(r.localFilePath)));
 
     await _recordingRepo.deleteAllRecordings();
     await _refreshPendingCount();
+  }
+
+  Future<void> _deleteQuietly(String path) async {
+    try {
+      await file_ops.deleteFile(path);
+    } on Exception catch (e, st) {
+      ref.read(errorReporterProvider).reportError(e, st);
+    }
   }
 
   bool _isProcessing = false;
 
   Future<void> processQueue() async {
     if (!state.isOnline) return;
-    // Reentrancy guard: a second concurrent call would otherwise stop the
-    // foreground service in its finally while the first is still uploading.
+    // Shared upload guard (see syncOne): bail if an upload op is already in
+    // flight so concurrent runs can't stop the foreground service mid-upload.
     if (_isProcessing) return;
     _isProcessing = true;
     try {

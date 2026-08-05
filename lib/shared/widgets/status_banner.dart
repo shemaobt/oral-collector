@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/tokens.dart';
 import '../../l10n/app_localizations.dart';
 
 enum StatusBannerVariant { warning, info }
@@ -52,19 +53,24 @@ class StatusBanner extends StatelessWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      padding: const EdgeInsets.fromLTRB(
+        SpacingScale.s16,
+        SpacingScale.s12,
+        SpacingScale.s16,
+        0,
+      ),
       child: Container(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(SpacingScale.s16),
         decoration: BoxDecoration(
           color: tint.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(RadiusScale.r16),
           border: Border.all(color: tint.withValues(alpha: 0.25)),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Icon(icon, size: 20, color: tint),
-            const SizedBox(width: 12),
+            const SizedBox(width: SpacingScale.s12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -77,7 +83,7 @@ class StatusBanner extends StatelessWidget {
                     ),
                   ),
                   if (subtitle != null) ...[
-                    const SizedBox(height: 4),
+                    const SizedBox(height: SpacingScale.s4),
                     Text(
                       subtitle!,
                       style: theme.textTheme.bodySmall?.copyWith(

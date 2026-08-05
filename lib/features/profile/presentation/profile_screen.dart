@@ -1,21 +1,24 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import '../../../../l10n/app_localizations.dart';
+import '../../../core/auth/auth_notifier.dart';
 import '../../../core/l10n/locale_provider.dart';
 import '../../../core/l10n/supported_locales.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../../l10n/app_localizations.dart';
+import '../../../core/theme/tokens.dart';
 import '../../../shared/preview_helpers.dart';
 import '../../../shared/utils/format.dart';
-import '../../../shared/widgets/error_snack_bar.dart';
 import '../../../shared/widgets/app_shell.dart';
+import '../../../shared/widgets/error_snack_bar.dart';
 import '../../../shared/widgets/icon_box.dart';
 import '../../../shared/widgets/locale_picker_sheet.dart';
 import '../../../shared/widgets/section_header.dart';
-import '../../../core/auth/auth_notifier.dart';
 import '../../auth/data/providers/role_provider.dart';
 import '../../invite/presentation/notifiers/invite_notifier.dart';
 import '../../project/presentation/notifiers/project_notifier.dart';
@@ -65,10 +68,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       }
     } catch (e) {
       if (mounted) {
-        showErrorSnackBar(
-          context,
-          AppLocalizations.of(context).profile_photoFailed(e.toString()),
-        );
+        showErrorSnackBar(context, e);
       }
     }
   }
@@ -137,7 +137,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final theme = Theme.of(context);
     final colors = AppColors.of(context);
     final l10n = AppLocalizations.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final user = authState.currentUser;
 
     final invitationsWidget = InvitationsSection(
@@ -148,7 +147,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             .acceptInvite(invite.id);
         if (!context.mounted) return;
         if (accepted) {
-          ref.read(projectNotifierProvider.notifier).fetchProjects();
+          unawaited(ref.read(projectNotifierProvider.notifier).fetchProjects());
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(l10n.profile_joinedSuccess(invite.projectName)),
@@ -182,52 +181,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final currentCode = currentLocale?.languageCode ?? 'en';
     final currentLocaleName = localeNativeNames[currentCode] ?? currentCode;
 
-    final languageSection = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SectionHeader(title: l10n.profile_language),
-        const SizedBox(height: 8),
-        Card(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: ListTile(
-            leading: IconBox(icon: LucideIcons.globe, color: colors.primary),
-            title: Text(currentLocaleName),
-            trailing: Icon(
-              LucideIcons.chevronRight,
-              size: 18,
-              color: colors.secondary,
-            ),
-            onTap: () {
-              showModalBottomSheet(
-                context: context,
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-                ),
-                constraints: const BoxConstraints(maxWidth: 600),
-                builder: (_) => const LocalePickerSheet(),
-              );
-            },
-          ),
-        ),
-      ],
-    );
-
-    final recordingSettingsSection = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SectionHeader(title: l10n.recording_recordingStep),
-        const SizedBox(height: 8),
-        RecordingSettingsCard(theme: theme, colors: colors),
-      ],
-    );
-
     final syncSection = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SectionHeader(title: l10n.profile_syncStorage),
-        const SizedBox(height: 8),
+        const SizedBox(height: SpacingScale.s8),
         SyncSettingsCard(
           syncState: syncState,
           theme: theme,
@@ -260,88 +218,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       ],
     );
 
-    final aboutSection = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SectionHeader(title: l10n.profile_about),
-        const SizedBox(height: 8),
-        Card(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Column(
-            children: [
-              ListTile(
-                leading: IconBox(icon: LucideIcons.info, color: colors.info),
-                title: Text(l10n.profile_appVersion),
-                trailing: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: colors.foreground.withValues(
-                      alpha: isDark ? 0.1 : 0.06,
-                    ),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    '1.0.0',
-                    style: theme.textTheme.labelMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-              const Divider(height: 1),
-              ListTile(
-                leading: IconBox(icon: LucideIcons.heart, color: colors.accent),
-                title: Text(l10n.profile_byShema),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-
-    final adminSection =
-        (kIsWeb && ref.read(roleNotifierProvider.notifier).isPlatformAdmin)
-        ? Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SectionHeader(title: l10n.profile_administration),
-              const SizedBox(height: 8),
-              Card(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: ListTile(
-                  leading: IconBox(
-                    icon: LucideIcons.layoutDashboard,
-                    color: colors.primary,
-                  ),
-                  title: Text(l10n.profile_adminDashboard),
-                  subtitle: Text(l10n.profile_adminSubtitle),
-                  trailing: Icon(
-                    LucideIcons.chevronRight,
-                    size: 18,
-                    color: colors.secondary,
-                  ),
-                  onTap: () => context.push('/admin'),
-                ),
-              ),
-            ],
-          )
-        : null;
+    final showAdmin = kIsWeb && ref.read(isPlatformAdminProvider);
 
     final accountSection = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SectionHeader(title: l10n.profile_account),
-        const SizedBox(height: 8),
+        const SizedBox(height: SpacingScale.s8),
         Card(
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(RadiusScale.r16),
           ),
           child: Column(
             children: [
@@ -399,9 +285,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
           return SingleChildScrollView(
             padding: EdgeInsets.fromLTRB(
-              20,
+              SpacingScale.s20,
               MediaQuery.of(context).padding.top + 8,
-              20,
+              SpacingScale.s20,
               AppShell.scrollPaddingFor(context),
             ),
             child: Center(
@@ -417,7 +303,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       onPickAvatar: _pickAndUploadAvatar,
                       onEditName: _showEditNameDialog,
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: SpacingScale.s24),
                     QuickStatsRow(
                       storageLabel: formatFileSize(
                         ref.read(profileNotifierProvider).storageUsedBytes,
@@ -427,11 +313,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       colors: colors,
                       theme: theme,
                     ),
-                    const SizedBox(height: 28),
+                    const SizedBox(height: SpacingScale.s28),
                     invitationsWidget,
-                    const SizedBox(height: 24),
-                    languageSection,
-                    const SizedBox(height: 24),
+                    const SizedBox(height: SpacingScale.s24),
+                    _LanguageSection(localeName: currentLocaleName),
+                    const SizedBox(height: SpacingScale.s24),
                     if (isWide) ...[
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -439,23 +325,23 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           Expanded(
                             child: Column(
                               children: [
-                                recordingSettingsSection,
-                                const SizedBox(height: 24),
+                                const _RecordingSettingsSection(),
+                                const SizedBox(height: SpacingScale.s24),
                                 syncSection,
-                                const SizedBox(height: 24),
-                                if (adminSection != null) ...[
-                                  adminSection,
-                                  const SizedBox(height: 24),
+                                const SizedBox(height: SpacingScale.s24),
+                                if (showAdmin) ...[
+                                  const _AdminSection(),
+                                  const SizedBox(height: SpacingScale.s24),
                                 ],
                               ],
                             ),
                           ),
-                          const SizedBox(width: 24),
+                          const SizedBox(width: SpacingScale.s24),
                           Expanded(
                             child: Column(
                               children: [
-                                aboutSection,
-                                const SizedBox(height: 24),
+                                const _AboutSection(),
+                                const SizedBox(height: SpacingScale.s24),
                                 accountSection,
                               ],
                             ),
@@ -463,15 +349,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         ],
                       ),
                     ] else ...[
-                      recordingSettingsSection,
-                      const SizedBox(height: 24),
+                      const _RecordingSettingsSection(),
+                      const SizedBox(height: SpacingScale.s24),
                       syncSection,
-                      const SizedBox(height: 24),
-                      aboutSection,
-                      const SizedBox(height: 24),
-                      if (adminSection != null) ...[
-                        adminSection,
-                        const SizedBox(height: 24),
+                      const SizedBox(height: SpacingScale.s24),
+                      const _AboutSection(),
+                      const SizedBox(height: SpacingScale.s24),
+                      if (showAdmin) ...[
+                        const _AdminSection(),
+                        const SizedBox(height: SpacingScale.s24),
                       ],
                       accountSection,
                     ],
@@ -521,7 +407,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(l10n.profile_typeDelete),
-              const SizedBox(height: 12),
+              const SizedBox(height: SpacingScale.s12),
               TextField(
                 controller: controller,
                 autofocus: true,
@@ -591,5 +477,160 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         );
       }
     }
+  }
+}
+
+class _LanguageSection extends StatelessWidget {
+  const _LanguageSection({required this.localeName});
+
+  final String localeName;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final colors = AppColors.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SectionHeader(title: l10n.profile_language),
+        const SizedBox(height: SpacingScale.s8),
+        Card(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(RadiusScale.r16),
+          ),
+          child: ListTile(
+            leading: IconBox(icon: LucideIcons.globe, color: colors.primary),
+            title: Text(localeName),
+            trailing: Icon(
+              LucideIcons.chevronRight,
+              size: 18,
+              color: colors.secondary,
+            ),
+            onTap: () {
+              showModalBottomSheet(
+                context: context,
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(RadiusScale.r24),
+                  ),
+                ),
+                constraints: const BoxConstraints(maxWidth: 600),
+                builder: (_) => const LocalePickerSheet(),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _RecordingSettingsSection extends StatelessWidget {
+  const _RecordingSettingsSection();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final colors = AppColors.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SectionHeader(title: l10n.recording_recordingStep),
+        const SizedBox(height: SpacingScale.s8),
+        RecordingSettingsCard(theme: theme, colors: colors),
+      ],
+    );
+  }
+}
+
+class _AboutSection extends StatelessWidget {
+  const _AboutSection();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final colors = AppColors.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SectionHeader(title: l10n.profile_about),
+        const SizedBox(height: SpacingScale.s8),
+        Card(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(RadiusScale.r16),
+          ),
+          child: Column(
+            children: [
+              ListTile(
+                leading: IconBox(icon: LucideIcons.info, color: colors.info),
+                title: Text(l10n.profile_appVersion),
+                trailing: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: SpacingScale.s8,
+                    vertical: SpacingScale.s4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: colors.foreground.withValues(
+                      alpha: isDark ? 0.1 : 0.06,
+                    ),
+                    borderRadius: BorderRadius.circular(RadiusScale.r8),
+                  ),
+                  child: Text(
+                    '1.0.0',
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+              const Divider(height: 1),
+              ListTile(
+                leading: IconBox(icon: LucideIcons.heart, color: colors.accent),
+                title: Text(l10n.profile_byShema),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _AdminSection extends StatelessWidget {
+  const _AdminSection();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final colors = AppColors.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SectionHeader(title: l10n.profile_administration),
+        const SizedBox(height: SpacingScale.s8),
+        Card(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(RadiusScale.r16),
+          ),
+          child: ListTile(
+            leading: IconBox(
+              icon: LucideIcons.layoutDashboard,
+              color: colors.primary,
+            ),
+            title: Text(l10n.profile_adminDashboard),
+            subtitle: Text(l10n.profile_adminSubtitle),
+            trailing: Icon(
+              LucideIcons.chevronRight,
+              size: 18,
+              color: colors.secondary,
+            ),
+            onTap: () => context.push('/admin'),
+          ),
+        ),
+      ],
+    );
   }
 }

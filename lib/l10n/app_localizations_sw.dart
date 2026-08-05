@@ -401,10 +401,6 @@ class AppLocalizationsSw extends AppLocalizations {
   String get projectSettings_updated => 'Mradi umesasishwa';
 
   @override
-  String get projectSettings_noPermission =>
-      'Huna ruhusa ya kusasisha mradi huu';
-
-  @override
   String get projectSettings_team => 'Timu';
 
   @override
@@ -475,7 +471,12 @@ class AppLocalizationsSw extends AppLocalizations {
   String get recording_titleHint => 'Kichwa cha rekodi';
 
   @override
-  String get recording_descriptionHint => 'Ongeza maelezo mafupi (si lazima)';
+  String get recording_descriptionHint => 'Eleza rekodi hii';
+
+  @override
+  String recording_descriptionTooShort(int count) {
+    return 'Eleza rekodi hii kwa angalau herufi $count';
+  }
 
   @override
   String get recording_descriptionEmpty => 'Ongeza maelezo';
@@ -553,11 +554,6 @@ class AppLocalizationsSw extends AppLocalizations {
   @override
   String get recording_downloadAudioMessage =>
       'Faili ya sauti haipo kwenye kifaa hiki. Ungependa kuipakua ili kuikata?';
-
-  @override
-  String recording_downloadFailed(String error) {
-    return 'Imeshindwa kupakua: $error';
-  }
 
   @override
   String get recording_audioNotAvailable => 'Faili ya sauti haipatikani';
@@ -667,6 +663,20 @@ class AppLocalizationsSw extends AppLocalizations {
       'Gusa maikrofoni ili kurekodi hadithi yako ya kwanza, au ingiza faili ya sauti.';
 
   @override
+  String get recordings_offlineFilterTitle => 'Haipatikani nje ya mtandao';
+
+  @override
+  String get recordings_offlineFilterDescription =>
+      'Seva ndiyo inayobaini rekodi zipi bado zinahitaji maelezo. Unganisha tena ili kuziona, au ondoa kichujio ili kuvinjari kila kitu kilichopo kwenye kifaa hiki.';
+
+  @override
+  String get recordings_filterErrorTitle => 'Imeshindikana kuangalia sasa';
+
+  @override
+  String get recordings_filterErrorDescription =>
+      'Seva haikujibu, kwa hivyo hatuwezi kusema ni rekodi zipi bado zinahitaji maelezo. Jaribu tena, au ondoa kichujio ili kuvinjari kila kitu kilichopo kwenye kifaa hiki.';
+
+  @override
   String get recordings_dropToImport =>
       'Kidokezo: buruta faili za sauti kwenye dirisha hili ili kuingiza.';
 
@@ -692,6 +702,38 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get recording_statusLocal => 'Ya Ndani';
+
+  @override
+  String get recording_statusNameConflict => 'Mgongano wa jina';
+
+  @override
+  String get recording_statusDescriptionTooShort => 'Maelezo ni mafupi sana';
+
+  @override
+  String get recording_descriptionGapMessage =>
+      'Rekodi hii haiwezi kupakiwa hadi uongeze maelezo marefu zaidi.';
+
+  @override
+  String get recording_statusRetriesExhausted => 'Majaribio yamekwisha';
+
+  @override
+  String get recording_statusFileMissing => 'Faili ya sauti haipatikani';
+
+  @override
+  String get recording_uploadExhaustedMessage =>
+      'Upakiaji ulisimama baada ya majaribio kadhaa. Unaweza kujaribu tena.';
+
+  @override
+  String get recording_fileMissingMessage =>
+      'Faili ya sauti ya rekodi hii haipo tena kwenye kifaa hiki, kwa hivyo haiwezi kupakiwa.';
+
+  @override
+  String get recording_duplicateTitleTitle => 'Jina limekwisha tumika';
+
+  @override
+  String recording_duplicateTitleMessage(String title) {
+    return 'Sauti yenye jina \"$title\" tayari ipo katika mradi huu. Chagua jina lingine.';
+  }
 
   @override
   String get recordings_clearStale => 'Futa zilizoshindwa';
@@ -794,10 +836,6 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get trim_classifySegment => 'Ainisha sehemu';
-
-  @override
-  String get trim_primaryEqualsSecondary =>
-      'Uainishaji msingi hauwezi kufanana na uainishaji wa pili wa rekodi.';
 
   @override
   String get trim_volume => 'Sauti';
@@ -968,12 +1006,12 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String import_resumePromptBody(String name, String size) {
-    return '\"$name\" ($size) ilipakiwa kwa sehemu. Chagua faili ileile ili kuendelea.';
+    return '\"$name\" ($size) ilipakiwa kwa sehemu. Chagua faili ileile kabisa (bila mabadiliko) ili kuendelea.';
   }
 
   @override
   String get import_resumeSizeMismatch =>
-      'Faili hiyo hailingani na upakiaji uliosimamishwa.';
+      'Hiyo ni faili tofauti. Chagua faili ileile kabisa uliyokuwa ukipakia.';
 
   @override
   String import_largeFileWarning(String size) {
@@ -1014,11 +1052,6 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get profile_photoUpdated => 'Picha ya wasifu imesasishwa';
-
-  @override
-  String profile_photoFailed(String error) {
-    return 'Imeshindwa kusasisha picha: $error';
-  }
 
   @override
   String get profile_editName => 'Hariri jina la kuonyesha';
@@ -1750,6 +1783,9 @@ class AppLocalizationsSw extends AppLocalizations {
   String get filter_unclassified => 'Haijainishwa';
 
   @override
+  String get filter_missingDescription => 'Hakuna maelezo';
+
+  @override
   String get filter_allGenres => 'Aina zote';
 
   @override
@@ -1828,6 +1864,14 @@ class AppLocalizationsSw extends AppLocalizations {
   String get projectStats_members => 'Wanachama';
 
   @override
+  String get projectStats_needsDetails => 'Zinahitaji maelezo';
+
+  @override
+  String projectStats_showPendency(String label, int count) {
+    return 'Onyesha rekodi — $label ($count)';
+  }
+
+  @override
   String get project_active => 'Hai';
 
   @override
@@ -1879,10 +1923,6 @@ class AppLocalizationsSw extends AppLocalizations {
   String get classify_action => 'Ainisha';
 
   @override
-  String get classify_banner =>
-      'Rekodi hii haijaainishwa. Gusa Ainisha ili kuongeza aina na rejista.';
-
-  @override
   String get classify_success => 'Rekodi imeainishwa';
 
   @override
@@ -1909,10 +1949,6 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get classify_secondaryRegister => 'Rejista ya pili';
-
-  @override
-  String get classify_secondarySameAsPrimary =>
-      'Aina ya pili lazima iwe tofauti na aina kuu.';
 
   @override
   String get classify_clearAlternative => 'Futa mbadala';
@@ -2284,7 +2320,11 @@ class AppLocalizationsSw extends AppLocalizations {
   String get filters_sheetTitle => 'Chuja rekodi';
 
   @override
-  String get filters_sectionStatus => 'Hali ya kupakia';
+  String get filters_sectionStatus => 'Hali kwenye kifaa hiki';
+
+  @override
+  String get filters_sectionStatusHint =>
+      'Huchuja rekodi zilizo tayari kwenye skrini. Hufanya kazi bila mtandao.';
 
   @override
   String get filters_sectionGenre => 'Aina';
@@ -2294,6 +2334,13 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get filters_sectionUser => 'Imerekodiwa na';
+
+  @override
+  String get filters_sectionPendency => 'Yanayokosekana kwa mujibu wa seva';
+
+  @override
+  String get filters_sectionPendencyHint =>
+      'Huuliza seva ni rekodi zipi bado zinahitaji maelezo. Inahitaji mtandao.';
 
   @override
   String get filter_apply => 'Tumia';
@@ -2327,6 +2374,9 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get filter_genreAll => 'Aina yoyote';
+
+  @override
+  String get filter_pendencyAll => 'Sehemu yoyote';
 
   @override
   String get detail_recordedBy => 'Imerekodiwa na';
@@ -2647,4 +2697,58 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get liveActivity_uploadingStatus => 'Inapakia';
+
+  @override
+  String get recording_completeFicha => 'Kamilisha maelezo';
+
+  @override
+  String get recording_completeFichaTitle => 'Kamilisha maelezo';
+
+  @override
+  String recording_completeFichaSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Sehemu $count bado hazijajazwa. Jaza sasa au urudi baadaye.',
+      one: 'Sehemu 1 bado haijajazwa. Jaza sasa au urudi baadaye.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recording_completeFichaStart => 'Anza';
+
+  @override
+  String get recording_completeFichaContinue => 'Endelea';
+
+  @override
+  String get recording_pendencyClassification => 'Haijainishwa';
+
+  @override
+  String get recording_pendencyClassificationContext =>
+      'Aina na rejista huonyesha hii ni hadithi ya aina gani.';
+
+  @override
+  String get recording_pendencyDescription => 'Maelezo ni mafupi mno';
+
+  @override
+  String get recording_pendencyDescriptionContext =>
+      'Maneno machache kuhusu kinachotokea katika rekodi.';
+
+  @override
+  String get recording_pendencyStoryteller => 'Hakuna msimulizi';
+
+  @override
+  String get recording_pendencyStorytellerContext =>
+      'Ni nani anayesimulia hadithi hii.';
+
+  @override
+  String recording_pendencyCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Sehemu $count za kujaza',
+    );
+    return '$_temp0';
+  }
 }

@@ -3,8 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../features/sync/presentation/notifiers/sync_notifier.dart';
+import '../../core/theme/tokens.dart';
 import '../../features/recording/data/providers.dart';
+import '../../features/sync/presentation/notifiers/sync_notifier.dart';
 import '../../l10n/app_localizations.dart';
 import '../utils/format.dart';
 
@@ -44,7 +45,7 @@ class _UploadQueueContent extends ConsumerWidget {
 
     return Column(
       children: [
-        const SizedBox(height: 8),
+        const SizedBox(height: SpacingScale.s8),
         Container(
           width: 40,
           height: 4,
@@ -54,14 +55,14 @@ class _UploadQueueContent extends ConsumerWidget {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(SpacingScale.s16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
                   Icon(LucideIcons.upload, size: 20, color: colors.primary),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: SpacingScale.s8),
                   Text(
                     l10n.recording_uploadQueue,
                     style: theme.textTheme.titleMedium?.copyWith(
@@ -77,9 +78,9 @@ class _UploadQueueContent extends ConsumerWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: SpacingScale.s12),
               ClipRRect(
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: BorderRadius.circular(RadiusScale.r4),
                 child: LinearProgressIndicator(
                   value: overallProgress.clamp(0.0, 1.0),
                   minHeight: 8,
@@ -87,7 +88,7 @@ class _UploadQueueContent extends ConsumerWidget {
                   valueColor: AlwaysStoppedAnimation(colors.primary),
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: SpacingScale.s8),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -114,19 +115,19 @@ class _UploadQueueContent extends ConsumerWidget {
                 ],
               ),
               if (syncState.currentFileName != null) ...[
-                const SizedBox(height: 8),
+                const SizedBox(height: SpacingScale.s8),
                 Row(
                   children: [
                     SizedBox(
-                      width: 14,
-                      height: 14,
+                      width: SpacingScale.s16,
+                      height: SpacingScale.s16,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
                         value: syncState.syncProgress / 100,
                         color: colors.primary,
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: SpacingScale.s8),
                     Expanded(
                       child: Text(
                         syncState.currentFileName!,
@@ -194,9 +195,13 @@ class _PendingFilesList extends ConsumerWidget {
 
         return ListView.separated(
           controller: scrollController,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.symmetric(
+            horizontal: SpacingScale.s16,
+            vertical: SpacingScale.s8,
+          ),
           itemCount: recordings.length,
-          separatorBuilder: (context, index) => const SizedBox(height: 4),
+          separatorBuilder: (context, index) =>
+              const SizedBox(height: SpacingScale.s4),
           itemBuilder: (context, index) {
             final rec = recordings[index];
             final isUploading = rec.id == syncState.uploadingId;
@@ -204,7 +209,9 @@ class _PendingFilesList extends ConsumerWidget {
 
             return ListTile(
               dense: true,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: SpacingScale.s8,
+              ),
               leading: Icon(
                 isUploading
                     ? LucideIcons.uploadCloud
@@ -234,7 +241,7 @@ class _PendingFilesList extends ConsumerWidget {
               ),
               trailing: isUploading
                   ? SizedBox(
-                      width: 40,
+                      width: SpacingScale.s40,
                       child: Text(
                         '${syncState.syncProgress}%',
                         style: theme.textTheme.labelSmall?.copyWith(

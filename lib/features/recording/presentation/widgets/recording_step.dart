@@ -7,6 +7,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../../shared/utils/format.dart';
 import '../../../../shared/widgets/record_button.dart';
 import '../../data/services/recovery_coordinator.dart';
@@ -48,7 +49,7 @@ class RecordingStep extends ConsumerStatefulWidget {
 
 class _RecordingStepState extends ConsumerState<RecordingStep>
     with WidgetsBindingObserver {
-  AppLifecycleState? _lastLifecycleState;
+  bool _wasBackgrounded = false;
   bool _showBackgroundResumeBanner = false;
   Timer? _backgroundBannerTimer;
 
@@ -71,29 +72,37 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    final previous = _lastLifecycleState;
-    _lastLifecycleState = state;
-    final isRecording = ref.read(recordingSessionNotifierProvider).isRecording;
-    if (state == AppLifecycleState.resumed &&
-        previous == AppLifecycleState.paused &&
-        isRecording) {
-      unawaited(
-        ref
-            .read(recordingSessionNotifierProvider.notifier)
-            .reactivateAudioSession(),
-      );
-      if (!mounted) return;
-      setState(() => _showBackgroundResumeBanner = true);
-      _backgroundBannerTimer?.cancel();
-      _backgroundBannerTimer = Timer(const Duration(seconds: 3), () {
-        if (!mounted) return;
-        setState(() => _showBackgroundResumeBanner = false);
-      });
+    // The framework synthesizes intermediate states, so the return path is
+    // always paused → hidden → inactive → resumed. We can't key off the state
+    // right before `resumed` (it's always `inactive`); instead we remember
+    // whether the app actually went to background (hidden/paused) and act on
+    // the next `resumed`. A bare `inactive` blip (e.g. iOS control center)
+    // never sets the flag, so it neither re-activates nor shows the banner.
+    if (state == AppLifecycleState.hidden ||
+        state == AppLifecycleState.paused) {
+      _wasBackgrounded = true;
     }
+    if (state != AppLifecycleState.resumed) return;
+    final wasBackgrounded = _wasBackgrounded;
+    _wasBackgrounded = false;
+    if (!wasBackgrounded) return;
+    if (!ref.read(recordingSessionNotifierProvider).isRecording) return;
+    unawaited(
+      ref
+          .read(recordingSessionNotifierProvider.notifier)
+          .reactivateAudioSession(),
+    );
+    if (!mounted) return;
+    setState(() => _showBackgroundResumeBanner = true);
+    _backgroundBannerTimer?.cancel();
+    _backgroundBannerTimer = Timer(const Duration(seconds: 3), () {
+      if (!mounted) return;
+      setState(() => _showBackgroundResumeBanner = false);
+    });
   }
 
   Future<void> _handleStop(RecordingSessionNotifier notifier) async {
-    HapticFeedback.heavyImpact();
+    unawaited(HapticFeedback.heavyImpact());
     final result = await notifier.stopRecording();
     if (!mounted) return;
     if (result != null) {
@@ -120,7 +129,7 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
       if (!mounted || proceed != true) return;
     }
 
-    HapticFeedback.mediumImpact();
+    unawaited(HapticFeedback.mediumImpact());
     await notifier.startRecording(
       widget.genreId,
       widget.subcategoryId,
@@ -171,14 +180,40 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
   Future<void> _handleCancelPendingResume(
     RecordingSessionNotifier notifier,
   ) async {
-    HapticFeedback.selectionClick();
+    unawaited(HapticFeedback.selectionClick());
     await notifier.cancelPendingResume();
   }
 
   void _openRecoverySheet() {
-    UnsavedRecordingsSheet.show(context, (result) {
+    UnsavedRecordingsSheet.show(context);
+  }
+
+  void _onAutoStopped(RecordingState? prev, RecordingState next) {
+    final result = next.autoStoppedResult;
+    if (result == null) return;
+    if (prev?.autoStoppedResult == result) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+      ref.read(recordingSessionNotifierProvider.notifier).acknowledgeAutoStop();
       widget.onRecordingComplete(result);
+    });
+  }
+
+  void _onStopError(RecordingState? prev, RecordingState next) {
+    final error = next.lastStopError;
+    if (error == null) return;
+    if (prev?.lastStopError == error) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref
+          .read(recordingSessionNotifierProvider.notifier)
+          .acknowledgeLastStopError();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context).recording_recoveryFailed),
+          duration: const Duration(seconds: 4),
+        ),
+      );
     });
   }
 
@@ -190,32 +225,11 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
     final recState = ref.watch(recordingSessionNotifierProvider);
     final notifier = ref.read(recordingSessionNotifierProvider.notifier);
 
-    ref.listen<RecordingState>(recordingSessionNotifierProvider, (prev, next) {
-      final result = next.autoStoppedResult;
-      if (result == null) return;
-      if (prev?.autoStoppedResult == result) return;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        notifier.acknowledgeAutoStop();
-        widget.onRecordingComplete(result);
-      });
-    });
-
-    ref.listen<RecordingState>(recordingSessionNotifierProvider, (prev, next) {
-      final error = next.lastStopError;
-      if (error == null) return;
-      if (prev?.lastStopError == error) return;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        notifier.acknowledgeLastStopError();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.recording_recoveryFailed),
-            duration: const Duration(seconds: 4),
-          ),
-        );
-      });
-    });
+    ref.listen<RecordingState>(
+      recordingSessionNotifierProvider,
+      _onAutoStopped,
+    );
+    ref.listen<RecordingState>(recordingSessionNotifierProvider, _onStopError);
 
     final isFinalizing = recState.isFinalizing;
     final hasError = recState.hasFinalizationError;
@@ -262,7 +276,12 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
                         ),
                       if (hasInterruptedAndReady)
                         Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                          padding: const EdgeInsets.fromLTRB(
+                            SpacingScale.s16,
+                            SpacingScale.s16,
+                            SpacingScale.s16,
+                            0,
+                          ),
                           child: UnsavedRecordingsBanner(
                             sessions: interrupted,
                             onReview: () => _openRecoverySheet(),
@@ -270,28 +289,41 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
                         )
                       else ...[
                         Padding(
-                          padding: const EdgeInsets.only(top: 24),
-                          child: Text(
-                            formatElapsed(recState.elapsed),
-                            style: theme.textTheme.displayLarge?.copyWith(
-                              color: colors.foreground,
-                              fontWeight: FontWeight.w200,
-                              fontSize: 56,
-                              fontFeatures: [
-                                const FontFeature.tabularFigures(),
-                              ],
+                          padding: const EdgeInsets.only(top: SpacingScale.s24),
+                          child: SizedBox(
+                            width: double.infinity,
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.center,
+                              child: Text(
+                                formatElapsed(recState.elapsed),
+                                maxLines: 1,
+                                softWrap: false,
+                                style: theme.textTheme.displayLarge?.copyWith(
+                                  color: colors.foreground,
+                                  fontWeight: FontWeight.w200,
+                                  fontSize: 56,
+                                  fontFeatures: [
+                                    const FontFeature.tabularFigures(),
+                                  ],
+                                ),
+                              ),
                             ),
                           ),
                         ),
                         if (isActive && !isFinalizing)
                           Padding(
-                            padding: const EdgeInsets.only(top: 6),
+                            padding: const EdgeInsets.only(
+                              top: SpacingScale.s8,
+                            ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 if (!recState.isPaused)
                                   Padding(
-                                    padding: const EdgeInsets.only(right: 8),
+                                    padding: const EdgeInsets.only(
+                                      right: SpacingScale.s8,
+                                    ),
                                     child: _PulsingDot(color: colors.accent),
                                   ),
                                 Text(
@@ -308,14 +340,16 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
                           ),
                         if (isFinalizing)
                           const Padding(
-                            padding: EdgeInsets.only(top: 10),
+                            padding: EdgeInsets.only(top: SpacingScale.s8),
                             child: SavingRecordingLabel(),
                           ),
                         if (isActive &&
                             (recState.isPendingResume ||
                                 recState.wasResumedSession))
                           Padding(
-                            padding: const EdgeInsets.only(top: 10),
+                            padding: const EdgeInsets.only(
+                              top: SpacingScale.s8,
+                            ),
                             child: _BackToListButton(
                               label: l10n.recovery_backToList,
                               onTap: () => _handleCancelPendingResume(notifier),
@@ -323,15 +357,19 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
                           ),
                         if (!isActive && !isFinalizing && tagLabel.isNotEmpty)
                           Padding(
-                            padding: const EdgeInsets.only(top: 8),
+                            padding: const EdgeInsets.only(
+                              top: SpacingScale.s8,
+                            ),
                             child: Container(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 4,
+                                horizontal: SpacingScale.s12,
+                                vertical: SpacingScale.s4,
                               ),
                               decoration: BoxDecoration(
                                 color: colors.surfaceAlt,
-                                borderRadius: BorderRadius.circular(16),
+                                borderRadius: BorderRadius.circular(
+                                  RadiusScale.r16,
+                                ),
                               ),
                               child: Text(
                                 tagLabel,
@@ -353,20 +391,12 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
                         _buildBottomControls(colors, notifier, recState),
                       if (isFinalizing)
                         Padding(
-                          padding: const EdgeInsets.only(bottom: 32),
+                          padding: const EdgeInsets.only(
+                            bottom: SpacingScale.s32,
+                          ),
                           child: FinalizingStatusCard(
                             stage: recState.finalizationStage,
                             degraded: recState.finalizationDegraded,
-                          ),
-                        ),
-                      if (isReady)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 40),
-                          child: Text(
-                            l10n.recording_tapToRecord,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: colors.secondary,
-                            ),
                           ),
                         ),
                     ],
@@ -384,15 +414,35 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
   ) {
     final sensitivity = ref.watch(noiseSensitivityProvider);
     return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
       children: [
+        const SizedBox(height: SpacingScale.s24),
         _buildInputSourceRow(colors),
-        const SizedBox(height: 12),
+        const SizedBox(height: SpacingScale.s12),
         _buildSensitivitySelector(colors, sensitivity),
-        const SizedBox(height: 32),
-        _buildRecordButtonWithRings(
-          colors,
-          () => _handleRecordTap(notifier, recState),
+        Expanded(
+          child: Center(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: _buildRecordButtonWithRings(
+                colors,
+                () => _handleRecordTap(notifier, recState),
+              ),
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(
+            top: SpacingScale.s8,
+            bottom: SpacingScale.s24,
+          ),
+          child: Text(
+            AppLocalizations.of(context).recording_tapToRecord,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: colors.secondary),
+          ),
         ),
       ],
     );
@@ -418,31 +468,50 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
         );
       },
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        padding: const EdgeInsets.symmetric(
+          horizontal: SpacingScale.s16,
+          vertical: SpacingScale.s8,
+        ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(LucideIcons.mic2, size: 14, color: colors.secondary),
-            const SizedBox(width: 6),
-            Text(
-              l10n.recording_inputSource,
-              style: theme.textTheme.labelSmall?.copyWith(
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Icon(LucideIcons.mic2, size: 14, color: colors.secondary),
+            ),
+            const SizedBox(width: SpacingScale.s8),
+            Flexible(
+              child: Wrap(
+                alignment: WrapAlignment.center,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: SpacingScale.s8,
+                runSpacing: 2,
+                children: [
+                  Text(
+                    l10n.recording_inputSource,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: colors.secondary,
+                    ),
+                  ),
+                  Text(
+                    label,
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: colors.foreground,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: SpacingScale.s4),
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Icon(
+                LucideIcons.chevronDown,
+                size: 14,
                 color: colors.secondary,
               ),
             ),
-            const SizedBox(width: 6),
-            Flexible(
-              child: Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.labelMedium?.copyWith(
-                  color: colors.foreground,
-                ),
-              ),
-            ),
-            const SizedBox(width: 4),
-            Icon(LucideIcons.chevronDown, size: 14, color: colors.secondary),
           ],
         ),
       ),
@@ -481,37 +550,51 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
     NoiseSensitivity current,
   ) {
     final theme = Theme.of(context);
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(LucideIcons.mic, size: 14, color: colors.secondary),
-        const SizedBox(width: 6),
-        Text(
-          AppLocalizations.of(context).recording_sensitivity,
-          style: theme.textTheme.labelSmall?.copyWith(color: colors.secondary),
-        ),
-        const SizedBox(width: 10),
-        _sensitivityChip(
-          colors,
-          NoiseSensitivity.low,
-          current,
-          AppLocalizations.of(context).recording_sensitivityLow,
-        ),
-        const SizedBox(width: 4),
-        _sensitivityChip(
-          colors,
-          NoiseSensitivity.medium,
-          current,
-          AppLocalizations.of(context).recording_sensitivityMed,
-        ),
-        const SizedBox(width: 4),
-        _sensitivityChip(
-          colors,
-          NoiseSensitivity.high,
-          current,
-          AppLocalizations.of(context).recording_sensitivityHigh,
-        ),
-      ],
+    final l10n = AppLocalizations.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: SpacingScale.s16),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(LucideIcons.mic, size: 14, color: colors.secondary),
+          const SizedBox(width: SpacingScale.s8),
+          Text(
+            l10n.recording_sensitivity,
+            maxLines: 1,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: colors.secondary,
+            ),
+          ),
+          const SizedBox(width: SpacingScale.s8),
+          Flexible(
+            child: Wrap(
+              spacing: SpacingScale.s4,
+              runSpacing: SpacingScale.s4,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                _sensitivityChip(
+                  colors,
+                  NoiseSensitivity.low,
+                  current,
+                  l10n.recording_sensitivityLow,
+                ),
+                _sensitivityChip(
+                  colors,
+                  NoiseSensitivity.medium,
+                  current,
+                  l10n.recording_sensitivityMed,
+                ),
+                _sensitivityChip(
+                  colors,
+                  NoiseSensitivity.high,
+                  current,
+                  l10n.recording_sensitivityHigh,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -528,14 +611,19 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
         ref.read(noiseSensitivityProvider.notifier).state = value;
       },
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        duration: DurationScale.ms200,
+        padding: const EdgeInsets.symmetric(
+          horizontal: SpacingScale.s12,
+          vertical: SpacingScale.s8,
+        ),
         decoration: BoxDecoration(
           color: isSelected ? colors.foreground : colors.surfaceAlt,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(RadiusScale.r12),
         ),
         child: Text(
           label,
+          maxLines: 1,
+          softWrap: false,
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
             color: isSelected ? colors.background : colors.secondary,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
@@ -568,7 +656,7 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
             bottom: 16,
             child: AnimatedOpacity(
               opacity: recState.showCheckpointToast ? 1.0 : 0.0,
-              duration: const Duration(milliseconds: 250),
+              duration: DurationScale.ms250,
               child: _CheckpointChip(
                 label: l10n.recording_savedAt(formatElapsed(checkpoint)),
               ),
@@ -584,7 +672,7 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
     RecordingState recState,
   ) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 40),
+      padding: const EdgeInsets.only(bottom: SpacingScale.s40),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -597,7 +685,7 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
                 ? notifier.resumeRecording()
                 : notifier.pauseRecording(),
           ),
-          const SizedBox(width: 48),
+          const SizedBox(width: SpacingScale.s48),
 
           _buildStopButton(colors, () => _handleStop(notifier)),
         ],
@@ -621,7 +709,7 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
               width: 64,
               height: 64,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(RadiusScale.r20),
                 color: colors.accent,
                 boxShadow: [
                   BoxShadow(
@@ -636,13 +724,13 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
                   width: 20,
                   height: 20,
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(4),
+                    color: AppColors.white,
+                    borderRadius: BorderRadius.circular(RadiusScale.r4),
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: SpacingScale.s8),
             Text(
               AppLocalizations.of(context).recording_stop,
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
@@ -666,21 +754,24 @@ class _StorageBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      color: const Color(0xFFFFEDCC),
+      padding: const EdgeInsets.symmetric(
+        horizontal: SpacingScale.s16,
+        vertical: SpacingScale.s8,
+      ),
+      color: AppColors.warningContainer,
       child: Row(
         children: [
           const Icon(
             LucideIcons.alertTriangle,
             size: 16,
-            color: Color(0xFF8A5A00),
+            color: AppColors.onWarningContainer,
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: SpacingScale.s8),
           Expanded(
             child: Text(
               message,
               style: const TextStyle(
-                color: Color(0xFF8A5A00),
+                color: AppColors.onWarningContainer,
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
               ),
@@ -702,16 +793,22 @@ class _InfoBanner extends StatelessWidget {
     final colors = AppColors.of(context);
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(
+        horizontal: SpacingScale.s16,
+        vertical: SpacingScale.s8,
+      ),
       color: colors.surfaceAlt,
       child: Row(
         children: [
           Icon(LucideIcons.info, size: 16, color: colors.secondary),
-          const SizedBox(width: 8),
+          const SizedBox(width: SpacingScale.s8),
           Expanded(
             child: Text(
               message,
-              style: TextStyle(color: colors.secondary, fontSize: 12),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: colors.secondary,
+                fontSize: 12,
+              ),
             ),
           ),
         ],
@@ -729,16 +826,19 @@ class _CheckpointChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(
+        horizontal: SpacingScale.s8,
+        vertical: SpacingScale.s4,
+      ),
       decoration: BoxDecoration(
         color: colors.foreground.withValues(alpha: 0.92),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(RadiusScale.r16),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(LucideIcons.checkCircle2, size: 12, color: colors.background),
-          const SizedBox(width: 6),
+          const SizedBox(width: SpacingScale.s8),
           Text(
             label,
             style: TextStyle(
@@ -763,17 +863,20 @@ class _BackToListButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     return Material(
-      color: Colors.transparent,
+      color: AppColors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(RadiusScale.r20),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          padding: const EdgeInsets.symmetric(
+            horizontal: SpacingScale.s12,
+            vertical: SpacingScale.s8,
+          ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(LucideIcons.arrowLeft, size: 14, color: colors.secondary),
-              const SizedBox(width: 6),
+              const SizedBox(width: SpacingScale.s8),
               Text(
                 label,
                 style: TextStyle(
@@ -809,7 +912,7 @@ class _PulsingDotState extends State<_PulsingDot>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 900),
+      duration: DurationScale.ms900,
     )..repeat(reverse: true);
   }
 

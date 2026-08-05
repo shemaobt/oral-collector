@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/tokens.dart';
 
 class MiniStatBadge extends StatelessWidget {
   const MiniStatBadge({
@@ -20,10 +21,13 @@ class MiniStatBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      padding: const EdgeInsets.symmetric(
+        horizontal: SpacingScale.s8,
+        vertical: 5,
+      ),
       decoration: BoxDecoration(
         color: bgBase.withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(RadiusScale.r8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

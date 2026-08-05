@@ -1,3 +1,5 @@
+import '../../../../core/serialization/safe_read.dart';
+
 class Project {
   final String id;
   final String name;
@@ -38,9 +40,7 @@ class Project {
       totalDurationSeconds:
           (json['total_duration_seconds'] as num?)?.toDouble() ?? 0,
       storytellerCount: (json['storyteller_count'] as num?)?.toInt() ?? 0,
-      createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at'] as String)
-          : null,
+      createdAt: readDateOrNull(json, 'created_at'),
     );
   }
 

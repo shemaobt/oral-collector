@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:oral_collector/core/observability/error_reporter.dart';
 import 'package:oral_collector/features/recording/data/services/recording_concat_service.dart';
 import 'package:oral_collector/features/recording/data/services/recording_finalization_service.dart';
 import 'package:oral_collector/features/recording/presentation/notifiers/recording_session_state.dart';
@@ -67,6 +68,43 @@ class _StubConcatService implements RecordingConcatService {
     }
     return path;
   }
+}
+
+class _CapturingReporter implements ErrorReporter {
+  final List<Object> errors = [];
+
+  @override
+  void reportError(
+    Object error,
+    StackTrace? stackTrace, {
+    Map<String, String>? tags,
+    Map<String, Object?>? context,
+    ErrorLevel level = ErrorLevel.error,
+  }) {
+    errors.add(error);
+  }
+
+  @override
+  void addBreadcrumb(
+    String message, {
+    String? category,
+    ErrorLevel level = ErrorLevel.info,
+    Map<String, Object?>? data,
+  }) {}
+
+  @override
+  void setUser({
+    String? id,
+    String? username,
+    String? email,
+    Map<String, Object?>? data,
+  }) {}
+
+  @override
+  void clearUser() {}
+
+  @override
+  void setTag(String key, String value) {}
 }
 
 void main() {
@@ -203,6 +241,107 @@ void main() {
         expect(outcome.degraded, isFalse);
       },
     );
+  });
+
+  group('finalize - deleteSources flag (crash recovery)', () {
+    test(
+      'deleteSources=false keeps the original segment files after a successful '
+      'concat + compress (so a cancelled recovery can still re-recover)',
+      () async {
+        final w1 = '${tmp.path}/s1.wav';
+        final w2 = '${tmp.path}/s2.wav';
+        await File(w1).writeAsBytes(_buildWavFile([1, 2]));
+        await File(w2).writeAsBytes(_buildWavFile([3, 4]));
+
+        final concatOut = '${tmp.path}/concat_sess.wav';
+        final service = RecordingFinalizationService(
+          concat: _StubConcatService(result: () => concatOut),
+          documentsDirFn: tmpDocsDir,
+          compressFn: okCompress,
+        );
+
+        final outcome = await service.finalize(
+          sessionId: 'sess',
+          segmentPaths: [w1, w2],
+          totalDuration: const Duration(seconds: 5),
+          deleteSources: false,
+        );
+
+        // Give any (incorrect) unawaited deletion a chance to run before we
+        // assert the sources survived.
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+
+        expect(outcome, isNotNull);
+        expect(File(w1).existsSync(), isTrue);
+        expect(File(w2).existsSync(), isTrue);
+      },
+    );
+
+    test('deleteSources=false keeps the single WAV segment after a successful '
+        'compress (single-segment recovery can still re-derive)', () async {
+      final wav = '${tmp.path}/seg.wav';
+      await File(wav).writeAsBytes(_buildWavFile([1, 2, 3]));
+
+      final service = RecordingFinalizationService(
+        concat: _StubConcatService(),
+        documentsDirFn: tmpDocsDir,
+        compressFn: okCompress,
+      );
+
+      final outcome = await service.finalize(
+        sessionId: 'sess',
+        segmentPaths: [wav],
+        totalDuration: const Duration(seconds: 5),
+        deleteSources: false,
+      );
+
+      // Give any (incorrect) unawaited deletion a chance to run before we
+      // assert the source survived.
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+
+      expect(outcome, isNotNull);
+      expect(File(wav).existsSync(), isTrue);
+    });
+
+    test('deleteSources=false reclaims the derived pure-Dart concat temp while '
+        'keeping the original segments', () async {
+      final w1 = '${tmp.path}/s1.wav';
+      final w2 = '${tmp.path}/s2.wav';
+      await File(w1).writeAsBytes(_buildWavFile([1, 2]));
+      await File(w2).writeAsBytes(_buildWavFile([3, 4]));
+
+      // ffmpeg concat "fails" (returns null) so the pure-Dart fallback runs;
+      // its output is a derived temp the service owns, not an original.
+      final service = RecordingFinalizationService(
+        concat: _StubConcatService(result: () => null),
+        documentsDirFn: tmpDocsDir,
+        compressFn: okCompress,
+      );
+
+      final outcome = await service.finalize(
+        sessionId: 'sess',
+        segmentPaths: [w1, w2],
+        totalDuration: const Duration(seconds: 5),
+        deleteSources: false,
+      );
+
+      // Give the fire-and-forget temp reclaim a chance to run.
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+
+      expect(outcome, isNotNull);
+      expect(outcome!.degraded, isTrue);
+      // Originals survive (deleteSources:false)...
+      expect(File(w1).existsSync(), isTrue);
+      expect(File(w2).existsSync(), isTrue);
+      // ...and the derived intermediate is reclaimed: the only files left in
+      // the docs dir are the two originals and the produced recording.
+      final remaining = tmp
+          .listSync()
+          .whereType<File>()
+          .map((f) => f.path)
+          .toSet();
+      expect(remaining, {w1, w2, outcome.result.filePath});
+    });
   });
 
   group('finalize - concat fallbacks', () {
@@ -393,6 +532,70 @@ void main() {
       );
 
       expect(outcome!.result.durationSeconds, 12.5);
+    });
+  });
+
+  group('finalize - delete observability', () {
+    test(
+      'a failed best-effort source deletion is reported, not swallowed',
+      () async {
+        final w1 = '${tmp.path}/s1.wav';
+        final w2 = '${tmp.path}/s2.wav';
+        await File(w1).writeAsBytes(_buildWavFile([1, 2]));
+        await File(w2).writeAsBytes(_buildWavFile([3, 4]));
+
+        final concatOut = '${tmp.path}/concat_sess.wav';
+        final reporter = _CapturingReporter();
+
+        final service = RecordingFinalizationService(
+          concat: _StubConcatService(result: () => concatOut),
+          documentsDirFn: tmpDocsDir,
+          compressFn: okCompress,
+          deleteFn: (_) async =>
+              throw const FileSystemException('delete failed'),
+          reporter: reporter,
+        );
+
+        await service.finalize(
+          sessionId: 'sess',
+          segmentPaths: [w1, w2],
+          totalDuration: const Duration(seconds: 5),
+          deleteSources: true,
+        );
+
+        // Deletions are fire-and-forget; let them run before asserting.
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+
+        expect(reporter.errors, isNotEmpty);
+      },
+    );
+
+    test('a successful deletion reports nothing', () async {
+      final w1 = '${tmp.path}/s1.wav';
+      final w2 = '${tmp.path}/s2.wav';
+      await File(w1).writeAsBytes(_buildWavFile([1, 2]));
+      await File(w2).writeAsBytes(_buildWavFile([3, 4]));
+
+      final concatOut = '${tmp.path}/concat_sess.wav';
+      final reporter = _CapturingReporter();
+
+      final service = RecordingFinalizationService(
+        concat: _StubConcatService(result: () => concatOut),
+        documentsDirFn: tmpDocsDir,
+        compressFn: okCompress,
+        deleteFn: (_) async {},
+        reporter: reporter,
+      );
+
+      await service.finalize(
+        sessionId: 'sess',
+        segmentPaths: [w1, w2],
+        totalDuration: const Duration(seconds: 5),
+        deleteSources: true,
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+
+      expect(reporter.errors, isEmpty);
     });
   });
 }

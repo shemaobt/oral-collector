@@ -3,11 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import '../../../core/auth/auth_notifier.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/tokens.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_snack_bar.dart';
 import '../../auth/data/providers/role_provider.dart';
-import '../../../core/auth/auth_notifier.dart';
 import '../../sync/presentation/notifiers/sync_notifier.dart';
 import '../domain/entities/storyteller.dart';
 import 'notifiers/project_storytellers_notifier.dart';
@@ -143,7 +145,7 @@ class _StorytellersListScreenState
           .read(projectStorytellersNotifierProvider.notifier)
           .fetch(widget.projectId),
       child: ListView.separated(
-        padding: const EdgeInsets.symmetric(vertical: 12),
+        padding: const EdgeInsets.symmetric(vertical: SpacingScale.s12),
         itemCount: state.storytellers.length,
         separatorBuilder: (_, _) => const Divider(height: 1),
         itemBuilder: (_, i) {
@@ -168,8 +170,8 @@ class _StorytellersListScreenState
             background: Container(
               color: Theme.of(context).colorScheme.error,
               alignment: Alignment.centerRight,
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: const Icon(LucideIcons.trash2, color: Colors.white),
+              padding: const EdgeInsets.symmetric(horizontal: SpacingScale.s24),
+              child: const Icon(LucideIcons.trash2, color: AppColors.white),
             ),
             child: tile,
           );

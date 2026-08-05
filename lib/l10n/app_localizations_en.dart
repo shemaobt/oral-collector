@@ -398,10 +398,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get projectSettings_updated => 'Project updated';
 
   @override
-  String get projectSettings_noPermission =>
-      'You do not have permission to update this project';
-
-  @override
   String get projectSettings_team => 'Team';
 
   @override
@@ -471,7 +467,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recording_titleHint => 'Recording title';
 
   @override
-  String get recording_descriptionHint => 'Add a short description (optional)';
+  String get recording_descriptionHint => 'Describe this recording';
+
+  @override
+  String recording_descriptionTooShort(int count) {
+    return 'Please describe this recording in at least $count characters';
+  }
 
   @override
   String get recording_descriptionEmpty => 'Add description';
@@ -550,11 +551,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get recording_downloadAudioMessage =>
       'The audio file is not stored on this device. Would you like to download it to trim?';
-
-  @override
-  String recording_downloadFailed(String error) {
-    return 'Failed to download: $error';
-  }
 
   @override
   String get recording_audioNotAvailable => 'Audio file not available';
@@ -664,6 +660,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'Tap the microphone to record your first story, or import an audio file.';
 
   @override
+  String get recordings_offlineFilterTitle => 'Not available offline';
+
+  @override
+  String get recordings_offlineFilterDescription =>
+      'The server works out which recordings still need details. Reconnect to see them, or remove the filter to browse everything on this device.';
+
+  @override
+  String get recordings_filterErrorTitle => 'Couldn\'t check right now';
+
+  @override
+  String get recordings_filterErrorDescription =>
+      'The server didn\'t answer, so we can\'t say which recordings still need details. Try again, or remove the filter to browse everything on this device.';
+
+  @override
   String get recordings_dropToImport =>
       'Tip: drag audio files onto this window to import.';
 
@@ -689,6 +699,38 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recording_statusLocal => 'Local';
+
+  @override
+  String get recording_statusNameConflict => 'Name conflict';
+
+  @override
+  String get recording_statusDescriptionTooShort => 'Description too short';
+
+  @override
+  String get recording_descriptionGapMessage =>
+      'This recording can\'t be uploaded until you add a longer description.';
+
+  @override
+  String get recording_statusRetriesExhausted => 'Attempts used up';
+
+  @override
+  String get recording_statusFileMissing => 'Audio file missing';
+
+  @override
+  String get recording_uploadExhaustedMessage =>
+      'The upload stopped after several attempts. You can try again.';
+
+  @override
+  String get recording_fileMissingMessage =>
+      'The audio file for this recording is no longer on this device, so it can\'t be uploaded.';
+
+  @override
+  String get recording_duplicateTitleTitle => 'Name already used';
+
+  @override
+  String recording_duplicateTitleMessage(String title) {
+    return 'An audio named \"$title\" already exists in this project. Choose another name.';
+  }
 
   @override
   String get recordings_clearStale => 'Clear failed';
@@ -797,10 +839,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get trim_classifySegment => 'Classify segment';
-
-  @override
-  String get trim_primaryEqualsSecondary =>
-      'Primary classification cannot match the recording\'s secondary classification.';
 
   @override
   String get trim_volume => 'Volume';
@@ -971,12 +1009,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String import_resumePromptBody(String name, String size) {
-    return '\"$name\" ($size) was partially uploaded. Select the same file to continue.';
+    return '\"$name\" ($size) was partially uploaded. Select the exact same file (unchanged) to continue.';
   }
 
   @override
   String get import_resumeSizeMismatch =>
-      'That file doesn\'t match the paused upload.';
+      'That\'s a different file. Select the exact same file you were uploading.';
 
   @override
   String import_largeFileWarning(String size) {
@@ -1017,11 +1055,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profile_photoUpdated => 'Profile photo updated';
-
-  @override
-  String profile_photoFailed(String error) {
-    return 'Failed to update photo: $error';
-  }
 
   @override
   String get profile_editName => 'Edit display name';
@@ -1757,6 +1790,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get filter_unclassified => 'Unclassified';
 
   @override
+  String get filter_missingDescription => 'Missing description';
+
+  @override
   String get filter_allGenres => 'All genres';
 
   @override
@@ -1835,6 +1871,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get projectStats_members => 'Members';
 
   @override
+  String get projectStats_needsDetails => 'Needs details';
+
+  @override
+  String projectStats_showPendency(String label, int count) {
+    return 'Show recordings — $label ($count)';
+  }
+
+  @override
   String get project_active => 'Active';
 
   @override
@@ -1886,10 +1930,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get classify_action => 'Classify';
 
   @override
-  String get classify_banner =>
-      'This recording is unclassified. Tap Classify to add a genre and register.';
-
-  @override
   String get classify_success => 'Recording classified';
 
   @override
@@ -1917,10 +1957,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get classify_secondaryRegister => 'Secondary register';
-
-  @override
-  String get classify_secondarySameAsPrimary =>
-      'Secondary genre must differ from the predominant genre.';
 
   @override
   String get classify_clearAlternative => 'Clear alternative';
@@ -2291,7 +2327,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get filters_sheetTitle => 'Filter recordings';
 
   @override
-  String get filters_sectionStatus => 'Upload status';
+  String get filters_sectionStatus => 'Status on this device';
+
+  @override
+  String get filters_sectionStatusHint =>
+      'Narrows the recordings already on screen. Works offline.';
 
   @override
   String get filters_sectionGenre => 'Genre';
@@ -2301,6 +2341,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get filters_sectionUser => 'Recorded by';
+
+  @override
+  String get filters_sectionPendency => 'What the server says is missing';
+
+  @override
+  String get filters_sectionPendencyHint =>
+      'Asks the server which recordings still need details. Needs a connection.';
 
   @override
   String get filter_apply => 'Apply';
@@ -2334,6 +2381,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get filter_genreAll => 'Any genre';
+
+  @override
+  String get filter_pendencyAll => 'Any field';
 
   @override
   String get detail_recordedBy => 'Recorded by';
@@ -2653,4 +2703,58 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get liveActivity_uploadingStatus => 'Uploading';
+
+  @override
+  String get recording_completeFicha => 'Complete details';
+
+  @override
+  String get recording_completeFichaTitle => 'Complete the details';
+
+  @override
+  String recording_completeFichaSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count details are still open. Fill them in now, or come back to them later.',
+      one: '1 detail is still open. Fill it in now, or come back to it later.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recording_completeFichaStart => 'Start';
+
+  @override
+  String get recording_completeFichaContinue => 'Continue';
+
+  @override
+  String get recording_pendencyClassification => 'No classification';
+
+  @override
+  String get recording_pendencyClassificationContext =>
+      'Genre and register say what kind of story this is.';
+
+  @override
+  String get recording_pendencyDescription => 'Description too short';
+
+  @override
+  String get recording_pendencyDescriptionContext =>
+      'A few words about what happens in the recording.';
+
+  @override
+  String get recording_pendencyStoryteller => 'No storyteller';
+
+  @override
+  String get recording_pendencyStorytellerContext => 'Who tells this story.';
+
+  @override
+  String recording_pendencyCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count fields to fill',
+    );
+    return '$_temp0';
+  }
 }

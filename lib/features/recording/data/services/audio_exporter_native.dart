@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'dart:ui' show Rect;
 
-import 'package:flutter/foundation.dart';
+import 'package:logging/logging.dart';
 import 'package:path/path.dart' as p;
 import 'package:share_plus/share_plus.dart';
 
@@ -14,6 +14,8 @@ class AudioExportResult {
 }
 
 class AudioExporter {
+  static final _log = Logger('AudioExporter');
+
   static Future<AudioExportResult> shareAudio({
     required String localFilePath,
     String? suggestedName,
@@ -42,7 +44,7 @@ class AudioExporter {
       );
       return const AudioExportResult(success: true);
     } catch (e, st) {
-      debugPrint('AudioExporter.shareAudio failed: $e\n$st');
+      _log.warning('shareAudio failed', e, st);
       return AudioExportResult(success: false, error: e.toString());
     }
   }

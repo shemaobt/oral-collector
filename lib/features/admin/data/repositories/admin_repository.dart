@@ -1,8 +1,10 @@
-import 'dart:convert';
-
 import '../../../../core/network/api_error_handler.dart';
 import '../../../../core/network/authenticated_client.dart';
+import '../../../../core/network/response_decoder.dart';
+import '../../../../core/observability/error_reporter.dart';
+import '../../../../core/serialization/parse_list.dart';
 import '../../../genre/domain/entities/genre.dart';
+import '../../../genre/domain/entities/genre_update.dart';
 import '../../../project/domain/entities/project.dart';
 import '../../../recording/domain/entities/recording.dart';
 import '../../domain/entities/admin_stats.dart';
@@ -10,44 +12,40 @@ import '../../domain/repositories/admin_repository.dart';
 
 class AdminRepositoryImpl implements AdminRepository {
   final AuthenticatedClient _client;
+  final ErrorReporter _reporter;
 
-  AdminRepositoryImpl({required AuthenticatedClient client}) : _client = client;
+  AdminRepositoryImpl({
+    required AuthenticatedClient client,
+    required ErrorReporter reporter,
+  }) : _client = client,
+       _reporter = reporter;
 
   @override
   Future<AdminStats> fetchStats() async {
     final response = await _client.get('/api/oc/admin/stats');
-    guardResponse(response);
-    if (response.statusCode != 200) {
-      throw Exception('Failed to fetch admin stats: ${response.body}');
-    }
-    final data = jsonDecode(response.body) as Map<String, dynamic>;
-    return AdminStats.fromJson(data);
+    return AdminStats.fromJson(decodeObject(response));
   }
 
   @override
   Future<List<Project>> fetchAllProjects() async {
     final response = await _client.get('/api/oc/projects');
-    guardResponse(response);
-    if (response.statusCode != 200) {
-      throw Exception('Failed to fetch projects: ${response.body}');
-    }
-    final data = jsonDecode(response.body) as List<dynamic>;
-    return data
-        .map((json) => Project.fromJson(json as Map<String, dynamic>))
-        .toList();
+    return parseList(
+      decodeList(response),
+      Project.fromJson,
+      context: 'fetchAllProjects',
+      onSkip: _reporter.parseSkipSink(context: 'fetchAllProjects'),
+    );
   }
 
   @override
   Future<List<Genre>> fetchAllGenres() async {
     final response = await _client.get('/api/oc/genres');
-    guardResponse(response);
-    if (response.statusCode != 200) {
-      throw Exception('Failed to fetch genres: ${response.body}');
-    }
-    final data = jsonDecode(response.body) as List<dynamic>;
-    return data
-        .map((json) => Genre.fromJson(json as Map<String, dynamic>))
-        .toList();
+    return parseList(
+      decodeList(response),
+      Genre.fromJson,
+      context: 'fetchAllGenres',
+      onSkip: _reporter.parseSkipSink(context: 'fetchAllGenres'),
+    );
   }
 
   @override
@@ -63,23 +61,16 @@ class AdminRepositoryImpl implements AdminRepository {
     if (color != null) body['color'] = color;
 
     final response = await _client.post('/api/oc/genres', body: body);
-    guardResponse(response);
-    if (response.statusCode != 200 && response.statusCode != 201) {
-      throw Exception('Failed to create genre: ${response.body}');
-    }
-    final data = jsonDecode(response.body) as Map<String, dynamic>;
-    return Genre.fromJson(data);
+    return Genre.fromJson(decodeObject(response));
   }
 
   @override
-  Future<Genre> updateGenre(String id, Map<String, dynamic> data) async {
-    final response = await _client.patch('/api/oc/genres/$id', body: data);
-    guardResponse(response);
-    if (response.statusCode != 200) {
-      throw Exception('Failed to update genre: ${response.body}');
-    }
-    final responseData = jsonDecode(response.body) as Map<String, dynamic>;
-    return Genre.fromJson(responseData);
+  Future<Genre> updateGenre(String id, GenreUpdate update) async {
+    final response = await _client.patch(
+      '/api/oc/genres/$id',
+      body: update.toJson(),
+    );
+    return Genre.fromJson(decodeObject(response));
   }
 
   @override
@@ -119,14 +110,12 @@ class AdminRepositoryImpl implements AdminRepository {
   @override
   Future<List<Recording>> fetchCleaningQueue() async {
     final response = await _client.get('/api/oc/admin/cleaning-queue');
-    guardResponse(response);
-    if (response.statusCode != 200) {
-      throw Exception('Failed to fetch cleaning queue: ${response.body}');
-    }
-    final data = jsonDecode(response.body) as List<dynamic>;
-    return data
-        .map((json) => Recording.fromJson(json as Map<String, dynamic>))
-        .toList();
+    return parseList(
+      decodeList(response),
+      Recording.fromJson,
+      context: 'fetchCleaningQueue',
+      onSkip: _reporter.parseSkipSink(context: 'fetchCleaningQueue'),
+    );
   }
 
   @override

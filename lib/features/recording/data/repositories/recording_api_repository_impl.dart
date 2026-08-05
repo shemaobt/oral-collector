@@ -1,27 +1,36 @@
 import 'dart:convert';
 
+import 'package:http/http.dart' as http;
+
 import '../../../../core/errors/api_exception.dart';
-import '../../../../core/network/authenticated_client.dart';
+import '../../../../core/errors/app_exception.dart' show ParseException;
 import '../../../../core/network/api_error_handler.dart';
+import '../../../../core/network/authenticated_client.dart';
+import '../../../../core/network/error_boundary.dart' show throwForResponse;
+import '../../../../core/network/response_decoder.dart';
+import '../../../../core/observability/error_reporter.dart';
+import '../../../../core/serialization/parse_list.dart';
+import '../../../../core/serialization/safe_read.dart';
+import '../../domain/entities/review_flag.dart';
 import '../../domain/entities/server_recording.dart';
+import '../../domain/entities/split_segment_request.dart';
+import '../../domain/entities/update_recording_request.dart';
 import '../../domain/repositories/recording_api_repository.dart';
 
 class RecordingApiRepositoryImpl implements RecordingApiRepository {
   final AuthenticatedClient _client;
+  final ErrorReporter _reporter;
 
-  RecordingApiRepositoryImpl({required AuthenticatedClient client})
-    : _client = client;
+  RecordingApiRepositoryImpl({
+    required AuthenticatedClient client,
+    required ErrorReporter reporter,
+  }) : _client = client,
+       _reporter = reporter;
 
   @override
   Future<ServerRecording> getRecording(String serverId) async {
     final response = await _client.get('/api/oc/recordings/$serverId');
-    guardResponse(response);
-    if (response.statusCode != 200) {
-      throw Exception('Failed to get recording: ${response.body}');
-    }
-    return ServerRecording.fromJson(
-      jsonDecode(response.body) as Map<String, dynamic>,
-    );
+    return ServerRecording.fromJson(decodeObject(response));
   }
 
   @override
@@ -32,6 +41,8 @@ class RecordingApiRepositoryImpl implements RecordingApiRepository {
     String? userId,
     String? storytellerId,
     String? uploadStatus,
+    String? title,
+    String? reviewFlag,
   }) async {
     final params = <String, String>{
       'project_id': projectId,
@@ -42,17 +53,23 @@ class RecordingApiRepositoryImpl implements RecordingApiRepository {
         'storyteller_id': storytellerId,
       if (uploadStatus != null && uploadStatus.isNotEmpty)
         'upload_status': uploadStatus,
+      if (title != null && title.isNotEmpty) 'title': title,
+      if (reviewFlag != null && reviewFlag.isNotEmpty)
+        'review_flag': reviewFlag,
     };
-    final query = params.entries.map((e) => '${e.key}=${e.value}').join('&');
+    // encodeComponent, not encodeQueryComponent: the latter writes a space as
+    // `+`, which only means space in form-encoded bodies. `%20` is unambiguous
+    // to any parser, and every default recording title contains a space.
+    final query = params.entries
+        .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
+        .join('&');
     final response = await _client.get('/api/oc/recordings?$query');
-    guardResponse(response);
-    if (response.statusCode != 200) {
-      throw Exception('Failed to list recordings: ${response.body}');
-    }
-    final data = jsonDecode(response.body) as List<dynamic>;
-    return data
-        .map((json) => ServerRecording.fromJson(json as Map<String, dynamic>))
-        .toList();
+    return parseList(
+      decodeList(response),
+      ServerRecording.fromJson,
+      context: 'listRecordings',
+      onSkip: _reporter.parseSkipSink(context: 'listRecordings'),
+    );
   }
 
   @override
@@ -68,57 +85,44 @@ class RecordingApiRepositoryImpl implements RecordingApiRepository {
   }
 
   @override
-  Future<bool> updateRecording(
-    String serverId, {
-    String? title,
-    String? description,
-    String? genreId,
-    String? subcategoryId,
-    String? registerId,
-    String? secondaryGenreId,
-    String? secondarySubcategoryId,
-    String? secondaryRegisterId,
-    bool clearSecondary = false,
-    String? storytellerId,
-    String? cleaningStatus,
-    double? durationSeconds,
-    int? fileSizeBytes,
-  }) async {
-    final body = <String, dynamic>{};
-    if (title != null) body['title'] = title;
-    if (description != null) body['description'] = description;
-    if (genreId != null) body['genre_id'] = genreId;
-    if (subcategoryId != null) body['subcategory_id'] = subcategoryId;
-    if (registerId != null) body['register_id'] = registerId;
-    if (clearSecondary) {
-      body['secondary_genre_id'] = null;
-      body['secondary_subcategory_id'] = null;
-      body['secondary_register_id'] = null;
-    } else {
-      if (secondaryGenreId != null) {
-        body['secondary_genre_id'] = secondaryGenreId;
-      }
-      if (secondarySubcategoryId != null) {
-        body['secondary_subcategory_id'] = secondarySubcategoryId;
-      }
-      if (secondaryRegisterId != null) {
-        body['secondary_register_id'] = secondaryRegisterId;
-      }
-    }
-    if (storytellerId != null) body['storyteller_id'] = storytellerId;
-    if (cleaningStatus != null) body['cleaning_status'] = cleaningStatus;
-    if (durationSeconds != null) body['duration_seconds'] = durationSeconds;
-    if (fileSizeBytes != null) body['file_size_bytes'] = fileSizeBytes;
-
+  Future<UpdateRecordingOutcome> updateRecording(
+    String serverId,
+    UpdateRecordingRequest request,
+  ) async {
     final response = await _client.patch(
       '/api/oc/recordings/$serverId',
-      body: body,
+      body: request.toJson(),
     );
     guardResponse(response);
     if (response.statusCode == 403) {
       throw const ForbiddenException();
     }
-    return response.statusCode == 200;
+    // The backend deduplicates on (project_id, title). A rename onto a taken
+    // title must stay distinguishable: callers save locally on a plain `false`,
+    // which would leave the device disagreeing with the server. (ENG-71)
+    if (response.statusCode == 409) {
+      throwForResponse(response);
+    }
+    final success = response.statusCode == 200;
+    return (
+      success: success,
+      reviewFlags: success ? _reviewFlagsOf(response) : null,
+    );
+  }
+
+  /// Only the flags are read back out of an accepted write, never the whole
+  /// [ServerRecording]: that factory force-casts, and a throw here would turn a
+  /// save the server already committed into a failure the user is told about
+  /// (ENG-379). A body that is not an object gives up on the flags and says so
+  /// with null.
+  List<ReviewFlag>? _reviewFlagsOf(http.Response response) {
+    try {
+      return readReviewFlagsOrNull(decodeObject(response));
+    } on FormatException {
+      return null;
+    } on ParseException {
+      return null;
+    }
   }
 
   @override
@@ -126,22 +130,18 @@ class RecordingApiRepositoryImpl implements RecordingApiRepository {
     final response = await _client.post(
       '/api/oc/recordings/clear-stale?project_id=$projectId',
     );
-    guardResponse(response);
-    if (response.statusCode != 200) {
-      throw Exception('Failed to clear stale recordings: ${response.body}');
-    }
-    final data = jsonDecode(response.body) as Map<String, dynamic>;
-    return data['deleted'] as int? ?? 0;
+    final data = decodeObject(response);
+    return readIntOrNull(data, 'deleted') ?? 0;
   }
 
   @override
   Future<List<String>> splitRecording({
     required String serverId,
-    required List<Map<String, dynamic>> segments,
+    required List<SplitSegmentRequest> segments,
   }) async {
     final response = await _client.post(
       '/api/oc/recordings/$serverId/split',
-      body: {'segments': segments},
+      body: {'segments': segments.map((s) => s.toJson()).toList()},
     );
     guardResponse(response);
     if (response.statusCode != 200 &&
@@ -152,9 +152,16 @@ class RecordingApiRepositoryImpl implements RecordingApiRepository {
       );
     }
     final data = jsonDecode(response.body);
-    if (data is Map<String, dynamic> && data.containsKey('recording_ids')) {
-      return (data['recording_ids'] as List<dynamic>).cast<String>();
-    }
-    return [];
+    if (data is! Map<String, dynamic>) return const [];
+    final ids = data['recording_ids'];
+    if (ids is! List) return const [];
+    return ids.map((e) {
+      if (e is String) return e;
+      throw ParseException(
+        field: 'recording_ids',
+        expected: 'String',
+        cause: e,
+      );
+    }).toList();
   }
 }

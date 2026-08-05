@@ -12,14 +12,14 @@ class _FakeRecordingSessionNotifier extends RecordingSessionNotifier {
   _FakeRecordingSessionNotifier(this._initial);
 
   final RecordingState _initial;
-  int discardCallCount = 0;
+  int _discardCallCount = 0;
 
   @override
   RecordingState build() => _initial;
 
   @override
   Future<void> discardRecording() async {
-    discardCallCount++;
+    _discardCallCount++;
     state = const RecordingState();
   }
 }
@@ -74,7 +74,7 @@ void main() {
       final l10n = AppLocalizationsEn();
       expect(find.text(l10n.recording_blockNavTitle), findsNothing);
       expect(result, isTrue);
-      expect(fake.discardCallCount, 0);
+      expect(fake._discardCallCount, 0);
     },
   );
 
@@ -108,7 +108,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(captured, isFalse);
-    expect(fake.discardCallCount, 0);
+    expect(fake._discardCallCount, 0);
   });
 
   testWidgets(
@@ -141,7 +141,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(captured, isTrue);
-      expect(fake.discardCallCount, 1);
+      expect(fake._discardCallCount, 1);
     },
   );
 

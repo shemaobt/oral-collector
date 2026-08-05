@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -12,14 +14,14 @@ class _FakeRecordingSessionNotifier extends RecordingSessionNotifier {
   _FakeRecordingSessionNotifier(this._initial);
 
   final RecordingState _initial;
-  int discardCallCount = 0;
+  int _discardCallCount = 0;
 
   @override
   RecordingState build() => _initial;
 
   @override
   Future<void> discardRecording() async {
-    discardCallCount++;
+    _discardCallCount++;
     state = const RecordingState();
   }
 }
@@ -42,10 +44,12 @@ Future<void> _pumpAppWithGuard(
     ),
   );
 
-  navKey.currentState!.push(
-    MaterialPageRoute<void>(
-      builder: (_) => const RecordingNavigationGuard(
-        child: Scaffold(body: Center(child: Text('recording'))),
+  unawaited(
+    navKey.currentState!.push(
+      MaterialPageRoute<void>(
+        builder: (_) => const RecordingNavigationGuard(
+          child: Scaffold(body: Center(child: Text('recording'))),
+        ),
       ),
     ),
   );
@@ -68,7 +72,7 @@ void main() {
     expect(popped, isTrue);
     expect(find.text('root'), findsOneWidget);
     expect(find.text('recording'), findsNothing);
-    expect(fake.discardCallCount, 0);
+    expect(fake._discardCallCount, 0);
   });
 
   testWidgets(
@@ -87,7 +91,7 @@ void main() {
       final l10n = AppLocalizationsEn();
       expect(find.text(l10n.recording_blockNavTitle), findsOneWidget);
       expect(find.text('recording'), findsOneWidget);
-      expect(fake.discardCallCount, 0);
+      expect(fake._discardCallCount, 0);
     },
   );
 
@@ -110,7 +114,7 @@ void main() {
 
       expect(find.text('recording'), findsOneWidget);
       expect(find.text('root'), findsNothing);
-      expect(fake.discardCallCount, 0);
+      expect(fake._discardCallCount, 0);
     },
   );
 
@@ -131,7 +135,7 @@ void main() {
       await tester.tap(find.text(l10n.recording_blockNavDiscardAndLeave));
       await tester.pumpAndSettle();
 
-      expect(fake.discardCallCount, 1);
+      expect(fake._discardCallCount, 1);
       expect(find.text('root'), findsOneWidget);
       expect(find.text('recording'), findsNothing);
     },

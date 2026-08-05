@@ -3,8 +3,11 @@ import 'package:intl/intl.dart' as intl;
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../../l10n/app_localizations.dart';
-import '../../../../core/database/app_database.dart';
+import '../../../../core/config/upload_retry_policy.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
+import '../../../../shared/utils/cleaning_status_style.dart';
+import '../../domain/entities/local_recording_entity.dart';
 
 class RecordingStatusSection extends StatelessWidget {
   const RecordingStatusSection({
@@ -16,7 +19,7 @@ class RecordingStatusSection extends StatelessWidget {
     this.onRetryUpload,
   });
 
-  final LocalRecording recording;
+  final LocalRecordingEntity recording;
   final AppColorSet colors;
   final ThemeData theme;
   final VoidCallback onToggleCleaning;
@@ -26,11 +29,16 @@ class RecordingStatusSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final locale = Localizations.localeOf(context).languageCode;
+    final cleaningStyle = CleaningStatusStyle.forStatus(
+      recording.cleaningStatus,
+      colors,
+      l10n,
+    );
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(SpacingScale.s16),
       decoration: BoxDecoration(
         color: colors.card,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(RadiusScale.r16),
         border: Border.all(color: colors.border.withValues(alpha: 0.15)),
       ),
       child: Column(
@@ -42,7 +50,7 @@ class RecordingStatusSection extends StatelessWidget {
               fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: SpacingScale.s16),
           StatusRow(
             icon: _uploadIcon(),
             iconColor: _uploadColor(),
@@ -55,8 +63,8 @@ class RecordingStatusSection extends StatelessWidget {
                     style: TextButton.styleFrom(
                       minimumSize: Size.zero,
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
+                        horizontal: SpacingScale.s8,
+                        vertical: SpacingScale.s4,
                       ),
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
@@ -73,23 +81,23 @@ class RecordingStatusSection extends StatelessWidget {
             theme: theme,
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 10),
+            padding: const EdgeInsets.symmetric(vertical: SpacingScale.s8),
             child: Divider(
               height: 1,
               color: colors.border.withValues(alpha: 0.15),
             ),
           ),
           StatusRow(
-            icon: _cleaningIcon(),
-            iconColor: _cleaningColor(),
+            icon: cleaningStyle.icon,
+            iconColor: cleaningStyle.color,
             label: l10n.detail_cleaning,
-            value: _cleaningLabel(l10n),
-            valueColor: _cleaningColor(),
+            value: cleaningStyle.label,
+            valueColor: cleaningStyle.color,
             colors: colors,
             theme: theme,
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 10),
+            padding: const EdgeInsets.symmetric(vertical: SpacingScale.s8),
             child: Divider(
               height: 1,
               color: colors.border.withValues(alpha: 0.15),
@@ -122,6 +130,13 @@ class RecordingStatusSection extends StatelessWidget {
         return LucideIcons.upload;
       case 'failed':
         return LucideIcons.cloudOff;
+      case 'failed_exhausted':
+        return LucideIcons.alertOctagon;
+      case 'failed_missing_file':
+        return LucideIcons.fileX;
+      case 'failed_conflict':
+      case 'failed_description':
+        return LucideIcons.alertCircle;
       default:
         return LucideIcons.smartphone;
     }
@@ -135,6 +150,10 @@ class RecordingStatusSection extends StatelessWidget {
       case 'uploading':
         return colors.accent;
       case 'failed':
+      case 'failed_exhausted':
+      case 'failed_missing_file':
+      case 'failed_conflict':
+      case 'failed_description':
         return colors.error;
       default:
         return colors.secondary;
@@ -147,59 +166,31 @@ class RecordingStatusSection extends StatelessWidget {
       case 'verified':
         return l10n.detail_uploaded;
       case 'uploading':
-        if (recording.retryCount >= 5) return l10n.detail_uploadStuck;
+        if (recording.retryCount >= kMaxUploadRetries) {
+          return l10n.detail_uploadStuck;
+        }
         return l10n.detail_uploading;
       case 'failed':
+        // Rows written by older builds, which are still in the database: the
+        // engine no longer leaves anything here with its budget spent — that
+        // shape is `failed_exhausted` now, and it reads the same line. The 5 is
+        // deliberately a literal and not the shared constant, because it is
+        // what those rows were written against, not policy that still applies.
+        // Raise the ceiling, and a reference to the constant would silently
+        // stop describing them.
         if (recording.retryCount >= 5) return l10n.detail_maxRetries;
         return l10n.detail_uploadFailed;
+      case 'failed_exhausted':
+        return l10n.detail_maxRetries;
+      case 'failed_missing_file':
+        return l10n.recording_statusFileMissing;
+      case 'failed_conflict':
+        return l10n.recording_statusNameConflict;
+      case 'failed_description':
+        return l10n.recording_statusDescriptionTooShort;
       default:
         if (recording.retryCount > 0) return l10n.detail_pendingRetried;
         return l10n.detail_notSynced;
-    }
-  }
-
-  IconData _cleaningIcon() {
-    switch (recording.cleaningStatus) {
-      case 'cleaned':
-        return LucideIcons.sparkles;
-      case 'cleaning':
-        return LucideIcons.loader;
-      case 'needs_cleaning':
-        return LucideIcons.alertCircle;
-      case 'failed':
-        return LucideIcons.alertTriangle;
-      default:
-        return LucideIcons.minus;
-    }
-  }
-
-  Color _cleaningColor() {
-    switch (recording.cleaningStatus) {
-      case 'cleaned':
-        return colors.success;
-      case 'cleaning':
-        return colors.info;
-      case 'needs_cleaning':
-        return Colors.amber.shade700;
-      case 'failed':
-        return colors.error;
-      default:
-        return colors.secondary;
-    }
-  }
-
-  String _cleaningLabel(AppLocalizations l10n) {
-    switch (recording.cleaningStatus) {
-      case 'cleaned':
-        return l10n.cleaning_cleaned;
-      case 'cleaning':
-        return l10n.cleaning_cleaning;
-      case 'needs_cleaning':
-        return l10n.cleaning_needsCleaning;
-      case 'failed':
-        return l10n.cleaning_cleanFailed;
-      default:
-        return l10n.detail_notFlagged;
     }
   }
 }
@@ -235,11 +226,11 @@ class StatusRow extends StatelessWidget {
           height: 32,
           decoration: BoxDecoration(
             color: iconColor.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(RadiusScale.r8),
           ),
           child: Center(child: Icon(icon, size: 16, color: iconColor)),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: SpacingScale.s12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

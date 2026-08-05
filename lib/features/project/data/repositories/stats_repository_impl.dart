@@ -1,7 +1,7 @@
-import 'dart:convert';
-
 import '../../../../core/network/api_error_handler.dart';
 import '../../../../core/network/authenticated_client.dart';
+import '../../../../core/network/response_decoder.dart';
+import '../../../../core/serialization/safe_read.dart';
 import '../../domain/entities/stats.dart';
 import '../../domain/repositories/stats_repository.dart';
 
@@ -18,7 +18,7 @@ class StatsRepositoryImpl implements StatsRepository {
     guardResponse(response);
     if (response.statusCode != 200) return {};
 
-    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    final data = decodeObject(response);
     return _parseGenreStats(data);
   }
 
@@ -42,7 +42,7 @@ class StatsRepositoryImpl implements StatsRepository {
       subcatsByGenre[genreId]![subcatId] = SubcategoryStat(
         subcategoryId: subcatId,
         totalDurationSeconds: (map['duration_seconds'] as num).toDouble(),
-        recordingCount: map['recording_count'] as int,
+        recordingCount: readInt(map, 'recording_count'),
       );
     }
     return subcatsByGenre;
@@ -59,7 +59,7 @@ class StatsRepositoryImpl implements StatsRepository {
       genreStats[genreId] = GenreStat(
         genreId: genreId,
         totalDurationSeconds: (map['duration_seconds'] as num).toDouble(),
-        recordingCount: map['recording_count'] as int,
+        recordingCount: readInt(map, 'recording_count'),
         subcategories: subcatsByGenre[genreId] ?? const {},
       );
     }

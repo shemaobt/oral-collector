@@ -398,10 +398,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get projectSettings_updated => 'تم تحديث المشروع';
 
   @override
-  String get projectSettings_noPermission =>
-      'ليس لديك صلاحية لتحديث هذا المشروع';
-
-  @override
   String get projectSettings_team => 'الفريق';
 
   @override
@@ -471,7 +467,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get recording_titleHint => 'عنوان التسجيل';
 
   @override
-  String get recording_descriptionHint => 'أضف وصفاً قصيراً (اختياري)';
+  String get recording_descriptionHint => 'صف هذا التسجيل';
+
+  @override
+  String recording_descriptionTooShort(int count) {
+    return 'يرجى وصف هذا التسجيل بما لا يقل عن $count حرفاً';
+  }
 
   @override
   String get recording_descriptionEmpty => 'أضف وصفاً';
@@ -549,11 +550,6 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get recording_downloadAudioMessage =>
       'ملف الصوت غير مخزن على هذا الجهاز. هل تريد تحميله للقص؟';
-
-  @override
-  String recording_downloadFailed(String error) {
-    return 'فشل التحميل: $error';
-  }
 
   @override
   String get recording_audioNotAvailable => 'ملف الصوت غير متاح';
@@ -659,6 +655,20 @@ class AppLocalizationsAr extends AppLocalizations {
       'انقر على الميكروفون لتسجيل أول قصة لك، أو استورد ملفاً صوتياً.';
 
   @override
+  String get recordings_offlineFilterTitle => 'غير متاح دون اتصال';
+
+  @override
+  String get recordings_offlineFilterDescription =>
+      'الخادم هو الذي يحدد التسجيلات التي ما زالت تنقصها تفاصيل. أعد الاتصال لعرضها، أو أزل عامل التصفية لتصفح كل ما على هذا الجهاز.';
+
+  @override
+  String get recordings_filterErrorTitle => 'تعذّر التحقق الآن';
+
+  @override
+  String get recordings_filterErrorDescription =>
+      'لم يستجب الخادم، لذا لا يمكن تحديد التسجيلات التي ما زالت تنقصها تفاصيل. أعد المحاولة، أو أزل عامل التصفية لتصفح كل ما على هذا الجهاز.';
+
+  @override
   String get recordings_dropToImport =>
       'تلميح: اسحب ملفات الصوت إلى هذه النافذة لاستيرادها.';
 
@@ -684,6 +694,38 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get recording_statusLocal => 'محلي';
+
+  @override
+  String get recording_statusNameConflict => 'تعارض في الاسم';
+
+  @override
+  String get recording_statusDescriptionTooShort => 'الوصف قصير جدًا';
+
+  @override
+  String get recording_descriptionGapMessage =>
+      'لا يمكن رفع هذا التسجيل حتى تضيف وصفًا أطول.';
+
+  @override
+  String get recording_statusRetriesExhausted => 'نفدت المحاولات';
+
+  @override
+  String get recording_statusFileMissing => 'ملف الصوت مفقود';
+
+  @override
+  String get recording_uploadExhaustedMessage =>
+      'توقف الرفع بعد عدة محاولات. يمكنك إعادة المحاولة.';
+
+  @override
+  String get recording_fileMissingMessage =>
+      'لم يعد ملف الصوت لهذا التسجيل موجودًا على هذا الجهاز، لذا لا يمكن رفعه.';
+
+  @override
+  String get recording_duplicateTitleTitle => 'الاسم مستخدم بالفعل';
+
+  @override
+  String recording_duplicateTitleMessage(String title) {
+    return 'يوجد بالفعل تسجيل صوتي باسم \"$title\" في هذا المشروع. اختر اسماً آخر.';
+  }
 
   @override
   String get recordings_clearStale => 'مسح الفاشلة';
@@ -785,10 +827,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get trim_classifySegment => 'تصنيف المقطع';
-
-  @override
-  String get trim_primaryEqualsSecondary =>
-      'لا يمكن أن يتطابق التصنيف الأساسي مع التصنيف الثانوي للتسجيل.';
 
   @override
   String get trim_volume => 'مستوى الصوت';
@@ -959,11 +997,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String import_resumePromptBody(String name, String size) {
-    return 'تم رفع \"$name\" ($size) جزئيًا. اختر الملف نفسه للمتابعة.';
+    return 'تم رفع \"$name\" ($size) جزئيًا. اختر الملف نفسه تمامًا (دون تغيير) للمتابعة.';
   }
 
   @override
-  String get import_resumeSizeMismatch => 'هذا الملف لا يطابق الرفع المتوقف.';
+  String get import_resumeSizeMismatch =>
+      'هذا ملف مختلف. اختر الملف نفسه تمامًا الذي كنت ترفعه.';
 
   @override
   String import_largeFileWarning(String size) {
@@ -1004,11 +1043,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get profile_photoUpdated => 'تم تحديث صورة الملف الشخصي';
-
-  @override
-  String profile_photoFailed(String error) {
-    return 'فشل في تحديث الصورة: $error';
-  }
 
   @override
   String get profile_editName => 'تعديل اسم العرض';
@@ -1726,6 +1760,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get filter_unclassified => 'غير مصنف';
 
   @override
+  String get filter_missingDescription => 'بدون وصف';
+
+  @override
   String get filter_allGenres => 'جميع الأنواع';
 
   @override
@@ -1804,6 +1841,14 @@ class AppLocalizationsAr extends AppLocalizations {
   String get projectStats_members => 'الأعضاء';
 
   @override
+  String get projectStats_needsDetails => 'بيانات ناقصة';
+
+  @override
+  String projectStats_showPendency(String label, int count) {
+    return 'عرض التسجيلات — $label ($count)';
+  }
+
+  @override
   String get project_active => 'نشط';
 
   @override
@@ -1855,10 +1900,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get classify_action => 'تصنيف';
 
   @override
-  String get classify_banner =>
-      'هذا التسجيل غير مصنف. انقر على تصنيف لإضافة نوع وسجل.';
-
-  @override
   String get classify_success => 'تم تصنيف التسجيل';
 
   @override
@@ -1885,10 +1926,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get classify_secondaryRegister => 'السجل الثانوي';
-
-  @override
-  String get classify_secondarySameAsPrimary =>
-      'يجب أن يختلف النوع الثانوي عن النوع السائد.';
 
   @override
   String get classify_clearAlternative => 'مسح البديل';
@@ -2254,7 +2291,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get filters_sheetTitle => 'تصفية التسجيلات';
 
   @override
-  String get filters_sectionStatus => 'حالة الرفع';
+  String get filters_sectionStatus => 'الحالة على هذا الجهاز';
+
+  @override
+  String get filters_sectionStatusHint =>
+      'يصفّي التسجيلات الظاهرة على الشاشة. يعمل دون اتصال.';
 
   @override
   String get filters_sectionGenre => 'النوع';
@@ -2264,6 +2305,13 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get filters_sectionUser => 'مسجل بواسطة';
+
+  @override
+  String get filters_sectionPendency => 'ما ينقص بحسب الخادم';
+
+  @override
+  String get filters_sectionPendencyHint =>
+      'يسأل الخادم عن التسجيلات التي ما زالت تنقصها تفاصيل. يتطلب اتصالاً.';
 
   @override
   String get filter_apply => 'تطبيق';
@@ -2297,6 +2345,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get filter_genreAll => 'أي نوع';
+
+  @override
+  String get filter_pendencyAll => 'أي حقل';
 
   @override
   String get detail_recordedBy => 'سُجل بواسطة';
@@ -2616,4 +2667,60 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get liveActivity_uploadingStatus => 'جاري الرفع';
+
+  @override
+  String get recording_completeFicha => 'أكمل البيانات';
+
+  @override
+  String get recording_completeFichaTitle => 'أكمل البيانات';
+
+  @override
+  String recording_completeFichaSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count حقول ما زالت ناقصة. أكملها الآن أو عد إليها لاحقاً.',
+      one: 'حقل واحد ما زال ناقصاً. أكمله الآن أو عد إليه لاحقاً.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recording_completeFichaStart => 'ابدأ';
+
+  @override
+  String get recording_completeFichaContinue => 'متابعة';
+
+  @override
+  String get recording_pendencyClassification => 'غير مصنف';
+
+  @override
+  String get recording_pendencyClassificationContext =>
+      'النوع والسجل يوضحان نوع هذه القصة.';
+
+  @override
+  String get recording_pendencyDescription => 'الوصف قصير جداً';
+
+  @override
+  String get recording_pendencyDescriptionContext =>
+      'بضع كلمات عما يحدث في التسجيل.';
+
+  @override
+  String get recording_pendencyStoryteller => 'بدون راوٍ';
+
+  @override
+  String get recording_pendencyStorytellerContext => 'من يروي هذه القصة.';
+
+  @override
+  String recording_pendencyCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count حقل بحاجة إلى تعبئة',
+      many: '$count حقلاً بحاجة إلى تعبئة',
+      few: '$count حقول بحاجة إلى تعبئة',
+      two: 'حقلان بحاجة إلى تعبئة',
+    );
+    return '$_temp0';
+  }
 }

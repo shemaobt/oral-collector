@@ -150,7 +150,6 @@
   "projectSettings_saving": "Saving...",
   "projectSettings_saveChanges": "Save Changes",
   "projectSettings_updated": "Project updated",
-  "projectSettings_noPermission": "You do not have permission to update this project",
   "projectSettings_team": "Team",
   "projectSettings_removeMember": "Remove Member",
   "projectSettings_removeMemberConfirm": "Remove {name} from this project?",
@@ -180,7 +179,15 @@
   "recording_noSubcategories": "No subcategories available",
   "recording_registerDescription": "Choose the speech register that best describes the tone and formality of this recording.",
   "recording_titleHint": "Recording title",
-  "recording_descriptionHint": "Add a short description (optional)",
+  "recording_descriptionHint": "Describe this recording",
+  "recording_descriptionTooShort": "Please describe this recording in at least {count} characters",
+  "@recording_descriptionTooShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "recording_descriptionEmpty": "Add description",
   "recording_titleEmpty": "Add title",
   "recording_titleRequired": "Title cannot be empty",
@@ -222,14 +229,6 @@
   "recording_moveCategory": "Move Category",
   "recording_downloadAudio": "Download Audio",
   "recording_downloadAudioMessage": "The audio file is not stored on this device. Would you like to download it to trim?",
-  "recording_downloadFailed": "Failed to download: {error}",
-  "@recording_downloadFailed": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
   "recording_audioNotAvailable": "Audio file not available",
   "recording_deleteTitle": "Delete Recording",
   "recording_deleteMessage": "This will permanently delete this recording from your device. If it has been uploaded, it will also be removed from the server. This action cannot be undone.",
@@ -271,6 +270,16 @@
   "recordings_selectProjectSubtitle": "Choose a project to view its recordings",
   "recordings_noRecordings": "No recordings yet",
   "recordings_noRecordingsSubtitle": "Tap the microphone to record your first story, or import an audio file.",
+  "recordings_offlineFilterTitle": "Not available offline",
+  "@recordings_offlineFilterTitle": {
+    "description": "Empty-state title when a review-flag filter is applied but the device is offline; the filter is server-computed and has no local equivalent (ENG-381)."
+  },
+  "recordings_offlineFilterDescription": "The server works out which recordings still need details. Reconnect to see them, or remove the filter to browse everything on this device.",
+  "recordings_filterErrorTitle": "Couldn't check right now",
+  "@recordings_filterErrorTitle": {
+    "description": "Empty-state title when a review-flag filter is applied and the last fetch failed; an empty list here would otherwise read as 'nothing left to do' (ENG-381)."
+  },
+  "recordings_filterErrorDescription": "The server didn't answer, so we can't say which recordings still need details. Try again, or remove the filter to browse everything on this device.",
   "recordings_dropToImport": "Tip: drag audio files onto this window to import.",
   "recordings_count": "{count, plural, =1{1 recording} other{{count} recordings}}",
   "@recordings_count": {
@@ -284,6 +293,22 @@
   "recording_statusUploading": "Uploading",
   "recording_statusFailed": "Failed",
   "recording_statusLocal": "Local",
+  "recording_statusNameConflict": "Name conflict",
+  "recording_statusDescriptionTooShort": "Description too short",
+  "recording_descriptionGapMessage": "This recording can't be uploaded until you add a longer description.",
+  "recording_statusRetriesExhausted": "Attempts used up",
+  "recording_statusFileMissing": "Audio file missing",
+  "recording_uploadExhaustedMessage": "The upload stopped after several attempts. You can try again.",
+  "recording_fileMissingMessage": "The audio file for this recording is no longer on this device, so it can't be uploaded.",
+  "recording_duplicateTitleTitle": "Name already used",
+  "recording_duplicateTitleMessage": "An audio named \"{title}\" already exists in this project. Choose another name.",
+  "@recording_duplicateTitleMessage": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "recordings_clearStale": "Clear failed",
   "recordings_clearStaleMessage": "This will permanently delete all recordings with failed or stuck upload status from the server. This cannot be undone.",
   "recordings_clearedCount": "{count, plural, =0{No stale recordings found} =1{Cleared 1 recording} other{Cleared {count} recordings}}",
@@ -347,7 +372,6 @@
   "trim_applyToAll": "Apply to all",
   "trim_copyFromPrevious": "Copy from previous",
   "trim_classifySegment": "Classify segment",
-  "trim_primaryEqualsSecondary": "Primary classification cannot match the recording's secondary classification.",
   "trim_volume": "Volume",
   "trim_peakClip": "Clipping",
   "trim_boostOnSave": "Boost applied on save",
@@ -464,7 +488,7 @@
     }
   },
   "import_resumePromptTitle": "Resume interrupted upload",
-  "import_resumePromptBody": "\"{name}\" ({size}) was partially uploaded. Select the same file to continue.",
+  "import_resumePromptBody": "\"{name}\" ({size}) was partially uploaded. Select the exact same file (unchanged) to continue.",
   "@import_resumePromptBody": {
     "placeholders": {
       "name": {
@@ -475,7 +499,7 @@
       }
     }
   },
-  "import_resumeSizeMismatch": "That file doesn't match the paused upload.",
+  "import_resumeSizeMismatch": "That's a different file. Select the exact same file you were uploading.",
   "import_largeFileWarning": "Large file ({size}). Keep this tab open until the upload completes.",
   "@import_largeFileWarning": {
     "placeholders": {
@@ -502,14 +526,6 @@
     }
   },
   "profile_photoUpdated": "Profile photo updated",
-  "profile_photoFailed": "Failed to update photo: {error}",
-  "@profile_photoFailed": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
   "profile_editName": "Edit display name",
   "profile_nameHint": "Your name",
   "profile_nameUpdated": "Name updated",
@@ -855,6 +871,7 @@
   "filter_uploaded": "Uploaded",
   "filter_needsCleaning": "Needs Cleaning",
   "filter_unclassified": "Unclassified",
+  "filter_missingDescription": "Missing description",
   "filter_allGenres": "All genres",
   "detail_duration": "Duration",
   "detail_size": "Size",
@@ -881,6 +898,22 @@
   "projectStats_recordings": "Recordings",
   "projectStats_duration": "Duration",
   "projectStats_members": "Members",
+  "projectStats_needsDetails": "Needs details",
+  "@projectStats_needsDetails": {
+    "description": "Stat chip label under the number of recordings that still have at least one open field (ENG-374)."
+  },
+  "projectStats_showPendency": "Show recordings — {label} ({count})",
+  "@projectStats_showPendency": {
+    "description": "Accessible label for the tappable breakdown line under the review counter; opens the recordings list filtered to that pendency (ENG-381).",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "project_active": "Active",
   "recording_paused": "Paused",
   "recording_recording": "Recording",
@@ -898,7 +931,6 @@
   "quickRecord_classifyLater": "Classify later",
   "classify_title": "Classify Recording",
   "classify_action": "Classify",
-  "classify_banner": "This recording is unclassified. Tap Classify to add a genre and register.",
   "classify_success": "Recording classified",
   "classify_register": "Register",
   "classify_selectRegister": "Select register",
@@ -908,7 +940,6 @@
   "classify_secondaryGenre": "Secondary genre",
   "classify_secondarySubcategory": "Secondary subcategory",
   "classify_secondaryRegister": "Secondary register",
-  "classify_secondarySameAsPrimary": "Secondary genre must differ from the predominant genre.",
   "classify_clearAlternative": "Clear alternative",
   "recording_alsoClassifiedAs": "Also classified as",
   "recording_alsoClassifiedAsTooltip": "Has alternative classification",
@@ -1092,10 +1123,25 @@
   },
   "filters_buttonLabel": "Filters",
   "filters_sheetTitle": "Filter recordings",
-  "filters_sectionStatus": "Upload status",
+  "filters_sectionStatus": "Status on this device",
+  "@filters_sectionStatus": {
+    "description": "Section header in the recordings filter sheet for the on-device status chips. Names the device because two of its chips (unclassified, missing description) read almost identically to the pendency chips below, and where the answer comes from is the only difference (ENG-383)."
+  },
+  "filters_sectionStatusHint": "Narrows the recordings already on screen. Works offline.",
+  "@filters_sectionStatusHint": {
+    "description": "Supporting line under the status section header in the recordings filter sheet (ENG-383)."
+  },
   "filters_sectionGenre": "Genre",
   "filters_sectionStoryteller": "Storyteller",
   "filters_sectionUser": "Recorded by",
+  "filters_sectionPendency": "What the server says is missing",
+  "@filters_sectionPendency": {
+    "description": "Section header in the recordings filter sheet for the review-pendency filter. Names the server because the chips below repeat the wording of the status chips above in several languages (ENG-383)."
+  },
+  "filters_sectionPendencyHint": "Asks the server which recordings still need details. Needs a connection.",
+  "@filters_sectionPendencyHint": {
+    "description": "Supporting line under the pendency section header in the recordings filter sheet (ENG-383)."
+  },
   "filter_apply": "Apply",
   "filter_reset": "Reset",
   "filter_clearAll": "Clear all",
@@ -1111,6 +1157,7 @@
   "filter_userAll": "Any user",
   "filter_storytellerAll": "Any storyteller",
   "filter_genreAll": "Any genre",
+  "filter_pendencyAll": "Any field",
   "detail_recordedBy": "Recorded by",
   "detail_storyteller": "Storyteller",
   "recording_unknownUser": "Unknown user",
@@ -1328,5 +1375,63 @@
   },
   "@liveActivity_uploadingStatus": {
     "description": "Live Activity (iOS) lock-screen and Dynamic Island short status while an upload is running."
+  },
+  "recording_completeFicha": "Complete details",
+  "@recording_completeFicha": {
+    "description": "Label on the pill that opens the guided completion flow for a recording's ficha (ENG-374)."
+  },
+  "recording_completeFichaTitle": "Complete the details",
+  "@recording_completeFichaTitle": {
+    "description": "Title of the guided completion sheet (ENG-374)."
+  },
+  "recording_completeFichaSubtitle": "{count, plural, =1{1 detail is still open. Fill it in now, or come back to it later.} other{{count} details are still open. Fill them in now, or come back to them later.}}",
+  "@recording_completeFichaSubtitle": {
+    "description": "Subtitle of the guided completion sheet: how many steps it holds, plus the reassurance that the user may leave and return.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recording_completeFichaStart": "Start",
+  "@recording_completeFichaStart": {
+    "description": "Primary action of the completion sheet when no step has been resolved yet."
+  },
+  "recording_completeFichaContinue": "Continue",
+  "@recording_completeFichaContinue": {
+    "description": "Primary action of the completion sheet once at least one step has been resolved."
+  },
+  "recording_pendencyClassification": "No classification",
+  "@recording_pendencyClassification": {
+    "description": "Step title: the recording has no genre/register yet. Names the gap, never blames the user."
+  },
+  "recording_pendencyClassificationContext": "Genre and register say what kind of story this is.",
+  "@recording_pendencyClassificationContext": {
+    "description": "Step context line explaining why the classification matters."
+  },
+  "recording_pendencyDescription": "Description too short",
+  "@recording_pendencyDescription": {
+    "description": "Step title: the recording's description does not meet the minimum."
+  },
+  "recording_pendencyDescriptionContext": "A few words about what happens in the recording.",
+  "@recording_pendencyDescriptionContext": {
+    "description": "Step context line explaining what the description should contain."
+  },
+  "recording_pendencyStoryteller": "No storyteller",
+  "@recording_pendencyStoryteller": {
+    "description": "Step title: no storyteller is assigned to the recording."
+  },
+  "recording_pendencyStorytellerContext": "Who tells this story.",
+  "@recording_pendencyStorytellerContext": {
+    "description": "Step context line explaining what the storyteller field is for."
+  },
+  "recording_pendencyCount": "{count, plural, other{{count} fields to fill}}",
+  "@recording_pendencyCount": {
+    "description": "List card chip when a recording owes more than one field. Counts the gap instead of naming each one, so the card keeps a single chip.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   }
 }

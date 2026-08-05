@@ -11,6 +11,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:oral_collector/core/database/app_database.dart';
 import 'package:oral_collector/features/recording/data/repositories/local_recording_repository.dart';
+import 'package:oral_collector/features/recording/domain/entities/local_recording_entity.dart';
+import 'package:oral_collector/features/recording/domain/entities/review_flag.dart';
 
 void main() {
   late AppDatabase db;
@@ -25,7 +27,7 @@ void main() {
     await db.close();
   });
 
-  LocalRecording buildIncoming({
+  LocalRecordingEntity buildIncoming({
     String id = 'rec-1',
     String? description = 'A story told on a Sunday',
     String? storytellerId = 'storyteller-7',
@@ -40,9 +42,10 @@ void main() {
     int? splitIndex,
     int? splitSegmentCount,
     String localFilePath = '',
+    List<ReviewFlag> reviewFlags = const [],
   }) {
     final now = DateTime.utc(2026, 5, 1, 10);
-    return LocalRecording(
+    return LocalRecordingEntity(
       id: id,
       projectId: 'project-1',
       genreId: genreId,
@@ -70,6 +73,7 @@ void main() {
       splitFromId: splitFromId,
       splitIndex: splitIndex,
       splitSegmentCount: splitSegmentCount,
+      reviewFlags: reviewFlags,
     );
   }
 
@@ -160,6 +164,42 @@ void main() {
     expect(saved.secondaryGenreId, 'g-local-edit');
   });
 
+  test('the update branch takes the server flags but still leaves local edits '
+      'alone', () async {
+    await repo.cacheDownloadedAudio(
+      recording: buildIncoming(
+        description: 'edited offline',
+        storytellerId: 's-local-edit',
+        secondaryGenreId: 'g-local-edit',
+        reviewFlags: const [
+          ReviewFlag(code: 'missing_classification', origin: 'system'),
+        ],
+      ),
+      localFilePath: '/old/path.m4a',
+    );
+
+    await repo.cacheDownloadedAudio(
+      recording: buildIncoming(
+        description: 'stale server description',
+        storytellerId: 's-server-stale',
+        secondaryGenreId: 'g-server-stale',
+        reviewFlags: const [
+          ReviewFlag(code: 'missing_storyteller', origin: 'system'),
+        ],
+      ),
+      localFilePath: '/new/path.m4a',
+    );
+
+    final saved = await repo.getRecordingEntityById('rec-1');
+    expect(saved, isNotNull);
+    expect(saved!.reviewFlags, const [
+      ReviewFlag(code: 'missing_storyteller', origin: 'system'),
+    ]);
+    expect(saved.description, 'edited offline');
+    expect(saved.storytellerId, 's-local-edit');
+    expect(saved.secondaryGenreId, 'g-local-edit');
+  });
+
   test('propagates split lineage fields when present on incoming', () async {
     final incoming = buildIncoming(
       splitFromId: 'parent-99',
@@ -177,6 +217,47 @@ void main() {
     expect(saved!.splitFromId, 'parent-99');
     expect(saved.splitIndex, 2);
     expect(saved.splitSegmentCount, 5);
+  });
+
+  test('what the recording still owes reaches the row, so it survives '
+      'offline', () async {
+    final incoming = buildIncoming(
+      reviewFlags: const [
+        ReviewFlag(code: 'missing_classification', origin: 'system'),
+        ReviewFlag(code: 'missing_storyteller', origin: 'system'),
+      ],
+    );
+
+    await repo.cacheDownloadedAudio(
+      recording: incoming,
+      localFilePath: '/local/cache/rec-1.m4a',
+    );
+
+    final saved = await repo.getRecordingEntityById('rec-1');
+    expect(saved, isNotNull);
+    expect(saved!.reviewFlags, incoming.reviewFlags);
+  });
+
+  test('a row whose flags are no longer readable still yields the '
+      'recording', () async {
+    await repo.cacheDownloadedAudio(
+      recording: buildIncoming(
+        reviewFlags: const [
+          ReviewFlag(code: 'missing_storyteller', origin: 'system'),
+        ],
+      ),
+      localFilePath: '/local/cache/rec-1.m4a',
+    );
+
+    await db.customStatement(
+      "UPDATE local_recordings SET review_flags_json = 'not json at all' "
+      "WHERE id = 'rec-1'",
+    );
+
+    final saved = await repo.getRecordingEntityById('rec-1');
+    expect(saved, isNotNull);
+    expect(saved!.title, 'Recording title');
+    expect(saved.reviewFlags, isEmpty);
   });
 
   test('is idempotent across repeated calls with different paths', () async {

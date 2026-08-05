@@ -3,20 +3,11 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_palettes.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../../shared/utils/format.dart';
 import '../../domain/entities/project.dart';
-
-const projectAccentColors = [
-  Color(0xFFD45200),
-  Color(0xFF1A8A78),
-  Color(0xFF477A12),
-  Color(0xFF8B5CF6),
-  Color(0xFFE0A526),
-  Color(0xFF2563EB),
-];
-
-Color projectAccentForIndex(int index) =>
-    projectAccentColors[index % projectAccentColors.length];
+import 'language_chip_row.dart';
 
 class ProjectCard extends StatelessWidget {
   const ProjectCard({
@@ -38,20 +29,20 @@ class ProjectCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = AppColors.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final cardAccent = projectAccentForIndex(colorIndex);
+    final cardAccent = AppPalettes.projectAccent(colorIndex);
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.only(bottom: SpacingScale.s16),
       child: Material(
-        color: Colors.transparent,
+        color: AppColors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(RadiusScale.r20),
           child: Container(
             clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
               color: colors.card,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(RadiusScale.r20),
               border: isActive
                   ? Border.all(color: colors.accent, width: 2)
                   : Border.all(
@@ -60,7 +51,7 @@ class ProjectCard extends StatelessWidget {
                     ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.06),
+                  color: AppColors.black.withValues(alpha: isDark ? 0.3 : 0.06),
                   blurRadius: 16,
                   offset: const Offset(0, 4),
                 ),
@@ -78,7 +69,12 @@ class ProjectCard extends StatelessWidget {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 16, 16, 20),
+                  padding: const EdgeInsets.fromLTRB(
+                    SpacingScale.s20,
+                    SpacingScale.s16,
+                    SpacingScale.s16,
+                    SpacingScale.s20,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -90,7 +86,9 @@ class ProjectCard extends StatelessWidget {
                             height: 44,
                             decoration: BoxDecoration(
                               color: cardAccent.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(
+                                RadiusScale.r12,
+                              ),
                             ),
                             child: Center(
                               child: Text(
@@ -104,7 +102,7 @@ class ProjectCard extends StatelessWidget {
                               ),
                             ),
                           ),
-                          const SizedBox(width: 14),
+                          const SizedBox(width: SpacingScale.s16),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -117,52 +115,13 @@ class ProjectCard extends StatelessWidget {
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                 ),
-                                const SizedBox(height: 4),
+                                const SizedBox(height: SpacingScale.s4),
                                 if (project.languageName != null)
-                                  Row(
-                                    children: [
-                                      Icon(
-                                        LucideIcons.globe,
-                                        size: 13,
-                                        color: colors.secondary,
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        project.languageName!,
-                                        style: theme.textTheme.bodySmall
-                                            ?.copyWith(
-                                              color: colors.secondary,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                      ),
-                                      if (project.languageCode != null) ...[
-                                        const SizedBox(width: 6),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 6,
-                                            vertical: 1,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: colors.border.withValues(
-                                              alpha: 0.2,
-                                            ),
-                                            borderRadius: BorderRadius.circular(
-                                              4,
-                                            ),
-                                          ),
-                                          child: Text(
-                                            project.languageCode!.toUpperCase(),
-                                            style: theme.textTheme.labelSmall
-                                                ?.copyWith(
-                                                  color: colors.secondary,
-                                                  fontSize: 10,
-                                                  fontWeight: FontWeight.w600,
-                                                  letterSpacing: 0.5,
-                                                ),
-                                          ),
-                                        ),
-                                      ],
-                                    ],
+                                  LanguageChipRow.card(
+                                    languageName: project.languageName!,
+                                    languageCode: project.languageCode,
+                                    colors: colors,
+                                    theme: theme,
                                   ),
                               ],
                             ),
@@ -174,9 +133,9 @@ class ProjectCard extends StatelessWidget {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: SpacingScale.s16),
                       Wrap(
-                        spacing: 10,
+                        spacing: SpacingScale.s8,
                         runSpacing: 8,
                         crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
@@ -209,12 +168,14 @@ class ProjectCard extends StatelessWidget {
                           if (isActive) ...[
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 4,
+                                horizontal: SpacingScale.s8,
+                                vertical: SpacingScale.s4,
                               ),
                               decoration: BoxDecoration(
                                 color: colors.accent.withValues(alpha: 0.15),
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(
+                                  RadiusScale.r8,
+                                ),
                               ),
                               child: Text(
                                 l10n.project_active,
@@ -256,16 +217,19 @@ class ProjectStatChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(
+        horizontal: SpacingScale.s8,
+        vertical: SpacingScale.s4,
+      ),
       decoration: BoxDecoration(
         color: colors.surfaceAlt.withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(RadiusScale.r8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 13, color: colors.secondary),
-          const SizedBox(width: 4),
+          const SizedBox(width: SpacingScale.s4),
           Text(
             value,
             style: theme.textTheme.labelSmall?.copyWith(

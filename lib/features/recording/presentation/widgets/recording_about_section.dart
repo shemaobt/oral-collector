@@ -3,6 +3,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 
 class RecordingAboutSection extends StatelessWidget {
   const RecordingAboutSection({
@@ -47,7 +48,7 @@ class RecordingAboutSection extends StatelessWidget {
                   fontStyle: hasTitle ? FontStyle.normal : FontStyle.italic,
                 ),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: SpacingScale.s8),
               Text(
                 hasDescription
                     ? description!.trim()
@@ -65,7 +66,7 @@ class RecordingAboutSection extends StatelessWidget {
           ),
         ),
         if (canEdit) ...[
-          const SizedBox(width: 12),
+          const SizedBox(width: SpacingScale.s12),
           Material(
             color: colors.accent,
             shape: const CircleBorder(),
@@ -73,9 +74,13 @@ class RecordingAboutSection extends StatelessWidget {
             child: InkWell(
               onTap: onEdit,
               child: const SizedBox(
-                width: 40,
-                height: 40,
-                child: Icon(LucideIcons.pencil, size: 18, color: Colors.white),
+                width: SpacingScale.s40,
+                height: SpacingScale.s40,
+                child: Icon(
+                  LucideIcons.pencil,
+                  size: 18,
+                  color: AppColors.white,
+                ),
               ),
             ),
           ),

@@ -3,8 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
-import '../../../core/theme/app_colors.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/tokens.dart';
 import '../../../shared/preview_helpers.dart';
 import '../../../shared/widgets/error_snack_bar.dart';
 import '../../auth/data/providers/role_provider.dart';
@@ -33,7 +34,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
   void initState() {
     super.initState();
     Future.microtask(() {
-      final isAdmin = ref.read(roleNotifierProvider.notifier).isPlatformAdmin;
+      final isAdmin = ref.read(isPlatformAdminProvider);
       if (!isAdmin) {
         if (mounted) {
           showErrorSnackBar(
@@ -68,7 +69,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
       }
     });
 
-    ref.listen<String?>(adminNotifierProvider.select((s) => s.error), (
+    ref.listen<Object?>(adminNotifierProvider.select((s) => s.error), (
       prev,
       next,
     ) {
@@ -147,7 +148,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                 },
                 child: SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.all(24),
+                  padding: const EdgeInsets.all(SpacingScale.s24),
                   child: body,
                 ),
               ),
@@ -163,9 +164,9 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
         children: [
           Padding(
             padding: EdgeInsets.fromLTRB(
-              24,
+              SpacingScale.s24,
               MediaQuery.of(context).padding.top + 16,
-              24,
+              SpacingScale.s24,
               0,
             ),
             child: Text(
@@ -175,16 +176,16 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: SpacingScale.s16),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 24),
+            padding: const EdgeInsets.symmetric(horizontal: SpacingScale.s24),
             child: Row(
               children: List.generate(sections.length, (i) {
                 final section = sections[i];
                 final isSelected = i == _selectedSection;
                 return Padding(
-                  padding: const EdgeInsets.only(right: 8),
+                  padding: const EdgeInsets.only(right: SpacingScale.s8),
                   child: FilterChip(
                     selected: isSelected,
                     label: Row(
@@ -195,7 +196,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                           size: 16,
                           color: isSelected ? colors.accent : colors.secondary,
                         ),
-                        const SizedBox(width: 6),
+                        const SizedBox(width: SpacingScale.s8),
                         Text(section.label),
                       ],
                     ),
@@ -209,7 +210,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                     ),
                     showCheckmark: false,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(RadiusScale.r8),
                       side: BorderSide(
                         color: isSelected
                             ? colors.accent.withValues(alpha: 0.3)
@@ -221,7 +222,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
               }),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: SpacingScale.s8),
 
           Expanded(
             child: RefreshIndicator(
@@ -229,7 +230,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                   ref.read(adminNotifierProvider.notifier).fetchAll(),
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(24),
+                padding: const EdgeInsets.all(SpacingScale.s24),
                 child: body,
               ),
             ),

@@ -69,6 +69,7 @@ This document defines engineering standards and behaviors for LLM agents working
 - Separate **data access** (repositories that call APIs and optionally local storage) from **presentation** (screens, widgets, navigation).
 - Depend **inward**: presentation depends on data (repositories/providers); data depends on domain (entities). Domain depends on nothing.
 - Prefer **dependency injection** (e.g. Riverpod providers for repositories) so that layers stay testable and swappable.
+- For the cross-cutting synthesis — the HTTP client convention and the deliberate `auth_repository` exception, the notifier data-access convention, and the observability/errors/logging seams — see [`docs/architecture/layering.md`](docs/architecture/layering.md).
 
 **Examples:**
 
@@ -87,6 +88,11 @@ This document defines engineering standards and behaviors for LLM agents working
 - Good: Need to refresh list: use existing `ref.invalidate(meaningMapsProvider)` or notifier's refresh method; do not add a new "RefreshService" that only calls the same provider.
 - Bad: Wrapper provider that only forwards to an existing provider with no added behavior.
 
+### Architecture Decision Records (ADRs)
+
+- Cross-cutting decisions live in [`docs/adr/`](docs/adr/ADR-0000-process.md) and are the **living standard** — consult them before changing architecture, and add an ADR when you make a new cross-cutting decision (see ADR-0000 for the process and template).
+- An ADR captures *why* a decision was made; keep per-folder `docs.md` (noridocs) current for *what* a module does.
+
 ---
 
 ## 3. Stack and Build
@@ -97,10 +103,10 @@ This document defines engineering standards and behaviors for LLM agents working
 - **Navigation**: **go_router** with declarative routes; or `MaterialApp.home` + imperative `Navigator` for simpler apps
 - **HTTP**: **http** package or **dio**; single API base URL from config
 - **Local storage**: **flutter_secure_storage** for tokens/credentials; **path_provider** for files; **shared_preferences** for simple key-value when appropriate
-- **Env / config**: **flutter_dotenv** (`.env` file, not committed) or **envied** (compile-time, generated `.g.dart`); never hardcode secrets
+- **Env / config**: compile-time `--dart-define` / `--dart-define-from-file=.env` read via `String.fromEnvironment` (see `core/config/env.dart`); never bundle `.env` as a Flutter asset; never ship secrets in the client
 - **Icons**: **lucide_icons** or **cupertino_icons**; prefer one icon set per project
 - **Fonts**: **google_fonts** for theme text styles
-- **Linting**: **flutter_lints** in `dev_dependencies`; respect `analysis_options.yaml`
+- **Linting**: **flutter_lints** + **custom_lint** / **riverpod_lint** in `dev_dependencies`; respect `analysis_options.yaml`. Strict rules are staged at `info` and analysis runs with `--no-fatal-infos` — see [ADR-0007](docs/adr/ADR-0007-lint-baseline.md)
 
 Use only these stack choices unless the project already uses something else. Do not introduce GetX, Bloc, or a second state/navigation system.
 
@@ -177,13 +183,14 @@ lib/
 
 - **Centralized theme**: Define `AppTheme.lightTheme` (and dark if needed) in `core/theme/app_theme.dart`. Use `ThemeData` with `colorScheme`, `textTheme`, `appBarTheme`, `cardTheme`, `elevatedButtonTheme`, `inputDecorationTheme` as appropriate.
 - **Colors**: Define semantic colors in `core/theme/app_colors.dart` (e.g. `primary`, `background`, `foreground`, `card`, `border`, `error`) and use them in `ColorScheme` and in widgets via `AppColors.primary` or `Theme.of(context).colorScheme.primary`.
+- **Spacing, radii & durations**: Use the design tokens in `core/theme/` instead of hardcoded numbers. The `const` scales `SpacingScale.s16` / `RadiusScale.r12` / `DurationScale.ms200` are the source of truth (preserve `const`: `const EdgeInsets.all(SpacingScale.s16)`); `context.spacing.s16` / `context.radii.r12` / `context.durations.ms200` are the theme-aware accessors for dynamic code. Only on-grid (4px) values are tokenized. See ADR-0002.
 - **Typography**: Use `google_fonts` in theme (e.g. `GoogleFonts.outfitTextTheme().apply(...)`). Prefer theme over hardcoded font names in widgets.
 - **Consistency**: Use theme and `AppColors` instead of raw `Colors.blue` or arbitrary hex in widget code.
 
 **Examples:**
 
-- Good: `Theme.of(context).textTheme.titleMedium`, `AppColors.foreground`, `Theme.of(context).colorScheme.primary`.
-- Bad: `TextStyle(fontSize: 16, color: Color(0xFF333333))` scattered in screens.
+- Good: `Theme.of(context).textTheme.titleMedium`, `AppColors.foreground`, `const EdgeInsets.all(SpacingScale.s16)`, `BorderRadius.circular(RadiusScale.r12)`.
+- Bad: `TextStyle(fontSize: 16, color: Color(0xFF333333))` or `EdgeInsets.all(16)` scattered in screens.
 
 ---
 
@@ -207,14 +214,14 @@ lib/
 
 ## 9. Secrets and Configuration
 
-- **No hardcoded secrets**: API keys, backend URLs, and credentials must come from environment or config. Use **flutter_dotenv** with a `.env` file (gitignored) and `dotenv.env['VAR']`, or **envied** with `@EnviedField` and generated code; provide `.env.example` with variable names only.
-- **Fail fast**: If the app requires a config value (e.g. backend URL), fail at startup or when first used rather than defaulting to a production URL or empty string in a way that hides misconfiguration.
+- **Never ship secrets in the client**: API keys, credentials, and secrets must not be bundled as assets, hardcoded, or passed via `--dart-define` (compiled values are extractable from the binary, especially the web bundle). Secrets live server-side or in **flutter_secure_storage** at runtime. See [ADR-0005](docs/adr/ADR-0005-security-policy.md).
+- **Non-secret build config**: Resolve non-secret values (e.g. the backend URL) at compile time via `--dart-define` / `--dart-define-from-file=.env`, read with `String.fromEnvironment` in `core/config/env.dart`. `.env` is a build-time input only and must never be a Flutter asset. Release pins the production value; debug/profile may override it.
 - **Secure storage**: Use **flutter_secure_storage** for tokens and sensitive data; do not store secrets in shared_preferences or in code.
 
 **Examples:**
 
-- Good: `Env.backendUrl` from `core/config/env.dart` backed by `dotenv.env['BACKEND_URL']` or envied; `.env` in `.gitignore`; `.env.example` with `BACKEND_URL=`.
-- Bad: `static const baseUrl = 'https://api.prod.com';` in source.
+- Good: `Env.backendUrl` from `core/config/env.dart` via `String.fromEnvironment('BACKEND_URL')`, pinned to production in release and overridable in debug with `--dart-define-from-file=.env`; `.env` gitignored and never an asset.
+- Bad: bundling `.env` as a Flutter asset, or putting an API key / secret in source or `--dart-define`.
 
 ---
 
@@ -264,11 +271,11 @@ lib/
 - [ ] Thin client: app consumes APIs and presents data; business logic lives on the backend; local persistence only when a feature justifies it (offline, credentials, preferences, caching).
 - [ ] Respect clean architecture: domain independent of Flutter and data; presentation and data depend on domain.
 - [ ] Prefer existing methods and abstractions; avoid overengineering.
-- [ ] Use only the stack above: Flutter, Dart 3, Riverpod, go_router (or MaterialApp.home), http/dio, flutter_secure_storage, env via dotenv/envied, lucide/cupertino icons, google_fonts, flutter_lints.
+- [ ] Use only the stack above: Flutter, Dart 3, Riverpod, go_router (or MaterialApp.home), http/dio, flutter_secure_storage, env via `--dart-define`/`String.fromEnvironment`, lucide/cupertino icons, google_fonts, flutter_lints.
 - [ ] Structure: Feature-based `lib/features/<name>/data|domain|presentation`; core for config, theme, router.
 - [ ] State: Riverpod only; one provider per logical state; screens watch and call notifiers; no duplicate state in widgets.
 - [ ] Build: Flutter CLI on host; document env and platform steps.
-- [ ] Secrets: No hardcoded keys or URLs; .env or envied; .env.example; flutter_secure_storage for tokens.
+- [ ] Secrets: never bundle `.env` or ship secrets in the client (no secrets in `--dart-define`); non-secret config via `String.fromEnvironment`; flutter_secure_storage for tokens.
 - [ ] Do not commit unless the user explicitly asks; when committing use semantic messages (`type(scope): description`).
 
 ---
@@ -282,6 +289,26 @@ When the repo contains both mobile and other parts:
 - **Web frontend** (e.g. `frontend/` or `web/`): Use [FRONTEND.md](FRONTEND.md) for React/TypeScript conventions.
 
 If the repo is **mobile-only**, this file is the single agent guideline. A separate BACKEND or FRONTEND file is not needed for the app itself; backend is typically another repository.
+
+---
+
+## 15. Quality Gates
+
+Static quality gates run in CI (on every PR) and locally via `make quality`. Run it before opening
+a PR and treat any hard-gate violation as blocking. See [ADR-0011](docs/adr/ADR-0011-architecture-dependency-rules.md)
+and `obt/.claude/quality-gates-plan.md`.
+
+- **Code metrics** (`dart_code_linter`, config in `analysis_options.yaml`, enforced by
+  `scripts/check_metrics.sh`): cyclomatic complexity, source lines of code, nesting level, and
+  number of parameters. **Hard gate.** Thresholds equal the current worst value (green now)
+  and ratchet down over time. Generated code (`*.g.dart`) is excluded.
+- **Import cycles** (`layerlens --fail-on-cycles`): **advisory** — reported in CI, does not block.
+  The codebase has known cycles documented in ADR-0009.
+- **Coverage** (`flutter test --coverage`): **advisory** — generated and uploaded in CI, not yet
+  enforced (current ~19%).
+
+The existing `flutter analyze --no-fatal-infos` / ADR-0007 lint baseline is unchanged; these gates
+are additive.
 
 ---
 

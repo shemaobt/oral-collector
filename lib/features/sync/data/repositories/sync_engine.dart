@@ -1,46 +1,67 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:drift/drift.dart' show Value;
-import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:logging/logging.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
+import '../../../../core/config/upload_retry_policy.dart';
 import '../../../../core/database/app_database.dart';
+import '../../../../core/errors/app_exception.dart' show AppException;
 import '../../../../core/network/authenticated_client.dart';
+import '../../../../core/network/response_decoder.dart';
 import '../../../../core/platform/file_ops.dart' as file_ops;
+import '../../../../core/serialization/safe_read.dart';
+import '../../../../shared/utils/recording_description.dart';
 import '../../../recording/data/repositories/local_recording_repository.dart';
+import '../../../recording/domain/entities/review_flag.dart';
 import '../../../storyteller/data/repositories/local_storyteller_repository.dart';
 import '../../domain/repositories/connectivity_service.dart';
 import '../../domain/repositories/sync_engine.dart';
 import '../services/resumable_upload_service.dart';
 import '../services/upload_downloader.dart';
 
-class _NonRetryableUploadException implements Exception {
-  final String message;
-  _NonRetryableUploadException(this.message);
-  @override
-  String toString() => message;
+const List<Duration> _kBackoffLadder = [
+  Duration(seconds: 5),
+  Duration(seconds: 15),
+  Duration(seconds: 30),
+  Duration(seconds: 60),
+];
+
+const double _kBackoffJitterFraction = 0.5;
+
+/// Retry backoff for [attempt] (1-based): the [_kBackoffLadder] rung plus
+/// additive random jitter in `[0, base * _kBackoffJitterFraction]`. The jitter
+/// de-synchronizes retries from devices that failed at the same instant so they
+/// don't realign on one schedule; it never shortens the delay below the rung.
+/// Attempts past the ladder saturate at the last rung.
+Duration backoffWithJitter(int attempt, Random random) {
+  final index = (attempt - 1).clamp(0, _kBackoffLadder.length - 1);
+  final base = _kBackoffLadder[index];
+  final maxJitterMs = (base.inMilliseconds * _kBackoffJitterFraction).round();
+  final jitterMs = maxJitterMs <= 0 ? 0 : random.nextInt(maxJitterMs + 1);
+  return base + Duration(milliseconds: jitterMs);
 }
 
+/// Outcome of a single `_uploadRecording` attempt. `processQueue` uses it to
+/// decide whether to re-probe connectivity (only on [failed]).
+enum _UploadOutcome { uploaded, skipped, failed }
+
 class SyncEngineImpl implements SyncEngine {
+  static final _log = Logger('SyncEngine');
+
   final LocalRecordingRepository _recordingRepo;
   final LocalStorytellerRepository _storytellerRepo;
   final ConnectivityService _connectivity;
   final AuthenticatedClient _client;
   late final ResumableUploadService _uploadService;
 
-  static const int maxRetries = 5;
   static const Duration _apiTimeout = Duration(seconds: 30);
 
-  static const List<Duration> _backoffDurations = [
-    Duration(seconds: 5),
-    Duration(seconds: 15),
-    Duration(seconds: 30),
-    Duration(seconds: 60),
-  ];
-
+  final Random _random = Random();
   bool _isProcessing = false;
 
   SyncEngineImpl({
@@ -62,6 +83,12 @@ class SyncEngineImpl implements SyncEngine {
 
   @override
   bool get isProcessing => _isProcessing;
+
+  bool _isWithinBackoffWindow(int retryCount, DateTime? lastRetryAt) {
+    if (retryCount <= 0 || lastRetryAt == null) return false;
+    final backoff = backoffWithJitter(retryCount, _random);
+    return DateTime.now().difference(lastRetryAt) < backoff;
+  }
 
   @override
   Future<void> processQueue({
@@ -92,74 +119,122 @@ class SyncEngineImpl implements SyncEngine {
 
       final eligible = <LocalRecording>[];
       for (final recording in pending) {
-        if (recording.retryCount >= maxRetries) continue;
+        if (recording.retryCount >= kMaxUploadRetries) continue;
+        // A row still in `uploading` is either in flight now or was reclaimed
+        // at startup (resetStuckUploading); the drain must not start a second
+        // attempt for it.
+        if (recording.uploadStatus == 'uploading') continue;
 
-        if (recording.retryCount > 0 && recording.lastRetryAt != null) {
-          final backoffIndex = (recording.retryCount - 1).clamp(
-            0,
-            _backoffDurations.length - 1,
-          );
-          final backoff = _backoffDurations[backoffIndex];
-          final elapsed = DateTime.now().difference(recording.lastRetryAt!);
-          if (elapsed < backoff) continue;
+        if (_isWithinBackoffWindow(
+          recording.retryCount,
+          recording.lastRetryAt,
+        )) {
+          continue;
         }
 
         eligible.add(recording);
       }
 
       if (maxConcurrency <= 1) {
-        for (final recording in eligible) {
-          final stillOnline = await _connectivity.isOnline;
-          if (!stillOnline) break;
-
-          if (wifiOnly) {
-            final stillWifi = await _connectivity.isOnWifi;
-            if (!stillWifi) break;
-          }
-
-          await _uploadRecording(
-            recording.id,
-            recording.localFilePath,
-            deleteAfterUpload: deleteAfterUpload,
-            onProgress: onProgress,
-          );
-        }
+        await _drainSerially(
+          eligible,
+          wifiOnly: wifiOnly,
+          deleteAfterUpload: deleteAfterUpload,
+          onProgress: onProgress,
+        );
       } else {
-        var index = 0;
-        final active = <Future<void>>[];
-
-        while (index < eligible.length || active.isNotEmpty) {
-          while (index < eligible.length && active.length < maxConcurrency) {
-            final stillOnline = await _connectivity.isOnline;
-            if (!stillOnline) break;
-
-            if (wifiOnly) {
-              final stillWifi = await _connectivity.isOnWifi;
-              if (!stillWifi) break;
-            }
-
-            final recording = eligible[index++];
-            late final Future<void> entry;
-            entry = _uploadRecording(
-              recording.id,
-              recording.localFilePath,
-              deleteAfterUpload: deleteAfterUpload,
-              onProgress: onProgress,
-            ).whenComplete(() => active.remove(entry));
-            active.add(entry);
-          }
-
-          if (active.isNotEmpty) {
-            await Future.any(active);
-          } else {
-            break;
-          }
-        }
+        await _drainConcurrently(
+          eligible,
+          maxConcurrency: maxConcurrency,
+          wifiOnly: wifiOnly,
+          deleteAfterUpload: deleteAfterUpload,
+          onProgress: onProgress,
+        );
       }
     } finally {
       _isProcessing = false;
     }
   }
+
+  Future<void> _drainSerially(
+    List<LocalRecording> eligible, {
+    required bool wifiOnly,
+    required bool deleteAfterUpload,
+    void Function(String recordingId, int bytesSent, int totalBytes)?
+    onProgress,
+  }) async {
+    for (final recording in eligible) {
+      // The Wi-Fi-only policy is a network-TYPE constraint: a Wi-Fi→cellular
+      // switch keeps uploads succeeding, so it can't be inferred from an
+      // upload outcome — it must be re-checked per item. Reachability
+      // (isOnline), by contrast, surfaces as an upload failure, so it is
+      // sampled once at the gate and only re-probed after a failure
+      // (ENG-125).
+      if (wifiOnly && !await _connectivity.isOnWifi) break;
+
+      final outcome = await _uploadRecording(
+        recording.id,
+        recording.localFilePath,
+        deleteAfterUpload: deleteAfterUpload,
+        onProgress: onProgress,
+      );
+
+      if (await _failedAndOffline(outcome)) break;
+    }
+  }
+
+  Future<void> _drainConcurrently(
+    List<LocalRecording> eligible, {
+    required int maxConcurrency,
+    required bool wifiOnly,
+    required bool deleteAfterUpload,
+    void Function(String recordingId, int bytesSent, int totalBytes)?
+    onProgress,
+  }) async {
+    var index = 0;
+    final active = <Future<void>>[];
+    // Set once we should stop the pass (Wi-Fi-only policy broken, or an
+    // upload failed and a re-probe confirms we are offline); it stops
+    // admitting new uploads while the in-flight ones drain.
+    var stopAdmitting = false;
+
+    while (index < eligible.length || active.isNotEmpty) {
+      while (!stopAdmitting &&
+          index < eligible.length &&
+          active.length < maxConcurrency) {
+        // Re-check the Wi-Fi-only policy per admit: a Wi-Fi→cellular switch
+        // keeps uploads succeeding, so it can't be inferred from outcomes
+        // (see the serial loop for the isOnline/isOnWifi rationale).
+        if (wifiOnly && !await _connectivity.isOnWifi) {
+          stopAdmitting = true;
+          break;
+        }
+        final recording = eligible[index++];
+        late final Future<void> entry;
+        entry =
+            _uploadRecording(
+                  recording.id,
+                  recording.localFilePath,
+                  deleteAfterUpload: deleteAfterUpload,
+                  onProgress: onProgress,
+                )
+                .then((outcome) async {
+                  if (await _failedAndOffline(outcome)) stopAdmitting = true;
+                })
+                .whenComplete(() => active.remove(entry));
+        active.add(entry);
+      }
+
+      if (active.isNotEmpty) {
+        await Future.any(active);
+      } else {
+        break;
+      }
+    }
+  }
+
+  Future<bool> _failedAndOffline(_UploadOutcome outcome) async =>
+      outcome == _UploadOutcome.failed && !await _connectivity.isOnline;
 
   @override
   Future<void> uploadSingle(
@@ -199,7 +274,7 @@ class SyncEngineImpl implements SyncEngine {
     return null;
   }
 
-  Future<void> _uploadRecording(
+  Future<_UploadOutcome> _uploadRecording(
     String id,
     String localFilePath, {
     bool deleteAfterUpload = false,
@@ -209,8 +284,14 @@ class SyncEngineImpl implements SyncEngine {
     try {
       final resolvedPath = await _resolveFilePath(localFilePath);
       if (resolvedPath == null) {
-        await _recordingRepo.markAsFailed(id, incrementRetry: false);
-        return;
+        // Terminal, not a retry: _resolveFilePath has already looked in all
+        // three places the app ever puts a recording, and deletion is a hard
+        // delete, so no later pass will find what this one could not. Marking
+        // it failed without spending a retry (as this used to) left the row
+        // pending forever — reselected on every drain, skipped on every drain.
+        _log.warning('local audio file missing for $id');
+        await _markPermanentlyFailed(id, status: 'failed_missing_file');
+        return _UploadOutcome.skipped;
       }
       if (resolvedPath != localFilePath) {
         await _recordingRepo.updateRecording(
@@ -220,7 +301,7 @@ class SyncEngineImpl implements SyncEngine {
       }
 
       final recording = await _recordingRepo.getRecordingById(id);
-      if (recording == null) return;
+      if (recording == null) return _UploadOutcome.skipped;
 
       await _recordingRepo.markAsUploading(id);
 
@@ -229,6 +310,18 @@ class SyncEngineImpl implements SyncEngine {
       if (recording.serverId != null && recording.serverId!.isNotEmpty) {
         serverId = recording.serverId!;
       } else {
+        // Pre-flight, not a diagnosis of the refusal: the create call requires
+        // a sufficient description and the client owns the same rule, so a row
+        // that predates it (or a split child that inherited a short parent
+        // description) is refused here instead of spending a round-trip to be
+        // told. Deliberately not inferred from the 422 — other things 422 on
+        // this endpoint, and a wrong explanation is worse than none.
+        if (!isDescriptionSufficient(recording.description)) {
+          _log.warning('description too short to create $id');
+          await _markPermanentlyFailed(id, status: 'failed_description');
+          return _UploadOutcome.failed;
+        }
+
         final subcategoryId =
             (recording.subcategoryId != null &&
                 recording.subcategoryId!.isNotEmpty)
@@ -245,33 +338,25 @@ class SyncEngineImpl implements SyncEngine {
           'format': recording.format,
           'recorded_at': recording.recordedAt.toUtc().toIso8601String(),
         };
-        if (recording.registerId != null && recording.registerId!.isNotEmpty) {
-          createBody['register_id'] = recording.registerId;
-        }
-        if (recording.secondaryGenreId != null &&
-            recording.secondaryGenreId!.isNotEmpty) {
-          createBody['secondary_genre_id'] = recording.secondaryGenreId;
-        }
-        if (recording.secondarySubcategoryId != null &&
-            recording.secondarySubcategoryId!.isNotEmpty) {
-          createBody['secondary_subcategory_id'] =
-              recording.secondarySubcategoryId;
-        }
-        if (recording.secondaryRegisterId != null &&
-            recording.secondaryRegisterId!.isNotEmpty) {
-          createBody['secondary_register_id'] = recording.secondaryRegisterId;
-        }
+        _addOptionalCreateFields(createBody, recording);
         if (recording.storytellerId != null &&
             recording.storytellerId!.isNotEmpty) {
           final resolvedStorytellerId = await _resolveStorytellerServerId(
             recording.storytellerId!,
           );
           if (resolvedStorytellerId == null) {
-            debugPrint(
-              'SyncEngine: skipping recording $id, '
-              'referenced storyteller ${recording.storytellerId} is not yet synced',
+            _log.info(
+              'skipping recording $id, referenced storyteller '
+              '${recording.storytellerId} is not yet synced',
             );
-            return;
+            // Undo the optimistic markAsUploading so the row stays drain-eligible
+            // once the storyteller syncs. Without this the uploading-skip in
+            // processQueue would strand it until the next app restart.
+            await _recordingRepo.updateRecording(
+              id,
+              const LocalRecordingsCompanion(uploadStatus: Value('local')),
+            );
+            return _UploadOutcome.skipped;
           }
           createBody['storyteller_id'] = resolvedStorytellerId;
         }
@@ -279,20 +364,41 @@ class SyncEngineImpl implements SyncEngine {
             .post('/api/oc/recordings', body: createBody)
             .timeout(_apiTimeout);
 
-        _checkResponse(
-          createResponse.statusCode,
-          createResponse.body,
-          'Create',
-          expected: 201,
-        );
+        // Only *this* call deduplicates on (project_id, title), so only a 409
+        // here is a name clash. Handled inline rather than in a catch arm: a
+        // 409 raised anywhere else below (confirm-upload) has no rename that
+        // could clear it, and parking those rows in failed_conflict would offer
+        // the user an exit that leads straight back here.
+        if (createResponse.statusCode == 409) {
+          _log.warning('title conflict for $id');
+          await _markPermanentlyFailed(id, status: 'failed_conflict');
+          return _UploadOutcome.failed;
+        }
 
-        final createData =
-            jsonDecode(createResponse.body) as Map<String, dynamic>;
-        serverId = createData['id'] as String;
+        final createData = decodeObject(createResponse);
+        serverId = readString(createData, 'id');
 
+        // The create response is the first and only time the server states what
+        // this recording still owes, and it recomputes before answering
+        // (ENG-373). Stored in the same write as the `serverId` on purpose: the
+        // two facts arrive together, and from the moment the `serverId` lands
+        // the flags are what the pendency rule reads (ENG-379) — a second,
+        // later write would leave a window where an uploaded recording reads as
+        // complete. Extending `markAsUploaded` would open exactly that window,
+        // and would lose the flags entirely when the transfer fails even though
+        // the server already knows them.
+        //
+        // `readReviewFlagsOrNull` cannot throw, so joining it to the `serverId`
+        // write adds no way for this to cost the upload.
+        final createdFlags = readReviewFlagsOrNull(createData);
         await _recordingRepo.updateRecording(
           id,
-          LocalRecordingsCompanion(serverId: Value(serverId)),
+          LocalRecordingsCompanion(
+            serverId: Value(serverId),
+            reviewFlagsJson: createdFlags == null
+                ? const Value.absent()
+                : Value(encodeReviewFlags(createdFlags)),
+          ),
         );
       }
 
@@ -312,7 +418,7 @@ class SyncEngineImpl implements SyncEngine {
           id,
           const LocalRecordingsCompanion(uploadStatus: Value('local')),
         );
-        return;
+        return _UploadOutcome.skipped;
       }
 
       if (!uploadResult.success) {
@@ -331,56 +437,46 @@ class SyncEngineImpl implements SyncEngine {
           )
           .timeout(_apiTimeout);
 
-      _checkResponse(
-        confirmResponse.statusCode,
-        confirmResponse.body,
-        'Confirm',
-        expected: 200,
-      );
-
-      final confirmData =
-          jsonDecode(confirmResponse.body) as Map<String, dynamic>;
-      final gcsUrl = confirmData['gcs_url'] as String?;
+      final confirmData = decodeObject(confirmResponse);
+      final gcsUrl = readStringOrNull(confirmData, 'gcs_url');
 
       await _recordingRepo.markAsUploaded(id, serverId, gcsUrl);
 
       if (deleteAfterUpload && !kIsWeb) {
         await file_ops.deleteFile(resolvedPath);
       }
-    } on _NonRetryableUploadException catch (e) {
-      debugPrint('SyncEngine: non-retryable upload failure for $id: $e');
-      await _markPermanentlyFailed(id);
+      return _UploadOutcome.uploaded;
+    } on AppException catch (e, st) {
+      // Retry decision by the typed flag (ENG-103), not by exception subtype.
+      if (e.retryable) {
+        _log.warning('retryable upload failure for $id', e);
+        await _recordingRepo.markAsFailed(id);
+      } else {
+        // Warning, not severe: non-retryable here is dominated by expected
+        // conditions (expired-session 401/403, server validation/conflict), so
+        // keep it off the reporter. Genuinely malformed payloads surface via the
+        // FormatException arm below.
+        _log.warning('permanent upload failure for $id', e, st);
+        await _markPermanentlyFailed(id);
+      }
     } on FormatException catch (e, st) {
-      // Server returned malformed JSON. Retrying won't help; mark terminal.
-      debugPrint('SyncEngine: response parse error for $id: $e\n$st');
+      // Server returned a non-JSON body. Retrying won't help; mark terminal.
+      _log.severe('response parse error for $id', e, st);
       await _markPermanentlyFailed(id);
-    } on TimeoutException catch (e) {
-      debugPrint('SyncEngine: timeout uploading $id: $e');
-      await _recordingRepo.markAsFailed(id);
-    } on SocketException catch (e) {
-      debugPrint('SyncEngine: socket error uploading $id: $e');
-      await _recordingRepo.markAsFailed(id);
     } on Exception catch (e, st) {
-      // Catchall for unexpected Exception subtypes. Programmer errors
-      // (subclasses of Error like TypeError, StateError, ArgumentError)
-      // are NOT caught here — they propagate as bugs.
-      debugPrint('SyncEngine: unexpected error uploading $id: $e\n$st');
+      // Transport faults (socket/timeout/filesystem) and other transient
+      // Exception subtypes → retry. Programmer errors (Error subtypes like
+      // TypeError, StateError) are NOT caught here — they propagate as bugs.
+      _log.warning('unexpected error uploading $id', e, st);
       await _recordingRepo.markAsFailed(id);
     }
+    return _UploadOutcome.failed;
   }
 
   Future<void> _processPendingStorytellers() async {
     final pending = await _storytellerRepo.getPendingSyncs();
     for (final row in pending) {
-      if (row.retryCount > 0 && row.lastRetryAt != null) {
-        final backoffIndex = (row.retryCount - 1).clamp(
-          0,
-          _backoffDurations.length - 1,
-        );
-        final backoff = _backoffDurations[backoffIndex];
-        final elapsed = DateTime.now().difference(row.lastRetryAt!);
-        if (elapsed < backoff) continue;
-      }
+      if (_isWithinBackoffWindow(row.retryCount, row.lastRetryAt)) continue;
 
       final stillOnline = await _connectivity.isOnline;
       if (!stillOnline) return;
@@ -404,31 +500,29 @@ class SyncEngineImpl implements SyncEngine {
             .timeout(_apiTimeout);
 
         if (response.statusCode != 201 && response.statusCode != 200) {
-          debugPrint(
-            'SyncEngine: storyteller ${row.id} failed '
+          _log.warning(
+            'storyteller ${row.id} failed '
             'with ${response.statusCode}: ${response.body}',
           );
           await _storytellerRepo.markFailed(row.id);
           continue;
         }
 
-        final data = jsonDecode(response.body) as Map<String, dynamic>;
-        final serverId = data['id'] as String;
+        final data = decodeObject(response);
+        final serverId = readString(data, 'id');
         await _storytellerRepo.markUploaded(row.id, serverId);
         await _recordingRepo.reassignStorytellerId(
           fromId: row.id,
           toId: serverId,
         );
       } on TimeoutException catch (e) {
-        debugPrint('SyncEngine: timeout syncing storyteller ${row.id}: $e');
+        _log.warning('timeout syncing storyteller ${row.id}', e);
         await _storytellerRepo.markFailed(row.id);
       } on SocketException catch (e) {
-        debugPrint(
-          'SyncEngine: socket error syncing storyteller ${row.id}: $e',
-        );
+        _log.warning('socket error syncing storyteller ${row.id}', e);
         await _storytellerRepo.markFailed(row.id);
       } on Exception catch (e) {
-        debugPrint('SyncEngine: error syncing storyteller ${row.id}: $e');
+        _log.warning('error syncing storyteller ${row.id}', e);
         await _storytellerRepo.markFailed(row.id);
       }
     }
@@ -448,36 +542,39 @@ class SyncEngineImpl implements SyncEngine {
     return null;
   }
 
-  Future<void> _markPermanentlyFailed(String id) async {
+  /// Adds the create-call fields the API treats as optional. Absent and empty
+  /// are both omitted, so an empty local string never becomes a foreign key.
+  void _addOptionalCreateFields(
+    Map<String, dynamic> body,
+    LocalRecording recording,
+  ) {
+    void put(String key, String? value) {
+      if (value != null && value.isNotEmpty) body[key] = value;
+    }
+
+    put('register_id', recording.registerId);
+    put('secondary_genre_id', recording.secondaryGenreId);
+    put('secondary_subcategory_id', recording.secondarySubcategoryId);
+    put('secondary_register_id', recording.secondaryRegisterId);
+  }
+
+  /// Writes a status the drain will never pick up again, with the retry budget
+  /// spent to match. Every such status is its own — the generic `failed` is
+  /// reserved for a row that still has attempts left — so the detail screen can
+  /// name what happened and offer the way out. The budget path does not come
+  /// through here: [LocalRecordingRepository.markAsFailed] owns it, because it
+  /// is the one that reads the count.
+  Future<void> _markPermanentlyFailed(
+    String id, {
+    String status = 'failed_exhausted',
+  }) async {
     await _recordingRepo.updateRecording(
       id,
       LocalRecordingsCompanion(
-        uploadStatus: const Value('failed'),
-        retryCount: const Value(maxRetries),
+        uploadStatus: Value(status),
+        retryCount: const Value(kMaxUploadRetries),
         lastRetryAt: Value(DateTime.now()),
       ),
     );
-  }
-
-  void _checkResponse(
-    int statusCode,
-    String body,
-    String operation, {
-    int? expected,
-  }) {
-    if (expected != null && statusCode == expected) return;
-    if (expected == null && statusCode >= 200 && statusCode < 300) return;
-
-    if (statusCode == 401 || statusCode == 403) {
-      throw _NonRetryableUploadException(
-        '$operation: auth error ($statusCode): $body',
-      );
-    }
-    if (statusCode >= 400 && statusCode < 500) {
-      throw _NonRetryableUploadException(
-        '$operation: client error ($statusCode): $body',
-      );
-    }
-    throw Exception('$operation failed ($statusCode): $body');
   }
 }

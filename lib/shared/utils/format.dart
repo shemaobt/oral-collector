@@ -141,6 +141,21 @@ String formatRecordingDate(
   return intl.DateFormat.yMMMd(locale).format(date);
 }
 
+/// Clock time, for a recording that never got a title.
+///
+/// Carries the seconds on purpose: untitled recordings arrive in bursts from
+/// the same session, and the fallback has to tell siblings apart.
+///
+/// `jms`, not `Hms`: the clock convention belongs to the locale, and half the
+/// shipped locales do not read a 24-hour clock.
+///
+/// [date] must already be in local time — it is rendered as handed in. Callers
+/// pass `recordedAt` straight off Drift, which stores local, and the sibling
+/// [formatRecordingDate] makes the same assumption; converting here and not
+/// there would put a shifted clock beside an unshifted date on the same row.
+String formatUntitledRecordingTime(DateTime date, String locale) =>
+    intl.DateFormat.jms(locale).format(date);
+
 String formatTimeAgo(DateTime time, AppLocalizations l10n) {
   final now = DateTime.now();
   final diff = now.difference(time);

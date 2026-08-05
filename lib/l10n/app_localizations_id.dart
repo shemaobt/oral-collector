@@ -402,10 +402,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get projectSettings_updated => 'Proyek diperbarui';
 
   @override
-  String get projectSettings_noPermission =>
-      'Anda tidak memiliki izin untuk memperbarui proyek ini';
-
-  @override
   String get projectSettings_team => 'Tim';
 
   @override
@@ -475,7 +471,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get recording_titleHint => 'Judul rekaman';
 
   @override
-  String get recording_descriptionHint => 'Tambah deskripsi singkat (opsional)';
+  String get recording_descriptionHint => 'Jelaskan rekaman ini';
+
+  @override
+  String recording_descriptionTooShort(int count) {
+    return 'Jelaskan rekaman ini dengan minimal $count karakter';
+  }
 
   @override
   String get recording_descriptionEmpty => 'Tambah deskripsi';
@@ -554,11 +555,6 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get recording_downloadAudioMessage =>
       'File audio tidak tersimpan di perangkat ini. Apakah Anda ingin mengunduhnya untuk memotong?';
-
-  @override
-  String recording_downloadFailed(String error) {
-    return 'Gagal mengunduh: $error';
-  }
 
   @override
   String get recording_audioNotAvailable => 'File audio tidak tersedia';
@@ -668,6 +664,20 @@ class AppLocalizationsId extends AppLocalizations {
       'Ketuk mikrofon untuk merekam cerita pertama Anda, atau impor file audio.';
 
   @override
+  String get recordings_offlineFilterTitle => 'Tidak tersedia offline';
+
+  @override
+  String get recordings_offlineFilterDescription =>
+      'Server yang menentukan rekaman mana yang masih memerlukan detail. Sambungkan kembali untuk melihatnya, atau hapus filter untuk menelusuri semua yang ada di perangkat ini.';
+
+  @override
+  String get recordings_filterErrorTitle => 'Tidak bisa memeriksa sekarang';
+
+  @override
+  String get recordings_filterErrorDescription =>
+      'Server tidak menjawab, jadi kami tidak bisa menyebutkan rekaman mana yang masih memerlukan detail. Coba lagi, atau hapus filter untuk menelusuri semua yang ada di perangkat ini.';
+
+  @override
   String get recordings_dropToImport =>
       'Tip: seret berkas audio ke jendela ini untuk mengimpor.';
 
@@ -693,6 +703,38 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get recording_statusLocal => 'Lokal';
+
+  @override
+  String get recording_statusNameConflict => 'Konflik nama';
+
+  @override
+  String get recording_statusDescriptionTooShort => 'Deskripsi terlalu pendek';
+
+  @override
+  String get recording_descriptionGapMessage =>
+      'Rekaman ini tidak dapat diunggah sampai Anda menambahkan deskripsi yang lebih panjang.';
+
+  @override
+  String get recording_statusRetriesExhausted => 'Percobaan habis';
+
+  @override
+  String get recording_statusFileMissing => 'Berkas audio hilang';
+
+  @override
+  String get recording_uploadExhaustedMessage =>
+      'Unggahan berhenti setelah beberapa percobaan. Anda dapat mencoba lagi.';
+
+  @override
+  String get recording_fileMissingMessage =>
+      'Berkas audio rekaman ini tidak ada lagi di perangkat ini, jadi tidak dapat diunggah.';
+
+  @override
+  String get recording_duplicateTitleTitle => 'Nama sudah digunakan';
+
+  @override
+  String recording_duplicateTitleMessage(String title) {
+    return 'Audio bernama \"$title\" sudah ada di proyek ini. Pilih nama lain.';
+  }
 
   @override
   String get recordings_clearStale => 'Bersihkan yang gagal';
@@ -796,10 +838,6 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get trim_classifySegment => 'Klasifikasikan segmen';
-
-  @override
-  String get trim_primaryEqualsSecondary =>
-      'Klasifikasi primer tidak boleh sama dengan klasifikasi sekunder rekaman.';
 
   @override
   String get trim_volume => 'Volume';
@@ -972,12 +1010,12 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String import_resumePromptBody(String name, String size) {
-    return '\"$name\" ($size) terunggah sebagian. Pilih berkas yang sama untuk melanjutkan.';
+    return '\"$name\" ($size) terunggah sebagian. Pilih berkas yang sama persis (tanpa perubahan) untuk melanjutkan.';
   }
 
   @override
   String get import_resumeSizeMismatch =>
-      'Berkas itu tidak cocok dengan unggahan yang dijeda.';
+      'Itu berkas yang berbeda. Pilih berkas yang sama persis dengan yang sedang Anda unggah.';
 
   @override
   String import_largeFileWarning(String size) {
@@ -1018,11 +1056,6 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get profile_photoUpdated => 'Foto profil diperbarui';
-
-  @override
-  String profile_photoFailed(String error) {
-    return 'Gagal memperbarui foto: $error';
-  }
 
   @override
   String get profile_editName => 'Edit nama tampilan';
@@ -1763,6 +1796,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get filter_unclassified => 'Belum diklasifikasi';
 
   @override
+  String get filter_missingDescription => 'Tanpa deskripsi';
+
+  @override
   String get filter_allGenres => 'Semua genre';
 
   @override
@@ -1841,6 +1877,14 @@ class AppLocalizationsId extends AppLocalizations {
   String get projectStats_members => 'Anggota';
 
   @override
+  String get projectStats_needsDetails => 'Perlu detail';
+
+  @override
+  String projectStats_showPendency(String label, int count) {
+    return 'Lihat rekaman — $label ($count)';
+  }
+
+  @override
   String get project_active => 'Aktif';
 
   @override
@@ -1892,10 +1936,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get classify_action => 'Klasifikasi';
 
   @override
-  String get classify_banner =>
-      'Rekaman ini belum diklasifikasi. Ketuk Klasifikasi untuk menambahkan genre dan register.';
-
-  @override
   String get classify_success => 'Rekaman diklasifikasi';
 
   @override
@@ -1923,10 +1963,6 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get classify_secondaryRegister => 'Register sekunder';
-
-  @override
-  String get classify_secondarySameAsPrimary =>
-      'Genre sekunder harus berbeda dari genre dominan.';
 
   @override
   String get classify_clearAlternative => 'Bersihkan alternatif';
@@ -2299,7 +2335,11 @@ class AppLocalizationsId extends AppLocalizations {
   String get filters_sheetTitle => 'Saring rekaman';
 
   @override
-  String get filters_sectionStatus => 'Status unggah';
+  String get filters_sectionStatus => 'Status di perangkat ini';
+
+  @override
+  String get filters_sectionStatusHint =>
+      'Menyaring rekaman yang sudah tampil di layar. Berfungsi tanpa koneksi.';
 
   @override
   String get filters_sectionGenre => 'Genre';
@@ -2309,6 +2349,13 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get filters_sectionUser => 'Direkam oleh';
+
+  @override
+  String get filters_sectionPendency => 'Yang menurut server masih kurang';
+
+  @override
+  String get filters_sectionPendencyHint =>
+      'Menanyakan ke server rekaman mana yang masih memerlukan detail. Perlu koneksi.';
 
   @override
   String get filter_apply => 'Terapkan';
@@ -2342,6 +2389,9 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get filter_genreAll => 'Semua genre';
+
+  @override
+  String get filter_pendencyAll => 'Semua bidang';
 
   @override
   String get detail_recordedBy => 'Direkam oleh';
@@ -2662,4 +2712,58 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get liveActivity_uploadingStatus => 'Mengunggah';
+
+  @override
+  String get recording_completeFicha => 'Lengkapi detail';
+
+  @override
+  String get recording_completeFichaTitle => 'Lengkapi detail';
+
+  @override
+  String recording_completeFichaSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count bidang masih kosong. Isi sekarang atau lanjutkan nanti.',
+      one: '1 bidang masih kosong. Isi sekarang atau lanjutkan nanti.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recording_completeFichaStart => 'Mulai';
+
+  @override
+  String get recording_completeFichaContinue => 'Lanjutkan';
+
+  @override
+  String get recording_pendencyClassification => 'Belum diklasifikasi';
+
+  @override
+  String get recording_pendencyClassificationContext =>
+      'Genre dan register menunjukkan jenis cerita ini.';
+
+  @override
+  String get recording_pendencyDescription => 'Deskripsi terlalu singkat';
+
+  @override
+  String get recording_pendencyDescriptionContext =>
+      'Beberapa kata tentang apa yang terjadi dalam rekaman.';
+
+  @override
+  String get recording_pendencyStoryteller => 'Belum ada pencerita';
+
+  @override
+  String get recording_pendencyStorytellerContext =>
+      'Siapa yang menceritakan kisah ini.';
+
+  @override
+  String recording_pendencyCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count bidang perlu diisi',
+    );
+    return '$_temp0';
+  }
 }

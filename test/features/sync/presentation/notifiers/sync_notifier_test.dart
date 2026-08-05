@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -52,8 +53,10 @@ LocalRecording makeRecording({
   int fileSizeBytes = 1024,
   String? title = 'Test',
   int retryCount = 0,
+  String localFilePath = '/tmp/test.m4a',
 }) => LocalRecording(
   id: id,
+  reviewFlagsJson: '[]',
   projectId: 'proj-1',
   genreId: 'genre-1',
   subcategoryId: null,
@@ -61,7 +64,7 @@ LocalRecording makeRecording({
   durationSeconds: 60.0,
   fileSizeBytes: fileSizeBytes,
   format: 'm4a',
-  localFilePath: '/tmp/test.m4a',
+  localFilePath: localFilePath,
   uploadStatus: uploadStatus,
   serverId: null,
   gcsUrl: null,
@@ -247,6 +250,43 @@ void main() {
 
       await controller.close();
     });
+  });
+
+  group('connectivity init race', () {
+    test(
+      'a connectivity change during init is not lost (subscribe before await)',
+      () async {
+        // connectivity_plus exposes a broadcast stream: events emitted before a
+        // listener attaches are dropped (no replay). If the notifier subscribes
+        // only AFTER awaiting the initial isOnline snapshot, a flip during that
+        // await window is missed.
+        final isOnlineGate = Completer<bool>();
+        final connChanges = StreamController<bool>.broadcast();
+        addTearDown(connChanges.close);
+
+        when(
+          () => mockConnectivity.isOnline,
+        ).thenAnswer((_) => isOnlineGate.future);
+        when(
+          () => mockConnectivity.onConnectivityChanged,
+        ).thenAnswer((_) => connChanges.stream);
+
+        container.read(syncNotifierProvider);
+        await Future<void>.delayed(Duration.zero);
+
+        // The device comes online WHILE the initial snapshot is still pending.
+        connChanges.add(true);
+        await Future<void>.delayed(Duration.zero);
+
+        // The snapshot resolves stale (offline) only afterwards; it must not
+        // clobber the fresher event the listener already observed.
+        isOnlineGate.complete(false);
+        await Future<void>.delayed(Duration.zero);
+        await Future<void>.delayed(Duration.zero);
+
+        expect(container.read(syncNotifierProvider).isOnline, true);
+      },
+    );
   });
 
   group('syncOne', () {
@@ -672,6 +712,115 @@ void main() {
     });
   });
 
+  group('upload guard', () {
+    test('syncOne bails while processQueue is in flight', () async {
+      final fakeFgs = _FakeUploadForegroundService();
+      final engineGate = Completer<void>();
+
+      when(
+        () => mockRecordingRepo.getPendingUploads(),
+      ).thenAnswer((_) async => [makeRecording()]);
+      when(
+        () => mockSyncEngine.processQueue(
+          deleteAfterUpload: any(named: 'deleteAfterUpload'),
+          wifiOnly: any(named: 'wifiOnly'),
+          maxConcurrency: any(named: 'maxConcurrency'),
+          onProgress: any(named: 'onProgress'),
+        ),
+      ).thenAnswer((_) => engineGate.future);
+      // syncOne's path is stubbed so RED fails on the verifyNever assertion
+      // rather than on a missing stub.
+      when(
+        () => mockRecordingRepo.getRecordingById('rec-1'),
+      ).thenAnswer((_) async => makeRecording(id: 'rec-1'));
+      when(
+        () => mockSyncEngine.uploadSingle(
+          any(),
+          deleteAfterUpload: any(named: 'deleteAfterUpload'),
+          onProgress: any(named: 'onProgress'),
+        ),
+      ).thenAnswer((_) async {});
+
+      final c = ProviderContainer(
+        overrides: [
+          connectivityServiceProvider.overrideWithValue(mockConnectivity),
+          syncEngineProvider.overrideWithValue(mockSyncEngine),
+          localRecordingRepositoryProvider.overrideWithValue(mockRecordingRepo),
+          uploadForegroundServiceProvider.overrideWithValue(fakeFgs),
+        ],
+      );
+      addTearDown(c.dispose);
+
+      final notifier = c.read(syncNotifierProvider.notifier);
+      await Future<void>.delayed(Duration.zero);
+
+      final first = notifier.processQueue();
+      await notifier.syncOne('rec-1');
+
+      verifyNever(
+        () => mockSyncEngine.uploadSingle(
+          any(),
+          deleteAfterUpload: any(named: 'deleteAfterUpload'),
+          onProgress: any(named: 'onProgress'),
+        ),
+      );
+
+      engineGate.complete();
+      await first;
+    });
+
+    test('processQueue bails while syncOne is in flight', () async {
+      final fakeFgs = _FakeUploadForegroundService();
+      final uploadGate = Completer<void>();
+
+      when(
+        () => mockRecordingRepo.getRecordingById('rec-1'),
+      ).thenAnswer((_) async => makeRecording(id: 'rec-1'));
+      when(
+        () => mockSyncEngine.uploadSingle(
+          any(),
+          deleteAfterUpload: any(named: 'deleteAfterUpload'),
+          onProgress: any(named: 'onProgress'),
+        ),
+      ).thenAnswer((_) => uploadGate.future);
+      when(
+        () => mockRecordingRepo.getPendingUploads(),
+      ).thenAnswer((_) async => [makeRecording()]);
+
+      final c = ProviderContainer(
+        overrides: [
+          connectivityServiceProvider.overrideWithValue(mockConnectivity),
+          syncEngineProvider.overrideWithValue(mockSyncEngine),
+          localRecordingRepositoryProvider.overrideWithValue(mockRecordingRepo),
+          uploadForegroundServiceProvider.overrideWithValue(fakeFgs),
+        ],
+      );
+      addTearDown(c.dispose);
+
+      final notifier = c.read(syncNotifierProvider.notifier);
+      await Future<void>.delayed(Duration.zero);
+
+      final first = notifier.syncOne('rec-1');
+      await notifier.processQueue();
+
+      verifyNever(
+        () => mockSyncEngine.processQueue(
+          deleteAfterUpload: any(named: 'deleteAfterUpload'),
+          wifiOnly: any(named: 'wifiOnly'),
+          maxConcurrency: any(named: 'maxConcurrency'),
+          onProgress: any(named: 'onProgress'),
+        ),
+      );
+      expect(fakeFgs.startCount, 0);
+      // syncOne genuinely holds the guard: it set uploadingId before its first
+      // await, so processQueue bailed on a real in-flight upload (not offline).
+      expect(c.read(syncNotifierProvider).uploadingId, 'rec-1');
+
+      uploadGate.complete();
+      await first;
+    });
+  });
+
   group('updateSettings', () {
     test('updates autoUploadWifiOnly', () async {
       container.read(syncNotifierProvider);
@@ -729,6 +878,9 @@ void main() {
   });
 
   group('resetAndRetry', () {
+    // Also guards the upload-guard pitfall: resetAndRetry calls syncOne, so it
+    // must NOT acquire the shared guard itself — otherwise the inner syncOne
+    // would re-entrantly bail and silently skip the upload.
     test('calls resetRetryCount then syncOne', () async {
       when(
         () => mockRecordingRepo.resetRetryCount('rec-1'),
@@ -820,6 +972,59 @@ void main() {
         uploadSpeedBps: 1000,
       );
       expect(state.estimatedTimeRemaining, const Duration(seconds: 5));
+    });
+  });
+
+  group('getLocalStorageUsed', () {
+    test('sums existing local file sizes and skips missing files', () async {
+      final dir = Directory.systemTemp.createTempSync('sync_storage_used');
+      addTearDown(() => dir.deleteSync(recursive: true));
+      File('${dir.path}/a.m4a').writeAsBytesSync(List.filled(100, 0));
+      File('${dir.path}/b.m4a').writeAsBytesSync(List.filled(250, 0));
+
+      when(() => mockRecordingRepo.getAllLocalRecordings()).thenAnswer(
+        (_) async => [
+          makeRecording(id: 'a', localFilePath: '${dir.path}/a.m4a'),
+          makeRecording(id: 'b', localFilePath: '${dir.path}/b.m4a'),
+          makeRecording(id: 'c', localFilePath: '${dir.path}/missing.m4a'),
+        ],
+      );
+
+      final notifier = container.read(syncNotifierProvider.notifier);
+      await Future<void>.delayed(Duration.zero);
+      expect(await notifier.getLocalStorageUsed(), 350);
+    });
+  });
+
+  group('clearLocalCache', () {
+    test('deletes every local file and then clears the repository', () async {
+      final dir = Directory.systemTemp.createTempSync('sync_storage_clear');
+      addTearDown(() {
+        if (dir.existsSync()) dir.deleteSync(recursive: true);
+      });
+      final a = File('${dir.path}/a.m4a')..writeAsBytesSync(List.filled(10, 0));
+      final b = File('${dir.path}/b.m4a')..writeAsBytesSync(List.filled(10, 0));
+
+      when(() => mockRecordingRepo.getAllLocalRecordings()).thenAnswer(
+        (_) async => [
+          makeRecording(id: 'a', localFilePath: a.path),
+          makeRecording(id: 'b', localFilePath: b.path),
+        ],
+      );
+      when(() => mockRecordingRepo.deleteAllRecordings()).thenAnswer((_) async {
+        // Ordering contract: files are deleted before the repository is cleared.
+        expect(a.existsSync(), isFalse);
+        expect(b.existsSync(), isFalse);
+        return 2;
+      });
+
+      final notifier = container.read(syncNotifierProvider.notifier);
+      await Future<void>.delayed(Duration.zero);
+      await notifier.clearLocalCache();
+
+      expect(a.existsSync(), isFalse);
+      expect(b.existsSync(), isFalse);
+      verify(() => mockRecordingRepo.deleteAllRecordings()).called(1);
     });
   });
 }

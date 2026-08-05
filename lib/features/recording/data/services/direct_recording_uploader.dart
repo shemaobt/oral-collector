@@ -1,16 +1,34 @@
-import 'dart:convert';
-
 import 'package:drift/drift.dart' show Value;
 import 'package:http/http.dart' as http;
 
+import '../../../../core/config/url_policy.dart';
 import '../../../../core/database/app_database.dart';
+import '../../../../core/errors/app_exception.dart' show ConflictException;
 import '../../../../core/network/authenticated_client.dart';
+import '../../../../core/network/error_boundary.dart' show throwForResponse;
+import '../../../../core/network/response_decoder.dart';
 import '../../../../core/platform/file_source.dart';
+import '../../../../core/serialization/safe_read.dart';
 import '../../../../core/util/crc32c.dart';
+import '../../../../core/util/crc32c_async.dart';
 import '../../../sync/data/services/resumable_upload_service.dart';
 import '../repositories/local_recording_repository.dart';
 
 const int _smallFileThreshold = 5 * 1024 * 1024;
+
+/// `code` carried by the [ConflictException] the **create** call raises.
+const kDuplicateRecordingTitleCode = 'recording_title_taken';
+
+/// Whether [error] is the one conflict a rename can actually fix.
+///
+/// The backend deduplicates `POST /api/oc/recordings` on `(project_id, title)`,
+/// so a 409 there is a name clash the user can resolve. A 409 from upload-url
+/// or confirm-upload is not: the bytes may already be in GCS and the recording
+/// already registered, so offering a rename would advertise an exit that leads
+/// nowhere. `SyncEngine` makes the same discrimination at the same call site —
+/// see [/lib/features/sync/docs.md].
+bool isDuplicateRecordingTitle(Object error) =>
+    error is ConflictException && error.code == kDuplicateRecordingTitleCode;
 
 class DirectUploadMetadata {
   const DirectUploadMetadata({
@@ -100,13 +118,18 @@ class DirectRecordingUploader {
     final createResponse = await _client
         .post('/api/oc/recordings', body: createBody)
         .timeout(_apiTimeout);
-    if (createResponse.statusCode != 201) {
-      throw _UploaderException(
-        'Create failed (${createResponse.statusCode}): ${createResponse.body}',
-      );
+    // Tagged inline at this one call site, like SyncEngine: only the create
+    // call dedupes on (project_id, title), so only its 409 is a taken title.
+    if (createResponse.statusCode == 409) {
+      throw const ConflictException(code: kDuplicateRecordingTitleCode);
     }
-    final createData = jsonDecode(createResponse.body) as Map<String, dynamic>;
-    return createData['id'] as String;
+    // Shared status table: 4xx (validation 422) -> non-retryable typed
+    // failure, 5xx -> retryable ServerException.
+    if (createResponse.statusCode != 201) {
+      throwForResponse(createResponse);
+    }
+    final createData = decodeObject(createResponse);
+    return readString(createData, 'id');
   }
 
   Future<void> _uploadSingleShot({
@@ -115,7 +138,7 @@ class DirectRecordingUploader {
     required DirectUploadMetadata meta,
   }) async {
     final bytes = await source.readRange(0, source.length);
-    final clientCrc = (Crc32c()..add(bytes)).base64BigEndian;
+    final clientCrc = await crc32cBytesBase64(bytes);
 
     final urlResponse = await _client
         .post(
@@ -124,14 +147,15 @@ class DirectRecordingUploader {
         )
         .timeout(_apiTimeout);
     if (urlResponse.statusCode != 200) {
-      throw _UploaderException(
-        'Upload URL failed (${urlResponse.statusCode}): ${urlResponse.body}',
-      );
+      throwForResponse(urlResponse);
     }
-    final urlData = jsonDecode(urlResponse.body) as Map<String, dynamic>;
-    final uploadUrl = urlData['upload_url'] as String;
+    final urlData = decodeObject(urlResponse);
+    final uploadUrl = readString(urlData, 'upload_url');
+    if (!isHttpsUrl(uploadUrl)) {
+      throw _UploaderException('Insecure upload URL (non-https)');
+    }
     final contentType =
-        urlData['content_type'] as String? ?? 'application/octet-stream';
+        readStringOrNull(urlData, 'content_type') ?? 'application/octet-stream';
 
     final putRequest = http.Request('PUT', Uri.parse(uploadUrl));
     putRequest.headers['Content-Type'] = contentType;
@@ -170,7 +194,7 @@ class DirectRecordingUploader {
         source.filePath ??
         'web_import_${DateTime.now().millisecondsSinceEpoch}_$serverId';
 
-    await _recordingRepo.insertRecording(
+    await _recordingRepo.upsertRecording(
       LocalRecordingsCompanion(
         id: Value(shadowId),
         projectId: Value(meta.projectId),
@@ -200,25 +224,21 @@ class DirectRecordingUploader {
       ),
     );
 
-    try {
-      final result = await _resumableUploadService.uploadFromSource(
-        recordingId: shadowId,
-        serverId: serverId,
-        source: source,
-        format: meta.format,
-        onProgress: onProgress,
+    final result = await _resumableUploadService.uploadFromSource(
+      recordingId: shadowId,
+      serverId: serverId,
+      source: source,
+      format: meta.format,
+      onProgress: onProgress,
+    );
+    if (!result.success) {
+      throw _UploaderException(
+        'Resumable upload failed: ${result.error ?? 'unknown'}',
       );
-      if (!result.success) {
-        throw _UploaderException(
-          'Resumable upload failed: ${result.error ?? 'unknown'}',
-        );
-      }
-
-      await _confirm(serverId, crc32c: result.clientCrc32c);
-      await _recordingRepo.deleteRecording(shadowId);
-    } catch (e) {
-      rethrow;
     }
+
+    await _confirm(serverId, crc32c: result.clientCrc32c);
+    await _recordingRepo.deleteRecording(shadowId);
   }
 
   Future<void> _confirm(String serverId, {required String? crc32c}) async {
@@ -229,9 +249,7 @@ class DirectRecordingUploader {
         .post('/api/oc/recordings/$serverId/confirm-upload', body: confirmBody)
         .timeout(_apiTimeout);
     if (confirmResponse.statusCode != 200) {
-      throw _UploaderException(
-        'Confirm failed (${confirmResponse.statusCode}): ${confirmResponse.body}',
-      );
+      throwForResponse(confirmResponse);
     }
   }
 }

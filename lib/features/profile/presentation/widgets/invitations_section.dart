@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../../l10n/app_localizations.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../../shared/utils/error_helpers.dart';
 import '../../../../shared/widgets/section_header.dart';
-import '../../../invite/presentation/notifiers/invite_state.dart';
 import '../../../invite/domain/entities/invite.dart';
+import '../../../invite/presentation/notifiers/invite_state.dart';
 import 'invite_tile.dart';
 
 class InvitationsSection extends StatelessWidget {
@@ -44,17 +45,17 @@ class InvitationsSection extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: SpacingScale.s8),
         if (inviteState.isLoading)
           const Card(
             child: Padding(
-              padding: EdgeInsets.all(24),
+              padding: EdgeInsets.all(SpacingScale.s24),
               child: Center(child: CircularProgressIndicator()),
             ),
           )
         else if (inviteState.error != null)
           _ErrorCard(
-            message: friendlyErrorMessage(
+            message: friendlyErrorFor(
               inviteState.error!,
               AppLocalizations.of(context),
             ),
@@ -63,10 +64,10 @@ class InvitationsSection extends StatelessWidget {
         else if (inviteState.invites.isEmpty)
           Card(
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(RadiusScale.r16),
             ),
             child: Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(SpacingScale.s20),
               child: Center(
                 child: Text(
                   l10n.profile_noInvitations,
@@ -80,7 +81,7 @@ class InvitationsSection extends StatelessWidget {
         else
           Card(
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(RadiusScale.r16),
             ),
             child: Column(
               children: [
@@ -95,7 +96,7 @@ class InvitationsSection extends StatelessWidget {
               ],
             ),
           ),
-        const SizedBox(height: 24),
+        const SizedBox(height: SpacingScale.s24),
       ],
     );
   }
@@ -113,23 +114,23 @@ class _ErrorCard extends StatelessWidget {
     final errorColor = theme.colorScheme.error;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(SpacingScale.s16),
       decoration: BoxDecoration(
         color: errorColor.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(RadiusScale.r16),
         border: Border.all(color: errorColor.withValues(alpha: 0.2)),
       ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(SpacingScale.s8),
             decoration: BoxDecoration(
               color: errorColor.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(RadiusScale.r8),
             ),
             child: Icon(LucideIcons.wifiOff, size: 18, color: errorColor),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: SpacingScale.s12),
           Expanded(
             child: Text(
               message,
@@ -139,12 +140,12 @@ class _ErrorCard extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: SpacingScale.s8),
           TextButton(
             onPressed: onRetry,
             style: TextButton.styleFrom(
               foregroundColor: errorColor,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
+              padding: const EdgeInsets.symmetric(horizontal: SpacingScale.s12),
             ),
             child: Text(AppLocalizations.of(context).common_retry),
           ),

@@ -1,40 +1,35 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/utils/format.dart';
 import '../../data/services/recovery_coordinator.dart';
 import '../notifiers/interrupted_sessions_notifier.dart';
 import '../notifiers/recording_session_notifier.dart';
-import '../notifiers/recording_session_state.dart';
 import 'unsaved_recording_row.dart';
 
 class UnsavedRecordingsSheet extends ConsumerWidget {
-  const UnsavedRecordingsSheet({
-    super.key,
-    required this.onSessionSaved,
-    this.onSessionResumed,
-  });
+  const UnsavedRecordingsSheet({super.key, this.onSessionResumed});
 
-  final ValueChanged<RecordingResult> onSessionSaved;
   final VoidCallback? onSessionResumed;
 
   static Future<void> show(
-    BuildContext context,
-    ValueChanged<RecordingResult> onSessionSaved, {
+    BuildContext context, {
     VoidCallback? onSessionResumed,
   }) {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => UnsavedRecordingsSheet(
-        onSessionSaved: onSessionSaved,
-        onSessionResumed: onSessionResumed,
-      ),
+      backgroundColor: AppColors.transparent,
+      builder: (_) =>
+          UnsavedRecordingsSheet(onSessionResumed: onSessionResumed),
     );
   }
 
@@ -60,7 +55,9 @@ class UnsavedRecordingsSheet extends ConsumerWidget {
         return Container(
           decoration: BoxDecoration(
             color: colors.card,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(RadiusScale.r24),
+            ),
           ),
           child: CustomScrollView(
             controller: scrollController,
@@ -124,7 +121,7 @@ class UnsavedRecordingsSheet extends ConsumerWidget {
     WidgetRef ref,
     InterruptedSession session,
   ) async {
-    HapticFeedback.selectionClick();
+    unawaited(HapticFeedback.selectionClick());
     final notifier = ref.read(recordingSessionNotifierProvider.notifier);
     final ok = await notifier.loadInterruptedSession(session.sessionId);
     if (!context.mounted) return;
@@ -138,13 +135,23 @@ class UnsavedRecordingsSheet extends ConsumerWidget {
     WidgetRef ref,
     InterruptedSession session,
   ) async {
-    HapticFeedback.selectionClick();
+    unawaited(HapticFeedback.selectionClick());
     final notifier = ref.read(interruptedSessionsNotifierProvider.notifier);
     final result = await notifier.save(session.sessionId);
     if (!context.mounted) return;
     if (result != null) {
+      ref.read(pendingRecoveryProvider.notifier).state = PendingRecovery(
+        result: result,
+        sessionId: session.sessionId,
+        genreId: session.genreId,
+        subcategoryId: session.subcategoryId,
+      );
+      // Capture the router before popping — the modal's context is defunct
+      // after pop, but the recovered session is finalized and parked in the
+      // provider, so navigation must still proceed.
+      final router = GoRouter.of(context);
       Navigator.of(context).pop();
-      onSessionSaved(result);
+      router.go('/recovery-confirm');
     }
   }
 
@@ -176,7 +183,7 @@ class UnsavedRecordingsSheet extends ConsumerWidget {
       ),
     );
     if (confirmed != true || !context.mounted) return;
-    HapticFeedback.mediumImpact();
+    unawaited(HapticFeedback.mediumImpact());
     final notifier = ref.read(interruptedSessionsNotifierProvider.notifier);
     await notifier.discard(session.sessionId);
   }
@@ -208,7 +215,7 @@ class UnsavedRecordingsSheet extends ConsumerWidget {
       ),
     );
     if (confirmed != true || !context.mounted) return;
-    HapticFeedback.mediumImpact();
+    unawaited(HapticFeedback.mediumImpact());
     final notifier = ref.read(interruptedSessionsNotifierProvider.notifier);
     final ids = ref
         .read(interruptedSessionsProvider)
@@ -231,7 +238,10 @@ class _Handle extends StatelessWidget {
       child: Container(
         width: 36,
         height: 4,
-        margin: const EdgeInsets.only(top: 10, bottom: 4),
+        margin: const EdgeInsets.only(
+          top: SpacingScale.s8,
+          bottom: SpacingScale.s4,
+        ),
         decoration: BoxDecoration(
           color: color,
           borderRadius: BorderRadius.circular(2),
@@ -253,7 +263,12 @@ class _SheetHeader extends StatelessWidget {
     final colors = AppColors.of(context);
     final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 12, 12, 16),
+      padding: const EdgeInsets.fromLTRB(
+        SpacingScale.s20,
+        SpacingScale.s12,
+        SpacingScale.s12,
+        SpacingScale.s16,
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../../l10n/app_localizations.dart';
 
 class RoleBadge extends StatelessWidget {
@@ -17,10 +18,13 @@ class RoleBadge extends StatelessWidget {
     final color = isManager ? colors.primary : colors.info;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      padding: const EdgeInsets.symmetric(
+        horizontal: SpacingScale.s8,
+        vertical: 2,
+      ),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(RadiusScale.r12),
         border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Text(

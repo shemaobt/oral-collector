@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 
 import '../auth/auth_notifier.dart';
 import '../config/env.dart';
+import '../config/url_policy.dart';
 import '../providers/http_client_provider.dart';
 import '../providers/secure_storage_provider.dart';
 
@@ -15,7 +16,6 @@ class AuthenticatedClient {
   final http.Client _client;
   final FlutterSecureStorage _storage;
   final TokenRefresher? _refreshToken;
-  bool _isRefreshing = false;
 
   AuthenticatedClient({
     required http.Client client,
@@ -40,15 +40,13 @@ class AuthenticatedClient {
     Future<http.Response> Function() request,
   ) async {
     final response = await request();
-    if (response.statusCode == 401 && _refreshToken != null && !_isRefreshing) {
-      _isRefreshing = true;
-      try {
-        final refreshed = await _refreshToken();
-        if (refreshed) {
-          return request();
-        }
-      } finally {
-        _isRefreshing = false;
+    if (response.statusCode == 401 && _refreshToken != null) {
+      // No per-client guard: the refresh is coalesced globally in AuthNotifier
+      // (ENG-136), so concurrent 401s await the same refresh and all retry,
+      // instead of skipping the retry and failing with 401.
+      final refreshed = await _refreshToken();
+      if (refreshed) {
+        return request();
       }
     }
     return response;
@@ -86,8 +84,10 @@ class AuthenticatedClient {
     Object? body,
     Map<String, String>? headers,
   }) async {
+    final target = url.startsWith('http') ? url : '$baseUrl$url';
+    assertHttpsUrl(target);
     return _client.put(
-      Uri.parse(url.startsWith('http') ? url : '$baseUrl$url'),
+      Uri.parse(target),
       headers: headers ?? await _headers(),
       body: body is String ? body : (body != null ? jsonEncode(body) : null),
     );

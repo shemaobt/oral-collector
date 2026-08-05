@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ENG-133: block all cleartext (HTTP) traffic. OS-layer defense-in-depth on top
+     of lib/core/config/url_policy.dart (which guards Dart's HttpClient). The debug
+     build overlays src/debug/res/xml/network_security_config.xml to re-permit
+     cleartext for local/LAN dev backends. -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

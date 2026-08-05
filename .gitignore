@@ -124,6 +124,9 @@ app.*.symbols
 !/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
 !/dev/ci/**/Gemfile.lock
 
+# Commit the resolved lockfile so drift schema codegen is reproducible (ENG-165).
+!pubspec.lock
+
 # Claude
 
 .claude.DS_Store
@@ -136,3 +139,7 @@ app.*.symbols
 
 # FVM
 .fvm/
+
+# layerlens generated dependency diagrams
+DEPS.md
+**/DEPS.md

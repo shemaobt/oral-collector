@@ -1,21 +1,24 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import '../../../../l10n/app_localizations.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/tokens.dart';
 import '../../../shared/preview_helpers.dart';
 import '../../../shared/widgets/app_shell.dart';
-import '../../../shared/widgets/error_snack_bar.dart';
 import '../../../shared/widgets/empty_state.dart';
+import '../../../shared/widgets/error_snack_bar.dart';
 import '../../../shared/widgets/screen_header.dart';
 import '../../../shared/widgets/sync_status_indicator.dart';
-import '../../../../l10n/app_localizations.dart';
 import '../../auth/data/providers/role_provider.dart';
 import '../../sync/presentation/notifiers/sync_notifier.dart';
+import 'create_project_dialog.dart';
 import 'notifiers/project_notifier.dart';
 import 'notifiers/project_state.dart';
-import 'create_project_dialog.dart';
 import 'widgets/create_project_fab.dart';
 import 'widgets/project_card.dart';
 
@@ -67,7 +70,7 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
     });
 
     final l10n = AppLocalizations.of(context);
-    final canCreate = roleNotifier.canCreateProject;
+    final canCreate = ref.read(canCreateProjectProvider);
     final fabOffset = AppShell.fabBottomOffset(context);
 
     return Scaffold(
@@ -119,9 +122,9 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
           if (isTablet) {
             return GridView.builder(
               padding: EdgeInsets.fromLTRB(
-                20,
-                20,
-                20,
+                SpacingScale.s20,
+                SpacingScale.s20,
+                SpacingScale.s20,
                 AppShell.scrollPaddingFor(context),
               ),
               gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
@@ -145,9 +148,9 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
 
           return ListView.builder(
             padding: EdgeInsets.fromLTRB(
-              20,
-              12,
-              20,
+              SpacingScale.s20,
+              SpacingScale.s12,
+              SpacingScale.s20,
               AppShell.scrollPaddingFor(context),
             ),
             itemCount: state.projects.length,
@@ -169,7 +172,7 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
   Future<void> _showCreateProjectDialog() async {
     final created = await showCreateProjectSheet(context);
     if (created == true && mounted) {
-      ref.read(projectNotifierProvider.notifier).fetchProjects();
+      unawaited(ref.read(projectNotifierProvider.notifier).fetchProjects());
     }
   }
 }

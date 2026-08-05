@@ -22,7 +22,17 @@ Path: @/lib/features/sync/data/services
   ([/lib/features/recording/data/repositories/local_recording_repository.dart](../../../recording/data/repositories/local_recording_repository.dart))
   to enumerate `getPendingUploads` and to flip rows
   `uploading` / `uploaded` / `failed`. The actual queue walk lives in the
-  `SyncEngine` ([/lib/features/sync/domain/repositories/sync_engine.dart](../../domain/repositories/sync_engine.dart)).
+  `SyncEngine` ([/lib/features/sync/domain/repositories/sync_engine.dart](../../domain/repositories/sync_engine.dart)),
+  which drains that list **in the order the repository returns it** —
+  `createdAt ASC, id ASC` (FIFO by enqueue time, ENG-122). The engine adds no
+  ordering of its own, so the upload order is whatever the repository query
+  defines; see
+  [/lib/features/recording/data/repositories/docs.md](../../../recording/data/repositories/docs.md).
+  The engine does, however, apply its own **eligibility filter** over that
+  list — it skips rows past the retry ceiling, rows inside their (jittered)
+  backoff window, and rows already in `uploading` — so not every returned row
+  is dispatched on a given pass; see
+  [/lib/features/sync/docs.md](../../docs.md).
 - `UploadForegroundService` shares the single Android foreground service
   with recording. It does not call the plugin directly for lifecycle; it
   goes through [/lib/core/platform/foreground_service_arbiter.dart](../../../../core/platform/foreground_service_arbiter.dart)
@@ -36,6 +46,10 @@ Path: @/lib/features/sync/data/services
 - `providers.dart` ([../providers.dart](../providers.dart)) exposes
   `uploadForegroundServiceProvider`, `uploadDownloaderProvider`, and
   `syncEngineProvider` consumed by the notifier and coordinator.
+- Diagnostics from the upload transport now flow through the app's logging facade
+  (named `package:logging` loggers) rather than ad-hoc console prints; severe
+  records reach the `ErrorReporter`. See
+  [/lib/core/observability/docs.md](../../../../core/observability/docs.md).
 
 ### Core Implementation
 
@@ -61,7 +75,23 @@ Path: @/lib/features/sync/data/services
 - The transport itself (`resumable_upload_service.dart`,
   `upload_downloader.dart`) validates CRC32C and resumes from the saved GCS
   offset; the foreground service / Live Activity are lifecycle and UI
-  concerns layered on top of it.
+  concerns layered on top of it. The client-side CRC32C is computed **off the
+  UI isolate** through the shared helper in
+  [/lib/core/util/docs.md](../../../../core/util/docs.md) (a background isolate
+  on native, a cooperative chunked yield on web) — for the path upload the
+  whole file is read and hashed inside the isolate from its path, so multi-MB
+  bytes are not copied across the boundary. This is the app's first
+  background-isolate usage; see ADR-0004. (The legacy web resumable path is the
+  exception — it still folds the CRC per upload chunk on the UI isolate,
+  interleaved with the chunk uploads.) The CRC is still checked against the
+  GCS `x-goog-hash` after the PUT, and the validate-scheme → PUT ordering is
+  unchanged.
+- The server returns the GCS target out-of-band (`upload_url` for single-PUT,
+  `session_uri` for resumable), so the transport re-checks its scheme at the
+  server→app boundary before any PUT, using the `isHttpsUrl` predicate from
+  [/lib/core/config/url_policy.dart](../../../../core/config/url_policy.dart).
+  This is the only place the presigned URL is scheme-validated — it never flows
+  through `AuthenticatedClient.baseUrl`. See "Things to Know".
 
 ### Things to Know
 
@@ -76,12 +106,39 @@ Path: @/lib/features/sync/data/services
   uninterruptible upload.
 - **Notification lifetime is a reentrancy hazard at the caller.** The upload
   FGS is started/stopped around the engine call inside
-  `SyncNotifier._runQueue`, and that method is reentrancy-guarded
-  (`_isProcessing`) in `processQueue`
+  `SyncNotifier._runQueue`. `processQueue` holds a shared `_isProcessing`
+  upload guard — also taken by `syncOne` — so the two upload entry points are
+  mutually exclusive
   ([/lib/features/sync/presentation/notifiers/sync_notifier.dart](../../presentation/notifiers/sync_notifier.dart)).
   Without that guard a second concurrent `processQueue` (e.g. app resume →
   recordings-list refresh → `processQueue`) short-circuited on the engine's
   own guard but still ran its `finally`, stopping the foreground service
   while the first upload kept running — the notification vanished mid-upload.
+  The same guard now also blocks a `syncOne` (e.g. reset-and-retry) from
+  starting underneath an active queue, so the FGS is never stopped out from
+  under an in-flight upload.
+
+- **A non-https presigned URL fails closed, it does not crash the upload.**
+  Both single-PUT paths reject the server's `upload_url` by returning
+  `ResumableUploadResult(success: false)` (so the queue marks the row failed
+  and retries later), and `_requestResumableSession` rejects a non-https
+  `session_uri` by logging and returning `null`, which surfaces as a failed
+  session to its callers. This is the transport half of the app-wide
+  no-cleartext-PUT invariant whose policy and rationale live in
+  [/lib/core/network/docs.md](../../../../core/network/docs.md); the
+  config/contract half throws instead.
+
+- **A malformed upload-response body now also fails closed instead of crashing
+  (ENG-153).** The transport reads the server's `upload_url` / `session_uri` /
+  `content_type` through `decodeObject` + the `safe_read` leaf readers
+  ([/lib/core/network/response_decoder.dart](../../../../core/network/response_decoder.dart),
+  [/lib/core/serialization/safe_read.dart](../../../../core/serialization/safe_read.dart))
+  rather than a raw `jsonDecode(...) as Map` / `as String`. A bad payload used to
+  throw `TypeError` (an `Error`), which escaped the transport's `on Exception`
+  arms and stranded the recording mid-upload; it now throws a catchable
+  `ParseException`, so the existing `on Exception` handlers degrade gracefully
+  (a failed `_requestResumableSession` returns `null`; the queue marks the row
+  failed and retries). No catch block was changed — see the Error-vs-Exception
+  invariant in [/lib/core/network/docs.md](../../../../core/network/docs.md).
 
 Created and maintained by Nori.

@@ -872,12 +872,6 @@ abstract class AppLocalizations {
   /// **'Project updated'**
   String get projectSettings_updated;
 
-  /// No description provided for @projectSettings_noPermission.
-  ///
-  /// In en, this message translates to:
-  /// **'You do not have permission to update this project'**
-  String get projectSettings_noPermission;
-
   /// No description provided for @projectSettings_team.
   ///
   /// In en, this message translates to:
@@ -1013,8 +1007,14 @@ abstract class AppLocalizations {
   /// No description provided for @recording_descriptionHint.
   ///
   /// In en, this message translates to:
-  /// **'Add a short description (optional)'**
+  /// **'Describe this recording'**
   String get recording_descriptionHint;
+
+  /// No description provided for @recording_descriptionTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Please describe this recording in at least {count} characters'**
+  String recording_descriptionTooShort(int count);
 
   /// No description provided for @recording_descriptionEmpty.
   ///
@@ -1159,12 +1159,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The audio file is not stored on this device. Would you like to download it to trim?'**
   String get recording_downloadAudioMessage;
-
-  /// No description provided for @recording_downloadFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to download: {error}'**
-  String recording_downloadFailed(String error);
 
   /// No description provided for @recording_audioNotAvailable.
   ///
@@ -1352,6 +1346,30 @@ abstract class AppLocalizations {
   /// **'Tap the microphone to record your first story, or import an audio file.'**
   String get recordings_noRecordingsSubtitle;
 
+  /// Empty-state title when a review-flag filter is applied but the device is offline; the filter is server-computed and has no local equivalent (ENG-381).
+  ///
+  /// In en, this message translates to:
+  /// **'Not available offline'**
+  String get recordings_offlineFilterTitle;
+
+  /// No description provided for @recordings_offlineFilterDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'The server works out which recordings still need details. Reconnect to see them, or remove the filter to browse everything on this device.'**
+  String get recordings_offlineFilterDescription;
+
+  /// Empty-state title when a review-flag filter is applied and the last fetch failed; an empty list here would otherwise read as 'nothing left to do' (ENG-381).
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t check right now'**
+  String get recordings_filterErrorTitle;
+
+  /// No description provided for @recordings_filterErrorDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'The server didn\'t answer, so we can\'t say which recordings still need details. Try again, or remove the filter to browse everything on this device.'**
+  String get recordings_filterErrorDescription;
+
   /// No description provided for @recordings_dropToImport.
   ///
   /// In en, this message translates to:
@@ -1387,6 +1405,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Local'**
   String get recording_statusLocal;
+
+  /// No description provided for @recording_statusNameConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'Name conflict'**
+  String get recording_statusNameConflict;
+
+  /// No description provided for @recording_statusDescriptionTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Description too short'**
+  String get recording_statusDescriptionTooShort;
+
+  /// No description provided for @recording_descriptionGapMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This recording can\'t be uploaded until you add a longer description.'**
+  String get recording_descriptionGapMessage;
+
+  /// No description provided for @recording_statusRetriesExhausted.
+  ///
+  /// In en, this message translates to:
+  /// **'Attempts used up'**
+  String get recording_statusRetriesExhausted;
+
+  /// No description provided for @recording_statusFileMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio file missing'**
+  String get recording_statusFileMissing;
+
+  /// No description provided for @recording_uploadExhaustedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The upload stopped after several attempts. You can try again.'**
+  String get recording_uploadExhaustedMessage;
+
+  /// No description provided for @recording_fileMissingMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The audio file for this recording is no longer on this device, so it can\'t be uploaded.'**
+  String get recording_fileMissingMessage;
+
+  /// No description provided for @recording_duplicateTitleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Name already used'**
+  String get recording_duplicateTitleTitle;
+
+  /// No description provided for @recording_duplicateTitleMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'An audio named \"{title}\" already exists in this project. Choose another name.'**
+  String recording_duplicateTitleMessage(String title);
 
   /// No description provided for @recordings_clearStale.
   ///
@@ -1537,12 +1609,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Classify segment'**
   String get trim_classifySegment;
-
-  /// No description provided for @trim_primaryEqualsSecondary.
-  ///
-  /// In en, this message translates to:
-  /// **'Primary classification cannot match the recording\'s secondary classification.'**
-  String get trim_primaryEqualsSecondary;
 
   /// No description provided for @trim_volume.
   ///
@@ -1751,13 +1817,13 @@ abstract class AppLocalizations {
   /// No description provided for @import_resumePromptBody.
   ///
   /// In en, this message translates to:
-  /// **'\"{name}\" ({size}) was partially uploaded. Select the same file to continue.'**
+  /// **'\"{name}\" ({size}) was partially uploaded. Select the exact same file (unchanged) to continue.'**
   String import_resumePromptBody(String name, String size);
 
   /// No description provided for @import_resumeSizeMismatch.
   ///
   /// In en, this message translates to:
-  /// **'That file doesn\'t match the paused upload.'**
+  /// **'That\'s a different file. Select the exact same file you were uploading.'**
   String get import_resumeSizeMismatch;
 
   /// No description provided for @import_largeFileWarning.
@@ -1831,12 +1897,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Profile photo updated'**
   String get profile_photoUpdated;
-
-  /// No description provided for @profile_photoFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to update photo: {error}'**
-  String profile_photoFailed(String error);
 
   /// No description provided for @profile_editName.
   ///
@@ -3158,6 +3218,12 @@ abstract class AppLocalizations {
   /// **'Unclassified'**
   String get filter_unclassified;
 
+  /// No description provided for @filter_missingDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Missing description'**
+  String get filter_missingDescription;
+
   /// No description provided for @filter_allGenres.
   ///
   /// In en, this message translates to:
@@ -3314,6 +3380,18 @@ abstract class AppLocalizations {
   /// **'Members'**
   String get projectStats_members;
 
+  /// Stat chip label under the number of recordings that still have at least one open field (ENG-374).
+  ///
+  /// In en, this message translates to:
+  /// **'Needs details'**
+  String get projectStats_needsDetails;
+
+  /// Accessible label for the tappable breakdown line under the review counter; opens the recordings list filtered to that pendency (ENG-381).
+  ///
+  /// In en, this message translates to:
+  /// **'Show recordings — {label} ({count})'**
+  String projectStats_showPendency(String label, int count);
+
   /// No description provided for @project_active.
   ///
   /// In en, this message translates to:
@@ -3416,12 +3494,6 @@ abstract class AppLocalizations {
   /// **'Classify'**
   String get classify_action;
 
-  /// No description provided for @classify_banner.
-  ///
-  /// In en, this message translates to:
-  /// **'This recording is unclassified. Tap Classify to add a genre and register.'**
-  String get classify_banner;
-
   /// No description provided for @classify_success.
   ///
   /// In en, this message translates to:
@@ -3475,12 +3547,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Secondary register'**
   String get classify_secondaryRegister;
-
-  /// No description provided for @classify_secondarySameAsPrimary.
-  ///
-  /// In en, this message translates to:
-  /// **'Secondary genre must differ from the predominant genre.'**
-  String get classify_secondarySameAsPrimary;
 
   /// No description provided for @classify_clearAlternative.
   ///
@@ -4130,11 +4196,17 @@ abstract class AppLocalizations {
   /// **'Filter recordings'**
   String get filters_sheetTitle;
 
-  /// No description provided for @filters_sectionStatus.
+  /// Section header in the recordings filter sheet for the on-device status chips. Names the device because two of its chips (unclassified, missing description) read almost identically to the pendency chips below, and where the answer comes from is the only difference (ENG-383).
   ///
   /// In en, this message translates to:
-  /// **'Upload status'**
+  /// **'Status on this device'**
   String get filters_sectionStatus;
+
+  /// Supporting line under the status section header in the recordings filter sheet (ENG-383).
+  ///
+  /// In en, this message translates to:
+  /// **'Narrows the recordings already on screen. Works offline.'**
+  String get filters_sectionStatusHint;
 
   /// No description provided for @filters_sectionGenre.
   ///
@@ -4153,6 +4225,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Recorded by'**
   String get filters_sectionUser;
+
+  /// Section header in the recordings filter sheet for the review-pendency filter. Names the server because the chips below repeat the wording of the status chips above in several languages (ENG-383).
+  ///
+  /// In en, this message translates to:
+  /// **'What the server says is missing'**
+  String get filters_sectionPendency;
+
+  /// Supporting line under the pendency section header in the recordings filter sheet (ENG-383).
+  ///
+  /// In en, this message translates to:
+  /// **'Asks the server which recordings still need details. Needs a connection.'**
+  String get filters_sectionPendencyHint;
 
   /// No description provided for @filter_apply.
   ///
@@ -4195,6 +4279,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Any genre'**
   String get filter_genreAll;
+
+  /// No description provided for @filter_pendencyAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Any field'**
+  String get filter_pendencyAll;
 
   /// No description provided for @detail_recordedBy.
   ///
@@ -4705,6 +4795,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Uploading'**
   String get liveActivity_uploadingStatus;
+
+  /// Label on the pill that opens the guided completion flow for a recording's ficha (ENG-374).
+  ///
+  /// In en, this message translates to:
+  /// **'Complete details'**
+  String get recording_completeFicha;
+
+  /// Title of the guided completion sheet (ENG-374).
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the details'**
+  String get recording_completeFichaTitle;
+
+  /// Subtitle of the guided completion sheet: how many steps it holds, plus the reassurance that the user may leave and return.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 detail is still open. Fill it in now, or come back to it later.} other{{count} details are still open. Fill them in now, or come back to them later.}}'**
+  String recording_completeFichaSubtitle(int count);
+
+  /// Primary action of the completion sheet when no step has been resolved yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get recording_completeFichaStart;
+
+  /// Primary action of the completion sheet once at least one step has been resolved.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get recording_completeFichaContinue;
+
+  /// Step title: the recording has no genre/register yet. Names the gap, never blames the user.
+  ///
+  /// In en, this message translates to:
+  /// **'No classification'**
+  String get recording_pendencyClassification;
+
+  /// Step context line explaining why the classification matters.
+  ///
+  /// In en, this message translates to:
+  /// **'Genre and register say what kind of story this is.'**
+  String get recording_pendencyClassificationContext;
+
+  /// Step title: the recording's description does not meet the minimum.
+  ///
+  /// In en, this message translates to:
+  /// **'Description too short'**
+  String get recording_pendencyDescription;
+
+  /// Step context line explaining what the description should contain.
+  ///
+  /// In en, this message translates to:
+  /// **'A few words about what happens in the recording.'**
+  String get recording_pendencyDescriptionContext;
+
+  /// Step title: no storyteller is assigned to the recording.
+  ///
+  /// In en, this message translates to:
+  /// **'No storyteller'**
+  String get recording_pendencyStoryteller;
+
+  /// Step context line explaining what the storyteller field is for.
+  ///
+  /// In en, this message translates to:
+  /// **'Who tells this story.'**
+  String get recording_pendencyStorytellerContext;
+
+  /// List card chip when a recording owes more than one field. Counts the gap instead of naming each one, so the card keeps a single chip.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, other{{count} fields to fill}}'**
+  String recording_pendencyCount(int count);
 }
 
 class _AppLocalizationsDelegate

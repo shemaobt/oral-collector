@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
-import '../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../notifiers/input_device_notifier.dart';
 
 class InputDevicePickerSheet extends ConsumerStatefulWidget {
@@ -37,7 +38,10 @@ class _InputDevicePickerSheetState
         children: [
           Center(
             child: Container(
-              margin: const EdgeInsets.only(top: 12, bottom: 12),
+              margin: const EdgeInsets.only(
+                top: SpacingScale.s12,
+                bottom: SpacingScale.s12,
+              ),
               width: 36,
               height: 4,
               decoration: BoxDecoration(
@@ -47,21 +51,28 @@ class _InputDevicePickerSheetState
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(24, 4, 24, 16),
+            padding: const EdgeInsets.fromLTRB(
+              SpacingScale.s24,
+              SpacingScale.s4,
+              SpacingScale.s24,
+              SpacingScale.s16,
+            ),
             child: Row(
               children: [
                 Icon(LucideIcons.mic, size: 20, color: colors.foreground),
-                const SizedBox(width: 10),
-                Text(
-                  l10n.recording_selectMicrophone,
-                  style: theme.textTheme.titleMedium,
+                const SizedBox(width: SpacingScale.s8),
+                Expanded(
+                  child: Text(
+                    l10n.recording_selectMicrophone,
+                    style: theme.textTheme.titleMedium,
+                  ),
                 ),
               ],
             ),
           ),
           if (state.isEnumerating)
             const Padding(
-              padding: EdgeInsets.symmetric(vertical: 16),
+              padding: EdgeInsets.symmetric(vertical: SpacingScale.s16),
               child: CircularProgressIndicator(),
             )
           else ...[
@@ -100,7 +111,12 @@ class _InputDevicePickerSheetState
                       ),
                   if (state.permissionNotYetGranted)
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 12, 24, 8),
+                      padding: const EdgeInsets.fromLTRB(
+                        SpacingScale.s24,
+                        SpacingScale.s12,
+                        SpacingScale.s24,
+                        SpacingScale.s8,
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -110,7 +126,7 @@ class _InputDevicePickerSheetState
                               color: colors.secondary,
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: SpacingScale.s8),
                           FilledButton(
                             onPressed: () {
                               ref
@@ -124,7 +140,12 @@ class _InputDevicePickerSheetState
                     ),
                   if (state.permissionDenied)
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 12, 24, 8),
+                      padding: const EdgeInsets.fromLTRB(
+                        SpacingScale.s24,
+                        SpacingScale.s12,
+                        SpacingScale.s24,
+                        SpacingScale.s8,
+                      ),
                       child: Text(
                         l10n.recording_micPermissionDenied,
                         style: theme.textTheme.bodySmall?.copyWith(
@@ -137,7 +158,7 @@ class _InputDevicePickerSheetState
                           .isEmpty &&
                       !state.permissionNotYetGranted)
                     Padding(
-                      padding: const EdgeInsets.all(24),
+                      padding: const EdgeInsets.all(SpacingScale.s24),
                       child: Text(
                         l10n.recording_noDevicesFound,
                         style: theme.textTheme.bodySmall?.copyWith(
@@ -148,7 +169,7 @@ class _InputDevicePickerSheetState
                 ],
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: SpacingScale.s16),
           ],
         ],
       ),
@@ -174,11 +195,14 @@ class _DeviceRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.transparent,
+      color: AppColors.transparent,
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          padding: const EdgeInsets.symmetric(
+            horizontal: SpacingScale.s24,
+            vertical: SpacingScale.s16,
+          ),
           child: Row(
             children: [
               Expanded(

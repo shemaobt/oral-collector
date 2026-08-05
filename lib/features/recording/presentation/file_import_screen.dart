@@ -1,33 +1,39 @@
+import 'dart:async';
+
 import 'package:cross_file/cross_file.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:logging/logging.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
-
-import '../../../core/auth/auth_notifier.dart';
-import '../../../core/platform/file_ops.dart' as file_ops;
-import '../../../core/platform/ffmpeg_ops.dart' as ffmpeg_ops;
-import '../../../core/platform/file_source.dart';
-import '../../../core/platform/web_file_picker.dart' as web_picker;
+import 'package:path_provider/path_provider.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../core/auth/auth_notifier.dart';
 import '../../../core/database/app_database.dart';
+import '../../../core/platform/ffmpeg_ops.dart' as ffmpeg_ops;
+import '../../../core/platform/file_ops.dart' as file_ops;
+import '../../../core/platform/file_source.dart';
+import '../../../core/platform/web_file_picker.dart' as web_picker;
 import '../../../core/theme/app_colors.dart';
-import '../../../shared/utils/error_helpers.dart';
+import '../../../core/theme/tokens.dart';
+import '../../../shared/widgets/error_snack_bar.dart';
 import '../../genre/presentation/notifiers/genre_notifier.dart';
-import '../../sync/presentation/notifiers/sync_notifier.dart';
 import '../../project/presentation/notifiers/project_notifier.dart';
 import '../../storyteller/domain/entities/storyteller.dart';
+import '../../sync/presentation/notifiers/sync_notifier.dart';
 import '../data/providers.dart';
+import '../data/repositories/local_recording_repository.dart';
 import '../data/services/audio_probe.dart';
 import '../data/services/direct_recording_uploader.dart';
 import '../data/supported_audio_formats.dart';
 import 'file_import_entry.dart';
 import 'file_import_rejection.dart';
+import 'file_import_validation.dart';
+import 'import_save_runner.dart';
 import 'notifiers/recordings_list_notifier.dart';
 import 'widgets/file_metadata_editor.dart';
 import 'widgets/import_drop_zone.dart';
@@ -50,6 +56,8 @@ class _Candidate {
 }
 
 class _FileImportScreenState extends ConsumerState<FileImportScreen> {
+  static final _log = Logger('FileImportScreen');
+
   final List<FileImportEntry> _entries = [];
   bool _isAnalyzing = false;
   bool _isSaving = false;
@@ -65,6 +73,7 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
   Storyteller? _bulkStoryteller;
 
   final Set<String> _errorEntryIds = {};
+  final Set<String> _completedEntryIds = {};
   final Map<String, GlobalKey> _errorKeys = {};
   final ScrollController _scrollController = ScrollController();
 
@@ -107,7 +116,7 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
         );
         if (sources.isEmpty) {
           if (mounted && _entries.isEmpty) {
-            Navigator.of(context).maybePop();
+            unawaited(Navigator.of(context).maybePop());
           }
           return;
         }
@@ -123,7 +132,7 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
         );
         if (result == null || result.files.isEmpty) {
           if (mounted && _entries.isEmpty) {
-            Navigator.of(context).maybePop();
+            unawaited(Navigator.of(context).maybePop());
           }
           return;
         }
@@ -140,16 +149,13 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
 
       await _analyzeCandidates(candidates);
     } catch (e, st) {
-      debugPrint('FileImportScreen._pickFile failed: $e\n$st');
+      _log.severe('_pickFile failed', e, st);
       if (mounted) {
         setState(() => _isAnalyzing = false);
         final l10n = AppLocalizations.of(context);
-        final friendly = friendlyErrorMessage(e.toString(), l10n);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.import_pickError(friendly))),
-        );
+        showErrorSnackBar(context, e, template: l10n.import_pickError);
         if (_entries.isEmpty) {
-          Navigator.of(context).maybePop();
+          unawaited(Navigator.of(context).maybePop());
         }
       }
     }
@@ -166,16 +172,13 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
       }
       await _analyzeCandidates(candidates);
     } catch (e, st) {
-      debugPrint('FileImportScreen._handleDrop failed: $e\n$st');
+      _log.severe('_handleDrop failed', e, st);
       if (mounted) {
         setState(() => _isAnalyzing = false);
         final l10n = AppLocalizations.of(context);
-        final friendly = friendlyErrorMessage(e.toString(), l10n);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.import_pickError(friendly))),
-        );
+        showErrorSnackBar(context, e, template: l10n.import_pickError);
         if (_entries.isEmpty) {
-          Navigator.of(context).maybePop();
+          unawaited(Navigator.of(context).maybePop());
         }
       }
     }
@@ -226,7 +229,7 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
       );
 
       if (!probeResult.hasDuration) {
-        debugPrint(
+        _log.info(
           'Import rejected ${c.name} (.$ext, ${c.size}B): '
           '${probeResult.diagnostic ?? "no diagnostic"}',
         );
@@ -244,17 +247,22 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
           c.source.filePath ??
           'web_import_${DateTime.now().microsecondsSinceEpoch}_${i}_${c.name}';
 
-      newEntries.add(
-        FileImportEntry(
-          id: '${DateTime.now().microsecondsSinceEpoch}_$i',
-          path: syntheticPath,
-          fileName: c.name,
-          sizeBytes: c.size,
-          format: ext,
-          durationSeconds: probeResult.durationSeconds!,
-          source: c.source,
-        ),
+      final entry = FileImportEntry(
+        id: '${DateTime.now().microsecondsSinceEpoch}_$i',
+        path: syntheticPath,
+        fileName: c.name,
+        sizeBytes: c.size,
+        format: ext,
+        durationSeconds: probeResult.durationSeconds!,
+        source: c.source,
       );
+      // The description has no onChanged of its own in either layout, so the
+      // controller is where typing reaches the screen. Dropped when the entry
+      // disposes its controllers.
+      entry.descriptionController.addListener(
+        () => _onDescriptionChanged(entry),
+      );
+      newEntries.add(entry);
     }
 
     if (!mounted) return;
@@ -262,7 +270,7 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
     if (newEntries.isEmpty) {
       _showRejectedSnack(rejected);
       if (_entries.isEmpty) {
-        Navigator.of(context).maybePop();
+        unawaited(Navigator.of(context).maybePop());
       } else {
         setState(() => _isAnalyzing = false);
       }
@@ -287,22 +295,21 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
     );
   }
 
-  bool _isEntryValid(FileImportEntry e) {
-    if (e.genreId == null || e.genreId!.isEmpty) return false;
-    if (e.registerId == null || e.registerId!.isEmpty) return false;
-    final genres = ref.read(genreNotifierProvider).genres;
-    final genre = genres.where((g) => g.id == e.genreId).firstOrNull;
-    if (genre != null && genre.subcategories.isNotEmpty) {
-      if (e.subcategoryId == null || e.subcategoryId!.isEmpty) return false;
-    }
-    return true;
-  }
+  bool _isEntryValid(FileImportEntry e) =>
+      isImportEntryValid(e, ref.read(genreNotifierProvider).genres);
 
   void _clearErrorIfResolved(FileImportEntry e) {
     if (!_errorEntryIds.contains(e.id)) return;
     if (_isEntryValid(e)) {
       _errorEntryIds.remove(e.id);
     }
+  }
+
+  /// Rebuilds so the inline description message re-evaluates while the user
+  /// types, the way the confirmation step and the edit sheet already behave.
+  void _onDescriptionChanged(FileImportEntry entry) {
+    if (!_errorEntryIds.contains(entry.id)) return;
+    setState(() => _clearErrorIfResolved(entry));
   }
 
   void _updateEntryGenre(String id, String? value) {
@@ -344,6 +351,7 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
       _entries[idx].dispose();
       _entries.removeAt(idx);
       _errorEntryIds.remove(id);
+      _completedEntryIds.remove(id);
       _errorKeys.remove(id);
     });
     if (_entries.isEmpty && mounted) {
@@ -411,7 +419,7 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
         if (ctx != null) {
           Scrollable.ensureVisible(
             ctx,
-            duration: const Duration(milliseconds: 300),
+            duration: DurationScale.ms300,
             alignment: 0.1,
             alignmentPolicy: ScrollPositionAlignmentPolicy.explicit,
           );
@@ -430,6 +438,9 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
       return;
     }
 
+    if (_errorEntryIds.isNotEmpty) {
+      setState(_errorEntryIds.clear);
+    }
     await _save();
   }
 
@@ -438,7 +449,7 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
 
     setState(() {
       _isSaving = true;
-      _saveProgress = 0;
+      _saveProgress = _completedEntryIds.length;
     });
 
     final projectState = ref.read(projectNotifierProvider);
@@ -448,150 +459,163 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
     final uploader = ref.read(directRecordingUploaderProvider);
 
     try {
-      for (var i = 0; i < _entries.length; i++) {
-        final entry = _entries[i];
-
-        String savedFilePath = entry.path;
-        int fileSizeBytes = entry.sizeBytes;
-        String format = entry.format;
-
-        if (kIsWeb) {
-          final source = entry.source;
-          if (source == null || source.length <= 0) {
-            throw Exception('Import "${entry.fileName}" has no source');
-          }
-
-          final title = entry.fileName.replaceAll(RegExp(r'\.[^.]+$'), '');
-          final description = entry.descriptionController.text.trim();
-
-          if (mounted) {
-            setState(() {
-              _currentFileBytesSent = 0;
-              _currentFileBytesTotal = source.length;
-            });
-          }
-
-          await uploader.upload(
-            source: source,
-            meta: DirectUploadMetadata(
-              projectId: projectId,
-              genreId: entry.genreId!,
-              subcategoryId:
-                  entry.subcategoryId != null && entry.subcategoryId!.isNotEmpty
-                  ? entry.subcategoryId!
-                  : 'unclassified',
-              registerId: entry.registerId,
-              storytellerId: entry.storytellerId,
-              userId: currentUserId,
-              title: title,
-              description: description.isEmpty ? null : description,
-              durationSeconds: entry.durationSeconds,
-              fileSizeBytes: source.length,
-              format: format,
-              recordedAt: DateTime.now(),
-            ),
-            onProgress: (sent, total) {
-              if (!mounted) return;
-              setState(() {
-                _currentFileBytesSent = sent;
-                _currentFileBytesTotal = total;
-              });
-            },
-          );
-
-          if (mounted) {
-            setState(() {
-              _saveProgress = i + 1;
-              _currentFileBytesSent = 0;
-              _currentFileBytesTotal = 0;
-            });
-          }
-          continue;
-        }
-
-        final appDir = await getApplicationDocumentsDirectory();
-        final recordingsPath = '${appDir.path}/recordings';
-        if (!await file_ops.dirExists(recordingsPath)) {
-          await file_ops.createDir(recordingsPath);
-        }
-        final destFileName =
-            '${DateTime.now().millisecondsSinceEpoch}_${entry.fileName}';
-        final destPath = '$recordingsPath/$destFileName';
-        await file_ops.copyFile(entry.path, destPath);
-        savedFilePath = destPath;
-
-        if (_compressWav && format == 'wav') {
-          final m4aPath = destPath.replaceAll(
-            RegExp(r'\.wav$', caseSensitive: false),
-            '.m4a',
-          );
-          final success = await ffmpeg_ops.compressToM4a(destPath, m4aPath);
-          if (success) {
-            await file_ops.deleteFile(destPath);
-            savedFilePath = m4aPath;
-            format = 'm4a';
-          }
-        }
-
-        fileSizeBytes = await file_ops.fileLength(savedFilePath);
-
-        final id = '${DateTime.now().microsecondsSinceEpoch}_$i';
-        final title = entry.fileName.replaceAll(RegExp(r'\.[^.]+$'), '');
-        final description = entry.descriptionController.text.trim();
-
-        await repo.insertRecording(
-          LocalRecordingsCompanion(
-            id: Value(id),
-            projectId: Value(projectId),
-            genreId: Value(entry.genreId!),
-            subcategoryId:
-                entry.subcategoryId != null && entry.subcategoryId!.isNotEmpty
-                ? Value(entry.subcategoryId!)
-                : const Value.absent(),
-            registerId: entry.registerId != null && entry.registerId!.isNotEmpty
-                ? Value(entry.registerId!)
-                : const Value.absent(),
-            storytellerId: entry.storytellerId != null
-                ? Value(entry.storytellerId!)
-                : const Value.absent(),
-            userId: currentUserId != null
-                ? Value(currentUserId)
-                : const Value.absent(),
-            title: Value(title),
-            description: description.isNotEmpty
-                ? Value(description)
-                : const Value.absent(),
-            durationSeconds: Value(entry.durationSeconds),
-            fileSizeBytes: Value(fileSizeBytes),
-            format: Value(format),
-            localFilePath: Value(savedFilePath),
-            recordedAt: Value(DateTime.now()),
-          ),
-        );
-
-        if (mounted) {
-          setState(() => _saveProgress = i + 1);
-        }
-      }
+      await runImportSave(
+        _entries.toList(),
+        _completedEntryIds,
+        (entry) => _saveEntry(
+          entry,
+          projectId: projectId,
+          currentUserId: currentUserId,
+          repo: repo,
+          uploader: uploader,
+        ),
+        onProgress: (count) {
+          if (mounted) setState(() => _saveProgress = count);
+        },
+      );
 
       if (!kIsWeb) {
-        ref.read(syncNotifierProvider.notifier).processQueue();
+        unawaited(ref.read(syncNotifierProvider.notifier).processQueue());
       }
-      ref.read(recordingsListNotifierProvider.notifier).fetchRecordings();
+      unawaited(
+        ref.read(recordingsListNotifierProvider.notifier).fetchRecordings(),
+      );
 
       if (mounted) {
-        Navigator.of(context).maybePop();
+        unawaited(Navigator.of(context).maybePop());
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isSaving = false);
         final l10n = AppLocalizations.of(context);
-        final friendly = friendlyErrorMessage(e.toString(), l10n);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.import_saveError(friendly))),
-        );
+        showErrorSnackBar(context, e, template: l10n.import_saveError);
       }
     }
+  }
+
+  Future<void> _saveEntry(
+    FileImportEntry entry, {
+    required String projectId,
+    required String? currentUserId,
+    required LocalRecordingRepository repo,
+    required DirectRecordingUploader uploader,
+  }) async {
+    String savedFilePath = entry.path;
+    int fileSizeBytes = entry.sizeBytes;
+    String format = entry.format;
+
+    if (kIsWeb) {
+      final source = entry.source;
+      if (source == null || source.length <= 0) {
+        throw Exception('Import "${entry.fileName}" has no source');
+      }
+
+      final title = entry.fileName.replaceAll(RegExp(r'\.[^.]+$'), '');
+      final description = entry.descriptionController.text.trim();
+
+      if (mounted) {
+        setState(() {
+          _currentFileBytesSent = 0;
+          _currentFileBytesTotal = source.length;
+        });
+      }
+
+      await uploader.upload(
+        source: source,
+        meta: DirectUploadMetadata(
+          projectId: projectId,
+          genreId: entry.genreId!,
+          subcategoryId:
+              entry.subcategoryId != null && entry.subcategoryId!.isNotEmpty
+              ? entry.subcategoryId!
+              : 'unclassified',
+          registerId: entry.registerId,
+          storytellerId: entry.storytellerId,
+          userId: currentUserId,
+          title: title,
+          description: description.isEmpty ? null : description,
+          durationSeconds: entry.durationSeconds,
+          fileSizeBytes: source.length,
+          format: format,
+          recordedAt: DateTime.now(),
+        ),
+        onProgress: (sent, total) {
+          if (!mounted) return;
+          setState(() {
+            _currentFileBytesSent = sent;
+            _currentFileBytesTotal = total;
+          });
+        },
+      );
+
+      if (mounted) {
+        setState(() {
+          _currentFileBytesSent = 0;
+          _currentFileBytesTotal = 0;
+        });
+      }
+      return;
+    }
+
+    final appDir = await getApplicationDocumentsDirectory();
+    final recordingsPath = '${appDir.path}/recordings';
+    if (!await file_ops.dirExists(recordingsPath)) {
+      await file_ops.createDir(recordingsPath);
+    }
+    final destFileName =
+        '${DateTime.now().millisecondsSinceEpoch}_${entry.fileName}';
+    final destPath = '$recordingsPath/$destFileName';
+    await file_ops.copyFile(entry.path, destPath);
+    savedFilePath = destPath;
+
+    if (_compressWav && format == 'wav') {
+      final m4aPath = destPath.replaceAll(
+        RegExp(r'\.wav$', caseSensitive: false),
+        '.m4a',
+      );
+      final success = await ffmpeg_ops.compressToM4a(destPath, m4aPath);
+      if (success) {
+        await file_ops.deleteFile(destPath);
+        savedFilePath = m4aPath;
+        format = 'm4a';
+      }
+    }
+
+    fileSizeBytes = await file_ops.fileLength(savedFilePath);
+
+    final id = '${DateTime.now().microsecondsSinceEpoch}_${entry.id}';
+    final title = entry.fileName.replaceAll(RegExp(r'\.[^.]+$'), '');
+    final description = entry.descriptionController.text.trim();
+
+    await repo.insertRecording(
+      LocalRecordingsCompanion(
+        id: Value(id),
+        projectId: Value(projectId),
+        genreId: Value(entry.genreId!),
+        subcategoryId:
+            entry.subcategoryId != null && entry.subcategoryId!.isNotEmpty
+            ? Value(entry.subcategoryId!)
+            : const Value.absent(),
+        registerId: entry.registerId != null && entry.registerId!.isNotEmpty
+            ? Value(entry.registerId!)
+            : const Value.absent(),
+        storytellerId: entry.storytellerId != null
+            ? Value(entry.storytellerId!)
+            : const Value.absent(),
+        userId: currentUserId != null
+            ? Value(currentUserId)
+            : const Value.absent(),
+        title: Value(title),
+        description: description.isNotEmpty
+            ? Value(description)
+            : const Value.absent(),
+        durationSeconds: Value(entry.durationSeconds),
+        fileSizeBytes: Value(fileSizeBytes),
+        format: Value(format),
+        localFilePath: Value(savedFilePath),
+        recordedAt: Value(DateTime.now()),
+      ),
+    );
   }
 
   @override
@@ -660,14 +684,14 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
     final colors = AppColors.of(context);
     return Center(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(SpacingScale.s24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (_isAnalyzing) ...[
               const CircularProgressIndicator(),
-              const SizedBox(height: 16),
+              const SizedBox(height: SpacingScale.s16),
               Text(
                 l10n.import_analyzing,
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
@@ -676,26 +700,26 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
               ),
             ] else ...[
               Icon(LucideIcons.fileAudio, size: 64, color: colors.border),
-              const SizedBox(height: 16),
+              const SizedBox(height: SpacingScale.s16),
               Text(
                 l10n.import_selectFile,
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                   color: colors.foreground.withValues(alpha: 0.6),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: SpacingScale.s20),
               ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 420),
                 child: const SupportedFormatsBanner(),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: SpacingScale.s24),
               ElevatedButton.icon(
                 onPressed: _pickFile,
                 icon: const Icon(LucideIcons.folderOpen),
                 label: Text(l10n.import_chooseFile),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: colors.primary,
-                  foregroundColor: Colors.white,
+                  foregroundColor: AppColors.white,
                   minimumSize: const Size(160, 48),
                 ),
               ),

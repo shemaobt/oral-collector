@@ -1,10 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../genre/domain/entities/genre.dart';
-import '../../../project/domain/entities/project.dart';
-import '../../../recording/domain/entities/recording.dart';
+import '../../../../core/errors/api_exception.dart';
+import '../../../../core/observability/error_reporter.dart';
+import '../../../../core/util/bounded_concurrency.dart';
+import '../../../genre/domain/entities/genre_update.dart';
 import '../../data/providers.dart';
-import '../../domain/entities/admin_stats.dart';
 import '../../domain/repositories/admin_repository.dart';
 import 'admin_state.dart';
 
@@ -21,27 +21,18 @@ class AdminNotifier extends Notifier<AdminState> {
   Future<void> fetchAll() async {
     state = state.copyWith(isLoading: true, clearError: true);
 
-    final results = await Future.wait([
-      _repo.fetchStats().then<AdminStats?>((v) => v).catchError((_) => null),
-      _repo
-          .fetchAllProjects()
-          .then<List<Project>?>((v) => v)
-          .catchError((_) => null),
-      _repo
-          .fetchAllGenres()
-          .then<List<Genre>?>((v) => v)
-          .catchError((_) => null),
-      _repo
-          .fetchCleaningQueue()
-          .then<List<Recording>?>((v) => v)
-          .catchError((_) => null),
-    ]);
+    final (stats, projects, genres, cleaningQueue) = await (
+      _guarded(_repo.fetchStats()),
+      _guarded(_repo.fetchAllProjects()),
+      _guarded(_repo.fetchAllGenres()),
+      _guarded(_repo.fetchCleaningQueue()),
+    ).wait;
 
     state = AdminState(
-      stats: results[0] as AdminStats? ?? state.stats,
-      projects: results[1] as List<Project>? ?? state.projects,
-      genres: results[2] as List<Genre>? ?? state.genres,
-      cleaningQueue: results[3] as List<Recording>? ?? state.cleaningQueue,
+      stats: stats ?? state.stats,
+      projects: projects ?? state.projects,
+      genres: genres ?? state.genres,
+      cleaningQueue: cleaningQueue ?? state.cleaningQueue,
       isLoading: false,
     );
   }
@@ -50,10 +41,9 @@ class AdminNotifier extends Notifier<AdminState> {
     try {
       final queue = await _repo.fetchCleaningQueue();
       state = state.copyWith(cleaningQueue: queue);
-    } on Exception catch (e) {
-      state = state.copyWith(
-        error: e.toString().replaceFirst('Exception: ', ''),
-      );
+    } on Exception catch (e, st) {
+      _reportUnexpected(e, st);
+      state = state.copyWith(error: e);
     }
   }
 
@@ -62,24 +52,29 @@ class AdminNotifier extends Notifier<AdminState> {
       await _repo.triggerClean(recordingId);
       await refreshCleaningQueue();
       return true;
-    } on Exception catch (e) {
-      state = state.copyWith(
-        error: e.toString().replaceFirst('Exception: ', ''),
-      );
+    } on Exception catch (e, st) {
+      _reportUnexpected(e, st);
+      state = state.copyWith(error: e);
       return false;
     }
   }
 
+  static const _batchCleanConcurrency = 6;
+
   Future<int> triggerBatchClean(List<String> recordingIds) async {
-    int successCount = 0;
-    for (final id in recordingIds) {
-      try {
-        await _repo.triggerClean(id);
-        successCount++;
-      } on Exception catch (_) {
-        // skip failed individual clean triggers
-      }
-    }
+    final outcomes = await mapBounded<String, bool>(
+      recordingIds,
+      _batchCleanConcurrency,
+      (id) async {
+        try {
+          await _repo.triggerClean(id);
+          return true;
+        } on Exception {
+          return false;
+        }
+      },
+    );
+    final successCount = outcomes.where((ok) => ok).length;
     await refreshCleaningQueue();
     return successCount;
   }
@@ -100,24 +95,22 @@ class AdminNotifier extends Notifier<AdminState> {
       final genres = await _repo.fetchAllGenres();
       state = state.copyWith(genres: genres);
       return true;
-    } on Exception catch (e) {
-      state = state.copyWith(
-        error: e.toString().replaceFirst('Exception: ', ''),
-      );
+    } on Exception catch (e, st) {
+      _reportUnexpected(e, st);
+      state = state.copyWith(error: e);
       return false;
     }
   }
 
-  Future<bool> updateGenre(String id, Map<String, dynamic> data) async {
+  Future<bool> updateGenre(String id, GenreUpdate update) async {
     try {
-      await _repo.updateGenre(id, data);
+      await _repo.updateGenre(id, update);
       final genres = await _repo.fetchAllGenres();
       state = state.copyWith(genres: genres);
       return true;
-    } on Exception catch (e) {
-      state = state.copyWith(
-        error: e.toString().replaceFirst('Exception: ', ''),
-      );
+    } on Exception catch (e, st) {
+      _reportUnexpected(e, st);
+      state = state.copyWith(error: e);
       return false;
     }
   }
@@ -128,10 +121,9 @@ class AdminNotifier extends Notifier<AdminState> {
       final genres = await _repo.fetchAllGenres();
       state = state.copyWith(genres: genres);
       return true;
-    } on Exception catch (e) {
-      state = state.copyWith(
-        error: e.toString().replaceFirst('Exception: ', ''),
-      );
+    } on Exception catch (e, st) {
+      _reportUnexpected(e, st);
+      state = state.copyWith(error: e);
       return false;
     }
   }
@@ -150,10 +142,9 @@ class AdminNotifier extends Notifier<AdminState> {
       final genres = await _repo.fetchAllGenres();
       state = state.copyWith(genres: genres);
       return true;
-    } on Exception catch (e) {
-      state = state.copyWith(
-        error: e.toString().replaceFirst('Exception: ', ''),
-      );
+    } on Exception catch (e, st) {
+      _reportUnexpected(e, st);
+      state = state.copyWith(error: e);
       return false;
     }
   }
@@ -164,11 +155,25 @@ class AdminNotifier extends Notifier<AdminState> {
       final genres = await _repo.fetchAllGenres();
       state = state.copyWith(genres: genres);
       return true;
-    } on Exception catch (e) {
-      state = state.copyWith(
-        error: e.toString().replaceFirst('Exception: ', ''),
-      );
+    } on Exception catch (e, st) {
+      _reportUnexpected(e, st);
+      state = state.copyWith(error: e);
       return false;
     }
+  }
+
+  // Degrades a failed slot to null so one failing fetch doesn't drop the other
+  // three, while still reporting it to telemetry with its stack.
+  Future<T?> _guarded<T>(Future<T> future) =>
+      future.then<T?>((v) => v).catchError((Object e, StackTrace st) {
+        _reportUnexpected(e, st);
+        return null;
+      });
+
+  void _reportUnexpected(Object error, StackTrace stackTrace) {
+    // 401 é sessão expirada esperada (tratada por refresh/login alhures);
+    // só erros inesperados vão à telemetria.
+    if (error is UnauthorizedException) return;
+    ref.read(errorReporterProvider).reportError(error, stackTrace);
   }
 }

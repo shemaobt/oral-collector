@@ -1,21 +1,27 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
-import '../../../core/errors/api_exception.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../../../core/observability/error_reporter.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/tokens.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/error_snack_bar.dart';
 import '../../../shared/widgets/invite_dialog.dart';
-import '../../../../l10n/app_localizations.dart';
 import '../../auth/data/providers/role_provider.dart';
+import '../../recording/domain/entities/review_pendency.dart';
 import '../../sync/presentation/notifiers/sync_notifier.dart';
 import '../data/providers.dart';
-import 'notifiers/member_notifier.dart';
-import 'notifiers/project_notifier.dart';
 import '../domain/entities/project.dart';
 import '../domain/entities/project_member.dart';
+import '../domain/entities/project_stats.dart';
+import '../domain/entities/project_update.dart';
+import 'notifiers/member_notifier.dart';
+import 'notifiers/project_notifier.dart';
 import 'widgets/member_list.dart';
 import 'widgets/project_settings_header.dart';
 
@@ -37,6 +43,10 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
   bool _isEdited = false;
   bool _isSaving = false;
   Project? _project;
+
+  /// Kept apart from [_project] because the review-flag counters have no home
+  /// on a [Project] and stay null when the best-effort stats fetch fails.
+  ProjectStats? _stats;
 
   bool get _isManager => ref
       .read(roleNotifierProvider.notifier)
@@ -65,24 +75,24 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
   Future<void> _loadProject() async {
     final repo = ref.read(projectRepositoryProvider);
     try {
-      final results = await Future.wait([
-        repo.getProject(widget.projectId),
-        repo.getProjectStats(widget.projectId),
-      ]);
+      final project = await repo.getProject(widget.projectId);
       if (!mounted) return;
 
-      final project = results[0] as Project;
-      final stats = results[1] as Map<String, dynamic>;
+      // Stats are best-effort: a stats failure falls back to the project's own
+      // counts instead of failing the whole screen load.
+      ProjectStats? stats;
+      try {
+        stats = await repo.getProjectStats(widget.projectId);
+      } on Exception {
+        stats = null;
+      }
+      if (!mounted) return;
 
-      final recordingCount =
-          (stats['total_recordings'] as num?)?.toInt() ??
-          project.recordingCount;
+      final recordingCount = stats?.totalRecordings ?? project.recordingCount;
       final totalDuration =
-          (stats['total_duration_seconds'] as num?)?.toDouble() ??
-          project.totalDurationSeconds;
+          stats?.totalDurationSeconds ?? project.totalDurationSeconds;
       final storytellerCount =
-          (stats['total_storytellers'] as num?)?.toInt() ??
-          project.storytellerCount;
+          stats?.totalStorytellers ?? project.storytellerCount;
 
       final languages = ref.read(projectNotifierProvider).languages;
       final lang = languages
@@ -105,12 +115,13 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
 
       setState(() {
         _project = enriched;
+        _stats = stats;
         _nameController.text = enriched.name;
         _descriptionController.text = enriched.description ?? '';
       });
     } on Exception catch (e) {
       if (!mounted) return;
-      showErrorSnackBar(context, e.toString());
+      showErrorSnackBar(context, e);
     }
   }
 
@@ -136,18 +147,17 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
 
     setState(() => _isSaving = true);
 
-    final data = <String, dynamic>{};
     final newName = _nameController.text.trim();
     final newDesc = _descriptionController.text.trim();
+    final descChanged = newDesc != (_project!.description ?? '');
 
-    if (newName != _project!.name) {
-      data['name'] = newName;
-    }
-    if (newDesc != (_project!.description ?? '')) {
-      data['description'] = newDesc.isEmpty ? null : newDesc;
-    }
+    final update = ProjectUpdate(
+      name: newName != _project!.name ? newName : null,
+      description: descChanged && newDesc.isNotEmpty ? newDesc : null,
+      clearDescription: descChanged && newDesc.isEmpty,
+    );
 
-    if (data.isEmpty) {
+    if (update.isEmpty) {
       setState(() => _isSaving = false);
       return;
     }
@@ -155,10 +165,15 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
     try {
       await ref
           .read(projectNotifierProvider.notifier)
-          .updateProject(widget.projectId, data);
+          .updateProject(widget.projectId, update);
       if (!mounted) return;
 
       final updatedState = ref.read(projectNotifierProvider);
+      if (updatedState.error != null) {
+        showErrorSnackBar(context, updatedState.error!);
+        return;
+      }
+
       final updated = updatedState.projects
           .where((p) => p.id == widget.projectId)
           .firstOrNull;
@@ -174,15 +189,6 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
           content: Text(AppLocalizations.of(context).projectSettings_updated),
         ),
       );
-    } on ForbiddenException {
-      if (!mounted) return;
-      showErrorSnackBar(
-        context,
-        'You don\'t have permission to update this project.',
-      );
-    } on Exception catch (e) {
-      if (!mounted) return;
-      showErrorSnackBar(context, e.toString());
     } finally {
       if (mounted) {
         setState(() => _isSaving = false);
@@ -210,7 +216,7 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
             onPressed: () => Navigator.of(ctx).pop(true),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.of(context).error,
-              foregroundColor: Colors.white,
+              foregroundColor: AppColors.white,
             ),
             child: Text(l10n.common_remove),
           ),
@@ -239,6 +245,45 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
     }
   }
 
+  /// Opens the recordings list narrowed to [kind] (ENG-381).
+  ///
+  /// Settings can be opened for any project in the list, but the recordings
+  /// list only ever reads the active one, so pushing straight there from
+  /// another project's settings would answer with the wrong project's
+  /// recordings. The switch happens first, and only when it is needed.
+  ///
+  /// The code travels as a query parameter rather than as `extra`: go_router's
+  /// own documentation warns against `extra`, and it is dropped on a back
+  /// navigation, which would silently widen the list.
+  ///
+  /// A failed switch stops here rather than pushing anyway: the list reads the
+  /// active project, so navigating would answer with another project's
+  /// recordings. Nothing else would notice — the caller's type is
+  /// `void Function(PendencyKind)`, so the Future is dropped and the tap would
+  /// simply do nothing.
+  Future<void> _openPendencyFilter(PendencyKind kind) async {
+    final project = _project;
+    if (project == null) return;
+
+    final active = ref.read(projectNotifierProvider).activeProject;
+    if (active?.id != project.id) {
+      try {
+        await ref
+            .read(projectNotifierProvider.notifier)
+            .setActiveProject(project);
+      } on Exception catch (e, st) {
+        ref.read(errorReporterProvider).reportError(e, st);
+        if (!mounted) return;
+        showErrorSnackBar(context, e);
+        return;
+      }
+    }
+    if (!mounted) return;
+    unawaited(
+      context.push<void>('/recordings?reviewFlag=${reviewFlagCodeFor(kind)}'),
+    );
+  }
+
   Future<void> _showInviteDialog() async {
     final result = await showDialog<bool>(
       context: context,
@@ -253,7 +298,11 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
           ),
         ),
       );
-      ref.read(memberNotifierProvider.notifier).fetchMembers(widget.projectId);
+      unawaited(
+        ref
+            .read(memberNotifierProvider.notifier)
+            .fetchMembers(widget.projectId),
+      );
     }
   }
 
@@ -309,7 +358,7 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
               letterSpacing: 0.2,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: SpacingScale.s12),
           TextFormField(
             controller: _nameController,
             decoration: InputDecoration(
@@ -324,7 +373,7 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
             },
             onChanged: (_) => _onFieldChanged(),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: SpacingScale.s12),
           TextFormField(
             controller: _descriptionController,
             decoration: InputDecoration(
@@ -335,10 +384,10 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
             maxLines: 3,
             onChanged: (_) => _onFieldChanged(),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: SpacingScale.s16),
           AnimatedOpacity(
             opacity: _isEdited ? 1.0 : 0.0,
-            duration: const Duration(milliseconds: 200),
+            duration: DurationScale.ms200,
             child: SizedBox(
               height: 44,
               width: double.infinity,
@@ -350,7 +399,7 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
                         height: 18,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Colors.white,
+                          color: AppColors.white,
                         ),
                       )
                     : const Icon(LucideIcons.save, size: 16),
@@ -386,8 +435,8 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
                 label: Text(l10n.common_invite),
                 style: TextButton.styleFrom(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
+                    horizontal: SpacingScale.s12,
+                    vertical: SpacingScale.s8,
                   ),
                   textStyle: theme.textTheme.labelMedium?.copyWith(
                     fontWeight: FontWeight.w600,
@@ -396,12 +445,12 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
               ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: SpacingScale.s8),
         MemberList(
           projectId: widget.projectId,
           onRemove: _isManager ? _confirmRemoveMember : null,
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: SpacingScale.s16),
         OutlinedButton.icon(
           onPressed: () =>
               context.push('/project/${widget.projectId}/storytellers'),
@@ -431,7 +480,12 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
               },
             ),
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
+              padding: const EdgeInsets.fromLTRB(
+                SpacingScale.s20,
+                SpacingScale.s20,
+                SpacingScale.s20,
+                SpacingScale.s40,
+              ),
               sliver: SliverLayoutBuilder(
                 builder: (context, constraints) {
                   final isWide = constraints.crossAxisExtent >= 700;
@@ -440,17 +494,19 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
                     return SliverToBoxAdapter(
                       child: Column(
                         children: [
-                          ProjectSettingsStatsRow(
+                          ProjectSettingsStatsSection(
                             project: _project!,
                             memberCount: memberCount,
                             storytellerCount: _project!.storytellerCount,
+                            stats: _stats,
+                            onPendencyTap: _openPendencyFilter,
                           ),
-                          const SizedBox(height: 28),
+                          const SizedBox(height: SpacingScale.s28),
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Expanded(child: detailsColumn),
-                              const SizedBox(width: 32),
+                              const SizedBox(width: SpacingScale.s32),
                               Expanded(child: teamColumn),
                             ],
                           ),
@@ -461,16 +517,18 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
 
                   return SliverList(
                     delegate: SliverChildListDelegate([
-                      ProjectSettingsStatsRow(
+                      ProjectSettingsStatsSection(
                         project: _project!,
                         memberCount: memberCount,
                         storytellerCount: _project!.storytellerCount,
+                        stats: _stats,
+                        onPendencyTap: _openPendencyFilter,
                       ),
                       if (_isManager) ...[
-                        const SizedBox(height: 28),
+                        const SizedBox(height: SpacingScale.s28),
                         detailsColumn,
                       ],
-                      const SizedBox(height: 28),
+                      const SizedBox(height: SpacingScale.s28),
                       teamColumn,
                     ]),
                   );

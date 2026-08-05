@@ -7,6 +7,8 @@ import 'package:path/path.dart' as p;
 import '../../../../core/auth/auth_repository.dart';
 import '../../../../core/config/env.dart';
 import '../../../../core/network/api_error_handler.dart';
+import '../../../../core/network/response_decoder.dart';
+import '../../../../core/serialization/safe_read.dart';
 import '../../domain/entities/user.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
@@ -31,11 +33,12 @@ class AuthRepositoryImpl implements AuthRepository {
       throw Exception('Login failed: ${response.body}');
     }
 
-    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    final data = decodeObject(response);
+    final tokens = readMap(data, 'tokens');
     return (
-      user: User.fromJson(data['user'] as Map<String, dynamic>),
-      accessToken: data['tokens']['access_token'] as String,
-      refreshToken: data['tokens']['refresh_token'] as String,
+      user: User.fromJson(readMap(data, 'user')),
+      accessToken: readString(tokens, 'access_token'),
+      refreshToken: readString(tokens, 'refresh_token'),
     );
   }
 
@@ -64,11 +67,12 @@ class AuthRepositoryImpl implements AuthRepository {
       throw Exception('Signup failed: ${response.body}');
     }
 
-    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    final data = decodeObject(response);
+    final tokens = readMap(data, 'tokens');
     return (
-      user: User.fromJson(data['user'] as Map<String, dynamic>),
-      accessToken: data['tokens']['access_token'] as String,
-      refreshToken: data['tokens']['refresh_token'] as String,
+      user: User.fromJson(readMap(data, 'user')),
+      accessToken: readString(tokens, 'access_token'),
+      refreshToken: readString(tokens, 'refresh_token'),
     );
   }
 
@@ -87,10 +91,10 @@ class AuthRepositoryImpl implements AuthRepository {
       throw Exception('Token refresh failed: ${response.body}');
     }
 
-    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    final data = decodeObject(response);
     return (
-      accessToken: data['access_token'] as String,
-      refreshToken: data['refresh_token'] as String,
+      accessToken: readString(data, 'access_token'),
+      refreshToken: readString(data, 'refresh_token'),
     );
   }
 
@@ -109,7 +113,7 @@ class AuthRepositoryImpl implements AuthRepository {
       throw Exception('Failed to get user: ${response.body}');
     }
 
-    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    final data = decodeObject(response);
     return User.fromJson(data);
   }
 
@@ -137,7 +141,7 @@ class AuthRepositoryImpl implements AuthRepository {
       throw Exception('Failed to update profile: ${response.body}');
     }
 
-    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    final data = decodeObject(response);
     return User.fromJson(data);
   }
 
@@ -175,8 +179,8 @@ class AuthRepositoryImpl implements AuthRepository {
       throw Exception('Failed to upload image: ${response.body}');
     }
 
-    final data = jsonDecode(response.body) as Map<String, dynamic>;
-    return data['url'] as String;
+    final data = decodeObject(response);
+    return readString(data, 'url');
   }
 
   @override

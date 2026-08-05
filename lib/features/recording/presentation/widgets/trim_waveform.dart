@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../../l10n/app_localizations.dart';
 
 class TrimWaveform extends StatefulWidget {
@@ -303,41 +304,26 @@ class _SplitWaveformPainter extends CustomPainter {
 
     final waveRect = RRect.fromRectAndRadius(
       Rect.fromLTRB(0, waveTop, size.width, waveBottom),
-      const Radius.circular(12),
+      const Radius.circular(RadiusScale.r12),
     );
     canvas.save();
     canvas.clipRRect(waveRect);
 
     final bgPaint = Paint()
-      ..color = (isDark ? Colors.white : Colors.black).withValues(alpha: 0.04)
+      ..color = (isDark ? AppColors.white : AppColors.black).withValues(
+        alpha: 0.04,
+      )
       ..style = PaintingStyle.fill;
     canvas.drawRect(Rect.fromLTRB(0, waveTop, size.width, waveBottom), bgPaint);
 
-    for (var i = 0; i < segmentCount; i++) {
-      final left = _fullToLocal(boundaries[i], size.width);
-      final right = _fullToLocal(boundaries[i + 1], size.width);
-      if (right < 0 || left > size.width) continue;
-
-      final isExcluded = excludedSegments.contains(i);
-      final isPlaying = playingSegment == i;
-      final isEven = i.isEven;
-
-      Color tint;
-      if (isExcluded) {
-        tint = errorColor.withValues(alpha: isDark ? 0.15 : 0.08);
-      } else if (isPlaying) {
-        tint = accentColor.withValues(alpha: isDark ? 0.22 : 0.14);
-      } else if (isEven) {
-        tint = accentColor.withValues(alpha: isDark ? 0.08 : 0.05);
-      } else {
-        tint = accentColor.withValues(alpha: isDark ? 0.14 : 0.09);
-      }
-
-      canvas.drawRect(
-        Rect.fromLTRB(left, waveTop, right, waveBottom),
-        Paint()..color = tint,
-      );
-    }
+    _drawSegmentTints(
+      canvas,
+      size,
+      waveTop,
+      waveBottom,
+      boundaries,
+      segmentCount,
+    );
 
     _drawBars(canvas, size, waveTop, waveBottom, boundaries, segmentCount);
 
@@ -422,6 +408,41 @@ class _SplitWaveformPainter extends CustomPainter {
     }
   }
 
+  void _drawSegmentTints(
+    Canvas canvas,
+    Size size,
+    double waveTop,
+    double waveBottom,
+    List<double> boundaries,
+    int segmentCount,
+  ) {
+    for (var i = 0; i < segmentCount; i++) {
+      final left = _fullToLocal(boundaries[i], size.width);
+      final right = _fullToLocal(boundaries[i + 1], size.width);
+      if (right < 0 || left > size.width) continue;
+
+      final isExcluded = excludedSegments.contains(i);
+      final isPlaying = playingSegment == i;
+      final isEven = i.isEven;
+
+      Color tint;
+      if (isExcluded) {
+        tint = errorColor.withValues(alpha: isDark ? 0.15 : 0.08);
+      } else if (isPlaying) {
+        tint = accentColor.withValues(alpha: isDark ? 0.22 : 0.14);
+      } else if (isEven) {
+        tint = accentColor.withValues(alpha: isDark ? 0.08 : 0.05);
+      } else {
+        tint = accentColor.withValues(alpha: isDark ? 0.14 : 0.09);
+      }
+
+      canvas.drawRect(
+        Rect.fromLTRB(left, waveTop, right, waveBottom),
+        Paint()..color = tint,
+      );
+    }
+  }
+
   void _drawBars(
     Canvas canvas,
     Size size,
@@ -496,7 +517,7 @@ class _SplitWaveformPainter extends CustomPainter {
     double waveBottom,
   ) {
     final linePaint = Paint()
-      ..color = (isDark ? Colors.white : foreground).withValues(alpha: 0.7)
+      ..color = (isDark ? AppColors.white : foreground).withValues(alpha: 0.7)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5;
 
@@ -513,7 +534,9 @@ class _SplitWaveformPainter extends CustomPainter {
     canvas.drawCircle(handleCenter, handleRadius, Paint()..color = accentColor);
 
     final gripPaint = Paint()
-      ..color = (isDark ? Colors.black : Colors.white).withValues(alpha: 0.8)
+      ..color = (isDark ? AppColors.black : AppColors.white).withValues(
+        alpha: 0.8,
+      )
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5
       ..strokeCap = StrokeCap.round;
@@ -548,7 +571,9 @@ class _SplitWaveformPainter extends CustomPainter {
     canvas.drawCircle(Offset(x, waveTop - 6), 5, handleFill);
 
     final handleStroke = Paint()
-      ..color = (isDark ? Colors.black : Colors.white).withValues(alpha: 0.9)
+      ..color = (isDark ? AppColors.black : AppColors.white).withValues(
+        alpha: 0.9,
+      )
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5;
     canvas.drawCircle(Offset(x, waveTop - 6), 5, handleStroke);

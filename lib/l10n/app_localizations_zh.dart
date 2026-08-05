@@ -393,9 +393,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get projectSettings_updated => '项目已更新';
 
   @override
-  String get projectSettings_noPermission => '您没有权限更新此项目';
-
-  @override
   String get projectSettings_team => '团队';
 
   @override
@@ -464,7 +461,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recording_titleHint => '录音标题';
 
   @override
-  String get recording_descriptionHint => '添加简短描述（选填）';
+  String get recording_descriptionHint => '描述这段录音';
+
+  @override
+  String recording_descriptionTooShort(int count) {
+    return '请用至少 $count 个字描述这段录音';
+  }
 
   @override
   String get recording_descriptionEmpty => '添加描述';
@@ -541,11 +543,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get recording_downloadAudioMessage => '音频文件未存储在此设备上。是否要下载以进行剪辑？';
-
-  @override
-  String recording_downloadFailed(String error) {
-    return '下载失败：$error';
-  }
 
   @override
   String get recording_audioNotAvailable => '音频文件不可用';
@@ -645,6 +642,20 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recordings_noRecordingsSubtitle => '点击麦克风录制您的第一个故事，或导入音频文件。';
 
   @override
+  String get recordings_offlineFilterTitle => '离线时不可用';
+
+  @override
+  String get recordings_offlineFilterDescription =>
+      '哪些录音还缺少信息是由服务器判定的。请重新联网查看，或清除筛选以浏览本设备上的全部录音。';
+
+  @override
+  String get recordings_filterErrorTitle => '暂时无法查询';
+
+  @override
+  String get recordings_filterErrorDescription =>
+      '服务器没有响应，因此无法说明哪些录音还缺少信息。请重试，或清除筛选以浏览本设备上的全部录音。';
+
+  @override
   String get recordings_dropToImport => '提示：将音频文件拖到此窗口以导入。';
 
   @override
@@ -669,6 +680,35 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get recording_statusLocal => '本地';
+
+  @override
+  String get recording_statusNameConflict => '名称冲突';
+
+  @override
+  String get recording_statusDescriptionTooShort => '描述太短';
+
+  @override
+  String get recording_descriptionGapMessage => '补充更长的描述后才能上传这段录音。';
+
+  @override
+  String get recording_statusRetriesExhausted => '重试次数已用完';
+
+  @override
+  String get recording_statusFileMissing => '音频文件丢失';
+
+  @override
+  String get recording_uploadExhaustedMessage => '多次尝试后上传已停止。你可以重试。';
+
+  @override
+  String get recording_fileMissingMessage => '这段录音的音频文件已不在本设备上，因此无法上传。';
+
+  @override
+  String get recording_duplicateTitleTitle => '名称已被使用';
+
+  @override
+  String recording_duplicateTitleMessage(String title) {
+    return '此项目中已存在名为“$title”的音频。请另选一个名称。';
+  }
 
   @override
   String get recordings_clearStale => '清除失败项';
@@ -768,9 +808,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get trim_classifySegment => '分类片段';
-
-  @override
-  String get trim_primaryEqualsSecondary => '主分类不能与录音的次分类相同。';
 
   @override
   String get trim_volume => '音量';
@@ -938,11 +975,11 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String import_resumePromptBody(String name, String size) {
-    return '“$name”（$size）已部分上传。选择相同文件以继续。';
+    return '“$name”（$size）已部分上传。请选择完全相同（未更改）的文件以继续。';
   }
 
   @override
-  String get import_resumeSizeMismatch => '该文件与暂停的上传不匹配。';
+  String get import_resumeSizeMismatch => '这是另一个文件。请选择您正在上传的那个完全相同的文件。';
 
   @override
   String import_largeFileWarning(String size) {
@@ -983,11 +1020,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get profile_photoUpdated => '头像已更新';
-
-  @override
-  String profile_photoFailed(String error) {
-    return '更新头像失败：$error';
-  }
 
   @override
   String get profile_editName => '编辑显示名称';
@@ -1691,6 +1723,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get filter_unclassified => '未分类';
 
   @override
+  String get filter_missingDescription => '缺少描述';
+
+  @override
   String get filter_allGenres => '所有体裁';
 
   @override
@@ -1769,6 +1804,14 @@ class AppLocalizationsZh extends AppLocalizations {
   String get projectStats_members => '成员';
 
   @override
+  String get projectStats_needsDetails => '待完善';
+
+  @override
+  String projectStats_showPendency(String label, int count) {
+    return '查看录音 — $label（$count）';
+  }
+
+  @override
   String get project_active => '活跃';
 
   @override
@@ -1820,9 +1863,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get classify_action => '分类';
 
   @override
-  String get classify_banner => '此录音尚未分类。点击分类以添加类型和语域。';
-
-  @override
   String get classify_success => '录音已分类';
 
   @override
@@ -1848,9 +1888,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get classify_secondaryRegister => '次要语域';
-
-  @override
-  String get classify_secondarySameAsPrimary => '次要类型必须与主要类型不同。';
 
   @override
   String get classify_clearAlternative => '清除替代';
@@ -2194,7 +2231,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get filters_sheetTitle => '筛选录音';
 
   @override
-  String get filters_sectionStatus => '上传状态';
+  String get filters_sectionStatus => '本机状态';
+
+  @override
+  String get filters_sectionStatusHint => '筛选屏幕上已有的录音。离线也能用。';
 
   @override
   String get filters_sectionGenre => '类型';
@@ -2204,6 +2244,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get filters_sectionUser => '录制者';
+
+  @override
+  String get filters_sectionPendency => '服务器提示还缺什么';
+
+  @override
+  String get filters_sectionPendencyHint => '向服务器查询哪些录音还缺少信息。需要联网。';
 
   @override
   String get filter_apply => '应用';
@@ -2237,6 +2283,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get filter_genreAll => '任意类型';
+
+  @override
+  String get filter_pendencyAll => '任意字段';
 
   @override
   String get detail_recordedBy => '录制者';
@@ -2550,4 +2599,55 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get liveActivity_uploadingStatus => '上传中';
+
+  @override
+  String get recording_completeFicha => '完善信息';
+
+  @override
+  String get recording_completeFichaTitle => '完善信息';
+
+  @override
+  String recording_completeFichaSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '还有 $count 项未填写。可以现在填写，也可以稍后再来。',
+      one: '还有 1 项未填写。可以现在填写，也可以稍后再来。',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recording_completeFichaStart => '开始';
+
+  @override
+  String get recording_completeFichaContinue => '继续';
+
+  @override
+  String get recording_pendencyClassification => '未分类';
+
+  @override
+  String get recording_pendencyClassificationContext => '体裁和语域说明这是哪一类故事。';
+
+  @override
+  String get recording_pendencyDescription => '描述过短';
+
+  @override
+  String get recording_pendencyDescriptionContext => '用几句话说明录音中的内容。';
+
+  @override
+  String get recording_pendencyStoryteller => '未指定讲述者';
+
+  @override
+  String get recording_pendencyStorytellerContext => '谁讲述了这个故事。';
+
+  @override
+  String recording_pendencyCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 个字段待填写',
+    );
+    return '$_temp0';
+  }
 }

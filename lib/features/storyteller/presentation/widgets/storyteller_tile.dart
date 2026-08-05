@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/storyteller.dart';
 
@@ -25,9 +26,11 @@ class StorytellerTile extends StatelessWidget {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
 
-    final sexLabel = storyteller.sex == StorytellerSex.male
-        ? l10n.storyteller_sexMale
-        : l10n.storyteller_sexFemale;
+    final sexLabel = switch (storyteller.sex) {
+      StorytellerSex.male => l10n.storyteller_sexMale,
+      StorytellerSex.female => l10n.storyteller_sexFemale,
+      StorytellerSex.unknown => '—',
+    };
 
     final parts = <String>[sexLabel];
     if (storyteller.age != null) {
@@ -44,7 +47,7 @@ class StorytellerTile extends StatelessWidget {
 
     return ListTile(
       dense: dense,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 24),
+      contentPadding: const EdgeInsets.symmetric(horizontal: SpacingScale.s24),
       leading: CircleAvatar(
         radius: 20,
         backgroundColor: colors.accent.withValues(alpha: 0.15),

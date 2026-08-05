@@ -4,12 +4,14 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/l10n/content_l10n.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../genre/presentation/notifiers/genre_notifier.dart';
 import '../../../project/presentation/notifiers/member_notifier.dart';
 import '../../../storyteller/presentation/notifiers/project_storytellers_notifier.dart';
 import '../notifiers/recordings_list_notifier.dart';
 import '../notifiers/recordings_list_state.dart';
+import '../pendency_label.dart';
 
 class ActiveFilterChips extends ConsumerWidget {
   const ActiveFilterChips({super.key});
@@ -26,6 +28,8 @@ class ActiveFilterChips extends ConsumerWidget {
         return l10n.filter_needsCleaning;
       case StatusFilter.unclassified:
         return l10n.filter_unclassified;
+      case StatusFilter.missingDescription:
+        return l10n.filter_missingDescription;
     }
   }
 
@@ -117,6 +121,20 @@ class ActiveFilterChips extends ConsumerWidget {
       );
     }
 
+    final reviewFlag = state.selectedReviewFlag;
+    if (reviewFlag != null) {
+      // Arriving from the project counter drops the user into an already
+      // narrowed list. Without a chip there is nothing on screen saying so, and
+      // nothing to press to get back to the whole project.
+      chips.add(
+        _buildChip(
+          context,
+          label: pendencyLabel(l10n, reviewFlag),
+          onRemove: () => notifier.setReviewFlagFilter(null),
+        ),
+      );
+    }
+
     if (state.activeFilterCount >= 2) {
       chips.add(
         TextButton.icon(
@@ -124,10 +142,12 @@ class ActiveFilterChips extends ConsumerWidget {
           icon: Icon(LucideIcons.x, size: 14, color: colors.error),
           label: Text(
             l10n.filter_clearAll,
-            style: TextStyle(color: colors.error, fontSize: 12),
+            style: Theme.of(
+              context,
+            ).textTheme.labelMedium?.copyWith(color: colors.error),
           ),
           style: TextButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
+            padding: const EdgeInsets.symmetric(horizontal: SpacingScale.s8),
             minimumSize: Size.zero,
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
@@ -136,7 +156,12 @@ class ActiveFilterChips extends ConsumerWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      padding: const EdgeInsets.fromLTRB(
+        SpacingScale.s16,
+        SpacingScale.s12,
+        SpacingScale.s16,
+        SpacingScale.s4,
+      ),
       child: Wrap(
         spacing: 8,
         runSpacing: 8,

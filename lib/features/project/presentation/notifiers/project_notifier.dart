@@ -1,13 +1,16 @@
-import 'dart:convert';
+import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/auth/auth_notifier.dart';
 import '../../../../core/errors/api_exception.dart';
+import '../../../../core/observability/error_reporter.dart';
+import '../../data/project_cache.dart';
 import '../../data/providers.dart';
 import '../../domain/entities/language.dart';
 import '../../domain/entities/project.dart';
+import '../../domain/entities/project_update.dart';
 import '../../domain/repositories/project_repository.dart';
 import 'project_state.dart';
 
@@ -17,10 +20,9 @@ final projectNotifierProvider = NotifierProvider<ProjectNotifier, ProjectState>(
 
 class ProjectNotifier extends Notifier<ProjectState> {
   static const _activeProjectIdKey = 'active_project_id';
-  static const _cachedProjectsKey = 'cached_projects';
-  static const _cachedLanguagesKey = 'cached_languages';
 
   ProjectRepository get _repo => ref.read(projectRepositoryProvider);
+  ProjectCache get _cache => ref.read(projectCacheProvider);
 
   @override
   ProjectState build() {
@@ -29,47 +31,21 @@ class ProjectNotifier extends Notifier<ProjectState> {
   }
 
   Future<void> _hydrateFromCache() async {
-    final prefs = await SharedPreferences.getInstance();
-    final rawProjects = prefs.getString(_cachedProjectsKey);
-    if (rawProjects == null) return;
+    final cached = await _cache.read();
+    if (cached == null) return;
+    // A completed fetch is authoritative: never let a late hydration clobber it.
+    if (state.lastFetched != null) return;
 
-    try {
-      final projects = (jsonDecode(rawProjects) as List<dynamic>)
-          .map((j) => Project.fromJson(j as Map<String, dynamic>))
-          .toList();
+    final active = await _restoreActiveProject(cached.projects);
+    // _restoreActiveProject awaits prefs; a fetch can complete during that gap.
+    // Re-check so the late hydration still can't clobber fresh server data.
+    if (state.lastFetched != null) return;
 
-      final rawLanguages = prefs.getString(_cachedLanguagesKey);
-      final languages = rawLanguages != null
-          ? (jsonDecode(rawLanguages) as List<dynamic>)
-                .map((j) => Language.fromJson(j as Map<String, dynamic>))
-                .toList()
-          : <Language>[];
-
-      final active = await _restoreActiveProject(projects);
-
-      state = state.copyWith(
-        projects: projects,
-        languages: languages,
-        activeProject: active,
-        clearActiveProject: active == null,
-      );
-    } on Exception {
-      // ignore corrupt cache
-    }
-  }
-
-  Future<void> _persistCache(
-    List<Project> projects,
-    List<Language> languages,
-  ) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-      _cachedProjectsKey,
-      jsonEncode(projects.map((p) => p.toJson()).toList()),
-    );
-    await prefs.setString(
-      _cachedLanguagesKey,
-      jsonEncode(languages.map((l) => l.toJson()).toList()),
+    state = state.copyWith(
+      projects: cached.projects,
+      languages: cached.languages,
+      activeProject: active,
+      clearActiveProject: active == null,
     );
   }
 
@@ -87,7 +63,7 @@ class ProjectNotifier extends Notifier<ProjectState> {
       final enriched = _enrichWithLanguageNames(projects, languages);
       final active = await _restoreActiveProject(enriched);
 
-      await _persistCache(enriched, languages);
+      await _cache.write(enriched, languages);
 
       state = state.copyWith(
         projects: enriched,
@@ -95,15 +71,22 @@ class ProjectNotifier extends Notifier<ProjectState> {
         activeProject: active,
         isLoading: false,
         clearActiveProject: active == null,
+        lastFetched: DateTime.now(),
       );
     } on UnauthorizedException {
       state = state.copyWith(isLoading: false);
-      ref.read(authNotifierProvider.notifier).handleUnauthorized();
-    } on Exception catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString().replaceFirst('Exception: ', ''),
+      // Fire-and-forget: handleUnauthorized pode propagar uma falha transitória
+      // de refresh (ENG-141); aqui ela é ignorada (sessão preservada). Só
+      // Exceptions, não Errors, para não mascarar bugs.
+      unawaited(
+        ref
+            .read(authNotifierProvider.notifier)
+            .handleUnauthorized()
+            .catchError((_) => false, test: (e) => e is Exception),
       );
+    } on Exception catch (e, st) {
+      ref.read(errorReporterProvider).reportError(e, st);
+      state = state.copyWith(isLoading: false, error: e);
     }
   }
 
@@ -121,10 +104,9 @@ class ProjectNotifier extends Notifier<ProjectState> {
     try {
       final languages = await _repo.listLanguages();
       state = state.copyWith(languages: languages);
-    } on Exception catch (e) {
-      state = state.copyWith(
-        error: e.toString().replaceFirst('Exception: ', ''),
-      );
+    } on Exception catch (e, st) {
+      ref.read(errorReporterProvider).reportError(e, st);
+      state = state.copyWith(error: e);
     }
   }
 
@@ -145,19 +127,17 @@ class ProjectNotifier extends Notifier<ProjectState> {
         projects: [...state.projects, project],
         isLoading: false,
       );
-    } on Exception catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString().replaceFirst('Exception: ', ''),
-      );
+    } on Exception catch (e, st) {
+      ref.read(errorReporterProvider).reportError(e, st);
+      state = state.copyWith(isLoading: false, error: e);
     }
   }
 
-  Future<void> updateProject(String id, Map<String, dynamic> data) async {
+  Future<void> updateProject(String id, ProjectUpdate update) async {
     state = state.copyWith(isLoading: true, clearError: true);
 
     try {
-      final updated = await _repo.updateProject(id, data);
+      final updated = await _repo.updateProject(id, update);
       final updatedList = state.projects.map((p) {
         return p.id == id ? updated : p;
       }).toList();
@@ -171,11 +151,9 @@ class ProjectNotifier extends Notifier<ProjectState> {
         activeProject: activeUpdated,
         isLoading: false,
       );
-    } on Exception catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString().replaceFirst('Exception: ', ''),
-      );
+    } on Exception catch (e, st) {
+      ref.read(errorReporterProvider).reportError(e, st);
+      state = state.copyWith(isLoading: false, error: e);
     }
   }
 

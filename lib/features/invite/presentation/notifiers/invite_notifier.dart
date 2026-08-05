@@ -1,5 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/auth/auth_notifier.dart';
+import '../../../../core/errors/api_exception.dart';
+import '../../../../core/observability/error_reporter.dart';
 import '../../data/providers.dart';
 import '../../domain/repositories/invite_repository.dart';
 import 'invite_state.dart';
@@ -19,11 +24,20 @@ class InviteNotifier extends Notifier<InviteState> {
     try {
       final invites = await _repo.fetchMyInvites();
       state = state.copyWith(invites: invites, isLoading: false);
-    } on Exception catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString().replaceFirst('Exception: ', ''),
+    } on UnauthorizedException {
+      state = state.copyWith(isLoading: false);
+      // Fire-and-forget: handleUnauthorized pode propagar uma falha transitória
+      // de refresh (ENG-141); aqui ela é ignorada (sessão preservada). Só
+      // Exceptions, não Errors, para não mascarar bugs.
+      unawaited(
+        ref
+            .read(authNotifierProvider.notifier)
+            .handleUnauthorized()
+            .catchError((_) => false, test: (e) => e is Exception),
       );
+    } on Exception catch (e, st) {
+      ref.read(errorReporterProvider).reportError(e, st);
+      state = state.copyWith(isLoading: false, error: e);
     }
   }
 
@@ -35,10 +49,17 @@ class InviteNotifier extends Notifier<InviteState> {
         invites: state.invites.where((i) => i.id != inviteId).toList(),
       );
       return true;
-    } on Exception catch (e) {
-      state = state.copyWith(
-        error: e.toString().replaceFirst('Exception: ', ''),
+    } on UnauthorizedException {
+      unawaited(
+        ref
+            .read(authNotifierProvider.notifier)
+            .handleUnauthorized()
+            .catchError((_) => false, test: (e) => e is Exception),
       );
+      return false;
+    } on Exception catch (e, st) {
+      ref.read(errorReporterProvider).reportError(e, st);
+      state = state.copyWith(error: e);
       return false;
     }
   }
@@ -51,10 +72,17 @@ class InviteNotifier extends Notifier<InviteState> {
         invites: state.invites.where((i) => i.id != inviteId).toList(),
       );
       return true;
-    } on Exception catch (e) {
-      state = state.copyWith(
-        error: e.toString().replaceFirst('Exception: ', ''),
+    } on UnauthorizedException {
+      unawaited(
+        ref
+            .read(authNotifierProvider.notifier)
+            .handleUnauthorized()
+            .catchError((_) => false, test: (e) => e is Exception),
       );
+      return false;
+    } on Exception catch (e, st) {
+      ref.read(errorReporterProvider).reportError(e, st);
+      state = state.copyWith(error: e);
       return false;
     }
   }

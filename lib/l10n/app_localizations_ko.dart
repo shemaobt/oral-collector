@@ -393,9 +393,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get projectSettings_updated => '프로젝트가 업데이트되었습니다';
 
   @override
-  String get projectSettings_noPermission => '이 프로젝트를 업데이트할 권한이 없습니다';
-
-  @override
   String get projectSettings_team => '팀';
 
   @override
@@ -465,7 +462,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recording_titleHint => '녹음 제목';
 
   @override
-  String get recording_descriptionHint => '짧은 설명 추가 (선택 사항)';
+  String get recording_descriptionHint => '이 녹음을 설명해 주세요';
+
+  @override
+  String recording_descriptionTooShort(int count) {
+    return '이 녹음을 최소 $count자 이상으로 설명해 주세요';
+  }
 
   @override
   String get recording_descriptionEmpty => '설명 추가';
@@ -543,11 +545,6 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get recording_downloadAudioMessage =>
       '오디오 파일이 이 기기에 저장되어 있지 않습니다. 자르기 위해 다운로드하시겠습니까?';
-
-  @override
-  String recording_downloadFailed(String error) {
-    return '다운로드 실패: $error';
-  }
 
   @override
   String get recording_audioNotAvailable => '오디오 파일을 사용할 수 없습니다';
@@ -649,6 +646,20 @@ class AppLocalizationsKo extends AppLocalizations {
       '마이크를 탭하여 첫 번째 이야기를 녹음하거나 오디오 파일을 가져오세요.';
 
   @override
+  String get recordings_offlineFilterTitle => '오프라인에서는 볼 수 없음';
+
+  @override
+  String get recordings_offlineFilterDescription =>
+      '어떤 녹음에 아직 정보가 빠져 있는지는 서버가 판단합니다. 다시 연결해 확인하거나, 필터를 지우고 이 기기의 모든 녹음을 살펴보세요.';
+
+  @override
+  String get recordings_filterErrorTitle => '지금은 확인할 수 없음';
+
+  @override
+  String get recordings_filterErrorDescription =>
+      '서버가 응답하지 않아 어떤 녹음에 정보가 빠져 있는지 알 수 없습니다. 다시 시도하거나, 필터를 지우고 이 기기의 모든 녹음을 살펴보세요.';
+
+  @override
   String get recordings_dropToImport => '팁: 오디오 파일을 이 창으로 끌어 가져오기 하세요.';
 
   @override
@@ -673,6 +684,38 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get recording_statusLocal => '로컬';
+
+  @override
+  String get recording_statusNameConflict => '이름 충돌';
+
+  @override
+  String get recording_statusDescriptionTooShort => '설명이 너무 짧습니다';
+
+  @override
+  String get recording_descriptionGapMessage =>
+      '설명을 더 길게 작성해야 이 녹음을 업로드할 수 있습니다.';
+
+  @override
+  String get recording_statusRetriesExhausted => '재시도 횟수 소진';
+
+  @override
+  String get recording_statusFileMissing => '오디오 파일 없음';
+
+  @override
+  String get recording_uploadExhaustedMessage =>
+      '여러 번 시도한 뒤 업로드가 중단되었습니다. 다시 시도할 수 있습니다.';
+
+  @override
+  String get recording_fileMissingMessage =>
+      '이 녹음의 오디오 파일이 이 기기에 더 이상 없어 업로드할 수 없습니다.';
+
+  @override
+  String get recording_duplicateTitleTitle => '이미 사용 중인 이름';
+
+  @override
+  String recording_duplicateTitleMessage(String title) {
+    return '이 프로젝트에 \"$title\" 이름의 오디오가 이미 있습니다. 다른 이름을 선택하세요.';
+  }
 
   @override
   String get recordings_clearStale => '실패 항목 삭제';
@@ -772,9 +815,6 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get trim_classifySegment => '세그먼트 분류';
-
-  @override
-  String get trim_primaryEqualsSecondary => '기본 분류는 녹음의 보조 분류와 같을 수 없습니다.';
 
   @override
   String get trim_volume => '볼륨';
@@ -943,11 +983,11 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String import_resumePromptBody(String name, String size) {
-    return '\"$name\"($size)이(가) 부분적으로 업로드되었습니다. 계속하려면 같은 파일을 선택하세요.';
+    return '\"$name\"($size)이(가) 부분적으로 업로드되었습니다. 계속하려면 변경되지 않은 똑같은 파일을 선택하세요.';
   }
 
   @override
-  String get import_resumeSizeMismatch => '이 파일은 일시 중지된 업로드와 일치하지 않습니다.';
+  String get import_resumeSizeMismatch => '다른 파일입니다. 업로드하던 것과 똑같은 파일을 선택하세요.';
 
   @override
   String import_largeFileWarning(String size) {
@@ -988,11 +1028,6 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get profile_photoUpdated => '프로필 사진이 업데이트되었습니다';
-
-  @override
-  String profile_photoFailed(String error) {
-    return '사진 업데이트 실패: $error';
-  }
 
   @override
   String get profile_editName => '표시 이름 편집';
@@ -1698,6 +1733,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get filter_unclassified => '미분류';
 
   @override
+  String get filter_missingDescription => '설명 없음';
+
+  @override
   String get filter_allGenres => '모든 장르';
 
   @override
@@ -1776,6 +1814,14 @@ class AppLocalizationsKo extends AppLocalizations {
   String get projectStats_members => '구성원';
 
   @override
+  String get projectStats_needsDetails => '정보 필요';
+
+  @override
+  String projectStats_showPendency(String label, int count) {
+    return '녹음 보기 — $label ($count)';
+  }
+
+  @override
   String get project_active => '활성';
 
   @override
@@ -1827,9 +1873,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get classify_action => '분류';
 
   @override
-  String get classify_banner => '이 녹음은 분류되지 않았습니다. 분류를 탭하여 장르와 사용역을 추가하세요.';
-
-  @override
   String get classify_success => '녹음이 분류되었습니다';
 
   @override
@@ -1855,9 +1898,6 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get classify_secondaryRegister => '보조 사용역';
-
-  @override
-  String get classify_secondarySameAsPrimary => '보조 장르는 주요 장르와 달라야 합니다.';
 
   @override
   String get classify_clearAlternative => '대체 지우기';
@@ -2207,7 +2247,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get filters_sheetTitle => '녹음 필터';
 
   @override
-  String get filters_sectionStatus => '업로드 상태';
+  String get filters_sectionStatus => '이 기기의 상태';
+
+  @override
+  String get filters_sectionStatusHint => '화면에 이미 있는 녹음을 걸러 냅니다. 오프라인에서도 됩니다.';
 
   @override
   String get filters_sectionGenre => '장르';
@@ -2217,6 +2260,13 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get filters_sectionUser => '녹음자';
+
+  @override
+  String get filters_sectionPendency => '서버가 알려주는 미완성 항목';
+
+  @override
+  String get filters_sectionPendencyHint =>
+      '어떤 녹음에 아직 정보가 빠져 있는지 서버에 물어봅니다. 연결이 필요합니다.';
 
   @override
   String get filter_apply => '적용';
@@ -2250,6 +2300,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get filter_genreAll => '모든 장르';
+
+  @override
+  String get filter_pendencyAll => '모든 항목';
 
   @override
   String get detail_recordedBy => '녹음자';
@@ -2565,4 +2618,57 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get liveActivity_uploadingStatus => '업로드 중';
+
+  @override
+  String get recording_completeFicha => '정보 완성하기';
+
+  @override
+  String get recording_completeFichaTitle => '정보 완성하기';
+
+  @override
+  String recording_completeFichaSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '항목 $count개가 남아 있습니다. 지금 채우거나 나중에 이어서 하세요.',
+      one: '항목 1개가 남아 있습니다. 지금 채우거나 나중에 이어서 하세요.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recording_completeFichaStart => '시작';
+
+  @override
+  String get recording_completeFichaContinue => '계속';
+
+  @override
+  String get recording_pendencyClassification => '미분류';
+
+  @override
+  String get recording_pendencyClassificationContext =>
+      '장르와 사용역이 이 이야기의 종류를 알려 줍니다.';
+
+  @override
+  String get recording_pendencyDescription => '설명이 너무 짧음';
+
+  @override
+  String get recording_pendencyDescriptionContext =>
+      '녹음에서 무슨 일이 일어나는지 몇 마디로 적어 주세요.';
+
+  @override
+  String get recording_pendencyStoryteller => '화자 없음';
+
+  @override
+  String get recording_pendencyStorytellerContext => '이 이야기를 들려주는 사람입니다.';
+
+  @override
+  String recording_pendencyCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '입력할 항목 $count개',
+    );
+    return '$_temp0';
+  }
 }

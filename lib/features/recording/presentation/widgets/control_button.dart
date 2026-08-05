@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 
 class ControlButton extends StatelessWidget {
   const ControlButton({
@@ -39,7 +40,7 @@ class ControlButton extends StatelessWidget {
                 color: isDark ? colors.surfaceAlt : colors.foreground,
                 boxShadow: [
                   BoxShadow(
-                    color: (isDark ? Colors.black : colors.foreground)
+                    color: (isDark ? AppColors.black : colors.foreground)
                         .withValues(alpha: 0.15),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
@@ -52,7 +53,7 @@ class ControlButton extends StatelessWidget {
                 size: 26,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: SpacingScale.s8),
             Text(
               label,
               style: Theme.of(context).textTheme.labelSmall?.copyWith(

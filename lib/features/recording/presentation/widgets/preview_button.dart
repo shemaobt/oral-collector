@@ -3,6 +3,7 @@ import 'package:just_audio/just_audio.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../../l10n/app_localizations.dart';
 
 class PreviewButton extends StatefulWidget {
@@ -57,9 +58,9 @@ class _PreviewButtonState extends State<PreviewButton> {
         style: FilledButton.styleFrom(
           backgroundColor: colors.accent.withValues(alpha: isDark ? 0.18 : 0.1),
           foregroundColor: colors.accent,
-          padding: const EdgeInsets.symmetric(vertical: 14),
+          padding: const EdgeInsets.symmetric(vertical: SpacingScale.s16),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(RadiusScale.r12),
           ),
           elevation: 0,
         ),

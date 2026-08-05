@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/tokens.dart';
 import '../../l10n/app_localizations.dart';
+import '../utils/cleaning_status_style.dart';
 
 class CleaningStatusBadge extends StatefulWidget {
   const CleaningStatusBadge({
@@ -61,39 +63,22 @@ class _CleaningStatusBadgeState extends State<CleaningStatusBadge>
     }
 
     final l10n = AppLocalizations.of(context);
+    final colors = AppColors.of(context);
+    final style = CleaningStatusStyle.forStatus(widget.status, colors, l10n);
+    if (!style.isFlagged) {
+      return const SizedBox.shrink();
+    }
+
     final iconSize = widget.compact ? 12.0 : 14.0;
-    final fontSize = widget.compact ? 11.0 : 13.0;
+    // `null` keeps labelSmall's native 11 (== the old compact size); only the
+    // off-token 13 stays as an explicit override (ENG-114 convention).
+    final double? fontSize = widget.compact ? null : 13.0;
     final hPad = widget.compact ? 6.0 : 8.0;
     final vPad = widget.compact ? 2.0 : 3.0;
 
-    final IconData icon;
-    final Color color;
-    final String label;
-
-    switch (widget.status) {
-      case 'needs_cleaning':
-        icon = LucideIcons.alertCircle;
-        color = Colors.amber.shade700;
-        label = l10n.cleaning_needsCleaning;
-        break;
-      case 'cleaning':
-        icon = LucideIcons.loader;
-        color = AppColors.info;
-        label = l10n.cleaning_cleaning;
-        break;
-      case 'cleaned':
-        icon = LucideIcons.sparkles;
-        color = AppColors.success;
-        label = l10n.cleaning_cleaned;
-        break;
-      case 'failed':
-        icon = LucideIcons.alertTriangle;
-        color = AppColors.error;
-        label = l10n.cleaning_cleanFailed;
-        break;
-      default:
-        return const SizedBox.shrink();
-    }
+    final icon = style.icon;
+    final color = style.color;
+    final label = style.label;
 
     Widget iconWidget = Icon(icon, size: iconSize, color: color);
 
@@ -108,19 +93,23 @@ class _CleaningStatusBadgeState extends State<CleaningStatusBadge>
       padding: EdgeInsets.symmetric(horizontal: hPad, vertical: vPad),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(RadiusScale.r8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           iconWidget,
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              fontSize: fontSize,
-              color: color,
-              fontWeight: FontWeight.w600,
+          const SizedBox(width: SpacingScale.s4),
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                fontSize: fontSize,
+                color: color,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],

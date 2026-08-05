@@ -196,4 +196,17 @@ void main() {
       },
     );
   });
+
+  group('upsertAll bulk write', () {
+    test('persists every item from a multi-row server page', () async {
+      await repo.upsertAll([
+        makeStoryteller(id: 's1', name: 'Ana'),
+        makeStoryteller(id: 's2', name: 'Bia'),
+        makeStoryteller(id: 's3', name: 'Cida'),
+      ], 'proj-1');
+
+      final list = await repo.getByProject('proj-1');
+      expect(list.map((s) => s.id).toSet(), {'s1', 's2', 's3'});
+    });
+  });
 }

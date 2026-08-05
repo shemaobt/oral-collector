@@ -1,13 +1,16 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:drift/native.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:mocktail/mocktail.dart';
 
+import 'package:oral_collector/core/config/env.dart';
+import 'package:oral_collector/core/database/app_database.dart';
+import 'package:oral_collector/core/errors/app_exception.dart';
 import 'package:oral_collector/core/network/authenticated_client.dart';
 import 'package:oral_collector/core/platform/file_source.dart';
 import 'package:oral_collector/features/recording/data/repositories/local_recording_repository.dart';
@@ -22,14 +25,30 @@ class MockResumableUploadService extends Mock
 class MockLocalRecordingRepository extends Mock
     implements LocalRecordingRepository {}
 
+class FakeResumableUploadService extends Fake
+    implements ResumableUploadService {
+  int attempts = 0;
+
+  @override
+  Future<ResumableUploadResult> uploadFromSource({
+    required String recordingId,
+    required String serverId,
+    required FileSource source,
+    required String format,
+    void Function(int bytesSent, int totalBytes)? onProgress,
+  }) async {
+    attempts++;
+    if (attempts == 1) {
+      return const ResumableUploadResult(success: false, error: 'offline');
+    }
+    return const ResumableUploadResult(success: true, clientCrc32c: 'AAAAAA==');
+  }
+}
+
 void main() {
   late MockSecureStorage storage;
   late MockResumableUploadService resumable;
   late MockLocalRecordingRepository repo;
-
-  setUpAll(() {
-    dotenv.testLoad(fileInput: 'BACKEND_URL=http://localhost:8080');
-  });
 
   setUp(() {
     storage = MockSecureStorage();
@@ -118,10 +137,10 @@ void main() {
     expect(serverId, 'srv-abc');
 
     expect(calls, [
-      'POST http://localhost:8080/api/oc/recordings',
-      'POST http://localhost:8080/api/oc/recordings/upload-url',
+      'POST ${Env.backendUrl}/api/oc/recordings',
+      'POST ${Env.backendUrl}/api/oc/recordings/upload-url',
       'PUT https://storage.googleapis.com/bucket/object',
-      'POST http://localhost:8080/api/oc/recordings/srv-abc/confirm-upload',
+      'POST ${Env.backendUrl}/api/oc/recordings/srv-abc/confirm-upload',
     ]);
     verifyZeroInteractions(resumable);
   });
@@ -146,6 +165,148 @@ void main() {
       throwsA(isA<Exception>()),
     );
   });
+
+  test('a 409 from create is reported as a taken title', () async {
+    final bytes = Uint8List(10);
+    final httpClient = MockClient((request) async {
+      if (request.url.path == '/api/oc/recordings') {
+        return http.Response('title already used', 409);
+      }
+      return http.Response('unexpected', 500);
+    });
+    final auth = AuthenticatedClient(client: httpClient, storage: storage);
+    final uploader = DirectRecordingUploader(
+      client: auth,
+      resumableUploadService: resumable,
+      recordingRepo: repo,
+    );
+
+    await expectLater(
+      uploader.upload(source: sampleSource(bytes), meta: sampleMeta()),
+      throwsA(
+        allOf(isA<ConflictException>(), predicate(isDuplicateRecordingTitle)),
+      ),
+    );
+  });
+
+  // ENG-354 regression: a 409 on confirm-upload means the recording is already
+  // registered and its bytes are already in GCS. Reporting it as a taken title
+  // would offer the user a rename that fixes nothing.
+  test('a 409 from confirm-upload is not reported as a taken title', () async {
+    final bytes = Uint8List(10);
+    final httpClient = MockClient((request) async {
+      final path = request.url.path;
+      if (request.method == 'POST' && path == '/api/oc/recordings') {
+        return http.Response(jsonEncode({'id': 'srv-abc'}), 201);
+      }
+      if (request.method == 'POST' && path == '/api/oc/recordings/upload-url') {
+        return http.Response(
+          jsonEncode({
+            'upload_url': 'https://storage.googleapis.com/bucket/object',
+            'content_type': 'audio/mp4',
+          }),
+          200,
+        );
+      }
+      if (request.method == 'PUT') {
+        return http.Response('', 200);
+      }
+      if (path == '/api/oc/recordings/srv-abc/confirm-upload') {
+        return http.Response('already confirmed', 409);
+      }
+      return http.Response('unexpected', 500);
+    });
+    final auth = AuthenticatedClient(client: httpClient, storage: storage);
+    final uploader = DirectRecordingUploader(
+      client: auth,
+      resumableUploadService: resumable,
+      recordingRepo: repo,
+    );
+
+    await expectLater(
+      uploader.upload(source: sampleSource(bytes), meta: sampleMeta()),
+      throwsA(
+        allOf(
+          isA<ConflictException>(),
+          isNot(predicate(isDuplicateRecordingTitle)),
+        ),
+      ),
+    );
+  });
+
+  test('create 422 is a non-retryable ValidationException', () async {
+    final bytes = Uint8List(10);
+    final httpClient = MockClient((request) async {
+      if (request.url.path == '/api/oc/recordings') {
+        return http.Response('{"detail":"description is required"}', 422);
+      }
+      return http.Response('unexpected', 500);
+    });
+    final auth = AuthenticatedClient(client: httpClient, storage: storage);
+    final uploader = DirectRecordingUploader(
+      client: auth,
+      resumableUploadService: resumable,
+      recordingRepo: repo,
+    );
+
+    await expectLater(
+      uploader.upload(source: sampleSource(bytes), meta: sampleMeta()),
+      throwsA(
+        isA<ValidationException>().having(
+          (e) => e.retryable,
+          'retryable',
+          isFalse,
+        ),
+      ),
+    );
+  });
+
+  test('create 503 stays a retryable ServerException', () async {
+    final bytes = Uint8List(10);
+    final httpClient = MockClient((request) async {
+      if (request.url.path == '/api/oc/recordings') {
+        return http.Response('gateway down', 503);
+      }
+      return http.Response('unexpected', 500);
+    });
+    final auth = AuthenticatedClient(client: httpClient, storage: storage);
+    final uploader = DirectRecordingUploader(
+      client: auth,
+      resumableUploadService: resumable,
+      recordingRepo: repo,
+    );
+
+    await expectLater(
+      uploader.upload(source: sampleSource(bytes), meta: sampleMeta()),
+      throwsA(
+        isA<ServerException>().having((e) => e.retryable, 'retryable', isTrue),
+      ),
+    );
+  });
+
+  test(
+    'throws a catchable ParseException when create returns a non-string id',
+    () async {
+      final bytes = Uint8List(10);
+      final httpClient = MockClient((request) async {
+        if (request.url.path == '/api/oc/recordings') {
+          return http.Response(jsonEncode({'id': 123}), 201);
+        }
+        return http.Response('unexpected', 500);
+      });
+      final auth = AuthenticatedClient(client: httpClient, storage: storage);
+      final uploader = DirectRecordingUploader(
+        client: auth,
+        resumableUploadService: resumable,
+        recordingRepo: repo,
+      );
+
+      await expectLater(
+        uploader.upload(source: sampleSource(bytes), meta: sampleMeta()),
+        throwsA(isA<ParseException>()),
+      );
+    },
+  );
 
   test('throws when GCS PUT fails', () async {
     final bytes = Uint8List(10);
@@ -178,5 +339,97 @@ void main() {
       () => uploader.upload(source: sampleSource(bytes), meta: sampleMeta()),
       throwsA(isA<Exception>()),
     );
+  });
+
+  test('retrying a failed resumable web import does not hit UNIQUE constraint '
+      'and completes', () async {
+    final db = AppDatabase.forTesting(NativeDatabase.memory());
+    addTearDown(db.close);
+    final realRepo = LocalRecordingRepository(db);
+
+    final httpClient = MockClient((request) async {
+      final path = request.url.path;
+      if (request.method == 'POST' && path == '/api/oc/recordings') {
+        return http.Response(jsonEncode({'id': 'srv-A'}), 201);
+      }
+      if (request.method == 'POST' &&
+          path == '/api/oc/recordings/srv-A/confirm-upload') {
+        return http.Response('{}', 200);
+      }
+      return http.Response('unexpected', 500);
+    });
+    final auth = AuthenticatedClient(client: httpClient, storage: storage);
+
+    final fakeResumable = FakeResumableUploadService();
+    final uploader = DirectRecordingUploader(
+      client: auth,
+      resumableUploadService: fakeResumable,
+      recordingRepo: realRepo,
+    );
+
+    // Must exceed DirectRecordingUploader's 5 MB small-file threshold so the
+    // upload takes the resumable (shadow-row) path under test.
+    const bigSize = 5 * 1024 * 1024 + 1;
+    DirectUploadMetadata bigMeta() => DirectUploadMetadata(
+      projectId: 'proj-1',
+      genreId: 'unclassified',
+      subcategoryId: 'unclassified',
+      userId: 'user-1',
+      title: 'Big web recording',
+      durationSeconds: 60,
+      fileSizeBytes: bigSize,
+      format: 'm4a',
+      recordedAt: DateTime.utc(2026, 4, 15, 10),
+    );
+    Uint8List bigBytes() => Uint8List(bigSize);
+
+    // First attempt fails mid-upload, leaving a shadow row behind.
+    await expectLater(
+      uploader.upload(source: sampleSource(bigBytes()), meta: bigMeta()),
+      throwsA(isA<Exception>()),
+    );
+
+    // Retry over the surviving shadow row must complete, not crash.
+    final serverId = await uploader.upload(
+      source: sampleSource(bigBytes()),
+      meta: bigMeta(),
+    );
+
+    expect(serverId, 'srv-A');
+    expect(await realRepo.getRecordingById('web_srv-A'), isNull);
+  });
+
+  test('recusa upload-url http inseguro sem fazer PUT', () async {
+    final bytes = Uint8List(10);
+    final calls = <String>[];
+    final httpClient = MockClient((request) async {
+      calls.add('${request.method} ${request.url}');
+      final path = request.url.path;
+      if (request.method == 'POST' && path == '/api/oc/recordings') {
+        return http.Response(jsonEncode({'id': 'srv-abc'}), 201);
+      }
+      if (request.method == 'POST' && path == '/api/oc/recordings/upload-url') {
+        return http.Response(
+          jsonEncode({
+            'upload_url': 'http://evil.com/leak',
+            'content_type': 'audio/mp4',
+          }),
+          200,
+        );
+      }
+      return http.Response('unexpected', 500);
+    });
+    final auth = AuthenticatedClient(client: httpClient, storage: storage);
+    final uploader = DirectRecordingUploader(
+      client: auth,
+      resumableUploadService: resumable,
+      recordingRepo: repo,
+    );
+
+    await expectLater(
+      uploader.upload(source: sampleSource(bytes), meta: sampleMeta()),
+      throwsA(isA<Exception>()),
+    );
+    expect(calls.any((c) => c.startsWith('PUT')), isFalse);
   });
 }

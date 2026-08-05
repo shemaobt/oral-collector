@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 
 class ProjectSettingsStatChip extends StatelessWidget {
   const ProjectSettingsStatChip({
@@ -24,15 +25,18 @@ class ProjectSettingsStatChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
+        padding: const EdgeInsets.symmetric(
+          vertical: SpacingScale.s16,
+          horizontal: SpacingScale.s8,
+        ),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(RadiusScale.r16),
         ),
         child: Column(
           children: [
             Icon(icon, size: 16, color: color),
-            const SizedBox(height: 6),
+            const SizedBox(height: SpacingScale.s8),
             Text(
               value,
               style: theme.textTheme.titleMedium?.copyWith(

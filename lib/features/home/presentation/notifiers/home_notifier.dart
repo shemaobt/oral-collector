@@ -1,10 +1,10 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../recording/data/providers.dart';
-import '../../../recording/domain/entities/classification.dart';
 import '../../../project/presentation/notifiers/project_notifier.dart';
 import '../../../project/presentation/notifiers/stats_notifier.dart';
+import '../../../recording/data/providers.dart';
+import '../../../recording/domain/entities/classification.dart';
 import 'home_state.dart';
 
 final homeNotifierProvider = NotifierProvider<HomeNotifier, HomeState>(

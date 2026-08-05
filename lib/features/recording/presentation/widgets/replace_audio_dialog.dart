@@ -3,6 +3,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 
 class ReplaceAudioDialog extends StatelessWidget {
   const ReplaceAudioDialog({super.key, required this.wasUploaded});
@@ -30,7 +31,7 @@ class ReplaceAudioDialog extends StatelessWidget {
       title: Row(
         children: [
           Icon(LucideIcons.alertTriangle, size: 20, color: colors.error),
-          const SizedBox(width: 8),
+          const SizedBox(width: SpacingScale.s8),
           Expanded(child: Text(l10n.recording_replaceTitle)),
         ],
       ),
@@ -43,19 +44,19 @@ class ReplaceAudioDialog extends StatelessWidget {
             style: theme.textTheme.bodyMedium,
           ),
           if (wasUploaded) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: SpacingScale.s12),
             Container(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(SpacingScale.s8),
               decoration: BoxDecoration(
                 color: colors.error.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(RadiusScale.r8),
                 border: Border.all(color: colors.error.withValues(alpha: 0.25)),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Icon(LucideIcons.uploadCloud, size: 16, color: colors.error),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: SpacingScale.s8),
                   Expanded(
                     child: Text(
                       l10n.recording_replaceReuploadNotice,

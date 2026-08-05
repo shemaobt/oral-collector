@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/tokens.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/widgets/error_snack_bar.dart';
 import '../domain/entities/storyteller.dart';
@@ -167,7 +168,7 @@ class _StorytellerFormScreenState extends ConsumerState<StorytellerFormScreen> {
         key: _formKey,
         onChanged: () => setState(() {}),
         child: ListView(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(SpacingScale.s20),
           children: [
             TextFormField(
               controller: _nameCtrl,
@@ -178,12 +179,12 @@ class _StorytellerFormScreenState extends ConsumerState<StorytellerFormScreen> {
               validator: (v) =>
                   (v == null || v.trim().isEmpty) ? l10n.error_generic : null,
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: SpacingScale.s20),
             Text(
               l10n.storyteller_sex,
               style: Theme.of(context).textTheme.labelLarge,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: SpacingScale.s8),
             SegmentedButton<StorytellerSex>(
               segments: [
                 ButtonSegment(
@@ -201,7 +202,7 @@ class _StorytellerFormScreenState extends ConsumerState<StorytellerFormScreen> {
                 setState(() => _sex = s.isEmpty ? null : s.first);
               },
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: SpacingScale.s20),
             TextFormField(
               controller: _ageCtrl,
               decoration: InputDecoration(labelText: l10n.storyteller_age),
@@ -216,19 +217,19 @@ class _StorytellerFormScreenState extends ConsumerState<StorytellerFormScreen> {
                 return null;
               },
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: SpacingScale.s20),
             TextFormField(
               controller: _locationCtrl,
               decoration: InputDecoration(labelText: l10n.storyteller_location),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: SpacingScale.s20),
             TextFormField(
               controller: _dialectCtrl,
               decoration: InputDecoration(labelText: l10n.storyteller_dialect),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: SpacingScale.s24),
             if (!widget.isEdit) _buildAcceptanceBlock(context, l10n),
-            const SizedBox(height: 32),
+            const SizedBox(height: SpacingScale.s32),
             SizedBox(
               width: double.infinity,
               height: 52,
@@ -236,11 +237,13 @@ class _StorytellerFormScreenState extends ConsumerState<StorytellerFormScreen> {
                 onPressed: _canSubmit ? _submit : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: colors.accent,
-                  foregroundColor: Colors.white,
+                  foregroundColor: AppColors.white,
                   disabledBackgroundColor: colors.accent.withValues(alpha: 0.3),
-                  disabledForegroundColor: Colors.white.withValues(alpha: 0.8),
+                  disabledForegroundColor: AppColors.white.withValues(
+                    alpha: 0.8,
+                  ),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(RadiusScale.r16),
                   ),
                   elevation: 0,
                   textStyle: Theme.of(
@@ -249,11 +252,11 @@ class _StorytellerFormScreenState extends ConsumerState<StorytellerFormScreen> {
                 ),
                 child: _isSaving
                     ? const SizedBox(
-                        height: 20,
-                        width: 20,
+                        height: SpacingScale.s20,
+                        width: SpacingScale.s20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Colors.white,
+                          color: AppColors.white,
                         ),
                       )
                     : Text(
@@ -272,10 +275,10 @@ class _StorytellerFormScreenState extends ConsumerState<StorytellerFormScreen> {
     final theme = Theme.of(context);
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(SpacingScale.s16),
       decoration: BoxDecoration(
         color: colors.info.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(RadiusScale.r12),
         border: Border.all(color: colors.info.withValues(alpha: 0.2)),
       ),
       child: Column(
@@ -284,7 +287,7 @@ class _StorytellerFormScreenState extends ConsumerState<StorytellerFormScreen> {
           Row(
             children: [
               Icon(LucideIcons.shieldCheck, size: 18, color: colors.info),
-              const SizedBox(width: 8),
+              const SizedBox(width: SpacingScale.s8),
               Expanded(
                 child: Text(
                   l10n.storyteller_externalAcceptanceTitle,
@@ -315,7 +318,7 @@ class _StorytellerFormScreenState extends ConsumerState<StorytellerFormScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: SpacingScale.s4),
           CheckboxListTile(
             contentPadding: EdgeInsets.zero,
             controlAffinity: ListTileControlAffinity.leading,

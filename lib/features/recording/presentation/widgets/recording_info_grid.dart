@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../../l10n/app_localizations.dart';
-import '../../../../core/database/app_database.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
+import '../../domain/entities/local_recording_entity.dart';
 
 class RecordingInfoGrid extends StatelessWidget {
   const RecordingInfoGrid({
@@ -16,7 +17,7 @@ class RecordingInfoGrid extends StatelessWidget {
     required this.formattedSize,
   });
 
-  final LocalRecording recording;
+  final LocalRecordingEntity recording;
   final AppColorSet colors;
   final ThemeData theme;
   final String formattedDuration;
@@ -37,7 +38,7 @@ class RecordingInfoGrid extends StatelessWidget {
             theme: theme,
           ),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: SpacingScale.s8),
         Expanded(
           child: InfoTile(
             icon: LucideIcons.hardDrive,
@@ -47,7 +48,7 @@ class RecordingInfoGrid extends StatelessWidget {
             theme: theme,
           ),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: SpacingScale.s8),
         Expanded(
           child: InfoTile(
             icon: LucideIcons.fileAudio,
@@ -81,17 +82,17 @@ class InfoTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(SpacingScale.s12),
       decoration: BoxDecoration(
         color: colors.surfaceAlt.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(RadiusScale.r16),
         border: Border.all(color: colors.border.withValues(alpha: 0.15)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(icon, size: 16, color: colors.secondary),
-          const SizedBox(height: 8),
+          const SizedBox(height: SpacingScale.s8),
           Text(
             value,
             style: theme.textTheme.titleSmall?.copyWith(

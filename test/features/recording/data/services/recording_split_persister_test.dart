@@ -9,19 +9,34 @@
 /// until the user opened them and edited a field.
 library;
 
-import 'package:drift/drift.dart' show Value;
+import 'package:drift/drift.dart'
+    show
+        ApplyInterceptor,
+        QueryExecutor,
+        QueryInterceptor,
+        Value,
+        driftRuntimeOptions;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:oral_collector/core/database/app_database.dart';
+import 'package:oral_collector/features/recording/data/local_recording_to_entity.dart';
 import 'package:oral_collector/features/recording/data/repositories/local_recording_repository.dart';
 import 'package:oral_collector/features/recording/data/services/recording_split_persister.dart';
+import 'package:oral_collector/features/recording/domain/entities/local_recording_entity.dart';
 import 'package:oral_collector/features/recording/domain/entities/server_recording.dart';
+import 'package:oral_collector/features/recording/domain/entities/split_segment_request.dart';
+import 'package:oral_collector/features/recording/domain/entities/update_recording_request.dart';
 import 'package:oral_collector/features/recording/domain/repositories/recording_api_repository.dart';
 
 void main() {
   late AppDatabase db;
   late LocalRecordingRepository repo;
+
+  // The atomicity test opens a second, fault-injecting in-memory database
+  // alongside the per-test one; both use independent executors.
+  setUpAll(() => driftRuntimeOptions.dontWarnAboutMultipleDatabases = true);
+  tearDownAll(() => driftRuntimeOptions.dontWarnAboutMultipleDatabases = false);
 
   setUp(() {
     db = AppDatabase.forTesting(NativeDatabase.memory());
@@ -32,7 +47,7 @@ void main() {
     await db.close();
   });
 
-  Future<LocalRecording> seedParent({
+  Future<LocalRecordingEntity> seedParent({
     String id = 'parent-1',
     String? serverId,
   }) async {
@@ -55,7 +70,7 @@ void main() {
         recordedAt: Value(DateTime.utc(2026, 5, 1, 10)),
       ),
     );
-    return (await repo.getRecordingById(id))!;
+    return localRecordingToEntity((await repo.getRecordingById(id))!);
   }
 
   SplitSegmentSpec spec({String id = 'c1'}) => SplitSegmentSpec(
@@ -155,27 +170,35 @@ void main() {
     expect(triggerCalls, 1);
   });
 
-  test('runs trashParent callback before deleting the parent locally, when '
-      'a callback is provided', () async {
+  test('archives the parent via trashParent after the split has committed, '
+      'when a callback is provided', () async {
     final parent = await seedParent();
     final api = _FakeApiRepo();
-    LocalRecording? trashedParent;
-    bool parentStillPresentDuringTrash = false;
+    LocalRecordingEntity? trashedParent;
+    bool childPresentDuringTrash = false;
+    bool parentRowGoneDuringTrash = false;
     final persister = RecordingSplitPersister(
       localRepo: repo,
       apiRepo: api,
       triggerUpload: () async {},
       trashParent: (p) async {
         trashedParent = p;
-        parentStillPresentDuringTrash =
-            (await repo.getRecordingById(p.id)) != null;
+        // The atomic split (insert children + delete parent) runs first, so by
+        // the time the parent file is archived the row is already gone and the
+        // child exists — a split failure can never leave a trashed file behind.
+        childPresentDuringTrash = (await repo.getRecordingById('c1')) != null;
+        parentRowGoneDuringTrash = (await repo.getRecordingById(p.id)) == null;
       },
     );
 
-    await persister.persist(parent: parent, segments: [spec()]);
+    await persister.persist(
+      parent: parent,
+      segments: [spec(id: 'c1')],
+    );
 
     expect(trashedParent?.id, parent.id);
-    expect(parentStillPresentDuringTrash, isTrue);
+    expect(childPresentDuringTrash, isTrue);
+    expect(parentRowGoneDuringTrash, isTrue);
     expect(await repo.getRecordingById(parent.id), isNull);
   });
 
@@ -198,6 +221,56 @@ void main() {
     );
 
     expect(ids, ['first', 'second', 'third']);
+  });
+
+  test('rolls back the inserted children when the parent delete fails, leaving '
+      'no partial state', () async {
+    // A real in-memory DB whose delete on local_recordings is forced to throw,
+    // to prove the child inserts and the parent delete commit as one unit.
+    final faultyDb = AppDatabase.forTesting(
+      NativeDatabase.memory().interceptWith(_FailLocalRecordingsDelete()),
+    );
+    addTearDown(faultyDb.close);
+    final faultyRepo = LocalRecordingRepository(faultyDb);
+
+    await faultyRepo.insertRecording(
+      LocalRecordingsCompanion(
+        id: const Value('parent-1'),
+        projectId: const Value('project-1'),
+        genreId: const Value('genre-1'),
+        title: const Value('Parent'),
+        durationSeconds: const Value(60.0),
+        fileSizeBytes: const Value(100000),
+        format: const Value('m4a'),
+        localFilePath: const Value('/local/parent.m4a'),
+        uploadStatus: const Value('verified'),
+        recordedAt: Value(DateTime.utc(2026, 5, 1, 10)),
+      ),
+    );
+    final parent = localRecordingToEntity(
+      (await faultyRepo.getRecordingById('parent-1'))!,
+    );
+    final persister = RecordingSplitPersister(
+      localRepo: faultyRepo,
+      apiRepo: _FakeApiRepo(),
+      triggerUpload: () async {},
+    );
+
+    await expectLater(
+      persister.persist(
+        parent: parent,
+        segments: [
+          spec(id: 'c1'),
+          spec(id: 'c2'),
+        ],
+      ),
+      throwsA(isA<Exception>()),
+    );
+
+    // Nothing partial survives: neither child was persisted, parent intact.
+    expect(await faultyRepo.getRecordingById('c1'), isNull);
+    expect(await faultyRepo.getRecordingById('c2'), isNull);
+    expect(await faultyRepo.getRecordingById('parent-1'), isNotNull);
   });
 }
 
@@ -225,33 +298,39 @@ class _FakeApiRepo implements RecordingApiRepository {
     String? userId,
     String? storytellerId,
     String? uploadStatus,
+    String? title,
+    String? reviewFlag,
   }) => throw UnimplementedError();
 
   @override
-  Future<bool> updateRecording(
-    String serverId, {
-    String? title,
-    String? description,
-    String? genreId,
-    String? subcategoryId,
-    String? registerId,
-    String? secondaryGenreId,
-    String? secondarySubcategoryId,
-    String? secondaryRegisterId,
-    bool clearSecondary = false,
-    String? storytellerId,
-    String? cleaningStatus,
-    double? durationSeconds,
-    int? fileSizeBytes,
-  }) => throw UnimplementedError();
+  Future<UpdateRecordingOutcome> updateRecording(
+    String serverId,
+    UpdateRecordingRequest request,
+  ) => throw UnimplementedError();
 
   @override
   Future<List<String>> splitRecording({
     required String serverId,
-    required List<Map<String, dynamic>> segments,
+    required List<SplitSegmentRequest> segments,
   }) => throw UnimplementedError();
 
   @override
   Future<int> clearStaleRecordings(String projectId) =>
       throw UnimplementedError();
+}
+
+/// Forces every delete against `local_recordings` to throw, so a test can
+/// assert the split's child-insert + parent-delete are atomic.
+class _FailLocalRecordingsDelete extends QueryInterceptor {
+  @override
+  Future<int> runDelete(
+    QueryExecutor executor,
+    String statement,
+    List<Object?> args,
+  ) {
+    if (statement.contains('local_recordings')) {
+      throw Exception('injected parent-delete failure');
+    }
+    return super.runDelete(executor, statement, args);
+  }
 }

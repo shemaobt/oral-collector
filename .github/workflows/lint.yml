@@ -13,18 +13,58 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.41.2"
+          flutter-version: "3.41.5"
           channel: "stable"
           cache: true
 
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Ensure .env exists for analyze
-        run: touch .env
-
       - name: Verify formatting
         run: dart format --set-exit-if-changed lib/ test/
 
       - name: Analyze
-        run: flutter analyze
+        run: flutter analyze --no-fatal-infos
+
+      - name: Custom lint (riverpod_lint)
+        run: dart run custom_lint
+
+      - name: Code metrics gate (dart_code_linter)
+        run: sh scripts/check_metrics.sh
+
+      - name: Import-cycle report (layerlens, advisory)
+        run: |
+          dart pub global activate layerlens
+          dart pub global run layerlens --fail-on-cycles
+        continue-on-error: true
+
+  # Testa as regras de obt_lints (ENG-159) de forma isolada e BLOQUEANTE, via
+  # fixtures // expect_lint no example/. O step app-wide acima também é bloqueante
+  # desde ENG-158 (baseline de avoid_public_notifier_properties zerado — ADR-0007).
+  obt_lints:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.41.5"
+          channel: "stable"
+          cache: true
+
+      - name: Get plugin deps
+        working-directory: packages/obt_lints
+        run: dart pub get
+
+      - name: Get example deps
+        working-directory: packages/obt_lints/example
+        run: flutter pub get
+
+      - name: Verify plugin formatting
+        working-directory: packages/obt_lints
+        run: dart format --output=none --set-exit-if-changed .
+
+      - name: Run obt_lints rule tests (blocking)
+        working-directory: packages/obt_lints/example
+        run: dart run custom_lint

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
-import '../../../../core/theme/app_colors.dart';
 import '../../../../../l10n/app_localizations.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../project/domain/entities/project.dart';
 
 class ProjectSwitcherSheet extends StatelessWidget {
@@ -27,13 +28,18 @@ class ProjectSwitcherSheet extends StatelessWidget {
 
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 16),
+        padding: const EdgeInsets.symmetric(vertical: SpacingScale.s16),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(24, 4, 24, 16),
+              padding: const EdgeInsets.fromLTRB(
+                SpacingScale.s24,
+                SpacingScale.s4,
+                SpacingScale.s24,
+                SpacingScale.s16,
+              ),
               child: Text(
                 l10n.project_switchTitle,
                 style: theme.textTheme.titleLarge?.copyWith(
@@ -50,7 +56,9 @@ class ProjectSwitcherSheet extends StatelessWidget {
                   final project = projects[index];
                   final isActive = project.id == activeProjectId;
                   return ListTile(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 24),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: SpacingScale.s24,
+                    ),
                     leading: Container(
                       width: 44,
                       height: 44,
@@ -58,7 +66,7 @@ class ProjectSwitcherSheet extends StatelessWidget {
                         color: isActive
                             ? colors.accent.withValues(alpha: 0.15)
                             : colors.surfaceAlt,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(RadiusScale.r12),
                       ),
                       child: Icon(
                         LucideIcons.folderOpen,

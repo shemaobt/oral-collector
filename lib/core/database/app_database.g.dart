@@ -337,6 +337,18 @@ class $LocalRecordingsTable extends LocalRecordings
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _reviewFlagsJsonMeta = const VerificationMeta(
+    'reviewFlagsJson',
+  );
+  @override
+  late final GeneratedColumn<String> reviewFlagsJson = GeneratedColumn<String>(
+    'review_flags_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('[]'),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -369,6 +381,7 @@ class $LocalRecordingsTable extends LocalRecordings
     splitFromId,
     splitIndex,
     splitSegmentCount,
+    reviewFlagsJson,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -617,6 +630,15 @@ class $LocalRecordingsTable extends LocalRecordings
         ),
       );
     }
+    if (data.containsKey('review_flags_json')) {
+      context.handle(
+        _reviewFlagsJsonMeta,
+        reviewFlagsJson.isAcceptableOrUnknown(
+          data['review_flags_json']!,
+          _reviewFlagsJsonMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -746,6 +768,10 @@ class $LocalRecordingsTable extends LocalRecordings
         DriftSqlType.int,
         data['${effectivePrefix}split_segment_count'],
       ),
+      reviewFlagsJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}review_flags_json'],
+      )!,
     );
   }
 
@@ -786,6 +812,12 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
   final String? splitFromId;
   final int? splitIndex;
   final int? splitSegmentCount;
+
+  /// Server-reported review flags, JSON-encoded (ENG-374). Stored so a device
+  /// reading its local rows offline still knows what each recording owes;
+  /// encoded as text like `RecordingSessions.segmentPathsJson` rather than
+  /// through a converter, which is the existing shape for a list in this schema.
+  final String reviewFlagsJson;
   const LocalRecording({
     required this.id,
     required this.projectId,
@@ -817,6 +849,7 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
     this.splitFromId,
     this.splitIndex,
     this.splitSegmentCount,
+    required this.reviewFlagsJson,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -887,6 +920,7 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
     if (!nullToAbsent || splitSegmentCount != null) {
       map['split_segment_count'] = Variable<int>(splitSegmentCount);
     }
+    map['review_flags_json'] = Variable<String>(reviewFlagsJson);
     return map;
   }
 
@@ -956,6 +990,7 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
       splitSegmentCount: splitSegmentCount == null && nullToAbsent
           ? const Value.absent()
           : Value(splitSegmentCount),
+      reviewFlagsJson: Value(reviewFlagsJson),
     );
   }
 
@@ -1001,6 +1036,7 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
       splitFromId: serializer.fromJson<String?>(json['splitFromId']),
       splitIndex: serializer.fromJson<int?>(json['splitIndex']),
       splitSegmentCount: serializer.fromJson<int?>(json['splitSegmentCount']),
+      reviewFlagsJson: serializer.fromJson<String>(json['reviewFlagsJson']),
     );
   }
   @override
@@ -1039,6 +1075,7 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
       'splitFromId': serializer.toJson<String?>(splitFromId),
       'splitIndex': serializer.toJson<int?>(splitIndex),
       'splitSegmentCount': serializer.toJson<int?>(splitSegmentCount),
+      'reviewFlagsJson': serializer.toJson<String>(reviewFlagsJson),
     };
   }
 
@@ -1073,6 +1110,7 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
     Value<String?> splitFromId = const Value.absent(),
     Value<int?> splitIndex = const Value.absent(),
     Value<int?> splitSegmentCount = const Value.absent(),
+    String? reviewFlagsJson,
   }) => LocalRecording(
     id: id ?? this.id,
     projectId: projectId ?? this.projectId,
@@ -1118,6 +1156,7 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
     splitSegmentCount: splitSegmentCount.present
         ? splitSegmentCount.value
         : this.splitSegmentCount,
+    reviewFlagsJson: reviewFlagsJson ?? this.reviewFlagsJson,
   );
   LocalRecording copyWithCompanion(LocalRecordingsCompanion data) {
     return LocalRecording(
@@ -1191,6 +1230,9 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
       splitSegmentCount: data.splitSegmentCount.present
           ? data.splitSegmentCount.value
           : this.splitSegmentCount,
+      reviewFlagsJson: data.reviewFlagsJson.present
+          ? data.reviewFlagsJson.value
+          : this.reviewFlagsJson,
     );
   }
 
@@ -1226,7 +1268,8 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
           ..write('md5Hash: $md5Hash, ')
           ..write('splitFromId: $splitFromId, ')
           ..write('splitIndex: $splitIndex, ')
-          ..write('splitSegmentCount: $splitSegmentCount')
+          ..write('splitSegmentCount: $splitSegmentCount, ')
+          ..write('reviewFlagsJson: $reviewFlagsJson')
           ..write(')'))
         .toString();
   }
@@ -1263,6 +1306,7 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
     splitFromId,
     splitIndex,
     splitSegmentCount,
+    reviewFlagsJson,
   ]);
   @override
   bool operator ==(Object other) =>
@@ -1297,7 +1341,8 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
           other.md5Hash == this.md5Hash &&
           other.splitFromId == this.splitFromId &&
           other.splitIndex == this.splitIndex &&
-          other.splitSegmentCount == this.splitSegmentCount);
+          other.splitSegmentCount == this.splitSegmentCount &&
+          other.reviewFlagsJson == this.reviewFlagsJson);
 }
 
 class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
@@ -1331,6 +1376,7 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
   final Value<String?> splitFromId;
   final Value<int?> splitIndex;
   final Value<int?> splitSegmentCount;
+  final Value<String> reviewFlagsJson;
   final Value<int> rowid;
   const LocalRecordingsCompanion({
     this.id = const Value.absent(),
@@ -1363,6 +1409,7 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
     this.splitFromId = const Value.absent(),
     this.splitIndex = const Value.absent(),
     this.splitSegmentCount = const Value.absent(),
+    this.reviewFlagsJson = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   LocalRecordingsCompanion.insert({
@@ -1396,6 +1443,7 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
     this.splitFromId = const Value.absent(),
     this.splitIndex = const Value.absent(),
     this.splitSegmentCount = const Value.absent(),
+    this.reviewFlagsJson = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        projectId = Value(projectId),
@@ -1433,6 +1481,7 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
     Expression<String>? splitFromId,
     Expression<int>? splitIndex,
     Expression<int>? splitSegmentCount,
+    Expression<String>? reviewFlagsJson,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1469,6 +1518,7 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
       if (splitFromId != null) 'split_from_id': splitFromId,
       if (splitIndex != null) 'split_index': splitIndex,
       if (splitSegmentCount != null) 'split_segment_count': splitSegmentCount,
+      if (reviewFlagsJson != null) 'review_flags_json': reviewFlagsJson,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1504,6 +1554,7 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
     Value<String?>? splitFromId,
     Value<int?>? splitIndex,
     Value<int?>? splitSegmentCount,
+    Value<String>? reviewFlagsJson,
     Value<int>? rowid,
   }) {
     return LocalRecordingsCompanion(
@@ -1538,6 +1589,7 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
       splitFromId: splitFromId ?? this.splitFromId,
       splitIndex: splitIndex ?? this.splitIndex,
       splitSegmentCount: splitSegmentCount ?? this.splitSegmentCount,
+      reviewFlagsJson: reviewFlagsJson ?? this.reviewFlagsJson,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1641,6 +1693,9 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
     if (splitSegmentCount.present) {
       map['split_segment_count'] = Variable<int>(splitSegmentCount.value);
     }
+    if (reviewFlagsJson.present) {
+      map['review_flags_json'] = Variable<String>(reviewFlagsJson.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1680,6 +1735,7 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
           ..write('splitFromId: $splitFromId, ')
           ..write('splitIndex: $splitIndex, ')
           ..write('splitSegmentCount: $splitSegmentCount, ')
+          ..write('reviewFlagsJson: $reviewFlagsJson, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -4133,6 +4189,26 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $LocalStorytellersTable(this);
   late final $RecordingSessionsTable recordingSessions =
       $RecordingSessionsTable(this);
+  late final Index idxRecordingsProjectRecorded = Index(
+    'idx_recordings_project_recorded',
+    'CREATE INDEX idx_recordings_project_recorded ON local_recordings (project_id, recorded_at)',
+  );
+  late final Index idxRecordingsStatusRecorded = Index(
+    'idx_recordings_status_recorded',
+    'CREATE INDEX idx_recordings_status_recorded ON local_recordings (upload_status, recorded_at)',
+  );
+  late final Index idxRecordingsServerId = Index(
+    'idx_recordings_server_id',
+    'CREATE INDEX idx_recordings_server_id ON local_recordings (server_id)',
+  );
+  late final Index idxRecordingsStorytellerId = Index(
+    'idx_recordings_storyteller_id',
+    'CREATE INDEX idx_recordings_storyteller_id ON local_recordings (storyteller_id)',
+  );
+  late final Index idxStorytellersProjectId = Index(
+    'idx_storytellers_project_id',
+    'CREATE INDEX idx_storytellers_project_id ON local_storytellers (project_id)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -4143,6 +4219,11 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     localSubcategories,
     localStorytellers,
     recordingSessions,
+    idxRecordingsProjectRecorded,
+    idxRecordingsStatusRecorded,
+    idxRecordingsServerId,
+    idxRecordingsStorytellerId,
+    idxStorytellersProjectId,
   ];
 }
 
@@ -4178,6 +4259,7 @@ typedef $$LocalRecordingsTableCreateCompanionBuilder =
       Value<String?> splitFromId,
       Value<int?> splitIndex,
       Value<int?> splitSegmentCount,
+      Value<String> reviewFlagsJson,
       Value<int> rowid,
     });
 typedef $$LocalRecordingsTableUpdateCompanionBuilder =
@@ -4212,6 +4294,7 @@ typedef $$LocalRecordingsTableUpdateCompanionBuilder =
       Value<String?> splitFromId,
       Value<int?> splitIndex,
       Value<int?> splitSegmentCount,
+      Value<String> reviewFlagsJson,
       Value<int> rowid,
     });
 
@@ -4371,6 +4454,11 @@ class $$LocalRecordingsTableFilterComposer
 
   ColumnFilters<int> get splitSegmentCount => $composableBuilder(
     column: $table.splitSegmentCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get reviewFlagsJson => $composableBuilder(
+    column: $table.reviewFlagsJson,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -4533,6 +4621,11 @@ class $$LocalRecordingsTableOrderingComposer
     column: $table.splitSegmentCount,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get reviewFlagsJson => $composableBuilder(
+    column: $table.reviewFlagsJson,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$LocalRecordingsTableAnnotationComposer
@@ -4673,6 +4766,11 @@ class $$LocalRecordingsTableAnnotationComposer
     column: $table.splitSegmentCount,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get reviewFlagsJson => $composableBuilder(
+    column: $table.reviewFlagsJson,
+    builder: (column) => column,
+  );
 }
 
 class $$LocalRecordingsTableTableManager
@@ -4742,6 +4840,7 @@ class $$LocalRecordingsTableTableManager
                 Value<String?> splitFromId = const Value.absent(),
                 Value<int?> splitIndex = const Value.absent(),
                 Value<int?> splitSegmentCount = const Value.absent(),
+                Value<String> reviewFlagsJson = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => LocalRecordingsCompanion(
                 id: id,
@@ -4774,6 +4873,7 @@ class $$LocalRecordingsTableTableManager
                 splitFromId: splitFromId,
                 splitIndex: splitIndex,
                 splitSegmentCount: splitSegmentCount,
+                reviewFlagsJson: reviewFlagsJson,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -4808,6 +4908,7 @@ class $$LocalRecordingsTableTableManager
                 Value<String?> splitFromId = const Value.absent(),
                 Value<int?> splitIndex = const Value.absent(),
                 Value<int?> splitSegmentCount = const Value.absent(),
+                Value<String> reviewFlagsJson = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => LocalRecordingsCompanion.insert(
                 id: id,
@@ -4840,6 +4941,7 @@ class $$LocalRecordingsTableTableManager
                 splitFromId: splitFromId,
                 splitIndex: splitIndex,
                 splitSegmentCount: splitSegmentCount,
+                reviewFlagsJson: reviewFlagsJson,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

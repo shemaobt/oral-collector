@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../../l10n/app_localizations.dart';
 
 class SegmentCard extends StatelessWidget {
@@ -61,8 +62,11 @@ class SegmentCard extends StatelessWidget {
     final showTaxonomyRow = onClassify != null && !isExcluded;
 
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      duration: DurationScale.ms200,
+      padding: const EdgeInsets.symmetric(
+        horizontal: SpacingScale.s16,
+        vertical: SpacingScale.s12,
+      ),
       decoration: BoxDecoration(
         color: isExcluded
             ? colors.error.withValues(alpha: isDark ? 0.08 : 0.04)
@@ -71,7 +75,7 @@ class SegmentCard extends StatelessWidget {
             : isDark
             ? colors.surfaceAlt.withValues(alpha: 0.4)
             : colors.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(RadiusScale.r12),
         border: Border.all(
           color: isExcluded
               ? colors.error.withValues(alpha: 0.2)
@@ -85,7 +89,7 @@ class SegmentCard extends StatelessWidget {
         children: [
           _buildMainRow(theme, fgAlpha, l10n),
           if (showTaxonomyRow) ...[
-            const SizedBox(height: 10),
+            const SizedBox(height: SpacingScale.s8),
             _buildTaxonomyRow(theme),
           ],
         ],
@@ -103,7 +107,7 @@ class SegmentCard extends StatelessWidget {
             color: isExcluded
                 ? colors.error.withValues(alpha: isDark ? 0.15 : 0.08)
                 : colors.accent.withValues(alpha: isDark ? 0.2 : 0.1),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(RadiusScale.r8),
           ),
           alignment: Alignment.center,
           child: Text(
@@ -115,7 +119,7 @@ class SegmentCard extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: SpacingScale.s12),
 
         Expanded(
           child: Column(
@@ -146,12 +150,15 @@ class SegmentCard extends StatelessWidget {
         ),
 
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          padding: const EdgeInsets.symmetric(
+            horizontal: SpacingScale.s8,
+            vertical: 3,
+          ),
           decoration: BoxDecoration(
             color: isExcluded
                 ? colors.error.withValues(alpha: 0.08)
                 : colors.accent.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(RadiusScale.r8),
           ),
           child: Text(
             duration,
@@ -162,7 +169,7 @@ class SegmentCard extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(width: 6),
+        const SizedBox(width: SpacingScale.s8),
 
         GestureDetector(
           onTap: onPlayPause,
@@ -173,19 +180,19 @@ class SegmentCard extends StatelessWidget {
               color: isPlaying
                   ? colors.accent
                   : colors.accent.withValues(alpha: isDark ? 0.18 : 0.1),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(RadiusScale.r8),
             ),
             alignment: Alignment.center,
             child: Icon(
               isPlaying ? LucideIcons.square : LucideIcons.play,
               size: 14,
               color: isPlaying
-                  ? (isDark ? Colors.black : Colors.white)
+                  ? (isDark ? AppColors.black : AppColors.white)
                   : colors.accent,
             ),
           ),
         ),
-        const SizedBox(width: 6),
+        const SizedBox(width: SpacingScale.s8),
 
         GestureDetector(
           onTap: onToggleExclude,
@@ -196,7 +203,7 @@ class SegmentCard extends StatelessWidget {
               color: isExcluded
                   ? colors.accent.withValues(alpha: isDark ? 0.18 : 0.1)
                   : colors.error.withValues(alpha: isDark ? 0.15 : 0.08),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(RadiusScale.r8),
             ),
             alignment: Alignment.center,
             child: Icon(
@@ -223,7 +230,7 @@ class SegmentCard extends StatelessWidget {
             onTap: onClassify,
           ),
         ),
-        const SizedBox(width: 6),
+        const SizedBox(width: SpacingScale.s8),
         Expanded(
           child: _TaxonomyChip(
             icon: LucideIcons.mic,
@@ -235,7 +242,7 @@ class SegmentCard extends StatelessWidget {
           ),
         ),
         if (canCopyFromPrevious && onCopyFromPrevious != null) ...[
-          const SizedBox(width: 6),
+          const SizedBox(width: SpacingScale.s8),
           Tooltip(
             message: copyFromPreviousLabel,
             child: GestureDetector(
@@ -245,7 +252,7 @@ class SegmentCard extends StatelessWidget {
                 height: 28,
                 decoration: BoxDecoration(
                   color: colors.surfaceAlt.withValues(alpha: 0.6),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(RadiusScale.r8),
                   border: Border.all(
                     color: colors.border.withValues(alpha: 0.4),
                   ),
@@ -298,12 +305,15 @@ class _TaxonomyChip extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(RadiusScale.r8),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        padding: const EdgeInsets.symmetric(
+          horizontal: SpacingScale.s8,
+          vertical: SpacingScale.s8,
+        ),
         decoration: BoxDecoration(
           color: bg,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(RadiusScale.r8),
           border: Border.all(color: borderClr),
         ),
         child: Row(

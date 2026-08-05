@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
+import '../../../../shared/utils/recording_description.dart';
 
 class EditRecordingDetailsResult {
   const EditRecordingDetailsResult({
@@ -21,7 +23,7 @@ Future<EditRecordingDetailsResult?> showEditRecordingDetailsSheet(
   return showModalBottomSheet<EditRecordingDetailsResult>(
     context: context,
     isScrollControlled: true,
-    backgroundColor: Colors.transparent,
+    backgroundColor: AppColors.transparent,
     builder: (ctx) => _EditRecordingDetailsSheet(
       initialTitle: initialTitle,
       initialDescription: initialDescription,
@@ -48,6 +50,7 @@ class _EditRecordingDetailsSheetState
   late final TextEditingController _titleController;
   late final TextEditingController _descriptionController;
   String? _titleError;
+  String? _descriptionError;
 
   @override
   void initState() {
@@ -72,12 +75,18 @@ class _EditRecordingDetailsSheetState
       setState(() => _titleError = l10n.recording_titleRequired);
       return;
     }
-    Navigator.of(context).pop(
-      EditRecordingDetailsResult(
-        title: title,
-        description: _descriptionController.text.trim(),
-      ),
-    );
+    final description = _descriptionController.text.trim();
+    if (!isDescriptionSufficient(description)) {
+      setState(
+        () => _descriptionError = l10n.recording_descriptionTooShort(
+          minDescriptionGraphemes,
+        ),
+      );
+      return;
+    }
+    Navigator.of(
+      context,
+    ).pop(EditRecordingDetailsResult(title: title, description: description));
   }
 
   @override
@@ -92,9 +101,16 @@ class _EditRecordingDetailsSheetState
       child: Container(
         decoration: BoxDecoration(
           color: colors.background,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(RadiusScale.r20),
+          ),
         ),
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+        padding: const EdgeInsets.fromLTRB(
+          SpacingScale.s20,
+          SpacingScale.s12,
+          SpacingScale.s20,
+          SpacingScale.s24,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -109,7 +125,7 @@ class _EditRecordingDetailsSheetState
                 ),
               ),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: SpacingScale.s16),
             Row(
               children: [
                 Expanded(
@@ -126,7 +142,7 @@ class _EditRecordingDetailsSheetState
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: SpacingScale.s12),
             Text(
               l10n.recording_title,
               style: theme.textTheme.labelMedium?.copyWith(
@@ -134,7 +150,7 @@ class _EditRecordingDetailsSheetState
                 fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: SpacingScale.s8),
             TextField(
               controller: _titleController,
               autofocus: true,
@@ -150,20 +166,20 @@ class _EditRecordingDetailsSheetState
                 filled: true,
                 fillColor: colors.surfaceAlt,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(RadiusScale.r12),
                   borderSide: BorderSide.none,
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(RadiusScale.r12),
                   borderSide: BorderSide.none,
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(RadiusScale.r12),
                   borderSide: BorderSide(color: colors.accent, width: 1.5),
                 ),
                 contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 12,
+                  horizontal: SpacingScale.s16,
+                  vertical: SpacingScale.s12,
                 ),
               ),
               onChanged: (_) {
@@ -172,7 +188,7 @@ class _EditRecordingDetailsSheetState
                 }
               },
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: SpacingScale.s16),
             Text(
               l10n.recording_description,
               style: theme.textTheme.labelMedium?.copyWith(
@@ -180,7 +196,7 @@ class _EditRecordingDetailsSheetState
                 fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: SpacingScale.s8),
             TextField(
               controller: _descriptionController,
               minLines: 3,
@@ -190,43 +206,49 @@ class _EditRecordingDetailsSheetState
               style: theme.textTheme.bodyMedium,
               decoration: InputDecoration(
                 hintText: l10n.recording_descriptionHint,
+                errorText: _descriptionError,
                 filled: true,
                 fillColor: colors.surfaceAlt,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(RadiusScale.r12),
                   borderSide: BorderSide.none,
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(RadiusScale.r12),
                   borderSide: BorderSide.none,
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(RadiusScale.r12),
                   borderSide: BorderSide(color: colors.accent, width: 1.5),
                 ),
                 contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 12,
+                  horizontal: SpacingScale.s16,
+                  vertical: SpacingScale.s12,
                 ),
               ),
+              onChanged: (_) {
+                if (_descriptionError != null) {
+                  setState(() => _descriptionError = null);
+                }
+              },
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: SpacingScale.s20),
             SizedBox(
               height: 52,
               child: ElevatedButton(
                 onPressed: _onSave,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: colors.accent,
-                  foregroundColor: Colors.white,
+                  foregroundColor: AppColors.white,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(RadiusScale.r16),
                   ),
                   elevation: 0,
                 ),
                 child: Text(
                   l10n.recording_saveChanges,
                   style: theme.textTheme.titleSmall?.copyWith(
-                    color: Colors.white,
+                    color: AppColors.white,
                     fontWeight: FontWeight.w600,
                   ),
                 ),

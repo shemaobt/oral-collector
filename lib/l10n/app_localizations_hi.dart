@@ -402,10 +402,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get projectSettings_updated => 'प्रोजेक्ट अपडेट हुआ';
 
   @override
-  String get projectSettings_noPermission =>
-      'आपको इस प्रोजेक्ट को अपडेट करने की अनुमति नहीं है';
-
-  @override
   String get projectSettings_team => 'टीम';
 
   @override
@@ -475,7 +471,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get recording_titleHint => 'रिकॉर्डिंग का शीर्षक';
 
   @override
-  String get recording_descriptionHint => 'संक्षिप्त विवरण जोड़ें (वैकल्पिक)';
+  String get recording_descriptionHint => 'इस रिकॉर्डिंग का वर्णन करें';
+
+  @override
+  String recording_descriptionTooShort(int count) {
+    return 'कृपया इस रिकॉर्डिंग का वर्णन कम से कम $count अक्षरों में करें';
+  }
 
   @override
   String get recording_descriptionEmpty => 'विवरण जोड़ें';
@@ -554,11 +555,6 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get recording_downloadAudioMessage =>
       'ऑडियो फ़ाइल इस डिवाइस पर संग्रहीत नहीं है। क्या आप इसे ट्रिम करने के लिए डाउनलोड करना चाहते हैं?';
-
-  @override
-  String recording_downloadFailed(String error) {
-    return 'डाउनलोड विफल: $error';
-  }
 
   @override
   String get recording_audioNotAvailable => 'ऑडियो फ़ाइल उपलब्ध नहीं है';
@@ -668,6 +664,20 @@ class AppLocalizationsHi extends AppLocalizations {
       'अपनी पहली कहानी रिकॉर्ड करने के लिए माइक्रोफ़ोन पर टैप करें, या एक ऑडियो फ़ाइल आयात करें।';
 
   @override
+  String get recordings_offlineFilterTitle => 'ऑफ़लाइन उपलब्ध नहीं';
+
+  @override
+  String get recordings_offlineFilterDescription =>
+      'कौन-सी रिकॉर्डिंग में अब भी विवरण बाकी हैं, यह सर्वर तय करता है। उन्हें देखने के लिए फिर से कनेक्ट करें, या इस डिवाइस की सारी रिकॉर्डिंग देखने के लिए फ़िल्टर हटाएँ।';
+
+  @override
+  String get recordings_filterErrorTitle => 'अभी जाँच नहीं हो सकी';
+
+  @override
+  String get recordings_filterErrorDescription =>
+      'सर्वर से जवाब नहीं मिला, इसलिए यह नहीं बताया जा सकता कि किन रिकॉर्डिंग में अब भी विवरण बाकी हैं। फिर से कोशिश करें, या इस डिवाइस की सारी रिकॉर्डिंग देखने के लिए फ़िल्टर हटाएँ।';
+
+  @override
   String get recordings_dropToImport =>
       'सुझाव: आयात करने के लिए ऑडियो फ़ाइलें इस विंडो पर खींचें।';
 
@@ -694,6 +704,38 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get recording_statusLocal => 'स्थानीय';
+
+  @override
+  String get recording_statusNameConflict => 'नाम विरोध';
+
+  @override
+  String get recording_statusDescriptionTooShort => 'विवरण बहुत छोटा है';
+
+  @override
+  String get recording_descriptionGapMessage =>
+      'इस रिकॉर्डिंग को अपलोड नहीं किया जा सकता जब तक आप एक लंबा विवरण नहीं जोड़ते।';
+
+  @override
+  String get recording_statusRetriesExhausted => 'प्रयास समाप्त';
+
+  @override
+  String get recording_statusFileMissing => 'ऑडियो फ़ाइल नहीं मिली';
+
+  @override
+  String get recording_uploadExhaustedMessage =>
+      'कई प्रयासों के बाद अपलोड रुक गया। आप फिर से कोशिश कर सकते हैं।';
+
+  @override
+  String get recording_fileMissingMessage =>
+      'इस रिकॉर्डिंग की ऑडियो फ़ाइल अब इस डिवाइस पर नहीं है, इसलिए इसे अपलोड नहीं किया जा सकता।';
+
+  @override
+  String get recording_duplicateTitleTitle => 'नाम पहले से उपयोग में है';
+
+  @override
+  String recording_duplicateTitleMessage(String title) {
+    return 'इस प्रोजेक्ट में \"$title\" नाम का ऑडियो पहले से मौजूद है। दूसरा नाम चुनें।';
+  }
 
   @override
   String get recordings_clearStale => 'विफल साफ़ करें';
@@ -808,10 +850,6 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get trim_classifySegment => 'खंड वर्गीकृत करें';
-
-  @override
-  String get trim_primaryEqualsSecondary =>
-      'प्राथमिक वर्गीकरण रिकॉर्डिंग के द्वितीयक वर्गीकरण से मेल नहीं खा सकता।';
 
   @override
   String get trim_volume => 'आवाज़';
@@ -982,12 +1020,12 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String import_resumePromptBody(String name, String size) {
-    return '\"$name\" ($size) आंशिक रूप से अपलोड हुई थी। जारी रखने के लिए वही फ़ाइल चुनें।';
+    return '\"$name\" ($size) आंशिक रूप से अपलोड हुई थी। जारी रखने के लिए ठीक वही फ़ाइल (बिना बदलाव) चुनें।';
   }
 
   @override
   String get import_resumeSizeMismatch =>
-      'यह फ़ाइल रुके हुए अपलोड से मेल नहीं खाती।';
+      'यह एक अलग फ़ाइल है। ठीक वही फ़ाइल चुनें जिसे आप अपलोड कर रहे थे।';
 
   @override
   String import_largeFileWarning(String size) {
@@ -1028,11 +1066,6 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get profile_photoUpdated => 'प्रोफ़ाइल फ़ोटो अपडेट हुई';
-
-  @override
-  String profile_photoFailed(String error) {
-    return 'फ़ोटो अपडेट करने में विफल: $error';
-  }
 
   @override
   String get profile_editName => 'प्रदर्शन नाम संपादित करें';
@@ -1763,6 +1796,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get filter_unclassified => 'अवर्गीकृत';
 
   @override
+  String get filter_missingDescription => 'विवरण नहीं है';
+
+  @override
   String get filter_allGenres => 'सभी विधाएँ';
 
   @override
@@ -1841,6 +1877,14 @@ class AppLocalizationsHi extends AppLocalizations {
   String get projectStats_members => 'सदस्य';
 
   @override
+  String get projectStats_needsDetails => 'विवरण अधूरा';
+
+  @override
+  String projectStats_showPendency(String label, int count) {
+    return 'रिकॉर्डिंग देखें — $label ($count)';
+  }
+
+  @override
   String get project_active => 'सक्रिय';
 
   @override
@@ -1892,10 +1936,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get classify_action => 'वर्गीकृत करें';
 
   @override
-  String get classify_banner =>
-      'यह रिकॉर्डिंग अवर्गीकृत है। शैली और रजिस्टर जोड़ने के लिए वर्गीकृत करें पर टैप करें।';
-
-  @override
   String get classify_success => 'रिकॉर्डिंग वर्गीकृत हो गई';
 
   @override
@@ -1923,10 +1963,6 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get classify_secondaryRegister => 'द्वितीयक रजिस्टर';
-
-  @override
-  String get classify_secondarySameAsPrimary =>
-      'द्वितीयक शैली प्रमुख शैली से भिन्न होनी चाहिए।';
 
   @override
   String get classify_clearAlternative => 'वैकल्पिक साफ़ करें';
@@ -2296,7 +2332,11 @@ class AppLocalizationsHi extends AppLocalizations {
   String get filters_sheetTitle => 'रिकॉर्डिंग फ़िल्टर करें';
 
   @override
-  String get filters_sectionStatus => 'अपलोड स्थिति';
+  String get filters_sectionStatus => 'इस डिवाइस पर स्थिति';
+
+  @override
+  String get filters_sectionStatusHint =>
+      'स्क्रीन पर पहले से मौजूद रिकॉर्डिंग को छाँटता है। ऑफ़लाइन भी काम करता है।';
 
   @override
   String get filters_sectionGenre => 'शैली';
@@ -2306,6 +2346,13 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get filters_sectionUser => 'द्वारा रिकॉर्ड';
+
+  @override
+  String get filters_sectionPendency => 'सर्वर के अनुसार क्या बाकी है';
+
+  @override
+  String get filters_sectionPendencyHint =>
+      'सर्वर से पूछता है कि किन रिकॉर्डिंग में अब भी विवरण बाकी हैं। इसके लिए कनेक्शन चाहिए।';
 
   @override
   String get filter_apply => 'लागू करें';
@@ -2339,6 +2386,9 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get filter_genreAll => 'कोई भी शैली';
+
+  @override
+  String get filter_pendencyAll => 'कोई भी विवरण';
 
   @override
   String get detail_recordedBy => 'द्वारा रिकॉर्ड';
@@ -2661,4 +2711,58 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get liveActivity_uploadingStatus => 'अपलोड हो रहा है';
+
+  @override
+  String get recording_completeFicha => 'विवरण पूरा करें';
+
+  @override
+  String get recording_completeFichaTitle => 'विवरण पूरा करें';
+
+  @override
+  String recording_completeFichaSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count फ़ील्ड अभी बाकी हैं। इन्हें अभी भरें या बाद में पूरा करें।',
+      one: '1 फ़ील्ड अभी बाकी है। इसे अभी भरें या बाद में पूरा करें।',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recording_completeFichaStart => 'शुरू करें';
+
+  @override
+  String get recording_completeFichaContinue => 'जारी रखें';
+
+  @override
+  String get recording_pendencyClassification => 'कोई वर्गीकरण नहीं';
+
+  @override
+  String get recording_pendencyClassificationContext =>
+      'विधा और भाषा शैली बताती हैं कि यह किस तरह की कहानी है।';
+
+  @override
+  String get recording_pendencyDescription => 'विवरण बहुत छोटा है';
+
+  @override
+  String get recording_pendencyDescriptionContext =>
+      'रिकॉर्डिंग में क्या होता है, इस बारे में कुछ शब्द।';
+
+  @override
+  String get recording_pendencyStoryteller => 'कोई कथाकार नहीं';
+
+  @override
+  String get recording_pendencyStorytellerContext => 'यह कहानी कौन सुनाता है।';
+
+  @override
+  String recording_pendencyCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count फ़ील्ड भरने हैं',
+    );
+    return '$_temp0';
+  }
 }

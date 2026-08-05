@@ -3,12 +3,15 @@ import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart' show AppLifecycleState, WidgetsBinding;
 import 'package:live_activities/live_activities.dart';
+import 'package:logging/logging.dart';
 
 import '../../../../core/config/recording_config.dart';
 
 class UploadLiveActivity {
   UploadLiveActivity._();
   static final UploadLiveActivity instance = UploadLiveActivity._();
+
+  static final _log = Logger('UploadLiveActivity');
 
   final LiveActivities _plugin = LiveActivities();
   bool _initialized = false;
@@ -28,7 +31,7 @@ class UploadLiveActivity {
       if (!supported) return false;
       return await _plugin.areActivitiesEnabled();
     } on Exception catch (e) {
-      debugPrint('UploadLiveActivity: support check failed: $e');
+      _log.warning('support check failed', e);
       return false;
     }
   }
@@ -61,7 +64,7 @@ class UploadLiveActivity {
       _activityId = id;
       return true;
     } on Exception catch (e) {
-      debugPrint('UploadLiveActivity: createActivity failed: $e');
+      _log.warning('createActivity failed', e);
       return false;
     }
   }
@@ -77,7 +80,7 @@ class UploadLiveActivity {
         'progressPercent': progressPercent.toString(),
       });
     } on Exception catch (e) {
-      debugPrint('UploadLiveActivity: updateActivity failed: $e');
+      _log.warning('updateActivity failed', e);
     }
   }
 
@@ -87,7 +90,7 @@ class UploadLiveActivity {
     try {
       await _plugin.endActivity(id);
     } on Exception catch (e) {
-      debugPrint('UploadLiveActivity: endActivity failed: $e');
+      _log.warning('endActivity failed', e);
     }
     _activityId = null;
   }

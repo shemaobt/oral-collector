@@ -4,14 +4,11 @@ import 'dart:typed_data';
 
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
 import 'package:oral_collector/core/database/app_database.dart';
 import 'package:oral_collector/core/network/authenticated_client.dart';
 import 'package:oral_collector/features/recording/data/repositories/local_recording_repository.dart';
@@ -19,6 +16,7 @@ import 'package:oral_collector/features/storyteller/data/repositories/local_stor
 import 'package:oral_collector/features/storyteller/domain/entities/storyteller.dart';
 import 'package:oral_collector/features/sync/data/repositories/sync_engine.dart';
 import 'package:oral_collector/features/sync/domain/repositories/connectivity_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MockConnectivity extends Mock implements ConnectivityService {}
 
@@ -33,10 +31,6 @@ void main() {
   late MockConnectivity mockConnectivity;
   late MockSecureStorage mockStorage;
   late Directory tempDir;
-
-  setUpAll(() {
-    dotenv.testLoad(fileInput: 'BACKEND_URL=http://localhost:8080');
-  });
 
   setUp(() {
     SharedPreferences.setMockInitialValues({});
@@ -86,6 +80,9 @@ void main() {
         projectId: const Value('proj-1'),
         genreId: const Value('g-1'),
         title: const Value('Rec'),
+        // Long enough for the create-time description rule (ENG-354), which
+        // would otherwise stop this recording before the storyteller logic runs.
+        description: const Value('A description with enough substance'),
         durationSeconds: const Value(10.0),
         fileSizeBytes: const Value(1024),
         format: const Value('m4a'),
@@ -313,6 +310,15 @@ void main() {
         0,
         reason:
             'recording referencing an unsynced local storyteller must NOT call recording-create',
+      );
+
+      final blocked = await recordingRepo.getRecordingById('rec_blocked');
+      expect(
+        blocked!.uploadStatus,
+        'local',
+        reason:
+            'a recording blocked on an unsynced storyteller must revert to '
+            'local (re-enqueueable), not stay stranded in uploading',
       );
 
       httpClient.close();

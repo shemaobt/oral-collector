@@ -5,7 +5,9 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/l10n/content_l10n.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../genre/presentation/notifiers/genre_notifier.dart';
+import '../../domain/entities/classification.dart';
 import '../../domain/entities/register.dart';
 
 class SegmentTaxonomyResult {
@@ -26,6 +28,8 @@ class SegmentTaxonomySheet extends ConsumerStatefulWidget {
   const SegmentTaxonomySheet({
     super.key,
     required this.parentGenreId,
+    required this.parentSubcategoryId,
+    required this.parentRegisterId,
     this.parentSecondaryGenreId,
     this.parentSecondarySubcategoryId,
     this.parentSecondaryRegisterId,
@@ -35,6 +39,8 @@ class SegmentTaxonomySheet extends ConsumerStatefulWidget {
   });
 
   final String parentGenreId;
+  final String? parentSubcategoryId;
+  final String? parentRegisterId;
   final String? parentSecondaryGenreId;
   final String? parentSecondarySubcategoryId;
   final String? parentSecondaryRegisterId;
@@ -61,37 +67,59 @@ class _SegmentTaxonomySheetState extends ConsumerState<SegmentTaxonomySheet> {
     _registerId = widget.initialRegisterId;
   }
 
+  static bool _same(String? a, String? b) => blankToNull(a) == blankToNull(b);
+
+  /// A segment's effective classification is its override falling back to the
+  /// parent's value, which is what the split guard compares.
+  String get _effectiveGenreId => _genreId ?? widget.parentGenreId;
+  String? get _effectiveRegisterId => _registerId ?? widget.parentRegisterId;
+
+  // Only an effective triple identical to the secondary triple inherited from
+  // the parent collides (ENG-72), so each field hides the single option that
+  // would complete it. The genre test uses the parent's subcategory rather
+  // than the current one because picking a genre always drops the subcategory
+  // override.
+  String? get _hiddenGenreId =>
+      _same(widget.parentSubcategoryId, widget.parentSecondarySubcategoryId) &&
+          _same(_effectiveRegisterId, widget.parentSecondaryRegisterId)
+      ? blankToNull(widget.parentSecondaryGenreId)
+      : null;
+
+  String? get _hiddenSubcategoryId =>
+      _same(_effectiveGenreId, widget.parentSecondaryGenreId) &&
+          _same(_effectiveRegisterId, widget.parentSecondaryRegisterId)
+      ? blankToNull(widget.parentSecondarySubcategoryId)
+      : null;
+
+  String? get _hiddenRegisterId =>
+      _same(_effectiveGenreId, widget.parentSecondaryGenreId) &&
+          _same(
+            _subcategoryId ?? widget.parentSubcategoryId,
+            widget.parentSecondarySubcategoryId,
+          )
+      ? blankToNull(widget.parentSecondaryRegisterId)
+      : null;
+
+  /// The inherit option is withheld when the value it would apply is the
+  /// hidden one.
+  static bool _inheritAllowed(String? parentValue, String? hiddenValue) =>
+      hiddenValue == null || blankToNull(parentValue) != hiddenValue;
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final colors = AppColors.of(context);
     final theme = Theme.of(context);
     final genreState = ref.watch(genreNotifierProvider);
-    final allGenres = genreState.genres;
-    final activeGenreId = _genreId ?? widget.parentGenreId;
-    final activeGenre = allGenres
-        .where((g) => g.id == activeGenreId)
+    final hiddenGenreId = _hiddenGenreId;
+    final hiddenSubcategoryId = _hiddenSubcategoryId;
+    final hiddenRegisterId = _hiddenRegisterId;
+    final activeGenre = genreState.genres
+        .where((g) => g.id == _effectiveGenreId)
         .firstOrNull;
-    final subcategories = activeGenre?.subcategories ?? [];
-
-    final effectiveGenre = _genreId ?? widget.parentGenreId;
-    final effectiveSubcategory = _subcategoryId;
-    final effectiveRegister = _registerId;
-
-    final genreCollides =
-        widget.parentSecondaryGenreId != null &&
-        widget.parentSecondaryGenreId!.isNotEmpty &&
-        effectiveGenre == widget.parentSecondaryGenreId;
-    final subcategoryCollides =
-        widget.parentSecondarySubcategoryId != null &&
-        widget.parentSecondarySubcategoryId!.isNotEmpty &&
-        effectiveSubcategory == widget.parentSecondarySubcategoryId;
-    final registerCollides =
-        widget.parentSecondaryRegisterId != null &&
-        widget.parentSecondaryRegisterId!.isNotEmpty &&
-        effectiveRegister == widget.parentSecondaryRegisterId;
-    final hasCollision =
-        genreCollides || subcategoryCollides || registerCollides;
+    final subcategories = (activeGenre?.subcategories ?? [])
+        .where((s) => s.id != hiddenSubcategoryId)
+        .toList();
 
     final screenHeight = MediaQuery.of(context).size.height;
     final maxSheetHeight = screenHeight * 0.85;
@@ -109,7 +137,12 @@ class _SegmentTaxonomySheetState extends ConsumerState<SegmentTaxonomySheet> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
+                padding: const EdgeInsets.fromLTRB(
+                  SpacingScale.s20,
+                  SpacingScale.s16,
+                  SpacingScale.s20,
+                  0,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -117,7 +150,7 @@ class _SegmentTaxonomySheetState extends ConsumerState<SegmentTaxonomySheet> {
                       child: Container(
                         width: 36,
                         height: 4,
-                        margin: const EdgeInsets.only(bottom: 16),
+                        margin: const EdgeInsets.only(bottom: SpacingScale.s16),
                         decoration: BoxDecoration(
                           color: colors.border.withValues(alpha: 0.6),
                           borderRadius: BorderRadius.circular(2),
@@ -127,159 +160,105 @@ class _SegmentTaxonomySheetState extends ConsumerState<SegmentTaxonomySheet> {
                     Row(
                       children: [
                         Icon(LucideIcons.tag, size: 18, color: colors.accent),
-                        const SizedBox(width: 8),
-                        Text(
-                          l10n.trim_classifySegment,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
+                        const SizedBox(width: SpacingScale.s8),
+                        Expanded(
+                          child: Text(
+                            l10n.trim_classifySegment,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: SpacingScale.s16),
                   ],
                 ),
               ),
               Flexible(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: SpacingScale.s20,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Text(
-                        l10n.moveCategory_genre,
-                        style: theme.textTheme.labelMedium?.copyWith(
-                          color: colors.foreground.withValues(alpha: 0.65),
-                          fontWeight: FontWeight.w700,
+                      _TaxonomySection(
+                        label: l10n.moveCategory_genre,
+                        showInherit: _inheritAllowed(
+                          widget.parentGenreId,
+                          hiddenGenreId,
                         ),
-                      ),
-                      const SizedBox(height: 6),
-                      _InheritTile(
-                        selected: _genreId == null,
-                        label: l10n.trim_inheritLabel,
-                        onTap: () => setState(() {
+                        inheritSelected: _genreId == null,
+                        onInherit: () => setState(() {
                           _genreId = null;
                           _subcategoryId = null;
                         }),
+                        options: [
+                          for (final g in genreState.genres)
+                            if (g.id != hiddenGenreId)
+                              (
+                                selected: _genreId == g.id,
+                                label: localizedGenreName(l10n, g.name),
+                                onTap: () => setState(() {
+                                  if (_genreId != g.id) _subcategoryId = null;
+                                  _genreId = g.id;
+                                }),
+                              ),
+                        ],
                       ),
-                      const SizedBox(height: 6),
-                      ...allGenres.map(
-                        (g) => Padding(
-                          padding: const EdgeInsets.only(bottom: 6),
-                          child: _OptionTile(
-                            selected: _genreId == g.id,
-                            label: localizedGenreName(l10n, g.name),
-                            onTap: () => setState(() {
-                              if (_genreId != g.id) {
-                                _subcategoryId = null;
-                              }
-                              _genreId = g.id;
-                            }),
+                      if (subcategories.isNotEmpty)
+                        _TaxonomySection(
+                          label: l10n.moveCategory_subcategory,
+                          showInherit: _inheritAllowed(
+                            widget.parentSubcategoryId,
+                            hiddenSubcategoryId,
                           ),
+                          inheritSelected: _subcategoryId == null,
+                          onInherit: () =>
+                              setState(() => _subcategoryId = null),
+                          options: [
+                            for (final s in subcategories)
+                              (
+                                selected: _subcategoryId == s.id,
+                                label: localizedSubcategoryName(l10n, s.name),
+                                onTap: () =>
+                                    setState(() => _subcategoryId = s.id),
+                              ),
+                          ],
                         ),
+                      _TaxonomySection(
+                        label: l10n.classify_register,
+                        showInherit: _inheritAllowed(
+                          widget.parentRegisterId,
+                          hiddenRegisterId,
+                        ),
+                        inheritSelected: _registerId == null,
+                        onInherit: () => setState(() => _registerId = null),
+                        options: [
+                          for (final r in kRegisters)
+                            if (r.id != hiddenRegisterId)
+                              (
+                                selected: _registerId == r.id,
+                                label: localizedRegisterName(l10n, r.name),
+                                onTap: () => setState(() => _registerId = r.id),
+                              ),
+                        ],
                       ),
-                      const SizedBox(height: 16),
-                      if (subcategories.isNotEmpty) ...[
-                        Text(
-                          l10n.moveCategory_subcategory,
-                          style: theme.textTheme.labelMedium?.copyWith(
-                            color: colors.foreground.withValues(alpha: 0.65),
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        _InheritTile(
-                          selected: _subcategoryId == null,
-                          label: l10n.trim_inheritLabel,
-                          onTap: () => setState(() => _subcategoryId = null),
-                        ),
-                        const SizedBox(height: 6),
-                        ...subcategories.map(
-                          (s) => Padding(
-                            padding: const EdgeInsets.only(bottom: 6),
-                            child: _OptionTile(
-                              selected: _subcategoryId == s.id,
-                              label: localizedSubcategoryName(l10n, s.name),
-                              onTap: () =>
-                                  setState(() => _subcategoryId = s.id),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                      ],
-                      Text(
-                        l10n.classify_register,
-                        style: theme.textTheme.labelMedium?.copyWith(
-                          color: colors.foreground.withValues(alpha: 0.65),
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      _InheritTile(
-                        selected: _registerId == null,
-                        label: l10n.trim_inheritLabel,
-                        onTap: () => setState(() => _registerId = null),
-                      ),
-                      const SizedBox(height: 6),
-                      ...kRegisters.map(
-                        (r) => Padding(
-                          padding: const EdgeInsets.only(bottom: 6),
-                          child: _OptionTile(
-                            selected: _registerId == r.id,
-                            label: localizedRegisterName(l10n, r.name),
-                            onTap: () => setState(() => _registerId = r.id),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
                     ],
                   ),
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+                padding: const EdgeInsets.fromLTRB(
+                  SpacingScale.s20,
+                  SpacingScale.s8,
+                  SpacingScale.s20,
+                  SpacingScale.s20,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    if (hasCollision)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 10,
-                          ),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.errorContainer.withValues(
-                              alpha: 0.4,
-                            ),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: theme.colorScheme.error.withValues(
-                                alpha: 0.5,
-                              ),
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                LucideIcons.alertCircle,
-                                size: 18,
-                                color: theme.colorScheme.error,
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  l10n.trim_primaryEqualsSecondary,
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.error,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
                     CheckboxListTile(
                       contentPadding: EdgeInsets.zero,
                       controlAffinity: ListTileControlAffinity.leading,
@@ -292,7 +271,7 @@ class _SegmentTaxonomySheetState extends ConsumerState<SegmentTaxonomySheet> {
                       ),
                       dense: true,
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: SpacingScale.s8),
                     Row(
                       children: [
                         Expanded(
@@ -301,19 +280,17 @@ class _SegmentTaxonomySheetState extends ConsumerState<SegmentTaxonomySheet> {
                             child: Text(l10n.common_cancel),
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: SpacingScale.s12),
                         Expanded(
                           child: FilledButton(
-                            onPressed: hasCollision
-                                ? null
-                                : () => Navigator.of(context).pop(
-                                    SegmentTaxonomyResult(
-                                      genreId: _genreId,
-                                      subcategoryId: _subcategoryId,
-                                      registerId: _registerId,
-                                      applyToAll: _applyToAll,
-                                    ),
-                                  ),
+                            onPressed: () => Navigator.of(context).pop(
+                              SegmentTaxonomyResult(
+                                genreId: _genreId,
+                                subcategoryId: _subcategoryId,
+                                registerId: _registerId,
+                                applyToAll: _applyToAll,
+                              ),
+                            ),
                             child: Text(l10n.common_save),
                           ),
                         ),
@@ -326,6 +303,64 @@ class _SegmentTaxonomySheetState extends ConsumerState<SegmentTaxonomySheet> {
           ),
         ),
       ),
+    );
+  }
+}
+
+typedef _TaxonomyOption = ({bool selected, String label, VoidCallback onTap});
+
+/// One labelled block of the sheet: the inherit option followed by the
+/// selectable values for that field.
+class _TaxonomySection extends StatelessWidget {
+  const _TaxonomySection({
+    required this.label,
+    required this.showInherit,
+    required this.inheritSelected,
+    required this.onInherit,
+    required this.options,
+  });
+
+  final String label;
+  final bool showInherit;
+  final bool inheritSelected;
+  final VoidCallback onInherit;
+  final List<_TaxonomyOption> options;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final colors = AppColors.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          label,
+          style: theme.textTheme.labelMedium?.copyWith(
+            color: colors.foreground.withValues(alpha: 0.65),
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: SpacingScale.s8),
+        if (showInherit) ...[
+          _InheritTile(
+            selected: inheritSelected,
+            label: l10n.trim_inheritLabel,
+            onTap: onInherit,
+          ),
+          const SizedBox(height: SpacingScale.s8),
+        ],
+        for (final option in options)
+          Padding(
+            padding: const EdgeInsets.only(bottom: SpacingScale.s8),
+            child: _OptionTile(
+              selected: option.selected,
+              label: option.label,
+              onTap: option.onTap,
+            ),
+          ),
+        const SizedBox(height: SpacingScale.s8),
+      ],
     );
   }
 }
@@ -348,12 +383,15 @@ class _OptionTile extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(RadiusScale.r8),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        padding: const EdgeInsets.symmetric(
+          horizontal: SpacingScale.s16,
+          vertical: SpacingScale.s12,
+        ),
         decoration: BoxDecoration(
           color: selected ? colors.accent.withValues(alpha: 0.12) : colors.card,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(RadiusScale.r8),
           border: Border.all(
             color: selected
                 ? colors.accent.withValues(alpha: 0.5)
@@ -398,14 +436,17 @@ class _InheritTile extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(RadiusScale.r8),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        padding: const EdgeInsets.symmetric(
+          horizontal: SpacingScale.s16,
+          vertical: SpacingScale.s12,
+        ),
         decoration: BoxDecoration(
           color: selected
               ? colors.secondary.withValues(alpha: 0.08)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
+              : AppColors.transparent,
+          borderRadius: BorderRadius.circular(RadiusScale.r8),
           border: Border.all(
             color: selected
                 ? colors.secondary.withValues(alpha: 0.4)
@@ -420,7 +461,7 @@ class _InheritTile extends StatelessWidget {
               size: 14,
               color: colors.foreground.withValues(alpha: 0.5),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: SpacingScale.s8),
             Expanded(
               child: Text(
                 label,

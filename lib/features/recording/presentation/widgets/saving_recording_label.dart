@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 
 /// "Saving recording…" label with three bouncing dots — shown below the timer
 /// while finalization is in progress.
@@ -21,7 +22,7 @@ class _SavingRecordingLabelState extends State<SavingRecordingLabel>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1100),
+      duration: DurationScale.ms1100,
     )..repeat();
   }
 
@@ -40,7 +41,7 @@ class _SavingRecordingLabelState extends State<SavingRecordingLabel>
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         _BouncingDots(controller: _controller, color: colors.accent),
-        const SizedBox(width: 8),
+        const SizedBox(width: SpacingScale.s8),
         Text(
           AppLocalizations.of(context).recording_savingRecording,
           style: theme.textTheme.bodyMedium?.copyWith(
@@ -62,8 +63,8 @@ class _BouncingDots extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 22,
-      height: 14,
+      width: SpacingScale.s24,
+      height: SpacingScale.s16,
       child: AnimatedBuilder(
         animation: controller,
         builder: (context, _) {

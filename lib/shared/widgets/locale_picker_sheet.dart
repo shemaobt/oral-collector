@@ -5,6 +5,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../core/l10n/locale_provider.dart';
 import '../../core/l10n/supported_locales.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/tokens.dart';
 import '../../l10n/app_localizations.dart';
 
 class LocalePickerSheet extends ConsumerWidget {
@@ -53,7 +54,10 @@ class LocalePickerSheet extends ConsumerWidget {
         children: [
           Center(
             child: Container(
-              margin: const EdgeInsets.only(top: 12, bottom: 16),
+              margin: const EdgeInsets.only(
+                top: SpacingScale.s12,
+                bottom: SpacingScale.s16,
+              ),
               width: 36,
               height: 4,
               decoration: BoxDecoration(
@@ -63,7 +67,7 @@ class LocalePickerSheet extends ConsumerWidget {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
+            padding: const EdgeInsets.symmetric(horizontal: SpacingScale.s24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -71,7 +75,7 @@ class LocalePickerSheet extends ConsumerWidget {
                   l10n.locale_selectLanguage,
                   style: theme.textTheme.titleLarge,
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: SpacingScale.s4),
                 Text(
                   l10n.locale_selectLanguageSubtitle,
                   style: theme.textTheme.bodySmall?.copyWith(
@@ -81,7 +85,7 @@ class LocalePickerSheet extends ConsumerWidget {
               ],
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: SpacingScale.s16),
           Flexible(
             child: ListView(
               shrinkWrap: true,
@@ -93,7 +97,9 @@ class LocalePickerSheet extends ConsumerWidget {
                 final isSelected = code == currentCode;
 
                 return ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 24),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: SpacingScale.s24,
+                  ),
                   leading: Container(
                     width: 40,
                     height: 40,
@@ -101,7 +107,7 @@ class LocalePickerSheet extends ConsumerWidget {
                       color: isSelected
                           ? colors.accent.withValues(alpha: 0.12)
                           : colors.surfaceAlt,
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(RadiusScale.r8),
                     ),
                     child: Center(
                       child: Text(
@@ -141,7 +147,7 @@ class LocalePickerSheet extends ConsumerWidget {
               }).toList(),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: SpacingScale.s16),
         ],
       ),
     );

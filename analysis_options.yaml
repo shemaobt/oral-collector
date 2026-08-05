@@ -10,9 +10,23 @@
 include: package:flutter_lints/flutter.yaml
 
 analyzer:
+  plugins:
+    - custom_lint
+  # ENG-156/ENG-157 / ADR-0007: promoted after burn-down to 0 violations.
+  # Enforced even under `flutter analyze --no-fatal-infos`.
+  errors:
+    use_build_context_synchronously: error
+    directives_ordering: warning
+    prefer_const_constructors: warning
+    prefer_final_locals: warning
+    unawaited_futures: warning
   exclude:
     - '**/*.g.dart'
     - '**/*.freezed.dart'
+    # drift_dev-generated schema fixtures for migration tests (ENG-123).
+    - 'test/core/database/generated/**'
+    # drift_dev-generated step-by-step migration helper (ENG-161).
+    - 'lib/core/database/schema_versions.dart'
 
 linter:
   # The lint rules applied to this project can be customized in the
@@ -26,8 +40,38 @@ linter:
   # `// ignore_for_file: name_of_lint` syntax on the line or in the file
   # producing the lint.
   rules:
-    # avoid_print: false  # Uncomment to disable the `avoid_print` rule
-    # prefer_single_quotes: true  # Uncomment to enable the `prefer_single_quotes` rule
+    # Strict baseline (ENG-89 / ADR-0007). Severities promoted in `analyzer:
+    # errors:` above (ENG-156, ENG-157).
+    use_build_context_synchronously: true
+    unawaited_futures: true
+    prefer_const_constructors: true
+    prefer_final_locals: true
+    directives_ordering: true
+
+# Custom lint rules (plugins habilitados em analyzer.plugins acima). obt_lints
+# (severidade WARNING nas próprias regras):
+#   - avoid_hardcoded_color / avoid_material_colors: bane Color(0x…) / bare
+#     Colors.* fora de lib/core/theme/** e test/ (ENG-159/ENG-183; ADR-0002).
+#   - avoid_raw_print: bane print/debugPrint cru fora de
+#     lib/core/observability/** e test/ (ENG-190; ADR-0010).
+custom_lint:
+  rules:
+    - avoid_hardcoded_color
+    - avoid_material_colors
+    - avoid_raw_print
+
+# Complexity/size quality gate (dart_code_linter). Thresholds are locked to the
+# current worst value (green now) and ratchet over time - see
+# obt/.claude/quality-gates-plan.md. Generated code is excluded.
+dart_code_linter:
+  metrics:
+    cyclomatic-complexity: 30 # current worst (LocalRecordingEntity.==, RecordingState.copyWith). Ratchet -> 20.
+    number-of-parameters: 8 # current worst (saveRecordingTitle). Ratchet -> 5.
+    maximum-nesting-level: 5 # current worst. Ratchet -> 4.
+    source-lines-of-code: 300 # Phase 1 met (real worst 294). Ratchet -> 150.
+  metrics-exclude:
+    - "**/*.g.dart"
+    - test/**
 
 # Additional information about this file can be found at
 # https://dart.dev/guides/language/analysis-options

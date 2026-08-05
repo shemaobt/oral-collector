@@ -4,6 +4,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../../shared/widgets/icon_box.dart';
 import '../../../recording/presentation/notifiers/input_device_notifier.dart';
 import '../../../recording/presentation/widgets/input_device_picker_sheet.dart';
@@ -43,7 +44,9 @@ class _RecordingSettingsCardState extends ConsumerState<RecordingSettingsCard> {
         : l10n.profile_systemDefault;
 
     return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(RadiusScale.r16),
+      ),
       child: ListTile(
         leading: IconBox(
           icon: LucideIcons.mic,

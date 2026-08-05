@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/tokens.dart';
 import '../../l10n/app_localizations.dart';
 
 enum RecordButtonState { ready, recording, paused }
@@ -32,7 +33,7 @@ class _RecordButtonState extends State<RecordButton>
     super.initState();
     _pulseController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1200),
+      duration: DurationScale.ms1200,
     );
     _pulseAnimation = Tween<double>(begin: 1.0, end: 1.12).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
@@ -104,7 +105,7 @@ class _RecordButtonState extends State<RecordButton>
       label: semanticLabel,
       button: true,
       child: Material(
-        color: Colors.transparent,
+        color: AppColors.transparent,
         shape: const CircleBorder(),
         child: InkWell(
           onTap: widget.onTap,
@@ -129,8 +130,16 @@ class _RecordButtonState extends State<RecordButton>
             ),
             child: Center(
               child: isPaused
-                  ? const Icon(LucideIcons.pause, color: Colors.white, size: 34)
-                  : const Icon(LucideIcons.mic, color: Colors.white, size: 34),
+                  ? const Icon(
+                      LucideIcons.pause,
+                      color: AppColors.white,
+                      size: 34,
+                    )
+                  : const Icon(
+                      LucideIcons.mic,
+                      color: AppColors.white,
+                      size: 34,
+                    ),
             ),
           ),
         ),

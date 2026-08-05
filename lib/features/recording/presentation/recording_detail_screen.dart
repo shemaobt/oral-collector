@@ -1,58 +1,55 @@
 import 'dart:async';
-import 'dart:io';
 
-import 'package:drift/drift.dart' show Value;
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:just_audio/just_audio.dart';
-
-import '../../../../core/l10n/content_l10n.dart';
-import 'package:http/http.dart' as http;
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 
-import '../../../core/platform/file_ops.dart' as file_ops;
-
+import '../../../../core/l10n/content_l10n.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../core/database/app_database.dart';
-import '../../../core/errors/api_exception.dart';
-import '../../../core/theme/app_colors.dart';
 import '../../../core/auth/auth_notifier.dart';
+import '../../../core/platform/file_ops.dart' as file_ops;
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/tokens.dart';
+import '../../../shared/utils/format.dart';
+import '../../../shared/widgets/error_snack_bar.dart';
 import '../../auth/data/providers/role_provider.dart';
 import '../../genre/presentation/notifiers/genre_notifier.dart';
-import '../../project/presentation/notifiers/member_notifier.dart';
 import '../../project/presentation/notifiers/stats_notifier.dart';
-import '../../storyteller/data/providers.dart' as storyteller_providers;
 import '../../storyteller/domain/entities/storyteller.dart';
+import '../../storyteller/presentation/widgets/storyteller_picker.dart';
 import '../../sync/presentation/notifiers/sync_notifier.dart';
-import '../../../shared/utils/format.dart';
-import 'notifiers/recordings_list_notifier.dart';
-import '../data/providers.dart';
-import '../data/recording_heal_companion.dart';
-import '../data/server_to_local_recording.dart';
 import '../data/services/audio_exporter.dart';
-import '../data/services/recording_trash.dart';
-import '../data/services/waveform_extractor.dart';
 import '../data/supported_audio_formats.dart';
-import '../domain/entities/register.dart';
 import '../domain/entities/classification.dart';
+import '../domain/entities/local_recording_entity.dart';
+import '../domain/entities/local_recording_entity_classification.dart';
+import '../domain/entities/register.dart';
+import '../domain/entities/review_pendency.dart';
+import '../domain/recording_edit_policy.dart';
+import 'notifiers/recording_detail_notifier.dart';
+import 'notifiers/recording_detail_state.dart';
+import 'notifiers/recordings_list_notifier.dart';
 import 'widgets/classify_recording_dialog.dart';
+import 'widgets/complete_ficha_overlay.dart';
+import 'widgets/complete_ficha_sheet.dart';
+import 'widgets/edit_recording_details_sheet.dart';
 import 'widgets/move_category_dialog.dart';
-import 'widgets/secondary_classification_fields.dart';
+import 'widgets/recording_action_menu.dart';
+import 'widgets/recording_classification_section.dart';
 import 'widgets/recording_hero_player.dart';
 import 'widgets/recording_info_grid.dart';
 import 'widgets/recording_quick_actions.dart';
 import 'widgets/recording_status_section.dart';
-import 'widgets/recording_upload_progress_section.dart';
-import 'widgets/recording_about_section.dart';
-import 'widgets/edit_recording_details_sheet.dart';
 import 'widgets/recording_storyteller_section.dart';
-import '../data/use_cases/save_recording_title.dart';
+import 'widgets/recording_upload_banners.dart';
+import 'widgets/recording_upload_progress_section.dart';
 import 'widgets/replace_audio_dialog.dart';
+import 'widgets/secondary_classification_fields.dart';
 
 class RecordingDetailScreen extends ConsumerStatefulWidget {
   const RecordingDetailScreen({super.key, required this.recordingId});
@@ -65,166 +62,49 @@ class RecordingDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
-  LocalRecording? _recording;
-  bool _isLoading = true;
-  Storyteller? _resolvedStoryteller;
+  RecordingDetailNotifier get _notifier =>
+      ref.read(recordingDetailProvider(widget.recordingId).notifier);
+  RecordingDetailState get _state =>
+      ref.read(recordingDetailProvider(widget.recordingId));
 
   bool get _canEditRecording {
-    final user = ref.read(authNotifierProvider).currentUser;
-    if (user == null) return false;
-    final recording = _recording;
+    final recording = _state.recording;
     if (recording == null) return false;
-    if (ref
-        .read(roleNotifierProvider.notifier)
-        .canManageProject(recording.projectId)) {
-      return true;
-    }
-    return true;
+    return canEditRecording(
+      user: ref.read(authNotifierProvider).currentUser,
+      canManageProject: ref
+          .read(roleNotifierProvider.notifier)
+          .canManageProject(recording.projectId),
+      recordingUserId: recording.userId,
+    );
   }
 
   @override
   void initState() {
     super.initState();
-    Future.microtask(_loadRecording);
-  }
-
-  Future<void> _loadRecording() async {
-    setState(() => _isLoading = true);
-    try {
-      LocalRecording? recording;
-
-      final isOnline = ref.read(syncNotifierProvider).isOnline;
-
-      if (kIsWeb) {
-        final apiRepo = ref.read(recordingApiRepositoryProvider);
-        final server = await apiRepo.getRecording(widget.recordingId);
-        recording = serverRecordingToLocal(server);
-      } else {
-        final localRepo = ref.read(localRecordingRepositoryProvider);
-
-        recording = await localRepo.getRecordingById(widget.recordingId);
-        recording ??= await localRepo.getRecordingByServerId(
-          widget.recordingId,
-        );
-
-        final localHasServerId =
-            recording != null &&
-            recording.serverId != null &&
-            recording.serverId!.isNotEmpty;
-        final needsGcsRefresh =
-            recording != null &&
-            (recording.gcsUrl == null || recording.gcsUrl!.isEmpty) &&
-            (recording.uploadStatus == 'uploaded' ||
-                recording.uploadStatus == 'verified');
-        final needsUserRefresh =
-            recording != null &&
-            (recording.userId == null || recording.userId!.isEmpty);
-
-        if (isOnline &&
-            localHasServerId &&
-            (needsGcsRefresh || needsUserRefresh)) {
-          try {
-            final apiRepo = ref.read(recordingApiRepositoryProvider);
-            final server = await apiRepo.getRecording(recording.serverId!);
-            final updates = buildHealMetadataCompanion(
-              local: recording,
-              server: server,
-            );
-            await localRepo.updateRecording(recording.id, updates);
-            recording = await localRepo.getRecordingById(recording.id);
-          } catch (_) {}
-        }
-
-        if (isOnline && recording == null) {
-          try {
-            final apiRepo = ref.read(recordingApiRepositoryProvider);
-            final server = await apiRepo.getRecording(widget.recordingId);
-            recording = serverRecordingToLocal(server);
-          } catch (_) {}
-        }
-      }
-
-      if (mounted) {
-        setState(() {
-          _recording = recording;
-          _isLoading = false;
-        });
-        if (isOnline && recording != null) {
-          await ref
-              .read(roleNotifierProvider.notifier)
-              .fetchRoleForProject(recording.projectId);
-          if (mounted) setState(() {});
-        }
-        if (recording != null) {
-          await _resolveStoryteller(recording);
-          await _ensureMembersLoaded(recording.projectId);
-        }
-      }
-    } catch (_) {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _resolveStoryteller(LocalRecording recording) async {
-    final id = recording.storytellerId;
-    if (id == null || id.isEmpty) {
-      if (mounted) setState(() => _resolvedStoryteller = null);
-      return;
-    }
-    final localRepo = ref.read(
-      storyteller_providers.localStorytellerRepositoryProvider,
-    );
-    final cached = await localRepo.getById(id);
-    if (mounted && cached != null) {
-      setState(() => _resolvedStoryteller = cached);
-    }
-    if (!ref.read(syncNotifierProvider).isOnline) return;
-    try {
-      final apiRepo = ref.read(
-        storyteller_providers.storytellerApiRepositoryProvider,
-      );
-      final remote = await apiRepo.get(id);
-      if (mounted) setState(() => _resolvedStoryteller = remote);
-    } catch (_) {
-      if (mounted && cached == null) {
-        setState(() => _resolvedStoryteller = null);
-      }
-    }
-  }
-
-  Future<void> _ensureMembersLoaded(String projectId) async {
-    if (ref.read(memberNotifierProvider).members.isEmpty &&
-        ref.read(syncNotifierProvider).isOnline) {
-      await ref.read(memberNotifierProvider.notifier).fetchMembers(projectId);
-      if (mounted) setState(() {});
-    }
+    Future.microtask(_notifier.load);
   }
 
   Future<void> _onStorytellerChanged(Storyteller? storyteller) async {
-    final recording = _recording;
+    final recording = _state.recording;
     if (recording == null) return;
-    final serverId = recording.serverId ?? recording.id;
-    try {
-      await ref
-          .read(recordingApiRepositoryProvider)
-          .updateRecording(serverId, storytellerId: storyteller?.id ?? '');
-    } on Exception catch (_) {}
-    if (!kIsWeb) {
-      final repo = ref.read(localRecordingRepositoryProvider);
-      await repo.updateRecording(
-        recording.id,
-        LocalRecordingsCompanion(
-          storytellerId: storyteller == null
-              ? const Value(null)
-              : Value(storyteller.id),
-        ),
-      );
-    }
-    await _loadRecording();
+    await _notifier.setStoryteller(recording, storyteller);
+  }
+
+  Future<void> _pickStoryteller() async {
+    final recording = _state.recording;
+    if (recording == null) return;
+    final picked = await showStorytellerPickerSheet(
+      context,
+      projectId: recording.projectId,
+      showAddNew: true,
+    );
+    if (picked == null) return;
+    await _onStorytellerChanged(picked);
   }
 
   Future<void> _openEditDetails() async {
-    final recording = _recording;
+    final recording = _state.recording;
     if (recording == null) return;
     final result = await showEditRecordingDetailsSheet(
       context,
@@ -233,136 +113,58 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     );
     if (result == null || !mounted) return;
 
+    final outcome = await _notifier.saveDetails(
+      recording,
+      title: result.title,
+      description: result.description,
+    );
+    if (!mounted) return;
     final l10n = AppLocalizations.of(context);
-    final apiRepo = ref.read(recordingApiRepositoryProvider);
-    final localRepo = kIsWeb
-        ? null
-        : ref.read(localRecordingRepositoryProvider);
-    final isOnline = ref.read(syncNotifierProvider).isOnline;
-
-    final titleChanged = result.title != (recording.title ?? '').trim();
-    final descriptionChanged =
-        result.description != (recording.description ?? '').trim();
-
-    if (titleChanged) {
-      try {
-        final titleResult = await saveRecordingTitle(
-          recordingId: widget.recordingId,
-          currentTitle: recording.title,
-          serverId: recording.serverId,
-          newTitle: result.title,
-          isWeb: kIsWeb,
-          isOnline: isOnline,
-          apiRepo: apiRepo,
-          localRepo: localRepo,
-        );
-        if (!mounted) return;
-        if (titleResult == SaveTitleResult.saved ||
-            titleResult == SaveTitleResult.savedLocallyOnly) {
-          ref
-              .read(recordingsListNotifierProvider.notifier)
-              .patchRecordingTitle(widget.recordingId, result.title);
-        }
-      } on ForbiddenException {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.recording_updateNoPermission),
-            backgroundColor: Colors.orange,
-          ),
-        );
-        return;
-      }
-    }
-
-    if (descriptionChanged) {
-      try {
-        if (kIsWeb) {
-          final serverId = recording.serverId ?? widget.recordingId;
-          await apiRepo.updateRecording(
-            serverId,
-            description: result.description,
-          );
-        } else {
-          await localRepo!.updateRecording(
-            widget.recordingId,
-            LocalRecordingsCompanion(description: Value(result.description)),
-          );
-        }
-      } on ForbiddenException {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.recording_updateNoPermission),
-            backgroundColor: Colors.orange,
-          ),
-        );
-        return;
-      }
-    }
-
-    if (titleChanged || descriptionChanged) {
-      await _loadRecording();
+    if (outcome == RecordingMutationResult.forbidden) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.recording_updateNoPermission),
+          backgroundColor: AppColors.of(context).warning,
+        ),
+      );
+    } else if (outcome == RecordingMutationResult.titleConflict) {
+      // The new name is taken too; the recording stays conflicted so the banner
+      // keeps offering another rename.
+      showErrorSnackBar(
+        context,
+        '',
+        template: (_) => l10n.recording_duplicateTitleMessage(result.title),
+      );
     }
   }
 
   Future<void> _toggleCleaningStatus() async {
-    final recording = _recording;
+    final recording = _state.recording;
     if (recording == null) return;
-
-    final newStatus = recording.cleaningStatus == 'none'
-        ? 'needs_cleaning'
-        : 'none';
-
-    final serverId = recording.serverId ?? recording.id;
-    if (recording.uploadStatus == 'uploaded' || kIsWeb) {
-      try {
-        final apiRepo = ref.read(recordingApiRepositoryProvider);
-        final success = await apiRepo.updateRecording(
-          serverId,
-          cleaningStatus: newStatus,
+    final result = await _notifier.toggleCleaningStatus(recording);
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context);
+    switch (result) {
+      case RecordingMutationResult.forbidden:
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.recording_updateNoPermission),
+            backgroundColor: AppColors.of(context).warning,
+          ),
         );
-        if (!success && mounted) {
-          final l10n = AppLocalizations.of(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.recording_cleaningStatusFailed)),
-          );
-          return;
-        }
-      } on ForbiddenException {
-        if (mounted) {
-          final l10n = AppLocalizations.of(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(l10n.recording_updateNoPermission),
-              backgroundColor: Colors.orange,
-            ),
-          );
-        }
-        return;
-      } catch (_) {
-        if (mounted) {
-          final l10n = AppLocalizations.of(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.recording_cleaningStatusFailed)),
-          );
-        }
-        return;
-      }
+      // Only a title edit can clash; elsewhere it reads as a plain failure.
+      case RecordingMutationResult.failed ||
+          RecordingMutationResult.titleConflict:
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.recording_cleaningStatusFailed)),
+        );
+      case RecordingMutationResult.success:
+        break;
     }
-
-    if (!kIsWeb) {
-      final repo = ref.read(localRecordingRepositoryProvider);
-      await repo.updateRecording(
-        widget.recordingId,
-        LocalRecordingsCompanion(cleaningStatus: Value(newStatus)),
-      );
-    }
-    await _loadRecording();
   }
 
   Future<void> _deleteRecording() async {
-    final recording = _recording;
+    final recording = _state.recording;
     if (recording == null) return;
 
     final colors = AppColors.of(context);
@@ -388,60 +190,44 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
 
     if (confirmed != true) return;
 
-    final serverId = recording.serverId ?? recording.id;
-    try {
-      final apiRepo = ref.read(recordingApiRepositoryProvider);
-      await apiRepo.deleteRecording(serverId);
-    } on ForbiddenException {
-      if (mounted) {
-        final l10n = AppLocalizations.of(context);
+    final result = await ref
+        .read(recordingsListNotifierProvider.notifier)
+        .deleteRecording(recording);
+    if (!mounted) return;
+    switch (result) {
+      case DeleteRecordingResult.forbidden:
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(l10n.recording_deleteNoPermission),
-            backgroundColor: Colors.orange,
+            backgroundColor: AppColors.of(context).warning,
           ),
         );
-      }
-      return;
-    } catch (_) {
-      if (kIsWeb) {
-        if (mounted) {
-          final l10n = AppLocalizations.of(context);
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(l10n.recording_deleteFailed)));
-        }
         return;
-      }
-      if (mounted) {
-        final l10n = AppLocalizations.of(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.recording_deleteFailedLocal)),
-        );
-      }
-    }
-
-    if (!kIsWeb) {
-      final repo = ref.read(localRecordingRepositoryProvider);
-      await repo.deleteRecording(widget.recordingId);
+      case DeleteRecordingResult.failed:
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.recording_deleteFailed)));
+        return;
+      case DeleteRecordingResult.ok:
+        break;
     }
 
     if (ref.read(syncNotifierProvider).isOnline) {
-      ref
-          .read(statsNotifierProvider.notifier)
-          .fetchGenreStats(recording.projectId);
+      unawaited(
+        ref
+            .read(statsNotifierProvider.notifier)
+            .fetchGenreStats(recording.projectId),
+      );
     }
 
-    if (mounted) {
-      if (context.canPop()) {
-        context.pop();
-      } else {
-        context.go('/recordings');
-      }
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/recordings');
     }
   }
 
-  Future<bool> _ensureLocalFile(LocalRecording recording) async {
+  Future<bool> _ensureLocalFile(LocalRecordingEntity recording) async {
     if (kIsWeb) return false;
 
     final hasLocal =
@@ -475,42 +261,23 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
 
     if (shouldDownload != true || !mounted) return false;
 
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const PopScope(
-        canPop: false,
-        child: Center(child: CircularProgressIndicator()),
+    unawaited(
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const PopScope(
+          canPop: false,
+          child: Center(child: CircularProgressIndicator()),
+        ),
       ),
     );
 
     try {
-      final response = await http.get(Uri.parse(recording.gcsUrl!));
-      if (response.statusCode != 200) {
-        throw Exception('Download failed (${response.statusCode})');
-      }
-
-      final docsDir = await getApplicationDocumentsDirectory();
-      final ext = recording.format.isNotEmpty ? recording.format : 'm4a';
-      final fileName =
-          'recording_${DateTime.now().millisecondsSinceEpoch}.$ext';
-      final filePath = '${docsDir.path}/$fileName';
-      await file_ops.writeFileBytes(filePath, response.bodyBytes);
-
-      final repo = ref.read(localRecordingRepositoryProvider);
-      await repo.cacheDownloadedAudio(
-        recording: recording,
-        localFilePath: filePath,
-      );
-
-      await _loadRecording();
+      await _notifier.downloadAndCache(recording);
     } catch (e) {
       if (mounted) {
         Navigator.of(context).pop();
-        final l10n = AppLocalizations.of(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.recording_downloadFailed(e.toString()))),
-        );
+        showErrorSnackBar(context, e);
       }
       return false;
     }
@@ -542,12 +309,14 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
   }
 
   Future<void> _handleTrim() async {
-    final recording = _recording;
+    final recording = _state.recording;
     if (recording == null) return;
 
     if (kIsWeb && recording.serverId != null) {
       if (!mounted) return;
-      context.push('/recording/${recording.serverId ?? recording.id}/trim');
+      unawaited(
+        context.push('/recording/${recording.serverId ?? recording.id}/trim'),
+      );
       return;
     }
 
@@ -578,7 +347,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
   }
 
   Future<void> _handleExportAudio() async {
-    final recording = _recording;
+    final recording = _state.recording;
     if (recording == null) return;
 
     final l10n = AppLocalizations.of(context);
@@ -594,23 +363,18 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
         );
         return;
       }
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (_) => const PopScope(
-          canPop: false,
-          child: Center(child: CircularProgressIndicator()),
+      unawaited(
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (_) => const PopScope(
+            canPop: false,
+            child: Center(child: CircularProgressIndicator()),
+          ),
         ),
       );
       try {
-        final response = await http.get(Uri.parse(gcsUrl));
-        if (response.statusCode != 200) {
-          throw Exception('Download failed (${response.statusCode})');
-        }
-        final tempPath =
-            'export_${recording.id}_${DateTime.now().millisecondsSinceEpoch}'
-            '.${recording.format}';
-        await file_ops.writeFileBytes(tempPath, response.bodyBytes);
+        final tempPath = await _notifier.downloadForExport(recording);
         final result = await AudioExporter.shareAudio(
           localFilePath: tempPath,
           suggestedName: suggestedName,
@@ -618,22 +382,19 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
         );
         if (mounted) Navigator.of(context).pop();
         if (!result.success && mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                result.error != null
-                    ? '${l10n.recording_exportShareFailed}: ${result.error}'
-                    : l10n.recording_exportShareFailed,
-              ),
-            ),
+          // O motivo de AudioExporter é técnico/inglês (já registrado em log);
+          // mapeá-lo dispararia ramos de import (ex.: "file not found"), então
+          // ao usuário mostramos só a mensagem localizada de share.
+          showErrorSnackBar(
+            context,
+            '',
+            template: (_) => l10n.recording_exportShareFailed,
           );
         }
       } catch (e) {
         if (mounted) {
           Navigator.of(context).pop();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${l10n.recording_exportShareFailed}: $e')),
-          );
+          showErrorSnackBar(context, e);
         }
       }
       return;
@@ -649,7 +410,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
       return;
     }
 
-    final fresh = _recording;
+    final fresh = _state.recording;
     if (fresh == null) return;
     final result = await AudioExporter.shareAudio(
       localFilePath: fresh.localFilePath,
@@ -657,20 +418,16 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
       sharePositionOrigin: _shareAnchorRect(),
     );
     if (!result.success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            result.error != null
-                ? '${l10n.recording_exportShareFailed}: ${result.error}'
-                : l10n.recording_exportShareFailed,
-          ),
-        ),
+      showErrorSnackBar(
+        context,
+        '',
+        template: (_) => l10n.recording_exportShareFailed,
       );
     }
   }
 
   Future<void> _handleReplaceAudio() async {
-    final recording = _recording;
+    final recording = _state.recording;
     if (recording == null) return;
 
     final l10n = AppLocalizations.of(context);
@@ -737,83 +494,36 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     }
 
     if (!mounted) return;
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const PopScope(
-        canPop: false,
-        child: Center(child: CircularProgressIndicator()),
+    unawaited(
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const PopScope(
+          canPop: false,
+          child: Center(child: CircularProgressIndicator()),
+        ),
       ),
     );
 
-    try {
-      final docsDir = await getApplicationDocumentsDirectory();
-      final recordingsDir = Directory('${docsDir.path}/recordings');
-      if (!await recordingsDir.exists()) {
-        await recordingsDir.create(recursive: true);
-      }
-      final newName =
-          '${DateTime.now().millisecondsSinceEpoch}_${p.basename(pickedFile.name)}';
-      final newPath = '${recordingsDir.path}/$newName';
-      await file_ops.copyFile(pickedPath, newPath);
-      final newSize = await file_ops.fileLength(newPath);
-
-      final oldPath = fresh.localFilePath;
-      if (oldPath.isNotEmpty) {
-        await RecordingTrash.putInTrash(
-          sourcePath: oldPath,
-          metadata: {
-            'recordingId': fresh.id,
-            'format': fresh.format,
-            'reason': 'replaced',
-          },
-        );
-        WaveformExtractor.invalidate(oldPath);
-      }
-
-      final localRepo = ref.read(localRecordingRepositoryProvider);
-      await localRepo.replaceAudio(
-        recordingId: fresh.id,
-        newFilePath: newPath,
-        newDurationSeconds: duration,
-        newFileSizeBytes: newSize,
-      );
-
-      if (wasUploaded) {
-        final serverId = fresh.serverId ?? fresh.id;
-        try {
-          await ref
-              .read(recordingApiRepositoryProvider)
-              .updateRecording(
-                serverId,
-                durationSeconds: duration,
-                fileSizeBytes: newSize,
-              );
-        } on Exception catch (e) {
-          debugPrint('Replace: failed to sync new metadata to server: $e');
-        }
-        await ref.read(syncNotifierProvider.notifier).resetAndRetry(fresh.id);
-      }
-
-      await _loadRecording();
-      if (mounted) Navigator.of(context).pop();
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.recording_replaceSuccess)));
-      }
-    } catch (_) {
-      if (mounted) {
-        Navigator.of(context).pop();
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.recording_replaceFailed)));
-      }
-    }
+    final ok = await _notifier.replaceAudio(
+      fresh,
+      sourcePath: pickedPath,
+      fileName: pickedFile.name,
+      durationSeconds: duration,
+    );
+    if (!mounted) return;
+    Navigator.of(context).pop();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          ok ? l10n.recording_replaceSuccess : l10n.recording_replaceFailed,
+        ),
+      ),
+    );
   }
 
   Future<void> _moveCategory() async {
-    final recording = _recording;
+    final recording = _state.recording;
     if (recording == null) return;
 
     final result = await showDialog<MoveCategoryResult>(
@@ -821,6 +531,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
       builder: (context) => MoveCategoryDialog(
         currentGenreId: recording.genreId,
         currentSubcategoryId: recording.subcategoryId,
+        currentPrimaryRegisterId: recording.registerId,
         currentSecondaryGenreId: recording.secondaryGenreId,
         currentSecondarySubcategoryId: recording.secondarySubcategoryId,
         currentSecondaryRegisterId: recording.secondaryRegisterId,
@@ -829,84 +540,32 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
 
     if (result == null) return;
 
-    final serverId = recording.serverId ?? recording.id;
-    try {
-      final apiRepo = ref.read(recordingApiRepositoryProvider);
-      final success = await apiRepo.updateRecording(
-        serverId,
-        genreId: result.genreId,
-        subcategoryId: result.subcategoryId,
-        secondaryGenreId: result.secondaryGenreId,
-        secondarySubcategoryId: result.secondarySubcategoryId,
-        secondaryRegisterId: result.secondaryRegisterId,
-        clearSecondary: result.clearSecondary,
-      );
-      if (!success && mounted) {
-        final l10n = AppLocalizations.of(context);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.recording_updateFailed)));
-        return;
-      }
-    } on ForbiddenException {
-      if (mounted) {
-        final l10n = AppLocalizations.of(context);
+    final outcome = await _notifier.moveCategory(recording, result);
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context);
+    switch (outcome) {
+      case RecordingMutationResult.forbidden:
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(l10n.recording_moveNoPermission),
-            backgroundColor: Colors.orange,
+            backgroundColor: AppColors.of(context).warning,
           ),
         );
-      }
-      return;
-    } catch (_) {
-      if (mounted) {
-        final l10n = AppLocalizations.of(context);
+      // Only a title edit can clash; elsewhere it reads as a plain failure.
+      case RecordingMutationResult.failed ||
+          RecordingMutationResult.titleConflict:
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(l10n.recording_updateFailed)));
-      }
-      return;
-    }
-
-    if (!kIsWeb) {
-      final repo = ref.read(localRecordingRepositoryProvider);
-      await repo.updateRecording(
-        recording.id,
-        LocalRecordingsCompanion(
-          genreId: Value(result.genreId),
-          subcategoryId: Value(result.subcategoryId),
-          secondaryGenreId: result.clearSecondary
-              ? const Value(null)
-              : Value(result.secondaryGenreId),
-          secondarySubcategoryId: result.clearSecondary
-              ? const Value(null)
-              : Value(result.secondarySubcategoryId),
-          secondaryRegisterId: result.clearSecondary
-              ? const Value(null)
-              : Value(result.secondaryRegisterId),
-        ),
-      );
-    }
-
-    if (ref.read(syncNotifierProvider).isOnline) {
-      ref
-          .read(statsNotifierProvider.notifier)
-          .fetchGenreStats(recording.projectId);
-    }
-
-    await _loadRecording();
-
-    if (mounted) {
-      final l10n = AppLocalizations.of(context);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.recording_movedSuccess)));
+      case RecordingMutationResult.success:
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.recording_movedSuccess)));
     }
   }
 
   Future<void> _classifyRecording() async {
-    final recording = _recording;
+    final recording = _state.recording;
     if (recording == null) return;
 
     final result = await showDialog<ClassifyResult>(
@@ -916,96 +575,32 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
 
     if (result == null) return;
 
-    final hasServerId =
-        recording.serverId != null && recording.serverId!.isNotEmpty;
-
-    final clearSecondary =
-        result.secondaryGenreId == null &&
-        result.secondaryRegisterId == null &&
-        (recording.secondaryGenreId != null ||
-            recording.secondaryRegisterId != null);
-
-    if (hasServerId) {
-      try {
-        final apiRepo = ref.read(recordingApiRepositoryProvider);
-        final success = await apiRepo.updateRecording(
-          recording.serverId!,
-          genreId: result.genreId,
-          subcategoryId: result.subcategoryId,
-          registerId: result.registerId,
-          secondaryGenreId: result.secondaryGenreId,
-          secondarySubcategoryId: result.secondarySubcategoryId,
-          secondaryRegisterId: result.secondaryRegisterId,
-          clearSecondary: clearSecondary,
+    final outcome = await _notifier.classify(recording, result);
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context);
+    switch (outcome) {
+      case RecordingMutationResult.forbidden:
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.recording_moveNoPermission),
+            backgroundColor: AppColors.of(context).warning,
+          ),
         );
-        if (!success && mounted) {
-          final l10n = AppLocalizations.of(context);
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(l10n.recording_updateFailed)));
-          return;
-        }
-      } on ForbiddenException {
-        if (mounted) {
-          final l10n = AppLocalizations.of(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(l10n.recording_moveNoPermission),
-              backgroundColor: Colors.orange,
-            ),
-          );
-        }
-        return;
-      } catch (_) {
-        if (mounted) {
-          final l10n = AppLocalizations.of(context);
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(l10n.recording_updateFailed)));
-        }
-        return;
-      }
-    }
-
-    if (!kIsWeb) {
-      final repo = ref.read(localRecordingRepositoryProvider);
-      await repo.updateRecording(
-        recording.id,
-        LocalRecordingsCompanion(
-          genreId: Value(result.genreId),
-          subcategoryId: Value(result.subcategoryId),
-          registerId: result.registerId != null
-              ? Value(result.registerId)
-              : const Value.absent(),
-          secondaryGenreId: Value(result.secondaryGenreId),
-          secondarySubcategoryId: Value(result.secondarySubcategoryId),
-          secondaryRegisterId: Value(result.secondaryRegisterId),
-        ),
-      );
-
-      if (!hasServerId && ref.read(syncNotifierProvider).isOnline) {
-        unawaited(ref.read(syncNotifierProvider.notifier).processQueue());
-      }
-    }
-
-    if (ref.read(syncNotifierProvider).isOnline) {
-      ref
-          .read(statsNotifierProvider.notifier)
-          .fetchGenreStats(recording.projectId);
-    }
-
-    await _loadRecording();
-
-    if (mounted) {
-      final l10n = AppLocalizations.of(context);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.classify_success)));
+      // Only a title edit can clash; elsewhere it reads as a plain failure.
+      case RecordingMutationResult.failed ||
+          RecordingMutationResult.titleConflict:
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.recording_updateFailed)));
+      case RecordingMutationResult.success:
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.classify_success)));
     }
   }
 
   Future<void> _editSecondaryClassification() async {
-    final recording = _recording;
+    final recording = _state.recording;
     if (recording == null) return;
 
     final l10n = AppLocalizations.of(context);
@@ -1025,6 +620,8 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
       context: context,
       builder: (context) => _SecondaryEditDialog(
         primaryGenreId: recording.genreId,
+        primarySubcategoryId: recording.subcategoryId,
+        primaryRegisterId: recording.registerId,
         initial: initial,
       ),
     );
@@ -1041,7 +638,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
   }
 
   Future<void> _clearSecondaryClassification() async {
-    final recording = _recording;
+    final recording = _state.recording;
     if (recording == null) return;
     final l10n = AppLocalizations.of(context);
     await _persistSecondary(
@@ -1052,100 +649,101 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
   }
 
   Future<void> _persistSecondary({
-    required LocalRecording recording,
+    required LocalRecordingEntity recording,
     required SecondaryValues? values,
     required String successMessage,
   }) async {
-    final hasServerId =
-        recording.serverId != null && recording.serverId!.isNotEmpty;
-    final clearSecondary = values == null;
-
-    if (hasServerId) {
-      try {
-        final apiRepo = ref.read(recordingApiRepositoryProvider);
-        final success = await apiRepo.updateRecording(
-          recording.serverId!,
-          secondaryGenreId: values?.genreId,
-          secondarySubcategoryId: values?.subcategoryId,
-          secondaryRegisterId: values?.registerId,
-          clearSecondary: clearSecondary,
+    final outcome = await _notifier.saveSecondary(recording, values);
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context);
+    switch (outcome) {
+      case RecordingMutationResult.forbidden:
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.recording_moveNoPermission),
+            backgroundColor: AppColors.of(context).warning,
+          ),
         );
-        if (!success && mounted) {
-          final l10n = AppLocalizations.of(context);
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(l10n.recording_updateFailed)));
-          return;
-        }
-      } on ForbiddenException {
-        if (mounted) {
-          final l10n = AppLocalizations.of(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(l10n.recording_moveNoPermission),
-              backgroundColor: Colors.orange,
-            ),
-          );
-        }
-        return;
-      } catch (_) {
-        if (mounted) {
-          final l10n = AppLocalizations.of(context);
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(l10n.recording_updateFailed)));
-        }
-        return;
-      }
-    }
-
-    if (!kIsWeb) {
-      final repo = ref.read(localRecordingRepositoryProvider);
-      await repo.updateRecording(
-        recording.id,
-        LocalRecordingsCompanion(
-          secondaryGenreId: Value(values?.genreId),
-          secondarySubcategoryId: Value(values?.subcategoryId),
-          secondaryRegisterId: Value(values?.registerId),
-        ),
-      );
-    }
-
-    await _loadRecording();
-
-    if (mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(successMessage)));
+      // Only a title edit can clash; elsewhere it reads as a plain failure.
+      case RecordingMutationResult.failed ||
+          RecordingMutationResult.titleConflict:
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.recording_updateFailed)));
+      case RecordingMutationResult.success:
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(successMessage)));
     }
   }
 
+  Future<void> _retryUpload() async {
+    final recording = _state.recording;
+    if (recording == null) return;
+    await ref.read(syncNotifierProvider.notifier).resetAndRetry(recording.id);
+    await _notifier.load();
+  }
+
+  Widget _completeFichaOverlay(LocalRecordingEntity recording) {
+    return CompleteFichaOverlay(
+      pendencyCount: recordingPendencies(recording).length,
+      onTap: _openCompleteFichaSheet,
+    );
+  }
+
+  Future<void> _openCompleteFichaSheet() async {
+    final recording = _state.recording;
+    if (recording == null) return;
+    final steps = recordingPendencies(recording);
+    if (steps.isEmpty) return;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.transparent,
+      // The step list is frozen at open time so nothing shifts under the user's
+      // finger; only what is still open is recomputed, to tick steps off as the
+      // user comes back from each editor.
+      builder: (_) => Consumer(
+        builder: (context, sheetRef, _) {
+          final current = sheetRef
+              .watch(recordingDetailProvider(widget.recordingId))
+              .recording;
+          final open = current == null
+              ? const <PendencyKind>[]
+              : recordingPendencies(current);
+          return CompleteFichaSheet(
+            steps: steps,
+            resolved: steps.where((step) => !open.contains(step)).toSet(),
+            onStep: _onFichaStep,
+          );
+        },
+      ),
+    );
+  }
+
+  Future<void> _onFichaStep(PendencyKind kind) => switch (kind) {
+    PendencyKind.classification => _classifyRecording(),
+    PendencyKind.description => _openEditDetails(),
+    PendencyKind.storyteller => _pickStoryteller(),
+  };
+
   @override
   Widget build(BuildContext context) {
-    if (!kIsWeb) {
-      ref.listen<AsyncValue<LocalRecording?>>(
-        localRecordingStreamProvider(widget.recordingId),
-        (_, next) {
-          final updated = next.valueOrNull;
-          if (updated == null || !mounted) return;
-          if (_recording == null || identical(_recording, updated)) return;
-          setState(() => _recording = updated);
-        },
-      );
-    }
+    final state = ref.watch(recordingDetailProvider(widget.recordingId));
 
     final theme = Theme.of(context);
     final colors = AppColors.of(context);
     final l10n = AppLocalizations.of(context);
 
-    if (_isLoading) {
+    if (state.isLoading) {
       return Scaffold(
         appBar: AppBar(leading: const BackButton()),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
 
-    final recording = _recording;
+    final recording = state.recording;
     if (recording == null) {
       return Scaffold(
         appBar: AppBar(leading: const BackButton()),
@@ -1209,199 +807,20 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
         ? breadcrumbParts.join(' > ')
         : l10n.recording_unknownGenre;
 
-    final titleAndGenre = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        RecordingAboutSection(
-          theme: theme,
-          colors: colors,
-          title: recording.title,
-          description: recording.description,
-          canEdit: _canEditRecording,
-          onEdit: _openEditDetails,
-        ),
-        const SizedBox(height: 14),
-        Row(
-          children: [
-            Icon(
-              isUnclassified ? LucideIcons.tag : LucideIcons.layers,
-              size: 14,
-              color: isUnclassified ? Colors.amber.shade700 : colors.accent,
-            ),
-            const SizedBox(width: 6),
-            Flexible(
-              child: Text(
-                genreBreadcrumb,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: isUnclassified ? Colors.amber.shade700 : colors.accent,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
-        ),
-        if (registerName != null) ...[
-          const SizedBox(height: 4),
-          Row(
-            children: [
-              Icon(LucideIcons.volume2, size: 14, color: colors.secondary),
-              const SizedBox(width: 6),
-              Flexible(
-                child: Text(
-                  registerName,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: colors.secondary,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-        if (!isUnclassified && hasSecondary) ...[
-          const SizedBox(height: 8),
-          Material(
-            color: Colors.transparent,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-              side: BorderSide(
-                color: colors.foreground.withValues(alpha: 0.18),
-              ),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onTap: _canEditRecording ? _editSecondaryClassification : null,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 8,
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Icon(
-                      LucideIcons.layers,
-                      size: 13,
-                      color: colors.foreground.withValues(alpha: 0.55),
-                    ),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            l10n.recording_alsoClassifiedAs,
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: colors.foreground.withValues(alpha: 0.55),
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                          if (secondaryBreadcrumb.isNotEmpty)
-                            Text(
-                              secondaryBreadcrumb,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: colors.foreground.withValues(
-                                  alpha: 0.85,
-                                ),
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          if (secondaryRegisterName != null)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 2),
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    LucideIcons.volume2,
-                                    size: 11,
-                                    color: colors.foreground.withValues(
-                                      alpha: 0.55,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Flexible(
-                                    child: Text(
-                                      secondaryRegisterName,
-                                      style: theme.textTheme.labelSmall
-                                          ?.copyWith(
-                                            color: colors.foreground.withValues(
-                                              alpha: 0.65,
-                                            ),
-                                          ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                    if (_canEditRecording)
-                      IconButton(
-                        icon: const Icon(LucideIcons.x, size: 14),
-                        tooltip: l10n.recording_removeSecondary,
-                        color: colors.foreground.withValues(alpha: 0.6),
-                        onPressed: _clearSecondaryClassification,
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(
-                          minWidth: 28,
-                          minHeight: 28,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-        if (!isUnclassified && !hasSecondary && _canEditRecording) ...[
-          const SizedBox(height: 6),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: TextButton.icon(
-              onPressed: _editSecondaryClassification,
-              icon: const Icon(LucideIcons.plus, size: 14),
-              label: Text(l10n.recording_addAlternative),
-              style: TextButton.styleFrom(
-                foregroundColor: colors.foreground.withValues(alpha: 0.65),
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                minimumSize: Size.zero,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                textStyle: theme.textTheme.labelSmall,
-              ),
-            ),
-          ),
-        ],
-        if (recording.splitFromId != null) ...[
-          const SizedBox(height: 6),
-          Row(
-            children: [
-              Icon(
-                LucideIcons.scissors,
-                size: 13,
-                color: colors.foreground.withValues(alpha: 0.55),
-              ),
-              const SizedBox(width: 6),
-              Flexible(
-                child: Text(
-                  (recording.splitIndex != null &&
-                          recording.splitSegmentCount != null)
-                      ? l10n.recording_partOf(
-                          recording.splitIndex! + 1,
-                          recording.splitSegmentCount!,
-                        )
-                      : l10n.recording_splitFrom(recording.splitFromId ?? ''),
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: colors.foreground.withValues(alpha: 0.65),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ],
+    final titleAndGenre = RecordingClassificationSection(
+      recording: recording,
+      theme: theme,
+      colors: colors,
+      genreBreadcrumb: genreBreadcrumb,
+      registerName: registerName,
+      isUnclassified: isUnclassified,
+      hasSecondary: hasSecondary,
+      secondaryBreadcrumb: secondaryBreadcrumb,
+      secondaryRegisterName: secondaryRegisterName,
+      canEdit: _canEditRecording,
+      onEditDetails: _openEditDetails,
+      onEditSecondary: _editSecondaryClassification,
+      onClearSecondary: _clearSecondaryClassification,
     );
 
     final infoGrid = RecordingInfoGrid(
@@ -1420,14 +839,10 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
       onToggleCleaning: _toggleCleaningStatus,
       onRetryUpload:
           recording.uploadStatus == 'failed' ||
+              recording.uploadStatus == 'failed_exhausted' ||
               recording.uploadStatus == 'uploading' ||
               (recording.uploadStatus == 'local' && recording.retryCount > 0)
-          ? () async {
-              await ref
-                  .read(syncNotifierProvider.notifier)
-                  .resetAndRetry(recording.id);
-              await _loadRecording();
-            }
+          ? _retryUpload
           : null,
     );
 
@@ -1443,361 +858,168 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
       isUnclassified: isUnclassified,
     );
 
-    final secondaryGenreCollides =
-        recording.secondaryGenreId != null &&
-        recording.secondaryGenreId!.isNotEmpty &&
-        recording.genreId == recording.secondaryGenreId;
-    final secondarySubcategoryCollides =
-        recording.secondarySubcategoryId != null &&
-        recording.secondarySubcategoryId!.isNotEmpty &&
-        recording.subcategoryId == recording.secondarySubcategoryId;
-    final secondaryRegisterCollides =
-        recording.secondaryRegisterId != null &&
-        recording.secondaryRegisterId!.isNotEmpty &&
-        recording.registerId == recording.secondaryRegisterId;
-    final hasSecondaryCollision =
-        secondaryGenreCollides ||
-        secondarySubcategoryCollides ||
-        secondaryRegisterCollides;
-
-    final secondaryCollisionBanner = hasSecondaryCollision
-        ? Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.errorContainer.withValues(alpha: 0.35),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: theme.colorScheme.error.withValues(alpha: 0.5),
-              ),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  LucideIcons.alertCircle,
-                  size: 18,
-                  color: theme.colorScheme.error,
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    l10n.recording_secondaryCollisionBanner,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.error,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                FilledButton.tonal(
-                  onPressed: _canEditRecording
-                      ? _clearSecondaryClassification
-                      : null,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: theme.colorScheme.error.withValues(
-                      alpha: 0.12,
-                    ),
-                    foregroundColor: theme.colorScheme.error,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                  child: Text(
-                    l10n.recording_clearSecondary,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          )
-        : null;
-
-    final classifyBanner = isUnclassified
-        ? Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: Colors.amber.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: Colors.amber.shade700.withValues(alpha: 0.3),
-              ),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  LucideIcons.alertCircle,
-                  size: 18,
-                  color: Colors.amber.shade700,
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    l10n.classify_banner,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: Colors.amber.shade700,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                FilledButton.tonal(
-                  onPressed: _classifyRecording,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: Colors.amber.shade700.withValues(
-                      alpha: 0.15,
-                    ),
-                    foregroundColor: Colors.amber.shade700,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                  child: Text(
-                    l10n.classify_action,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          )
-        : null;
+    final banners = RecordingUploadBanners(
+      recording: recording,
+      canEdit: _canEditRecording,
+      onEditDetails: _openEditDetails,
+      onRetryUpload: _retryUpload,
+      onDelete: _deleteRecording,
+      onClearSecondary: _clearSecondaryClassification,
+    );
 
     final storytellerSection = RecordingStorytellerSection(
-      projectId: recording.projectId,
       storytellerId: recording.storytellerId,
       userId: recording.userId,
-      resolvedStoryteller: _resolvedStoryteller,
+      resolvedStoryteller: state.resolvedStoryteller,
       canEdit: _canEditRecording,
-      onStorytellerChanged: _canEditRecording ? _onStorytellerChanged : null,
+      onEditStoryteller: _canEditRecording ? _pickStoryteller : null,
     );
 
     final detailContent = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         RecordingUploadProgressSection(recordingId: recording.id),
-        if (secondaryCollisionBanner != null) ...[
-          secondaryCollisionBanner,
-          const SizedBox(height: 16),
-        ],
-        if (classifyBanner != null) ...[
-          classifyBanner,
-          const SizedBox(height: 16),
-        ],
+        banners,
         titleAndGenre,
-        const SizedBox(height: 20),
+        const SizedBox(height: SpacingScale.s20),
         storytellerSection,
-        const SizedBox(height: 24),
+        const SizedBox(height: SpacingScale.s24),
         infoGrid,
-        const SizedBox(height: 24),
+        const SizedBox(height: SpacingScale.s24),
         statusSection,
-        const SizedBox(height: 24),
+        const SizedBox(height: SpacingScale.s24),
         quickActions,
       ],
     );
 
     final menuButton = _canEditRecording
-        ? PopupMenuButton<String>(
-            icon: Icon(LucideIcons.moreVertical, color: colors.foreground),
-            onSelected: (value) {
-              switch (value) {
-                case 'trim':
-                  _handleTrim();
-                case 'export':
-                  _handleExportAudio();
-                case 'replace':
-                  _handleReplaceAudio();
-                case 'move':
-                  _moveCategory();
-                case 'classify':
-                  _classifyRecording();
-                case 'delete':
-                  _deleteRecording();
-              }
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'trim',
-                child: Row(
-                  children: [
-                    const Icon(LucideIcons.scissors, size: 18),
-                    const SizedBox(width: 12),
-                    Text(l10n.recording_splitRecording),
-                  ],
-                ),
-              ),
-              PopupMenuItem(
-                value: 'export',
-                child: Row(
-                  children: [
-                    const Icon(LucideIcons.share2, size: 18),
-                    const SizedBox(width: 12),
-                    Text(l10n.recording_exportAudio),
-                  ],
-                ),
-              ),
-              if (isUnclassified)
-                PopupMenuItem(
-                  value: 'classify',
-                  child: Row(
-                    children: [
-                      Icon(
-                        LucideIcons.tag,
-                        size: 18,
-                        color: Colors.amber.shade700,
-                      ),
-                      const SizedBox(width: 12),
-                      Text(l10n.classify_action),
-                    ],
-                  ),
-                )
-              else
-                PopupMenuItem(
-                  value: 'move',
-                  child: Row(
-                    children: [
-                      const Icon(LucideIcons.folderInput, size: 18),
-                      const SizedBox(width: 12),
-                      Text(l10n.recording_moveCategory),
-                    ],
-                  ),
-                ),
-              PopupMenuItem(
-                value: 'replace',
-                child: Row(
-                  children: [
-                    Icon(LucideIcons.refreshCw, size: 18, color: colors.error),
-                    const SizedBox(width: 12),
-                    Text(
-                      l10n.recording_replaceAudio,
-                      style: TextStyle(color: colors.error),
-                    ),
-                  ],
-                ),
-              ),
-              PopupMenuItem(
-                value: 'delete',
-                child: Row(
-                  children: [
-                    Icon(LucideIcons.trash2, size: 18, color: colors.error),
-                    const SizedBox(width: 12),
-                    Text(
-                      l10n.common_delete,
-                      style: TextStyle(color: colors.error),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+        ? RecordingActionMenu(
+            colors: colors,
+            isUnclassified: isUnclassified,
+            onTrim: _handleTrim,
+            onExport: _handleExportAudio,
+            onReplace: _handleReplaceAudio,
+            onMove: _moveCategory,
+            onClassify: _classifyRecording,
+            onDelete: _deleteRecording,
           )
         : null;
 
     return Scaffold(
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          if (constraints.maxWidth >= 700) {
-            return Column(
-              children: [
-                AppBar(leading: const BackButton(), actions: [?menuButton]),
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        titleAndGenre,
-                        const SizedBox(height: 24),
-                        Row(
+      body: Stack(
+        children: [
+          LayoutBuilder(
+            builder: (context, constraints) {
+              if (constraints.maxWidth >= 700) {
+                return Column(
+                  children: [
+                    AppBar(leading: const BackButton(), actions: [?menuButton]),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(SpacingScale.s24),
+                        child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  infoGrid,
-                                  const SizedBox(height: 24),
-                                  quickActions,
-                                ],
-                              ),
+                            titleAndGenre,
+                            const SizedBox(height: SpacingScale.s24),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      infoGrid,
+                                      const SizedBox(height: SpacingScale.s24),
+                                      quickActions,
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: SpacingScale.s24),
+                                Expanded(child: statusSection),
+                              ],
                             ),
-                            const SizedBox(width: 24),
-                            Expanded(child: statusSection),
                           ],
                         ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                Container(
-                  decoration: BoxDecoration(
-                    color: colors.card,
-                    border: Border(
-                      top: BorderSide(
-                        color: colors.border.withValues(alpha: 0.15),
                       ),
                     ),
-                  ),
-                  child: RecordingHeroPlayer(
-                    recording: recording,
-                    colors: colors,
-                    theme: theme,
-                  ),
-                ),
-              ],
-            );
-          }
 
-          return CustomScrollView(
-            slivers: [
-              SliverAppBar(
-                expandedHeight: 260,
-                pinned: true,
-                leading: Padding(
-                  padding: const EdgeInsets.all(6),
-                  child: Material(
-                    color: colors.card.withValues(alpha: 0.6),
-                    shape: const CircleBorder(),
-                    clipBehavior: Clip.antiAlias,
-                    child: BackButton(color: colors.foreground),
-                  ),
-                ),
-                actions: [
-                  if (menuButton != null)
-                    Padding(
-                      padding: const EdgeInsets.only(right: 6),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: colors.card,
+                        border: Border(
+                          top: BorderSide(
+                            color: colors.border.withValues(alpha: 0.15),
+                          ),
+                        ),
+                      ),
+                      child: RecordingHeroPlayer(
+                        recording: recording,
+                        colors: colors,
+                        theme: theme,
+                      ),
+                    ),
+                  ],
+                );
+              }
+
+              return CustomScrollView(
+                slivers: [
+                  SliverAppBar(
+                    expandedHeight: 260,
+                    pinned: true,
+                    leading: Padding(
+                      padding: const EdgeInsets.all(SpacingScale.s8),
                       child: Material(
                         color: colors.card.withValues(alpha: 0.6),
                         shape: const CircleBorder(),
                         clipBehavior: Clip.antiAlias,
-                        child: menuButton,
+                        child: BackButton(color: colors.foreground),
                       ),
                     ),
-                ],
-                flexibleSpace: FlexibleSpaceBar(
-                  background: RecordingHeroPlayer(
-                    recording: recording,
-                    colors: colors,
-                    theme: theme,
+                    actions: [
+                      if (menuButton != null)
+                        Padding(
+                          padding: const EdgeInsets.only(
+                            right: SpacingScale.s8,
+                          ),
+                          child: Material(
+                            color: colors.card.withValues(alpha: 0.6),
+                            shape: const CircleBorder(),
+                            clipBehavior: Clip.antiAlias,
+                            child: menuButton,
+                          ),
+                        ),
+                    ],
+                    flexibleSpace: FlexibleSpaceBar(
+                      background: RecordingHeroPlayer(
+                        recording: recording,
+                        colors: colors,
+                        theme: theme,
+                      ),
+                    ),
                   ),
-                ),
-              ),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 80),
-                  child: detailContent,
-                ),
-              ),
-            ],
-          );
-        },
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        SpacingScale.s20,
+                        SpacingScale.s20,
+                        SpacingScale.s20,
+                        // Clears the floating "complete details" pill: it
+                        // lives outside this scrollable, so without the
+                        // reserve it covers the last card.
+                        CompleteFichaOverlay.scrollReserve(context),
+                      ),
+                      child: detailContent,
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+          if (_canEditRecording) _completeFichaOverlay(recording),
+        ],
       ),
     );
   }
@@ -1805,9 +1027,16 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
 
 class _SecondaryEditDialog extends StatefulWidget {
   final String primaryGenreId;
+  final String? primarySubcategoryId;
+  final String? primaryRegisterId;
   final SecondaryValues? initial;
 
-  const _SecondaryEditDialog({required this.primaryGenreId, this.initial});
+  const _SecondaryEditDialog({
+    required this.primaryGenreId,
+    this.primarySubcategoryId,
+    this.primaryRegisterId,
+    this.initial,
+  });
 
   @override
   State<_SecondaryEditDialog> createState() => _SecondaryEditDialogState();
@@ -1829,7 +1058,15 @@ class _SecondaryEditDialogState extends State<_SecondaryEditDialog> {
     final hadInitial = widget.initial != null;
     final isValid =
         _values == null ||
-        (_values!.isValid && _values!.genreId != widget.primaryGenreId);
+        (_values!.isValid &&
+            !secondaryEqualsPrimary(
+              primaryRegisterId: widget.primaryRegisterId,
+              primaryGenreId: widget.primaryGenreId,
+              primarySubcategoryId: widget.primarySubcategoryId,
+              secondaryRegisterId: _values!.registerId,
+              secondaryGenreId: _values!.genreId,
+              secondarySubcategoryId: _values!.subcategoryId,
+            ));
     final hasChanged =
         (_values?.genreId != widget.initial?.genreId) ||
         (_values?.subcategoryId != widget.initial?.subcategoryId) ||
@@ -1839,7 +1076,7 @@ class _SecondaryEditDialogState extends State<_SecondaryEditDialog> {
       title: Row(
         children: [
           Icon(LucideIcons.layers, size: 20, color: colors.secondary),
-          const SizedBox(width: 8),
+          const SizedBox(width: SpacingScale.s8),
           Expanded(child: Text(l10n.classify_addAlternativeTitle)),
         ],
       ),
@@ -1848,6 +1085,8 @@ class _SecondaryEditDialogState extends State<_SecondaryEditDialog> {
         child: SingleChildScrollView(
           child: SecondaryClassificationFields(
             primaryGenreId: widget.primaryGenreId,
+            primarySubcategoryId: widget.primarySubcategoryId,
+            primaryRegisterId: widget.primaryRegisterId,
             initial: widget.initial,
             onChanged: (v) => setState(() => _values = v),
           ),

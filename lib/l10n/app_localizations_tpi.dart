@@ -399,10 +399,6 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get projectSettings_updated => 'Projek i apdet pinis';
 
   @override
-  String get projectSettings_noPermission =>
-      'Yu no gat pemisin bilong apdet dispela projek';
-
-  @override
   String get projectSettings_team => 'Tim';
 
   @override
@@ -473,7 +469,12 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get recording_titleHint => 'Nem bilong rekoding';
 
   @override
-  String get recording_descriptionHint => 'Raitim liklik stori (sapos yu laik)';
+  String get recording_descriptionHint => 'Raitim stori bilong dispela rekod';
+
+  @override
+  String recording_descriptionTooShort(int count) {
+    return 'Raitim stori bilong dispela rekod, i mas gat $count leta o moa';
+  }
 
   @override
   String get recording_descriptionEmpty => 'Raitim stori';
@@ -551,11 +552,6 @@ class AppLocalizationsTpi extends AppLocalizations {
   @override
   String get recording_downloadAudioMessage =>
       'Audio fail i no stap long dispela divais. Yu laik kisim i kam daun bilong katim?';
-
-  @override
-  String recording_downloadFailed(String error) {
-    return 'No inap kisim i kam daun: $error';
-  }
 
   @override
   String get recording_audioNotAvailable => 'Audio fail i no stap';
@@ -665,6 +661,20 @@ class AppLocalizationsTpi extends AppLocalizations {
       'Presim maikorofon bilong rekodim fes stori bilong yu, o importim wanpela audio fail.';
 
   @override
+  String get recordings_offlineFilterTitle => 'I no stap taim yu no gat net';
+
+  @override
+  String get recordings_offlineFilterDescription =>
+      'Sever i save makim wanem ol rekoding i sot yet long ol tok. Konektim gen bilong lukim ol, o rausim filta bilong lukim olgeta samting i stap long dispela masin.';
+
+  @override
+  String get recordings_filterErrorTitle => 'I no inap sekim nau';
+
+  @override
+  String get recordings_filterErrorDescription =>
+      'Sever i no bekim, olsem na mipela i no inap tokim yu wanem ol rekoding i sot yet long ol tok. Traim gen, o rausim filta bilong lukim olgeta samting i stap long dispela masin.';
+
+  @override
   String get recordings_dropToImport =>
       'Tip: pulim ol audio fail i go long dispela windo bilong imotim.';
 
@@ -690,6 +700,38 @@ class AppLocalizationsTpi extends AppLocalizations {
 
   @override
   String get recording_statusLocal => 'Lokal';
+
+  @override
+  String get recording_statusNameConflict => 'Nem i pait';
+
+  @override
+  String get recording_statusDescriptionTooShort => 'Stori i sotpela tumas';
+
+  @override
+  String get recording_descriptionGapMessage =>
+      'Yu no inap salim dispela rekod inap yu putim wanpela longpela stori.';
+
+  @override
+  String get recording_statusRetriesExhausted => 'Ol traim i pinis';
+
+  @override
+  String get recording_statusFileMissing => 'Odio fail i lus';
+
+  @override
+  String get recording_uploadExhaustedMessage =>
+      'Salim i stop bihain long planti traim. Yu inap traim gen.';
+
+  @override
+  String get recording_fileMissingMessage =>
+      'Odio fail bilong dispela rekod i no stap moa long dispela masin, olsem na yu no inap salim.';
+
+  @override
+  String get recording_duplicateTitleTitle => 'Nem i stap pinis';
+
+  @override
+  String recording_duplicateTitleMessage(String title) {
+    return 'Wanpela odio wantaim nem \"$title\" i stap pinis long dispela projek. Makim narapela nem.';
+  }
 
   @override
   String get recordings_clearStale => 'Klinim ol i pundaun';
@@ -792,10 +834,6 @@ class AppLocalizationsTpi extends AppLocalizations {
 
   @override
   String get trim_classifySegment => 'Klasifaiim segment';
-
-  @override
-  String get trim_primaryEqualsSecondary =>
-      'Primary klasifikesen i no inap stap wankain long sekondari klasifikesen bilong rekoding.';
 
   @override
   String get trim_volume => 'Volium';
@@ -966,12 +1004,12 @@ class AppLocalizationsTpi extends AppLocalizations {
 
   @override
   String import_resumePromptBody(String name, String size) {
-    return '\"$name\" ($size) i no go pinis. Makim wankain fail bilong go het.';
+    return '\"$name\" ($size) i no go pinis. Makim stret wankain fail (i no senis) bilong go het.';
   }
 
   @override
   String get import_resumeSizeMismatch =>
-      'Dispela fail i no wankain wantaim aplotim i wet.';
+      'Em narapela fail. Makim stret wankain fail yu bin aplotim.';
 
   @override
   String import_largeFileWarning(String size) {
@@ -1012,11 +1050,6 @@ class AppLocalizationsTpi extends AppLocalizations {
 
   @override
   String get profile_photoUpdated => 'Profail foto i apdet pinis';
-
-  @override
-  String profile_photoFailed(String error) {
-    return 'No inap apdet foto: $error';
-  }
 
   @override
   String get profile_editName => 'Senisim nem bilong yu';
@@ -1746,6 +1779,9 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get filter_unclassified => 'I no makim kain yet';
 
   @override
+  String get filter_missingDescription => 'I no gat stori';
+
+  @override
   String get filter_allGenres => 'Olgeta kain';
 
   @override
@@ -1824,6 +1860,14 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get projectStats_members => 'Ol Memba';
 
   @override
+  String get projectStats_needsDetails => 'I no pinis yet';
+
+  @override
+  String projectStats_showPendency(String label, int count) {
+    return 'Lukim ol rekoding — $label ($count)';
+  }
+
+  @override
   String get project_active => 'Aktiv';
 
   @override
@@ -1875,10 +1919,6 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get classify_action => 'Makim Kain';
 
   @override
-  String get classify_banner =>
-      'Dispela rekoding i no gat kain yet. Paitim Makim Kain bilong putim kain na rejista.';
-
-  @override
   String get classify_success => 'Rekoding i gat kain pinis';
 
   @override
@@ -1906,10 +1946,6 @@ class AppLocalizationsTpi extends AppLocalizations {
 
   @override
   String get classify_secondaryRegister => 'Namba tu rejista';
-
-  @override
-  String get classify_secondarySameAsPrimary =>
-      'Namba tu senre mas i narapela long nambawan senre.';
 
   @override
   String get classify_clearAlternative => 'Rausim narapela';
@@ -2278,7 +2314,11 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get filters_sheetTitle => 'Filta ol rekoding';
 
   @override
-  String get filters_sectionStatus => 'Stetas bilong aplot';
+  String get filters_sectionStatus => 'Stetas long dispela masin';
+
+  @override
+  String get filters_sectionStatusHint =>
+      'Em i filtaim ol rekoding i stap pinis long skrin. Em i wok tu taim i no gat net.';
 
   @override
   String get filters_sectionGenre => 'Kain stori';
@@ -2288,6 +2328,13 @@ class AppLocalizationsTpi extends AppLocalizations {
 
   @override
   String get filters_sectionUser => 'Husat i rekodim';
+
+  @override
+  String get filters_sectionPendency => 'Wanem samting Sever i tok i sot yet';
+
+  @override
+  String get filters_sectionPendencyHint =>
+      'Em i askim Sever long wanem ol rekoding i sot yet long ol tok. Yu mas gat net.';
 
   @override
   String get filter_apply => 'Wokim';
@@ -2321,6 +2368,9 @@ class AppLocalizationsTpi extends AppLocalizations {
 
   @override
   String get filter_genreAll => 'Wanem kain stori';
+
+  @override
+  String get filter_pendencyAll => 'Wanem samting';
 
   @override
   String get detail_recordedBy => 'Husat i rekodim';
@@ -2640,4 +2690,58 @@ class AppLocalizationsTpi extends AppLocalizations {
 
   @override
   String get liveActivity_uploadingStatus => 'Aplotim';
+
+  @override
+  String get recording_completeFicha => 'Pinisim ol samting';
+
+  @override
+  String get recording_completeFichaTitle => 'Pinisim ol samting';
+
+  @override
+  String recording_completeFichaSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count samting i no stap yet. Yu ken putim nau o kam bek bihain.',
+      one: '1 samting i no stap yet. Yu ken putim nau o kam bek bihain.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recording_completeFichaStart => 'Statim';
+
+  @override
+  String get recording_completeFichaContinue => 'Go het';
+
+  @override
+  String get recording_pendencyClassification => 'I no makim kain yet';
+
+  @override
+  String get recording_pendencyClassificationContext =>
+      'Kain na rejista i soim wanem kain stori dispela i stap.';
+
+  @override
+  String get recording_pendencyDescription => 'Stori i sotpela tumas';
+
+  @override
+  String get recording_pendencyDescriptionContext =>
+      'Sampela toktok long wanem samting i kamap long rekoding.';
+
+  @override
+  String get recording_pendencyStoryteller => 'I no gat stori man';
+
+  @override
+  String get recording_pendencyStorytellerContext =>
+      'Husat i tokim dispela stori.';
+
+  @override
+  String recording_pendencyCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count samting i mas pulapim',
+    );
+    return '$_temp0';
+  }
 }

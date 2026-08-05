@@ -2,6 +2,7 @@ import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
+import 'package:logging/logging.dart';
 
 import '../../../../core/config/recording_config.dart';
 import '../../../../core/platform/foreground_service_arbiter.dart';
@@ -11,6 +12,8 @@ import 'upload_foreground_task.dart';
 /// continue while the app is minimized. Android-only (no-op on iOS/web).
 class UploadForegroundService {
   UploadForegroundService();
+
+  static final _log = Logger('UploadForegroundService');
 
   bool get isRunning =>
       ForegroundServiceArbiter.isOwner(ForegroundServiceOwner.upload);
@@ -30,7 +33,7 @@ class UploadForegroundService {
     try {
       title = await titleResolver();
     } on Object catch (e) {
-      debugPrint('UploadForegroundService: title resolve failed: $e');
+      _log.warning('title resolve failed', e);
       title = body;
     }
 
@@ -54,7 +57,7 @@ class UploadForegroundService {
         ),
       );
     } on Exception catch (e) {
-      debugPrint('UploadForegroundService: init failed: $e');
+      _log.warning('init failed', e);
       return;
     }
 
@@ -79,7 +82,7 @@ class UploadForegroundService {
         },
       );
     } on Exception catch (e) {
-      debugPrint('UploadForegroundService: startService failed: $e');
+      _log.warning('startService failed', e);
     }
   }
 
@@ -97,7 +100,7 @@ class UploadForegroundService {
         notificationText: body,
       );
     } on Exception catch (e) {
-      debugPrint('UploadForegroundService: updateService failed: $e');
+      _log.warning('updateService failed', e);
     }
   }
 
@@ -112,7 +115,7 @@ class UploadForegroundService {
         },
       );
     } on Exception catch (e) {
-      debugPrint('UploadForegroundService: stopService failed: $e');
+      _log.warning('stopService failed', e);
     }
   }
 }

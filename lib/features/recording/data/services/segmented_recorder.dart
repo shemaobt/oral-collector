@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:audio_session/audio_session.dart';
 import 'package:flutter/foundation.dart';
+import 'package:logging/logging.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 
@@ -50,6 +51,8 @@ class SegmentedRecorder {
   final AudioRecorderFactory _recorderFactory;
   final DocDirProvider _docDirProvider;
   final bool _configureAudioSession;
+
+  static final _log = Logger('SegmentedRecorder');
 
   static const int _sampleRate = 16000;
   static const int _numChannels = 1;
@@ -126,9 +129,7 @@ class SegmentedRecorder {
       try {
         await _recorder!.ios?.manageAudioSession(false);
       } on Exception catch (e) {
-        debugPrint(
-          'SegmentedRecorder: ios.manageAudioSession(false) failed: $e',
-        );
+        _log.warning('ios.manageAudioSession(false) failed', e);
       }
     }
 
@@ -167,12 +168,12 @@ class SegmentedRecorder {
     _pcmSub = stream.listen(
       _onPcmChunk,
       onError: (Object e) {
-        debugPrint('SegmentedRecorder: PCM stream error: $e');
+        _log.severe('PCM stream error', e);
       },
     );
 
-    debugPrint(
-      'SegmentedRecorder: streaming started '
+    _log.info(
+      'streaming started '
       '(bytesPerSegment=$_bytesPerSegment device=${_inputDevice?.id ?? "default"})',
     );
 
@@ -196,34 +197,26 @@ class SegmentedRecorder {
         ),
       );
       final activated = await audioSession.setActive(true);
-      debugPrint(
-        'SegmentedRecorder: AudioSession configured (activated=$activated)',
-      );
+      _log.info('AudioSession configured (activated=$activated)');
       await _interruptionSub?.cancel();
       _interruptionSub = audioSession.interruptionEventStream.listen((
         event,
       ) async {
         if (event.begin) {
-          debugPrint(
-            'SegmentedRecorder: audio session interruption began '
-            '(type=${event.type})',
-          );
+          _log.info('audio session interruption began (type=${event.type})');
           return;
         }
-        debugPrint(
-          'SegmentedRecorder: audio session interruption ended '
-          '(type=${event.type}); re-activating',
+        _log.info(
+          'audio session interruption ended (type=${event.type}); re-activating',
         );
         try {
           await audioSession.setActive(true);
         } on Exception catch (e) {
-          debugPrint(
-            'SegmentedRecorder: re-activate after interruption failed: $e',
-          );
+          _log.warning('re-activate after interruption failed', e);
         }
       });
     } on Exception catch (e) {
-      debugPrint('SegmentedRecorder: AudioSession setup failed: $e');
+      _log.warning('AudioSession setup failed', e);
     }
   }
 
@@ -237,8 +230,9 @@ class SegmentedRecorder {
   }
 
   void _rotateSync() {
-    final closing = _currentSink!;
-    final closingPath = _currentSegmentPath!;
+    final closing = _currentSink;
+    final closingPath = _currentSegmentPath;
+    if (closing == null || closingPath == null) return;
     final closingDuration = closing.currentDuration;
     _openNextSink();
     _finalizeChain = _finalizeChain.then(
@@ -263,7 +257,7 @@ class SegmentedRecorder {
     try {
       await closing.close();
     } catch (e, st) {
-      debugPrint('SegmentedRecorder: sink close failed: $e\n$st');
+      _log.severe('sink close failed', e, st);
     }
 
     _paths.add(closingPath);
@@ -278,7 +272,7 @@ class SegmentedRecorder {
           closingDuration.inMilliseconds / 1000.0,
         );
       } catch (e, st) {
-        debugPrint('SegmentedRecorder: appendSegment failed: $e\n$st');
+        _log.severe('appendSegment failed', e, st);
       }
     }
 
@@ -292,7 +286,7 @@ class SegmentedRecorder {
         onStorageCritical?.call(storage.estimatedSeconds);
       }
     } catch (e, st) {
-      debugPrint('SegmentedRecorder: storage check failed: $e\n$st');
+      _log.severe('storage check failed', e, st);
     }
 
     final latency = DateTime.now().difference(rotateStart);
@@ -315,9 +309,8 @@ class SegmentedRecorder {
               return;
             }
             if (tick % 10 == 0) {
-              debugPrint(
-                'SegmentedRecorder: amplitude current=${amp.current} '
-                'max=${amp.max}',
+              _log.fine(
+                () => 'amplitude current=${amp.current} max=${amp.max}',
               );
             }
             tick++;
@@ -327,7 +320,7 @@ class SegmentedRecorder {
             _amplitudeController!.add(mapped);
           },
           onError: (Object e) {
-            debugPrint('SegmentedRecorder: amplitude stream error: $e');
+            _log.warning('amplitude stream error', e);
           },
         );
   }
@@ -365,7 +358,7 @@ class SegmentedRecorder {
     try {
       await _recorder?.stop();
     } catch (e) {
-      debugPrint('SegmentedRecorder: recorder.stop on finish failed: $e');
+      _log.severe('recorder.stop on finish failed', e);
     }
 
     final closing = _currentSink;

@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
-import '../../../../core/theme/app_colors.dart';
 import '../../../../../l10n/app_localizations.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 
 class ExpandableRecordFab extends StatefulWidget {
   const ExpandableRecordFab({
@@ -23,8 +24,12 @@ class ExpandableRecordFab extends StatefulWidget {
 
 class _ExpandableRecordFabState extends State<ExpandableRecordFab>
     with SingleTickerProviderStateMixin {
+  static const double _miniButtonSize = 48;
+  static const double _mainButtonSize = 62;
+
   late final AnimationController _controller;
   late final Animation<double> _expandAnimation;
+  late final Animation<Offset> _slideAnimation;
   bool _isOpen = false;
 
   @override
@@ -32,13 +37,17 @@ class _ExpandableRecordFabState extends State<ExpandableRecordFab>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 200),
+      duration: DurationScale.ms200,
     );
     _expandAnimation = CurvedAnimation(
       parent: _controller,
       curve: Curves.easeOut,
       reverseCurve: Curves.easeIn,
     );
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.25),
+      end: Offset.zero,
+    ).animate(_expandAnimation);
   }
 
   @override
@@ -70,161 +79,153 @@ class _ExpandableRecordFabState extends State<ExpandableRecordFab>
     final l10n = AppLocalizations.of(context);
     final colors = widget.colors;
 
-    return SizedBox(
-      width: 160,
-      height: 210,
-      child: Stack(
-        alignment: Alignment.bottomRight,
-        children: [
-          if (_isOpen)
-            Positioned.fill(
-              child: GestureDetector(
-                onTap: _close,
-                behavior: HitTestBehavior.opaque,
-                child: const SizedBox.expand(),
+    // ENG-185: an intrinsic, bottom-anchored layout grows with the text scale
+    // instead of clipping inside a fixed-size corner box. The mini-fabs stay in
+    // the tree (so their positions are laid out, not hardcoded) and only fade /
+    // slide in, which keeps the layout footprint stable during the animation.
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        _buildMiniFab(
+          icon: LucideIcons.mic,
+          label: l10n.fab_normalRecord,
+          color: colors.accent.withValues(alpha: 0.85),
+          onTap: () {
+            _close();
+            widget.onNormalRecord();
+          },
+        ),
+        const SizedBox(height: SpacingScale.s12),
+        _buildMiniFab(
+          icon: LucideIcons.zap,
+          label: l10n.fab_quickRecord,
+          color: colors.warning,
+          onTap: () {
+            _close();
+            widget.onQuickRecord();
+          },
+        ),
+        const SizedBox(height: SpacingScale.s12),
+        _buildMainFab(l10n, colors),
+      ],
+    );
+  }
+
+  Widget _buildMainFab(AppLocalizations l10n, AppColorSet colors) {
+    return Semantics(
+      label: l10n.a11y_startRecording,
+      button: true,
+      child: Material(
+        color: AppColors.transparent,
+        shape: const CircleBorder(),
+        child: InkWell(
+          onTap: _toggle,
+          customBorder: const CircleBorder(),
+          child: Container(
+            width: _mainButtonSize,
+            height: _mainButtonSize,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [colors.accent, colors.accent.withValues(alpha: 0.85)],
               ),
-            ),
-
-          _buildMiniFab(
-            offsetY: 130,
-            icon: LucideIcons.mic,
-            label: l10n.fab_normalRecord,
-            color: colors.accent.withValues(alpha: 0.85),
-            onTap: () {
-              _close();
-              widget.onNormalRecord();
-            },
-          ),
-
-          _buildMiniFab(
-            offsetY: 72,
-            icon: LucideIcons.zap,
-            label: l10n.fab_quickRecord,
-            color: Colors.amber.shade700,
-            onTap: () {
-              _close();
-              widget.onQuickRecord();
-            },
-          ),
-
-          Positioned(
-            bottom: 0,
-            right: 0,
-            child: Semantics(
-              label: l10n.a11y_startRecording,
-              button: true,
-              child: Material(
-                color: Colors.transparent,
-                shape: const CircleBorder(),
-                child: InkWell(
-                  onTap: _toggle,
-                  customBorder: const CircleBorder(),
-                  child: Container(
-                    width: 62,
-                    height: 62,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          colors.accent,
-                          colors.accent.withValues(alpha: 0.85),
-                        ],
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: colors.accent.withValues(alpha: 0.4),
-                          blurRadius: 20,
-                          offset: const Offset(0, 6),
-                        ),
-                        BoxShadow(
-                          color: colors.accent.withValues(alpha: 0.15),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 200),
-                      child: Icon(
-                        _isOpen ? LucideIcons.x : LucideIcons.mic,
-                        key: ValueKey(_isOpen),
-                        size: 26,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
+              boxShadow: [
+                BoxShadow(
+                  color: colors.accent.withValues(alpha: 0.4),
+                  blurRadius: 20,
+                  offset: const Offset(0, 6),
                 ),
+                BoxShadow(
+                  color: colors.accent.withValues(alpha: 0.15),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: AnimatedSwitcher(
+              duration: DurationScale.ms200,
+              child: Icon(
+                _isOpen ? LucideIcons.x : LucideIcons.mic,
+                key: ValueKey(_isOpen),
+                size: 26,
+                color: AppColors.white,
               ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }
 
   Widget _buildMiniFab({
-    required double offsetY,
     required IconData icon,
     required String label,
     required Color color,
     required VoidCallback onTap,
   }) {
-    return Positioned(
-      bottom: 0,
-      right: 0,
-      child: ListenableBuilder(
-        listenable: _expandAnimation,
-        builder: (context, child) {
-          final value = _expandAnimation.value;
-          return Transform.translate(
-            offset: Offset(0, -offsetY * value),
-            child: Opacity(
-              opacity: value,
-              child: IgnorePointer(ignoring: value < 0.5, child: child),
-            ),
-          );
-        },
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                label,
-                style: TextStyle(
-                  color: color,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            const SizedBox(width: 10),
-            GestureDetector(
-              onTap: onTap,
-              child: Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: color,
-                  boxShadow: [
-                    BoxShadow(
-                      color: color.withValues(alpha: 0.3),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
+    // ENG-185: cap the label so long locales wrap instead of pushing the cluster
+    // off-screen. It wraps (never ellipsizes), so the label stays fully legible.
+    final maxLabelWidth =
+        MediaQuery.sizeOf(context).width -
+        (_miniButtonSize + SpacingScale.s8 + SpacingScale.s16 * 2);
+
+    return FadeTransition(
+      opacity: _expandAnimation,
+      child: SlideTransition(
+        position: _slideAnimation,
+        child: IgnorePointer(
+          ignoring: !_isOpen,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: maxLabelWidth),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: SpacingScale.s8,
+                    vertical: SpacingScale.s8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(RadiusScale.r8),
+                  ),
+                  child: Text(
+                    label,
+                    maxLines: 2,
+                    softWrap: true,
+                    style: TextStyle(
+                      color: color,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
                     ),
-                  ],
+                  ),
                 ),
-                child: Icon(icon, size: 20, color: Colors.white),
               ),
-            ),
-          ],
+              const SizedBox(width: SpacingScale.s8),
+              GestureDetector(
+                onTap: onTap,
+                child: Container(
+                  width: _miniButtonSize,
+                  height: _miniButtonSize,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: color,
+                    boxShadow: [
+                      BoxShadow(
+                        color: color.withValues(alpha: 0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Icon(icon, size: 20, color: AppColors.white),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

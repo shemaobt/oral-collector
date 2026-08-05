@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/tokens.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/project_member.dart';
 import '../notifiers/member_notifier.dart';
@@ -27,7 +28,9 @@ Future<ProjectMember?> showProjectMemberPickerSheet(
     useRootNavigator: true,
     backgroundColor: Theme.of(context).colorScheme.surface,
     shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      borderRadius: BorderRadius.vertical(
+        top: Radius.circular(RadiusScale.r20),
+      ),
     ),
     builder: (_) => _ProjectMemberPickerSheet(
       projectId: projectId,
@@ -94,7 +97,12 @@ class _ProjectMemberPickerSheetState
         return Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 8, 4),
+              padding: const EdgeInsets.fromLTRB(
+                SpacingScale.s20,
+                SpacingScale.s16,
+                SpacingScale.s8,
+                SpacingScale.s4,
+              ),
               child: Row(
                 children: [
                   Expanded(
@@ -111,7 +119,7 @@ class _ProjectMemberPickerSheetState
               ),
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+              padding: const EdgeInsets.symmetric(horizontal: SpacingScale.s20),
               child: TextField(
                 autofocus: false,
                 decoration: InputDecoration(
@@ -121,10 +129,10 @@ class _ProjectMemberPickerSheetState
                 onChanged: (v) => setState(() => _query = v),
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: SpacingScale.s8),
             if (state.isLoading && state.members.isEmpty)
               const Padding(
-                padding: EdgeInsets.all(32),
+                padding: EdgeInsets.all(SpacingScale.s32),
                 child: Center(child: CircularProgressIndicator()),
               )
             else
@@ -138,7 +146,7 @@ class _ProjectMemberPickerSheetState
                     if (widget.includeAll && q.isEmpty && index == 0) {
                       return ListTile(
                         contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 24,
+                          horizontal: SpacingScale.s24,
                         ),
                         leading: CircleAvatar(
                           radius: 20,
@@ -170,7 +178,7 @@ class _ProjectMemberPickerSheetState
                         : label.substring(0, 1).toUpperCase();
                     return ListTile(
                       contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 24,
+                        horizontal: SpacingScale.s24,
                       ),
                       leading: CircleAvatar(
                         radius: 20,
