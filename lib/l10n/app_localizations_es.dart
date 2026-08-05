@@ -2361,6 +2361,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get filters_sectionUser => 'Grabado por';
 
   @override
+  String get filters_sectionPendency => 'Faltan detalles';
+
+  @override
   String get filter_apply => 'Aplicar';
 
   @override
@@ -2392,6 +2395,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get filter_genreAll => 'Cualquier género';
+
+  @override
+  String get filter_pendencyAll => 'Cualquier campo';
 
   @override
   String get detail_recordedBy => 'Grabado por';

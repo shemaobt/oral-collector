@@ -4220,6 +4220,12 @@ abstract class AppLocalizations {
   /// **'Recorded by'**
   String get filters_sectionUser;
 
+  /// Section header in the recordings filter sheet for the review-pendency filter, worded like the project screen's stat chip so the two read as the same thing (ENG-383).
+  ///
+  /// In en, this message translates to:
+  /// **'Needs details'**
+  String get filters_sectionPendency;
+
   /// No description provided for @filter_apply.
   ///
   /// In en, this message translates to:
@@ -4261,6 +4267,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Any genre'**
   String get filter_genreAll;
+
+  /// No description provided for @filter_pendencyAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Any field'**
+  String get filter_pendencyAll;
 
   /// No description provided for @detail_recordedBy.
   ///

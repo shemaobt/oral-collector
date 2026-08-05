@@ -2344,6 +2344,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get filters_sectionUser => 'द्वारा रिकॉर्ड';
 
   @override
+  String get filters_sectionPendency => 'विवरण अधूरा';
+
+  @override
   String get filter_apply => 'लागू करें';
 
   @override
@@ -2375,6 +2378,9 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get filter_genreAll => 'कोई भी शैली';
+
+  @override
+  String get filter_pendencyAll => 'कोई भी विवरण';
 
   @override
   String get detail_recordedBy => 'द्वारा रिकॉर्ड';

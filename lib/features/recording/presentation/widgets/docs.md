@@ -140,6 +140,19 @@ Path: @/lib/features/recording/presentation/widgets
   would drift. That helper sits in `presentation/`, not next to the
   `PendencyKind` enum it switches on, because a translated string is not
   domain knowledge — see [../../domain/docs.md](../../domain/docs.md).
+- `RecordingsFilterSheet` (`recordings_filter_sheet.dart`) must carry every
+  filter `RecordingsListState.activeFilterCount` counts, because that count is
+  the badge on the sheet's own button. It shipped without the pendency one:
+  the badge said "1", the sheet showed nothing selected, and Reset + Apply left
+  the filter standing — only the chip on the list could remove it (ENG-383).
+  The sheet mirrors the notifier's filters into local fields in `initState` and
+  writes them back on Apply, so Reset is a local clear that only takes effect
+  through Apply. Apply calls `setReviewFlagFilter(..., refresh: false)` before
+  the storyteller and user setters: all three are server-side, and those two
+  re-fetch, so the flag is in state by the time the request goes out and one
+  Apply still costs the fetches it already did. Its chips iterate
+  `PendencyKind.values` and label them with the shared `pendencyLabel`, the
+  same helper `ActiveFilterChips` uses.
 - `RecordingCard` (ENG-374, "card V3") was redesigned around one question —
   "which recordings still need me?" — which cost the duration chip (and the
   `formattedDuration` constructor param `recordings_list_screen.dart` used to

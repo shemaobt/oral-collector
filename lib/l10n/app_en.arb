@@ -1127,6 +1127,10 @@
   "filters_sectionGenre": "Genre",
   "filters_sectionStoryteller": "Storyteller",
   "filters_sectionUser": "Recorded by",
+  "filters_sectionPendency": "Needs details",
+  "@filters_sectionPendency": {
+    "description": "Section header in the recordings filter sheet for the review-pendency filter, worded like the project screen's stat chip so the two read as the same thing (ENG-383)."
+  },
   "filter_apply": "Apply",
   "filter_reset": "Reset",
   "filter_clearAll": "Clear all",
@@ -1142,6 +1146,7 @@
   "filter_userAll": "Any user",
   "filter_storytellerAll": "Any storyteller",
   "filter_genreAll": "Any genre",
+  "filter_pendencyAll": "Any field",
   "detail_recordedBy": "Recorded by",
   "detail_storyteller": "Storyteller",
   "recording_unknownUser": "Unknown user",

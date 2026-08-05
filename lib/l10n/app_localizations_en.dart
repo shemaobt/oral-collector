@@ -2339,6 +2339,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get filters_sectionUser => 'Recorded by';
 
   @override
+  String get filters_sectionPendency => 'Needs details';
+
+  @override
   String get filter_apply => 'Apply';
 
   @override
@@ -2370,6 +2373,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get filter_genreAll => 'Any genre';
+
+  @override
+  String get filter_pendencyAll => 'Any field';
 
   @override
   String get detail_recordedBy => 'Recorded by';

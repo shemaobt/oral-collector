@@ -2259,6 +2259,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get filters_sectionUser => '녹음자';
 
   @override
+  String get filters_sectionPendency => '정보 필요';
+
+  @override
   String get filter_apply => '적용';
 
   @override
@@ -2290,6 +2293,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get filter_genreAll => '모든 장르';
+
+  @override
+  String get filter_pendencyAll => '모든 항목';
 
   @override
   String get detail_recordedBy => '녹음자';

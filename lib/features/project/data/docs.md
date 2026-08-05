@@ -119,7 +119,13 @@ Path: @/lib/features/project/data
   but the headline `recordings_with_review_flags` count stays untappable,
   since there is no server filter that answers to it. ENG-377 is an open bug
   of exactly this shape elsewhere in the repo, so treat the trap as recurring
-  rather than hypothetical.
+  rather than hypothetical. The tap first switches the active project when
+  settings were opened for a non-active one, and a failed switch stops there —
+  snackbar plus `ErrorReporter`, no navigation, since the list only ever reads
+  the active project and pushing anyway would answer with the wrong project's
+  recordings (ENG-383). Nothing else would catch that failure: the callback's
+  type is `void Function(PendencyKind)`, so the `Future` is dropped and
+  `unawaited_futures` stays quiet.
 - **A code's presence in `review_flag_counts` means nothing; only its count
   does (ENG-385).** The server seeds every known code at zero, so a project
   with nothing pending arrives as a full map rather than an empty one. It used

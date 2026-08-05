@@ -2347,6 +2347,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get filters_sectionUser => 'Direkam oleh';
 
   @override
+  String get filters_sectionPendency => 'Perlu detail';
+
+  @override
   String get filter_apply => 'Terapkan';
 
   @override
@@ -2378,6 +2381,9 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get filter_genreAll => 'Semua genre';
+
+  @override
+  String get filter_pendencyAll => 'Semua bidang';
 
   @override
   String get detail_recordedBy => 'Direkam oleh';

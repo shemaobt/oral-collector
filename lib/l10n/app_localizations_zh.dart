@@ -2243,6 +2243,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get filters_sectionUser => '录制者';
 
   @override
+  String get filters_sectionPendency => '待完善';
+
+  @override
   String get filter_apply => '应用';
 
   @override
@@ -2274,6 +2277,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get filter_genreAll => '任意类型';
+
+  @override
+  String get filter_pendencyAll => '任意字段';
 
   @override
   String get detail_recordedBy => '录制者';

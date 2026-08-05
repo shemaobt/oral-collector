@@ -2303,6 +2303,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get filters_sectionUser => 'مسجل بواسطة';
 
   @override
+  String get filters_sectionPendency => 'بيانات ناقصة';
+
+  @override
   String get filter_apply => 'تطبيق';
 
   @override
@@ -2334,6 +2337,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get filter_genreAll => 'أي نوع';
+
+  @override
+  String get filter_pendencyAll => 'أي حقل';
 
   @override
   String get detail_recordedBy => 'سُجل بواسطة';

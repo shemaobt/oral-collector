@@ -77,6 +77,29 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
   }
 
   @override
+  void didUpdateWidget(RecordingsListScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // The tab bar, deep links and back navigation all reach this screen through
+    // the router, which rebuilds the widget with the route's parameters but
+    // reuses the State, so `initState` never runs again and a pendency from an
+    // earlier visit outlives the URL that named it.
+    //
+    // The comparison is against the old widget, never against the notifier: a
+    // filter the user picked from the sheet or a chip is not in the URL, and
+    // keying this on the route alone would wipe it on any rebuild.
+    if (widget.initialReviewFlag == oldWidget.initialReviewFlag) return;
+    final flag = widget.initialReviewFlag;
+    Future.microtask(() {
+      if (!mounted) return;
+      unawaited(
+        ref
+            .read(recordingsListNotifierProvider.notifier)
+            .setReviewFlagFilter(flag),
+      );
+    });
+  }
+
+  @override
   void dispose() {
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();

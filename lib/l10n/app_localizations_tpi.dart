@@ -2326,6 +2326,9 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get filters_sectionUser => 'Husat i rekodim';
 
   @override
+  String get filters_sectionPendency => 'I no pinis yet';
+
+  @override
   String get filter_apply => 'Wokim';
 
   @override
@@ -2357,6 +2360,9 @@ class AppLocalizationsTpi extends AppLocalizations {
 
   @override
   String get filter_genreAll => 'Wanem kain stori';
+
+  @override
+  String get filter_pendencyAll => 'Wanem samting';
 
   @override
   String get detail_recordedBy => 'Husat i rekodim';

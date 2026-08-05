@@ -11,8 +11,10 @@ import '../../../project/presentation/notifiers/member_notifier.dart';
 import '../../../project/presentation/widgets/project_member_picker_sheet.dart';
 import '../../../storyteller/presentation/notifiers/project_storytellers_notifier.dart';
 import '../../../storyteller/presentation/widgets/storyteller_picker.dart';
+import '../../domain/entities/review_pendency.dart';
 import '../notifiers/recordings_list_notifier.dart';
 import '../notifiers/recordings_list_state.dart';
+import '../pendency_label.dart';
 
 class RecordingsFilterSheet extends ConsumerStatefulWidget {
   const RecordingsFilterSheet({super.key, required this.projectId});
@@ -29,6 +31,7 @@ class _RecordingsFilterSheetState extends ConsumerState<RecordingsFilterSheet> {
   String? _genreId;
   String? _storytellerId;
   String? _userId;
+  PendencyKind? _reviewFlag;
 
   @override
   void initState() {
@@ -38,6 +41,7 @@ class _RecordingsFilterSheetState extends ConsumerState<RecordingsFilterSheet> {
     _genreId = state.selectedGenreId;
     _storytellerId = state.selectedStorytellerId;
     _userId = state.selectedUserId;
+    _reviewFlag = state.selectedReviewFlag;
 
     Future.microtask(() {
       ref
@@ -96,6 +100,10 @@ class _RecordingsFilterSheetState extends ConsumerState<RecordingsFilterSheet> {
                   _sectionTitle(theme, l10n.filters_sectionStatus),
                   const SizedBox(height: SpacingScale.s8),
                   _buildStatusChips(),
+                  const SizedBox(height: SpacingScale.s24),
+                  _sectionTitle(theme, l10n.filters_sectionPendency),
+                  const SizedBox(height: SpacingScale.s8),
+                  _buildPendencyChips(l10n),
                   const SizedBox(height: SpacingScale.s24),
                   _sectionTitle(theme, l10n.filters_sectionGenre),
                   const SizedBox(height: SpacingScale.s8),
@@ -166,6 +174,27 @@ class _RecordingsFilterSheetState extends ConsumerState<RecordingsFilterSheet> {
             ),
           )
           .toList(),
+    );
+  }
+
+  Widget _buildPendencyChips(AppLocalizations l10n) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        ChoiceChip(
+          label: Text(l10n.filter_pendencyAll),
+          selected: _reviewFlag == null,
+          onSelected: (_) => setState(() => _reviewFlag = null),
+        ),
+        ...PendencyKind.values.map(
+          (kind) => ChoiceChip(
+            label: Text(pendencyLabel(l10n, kind)),
+            selected: _reviewFlag == kind,
+            onSelected: (_) => setState(() => _reviewFlag = kind),
+          ),
+        ),
+      ],
     );
   }
 
@@ -289,6 +318,7 @@ class _RecordingsFilterSheetState extends ConsumerState<RecordingsFilterSheet> {
                     _genreId = null;
                     _storytellerId = null;
                     _userId = null;
+                    _reviewFlag = null;
                   });
                 },
                 style: OutlinedButton.styleFrom(
@@ -319,6 +349,14 @@ class _RecordingsFilterSheetState extends ConsumerState<RecordingsFilterSheet> {
                   );
                   notifier.setStatusFilter(_status);
                   notifier.setGenreFilter(_genreId);
+                  // refresh: false — the pendency is a server-side filter, but
+                  // it is in state before the two setters below, and each of
+                  // those refetches. Letting it fetch too would ask three
+                  // times for one Apply.
+                  await notifier.setReviewFlagFilter(
+                    _reviewFlag,
+                    refresh: false,
+                  );
                   await notifier.setStorytellerFilter(_storytellerId);
                   await notifier.setUserFilter(_userId);
                   if (context.mounted) Navigator.of(context).pop();

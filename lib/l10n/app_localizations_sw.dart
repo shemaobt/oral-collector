@@ -2332,6 +2332,9 @@ class AppLocalizationsSw extends AppLocalizations {
   String get filters_sectionUser => 'Imerekodiwa na';
 
   @override
+  String get filters_sectionPendency => 'Zinahitaji maelezo';
+
+  @override
   String get filter_apply => 'Tumia';
 
   @override
@@ -2363,6 +2366,9 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get filter_genreAll => 'Aina yoyote';
+
+  @override
+  String get filter_pendencyAll => 'Sehemu yoyote';
 
   @override
   String get detail_recordedBy => 'Imerekodiwa na';

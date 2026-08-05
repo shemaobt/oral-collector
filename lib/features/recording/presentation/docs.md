@@ -31,7 +31,13 @@ Path: @/lib/features/recording/presentation
   instead of forwarding a value the server would 422 on; the project settings
   screen's pendency breakdown is what links here (see
   [../../project/data/docs.md](../../project/data/docs.md) for the counters it
-  reads).
+  reads). `RecordingsListScreen` re-applies that parameter from
+  `didUpdateWidget`, not only from `initState`: the router reuses the `State`
+  across navigations (the tab bar's `context.go('/recordings')` is the common
+  case), so without it a pendency from an earlier visit outlives the URL that
+  named it. The guard compares the new widget against the old one rather than
+  against the notifier — a filter the user picked from the sheet or a chip is
+  not in the URL and must survive an unrelated rebuild (ENG-383).
 - The detail screen is now a thin consumer of `RecordingDetailNotifier`
   (ENG-194), which owns the load orchestration, the metadata/audio mutations,
   and the `localRecordingStreamProvider` listen (see
@@ -322,6 +328,17 @@ Path: @/lib/features/recording/presentation
 
 ### Things to Know
 
+- **The list re-asks the server after a visit to the detail screen.**
+  `recordings_list_screen.dart` awaits its `context.push('/recording/:id')` and
+  fires `fetchRecordings()` when it returns. Under a pendency filter the list is
+  the server's answer to a question the detail screen just changed — the server
+  recomputes the review flags on every write — so without the refetch a
+  recording the user has just corrected stays in the list of things still to
+  correct. This predates ENG-381 and was untested until ENG-383; the regression
+  test is
+  [/test/features/recording/presentation/recordings_list_refetch_after_detail_test.dart](../../../../test/features/recording/presentation/recordings_list_refetch_after_detail_test.dart).
+  Note the refetch is a fresh page one: pages the user pulled in with `loadMore`
+  before opening the detail are dropped.
 - **The recordings list and its leaf cards are end-to-end entity-typed
   (ENG-196).** `recordings_list_screen.dart` reads
   `RecordingsListState.recordings` as `List<LocalRecordingEntity>` and passes

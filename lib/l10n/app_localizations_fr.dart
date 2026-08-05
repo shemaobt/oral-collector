@@ -2372,6 +2372,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get filters_sectionUser => 'Enregistré par';
 
   @override
+  String get filters_sectionPendency => 'Détails manquants';
+
+  @override
   String get filter_apply => 'Appliquer';
 
   @override
@@ -2403,6 +2406,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get filter_genreAll => 'N\'importe quel genre';
+
+  @override
+  String get filter_pendencyAll => 'N\'importe quel champ';
 
   @override
   String get detail_recordedBy => 'Enregistré par';
