@@ -128,6 +128,50 @@ void main() {
     );
   });
 
+  testWidgets('a project with nothing pending gets no breakdown at all', (
+    tester,
+  ) async {
+    // The server seeds every known code at zero, so a clean project arrives as
+    // a full map rather than an empty one. Rendering it as written would put
+    // three lines saying zero on screen — and since ENG-381 each line is a tap
+    // target, all three would lead somewhere with nothing in it.
+    await _pump(
+      tester,
+      stats: const ProjectStats(
+        reviewFlagCounts: {
+          'missing_classification': 0,
+          'insufficient_description': 0,
+          'missing_storyteller': 0,
+        },
+        // Zero, not absent: a null distinct count short-circuits the breakdown
+        // before the per-code map is ever read, which would leave this passing
+        // without exercising the filtering at all.
+        recordingsWithReviewFlags: 0,
+      ),
+    );
+
+    expect(find.textContaining(': 0'), findsNothing);
+  });
+
+  testWidgets('a code nobody carries stays out while its siblings show', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      stats: const ProjectStats(
+        reviewFlagCounts: {
+          'missing_classification': 2,
+          'insufficient_description': 0,
+          'missing_storyteller': 0,
+        },
+        recordingsWithReviewFlags: 2,
+      ),
+    );
+
+    expect(find.text('No classification: 2'), findsOneWidget);
+    expect(find.textContaining(': 0'), findsNothing);
+  });
+
   testWidgets('the whole breakdown line is a tap target, not just its text', (
     tester,
   ) async {

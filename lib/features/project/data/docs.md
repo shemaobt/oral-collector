@@ -120,6 +120,15 @@ Path: @/lib/features/project/data
   since there is no server filter that answers to it. ENG-377 is an open bug
   of exactly this shape elsewhere in the repo, so treat the trap as recurring
   rather than hypothetical.
+- **A code's presence in `review_flag_counts` means nothing; only its count
+  does (ENG-385).** The server seeds every known code at zero, so a project
+  with nothing pending arrives as a full map rather than an empty one. It used
+  to omit codes nobody carried, and `_breakdownByKind` was written against
+  that: it kept any code present in the map. The result was three lines reading
+  zero on a clean project, each of them a tap target into an empty list. The
+  breakdown now drops zero counts, which is what restores the property the
+  tap targets rely on — every line that renders leads to at least one
+  recording.
 - **Server-wins-after-fetch invariant.** Build kicks off cache hydration without
   awaiting it, so a slow `read()` can resolve after a fast `fetchProjects()` has
   already populated fresh server data. Hydration bails when the fetch has
