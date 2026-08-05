@@ -71,12 +71,49 @@ String _statusLabel(String uploadStatus, AppLocalizations l10n) =>
 /// around the whitespace that disagreement left behind.
 String? _visibleDescription(String? raw) => blankToNull(raw?.trim());
 
+/// Width the left status rail takes before the content column gets any.
+const double _railWidth = 4;
+
+/// One definition of the duration's type, shared by the [Text] that paints it
+/// and by the measurement that decides whether it is painted at all.
+TextStyle? _durationStyle(BuildContext context) =>
+    Theme.of(context).textTheme.labelSmall?.copyWith(
+      color: AppColors.of(context).secondary.withValues(alpha: 0.7),
+      fontFeatures: const [FontFeature.tabularFigures()],
+    );
+
+/// Width [text] takes when laid out the way a [Text] carrying [style] would.
+///
+/// The footer has to rank the pendency chip above the duration, and a [Row]
+/// cannot express that: it gives every non-flex child its intrinsic width
+/// first and hands only the remainder to the flexible one, so whichever
+/// element is left out of the flex is served first regardless of rank.
+/// Measuring both strings up front is what lets the row decide instead of the
+/// layout algorithm. Two short single-line strings, once per build.
+double _textWidth(BuildContext context, String text, TextStyle? style) {
+  final painter = TextPainter(
+    text: TextSpan(
+      text: text,
+      style: DefaultTextStyle.of(context).style.merge(style),
+    ),
+    textDirection: Directionality.of(context),
+    textScaler: MediaQuery.textScalerOf(context),
+    maxLines: 1,
+  )..layout();
+  return painter.width;
+}
+
 /// One row of the recordings list (ENG-374, card V3).
 ///
 /// The list answers "which recordings still need me?", so the room the upload
 /// chip and the duration chip used to take now goes to the description and to
 /// a single pendency chip. Upload state survives as an icon with its old label
 /// moved into semantics — colour alone would say nothing to a screen reader.
+///
+/// ENG-382 let the duration back into the footer as plain text rather than a
+/// chip: it earns a place by telling an accidental misfire from a real
+/// session, but it re-enters ranked below the description that displaced it —
+/// on a footer too narrow for both, the duration is the one that goes.
 ///
 /// Every row below is a private widget that reads its own `l10n` off the
 /// context; nothing on this card takes localizations as a parameter.
@@ -118,6 +155,34 @@ class RecordingCard extends ConsumerWidget {
         (recording.uploadedBytes > 0 || recording.resumableSessionUri != null);
     final description = _visibleDescription(recording.description);
 
+    // The footer needs its own width to rank the chip above the duration, and
+    // the measurement has to happen here rather than down in `_FooterRow`:
+    // everything below is wrapped in an `IntrinsicHeight` for the rail, and a
+    // `LayoutBuilder` refuses to answer the intrinsic query that sends.
+    return LayoutBuilder(
+      builder: (context, constraints) => _cardBody(
+        context,
+        colors: colors,
+        description: description,
+        isUploadingThis: isUploadingThis,
+        uploadProgress: uploadProgress,
+        isPausedByRecording: isPausedByRecording,
+        footerWidth: constraints.maxWidth.isFinite
+            ? constraints.maxWidth - _railWidth - SpacingScale.s16 * 2
+            : null,
+      ),
+    );
+  }
+
+  Widget _cardBody(
+    BuildContext context, {
+    required AppColorSet colors,
+    required String? description,
+    required bool isUploadingThis,
+    required int uploadProgress,
+    required bool isPausedByRecording,
+    required double? footerWidth,
+  }) {
     return Material(
       color: colors.card,
       borderRadius: BorderRadius.circular(RadiusScale.r16),
@@ -129,7 +194,7 @@ class RecordingCard extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Container(
-                width: 4,
+                width: _railWidth,
                 decoration: BoxDecoration(
                   color:
                       _statusAccent(recording.uploadStatus, colors) ??
@@ -161,7 +226,7 @@ class RecordingCard extends ConsumerWidget {
                         RecordingDescriptionLine(description: description),
                       ],
                       const SizedBox(height: SpacingScale.s8),
-                      _FooterRow(recording: recording),
+                      _FooterRow(recording: recording, width: footerWidth),
                       if (isUploadingThis) ...[
                         const SizedBox(height: SpacingScale.s8),
                         _UploadProgressRow(progress: uploadProgress),
@@ -198,7 +263,7 @@ class _TitleRow extends StatelessWidget {
       children: [
         Expanded(
           child: Text(
-            title ?? formatWeekdayTime(recording.recordedAt, locale),
+            title ?? formatUntitledRecordingTime(recording.recordedAt, locale),
             style: theme.textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.w700,
               fontStyle: title == null ? FontStyle.italic : FontStyle.normal,
@@ -275,9 +340,40 @@ class _BreadcrumbRow extends StatelessWidget {
 }
 
 class _FooterRow extends StatelessWidget {
-  const _FooterRow({required this.recording});
+  const _FooterRow({required this.recording, required this.width});
 
   final LocalRecordingEntity recording;
+
+  /// Room the row has to spend, or null when the card's width is unbounded
+  /// and there is nothing to ration.
+  final double? width;
+
+  static const double _statusTarget = 24;
+  static const double _chevronSize = 16;
+
+  /// Everything in the row that is neither the chip nor the duration: the
+  /// status icon's press target, the chevron, and the three gaps between the
+  /// four slots.
+  static const double _furniture =
+      _statusTarget + _chevronSize + SpacingScale.s8 * 3;
+
+  /// Whether the duration can be shown without taking anything from the chip.
+  ///
+  /// The duration is the footer's lowest-ranked element, so it appears only
+  /// when the chip already has the width it wants. Anything short of that and
+  /// it goes entirely: `Flexible` with an ellipsis would paint `1:0…`, which
+  /// reads as a wrong duration rather than as an absent one.
+  bool _durationFits(BuildContext context, String? pendency, String duration) {
+    final available = width;
+    if (available == null) return true;
+    final chip = pendency == null
+        ? 0.0
+        : _PendencyChip.widthFor(context, pendency);
+    return chip +
+            _textWidth(context, duration, _durationStyle(context)) +
+            _furniture <=
+        available;
+  }
 
   /// At most one chip: naming every open field would crowd the row the
   /// description just moved into, so two or more collapse into a count.
@@ -300,6 +396,13 @@ class _FooterRow extends StatelessWidget {
     final colors = AppColors.of(context);
     final statusLabel = _statusLabel(recording.uploadStatus, l10n);
     final pendency = _pendencyLabel(l10n);
+    final duration = formatDurationHMS(recording.durationSeconds);
+    // The chip takes the slack through its Expanded, and the duration is in
+    // the row at all only when it fits beside a chip at full width. Leaving
+    // the duration in unconditionally would invert the ranking: a Row sizes
+    // its non-flex children first, so the duration would be paid before the
+    // chip and the chip would absorb every pixel of the shortfall.
+    final showDuration = _durationFits(context, pendency, duration);
     return Row(
       children: [
         Tooltip(
@@ -307,7 +410,7 @@ class _FooterRow extends StatelessWidget {
           // The glyph stays small; its long-press target does not. A 13px hit
           // area puts the only visible copy of the status label out of reach.
           child: SizedBox.square(
-            dimension: 24,
+            dimension: _statusTarget,
             child: Center(
               child: Icon(
                 _statusIcon(recording.uploadStatus),
@@ -331,7 +434,30 @@ class _FooterRow extends StatelessWidget {
                   child: _PendencyChip(label: pendency),
                 ),
         ),
-        Icon(LucideIcons.chevronRight, size: 16, color: colors.border),
+        if (showDuration) ...[
+          const SizedBox(width: SpacingScale.s8),
+          Text(
+            // Seconds, not the compact hours-and-minutes form: an accidental
+            // three-second misfire and a real forty-minute take both read as
+            // "0m" there, and telling those apart is why the duration is back.
+            duration,
+            // `00:03` is ambiguous read aloud — mm:ss and hh:mm sound the
+            // same. The compact form names its units, so the announcement
+            // carries the fact the glyphs only imply.
+            semanticsLabel: formatDurationCompactWithSeconds(
+              Duration(
+                milliseconds: (recording.durationSeconds * 1000).round(),
+              ),
+            ),
+            style: _durationStyle(context),
+          ),
+        ],
+        const SizedBox(width: SpacingScale.s8),
+        Icon(
+          LucideIcons.chevronRight,
+          size: _chevronSize,
+          color: colors.border,
+        ),
       ],
     );
   }
@@ -382,12 +508,30 @@ class _PendencyChip extends StatelessWidget {
 
   final String label;
 
+  static const double _iconSize = 11;
+  static const double _iconGap = SpacingScale.s4;
+  static const double _horizontalPadding = SpacingScale.s8;
+
+  static TextStyle? _labelStyle(BuildContext context) =>
+      Theme.of(context).textTheme.labelSmall?.copyWith(
+        color: AppColors.of(context).secondary,
+        fontWeight: FontWeight.w600,
+      );
+
+  /// Width the chip wants for [label] before anything squeezes it — what the
+  /// footer compares the duration against.
+  static double widthFor(BuildContext context, String label) =>
+      _horizontalPadding * 2 +
+      _iconSize +
+      _iconGap +
+      _textWidth(context, label, _labelStyle(context));
+
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: SpacingScale.s8,
+        horizontal: _horizontalPadding,
         vertical: 3,
       ),
       decoration: BoxDecoration(
@@ -397,15 +541,16 @@ class _PendencyChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(LucideIcons.circleDashed, size: 11, color: colors.secondary),
-          const SizedBox(width: SpacingScale.s4),
+          Icon(
+            LucideIcons.circleDashed,
+            size: _iconSize,
+            color: colors.secondary,
+          ),
+          const SizedBox(width: _iconGap),
           Flexible(
             child: Text(
               label,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: colors.secondary,
-                fontWeight: FontWeight.w600,
-              ),
+              style: _labelStyle(context),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),

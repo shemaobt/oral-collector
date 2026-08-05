@@ -170,11 +170,16 @@ Path: @/lib/features/recording/presentation/widgets
   the same function `CompleteFichaPill`/`CompleteFichaSheet` read (see
   below), and shows at most one chip: a single open field is named, two or
   more collapse into `recording_pendencyCount(n)`. A title-less recording
-  falls back to `formatWeekdayTime`
+  falls back to `formatUntitledRecordingTime`
   ([/lib/shared/utils/format.dart](/lib/shared/utils/format.dart)), in
   italics, instead of a generic "Untitled" label — the fallback carries
   seconds because untitled recordings tend to arrive in bursts from the same
-  session, and minute precision would not tell siblings apart. `build()` was
+  session, and minute precision would not tell siblings apart. It is a clock
+  time only: ENG-382 dropped the weekday the function used to prefix, because
+  the date column on the same row already places the recording in time. The
+  function kept `DateFormat.jms` (not `Hms`) through the rename — the clock
+  convention belongs to the locale, and forcing 24 hours is the defect PR #174
+  fixed for en/ar/hi/ko. `build()` was
   split entirely into row-level widget classes — `_TitleRow`, `_BreadcrumbRow`,
   `_FooterRow`, `RecordingDescriptionLine`, and a few more — rather than
   private build-returning methods, a convention local to this file; each
@@ -187,7 +192,42 @@ Path: @/lib/features/recording/presentation/widgets
   comparing colour values to infer which state produced them — the rail falls
   back to `colors.border`, the icon to `colors.secondary`. The chip's
   background is the themed `colors.chipSurface`
-  (ENG-374; see [/lib/core/theme/docs.md](/lib/core/theme/docs.md)).
+  (ENG-374; see [/lib/core/theme/docs.md](/lib/core/theme/docs.md)). ENG-382
+  weighed retiring that token and kept it: it is not interchangeable with
+  `surfaceAlt`, which coincides in dark (`0xFF302D22`) but differs in light
+  (`0xFFF1EEDE` against `0xFFEDE9D5`), so the field is carrying a real
+  distinction rather than costing one for nothing. ENG-382 did put
+  the duration back in `_FooterRow`, between the chip and the chevron, which
+  amends the ENG-374 trade rule that had banned it — the description keeps the
+  room it won, and the duration is the element ranked below it. It uses
+  `formatDurationHMS`, not `formatDurationCompact`: the compact form is
+  hours-and-minutes only and renders both a three-second misfire and a real
+  forty-minute take as `0m`, which is the exact distinction the amendment
+  exists to restore. Its `semanticsLabel` is
+  `formatDurationCompactWithSeconds`, because `00:03` spoken aloud is
+  ambiguous between mm:ss and hh:mm while `3s` names its units.
+  That ranking is enforced by measurement, not by the flex factors: a `Row`
+  sizes its non-flex children at their intrinsic width **first** and hands
+  only the remainder to the `Expanded` one, so leaving the duration in the row
+  unconditionally made the chip — not the duration — pay for every pixel of a
+  shortfall (at 390dp and 2.0x the chip's paragraph was cut to 69.5px). So
+  `_FooterRow` takes the width the card measured for it, adds up
+  `_PendencyChip.widthFor` and the duration's own `_textWidth`, and drops the
+  duration from the row entirely when the two do not both fit. Dropping it
+  whole rather than ellipsizing it is deliberate: `1:0…` reads as a wrong
+  duration, an absent one reads as nothing. The width is measured by a
+  `LayoutBuilder` at the very top of `RecordingCard.build` rather than around
+  the footer, because the rail's `IntrinsicHeight` asks its subtree for
+  intrinsic dimensions and `LayoutBuilder` throws on that query.
+  `recording_card_text_scale_test.dart` pins the ranking: it pumps the card
+  inside the 16dp padding the list really applies, at 320dp as well as 390dp,
+  and asserts geometry — the chip reaches the chevron once the duration
+  yields, and wherever the duration does render the chip's paragraph is
+  uncut. (`find.text` is blind to all of this: it matches `Text.data`
+  whatever the layout did with it.) One overflow at 320dp above 1.0x is
+  neither the footer's nor ENG-382's — `_TitleRow`'s date column overflows
+  there on `dev` too, by the same 26px — so that assertion is scoped to the
+  footer's own rows until the title is fixed on its own issue.
 - `CompleteFichaOverlay`/`CompleteFichaPill`/`CompleteFichaSheet`
   ([complete_ficha_overlay.dart](complete_ficha_overlay.dart) /
   [complete_ficha_pill.dart](complete_ficha_pill.dart) /
