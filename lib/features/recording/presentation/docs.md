@@ -38,6 +38,20 @@ Path: @/lib/features/recording/presentation
   named it. The guard compares the new widget against the old one rather than
   against the notifier — a filter the user picked from the sheet or a chip is
   not in the URL and must survive an unrelated rebuild (ENG-383).
+  **The division of labour between the two callbacks is the whole rule: the URL
+  wins when the route *changes*, and a filter chosen on this screen is sticky
+  the rest of the time.** So `initState` applies the pendency only when the
+  route names one, exactly as it already did for `genreId`/`subcategoryId`; a
+  `State` built from scratch — leaving the screen and coming back — must not
+  wipe what the sheet set, and clearing on a route change, including the change
+  to null the tab bar makes, is `didUpdateWidget`'s job alone. The
+  re-application also re-fetches, which is not incidental: the narrowing lives
+  on the server, so a list that only cleared its state would keep the narrowed
+  page on screen under a URL that names no filter. Both halves are pinned in
+  [/test/features/recording/presentation/recordings_list_filter_reset_test.dart](../../../../test/features/recording/presentation/recordings_list_filter_reset_test.dart).
+  `didUpdateWidget` follows the pendency and nothing else: `initialGenreId` and
+  `initialSubcategoryId` can diverge the same way in principle, but no live path
+  produces one, so following them would be untestable code for a hypothetical.
 - The detail screen is now a thin consumer of `RecordingDetailNotifier`
   (ENG-194), which owns the load orchestration, the metadata/audio mutations,
   and the `localRecordingStreamProvider` listen (see

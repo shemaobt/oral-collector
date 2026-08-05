@@ -4196,11 +4196,17 @@ abstract class AppLocalizations {
   /// **'Filter recordings'**
   String get filters_sheetTitle;
 
-  /// No description provided for @filters_sectionStatus.
+  /// Section header in the recordings filter sheet for the on-device status chips. Names the device because two of its chips (unclassified, missing description) read almost identically to the pendency chips below, and where the answer comes from is the only difference (ENG-383).
   ///
   /// In en, this message translates to:
-  /// **'Upload status'**
+  /// **'Status on this device'**
   String get filters_sectionStatus;
+
+  /// Supporting line under the status section header in the recordings filter sheet (ENG-383).
+  ///
+  /// In en, this message translates to:
+  /// **'Narrows the recordings already on screen. Works offline.'**
+  String get filters_sectionStatusHint;
 
   /// No description provided for @filters_sectionGenre.
   ///
@@ -4220,11 +4226,17 @@ abstract class AppLocalizations {
   /// **'Recorded by'**
   String get filters_sectionUser;
 
-  /// Section header in the recordings filter sheet for the review-pendency filter, worded like the project screen's stat chip so the two read as the same thing (ENG-383).
+  /// Section header in the recordings filter sheet for the review-pendency filter. Names the server because the chips below repeat the wording of the status chips above in several languages (ENG-383).
   ///
   /// In en, this message translates to:
-  /// **'Needs details'**
+  /// **'What the server says is missing'**
   String get filters_sectionPendency;
+
+  /// Supporting line under the pendency section header in the recordings filter sheet (ENG-383).
+  ///
+  /// In en, this message translates to:
+  /// **'Asks the server which recordings still need details. Needs a connection.'**
+  String get filters_sectionPendencyHint;
 
   /// No description provided for @filter_apply.
   ///

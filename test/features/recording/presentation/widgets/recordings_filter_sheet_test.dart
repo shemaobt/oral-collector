@@ -11,6 +11,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:oral_collector/core/database/app_database.dart';
+import 'package:oral_collector/core/l10n/content_l10n.dart';
+import 'package:oral_collector/features/genre/domain/entities/genre.dart';
 import 'package:oral_collector/features/genre/presentation/notifiers/genre_notifier.dart';
 import 'package:oral_collector/features/genre/presentation/notifiers/genre_state.dart';
 import 'package:oral_collector/features/project/domain/entities/project.dart';
@@ -30,6 +32,7 @@ import 'package:oral_collector/features/storyteller/presentation/notifiers/proje
 import 'package:oral_collector/features/sync/presentation/notifiers/sync_notifier.dart';
 import 'package:oral_collector/features/sync/presentation/notifiers/sync_state.dart';
 import 'package:oral_collector/l10n/app_localizations_en.dart';
+import 'package:oral_collector/l10n/app_localizations_es.dart';
 
 import '../../../../support/text_scale.dart';
 
@@ -77,9 +80,14 @@ class _FakeProjectNotifier extends ProjectNotifier {
   ProjectState build() => const ProjectState(activeProject: _project);
 }
 
+const _genres = [
+  Genre(id: 'g1', name: 'Kwanga tales'),
+  Genre(id: 'g2', name: 'Ndoto songs'),
+];
+
 class _FakeGenreNotifier extends GenreNotifier {
   @override
-  GenreState build() => const GenreState();
+  GenreState build() => const GenreState(genres: _genres);
 
   @override
   Future<void> fetchGenres() async {}
@@ -137,10 +145,12 @@ void main() {
   Future<ProviderContainer> pumpHost(
     WidgetTester tester, {
     bool online = false,
+    Locale locale = const Locale('en'),
   }) async {
     await pumpAtTextScale(
       tester,
       overrides: overrides(online: online),
+      locale: locale,
       child: Builder(
         builder: (context) => TextButton(
           onPressed: () => showModalBottomSheet<void>(
@@ -162,6 +172,20 @@ void main() {
 
   Future<void> tapChip(WidgetTester tester, String label) async {
     final chip = find.widgetWithText(ChoiceChip, label);
+    if (chip.evaluate().isEmpty) {
+      // The sheet's list only builds what fits, and the genre chips are below
+      // the fold on a phone.
+      await tester.scrollUntilVisible(
+        chip,
+        200,
+        scrollable: find
+            .descendant(
+              of: find.byType(RecordingsFilterSheet),
+              matching: find.byType(Scrollable),
+            )
+            .first,
+      );
+    }
     await tester.ensureVisible(chip);
     await tester.pumpAndSettle();
     await tester.tap(chip);
@@ -242,5 +266,99 @@ void main() {
       container.read(recordingsListNotifierProvider).selectedReviewFlag,
       isNull,
     );
+  });
+
+  testWidgets('the two chips that share a name are told apart by section', (
+    tester,
+  ) async {
+    // Spanish reads "Sin clasificar" for both the status chip and the pendency
+    // chip. Seven of the eleven languages do; English is one of the four that
+    // hide it. Both stay: the status one is the offline answer, and this app is
+    // used in the field. So the section they sit in is what has to distinguish
+    // them.
+    final es = AppLocalizationsEs();
+    expect(es.filter_unclassified, es.recording_pendencyClassification);
+
+    await pumpHost(tester, locale: const Locale('es'));
+    await openSheet(tester);
+
+    final homonym = find.widgetWithText(
+      ChoiceChip,
+      es.recording_pendencyClassification,
+    );
+    expect(homonym, findsNWidgets(2));
+
+    Finder inSection(String title) => find.descendant(
+      of: find.widgetWithText(FilterSection, title),
+      matching: homonym,
+    );
+    expect(inSection(es.filters_sectionStatus), findsOneWidget);
+    expect(inSection(es.filters_sectionPendency), findsOneWidget);
+
+    // The headers are what the reader has to go on, so they cannot collide the
+    // way the chips do, and each carries the line that says what it costs.
+    expect(es.filters_sectionStatus, isNot(es.filters_sectionPendency));
+    expect(find.text(es.filters_sectionStatusHint), findsOneWidget);
+    expect(find.text(es.filters_sectionPendencyHint), findsOneWidget);
+  });
+
+  testWidgets('Reset then Apply drops the subcategory the badge counts', (
+    tester,
+  ) async {
+    // `/recordings?genreId=…&subcategoryId=…` is a live route (the genre
+    // detail screen), and `activeFilterCount` counts the subcategory, so the
+    // sheet has to be able to clear what the badge is counting.
+    final container = await pumpHost(tester);
+    final notifier = container.read(recordingsListNotifierProvider.notifier);
+    notifier.setGenreFilter('g1');
+    notifier.setSubcategoryFilter('s1');
+    await tester.pump();
+    await openSheet(tester);
+
+    await tester.tap(find.widgetWithText(OutlinedButton, _l10n.filter_reset));
+    await tester.pump();
+    await apply(tester);
+
+    expect(container.read(recordingsListNotifierProvider).activeFilterCount, 0);
+  });
+
+  testWidgets('Apply keeps a subcategory the sheet never showed', (
+    tester,
+  ) async {
+    final container = await pumpHost(tester);
+    final notifier = container.read(recordingsListNotifierProvider.notifier);
+    notifier.setGenreFilter('g1');
+    notifier.setSubcategoryFilter('s1');
+    await tester.pump();
+    await openSheet(tester);
+
+    // Changing something else entirely must not silently widen the list back
+    // to the whole genre.
+    await tapChip(tester, _l10n.filter_uploaded);
+    await apply(tester);
+
+    final state = container.read(recordingsListNotifierProvider);
+    expect(state.selectedSubcategoryId, 's1');
+    expect(state.selectedGenreId, 'g1');
+  });
+
+  testWidgets('picking another genre drops the subcategory under it', (
+    tester,
+  ) async {
+    final container = await pumpHost(tester);
+    final notifier = container.read(recordingsListNotifierProvider.notifier);
+    notifier.setGenreFilter('g1');
+    notifier.setSubcategoryFilter('s1');
+    await tester.pump();
+    await openSheet(tester);
+
+    await tapChip(tester, localizedGenreName(_l10n, _genres[1].name));
+    await apply(tester);
+
+    final state = container.read(recordingsListNotifierProvider);
+    expect(state.selectedGenreId, 'g2');
+    // A refinement of the genre it came with. Kept under a different genre it
+    // would narrow the list to nothing while the badge counted it.
+    expect(state.selectedSubcategoryId, isNull);
   });
 }

@@ -2291,7 +2291,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get filters_sheetTitle => 'تصفية التسجيلات';
 
   @override
-  String get filters_sectionStatus => 'حالة الرفع';
+  String get filters_sectionStatus => 'الحالة على هذا الجهاز';
+
+  @override
+  String get filters_sectionStatusHint =>
+      'يصفّي التسجيلات الظاهرة على الشاشة. يعمل دون اتصال.';
 
   @override
   String get filters_sectionGenre => 'النوع';
@@ -2303,7 +2307,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get filters_sectionUser => 'مسجل بواسطة';
 
   @override
-  String get filters_sectionPendency => 'بيانات ناقصة';
+  String get filters_sectionPendency => 'ما ينقص بحسب الخادم';
+
+  @override
+  String get filters_sectionPendencyHint =>
+      'يسأل الخادم عن التسجيلات التي ما زالت تنقصها تفاصيل. يتطلب اتصالاً.';
 
   @override
   String get filter_apply => 'تطبيق';

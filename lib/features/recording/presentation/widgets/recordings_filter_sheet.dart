@@ -16,6 +16,63 @@ import '../notifiers/recordings_list_notifier.dart';
 import '../notifiers/recordings_list_state.dart';
 import '../pendency_label.dart';
 
+/// One labelled group of controls in the filter sheet.
+///
+/// A real subtree rather than a header and its controls sitting as siblings,
+/// because the sheet has two sections whose chips read the same. "Unclassified"
+/// (status) and "No classification" (pendency) are word-for-word identical in
+/// seven of the eleven languages, and so are their description counterparts, so
+/// which section a chip belongs to is the only thing that says what it does —
+/// on screen and to a test.
+///
+/// [hint] is the supporting line those two sections carry. The difference
+/// between them is where the answer comes from: one sieves the recordings
+/// already on screen and holds up with no network, the other is a question for
+/// the server. Neither is redundant — the offline one is the one that still
+/// works in the field.
+class FilterSection extends StatelessWidget {
+  const FilterSection({
+    super.key,
+    required this.title,
+    required this.child,
+    this.hint,
+  });
+
+  final String title;
+  final String? hint;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = AppColors.of(context);
+    final hintText = hint;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: theme.textTheme.labelLarge?.copyWith(
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.2,
+          ),
+        ),
+        if (hintText != null) ...[
+          const SizedBox(height: 2),
+          Text(
+            hintText,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: colors.foreground.withValues(alpha: 0.6),
+            ),
+          ),
+        ],
+        const SizedBox(height: SpacingScale.s8),
+        child,
+      ],
+    );
+  }
+}
+
 class RecordingsFilterSheet extends ConsumerStatefulWidget {
   const RecordingsFilterSheet({super.key, required this.projectId});
 
@@ -29,6 +86,13 @@ class RecordingsFilterSheet extends ConsumerStatefulWidget {
 class _RecordingsFilterSheetState extends ConsumerState<RecordingsFilterSheet> {
   late StatusFilter _status;
   String? _genreId;
+
+  /// Carried, not shown. A subcategory only ever arrives with the genre it
+  /// belongs to (`/recordings?genreId=…&subcategoryId=…`), and it counts
+  /// towards the badge, so the sheet has to be able to keep it across an Apply
+  /// and drop it on a Reset — but a control of its own would ask the user to
+  /// pick a refinement of a genre they may not have chosen.
+  String? _subcategoryId;
   String? _storytellerId;
   String? _userId;
   PendencyKind? _reviewFlag;
@@ -39,6 +103,7 @@ class _RecordingsFilterSheetState extends ConsumerState<RecordingsFilterSheet> {
     final state = ref.read(recordingsListNotifierProvider);
     _status = state.selectedFilter;
     _genreId = state.selectedGenreId;
+    _subcategoryId = state.selectedSubcategoryId;
     _storytellerId = state.selectedStorytellerId;
     _userId = state.selectedUserId;
     _reviewFlag = state.selectedReviewFlag;
@@ -97,40 +162,32 @@ class _RecordingsFilterSheetState extends ConsumerState<RecordingsFilterSheet> {
                   SpacingScale.s20,
                 ),
                 children: [
-                  _sectionTitle(theme, l10n.filters_sectionStatus),
-                  const SizedBox(height: SpacingScale.s8),
-                  _buildStatusChips(),
-                  const SizedBox(height: SpacingScale.s24),
-                  _sectionTitle(theme, l10n.filters_sectionPendency),
-                  const SizedBox(height: SpacingScale.s8),
-                  _buildPendencyChips(l10n),
-                  const SizedBox(height: SpacingScale.s24),
-                  _sectionTitle(theme, l10n.filters_sectionGenre),
-                  const SizedBox(height: SpacingScale.s8),
-                  _buildGenreChips(l10n),
-                  const SizedBox(height: SpacingScale.s24),
-                  _sectionTitle(theme, l10n.filters_sectionStoryteller),
-                  const SizedBox(height: SpacingScale.s8),
-                  StorytellerPicker(
-                    projectId: widget.projectId,
-                    selected: ref
-                        .watch(projectStorytellersNotifierProvider)
-                        .storytellers
-                        .where((s) => s.id == _storytellerId)
-                        .firstOrNull,
-                    onChanged: (s) => setState(() => _storytellerId = s?.id),
-                    showAddNew: false,
+                  FilterSection(
+                    title: l10n.filters_sectionStatus,
+                    hint: l10n.filters_sectionStatusHint,
+                    child: _buildStatusChips(),
                   ),
-                  if (_storytellerId != null)
-                    TextButton.icon(
-                      onPressed: () => setState(() => _storytellerId = null),
-                      icon: const Icon(LucideIcons.x, size: 14),
-                      label: Text(l10n.filter_storytellerAll),
-                    ),
                   const SizedBox(height: SpacingScale.s24),
-                  _sectionTitle(theme, l10n.filters_sectionUser),
-                  const SizedBox(height: SpacingScale.s8),
-                  _buildUserPicker(l10n, colors),
+                  FilterSection(
+                    title: l10n.filters_sectionPendency,
+                    hint: l10n.filters_sectionPendencyHint,
+                    child: _buildPendencyChips(l10n),
+                  ),
+                  const SizedBox(height: SpacingScale.s24),
+                  FilterSection(
+                    title: l10n.filters_sectionGenre,
+                    child: _buildGenreChips(l10n),
+                  ),
+                  const SizedBox(height: SpacingScale.s24),
+                  FilterSection(
+                    title: l10n.filters_sectionStoryteller,
+                    child: _buildStorytellerPicker(l10n),
+                  ),
+                  const SizedBox(height: SpacingScale.s24),
+                  FilterSection(
+                    title: l10n.filters_sectionUser,
+                    child: _buildUserPicker(l10n, colors),
+                  ),
                   const SizedBox(height: SpacingScale.s40),
                 ],
               ),
@@ -142,13 +199,27 @@ class _RecordingsFilterSheetState extends ConsumerState<RecordingsFilterSheet> {
     );
   }
 
-  Widget _sectionTitle(ThemeData theme, String text) {
-    return Text(
-      text,
-      style: theme.textTheme.labelLarge?.copyWith(
-        fontWeight: FontWeight.w700,
-        letterSpacing: 0.2,
-      ),
+  Widget _buildStorytellerPicker(AppLocalizations l10n) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        StorytellerPicker(
+          projectId: widget.projectId,
+          selected: ref
+              .watch(projectStorytellersNotifierProvider)
+              .storytellers
+              .where((s) => s.id == _storytellerId)
+              .firstOrNull,
+          onChanged: (s) => setState(() => _storytellerId = s?.id),
+          showAddNew: false,
+        ),
+        if (_storytellerId != null)
+          TextButton.icon(
+            onPressed: () => setState(() => _storytellerId = null),
+            icon: const Icon(LucideIcons.x, size: 14),
+            label: Text(l10n.filter_storytellerAll),
+          ),
+      ],
     );
   }
 
@@ -207,17 +278,27 @@ class _RecordingsFilterSheetState extends ConsumerState<RecordingsFilterSheet> {
         ChoiceChip(
           label: Text(l10n.filter_genreAll),
           selected: _genreId == null,
-          onSelected: (_) => setState(() => _genreId = null),
+          onSelected: (_) => _selectGenre(null),
         ),
         ...genres.map(
           (g) => ChoiceChip(
             label: Text(localizedGenreName(l10n, g.name)),
             selected: _genreId == g.id,
-            onSelected: (_) => setState(() => _genreId = g.id),
+            onSelected: (_) => _selectGenre(g.id),
           ),
         ),
       ],
     );
+  }
+
+  /// Picking a genre discards the subcategory: it names a refinement of the
+  /// genre it came with, and under a different genre it would narrow the list
+  /// to nothing while the badge counted it.
+  void _selectGenre(String? genreId) {
+    setState(() {
+      if (genreId != _genreId) _subcategoryId = null;
+      _genreId = genreId;
+    });
   }
 
   Widget _buildUserPicker(AppLocalizations l10n, AppColorSet colors) {
@@ -316,6 +397,9 @@ class _RecordingsFilterSheetState extends ConsumerState<RecordingsFilterSheet> {
                   setState(() {
                     _status = StatusFilter.all;
                     _genreId = null;
+                    // Reset has to reach every filter the badge counts, and it
+                    // counts the subcategory too.
+                    _subcategoryId = null;
                     _storytellerId = null;
                     _userId = null;
                     _reviewFlag = null;
@@ -349,6 +433,7 @@ class _RecordingsFilterSheetState extends ConsumerState<RecordingsFilterSheet> {
                   );
                   notifier.setStatusFilter(_status);
                   notifier.setGenreFilter(_genreId);
+                  notifier.setSubcategoryFilter(_subcategoryId);
                   // refresh: false — the pendency is a server-side filter, but
                   // it is in state before the two setters below, and each of
                   // those refetches. Letting it fetch too would ask three

@@ -11,6 +11,7 @@
 /// leave it alone.
 library;
 
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -34,7 +35,11 @@ import '../../../support/text_scale.dart';
 
 const _project = Project(id: 'p1', name: 'Kwanga stories', languageId: 'l1');
 
+/// Remembers the `review_flag` of every listing it is asked for, so a test can
+/// check the list re-asked the server rather than only that the state changed.
 class _FakeApi implements RecordingApiRepository {
+  final askedFlags = <String?>[];
+
   @override
   Future<List<ServerRecording>> listRecordings(
     String projectId, {
@@ -45,7 +50,10 @@ class _FakeApi implements RecordingApiRepository {
     String? uploadStatus,
     String? title,
     String? reviewFlag,
-  }) async => const [];
+  }) async {
+    askedFlags.add(reviewFlag);
+    return const [];
+  }
 
   @override
   dynamic noSuchMethod(Invocation invocation) =>
@@ -75,31 +83,42 @@ class _FakeGenreNotifier extends GenreNotifier {
   Future<void> fetchGenres() async {}
 }
 
-class _OfflineSync extends SyncNotifier {
+class _SyncNotifierAt extends SyncNotifier {
+  _SyncNotifierAt({required bool online}) : _online = online;
+
+  final bool _online;
+
   @override
-  SyncState build() => const SyncState();
+  SyncState build() => SyncState(isOnline: _online);
 
   @override
   Future<void> processQueue() async {}
 }
 
 void main() {
+  late _FakeApi api;
+  late List<Override> overrides;
+
   // The real notifier throughout: the question is what the screen does to the
   // filter it owns, and a fake notifier would answer a different one.
-  final overrides = <Override>[
-    recordingApiRepositoryProvider.overrideWithValue(_FakeApi()),
-    localRecordingRepositoryProvider.overrideWithValue(_FakeLocal()),
-    projectNotifierProvider.overrideWith(_FakeProjectNotifier.new),
-    genreNotifierProvider.overrideWith(_FakeGenreNotifier.new),
-    syncNotifierProvider.overrideWith(_OfflineSync.new),
-  ];
+  void useOverrides({required bool online}) {
+    api = _FakeApi();
+    overrides = <Override>[
+      recordingApiRepositoryProvider.overrideWithValue(api),
+      localRecordingRepositoryProvider.overrideWithValue(_FakeLocal()),
+      projectNotifierProvider.overrideWith(_FakeProjectNotifier.new),
+      genreNotifierProvider.overrideWith(_FakeGenreNotifier.new),
+      syncNotifierProvider.overrideWith(() => _SyncNotifierAt(online: online)),
+    ];
+  }
+
+  setUp(() => useOverrides(online: false));
+
+  Future<void> pumpChild(WidgetTester tester, Widget child) =>
+      pumpAtTextScale(tester, overrides: overrides, child: child);
 
   Future<void> openList(WidgetTester tester, PendencyKind? flag) async {
-    await pumpAtTextScale(
-      tester,
-      overrides: overrides,
-      child: RecordingsListScreen(initialReviewFlag: flag),
-    );
+    await pumpChild(tester, RecordingsListScreen(initialReviewFlag: flag));
     await tester.pump();
     await tester.pump();
   }
@@ -140,5 +159,45 @@ void main() {
     await openList(tester, null);
 
     expect(filterOf(tester), PendencyKind.storyteller);
+  });
+
+  testWidgets('a filter chosen in the sheet survives leaving and coming back', (
+    tester,
+  ) async {
+    await openList(tester, null);
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(RecordingsListScreen)),
+    );
+    await container
+        .read(recordingsListNotifierProvider.notifier)
+        .setReviewFlagFilter(PendencyKind.storyteller);
+    await tester.pump();
+
+    // Away: the State is disposed, as it is when the user leaves for another
+    // tab. The container outlives the screen, so the filter is still set.
+    await pumpChild(tester, const SizedBox.shrink());
+    await tester.pump();
+    expect(find.byType(RecordingsListScreen), findsNothing);
+
+    // Back on `/recordings`, a route that names no pendency. `initState` runs
+    // again here, and the filter it must not touch is the one the user chose.
+    await openList(tester, null);
+
+    expect(filterOf(tester), PendencyKind.storyteller);
+  });
+
+  testWidgets('following the route back to no pendency re-asks the server', (
+    tester,
+  ) async {
+    useOverrides(online: true);
+    await openList(tester, PendencyKind.classification);
+    expect(api.askedFlags.last, 'missing_classification');
+
+    // The tab bar's `context.go('/recordings')`. Clearing the state is not
+    // enough: the narrowing lives on the server, so a list left holding the
+    // filtered page shows fewer recordings than the URL says it should.
+    await openList(tester, null);
+
+    expect(api.askedFlags.last, isNull);
   });
 }

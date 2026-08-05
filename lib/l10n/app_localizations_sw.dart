@@ -2320,7 +2320,11 @@ class AppLocalizationsSw extends AppLocalizations {
   String get filters_sheetTitle => 'Chuja rekodi';
 
   @override
-  String get filters_sectionStatus => 'Hali ya kupakia';
+  String get filters_sectionStatus => 'Hali kwenye kifaa hiki';
+
+  @override
+  String get filters_sectionStatusHint =>
+      'Huchuja rekodi zilizo tayari kwenye skrini. Hufanya kazi bila mtandao.';
 
   @override
   String get filters_sectionGenre => 'Aina';
@@ -2332,7 +2336,11 @@ class AppLocalizationsSw extends AppLocalizations {
   String get filters_sectionUser => 'Imerekodiwa na';
 
   @override
-  String get filters_sectionPendency => 'Zinahitaji maelezo';
+  String get filters_sectionPendency => 'Yanayokosekana kwa mujibu wa seva';
+
+  @override
+  String get filters_sectionPendencyHint =>
+      'Huuliza seva ni rekodi zipi bado zinahitaji maelezo. Inahitaji mtandao.';
 
   @override
   String get filter_apply => 'Tumia';

@@ -2314,7 +2314,11 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get filters_sheetTitle => 'Filta ol rekoding';
 
   @override
-  String get filters_sectionStatus => 'Stetas bilong aplot';
+  String get filters_sectionStatus => 'Stetas long dispela masin';
+
+  @override
+  String get filters_sectionStatusHint =>
+      'Em i filtaim ol rekoding i stap pinis long skrin. Em i wok tu taim i no gat net.';
 
   @override
   String get filters_sectionGenre => 'Kain stori';
@@ -2326,7 +2330,11 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get filters_sectionUser => 'Husat i rekodim';
 
   @override
-  String get filters_sectionPendency => 'I no pinis yet';
+  String get filters_sectionPendency => 'Wanem samting Sever i tok i sot yet';
+
+  @override
+  String get filters_sectionPendencyHint =>
+      'Em i askim Sever long wanem ol rekoding i sot yet long ol tok. Yu mas gat net.';
 
   @override
   String get filter_apply => 'Wokim';

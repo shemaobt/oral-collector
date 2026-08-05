@@ -2327,7 +2327,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get filters_sheetTitle => 'Filter recordings';
 
   @override
-  String get filters_sectionStatus => 'Upload status';
+  String get filters_sectionStatus => 'Status on this device';
+
+  @override
+  String get filters_sectionStatusHint =>
+      'Narrows the recordings already on screen. Works offline.';
 
   @override
   String get filters_sectionGenre => 'Genre';
@@ -2339,7 +2343,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get filters_sectionUser => 'Recorded by';
 
   @override
-  String get filters_sectionPendency => 'Needs details';
+  String get filters_sectionPendency => 'What the server says is missing';
+
+  @override
+  String get filters_sectionPendencyHint =>
+      'Asks the server which recordings still need details. Needs a connection.';
 
   @override
   String get filter_apply => 'Apply';

@@ -2341,7 +2341,11 @@ class AppLocalizationsPt extends AppLocalizations {
   String get filters_sheetTitle => 'Filtrar gravações';
 
   @override
-  String get filters_sectionStatus => 'Status de envio';
+  String get filters_sectionStatus => 'Situação neste aparelho';
+
+  @override
+  String get filters_sectionStatusHint =>
+      'Filtra as gravações que já estão na tela. Funciona offline.';
 
   @override
   String get filters_sectionGenre => 'Gênero';
@@ -2353,7 +2357,11 @@ class AppLocalizationsPt extends AppLocalizations {
   String get filters_sectionUser => 'Gravado por';
 
   @override
-  String get filters_sectionPendency => 'Faltam detalhes';
+  String get filters_sectionPendency => 'O que o servidor diz que falta';
+
+  @override
+  String get filters_sectionPendencyHint =>
+      'Pergunta ao servidor quais gravações ainda precisam de detalhes. Requer conexão.';
 
   @override
   String get filter_apply => 'Aplicar';

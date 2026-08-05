@@ -2360,7 +2360,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get filters_sheetTitle => 'Filtrer les enregistrements';
 
   @override
-  String get filters_sectionStatus => 'Statut d\'envoi';
+  String get filters_sectionStatus => 'État sur cet appareil';
+
+  @override
+  String get filters_sectionStatusHint =>
+      'Filtre les enregistrements déjà affichés. Fonctionne hors ligne.';
 
   @override
   String get filters_sectionGenre => 'Genre';
@@ -2372,7 +2376,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get filters_sectionUser => 'Enregistré par';
 
   @override
-  String get filters_sectionPendency => 'Détails manquants';
+  String get filters_sectionPendency => 'Ce qui manque, selon le serveur';
+
+  @override
+  String get filters_sectionPendencyHint =>
+      'Demande au serveur quels enregistrements manquent encore de détails. Nécessite une connexion.';
 
   @override
   String get filter_apply => 'Appliquer';
