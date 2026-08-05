@@ -129,17 +129,30 @@ Path: @/lib/features/recording/presentation/widgets
   or the row-level classification extension.
 - `ActiveFilterChips` (`active_filter_chips.dart`) renders one chip per active
   filter on `RecordingsListState`, each removable back through the matching
-  notifier setter. Its review-flag chip (ENG-381) is the one chip whose
-  presence means the list is server-filtered rather than sieved from the
-  in-memory page — removing it calls `setReviewFlagFilter(null)`, which
-  (see [../notifiers/docs.md](../notifiers/docs.md)) re-fetches from the
-  server rather than just re-computing `filteredRecordings` locally. Its label
-  comes from the shared `pendencyLabel` in
-  [../pendency_label.dart](../pendency_label.dart), not a local switch: the
-  project settings breakdown names the same three kinds, and the two copies
-  would drift. That helper sits in `presentation/`, not next to the
-  `PendencyKind` enum it switches on, because a translated string is not
-  domain knowledge — see [../../domain/docs.md](../../domain/docs.md).
+  notifier setter. **The pendency is the exception: it has no chip here.** It
+  had one (ENG-381), until `PendencyFilterChips` took over showing which
+  pendency the list is narrowed to and offering the way back — two controls for
+  one filter is the case where the user can watch them disagree.
+- `PendencyFilterChips` (`pendency_filter_chips.dart`) is the always-visible
+  shortcut in front of the sheet's pendency section: "all" plus one chip per
+  `PendencyKind`, scrolling horizontally, each carrying how many recordings owe
+  that field. It keeps **no selection of its own** — it watches
+  `selectedReviewFlag` and calls `setReviewFlagFilter`, the same field the sheet
+  mirrors in `initState`, which is the whole mechanism behind "pick a chip, open
+  the sheet, and it is already selected". Labels come from the shared
+  `pendencyLabel` in [../pendency_label.dart](../pendency_label.dart), not a
+  local switch: the project settings breakdown names the same three kinds and
+  the copies would drift. That helper sits in `presentation/`, not next to the
+  `PendencyKind` enum it switches on, because a translated string is not domain
+  knowledge — see [../../domain/docs.md](../../domain/docs.md).
+- **Those counts are the project's, not the visible list's.** They come from
+  `projectStatsProvider` → `ProjectStats.reviewFlagCounts`, the same aggregate
+  the project screen quotes, so the two surfaces can never answer "how many
+  still need a narrator" differently. The cost is that under another filter — a
+  genre, a narrower status — the chip counts more recordings than the list ends
+  up showing. A code absent from that map is a real zero and reads as `0`; an
+  aggregate that never answered shows **no number at all**, because the list
+  works offline and an invented count is worse than a missing one.
 - `RecordingsFilterSheet` (`recordings_filter_sheet.dart`) must carry every
   filter `RecordingsListState.activeFilterCount` counts, because that count is
   the badge on the sheet's own button. It shipped without the pendency one:
@@ -152,7 +165,7 @@ Path: @/lib/features/recording/presentation/widgets
   re-fetch, so the flag is in state by the time the request goes out and one
   Apply still costs the fetches it already did. Its chips iterate
   `PendencyKind.values` and label them with the shared `pendencyLabel`, the
-  same helper `ActiveFilterChips` uses.
+  same helper `PendencyFilterChips` uses.
 - **The subcategory is carried without a control of its own (ENG-383).** It is
   counted by `activeFilterCount` too, and it is reachable: the genre detail
   screen navigates to `/recordings?genreId=…&subcategoryId=…`. The sheet mirrors
