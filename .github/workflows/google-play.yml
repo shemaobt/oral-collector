@@ -3,6 +3,13 @@ name: Google Play
 on:
   push:
     branches: [main]
+  # Manual re-run, matching deploy-web and testflight. Without it, the only way
+  # to retry a failed upload is another push to main — an empty commit on the
+  # release branch to work around a missing trigger. The versionCode comes from
+  # pubspec.yaml, so a re-run of an unchanged main uploads the same number and
+  # Play rejects it: this retries an upload that did not happen, it does not
+  # publish anything twice.
+  workflow_dispatch:
 
 jobs:
   build-and-upload:
