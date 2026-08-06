@@ -110,10 +110,19 @@ double _textWidth(BuildContext context, String text, TextStyle? style) {
 /// a single pendency chip. Upload state survives as an icon with its old label
 /// moved into semantics — colour alone would say nothing to a screen reader.
 ///
+/// Three rows: the title line (title, upload glyph, date), an optional
+/// description line, and the footer (tag, classification, pendency chip,
+/// chevron). The glyph is up on the title line because it answers "is this one
+/// safe yet", which is a property of the recording the title names; the
+/// classification is down in the footer because folding those two rows into one
+/// is what keeps the card to the height the design package specifies.
+///
 /// ENG-382 let the duration back into the footer as plain text rather than a
 /// chip: it earns a place by telling an accidental misfire from a real
-/// session, but it re-enters ranked below the description that displaced it —
-/// on a footer too narrow for both, the duration is the one that goes.
+/// session, but it re-enters ranked below the description that displaced it.
+/// The classification joining that row outranks it too, so on a phone the
+/// duration no longer renders at all — which is the package's "the duration
+/// does not come back", reached by the ranking rather than by deleting it.
 ///
 /// Every row below is a private widget that reads its own `l10n` off the
 /// context; nothing on this card takes localizations as a parameter.
@@ -214,19 +223,19 @@ class RecordingCard extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _TitleRow(recording: recording),
-                      const SizedBox(height: 2),
-                      _BreadcrumbRow(
-                        recording: recording,
-                        genreName: genreName,
-                        subcategoryName: subcategoryName,
-                      ),
+                      _TitleRow(recording: recording, width: footerWidth),
                       if (description != null) ...[
                         const SizedBox(height: 2),
                         RecordingDescriptionLine(description: description),
                       ],
                       const SizedBox(height: SpacingScale.s8),
-                      _FooterRow(recording: recording, width: footerWidth),
+                      _FooterRow(
+                        recording: recording,
+                        genreName: genreName,
+                        subcategoryName: subcategoryName,
+                        registerName: registerName,
+                        width: footerWidth,
+                      ),
                       if (isUploadingThis) ...[
                         const SizedBox(height: SpacingScale.s8),
                         _UploadProgressRow(progress: uploadProgress),
@@ -248,9 +257,23 @@ class RecordingCard extends ConsumerWidget {
 }
 
 class _TitleRow extends StatelessWidget {
-  const _TitleRow({required this.recording});
+  const _TitleRow({required this.recording, required this.width});
 
   final LocalRecordingEntity recording;
+
+  /// Room the row has to spend, or null when the card's width is unbounded.
+  final double? width;
+
+  static const double _statusTarget = 24;
+
+  /// The most of the row the date may take.
+  ///
+  /// The date is non-flex so that the title yields to it at ordinary sizes —
+  /// a truncated title is still recognisable, a truncated date is not. That
+  /// ranking has to stop somewhere: in Arabic at 2.0x the spelled-out date
+  /// plus the upload glyph outgrow the row, and without a ceiling the title
+  /// is pushed off the card rather than merely shortened.
+  static const double _dateShare = 0.45;
 
   @override
   Widget build(BuildContext context) {
@@ -259,6 +282,7 @@ class _TitleRow extends StatelessWidget {
     final colors = AppColors.of(context);
     final locale = Localizations.localeOf(context).languageCode;
     final title = blankToNull(recording.title);
+    final statusLabel = _statusLabel(recording.uploadStatus, l10n);
     return Row(
       children: [
         Expanded(
@@ -266,145 +290,19 @@ class _TitleRow extends StatelessWidget {
             title ?? formatUntitledRecordingTime(recording.recordedAt, locale),
             style: theme.textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.w700,
+              // A timestamp standing in for a title is not the recording's
+              // name, and italic in the softer ink is what says so.
               fontStyle: title == null ? FontStyle.italic : FontStyle.normal,
+              color: title == null ? colors.secondary : null,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
         ),
         const SizedBox(width: SpacingScale.s8),
-        Text(
-          formatRecordingDate(recording.recordedAt, locale, l10n: l10n),
-          style: theme.textTheme.labelSmall?.copyWith(
-            color: colors.secondary.withValues(alpha: 0.7),
-          ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ],
-    );
-  }
-}
-
-class _BreadcrumbRow extends StatelessWidget {
-  const _BreadcrumbRow({
-    required this.recording,
-    required this.genreName,
-    required this.subcategoryName,
-  });
-
-  final LocalRecordingEntity recording;
-  final String? genreName;
-  final String? subcategoryName;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final colors = AppColors.of(context);
-    final isUnclassified = recording.isUnclassified;
-    final parts = <String>[?genreName, ?subcategoryName];
-    final breadcrumb = isUnclassified
-        ? l10n.recording_unclassified
-        : parts.isNotEmpty
-        ? parts.join(' > ')
-        : l10n.recording_unknownGenre;
-    return Row(
-      children: [
-        Flexible(
-          child: Text(
-            breadcrumb,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: isUnclassified ? colors.warning : colors.secondary,
-              fontWeight: FontWeight.w500,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-        if (recording.hasSecondary) ...[
-          const SizedBox(width: SpacingScale.s8),
-          Tooltip(
-            message: l10n.recording_alsoClassifiedAsTooltip,
-            child: Icon(
-              LucideIcons.layers,
-              size: 12,
-              color: colors.secondary.withValues(alpha: 0.7),
-              semanticLabel: l10n.recording_alsoClassifiedAsTooltip,
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-}
-
-class _FooterRow extends StatelessWidget {
-  const _FooterRow({required this.recording, required this.width});
-
-  final LocalRecordingEntity recording;
-
-  /// Room the row has to spend, or null when the card's width is unbounded
-  /// and there is nothing to ration.
-  final double? width;
-
-  static const double _statusTarget = 24;
-  static const double _chevronSize = 16;
-
-  /// Everything in the row that is neither the chip nor the duration: the
-  /// status icon's press target, the chevron, and the three gaps between the
-  /// four slots.
-  static const double _furniture =
-      _statusTarget + _chevronSize + SpacingScale.s8 * 3;
-
-  /// Whether the duration can be shown without taking anything from the chip.
-  ///
-  /// The duration is the footer's lowest-ranked element, so it appears only
-  /// when the chip already has the width it wants. Anything short of that and
-  /// it goes entirely: `Flexible` with an ellipsis would paint `1:0…`, which
-  /// reads as a wrong duration rather than as an absent one.
-  bool _durationFits(BuildContext context, String? pendency, String duration) {
-    final available = width;
-    if (available == null) return true;
-    final chip = pendency == null
-        ? 0.0
-        : _PendencyChip.widthFor(context, pendency);
-    return chip +
-            _textWidth(context, duration, _durationStyle(context)) +
-            _furniture <=
-        available;
-  }
-
-  /// At most one chip: naming every open field would crowd the row the
-  /// description just moved into, so two or more collapse into a count.
-  String? _pendencyLabel(AppLocalizations l10n) {
-    final pendencies = recordingPendencies(recording);
-    if (pendencies.isEmpty) return null;
-    if (pendencies.length > 1) {
-      return l10n.recording_pendencyCount(pendencies.length);
-    }
-    return switch (pendencies.first) {
-      PendencyKind.classification => l10n.recording_pendencyClassification,
-      PendencyKind.description => l10n.recording_pendencyDescription,
-      PendencyKind.storyteller => l10n.recording_pendencyStoryteller,
-    };
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final colors = AppColors.of(context);
-    final statusLabel = _statusLabel(recording.uploadStatus, l10n);
-    final pendency = _pendencyLabel(l10n);
-    final duration = formatDurationHMS(recording.durationSeconds);
-    // The chip takes the slack through its Expanded, and the duration is in
-    // the row at all only when it fits beside a chip at full width. Leaving
-    // the duration in unconditionally would invert the ranking: a Row sizes
-    // its non-flex children first, so the duration would be paid before the
-    // chip and the chip would absorb every pixel of the shortfall.
-    final showDuration = _durationFits(context, pendency, duration);
-    return Row(
-      children: [
+        // The upload state belongs on this line (card V3): it answers "is this
+        // one safe yet", which is a property of the recording the title names,
+        // not of the classification the footer describes.
         Tooltip(
           message: statusLabel,
           // The glyph stays small; its long-press target does not. A 13px hit
@@ -425,15 +323,241 @@ class _FooterRow extends StatelessWidget {
             ),
           ),
         ),
+        ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: width == null ? double.infinity : width! * _dateShare,
+          ),
+          child: Text(
+            formatRecordingDate(recording.recordedAt, locale, l10n: l10n),
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: colors.secondary.withValues(alpha: 0.7),
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// The classification as one line, and whether it is one at all.
+///
+/// The register is part of it (card V3, "classificação completa"): the list
+/// screen has always handed the card a `registerName`, and the card dropped it
+/// — so a recording classified down to its register read exactly like one that
+/// was still missing it.
+({String text, bool isUnclassified}) _classification(
+  BuildContext context, {
+  required LocalRecordingEntity recording,
+  required String? genreName,
+  required String? subcategoryName,
+  required String? registerName,
+}) {
+  final l10n = AppLocalizations.of(context);
+  if (recording.isUnclassified) {
+    return (text: l10n.recording_unclassified, isUnclassified: true);
+  }
+  final parts = <String>[?genreName, ?subcategoryName, ?registerName];
+  return (
+    text: parts.isEmpty ? l10n.recording_unknownGenre : parts.join(' > '),
+    isUnclassified: false,
+  );
+}
+
+/// One definition of the classification's type, shared by the [Text] that
+/// paints it and by the measurement that rations the footer.
+///
+/// Unclassified is italic in the ordinary ink, never `warning`: that token is
+/// reserved for system trouble — a corrupted file, an upload that failed — and
+/// spending it on a field the user simply has not filled in yet says something
+/// broke when nothing did.
+TextStyle? _classificationStyle(BuildContext context, bool isUnclassified) =>
+    Theme.of(context).textTheme.labelSmall?.copyWith(
+      color: AppColors.of(context).secondary,
+      fontWeight: FontWeight.w600,
+      fontStyle: isUnclassified ? FontStyle.italic : FontStyle.normal,
+    );
+
+class _FooterRow extends StatelessWidget {
+  const _FooterRow({
+    required this.recording,
+    required this.genreName,
+    required this.subcategoryName,
+    required this.registerName,
+    required this.width,
+  });
+
+  final LocalRecordingEntity recording;
+  final String? genreName;
+  final String? subcategoryName;
+  final String? registerName;
+
+  /// Room the row has to spend, or null when the card's width is unbounded
+  /// and there is nothing to ration.
+  final double? width;
+
+  static const double _tagSize = 12;
+  static const double _chevronSize = 16;
+  static const double _secondarySize = 12;
+
+  /// The most of the shared space the chip may take.
+  ///
+  /// It outranks the classification — it is the call to action, and it is the
+  /// one element whose label cannot be guessed from an ellipsis — but a row
+  /// where it takes everything leaves the card unable to say which recording
+  /// it is. Only ever binds at large text scales on a narrow phone; at any
+  /// ordinary size the chip is well under its share and the classification
+  /// keeps the rest.
+  static const double _chipShare = 0.6;
+
+  /// Everything in the row that is neither the classification, the chip nor
+  /// the duration: the tag, the chevron, the gaps between the slots, and the
+  /// secondary-classification glyph when the recording carries one.
+  double _furniture(bool hasSecondary) =>
+      _tagSize +
+      _chevronSize +
+      SpacingScale.s8 * 4 +
+      (hasSecondary ? _secondarySize + SpacingScale.s4 : 0);
+
+  /// Whether the duration can be shown without taking anything from the two
+  /// things ranked above it.
+  ///
+  /// The duration is the footer's lowest-ranked element (ENG-382 let it back in
+  /// on that condition), so it appears only when the classification and the
+  /// chip already have the width they want — which, now that the classification
+  /// shares this row, is rarely true on a phone. Anything short of that and it
+  /// goes entirely: `Flexible` with an ellipsis would paint `1:0…`, which reads
+  /// as a wrong duration rather than as an absent one.
+  bool _durationFits(
+    BuildContext context, {
+    required String classification,
+    required bool isUnclassified,
+    required String? pendency,
+    required String duration,
+  }) {
+    final available = width;
+    if (available == null) return true;
+    final chip = pendency == null
+        ? 0.0
+        : _PendencyChip.widthFor(context, pendency);
+    return _textWidth(
+              context,
+              classification,
+              _classificationStyle(context, isUnclassified),
+            ) +
+            chip +
+            _textWidth(context, duration, _durationStyle(context)) +
+            _furniture(recording.hasSecondary) <=
+        available;
+  }
+
+  /// The width cap the chip is laid out under, or null when the card's width
+  /// is unbounded and nothing has to be rationed.
+  double? _chipCap(BuildContext context, {required bool showDuration}) {
+    final available = width;
+    if (available == null) return null;
+    final duration = showDuration
+        ? _textWidth(
+            context,
+            formatDurationHMS(recording.durationSeconds),
+            _durationStyle(context),
+          )
+        : 0.0;
+    final shared = available - _furniture(recording.hasSecondary) - duration;
+    return shared <= 0 ? 0 : shared * _chipShare;
+  }
+
+  /// At most one chip: naming every open field would crowd the row the
+  /// description just moved into, so two or more collapse into a count — and a
+  /// count has no kind, so it loses the per-kind glyph with the per-kind name.
+  ({String label, IconData icon})? _pendency(AppLocalizations l10n) {
+    final pendencies = recordingPendencies(recording);
+    if (pendencies.isEmpty) return null;
+    if (pendencies.length > 1) {
+      return (
+        label: l10n.recording_pendencyCount(pendencies.length),
+        icon: LucideIcons.circleDashed,
+      );
+    }
+    return switch (pendencies.first) {
+      PendencyKind.classification => (
+        label: l10n.recording_pendencyClassification,
+        // The same tag this row labels the classification with: the chip names
+        // the field the label is standing in for.
+        icon: LucideIcons.tag,
+      ),
+      PendencyKind.description => (
+        label: l10n.recording_pendencyDescription,
+        icon: LucideIcons.fileText,
+      ),
+      PendencyKind.storyteller => (
+        label: l10n.recording_pendencyStoryteller,
+        icon: LucideIcons.userMinus,
+      ),
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final colors = AppColors.of(context);
+    final classification = _classification(
+      context,
+      recording: recording,
+      genreName: genreName,
+      subcategoryName: subcategoryName,
+      registerName: registerName,
+    );
+    final pendency = _pendency(l10n);
+    final duration = formatDurationHMS(recording.durationSeconds);
+    // The classification takes the slack through its Expanded, and the duration
+    // is in the row at all only when everything above it already fits. Leaving
+    // the duration in unconditionally would invert the ranking: a Row sizes its
+    // non-flex children first, so the duration would be paid before the
+    // classification and the classification would absorb the whole shortfall.
+    final showDuration = _durationFits(
+      context,
+      classification: classification.text,
+      isUnclassified: classification.isUnclassified,
+      pendency: pendency?.label,
+      duration: duration,
+    );
+    return Row(
+      children: [
+        Icon(LucideIcons.tag, size: _tagSize, color: colors.secondary),
         const SizedBox(width: SpacingScale.s8),
         Expanded(
-          child: pendency == null
-              ? const SizedBox.shrink()
-              : Align(
-                  alignment: AlignmentDirectional.centerStart,
-                  child: _PendencyChip(label: pendency),
-                ),
+          child: Text(
+            classification.text,
+            style: _classificationStyle(context, classification.isUnclassified),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
         ),
+        if (recording.hasSecondary) ...[
+          const SizedBox(width: SpacingScale.s4),
+          Tooltip(
+            message: l10n.recording_alsoClassifiedAsTooltip,
+            child: Icon(
+              LucideIcons.layers,
+              size: 12,
+              color: colors.secondary.withValues(alpha: 0.7),
+              semanticLabel: l10n.recording_alsoClassifiedAsTooltip,
+            ),
+          ),
+        ],
+        if (pendency != null) ...[
+          const SizedBox(width: SpacingScale.s8),
+          ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth:
+                  _chipCap(context, showDuration: showDuration) ??
+                  double.infinity,
+            ),
+            child: _PendencyChip(label: pendency.label, icon: pendency.icon),
+          ),
+        ],
         if (showDuration) ...[
           const SizedBox(width: SpacingScale.s8),
           Text(
@@ -504,9 +628,10 @@ class RecordingDescriptionLine extends StatelessWidget {
 }
 
 class _PendencyChip extends StatelessWidget {
-  const _PendencyChip({required this.label});
+  const _PendencyChip({required this.label, required this.icon});
 
   final String label;
+  final IconData icon;
 
   static const double _iconSize = 11;
   static const double _iconGap = SpacingScale.s4;
@@ -541,11 +666,7 @@ class _PendencyChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            LucideIcons.circleDashed,
-            size: _iconSize,
-            color: colors.secondary,
-          ),
+          Icon(icon, size: _iconSize, color: colors.secondary),
           const SizedBox(width: _iconGap),
           Flexible(
             child: Text(

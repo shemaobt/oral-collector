@@ -11,7 +11,6 @@ import '../../../project/presentation/notifiers/member_notifier.dart';
 import '../../../storyteller/presentation/notifiers/project_storytellers_notifier.dart';
 import '../notifiers/recordings_list_notifier.dart';
 import '../notifiers/recordings_list_state.dart';
-import '../pendency_label.dart';
 
 class ActiveFilterChips extends ConsumerWidget {
   const ActiveFilterChips({super.key});
@@ -121,19 +120,10 @@ class ActiveFilterChips extends ConsumerWidget {
       );
     }
 
-    final reviewFlag = state.selectedReviewFlag;
-    if (reviewFlag != null) {
-      // Arriving from the project counter drops the user into an already
-      // narrowed list. Without a chip there is nothing on screen saying so, and
-      // nothing to press to get back to the whole project.
-      chips.add(
-        _buildChip(
-          context,
-          label: pendencyLabel(l10n, reviewFlag),
-          onRemove: () => notifier.setReviewFlagFilter(null),
-        ),
-      );
-    }
+    // No chip for the pendency: `PendencyFilterChips` sits directly above this
+    // row and already shows which one the list is narrowed to, with "all" as
+    // the way back. A second control for one filter is the case where the two
+    // can be seen to disagree.
 
     if (state.activeFilterCount >= 2) {
       chips.add(

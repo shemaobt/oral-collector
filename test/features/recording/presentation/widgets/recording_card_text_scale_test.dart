@@ -17,7 +17,10 @@
 /// ENG-382 also put the duration back in the footer, ranked below the pendency
 /// chip: it renders only when the chip can keep its whole label, so the
 /// assertions below are about which of the two yields, not about overflow
-/// alone.
+/// alone. Card V3 then moved the classification into that same footer, which
+/// outranks the duration too — on a phone the row now has no spare width, so
+/// the duration is in practice gone. The ranking is still what decides it, and
+/// the test at the bottom pins both ends of that.
 library;
 
 import 'package:flutter/material.dart';
@@ -86,6 +89,9 @@ Future<void> _pump(
   required Locale locale,
   Size size = kPhoneSize,
   LocalRecordingEntity? recording,
+  String? genreName = _longGenre,
+  String? subcategoryName = _longSubcategory,
+  String? registerName = 'Formel',
 }) async {
   await pumpAtTextScale(
     tester,
@@ -103,9 +109,9 @@ Future<void> _pump(
       padding: _listPadding,
       child: RecordingCard(
         recording: recording ?? _recording(),
-        genreName: _longGenre,
-        subcategoryName: _longSubcategory,
-        registerName: 'Formel',
+        genreName: genreName,
+        subcategoryName: subcategoryName,
+        registerName: registerName,
         onTap: () {},
       ),
     ),
@@ -233,16 +239,33 @@ void main() {
     },
   );
 
-  testWidgets('the duration is on screen when the footer has room for it', (
-    tester,
-  ) async {
-    // Nothing pending, so no chip competes for the row: the rule above hides
-    // the duration only when it would cost the chip width, never otherwise.
+  testWidgets('the duration yields to the classification on a phone, and '
+      'comes back where the row is genuinely wide', (tester) async {
+    // Nothing pending here, so no chip competes for the row — and the duration
+    // is gone anyway. Card V3 moved the classification into this footer, and
+    // that is what now outranks it: on a phone the row has no spare width,
+    // which is the design package's "the duration does not come back", reached
+    // through ENG-382's ranking rather than by deleting it.
     await _pump(
       tester,
       scale: 1.0,
       locale: const Locale('en'),
       recording: _recording(storytellerId: 'st-1'),
+    );
+
+    expect(find.text('1:05:00'), findsNothing);
+
+    // The rule is about room, not about the duration being unwanted: shorten
+    // the classification to what an ordinary one costs and it renders, inside
+    // the card. Same width, same scale — only the competing text changed.
+    await _pump(
+      tester,
+      scale: 1.0,
+      locale: const Locale('en'),
+      recording: _recording(storytellerId: 'st-1'),
+      genreName: 'Conte',
+      subcategoryName: null,
+      registerName: null,
     );
 
     expect(find.text('1:05:00'), findsOneWidget);

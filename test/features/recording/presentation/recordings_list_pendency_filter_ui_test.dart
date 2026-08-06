@@ -7,7 +7,6 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 
 import 'package:oral_collector/core/database/app_database.dart';
 import 'package:oral_collector/features/genre/presentation/notifiers/genre_notifier.dart';
@@ -24,7 +23,7 @@ import 'package:oral_collector/features/recording/domain/repositories/recording_
 import 'package:oral_collector/features/recording/presentation/notifiers/recordings_list_notifier.dart';
 import 'package:oral_collector/features/recording/presentation/notifiers/recordings_list_state.dart';
 import 'package:oral_collector/features/recording/presentation/recordings_list_screen.dart';
-import 'package:oral_collector/features/recording/presentation/widgets/active_filter_chips.dart';
+import 'package:oral_collector/features/recording/presentation/widgets/pendency_filter_chips.dart';
 import 'package:oral_collector/features/sync/presentation/notifiers/sync_notifier.dart';
 import 'package:oral_collector/features/sync/presentation/notifiers/sync_state.dart';
 import 'package:oral_collector/l10n/app_localizations_en.dart';
@@ -157,50 +156,25 @@ Future<void> pumpList(
   await tester.pump();
 }
 
-/// The chips run against the real notifier: the point is that removing the chip
-/// really widens the list, not that a fake was called.
-Future<ProviderContainer> pumpChips(
-  WidgetTester tester,
-  PendencyKind kind,
-) async {
-  await pumpAtTextScale(
-    tester,
-    overrides: _overrides(),
-    child: const Align(
-      alignment: Alignment.topCenter,
-      child: ActiveFilterChips(),
-    ),
-  );
-  final container = ProviderScope.containerOf(
-    tester.element(find.byType(ActiveFilterChips)),
-  );
-  await container
-      .read(recordingsListNotifierProvider.notifier)
-      .setReviewFlagFilter(kind);
-  await tester.pump();
-  return container;
-}
-
 void main() {
-  testWidgets('a filtered list says which pendency it is showing', (
-    tester,
-  ) async {
-    await pumpChips(tester, PendencyKind.storyteller);
+  // What each chip does is `pendency_filter_chips_test`'s subject. What this
+  // one holds is that the row reaches the screen at all: the filter can arrive
+  // from a project counter or a deep link, and a narrowed list with nothing on
+  // it saying so reads as the whole project.
+  testWidgets('a filtered list says which pendency it is showing, and offers '
+      'the whole project back', (tester) async {
+    await pumpList(tester, listState: _settledEmpty);
 
-    expect(find.text(_l10n.recording_pendencyStoryteller), findsOneWidget);
-  });
-
-  testWidgets('the chip gives the whole project back', (tester) async {
-    final container = await pumpChips(tester, PendencyKind.classification);
-
-    await tester.tap(find.byIcon(LucideIcons.x));
-    await tester.pumpAndSettle();
-
-    expect(
-      container.read(recordingsListNotifierProvider).selectedReviewFlag,
-      isNull,
+    expect(find.byType(PendencyFilterChips), findsOneWidget);
+    final selected = tester.widget<ChoiceChip>(
+      find.widgetWithText(ChoiceChip, _l10n.recording_pendencyClassification),
     );
-    expect(find.byType(InputChip), findsNothing);
+
+    expect(selected.selected, isTrue);
+    expect(
+      find.widgetWithText(ChoiceChip, _l10n.filter_pendencyAll),
+      findsOneWidget,
+    );
   });
 
   testWidgets('offline under a filter explains itself instead of claiming '

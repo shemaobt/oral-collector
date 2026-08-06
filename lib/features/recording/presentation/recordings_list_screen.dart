@@ -27,6 +27,7 @@ import 'notifiers/recordings_list_state.dart';
 import 'widgets/active_filter_chips.dart';
 import 'widgets/filters_icon_button.dart';
 import 'widgets/import_drop_zone.dart';
+import 'widgets/pendency_filter_chips.dart';
 import 'widgets/pending_web_uploads_banner.dart';
 import 'widgets/recording_card.dart';
 import 'widgets/recordings_filter_sheet.dart';
@@ -360,15 +361,22 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
                   ),
                 ),
 
+                SliverToBoxAdapter(
+                  child: PendencyFilterChips(projectId: activeProject.id),
+                ),
+
                 const SliverToBoxAdapter(child: ActiveFilterChips()),
 
                 SliverToBoxAdapter(
                   child: Padding(
+                    // Tighter than it was, to the design package's 14/16/6 —
+                    // snapped to the 4px scale, which is what closes the gap
+                    // the chip row opened above it.
                     padding: const EdgeInsets.fromLTRB(
                       SpacingScale.s16,
+                      SpacingScale.s12,
                       SpacingScale.s16,
-                      SpacingScale.s16,
-                      SpacingScale.s8,
+                      SpacingScale.s4,
                     ),
                     child: Row(
                       children: [
