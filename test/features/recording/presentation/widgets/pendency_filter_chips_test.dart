@@ -8,6 +8,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 import 'package:oral_collector/core/database/app_database.dart';
 import 'package:oral_collector/features/project/data/providers.dart';
@@ -286,5 +287,70 @@ void main() {
       container.read(recordingsListNotifierProvider).selectedReviewFlag,
       PendencyKind.classification,
     );
+  });
+
+  group('the density the design package specifies', () {
+    testWidgets('a chip is a pill, not a Material chip at its default size', (
+      tester,
+    ) async {
+      await pumpRow(tester);
+
+      final chip = tester.getSize(
+        find.widgetWithText(ChoiceChip, _l10n.filter_pendencyAll),
+      );
+
+      // Material's default ChoiceChip is a 32px label box inside a 48px tap
+      // target, which is what made the row read as oversized; the package's
+      // pill is ~26px. A ceiling of 30 is below the Material floor, so it
+      // fails the day any of the overrides that buy the density is dropped —
+      // a ceiling at the measured height would only pin today's number.
+      expect(chip.height, lessThan(30));
+    });
+
+    testWidgets('the count is bare bold text, with no capsule of its own', (
+      tester,
+    ) async {
+      await pumpRow(
+        tester,
+        stats: const ProjectStats(reviewFlagCounts: {'missing_storyteller': 5}),
+      );
+
+      final count = find.descendant(
+        of: find.widgetWithText(
+          ChoiceChip,
+          _l10n.recording_pendencyStoryteller,
+        ),
+        matching: find.text('5'),
+      );
+
+      expect(count, findsOne);
+      // The package draws the count as bold text beside the label. A box of
+      // its own is what made the chip wider than the design.
+      expect(
+        find.ancestor(of: count, matching: find.byType(Container)),
+        findsNothing,
+      );
+      expect(tester.widget<Text>(count).style?.fontWeight, FontWeight.w800);
+    });
+
+    testWidgets('each pendency chip carries the glyph of the field it names, '
+        'and "all" carries none', (tester) async {
+      await pumpRow(tester);
+
+      for (final glyph in [
+        LucideIcons.tag,
+        LucideIcons.fileText,
+        LucideIcons.userMinus,
+      ]) {
+        expect(find.byIcon(glyph), findsOne, reason: '$glyph missing');
+      }
+      expect(
+        find.descendant(
+          of: find.widgetWithText(ChoiceChip, _l10n.filter_pendencyAll),
+          matching: find.byType(Icon),
+        ),
+        findsNothing,
+      );
+    });
   });
 }

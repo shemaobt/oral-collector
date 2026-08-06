@@ -145,6 +145,19 @@ Path: @/lib/features/recording/presentation/widgets
   the copies would drift. That helper sits in `presentation/`, not next to the
   `PendencyKind` enum it switches on, because a translated string is not domain
   knowledge — see [../../domain/docs.md](../../domain/docs.md).
+- **The chip is a Material `ChoiceChip` overridden down to the package's pill**,
+  not Material's own metrics: `showCheckmark: false`, `StadiumBorder`, no side,
+  `labelPadding: zero`, `padding` 8×4, `VisualDensity.compact` and
+  `MaterialTapTargetSize.shrinkWrap` take it from a 32px label box inside a 48px
+  tap target down to ~28px. The count is bold text beside the label, not a
+  capsule of its own — the capsule was most of the extra width. The design's
+  literal `6px 10px` / `gap: 5` are off the codebase's 4px scale
+  ([/lib/core/theme/app_spacing.dart](../../../../core/theme/app_spacing.dart)),
+  so the tokens one step tighter are used instead. **The trade is the tap
+  target**: ~28px is below the 44px both platforms ask for, and
+  `MaterialTapTargetSize.padded` would restore it without changing how the chip
+  looks, at the cost of a row half again as tall. The density is what the design
+  is explicit about, so it wins — but it is a real trade, not an oversight.
 - **Those counts are the project's, not the visible list's.** They come from
   `projectStatsProvider` → `ProjectStats.reviewFlagCounts`, the same aggregate
   the project screen quotes, so the two surfaces can never answer "how many
