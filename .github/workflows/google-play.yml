@@ -59,8 +59,17 @@ jobs:
           storeFile=upload-keystore.jks
           EOF
 
+      # No --build-number: the versionCode comes from pubspec.yaml, which is the
+      # only place a human decides it. It used to be `100 + run_number`, a
+      # counter nobody owned that drifted far below the numbers pubspec was
+      # carrying (118 against 220) — and Play refuses a release whose
+      # versionCode is under what users already have.
+      #
+      # The consequence is deliberate: a push to main without a version bump now
+      # fails the upload on a duplicate versionCode instead of quietly shipping
+      # a number no one chose.
       - name: Build AAB
-        run: flutter build appbundle --release --build-number=$(( 100 + ${{ github.run_number }} )) --obfuscate --split-debug-info=build/symbols
+        run: flutter build appbundle --release --obfuscate --split-debug-info=build/symbols
 
       - name: Archive Dart symbols (de-obfuscation maps)
         uses: actions/upload-artifact@v4
