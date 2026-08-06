@@ -66,9 +66,23 @@ jobs:
 
       - name: Resolve version
         run: |
+          # Both halves come from pubspec.yaml. The build number used to be
+          # `github.run_number`, which meant iOS and Android shipped different
+          # build numbers for the same release (53 and 118 for 1.4.0) and
+          # neither matched the one in the repo.
           APP_VERSION=$(grep '^version:' pubspec.yaml | sed 's/version:[[:space:]]*//; s/+.*//')
+          BUILD_NUMBER=$(grep '^version:' pubspec.yaml | sed 's/.*+//')
+          # Digits or nothing: with no `+` in the version, the sed above leaves
+          # the whole line untouched, so an unguarded read would hand Xcode
+          # "version: 1.4.0" as a build number.
+          case "$BUILD_NUMBER" in
+            ''|*[!0-9]*)
+              echo "::error::pubspec.yaml version must carry a numeric +buildNumber"
+              exit 1
+              ;;
+          esac
           echo "APP_VERSION=$APP_VERSION" >> "$GITHUB_ENV"
-          echo "BUILD_NUMBER=${{ github.run_number }}" >> "$GITHUB_ENV"
+          echo "BUILD_NUMBER=$BUILD_NUMBER" >> "$GITHUB_ENV"
 
       - name: Fetch App Store provisioning profiles (fastlane sigh, via API key)
         run: |
