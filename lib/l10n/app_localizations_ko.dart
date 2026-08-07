@@ -2671,4 +2671,16 @@ class AppLocalizationsKo extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String profile_clearCacheKept(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count recordings were kept — they have not been uploaded yet',
+      one: '1 recording was kept — it has not been uploaded yet',
+      zero: '',
+    );
+    return '$_temp0';
+  }
 }

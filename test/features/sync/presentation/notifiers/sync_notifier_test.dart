@@ -54,6 +54,7 @@ LocalRecording makeRecording({
   String? title = 'Test',
   int retryCount = 0,
   String localFilePath = '/tmp/test.m4a',
+  String? serverId,
 }) => LocalRecording(
   id: id,
   reviewFlagsJson: '[]',
@@ -66,7 +67,7 @@ LocalRecording makeRecording({
   format: 'm4a',
   localFilePath: localFilePath,
   uploadStatus: uploadStatus,
-  serverId: null,
+  serverId: serverId,
   gcsUrl: null,
   registerId: null,
   cleaningStatus: 'none',
@@ -997,34 +998,49 @@ void main() {
   });
 
   group('clearLocalCache', () {
-    test('deletes every local file and then clears the repository', () async {
+    // This used to assert that every file went and the whole table was
+    // cleared, which is the behaviour that cost a field user an hour-long
+    // recording that had never been uploaded. The ordering contract it carried
+    // is worth keeping; the wipe is not. What is deleted at all is
+    // `sync_notifier_clear_cache_test.dart`'s subject.
+    test('deletes the file of an uploaded recording before dropping its row, '
+        'and leaves an unsent one alone', () async {
       final dir = Directory.systemTemp.createTempSync('sync_storage_clear');
       addTearDown(() {
         if (dir.existsSync()) dir.deleteSync(recursive: true);
       });
-      final a = File('${dir.path}/a.m4a')..writeAsBytesSync(List.filled(10, 0));
-      final b = File('${dir.path}/b.m4a')..writeAsBytesSync(List.filled(10, 0));
+      final sent = File('${dir.path}/a.m4a')
+        ..writeAsBytesSync(List.filled(10, 0));
+      final unsent = File('${dir.path}/b.m4a')
+        ..writeAsBytesSync(List.filled(10, 0));
 
       when(() => mockRecordingRepo.getAllLocalRecordings()).thenAnswer(
         (_) async => [
-          makeRecording(id: 'a', localFilePath: a.path),
-          makeRecording(id: 'b', localFilePath: b.path),
+          makeRecording(
+            id: 'a',
+            localFilePath: sent.path,
+            uploadStatus: 'uploaded',
+            serverId: 'srv-a',
+          ),
+          makeRecording(id: 'b', localFilePath: unsent.path),
         ],
       );
-      when(() => mockRecordingRepo.deleteAllRecordings()).thenAnswer((_) async {
-        // Ordering contract: files are deleted before the repository is cleared.
-        expect(a.existsSync(), isFalse);
-        expect(b.existsSync(), isFalse);
-        return 2;
+      when(() => mockRecordingRepo.deleteRecording('a')).thenAnswer((_) async {
+        // Ordering contract: the file goes before the row that points at it.
+        expect(sent.existsSync(), isFalse);
+        return true;
       });
 
       final notifier = container.read(syncNotifierProvider.notifier);
       await Future<void>.delayed(Duration.zero);
-      await notifier.clearLocalCache();
+      final kept = await notifier.clearLocalCache();
 
-      expect(a.existsSync(), isFalse);
-      expect(b.existsSync(), isFalse);
-      verify(() => mockRecordingRepo.deleteAllRecordings()).called(1);
+      expect(sent.existsSync(), isFalse);
+      expect(unsent.existsSync(), isTrue);
+      expect(kept, 1);
+      verify(() => mockRecordingRepo.deleteRecording('a')).called(1);
+      verifyNever(() => mockRecordingRepo.deleteRecording('b'));
+      verifyNever(() => mockRecordingRepo.deleteAllRecordings());
     });
   });
 }

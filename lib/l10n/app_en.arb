@@ -543,7 +543,7 @@
   "profile_deleteAccountWarning": "This action is permanent and cannot be undone. Your account will be deleted, but your uploaded recordings will be preserved for the language projects.",
   "profile_typeDelete": "Type DELETE to confirm account deletion:",
   "profile_clearCacheTitle": "Clear local cache?",
-  "profile_clearCacheMessage": "This will delete all locally stored recordings. Uploaded recordings on the server will not be affected.",
+  "profile_clearCacheMessage": "This frees space by deleting local copies of recordings the server already has. Recordings still waiting to upload are kept — they exist nowhere else.",
   "profile_cacheCleared": "Local cache cleared",
   "profile_joinedSuccess": "Joined \"{name}\" successfully",
   "@profile_joinedSuccess": {
@@ -588,7 +588,7 @@
   "profile_autoRemove": "Auto-remove after upload",
   "profile_autoRemoveSubtitle": "Delete local files after successful upload",
   "profile_clearCache": "Clear local cache",
-  "profile_clearCacheSubtitle": "Delete all locally stored recordings",
+  "profile_clearCacheSubtitle": "Delete local copies of recordings already uploaded",
   "profile_invitations": "Invitations",
   "profile_refreshInvitations": "Refresh invitations",
   "profile_noInvitations": "No pending invitations",
@@ -1428,6 +1428,15 @@
   "recording_pendencyCount": "{count, plural, other{{count} fields to fill}}",
   "@recording_pendencyCount": {
     "description": "List card chip when a recording owes more than one field. Counts the gap instead of naming each one, so the card keeps a single chip.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "profile_clearCacheKept": "{count, plural, =0{} =1{1 recording was kept — it has not been uploaded yet} other{{count} recordings were kept — they have not been uploaded yet}}",
+  "@profile_clearCacheKept": {
+    "description": "Told after clearing: how many recordings were spared because the server does not have them.",
     "placeholders": {
       "count": {
         "type": "int"

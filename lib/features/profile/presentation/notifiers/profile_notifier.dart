@@ -47,8 +47,13 @@ class ProfileNotifier extends Notifier<ProfileState> {
         .updateProfile(displayName: name);
   }
 
-  Future<void> clearCacheAndRefresh() async {
-    await ref.read(syncNotifierProvider.notifier).clearLocalCache();
+  /// Returns how many recordings the clear refused to delete because the
+  /// server does not have them, so the screen can say so.
+  Future<int> clearCacheAndRefresh() async {
+    final kept = await ref
+        .read(syncNotifierProvider.notifier)
+        .clearLocalCache();
     await loadStorageUsed();
+    return kept;
   }
 }

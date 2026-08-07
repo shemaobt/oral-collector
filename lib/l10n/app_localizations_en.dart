@@ -1111,7 +1111,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profile_clearCacheMessage =>
-      'This will delete all locally stored recordings. Uploaded recordings on the server will not be affected.';
+      'This frees space by deleting local copies of recordings the server already has. Recordings still waiting to upload are kept — they exist nowhere else.';
 
   @override
   String get profile_cacheCleared => 'Local cache cleared';
@@ -1172,7 +1172,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profile_clearCacheSubtitle =>
-      'Delete all locally stored recordings';
+      'Delete local copies of recordings already uploaded';
 
   @override
   String get profile_invitations => 'Invitations';
@@ -2754,6 +2754,18 @@ class AppLocalizationsEn extends AppLocalizations {
       count,
       locale: localeName,
       other: '$count fields to fill',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String profile_clearCacheKept(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count recordings were kept — they have not been uploaded yet',
+      one: '1 recording was kept — it has not been uploaded yet',
+      zero: '',
     );
     return '$_temp0';
   }

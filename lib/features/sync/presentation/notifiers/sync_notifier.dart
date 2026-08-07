@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/widgets.dart' show Locale, WidgetsBinding;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/database/app_database.dart' show LocalRecording;
 import '../../../../core/l10n/locale_provider.dart';
 import '../../../../core/observability/error_reporter.dart';
 import '../../../../core/platform/disk_space.dart' as disk_space;
@@ -183,15 +184,45 @@ class SyncNotifier extends Notifier<SyncState> {
     );
   }
 
-  Future<void> clearLocalCache() async {
-    if (kIsWeb) return;
+  /// Drops the local copies the server already holds, and returns how many
+  /// recordings were kept because it does not.
+  ///
+  /// **It used to delete everything**, files and rows alike, with no regard for
+  /// whether the recording had ever been uploaded — and the dialog in front of
+  /// it said "uploaded recordings on the server will not be affected", which is
+  /// true, and is exactly what made it dangerous: it answers for the recordings
+  /// that are safe and says nothing about the ones that exist nowhere else. A
+  /// field report cost an hour-long recording that way, after it had waited
+  /// days to upload.
+  ///
+  /// Freeing space is the point, so recordings the server is holding still go.
+  /// The rest are not cache — they are the only copy.
+  Future<int> clearLocalCache() async {
+    if (kIsWeb) return 0;
 
     final all = await _recordingRepo.getAllLocalRecordings();
-    await Future.wait(all.map((r) => _deleteQuietly(r.localFilePath)));
+    final onServer = all.where(_serverHasIt).toList();
 
-    await _recordingRepo.deleteAllRecordings();
+    await Future.wait(onServer.map((r) => _deleteQuietly(r.localFilePath)));
+    for (final recording in onServer) {
+      await _recordingRepo.deleteRecording(recording.id);
+    }
+
     await _refreshPendingCount();
+    return all.length - onServer.length;
   }
+
+  /// Whether the server is holding [recording], and the local file is therefore
+  /// a copy rather than the original.
+  ///
+  /// The status alone will not do: `markAsUploaded` writes the server id in the
+  /// same call that sets the status, so a row claiming `uploaded` without one
+  /// never finished the round trip. Erring toward keeping costs disk space;
+  /// erring the other way costs the recording.
+  bool _serverHasIt(LocalRecording recording) =>
+      (recording.uploadStatus == 'uploaded' ||
+          recording.uploadStatus == 'verified') &&
+      (recording.serverId?.isNotEmpty ?? false);
 
   Future<void> _deleteQuietly(String path) async {
     try {

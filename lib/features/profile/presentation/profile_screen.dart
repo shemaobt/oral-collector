@@ -470,10 +470,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
 
     if (confirmed == true && mounted) {
-      await ref.read(profileNotifierProvider.notifier).clearCacheAndRefresh();
+      final kept = await ref
+          .read(profileNotifierProvider.notifier)
+          .clearCacheAndRefresh();
       if (mounted) {
         messenger.showSnackBar(
-          SnackBar(content: Text(l10n.profile_cacheCleared)),
+          SnackBar(
+            // Naming what survived is the point: the recordings that were kept
+            // are the ones the user would have lost, and silence here reads as
+            // "everything went".
+            content: Text(
+              kept == 0
+                  ? l10n.profile_cacheCleared
+                  : l10n.profile_clearCacheKept(kept),
+            ),
+          ),
         );
       }
     }

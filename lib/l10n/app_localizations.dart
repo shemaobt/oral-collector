@@ -2003,7 +2003,7 @@ abstract class AppLocalizations {
   /// No description provided for @profile_clearCacheMessage.
   ///
   /// In en, this message translates to:
-  /// **'This will delete all locally stored recordings. Uploaded recordings on the server will not be affected.'**
+  /// **'This frees space by deleting local copies of recordings the server already has. Recordings still waiting to upload are kept — they exist nowhere else.'**
   String get profile_clearCacheMessage;
 
   /// No description provided for @profile_cacheCleared.
@@ -2105,7 +2105,7 @@ abstract class AppLocalizations {
   /// No description provided for @profile_clearCacheSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Delete all locally stored recordings'**
+  /// **'Delete local copies of recordings already uploaded'**
   String get profile_clearCacheSubtitle;
 
   /// No description provided for @profile_invitations.
@@ -4867,6 +4867,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, other{{count} fields to fill}}'**
   String recording_pendencyCount(int count);
+
+  /// Told after clearing: how many recordings were spared because the server does not have them.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{} =1{1 recording was kept — it has not been uploaded yet} other{{count} recordings were kept — they have not been uploaded yet}}'**
+  String profile_clearCacheKept(int count);
 }
 
 class _AppLocalizationsDelegate

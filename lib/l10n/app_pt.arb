@@ -393,7 +393,7 @@
   "profile_deleteAccountWarning": "Esta acao e permanente e nao pode ser desfeita. Sua conta sera excluida, mas suas gravacoes enviadas serao preservadas para os projetos de idiomas.",
   "profile_typeDelete": "Digite DELETE para confirmar a exclusao da conta:",
   "profile_clearCacheTitle": "Limpar cache local?",
-  "profile_clearCacheMessage": "Isso excluirá todas as gravações armazenadas localmente. As gravações enviadas ao servidor não serão afetadas.",
+  "profile_clearCacheMessage": "Isso libera espaço apagando as cópias locais das gravações que o servidor já tem. As gravações que ainda estão esperando para subir são mantidas — elas não existem em nenhum outro lugar.",
   "profile_cacheCleared": "Cache local limpo",
   "profile_joinedSuccess": "Entrou em \"{name}\" com sucesso",
   "profile_inviteDeclined": "Convite recusado",
@@ -410,7 +410,7 @@
   "profile_autoRemove": "Remover automaticamente após envio",
   "profile_autoRemoveSubtitle": "Excluir arquivos locais após envio bem-sucedido",
   "profile_clearCache": "Limpar cache local",
-  "profile_clearCacheSubtitle": "Excluir todas as gravações armazenadas localmente",
+  "profile_clearCacheSubtitle": "Apagar cópias locais das gravações já enviadas",
   "profile_invitations": "Convites",
   "profile_refreshInvitations": "Atualizar convites",
   "profile_noInvitations": "Nenhum convite pendente",
@@ -940,5 +940,6 @@
   "recording_pendencyDescriptionContext": "Algumas palavras sobre o que acontece na gravação.",
   "recording_pendencyStoryteller": "Sem narrador",
   "recording_pendencyStorytellerContext": "Quem conta esta história.",
-  "recording_pendencyCount": "{count, plural, other{{count} campos a preencher}}"
+  "recording_pendencyCount": "{count, plural, other{{count} campos a preencher}}",
+  "profile_clearCacheKept": "{count, plural, =0{} =1{1 gravação foi mantida — ela ainda não foi enviada} other{{count} gravações foram mantidas — elas ainda não foram enviadas}}"
 }
