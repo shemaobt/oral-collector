@@ -498,7 +498,10 @@ void main() {
           ReviewFlag(code: 'missing_classification', origin: 'system'),
         ],
       );
-      final c = makeContainer(api: _FakeApiRepo(updateReviewFlags: const []));
+      final c = makeContainer(
+        isOnline: true,
+        api: _FakeApiRepo(updateReviewFlags: const []),
+      );
 
       await notifierOf(c).moveCategory(
         recording,
@@ -718,7 +721,7 @@ void main() {
         serverId: 'srv-1',
       );
       final api = _FakeApiRepo();
-      final c = makeContainer(api: api);
+      final c = makeContainer(isOnline: true, api: api);
 
       await notifierOf(c).toggleCleaningStatus(recording);
 
@@ -736,15 +739,77 @@ void main() {
         serverId: 'srv-1',
       );
       final api = _FakeApiRepo();
-      final c = makeContainer(api: api);
+      final c = makeContainer(isOnline: true, api: api);
 
-      await notifierOf(c).toggleCleaningStatus(recording);
+      final result = await notifierOf(c).toggleCleaningStatus(recording);
 
+      expect(result, RecordingMutationResult.success);
       expect(api.updateCalls, 1);
       expect(api.lastUpdate['cleaningStatus'], 'needs_cleaning');
       expect(
         (await repo.getRecordingById(recordingId))!.cleaningStatus,
         'needs_cleaning',
+      );
+    });
+
+    // ENG-399: since ENG-376 counted `verified` as server-known, the common
+    // recording takes the server path — so a plain network error used to throw
+    // the edit away instead of keeping it.
+    test(
+      'keeps the edit on the device when the server is unreachable',
+      () async {
+        final recording = await seed(
+          uploadStatus: 'verified',
+          cleaningStatus: 'none',
+          serverId: 'srv-1',
+        );
+        final api = _FakeApiRepo(updateError: Exception('connection failed'));
+        final c = makeContainer(isOnline: true, api: api);
+
+        final result = await notifierOf(c).toggleCleaningStatus(recording);
+
+        expect(result, RecordingMutationResult.savedLocallyOnly);
+        expect(
+          (await repo.getRecordingById(recordingId))!.cleaningStatus,
+          'needs_cleaning',
+        );
+      },
+    );
+
+    test('writes locally without trying the server while offline', () async {
+      final recording = await seed(
+        uploadStatus: 'verified',
+        cleaningStatus: 'none',
+        serverId: 'srv-1',
+      );
+      final api = _FakeApiRepo();
+      final c = makeContainer(api: api);
+
+      final result = await notifierOf(c).toggleCleaningStatus(recording);
+
+      expect(result, RecordingMutationResult.savedLocallyOnly);
+      expect(api.updateCalls, 0);
+      expect(
+        (await repo.getRecordingById(recordingId))!.cleaningStatus,
+        'needs_cleaning',
+      );
+    });
+
+    test('returns forbidden and leaves the row untouched on 403', () async {
+      final recording = await seed(
+        uploadStatus: 'verified',
+        cleaningStatus: 'none',
+        serverId: 'srv-1',
+      );
+      final api = _FakeApiRepo(updateError: const ForbiddenException());
+      final c = makeContainer(isOnline: true, api: api);
+
+      final result = await notifierOf(c).toggleCleaningStatus(recording);
+
+      expect(result, RecordingMutationResult.forbidden);
+      expect(
+        (await repo.getRecordingById(recordingId))!.cleaningStatus,
+        'none',
       );
     });
   });
@@ -755,7 +820,7 @@ void main() {
       () async {
         final recording = await seed(secondaryGenreId: 'sg-old');
         final api = _FakeApiRepo();
-        final c = makeContainer(api: api);
+        final c = makeContainer(isOnline: true, api: api);
 
         final result = await notifierOf(c).moveCategory(
           recording,
@@ -777,7 +842,7 @@ void main() {
     test('returns forbidden and leaves the row untouched on 403', () async {
       final recording = await seed(genreId: 'genre-1');
       final api = _FakeApiRepo(updateError: const ForbiddenException());
-      final c = makeContainer(api: api);
+      final c = makeContainer(isOnline: true, api: api);
 
       final result = await notifierOf(c).moveCategory(
         recording,
@@ -795,7 +860,7 @@ void main() {
     test('returns failed when the API reports no success', () async {
       final recording = await seed();
       final api = _FakeApiRepo(updateResult: false);
-      final c = makeContainer(api: api);
+      final c = makeContainer(isOnline: true, api: api);
 
       final result = await notifierOf(c).moveCategory(
         recording,
@@ -807,6 +872,56 @@ void main() {
       );
 
       expect(result, RecordingMutationResult.failed);
+    });
+
+    // ENG-399: same shape as toggleCleaningStatus — a network error used to
+    // discard the move instead of keeping it on the device.
+    test(
+      'keeps the move on the device when the server is unreachable',
+      () async {
+        final recording = await seed(
+          genreId: 'genre-1',
+          uploadStatus: 'verified',
+          serverId: 'srv-1',
+        );
+        final api = _FakeApiRepo(updateError: Exception('connection failed'));
+        final c = makeContainer(isOnline: true, api: api);
+
+        final result = await notifierOf(c).moveCategory(
+          recording,
+          const MoveCategoryResult(
+            genreId: 'genre-2',
+            subcategoryId: 'sub-2',
+            clearSecondary: false,
+          ),
+        );
+
+        expect(result, RecordingMutationResult.savedLocallyOnly);
+        expect((await repo.getRecordingById(recordingId))!.genreId, 'genre-2');
+      },
+    );
+
+    test('writes locally without trying the server while offline', () async {
+      final recording = await seed(
+        genreId: 'genre-1',
+        uploadStatus: 'verified',
+        serverId: 'srv-1',
+      );
+      final api = _FakeApiRepo();
+      final c = makeContainer(api: api);
+
+      final result = await notifierOf(c).moveCategory(
+        recording,
+        const MoveCategoryResult(
+          genreId: 'genre-2',
+          subcategoryId: 'sub-2',
+          clearSecondary: false,
+        ),
+      );
+
+      expect(result, RecordingMutationResult.savedLocallyOnly);
+      expect(api.updateCalls, 0);
+      expect((await repo.getRecordingById(recordingId))!.genreId, 'genre-2');
     });
   });
 

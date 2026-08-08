@@ -582,6 +582,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'Falha ao atualizar status de limpeza no servidor';
 
   @override
+  String get recording_savedOnDeviceOnly =>
+      'Salvo apenas neste dispositivo — o servidor não recebeu esta alteração. Reconecte e faça a alteração novamente para atualizar o servidor.';
+
+  @override
   String get recording_updateNoPermission =>
       'Você não tem permissão para atualizar esta gravação';
 

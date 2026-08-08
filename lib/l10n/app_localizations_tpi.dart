@@ -579,6 +579,10 @@ class AppLocalizationsTpi extends AppLocalizations {
       'No inap apdet klining stetas long seva';
 
   @override
+  String get recording_savedOnDeviceOnly =>
+      'Saved on this device only — the server did not get this change. Reconnect and make it again to update the server.';
+
+  @override
   String get recording_updateNoPermission =>
       'Yu no gat pemisin bilong apdet dispela rekoding';
 

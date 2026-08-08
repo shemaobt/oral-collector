@@ -589,6 +589,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Échec de la mise à jour du statut de nettoyage sur le serveur';
 
   @override
+  String get recording_savedOnDeviceOnly =>
+      'Saved on this device only — the server did not get this change. Reconnect and make it again to update the server.';
+
+  @override
   String get recording_updateNoPermission =>
       'Vous n\'avez pas la permission de mettre à jour cet enregistrement';
 

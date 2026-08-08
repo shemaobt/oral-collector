@@ -203,6 +203,7 @@
   "recording_deleteFailed": "Falha ao excluir gravação",
   "recording_deleteFailedLocal": "Falha ao excluir do servidor. Removendo localmente.",
   "recording_cleaningStatusFailed": "Falha ao atualizar status de limpeza no servidor",
+  "recording_savedOnDeviceOnly": "Salvo apenas neste dispositivo — o servidor não recebeu esta alteração. Reconecte e faça a alteração novamente para atualizar o servidor.",
   "recording_updateNoPermission": "Você não tem permissão para atualizar esta gravação",
   "recording_moveNoPermission": "Você não tem permissão para mover esta gravação",
   "recording_movedSuccess": "Gravação movida com sucesso",

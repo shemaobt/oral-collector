@@ -578,6 +578,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Failed to update cleaning status on server';
 
   @override
+  String get recording_savedOnDeviceOnly =>
+      'Saved on this device only — the server did not get this change. Reconnect and make it again to update the server.';
+
+  @override
   String get recording_updateNoPermission =>
       'You do not have permission to update this recording';
 
