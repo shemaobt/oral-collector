@@ -37,7 +37,7 @@ Several Drift columns hold a free-text status string (no DB-level enum). The val
 
 | Column (client / server) | Where | Values |
 |---|---|---|
-| `uploadStatus` / `upload_status` | recordings | **client:** `local`, `uploading`, `uploaded`, `verified`, `failed`, `failed_conflict`, `failed_description`, `failed_exhausted`, `failed_missing_file`, `web_uploading` (web). **server:** uppercase, e.g. `VERIFIED`. `local`, every `failed_*` variant and `web_uploading` are client-only and never sent by the server. `failed` means *a retry is still coming*; the `failed_*` variants are terminal. |
+| `uploadStatus` / `upload_status` | recordings | **client:** `local`, `uploading`, `uploaded`, `verified`, `failed`, `failed_conflict`, `failed_description`, `failed_exhausted`, `failed_missing_file`, `web_uploading` (web). **server:** lowercase — `local`, `uploading`, `uploaded`, `verified`, `upload_failed` (`UploadStatus(StrEnum)` in the API's `app/core/enums.py`, serialized by value). The client's `failed`, every `failed_*` variant and `web_uploading` are client-only; the server's single failure state is `upload_failed`, which the client never writes. `failed` means *a retry is still coming*; the `failed_*` variants are terminal. |
 | `cleaningStatus` / `cleaning_status` | recordings | **client:** `none`, `needs_cleaning`; reads `cleaned` from the server. **server:** uppercase enum, e.g. `CleaningStatus.NONE`. |
 | `syncStatus` | storytellers (client-only queue) | `synced`, `uploading`, `failed`. The server tracks storytellers by id/timestamps, not this column. |
 | `status` | recording_sessions (client-only recovery) | `active`, `completed`. |
