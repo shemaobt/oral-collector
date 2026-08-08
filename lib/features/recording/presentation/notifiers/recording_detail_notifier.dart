@@ -8,6 +8,7 @@ import '../../../../core/database/app_database.dart';
 import '../../../../core/errors/api_exception.dart';
 import '../../../../core/errors/app_exception.dart' show ConflictException;
 import '../../../../core/observability/error_reporter.dart';
+import '../../../../core/platform/file_ops.dart' as file_ops;
 import '../../../auth/data/providers/role_provider.dart';
 import '../../../project/presentation/notifiers/member_notifier.dart';
 import '../../../project/presentation/notifiers/stats_notifier.dart';
@@ -27,6 +28,8 @@ import '../../domain/entities/local_recording_entity.dart';
 import '../../domain/entities/review_flag.dart';
 import '../../domain/entities/update_recording_request.dart';
 import '../../domain/repositories/recording_api_repository.dart';
+import '../../domain/server_deletion_policy.dart';
+import '../trim_load_error.dart';
 import '../widgets/classify_recording_dialog.dart' show ClassifyResult;
 import '../widgets/move_category_dialog.dart' show MoveCategoryResult;
 import '../widgets/secondary_classification_fields.dart' show SecondaryValues;
@@ -90,6 +93,7 @@ class RecordingDetailNotifier
     state = state.copyWith(isLoading: true);
     try {
       LocalRecording? recording;
+      var deletedOnServer = false;
       final isOnline = ref.read(syncNotifierProvider).isOnline;
 
       if (kIsWeb) {
@@ -107,21 +111,13 @@ class RecordingDetailNotifier
             current != null &&
             _hasServerId(current) &&
             (_needsGcsRefresh(current) || _needsUserRefresh(current))) {
-          try {
-            final server = await _apiRepo.getRecording(current.serverId!);
-            if (_disposed) return;
-            final updates = buildHealMetadataCompanion(
-              local: current,
-              server: server,
-            );
-            await _localRepo.updateRecording(current.id, updates);
-            if (_disposed) return;
-            recording = await _localRepo.getRecordingById(current.id);
-            if (_disposed) return;
-          } catch (_) {}
+          final healed = await _healMetadata(current);
+          if (healed == null) return;
+          recording = healed.recording;
+          deletedOnServer = healed.deletedOnServer;
         }
 
-        if (isOnline && recording == null) {
+        if (isOnline && recording == null && !deletedOnServer) {
           try {
             final server = await _apiRepo.getRecording(arg);
             if (_disposed) return;
@@ -155,6 +151,56 @@ class RecordingDetailNotifier
     } catch (_) {
       if (_disposed) return;
       state = state.copyWith(isLoading: false);
+    }
+  }
+
+  /// Refreshes [current] from the server when its stored metadata is
+  /// incomplete, and reads a 404 as "the server hard-deleted it".
+  ///
+  /// Returns null when the notifier was disposed mid-flight, which is [load]'s
+  /// signal to abandon the rest of the load. Otherwise returns the row to carry
+  /// on with — the reloaded one, [current] itself when the refresh failed for
+  /// any other reason, or null once the row has been erased. Requires a
+  /// non-empty `serverId` ([_hasServerId]).
+  Future<({LocalRecording? recording, bool deletedOnServer})?> _healMetadata(
+    LocalRecording current,
+  ) async {
+    try {
+      final server = await _apiRepo.getRecording(current.serverId!);
+      if (_disposed) return null;
+      final updates = buildHealMetadataCompanion(
+        local: current,
+        server: server,
+      );
+      await _localRepo.updateRecording(current.id, updates);
+      if (_disposed) return null;
+      final reloaded = await _localRepo.getRecordingById(current.id);
+      if (_disposed) return null;
+      return (recording: reloaded, deletedOnServer: false);
+    } catch (e) {
+      final erasable =
+          isRecordingNotFound(e) &&
+          canEraseAsDeletedOnServer(
+            serverId: current.serverId,
+            uploadStatus: current.uploadStatus,
+          );
+      if (!erasable) return (recording: current, deletedOnServer: false);
+      await _eraseDeletedOnServer(current);
+      if (_disposed) return null;
+      return (recording: null, deletedOnServer: true);
+    }
+  }
+
+  /// The server hard-deleted this recording, so the local row and its audio are
+  /// the leftovers of something that no longer exists anywhere.
+  Future<void> _eraseDeletedOnServer(LocalRecording recording) async {
+    await _localRepo.deleteRecording(recording.id);
+    if (recording.localFilePath.isEmpty) return;
+    try {
+      await file_ops.deleteFile(recording.localFilePath);
+    } on Exception catch (e, st) {
+      // Best-effort: a missing/locked file must not abort the row delete.
+      ref.read(errorReporterProvider).reportError(e, st);
     }
   }
 
@@ -342,7 +388,8 @@ class RecordingDetailNotifier
         : 'none';
     final serverId = recording.serverId ?? recording.id;
 
-    if (recording.uploadStatus == 'uploaded' || kIsWeb) {
+    if (const {'uploaded', 'verified'}.contains(recording.uploadStatus) ||
+        kIsWeb) {
       try {
         final outcome = await _apiRepo.updateRecording(
           serverId,

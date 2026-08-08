@@ -21,6 +21,7 @@ jobs:
     uses: shemaobt/.github/.github/workflows/joaozinho-review.yml@main
     with:
       lens_pack: flutter-dart
+      verdict_mode: block
       app_id: ${{ vars.JOAOZINHO_APP_ID }}
     secrets:
       app_private_key: ${{ secrets.JOAOZINHO_APP_PRIVATE_KEY }}

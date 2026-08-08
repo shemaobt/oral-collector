@@ -439,10 +439,29 @@ Path: @/lib/features/recording/presentation
   server-side check is tracked separately (ENG-81). The getter still
   short-circuits to non-editable while `RecordingDetailState.recording` is null
   (before the row resolves).
-- **Online-first then mirror locally.** Edits always call the server
-  first (now inside the notifier's mutations, ENG-194); if the server call
-  fails, the local row is not changed (so we do not generate phantom local
-  edits). The notifier hands the outcome back as a `RecordingMutationResult` and
+- **Online-first, but only once the server already knows the recording.**
+  Edits call the server first (now inside the notifier's mutations, ENG-194)
+  when the recording's `uploadStatus` is one the server has already seen —
+  `{'uploaded', 'verified'}` — or on web, where every recording is
+  server-backed; if that call fails, the local row is not changed (so we do
+  not generate phantom local edits). A recording that is still
+  `local`/`failed`/`uploading` has nothing to correct server-side yet, so the
+  edit is written straight to Drift and rides along on the eventual upload —
+  this is intentional, not a fallback. `uploadStatus` has no client-side enum
+  (it is a loose `String` throughout this layer, tracked as `needs-api` in
+  ENG-174), so every "does the server already know this recording" gate has
+  to independently spell out both statuses; besides `toggleCleaningStatus`
+  the idiom also guards `_needsGcsRefresh` and `replaceAudio` above, and the
+  `StatusFilter.uploaded` list filter
+  ([./notifiers/docs.md](notifiers/docs.md)). Before ENG-376,
+  `toggleCleaningStatus` checked only for `'uploaded'`, so a `verified`
+  recording — most of what is listed once sync has caught up — silently
+  skipped the server call: the local row was written, `load()` re-read it,
+  and the screen reported success while the server never learned of the
+  edit. The list filter had the matching gap, hiding `verified` recordings
+  (which already carry the same `recording_statusUploaded` badge on their
+  card) from the `filter_uploaded` chip. The notifier hands the outcome back
+  as a `RecordingMutationResult` and
   the widget surfaces errors through the shared `showErrorSnackBar` helper
   ([/lib/shared/widgets/error_snack_bar.dart](../../../shared/widgets/error_snack_bar.dart)),
   which is handed the **typed** caught exception so it localizes via the type
@@ -461,6 +480,23 @@ Path: @/lib/features/recording/presentation
   delete path is the exception: it does not throw but returns a
   `DeleteRecordingResult`, and a `forbidden` result is shown in the semantic
   `warning` color (`AppColors.of(context).warning`), so it adapts to dark mode.
+- **`toggleCleaningStatus` has no offline fallback, unlike the title and
+  description use-cases.** `saveRecordingTitle` and `saveRecordingDescription`
+  ([../data/use_cases/save_recording_title.dart](../data/use_cases/save_recording_title.dart),
+  [../data/use_cases/save_recording_description.dart](../data/use_cases/save_recording_description.dart))
+  check `isOnline` up front and, on a generic (non-`ForbiddenException`)
+  failure from the server call, still write the local row and return
+  `savedLocallyOnly` (ENG-380). `toggleCleaningStatus` does neither: it has no
+  connectivity check, and any exception from `updateRecording` — including a
+  plain offline network error — is caught and turned into
+  `RecordingMutationResult.failed` with no local write at all. This gap
+  predates ENG-376 but only mattered for already-`uploaded` recordings;
+  because the server-call gate above now also covers `verified`, toggling
+  cleaning status while offline on a `verified` recording (most of what is
+  listed) now surfaces a visible failure where it previously wrote the wrong
+  thing to Drift silently. That trade — a visible failure over a false
+  success — is deliberate and left as-is here, not something this fix
+  attempted to close.
 - **The "download for edit" UX dialog gating.** `_ensureLocalFile` first
   asks the user for confirmation (`recording_downloadAudio`) before
   pulling the bytes. If the user cancels, no write happens; if the

@@ -8,16 +8,23 @@ Path: @/lib/features/recording/domain
   types under [./entities/](entities/), the abstract repository contract
   under [./repositories/](repositories/), and pure policy logic — the
   edit-authorization policy in
-  [./recording_edit_policy.dart](recording_edit_policy.dart) and the
+  [./recording_edit_policy.dart](recording_edit_policy.dart), the
+  upload-status affordance predicates in
+  [./upload_status_actions.dart](upload_status_actions.dart), the
   classification predicates in
-  [./entities/classification.dart](entities/classification.dart).
+  [./entities/classification.dart](entities/classification.dart), and the
+  server-deletion eligibility check in
+  [./server_deletion_policy.dart](server_deletion_policy.dart).
 - Holds no Flutter, Riverpod, Drift, or `http` dependencies: every file
-  here imports nothing but other domain types (the policy depends only on
-  the auth `User` entity; `classification.dart` imports nothing at all).
-  This keeps the rules headless-testable in isolation from any row or
-  screen. The classification predicates are pure id-logic — they take
-  genre/register id arguments rather than reading them off the Drift
-  `LocalRecording` row, which is what lets this file stay Drift-free.
+  here imports nothing but other domain types (the edit policy depends
+  only on the auth `User` entity; `canRetryUpload` in
+  `upload_status_actions.dart` imports nothing at all,
+  `hasClearableFailedUploads` reads only `LocalRecordingEntity`;
+  `classification.dart` imports nothing at all). This keeps the rules
+  headless-testable in isolation from any row or screen. The
+  classification predicates are pure id-logic — they take genre/register
+  id arguments rather than reading them off the Drift `LocalRecording`
+  row, which is what lets this file stay Drift-free.
 - This layer defines *what* a recording is and *who may edit one*; the
   data layer ([../data/](../data/)) supplies the implementation and the
   presentation layer ([../presentation/](../presentation/)) consumes
@@ -185,6 +192,22 @@ Path: @/lib/features/recording/domain
   ([/lib/features/auth/domain/entities/user.dart](../../auth/domain/entities/user.dart))
   and is fed the boolean result of `RoleNotifier.canManageProject`
   ([/lib/features/auth/data/providers/role_provider.dart](../../auth/data/providers/role_provider.dart)).
+- `upload_status_actions.dart` (ENG-46) holds two independent predicates
+  gating upload-adjacent affordances: `recording_detail_screen.dart`'s
+  Retry button calls `canRetryUpload`, and `recordings_list_screen.dart`'s
+  "Clear failed" button calls `hasClearableFailedUploads`. Both started as
+  inline boolean expressions in the presentation layer and moved here in
+  two steps — extracted alongside the ENG-46 fix, then relocated from
+  `presentation/` into `domain/` as a pure follow-up refactor once it was
+  clear neither function touches Flutter, Riverpod, or Drift — following
+  the `recording_edit_policy.dart` precedent above: same shape (a pure
+  predicate consumed by exactly the screen it gates), same test placement
+  under `test/features/recording/domain/`.
+- `server_deletion_policy.dart` (ENG-45) is the single definition of which
+  local row a hard delete on the server is allowed to erase. It is consumed
+  by `RecordingsListNotifier`'s whole-project sweep reconciliation and by
+  `RecordingDetailNotifier`'s metadata-heal 404 branch (see
+  [../presentation/notifiers/docs.md](../presentation/notifiers/docs.md)).
 
 ### Core Implementation
 
@@ -197,6 +220,35 @@ Path: @/lib/features/recording/domain
   `RoleNotifier` so the policy carries no Riverpod/network dependency —
   the caller resolves the role boolean and passes it in. This is the
   seam that makes the rule unit-testable without a container.
+- `canRetryUpload(uploadStatus, retryCount)` returns true for `failed`,
+  `failed_exhausted`, and `local` with `retryCount > 0` (a row that
+  already burned at least one attempt before landing back on `local`,
+  e.g. via `resetAndRetry`). It excludes `uploading`: the upload is
+  already happening, so offering Retry there would queue a second
+  attempt on top of the one in flight and reset a budget that has not
+  actually been spent. `failed_conflict` and `failed_description` are
+  excluded too — same as before this file existed — because a bare retry
+  would just repeat the same rejected create call; those two route through
+  a rename/edit exit instead (see
+  [/lib/features/sync/docs.md](../../sync/docs.md)).
+- `hasClearableFailedUploads(recordings)` is true iff at least one entity
+  in the iterable has `uploadStatus == 'failed'`. It mirrors — deliberately,
+  by scope not by shared code — the `WHERE` clause
+  `LocalRecordingRepository.deleteStaleRecordings` uses (see
+  [../data/repositories/docs.md](../data/repositories/docs.md)), so the
+  list's "Clear failed" button only ever appears over a set the sweep
+  would actually touch. Nothing enforces the two stay in sync beyond both
+  being reviewed together; a future change to one without the other would
+  reopen the ENG-46 shape of bug (an affordance advertising a delete it
+  does not perform, or a delete reaching rows the button never showed).
+- `canEraseAsDeletedOnServer({serverId, uploadStatus})` returns true only
+  for a non-empty `serverId` whose `uploadStatus` is `uploaded` or
+  `verified`. Any other status means the row may never have completed the
+  round trip to the server — `markAsUploaded` is what writes `uploaded`
+  alongside the server id, so anything still `local`/`uploading`/`failed`
+  may be the only copy of that audio, and the caller must never erase it no
+  matter what the server answers (PR #193, the data-loss this guards
+  against).
 
 ### Things to Know
 
@@ -272,5 +324,15 @@ Path: @/lib/features/recording/domain
   non-owner / null-user matrix without a widget or provider. Do not pull
   Riverpod, Drift, or `BuildContext` into this file — resolve those at
   the call site and pass primitives in.
+- **`upload_status_actions.dart` exists because `RecordingDetailScreen`
+  cannot be pumped in its loaded state in a widget test** — the hero
+  player takes near-unbounded height under the test font (see
+  [../presentation/docs.md](../presentation/docs.md)) — so a predicate
+  that stayed inline on that screen could only be exercised by mounting
+  something the test harness cannot render. Pulling it into a plain
+  function over primitives/an entity is the same move ENG-374 made for
+  `CompleteFichaOverlay`: when the screen a piece of logic lives on is
+  untestable as a whole, the logic moves somewhere it can be tested
+  directly instead of going unverified.
 
 Created and maintained by Nori.

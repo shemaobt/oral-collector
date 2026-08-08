@@ -326,12 +326,12 @@ class LocalRecordingRepository {
     return _db.delete(_db.localRecordings).go();
   }
 
+  /// Scoped to `failed` alone: `uploading` is an upload in progress, not a
+  /// failure, and this sweep is a wholesale hard delete (ENG-46).
   Future<int> deleteStaleRecordings(String projectId) async {
     return (_db.delete(_db.localRecordings)..where(
           (t) =>
-              t.projectId.equals(projectId) &
-              (t.uploadStatus.equals('failed') |
-                  t.uploadStatus.equals('uploading')),
+              t.projectId.equals(projectId) & t.uploadStatus.equals('failed'),
         ))
         .go();
   }

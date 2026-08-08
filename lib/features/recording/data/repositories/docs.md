@@ -102,8 +102,8 @@ Path: @/lib/features/recording/data/repositories
   is terminal until the user asks for it again, and audio that is no longer on
   the device is terminal outright. The first three exits route through
   `resetRetryCount`, which flips the row back to `local` and so back into this
-  query. `deleteStaleRecordings` matches `failed` / `uploading` only, so none of
-  them is destroyed by "Clear failed" while it waits on the user. Not because
+  query. `deleteStaleRecordings` matches `failed` only (ENG-46; see Things to Know), so
+  none of them is destroyed by "Clear failed" while it waits on the user. Not because
   the audio is still there — `failed_missing_file` has none by definition — but
   because each row carries the title, description and classification the user
   typed and the server never received, and the sweep is wholesale.
@@ -289,8 +289,17 @@ Path: @/lib/features/recording/data/repositories
   row delete, and the physical audio-file delete is orchestrated by
   `RecordingsListNotifier.deleteRecording` (ENG-120), not here — see
   [../../presentation/notifiers/docs.md](../../presentation/notifiers/docs.md).
+  The same row-delete is also the one `RecordingsListNotifier`'s
+  whole-project-sweep reconciliation and `RecordingDetailNotifier`'s
+  metadata-heal 404 branch call to erase a row the server hard-deleted
+  (ENG-45, gated by `canEraseAsDeletedOnServer` — see
+  [../../domain/docs.md](../../domain/docs.md)).
   `deleteStaleRecordings(projectId)` is the separate user-triggered "clear
-  stale" sweep that bulk-deletes `failed` and `uploading` rows for a project.
+  stale" sweep that bulk-deletes `failed` rows for a project — `uploading` is
+  deliberately excluded (ENG-46; see Things to Know). The list's "Clear
+  failed" button only shows when `hasClearableFailedUploads`
+  ([../../domain/docs.md](../../domain/docs.md)) finds a matching row, which
+  mirrors this same filter.
 - Lifecycle helpers: `markAsUploading`, `markAsUploaded(id, serverId,
   gcsUrl)`, `markAsFailed`, `resetRetryCount`, `resetStuckUploading`, and
   `normalizeExhaustedUploads`. These mutate only upload-state columns; they
@@ -407,13 +416,17 @@ Path: @/lib/features/recording/data/repositories
   in `uploading`. The helper rewrites only `uploadStatus`, leaving the
   resumable offset (`resumableSessionUri`, `uploadedBytes`), `serverId`, and
   the retry budget (`retryCount`, `lastRetryAt`) intact so the next drain
-  resumes rather than restarts. It deliberately targets `local`, not
-  `failed`, because `deleteStaleRecordings` (the user-triggered "clear stale"
-  cleanup) deletes both `failed` and `uploading` rows — landing on `local`
-  keeps a recoverable recording out of that destructive sweep. Because it
-  matches only `uploading` (a native-only status; web uses `web_uploading`),
-  it is a no-op on web. The drain's complementary exclusion of `uploading`
-  rows and the startup invocation order live in
+  resumes rather than restarts. It has to move the row out of `uploading` at
+  all because the sync engine's own eligibility filter skips that status (see
+  [/lib/features/sync/docs.md](../../../sync/docs.md)) — a row left there
+  would never be re-dispatched. It targets `local`, not `failed`: `failed` is
+  the status `deleteStaleRecordings`/`hasClearableFailedUploads` (ENG-46, see
+  Things to Know and [../../domain/docs.md](../../domain/docs.md)) treat as a
+  real failure, and a crash mid-transfer is not one — landing on `failed`
+  would expose a resumable row to "Clear failed" and mislabel it as something
+  it never earned. Because it matches only `uploading` (a native-only status;
+  web uses `web_uploading`), it is a no-op on web. The drain's complementary
+  exclusion of `uploading` rows and the startup invocation order live in
   [/lib/features/sync/docs.md](../../../sync/docs.md).
 - **The retry ceiling is decided inside `markAsFailed`, not by its caller
   (ENG-377).** The sync engine used to read the row, add one, and pick
@@ -445,21 +458,43 @@ Path: @/lib/features/recording/data/repositories
   see [/lib/core/database/docs.md](../../../../core/database/docs.md) for
   the schema-migration path this deliberately is not.
 - **`deleteStaleRecordings` ("Clear failed") lost most of what it used to
-  clear (ENG-377).** Before ENG-377, a permanently-failed upload sat at the
-  generic `failed` status and was exactly the kind of row this bulk delete
-  was for. Now every permanent failure has its own terminal status —
-  `failed_conflict`, `failed_description`, `failed_exhausted`,
-  `failed_missing_file` — and none of them match `deleteStaleRecordings`'s
-  `failed` / `uploading` filter, on purpose: each carries the title,
-  description and classification the user typed and the server never
-  received. (Not "the audio is still there" — for `failed_missing_file` it is
-  not, and that row is still worth keeping for its metadata.) What is left for the button to catch is
-  a `failed` row still inside its retry budget (deleting it throws away an
-  upload the queue is still going to attempt) and an `uploading` row that
-  was not reclaimed by `resetStuckUploading`. The action was not removed or
-  renamed as part of ENG-377; whether it should widen its match, and eat the
-  same loss of user-entered metadata the new statuses were built to avoid, is
-  left as an open product decision.
+  clear (ENG-377), then lost `uploading` too (ENG-46).** Before ENG-377, a
+  permanently-failed upload sat at the generic `failed` status and was
+  exactly the kind of row this bulk delete was for. Now every permanent
+  failure has its own terminal status — `failed_conflict`,
+  `failed_description`, `failed_exhausted`, `failed_missing_file` — and none
+  of them match `deleteStaleRecordings`'s `failed` filter, on purpose: each
+  carries the title, description and classification the user typed and the
+  server never received. (Not "the audio is still there" — for
+  `failed_missing_file` it is not, and that row is still worth keeping for
+  its metadata.) `uploading` used to match too — the ENG-46 bug: an upload
+  in progress is not a failure, and the sweep is a wholesale hard delete, so
+  tapping "Clear failed" mid-upload destroyed a recording the user never saw
+  fail. `uploading` is now excluded outright, regardless of whether
+  `resetStuckUploading` has already reclaimed the row — there is no longer a
+  window where an in-flight or crash-stranded upload is reachable from this
+  button. What is left for the button to catch is a `failed` row still
+  inside its retry budget — deleting it throws away an upload the queue is
+  still going to attempt, and that trade-off is unchanged and accepted. The
+  list only offers the button when `hasClearableFailedUploads` finds such a
+  row, and the detail screen's plain Retry (`canRetryUpload`) no longer fires
+  over `uploading` either — both predicates live in
+  [../../domain/upload_status_actions.dart](../../domain/upload_status_actions.dart)
+  (see [../../domain/docs.md](../../domain/docs.md)) and mirror this scope so
+  neither affordance promises something the underlying action won't do.
+  Whether the sweep should widen its match to the terminal `failed_*`
+  statuses, and eat the same loss of user-entered metadata those statuses
+  were built to avoid, is still an open product decision — ENG-46 narrowed
+  the match, it did not reopen that question.
+  **This is the client half only.** `RecordingsListNotifier.clearStaleRecordings`
+  ([../../presentation/notifiers/docs.md](../../presentation/notifiers/docs.md))
+  calls the server's own `/api/oc/recordings/clear-stale`
+  (`RecordingApiRepositoryImpl.clearStaleRecordings`) before this local sweep
+  runs, and that endpoint's scope has not been narrowed to match (tracked as
+  ENG-397). Until it is, "Clear failed" can leave a device and the server
+  disagreeing about which rows survive — the server may still delete a row
+  this client would now spare — which is a desync, not the pre-ENG-46 failure
+  mode of the client destroying a recording outright.
 - **The pending-upload order is `createdAt ASC, id ASC`, and the queue is
   drained in that order (ENG-122).** Ordering by `recordedAt` (wall-clock
   recording time) is wrong for a FIFO queue: a batch import stamps many rows

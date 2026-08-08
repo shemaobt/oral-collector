@@ -149,5 +149,21 @@ void main() {
 
       expect(state.filteredRecordings.map((r) => r.id), ['m']);
     });
+
+    test('uploaded filter keeps recordings the server already verified', () {
+      final uploaded = _entity(id: 'u', uploadStatus: 'uploaded');
+      final verified = _entity(id: 'v', uploadStatus: 'verified');
+      final local = _entity(id: 'l', uploadStatus: 'local');
+
+      final state = RecordingsListState(
+        recordings: [uploaded, verified, local],
+        selectedFilter: StatusFilter.uploaded,
+      );
+
+      expect(
+        state.filteredRecordings.map((r) => r.id),
+        unorderedEquals(['u', 'v']),
+      );
+    });
   });
 }

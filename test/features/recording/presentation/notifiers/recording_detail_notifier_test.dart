@@ -6,6 +6,8 @@
 /// writes must preserve.
 library;
 
+import 'dart:io';
+
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,7 +16,7 @@ import 'package:oral_collector/core/database/app_database.dart';
 import 'package:oral_collector/core/database/database_provider.dart';
 import 'package:oral_collector/core/errors/api_exception.dart';
 import 'package:oral_collector/core/errors/app_exception.dart'
-    show ConflictException;
+    show ConflictException, NetworkException, ValidationException;
 import 'package:oral_collector/features/auth/data/providers/role_provider.dart';
 import 'package:oral_collector/features/project/presentation/notifiers/member_notifier.dart';
 import 'package:oral_collector/features/project/presentation/notifiers/member_state.dart';
@@ -49,6 +51,7 @@ class _FakeApiRepo implements RecordingApiRepository {
     this.updateResult = true,
     this.updateError,
     this.getRecordingResult,
+    this.getRecordingError,
     this.updateReviewFlags,
   });
 
@@ -56,6 +59,7 @@ class _FakeApiRepo implements RecordingApiRepository {
   List<ReviewFlag>? updateReviewFlags;
   Object? updateError;
   ServerRecording? getRecordingResult;
+  Object? getRecordingError;
 
   int updateCalls = 0;
   int getRecordingCalls = 0;
@@ -93,6 +97,7 @@ class _FakeApiRepo implements RecordingApiRepository {
   Future<ServerRecording> getRecording(String serverId) async {
     getRecordingCalls++;
     lastGetServerId = serverId;
+    if (getRecordingError != null) throw getRecordingError!;
     final result = getRecordingResult;
     if (result == null) throw StateError('getRecording not expected');
     return result;
@@ -404,6 +409,76 @@ void main() {
         expect((await repo.getRecordingById(recordingId))!.gcsUrl, '');
       },
     );
+
+    test('a 404 on the metadata heal removes the uploaded row and its '
+        'audio file', () async {
+      final tmpDir = Directory.systemTemp.createTempSync('eng45_detail_');
+      addTearDown(() {
+        if (tmpDir.existsSync()) tmpDir.deleteSync(recursive: true);
+      });
+      final file = File('${tmpDir.path}/in.m4a')..writeAsStringSync('audio');
+      await seed(
+        serverId: 'srv-1',
+        gcsUrl: '',
+        uploadStatus: 'uploaded',
+        localFilePath: file.path,
+      );
+      final api = _FakeApiRepo(
+        getRecordingError: const ValidationException(
+          code: 'client_404',
+          statusCode: 404,
+        ),
+      );
+      final c = makeContainer(isOnline: true, api: api);
+      // The erase adds enough async turns for the autoDispose provider to be
+      // collected mid-load; a listener keeps the notifier (and its state) alive
+      // the way the screen does.
+      addTearDown(
+        c.listen(recordingDetailProvider(recordingId), (_, _) {}).close,
+      );
+
+      await notifierOf(c).load();
+
+      expect(await repo.getRecordingById(recordingId), isNull);
+      expect(file.existsSync(), isFalse);
+      expect(stateOf(c).recording, isNull);
+      expect(stateOf(c).isLoading, isFalse);
+      expect(
+        api.getRecordingCalls,
+        1,
+        reason: 'the row is gone for good; no point re-asking as a fallback',
+      );
+    });
+
+    test('a 404 does not remove a row that never finished uploading', () async {
+      // userId is what sends this row to the server, so the heal runs even
+      // though the audio may exist nowhere else (PR #193).
+      await seed(serverId: 'srv-1', userId: '', uploadStatus: 'failed');
+      final api = _FakeApiRepo(
+        getRecordingError: const ValidationException(
+          code: 'client_404',
+          statusCode: 404,
+        ),
+      );
+      final c = makeContainer(isOnline: true, api: api);
+
+      await notifierOf(c).load();
+
+      expect(api.getRecordingCalls, greaterThan(0));
+      expect(await repo.getRecordingById(recordingId), isNotNull);
+      expect(stateOf(c).recording?.id, recordingId);
+    });
+
+    test('a non-404 heal failure leaves the row alone', () async {
+      await seed(serverId: 'srv-1', gcsUrl: '', uploadStatus: 'uploaded');
+      final api = _FakeApiRepo(getRecordingError: const NetworkException());
+      final c = makeContainer(isOnline: true, api: api);
+
+      await notifierOf(c).load();
+
+      expect(await repo.getRecordingById(recordingId), isNotNull);
+      expect(stateOf(c).recording?.id, recordingId);
+    });
   });
 
   group('setStoryteller', () {
@@ -726,6 +801,25 @@ void main() {
       expect(
         (await repo.getRecordingById(recordingId))!.cleaningStatus,
         'none',
+      );
+    });
+
+    test('calls the API when the recording was verified', () async {
+      final recording = await seed(
+        uploadStatus: 'verified',
+        cleaningStatus: 'none',
+        serverId: 'srv-1',
+      );
+      final api = _FakeApiRepo();
+      final c = makeContainer(api: api);
+
+      await notifierOf(c).toggleCleaningStatus(recording);
+
+      expect(api.updateCalls, 1);
+      expect(api.lastUpdate['cleaningStatus'], 'needs_cleaning');
+      expect(
+        (await repo.getRecordingById(recordingId))!.cleaningStatus,
+        'needs_cleaning',
       );
     });
   });
