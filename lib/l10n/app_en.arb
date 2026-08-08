@@ -236,6 +236,10 @@
   "recording_deleteFailed": "Failed to delete recording",
   "recording_deleteFailedLocal": "Failed to delete from server. Removing locally.",
   "recording_cleaningStatusFailed": "Failed to update cleaning status on server",
+  "recording_savedOnDeviceOnly": "Saved on this device only — the server did not get this change. Reconnect and make it again to update the server.",
+  "@recording_savedOnDeviceOnly": {
+    "description": "Snackbar after a metadata edit the server could not be told about (offline or unreachable). The edit is kept locally, but nothing re-sends it, so the user is asked to redo it online (ENG-399)."
+  },
   "recording_updateNoPermission": "You do not have permission to update this recording",
   "recording_moveNoPermission": "You do not have permission to move this recording",
   "recording_movedSuccess": "Recording moved successfully",

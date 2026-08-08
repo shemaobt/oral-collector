@@ -582,6 +582,10 @@ class AppLocalizationsHi extends AppLocalizations {
       'सर्वर पर सफ़ाई स्थिति अपडेट करने में विफल';
 
   @override
+  String get recording_savedOnDeviceOnly =>
+      'Saved on this device only — the server did not get this change. Reconnect and make it again to update the server.';
+
+  @override
   String get recording_updateNoPermission =>
       'आपको यह रिकॉर्डिंग अपडेट करने की अनुमति नहीं है';
 

@@ -587,6 +587,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Error al actualizar el estado de limpieza en el servidor';
 
   @override
+  String get recording_savedOnDeviceOnly =>
+      'Saved on this device only — the server did not get this change. Reconnect and make it again to update the server.';
+
+  @override
   String get recording_updateNoPermission =>
       'No tienes permiso para actualizar esta grabación';
 

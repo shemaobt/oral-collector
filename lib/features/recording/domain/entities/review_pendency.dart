@@ -32,8 +32,9 @@ const Map<String, PendencyKind> _knownCodes = {
 /// and stale after an edit — which is why it derived locally instead. Read
 /// those two write paths before trusting this again.
 ///
-/// Offline needs no special case: editing is online-first, so a failed call
-/// leaves the row untouched and the stored flags cannot go stale.
+/// Offline does have a case, since ENG-399: an edit the server never received
+/// is written locally anyway, so the stored flags describe a recording the
+/// server has not seen. They go stale until the user redoes the edit online.
 List<PendencyKind> recordingPendencies(LocalRecordingEntity recording) {
   final serverId = recording.serverId;
   if (serverId == null || serverId.isEmpty) return _fromFields(recording);

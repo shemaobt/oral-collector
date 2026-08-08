@@ -439,15 +439,25 @@ Path: @/lib/features/recording/presentation
   server-side check is tracked separately (ENG-81). The getter still
   short-circuits to non-editable while `RecordingDetailState.recording` is null
   (before the row resolves).
-- **Online-first, but only once the server already knows the recording.**
-  Edits call the server first (now inside the notifier's mutations, ENG-194)
-  when the recording's `uploadStatus` is one the server has already seen —
-  `{'uploaded', 'verified'}` — or on web, where every recording is
-  server-backed; if that call fails, the local row is not changed (so we do
-  not generate phantom local edits). A recording that is still
+- **Online-first, but only once the server already knows the recording — and
+  since ENG-399, a distinction between "the server refused" and "the server
+  was never reached".** Edits call the server first (now inside the
+  notifier's mutations, ENG-194) when the recording's `uploadStatus` is one
+  the server has already seen — `{'uploaded', 'verified'}` — or on web, where
+  every recording is server-backed; a recording that is still
   `local`/`failed`/`uploading` has nothing to correct server-side yet, so the
-  edit is written straight to Drift and rides along on the eventual upload —
-  this is intentional, not a fallback. `uploadStatus` has no client-side enum
+  edit is written straight to Drift with no server call at all and rides
+  along on the eventual upload — this is intentional, not a fallback, and the
+  method returns `RecordingMutationResult.success`, not `savedLocallyOnly`:
+  nothing is owed to a server that has never seen the row. The gate for
+  deciding whether an edit is owed to the server is **not the same across the
+  four metadata mutations, and that inconsistency is deliberate (ENG-399),
+  not an oversight to unify**: `classify`/`saveSecondary` gate on
+  `hasServerId`, `toggleCleaningStatus` on `uploadStatus` in
+  `{'uploaded', 'verified'}` (or web), and `moveCategory` calls the server
+  unconditionally. Unifying them would touch every one of those call sites'
+  local-only semantics at once, for a benefit no bug report asked for.
+  `uploadStatus` has no client-side enum
   (it is a loose `String` throughout this layer, tracked as `needs-api` in
   ENG-174), so every "does the server already know this recording" gate has
   to independently spell out both statuses; besides `toggleCleaningStatus`
@@ -460,7 +470,53 @@ Path: @/lib/features/recording/presentation
   and the screen reported success while the server never learned of the
   edit. The list filter had the matching gap, hiding `verified` recordings
   (which already carry the same `recording_statusUploaded` badge on their
-  card) from the `filter_uploaded` chip. The notifier hands the outcome back
+  card) from the `filter_uploaded` chip.
+  **When the call is made, ENG-399 classifies the result instead of
+  collapsing every failure into `failed`.** All four mutations route the
+  actual `updateRecording` call through the notifier's private
+  `_pushMetadata`/`_refusal` pair
+  ([./notifiers/docs.md](notifiers/docs.md)), which tells a refusal — the
+  server was reached and said no — apart from not reaching it at all. A
+  refusal is `updateRecording` throwing `ForbiddenException` (403) or
+  returning a plain non-exceptional `success: false` (any other non-200
+  status; `RecordingApiRepositoryImpl.updateRecording`, see
+  [../data/repositories/docs.md](../data/repositories/docs.md), only throws
+  on 401/403/409, so a 500 lands here); the local row is left untouched,
+  exactly as before ENG-399. Everything else — the up-front offline check
+  (`SyncNotifier.isOnline`, native only) failing, or *any* other thrown
+  exception, including `UnauthorizedException` (401) and `ConflictException`
+  (409) — is unreachable: the edit is mirrored to the local row anyway and
+  the method returns `RecordingMutationResult.savedLocallyOnly`, and the
+  screen shows a warning snackbar (`recording_savedOnDeviceOnly`) telling the
+  user the change stopped at this device. Web has no local row, so an
+  unreachable server there is treated the same as a refusal (`_pushMetadata`
+  maps any thrown exception to `rejected` under `kIsWeb`), not a
+  `savedLocallyOnly`.
+  **Nothing re-sends a `savedLocallyOnly` edit.** `getPendingUploads`
+  (the upload queue's source, see
+  [../data/repositories/docs.md](../data/repositories/docs.md)) only selects
+  `uploadStatus` in `{'local', 'failed', 'uploading'}`, and none of these four
+  mutations touch `uploadStatus`. An edit saved locally on an
+  `uploaded`/`verified` recording is therefore stuck on that device
+  indefinitely — invisible to the queue, the pending counters, and every
+  other device — until the user reconnects and repeats the edit online; the
+  snackbar says exactly that instead of promising a sync that will not
+  happen. This is a known limitation of the design, not a gap ENG-399 closed.
+  **A 401 or a 409 landing in the generic catch and being classified as
+  unreachable is a gap inherited from ENG-380, now with a wider reach.** A
+  stale/expired session or a write the server refused for some other reason
+  is not the same thing as being offline, but `_pushMetadata`'s `catch (_)`
+  does not distinguish them. This already applied to `saveRecordingDescription`
+  ([../data/use_cases/save_recording_description.dart](../data/use_cases/save_recording_description.dart)),
+  whose own generic catch has the identical shape; `saveRecordingTitle`
+  ([../data/use_cases/save_recording_title.dart](../data/use_cases/save_recording_title.dart))
+  is the one exception — it special-cases `ConflictException` with its own
+  `rethrow` so a duplicate-title 409 reaches `saveDetails` as
+  `titleConflict` rather than a local-only save, but still swallows a 401
+  the same generic way. ENG-399 did not introduce this shape; it extended it
+  from those two ENG-380 use-cases to the four `_pushMetadata`-based
+  mutations, none of which carry a title-conflict-style carve-out.
+  The notifier hands the outcome back
   as a `RecordingMutationResult` and
   the widget surfaces errors through the shared `showErrorSnackBar` helper
   ([/lib/shared/widgets/error_snack_bar.dart](../../../shared/widgets/error_snack_bar.dart)),
@@ -480,23 +536,26 @@ Path: @/lib/features/recording/presentation
   delete path is the exception: it does not throw but returns a
   `DeleteRecordingResult`, and a `forbidden` result is shown in the semantic
   `warning` color (`AppColors.of(context).warning`), so it adapts to dark mode.
-- **`toggleCleaningStatus` has no offline fallback, unlike the title and
-  description use-cases.** `saveRecordingTitle` and `saveRecordingDescription`
-  ([../data/use_cases/save_recording_title.dart](../data/use_cases/save_recording_title.dart),
-  [../data/use_cases/save_recording_description.dart](../data/use_cases/save_recording_description.dart))
-  check `isOnline` up front and, on a generic (non-`ForbiddenException`)
-  failure from the server call, still write the local row and return
-  `savedLocallyOnly` (ENG-380). `toggleCleaningStatus` does neither: it has no
-  connectivity check, and any exception from `updateRecording` — including a
-  plain offline network error — is caught and turned into
-  `RecordingMutationResult.failed` with no local write at all. This gap
-  predates ENG-376 but only mattered for already-`uploaded` recordings;
-  because the server-call gate above now also covers `verified`, toggling
-  cleaning status while offline on a `verified` recording (most of what is
-  listed) now surfaces a visible failure where it previously wrote the wrong
-  thing to Drift silently. That trade — a visible failure over a false
-  success — is deliberate and left as-is here, not something this fix
-  attempted to close.
+- **Before ENG-399, only two of the four metadata mutations had this offline
+  fallback.** `toggleCleaningStatus`/`moveCategory`/`classify`/`saveSecondary`
+  used to have no connectivity check and turn any exception from
+  `updateRecording` — including a plain offline network error — into
+  `RecordingMutationResult.failed` with no local write at all, throwing away
+  the user's edit; that gap predated ENG-376 but only mattered for
+  already-`uploaded` recordings, and started firing for most of what is
+  listed once the server-call gate above also started covering `verified`.
+  ENG-399 landed in two commits — `toggleCleaningStatus`/`moveCategory`
+  first, then `classify`/`saveSecondary` (whose `savedLocallyOnly` handling
+  in the screen had shipped in the first commit but was unreachable dead code
+  until the second) — extracting the shared `_pushMetadata`/`_refusal`
+  classification described above. The second commit also fixed
+  `saveRecordingTitle`
+  ([../data/use_cases/save_recording_title.dart](../data/use_cases/save_recording_title.dart))
+  to agree with its sibling `saveRecordingDescription`
+  ([../data/use_cases/save_recording_description.dart](../data/use_cases/save_recording_description.dart)):
+  it used to return `SaveTitleResult.saved` when offline with a `serverId`,
+  where `saveRecordingDescription` already returned `savedLocallyOnly` in the
+  identical situation.
 - **The "download for edit" UX dialog gating.** `_ensureLocalFile` first
   asks the user for confirmation (`recording_downloadAudio`) before
   pulling the bytes. If the user cancels, no write happens; if the

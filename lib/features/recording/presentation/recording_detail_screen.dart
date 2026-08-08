@@ -153,6 +153,8 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
             backgroundColor: AppColors.of(context).warning,
           ),
         );
+      case RecordingMutationResult.savedLocallyOnly:
+        _showSavedOnDeviceOnly();
       // Only a title edit can clash; elsewhere it reads as a plain failure.
       case RecordingMutationResult.failed ||
           RecordingMutationResult.titleConflict:
@@ -162,6 +164,18 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
       case RecordingMutationResult.success:
         break;
     }
+  }
+
+  /// The edit is on this device and nothing re-sends it: an already-uploaded
+  /// recording never re-enters the upload queue, so saying "will sync" would be
+  /// a lie (ENG-399).
+  void _showSavedOnDeviceOnly() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(AppLocalizations.of(context).recording_savedOnDeviceOnly),
+        backgroundColor: AppColors.of(context).warning,
+      ),
+    );
   }
 
   Future<void> _deleteRecording() async {
@@ -552,6 +566,8 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
             backgroundColor: AppColors.of(context).warning,
           ),
         );
+      case RecordingMutationResult.savedLocallyOnly:
+        _showSavedOnDeviceOnly();
       // Only a title edit can clash; elsewhere it reads as a plain failure.
       case RecordingMutationResult.failed ||
           RecordingMutationResult.titleConflict:
@@ -587,6 +603,8 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
             backgroundColor: AppColors.of(context).warning,
           ),
         );
+      case RecordingMutationResult.savedLocallyOnly:
+        _showSavedOnDeviceOnly();
       // Only a title edit can clash; elsewhere it reads as a plain failure.
       case RecordingMutationResult.failed ||
           RecordingMutationResult.titleConflict:
@@ -665,6 +683,8 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
             backgroundColor: AppColors.of(context).warning,
           ),
         );
+      case RecordingMutationResult.savedLocallyOnly:
+        _showSavedOnDeviceOnly();
       // Only a title edit can clash; elsewhere it reads as a plain failure.
       case RecordingMutationResult.failed ||
           RecordingMutationResult.titleConflict:

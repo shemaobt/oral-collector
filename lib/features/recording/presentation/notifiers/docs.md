@@ -67,8 +67,9 @@ Path: @/lib/features/recording/presentation/notifiers
   editor's injectable seams" in [../../data/docs.md](../../data/docs.md).
 - `RecordingDetailNotifier` is **headless** for the same reason: no
   `BuildContext`, no navigation, no snackbars. Its metadata mutations return a
-  `RecordingMutationResult { success, failed, forbidden, titleConflict }` the
-  widget maps to a localized snackbar (see Core Implementation). Its writes go through typed
+  `RecordingMutationResult { success, savedLocallyOnly, failed, forbidden,
+  titleConflict }` the widget maps to a localized snackbar (see Core
+  Implementation). Its writes go through typed
   repository methods on
   [../../data/repositories/local_recording_repository.dart](../../data/repositories/local_recording_repository.dart)
   (`setStoryteller`, `classify`, `moveCategory`, …) and through the
@@ -163,12 +164,28 @@ Path: @/lib/features/recording/presentation/notifiers
     calls the server first, mirrors to Drift through a typed
     `LocalRecordingRepository` write (native only), refreshes genre stats /
     kicks the sync queue where the screen did, then `await load()`s.
-    `toggleCleaningStatus` only reaches the server when it already knows the
-    recording (`uploadStatus` in `{'uploaded', 'verified'}`, ENG-376) or on
-    web; a still-local recording mirrors straight to Drift, and unlike
-    `saveDetails`' description write there is no offline fallback if the
-    server call itself fails (see the "Online-first" and "no offline
-    fallback" bullets in [../docs.md](../docs.md)). The four
+    `toggleCleaningStatus`/`moveCategory`/`classify`/`saveSecondary` (ENG-399)
+    route the server call through the shared `_pushMetadata`/`_refusal` pair,
+    which classifies the outcome as accepted, rejected (a non-200 response, or
+    403 → `ForbiddenException`), or unreachable (offline, or any other thrown
+    exception, except on web where a thrown exception is treated as rejected —
+    there is no local row to fall back to) rather than collapsing every
+    failure into one `failed`. A rejection still leaves the local row alone; an
+    unreachable server mirrors the edit to Drift anyway and the method returns
+    `RecordingMutationResult.savedLocallyOnly` instead of `success`. See the
+    "Online-first" bullet in [../docs.md](../docs.md) for the full
+    accepted/rejected/unreachable contract, why each method keeps its own
+    (deliberately inconsistent) gate for whether the edit is owed to the
+    server at all, and the "no resend" limitation this leaves. `saveDetails`
+    gets the same fallback through the ENG-380 use-cases
+    (`saveRecordingTitle`/`saveRecordingDescription` — see
+    [../../data/docs.md](../../data/docs.md)) rather than `_pushMetadata`
+    directly, since it does not call `updateRecording` itself; it tracks a
+    single `localOnly` flag across the title and description halves — either
+    one landing local-only makes the whole edit `savedLocallyOnly` — and binds
+    both use-case results before returning, which a prior revision of this
+    method did not do for the description half (a bug fixed by ENG-399, not a
+    behavior this doc is describing as new). The four
     that can fail visibly (`toggleCleaningStatus`/`moveCategory`/`classify`/
     `saveSecondary`, plus `saveDetails`) return `RecordingMutationResult` so the
     widget picks the snackbar (see Things to Know). `titleConflict` comes only
@@ -473,11 +490,13 @@ Path: @/lib/features/recording/presentation/notifiers
   even after disposal.
 - **`RecordingDetailNotifier` is headless; the widget owns every snackbar
   (ENG-194).** The notifier has no `BuildContext`, so its metadata mutations
-  resolve to a `RecordingMutationResult { success, failed, forbidden,
-  titleConflict }` and the screen `switch`es on it to pick the localized message
-  and color (e.g. `forbidden` → `recording_updateNoPermission` in
-  `AppColors.of(context).warning`; `failed` → the action's generic failure;
-  `success` → the success snackbar or nothing). This is the same headless →
+  resolve to a `RecordingMutationResult { success, savedLocallyOnly, failed,
+  forbidden, titleConflict }` and the screen `switch`es on it to pick the
+  localized message and color (e.g. `forbidden` → `recording_updateNoPermission`
+  in `AppColors.of(context).warning`; `failed` → the action's generic failure;
+  `savedLocallyOnly` → `recording_savedOnDeviceOnly`, also in the warning
+  color, via the shared `_showSavedOnDeviceOnly` helper (ENG-399); `success` →
+  the success snackbar or nothing). This is the same headless →
   result → widget-owns-UI boundary as the trim editor's `TrimSaveOutcome`. The
   audio paths instead **throw** (`downloadAndCache`, `downloadForExport`) or
   return a `bool` (`replaceAudio`) because the screen wraps them in a progress

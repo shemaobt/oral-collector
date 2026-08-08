@@ -567,6 +567,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recording_cleaningStatusFailed => '更新服务器清理状态失败';
 
   @override
+  String get recording_savedOnDeviceOnly =>
+      'Saved on this device only — the server did not get this change. Reconnect and make it again to update the server.';
+
+  @override
   String get recording_updateNoPermission => '您没有权限更新此录音';
 
   @override
