@@ -152,7 +152,13 @@ Path: @/lib/features/recording/presentation/notifiers
     `toggleCleaningStatus`, `moveCategory`, `classify`, `saveSecondary` — each
     calls the server first, mirrors to Drift through a typed
     `LocalRecordingRepository` write (native only), refreshes genre stats /
-    kicks the sync queue where the screen did, then `await load()`s. The four
+    kicks the sync queue where the screen did, then `await load()`s.
+    `toggleCleaningStatus` only reaches the server when it already knows the
+    recording (`uploadStatus` in `{'uploaded', 'verified'}`, ENG-376) or on
+    web; a still-local recording mirrors straight to Drift, and unlike
+    `saveDetails`' description write there is no offline fallback if the
+    server call itself fails (see the "Online-first" and "no offline
+    fallback" bullets in [../docs.md](../docs.md)). The four
     that can fail visibly (`toggleCleaningStatus`/`moveCategory`/`classify`/
     `saveSecondary`, plus `saveDetails`) return `RecordingMutationResult` so the
     widget picks the snackbar (see Things to Know). `titleConflict` comes only
@@ -241,7 +247,12 @@ Path: @/lib/features/recording/presentation/notifiers
   below). The merge/dedup logic is byte-for-byte
   the pre-ENG-197 algorithm, just keyed off entity fields. Status / genre /
   subcategory / search filtering is computed client-side by
-  `RecordingsListState.filteredRecordings` (`unclassified` reads the entity's
+  `RecordingsListState.filteredRecordings` (`StatusFilter.uploaded` matches
+  `uploadStatus` in `{'uploaded', 'verified'}` (ENG-376), not just
+  `'uploaded'` — a `verified` recording already shows the same
+  `recording_statusUploaded` badge on its card, so excluding it from the
+  `filter_uploaded` chip looked like a missing-recording bug rather than a
+  filter bug; `unclassified` reads the entity's
   `isUnclassified` extension; `missingDescription`, added by ENG-354, negates
   `isDescriptionSufficient` from
   [../../../../shared/utils/recording_description.dart](../../../../shared/utils/recording_description.dart)
