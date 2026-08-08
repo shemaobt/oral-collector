@@ -68,7 +68,7 @@ Path: @/lib/features/recording/data/repositories
   `watchRecordingEntityById` (the entity stream behind
   `localRecordingStreamProvider`), `getPendingUploads`, `getPendingWebUploads`,
   and the aggregate helpers
-  `countRecordings`/`totalDuration`/`getLocalUnclassifiedStats`.
+  `countRecordings`/`totalDuration`/`getLocalUnclassifiedStats`/`getLocalOnlyStats`.
 - `getRecordingEntityById`/`getRecordingEntityByServerId` are the **one-shot,
   row-decoupled** analogue of `watchRecordingEntityById` (ENG-202): each wraps
   the matching row getter (`getRecordingById`/`getRecordingByServerId`) and
@@ -89,11 +89,10 @@ Path: @/lib/features/recording/data/repositories
   load-bearing ordering invariant — see Things to Know.
 - `getPendingUploads` matches `uploadStatus IN ('local', 'failed',
   'uploading')` — it intentionally still surfaces `uploading` rows so the
-  upload-queue UI and the home counters can show in-flight work. The sync
-  engine, however, excludes `uploading` from its own eligibility filter so it
-  never re-dispatches a row that is in flight or was just reclaimed by
-  `resetStuckUploading`. That filter lives only in the engine, not in this
-  query — see Things to Know and
+  upload-queue UI can show in-flight work. The sync engine, however, excludes
+  `uploading` from its own eligibility filter so it never re-dispatches a row
+  that is in flight or was just reclaimed by `resetStuckUploading`. That
+  filter lives only in the engine, not in this query — see Things to Know and
   [/lib/features/sync/docs.md](../../../sync/docs.md).
   `failed_conflict` (ENG-71), `failed_description` (ENG-354),
   `failed_exhausted` and `failed_missing_file` (both ENG-377) are all
@@ -112,6 +111,16 @@ Path: @/lib/features/recording/data/repositories
   Before ENG-377 it also covered rows whose budget was spent, which this query
   called pending and the engine's eligibility filter refused — a recording no
   pass would ever move, counted by every badge that reads this query.
+- `getLocalOnlyStats(projectId)` (ENG-355) is a single count/duration query
+  for `uploadStatus NOT IN ('uploaded', 'verified')` — every recording of a
+  project the server does not have yet, counted exactly once. It exists so the
+  home screen's device-only addend
+  ([../../../home/presentation/notifiers/docs.md](../../../home/presentation/notifiers/docs.md))
+  can be one non-overlapping set; it deliberately differs from
+  `getLocalUnclassifiedStats` (genre/register-scoped) and from
+  `getPendingUploads` (a `List<LocalRecording>` scoped to the retryable subset
+  `local`/`failed`/`uploading`, used to drive the actual upload queue, not to
+  total a badge).
 - `watchRecordingEntityById` is the **single detail watch stream** (ENG-195
   introduced it; ENG-199/ENG-200 made it the sole one by deleting the former
   row stream `watchRecordingById`). It is a `watchSingleOrNull` query that
