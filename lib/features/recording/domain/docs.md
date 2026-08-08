@@ -8,9 +8,11 @@ Path: @/lib/features/recording/domain
   types under [./entities/](entities/), the abstract repository contract
   under [./repositories/](repositories/), and pure policy logic — the
   edit-authorization policy in
-  [./recording_edit_policy.dart](recording_edit_policy.dart) and the
+  [./recording_edit_policy.dart](recording_edit_policy.dart), the
   classification predicates in
-  [./entities/classification.dart](entities/classification.dart).
+  [./entities/classification.dart](entities/classification.dart), and the
+  server-deletion eligibility check in
+  [./server_deletion_policy.dart](server_deletion_policy.dart).
 - Holds no Flutter, Riverpod, Drift, or `http` dependencies: every file
   here imports nothing but other domain types (the policy depends only on
   the auth `User` entity; `classification.dart` imports nothing at all).
@@ -181,6 +183,11 @@ Path: @/lib/features/recording/domain
   `_canEditRecording` getter (see
   [../presentation/docs.md](../presentation/docs.md)). It is the single
   client-side authorization decision for a recording.
+- `server_deletion_policy.dart` (ENG-45) is the single definition of which
+  local row a hard delete on the server is allowed to erase. It is consumed
+  by `RecordingsListNotifier`'s whole-project sweep reconciliation and by
+  `RecordingDetailNotifier`'s metadata-heal 404 branch (see
+  [../presentation/notifiers/docs.md](../presentation/notifiers/docs.md)).
 - It reaches across to the auth feature for the `User` entity
   ([/lib/features/auth/domain/entities/user.dart](../../auth/domain/entities/user.dart))
   and is fed the boolean result of `RoleNotifier.canManageProject`
@@ -197,6 +204,14 @@ Path: @/lib/features/recording/domain
   `RoleNotifier` so the policy carries no Riverpod/network dependency —
   the caller resolves the role boolean and passes it in. This is the
   seam that makes the rule unit-testable without a container.
+- `canEraseAsDeletedOnServer({serverId, uploadStatus})` returns true only
+  for a non-empty `serverId` whose `uploadStatus` is `uploaded` or
+  `verified`. Any other status means the row may never have completed the
+  round trip to the server — `markAsUploaded` is what writes `uploaded`
+  alongside the server id, so anything still `local`/`uploading`/`failed`
+  may be the only copy of that audio, and the caller must never erase it no
+  matter what the server answers (PR #193, the data-loss this guards
+  against).
 
 ### Things to Know
 

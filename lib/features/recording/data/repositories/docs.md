@@ -280,6 +280,11 @@ Path: @/lib/features/recording/data/repositories
   row delete, and the physical audio-file delete is orchestrated by
   `RecordingsListNotifier.deleteRecording` (ENG-120), not here — see
   [../../presentation/notifiers/docs.md](../../presentation/notifiers/docs.md).
+  The same row-delete is also the one `RecordingsListNotifier`'s
+  whole-project-sweep reconciliation and `RecordingDetailNotifier`'s
+  metadata-heal 404 branch call to erase a row the server hard-deleted
+  (ENG-45, gated by `canEraseAsDeletedOnServer` — see
+  [../../domain/docs.md](../../domain/docs.md)).
   `deleteStaleRecordings(projectId)` is the separate user-triggered "clear
   stale" sweep that bulk-deletes `failed` and `uploading` rows for a project.
 - Lifecycle helpers: `markAsUploading`, `markAsUploaded(id, serverId,
