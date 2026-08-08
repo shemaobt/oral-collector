@@ -7,7 +7,7 @@ library;
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:oral_collector/features/recording/domain/entities/local_recording_entity.dart';
-import 'package:oral_collector/features/recording/presentation/upload_status_actions.dart';
+import 'package:oral_collector/features/recording/domain/upload_status_actions.dart';
 
 LocalRecordingEntity _recording(String uploadStatus) => LocalRecordingEntity(
   id: 'rec-$uploadStatus',

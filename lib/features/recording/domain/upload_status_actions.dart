@@ -1,4 +1,4 @@
-import '../domain/entities/local_recording_entity.dart';
+import 'entities/local_recording_entity.dart';
 
 /// Whether the detail screen's status card offers a plain "Retry".
 ///
