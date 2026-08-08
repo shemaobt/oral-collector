@@ -14,6 +14,7 @@ import '../../domain/entities/review_pendency.dart';
 import '../../domain/entities/server_recording.dart';
 import '../../domain/repositories/recording_api_repository.dart';
 import '../../domain/server_deletion_policy.dart';
+import '../trim_load_error.dart';
 import 'recordings_list_state.dart';
 
 /// Outcome of [RecordingsListNotifier.deleteRecording], so the screen can pick
@@ -43,6 +44,9 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
   // Bumped on each fetchRecordings; a fetch/loadMore whose generation no longer
   // matches discards its result instead of clobbering a newer fetch.
   int _fetchGeneration = 0;
+  // Every server id the current sweep has seen, stamped with the project it
+  // was collected under. Null while there is no sweep worth finishing.
+  ({String projectId, Set<String> serverIds})? _sweep;
 
   @override
   RecordingsListState build() => const RecordingsListState();
@@ -79,7 +83,7 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
     }
 
     try {
-      final result = await _fetchAndMerge(projectId);
+      final result = await _fetchAndMerge(projectId, gen);
       if (gen != _fetchGeneration) return;
       _serverOffset = result.serverOffset;
       state = state.copyWith(
@@ -150,6 +154,15 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
             )
             ..addAll(newServerAsLocal);
 
+      final erased = await _advanceSweep(
+        projectId: projectId,
+        page: serverPage,
+        hasMore: hasMore,
+        gen: gen,
+      );
+      if (gen != _fetchGeneration) return;
+      currentRecordings.removeWhere((r) => erased.contains(r.id));
+
       state = state.copyWith(
         recordings: currentRecordings,
         isLoadingMore: false,
@@ -212,7 +225,7 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
     return DeleteRecordingResult.ok;
   }
 
-  Future<_FetchResult> _fetchAndMerge(String projectId) async {
+  Future<_FetchResult> _fetchAndMerge(String projectId, int gen) async {
     // Read the filters once, before the await, the way projectId already is:
     // what follows has to judge the response against the filters it was
     // actually requested with. Re-reading state afterwards lets a slow filtered
@@ -245,18 +258,31 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
         .where((r) => r.serverId == null || !serverIds.contains(r.serverId))
         .toList();
 
-    // Absence only means "deleted on the server" when this response covered the
-    // whole project: a full page hides the rest behind pagination and a filter
-    // hides whatever it excluded, and erasing either would delete recordings
-    // that are still there. An empty answer is discarded too — a lost
-    // permission, a mis-scoped query and a genuinely empty project all look
-    // identical from here, and the wrong guess wipes the cache wholesale.
+    final unfiltered =
+        userId == null && storytellerId == null && reviewFlag == null;
+
+    // This page is where a sweep begins, so a project past one page can heal
+    // once pagination reaches the end instead of never (ENG-400). It is stamped
+    // with the project it was collected under; a filtered fetch installs no
+    // sweep, and a fetch a newer one already superseded installs nothing.
+    if (gen == _fetchGeneration) {
+      _sweep = unfiltered
+          ? (projectId: projectId, serverIds: {...serverIds})
+          : null;
+    }
+
+    // What follows decides who is *asked about*, not who is deleted — the
+    // erase confirms every candidate individually. These conditions are what
+    // keep that list short: under a filter, or with pages still to come, most
+    // of the project is missing from the answer for reasons that have nothing
+    // to do with deletion, and asking about all of it would be a request storm
+    // against a server that already answered. An empty response is excluded on
+    // top of that: a lost permission, a mis-scoped query and a genuinely empty
+    // project are indistinguishable, so it is no reason to suspect anything.
     final sweptWholeProject =
+        unfiltered &&
         serverRecordings.isNotEmpty &&
-        serverRecordings.length < _pageSize &&
-        userId == null &&
-        storytellerId == null &&
-        reviewFlag == null;
+        serverRecordings.length < _pageSize;
     if (sweptWholeProject) {
       final erased = await _eraseDeletedOnServer(localOnly);
       if (erased.isNotEmpty) {
@@ -274,19 +300,78 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
     );
   }
 
+  /// Feeds a paginated page into the sweep [_fetchAndMerge] started and, once
+  /// the sweep ends, hands what no page showed to [_eraseDeletedOnServer] as
+  /// *candidates*. Returns the ids actually erased, so the caller can drop them
+  /// from the list too.
+  ///
+  /// A project past one page never heals from the first page alone, which is
+  /// the whole point of accumulating (ENG-400). What the accumulation is not is
+  /// proof: neither set holds still across several round trips, so the union
+  /// only narrows who gets asked about individually.
+  Future<Set<String>> _advanceSweep({
+    required String projectId,
+    required List<ServerRecording> page,
+    required bool hasMore,
+    required int gen,
+  }) async {
+    final sweep = _sweep;
+    // Another project's pages answer about other recordings, so they never join
+    // this sweep. A filter is handled upstream: a filtered fetch installs no
+    // sweep, so there is nothing here to feed. So is a newer fetch — it
+    // installs a sweep of its own and the caller drops pages older than it.
+    if (sweep == null || projectId != sweep.projectId) return const {};
+    sweep.serverIds.addAll(page.map((s) => s.id));
+
+    // Mid-pagination absence means nothing: the recording may be on a page
+    // ahead. Only the last page closes the sweep.
+    if (hasMore) return const {};
+    _sweep = null;
+    // Defence in depth, unreachable as written: page zero being empty ends the
+    // pagination before any of this. A union of nothing is not an answer about
+    // anything, the way an empty first page is not (see _fetchAndMerge).
+    if (sweep.serverIds.isEmpty) return const {};
+
+    final local = await _loadLocal(projectId) ?? const <LocalRecordingEntity>[];
+    // The erase below outlives this check by one network round trip per
+    // candidate, but a refresh that starts before it means the caller will
+    // discard our list: erasing rows the screen would go on showing is worse
+    // than leaving them for the next sweep.
+    if (gen != _fetchGeneration) return const {};
+    return _eraseDeletedOnServer(
+      local.where((r) => !sweep.serverIds.contains(r.serverId)).toList(),
+    );
+  }
+
   /// Drops the rows the server hard-deleted (row + audio file) and returns
-  /// their ids. Skips anything that may never have reached the server.
+  /// their ids.
+  ///
+  /// Missing from a listing is a suspicion, not a verdict. Neither set holds
+  /// still while a sweep runs: an upload landing after page zero puts a live
+  /// recording in a window already read, and a delete on the server shifts the
+  /// offset window so the next page skips a row that is still there. Both end
+  /// with a recording absent from every page and present on the server. So each
+  /// candidate is confirmed individually before anything is destroyed — a
+  /// listing can be stale or mis-windowed, a 404 for one id cannot.
+  ///
+  /// Only what the server acknowledged is a candidate at all
+  /// ([canEraseAsDeletedOnServer]), and since ENG-399 that gate no longer means
+  /// the row is a redundant copy: a metadata edit made offline lives in the
+  /// local row and nothing re-sends it, so a false positive costs the user's
+  /// edits outright and not just a cached copy of the audio.
   Future<Set<String>> _eraseDeletedOnServer(
     List<LocalRecordingEntity> candidates,
   ) async {
     final erased = <String>{};
     for (final recording in candidates) {
+      final serverId = recording.serverId;
       if (!canEraseAsDeletedOnServer(
-        serverId: recording.serverId,
+        serverId: serverId,
         uploadStatus: recording.uploadStatus,
       )) {
         continue;
       }
+      if (!await _confirmDeletedOnServer(serverId!)) continue;
       await _localRepo.deleteRecording(recording.id);
       erased.add(recording.id);
       if (recording.localFilePath.isNotEmpty) {
@@ -299,6 +384,18 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
       }
     }
     return erased;
+  }
+
+  /// Asks the server about this one recording. Only a 404 confirms the delete;
+  /// an answer, a refusal or an unreachable server all leave the row alone, the
+  /// same reading RecordingDetailNotifier applies to a single recording.
+  Future<bool> _confirmDeletedOnServer(String serverId) async {
+    try {
+      await _apiRepo.getRecording(serverId);
+      return false;
+    } catch (e) {
+      return isRecordingNotFound(e);
+    }
   }
 
   List<LocalRecordingEntity> _convertServerRecordings(
