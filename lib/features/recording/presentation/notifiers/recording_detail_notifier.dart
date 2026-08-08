@@ -342,7 +342,8 @@ class RecordingDetailNotifier
         : 'none';
     final serverId = recording.serverId ?? recording.id;
 
-    if (recording.uploadStatus == 'uploaded' || kIsWeb) {
+    if (const {'uploaded', 'verified'}.contains(recording.uploadStatus) ||
+        kIsWeb) {
       try {
         final outcome = await _apiRepo.updateRecording(
           serverId,
