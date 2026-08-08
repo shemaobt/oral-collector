@@ -34,6 +34,7 @@ import '../domain/recording_edit_policy.dart';
 import 'notifiers/recording_detail_notifier.dart';
 import 'notifiers/recording_detail_state.dart';
 import 'notifiers/recordings_list_notifier.dart';
+import 'upload_status_actions.dart';
 import 'widgets/classify_recording_dialog.dart';
 import 'widgets/complete_ficha_overlay.dart';
 import 'widgets/complete_ficha_sheet.dart';
@@ -838,10 +839,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
       theme: theme,
       onToggleCleaning: _toggleCleaningStatus,
       onRetryUpload:
-          recording.uploadStatus == 'failed' ||
-              recording.uploadStatus == 'failed_exhausted' ||
-              recording.uploadStatus == 'uploading' ||
-              (recording.uploadStatus == 'local' && recording.retryCount > 0)
+          canRetryUpload(recording.uploadStatus, recording.retryCount)
           ? _retryUpload
           : null,
     );
