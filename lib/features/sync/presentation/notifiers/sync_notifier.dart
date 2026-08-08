@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/widgets.dart' show Locale, WidgetsBinding;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/l10n/locale_provider.dart';
 import '../../../../core/observability/error_reporter.dart';
@@ -17,6 +18,9 @@ import '../../domain/repositories/connectivity_service.dart';
 import '../../domain/repositories/sync_engine.dart';
 import 'sync_state.dart';
 
+const _kAutoUploadWifiOnlyKey = 'sync_auto_upload_wifi_only';
+const _kAutoRemoveAfterUploadKey = 'sync_auto_remove_after_upload';
+
 final syncNotifierProvider = NotifierProvider<SyncNotifier, SyncState>(
   SyncNotifier.new,
 );
@@ -24,6 +28,7 @@ final syncNotifierProvider = NotifierProvider<SyncNotifier, SyncState>(
 class SyncNotifier extends Notifier<SyncState> {
   StreamSubscription<bool>? _connectivitySub;
   bool _sawConnectivityEvent = false;
+  bool _settingsTouched = false;
   DateTime? _speedSampleTime;
   int _speedSampleBytes = 0;
   final Map<String, int> _fileProgress = {};
@@ -46,8 +51,23 @@ class SyncNotifier extends Notifier<SyncState> {
   @override
   SyncState build() {
     ref.onDispose(_cleanup);
+    _loadSettings();
     _initConnectivity();
     return const SyncState();
+  }
+
+  Future<void> _loadSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    // The user can reach the switches before this continuation lands (the
+    // SharedPreferences singleton is already warm from startup, so the load
+    // resolves *after* an updateSettings that came later). Their choice is
+    // newer than the disk, and updateSettings persisted it anyway — one flag
+    // covers both fields because SyncSettings always carries both.
+    if (_settingsTouched) return;
+    state = state.copyWith(
+      autoUploadWifiOnly: prefs.getBool(_kAutoUploadWifiOnlyKey),
+      autoRemoveAfterUpload: prefs.getBool(_kAutoRemoveAfterUploadKey),
+    );
   }
 
   Future<void> _initConnectivity() async {
@@ -90,7 +110,14 @@ class SyncNotifier extends Notifier<SyncState> {
     if (_isProcessing) return;
     _isProcessing = true;
     try {
-      state = state.copyWith(uploadingId: recordingId, syncProgress: 0);
+      // An upload is running, so no verdict from an earlier blocked pass is
+      // still true. processQueue bails on the shared guard without recomputing
+      // it, and that stale verdict is what the chip would report.
+      state = state.copyWith(
+        uploadingId: recordingId,
+        syncProgress: 0,
+        clearBlockReason: true,
+      );
       _fileProgress.clear();
 
       try {
@@ -143,10 +170,21 @@ class SyncNotifier extends Notifier<SyncState> {
     await syncOne(recordingId);
   }
 
-  void updateSettings(SyncSettings settings) {
+  /// Both flags are persisted: they were state-only, so a device parked on
+  /// cellular got the Wi-Fi-only default back on every relaunch and its queue
+  /// never drained (ENG-355).
+  Future<void> updateSettings(SyncSettings settings) async {
+    _settingsTouched = true;
     state = state.copyWith(
       autoUploadWifiOnly: settings.autoUploadWifiOnly,
       autoRemoveAfterUpload: settings.autoRemoveAfterUpload,
+    );
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_kAutoUploadWifiOnlyKey, settings.autoUploadWifiOnly);
+    await prefs.setBool(
+      _kAutoRemoveAfterUploadKey,
+      settings.autoRemoveAfterUpload,
     );
   }
 
@@ -204,7 +242,12 @@ class SyncNotifier extends Notifier<SyncState> {
   bool _isProcessing = false;
 
   Future<void> processQueue() async {
-    if (!state.isOnline) return;
+    if (!state.isOnline) {
+      // Being offline is its own (already visible) condition; don't leave a
+      // stale Wi-Fi-only verdict behind to be reported instead.
+      state = state.copyWith(clearBlockReason: true);
+      return;
+    }
     // Shared upload guard (see syncOne): bail if an upload op is already in
     // flight so concurrent runs can't stop the foreground service mid-upload.
     if (_isProcessing) return;
@@ -218,6 +261,17 @@ class SyncNotifier extends Notifier<SyncState> {
 
   Future<void> _runQueue() async {
     await _refreshPendingCount();
+
+    final isWifi = await _connectivity.isOnWifi;
+    // The engine applies this policy too, but by returning quietly — and the
+    // caller then wrote lastSyncAt for a queue that never ran. Decide here so
+    // no run is reported, no foreground service is raised, and the UI can tell
+    // the user why nothing moved (ENG-355).
+    if (state.autoUploadWifiOnly && !isWifi) {
+      state = state.copyWith(blockReason: SyncBlockReason.wifiOnly);
+      return;
+    }
+    state = state.copyWith(clearBlockReason: true);
 
     final pending = await _recordingRepo.getPendingUploads();
     final totalBytes = pending.fold(0, (sum, r) => sum + r.fileSizeBytes);
@@ -238,7 +292,6 @@ class SyncNotifier extends Notifier<SyncState> {
     _speedSampleTime = DateTime.now();
     _speedSampleBytes = 0;
 
-    final isWifi = await _connectivity.isOnWifi;
     final concurrency = isWifi ? 3 : 1;
 
     // Keep the Android process alive while the queue runs so uploads continue

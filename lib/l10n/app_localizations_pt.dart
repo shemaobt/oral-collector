@@ -1062,6 +1062,10 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String get sync_waitingForWifi =>
+      'Os envios estão esperando Wi-Fi. Desative \"Enviar apenas por Wi-Fi\" para enviar por dados móveis.';
+
+  @override
   String get profile_photoUpdated => 'Foto de perfil atualizada';
 
   @override

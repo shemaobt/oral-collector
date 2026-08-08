@@ -224,6 +224,31 @@ class LocalRecordingRepository {
         .get();
   }
 
+  /// Recordings of [projectId] the server does not have yet, counted once each.
+  ///
+  /// The home total used to add `getPendingUploads` to
+  /// [getLocalUnclassifiedStats]; those sets overlap (a `local` unclassified row
+  /// is in both) and together still miss the terminal `failed_*` states, which
+  /// are neither retryable nor unclassified. See ENG-355.
+  Future<({int count, double durationSeconds})> getLocalOnlyStats(
+    String projectId,
+  ) async {
+    final countExpr = _db.localRecordings.id.count();
+    final durationExpr = _db.localRecordings.durationSeconds.sum();
+    final query = _db.selectOnly(_db.localRecordings)
+      ..addColumns([countExpr, durationExpr])
+      ..where(
+        _db.localRecordings.projectId.equals(projectId) &
+            _db.localRecordings.uploadStatus.equals('uploaded').not() &
+            _db.localRecordings.uploadStatus.equals('verified').not(),
+      );
+    final row = await query.getSingle();
+    return (
+      count: row.read(countExpr) ?? 0,
+      durationSeconds: row.read(durationExpr) ?? 0.0,
+    );
+  }
+
   Future<({int count, double durationSeconds})> getLocalUnclassifiedStats(
     String projectId,
   ) async {

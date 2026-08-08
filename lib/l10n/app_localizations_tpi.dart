@@ -1049,6 +1049,10 @@ class AppLocalizationsTpi extends AppLocalizations {
   }
 
   @override
+  String get sync_waitingForWifi =>
+      'Uploads are waiting for Wi-Fi. Turn off \"Upload on Wi-Fi only\" to send over cellular data.';
+
+  @override
   String get profile_photoUpdated => 'Profail foto i apdet pinis';
 
   @override

@@ -6,6 +6,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/tokens.dart';
 import '../../features/sync/presentation/notifiers/sync_notifier.dart';
 import '../../l10n/app_localizations.dart';
+import '../utils/sync_now.dart';
 
 class SyncStatusIndicator extends ConsumerWidget {
   const SyncStatusIndicator({super.key});
@@ -36,7 +37,7 @@ class SyncStatusIndicator extends ConsumerWidget {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(RadiusScale.r20),
         ),
-        onPressed: () => ref.read(syncNotifierProvider.notifier).syncAll(),
+        onPressed: () => syncNowWithFeedback(context, ref),
       ),
     );
   }

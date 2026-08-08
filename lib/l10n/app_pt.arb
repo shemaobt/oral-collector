@@ -375,6 +375,7 @@
   "cleaning_cleanFailed": "Falha na Limpeza",
   "sync_uploading": "Enviando...",
   "sync_pending": "{count} pendente(s)",
+  "sync_waitingForWifi": "Os envios estão esperando Wi-Fi. Desative \"Enviar apenas por Wi-Fi\" para enviar por dados móveis.",
   "profile_photoUpdated": "Foto de perfil atualizada",
   "profile_editName": "Editar nome de exibição",
   "profile_nameHint": "Seu nome",

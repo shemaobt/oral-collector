@@ -1027,6 +1027,10 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get sync_waitingForWifi =>
+      'Uploads are waiting for Wi-Fi. Turn off \"Upload on Wi-Fi only\" to send over cellular data.';
+
+  @override
   String get profile_photoUpdated => '프로필 사진이 업데이트되었습니다';
 
   @override

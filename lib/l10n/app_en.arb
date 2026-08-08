@@ -525,6 +525,7 @@
       }
     }
   },
+  "sync_waitingForWifi": "Uploads are waiting for Wi-Fi. Turn off \"Upload on Wi-Fi only\" to send over cellular data.",
   "profile_photoUpdated": "Profile photo updated",
   "profile_editName": "Edit display name",
   "profile_nameHint": "Your name",

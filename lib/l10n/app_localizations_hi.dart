@@ -1065,6 +1065,10 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
+  String get sync_waitingForWifi =>
+      'Uploads are waiting for Wi-Fi. Turn off \"Upload on Wi-Fi only\" to send over cellular data.';
+
+  @override
   String get profile_photoUpdated => 'प्रोफ़ाइल फ़ोटो अपडेट हुई';
 
   @override

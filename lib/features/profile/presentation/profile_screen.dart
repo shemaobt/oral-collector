@@ -14,6 +14,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../shared/preview_helpers.dart';
 import '../../../shared/utils/format.dart';
+import '../../../shared/utils/sync_now.dart';
 import '../../../shared/widgets/app_shell.dart';
 import '../../../shared/widgets/error_snack_bar.dart';
 import '../../../shared/widgets/icon_box.dart';
@@ -190,9 +191,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           syncState: syncState,
           theme: theme,
           colors: colors,
-          onSyncNow: () {
-            ref.read(syncNotifierProvider.notifier).syncAll();
-          },
+          onSyncNow: () => syncNowWithFeedback(context, ref),
           onWifiOnlyChanged: (value) {
             ref
                 .read(syncNotifierProvider.notifier)
