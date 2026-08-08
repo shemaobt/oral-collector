@@ -803,6 +803,25 @@ void main() {
         'none',
       );
     });
+
+    test('calls the API when the recording was verified', () async {
+      final recording = await seed(
+        uploadStatus: 'verified',
+        cleaningStatus: 'none',
+        serverId: 'srv-1',
+      );
+      final api = _FakeApiRepo();
+      final c = makeContainer(api: api);
+
+      await notifierOf(c).toggleCleaningStatus(recording);
+
+      expect(api.updateCalls, 1);
+      expect(api.lastUpdate['cleaningStatus'], 'needs_cleaning');
+      expect(
+        (await repo.getRecordingById(recordingId))!.cleaningStatus,
+        'needs_cleaning',
+      );
+    });
   });
 
   group('moveCategory', () {

@@ -22,6 +22,7 @@ import '../../sync/presentation/notifiers/sync_notifier.dart';
 import '../domain/entities/local_recording_entity.dart';
 import '../domain/entities/register.dart';
 import '../domain/entities/review_pendency.dart';
+import '../domain/upload_status_actions.dart';
 import 'notifiers/recordings_list_notifier.dart';
 import 'notifiers/recordings_list_state.dart';
 import 'widgets/active_filter_chips.dart';
@@ -393,11 +394,7 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
                         const Spacer(),
                         if ((listState.selectedFilter == StatusFilter.pending ||
                                 listState.selectedFilter == StatusFilter.all) &&
-                            filtered.any(
-                              (r) =>
-                                  r.uploadStatus == 'failed' ||
-                                  r.uploadStatus == 'uploading',
-                            ) &&
+                            hasClearableFailedUploads(filtered) &&
                             ref
                                 .watch(roleNotifierProvider.notifier)
                                 .canManageProject(activeProject.id))

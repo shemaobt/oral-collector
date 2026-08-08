@@ -163,7 +163,11 @@ class RecordingsListState {
             )
             .toList();
       case StatusFilter.uploaded:
-        list = list.where((r) => r.uploadStatus == 'uploaded').toList();
+        list = list
+            .where(
+              (r) => const {'uploaded', 'verified'}.contains(r.uploadStatus),
+            )
+            .toList();
       case StatusFilter.needsCleaning:
         list = list.where((r) => r.cleaningStatus == 'needs_cleaning').toList();
       case StatusFilter.unclassified:
