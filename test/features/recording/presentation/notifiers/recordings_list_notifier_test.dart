@@ -1033,6 +1033,89 @@ void main() {
       },
     );
 
+    test('an empty server answer is too ambiguous to erase anything', () async {
+      // A 200 with an empty list looks the same whether the project is really
+      // empty, the caller lost access, or the backend scoped the query wrong.
+      final file = await insertRow(
+        id: 'local-uuid',
+        serverId: 'srv-gone',
+        uploadStatus: 'uploaded',
+      );
+      stubServerPage(const []);
+
+      final container = realContainer();
+      addTearDown(container.dispose);
+      await container
+          .read(recordingsListNotifierProvider.notifier)
+          .fetchRecordings();
+
+      expect(
+        container
+            .read(recordingsListNotifierProvider)
+            .recordings
+            .map((r) => r.id),
+        contains('local-uuid'),
+      );
+      expect(await realLocal.getRecordingById('local-uuid'), isNotNull);
+      expect(file.existsSync(), isTrue);
+    });
+
+    test('a filtered answer that lands after the filter was cleared erases '
+        'nothing', () async {
+      // The user filters, changes their mind and clears on a slow link. The
+      // narrow response arrives last: judged against the filters in state by
+      // then (none) it would read as a complete sweep, and the recording it
+      // merely excluded would be erased — while still on the server.
+      final file = await insertRow(
+        id: 'local-uuid',
+        serverId: 'srv-gone',
+        uploadStatus: 'uploaded',
+      );
+
+      final filteredGate = Completer<List<ServerRecording>>();
+      when(
+        () => api.listRecordings(
+          'proj-1',
+          offset: 0,
+          limit: any(named: 'limit'),
+          userId: any(named: 'userId'),
+          storytellerId: 'st-1',
+          reviewFlag: any(named: 'reviewFlag'),
+        ),
+      ).thenAnswer((_) => filteredGate.future);
+      when(
+        () => api.listRecordings(
+          'proj-1',
+          offset: 0,
+          limit: any(named: 'limit'),
+          userId: any(named: 'userId'),
+          storytellerId: null,
+          reviewFlag: any(named: 'reviewFlag'),
+        ),
+      ).thenAnswer((_) async => [_makeServerRecording('srv-gone')]);
+
+      final container = realContainer();
+      addTearDown(container.dispose);
+      final notifier = container.read(recordingsListNotifierProvider.notifier);
+
+      final filtered = notifier.setStorytellerFilter('st-1');
+      final cleared = notifier.setStorytellerFilter(null);
+      await cleared;
+      // The stale filtered page resolves last, with no filter left in state.
+      filteredGate.complete([_makeServerRecording('srv-other')]);
+      await filtered;
+
+      expect(await realLocal.getRecordingById('local-uuid'), isNotNull);
+      expect(file.existsSync(), isTrue);
+      expect(
+        container
+            .read(recordingsListNotifierProvider)
+            .recordings
+            .map((r) => r.id),
+        ['srv-gone'],
+      );
+    });
+
     test('an active filter narrows the answer: nothing is dropped', () async {
       final file = await insertRow(
         id: 'local-uuid',

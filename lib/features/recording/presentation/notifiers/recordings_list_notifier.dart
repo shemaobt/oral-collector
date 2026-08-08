@@ -213,20 +213,30 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
   }
 
   Future<_FetchResult> _fetchAndMerge(String projectId) async {
+    // Read the filters once, before the await, the way projectId already is:
+    // what follows has to judge the response against the filters it was
+    // actually requested with. Re-reading state afterwards lets a slow filtered
+    // response be mistaken for a whole-project answer once the user clears the
+    // filter, and the generation counter in the caller does not help — it
+    // discards the stale list, not the deletes done on the way to building it.
+    final userId = state.selectedUserId;
+    final storytellerId = state.selectedStorytellerId;
+    final reviewFlag = _reviewFlagCode;
+
     final serverRecordings = await _apiRepo.listRecordings(
       projectId,
       offset: 0,
       limit: _pageSize,
-      userId: state.selectedUserId,
-      storytellerId: state.selectedStorytellerId,
-      reviewFlag: _reviewFlagCode,
+      userId: userId,
+      storytellerId: storytellerId,
+      reviewFlag: reviewFlag,
     );
     // A pendency filter takes the server's answer alone. The counts that send
     // the user here only cover uploaded and verified recordings, so a row that
     // has never left this phone was never part of the number tapped; merging
     // the device in would pad the list with recordings the filter never
     // considered.
-    final localRecordings = state.selectedReviewFlag != null
+    final localRecordings = reviewFlag != null
         ? const <LocalRecordingEntity>[]
         : (await _loadLocal(projectId)) ?? const <LocalRecordingEntity>[];
 
@@ -238,12 +248,15 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
     // Absence only means "deleted on the server" when this response covered the
     // whole project: a full page hides the rest behind pagination and a filter
     // hides whatever it excluded, and erasing either would delete recordings
-    // that are still there.
+    // that are still there. An empty answer is discarded too — a lost
+    // permission, a mis-scoped query and a genuinely empty project all look
+    // identical from here, and the wrong guess wipes the cache wholesale.
     final sweptWholeProject =
+        serverRecordings.isNotEmpty &&
         serverRecordings.length < _pageSize &&
-        state.selectedUserId == null &&
-        state.selectedStorytellerId == null &&
-        _reviewFlagCode == null;
+        userId == null &&
+        storytellerId == null &&
+        reviewFlag == null;
     if (sweptWholeProject) {
       final erased = await _eraseDeletedOnServer(localOnly);
       if (erased.isNotEmpty) {
