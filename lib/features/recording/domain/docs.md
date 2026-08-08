@@ -268,9 +268,19 @@ Path: @/lib/features/recording/domain
   ([../presentation/docs.md](../presentation/docs.md)) marks a step done only
   once it drops out of a fresh `recordingPendencies` read, and every edit
   that reaches the server reloads the entity from the server's response — so
-  online this reads as instant progress. Offline, the edit call fails before
-  the entity is ever rebuilt, so there is no way to check a step off without
-  connectivity.
+  online this reads as instant progress. **This still holds after ENG-399**,
+  though not for the reason it used to: offline no longer stops the entity
+  from being rebuilt — `classify`/`moveCategory`/`saveSecondary`
+  ([../presentation/notifiers/docs.md](../presentation/notifiers/docs.md))
+  write the new classification to the local row and call `load()` regardless
+  of whether the server was reached (a refusal still returns early with the
+  local row untouched, as before). What still blocks the step on the
+  unreachable path is `_storeReviewFlags`: it is a no-op when there are no
+  server flags to store, and an unreachable write's `reviewFlags` is always
+  `null`, so the stale flags the reload reads are untouched —
+  `recordingPendencies` for a server-known recording reads only
+  `reviewFlags`, never the entity's own classification fields, so the step
+  still cannot be checked off without connectivity.
 - **The entity deliberately drops the persistence internals `lastRetryAt`
   and `md5Hash`.** They are not fields the UI reads, and omitting them means
   a write touching only those produces an *equal* entity, which `.distinct()`
