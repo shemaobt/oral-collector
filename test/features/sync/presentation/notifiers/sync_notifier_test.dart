@@ -1063,8 +1063,11 @@ void main() {
 
       final state = container.read(syncNotifierProvider);
       expect(state.lastSyncAt, isNull);
-      expect(state.syncProgress, isNot(100));
+      expect(state.syncProgress, 0);
       expect(state.pendingCount, 1);
+      // uploadingId is what hides the chip: leaving it set is the "blink" the
+      // user reported.
+      expect(state.uploadingId, isNull);
     });
 
     test('exposes why the queue was held back', () async {
@@ -1099,6 +1102,42 @@ void main() {
       await container.read(syncNotifierProvider.notifier).syncAll();
 
       expect(container.read(syncNotifierProvider).blockReason, isNull);
+    });
+
+    test('does not blame Wi-Fi while an upload is in flight', () async {
+      container.read(syncNotifierProvider);
+      await Future<void>.delayed(Duration.zero);
+      await container.read(syncNotifierProvider.notifier).syncAll();
+      expect(
+        container.read(syncNotifierProvider).blockReason,
+        SyncBlockReason.wifiOnly,
+      );
+
+      // The user retries one recording from the detail screen. It takes the
+      // shared upload guard, so a tap on the chip bails out of processQueue
+      // early — and must not report the stale verdict while bytes are moving.
+      final uploadGate = Completer<void>();
+      when(
+        () => mockRecordingRepo.getRecordingById('rec-1'),
+      ).thenAnswer((_) async => makeRecording(id: 'rec-1'));
+      when(
+        () => mockSyncEngine.uploadSingle(
+          any(),
+          deleteAfterUpload: any(named: 'deleteAfterUpload'),
+          onProgress: any(named: 'onProgress'),
+        ),
+      ).thenAnswer((_) => uploadGate.future);
+
+      final inFlight = container
+          .read(syncNotifierProvider.notifier)
+          .syncOne('rec-1');
+      await container.read(syncNotifierProvider.notifier).syncAll();
+
+      expect(container.read(syncNotifierProvider).uploadingId, 'rec-1');
+      expect(container.read(syncNotifierProvider).blockReason, isNull);
+
+      uploadGate.complete();
+      await inFlight;
     });
 
     test('clears the block once the device is back on Wi-Fi', () async {
@@ -1170,6 +1209,33 @@ void main() {
         ),
       ).called(1);
     });
+
+    test(
+      'a choice made while the stored value loads is not overwritten',
+      () async {
+        SharedPreferences.setMockInitialValues({
+          'sync_auto_upload_wifi_only': true,
+        });
+        // Startup already warmed the singleton (locale_provider,
+        // project_notifier). That is what puts _loadSettings' continuation
+        // *after* the user's choice instead of before it.
+        await SharedPreferences.getInstance();
+
+        final c = relaunch();
+        c.read(syncNotifierProvider);
+        await c
+            .read(syncNotifierProvider.notifier)
+            .updateSettings(
+              const SyncSettings(
+                autoUploadWifiOnly: false,
+                autoRemoveAfterUpload: true,
+              ),
+            );
+        await Future<void>.delayed(Duration.zero);
+
+        expect(c.read(syncNotifierProvider).autoUploadWifiOnly, isFalse);
+      },
+    );
 
     test('auto-remove stays off after a relaunch', () async {
       await container

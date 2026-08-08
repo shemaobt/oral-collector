@@ -28,6 +28,7 @@ final syncNotifierProvider = NotifierProvider<SyncNotifier, SyncState>(
 class SyncNotifier extends Notifier<SyncState> {
   StreamSubscription<bool>? _connectivitySub;
   bool _sawConnectivityEvent = false;
+  bool _settingsTouched = false;
   DateTime? _speedSampleTime;
   int _speedSampleBytes = 0;
   final Map<String, int> _fileProgress = {};
@@ -57,6 +58,12 @@ class SyncNotifier extends Notifier<SyncState> {
 
   Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
+    // The user can reach the switches before this continuation lands (the
+    // SharedPreferences singleton is already warm from startup, so the load
+    // resolves *after* an updateSettings that came later). Their choice is
+    // newer than the disk, and updateSettings persisted it anyway — one flag
+    // covers both fields because SyncSettings always carries both.
+    if (_settingsTouched) return;
     state = state.copyWith(
       autoUploadWifiOnly: prefs.getBool(_kAutoUploadWifiOnlyKey),
       autoRemoveAfterUpload: prefs.getBool(_kAutoRemoveAfterUploadKey),
@@ -103,7 +110,14 @@ class SyncNotifier extends Notifier<SyncState> {
     if (_isProcessing) return;
     _isProcessing = true;
     try {
-      state = state.copyWith(uploadingId: recordingId, syncProgress: 0);
+      // An upload is running, so no verdict from an earlier blocked pass is
+      // still true. processQueue bails on the shared guard without recomputing
+      // it, and that stale verdict is what the chip would report.
+      state = state.copyWith(
+        uploadingId: recordingId,
+        syncProgress: 0,
+        clearBlockReason: true,
+      );
       _fileProgress.clear();
 
       try {
@@ -160,6 +174,7 @@ class SyncNotifier extends Notifier<SyncState> {
   /// cellular got the Wi-Fi-only default back on every relaunch and its queue
   /// never drained (ENG-355).
   Future<void> updateSettings(SyncSettings settings) async {
+    _settingsTouched = true;
     state = state.copyWith(
       autoUploadWifiOnly: settings.autoUploadWifiOnly,
       autoRemoveAfterUpload: settings.autoRemoveAfterUpload,
