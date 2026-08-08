@@ -883,6 +883,265 @@ void main() {
     );
   });
 
+  group('RecordingsListNotifier.fetchRecordings — server-side deletion', () {
+    late Directory tmpDir;
+    late AppDatabase db;
+    late LocalRecordingRepository realLocal;
+
+    setUp(() {
+      tmpDir = Directory.systemTemp.createTempSync('eng45_heal_');
+      db = AppDatabase.forTesting(NativeDatabase.memory());
+      realLocal = LocalRecordingRepository(db);
+    });
+
+    tearDown(() async {
+      await db.close();
+      if (tmpDir.existsSync()) tmpDir.deleteSync(recursive: true);
+    });
+
+    // Real Drift repo (in-memory): the reconciliation has to hit the actual row
+    // and its audio file, which a mocked repo would only pretend to do.
+    ProviderContainer realContainer() => ProviderContainer(
+      overrides: [
+        recordingApiRepositoryProvider.overrideWithValue(api),
+        localRecordingRepositoryProvider.overrideWithValue(realLocal),
+        projectNotifierProvider.overrideWith(
+          () =>
+              _FakeProjectNotifier(ProjectState(activeProject: activeProject)),
+        ),
+        syncNotifierProvider.overrideWith(
+          () => _FakeSyncNotifier(initialOnline: true),
+        ),
+        errorReporterProvider.overrideWithValue(reporter),
+      ],
+    );
+
+    Future<File> insertRow({
+      required String id,
+      required String? serverId,
+      required String uploadStatus,
+    }) async {
+      final file = File('${tmpDir.path}/$id.m4a')
+        ..writeAsStringSync('audio-bytes');
+      await realLocal.insertRecording(
+        LocalRecordingsCompanion.insert(
+          id: id,
+          projectId: 'proj-1',
+          genreId: 'genre-1',
+          localFilePath: file.path,
+          recordedAt: DateTime(2026, 1, 1),
+          serverId: Value(serverId),
+          uploadStatus: Value(uploadStatus),
+        ),
+      );
+      return file;
+    }
+
+    void stubServerPage(List<ServerRecording> page) {
+      when(
+        () => api.listRecordings(
+          'proj-1',
+          offset: 0,
+          limit: any(named: 'limit'),
+          userId: any(named: 'userId'),
+          storytellerId: any(named: 'storytellerId'),
+          reviewFlag: any(named: 'reviewFlag'),
+        ),
+      ).thenAnswer((_) async => page);
+    }
+
+    test(
+      'a complete unfiltered sweep drops an uploaded row the server no longer '
+      'has, row and audio file included',
+      () async {
+        final file = await insertRow(
+          id: 'local-uuid',
+          serverId: 'srv-gone',
+          uploadStatus: 'uploaded',
+        );
+        stubServerPage([_makeServerRecording('srv-live')]);
+
+        final container = realContainer();
+        addTearDown(container.dispose);
+        await container
+            .read(recordingsListNotifierProvider.notifier)
+            .fetchRecordings();
+
+        expect(
+          container
+              .read(recordingsListNotifierProvider)
+              .recordings
+              .map((r) => r.id),
+          ['srv-live'],
+        );
+        expect(await realLocal.getRecordingById('local-uuid'), isNull);
+        expect(file.existsSync(), isFalse);
+      },
+    );
+
+    test(
+      'a row that never finished uploading survives the same sweep',
+      () async {
+        // serverId + a non-uploaded status is the shape a reset/retry leaves
+        // behind; this device may hold the only copy of the audio (PR #193).
+        final file = await insertRow(
+          id: 'never-landed',
+          serverId: 'srv-gone',
+          uploadStatus: 'failed',
+        );
+        stubServerPage([_makeServerRecording('srv-live')]);
+
+        final container = realContainer();
+        addTearDown(container.dispose);
+        await container
+            .read(recordingsListNotifierProvider.notifier)
+            .fetchRecordings();
+
+        expect(
+          container
+              .read(recordingsListNotifierProvider)
+              .recordings
+              .map((r) => r.id),
+          contains('never-landed'),
+        );
+        expect(await realLocal.getRecordingById('never-landed'), isNotNull);
+        expect(file.existsSync(), isTrue);
+      },
+    );
+
+    test(
+      'a full page means the sweep is partial: nothing is dropped',
+      () async {
+        final file = await insertRow(
+          id: 'local-uuid',
+          serverId: 'srv-gone',
+          uploadStatus: 'uploaded',
+        );
+        stubServerPage(List.generate(50, (i) => _makeServerRecording('s$i')));
+
+        final container = realContainer();
+        addTearDown(container.dispose);
+        await container
+            .read(recordingsListNotifierProvider.notifier)
+            .fetchRecordings();
+
+        final state = container.read(recordingsListNotifierProvider);
+        expect(state.hasMore, isTrue);
+        expect(state.recordings.map((r) => r.id), contains('local-uuid'));
+        expect(await realLocal.getRecordingById('local-uuid'), isNotNull);
+        expect(file.existsSync(), isTrue);
+      },
+    );
+
+    test('an empty server answer is too ambiguous to erase anything', () async {
+      // A 200 with an empty list looks the same whether the project is really
+      // empty, the caller lost access, or the backend scoped the query wrong.
+      final file = await insertRow(
+        id: 'local-uuid',
+        serverId: 'srv-gone',
+        uploadStatus: 'uploaded',
+      );
+      stubServerPage(const []);
+
+      final container = realContainer();
+      addTearDown(container.dispose);
+      await container
+          .read(recordingsListNotifierProvider.notifier)
+          .fetchRecordings();
+
+      expect(
+        container
+            .read(recordingsListNotifierProvider)
+            .recordings
+            .map((r) => r.id),
+        contains('local-uuid'),
+      );
+      expect(await realLocal.getRecordingById('local-uuid'), isNotNull);
+      expect(file.existsSync(), isTrue);
+    });
+
+    test('a filtered answer that lands after the filter was cleared erases '
+        'nothing', () async {
+      // The user filters, changes their mind and clears on a slow link. The
+      // narrow response arrives last: judged against the filters in state by
+      // then (none) it would read as a complete sweep, and the recording it
+      // merely excluded would be erased — while still on the server.
+      final file = await insertRow(
+        id: 'local-uuid',
+        serverId: 'srv-gone',
+        uploadStatus: 'uploaded',
+      );
+
+      final filteredGate = Completer<List<ServerRecording>>();
+      when(
+        () => api.listRecordings(
+          'proj-1',
+          offset: 0,
+          limit: any(named: 'limit'),
+          userId: any(named: 'userId'),
+          storytellerId: 'st-1',
+          reviewFlag: any(named: 'reviewFlag'),
+        ),
+      ).thenAnswer((_) => filteredGate.future);
+      when(
+        () => api.listRecordings(
+          'proj-1',
+          offset: 0,
+          limit: any(named: 'limit'),
+          userId: any(named: 'userId'),
+          storytellerId: null,
+          reviewFlag: any(named: 'reviewFlag'),
+        ),
+      ).thenAnswer((_) async => [_makeServerRecording('srv-gone')]);
+
+      final container = realContainer();
+      addTearDown(container.dispose);
+      final notifier = container.read(recordingsListNotifierProvider.notifier);
+
+      final filtered = notifier.setStorytellerFilter('st-1');
+      final cleared = notifier.setStorytellerFilter(null);
+      await cleared;
+      // The stale filtered page resolves last, with no filter left in state.
+      filteredGate.complete([_makeServerRecording('srv-other')]);
+      await filtered;
+
+      expect(await realLocal.getRecordingById('local-uuid'), isNotNull);
+      expect(file.existsSync(), isTrue);
+      expect(
+        container
+            .read(recordingsListNotifierProvider)
+            .recordings
+            .map((r) => r.id),
+        ['srv-gone'],
+      );
+    });
+
+    test('an active filter narrows the answer: nothing is dropped', () async {
+      final file = await insertRow(
+        id: 'local-uuid',
+        serverId: 'srv-gone',
+        uploadStatus: 'uploaded',
+      );
+      stubServerPage([_makeServerRecording('srv-live')]);
+
+      final container = realContainer();
+      addTearDown(container.dispose);
+      await container
+          .read(recordingsListNotifierProvider.notifier)
+          .setStorytellerFilter('st-1');
+
+      expect(
+        container
+            .read(recordingsListNotifierProvider)
+            .recordings
+            .map((r) => r.id),
+        contains('local-uuid'),
+      );
+      expect(await realLocal.getRecordingById('local-uuid'), isNotNull);
+      expect(file.existsSync(), isTrue);
+    });
+  });
+
   group('error reporting', () {
     test(
       'reports the server-fetch failure before falling back to local',

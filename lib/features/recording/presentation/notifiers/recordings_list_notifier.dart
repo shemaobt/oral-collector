@@ -13,6 +13,7 @@ import '../../domain/entities/local_recording_entity.dart';
 import '../../domain/entities/review_pendency.dart';
 import '../../domain/entities/server_recording.dart';
 import '../../domain/repositories/recording_api_repository.dart';
+import '../../domain/server_deletion_policy.dart';
 import 'recordings_list_state.dart';
 
 /// Outcome of [RecordingsListNotifier.deleteRecording], so the screen can pick
@@ -212,27 +213,56 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
   }
 
   Future<_FetchResult> _fetchAndMerge(String projectId) async {
+    // Read the filters once, before the await, the way projectId already is:
+    // what follows has to judge the response against the filters it was
+    // actually requested with. Re-reading state afterwards lets a slow filtered
+    // response be mistaken for a whole-project answer once the user clears the
+    // filter, and the generation counter in the caller does not help — it
+    // discards the stale list, not the deletes done on the way to building it.
+    final userId = state.selectedUserId;
+    final storytellerId = state.selectedStorytellerId;
+    final reviewFlag = _reviewFlagCode;
+
     final serverRecordings = await _apiRepo.listRecordings(
       projectId,
       offset: 0,
       limit: _pageSize,
-      userId: state.selectedUserId,
-      storytellerId: state.selectedStorytellerId,
-      reviewFlag: _reviewFlagCode,
+      userId: userId,
+      storytellerId: storytellerId,
+      reviewFlag: reviewFlag,
     );
     // A pendency filter takes the server's answer alone. The counts that send
     // the user here only cover uploaded and verified recordings, so a row that
     // has never left this phone was never part of the number tapped; merging
     // the device in would pad the list with recordings the filter never
     // considered.
-    final localRecordings = state.selectedReviewFlag != null
+    final localRecordings = reviewFlag != null
         ? const <LocalRecordingEntity>[]
         : (await _loadLocal(projectId)) ?? const <LocalRecordingEntity>[];
 
     final serverIds = {for (final s in serverRecordings) s.id};
-    final localOnly = localRecordings
+    var localOnly = localRecordings
         .where((r) => r.serverId == null || !serverIds.contains(r.serverId))
         .toList();
+
+    // Absence only means "deleted on the server" when this response covered the
+    // whole project: a full page hides the rest behind pagination and a filter
+    // hides whatever it excluded, and erasing either would delete recordings
+    // that are still there. An empty answer is discarded too — a lost
+    // permission, a mis-scoped query and a genuinely empty project all look
+    // identical from here, and the wrong guess wipes the cache wholesale.
+    final sweptWholeProject =
+        serverRecordings.isNotEmpty &&
+        serverRecordings.length < _pageSize &&
+        userId == null &&
+        storytellerId == null &&
+        reviewFlag == null;
+    if (sweptWholeProject) {
+      final erased = await _eraseDeletedOnServer(localOnly);
+      if (erased.isNotEmpty) {
+        localOnly = localOnly.where((r) => !erased.contains(r.id)).toList();
+      }
+    }
 
     final merged = [...localOnly, ..._convertServerRecordings(serverRecordings)]
       ..sort((a, b) => b.recordedAt.compareTo(a.recordedAt));
@@ -242,6 +272,33 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
       hasMore: serverRecordings.length >= _pageSize,
       serverOffset: serverRecordings.length,
     );
+  }
+
+  /// Drops the rows the server hard-deleted (row + audio file) and returns
+  /// their ids. Skips anything that may never have reached the server.
+  Future<Set<String>> _eraseDeletedOnServer(
+    List<LocalRecordingEntity> candidates,
+  ) async {
+    final erased = <String>{};
+    for (final recording in candidates) {
+      if (!canEraseAsDeletedOnServer(
+        serverId: recording.serverId,
+        uploadStatus: recording.uploadStatus,
+      )) {
+        continue;
+      }
+      await _localRepo.deleteRecording(recording.id);
+      erased.add(recording.id);
+      if (recording.localFilePath.isNotEmpty) {
+        try {
+          await file_ops.deleteFile(recording.localFilePath);
+        } on Exception catch (e, st) {
+          // Best-effort: a missing/locked file must not abort the row delete.
+          _reportUnexpected(e, st);
+        }
+      }
+    }
+    return erased;
   }
 
   List<LocalRecordingEntity> _convertServerRecordings(

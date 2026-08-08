@@ -124,7 +124,17 @@ Path: @/lib/features/recording/presentation/notifiers
     `buildHealMetadataCompanion`
     ([../../data/recording_heal_companion.dart](../../data/recording_heal_companion.dart)),
     then (online, still no row) falls back to a server fetch mapped through
-    `serverRecordingToLocal`; web always fetches the server DTO. The resolved row
+    `serverRecordingToLocal`; web always fetches the server DTO. Since ENG-45,
+    if that heal call 404s for a row that `canEraseAsDeletedOnServer`
+    ([../../domain/server_deletion_policy.dart](../../domain/server_deletion_policy.dart))
+    accepts, the row and its audio file are erased and the server-fallback
+    fetch above is skipped for this load — asking again would only re-confirm
+    what the 404 already proved. The heal branch is reachable even for a row
+    that never finished uploading, because `_needsUserRefresh` (unlike
+    `_needsGcsRefresh`) does not check `uploadStatus`: there is a real window
+    where a row has a `serverId` but is still `uploading`/`failed` (the id is
+    written before `markAsUploaded`), and `canEraseAsDeletedOnServer`'s status
+    check is what keeps a stray 404 in that window from erasing it. The resolved row
     is mapped to the entity **exactly once at the state boundary** via
     `localRecordingToEntity`
     ([../../data/local_recording_to_entity.dart](../../data/local_recording_to_entity.dart)),
@@ -244,8 +254,21 @@ Path: @/lib/features/recording/presentation/notifiers
   merged with local-only entities, deduped by `serverId` — and `loadMore`
   appends later pages from the `_serverOffset` cursor; offline or on an API
   error both fall back to the full local set (see the review-flag exception
-  below). The merge/dedup logic is byte-for-byte
-  the pre-ENG-197 algorithm, just keyed off entity fields. Status / genre /
+  below). Since ENG-45, `_fetchAndMerge` also reconciles a hard delete made
+  on the server: a local-only row is erased (row + audio file, through
+  `canEraseAsDeletedOnServer` — see
+  [../../domain/docs.md](../../domain/docs.md)) when, and only when, the
+  response is a **complete, unfiltered sweep of the project** — non-empty,
+  shorter than `_pageSize` (50), and requested with no user / storyteller /
+  review-flag filter. Only then does the server's silence about a row
+  actually answer "the server no longer has it"; a full page or a filtered
+  page is a subset that says nothing about the rest, and an empty page is
+  exactly as consistent with a lost permission or a stale cross-project
+  response as with a genuinely empty project (see Things to Know). The three
+  filters and the projectId are read from `state` once, before the request
+  goes out — not re-read afterwards — for the reason in Things to Know. A
+  project sitting at 50 or more recordings never produces a short first
+  page, so it never self-heals this way (see Things to Know). Status / genre /
   subcategory / search filtering is computed client-side by
   `RecordingsListState.filteredRecordings` (`StatusFilter.uploaded` matches
   `uploadStatus` in `{'uploaded', 'verified'}` (ENG-376), not just
@@ -586,6 +609,15 @@ Path: @/lib/features/recording/presentation/notifiers
   a superseded `loadMore` that bails cannot leave the spinner stuck.
   `_serverOffset` is the only mutable field shared across these methods —
   everything else lives on `state` or as a local.
+- **The fetch-generation guard does not cover the ENG-45 sweep erase.** It
+  discards a stale *list* — the `state`/`_serverOffset` assignment after the
+  generation check in the caller — but the erase inside `_fetchAndMerge` has
+  already run by then, on the way to building that list. This is why
+  `_fetchAndMerge` captures `projectId` and the three filters once, before
+  the `listRecordings` await, instead of re-reading `state` afterwards:
+  re-reading let a slow filtered response outlive the user clearing the
+  filter and get judged against no filter at all, erasing rows the filter
+  had merely excluded rather than rows the server had actually dropped.
 - **Delete is a hard delete on every platform — the row delete is never
   `kIsWeb`-gated (ENG-120).** Each screen previously owned a duplicated
   delete that ran the local Drift delete inside `if (!kIsWeb)`. On web
@@ -634,11 +666,29 @@ Path: @/lib/features/recording/presentation/notifiers
   not surface to the UI. `_reportUnexpected` skips `UnauthorizedException` (the
   expected token-refresh flow). Do not reintroduce a bare `catch (_)` here — a
   silently-swallowed failure on these paths is invisible to telemetry.
-- **This is a hard delete, not a tombstone.** `deleteRecording` removes
-  the row and audio outright; there is no soft-delete / tombstone marker.
-  The durable cross-device delete case (delete on device A propagating to
-  device B) is out of scope and needs a server-side delete contract
-  (`needs-api`); a synced row deleted here will reappear on a different
-  device that still lists it from the server.
+- **This is a hard delete, not a tombstone — and, as of ENG-45, the absence
+  of a tombstone is what lets a server-side delete propagate across
+  devices.** `deleteRecording` removes the row and audio outright when the
+  user asks for it, and the server row too when there is a `serverId`
+  (ENG-120); there is no soft-delete/tombstone marker anywhere. Because
+  nothing marks a deletion, device B cannot tell "the server deleted this"
+  from "this just fell off the page" except by asking the same question
+  `_fetchAndMerge` asks — is this response a complete sweep? Under a
+  complete unfiltered sweep, an `uploaded`/`verified` row missing from the
+  answer is erased on device B too, so a delete made on device A does reach
+  a synced device B the next time B's list does a complete sweep, with no
+  server-side delete contract and no push. This is the ENG-45 fix; the
+  remaining limits are the sweep's own conditions from the `_fetchAndMerge`
+  bullet above (the 50-recording page-size ceiling, the
+  `uploaded`/`verified`-only gate), not a cross-device scope carve-out.
+- **A benign race between the list sweep and downloading/caching the same
+  recording (ENG-45).** If a complete sweep runs while
+  `RecordingDetailNotifier.downloadAndCache` is mid-flight for a recording
+  the server no longer has, the sweep can erase the row while the detail
+  screen is still writing to it. It is left self-correcting rather than
+  guarded: `cacheDownloadedAudio`'s insert branch
+  ([../../data/repositories/docs.md](../../data/repositories/docs.md))
+  resurrects the row on its next write, and the following sweep erases it
+  again since the server still doesn't have it.
 
 Created and maintained by Nori.

@@ -10,9 +10,11 @@ Path: @/lib/features/recording/domain
   edit-authorization policy in
   [./recording_edit_policy.dart](recording_edit_policy.dart), the
   upload-status affordance predicates in
-  [./upload_status_actions.dart](upload_status_actions.dart), and the
+  [./upload_status_actions.dart](upload_status_actions.dart), the
   classification predicates in
-  [./entities/classification.dart](entities/classification.dart).
+  [./entities/classification.dart](entities/classification.dart), and the
+  server-deletion eligibility check in
+  [./server_deletion_policy.dart](server_deletion_policy.dart).
 - Holds no Flutter, Riverpod, Drift, or `http` dependencies: every file
   here imports nothing but other domain types (the edit policy depends
   only on the auth `User` entity; `canRetryUpload` in
@@ -186,6 +188,10 @@ Path: @/lib/features/recording/domain
   `_canEditRecording` getter (see
   [../presentation/docs.md](../presentation/docs.md)). It is the single
   client-side authorization decision for a recording.
+- It reaches across to the auth feature for the `User` entity
+  ([/lib/features/auth/domain/entities/user.dart](../../auth/domain/entities/user.dart))
+  and is fed the boolean result of `RoleNotifier.canManageProject`
+  ([/lib/features/auth/data/providers/role_provider.dart](../../auth/data/providers/role_provider.dart)).
 - `upload_status_actions.dart` (ENG-46) holds two independent predicates
   gating upload-adjacent affordances: `recording_detail_screen.dart`'s
   Retry button calls `canRetryUpload`, and `recordings_list_screen.dart`'s
@@ -197,10 +203,11 @@ Path: @/lib/features/recording/domain
   the `recording_edit_policy.dart` precedent above: same shape (a pure
   predicate consumed by exactly the screen it gates), same test placement
   under `test/features/recording/domain/`.
-- It reaches across to the auth feature for the `User` entity
-  ([/lib/features/auth/domain/entities/user.dart](../../auth/domain/entities/user.dart))
-  and is fed the boolean result of `RoleNotifier.canManageProject`
-  ([/lib/features/auth/data/providers/role_provider.dart](../../auth/data/providers/role_provider.dart)).
+- `server_deletion_policy.dart` (ENG-45) is the single definition of which
+  local row a hard delete on the server is allowed to erase. It is consumed
+  by `RecordingsListNotifier`'s whole-project sweep reconciliation and by
+  `RecordingDetailNotifier`'s metadata-heal 404 branch (see
+  [../presentation/notifiers/docs.md](../presentation/notifiers/docs.md)).
 
 ### Core Implementation
 
@@ -234,6 +241,14 @@ Path: @/lib/features/recording/domain
   being reviewed together; a future change to one without the other would
   reopen the ENG-46 shape of bug (an affordance advertising a delete it
   does not perform, or a delete reaching rows the button never showed).
+- `canEraseAsDeletedOnServer({serverId, uploadStatus})` returns true only
+  for a non-empty `serverId` whose `uploadStatus` is `uploaded` or
+  `verified`. Any other status means the row may never have completed the
+  round trip to the server — `markAsUploaded` is what writes `uploaded`
+  alongside the server id, so anything still `local`/`uploading`/`failed`
+  may be the only copy of that audio, and the caller must never erase it no
+  matter what the server answers (PR #193, the data-loss this guards
+  against).
 
 ### Things to Know
 
