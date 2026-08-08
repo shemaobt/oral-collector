@@ -111,29 +111,10 @@ class RecordingDetailNotifier
             current != null &&
             _hasServerId(current) &&
             (_needsGcsRefresh(current) || _needsUserRefresh(current))) {
-          try {
-            final server = await _apiRepo.getRecording(current.serverId!);
-            if (_disposed) return;
-            final updates = buildHealMetadataCompanion(
-              local: current,
-              server: server,
-            );
-            await _localRepo.updateRecording(current.id, updates);
-            if (_disposed) return;
-            recording = await _localRepo.getRecordingById(current.id);
-            if (_disposed) return;
-          } catch (e) {
-            if (isRecordingNotFound(e) &&
-                canEraseAsDeletedOnServer(
-                  serverId: current.serverId,
-                  uploadStatus: current.uploadStatus,
-                )) {
-              await _eraseDeletedOnServer(current);
-              if (_disposed) return;
-              recording = null;
-              deletedOnServer = true;
-            }
-          }
+          final healed = await _healMetadata(current);
+          if (healed == null) return;
+          recording = healed.recording;
+          deletedOnServer = healed.deletedOnServer;
         }
 
         if (isOnline && recording == null && !deletedOnServer) {
@@ -170,6 +151,43 @@ class RecordingDetailNotifier
     } catch (_) {
       if (_disposed) return;
       state = state.copyWith(isLoading: false);
+    }
+  }
+
+  /// Refreshes [current] from the server when its stored metadata is
+  /// incomplete, and reads a 404 as "the server hard-deleted it".
+  ///
+  /// Returns null when the notifier was disposed mid-flight, which is [load]'s
+  /// signal to abandon the rest of the load. Otherwise returns the row to carry
+  /// on with — the reloaded one, [current] itself when the refresh failed for
+  /// any other reason, or null once the row has been erased. Requires a
+  /// non-empty `serverId` ([_hasServerId]).
+  Future<({LocalRecording? recording, bool deletedOnServer})?> _healMetadata(
+    LocalRecording current,
+  ) async {
+    try {
+      final server = await _apiRepo.getRecording(current.serverId!);
+      if (_disposed) return null;
+      final updates = buildHealMetadataCompanion(
+        local: current,
+        server: server,
+      );
+      await _localRepo.updateRecording(current.id, updates);
+      if (_disposed) return null;
+      final reloaded = await _localRepo.getRecordingById(current.id);
+      if (_disposed) return null;
+      return (recording: reloaded, deletedOnServer: false);
+    } catch (e) {
+      final erasable =
+          isRecordingNotFound(e) &&
+          canEraseAsDeletedOnServer(
+            serverId: current.serverId,
+            uploadStatus: current.uploadStatus,
+          );
+      if (!erasable) return (recording: current, deletedOnServer: false);
+      await _eraseDeletedOnServer(current);
+      if (_disposed) return null;
+      return (recording: null, deletedOnServer: true);
     }
   }
 
