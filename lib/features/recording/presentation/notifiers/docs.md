@@ -271,21 +271,39 @@ Path: @/lib/features/recording/presentation/notifiers
   merged with local-only entities, deduped by `serverId` — and `loadMore`
   appends later pages from the `_serverOffset` cursor; offline or on an API
   error both fall back to the full local set (see the review-flag exception
-  below). Since ENG-45, `_fetchAndMerge` also reconciles a hard delete made
-  on the server: a local-only row is erased (row + audio file, through
-  `canEraseAsDeletedOnServer` — see
-  [../../domain/docs.md](../../domain/docs.md)) when, and only when, the
-  response is a **complete, unfiltered sweep of the project** — non-empty,
-  shorter than `_pageSize` (50), and requested with no user / storyteller /
-  review-flag filter. Only then does the server's silence about a row
-  actually answer "the server no longer has it"; a full page or a filtered
-  page is a subset that says nothing about the rest, and an empty page is
-  exactly as consistent with a lost permission or a stale cross-project
-  response as with a genuinely empty project (see Things to Know). The three
-  filters and the projectId are read from `state` once, before the request
-  goes out — not re-read afterwards — for the reason in Things to Know. A
-  project sitting at 50 or more recordings never produces a short first
-  page, so it never self-heals this way (see Things to Know). Status / genre /
+  below). Since ENG-45 the list also reconciles a hard delete made
+  on the server, and as of ENG-400 that reconciliation spans pagination and
+  ends in a per-recording confirmation. A **sweep** is the union of the server
+  ids seen across an unfiltered pass: `_fetchAndMerge` opens it with page zero
+  (`_sweep`, stamped with its `projectId`; a filtered fetch opens none, and a
+  fetch a newer one already superseded opens none either), each `loadMore`
+  page joins it through `_advanceSweep`, and the last page — the one shorter
+  than `_pageSize` (50) — closes it. Only then are the local rows absent from
+  the union considered, and they are *candidates*, not verdicts: each is put
+  through `canEraseAsDeletedOnServer` (see
+  [../../domain/docs.md](../../domain/docs.md)) and then confirmed with a
+  direct `getRecording(serverId)`, and only a 404 — read with the shared
+  `isRecordingNotFound` — erases the row and its audio file. Anything else the
+  server says, including an unreachable one, leaves the row alone. The union
+  decides *who gets asked about*, which is why the sweep still refuses to
+  close mid-pagination, under a filter, on another project's pages, or on an
+  empty first page: not because the answer would be unsafe (the confirmation
+  handles that) but because each of those would put most of the project on
+  trial and turn one listing into a request storm. `_advanceSweep` does not
+  re-check the filters itself, and that rests on an invariant that lives in
+  this class rather than in it: **every server-side filter setter
+  (`setUserFilter`, `setStorytellerFilter`, `setReviewFlagFilter`,
+  `clearAllFilters`) refetches**, and a fetch installs a fresh sweep — a
+  filtered one installs none at all. Break that (a filter that mutates `state`
+  without refetching) and a filtered pagination could close a sweep opened
+  unfiltered; the cost is a storm of confirmations, not lost recordings, since
+  each candidate is still confirmed individually. The confirmations themselves
+  run through `mapBounded` (`_confirmDeletedConcurrency`) and are cut short by
+  a generation change, so a refresh abandons the queued ones instead of waiting
+  them out; the deletions they authorise stay serial. A project of 50 or more
+  recordings now heals as the user pages to the end of the list, which is what
+  ENG-400 fixed — before it, only a short first page reconciled and a large
+  project never self-healed at all (see Things to Know). Status / genre /
   subcategory / search filtering is computed client-side by
   `RecordingsListState.filteredRecordings` (`StatusFilter.uploaded` matches
   `uploadStatus` in `{'uploaded', 'verified'}` (ENG-376), not just
@@ -635,8 +653,33 @@ Path: @/lib/features/recording/presentation/notifiers
   `_fetchAndMerge` captures `projectId` and the three filters once, before
   the `listRecordings` await, instead of re-reading `state` afterwards:
   re-reading let a slow filtered response outlive the user clearing the
-  filter and get judged against no filter at all, erasing rows the filter
-  had merely excluded rather than rows the server had actually dropped.
+  filter and get judged against no filter at all, putting rows the filter had
+  merely excluded on trial rather than rows the server had actually dropped.
+  On the paginated path (ENG-400) the ordering is the other way round and the
+  check *is* load-bearing: `_advanceSweep` re-reads the generation after its
+  `_loadLocal` and before erasing anything, because `_fetchGeneration` moves
+  synchronously at the top of `fetchRecordings` while the erase runs on for a
+  local read plus one round trip per candidate. Without it a refresh that
+  starts mid-erase leaves `loadMore` bailing at its own generation check and
+  never updating `state`: the rows would be gone from Drift and still on
+  screen. Erasing is left to the next sweep instead.
+- **A sweep is a suspicion, not a verdict — neither set holds still while it
+  runs (ENG-400).** Three independent paths end with a recording absent from
+  every page of a completed sweep while the server still has it: an upload
+  that lands after page zero was read (the server sorts newest first, so the
+  row belongs to a window already consumed, and the queue only updates
+  `lastSyncAt` when it drains, which is what triggers the refetch); a delete
+  on the server between two requests, which shifts everything down one
+  position so the next `offset` window skips a live row; and a sweep left open
+  across screen visits, since the provider is not `autoDispose` and the list
+  screen reuses its `State` (tab bar, deep link, back navigation — see
+  `didUpdateWidget`), so `initState` does not refetch and the page that closes
+  a sweep can be visits away from the one that opened it. Narrowing the sweep
+  cannot fix any of them, which is why the erase confirms each candidate with
+  `getRecording` instead. Since ENG-399 a false positive is not a cache
+  eviction: a metadata edit made offline lives only in the local row and
+  nothing re-sends it, so `canEraseAsDeletedOnServer` no longer implies the
+  row is a redundant copy of what the server has.
 - **Delete is a hard delete on every platform — the row delete is never
   `kIsWeb`-gated (ENG-120).** Each screen previously owned a duplicated
   delete that ran the local Drift delete inside `if (!kIsWeb)`. On web
@@ -691,15 +734,16 @@ Path: @/lib/features/recording/presentation/notifiers
   user asks for it, and the server row too when there is a `serverId`
   (ENG-120); there is no soft-delete/tombstone marker anywhere. Because
   nothing marks a deletion, device B cannot tell "the server deleted this"
-  from "this just fell off the page" except by asking the same question
-  `_fetchAndMerge` asks — is this response a complete sweep? Under a
-  complete unfiltered sweep, an `uploaded`/`verified` row missing from the
-  answer is erased on device B too, so a delete made on device A does reach
-  a synced device B the next time B's list does a complete sweep, with no
-  server-side delete contract and no push. This is the ENG-45 fix; the
-  remaining limits are the sweep's own conditions from the `_fetchAndMerge`
-  bullet above (the 50-recording page-size ceiling, the
-  `uploaded`/`verified`-only gate), not a cross-device scope carve-out.
+  from "this just fell off the page" by looking at a listing alone — which is
+  why, since ENG-400, it does not try to: absence from a completed sweep only
+  nominates a row, and `getRecording` is asked about that one recording before
+  anything is destroyed. A delete made on device A therefore reaches a synced
+  device B the next time B completes a sweep and the server answers 404, with
+  no server-side delete contract and no push. This is the ENG-45 fix as
+  extended by ENG-400; the remaining limits are the `uploaded`/`verified`-only
+  gate and the fact that the sweep completes only when the user pages to the
+  end of the list (the 50-recording page-size ceiling is gone), not a
+  cross-device scope carve-out.
 - **A benign race between the list sweep and downloading/caching the same
   recording (ENG-45).** If a complete sweep runs while
   `RecordingDetailNotifier.downloadAndCache` is mid-flight for a recording

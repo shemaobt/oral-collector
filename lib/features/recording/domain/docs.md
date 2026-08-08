@@ -204,9 +204,11 @@ Path: @/lib/features/recording/domain
   predicate consumed by exactly the screen it gates), same test placement
   under `test/features/recording/domain/`.
 - `server_deletion_policy.dart` (ENG-45) is the single definition of which
-  local row a hard delete on the server is allowed to erase. It is consumed
-  by `RecordingsListNotifier`'s whole-project sweep reconciliation and by
-  `RecordingDetailNotifier`'s metadata-heal 404 branch (see
+  local row a hard delete on the server is *allowed* to erase. It is a
+  necessary condition, never a sufficient one: both consumers pair it with a
+  confirmed 404 for that specific recording — `RecordingDetailNotifier`'s
+  metadata-heal branch, and, since ENG-400, `RecordingsListNotifier`'s sweep,
+  where absence from the listing only nominates a candidate (see
   [../presentation/notifiers/docs.md](../presentation/notifiers/docs.md)).
 
 ### Core Implementation
