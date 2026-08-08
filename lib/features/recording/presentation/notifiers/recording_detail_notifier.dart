@@ -279,6 +279,13 @@ class RecordingDetailNotifier
     final descriptionChanged =
         description != (recording.description ?? '').trim();
 
+    // The ENG-380 use-cases already tell a local-only save apart from one the
+    // server took; either half being local-only makes the whole edit pending.
+    var localOnly = false;
+    RecordingMutationResult saved() => localOnly
+        ? RecordingMutationResult.savedLocallyOnly
+        : RecordingMutationResult.success;
+
     if (titleChanged) {
       try {
         final titleResult = await saveRecordingTitle(
@@ -291,7 +298,8 @@ class RecordingDetailNotifier
           apiRepo: _apiRepo,
           localRepo: localRepo,
         );
-        if (_disposed) return RecordingMutationResult.success;
+        localOnly = titleResult == SaveTitleResult.savedLocallyOnly;
+        if (_disposed) return saved();
         if (titleResult == SaveTitleResult.saved ||
             titleResult == SaveTitleResult.savedLocallyOnly) {
           ref
@@ -304,7 +312,7 @@ class RecordingDetailNotifier
             await ref
                 .read(syncNotifierProvider.notifier)
                 .resetAndRetry(recording.id);
-            if (_disposed) return RecordingMutationResult.success;
+            if (_disposed) return saved();
           }
         }
       } on ForbiddenException {
@@ -319,7 +327,7 @@ class RecordingDetailNotifier
 
     if (descriptionChanged) {
       try {
-        await saveRecordingDescription(
+        final descriptionResult = await saveRecordingDescription(
           recordingId: arg,
           serverId: recording.serverId,
           description: description,
@@ -328,7 +336,10 @@ class RecordingDetailNotifier
           apiRepo: _apiRepo,
           localRepo: localRepo,
         );
-        if (_disposed) return RecordingMutationResult.success;
+        localOnly =
+            localOnly ||
+            descriptionResult == SaveDescriptionResult.savedLocallyOnly;
+        if (_disposed) return saved();
       } on ForbiddenException {
         return RecordingMutationResult.forbidden;
       }
@@ -339,14 +350,14 @@ class RecordingDetailNotifier
         await ref
             .read(syncNotifierProvider.notifier)
             .resetAndRetry(recording.id);
-        if (_disposed) return RecordingMutationResult.success;
+        if (_disposed) return saved();
       }
     }
 
     if (titleChanged || descriptionChanged) {
       await load();
     }
-    return RecordingMutationResult.success;
+    return saved();
   }
 
   /// Sends a metadata write to the server, classifying the outcome instead of
@@ -483,30 +494,33 @@ class RecordingDetailNotifier
         (recording.secondaryGenreId != null ||
             recording.secondaryRegisterId != null);
 
+    // The gate stays `hasServerId`, not uploadStatus: a recording the server
+    // has never seen owes it nothing, so skipping the call is not a fallback
+    // and must not be reported as a pending edit.
     List<ReviewFlag>? serverFlags;
+    var localOnly = false;
     if (hasServerId) {
-      try {
-        final outcome = await _apiRepo.updateRecording(
-          recording.serverId!,
-          UpdateRecordingRequest(
-            genreId: result.genreId,
-            subcategoryId: result.subcategoryId,
-            registerId: result.registerId,
-            secondaryGenreId: result.secondaryGenreId,
-            secondarySubcategoryId: result.secondarySubcategoryId,
-            secondaryRegisterId: result.secondaryRegisterId,
-            clearSecondary: clearSecondary,
-          ),
-        );
-        if (_disposed) return RecordingMutationResult.success;
-        if (!outcome.success) return RecordingMutationResult.failed;
-        serverFlags = outcome.reviewFlags;
-      } on ForbiddenException {
-        return RecordingMutationResult.forbidden;
-      } catch (_) {
-        return RecordingMutationResult.failed;
-      }
+      final write = await _pushMetadata(
+        recording.serverId!,
+        UpdateRecordingRequest(
+          genreId: result.genreId,
+          subcategoryId: result.subcategoryId,
+          registerId: result.registerId,
+          secondaryGenreId: result.secondaryGenreId,
+          secondarySubcategoryId: result.secondarySubcategoryId,
+          secondaryRegisterId: result.secondaryRegisterId,
+          clearSecondary: clearSecondary,
+        ),
+      );
+      final refusal = _refusal(write.status);
+      if (refusal != null) return refusal;
+      if (_disposed) return RecordingMutationResult.success;
+      serverFlags = write.reviewFlags;
+      localOnly = write.status == _ServerWrite.unreachable;
     }
+    final saved = localOnly
+        ? RecordingMutationResult.savedLocallyOnly
+        : RecordingMutationResult.success;
 
     if (!kIsWeb) {
       await _localRepo.classify(
@@ -518,9 +532,9 @@ class RecordingDetailNotifier
         secondarySubcategoryId: result.secondarySubcategoryId,
         secondaryRegisterId: result.secondaryRegisterId,
       );
-      if (_disposed) return RecordingMutationResult.success;
+      if (_disposed) return saved;
       await _storeReviewFlags(recording.id, serverFlags);
-      if (_disposed) return RecordingMutationResult.success;
+      if (_disposed) return saved;
 
       if (!hasServerId && ref.read(syncNotifierProvider).isOnline) {
         unawaited(ref.read(syncNotifierProvider.notifier).processQueue());
@@ -535,7 +549,7 @@ class RecordingDetailNotifier
       );
     }
     await load();
-    return RecordingMutationResult.success;
+    return saved;
   }
 
   /// Persists (or clears, when [values] is null) the secondary classification.
@@ -548,26 +562,26 @@ class RecordingDetailNotifier
     final clearSecondary = values == null;
 
     List<ReviewFlag>? serverFlags;
+    var localOnly = false;
     if (hasServerId) {
-      try {
-        final outcome = await _apiRepo.updateRecording(
-          recording.serverId!,
-          UpdateRecordingRequest(
-            secondaryGenreId: values?.genreId,
-            secondarySubcategoryId: values?.subcategoryId,
-            secondaryRegisterId: values?.registerId,
-            clearSecondary: clearSecondary,
-          ),
-        );
-        if (_disposed) return RecordingMutationResult.success;
-        if (!outcome.success) return RecordingMutationResult.failed;
-        serverFlags = outcome.reviewFlags;
-      } on ForbiddenException {
-        return RecordingMutationResult.forbidden;
-      } catch (_) {
-        return RecordingMutationResult.failed;
-      }
+      final write = await _pushMetadata(
+        recording.serverId!,
+        UpdateRecordingRequest(
+          secondaryGenreId: values?.genreId,
+          secondarySubcategoryId: values?.subcategoryId,
+          secondaryRegisterId: values?.registerId,
+          clearSecondary: clearSecondary,
+        ),
+      );
+      final refusal = _refusal(write.status);
+      if (refusal != null) return refusal;
+      if (_disposed) return RecordingMutationResult.success;
+      serverFlags = write.reviewFlags;
+      localOnly = write.status == _ServerWrite.unreachable;
     }
+    final saved = localOnly
+        ? RecordingMutationResult.savedLocallyOnly
+        : RecordingMutationResult.success;
 
     if (!kIsWeb) {
       await _localRepo.updateSecondaryClassification(
@@ -576,13 +590,13 @@ class RecordingDetailNotifier
         subcategoryId: values?.subcategoryId,
         registerId: values?.registerId,
       );
-      if (_disposed) return RecordingMutationResult.success;
+      if (_disposed) return saved;
       await _storeReviewFlags(recording.id, serverFlags);
-      if (_disposed) return RecordingMutationResult.success;
+      if (_disposed) return saved;
     }
 
     await load();
-    return RecordingMutationResult.success;
+    return saved;
   }
 
   /// Downloads the recording's audio from GCS and caches it locally, then

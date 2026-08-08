@@ -43,8 +43,9 @@ Future<SaveTitleResult> saveRecordingTitle({
   }
 
   final localCompanion = LocalRecordingsCompanion(title: Value(trimmed));
+  final hasServerCopy = serverId != null && serverId.isNotEmpty;
 
-  if (isOnline && serverId != null && serverId.isNotEmpty) {
+  if (isOnline && hasServerCopy) {
     try {
       await apiRepo.updateRecording(
         serverId,
@@ -65,5 +66,11 @@ Future<SaveTitleResult> saveRecordingTitle({
   }
 
   await localRepo!.updateRecording(recordingId, localCompanion);
-  return SaveTitleResult.saved;
+  // Offline with a server copy is a local-only save, exactly as
+  // saveRecordingDescription reports it: the server holds this recording and
+  // was not told. Without a server copy the rename rides along on the upload,
+  // so nothing is pending (ENG-399).
+  return hasServerCopy
+      ? SaveTitleResult.savedLocallyOnly
+      : SaveTitleResult.saved;
 }

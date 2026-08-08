@@ -178,7 +178,9 @@ void main() {
         localRepo: localRepo,
       );
 
-      expect(result, SaveTitleResult.saved);
+      // The server already knows this recording and was not told, so this is a
+      // local-only save — same answer saveRecordingDescription gives (ENG-399).
+      expect(result, SaveTitleResult.savedLocallyOnly);
       verify(() => localRepo.updateRecording('rec-1', any())).called(1);
       verifyNever(() => apiRepo.updateRecording(any(), any()));
     });
