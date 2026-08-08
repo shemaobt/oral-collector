@@ -289,7 +289,18 @@ Path: @/lib/features/recording/presentation/notifiers
   close mid-pagination, under a filter, on another project's pages, or on an
   empty first page: not because the answer would be unsafe (the confirmation
   handles that) but because each of those would put most of the project on
-  trial and turn one listing into a request storm. A project of 50 or more
+  trial and turn one listing into a request storm. `_advanceSweep` does not
+  re-check the filters itself, and that rests on an invariant that lives in
+  this class rather than in it: **every server-side filter setter
+  (`setUserFilter`, `setStorytellerFilter`, `setReviewFlagFilter`,
+  `clearAllFilters`) refetches**, and a fetch installs a fresh sweep — a
+  filtered one installs none at all. Break that (a filter that mutates `state`
+  without refetching) and a filtered pagination could close a sweep opened
+  unfiltered; the cost is a storm of confirmations, not lost recordings, since
+  each candidate is still confirmed individually. The confirmations themselves
+  run through `mapBounded` (`_confirmDeletedConcurrency`) and are cut short by
+  a generation change, so a refresh abandons the queued ones instead of waiting
+  them out; the deletions they authorise stay serial. A project of 50 or more
   recordings now heals as the user pages to the end of the list, which is what
   ENG-400 fixed — before it, only a short first page reconciled and a large
   project never self-healed at all (see Things to Know). Status / genre /

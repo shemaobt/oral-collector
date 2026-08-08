@@ -130,6 +130,15 @@ ServerRecording _makeServerRecording(String id) => ServerRecording(
   recordedAt: DateTime(2026, 2, 1),
 );
 
+/// Pumps the event loop until [done], failing fast instead of hanging until the
+/// suite timeout when a regression means it never will.
+Future<void> pumpUntil(bool Function() done, {int maxTurns = 200}) async {
+  for (var turn = 0; turn < maxTurns && !done(); turn++) {
+    await Future<void>.delayed(Duration.zero);
+  }
+  if (!done()) fail('condition still false after $maxTurns event-loop turns');
+}
+
 void main() {
   late _MockApi api;
   late _MockLocal local;
@@ -1298,6 +1307,8 @@ void main() {
 
         expect(await realLocal.getRecordingById('local-uuid'), isNull);
         expect(file.existsSync(), isFalse);
+        // A confirmed delete is the feature working, not a failure to report.
+        expect(reporter.reported, isEmpty);
         expect(
           container
               .read(recordingsListNotifierProvider)
@@ -1560,9 +1571,7 @@ void main() {
 
       await notifier.fetchRecordings();
       final paging = notifier.loadMore();
-      while (localReads < 2) {
-        await Future<void>.delayed(Duration.zero);
-      }
+      await pumpUntil(() => localReads >= 2);
       final refresh = notifier.fetchRecordings();
       sweepRead.complete([row]);
       await paging;
@@ -1594,7 +1603,63 @@ void main() {
 
       expect(await realLocal.getRecordingById('local-uuid'), isNotNull);
       expect(file.existsSync(), isTrue);
+      // Silence here would switch healing off for good with nothing in
+      // telemetry to say so (ENG-102).
+      expect(reporter.reported, contains(isA<NetworkException>()));
     });
+
+    test(
+      'a refresh mid-confirmation drops the confirmations still queued',
+      () async {
+        // The confirmations are bounded, so a backlog waits its turn; a refresh
+        // means this sweep's work is already discarded, and on a link with no
+        // response timeout that queue is what turns a spinner into minutes.
+        final rows = <File>[];
+        for (var i = 0; i < 8; i++) {
+          rows.add(
+            await insertRow(
+              id: 'cand-$i',
+              serverId: 'srv-c$i',
+              uploadStatus: 'uploaded',
+            ),
+          );
+        }
+        stubPage(0, () async => fullPage('s'));
+        stubPage(50, () async => [_makeServerRecording('s50')]);
+        var asked = 0;
+        final held = Completer<ServerRecording>();
+        when(() => api.getRecording(any())).thenAnswer((_) {
+          asked++;
+          return held.future;
+        });
+
+        final container = realContainer();
+        addTearDown(container.dispose);
+        final notifier = container.read(
+          recordingsListNotifierProvider.notifier,
+        );
+
+        await notifier.fetchRecordings();
+        final paging = notifier.loadMore();
+        await pumpUntil(() => asked > 0);
+        final inFlight = asked;
+
+        final refresh = notifier.fetchRecordings();
+        // The in-flight confirmations come back positive, so the refresh is the
+        // only thing standing between these rows and deletion.
+        held.completeError(const ValidationException(statusCode: 404));
+        await paging;
+        await refresh;
+
+        // Whatever was already in flight finishes; the rest is never asked.
+        expect(asked, inFlight);
+        expect(asked, lessThan(rows.length));
+        for (var i = 0; i < rows.length; i++) {
+          expect(await realLocal.getRecordingById('cand-$i'), isNotNull);
+          expect(rows[i].existsSync(), isTrue);
+        }
+      },
+    );
 
     test(
       'an upload that lands mid-pagination is not read as a deletion',

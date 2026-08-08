@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/errors/api_exception.dart';
 import '../../../../core/observability/error_reporter.dart';
 import '../../../../core/platform/file_ops.dart' as file_ops;
+import '../../../../core/util/bounded_concurrency.dart';
 import '../../../project/presentation/notifiers/project_notifier.dart';
 import '../../../sync/presentation/notifiers/sync_notifier.dart';
 import '../../data/local_recording_to_entity.dart';
@@ -22,6 +23,10 @@ import 'recordings_list_state.dart';
 enum DeleteRecordingResult { ok, forbidden, failed }
 
 const _pageSize = 50;
+
+/// Confirmations run in parallel up to this many at once; the deletions they
+/// authorise stay serial.
+const _confirmDeletedConcurrency = 6;
 
 final recordingsListNotifierProvider =
     NotifierProvider<RecordingsListNotifier, RecordingsListState>(
@@ -284,7 +289,7 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
         serverRecordings.isNotEmpty &&
         serverRecordings.length < _pageSize;
     if (sweptWholeProject) {
-      final erased = await _eraseDeletedOnServer(localOnly);
+      final erased = await _eraseDeletedOnServer(localOnly, gen: gen);
       if (erased.isNotEmpty) {
         localOnly = localOnly.where((r) => !erased.contains(r.id)).toList();
       }
@@ -333,13 +338,15 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
     if (sweep.serverIds.isEmpty) return const {};
 
     final local = await _loadLocal(projectId) ?? const <LocalRecordingEntity>[];
-    // The erase below outlives this check by one network round trip per
-    // candidate, but a refresh that starts before it means the caller will
-    // discard our list: erasing rows the screen would go on showing is worse
-    // than leaving them for the next sweep.
+    // A refresh landing while the local read was in flight means the caller
+    // will discard our list, so this sweep has nothing left to do. Purely an
+    // early-out: the erase cuts on the generation too, before each confirmation
+    // and again before each delete, which is what actually keeps rows the
+    // screen would go on showing from being deleted under it.
     if (gen != _fetchGeneration) return const {};
     return _eraseDeletedOnServer(
       local.where((r) => !sweep.serverIds.contains(r.serverId)).toList(),
+      gen: gen,
     );
   }
 
@@ -360,18 +367,44 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
   /// local row and nothing re-sends it, so a false positive costs the user's
   /// edits outright and not just a cached copy of the audio.
   Future<Set<String>> _eraseDeletedOnServer(
-    List<LocalRecordingEntity> candidates,
-  ) async {
+    List<LocalRecordingEntity> candidates, {
+    required int gen,
+  }) async {
+    final erasable = candidates
+        .where(
+          (r) => canEraseAsDeletedOnServer(
+            serverId: r.serverId,
+            uploadStatus: r.uploadStatus,
+          ),
+        )
+        .toList();
+    if (erasable.isEmpty) return const {};
+
+    // The confirmations fan out; the deletes stay serial. A server-side cleanup
+    // of thirty recordings is thirty round trips, and this runs before the list
+    // stops loading, on links where the client has no response timeout at all:
+    // in series that is a spinner the length of thirty timeouts. Deleting is
+    // local and cheap, so it keeps the one shape that is obviously correct —
+    // one row at a time, one set built in one place.
+    final confirmations = await mapBounded(
+      erasable,
+      _confirmDeletedConcurrency,
+      (recording) async {
+        // A refresh superseded this sweep: whatever is still queued costs
+        // nothing and the next sweep will ask again.
+        if (gen != _fetchGeneration) return (recording: recording, gone: false);
+        return (
+          recording: recording,
+          gone: await _confirmDeletedOnServer(recording.serverId!),
+        );
+      },
+    );
+
     final erased = <String>{};
-    for (final recording in candidates) {
-      final serverId = recording.serverId;
-      if (!canEraseAsDeletedOnServer(
-        serverId: serverId,
-        uploadStatus: recording.uploadStatus,
-      )) {
-        continue;
-      }
-      if (!await _confirmDeletedOnServer(serverId!)) continue;
+    for (final confirmation in confirmations) {
+      if (gen != _fetchGeneration) break;
+      if (!confirmation.gone) continue;
+      final recording = confirmation.recording;
       await _localRepo.deleteRecording(recording.id);
       erased.add(recording.id);
       if (recording.localFilePath.isNotEmpty) {
@@ -393,8 +426,13 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
     try {
       await _apiRepo.getRecording(serverId);
       return false;
-    } catch (e) {
-      return isRecordingNotFound(e);
+    } catch (e, st) {
+      if (isRecordingNotFound(e)) return true;
+      // Not an answer about this recording, so the row stays — but the failure
+      // is reported (ENG-102): an endpoint failing systematically would
+      // otherwise switch healing off permanently and silently.
+      _reportUnexpected(e, st);
+      return false;
     }
   }
 
