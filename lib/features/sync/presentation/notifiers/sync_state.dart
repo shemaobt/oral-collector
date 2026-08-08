@@ -1,3 +1,9 @@
+/// Why the upload queue declined to run. Offline is not one of these: the app
+/// already shows an offline banner everywhere it matters. The Wi-Fi-only policy
+/// had no such signal, so a tap on "sync pending" over cellular looked like a
+/// dead button (ENG-355).
+enum SyncBlockReason { wifiOnly }
+
 class SyncState {
   final bool isOnline;
   final int pendingCount;
@@ -10,6 +16,7 @@ class SyncState {
   final int totalUploadedBytes;
   final String? currentFileName;
   final double uploadSpeedBps;
+  final SyncBlockReason? blockReason;
 
   const SyncState({
     this.isOnline = false,
@@ -23,6 +30,7 @@ class SyncState {
     this.totalUploadedBytes = 0,
     this.currentFileName,
     this.uploadSpeedBps = 0,
+    this.blockReason,
   });
 
   Duration? get estimatedTimeRemaining {
@@ -44,9 +52,11 @@ class SyncState {
     int? totalUploadedBytes,
     String? currentFileName,
     double? uploadSpeedBps,
+    SyncBlockReason? blockReason,
     bool clearUploadingId = false,
     bool clearLastSyncAt = false,
     bool clearCurrentFileName = false,
+    bool clearBlockReason = false,
   }) {
     return SyncState(
       isOnline: isOnline ?? this.isOnline,
@@ -63,6 +73,7 @@ class SyncState {
           ? null
           : (currentFileName ?? this.currentFileName),
       uploadSpeedBps: uploadSpeedBps ?? this.uploadSpeedBps,
+      blockReason: clearBlockReason ? null : (blockReason ?? this.blockReason),
     );
   }
 }

@@ -1892,6 +1892,12 @@ abstract class AppLocalizations {
   /// **'{count} pending'**
   String sync_pending(int count);
 
+  /// No description provided for @sync_waitingForWifi.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploads are waiting for Wi-Fi. Turn off \"Upload on Wi-Fi only\" to send over cellular data.'**
+  String get sync_waitingForWifi;
+
   /// No description provided for @profile_photoUpdated.
   ///
   /// In en, this message translates to:
