@@ -102,11 +102,13 @@ Path: @/lib/features/recording/data/repositories
   is terminal until the user asks for it again, and audio that is no longer on
   the device is terminal outright. The first three exits route through
   `resetRetryCount`, which flips the row back to `local` and so back into this
-  query. `deleteStaleRecordings` matches `failed` only (ENG-46; see Things to Know), so
-  none of them is destroyed by "Clear failed" while it waits on the user. Not because
-  the audio is still there — `failed_missing_file` has none by definition — but
-  because each row carries the title, description and classification the user
-  typed and the server never received, and the sweep is wholesale.
+  query. `requeueFailedUploads` (ENG-404) is the bulk counterpart: it matches
+  `failed` and `failed_exhausted` and, like `resetRetryCount`, writes the row
+  back to `local` — but as one project-wide `UPDATE` instead of a per-row call.
+  `failed_conflict` and `failed_description` stay outside its scope because a
+  bare retry would repeat the same rejected request; `failed_missing_file`
+  because there is no file left to resend. See Things to Know for the
+  batch-write and three-column rationale.
   The generic `failed` therefore means one thing only: a retry is still coming.
   Before ENG-377 it also covered rows whose budget was spent, which this query
   called pending and the engine's eligibility filter refused — a recording no
@@ -294,10 +296,13 @@ Path: @/lib/features/recording/data/repositories
   metadata-heal 404 branch call to erase a row the server hard-deleted
   (ENG-45, gated by `canEraseAsDeletedOnServer` — see
   [../../domain/docs.md](../../domain/docs.md)).
-  `deleteStaleRecordings(projectId)` is the separate user-triggered "clear
-  stale" sweep that bulk-deletes `failed` rows for a project — `uploading` is
-  deliberately excluded (ENG-46; see Things to Know). The list's "Clear
-  failed" button only shows when `hasClearableFailedUploads`
+  `requeueFailedUploads(projectId)` (ENG-404) is the separate user-triggered
+  bulk retry over the same project: one `UPDATE` that writes `uploadStatus`,
+  `retryCount`, and `lastRetryAt` for every `failed`/`failed_exhausted` row —
+  see Things to Know for why those two statuses and why all three columns. It
+  replaced a hard delete of the same idea (ENG-46's `deleteStaleRecordings`,
+  removed by ENG-404): the rows it touches are never deleted, only requeued.
+  The list's bulk-retry button only shows when `hasRetryableFailedUploads`
   ([../../domain/docs.md](../../domain/docs.md)) finds a matching row, which
   mirrors this same filter.
 - **The metadata-outbox lifecycle helpers (ENG-403)** — `markMetadataPending`,
@@ -446,11 +451,12 @@ Path: @/lib/features/recording/data/repositories
   all because the sync engine's own eligibility filter skips that status (see
   [/lib/features/sync/docs.md](../../../sync/docs.md)) — a row left there
   would never be re-dispatched. It targets `local`, not `failed`: `failed` is
-  the status `deleteStaleRecordings`/`hasClearableFailedUploads` (ENG-46, see
+  the status `requeueFailedUploads`/`hasRetryableFailedUploads` (ENG-404, see
   Things to Know and [../../domain/docs.md](../../domain/docs.md)) treat as a
-  real failure, and a crash mid-transfer is not one — landing on `failed`
-  would expose a resumable row to "Clear failed" and mislabel it as something
-  it never earned. Because it matches only `uploading` (a native-only status;
+  retryable failure, and a crash mid-transfer is not one — landing on `failed`
+  would expose a resumable row to the bulk retry, which would reset the very
+  budget and backoff state this method preserves. Because it matches only
+  `uploading` (a native-only status;
   web uses `web_uploading`), it is a no-op on web. The drain's complementary
   exclusion of `uploading` rows and the startup invocation order live in
   [/lib/features/sync/docs.md](../../../sync/docs.md).
@@ -483,44 +489,55 @@ Path: @/lib/features/recording/data/repositories
   which is why this is a normal `UPDATE` rather than a Drift schema step;
   see [/lib/core/database/docs.md](../../../../core/database/docs.md) for
   the schema-migration path this deliberately is not.
-- **`deleteStaleRecordings` ("Clear failed") lost most of what it used to
-  clear (ENG-377), then lost `uploading` too (ENG-46).** Before ENG-377, a
-  permanently-failed upload sat at the generic `failed` status and was
-  exactly the kind of row this bulk delete was for. Now every permanent
-  failure has its own terminal status — `failed_conflict`,
-  `failed_description`, `failed_exhausted`, `failed_missing_file` — and none
-  of them match `deleteStaleRecordings`'s `failed` filter, on purpose: each
-  carries the title, description and classification the user typed and the
-  server never received. (Not "the audio is still there" — for
-  `failed_missing_file` it is not, and that row is still worth keeping for
-  its metadata.) `uploading` used to match too — the ENG-46 bug: an upload
-  in progress is not a failure, and the sweep is a wholesale hard delete, so
-  tapping "Clear failed" mid-upload destroyed a recording the user never saw
-  fail. `uploading` is now excluded outright, regardless of whether
-  `resetStuckUploading` has already reclaimed the row — there is no longer a
-  window where an in-flight or crash-stranded upload is reachable from this
-  button. What is left for the button to catch is a `failed` row still
-  inside its retry budget — deleting it throws away an upload the queue is
-  still going to attempt, and that trade-off is unchanged and accepted. The
-  list only offers the button when `hasClearableFailedUploads` finds such a
-  row, and the detail screen's plain Retry (`canRetryUpload`) no longer fires
-  over `uploading` either — both predicates live in
+- **`requeueFailedUploads` targets `failed`/`failed_exhausted` because those
+  are the only two failures a bare retry can still resolve (ENG-404).** The
+  other three terminal statuses — `failed_conflict`, `failed_description`,
+  `failed_missing_file` — would be refused identically on the next attempt: a
+  duplicate title, a description under the minimum, or no audio file at all.
+  Each already has its own banner routing to its own fix (rename, edit the
+  description; there is no fix for a missing file but delete). Requeueing
+  them would only spend the user's tap on a request the server is going to
+  reject the same way. This is exactly what
+  `isRetryableFailure`/`hasRetryableFailedUploads` in
   [../../domain/upload_status_actions.dart](../../domain/upload_status_actions.dart)
-  (see [../../domain/docs.md](../../domain/docs.md)) and mirror this scope so
-  neither affordance promises something the underlying action won't do.
-  Whether the sweep should widen its match to the terminal `failed_*`
-  statuses, and eat the same loss of user-entered metadata those statuses
-  were built to avoid, is still an open product decision — ENG-46 narrowed
-  the match, it did not reopen that question.
-  **This is the client half only.** `RecordingsListNotifier.clearStaleRecordings`
-  ([../../presentation/notifiers/docs.md](../../presentation/notifiers/docs.md))
-  calls the server's own `/api/oc/recordings/clear-stale`
-  (`RecordingApiRepositoryImpl.clearStaleRecordings`) before this local sweep
-  runs, and that endpoint's scope has not been narrowed to match (tracked as
-  ENG-397). Until it is, "Clear failed" can leave a device and the server
-  disagreeing about which rows survive — the server may still delete a row
-  this client would now spare — which is a desync, not the pre-ENG-46 failure
-  mode of the client destroying a recording outright.
+  (see [../../domain/docs.md](../../domain/docs.md)) encode, so the list's
+  bulk-retry button never appears over a row this write will not touch.
+- **One `UPDATE`, not a loop over `resetAndRetry` (ENG-404).** The per-row
+  alternative, `SyncNotifier.resetAndRetry`, ends in `syncOne`, which takes
+  the same `_isProcessing` guard `processQueue` does (see
+  [/lib/features/sync/docs.md](../../../sync/docs.md)) — whichever call
+  arrives first wins the guard and every other call returns immediately, so
+  calling `resetAndRetry` in a loop over N failed rows would fan out N passes
+  against a guard built to admit exactly one, and silently drop the rest.
+  `requeueFailedUploads` instead writes every matching row in the project
+  with a single `UPDATE`; the caller
+  (`RecordingsListNotifier.retryFailedUploads`, see
+  [../../presentation/notifiers/docs.md](../../presentation/notifiers/docs.md))
+  then calls `processQueue()` exactly once to drain the whole batch.
+- **The write touches three columns because the status alone would leave a
+  row queued but refused.** `uploadStatus: 'local'` on its own is not
+  enough: a stale `retryCount` is still the exhausted budget
+  `processQueue`'s eligibility filter checks against, and a stale
+  `lastRetryAt` still falls inside the backoff window that same filter
+  enforces (see [/lib/features/sync/docs.md](../../../sync/docs.md)).
+  `requeueFailedUploads` resets `retryCount` to `0` and `lastRetryAt` to
+  `null` in the same write, so the row is immediately eligible rather than
+  just relabeled.
+- **The action no longer shrinks the home screen's total (ENG-404).** The
+  hard delete this replaced removed the row, so the total dropped every
+  time it ran. The requeue only rewrites `uploadStatus`/`retryCount`/
+  `lastRetryAt` — the row still exists and still satisfies
+  `getLocalOnlyStats`'s `uploadStatus NOT IN ('uploaded', 'verified')`
+  predicate before and after — so the home screen's count does not move
+  when the user retries a batch of failures. This is the correct
+  consequence of no longer destroying the row, not a regression; see
+  [/lib/features/home/presentation/notifiers/docs.md](../../../home/presentation/notifiers/docs.md).
+- **`/api/oc/recordings/clear-stale` is now an orphaned endpoint (ENG-404).**
+  `RecordingApiRepository.clearStaleRecordings` and its implementation were
+  deleted along with the hard-delete flow that was their only caller. The
+  route itself was not removed from the server — anyone changing the backend
+  should not assume it is dead on both sides, only that nothing in this app
+  calls it anymore.
 - **The pending-upload order is `createdAt ASC, id ASC`, and the queue is
   drained in that order (ENG-122).** Ordering by `recordedAt` (wall-clock
   recording time) is wrong for a FIFO queue: a batch import stamps many rows

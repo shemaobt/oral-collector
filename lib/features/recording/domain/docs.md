@@ -17,9 +17,9 @@ Path: @/lib/features/recording/domain
   [./server_deletion_policy.dart](server_deletion_policy.dart).
 - Holds no Flutter, Riverpod, Drift, or `http` dependencies: every file
   here imports nothing but other domain types (the edit policy depends
-  only on the auth `User` entity; `canRetryUpload` in
-  `upload_status_actions.dart` imports nothing at all,
-  `hasClearableFailedUploads` reads only `LocalRecordingEntity`;
+  only on the auth `User` entity; `canRetryUpload` and `isRetryableFailure` in
+  `upload_status_actions.dart` import nothing at all,
+  `hasRetryableFailedUploads` reads only `LocalRecordingEntity`;
   `classification.dart` imports nothing at all). This keeps the rules
   headless-testable in isolation from any row or screen. The
   classification predicates are pure id-logic — they take genre/register
@@ -213,17 +213,18 @@ Path: @/lib/features/recording/domain
   ([/lib/features/auth/domain/entities/user.dart](../../auth/domain/entities/user.dart))
   and is fed the boolean result of `RoleNotifier.canManageProject`
   ([/lib/features/auth/data/providers/role_provider.dart](../../auth/data/providers/role_provider.dart)).
-- `upload_status_actions.dart` (ENG-46) holds two independent predicates
-  gating upload-adjacent affordances: `recording_detail_screen.dart`'s
-  Retry button calls `canRetryUpload`, and `recordings_list_screen.dart`'s
-  "Clear failed" button calls `hasClearableFailedUploads`. Both started as
-  inline boolean expressions in the presentation layer and moved here in
-  two steps — extracted alongside the ENG-46 fix, then relocated from
-  `presentation/` into `domain/` as a pure follow-up refactor once it was
-  clear neither function touches Flutter, Riverpod, or Drift — following
-  the `recording_edit_policy.dart` precedent above: same shape (a pure
-  predicate consumed by exactly the screen it gates), same test placement
-  under `test/features/recording/domain/`.
+- `upload_status_actions.dart` (ENG-46) holds two predicates gating
+  upload-adjacent affordances, both built on the shared `isRetryableFailure`
+  (ENG-404): `recording_detail_screen.dart`'s Retry button calls
+  `canRetryUpload`, and `recordings_list_screen.dart`'s bulk-retry button
+  calls `hasRetryableFailedUploads`. Both started as inline boolean
+  expressions in the presentation layer and moved here in two steps —
+  extracted alongside the ENG-46 fix, then relocated from `presentation/`
+  into `domain/` as a pure follow-up refactor once it was clear neither
+  function touches Flutter, Riverpod, or Drift — following the
+  `recording_edit_policy.dart` precedent above: same shape (a pure predicate
+  consumed by exactly the screen it gates), same test placement under
+  `test/features/recording/domain/`.
 - `server_deletion_policy.dart` (ENG-45) is the single definition of which
   local row a hard delete on the server is *allowed* to erase. It is a
   necessary condition, never a sufficient one: both consumers pair it with a
@@ -243,27 +244,34 @@ Path: @/lib/features/recording/domain
   `RoleNotifier` so the policy carries no Riverpod/network dependency —
   the caller resolves the role boolean and passes it in. This is the
   seam that makes the rule unit-testable without a container.
-- `canRetryUpload(uploadStatus, retryCount)` returns true for `failed`,
-  `failed_exhausted`, and `local` with `retryCount > 0` (a row that
-  already burned at least one attempt before landing back on `local`,
-  e.g. via `resetAndRetry`). It excludes `uploading`: the upload is
-  already happening, so offering Retry there would queue a second
-  attempt on top of the one in flight and reset a budget that has not
-  actually been spent. `failed_conflict` and `failed_description` are
-  excluded too — same as before this file existed — because a bare retry
-  would just repeat the same rejected create call; those two route through
-  a rename/edit exit instead (see
-  [/lib/features/sync/docs.md](../../sync/docs.md)).
-- `hasClearableFailedUploads(recordings)` is true iff at least one entity
-  in the iterable has `uploadStatus == 'failed'`. It mirrors — deliberately,
-  by scope not by shared code — the `WHERE` clause
-  `LocalRecordingRepository.deleteStaleRecordings` uses (see
+- `isRetryableFailure(uploadStatus)` (ENG-404) is true for `failed` and
+  `failed_exhausted` — the two failures a bare retry can still move, because
+  `failed` is still inside the queue (a retry just skips the backoff wait)
+  and `failed_exhausted` only needs its budget handed back.
+  `failed_conflict`, `failed_description`, and `failed_missing_file` are
+  excluded: each would be refused the same way on the next attempt (a
+  duplicate title, a description under the minimum, or no audio file at
+  all), and each already has its own banner leading to its own fix. Both
+  `canRetryUpload` and `hasRetryableFailedUploads` below delegate to it, so
+  the two affordances cannot disagree about which statuses a retry can
+  touch.
+- `canRetryUpload(uploadStatus, retryCount)` returns true for
+  `isRetryableFailure(uploadStatus)` or `local` with `retryCount > 0` (a row
+  that already burned at least one attempt before landing back on `local`,
+  e.g. via `resetAndRetry`). It excludes `uploading`: the upload is already
+  happening, so offering Retry there would queue a second attempt on top of
+  the one in flight and reset a budget that has not actually been spent.
+- `hasRetryableFailedUploads(recordings)` is true iff at least one entity in
+  the iterable satisfies `isRetryableFailure`. It mirrors — deliberately, by
+  scope not by shared code — the `WHERE` clause
+  `LocalRecordingRepository.requeueFailedUploads` uses (see
   [../data/repositories/docs.md](../data/repositories/docs.md)), so the
-  list's "Clear failed" button only ever appears over a set the sweep
-  would actually touch. Nothing enforces the two stay in sync beyond both
-  being reviewed together; a future change to one without the other would
-  reopen the ENG-46 shape of bug (an affordance advertising a delete it
-  does not perform, or a delete reaching rows the button never showed).
+  list's bulk-retry button only ever appears over a set the write would
+  actually touch. Nothing enforces the two stay in sync beyond both being
+  reviewed together and the shared `isRetryableFailure` predicate; a future
+  change to one without the other would reopen the ENG-46 shape of bug (an
+  affordance advertising an action it does not perform, or an action
+  reaching rows the button never showed).
 - `canEraseAsDeletedOnServer({serverId, uploadStatus})` returns true only
   for a non-empty `serverId` whose `uploadStatus` is `uploaded` or
   `verified`. Any other status means the row may never have completed the
