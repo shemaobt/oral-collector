@@ -753,26 +753,22 @@ class AppLocalizationsTpi extends AppLocalizations {
   }
 
   @override
-  String get recordings_clearStale => 'Klinim ol i pundaun';
+  String get recordings_retryFailedUploads => 'Retry uploads';
 
   @override
-  String get recordings_clearStaleMessage =>
-      'Dispela bai rausim olgeta rekoding we i pundaun o i pas long salim i go antap long seva. Dispela aksen i no inap senisim bek.';
-
-  @override
-  String recordings_clearedCount(int count) {
+  String recordings_retryQueuedCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Klinim $count rekoding',
-      one: 'Klinim 1 rekoding',
-      zero: 'I no painim ol olpela rekoding',
+      other: '$count recordings back in the upload queue',
+      one: '1 recording back in the upload queue',
+      zero: 'No uploads to retry',
     );
     return '$_temp0';
   }
 
   @override
-  String get recordings_clearFailed => 'No inap klinim ol rekoding';
+  String get recordings_retryFailed => 'Could not queue the uploads again';
 
   @override
   String get trim_title => 'Stretim Rekoding';

@@ -747,26 +747,22 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get recordings_clearStale => 'مسح الفاشلة';
+  String get recordings_retryFailedUploads => 'Retry uploads';
 
   @override
-  String get recordings_clearStaleMessage =>
-      'سيؤدي هذا إلى حذف جميع التسجيلات ذات حالة الرفع الفاشلة أو المعلقة من الخادم نهائياً. لا يمكن التراجع عن هذا الإجراء.';
-
-  @override
-  String recordings_clearedCount(int count) {
+  String recordings_retryQueuedCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'تم مسح $count تسجيلات',
-      one: 'تم مسح تسجيل واحد',
-      zero: 'لم يتم العثور على تسجيلات قديمة',
+      other: '$count recordings back in the upload queue',
+      one: '1 recording back in the upload queue',
+      zero: 'No uploads to retry',
     );
     return '$_temp0';
   }
 
   @override
-  String get recordings_clearFailed => 'فشل في مسح التسجيلات';
+  String get recordings_retryFailed => 'Could not queue the uploads again';
 
   @override
   String get trim_title => 'تحرير التسجيل';

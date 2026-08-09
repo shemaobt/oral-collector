@@ -757,26 +757,22 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get recordings_clearStale => 'विफल साफ़ करें';
+  String get recordings_retryFailedUploads => 'Retry uploads';
 
   @override
-  String get recordings_clearStaleMessage =>
-      'यह सर्वर से विफल या अटकी हुई अपलोड स्थिति वाली सभी रिकॉर्डिंग्स को स्थायी रूप से हटा देगा। इसे पूर्ववत नहीं किया जा सकता।';
-
-  @override
-  String recordings_clearedCount(int count) {
+  String recordings_retryQueuedCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count रिकॉर्डिंग्स साफ़ की गईं',
-      one: '1 रिकॉर्डिंग साफ़ की गई',
-      zero: 'कोई पुरानी रिकॉर्डिंग नहीं मिली',
+      other: '$count recordings back in the upload queue',
+      one: '1 recording back in the upload queue',
+      zero: 'No uploads to retry',
     );
     return '$_temp0';
   }
 
   @override
-  String get recordings_clearFailed => 'रिकॉर्डिंग्स साफ़ करने में विफल';
+  String get recordings_retryFailed => 'Could not queue the uploads again';
 
   @override
   String get trim_title => 'रिकॉर्डिंग संपादित करें';

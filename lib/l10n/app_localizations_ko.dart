@@ -737,26 +737,22 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get recordings_clearStale => '실패 항목 삭제';
+  String get recordings_retryFailedUploads => 'Retry uploads';
 
   @override
-  String get recordings_clearStaleMessage =>
-      '서버에서 업로드 실패 또는 멈춘 상태의 모든 녹음을 영구적으로 삭제합니다. 이 작업은 취소할 수 없습니다.';
-
-  @override
-  String recordings_clearedCount(int count) {
+  String recordings_retryQueuedCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '녹음 $count개 삭제됨',
-      one: '녹음 1개 삭제됨',
-      zero: '오래된 녹음이 없습니다',
+      other: '$count recordings back in the upload queue',
+      one: '1 recording back in the upload queue',
+      zero: 'No uploads to retry',
     );
     return '$_temp0';
   }
 
   @override
-  String get recordings_clearFailed => '녹음 삭제에 실패했습니다';
+  String get recordings_retryFailed => 'Could not queue the uploads again';
 
   @override
   String get trim_title => '녹음 편집';

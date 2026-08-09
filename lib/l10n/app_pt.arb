@@ -261,17 +261,16 @@
   "recording_fileMissingMessage": "O arquivo de áudio desta gravação não está mais neste aparelho, então ela não pode ser enviada.",
   "recording_duplicateTitleTitle": "Nome já utilizado",
   "recording_duplicateTitleMessage": "Já existe um áudio chamado \"{title}\" neste projeto. Escolha outro nome.",
-  "recordings_clearStale": "Limpar falhas",
-  "recordings_clearStaleMessage": "Isto irá remover permanentemente todas as gravações com upload falhado ou travado do servidor. Esta ação não pode ser desfeita.",
-  "recordings_clearedCount": "{count, plural, =0{Nenhuma gravação encontrada} =1{1 gravação removida} other{{count} gravações removidas}}",
-  "@recordings_clearedCount": {
+  "recordings_retryFailedUploads": "Tentar de novo",
+  "recordings_retryQueuedCount": "{count, plural, =0{Nenhum envio para tentar de novo} =1{1 gravação de volta na fila de envio} other{{count} gravações de volta na fila de envio}}",
+  "@recordings_retryQueuedCount": {
     "placeholders": {
       "count": {
         "type": "int"
       }
     }
   },
-  "recordings_clearFailed": "Falha ao limpar gravações",
+  "recordings_retryFailed": "Não foi possível recolocar os envios na fila",
   "trim_title": "Editar Gravação",
   "trim_notFound": "Gravação não encontrada",
   "trim_audioUrlNotAvailable": "URL do áudio não disponível para esta gravação.",

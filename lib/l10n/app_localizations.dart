@@ -1490,29 +1490,23 @@ abstract class AppLocalizations {
   /// **'An audio named \"{title}\" already exists in this project. Choose another name.'**
   String recording_duplicateTitleMessage(String title);
 
-  /// No description provided for @recordings_clearStale.
+  /// No description provided for @recordings_retryFailedUploads.
   ///
   /// In en, this message translates to:
-  /// **'Clear failed'**
-  String get recordings_clearStale;
+  /// **'Retry uploads'**
+  String get recordings_retryFailedUploads;
 
-  /// No description provided for @recordings_clearStaleMessage.
+  /// No description provided for @recordings_retryQueuedCount.
   ///
   /// In en, this message translates to:
-  /// **'This will permanently delete all recordings with failed or stuck upload status from the server. This cannot be undone.'**
-  String get recordings_clearStaleMessage;
+  /// **'{count, plural, =0{No uploads to retry} =1{1 recording back in the upload queue} other{{count} recordings back in the upload queue}}'**
+  String recordings_retryQueuedCount(int count);
 
-  /// No description provided for @recordings_clearedCount.
+  /// No description provided for @recordings_retryFailed.
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, =0{No stale recordings found} =1{Cleared 1 recording} other{Cleared {count} recordings}}'**
-  String recordings_clearedCount(int count);
-
-  /// No description provided for @recordings_clearFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to clear recordings'**
-  String get recordings_clearFailed;
+  /// **'Could not queue the uploads again'**
+  String get recordings_retryFailed;
 
   /// No description provided for @trim_title.
   ///

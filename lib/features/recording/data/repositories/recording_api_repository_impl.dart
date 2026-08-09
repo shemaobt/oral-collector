@@ -10,7 +10,6 @@ import '../../../../core/network/error_boundary.dart' show throwForResponse;
 import '../../../../core/network/response_decoder.dart';
 import '../../../../core/observability/error_reporter.dart';
 import '../../../../core/serialization/parse_list.dart';
-import '../../../../core/serialization/safe_read.dart';
 import '../../domain/entities/review_flag.dart';
 import '../../domain/entities/server_recording.dart';
 import '../../domain/entities/split_segment_request.dart';
@@ -123,15 +122,6 @@ class RecordingApiRepositoryImpl implements RecordingApiRepository {
     } on ParseException {
       return null;
     }
-  }
-
-  @override
-  Future<int> clearStaleRecordings(String projectId) async {
-    final response = await _client.post(
-      '/api/oc/recordings/clear-stale?project_id=$projectId',
-    );
-    final data = decodeObject(response);
-    return readIntOrNull(data, 'deleted') ?? 0;
   }
 
   @override

@@ -608,17 +608,6 @@
   "recording_stop": "Detener",
   "recording_resume": "Reanudar",
   "recording_pause": "Pausar",
-  "recordings_clearStale": "Limpiar fallidos",
-  "recordings_clearStaleMessage": "Esto eliminará permanentemente todas las grabaciones con estado de subida fallido o atascado del servidor. Esta acción no se puede deshacer.",
-  "recordings_clearedCount": "{count, plural, =0{No se encontraron grabaciones obsoletas} =1{Se limpió 1 grabación} other{Se limpiaron {count} grabaciones}}",
-  "@recordings_clearedCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "recordings_clearFailed": "Error al limpiar grabaciones",
   "filter_unclassified": "Sin clasificar",
   "filter_missingDescription": "Sin descripción",
   "quickRecord_title": "Grabación Rápida",

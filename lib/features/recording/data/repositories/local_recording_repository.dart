@@ -327,14 +327,37 @@ class LocalRecordingRepository {
     return _db.delete(_db.localRecordings).go();
   }
 
-  /// Scoped to `failed` alone: `uploading` is an upload in progress, not a
-  /// failure, and this sweep is a wholesale hard delete (ENG-46).
-  Future<int> deleteStaleRecordings(String projectId) async {
-    return (_db.delete(_db.localRecordings)..where(
+  /// Hands every retryable failure in [projectId] back to the upload queue, as
+  /// one write. Returns how many rows moved.
+  ///
+  /// This replaced a hard delete (ENG-404): a failed upload is by definition
+  /// one the server never received, so the audio exists only here and deleting
+  /// it is the one thing the action must not do.
+  ///
+  /// Writes the same three columns as [resetRetryCount], and for the same
+  /// reason — the status alone would leave the row queued but refused, by the
+  /// budget filter or by the backoff window. One `UPDATE` rather than a
+  /// per-row loop through `SyncNotifier.resetAndRetry`, which drains as it
+  /// goes and would fan out N passes against a guard that admits one.
+  ///
+  /// Scoped to the two statuses a bare retry can still move. `failed_conflict`
+  /// and `failed_description` would be refused identically until the user
+  /// fixes the title or the description; `failed_missing_file` has no audio
+  /// left to send. Each has its own banner leading to its own way out.
+  Future<int> requeueFailedUploads(String projectId) async {
+    return (_db.update(_db.localRecordings)..where(
           (t) =>
-              t.projectId.equals(projectId) & t.uploadStatus.equals('failed'),
+              t.projectId.equals(projectId) &
+              (t.uploadStatus.equals('failed') |
+                  t.uploadStatus.equals('failed_exhausted')),
         ))
-        .go();
+        .write(
+          const LocalRecordingsCompanion(
+            uploadStatus: Value('local'),
+            retryCount: Value(0),
+            lastRetryAt: Value(null),
+          ),
+        );
   }
 
   Future<bool> resetRetryCount(String id) async {
@@ -354,7 +377,10 @@ class LocalRecordingRepository {
   /// Hands rows orphaned in `uploading` (the app died mid-upload) back to the
   /// queue at startup. Only [uploadStatus] is rewritten — retry budget and the
   /// resumable offset survive, so the upload resumes instead of restarting.
-  /// Target `local` (not `failed`) keeps the row clear of [deleteStaleRecordings].
+  /// Target `local` (not `failed`) because a crash mid-transfer is not a
+  /// failure: `failed` would label a resumable row as one in the list and the
+  /// detail screen, and would expose it to [requeueFailedUploads], which resets
+  /// the very budget and backoff state this method preserves.
   Future<int> resetStuckUploading() async {
     return (_db.update(_db.localRecordings)
           ..where((t) => t.uploadStatus.equals('uploading')))

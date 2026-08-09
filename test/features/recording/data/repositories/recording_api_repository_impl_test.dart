@@ -24,40 +24,6 @@ void main() {
     );
   });
 
-  void stubBody(Map<String, dynamic> body) {
-    when(
-      () => client.post(any()),
-    ).thenAnswer((_) async => http.Response(jsonEncode(body), 200));
-  }
-
-  group('clearStaleRecordings', () {
-    test(
-      'throws a catchable ParseException when "deleted" is not a num',
-      () async {
-        stubBody({'deleted': 'oops'});
-
-        await expectLater(
-          repo.clearStaleRecordings('p-1'),
-          throwsA(
-            isA<ParseException>().having((e) => e.field, 'field', 'deleted'),
-          ),
-        );
-      },
-    );
-
-    test('returns 0 when "deleted" is absent', () async {
-      stubBody({});
-
-      expect(await repo.clearStaleRecordings('p-1'), 0);
-    });
-
-    test('returns the deleted count on success', () async {
-      stubBody({'deleted': 5});
-
-      expect(await repo.clearStaleRecordings('p-1'), 5);
-    });
-  });
-
   group('splitRecording', () {
     void stubSplit(Object body, {int status = 200}) {
       when(() => client.post(any(), body: any(named: 'body'))).thenAnswer(

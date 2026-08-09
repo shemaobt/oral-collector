@@ -191,63 +191,29 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
     ref.read(syncNotifierProvider.notifier).processQueue();
   }
 
-  Future<void> _clearStaleRecordings() async {
+  /// No confirmation dialog and no online pre-check, both dropped with the
+  /// delete this replaced (ENG-404). A confirmation buys the user a chance to
+  /// back out of something irreversible; requeueing destroys nothing and is
+  /// idempotent, so the prompt would only charge a second tap and keep
+  /// signalling danger where there is none. The write is local, and useful
+  /// offline at that — the rows drain on their own once reachability returns.
+  Future<void> _retryFailedUploads() async {
     final l10n = AppLocalizations.of(context);
     final colors = AppColors.of(context);
 
-    if (!ref.read(syncNotifierProvider).isOnline) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.error_network),
-          backgroundColor: colors.error,
-        ),
-      );
-      return;
-    }
-
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.recordings_clearStale),
-        content: Text(l10n.recordings_clearStaleMessage),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(l10n.common_cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            style: TextButton.styleFrom(foregroundColor: colors.error),
-            child: Text(l10n.recordings_clearStale),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
-
     try {
-      final deleted = await ref
+      final requeued = await ref
           .read(recordingsListNotifierProvider.notifier)
-          .clearStaleRecordings();
+          .retryFailedUploads();
       if (!mounted) return;
-      if (deleted == null) {
-        // Connectivity dropped between the dialog confirm and the API call.
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.error_network),
-            backgroundColor: colors.error,
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.recordings_clearedCount(deleted))),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.recordings_retryQueuedCount(requeued))),
+      );
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(l10n.recordings_clearFailed),
+            content: Text(l10n.recordings_retryFailed),
             backgroundColor: colors.error,
           ),
         );
@@ -394,21 +360,21 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
                         const Spacer(),
                         if ((listState.selectedFilter == StatusFilter.pending ||
                                 listState.selectedFilter == StatusFilter.all) &&
-                            hasClearableFailedUploads(filtered) &&
+                            hasRetryableFailedUploads(filtered) &&
                             ref
                                 .watch(roleNotifierProvider.notifier)
                                 .canManageProject(activeProject.id))
                           TextButton.icon(
-                            onPressed: _clearStaleRecordings,
+                            onPressed: _retryFailedUploads,
                             icon: Icon(
-                              LucideIcons.trash2,
+                              LucideIcons.refreshCw,
                               size: 14,
-                              color: colors.error,
+                              color: colors.primary,
                             ),
                             label: Text(
-                              l10n.recordings_clearStale,
+                              l10n.recordings_retryFailedUploads,
                               style: TextStyle(
-                                color: colors.error,
+                                color: colors.primary,
                                 fontSize: 12,
                               ),
                             ),

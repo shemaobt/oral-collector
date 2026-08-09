@@ -608,17 +608,6 @@
   "recording_stop": "إيقاف",
   "recording_resume": "استئناف",
   "recording_pause": "إيقاف مؤقت",
-  "recordings_clearStale": "مسح الفاشلة",
-  "recordings_clearStaleMessage": "سيؤدي هذا إلى حذف جميع التسجيلات ذات حالة الرفع الفاشلة أو المعلقة من الخادم نهائياً. لا يمكن التراجع عن هذا الإجراء.",
-  "recordings_clearedCount": "{count, plural, =0{لم يتم العثور على تسجيلات قديمة} =1{تم مسح تسجيل واحد} other{تم مسح {count} تسجيلات}}",
-  "@recordings_clearedCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "recordings_clearFailed": "فشل في مسح التسجيلات",
   "filter_unclassified": "غير مصنف",
   "filter_missingDescription": "بدون وصف",
   "quickRecord_title": "تسجيل سريع",

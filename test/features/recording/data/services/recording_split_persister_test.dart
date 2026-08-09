@@ -313,10 +313,6 @@ class _FakeApiRepo implements RecordingApiRepository {
     required String serverId,
     required List<SplitSegmentRequest> segments,
   }) => throw UnimplementedError();
-
-  @override
-  Future<int> clearStaleRecordings(String projectId) =>
-      throw UnimplementedError();
 }
 
 /// Forces every delete against `local_recordings` to throw, so a test can
