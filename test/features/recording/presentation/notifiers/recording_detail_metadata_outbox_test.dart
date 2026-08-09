@@ -354,6 +354,48 @@ void main() {
 
       expect(await owed(), isEmpty);
       expect(await outboxStatus(), MetadataSyncStatus.synced);
+      // The snackbar promises the edit will go up on its own, and it does —
+      // through the upload queue, whose create call carries the genre and
+      // subcategory. Without this the message would promise a send that never
+      // happens for the one mutation that reports `savedLocallyOnly` without
+      // queuing anything.
+      final queued = await repo.getPendingUploads();
+      expect(queued.map((r) => r.id), contains(recordingId));
+      expect(queued.single.genreId, 'genre-2');
+      expect(queued.single.subcategoryId, 'sub-2');
+    });
+  });
+
+  group('the gate that decides whether the server is owed anything', () {
+    test(
+      'toggleCleaningStatus keys off the server id, not the status',
+      () async {
+        // The other four mutations gate on `serverId`. This one gated on
+        // uploadStatus, which agreed only because markAsUploaded writes both in
+        // one statement. A row that has an id but is not uploaded yet skips the
+        // create on retry, so a locally-written cleaning status would never
+        // reach the server at all — it has to go through the outbox.
+        final recording = await seed(serverId: 'srv-1', uploadStatus: 'failed');
+        final c = makeContainer();
+
+        final result = await notifierOf(c).toggleCleaningStatus(recording);
+
+        expect(result, RecordingMutationResult.savedLocallyOnly);
+        expect(await owed(), {PendingMetadataField.cleaningStatus});
+        expect(await outboxStatus(), MetadataSyncStatus.pending);
+      },
+    );
+
+    test('and still leaves a server-less recording alone', () async {
+      final recording = await seed(serverId: null, uploadStatus: 'local');
+      final api = _FakeApiRepo();
+      final c = makeContainer(isOnline: true, api: api);
+
+      final result = await notifierOf(c).toggleCleaningStatus(recording);
+
+      expect(result, RecordingMutationResult.success);
+      expect(api.updateCalls, 0);
+      expect(await owed(), isEmpty);
     });
   });
 }

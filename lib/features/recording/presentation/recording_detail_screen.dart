@@ -166,9 +166,18 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     }
   }
 
-  /// The edit is on this device and nothing re-sends it: an already-uploaded
-  /// recording never re-enters the upload queue, so saying "will sync" would be
-  /// a lie (ENG-399).
+  /// The edit is on this device and the metadata outbox will resend it on
+  /// reconnect (ENG-403), so the message says to expect that. Under ENG-399 it
+  /// asked the user to redo the edit online, which is now wasted work: every
+  /// mutation that reports `savedLocallyOnly` has a server copy to owe, and
+  /// marks the fields it touched as pending in the same breath.
+  ///
+  /// The one mutation that can report it without queuing is `moveCategory` on a
+  /// recording the server has never seen — it asks the server without checking
+  /// for a `serverId` first. The promise still holds there: that recording is
+  /// in the upload queue, and its genre and subcategory ride along on the
+  /// create call. (Reporting it as pending at all is an ENG-399 quirk, not a
+  /// lost edit.)
   void _showSavedOnDeviceOnly() {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(

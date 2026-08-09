@@ -589,7 +589,8 @@ class SyncEngineImpl implements SyncEngine {
     }
   }
 
-  /// Sends one row's owed fields. Returns true when the whole pass must stop.
+  /// Sends one row's owed fields. Returns true when the metadata queue must
+  /// give up for this pass; the rest of [processQueue] carries on regardless.
   Future<bool> _pushPendingMetadata(LocalRecording row) async {
     final fields = decodePendingMetadataFields(row.pendingMetadataJson);
     if (fields.isEmpty) {
@@ -613,7 +614,11 @@ class SyncEngineImpl implements SyncEngine {
         await _recordingRepo.markMetadataSyncFailed(row.id);
         return false;
       }
-      await _recordingRepo.clearPendingMetadataFields(row.id, fields);
+      // Compare-and-clear against the row the request was built from: an edit
+      // that landed while the PATCH was in flight must stay owed, or the server
+      // keeps the older value and the device the newer one with nothing left to
+      // reconcile them.
+      await _recordingRepo.clearPushedMetadataFields(row.id, fields, row);
       final flags = outcome.reviewFlags;
       if (flags != null) {
         await _recordingRepo.updateReviewFlags(row.id, flags);
@@ -638,10 +643,14 @@ class SyncEngineImpl implements SyncEngine {
       );
     } on UnauthorizedException catch (e) {
       // The session, not the edit. The token can still refresh, and every other
-      // row in this pass would hit the same wall — so stop the pass and charge
-      // the edit nothing. Spending a retry here would burn the budget of an
-      // edit that was never refused.
-      _log.info('metadata sync paused, session not accepted', e);
+      // row in this queue would hit the same wall — so give up on the metadata
+      // queue for this pass and charge the edit nothing. Spending a retry here
+      // would burn the budget of an edit that was never refused.
+      //
+      // It ends this queue only. `processQueue` carries on to the Wi-Fi gate,
+      // the storyteller drain and the uploads, which meet the same 401 and do
+      // spend their own retries — that is their existing policy, untouched.
+      _log.info('metadata queue paused, session not accepted', e);
       return true;
     } on AppException catch (e, st) {
       if (e.retryable) {

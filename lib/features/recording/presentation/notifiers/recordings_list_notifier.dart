@@ -364,8 +364,15 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
   /// Only what the server acknowledged is a candidate at all
   /// ([canEraseAsDeletedOnServer]), and since ENG-399 that gate no longer means
   /// the row is a redundant copy: a metadata edit made offline lives in the
-  /// local row and nothing re-sends it, so a false positive costs the user's
-  /// edits outright and not just a cached copy of the audio.
+  /// local row, and until the outbox drains it (ENG-403) this device holds the
+  /// only copy of it — so a false positive costs the user's edits outright and
+  /// not just a cached copy of the audio. The outbox narrowed that window; it
+  /// did not close it, because the edit is owed for exactly as long as the
+  /// device cannot reach the server, which is when a sweep is least reliable.
+  ///
+  /// When the deletion is real the pendency goes with the row, which is
+  /// correct: the recording it described no longer exists, so there is nothing
+  /// left to update.
   Future<Set<String>> _eraseDeletedOnServer(
     List<LocalRecordingEntity> candidates, {
     required int gen,

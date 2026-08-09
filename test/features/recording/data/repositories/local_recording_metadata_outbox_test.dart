@@ -161,6 +161,54 @@ void main() {
       },
     );
 
+    test('leaves a terminal verdict alone when fields remain', () async {
+      // A clear is not a new intent. Rewriting `pending` here erases the reason
+      // the row was retired and puts it back in the queue with a spent budget —
+      // retired again on its first failure. Only markMetadataPending revives a
+      // row, and it says so: with a fresh budget.
+      await seed();
+      await repo.markMetadataPending('rec-1', {
+        PendingMetadataField.title,
+        PendingMetadataField.cleaningStatus,
+      });
+      await repo.markMetadataSyncTerminal(
+        'rec-1',
+        status: MetadataSyncStatus.failedForbidden,
+      );
+
+      await repo.clearPendingMetadataFields('rec-1', {
+        PendingMetadataField.cleaningStatus,
+      });
+
+      final row = (await repo.getRecordingById('rec-1'))!;
+      expect(row.metadataSyncStatus, MetadataSyncStatus.failedForbidden);
+      expect(row.metadataRetryCount, kMaxUploadRetries);
+      expect(decodePendingMetadataFields(row.pendingMetadataJson), {
+        PendingMetadataField.title,
+      });
+      expect(await repo.getPendingMetadataSyncs(), isEmpty);
+    });
+
+    test('releases a terminal row once nothing is owed', () async {
+      // Nothing outstanding means no verdict left to keep, so the row goes back
+      // to a clean slate rather than wearing a refusal about an empty set.
+      await seed();
+      await repo.markMetadataPending('rec-1', {PendingMetadataField.title});
+      await repo.markMetadataSyncTerminal(
+        'rec-1',
+        status: MetadataSyncStatus.failedForbidden,
+      );
+
+      await repo.clearPendingMetadataFields('rec-1', {
+        PendingMetadataField.title,
+      });
+
+      final row = (await repo.getRecordingById('rec-1'))!;
+      expect(row.metadataSyncStatus, MetadataSyncStatus.synced);
+      expect(row.metadataRetryCount, 0);
+      expect(row.metadataLastRetryAt, isNull);
+    });
+
     test('keeps the row queued while something is still owed', () async {
       await seed();
       await repo.markMetadataPending('rec-1', {

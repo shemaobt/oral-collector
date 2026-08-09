@@ -488,7 +488,8 @@ Path: @/lib/features/recording/presentation
   (409) — is unreachable: the edit is mirrored to the local row anyway and
   the method returns `RecordingMutationResult.savedLocallyOnly`, and the
   screen shows a warning snackbar (`recording_savedOnDeviceOnly`) telling the
-  user the change stopped at this device. Web has no local row, so an
+  user the change is on this device and will be sent when the connection
+  returns. Web has no local row, so an
   unreachable server there is treated the same as a refusal (`_pushMetadata`
   maps any thrown exception to `rejected` under `kIsWeb`), not a
   `savedLocallyOnly`.
@@ -505,8 +506,14 @@ Path: @/lib/features/recording/presentation
   reading the current value back off the row rather than replaying a stored
   payload — see [/lib/features/sync/docs.md](../../sync/docs.md) for the
   drain and its error taxonomy. The `recording_savedOnDeviceOnly` snackbar
-  still tells the user the change stopped at this device, because from the
-  user's perspective nothing else changed yet: no affordance shows the
+  was rewritten to match (ENG-403): it said the change stopped at this device
+  and asked the user to **redo it online**, which is now wasted work, and says
+  instead that it will be sent on its own when the connection comes back. Only
+  `app_en.arb` and `app_pt.arb` were edited; the other nine locales never had
+  a translation of their own for this key and inline the English source, so
+  `gen-l10n` carried the new wording into all of them — none is left holding
+  the ENG-399 redo instruction. No
+  affordance shows the pending state itself yet: no affordance shows the
   pending state today (`LocalRecordingEntity.hasPendingMetadata`/
   `pendingMetadataFields` exist for that, but nothing reads them yet — a
   future consumer is tracked as ENG-405; see

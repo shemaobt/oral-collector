@@ -235,6 +235,80 @@ void main() {
     });
   });
 
+  group('an edit made while the write is in flight', () {
+    /// Renames the row mid-request, the way the user does when the drain fires
+    /// on reconnect and they are still editing on a shaky link.
+    (MockClient, _PatchLog) racingClient(String newTitle) {
+      final log = _PatchLog();
+      return (
+        MockClient((request) async {
+          log.paths.add(request.url.path);
+          log.bodies.add(jsonDecode(request.body) as Map<String, dynamic>);
+          await repo.updateRecording(
+            'rec-1',
+            LocalRecordingsCompanion(title: Value(newTitle)),
+          );
+          await repo.markMetadataPending('rec-1', {PendingMetadataField.title});
+          return http.Response('{}', 200);
+        }),
+        log,
+      );
+    }
+
+    test('stays owed, because the server has the older value', () async {
+      // Clearing what was *sent* rather than what is still *unchanged* strands
+      // the two apart with nothing left to reconcile them: the server keeps
+      // 'Old', the device shows 'Newer', and the row says it owes nothing.
+      await seedVerified(title: 'Old');
+      await repo.markMetadataPending('rec-1', {PendingMetadataField.title});
+
+      final (client, log) = racingClient('Newer');
+      await buildEngine(client).processQueue();
+
+      expect(log.only['title'], 'Old');
+      final r = await row();
+      expect(r.title, 'Newer');
+      expect(decodePendingMetadataFields(r.pendingMetadataJson), {
+        PendingMetadataField.title,
+      });
+      expect(r.metadataSyncStatus, MetadataSyncStatus.pending);
+      client.close();
+    });
+
+    test('goes up on the next pass, at its newer value', () async {
+      await seedVerified(title: 'Old');
+      await repo.markMetadataPending('rec-1', {PendingMetadataField.title});
+      final (racing, _) = racingClient('Newer');
+      await buildEngine(racing).processQueue();
+      racing.close();
+
+      final (client, log) = patchClient();
+      await buildEngine(client).processQueue();
+
+      expect(log.only['title'], 'Newer');
+      expect((await row()).metadataSyncStatus, MetadataSyncStatus.synced);
+      client.close();
+    });
+
+    test('a field nobody touched mid-flight is still settled', () async {
+      // The compare is per field: a racing rename must not keep an unrelated
+      // cleaning edit owed and re-sent forever.
+      await seedVerified(title: 'Old', cleaningStatus: 'needs_cleaning');
+      await repo.markMetadataPending('rec-1', {
+        PendingMetadataField.title,
+        PendingMetadataField.cleaningStatus,
+      });
+
+      final (client, _) = racingClient('Newer');
+      await buildEngine(client).processQueue();
+
+      expect(decodePendingMetadataFields((await row()).pendingMetadataJson), {
+        PendingMetadataField.title,
+      });
+      client.close();
+    });
+  });
+
   group('what ends the attempt for good', () {
     test('a permission refusal is terminal', () async {
       await seedVerified();
@@ -300,6 +374,49 @@ void main() {
       expect(decodePendingMetadataFields((await row()).pendingMetadataJson), {
         PendingMetadataField.title,
       });
+      client.close();
+    });
+  });
+
+  group('when the recording is gone from the server', () {
+    test('the pendency dies with the row, which is right', () async {
+      // The ENG-400 sweep hard-deletes a row whose absence a 404 confirmed. The
+      // outbox lives in that row's columns, so it goes too — correctly: there
+      // is no recording left to update.
+      await seedVerified();
+      await repo.markMetadataPending('rec-1', {PendingMetadataField.title});
+
+      await repo.deleteRecording('rec-1');
+
+      expect(await repo.getPendingMetadataSyncs(), isEmpty);
+    });
+
+    test('a 404 retires the row instead of retrying forever', () async {
+      // If the sweep has not run yet, the drain PATCHes a recording the server
+      // no longer has. `updateRecording` reports 404 as a plain unsuccessful
+      // write, indistinguishable from a 500, so it spends the budget rather
+      // than being read as terminal — bounded, not a leak. See the report: a
+      // dedicated terminal read would need the status code on
+      // `UpdateRecordingOutcome`, which every caller constructs.
+      await seedVerified();
+      await repo.markMetadataPending('rec-1', {PendingMetadataField.title});
+
+      final (client, log) = patchClient(status: 404);
+      final engine = buildEngine(client);
+      for (var i = 0; i < kMaxUploadRetries + 2; i++) {
+        await repo.updateRecording(
+          'rec-1',
+          const LocalRecordingsCompanion(metadataLastRetryAt: Value(null)),
+        );
+        await engine.processQueue();
+      }
+
+      expect(log.count, kMaxUploadRetries);
+      expect(
+        (await row()).metadataSyncStatus,
+        MetadataSyncStatus.failedExhausted,
+      );
+      expect(await repo.getPendingMetadataSyncs(), isEmpty);
       client.close();
     });
   });

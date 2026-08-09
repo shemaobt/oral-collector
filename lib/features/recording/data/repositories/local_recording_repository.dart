@@ -422,26 +422,98 @@ class LocalRecordingRepository {
     await _db.transaction(() async {
       final row = await getRecordingById(id);
       if (row == null) return;
-      final remaining = decodePendingMetadataFields(row.pendingMetadataJson)
-        ..removeAll(fields);
-      await updateRecording(
-        id,
-        LocalRecordingsCompanion(
-          pendingMetadataJson: Value(encodePendingMetadataFields(remaining)),
-          metadataSyncStatus: Value(
-            remaining.isEmpty
-                ? MetadataSyncStatus.synced
-                : MetadataSyncStatus.pending,
-          ),
-          metadataRetryCount: remaining.isEmpty
-              ? const Value(0)
-              : const Value.absent(),
-          metadataLastRetryAt: remaining.isEmpty
-              ? const Value(null)
-              : const Value.absent(),
-        ),
+      await _writeRemainingPending(
+        row,
+        decodePendingMetadataFields(row.pendingMetadataJson)..removeAll(fields),
       );
     });
+  }
+
+  /// Compare-and-clear, for the drain: settles only the [fields] whose value on
+  /// the row is still the one that went to the wire.
+  ///
+  /// [sent] is the row the request was built from. An edit landing while the
+  /// PATCH is in flight leaves the server holding the older value and the
+  /// device showing the newer one, so clearing what was *sent* rather than what
+  /// is still *unchanged* would strand the two apart with nothing left to
+  /// reconcile them — the same silent divergence the outbox exists to end, in a
+  /// narrower window. The window is the bad one: the drain fires on reconnect,
+  /// which is exactly when the link is poor and the user is still editing.
+  ///
+  /// The comparison is per field, so a racing rename does not keep an unrelated
+  /// cleaning edit owed. It re-reads inside the transaction that does the write,
+  /// so the comparison cannot itself go stale.
+  Future<void> clearPushedMetadataFields(
+    String id,
+    Set<PendingMetadataField> fields,
+    LocalRecording sent,
+  ) async {
+    await _db.transaction(() async {
+      final row = await getRecordingById(id);
+      if (row == null) return;
+      final settled = fields
+          .where((f) => _pendingValueOf(row, f) == _pendingValueOf(sent, f))
+          .toSet();
+      await _writeRemainingPending(
+        row,
+        decodePendingMetadataFields(row.pendingMetadataJson)
+          ..removeAll(settled),
+      );
+    });
+  }
+
+  /// The value the outbox would send for [field], used to tell an edit that
+  /// landed mid-flight from one that did not. The secondary triple compares as
+  /// a record because the three columns are owed, sent and cleared together.
+  static Object? _pendingValueOf(
+    LocalRecording row,
+    PendingMetadataField field,
+  ) => switch (field) {
+    PendingMetadataField.title => row.title,
+    PendingMetadataField.description => row.description,
+    PendingMetadataField.genre => row.genreId,
+    PendingMetadataField.subcategory => row.subcategoryId,
+    PendingMetadataField.register => row.registerId,
+    PendingMetadataField.secondary => (
+      row.secondaryGenreId,
+      row.secondarySubcategoryId,
+      row.secondaryRegisterId,
+    ),
+    PendingMetadataField.cleaningStatus => row.cleaningStatus,
+  };
+
+  /// Writes what is left owed after a clear.
+  ///
+  /// A clear is not a new intent, so it never lifts a terminal verdict: a row
+  /// retired under `failed_forbidden` that has one of its *other* fields
+  /// settled stays retired, with its reason and its spent budget intact.
+  /// Rewriting `pending` here would erase the reason and put the row back in
+  /// the queue with nothing left to spend — retired again on its first failure.
+  /// Only [markMetadataPending] revives a row, and it says so: with a fresh
+  /// budget. Leaving the status absent is what expresses that, since the row is
+  /// either already `pending` (stays) or terminal (stays).
+  ///
+  /// Nothing owed is the one case that does reset: there is no verdict left to
+  /// keep about an empty set.
+  Future<void> _writeRemainingPending(
+    LocalRecording row,
+    Set<PendingMetadataField> remaining,
+  ) async {
+    await updateRecording(
+      row.id,
+      LocalRecordingsCompanion(
+        pendingMetadataJson: Value(encodePendingMetadataFields(remaining)),
+        metadataSyncStatus: remaining.isEmpty
+            ? const Value(MetadataSyncStatus.synced)
+            : const Value.absent(),
+        metadataRetryCount: remaining.isEmpty
+            ? const Value(0)
+            : const Value.absent(),
+        metadataLastRetryAt: remaining.isEmpty
+            ? const Value(null)
+            : const Value.absent(),
+      ),
+    );
   }
 
   /// Rows the server is owed a metadata write for, oldest first.
@@ -495,11 +567,11 @@ class LocalRecordingRepository {
   /// Parks the row outside the metadata queue under [status], for a refusal
   /// that was never about the budget. Spends the budget to match, so nothing
   /// downstream reads a retired row as having attempts left.
-  Future<bool> markMetadataSyncTerminal(
+  Future<void> markMetadataSyncTerminal(
     String id, {
     required String status,
   }) async {
-    return updateRecording(
+    await updateRecording(
       id,
       LocalRecordingsCompanion(
         metadataSyncStatus: Value(status),

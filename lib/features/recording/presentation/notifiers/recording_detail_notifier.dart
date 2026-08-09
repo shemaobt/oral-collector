@@ -491,13 +491,20 @@ class RecordingDetailNotifier
         ? 'needs_cleaning'
         : 'none';
 
-    final serverKnown = const {
-      'uploaded',
-      'verified',
-    }.contains(recording.uploadStatus);
+    // `serverId`, not `uploadStatus` — the same gate the other four mutations
+    // use. The two agreed only because `markAsUploaded` writes the status and
+    // the id in one statement, an undocumented invariant the outbox would have
+    // made load-bearing: were it ever to break, this would mark a pendency that
+    // `getPendingMetadataSyncs` (which requires a `serverId`) never selects,
+    // and the row would read as pending forever. It also closes a gap of its
+    // own — a row that has a `serverId` but is not yet `uploaded` skips the
+    // create on retry, so a cleaning status written only locally would never
+    // reach the server at all.
+    final hasServerId =
+        recording.serverId != null && recording.serverId!.isNotEmpty;
 
     var localOnly = false;
-    if (kIsWeb || serverKnown) {
+    if (kIsWeb || hasServerId) {
       final write = await _pushMetadata(
         recording.serverId ?? recording.id,
         UpdateRecordingRequest(cleaningStatus: newStatus),
@@ -514,7 +521,7 @@ class RecordingDetailNotifier
     if (!kIsWeb) {
       await _localRepo.updateCleaningStatus(arg, newStatus);
       if (_disposed) return saved;
-      if (serverKnown) {
+      if (hasServerId) {
         await _settleOutbox(arg, const {
           PendingMetadataField.cleaningStatus,
         }, owed: localOnly);

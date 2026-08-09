@@ -1202,10 +1202,10 @@ abstract class AppLocalizations {
   /// **'Failed to update cleaning status on server'**
   String get recording_cleaningStatusFailed;
 
-  /// Snackbar after a metadata edit the server could not be told about (offline or unreachable). The edit is kept locally, but nothing re-sends it, so the user is asked to redo it online (ENG-399).
+  /// Snackbar after a metadata edit the server could not be told about (offline or unreachable). The edit is kept locally and the metadata outbox resends it on reconnect, so the user is told to expect that rather than to redo it (ENG-403, replacing the redo instruction from ENG-399).
   ///
   /// In en, this message translates to:
-  /// **'Saved on this device only — the server did not get this change. Reconnect and make it again to update the server.'**
+  /// **'Saved on this device — the server has not got this change yet. It will be sent on its own when the connection comes back.'**
   String get recording_savedOnDeviceOnly;
 
   /// No description provided for @recording_updateNoPermission.

@@ -583,7 +583,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get recording_savedOnDeviceOnly =>
-      'Salvo apenas neste dispositivo — o servidor não recebeu esta alteração. Reconecte e faça a alteração novamente para atualizar o servidor.';
+      'Salvo neste dispositivo — o servidor ainda não recebeu esta alteração. Ela será enviada sozinha quando a conexão voltar.';
 
   @override
   String get recording_updateNoPermission =>
