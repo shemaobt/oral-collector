@@ -124,13 +124,18 @@ class SyncEngineImpl implements SyncEngine {
       final online = await _connectivity.isOnline;
       if (!online) return;
 
+      // Above the Wi-Fi gate on purpose (ENG-403): that preference exists to
+      // keep megabytes of audio off a metered connection, and a metadata PATCH
+      // is a few hundred bytes. The product rule is that an edit goes up when
+      // the connection returns, not when Wi-Fi does.
+      await _processPendingMetadata();
+
       if (wifiOnly) {
         final onWifi = await _connectivity.isOnWifi;
         if (!onWifi) return;
       }
 
       await _processPendingStorytellers();
-      await _processPendingMetadata();
 
       final pending = await _recordingRepo.getPendingUploads();
 
@@ -545,7 +550,22 @@ class SyncEngineImpl implements SyncEngine {
     }
   }
 
-  /// Third queue of the pass (ENG-403): metadata edits made while the server
+  @override
+  Future<void> processPendingMetadata() async {
+    // Takes the same bail-if-busy guard as [processQueue], which already drains
+    // this queue: whichever runs first wins, so the two can never both be
+    // pushing the same row.
+    if (_isProcessing) return;
+    _isProcessing = true;
+    try {
+      if (!await _connectivity.isOnline) return;
+      await _processPendingMetadata();
+    } finally {
+      _isProcessing = false;
+    }
+  }
+
+  /// First queue of the pass (ENG-403): metadata edits made while the server
   /// was out of reach.
   ///
   /// Same shape as [_processPendingStorytellers] on purpose — selection by

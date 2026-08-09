@@ -356,6 +356,40 @@ void main() {
       client.close();
     });
 
+    test('Wi-Fi-only does not hold the edit back', () async {
+      // The preference exists to keep megabytes of audio off a metered
+      // connection; a metadata PATCH is a few hundred bytes. The product
+      // decision is "the edit goes up when the connection returns", not "when
+      // Wi-Fi returns" — so the edit goes and the audio waits.
+      await seedVerified();
+      await repo.markMetadataPending('rec-1', {PendingMetadataField.title});
+      await repo.insertRecording(
+        LocalRecordingsCompanion(
+          id: const Value('rec-audio'),
+          projectId: const Value('proj'),
+          genreId: const Value('genre-1'),
+          localFilePath: const Value('/audio/rec-audio.m4a'),
+          durationSeconds: const Value(30),
+          fileSizeBytes: const Value(1000),
+          uploadStatus: const Value('local'),
+          recordedAt: Value(DateTime.utc(2026, 5, 1)),
+        ),
+      );
+      when(() => connectivity.isOnWifi).thenAnswer((_) async => false);
+
+      final (client, log) = patchClient();
+      await buildEngine(client).processQueue(wifiOnly: true);
+
+      expect(log.count, 1, reason: 'the edit is not what the gate protects');
+      expect((await row()).metadataSyncStatus, MetadataSyncStatus.synced);
+      // Untouched: had the upload drain run, this row would have left `local`
+      // (its audio file does not exist).
+      final audio = await row('rec-audio');
+      expect(audio.uploadStatus, 'local');
+      expect(audio.retryCount, 0);
+      client.close();
+    });
+
     test('an offline pass sends nothing and keeps the edit owed', () async {
       await seedVerified();
       await repo.markMetadataPending('rec-1', {PendingMetadataField.title});
