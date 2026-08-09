@@ -4,6 +4,7 @@ import '../../../../core/config/upload_retry_policy.dart';
 import '../../../../core/database/app_database.dart';
 import '../../domain/entities/classification.dart';
 import '../../domain/entities/local_recording_entity.dart';
+import '../../domain/entities/pending_metadata_field.dart';
 import '../../domain/entities/review_flag.dart';
 import '../local_recording_entity_to_companion.dart';
 import '../local_recording_to_entity.dart';
@@ -370,6 +371,140 @@ class LocalRecordingRepository {
       id,
       LocalRecordingsCompanion(
         reviewFlagsJson: Value(encodeReviewFlags(flags)),
+      ),
+    );
+  }
+
+  // Metadata outbox (ENG-403). An edit made while the server was unreachable is
+  // already on the local row; these remember that the server is still owed it.
+  // The stored set names fields, never values — the drain reads the values back
+  // off the row, so successive edits collapse into one write.
+
+  /// Records that [fields] were edited on this device with the server out of
+  /// reach.
+  ///
+  /// Unions with whatever is already owed, and hands the row a fresh budget: a
+  /// new edit is a new intent, so it must also lift a terminal status. That is
+  /// the exit from a title clash — the rename is what makes the row drainable
+  /// again, exactly as `resetRetryCount` is for `failed_conflict` uploads.
+  ///
+  /// Read-modify-write in one transaction so two mutations racing on the same
+  /// recording cannot drop one another's field.
+  Future<void> markMetadataPending(
+    String id,
+    Set<PendingMetadataField> fields,
+  ) async {
+    if (fields.isEmpty) return;
+    await _db.transaction(() async {
+      final row = await getRecordingById(id);
+      if (row == null) return;
+      final merged = decodePendingMetadataFields(row.pendingMetadataJson)
+        ..addAll(fields);
+      await updateRecording(
+        id,
+        LocalRecordingsCompanion(
+          pendingMetadataJson: Value(encodePendingMetadataFields(merged)),
+          metadataSyncStatus: const Value(MetadataSyncStatus.pending),
+          metadataRetryCount: const Value(0),
+          metadataLastRetryAt: const Value(null),
+        ),
+      );
+    });
+  }
+
+  /// Drops [fields] from what the row owes — the server just took them. Leaves
+  /// the row queued when something else is still outstanding, so a partial push
+  /// never looks complete.
+  Future<void> clearPendingMetadataFields(
+    String id,
+    Set<PendingMetadataField> fields,
+  ) async {
+    await _db.transaction(() async {
+      final row = await getRecordingById(id);
+      if (row == null) return;
+      final remaining = decodePendingMetadataFields(row.pendingMetadataJson)
+        ..removeAll(fields);
+      await updateRecording(
+        id,
+        LocalRecordingsCompanion(
+          pendingMetadataJson: Value(encodePendingMetadataFields(remaining)),
+          metadataSyncStatus: Value(
+            remaining.isEmpty
+                ? MetadataSyncStatus.synced
+                : MetadataSyncStatus.pending,
+          ),
+          metadataRetryCount: remaining.isEmpty
+              ? const Value(0)
+              : const Value.absent(),
+          metadataLastRetryAt: remaining.isEmpty
+              ? const Value(null)
+              : const Value.absent(),
+        ),
+      );
+    });
+  }
+
+  /// Rows the server is owed a metadata write for, oldest first.
+  ///
+  /// The `serverId` clause is the correctness condition, not a defence: without
+  /// one there is nothing to PATCH, because the recording's metadata rides along
+  /// on the upload's create call instead. Ordering matches
+  /// [getPendingUploads] — `createdAt` is enqueue time, `id` the tiebreaker.
+  Future<List<LocalRecording>> getPendingMetadataSyncs() async {
+    return (_db.select(_db.localRecordings)
+          ..where(
+            (t) =>
+                t.metadataSyncStatus.equals(MetadataSyncStatus.pending) &
+                t.serverId.isNotNull() &
+                t.serverId.equals('').not(),
+          )
+          ..orderBy([
+            (t) => OrderingTerm.asc(t.createdAt),
+            (t) => OrderingTerm.asc(t.id),
+          ]))
+        .get();
+  }
+
+  /// Spends one metadata retry, and retires the row when that was the last one.
+  ///
+  /// The ceiling is decided here for the same reason [markAsFailed] decides the
+  /// upload's: this is where the count is read, so the invariant holds whatever
+  /// threw and wherever. The owed fields are deliberately kept on a retired row
+  /// — the user still typed that edit, and the row is what the screen reads to
+  /// say what is stuck.
+  Future<void> markMetadataSyncFailed(String id) async {
+    await _db.transaction(() async {
+      final row = await getRecordingById(id);
+      if (row == null) return;
+      final spent = row.metadataRetryCount + 1;
+      await updateRecording(
+        id,
+        LocalRecordingsCompanion(
+          metadataSyncStatus: Value(
+            spent >= kMaxUploadRetries
+                ? MetadataSyncStatus.failedExhausted
+                : MetadataSyncStatus.pending,
+          ),
+          metadataRetryCount: Value(spent),
+          metadataLastRetryAt: Value(DateTime.now()),
+        ),
+      );
+    });
+  }
+
+  /// Parks the row outside the metadata queue under [status], for a refusal
+  /// that was never about the budget. Spends the budget to match, so nothing
+  /// downstream reads a retired row as having attempts left.
+  Future<bool> markMetadataSyncTerminal(
+    String id, {
+    required String status,
+  }) async {
+    return updateRecording(
+      id,
+      LocalRecordingsCompanion(
+        metadataSyncStatus: Value(status),
+        metadataRetryCount: const Value(kMaxUploadRetries),
+        metadataLastRetryAt: Value(DateTime.now()),
       ),
     );
   }

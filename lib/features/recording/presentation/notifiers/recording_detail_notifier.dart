@@ -25,6 +25,7 @@ import '../../data/services/recording_file_importer.dart';
 import '../../data/use_cases/save_recording_description.dart';
 import '../../data/use_cases/save_recording_title.dart';
 import '../../domain/entities/local_recording_entity.dart';
+import '../../domain/entities/pending_metadata_field.dart';
 import '../../domain/entities/review_flag.dart';
 import '../../domain/entities/update_recording_request.dart';
 import '../../domain/repositories/recording_api_repository.dart';
@@ -348,6 +349,14 @@ class RecordingDetailNotifier
         if (_disposed) return saved();
         if (titleResult == SaveTitleResult.saved ||
             titleResult == SaveTitleResult.savedLocallyOnly) {
+          // The use-case reports `saved` both for a write the server took and
+          // for one that never needed it (no server copy). Settling either way
+          // is right: the second is a no-op on a row that owes nothing, and it
+          // is what clears a title owed from an earlier offline rename.
+          await _settleOutbox(arg, const {
+            PendingMetadataField.title,
+          }, owed: localOnly);
+          if (_disposed) return saved();
           ref
               .read(recordingsListNotifierProvider.notifier)
               .patchRecordingTitle(arg, title);
@@ -382,9 +391,13 @@ class RecordingDetailNotifier
           apiRepo: _apiRepo,
           localRepo: localRepo,
         );
-        localOnly =
-            localOnly ||
+        final descriptionLocalOnly =
             descriptionResult == SaveDescriptionResult.savedLocallyOnly;
+        localOnly = localOnly || descriptionLocalOnly;
+        if (_disposed) return saved();
+        await _settleOutbox(arg, const {
+          PendingMetadataField.description,
+        }, owed: descriptionLocalOnly);
         if (_disposed) return saved();
       } on ForbiddenException {
         return RecordingMutationResult.forbidden;
@@ -438,6 +451,31 @@ class RecordingDetailNotifier
     }
   }
 
+  /// Records that the server is still owed [fields], or drops them once it has
+  /// taken them (ENG-403).
+  ///
+  /// Only the *names* are stored. The local row already holds the edited value
+  /// — every caller below writes it there first — so the drain reads the value
+  /// back off the row when it finally reaches the server. That is what makes
+  /// two offline edits to one field collapse into a single write instead of a
+  /// replay, and what keeps a field this device never touched out of the PATCH.
+  ///
+  /// Callers must only reach here when the recording actually has a server copy
+  /// to owe; without one the metadata rides along on the upload's create call
+  /// and a pendency would never be drainable.
+  Future<void> _settleOutbox(
+    String id,
+    Set<PendingMetadataField> fields, {
+    required bool owed,
+  }) async {
+    if (kIsWeb || _disposed) return;
+    if (owed) {
+      await _localRepo.markMetadataPending(id, fields);
+    } else {
+      await _localRepo.clearPendingMetadataFields(id, fields);
+    }
+  }
+
   /// Maps a server refusal to the result the widget reports, or null when the
   /// caller should carry on and write the local row.
   RecordingMutationResult? _refusal(_ServerWrite status) => switch (status) {
@@ -453,9 +491,13 @@ class RecordingDetailNotifier
         ? 'needs_cleaning'
         : 'none';
 
+    final serverKnown = const {
+      'uploaded',
+      'verified',
+    }.contains(recording.uploadStatus);
+
     var localOnly = false;
-    if (kIsWeb ||
-        const {'uploaded', 'verified'}.contains(recording.uploadStatus)) {
+    if (kIsWeb || serverKnown) {
       final write = await _pushMetadata(
         recording.serverId ?? recording.id,
         UpdateRecordingRequest(cleaningStatus: newStatus),
@@ -472,6 +514,12 @@ class RecordingDetailNotifier
     if (!kIsWeb) {
       await _localRepo.updateCleaningStatus(arg, newStatus);
       if (_disposed) return saved;
+      if (serverKnown) {
+        await _settleOutbox(arg, const {
+          PendingMetadataField.cleaningStatus,
+        }, owed: localOnly);
+        if (_disposed) return saved;
+      }
     }
     await load();
     return saved;
@@ -497,7 +545,8 @@ class RecordingDetailNotifier
     if (_disposed) return RecordingMutationResult.success;
 
     final serverFlags = write.reviewFlags;
-    final saved = write.status == _ServerWrite.unreachable
+    final localOnly = write.status == _ServerWrite.unreachable;
+    final saved = localOnly
         ? RecordingMutationResult.savedLocallyOnly
         : RecordingMutationResult.success;
 
@@ -514,6 +563,17 @@ class RecordingDetailNotifier
       if (_disposed) return saved;
       await _storeReviewFlags(recording.id, serverFlags);
       if (_disposed) return saved;
+      // Unlike the other mutations this one pushes without checking for a
+      // server copy, so the "unreachable" it reports for a recording the server
+      // never had is not something the drain could ever settle.
+      if (recording.serverId != null && recording.serverId!.isNotEmpty) {
+        await _settleOutbox(recording.id, const {
+          PendingMetadataField.genre,
+          PendingMetadataField.subcategory,
+          PendingMetadataField.secondary,
+        }, owed: localOnly);
+        if (_disposed) return saved;
+      }
     }
 
     if (ref.read(syncNotifierProvider).isOnline) {
@@ -581,6 +641,15 @@ class RecordingDetailNotifier
       if (_disposed) return saved;
       await _storeReviewFlags(recording.id, serverFlags);
       if (_disposed) return saved;
+      if (hasServerId) {
+        await _settleOutbox(recording.id, const {
+          PendingMetadataField.genre,
+          PendingMetadataField.subcategory,
+          PendingMetadataField.register,
+          PendingMetadataField.secondary,
+        }, owed: localOnly);
+        if (_disposed) return saved;
+      }
 
       if (!hasServerId && ref.read(syncNotifierProvider).isOnline) {
         unawaited(ref.read(syncNotifierProvider.notifier).processQueue());
@@ -639,6 +708,12 @@ class RecordingDetailNotifier
       if (_disposed) return saved;
       await _storeReviewFlags(recording.id, serverFlags);
       if (_disposed) return saved;
+      if (hasServerId) {
+        await _settleOutbox(recording.id, const {
+          PendingMetadataField.secondary,
+        }, owed: localOnly);
+        if (_disposed) return saved;
+      }
     }
 
     await load();

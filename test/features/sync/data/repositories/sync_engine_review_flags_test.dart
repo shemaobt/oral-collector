@@ -28,6 +28,8 @@ import 'package:oral_collector/features/sync/data/services/upload_downloader.dar
 import 'package:oral_collector/features/sync/domain/repositories/connectivity_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../../support/sync_engine_api.dart';
+
 class _AlwaysOkDownloader implements UploadDownloader {
   const _AlwaysOkDownloader();
 
@@ -145,11 +147,13 @@ void main() {
       return http.Response('Not Found', 404);
     });
 
+    final authClient = AuthenticatedClient(client: client, storage: storage);
     return SyncEngineImpl(
       recordingRepo: repo,
       storytellerRepo: LocalStorytellerRepository(db),
       connectivity: _OnlineConnectivity(),
-      client: AuthenticatedClient(client: client, storage: storage),
+      client: authClient,
+      recordingApi: apiRepoFor(authClient),
       uploadDownloader: const _AlwaysOkDownloader(),
     );
   }

@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:oral_collector/core/database/app_database.dart';
 import 'package:oral_collector/features/recording/data/local_recording_to_entity.dart';
+import 'package:oral_collector/features/recording/domain/entities/pending_metadata_field.dart';
 
 void main() {
   group('localRecordingToEntity', () {
@@ -37,6 +38,10 @@ void main() {
         splitFromId: 'split-1',
         splitIndex: 3,
         splitSegmentCount: 9,
+        metadataSyncStatus: MetadataSyncStatus.pending,
+        pendingMetadataJson: '["title","cleaning_status"]',
+        metadataRetryCount: 2,
+        metadataLastRetryAt: DateTime(2026, 3, 5),
       );
 
       final entity = localRecordingToEntity(row);
@@ -69,6 +74,79 @@ void main() {
       expect(entity.splitFromId, 'split-1');
       expect(entity.splitIndex, 3);
       expect(entity.splitSegmentCount, 9);
+      // ENG-405 reads the outbox off the entity, not the row, so the marker on
+      // the list has to survive this projection (ENG-403).
+      expect(entity.metadataSyncStatus, MetadataSyncStatus.pending);
+      expect(entity.pendingMetadataFields, {
+        PendingMetadataField.title,
+        PendingMetadataField.cleaningStatus,
+      });
+      expect(entity.hasPendingMetadata, isTrue);
+    });
+
+    test('a row owing nothing reads as having nothing pending', () {
+      final row = LocalRecording(
+        id: 'id-1',
+        reviewFlagsJson: '[]',
+        projectId: 'proj-1',
+        genreId: 'genre-1',
+        durationSeconds: 1,
+        fileSizeBytes: 1,
+        format: 'm4a',
+        localFilePath: '/path/1.m4a',
+        uploadStatus: 'local',
+        cleaningStatus: 'none',
+        recordedAt: DateTime(2026, 1, 2),
+        createdAt: DateTime(2026, 1, 2),
+        retryCount: 0,
+        uploadedBytes: 0,
+        metadataSyncStatus: MetadataSyncStatus.synced,
+        pendingMetadataJson: '[]',
+        metadataRetryCount: 0,
+      );
+
+      final entity = localRecordingToEntity(row);
+
+      expect(entity.pendingMetadataFields, isEmpty);
+      expect(entity.hasPendingMetadata, isFalse);
+    });
+
+    test('copyWith carries the outbox through untouched', () {
+      // copyWith rebuilds the entity field by field; a field it forgets is
+      // silently reset to its default, which here would erase a pending edit
+      // from the screen while the row still owes it.
+      final entity = localRecordingToEntity(
+        LocalRecording(
+          id: 'id-1',
+          reviewFlagsJson: '[]',
+          projectId: 'proj-1',
+          genreId: 'genre-1',
+          durationSeconds: 1,
+          fileSizeBytes: 1,
+          format: 'm4a',
+          localFilePath: '/path/1.m4a',
+          uploadStatus: 'local',
+          cleaningStatus: 'none',
+          recordedAt: DateTime(2026, 1, 2),
+          createdAt: DateTime(2026, 1, 2),
+          retryCount: 0,
+          uploadedBytes: 0,
+          metadataSyncStatus: MetadataSyncStatus.pending,
+          pendingMetadataJson: '["title"]',
+          metadataRetryCount: 0,
+        ),
+      );
+
+      final copy = entity.copyWith(title: 'renamed');
+
+      expect(copy.metadataSyncStatus, MetadataSyncStatus.pending);
+      expect(copy.pendingMetadataFields, {PendingMetadataField.title});
+      expect(copy, isNot(entity));
+      expect(
+        copy,
+        equals(entity.copyWith(title: 'renamed')),
+        reason: 'value equality must account for the outbox',
+      );
     });
   });
 }

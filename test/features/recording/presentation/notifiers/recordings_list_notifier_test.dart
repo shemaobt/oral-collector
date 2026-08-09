@@ -102,6 +102,10 @@ class _SwitchableProjectNotifier extends ProjectNotifier {
 LocalRecording _makeRecording(String id) => LocalRecording(
   id: id,
   reviewFlagsJson: '[]',
+  // The metadata outbox defaults (ENG-403): this row owes the server no edit.
+  metadataSyncStatus: 'synced',
+  pendingMetadataJson: '[]',
+  metadataRetryCount: 0,
   projectId: 'proj-1',
   genreId: 'genre-1',
   title: 'Recording $id',
@@ -1539,6 +1543,10 @@ void main() {
       final row = LocalRecording(
         id: 'local-uuid',
         reviewFlagsJson: '[]',
+        // The metadata outbox defaults (ENG-403): this row owes the server no edit.
+        metadataSyncStatus: 'synced',
+        pendingMetadataJson: '[]',
+        metadataRetryCount: 0,
         projectId: 'proj-1',
         genreId: 'genre-1',
         durationSeconds: 30.0,

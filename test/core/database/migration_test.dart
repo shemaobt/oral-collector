@@ -19,18 +19,18 @@ void main() {
     verifier = SchemaVerifier(GeneratedHelper());
   });
 
-  group('migrating a database at each historical version up to v12', () {
+  group('migrating a database at each historical version up to v13', () {
     // A user who skipped builds upgrades straight from their on-disk version to
-    // the current schema. drift runs onUpgrade(from, 12) once. The resulting
-    // schema must match the official v12 reference for every starting point —
+    // the current schema. drift runs onUpgrade(from, 13) once. The resulting
+    // schema must match the official v13 reference for every starting point —
     // indexes included, so a forgotten createIndex in onUpgrade fails here
     // (migrateAndValidate diffs indexes, not just tables and columns).
-    for (var from = 1; from < 12; from++) {
-      test('v$from -> v12 yields the expected v12 schema', () async {
+    for (var from = 1; from < 13; from++) {
+      test('v$from -> v13 yields the expected v13 schema', () async {
         final connection = await verifier.startAt(from);
         final db = AppDatabase.forTesting(connection);
         try {
-          await verifier.migrateAndValidate(db, 12);
+          await verifier.migrateAndValidate(db, 13);
         } finally {
           await db.close();
         }
@@ -43,7 +43,7 @@ void main() {
     // exactly on the next version's schema instead of running through to the
     // latest. migrateAndValidate diffs tables, columns and indexes, so every
     // single step is validated against its own snapshot in isolation.
-    for (var from = 1; from < 12; from++) {
+    for (var from = 1; from < 13; from++) {
       test(
         'v$from -> v${from + 1} yields the expected v${from + 1} schema',
         () async {
@@ -60,7 +60,7 @@ void main() {
   });
 
   test(
-    'preserves an un-uploaded recording across the full v1 -> v12 upgrade',
+    'preserves an un-uploaded recording across the full v1 -> v13 upgrade',
     () async {
       final schema = await verifier.schemaAt(1);
 
@@ -87,10 +87,10 @@ void main() {
           );
       await oldDb.close();
 
-      // Run the real migration to v12 on the app's database class.
+      // Run the real migration to v13 on the app's database class.
       final db = AppDatabase.forTesting(schema.newConnection());
       try {
-        await verifier.migrateAndValidate(db, 12);
+        await verifier.migrateAndValidate(db, 13);
 
         final rows = await db.select(db.localRecordings).get();
         expect(rows, hasLength(1));
@@ -106,13 +106,19 @@ void main() {
         // A row written before review flags existed reads as owing nothing,
         // rather than as a null the entity mapper would have to guess about.
         expect(row.reviewFlagsJson, '[]');
+        // Same for the metadata outbox (ENG-403): a row that predates it owes
+        // the server no edit, so it must not be drained on first launch.
+        expect(row.metadataSyncStatus, 'synced');
+        expect(row.pendingMetadataJson, '[]');
+        expect(row.metadataRetryCount, 0);
+        expect(row.metadataLastRetryAt, isNull);
       } finally {
         await db.close();
       }
     },
   );
 
-  test('preserves a storyteller across the v6 -> v12 upgrade', () async {
+  test('preserves a storyteller across the v6 -> v13 upgrade', () async {
     final schema = await verifier.schemaAt(6);
 
     // Seed a storyteller at v6 — the version where local_storytellers exists
@@ -136,7 +142,7 @@ void main() {
 
     final db = AppDatabase.forTesting(schema.newConnection());
     try {
-      await verifier.migrateAndValidate(db, 12);
+      await verifier.migrateAndValidate(db, 13);
 
       final rows = await db.select(db.localStorytellers).get();
       expect(rows, hasLength(1));
