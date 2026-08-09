@@ -9,6 +9,20 @@ import '../../domain/entities/review_flag.dart';
 import '../local_recording_entity_to_companion.dart';
 import '../local_recording_to_entity.dart';
 
+/// The columns that put a row back in the upload queue.
+///
+/// All three, because the status alone leaves the row queued but refused: a
+/// stale `retryCount` is still the spent budget the drain's eligibility filter
+/// rejects, and a stale `lastRetryAt` still falls inside its backoff window.
+/// Shared by [LocalRecordingRepository.resetRetryCount] (one row, by id) and
+/// [LocalRecordingRepository.requeueFailedUploads] (a project's failures, in
+/// one write) so the two cannot drift apart.
+const _requeueCompanion = LocalRecordingsCompanion(
+  uploadStatus: Value('local'),
+  retryCount: Value(0),
+  lastRetryAt: Value(null),
+);
+
 class LocalRecordingRepository {
   final AppDatabase _db;
 
@@ -334,11 +348,10 @@ class LocalRecordingRepository {
   /// one the server never received, so the audio exists only here and deleting
   /// it is the one thing the action must not do.
   ///
-  /// Writes the same three columns as [resetRetryCount], and for the same
-  /// reason — the status alone would leave the row queued but refused, by the
-  /// budget filter or by the backoff window. One `UPDATE` rather than a
-  /// per-row loop through `SyncNotifier.resetAndRetry`, which drains as it
-  /// goes and would fan out N passes against a guard that admits one.
+  /// Writes [_requeueCompanion], the same columns [resetRetryCount] writes for
+  /// a single row. One `UPDATE` rather than a per-row loop through
+  /// `SyncNotifier.resetAndRetry`, which drains as it goes and would fan out N
+  /// passes against a guard that admits one.
   ///
   /// Scoped to the two statuses a bare retry can still move. `failed_conflict`
   /// and `failed_description` would be refused identically until the user
@@ -351,26 +364,13 @@ class LocalRecordingRepository {
               (t.uploadStatus.equals('failed') |
                   t.uploadStatus.equals('failed_exhausted')),
         ))
-        .write(
-          const LocalRecordingsCompanion(
-            uploadStatus: Value('local'),
-            retryCount: Value(0),
-            lastRetryAt: Value(null),
-          ),
-        );
+        .write(_requeueCompanion);
   }
 
   Future<bool> resetRetryCount(String id) async {
-    final rows =
-        await (_db.update(
-          _db.localRecordings,
-        )..where((t) => t.id.equals(id))).write(
-          const LocalRecordingsCompanion(
-            uploadStatus: Value('local'),
-            retryCount: Value(0),
-            lastRetryAt: Value(null),
-          ),
-        );
+    final rows = await (_db.update(
+      _db.localRecordings,
+    )..where((t) => t.id.equals(id))).write(_requeueCompanion);
     return rows > 0;
   }
 

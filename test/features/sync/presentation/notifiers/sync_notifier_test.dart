@@ -529,6 +529,32 @@ void main() {
       );
     });
 
+    test('offline still reports the size of the queue it is not draining '
+        '(ENG-404)', () async {
+      // The list's bulk retry requeues rows and then calls processQueue, and it
+      // works offline on purpose. The drain is refused, but the badge must not
+      // keep advertising the queue as it was before the requeue: the Wi-Fi-only
+      // branch refreshes before it blocks, and being offline is no better a
+      // reason to report a wrong count.
+      when(() => mockConnectivity.isOnline).thenAnswer((_) async => false);
+      container.read(syncNotifierProvider);
+      await Future<void>.delayed(Duration.zero);
+      expect(container.read(syncNotifierProvider).pendingCount, 0);
+
+      when(() => mockRecordingRepo.getPendingUploads()).thenAnswer(
+        (_) async => [
+          makeRecording(id: 'r-1', fileSizeBytes: 100),
+          makeRecording(id: 'r-2', fileSizeBytes: 200),
+        ],
+      );
+
+      await container.read(syncNotifierProvider.notifier).processQueue();
+
+      final state = container.read(syncNotifierProvider);
+      expect(state.pendingCount, 2);
+      expect(state.totalQueueSizeBytes, 300);
+    });
+
     test('delegates to engine even when no recordings are pending '
         '(storytellers may need sync)', () async {
       when(

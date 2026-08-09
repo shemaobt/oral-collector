@@ -7,12 +7,14 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/l10n/content_l10n.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../core/observability/error_reporter.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../features/auth/data/providers/role_provider.dart';
 import '../../../shared/preview_helpers.dart';
 import '../../../shared/widgets/app_shell.dart';
 import '../../../shared/widgets/empty_state.dart';
+import '../../../shared/widgets/error_snack_bar.dart';
 import '../../../shared/widgets/screen_header.dart';
 import '../../../shared/widgets/status_banner.dart';
 import '../../../shared/widgets/sync_status_indicator.dart';
@@ -199,7 +201,6 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
   /// offline at that — the rows drain on their own once reachability returns.
   Future<void> _retryFailedUploads() async {
     final l10n = AppLocalizations.of(context);
-    final colors = AppColors.of(context);
 
     try {
       final requeued = await ref
@@ -209,15 +210,17 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.recordings_retryQueuedCount(requeued))),
       );
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.recordings_retryFailed),
-            backgroundColor: colors.error,
-          ),
-        );
-      }
+    } on Exception catch (e, st) {
+      ref.read(errorReporterProvider).reportError(e, st);
+      if (!mounted) return;
+      // A fixed message rather than the mapped one: what can fail here is a
+      // local write, and `friendlyErrorFor` would dress it as something the
+      // user could act on. The real error goes to telemetry above.
+      showErrorSnackBar(
+        context,
+        '',
+        template: (_) => l10n.recordings_retryFailed,
+      );
     }
   }
 

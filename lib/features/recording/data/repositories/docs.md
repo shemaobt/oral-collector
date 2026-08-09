@@ -513,7 +513,15 @@ Path: @/lib/features/recording/data/repositories
   with a single `UPDATE`; the caller
   (`RecordingsListNotifier.retryFailedUploads`, see
   [../../presentation/notifiers/docs.md](../../presentation/notifiers/docs.md))
-  then calls `processQueue()` exactly once to drain the whole batch.
+  then calls `processQueue()` once for the batch rather than N times. One
+  call is the whole claim — it is **not** a promise that the batch drains.
+  The same guard applies to this call: if a pass is already in flight it
+  returns immediately, and that pass read its `getPendingUploads()` snapshot
+  before the `UPDATE`, so the requeued rows wait for the next trigger (a
+  later `processQueue`, the offline→online transition, app start). That is
+  acceptable because the requeue is what the action actually promises — the
+  rows are queued and eligible from the moment the `UPDATE` commits, and the
+  drain finds them whenever it next runs.
 - **The write touches three columns because the status alone would leave a
   row queued but refused.** `uploadStatus: 'local'` on its own is not
   enough: a stale `retryCount` is still the exhausted budget

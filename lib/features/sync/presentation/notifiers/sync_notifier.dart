@@ -246,6 +246,11 @@ class SyncNotifier extends Notifier<SyncState> {
       // Being offline is its own (already visible) condition; don't leave a
       // stale Wi-Fi-only verdict behind to be reported instead.
       state = state.copyWith(clearBlockReason: true);
+      // Refuse the drain, but still report the queue honestly — callers change
+      // its contents and then ask for a pass (the list's bulk retry does, and
+      // works offline by design). The Wi-Fi-only branch inside _runQueue
+      // refreshes before it blocks, for the same reason (ENG-404).
+      await _refreshPendingCount();
       return;
     }
     // Shared upload guard (see syncOne): bail if an upload op is already in
