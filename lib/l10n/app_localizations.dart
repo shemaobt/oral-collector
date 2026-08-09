@@ -1442,6 +1442,30 @@ abstract class AppLocalizations {
   /// **'Audio file missing'**
   String get recording_statusFileMissing;
 
+  /// Mark on a recording whose metadata edit is still in the outbox (ENG-405). Transitory and blameless: the person has to do nothing but reconnect, so the wording must not read as a failure. Says 'change', never 'upload', because the audio may already be safely on the server.
+  ///
+  /// In en, this message translates to:
+  /// **'Change waiting to be sent'**
+  String get recording_metadataSyncPending;
+
+  /// Mark on a recording whose metadata edit the server refused with a 403 (ENG-405). Terminal and not retryable from the phone; kept apart from the other two refusals because no amount of insisting grants permission.
+  ///
+  /// In en, this message translates to:
+  /// **'Change refused — you cannot edit this recording'**
+  String get recording_metadataSyncForbidden;
+
+  /// Mark on a recording whose metadata edit the server refused with a 409 title clash (ENG-405). Terminal until the user renames, which is the one exit — hence naming the title rather than saying 'refused'.
+  ///
+  /// In en, this message translates to:
+  /// **'Change refused — another recording has this title'**
+  String get recording_metadataSyncConflict;
+
+  /// Mark on a recording whose metadata edit spent its whole retry budget (ENG-405). Same spent-budget wording as the upload queue's recording_statusRetriesExhausted, because it is the same situation for a different queue.
+  ///
+  /// In en, this message translates to:
+  /// **'Change not sent — attempts used up'**
+  String get recording_metadataSyncExhausted;
+
   /// No description provided for @recording_uploadExhaustedMessage.
   ///
   /// In en, this message translates to:
@@ -3283,6 +3307,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cleaning'**
   String get detail_cleaning;
+
+  /// Label of the detail screen's status row for the metadata outbox (ENG-405). Names the axis, not the state — the state is the row's value. Kept distinct from detail_upload because a recording can be fully uploaded and still owe an edit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edits'**
+  String get detail_metadataSync;
 
   /// No description provided for @detail_recorded.
   ///

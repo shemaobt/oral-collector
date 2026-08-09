@@ -724,6 +724,21 @@ class AppLocalizationsSw extends AppLocalizations {
   String get recording_statusFileMissing => 'Faili ya sauti haipatikani';
 
   @override
+  String get recording_metadataSyncPending => 'Change waiting to be sent';
+
+  @override
+  String get recording_metadataSyncForbidden =>
+      'Change refused — you cannot edit this recording';
+
+  @override
+  String get recording_metadataSyncConflict =>
+      'Change refused — another recording has this title';
+
+  @override
+  String get recording_metadataSyncExhausted =>
+      'Change not sent — attempts used up';
+
+  @override
   String get recording_uploadExhaustedMessage =>
       'Upakiaji ulisimama baada ya majaribio kadhaa. Unaweza kujaribu tena.';
 
@@ -1816,6 +1831,9 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get detail_cleaning => 'Usafishaji';
+
+  @override
+  String get detail_metadataSync => 'Edits';
 
   @override
   String get detail_recorded => 'Imerekodwa';

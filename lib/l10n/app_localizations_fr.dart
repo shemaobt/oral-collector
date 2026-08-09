@@ -734,6 +734,21 @@ class AppLocalizationsFr extends AppLocalizations {
   String get recording_statusFileMissing => 'Fichier audio introuvable';
 
   @override
+  String get recording_metadataSyncPending => 'Change waiting to be sent';
+
+  @override
+  String get recording_metadataSyncForbidden =>
+      'Change refused — you cannot edit this recording';
+
+  @override
+  String get recording_metadataSyncConflict =>
+      'Change refused — another recording has this title';
+
+  @override
+  String get recording_metadataSyncExhausted =>
+      'Change not sent — attempts used up';
+
+  @override
   String get recording_uploadExhaustedMessage =>
       'L\'envoi s\'est arrêté après plusieurs tentatives. Vous pouvez réessayer.';
 
@@ -1848,6 +1863,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get detail_cleaning => 'Nettoyage';
+
+  @override
+  String get detail_metadataSync => 'Edits';
 
   @override
   String get detail_recorded => 'Enregistré';

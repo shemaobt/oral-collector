@@ -701,6 +701,21 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recording_statusFileMissing => '音频文件丢失';
 
   @override
+  String get recording_metadataSyncPending => 'Change waiting to be sent';
+
+  @override
+  String get recording_metadataSyncForbidden =>
+      'Change refused — you cannot edit this recording';
+
+  @override
+  String get recording_metadataSyncConflict =>
+      'Change refused — another recording has this title';
+
+  @override
+  String get recording_metadataSyncExhausted =>
+      'Change not sent — attempts used up';
+
+  @override
   String get recording_uploadExhaustedMessage => '多次尝试后上传已停止。你可以重试。';
 
   @override
@@ -1756,6 +1771,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get detail_cleaning => '清理';
+
+  @override
+  String get detail_metadataSync => 'Edits';
 
   @override
   String get detail_recorded => '录制时间';

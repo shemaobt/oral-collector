@@ -302,6 +302,22 @@
   "recording_descriptionGapMessage": "This recording can't be uploaded until you add a longer description.",
   "recording_statusRetriesExhausted": "Attempts used up",
   "recording_statusFileMissing": "Audio file missing",
+  "recording_metadataSyncPending": "Change waiting to be sent",
+  "@recording_metadataSyncPending": {
+    "description": "Mark on a recording whose metadata edit is still in the outbox (ENG-405). Transitory and blameless: the person has to do nothing but reconnect, so the wording must not read as a failure. Says 'change', never 'upload', because the audio may already be safely on the server."
+  },
+  "recording_metadataSyncForbidden": "Change refused — you cannot edit this recording",
+  "@recording_metadataSyncForbidden": {
+    "description": "Mark on a recording whose metadata edit the server refused with a 403 (ENG-405). Terminal and not retryable from the phone; kept apart from the other two refusals because no amount of insisting grants permission."
+  },
+  "recording_metadataSyncConflict": "Change refused — another recording has this title",
+  "@recording_metadataSyncConflict": {
+    "description": "Mark on a recording whose metadata edit the server refused with a 409 title clash (ENG-405). Terminal until the user renames, which is the one exit — hence naming the title rather than saying 'refused'."
+  },
+  "recording_metadataSyncExhausted": "Change not sent — attempts used up",
+  "@recording_metadataSyncExhausted": {
+    "description": "Mark on a recording whose metadata edit spent its whole retry budget (ENG-405). Same spent-budget wording as the upload queue's recording_statusRetriesExhausted, because it is the same situation for a different queue."
+  },
   "recording_uploadExhaustedMessage": "The upload stopped after several attempts. You can try again.",
   "recording_fileMissingMessage": "The audio file for this recording is no longer on this device, so it can't be uploaded.",
   "recording_duplicateTitleTitle": "Name already used",
@@ -885,6 +901,10 @@
   "detail_upload": "Upload",
   "detail_uploaded": "Uploaded",
   "detail_cleaning": "Cleaning",
+  "detail_metadataSync": "Edits",
+  "@detail_metadataSync": {
+    "description": "Label of the detail screen's status row for the metadata outbox (ENG-405). Names the axis, not the state — the state is the row's value. Kept distinct from detail_upload because a recording can be fully uploaded and still owe an edit."
+  },
   "detail_recorded": "Recorded",
   "detail_retry": "Retry",
   "detail_notFlagged": "Not flagged",

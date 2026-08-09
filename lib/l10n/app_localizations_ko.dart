@@ -706,6 +706,21 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recording_statusFileMissing => '오디오 파일 없음';
 
   @override
+  String get recording_metadataSyncPending => 'Change waiting to be sent';
+
+  @override
+  String get recording_metadataSyncForbidden =>
+      'Change refused — you cannot edit this recording';
+
+  @override
+  String get recording_metadataSyncConflict =>
+      'Change refused — another recording has this title';
+
+  @override
+  String get recording_metadataSyncExhausted =>
+      'Change not sent — attempts used up';
+
+  @override
   String get recording_uploadExhaustedMessage =>
       '여러 번 시도한 뒤 업로드가 중단되었습니다. 다시 시도할 수 있습니다.';
 
@@ -1766,6 +1781,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get detail_cleaning => '클리닝';
+
+  @override
+  String get detail_metadataSync => 'Edits';
 
   @override
   String get detail_recorded => '녹음일';
