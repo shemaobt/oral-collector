@@ -59,7 +59,7 @@ Path: @/lib/core/database
 ### Core Implementation
 
 - `AppDatabase` is annotated with `@DriftDatabase(tables: [...])` and exposes
-  the current `schemaVersion` (12). `AppDatabase.forTesting(e)` takes an
+  the current `schemaVersion` (13). `AppDatabase.forTesting(e)` takes an
   explicit executor and is the entry point the migration tests and an in-memory
   `NativeDatabase.memory()` use.
 - `MigrationStrategy` has two callbacks:
@@ -104,7 +104,7 @@ Path: @/lib/core/database
     [/analysis_options.yaml](../../../analysis_options.yaml).
   - [/test/core/database/migration_test.dart](../../../test/core/database/migration_test.dart) —
     drives drift's `SchemaVerifier`. For every historical version it `startAt(k)`
-    and both `migrateAndValidate(db, 12)` (the skip-many-releases path) and
+    and both `migrateAndValidate(db, 13)` (the skip-many-releases path) and
     `migrateAndValidate(db, k + 1)` (a single step lands exactly on the next
     version, exercising that `stepByStep` honors `to`). Plus data-integrity
     cases that seed an un-uploaded recording at the oldest version and a

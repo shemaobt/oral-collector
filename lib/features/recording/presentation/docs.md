@@ -492,16 +492,30 @@ Path: @/lib/features/recording/presentation
   unreachable server there is treated the same as a refusal (`_pushMetadata`
   maps any thrown exception to `rejected` under `kIsWeb`), not a
   `savedLocallyOnly`.
-  **Nothing re-sends a `savedLocallyOnly` edit.** `getPendingUploads`
-  (the upload queue's source, see
-  [../data/repositories/docs.md](../data/repositories/docs.md)) only selects
-  `uploadStatus` in `{'local', 'failed', 'uploading'}`, and none of these four
-  mutations touch `uploadStatus`. An edit saved locally on an
-  `uploaded`/`verified` recording is therefore stuck on that device
-  indefinitely — invisible to the queue, the pending counters, and every
-  other device — until the user reconnects and repeats the edit online; the
-  snackbar says exactly that instead of promising a sync that will not
-  happen. This is a known limitation of the design, not a gap ENG-399 closed.
+  **A `savedLocallyOnly` edit resends itself as of ENG-403 — the user no
+  longer has to repeat it online.** `getPendingUploads` (the upload queue's
+  source, see [../data/repositories/docs.md](../data/repositories/docs.md))
+  only selects `uploadStatus` in `{'local', 'failed', 'uploading'}`, and none
+  of the metadata mutations touch `uploadStatus`, so the edit was never going
+  to ride the upload queue or its counters (`SyncState.pendingCount` still
+  does not count it). What resends it instead is a second, narrower queue:
+  the mutation that took the unreachable branch also marks the fields it
+  wrote as owed (`_settleOutbox`, [./notifiers/docs.md](notifiers/docs.md)),
+  and `SyncEngine` drains that queue on every pass, rebuilding the request by
+  reading the current value back off the row rather than replaying a stored
+  payload — see [/lib/features/sync/docs.md](../../sync/docs.md) for the
+  drain and its error taxonomy. The `recording_savedOnDeviceOnly` snackbar
+  still tells the user the change stopped at this device, because from the
+  user's perspective nothing else changed yet: no affordance shows the
+  pending state today (`LocalRecordingEntity.hasPendingMetadata`/
+  `pendingMetadataFields` exist for that, but nothing reads them yet — a
+  future consumer is tracked as ENG-405; see
+  [../domain/docs.md](../domain/docs.md)). Two edits still don't ride this
+  queue: one made through `setStoryteller`, whose own error handling doesn't
+  distinguish "unreachable" from "refused"
+  ([/lib/features/sync/docs.md](../../sync/docs.md)), and one made while the
+  recording is still `local`/`failed`/`uploading` — that edit never needed a
+  resend queue, since it rides the eventual create call instead.
   **A 401 or a 409 landing in the generic catch and being classified as
   unreachable is a gap inherited from ENG-380, now with a wider reach.** A
   stale/expired session or a write the server refused for some other reason

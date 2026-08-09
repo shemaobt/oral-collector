@@ -61,6 +61,27 @@ Path: @/lib/features/recording/domain
   ([./entities/recording.dart](entities/recording.dart)) deliberately does
   not carry this field — it belongs to a different feature and no admin
   screen reads pending review state.
+- [`PendingMetadataField`/`MetadataSyncStatus`](entities/pending_metadata_field.dart)
+  (ENG-403) are the mirror image of `ReviewFlag` above: where a `ReviewFlag`
+  is something the server says a recording still owes, a `PendingMetadataField`
+  is something *this device* still owes the *server* — a field edited while
+  the server was unreachable. The set names fields, never values: the local
+  row already holds the desired state (every mutation writes it there
+  first), so the sync drain
+  ([/lib/features/sync/docs.md](../../sync/docs.md)) reads the value back
+  off the row at send time instead of replaying a stored payload, which is
+  what makes two offline edits to the same field collapse into one write.
+  `secondary` names all three secondary-classification columns as one token
+  because the wire contract only ever clears them together.
+  `encodePendingMetadataFields`/`decodePendingMetadataFields` are the
+  JSON-text codec for the Drift column (`pendingMetadataJson`), mirroring
+  `decodeReviewFlags`'s tolerance of an unknown token or invalid JSON — a
+  stored value from a newer or older build must cost at most the un-pushed
+  edit, never the read of the whole recording.
+  `LocalRecordingEntity.metadataSyncStatus`/`pendingMetadataFields`/
+  `hasPendingMetadata` carry this state onto the entity, because the
+  recordings list and card read the entity, not the row; nothing in the UI
+  reads them yet — a future consumer is tracked as ENG-405.
 - [`PendencyKind`/`recordingPendencies`](entities/review_pendency.dart)
   (ENG-374 PR-B) turn `reviewFlags`, plus the classification/description/
   storyteller fields, into the ordered list of steps the guided completion
@@ -261,7 +282,13 @@ Path: @/lib/features/recording/domain
   stream. The data layer maps row→entity *before* `.distinct()` on the watch
   stream, so dedup keys on this `==` rather than the Drift row's generated
   equality. Without the override, each emission would be a fresh unequal object
-  and `.distinct()` would never collapse anything.
+  and `.distinct()` would never collapse anything. `pendingMetadataFields`
+  (ENG-403) needs the same treatment as `reviewFlags` below for the same
+  reason — it is a `Set`, which also compares by identity — but its
+  comparison is order-insensitive (`containsAll` + length,
+  `Object.hashAllUnordered`) where `reviewFlags`'s is order-sensitive: a
+  `Set`'s iteration order carries no meaning the way the server's flag order
+  does.
 - **The equality check is split into private grouped comparisons
   (`_sameSubject`, `_sameClassification`, `_sameAudio`, `_sameUpload`,
   `_sameSplit`, ENG-374).** Adding `reviewFlags` pushed `operator ==` over the
