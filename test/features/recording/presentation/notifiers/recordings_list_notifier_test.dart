@@ -172,6 +172,13 @@ void main() {
     api = _MockApi();
     local = _MockLocal();
     reporter = _RecordingReporter();
+    // Nothing in this file is about the metadata outbox, but the notifier
+    // follows it from `build` (ENG-405). An empty answer is the honest one for
+    // these fixtures — none of them owes an edit — and stubbing it keeps the
+    // provider out of an error state that would only be swallowed.
+    when(
+      () => local.watchMetadataOutbox(),
+    ).thenAnswer((_) => Stream.value(const {}));
   });
 
   group('RecordingsListNotifier.fetchRecordings — offline', () {

@@ -516,6 +516,57 @@ class LocalRecordingRepository {
     );
   }
 
+  /// Watches every recording that still owes the server a metadata write, keyed
+  /// by *both* ids so a caller can look one up whichever it is holding
+  /// (ENG-405).
+  ///
+  /// The list holds the server's projection of any recording the server knows
+  /// about, and that projection is `synced` by construction — which is every
+  /// recording that can owe an edit, since the outbox requires a `serverId`. So
+  /// the list cannot read this off what it fetched; it has to read it here.
+  ///
+  /// A stream rather than a one-shot read because the point is that the mark
+  /// clears itself: the drain runs, the row returns to `synced`, and the screen
+  /// follows without a refetch to trigger it. Deduped on value, because a
+  /// `watch` over this table re-runs on every unrelated write — an upload's
+  /// byte counter among them — and each of those would otherwise rebuild the
+  /// whole list.
+  Stream<Map<String, MetadataOutboxEntry>> watchMetadataOutbox() {
+    return (_db.select(_db.localRecordings)..where(
+          (t) => t.metadataSyncStatus.equals(MetadataSyncStatus.synced).not(),
+        ))
+        .watch()
+        .map(_outboxByKey)
+        .distinct(_sameOutbox);
+  }
+
+  static Map<String, MetadataOutboxEntry> _outboxByKey(
+    List<LocalRecording> rows,
+  ) {
+    final byKey = <String, MetadataOutboxEntry>{};
+    for (final row in rows) {
+      final entry = (
+        status: row.metadataSyncStatus,
+        fieldsJson: row.pendingMetadataJson,
+      );
+      byKey[row.id] = entry;
+      final serverId = row.serverId;
+      if (serverId != null && serverId.isNotEmpty) byKey[serverId] = entry;
+    }
+    return byKey;
+  }
+
+  static bool _sameOutbox(
+    Map<String, MetadataOutboxEntry> a,
+    Map<String, MetadataOutboxEntry> b,
+  ) {
+    if (a.length != b.length) return false;
+    for (final entry in a.entries) {
+      if (b[entry.key] != entry.value) return false;
+    }
+    return true;
+  }
+
   /// Rows the server is owed a metadata write for, oldest first.
   ///
   /// The `serverId` clause is the correctness condition, not a defence: without

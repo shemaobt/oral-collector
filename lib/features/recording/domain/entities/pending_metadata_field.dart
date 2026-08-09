@@ -46,6 +46,15 @@ abstract final class MetadataSyncStatus {
   static const failedExhausted = 'failed_exhausted';
 }
 
+/// Where one recording stands with the metadata outbox, for callers that need
+/// that and nothing else off the row (ENG-405).
+///
+/// The owed fields travel as the stored text rather than as a decoded `Set` so
+/// the record keeps structural equality — a `Set` inside a record compares by
+/// identity, and the watch stream that carries these dedups on `==`. Decoding
+/// is the reader's job, at the point it needs the names.
+typedef MetadataOutboxEntry = ({String status, String fieldsJson});
+
 /// Serializes [fields] for the Drift column, ordered by declaration so two rows
 /// owing the same fields hold byte-identical text — the recording watch stream
 /// dedups on value equality and would otherwise rebuild on a reordering.
