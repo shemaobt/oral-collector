@@ -1445,25 +1445,25 @@ abstract class AppLocalizations {
   /// Mark on a recording whose metadata edit is still in the outbox (ENG-405). Transitory and blameless: the person has to do nothing but reconnect, so the wording must not read as a failure. Says 'change', never 'upload', because the audio may already be safely on the server.
   ///
   /// In en, this message translates to:
-  /// **'Change waiting to be sent'**
+  /// **'Edit waiting to be sent'**
   String get recording_metadataSyncPending;
 
   /// Mark on a recording whose metadata edit the server refused with a 403 (ENG-405). Terminal and not retryable from the phone; kept apart from the other two refusals because no amount of insisting grants permission.
   ///
   /// In en, this message translates to:
-  /// **'Change refused — you cannot edit this recording'**
+  /// **'Edit refused: you cannot change this recording'**
   String get recording_metadataSyncForbidden;
 
   /// Mark on a recording whose metadata edit the server refused with a 409 title clash (ENG-405). Terminal until the user renames, which is the one exit — hence naming the title rather than saying 'refused'.
   ///
   /// In en, this message translates to:
-  /// **'Change refused — another recording has this title'**
+  /// **'Edit refused: another recording has this title'**
   String get recording_metadataSyncConflict;
 
-  /// Mark on a recording whose metadata edit spent its whole retry budget (ENG-405). Same spent-budget wording as the upload queue's recording_statusRetriesExhausted, because it is the same situation for a different queue.
+  /// Mark on a recording whose metadata edit spent its whole retry budget (ENG-405). Unlike the other two refusals this one is recoverable from the phone: a fresh edit revives the row with a new budget (markMetadataPending), so the label names that exit rather than only reporting the spent budget — the same reason recording_uploadExhaustedMessage says a retry is possible.
   ///
   /// In en, this message translates to:
-  /// **'Change not sent — attempts used up'**
+  /// **'Edit not sent — edit again to retry'**
   String get recording_metadataSyncExhausted;
 
   /// No description provided for @recording_uploadExhaustedMessage.

@@ -12,10 +12,12 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:oral_collector/core/theme/app_colors.dart';
 import 'package:oral_collector/features/recording/domain/entities/local_recording_entity.dart';
 import 'package:oral_collector/features/recording/domain/entities/pending_metadata_field.dart';
+import 'package:oral_collector/features/recording/presentation/widgets/metadata_sync_mark.dart';
 import 'package:oral_collector/features/recording/presentation/widgets/recording_card.dart';
 import 'package:oral_collector/l10n/app_localizations.dart';
 
@@ -23,10 +25,10 @@ import '../../../../support/text_scale.dart';
 
 /// Written out rather than read off `AppLocalizations`, so the assertions fail
 /// when the card stops saying these things — not merely when a key is renamed.
-const _waiting = 'Change waiting to be sent';
-const _forbidden = 'Change refused — you cannot edit this recording';
-const _conflict = 'Change refused — another recording has this title';
-const _exhausted = 'Change not sent — attempts used up';
+const _waiting = 'Edit waiting to be sent';
+const _forbidden = 'Edit refused: you cannot change this recording';
+const _conflict = 'Edit refused: another recording has this title';
+const _exhausted = 'Edit not sent — edit again to retry';
 
 const _everyMark = [_waiting, _forbidden, _conflict, _exhausted];
 
@@ -87,16 +89,27 @@ Future<void> _pumpCard(
   await tester.pump();
 }
 
-/// The glyph the card draws beside [label], read off the innermost row that
-/// carries the text.
-Icon _markIcon(WidgetTester tester, String label) => tester.widget<Icon>(
-  find
-      .descendant(
-        of: find.ancestor(of: find.text(label), matching: find.byType(Row)),
-        matching: find.byType(Icon),
-      )
-      .first,
+/// The glyph the card draws for the mark.
+///
+/// Addressed through the mark's own type rather than by walking up to some
+/// enclosing `Row`: that walk happened to land on the right one only because
+/// of the order finders return ancestors in, and would silently start reading
+/// a different icon the day the mark gains a wrapper.
+Icon _markIcon(WidgetTester tester) => tester.widget<Icon>(
+  find.descendant(
+    of: find.byType(RecordingMetadataSyncMark),
+    matching: find.byType(Icon),
+  ),
 );
+
+/// The mark's text as the card actually lays it out.
+RenderParagraph _markParagraph(WidgetTester tester) =>
+    tester.renderObject<RenderParagraph>(
+      find.descendant(
+        of: find.byType(RecordingMetadataSyncMark),
+        matching: find.byType(Text),
+      ),
+    );
 
 Color _errorToken(WidgetTester tester) =>
     AppColors.of(tester.element(find.byType(RecordingCard))).error;
@@ -173,7 +186,7 @@ void main() {
           ),
         );
 
-        expect(_markIcon(tester, entry.value).color, _errorToken(tester));
+        expect(_markIcon(tester).color, _errorToken(tester));
       });
     }
 
@@ -189,33 +202,40 @@ void main() {
       // Reconnecting is all it takes, and the person cannot make that happen
       // any faster by being alarmed about it.
       expect(
-        _markIcon(tester, _waiting).color,
+        _markIcon(tester).color,
         isNot(_errorToken(tester)),
         reason: 'a routine wait must not be painted as a failure',
       );
     });
 
-    testWidgets('a wait and a refusal do not share a glyph', (tester) async {
-      await _pumpCard(
-        tester,
-        _recording(
-          metadataSyncStatus: MetadataSyncStatus.pending,
-          pendingMetadataFields: const {PendingMetadataField.title},
-        ),
-      );
-      final waiting = _markIcon(tester, _waiting).icon;
+    testWidgets('no two states share a glyph', (tester) async {
+      final glyphs = <String, IconData?>{};
+      for (final status in const [
+        MetadataSyncStatus.pending,
+        MetadataSyncStatus.failedForbidden,
+        MetadataSyncStatus.failedConflict,
+        MetadataSyncStatus.failedExhausted,
+      ]) {
+        await _pumpCard(
+          tester,
+          _recording(
+            metadataSyncStatus: status,
+            pendingMetadataFields: const {PendingMetadataField.title},
+          ),
+        );
+        glyphs[status] = _markIcon(tester).icon;
+      }
 
-      await _pumpCard(
-        tester,
-        _recording(
-          metadataSyncStatus: MetadataSyncStatus.failedForbidden,
-          pendingMetadataFields: const {PendingMetadataField.title},
-        ),
+      // Colour says nothing under a colour-blind eye or a grayscale filter,
+      // and the three refusals all share the error token — so between *them*
+      // the glyph is the only channel left. A wait against a refusal is the
+      // easy half of this; refusal against refusal is the half that was not
+      // pinned.
+      expect(
+        glyphs.values.toSet(),
+        hasLength(glyphs.length),
+        reason: 'two states drew the same glyph: $glyphs',
       );
-
-      // Colour alone would say nothing under a colour-blind eye or a
-      // grayscale filter.
-      expect(_markIcon(tester, _forbidden).icon, isNot(waiting));
     });
   });
 
@@ -242,40 +262,47 @@ void main() {
     );
   });
 
-  group('large fonts', () {
+  /// `find.text` matches the string the widget was *handed*, not the glyphs
+  /// that reached the screen — so a mark whose second half was ellipsized still
+  /// satisfies every assertion above. Only the laid-out paragraph knows, which
+  /// is the lesson ENG-185 already paid for: assert geometry, not the absence
+  /// of an exception.
+  ///
+  /// Measured before this group existed: the two long refusals were cut on a
+  /// 320dp phone at 1.0x, and on 390dp from 1.5x. A cut warning is worse than
+  /// a short one — the cause and the way out both live at the end of the
+  /// sentence.
+  group('the whole message reaches the screen', () {
     for (final size in const [kPhoneSize, _narrowPhone]) {
-      for (final scale in const [1.5, 2.0]) {
-        final where = '${scale}x on ${size.width.toInt()}dp';
+      for (final scale in const [1.0, 1.5, 2.0]) {
+        for (final entry in const {
+          MetadataSyncStatus.pending: _waiting,
+          MetadataSyncStatus.failedForbidden: _forbidden,
+          MetadataSyncStatus.failedConflict: _conflict,
+          MetadataSyncStatus.failedExhausted: _exhausted,
+        }.entries) {
+          final where = '${entry.key} at ${scale}x on ${size.width.toInt()}dp';
 
-        testWidgets('the waiting mark survives $where', (tester) async {
-          await _pumpCard(
-            tester,
-            _recording(
-              metadataSyncStatus: MetadataSyncStatus.pending,
-              pendingMetadataFields: const {PendingMetadataField.title},
-            ),
-            scale: scale,
-            size: size,
-          );
+          testWidgets('$where is not cut short', (tester) async {
+            await _pumpCard(
+              tester,
+              _recording(
+                metadataSyncStatus: entry.key,
+                pendingMetadataFields: const {PendingMetadataField.title},
+              ),
+              scale: scale,
+              size: size,
+            );
 
-          expect(find.text(_waiting), findsOneWidget);
-          expectNoOverflow(tester);
-        });
-
-        testWidgets('the longest refusal survives $where', (tester) async {
-          await _pumpCard(
-            tester,
-            _recording(
-              metadataSyncStatus: MetadataSyncStatus.failedConflict,
-              pendingMetadataFields: const {PendingMetadataField.title},
-            ),
-            scale: scale,
-            size: size,
-          );
-
-          expect(find.text(_conflict), findsOneWidget);
-          expectNoOverflow(tester);
-        });
+            expect(find.text(entry.value), findsOneWidget);
+            expect(
+              _markParagraph(tester).didExceedMaxLines,
+              isFalse,
+              reason: 'the mark was ellipsized at $where',
+            );
+            expectNoOverflow(tester);
+          });
+        }
       }
     }
   });

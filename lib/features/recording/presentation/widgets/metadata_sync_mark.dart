@@ -106,11 +106,16 @@ class RecordingMetadataSyncMark extends StatelessWidget {
               color: style.color,
               fontWeight: FontWeight.w500,
             ),
-            // Two lines because the refusals name their cause, and the cause
-            // is the part that tells the user what to do; one line drops it at
-            // any large text scale. Beyond two the card stops being a list row.
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
+            // No line ceiling, unlike every other line on this card. The cause
+            // and the way out *are* the message here, and an ellipsis eats the
+            // end of the sentence — which is where both live. Measured, two
+            // lines already truncated the refusals on a 320dp phone at 1.0x,
+            // and no fixed ceiling survives 2.0x there.
+            //
+            // The card is free to grow instead: this row appears on the few
+            // recordings that need reading, in a list that scrolls, and the
+            // text-scale programme's rule (ENG-177) is that large type wins
+            // over a fixed box.
           ),
         ),
       ],

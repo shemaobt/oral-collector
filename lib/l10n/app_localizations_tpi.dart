@@ -722,19 +722,19 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get recording_statusFileMissing => 'Odio fail i lus';
 
   @override
-  String get recording_metadataSyncPending => 'Change waiting to be sent';
+  String get recording_metadataSyncPending => 'Edit waiting to be sent';
 
   @override
   String get recording_metadataSyncForbidden =>
-      'Change refused — you cannot edit this recording';
+      'Edit refused: you cannot change this recording';
 
   @override
   String get recording_metadataSyncConflict =>
-      'Change refused — another recording has this title';
+      'Edit refused: another recording has this title';
 
   @override
   String get recording_metadataSyncExhausted =>
-      'Change not sent — attempts used up';
+      'Edit not sent — edit again to retry';
 
   @override
   String get recording_uploadExhaustedMessage =>

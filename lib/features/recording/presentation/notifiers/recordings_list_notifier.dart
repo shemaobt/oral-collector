@@ -69,7 +69,23 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
     // Not `fireImmediately`: the callback writes `state`, which cannot be
     // touched while `build` is still returning the first one. Nothing is lost,
     // because every path that produces recordings reads the outbox itself.
-    ref.listen(metadataOutboxProvider, (_, _) => _remarkOutbox());
+    ref.listen(metadataOutboxProvider, (_, next) {
+      // Two different failures hide behind one silent screen. Not having
+      // answered yet is a start-up race that resolves itself, and staying quiet
+      // through it is right. A broken stream is permanent, and quiet is all it
+      // used to be: the marks would simply never appear, for the lifetime of
+      // the app, with nothing anywhere saying why. That is the same silent
+      // failure this ticket exists to abolish, one layer down.
+      //
+      // So: still no alarm on screen — a mark the user cannot act on is worse
+      // than none — but the failure is reported, the way every other unexpected
+      // error in this notifier has been since ENG-102.
+      final error = next.error;
+      if (error != null) {
+        _reportUnexpected(error, next.stackTrace ?? StackTrace.current);
+      }
+      _remarkOutbox();
+    });
     return const RecordingsListState();
   }
 
@@ -87,7 +103,22 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
     final owed = _outbox;
     if (owed == null) return;
     final remarked = [for (final r in state.recordings) _withOutbox(r, owed)];
+    // `RecordingsListState` compares by identity, so any write here notifies
+    // and the screen rebuilds every card. A Drift `watch` re-runs on writes
+    // that have nothing to do with the outbox, and while `.distinct` stops the
+    // ones that change nothing, a tick that settles *another* recording still
+    // arrives — and would cost this list a full rebuild for a row it does not
+    // show. This is what makes `_withOutbox` returning the original worth
+    // anything.
+    if (!_anyRemarked(remarked)) return;
     state = state.copyWith(recordings: remarked);
+  }
+
+  bool _anyRemarked(List<LocalRecordingEntity> remarked) {
+    for (var i = 0; i < remarked.length; i++) {
+      if (!identical(remarked[i], state.recordings[i])) return true;
+    }
+    return false;
   }
 
   /// [recording] with the outbox's answer on it, rather than whatever the

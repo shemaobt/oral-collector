@@ -512,12 +512,42 @@ Path: @/lib/features/recording/presentation
   `app_en.arb` and `app_pt.arb` were edited; the other nine locales never had
   a translation of their own for this key and inline the English source, so
   `gen-l10n` carried the new wording into all of them — none is left holding
-  the ENG-399 redo instruction. No
-  affordance shows the pending state itself yet: no affordance shows the
-  pending state today (`LocalRecordingEntity.hasPendingMetadata`/
-  `pendingMetadataFields` exist for that, but nothing reads them yet — a
-  future consumer is tracked as ENG-405; see
-  [../domain/docs.md](../domain/docs.md)). Two edits still don't ride this
+  the ENG-399 redo instruction.
+  **ENG-405 gives the pending state a mark, on the list card and on the detail
+  screen's status card.** `MetadataSyncStyle.forStatus`
+  (`widgets/metadata_sync_mark.dart`) is the single mapping from
+  `metadataSyncStatus` to a glyph, a colour token and a label, in the same
+  shape `CleaningStatusStyle` uses, so the two surfaces cannot describe one row
+  differently. It returns **null** for `synced` *and* for any token this build
+  does not recognise — a row written by a newer build draws nothing rather than
+  a guessed alarm the user could not act on. The card renders
+  `RecordingMetadataSyncMark` (public, so a test can assert absence by type) as
+  a row under the footer rather than a fourth chip inside it: the footer
+  already rations width between the classification, the pendency chip and the
+  duration. The detail screen renders a `StatusRow` directly under the upload
+  row.
+  Two states, deliberately not one: `pending` takes `colors.secondary` and a
+  clock, because reconnecting is all it needs and alarm buys nothing; the three
+  `failed_*` take `colors.error` and a glyph per cause (lock / copy /
+  alertOctagon), because they never clear themselves. All four labels name the
+  *edit*, never the upload — the two axes are independent and a `verified`
+  recording can still owe one, so a mark reading "not sent" without a subject
+  would be taken for the audio. The mark's text carries **no `maxLines`**,
+  unlike every other line on the card: the cause and the way out live at the
+  end of the sentence, and a two-line ceiling measurably truncated the
+  refusals at 1.0x on a 320dp phone.
+  **The mark is read off the database, not off what the list fetched.** The
+  list shows the server's projection for every recording the server knows
+  about, and `serverRecordingToLocal` reports `synced` by construction — which
+  is every recording that can owe an edit, since the outbox requires a
+  `serverId`. So `RecordingsListNotifier` follows
+  `metadataOutboxProvider` (see [../data/docs.md](../data/docs.md)) and applies
+  it both at server-conversion time and on every stream tick; that is also what
+  makes the mark clear itself after a drain behind the Wi-Fi gate, where
+  `lastSyncAt` — the list's usual refetch trigger — is deliberately not
+  written. A broken outbox stream leaves the screen unmarked but is reported
+  through `_reportUnexpected`, so the quiet is a decision and not a blind spot.
+  Two edits still don't ride this
   queue: one made through `setStoryteller`, whose own error handling doesn't
   distinguish "unreachable" from "refused"
   ([/lib/features/sync/docs.md](../../sync/docs.md)), and one made while the

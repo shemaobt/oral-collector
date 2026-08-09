@@ -16,10 +16,10 @@ import 'package:oral_collector/l10n/app_localizations.dart';
 
 import '../../../../support/text_scale.dart';
 
-const _waiting = 'Change waiting to be sent';
-const _forbidden = 'Change refused — you cannot edit this recording';
-const _conflict = 'Change refused — another recording has this title';
-const _exhausted = 'Change not sent — attempts used up';
+const _waiting = 'Edit waiting to be sent';
+const _forbidden = 'Edit refused: you cannot change this recording';
+const _conflict = 'Edit refused: another recording has this title';
+const _exhausted = 'Edit not sent — edit again to retry';
 
 const _everyMark = [_waiting, _forbidden, _conflict, _exhausted];
 

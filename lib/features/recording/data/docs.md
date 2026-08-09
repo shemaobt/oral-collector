@@ -73,6 +73,19 @@ Path: @/lib/features/recording/data
   `StreamProvider.family<LocalRecordingEntity?, String>` backed by
   `LocalRecordingRepository.watchRecordingEntityById` (the former row stream
   `watchRecordingById` was deleted with the detail tree's row→entity migration).
+  `metadataOutboxProvider` (ENG-405) is the second stream here: a
+  non-family `StreamProvider<Map<String, MetadataOutboxEntry>>` over
+  `LocalRecordingRepository.watchMetadataOutbox`, carrying every recording that
+  still owes the server a metadata write, keyed by **both** the local id and
+  the server id so a caller can look one up whichever it holds. One stream for
+  the whole list rather than one per card — the answer is almost always an
+  empty map, and a subscription per row would pay a Drift query each. The entry
+  is a record of two `String`s (`status`, `fieldsJson`) rather than a decoded
+  `Set`, because a `Set` inside a record compares by identity and the stream
+  dedups on `==`; `watchMetadataOutbox` needs that dedup, since a Drift `watch`
+  over `localRecordings` re-runs on every unrelated write to the table, an
+  upload's byte counter included. `RecordingsListNotifier` is its consumer
+  ([../presentation/docs.md](../presentation/docs.md)).
   `RecordingDetailNotifier`
   ([../presentation/notifiers/docs.md](../presentation/notifiers/docs.md))
   listens to it (native only, ENG-194) so any write through

@@ -25,6 +25,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:oral_collector/core/database/app_database.dart';
 import 'package:oral_collector/core/database/database_provider.dart';
+import 'package:oral_collector/core/observability/error_reporter.dart';
 import 'package:oral_collector/features/project/domain/entities/project.dart';
 import 'package:oral_collector/features/project/presentation/notifiers/project_notifier.dart';
 import 'package:oral_collector/features/project/presentation/notifiers/project_state.dart';
@@ -74,6 +75,41 @@ class _DrainingSyncEngine extends Mock implements SyncEngine {
   }) async {}
 }
 
+class _RecordingReporter implements ErrorReporter {
+  final List<Object> reported = [];
+
+  @override
+  void reportError(
+    Object error,
+    StackTrace? stackTrace, {
+    Map<String, String>? tags,
+    Map<String, Object?>? context,
+    ErrorLevel level = ErrorLevel.error,
+  }) => reported.add(error);
+
+  @override
+  void addBreadcrumb(
+    String message, {
+    String? category,
+    ErrorLevel level = ErrorLevel.info,
+    Map<String, Object?>? data,
+  }) {}
+
+  @override
+  void setUser({
+    String? id,
+    String? username,
+    String? email,
+    Map<String, Object?>? data,
+  }) {}
+
+  @override
+  void clearUser() {}
+
+  @override
+  void setTag(String key, String value) {}
+}
+
 class _FakeProjectNotifier extends ProjectNotifier {
   _FakeProjectNotifier(this._state);
   final ProjectState _state;
@@ -108,8 +144,8 @@ LocalRecordingsCompanion _pendingRow() => LocalRecordingsCompanion.insert(
   ),
 );
 
-ServerRecording _serverCopy() => ServerRecording(
-  id: _serverId,
+ServerRecording _serverCopy({String id = _serverId}) => ServerRecording(
+  id: id,
   projectId: _project.id,
   genreId: 'genre-1',
   // The server still holds the name from before the offline rename.
@@ -227,6 +263,86 @@ void main() {
       // server and the list stopped saying otherwise on its own.
       expect(engine.drains, 1);
       expect(markOn(container), MetadataSyncStatus.synced);
+    },
+  );
+
+  test('a recording that only turns up on page two is marked too', () async {
+    // The first page is full, so the list keeps paginating; the owed recording
+    // is on the second. `loadMore` converts server recordings through the same
+    // helper the first fetch does, and today that is the only reason it works —
+    // inline the conversion there and the mark disappears from page two with
+    // the rest of the suite still green.
+    final firstPage = [
+      for (var i = 0; i < 50; i++) _serverCopy(id: 'other-$i'),
+    ];
+    when(
+      () => api.listRecordings(
+        any(),
+        offset: 0,
+        limit: any(named: 'limit'),
+        userId: any(named: 'userId'),
+        storytellerId: any(named: 'storytellerId'),
+        reviewFlag: any(named: 'reviewFlag'),
+      ),
+    ).thenAnswer((_) async => firstPage);
+    when(
+      () => api.listRecordings(
+        any(),
+        offset: 50,
+        limit: any(named: 'limit'),
+        userId: any(named: 'userId'),
+        storytellerId: any(named: 'storytellerId'),
+        reviewFlag: any(named: 'reviewFlag'),
+      ),
+    ).thenAnswer((_) async => [_serverCopy()]);
+
+    await loadList();
+    final list = container.read(recordingsListNotifierProvider.notifier);
+    expect(container.read(recordingsListNotifierProvider).hasMore, isTrue);
+
+    await list.loadMore();
+
+    final owed = container
+        .read(recordingsListNotifierProvider)
+        .recordings
+        .firstWhere((r) => r.serverId == _serverId);
+    expect(owed.metadataSyncStatus, MetadataSyncStatus.pending);
+  });
+
+  test(
+    'a broken outbox stream stays off the screen but not off the wire',
+    () async {
+      final reporter = _RecordingReporter();
+      final broken = ProviderContainer(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(db),
+          recordingApiRepositoryProvider.overrideWithValue(api),
+          connectivityServiceProvider.overrideWithValue(connectivity),
+          syncEngineProvider.overrideWithValue(engine),
+          errorReporterProvider.overrideWithValue(reporter),
+          projectNotifierProvider.overrideWith(
+            () => _FakeProjectNotifier(
+              const ProjectState(activeProject: _project),
+            ),
+          ),
+          metadataOutboxProvider.overrideWith(
+            (_) => Stream.error(StateError('outbox stream is broken')),
+          ),
+        ],
+      );
+      addTearDown(broken.dispose);
+
+      broken.read(syncNotifierProvider);
+      await _pumpUntil(() => broken.read(syncNotifierProvider).isOnline);
+      await broken
+          .read(recordingsListNotifierProvider.notifier)
+          .fetchRecordings();
+      await _pumpUntil(() => reporter.reported.isNotEmpty);
+
+      // Quiet on screen is the right call — a mark nobody can act on is worse
+      // than none — but quiet everywhere is how this feature's own bug looked.
+      expect(markOn(broken), MetadataSyncStatus.synced);
+      expect(reporter.reported.single, isA<StateError>());
     },
   );
 

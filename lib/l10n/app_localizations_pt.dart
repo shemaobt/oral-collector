@@ -727,19 +727,19 @@ class AppLocalizationsPt extends AppLocalizations {
   String get recording_statusFileMissing => 'Arquivo de áudio ausente';
 
   @override
-  String get recording_metadataSyncPending => 'Alteração aguardando envio';
+  String get recording_metadataSyncPending => 'Edição aguardando envio';
 
   @override
   String get recording_metadataSyncForbidden =>
-      'Alteração recusada — você não pode editar esta gravação';
+      'Edição recusada: você não pode alterar esta gravação';
 
   @override
   String get recording_metadataSyncConflict =>
-      'Alteração recusada — outra gravação já tem este título';
+      'Edição recusada: outra gravação já tem este título';
 
   @override
   String get recording_metadataSyncExhausted =>
-      'Alteração não enviada — tentativas esgotadas';
+      'Edição não enviada — edite de novo para tentar';
 
   @override
   String get recording_uploadExhaustedMessage =>
