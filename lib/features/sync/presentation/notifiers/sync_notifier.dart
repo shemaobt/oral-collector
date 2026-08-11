@@ -227,8 +227,13 @@ class SyncNotifier extends Notifier<SyncState> {
   ///
   /// A recording the server never received exists nowhere else, so it is kept —
   /// clearing the cache used to delete it and an hour-long story was lost that
-  /// way (ENG-407). The file goes before the row that points at it, so no row is
-  /// ever left addressing a file that is gone.
+  /// way (ENG-407).
+  ///
+  /// A row is removed only once its file is actually gone. The row is the only
+  /// handle on that file — the storage figure and every later clear walk the
+  /// rows — so dropping it after a failed delete would strand the audio on disk
+  /// for good and report space that was never freed. A kept row with its file
+  /// is consistent, and the next clear retries it.
   Future<int> clearLocalCache() async {
     if (kIsWeb) return 0;
 
@@ -242,20 +247,29 @@ class SyncNotifier extends Notifier<SyncState> {
         )
         .toList();
 
-    await Future.wait(discardable.map((r) => _deleteQuietly(r.localFilePath)));
-    await _recordingRepo.deleteRecordingsByIds(
-      discardable.map((r) => r.id).toList(),
+    final deleted = await Future.wait(
+      discardable.map((r) => _tryDeleteFile(r.localFilePath)),
     );
+    final removableIds = [
+      for (var i = 0; i < discardable.length; i++)
+        if (deleted[i]) discardable[i].id,
+    ];
+    await _recordingRepo.deleteRecordingsByIds(removableIds);
 
     await _refreshPendingCount();
-    return all.length - discardable.length;
+    return all.length - removableIds.length;
   }
 
-  Future<void> _deleteQuietly(String path) async {
+  /// Deletes [path], reporting and swallowing any failure. Returns whether the
+  /// file is gone — an absent file is a success, since `deleteFile` checks
+  /// existence first and never throws for one.
+  Future<bool> _tryDeleteFile(String path) async {
     try {
-      await file_ops.deleteFile(path);
+      await ref.read(deleteFileProvider)(path);
+      return true;
     } on Exception catch (e, st) {
       ref.read(errorReporterProvider).reportError(e, st);
+      return false;
     }
   }
 

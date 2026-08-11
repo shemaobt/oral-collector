@@ -342,8 +342,11 @@ Path: @/lib/features/recording/data/repositories
   exactly one caller — the pre-ENG-407 cache clear, which deleted every row
   regardless of upload status — and was removed once that caller started
   filtering first. A per-row `deleteRecording` loop was rejected in favor of
-  the single `IN (...)` statement so a cache clear stays one pass over the
-  table with no partial-failure story.
+  the single `IN (...)` statement, so a cache clear is one pass over the table
+  and the row set either goes or stays as a unit. Partial failure is handled
+  one level up instead: the caller passes only the ids whose *file* it managed
+  to delete, so a row whose file survived survives with it rather than being
+  orphaned.
 - Lifecycle helpers: `markAsUploading`, `markAsUploaded(id, serverId,
   gcsUrl)`, `markAsFailed`, `resetRetryCount`, `resetStuckUploading`, and
   `normalizeExhaustedUploads`. These mutate only upload-state columns; they

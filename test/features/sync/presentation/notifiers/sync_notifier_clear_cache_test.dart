@@ -15,6 +15,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:oral_collector/core/database/app_database.dart';
+import 'package:oral_collector/core/platform/file_ops.dart' as file_ops;
 import 'package:oral_collector/features/recording/data/providers.dart';
 import 'package:oral_collector/features/recording/data/repositories/local_recording_repository.dart';
 import 'package:oral_collector/features/sync/data/providers.dart';
@@ -37,6 +38,7 @@ void main() {
   late LocalRecordingRepository repo;
   late ProviderContainer container;
   late Directory dir;
+  late List<Override> baseOverrides;
 
   setUp(() {
     SharedPreferences.setMockInitialValues({});
@@ -51,13 +53,12 @@ void main() {
       () => connectivity.onConnectivityChanged,
     ).thenAnswer((_) => const Stream.empty());
 
-    container = ProviderContainer(
-      overrides: [
-        connectivityServiceProvider.overrideWithValue(connectivity),
-        syncEngineProvider.overrideWithValue(_MockSyncEngine()),
-        localRecordingRepositoryProvider.overrideWithValue(repo),
-      ],
-    );
+    baseOverrides = [
+      connectivityServiceProvider.overrideWithValue(connectivity),
+      syncEngineProvider.overrideWithValue(_MockSyncEngine()),
+      localRecordingRepositoryProvider.overrideWithValue(repo),
+    ];
+    container = ProviderContainer(overrides: baseOverrides);
   });
 
   tearDown(() async {
@@ -202,6 +203,47 @@ void main() {
     await expectSurvived(a);
     await expectSurvived(b);
   });
+
+  test(
+    'a file that will not delete keeps its row rather than orphaning',
+    () async {
+      // A row is the only thing that can find the file again — the storage
+      // figure and any later clear both walk the rows. Dropping the row after a
+      // failed delete strands the audio on disk forever and reports space that
+      // was never freed.
+      final stuck = await seed(
+        'stuck',
+        uploadStatus: 'verified',
+        serverId: 'srv-stuck',
+      );
+      final fine = await seed(
+        'fine',
+        uploadStatus: 'verified',
+        serverId: 'srv-fine',
+      );
+
+      final failing = ProviderContainer(
+        overrides: [
+          ...baseOverrides,
+          deleteFileProvider.overrideWithValue((path) async {
+            if (path == stuck.file.path) {
+              throw const FileSystemException('permission denied');
+            }
+            await file_ops.deleteFile(path);
+          }),
+        ],
+      );
+      addTearDown(failing.dispose);
+
+      final n = failing.read(syncNotifierProvider.notifier);
+      await Future<void>.delayed(Duration.zero);
+      final count = await n.clearLocalCache();
+
+      await expectSurvived(stuck);
+      await expectDiscarded(fine);
+      expect(count, 1);
+    },
+  );
 
   test('the pending count reflects what stayed behind', () async {
     await seed('kept-failed', uploadStatus: 'failed');
