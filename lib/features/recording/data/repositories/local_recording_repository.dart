@@ -337,8 +337,11 @@ class LocalRecordingRepository {
     return result.read(sum) ?? 0.0;
   }
 
-  Future<int> deleteAllRecordings() async {
-    return _db.delete(_db.localRecordings).go();
+  /// Removes exactly [ids] in one statement, so a cache clear is a single pass
+  /// over the table instead of one round trip per row.
+  Future<int> deleteRecordingsByIds(List<String> ids) async {
+    if (ids.isEmpty) return 0;
+    return (_db.delete(_db.localRecordings)..where((t) => t.id.isIn(ids))).go();
   }
 
   /// Hands every retryable failure in [projectId] back to the upload queue, as

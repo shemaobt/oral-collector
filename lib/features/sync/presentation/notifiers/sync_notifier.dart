@@ -12,6 +12,7 @@ import '../../../../core/platform/file_ops.dart' as file_ops;
 import '../../../../l10n/app_localizations.dart';
 import '../../../recording/data/providers.dart';
 import '../../../recording/data/repositories/local_recording_repository.dart';
+import '../../../recording/domain/server_deletion_policy.dart';
 import '../../data/providers.dart';
 import '../../data/services/upload_foreground_service.dart';
 import '../../domain/repositories/connectivity_service.dart';
@@ -221,14 +222,33 @@ class SyncNotifier extends Notifier<SyncState> {
     );
   }
 
-  Future<void> clearLocalCache() async {
-    if (kIsWeb) return;
+  /// Drops the local copies the server already has and returns how many
+  /// recordings stayed on the device.
+  ///
+  /// A recording the server never received exists nowhere else, so it is kept —
+  /// clearing the cache used to delete it and an hour-long story was lost that
+  /// way (ENG-407). The file goes before the row that points at it, so no row is
+  /// ever left addressing a file that is gone.
+  Future<int> clearLocalCache() async {
+    if (kIsWeb) return 0;
 
     final all = await _recordingRepo.getAllLocalRecordings();
-    await Future.wait(all.map((r) => _deleteQuietly(r.localFilePath)));
+    final discardable = all
+        .where(
+          (r) => serverHasRecording(
+            serverId: r.serverId,
+            uploadStatus: r.uploadStatus,
+          ),
+        )
+        .toList();
 
-    await _recordingRepo.deleteAllRecordings();
+    await Future.wait(discardable.map((r) => _deleteQuietly(r.localFilePath)));
+    await _recordingRepo.deleteRecordingsByIds(
+      discardable.map((r) => r.id).toList(),
+    );
+
     await _refreshPendingCount();
+    return all.length - discardable.length;
   }
 
   Future<void> _deleteQuietly(String path) async {

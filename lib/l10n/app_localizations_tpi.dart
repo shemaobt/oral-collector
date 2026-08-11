@@ -1132,6 +1132,19 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get profile_cacheCleared => 'Lokal kes i klin pinis';
 
   @override
+  String profile_cacheClearedKept(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Local cache cleared. $count recordings were kept because they have not been uploaded yet.',
+      one:
+          'Local cache cleared. 1 recording was kept because it has not been uploaded yet.',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String profile_joinedSuccess(String name) {
     return 'Join long \"$name\" pinis';
   }

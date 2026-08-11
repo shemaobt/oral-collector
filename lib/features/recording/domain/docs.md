@@ -224,7 +224,11 @@ Path: @/lib/features/recording/domain
   function touches Flutter, Riverpod, or Drift — following the
   `recording_edit_policy.dart` precedent above: same shape (a pure predicate
   consumed by exactly the screen it gates), same test placement under
-  `test/features/recording/domain/`.
+  `test/features/recording/domain/`. ENG-407 deliberately did **not** add a
+  third one here: the "does the server have this recording?" question its
+  cache clear needed was already answered by `serverHasRecording` in
+  `server_deletion_policy.dart` below, and cloning a predicate that guards
+  against losing audio is how the two copies drift apart.
 - `server_deletion_policy.dart` (ENG-45) is the single definition of which
   local row a hard delete on the server is *allowed* to erase. It is a
   necessary condition, never a sufficient one: both consumers pair it with a
@@ -272,14 +276,35 @@ Path: @/lib/features/recording/domain
   change to one without the other would reopen the ENG-46 shape of bug (an
   affordance advertising an action it does not perform, or an action
   reaching rows the button never showed).
-- `canEraseAsDeletedOnServer({serverId, uploadStatus})` returns true only
+- `serverHasRecording({serverId, uploadStatus})` returns true only
   for a non-empty `serverId` whose `uploadStatus` is `uploaded` or
-  `verified`. Any other status means the row may never have completed the
+  `verified`; an empty string and a null id are the same "no id" case. Any
+  other status means the row may never have completed the
   round trip to the server — `markAsUploaded` is what writes `uploaded`
   alongside the server id, so anything still `local`/`uploading`/`failed`
-  may be the only copy of that audio, and the caller must never erase it no
-  matter what the server answers (PR #193, the data-loss this guards
-  against).
+  may be the only copy of that audio, and no caller may erase it no
+  matter what the server answers (ENG-45, after the loss in PR #193). It was
+  named `canEraseAsDeletedOnServer` until ENG-407 gave it a second caller that
+  is not about server-side deletion at all, so it now states the fact
+  ("the server has this recording") and lets each caller supply its own reason
+  to care. Two callers, one definition on purpose:
+  - The **heal paths** treat it as a *necessary* condition and pair it with a
+    confirmed 404 for that specific recording (see
+    [../presentation/notifiers/docs.md](../presentation/notifiers/docs.md)) —
+    only a recording the server acknowledged can be *missing* from it.
+  - **`SyncNotifier.clearLocalCache`** (ENG-407, `@/lib/features/sync/docs.md`)
+    treats it as *sufficient* on its own: no 404 confirmation, because a cache
+    clear never asks the server anything. Getting it wrong there is asymmetric
+    by design — keeping a copy the server already has costs disk space,
+    dropping one it does not costs the recording, which is why both conditions
+    are required rather than either alone.
+
+  Resist cloning this condition for a third caller. ENG-407 first shipped a
+  second copy of it in `upload_status_actions.dart` and that was reverted: a
+  duplicated safety predicate is how someone tightens one and forgets the
+  other, and the cost of forgetting is lost audio. If a future caller needs a
+  different rule, it needs a different *rule*, not a copy of this one. (PR #193
+  was an earlier, abandoned attempt at the ENG-407 fix.)
 
 ### Things to Know
 

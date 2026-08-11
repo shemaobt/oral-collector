@@ -1140,10 +1140,23 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get profile_clearCacheMessage =>
-      'Isso excluirá todas as gravações armazenadas localmente. As gravações enviadas ao servidor não serão afetadas.';
+      'Isso excluirá as gravações armazenadas localmente que o servidor já tem. As gravações que ainda não foram enviadas serão mantidas neste aparelho.';
 
   @override
   String get profile_cacheCleared => 'Cache local limpo';
+
+  @override
+  String profile_cacheClearedKept(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Cache local limpo. $count gravações foram mantidas porque ainda não foram enviadas.',
+      one:
+          'Cache local limpo. 1 gravação foi mantida porque ainda não foi enviada.',
+    );
+    return '$_temp0';
+  }
 
   @override
   String profile_joinedSuccess(String name) {
@@ -1201,7 +1214,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get profile_clearCacheSubtitle =>
-      'Excluir todas as gravações armazenadas localmente';
+      'Excluir as cópias locais que o servidor já tem';
 
   @override
   String get profile_invitations => 'Convites';
