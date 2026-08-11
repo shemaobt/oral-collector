@@ -608,17 +608,6 @@
   "recording_stop": "Simama",
   "recording_resume": "Endelea",
   "recording_pause": "Simamisha",
-  "recordings_clearStale": "Futa zilizoshindwa",
-  "recordings_clearStaleMessage": "Hii itafuta kabisa rekodi zote zenye hali ya kupakia iliyoshindwa au iliyokwama kutoka kwenye seva. Kitendo hiki hakiwezi kutenduliwa.",
-  "recordings_clearedCount": "{count, plural, =0{Hakuna rekodi za zamani zilizopatikana} =1{Rekodi 1 imefutwa} other{Rekodi {count} zimefutwa}}",
-  "@recordings_clearedCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "recordings_clearFailed": "Imeshindwa kufuta rekodi",
   "filter_unclassified": "Haijainishwa",
   "filter_missingDescription": "Hakuna maelezo",
   "quickRecord_title": "Rekodi Haraka",

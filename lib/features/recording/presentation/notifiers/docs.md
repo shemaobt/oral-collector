@@ -346,7 +346,7 @@ Path: @/lib/features/recording/presentation/notifiers
   `uploadStatus='failed_description'`, so this filter is how the user finds them
   and the detail banner is how they clear them) and never refetches, so only
   `setUserFilter`, `setStorytellerFilter`, `setReviewFlagFilter`,
-  `clearAllFilters`, `clearStaleRecordings`, and
+  `clearAllFilters`, `retryFailedUploads`, and
   pull-to-refresh re-hit the server. `patchRecordingTitle` rerenders after an
   edit without a full refetch, using the entity's sentinel `copyWith(title: …)`
   rather than Drift's `Value(...)` wrapper.
@@ -400,6 +400,22 @@ Path: @/lib/features/recording/presentation/notifiers
   so the screen picks the snackbar without re-deriving it from an
   exception. See Things to Know for the web-orphan fix and the
   remote-failure semantics.
+- `retryFailedUploads()` (ENG-404) is the bulk counterpart the recordings
+  list offers over `failed`/`failed_exhausted` rows. It replaced a hard
+  delete of the same set (the former `clearStaleRecordings`), which
+  destroyed the only copy of audio the server had never received. It calls
+  `LocalRecordingRepository.requeueFailedUploads` (one `UPDATE`; see
+  [../../data/repositories/docs.md](../../data/repositories/docs.md) for the
+  scope and batch-write rationale), fires `SyncNotifier.processQueue()`
+  **unawaited** — the caller only needs the rows queued, not the uploads
+  finished — and refetches. Unlike `deleteRecording`, there is no
+  confirmation dialog and no online pre-check: requeueing destroys nothing
+  and is idempotent, so a confirmation would only cost a second tap, and the
+  write needs no network — the rows drain on their own once the device is
+  back online. The visible consequence: the home screen's total no longer
+  drops when the user runs this, because the row survives and still counts
+  toward `getLocalOnlyStats` under its new status (see
+  [/lib/features/home/presentation/notifiers/docs.md](../../../home/presentation/notifiers/docs.md)).
 - `InputDeviceNotifier` tracks the currently selected microphone for
   capture; `InterruptedSessionsNotifier` powers the "you have an
   unsaved recording" prompt on app open by reading recovery rows from

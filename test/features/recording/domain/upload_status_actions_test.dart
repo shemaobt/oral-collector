@@ -1,8 +1,15 @@
-/// Which upload statuses two destructive-adjacent affordances answer to.
+/// Which upload statuses the two retry affordances answer to.
 ///
 /// Both used to treat `uploading` as a failure: Retry would fire a second
-/// upload over the live one, and "Clear failed" would appear — and then delete
-/// — while the recording was still on its way up (ENG-46).
+/// upload over the live one, and the list's bulk action would appear — and
+/// then delete — while the recording was still on its way up (ENG-46).
+///
+/// The bulk action is no longer destructive (ENG-404) and no longer matches
+/// `failed` alone. `failed_exhausted` is the status that most needs it: it left
+/// the queue for good and will not be attempted again without one. The three
+/// failures a bare retry cannot fix — a duplicate title, a short description, a
+/// missing audio file — stay out, because each would fail the same way again
+/// and each already has its own banner routing the user to the actual fix.
 library;
 
 import 'package:flutter_test/flutter_test.dart';
@@ -43,17 +50,43 @@ void main() {
     }
   });
 
-  group('hasClearableFailedUploads', () {
-    test('an upload in flight is not something to clear', () {
-      expect(hasClearableFailedUploads([_recording('uploading')]), isFalse);
+  group('hasRetryableFailedUploads', () {
+    const offered = ['failed', 'failed_exhausted'];
+    const withheld = [
+      'uploading',
+      'local',
+      'uploaded',
+      'verified',
+      'failed_conflict',
+      'failed_description',
+      'failed_missing_file',
+    ];
+
+    for (final status in offered) {
+      test('$status is worth retrying in bulk', () {
+        expect(hasRetryableFailedUploads([_recording(status)]), isTrue);
+      });
+    }
+
+    for (final status in withheld) {
+      test('$status is not', () {
+        expect(hasRetryableFailedUploads([_recording(status)]), isFalse);
+      });
+    }
+
+    test('an empty list has nothing to retry', () {
+      expect(hasRetryableFailedUploads(const []), isFalse);
     });
 
-    test('a failed upload is', () {
-      expect(hasClearableFailedUploads([_recording('failed')]), isTrue);
-    });
-
-    test('an empty list has nothing to clear', () {
-      expect(hasClearableFailedUploads(const []), isFalse);
+    test('one retryable failure among unretryable ones is enough', () {
+      expect(
+        hasRetryableFailedUploads([
+          _recording('failed_conflict'),
+          _recording('uploaded'),
+          _recording('failed_exhausted'),
+        ]),
+        isTrue,
+      );
     });
   });
 }

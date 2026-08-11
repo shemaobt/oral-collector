@@ -758,26 +758,23 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get recordings_clearStale => 'Limpar falhas';
+  String get recordings_retryFailedUploads => 'Tentar de novo';
 
   @override
-  String get recordings_clearStaleMessage =>
-      'Isto irá remover permanentemente todas as gravações com upload falhado ou travado do servidor. Esta ação não pode ser desfeita.';
-
-  @override
-  String recordings_clearedCount(int count) {
+  String recordings_retryQueuedCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count gravações removidas',
-      one: '1 gravação removida',
-      zero: 'Nenhuma gravação encontrada',
+      other: '$count gravações de volta na fila de envio',
+      one: '1 gravação de volta na fila de envio',
+      zero: 'Nenhum envio para tentar de novo',
     );
     return '$_temp0';
   }
 
   @override
-  String get recordings_clearFailed => 'Falha ao limpar gravações';
+  String get recordings_retryFailed =>
+      'Não foi possível recolocar os envios na fila';
 
   @override
   String get trim_title => 'Editar Gravação';

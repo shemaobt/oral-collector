@@ -756,26 +756,22 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String get recordings_clearStale => 'Bersihkan yang gagal';
+  String get recordings_retryFailedUploads => 'Retry uploads';
 
   @override
-  String get recordings_clearStaleMessage =>
-      'Ini akan menghapus secara permanen semua rekaman dengan status unggahan gagal atau macet dari server. Tindakan ini tidak dapat dibatalkan.';
-
-  @override
-  String recordings_clearedCount(int count) {
+  String recordings_retryQueuedCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count rekaman dibersihkan',
-      one: '1 rekaman dibersihkan',
-      zero: 'Tidak ada rekaman usang ditemukan',
+      other: '$count recordings back in the upload queue',
+      one: '1 recording back in the upload queue',
+      zero: 'No uploads to retry',
     );
     return '$_temp0';
   }
 
   @override
-  String get recordings_clearFailed => 'Gagal membersihkan rekaman';
+  String get recordings_retryFailed => 'Could not queue the uploads again';
 
   @override
   String get trim_title => 'Edit Rekaman';

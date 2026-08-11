@@ -608,17 +608,6 @@
   "recording_stop": "Arrêter",
   "recording_resume": "Reprendre",
   "recording_pause": "Pause",
-  "recordings_clearStale": "Supprimer les échecs",
-  "recordings_clearStaleMessage": "Cela supprimera définitivement tous les enregistrements avec un statut de téléversement échoué ou bloqué du serveur. Cette action est irréversible.",
-  "recordings_clearedCount": "{count, plural, =0{Aucun enregistrement obsolète trouvé} =1{1 enregistrement supprimé} other{{count} enregistrements supprimés}}",
-  "@recordings_clearedCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "recordings_clearFailed": "Échec de la suppression des enregistrements",
   "filter_unclassified": "Non classifié",
   "filter_missingDescription": "Sans description",
   "quickRecord_title": "Enregistrement Rapide",

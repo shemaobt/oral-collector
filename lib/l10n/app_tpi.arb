@@ -608,17 +608,6 @@
   "recording_stop": "Stop",
   "recording_resume": "Stat gen",
   "recording_pause": "Stopim liklik",
-  "recordings_clearStale": "Klinim ol i pundaun",
-  "recordings_clearStaleMessage": "Dispela bai rausim olgeta rekoding we i pundaun o i pas long salim i go antap long seva. Dispela aksen i no inap senisim bek.",
-  "recordings_clearedCount": "{count, plural, =0{I no painim ol olpela rekoding} =1{Klinim 1 rekoding} other{Klinim {count} rekoding}}",
-  "@recordings_clearedCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "recordings_clearFailed": "No inap klinim ol rekoding",
   "filter_unclassified": "I no makim kain yet",
   "filter_missingDescription": "I no gat stori",
   "quickRecord_title": "Rekodim Hariap",

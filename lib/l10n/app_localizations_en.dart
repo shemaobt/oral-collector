@@ -752,26 +752,22 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get recordings_clearStale => 'Clear failed';
+  String get recordings_retryFailedUploads => 'Retry uploads';
 
   @override
-  String get recordings_clearStaleMessage =>
-      'This will permanently delete all recordings with failed or stuck upload status from the server. This cannot be undone.';
-
-  @override
-  String recordings_clearedCount(int count) {
+  String recordings_retryQueuedCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Cleared $count recordings',
-      one: 'Cleared 1 recording',
-      zero: 'No stale recordings found',
+      other: '$count recordings back in the upload queue',
+      one: '1 recording back in the upload queue',
+      zero: 'No uploads to retry',
     );
     return '$_temp0';
   }
 
   @override
-  String get recordings_clearFailed => 'Failed to clear recordings';
+  String get recordings_retryFailed => 'Could not queue the uploads again';
 
   @override
   String get trim_title => 'Edit Recording';

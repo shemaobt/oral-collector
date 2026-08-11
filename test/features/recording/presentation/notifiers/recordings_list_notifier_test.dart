@@ -68,6 +68,7 @@ class _FakeSyncNotifier extends SyncNotifier {
     : _initialOnline = initialOnline;
 
   final bool _initialOnline;
+  int _processQueueCalls = 0;
 
   @override
   SyncState build() => SyncState(isOnline: _initialOnline);
@@ -75,6 +76,13 @@ class _FakeSyncNotifier extends SyncNotifier {
   void setOnline(bool online) {
     state = state.copyWith(isOnline: online);
   }
+
+  @override
+  Future<void> processQueue() async {
+    _processQueueCalls++;
+  }
+
+  int processQueueCallCount() => _processQueueCalls;
 }
 
 class _FakeProjectNotifier extends ProjectNotifier {
@@ -275,23 +283,70 @@ void main() {
     );
   });
 
-  group('RecordingsListNotifier.clearStaleRecordings — offline', () {
-    test('offline returns null without touching server or local', () async {
-      final container = makeContainer(online: false);
+  group('RecordingsListNotifier.retryFailedUploads', () {
+    ProviderContainer makeRetryContainer(_FakeSyncNotifier sync) {
+      when(
+        () => local.getAllRecordings('proj-1'),
+      ).thenAnswer((_) async => const []);
+      when(
+        () => api.listRecordings(
+          'proj-1',
+          offset: any(named: 'offset'),
+          limit: any(named: 'limit'),
+          userId: any(named: 'userId'),
+          storytellerId: any(named: 'storytellerId'),
+        ),
+      ).thenAnswer((_) async => const []);
+      return ProviderContainer(
+        overrides: [
+          recordingApiRepositoryProvider.overrideWithValue(api),
+          localRecordingRepositoryProvider.overrideWithValue(local),
+          projectNotifierProvider.overrideWith(
+            () => _FakeProjectNotifier(
+              ProjectState(activeProject: activeProject),
+            ),
+          ),
+          syncNotifierProvider.overrideWith(() => sync),
+          errorReporterProvider.overrideWithValue(reporter),
+        ],
+      );
+    }
+
+    test('requeues the whole batch with a single drain', () async {
+      // resetAndRetry-per-row would be N drains fighting SyncNotifier's
+      // _isProcessing guard, so all but the first would be dropped.
+      when(
+        () => local.requeueFailedUploads('proj-1'),
+      ).thenAnswer((_) async => 3);
+      final sync = _FakeSyncNotifier(initialOnline: true);
+      final container = makeRetryContainer(sync);
       addTearDown(container.dispose);
 
-      final result = await container
+      final requeued = await container
           .read(recordingsListNotifierProvider.notifier)
-          .clearStaleRecordings();
+          .retryFailedUploads();
 
-      expect(
-        result,
-        isNull,
-        reason:
-            'null distinguishes "offline no-op" from a real "0 deleted" success',
+      expect(requeued, 3);
+      verify(() => local.requeueFailedUploads('proj-1')).called(1);
+      expect(sync.processQueueCallCount(), 1);
+    });
+
+    test('deletes nothing, locally or on the server', () async {
+      when(
+        () => local.requeueFailedUploads('proj-1'),
+      ).thenAnswer((_) async => 2);
+      final container = makeRetryContainer(
+        _FakeSyncNotifier(initialOnline: true),
       );
-      verifyNever(() => api.clearStaleRecordings(any()));
-      verifyNever(() => local.deleteStaleRecordings(any()));
+      addTearDown(container.dispose);
+
+      await container
+          .read(recordingsListNotifierProvider.notifier)
+          .retryFailedUploads();
+
+      verifyNever(() => local.deleteRecording(any()));
+      verifyNever(() => local.deleteAllRecordings());
+      verifyNever(() => api.deleteRecording(any()));
     });
   });
 

@@ -608,17 +608,6 @@
   "recording_stop": "중지",
   "recording_resume": "재개",
   "recording_pause": "일시정지",
-  "recordings_clearStale": "실패 항목 삭제",
-  "recordings_clearStaleMessage": "서버에서 업로드 실패 또는 멈춘 상태의 모든 녹음을 영구적으로 삭제합니다. 이 작업은 취소할 수 없습니다.",
-  "recordings_clearedCount": "{count, plural, =0{오래된 녹음이 없습니다} =1{녹음 1개 삭제됨} other{녹음 {count}개 삭제됨}}",
-  "@recordings_clearedCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "recordings_clearFailed": "녹음 삭제에 실패했습니다",
   "filter_unclassified": "미분류",
   "filter_missingDescription": "설명 없음",
   "quickRecord_title": "빠른 녹음",

@@ -39,6 +39,4 @@ abstract class RecordingApiRepository {
     required String serverId,
     required List<SplitSegmentRequest> segments,
   });
-
-  Future<int> clearStaleRecordings(String projectId);
 }

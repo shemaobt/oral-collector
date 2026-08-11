@@ -755,26 +755,22 @@ class AppLocalizationsSw extends AppLocalizations {
   }
 
   @override
-  String get recordings_clearStale => 'Futa zilizoshindwa';
+  String get recordings_retryFailedUploads => 'Retry uploads';
 
   @override
-  String get recordings_clearStaleMessage =>
-      'Hii itafuta kabisa rekodi zote zenye hali ya kupakia iliyoshindwa au iliyokwama kutoka kwenye seva. Kitendo hiki hakiwezi kutenduliwa.';
-
-  @override
-  String recordings_clearedCount(int count) {
+  String recordings_retryQueuedCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Rekodi $count zimefutwa',
-      one: 'Rekodi 1 imefutwa',
-      zero: 'Hakuna rekodi za zamani zilizopatikana',
+      other: '$count recordings back in the upload queue',
+      one: '1 recording back in the upload queue',
+      zero: 'No uploads to retry',
     );
     return '$_temp0';
   }
 
   @override
-  String get recordings_clearFailed => 'Imeshindwa kufuta rekodi';
+  String get recordings_retryFailed => 'Could not queue the uploads again';
 
   @override
   String get trim_title => 'Hariri Rekodi';

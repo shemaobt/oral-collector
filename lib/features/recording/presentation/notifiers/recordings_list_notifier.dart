@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/errors/api_exception.dart';
@@ -653,18 +655,27 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
     await fetchRecordings();
   }
 
-  Future<int?> clearStaleRecordings() async {
+  /// Puts every retryable failure back in the upload queue. Returns how many
+  /// rows moved.
+  ///
+  /// Reset the whole batch first, then drain once. The per-row alternative,
+  /// `SyncNotifier.resetAndRetry`, ends in `syncOne`, which takes the same
+  /// `_isProcessing` guard `processQueue` does — calling it in a loop would
+  /// fan out N passes for a guard that admits one, and the rest would be
+  /// dropped silently.
+  ///
+  /// The drain is deliberately not awaited: it runs the uploads themselves, and
+  /// the caller only needs to know the rows are queued. Nothing here needs the
+  /// network — requeueing offline is still useful, because the rows then drain
+  /// on their own once reachability returns.
+  Future<int> retryFailedUploads() async {
     final projectId = ref.read(projectNotifierProvider).activeProject?.id;
     if (projectId == null) return 0;
 
-    // null (not 0) signals "didn't run because offline" so the screen can
-    // distinguish a real "0 deleted" success from a no-op fail-fast.
-    if (!ref.read(syncNotifierProvider).isOnline) return null;
-
-    final serverDeleted = await _apiRepo.clearStaleRecordings(projectId);
-    await _localRepo.deleteStaleRecordings(projectId);
+    final requeued = await _localRepo.requeueFailedUploads(projectId);
+    unawaited(ref.read(syncNotifierProvider.notifier).processQueue());
     await fetchRecordings();
-    return serverDeleted;
+    return requeued;
   }
 
   void _reportUnexpected(Object error, StackTrace stackTrace) {

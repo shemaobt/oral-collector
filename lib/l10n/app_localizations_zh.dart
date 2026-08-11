@@ -730,26 +730,22 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get recordings_clearStale => '清除失败项';
+  String get recordings_retryFailedUploads => 'Retry uploads';
 
   @override
-  String get recordings_clearStaleMessage =>
-      '此操作将永久删除服务器上所有上传失败或卡住的录音。此操作无法撤消。';
-
-  @override
-  String recordings_clearedCount(int count) {
+  String recordings_retryQueuedCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '已清除 $count 条录音',
-      one: '已清除 1 条录音',
-      zero: '未找到过期录音',
+      other: '$count recordings back in the upload queue',
+      one: '1 recording back in the upload queue',
+      zero: 'No uploads to retry',
     );
     return '$_temp0';
   }
 
   @override
-  String get recordings_clearFailed => '清除录音失败';
+  String get recordings_retryFailed => 'Could not queue the uploads again';
 
   @override
   String get trim_title => '编辑录音';

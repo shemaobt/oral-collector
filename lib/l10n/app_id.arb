@@ -608,17 +608,6 @@
   "recording_stop": "Berhenti",
   "recording_resume": "Lanjutkan",
   "recording_pause": "Jeda",
-  "recordings_clearStale": "Bersihkan yang gagal",
-  "recordings_clearStaleMessage": "Ini akan menghapus secara permanen semua rekaman dengan status unggahan gagal atau macet dari server. Tindakan ini tidak dapat dibatalkan.",
-  "recordings_clearedCount": "{count, plural, =0{Tidak ada rekaman usang ditemukan} =1{1 rekaman dibersihkan} other{{count} rekaman dibersihkan}}",
-  "@recordings_clearedCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "recordings_clearFailed": "Gagal membersihkan rekaman",
   "filter_unclassified": "Belum diklasifikasi",
   "filter_missingDescription": "Tanpa deskripsi",
   "quickRecord_title": "Rekam Cepat",

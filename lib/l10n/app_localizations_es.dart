@@ -763,26 +763,22 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get recordings_clearStale => 'Limpiar fallidos';
+  String get recordings_retryFailedUploads => 'Retry uploads';
 
   @override
-  String get recordings_clearStaleMessage =>
-      'Esto eliminará permanentemente todas las grabaciones con estado de subida fallido o atascado del servidor. Esta acción no se puede deshacer.';
-
-  @override
-  String recordings_clearedCount(int count) {
+  String recordings_retryQueuedCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Se limpiaron $count grabaciones',
-      one: 'Se limpió 1 grabación',
-      zero: 'No se encontraron grabaciones obsoletas',
+      other: '$count recordings back in the upload queue',
+      one: '1 recording back in the upload queue',
+      zero: 'No uploads to retry',
     );
     return '$_temp0';
   }
 
   @override
-  String get recordings_clearFailed => 'Error al limpiar grabaciones';
+  String get recordings_retryFailed => 'Could not queue the uploads again';
 
   @override
   String get trim_title => 'Editar Grabación';

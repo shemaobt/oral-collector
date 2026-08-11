@@ -765,27 +765,22 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get recordings_clearStale => 'Supprimer les échecs';
+  String get recordings_retryFailedUploads => 'Retry uploads';
 
   @override
-  String get recordings_clearStaleMessage =>
-      'Cela supprimera définitivement tous les enregistrements avec un statut de téléversement échoué ou bloqué du serveur. Cette action est irréversible.';
-
-  @override
-  String recordings_clearedCount(int count) {
+  String recordings_retryQueuedCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count enregistrements supprimés',
-      one: '1 enregistrement supprimé',
-      zero: 'Aucun enregistrement obsolète trouvé',
+      other: '$count recordings back in the upload queue',
+      one: '1 recording back in the upload queue',
+      zero: 'No uploads to retry',
     );
     return '$_temp0';
   }
 
   @override
-  String get recordings_clearFailed =>
-      'Échec de la suppression des enregistrements';
+  String get recordings_retryFailed => 'Could not queue the uploads again';
 
   @override
   String get trim_title => 'Modifier l\'Enregistrement';
