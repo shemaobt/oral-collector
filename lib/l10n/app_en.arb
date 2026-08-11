@@ -563,8 +563,16 @@
   "profile_deleteAccountWarning": "This action is permanent and cannot be undone. Your account will be deleted, but your uploaded recordings will be preserved for the language projects.",
   "profile_typeDelete": "Type DELETE to confirm account deletion:",
   "profile_clearCacheTitle": "Clear local cache?",
-  "profile_clearCacheMessage": "This will delete all locally stored recordings. Uploaded recordings on the server will not be affected.",
+  "profile_clearCacheMessage": "This will delete the locally stored recordings the server already has. Recordings that have not been uploaded yet are kept on this device.",
   "profile_cacheCleared": "Local cache cleared",
+  "profile_cacheClearedKept": "{count, plural, =1{Local cache cleared. 1 recording was kept because it has not been uploaded yet.} other{Local cache cleared. {count} recordings were kept because they have not been uploaded yet.}}",
+  "@profile_cacheClearedKept": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "profile_joinedSuccess": "Joined \"{name}\" successfully",
   "@profile_joinedSuccess": {
     "placeholders": {
@@ -608,7 +616,7 @@
   "profile_autoRemove": "Auto-remove after upload",
   "profile_autoRemoveSubtitle": "Delete local files after successful upload",
   "profile_clearCache": "Clear local cache",
-  "profile_clearCacheSubtitle": "Delete all locally stored recordings",
+  "profile_clearCacheSubtitle": "Delete the local copies the server already has",
   "profile_invitations": "Invitations",
   "profile_refreshInvitations": "Refresh invitations",
   "profile_noInvitations": "No pending invitations",

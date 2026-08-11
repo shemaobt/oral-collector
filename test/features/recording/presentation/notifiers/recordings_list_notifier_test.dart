@@ -345,7 +345,6 @@ void main() {
           .retryFailedUploads();
 
       verifyNever(() => local.deleteRecording(any()));
-      verifyNever(() => local.deleteAllRecordings());
       verifyNever(() => api.deleteRecording(any()));
     });
   });

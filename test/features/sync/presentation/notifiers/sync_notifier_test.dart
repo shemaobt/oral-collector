@@ -55,6 +55,7 @@ LocalRecording makeRecording({
   String? title = 'Test',
   int retryCount = 0,
   String localFilePath = '/tmp/test.m4a',
+  String? serverId,
 }) => LocalRecording(
   id: id,
   reviewFlagsJson: '[]',
@@ -71,7 +72,7 @@ LocalRecording makeRecording({
   format: 'm4a',
   localFilePath: localFilePath,
   uploadStatus: uploadStatus,
-  serverId: null,
+  serverId: serverId,
   gcsUrl: null,
   registerId: null,
   cleaningStatus: 'none',
@@ -1046,7 +1047,10 @@ void main() {
   });
 
   group('clearLocalCache', () {
-    test('deletes every local file and then clears the repository', () async {
+    // Only rows the server demonstrably has are discardable at all; which rows
+    // qualify is covered by sync_notifier_clear_cache_test.dart. What this pins
+    // is the order: a row that outlived its file would point at nothing.
+    test('deletes the file before the row that points at it', () async {
       final dir = Directory.systemTemp.createTempSync('sync_storage_clear');
       addTearDown(() {
         if (dir.existsSync()) dir.deleteSync(recursive: true);
@@ -1056,12 +1060,25 @@ void main() {
 
       when(() => mockRecordingRepo.getAllLocalRecordings()).thenAnswer(
         (_) async => [
-          makeRecording(id: 'a', localFilePath: a.path),
-          makeRecording(id: 'b', localFilePath: b.path),
+          makeRecording(
+            id: 'a',
+            localFilePath: a.path,
+            uploadStatus: 'verified',
+            serverId: 'srv-a',
+          ),
+          makeRecording(
+            id: 'b',
+            localFilePath: b.path,
+            uploadStatus: 'uploaded',
+            serverId: 'srv-b',
+          ),
         ],
       );
-      when(() => mockRecordingRepo.deleteAllRecordings()).thenAnswer((_) async {
-        // Ordering contract: files are deleted before the repository is cleared.
+      var rowsRemoved = false;
+      when(() => mockRecordingRepo.deleteRecordingsByIds(any())).thenAnswer((
+        _,
+      ) async {
+        rowsRemoved = true;
         expect(a.existsSync(), isFalse);
         expect(b.existsSync(), isFalse);
         return 2;
@@ -1071,9 +1088,9 @@ void main() {
       await Future<void>.delayed(Duration.zero);
       await notifier.clearLocalCache();
 
-      expect(a.existsSync(), isFalse);
-      expect(b.existsSync(), isFalse);
-      verify(() => mockRecordingRepo.deleteAllRecordings()).called(1);
+      // Without this the assertions above are unreachable — and silently so —
+      // for any implementation that removes the rows some other way.
+      expect(rowsRemoved, isTrue);
     });
   });
 

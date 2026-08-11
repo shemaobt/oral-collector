@@ -126,7 +126,7 @@ Path: @/lib/features/recording/presentation/notifiers
     ([../../data/recording_heal_companion.dart](../../data/recording_heal_companion.dart)),
     then (online, still no row) falls back to a server fetch mapped through
     `serverRecordingToLocal`; web always fetches the server DTO. Since ENG-45,
-    if that heal call 404s for a row that `canEraseAsDeletedOnServer`
+    if that heal call 404s for a row that `serverHasRecording`
     ([../../domain/server_deletion_policy.dart](../../domain/server_deletion_policy.dart))
     accepts, the row and its audio file are erased and the server-fallback
     fetch above is skipped for this load — asking again would only re-confirm
@@ -134,7 +134,7 @@ Path: @/lib/features/recording/presentation/notifiers
     that never finished uploading, because `_needsUserRefresh` (unlike
     `_needsGcsRefresh`) does not check `uploadStatus`: there is a real window
     where a row has a `serverId` but is still `uploading`/`failed` (the id is
-    written before `markAsUploaded`), and `canEraseAsDeletedOnServer`'s status
+    written before `markAsUploaded`), and `serverHasRecording`'s status
     check is what keeps a stray 404 in that window from erasing it. The resolved row
     is mapped to the entity **exactly once at the state boundary** via
     `localRecordingToEntity`
@@ -305,7 +305,7 @@ Path: @/lib/features/recording/presentation/notifiers
   page joins it through `_advanceSweep`, and the last page — the one shorter
   than `_pageSize` (50) — closes it. Only then are the local rows absent from
   the union considered, and they are *candidates*, not verdicts: each is put
-  through `canEraseAsDeletedOnServer` (see
+  through `serverHasRecording` (see
   [../../domain/docs.md](../../domain/docs.md)) and then confirmed with a
   direct `getRecording(serverId)`, and only a 404 — read with the shared
   `isRecordingNotFound` — erases the row and its audio file. Anything else the
@@ -720,7 +720,7 @@ Path: @/lib/features/recording/presentation/notifiers
   `getRecording` instead. Since ENG-399 a false positive is not a cache
   eviction: a metadata edit made offline lives only on the local row until
   the metadata outbox drains it (ENG-403 added the drain; before it, nothing
-  ever resent the edit), so `canEraseAsDeletedOnServer` no longer implies the
+  ever resent the edit), so `serverHasRecording` no longer implies the
   row is a redundant copy of what the server has — an erroneous erase before
   the drain runs would lose the edit outright, not merely evict a cache
   entry.

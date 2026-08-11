@@ -294,7 +294,7 @@ Path: @/lib/features/recording/data/repositories
   The same row-delete is also the one `RecordingsListNotifier`'s
   whole-project-sweep reconciliation and `RecordingDetailNotifier`'s
   metadata-heal 404 branch call to erase a row the server hard-deleted
-  (ENG-45, gated by `canEraseAsDeletedOnServer` — see
+  (ENG-45, gated by `serverHasRecording` — see
   [../../domain/docs.md](../../domain/docs.md)).
   `requeueFailedUploads(projectId)` (ENG-404) is the separate user-triggered
   bulk retry over the same project: one `UPDATE` that writes `uploadStatus`,
@@ -331,6 +331,22 @@ Path: @/lib/features/recording/data/repositories
   still having attempts left. See
   [/lib/features/sync/docs.md](../../../sync/docs.md) for the drain and the
   error taxonomy that decides which of these each outcome calls.
+- `deleteRecordingsByIds(ids)` (ENG-407) is a single `DELETE ... WHERE id IN
+  (...)` statement, returning `0` without touching the database on an empty
+  list. `SyncNotifier.clearLocalCache`
+  ([../../../sync/docs.md](../../../sync/docs.md)) is the sole caller: it
+  filters the local rows down to the subset `serverHasRecording`
+  ([../../domain/docs.md](../../domain/docs.md)) says the server already has,
+  then deletes exactly those rows in one pass. It replaced
+  `deleteAllRecordings` (a bare `DELETE` over the whole table), which had
+  exactly one caller — the pre-ENG-407 cache clear, which deleted every row
+  regardless of upload status — and was removed once that caller started
+  filtering first. A per-row `deleteRecording` loop was rejected in favor of
+  the single `IN (...)` statement, so a cache clear is one pass over the table
+  and the row set either goes or stays as a unit. Partial failure is handled
+  one level up instead: the caller passes only the ids whose *file* it managed
+  to delete, so a row whose file survived survives with it rather than being
+  orphaned.
 - Lifecycle helpers: `markAsUploading`, `markAsUploaded(id, serverId,
   gcsUrl)`, `markAsFailed`, `resetRetryCount`, `resetStuckUploading`, and
   `normalizeExhaustedUploads`. These mutate only upload-state columns; they

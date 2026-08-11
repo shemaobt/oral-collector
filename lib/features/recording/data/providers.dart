@@ -73,3 +73,10 @@ final localRecordingStreamProvider =
 final fileExistsProvider = Provider<Future<bool> Function(String path)>(
   (_) => file_ops.fileExists,
 );
+
+/// Injectable file delete, so a delete that *fails* can be driven in tests.
+/// The cache clear's behaviour on failure is load-bearing — it decides whether
+/// the row survives with its file or the file is orphaned (ENG-407).
+final deleteFileProvider = Provider<Future<void> Function(String path)>(
+  (_) => file_ops.deleteFile,
+);

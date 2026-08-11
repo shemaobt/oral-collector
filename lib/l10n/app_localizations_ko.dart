@@ -1108,6 +1108,19 @@ class AppLocalizationsKo extends AppLocalizations {
   String get profile_cacheCleared => '로컬 캐시가 삭제되었습니다';
 
   @override
+  String profile_cacheClearedKept(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Local cache cleared. $count recordings were kept because they have not been uploaded yet.',
+      one:
+          'Local cache cleared. 1 recording was kept because it has not been uploaded yet.',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String profile_joinedSuccess(String name) {
     return '\"$name\"에 성공적으로 참여했습니다';
   }
