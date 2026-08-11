@@ -1,4 +1,5 @@
 import '../../../core/database/app_database.dart';
+import '../domain/entities/pending_metadata_field.dart';
 import '../domain/entities/review_flag.dart';
 import '../domain/entities/server_recording.dart';
 
@@ -39,5 +40,11 @@ LocalRecording serverRecordingToLocal(ServerRecording server) {
     splitIndex: server.splitIndex,
     splitSegmentCount: server.splitSegmentCount,
     reviewFlagsJson: encodeReviewFlags(server.reviewFlags),
+    // Straight from the server, so by construction it owes the server nothing
+    // (ENG-403). This projection is not backed by a stored row — any real
+    // pendency lives on the local row the caller may already have.
+    metadataSyncStatus: MetadataSyncStatus.synced,
+    pendingMetadataJson: '[]',
+    metadataRetryCount: 0,
   );
 }

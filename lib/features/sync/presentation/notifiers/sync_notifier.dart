@@ -268,6 +268,14 @@ class SyncNotifier extends Notifier<SyncState> {
     // no run is reported, no foreground service is raised, and the UI can tell
     // the user why nothing moved (ENG-355).
     if (state.autoUploadWifiOnly && !isWifi) {
+      // The gate holds back the uploads, not the metadata outbox (ENG-403):
+      // this return is what the engine's own exemption would never be reached
+      // through, so the drain is asked for explicitly here. `blockReason` still
+      // says Wi-Fi, and truthfully — it describes the uploads, which really are
+      // waiting. Nothing else is written: `lastSyncAt` and `syncProgress` would
+      // report a queue run that did not happen, and `pendingCount` counts
+      // uploads, which this drain does not change.
+      await _syncEngine.processPendingMetadata();
       state = state.copyWith(blockReason: SyncBlockReason.wifiOnly);
       return;
     }

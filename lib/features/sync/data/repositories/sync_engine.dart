@@ -10,17 +10,25 @@ import 'package:path_provider/path_provider.dart';
 
 import '../../../../core/config/upload_retry_policy.dart';
 import '../../../../core/database/app_database.dart';
-import '../../../../core/errors/app_exception.dart' show AppException;
+import '../../../../core/errors/app_exception.dart'
+    show
+        AppException,
+        ConflictException,
+        ForbiddenException,
+        UnauthorizedException;
 import '../../../../core/network/authenticated_client.dart';
 import '../../../../core/network/response_decoder.dart';
 import '../../../../core/platform/file_ops.dart' as file_ops;
 import '../../../../core/serialization/safe_read.dart';
 import '../../../../shared/utils/recording_description.dart';
 import '../../../recording/data/repositories/local_recording_repository.dart';
+import '../../../recording/domain/entities/pending_metadata_field.dart';
 import '../../../recording/domain/entities/review_flag.dart';
+import '../../../recording/domain/repositories/recording_api_repository.dart';
 import '../../../storyteller/data/repositories/local_storyteller_repository.dart';
 import '../../domain/repositories/connectivity_service.dart';
 import '../../domain/repositories/sync_engine.dart';
+import '../pending_metadata_request.dart';
 import '../services/resumable_upload_service.dart';
 import '../services/upload_downloader.dart';
 
@@ -57,6 +65,12 @@ class SyncEngineImpl implements SyncEngine {
   final LocalStorytellerRepository _storytellerRepo;
   final ConnectivityService _connectivity;
   final AuthenticatedClient _client;
+
+  /// The metadata drain goes through the API repository rather than [_client]
+  /// so it inherits the one place that knows what `PATCH /recordings/{id}`
+  /// means: 403 as a refusal, 409 as a name clash, and the review flags the
+  /// server recomputes on every accepted write (ENG-403).
+  final RecordingApiRepository _recordingApi;
   late final ResumableUploadService _uploadService;
 
   static const Duration _apiTimeout = Duration(seconds: 30);
@@ -69,11 +83,13 @@ class SyncEngineImpl implements SyncEngine {
     required LocalStorytellerRepository storytellerRepo,
     required ConnectivityService connectivity,
     required AuthenticatedClient client,
+    required RecordingApiRepository recordingApi,
     UploadDownloader? uploadDownloader,
   }) : _recordingRepo = recordingRepo,
        _storytellerRepo = storytellerRepo,
        _connectivity = connectivity,
-       _client = client {
+       _client = client,
+       _recordingApi = recordingApi {
     _uploadService = ResumableUploadService(
       client: _client,
       recordingRepo: _recordingRepo,
@@ -107,6 +123,12 @@ class SyncEngineImpl implements SyncEngine {
     try {
       final online = await _connectivity.isOnline;
       if (!online) return;
+
+      // Above the Wi-Fi gate on purpose (ENG-403): that preference exists to
+      // keep megabytes of audio off a metered connection, and a metadata PATCH
+      // is a few hundred bytes. The product rule is that an edit goes up when
+      // the connection returns, not when Wi-Fi does.
+      await _processPendingMetadata();
 
       if (wifiOnly) {
         final onWifi = await _connectivity.isOnWifi;
@@ -526,6 +548,128 @@ class SyncEngineImpl implements SyncEngine {
         await _storytellerRepo.markFailed(row.id);
       }
     }
+  }
+
+  @override
+  Future<void> processPendingMetadata() async {
+    // Takes the same bail-if-busy guard as [processQueue], which already drains
+    // this queue: whichever runs first wins, so the two can never both be
+    // pushing the same row.
+    if (_isProcessing) return;
+    _isProcessing = true;
+    try {
+      if (!await _connectivity.isOnline) return;
+      await _processPendingMetadata();
+    } finally {
+      _isProcessing = false;
+    }
+  }
+
+  /// First queue of the pass (ENG-403): metadata edits made while the server
+  /// was out of reach.
+  ///
+  /// Same shape as [_processPendingStorytellers] on purpose — selection by
+  /// predicate, the shared [_isWithinBackoffWindow], and no schedule of its own:
+  /// the reconnect hook that already calls `processQueue` is what makes an
+  /// offline edit go up by itself.
+  Future<void> _processPendingMetadata() async {
+    final pending = await _recordingRepo.getPendingMetadataSyncs();
+    for (final row in pending) {
+      if (_isWithinBackoffWindow(
+        row.metadataRetryCount,
+        row.metadataLastRetryAt,
+      )) {
+        continue;
+      }
+
+      final stillOnline = await _connectivity.isOnline;
+      if (!stillOnline) return;
+
+      if (await _pushPendingMetadata(row)) return;
+    }
+  }
+
+  /// Sends one row's owed fields. Returns true when the metadata queue must
+  /// give up for this pass; the rest of [processQueue] carries on regardless.
+  Future<bool> _pushPendingMetadata(LocalRecording row) async {
+    final fields = decodePendingMetadataFields(row.pendingMetadataJson);
+    if (fields.isEmpty) {
+      // Queued but owing nothing: a row written by a build whose field names
+      // this one does not know. Clearing it beats reselecting it every pass.
+      await _recordingRepo.clearPendingMetadataFields(
+        row.id,
+        PendingMetadataField.values.toSet(),
+      );
+      return false;
+    }
+
+    try {
+      final outcome = await _recordingApi
+          .updateRecording(
+            row.serverId!,
+            buildPendingMetadataRequest(row, fields),
+          )
+          .timeout(_apiTimeout);
+      if (!outcome.success) {
+        await _recordingRepo.markMetadataSyncFailed(row.id);
+        return false;
+      }
+      // Compare-and-clear against the row the request was built from: an edit
+      // that landed while the PATCH was in flight must stay owed, or the server
+      // keeps the older value and the device the newer one with nothing left to
+      // reconcile them.
+      await _recordingRepo.clearPushedMetadataFields(row.id, fields, row);
+      final flags = outcome.reviewFlags;
+      if (flags != null) {
+        await _recordingRepo.updateReviewFlags(row.id, flags);
+      }
+    } on ForbiddenException catch (e) {
+      // Insisting cannot grant permission, and offering a retry would advertise
+      // a way out that leads nowhere.
+      _log.warning('metadata refused for ${row.id}', e);
+      await _recordingRepo.markMetadataSyncTerminal(
+        row.id,
+        status: MetadataSyncStatus.failedForbidden,
+      );
+    } on ConflictException catch (e) {
+      // The backend deduplicates on (project_id, title), and PATCH 409s on a
+      // clash the same way create does. Terminal under the upload queue's own
+      // name for it, because it has the same exit: renaming re-marks the row
+      // pending with a fresh budget.
+      _log.warning('metadata title conflict for ${row.id}', e);
+      await _recordingRepo.markMetadataSyncTerminal(
+        row.id,
+        status: MetadataSyncStatus.failedConflict,
+      );
+    } on UnauthorizedException catch (e) {
+      // The session, not the edit. The token can still refresh, and every other
+      // row in this queue would hit the same wall — so give up on the metadata
+      // queue for this pass and charge the edit nothing. Spending a retry here
+      // would burn the budget of an edit that was never refused.
+      //
+      // It ends this queue only. `processQueue` carries on to the Wi-Fi gate,
+      // the storyteller drain and the uploads, which meet the same 401 and do
+      // spend their own retries — that is their existing policy, untouched.
+      _log.info('metadata queue paused, session not accepted', e);
+      return true;
+    } on AppException catch (e, st) {
+      if (e.retryable) {
+        _log.warning('retryable metadata failure for ${row.id}', e);
+        await _recordingRepo.markMetadataSyncFailed(row.id);
+      } else {
+        _log.warning('permanent metadata failure for ${row.id}', e, st);
+        await _recordingRepo.markMetadataSyncTerminal(
+          row.id,
+          status: MetadataSyncStatus.failedExhausted,
+        );
+      }
+    } on Exception catch (e, st) {
+      // Transport faults and other transient Exception subtypes → retry.
+      // `Error` subtypes are deliberately not caught; they propagate as bugs.
+      _log.warning('unexpected error syncing metadata for ${row.id}', e, st);
+      await _recordingRepo.markMetadataSyncFailed(row.id);
+    }
+    return false;
   }
 
   Future<String?> _resolveStorytellerServerId(String referencedId) async {

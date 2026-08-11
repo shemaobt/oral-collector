@@ -102,6 +102,10 @@ class _SwitchableProjectNotifier extends ProjectNotifier {
 LocalRecording _makeRecording(String id) => LocalRecording(
   id: id,
   reviewFlagsJson: '[]',
+  // The metadata outbox defaults (ENG-403): this row owes the server no edit.
+  metadataSyncStatus: 'synced',
+  pendingMetadataJson: '[]',
+  metadataRetryCount: 0,
   projectId: 'proj-1',
   genreId: 'genre-1',
   title: 'Recording $id',
@@ -168,6 +172,13 @@ void main() {
     api = _MockApi();
     local = _MockLocal();
     reporter = _RecordingReporter();
+    // Nothing in this file is about the metadata outbox, but the notifier
+    // follows it from `build` (ENG-405). An empty answer is the honest one for
+    // these fixtures — none of them owes an edit — and stubbing it keeps the
+    // provider out of an error state that would only be swallowed.
+    when(
+      () => local.watchMetadataOutbox(),
+    ).thenAnswer((_) => Stream.value(const {}));
   });
 
   group('RecordingsListNotifier.fetchRecordings — offline', () {
@@ -1539,6 +1550,10 @@ void main() {
       final row = LocalRecording(
         id: 'local-uuid',
         reviewFlagsJson: '[]',
+        // The metadata outbox defaults (ENG-403): this row owes the server no edit.
+        metadataSyncStatus: 'synced',
+        pendingMetadataJson: '[]',
+        metadataRetryCount: 0,
         projectId: 'proj-1',
         genreId: 'genre-1',
         durationSeconds: 30.0,

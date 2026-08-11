@@ -488,20 +488,71 @@ Path: @/lib/features/recording/presentation
   (409) — is unreachable: the edit is mirrored to the local row anyway and
   the method returns `RecordingMutationResult.savedLocallyOnly`, and the
   screen shows a warning snackbar (`recording_savedOnDeviceOnly`) telling the
-  user the change stopped at this device. Web has no local row, so an
+  user the change is on this device and will be sent when the connection
+  returns. Web has no local row, so an
   unreachable server there is treated the same as a refusal (`_pushMetadata`
   maps any thrown exception to `rejected` under `kIsWeb`), not a
   `savedLocallyOnly`.
-  **Nothing re-sends a `savedLocallyOnly` edit.** `getPendingUploads`
-  (the upload queue's source, see
-  [../data/repositories/docs.md](../data/repositories/docs.md)) only selects
-  `uploadStatus` in `{'local', 'failed', 'uploading'}`, and none of these four
-  mutations touch `uploadStatus`. An edit saved locally on an
-  `uploaded`/`verified` recording is therefore stuck on that device
-  indefinitely — invisible to the queue, the pending counters, and every
-  other device — until the user reconnects and repeats the edit online; the
-  snackbar says exactly that instead of promising a sync that will not
-  happen. This is a known limitation of the design, not a gap ENG-399 closed.
+  **A `savedLocallyOnly` edit resends itself as of ENG-403 — the user no
+  longer has to repeat it online.** `getPendingUploads` (the upload queue's
+  source, see [../data/repositories/docs.md](../data/repositories/docs.md))
+  only selects `uploadStatus` in `{'local', 'failed', 'uploading'}`, and none
+  of the metadata mutations touch `uploadStatus`, so the edit was never going
+  to ride the upload queue or its counters (`SyncState.pendingCount` still
+  does not count it). What resends it instead is a second, narrower queue:
+  the mutation that took the unreachable branch also marks the fields it
+  wrote as owed (`_settleOutbox`, [./notifiers/docs.md](notifiers/docs.md)),
+  and `SyncEngine` drains that queue on every pass, rebuilding the request by
+  reading the current value back off the row rather than replaying a stored
+  payload — see [/lib/features/sync/docs.md](../../sync/docs.md) for the
+  drain and its error taxonomy. The `recording_savedOnDeviceOnly` snackbar
+  was rewritten to match (ENG-403): it said the change stopped at this device
+  and asked the user to **redo it online**, which is now wasted work, and says
+  instead that it will be sent on its own when the connection comes back. Only
+  `app_en.arb` and `app_pt.arb` were edited; the other nine locales never had
+  a translation of their own for this key and inline the English source, so
+  `gen-l10n` carried the new wording into all of them — none is left holding
+  the ENG-399 redo instruction.
+  **ENG-405 gives the pending state a mark, on the list card and on the detail
+  screen's status card.** `MetadataSyncStyle.forStatus`
+  (`widgets/metadata_sync_mark.dart`) is the single mapping from
+  `metadataSyncStatus` to a glyph, a colour token and a label, in the same
+  shape `CleaningStatusStyle` uses, so the two surfaces cannot describe one row
+  differently. It returns **null** for `synced` *and* for any token this build
+  does not recognise — a row written by a newer build draws nothing rather than
+  a guessed alarm the user could not act on. The card renders
+  `RecordingMetadataSyncMark` (public, so a test can assert absence by type) as
+  a row under the footer rather than a fourth chip inside it: the footer
+  already rations width between the classification, the pendency chip and the
+  duration. The detail screen renders a `StatusRow` directly under the upload
+  row.
+  Two states, deliberately not one: `pending` takes `colors.secondary` and a
+  clock, because reconnecting is all it needs and alarm buys nothing; the three
+  `failed_*` take `colors.error` and a glyph per cause (lock / copy /
+  alertOctagon), because they never clear themselves. All four labels name the
+  *edit*, never the upload — the two axes are independent and a `verified`
+  recording can still owe one, so a mark reading "not sent" without a subject
+  would be taken for the audio. The mark's text carries **no `maxLines`**,
+  unlike every other line on the card: the cause and the way out live at the
+  end of the sentence, and a two-line ceiling measurably truncated the
+  refusals at 1.0x on a 320dp phone.
+  **The mark is read off the database, not off what the list fetched.** The
+  list shows the server's projection for every recording the server knows
+  about, and `serverRecordingToLocal` reports `synced` by construction — which
+  is every recording that can owe an edit, since the outbox requires a
+  `serverId`. So `RecordingsListNotifier` follows
+  `metadataOutboxProvider` (see [../data/docs.md](../data/docs.md)) and applies
+  it both at server-conversion time and on every stream tick; that is also what
+  makes the mark clear itself after a drain behind the Wi-Fi gate, where
+  `lastSyncAt` — the list's usual refetch trigger — is deliberately not
+  written. A broken outbox stream leaves the screen unmarked but is reported
+  through `_reportUnexpected`, so the quiet is a decision and not a blind spot.
+  Two edits still don't ride this
+  queue: one made through `setStoryteller`, whose own error handling doesn't
+  distinguish "unreachable" from "refused"
+  ([/lib/features/sync/docs.md](../../sync/docs.md)), and one made while the
+  recording is still `local`/`failed`/`uploading` — that edit never needed a
+  resend queue, since it rides the eventual create call instead.
   **A 401 or a 409 landing in the generic catch and being classified as
   unreachable is a gap inherited from ENG-380, now with a wider reach.** A
   stale/expired session or a write the server refused for some other reason

@@ -33,6 +33,8 @@ import 'package:oral_collector/features/storyteller/data/repositories/local_stor
 import 'package:oral_collector/features/sync/data/repositories/sync_engine.dart';
 import 'package:oral_collector/features/sync/domain/repositories/connectivity_service.dart';
 
+import '../../../../support/sync_engine_api.dart';
+
 class _MockConnectivity extends Mock implements ConnectivityService {}
 
 class _MockSecureStorage extends Mock implements FlutterSecureStorage {}
@@ -98,12 +100,19 @@ void main() {
           );
     }
 
-    SyncEngineImpl buildEngine(MockClient httpClient) => SyncEngineImpl(
-      recordingRepo: repo,
-      storytellerRepo: LocalStorytellerRepository(db),
-      connectivity: connectivity,
-      client: AuthenticatedClient(client: httpClient, storage: storage),
-    );
+    SyncEngineImpl buildEngine(MockClient httpClient) {
+      final authClient = AuthenticatedClient(
+        client: httpClient,
+        storage: storage,
+      );
+      return SyncEngineImpl(
+        recordingRepo: repo,
+        storytellerRepo: LocalStorytellerRepository(db),
+        connectivity: connectivity,
+        client: authClient,
+        recordingApi: apiRepoFor(authClient),
+      );
+    }
 
     test('a permanent refusal leaves the queue for good', () async {
       final file = File('${tempDir.path}/present.m4a')..writeAsBytesSync([0]);

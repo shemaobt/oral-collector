@@ -1202,10 +1202,10 @@ abstract class AppLocalizations {
   /// **'Failed to update cleaning status on server'**
   String get recording_cleaningStatusFailed;
 
-  /// Snackbar after a metadata edit the server could not be told about (offline or unreachable). The edit is kept locally, but nothing re-sends it, so the user is asked to redo it online (ENG-399).
+  /// Snackbar after a metadata edit the server could not be told about (offline or unreachable). The edit is kept locally and the metadata outbox resends it on reconnect, so the user is told to expect that rather than to redo it (ENG-403, replacing the redo instruction from ENG-399).
   ///
   /// In en, this message translates to:
-  /// **'Saved on this device only — the server did not get this change. Reconnect and make it again to update the server.'**
+  /// **'Saved on this device — the server has not got this change yet. It will be sent on its own when the connection comes back.'**
   String get recording_savedOnDeviceOnly;
 
   /// No description provided for @recording_updateNoPermission.
@@ -1441,6 +1441,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Audio file missing'**
   String get recording_statusFileMissing;
+
+  /// Mark on a recording whose metadata edit is still in the outbox (ENG-405). Transitory and blameless: the person has to do nothing but reconnect, so the wording must not read as a failure. Says 'change', never 'upload', because the audio may already be safely on the server.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit waiting to be sent'**
+  String get recording_metadataSyncPending;
+
+  /// Mark on a recording whose metadata edit the server refused with a 403 (ENG-405). Terminal and not retryable from the phone; kept apart from the other two refusals because no amount of insisting grants permission.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit refused: you cannot change this recording'**
+  String get recording_metadataSyncForbidden;
+
+  /// Mark on a recording whose metadata edit the server refused with a 409 title clash (ENG-405). Terminal until the user renames, which is the one exit — hence naming the title rather than saying 'refused'.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit refused: another recording has this title'**
+  String get recording_metadataSyncConflict;
+
+  /// Mark on a recording whose metadata edit spent its whole retry budget (ENG-405). Unlike the other two refusals this one is recoverable from the phone: a fresh edit revives the row with a new budget (markMetadataPending), so the label names that exit rather than only reporting the spent budget — the same reason recording_uploadExhaustedMessage says a retry is possible.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit not sent — edit again to retry'**
+  String get recording_metadataSyncExhausted;
 
   /// No description provided for @recording_uploadExhaustedMessage.
   ///
@@ -3283,6 +3307,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cleaning'**
   String get detail_cleaning;
+
+  /// Label of the detail screen's status row for the metadata outbox (ENG-405). Names the axis, not the state — the state is the row's value. Kept distinct from detail_upload because a recording can be fully uploaded and still owe an edit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edits'**
+  String get detail_metadataSync;
 
   /// No description provided for @detail_recorded.
   ///

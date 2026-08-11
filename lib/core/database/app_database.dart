@@ -53,6 +53,25 @@ class LocalRecordings extends Table {
   /// through a converter, which is the existing shape for a list in this schema.
   TextColumn get reviewFlagsJson => text().withDefault(const Constant('[]'))();
 
+  /// Metadata-outbox state (ENG-403): which fields this device edited while the
+  /// server was unreachable, and the retry bookkeeping for pushing them.
+  ///
+  /// Columns on the recording rather than a queue table because the relation is
+  /// 1:1 — a recording owes at most one set of fields — and because the values
+  /// are not stored here at all: the row already holds the desired state, so
+  /// [pendingMetadataJson] only names the fields the drain must read back off
+  /// it. Successive offline edits therefore collapse instead of replaying.
+  ///
+  /// [metadataRetryCount] / [metadataLastRetryAt] mirror the upload queue's
+  /// `retryCount` / `lastRetryAt` and feed the same backoff.
+  TextColumn get metadataSyncStatus =>
+      text().withDefault(const Constant('synced'))();
+  TextColumn get pendingMetadataJson =>
+      text().withDefault(const Constant('[]'))();
+  IntColumn get metadataRetryCount =>
+      integer().withDefault(const Constant(0))();
+  DateTimeColumn get metadataLastRetryAt => dateTime().nullable()();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -138,7 +157,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 12;
+  int get schemaVersion => 13;
 
   @override
   MigrationStrategy get migration =>
@@ -244,6 +263,24 @@ final OnUpgrade _upgrade = stepByStep(
     await m.addColumn(
       schema.localRecordings,
       schema.localRecordings.reviewFlagsJson,
+    );
+  },
+  from12To13: (m, schema) async {
+    await m.addColumn(
+      schema.localRecordings,
+      schema.localRecordings.metadataSyncStatus,
+    );
+    await m.addColumn(
+      schema.localRecordings,
+      schema.localRecordings.pendingMetadataJson,
+    );
+    await m.addColumn(
+      schema.localRecordings,
+      schema.localRecordings.metadataRetryCount,
+    );
+    await m.addColumn(
+      schema.localRecordings,
+      schema.localRecordings.metadataLastRetryAt,
     );
   },
 );

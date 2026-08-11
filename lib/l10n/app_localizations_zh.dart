@@ -568,7 +568,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get recording_savedOnDeviceOnly =>
-      'Saved on this device only — the server did not get this change. Reconnect and make it again to update the server.';
+      'Saved on this device — the server has not got this change yet. It will be sent on its own when the connection comes back.';
 
   @override
   String get recording_updateNoPermission => '您没有权限更新此录音';
@@ -699,6 +699,21 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get recording_statusFileMissing => '音频文件丢失';
+
+  @override
+  String get recording_metadataSyncPending => 'Edit waiting to be sent';
+
+  @override
+  String get recording_metadataSyncForbidden =>
+      'Edit refused: you cannot change this recording';
+
+  @override
+  String get recording_metadataSyncConflict =>
+      'Edit refused: another recording has this title';
+
+  @override
+  String get recording_metadataSyncExhausted =>
+      'Edit not sent — edit again to retry';
 
   @override
   String get recording_uploadExhaustedMessage => '多次尝试后上传已停止。你可以重试。';
@@ -1756,6 +1771,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get detail_cleaning => '清理';
+
+  @override
+  String get detail_metadataSync => 'Edits';
 
   @override
   String get detail_recorded => '录制时间';

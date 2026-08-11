@@ -13,6 +13,7 @@ import '../../domain/entities/local_recording_entity.dart';
 import '../../domain/entities/local_recording_entity_classification.dart';
 import '../../domain/entities/review_pendency.dart';
 import '../notifiers/recording_session_notifier.dart';
+import 'metadata_sync_mark.dart';
 
 /// The colour the upload state paints, or null for a recording that is merely
 /// local — the one state with no colour of its own.
@@ -163,6 +164,11 @@ class RecordingCard extends ConsumerWidget {
         recording.uploadStatus == 'local' &&
         (recording.uploadedBytes > 0 || recording.resumableSessionUri != null);
     final description = _visibleDescription(recording.description);
+    final metadataSync = MetadataSyncStyle.forStatus(
+      recording.metadataSyncStatus,
+      colors,
+      AppLocalizations.of(context),
+    );
 
     // The footer needs its own width to rank the chip above the duration, and
     // the measurement has to happen here rather than down in `_FooterRow`:
@@ -176,6 +182,7 @@ class RecordingCard extends ConsumerWidget {
         isUploadingThis: isUploadingThis,
         uploadProgress: uploadProgress,
         isPausedByRecording: isPausedByRecording,
+        metadataSync: metadataSync,
         footerWidth: constraints.maxWidth.isFinite
             ? constraints.maxWidth - _railWidth - SpacingScale.s16 * 2
             : null,
@@ -190,6 +197,7 @@ class RecordingCard extends ConsumerWidget {
     required bool isUploadingThis,
     required int uploadProgress,
     required bool isPausedByRecording,
+    required MetadataSyncStyle? metadataSync,
     required double? footerWidth,
   }) {
     return Material(
@@ -243,6 +251,10 @@ class RecordingCard extends ConsumerWidget {
                       if (isPausedByRecording) ...[
                         const SizedBox(height: SpacingScale.s8),
                         const _PausedWhileRecordingRow(),
+                      ],
+                      if (metadataSync != null) ...[
+                        const SizedBox(height: SpacingScale.s8),
+                        RecordingMetadataSyncMark(style: metadataSync),
                       ],
                     ],
                   ),

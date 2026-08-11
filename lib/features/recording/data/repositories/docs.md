@@ -300,6 +300,32 @@ Path: @/lib/features/recording/data/repositories
   failed" button only shows when `hasClearableFailedUploads`
   ([../../domain/docs.md](../../domain/docs.md)) finds a matching row, which
   mirrors this same filter.
+- **The metadata-outbox lifecycle helpers (ENG-403)** — `markMetadataPending`,
+  `clearPendingMetadataFields`, `getPendingMetadataSyncs`,
+  `markMetadataSyncFailed`, `markMetadataSyncTerminal` — are
+  `RecordingDetailNotifier`'s and the sync engine's only way to touch the four
+  ENG-403 columns on `local_recordings`
+  ([/lib/core/database/docs.md](../../../../core/database/docs.md)), and each
+  does a read-modify-write inside a transaction so two mutations racing the
+  same recording cannot drop each other's field. `markMetadataPending` unions
+  the incoming fields into whatever is already owed and resets the retry
+  budget — a new edit is a new intent, so it also lifts a terminal status,
+  the same exit `resetRetryCount` gives a `failed_conflict` upload.
+  `clearPendingMetadataFields` removes fields (the server just took them) and
+  only flips the row back to `synced` once nothing remains, so a partial push
+  never reads as complete. `getPendingMetadataSyncs` is what the sync engine
+  drains: it matches `metadataSyncStatus = 'pending'` **and** a non-empty
+  `serverId` — the `serverId` clause is a correctness condition, not a
+  defence, because a recording with no server copy has nothing to PATCH; its
+  metadata rides along on the eventual create call instead.
+  `markMetadataSyncFailed` spends one retry and owns the ceiling
+  (`kMaxUploadRetries`, the same constant `markAsFailed` reads), mirroring
+  that method's shape; `markMetadataSyncTerminal` parks the row outside the
+  queue for a refusal that was never about the budget (403/409) and spends
+  the whole budget to match, so nothing downstream reads a retired row as
+  still having attempts left. See
+  [/lib/features/sync/docs.md](../../../sync/docs.md) for the drain and the
+  error taxonomy that decides which of these each outcome calls.
 - Lifecycle helpers: `markAsUploading`, `markAsUploaded(id, serverId,
   gcsUrl)`, `markAsFailed`, `resetRetryCount`, `resetStuckUploading`, and
   `normalizeExhaustedUploads`. These mutate only upload-state columns; they

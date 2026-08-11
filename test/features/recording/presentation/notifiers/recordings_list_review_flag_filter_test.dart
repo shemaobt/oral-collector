@@ -82,6 +82,10 @@ class _FakeProjectNotifier extends ProjectNotifier {
 LocalRecording _localOnly(String id) => LocalRecording(
   id: id,
   reviewFlagsJson: '[]',
+  // The metadata outbox defaults (ENG-403): this row owes the server no edit.
+  metadataSyncStatus: 'synced',
+  pendingMetadataJson: '[]',
+  metadataRetryCount: 0,
   projectId: 'proj-1',
   genreId: 'genre-1',
   title: 'Local $id',

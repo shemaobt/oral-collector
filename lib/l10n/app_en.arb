@@ -236,9 +236,9 @@
   "recording_deleteFailed": "Failed to delete recording",
   "recording_deleteFailedLocal": "Failed to delete from server. Removing locally.",
   "recording_cleaningStatusFailed": "Failed to update cleaning status on server",
-  "recording_savedOnDeviceOnly": "Saved on this device only — the server did not get this change. Reconnect and make it again to update the server.",
+  "recording_savedOnDeviceOnly": "Saved on this device — the server has not got this change yet. It will be sent on its own when the connection comes back.",
   "@recording_savedOnDeviceOnly": {
-    "description": "Snackbar after a metadata edit the server could not be told about (offline or unreachable). The edit is kept locally, but nothing re-sends it, so the user is asked to redo it online (ENG-399)."
+    "description": "Snackbar after a metadata edit the server could not be told about (offline or unreachable). The edit is kept locally and the metadata outbox resends it on reconnect, so the user is told to expect that rather than to redo it (ENG-403, replacing the redo instruction from ENG-399)."
   },
   "recording_updateNoPermission": "You do not have permission to update this recording",
   "recording_moveNoPermission": "You do not have permission to move this recording",
@@ -302,6 +302,22 @@
   "recording_descriptionGapMessage": "This recording can't be uploaded until you add a longer description.",
   "recording_statusRetriesExhausted": "Attempts used up",
   "recording_statusFileMissing": "Audio file missing",
+  "recording_metadataSyncPending": "Edit waiting to be sent",
+  "@recording_metadataSyncPending": {
+    "description": "Mark on a recording whose metadata edit is still in the outbox (ENG-405). Transitory and blameless: the person has to do nothing but reconnect, so the wording must not read as a failure. Says 'change', never 'upload', because the audio may already be safely on the server."
+  },
+  "recording_metadataSyncForbidden": "Edit refused: you cannot change this recording",
+  "@recording_metadataSyncForbidden": {
+    "description": "Mark on a recording whose metadata edit the server refused with a 403 (ENG-405). Terminal and not retryable from the phone; kept apart from the other two refusals because no amount of insisting grants permission."
+  },
+  "recording_metadataSyncConflict": "Edit refused: another recording has this title",
+  "@recording_metadataSyncConflict": {
+    "description": "Mark on a recording whose metadata edit the server refused with a 409 title clash (ENG-405). Terminal until the user renames, which is the one exit — hence naming the title rather than saying 'refused'."
+  },
+  "recording_metadataSyncExhausted": "Edit not sent — edit again to retry",
+  "@recording_metadataSyncExhausted": {
+    "description": "Mark on a recording whose metadata edit spent its whole retry budget (ENG-405). Unlike the other two refusals this one is recoverable from the phone: a fresh edit revives the row with a new budget (markMetadataPending), so the label names that exit rather than only reporting the spent budget — the same reason recording_uploadExhaustedMessage says a retry is possible."
+  },
   "recording_uploadExhaustedMessage": "The upload stopped after several attempts. You can try again.",
   "recording_fileMissingMessage": "The audio file for this recording is no longer on this device, so it can't be uploaded.",
   "recording_duplicateTitleTitle": "Name already used",
@@ -885,6 +901,10 @@
   "detail_upload": "Upload",
   "detail_uploaded": "Uploaded",
   "detail_cleaning": "Cleaning",
+  "detail_metadataSync": "Edits",
+  "@detail_metadataSync": {
+    "description": "Label of the detail screen's status row for the metadata outbox (ENG-405). Names the axis, not the state — the state is the row's value. Kept distinct from detail_upload because a recording can be fully uploaded and still owe an edit."
+  },
   "detail_recorded": "Recorded",
   "detail_retry": "Retry",
   "detail_notFlagged": "Not flagged",

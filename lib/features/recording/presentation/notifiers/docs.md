@@ -176,7 +176,8 @@ Path: @/lib/features/recording/presentation/notifiers
     "Online-first" bullet in [../docs.md](../docs.md) for the full
     accepted/rejected/unreachable contract, why each method keeps its own
     (deliberately inconsistent) gate for whether the edit is owed to the
-    server at all, and the "no resend" limitation this leaves. `saveDetails`
+    server at all, and how the metadata outbox (ENG-403, below) resends a
+    `savedLocallyOnly` edit once the connection returns. `saveDetails`
     gets the same fallback through the ENG-380 use-cases
     (`saveRecordingTitle`/`saveRecordingDescription` — see
     [../../data/docs.md](../../data/docs.md)) rather than `_pushMetadata`
@@ -199,6 +200,30 @@ Path: @/lib/features/recording/presentation/notifiers
     puts the recording back in the queue instead of leaving it stuck. Unlike the
     rename there is no server-side second refusal to guard against — the
     description is only sent at create time — so the requeue is unconditional.
+  - **Each of the five metadata-mutation entry points also settles the
+    metadata outbox (ENG-403), through the shared `_settleOutbox` helper.**
+    `saveDetails` calls it once for `title` and once for `description`, right
+    after each half's write; `toggleCleaningStatus` gates it behind the same
+    `serverKnown` (`uploadStatus` in `{'uploaded', 'verified'}`) check that
+    decides whether to call the server at all; `classify`/`saveSecondary`
+    gate it behind `hasServerId`, matching the gate that decides whether
+    *they* call the server. `moveCategory` is the odd one: it calls the
+    server unconditionally, without checking for a server copy first (see
+    [../../domain/docs.md](../../domain/docs.md)), so its outbox gate is new
+    and different from the rest — a non-empty `serverId` check that exists
+    purely to keep a recording the server has never seen from being marked
+    pending in a queue that only drains rows with a `serverId`
+    ([/lib/features/sync/docs.md](../../../sync/docs.md)); without it, that
+    pendency would sit forever, filtered out of every pass. `_settleOutbox`
+    marks the fields pending on the `savedLocallyOnly` branch and clears them
+    (a no-op if nothing was owed) once the write reaches the server, through
+    `LocalRecordingRepository.markMetadataPending`/`clearPendingMetadataFields`
+    ([../../data/repositories/docs.md](../../data/repositories/docs.md)), so
+    an edit that finally lands also clears whatever an earlier offline edit
+    to the same field left owed. `setStoryteller` does not call
+    `_settleOutbox` at all — its own error handling swallows every exception
+    without telling "unreachable" apart from "refused", so it cannot decide
+    which case the outbox contract needs.
   - **Audio mutations** behind the IO seams: `downloadAndCache` (GCS download +
     `cacheDownloadedAudio`, throws on failure so the widget dismisses its
     progress dialog and shows the error), `downloadForExport` (temp download for
@@ -677,9 +702,12 @@ Path: @/lib/features/recording/presentation/notifiers
   a sweep can be visits away from the one that opened it. Narrowing the sweep
   cannot fix any of them, which is why the erase confirms each candidate with
   `getRecording` instead. Since ENG-399 a false positive is not a cache
-  eviction: a metadata edit made offline lives only in the local row and
-  nothing re-sends it, so `canEraseAsDeletedOnServer` no longer implies the
-  row is a redundant copy of what the server has.
+  eviction: a metadata edit made offline lives only on the local row until
+  the metadata outbox drains it (ENG-403 added the drain; before it, nothing
+  ever resent the edit), so `canEraseAsDeletedOnServer` no longer implies the
+  row is a redundant copy of what the server has — an erroneous erase before
+  the drain runs would lose the edit outright, not merely evict a cache
+  entry.
 - **Delete is a hard delete on every platform — the row delete is never
   `kIsWeb`-gated (ENG-120).** Each screen previously owned a duplicated
   delete that ran the local Drift delete inside `if (!kIsWeb)`. On web

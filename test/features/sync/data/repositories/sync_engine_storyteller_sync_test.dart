@@ -18,6 +18,8 @@ import 'package:oral_collector/features/sync/data/repositories/sync_engine.dart'
 import 'package:oral_collector/features/sync/domain/repositories/connectivity_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../../support/sync_engine_api.dart';
+
 class MockConnectivity extends Mock implements ConnectivityService {}
 
 class MockSecureStorage extends Mock implements FlutterSecureStorage {}
@@ -78,6 +80,7 @@ void main() {
       storytellerRepo: storytellerRepo,
       connectivity: mockConnectivity,
       client: authClient,
+      recordingApi: apiRepoFor(authClient),
     );
   }
 

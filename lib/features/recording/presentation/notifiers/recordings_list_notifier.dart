@@ -11,6 +11,7 @@ import '../../data/providers.dart';
 import '../../data/repositories/local_recording_repository.dart';
 import '../../data/server_to_local_recording.dart';
 import '../../domain/entities/local_recording_entity.dart';
+import '../../domain/entities/pending_metadata_field.dart';
 import '../../domain/entities/review_pendency.dart';
 import '../../domain/entities/server_recording.dart';
 import '../../domain/repositories/recording_api_repository.dart';
@@ -54,7 +55,101 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
   ({String projectId, Set<String> serverIds})? _sweep;
 
   @override
-  RecordingsListState build() => const RecordingsListState();
+  RecordingsListState build() {
+    // The outbox is a table this notifier does not own, and the mark it drives
+    // has to clear itself when the drain settles an edit. Following the data is
+    // what makes that happen: the alternative on offer was to refetch on a
+    // timestamp, and the timestamp the list already refetches on
+    // (`lastSyncAt`) deliberately stays unwritten when the Wi-Fi gate holds the
+    // uploads back — it asserts the upload queue ran, and there it did not.
+    // Reusing it for this would put back the state lie ENG-355 removed, and
+    // minting a second one would leave the mark trailing whatever pulse
+    // happened to fire.
+    //
+    // Not `fireImmediately`: the callback writes `state`, which cannot be
+    // touched while `build` is still returning the first one. Nothing is lost,
+    // because every path that produces recordings reads the outbox itself.
+    ref.listen(metadataOutboxProvider, (_, next) {
+      // Two different failures hide behind one silent screen. Not having
+      // answered yet is a start-up race that resolves itself, and staying quiet
+      // through it is right. A broken stream is permanent, and quiet is all it
+      // used to be: the marks would simply never appear, for the lifetime of
+      // the app, with nothing anywhere saying why. That is the same silent
+      // failure this ticket exists to abolish, one layer down.
+      //
+      // So: still no alarm on screen — a mark the user cannot act on is worse
+      // than none — but the failure is reported, the way every other unexpected
+      // error in this notifier has been since ENG-102.
+      final error = next.error;
+      if (error != null) {
+        _reportUnexpected(error, next.stackTrace ?? StackTrace.current);
+      }
+      _remarkOutbox();
+    });
+    return const RecordingsListState();
+  }
+
+  /// The outbox as of now, or null while the stream has yet to answer — or if
+  /// it failed. Either way whatever the entity already carries stands, which
+  /// for a local row is the same columns read a moment earlier and for a
+  /// server-converted one is no mark at all. Falling silent is the right way
+  /// for this to break: a mark the user cannot act on is worse than none, the
+  /// same reason an unrecognised status renders nothing.
+  Map<String, MetadataOutboxEntry>? get _outbox =>
+      ref.read(metadataOutboxProvider).valueOrNull;
+
+  void _remarkOutbox() {
+    if (state.recordings.isEmpty) return;
+    final owed = _outbox;
+    if (owed == null) return;
+    final remarked = [for (final r in state.recordings) _withOutbox(r, owed)];
+    // `RecordingsListState` compares by identity, so any write here notifies
+    // and the screen rebuilds every card. A Drift `watch` re-runs on writes
+    // that have nothing to do with the outbox, and while `.distinct` stops the
+    // ones that change nothing, a tick that settles *another* recording still
+    // arrives — and would cost this list a full rebuild for a row it does not
+    // show. This is what makes `_withOutbox` returning the original worth
+    // anything.
+    if (!_anyRemarked(remarked)) return;
+    state = state.copyWith(recordings: remarked);
+  }
+
+  bool _anyRemarked(List<LocalRecordingEntity> remarked) {
+    for (var i = 0; i < remarked.length; i++) {
+      if (!identical(remarked[i], state.recordings[i])) return true;
+    }
+    return false;
+  }
+
+  /// [recording] with the outbox's answer on it, rather than whatever the
+  /// projection it came from happened to say.
+  ///
+  /// Absent from [owed] means `synced`: the map is the whole of what is owed,
+  /// so a recording missing from it owes nothing. Returning the original when
+  /// nothing changed keeps the list's identity stable, which is what stops a
+  /// stream tick about some other recording from rebuilding every card.
+  static LocalRecordingEntity _withOutbox(
+    LocalRecordingEntity recording,
+    Map<String, MetadataOutboxEntry> owed,
+  ) {
+    final serverId = recording.serverId;
+    final entry =
+        owed[recording.id] ?? (serverId == null ? null : owed[serverId]);
+    final status = entry?.status ?? MetadataSyncStatus.synced;
+    final fields = entry == null
+        ? const <PendingMetadataField>{}
+        : decodePendingMetadataFields(entry.fieldsJson);
+    final unchanged =
+        status == recording.metadataSyncStatus &&
+        fields.length == recording.pendingMetadataFields.length &&
+        fields.containsAll(recording.pendingMetadataFields);
+    return unchanged
+        ? recording
+        : recording.copyWith(
+            metadataSyncStatus: status,
+            pendingMetadataFields: fields,
+          );
+  }
 
   String? get _reviewFlagCode {
     final kind = state.selectedReviewFlag;
@@ -364,8 +459,15 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
   /// Only what the server acknowledged is a candidate at all
   /// ([canEraseAsDeletedOnServer]), and since ENG-399 that gate no longer means
   /// the row is a redundant copy: a metadata edit made offline lives in the
-  /// local row and nothing re-sends it, so a false positive costs the user's
-  /// edits outright and not just a cached copy of the audio.
+  /// local row, and until the outbox drains it (ENG-403) this device holds the
+  /// only copy of it — so a false positive costs the user's edits outright and
+  /// not just a cached copy of the audio. The outbox narrowed that window; it
+  /// did not close it, because the edit is owed for exactly as long as the
+  /// device cannot reach the server, which is when a sweep is least reliable.
+  ///
+  /// When the deletion is real the pendency goes with the row, which is
+  /// correct: the recording it described no longer exists, so there is nothing
+  /// left to update.
   Future<Set<String>> _eraseDeletedOnServer(
     List<LocalRecordingEntity> candidates, {
     required int gen,
@@ -436,12 +538,22 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
     }
   }
 
+  /// The server's copy of each recording, with this device's outbox state put
+  /// back on it.
+  ///
+  /// `serverRecordingToLocal` reports `synced` — truthfully, from the server's
+  /// side, since the projection is not backed by a stored row. But the list
+  /// shows this copy in place of the local one for every recording the server
+  /// knows about, which is exactly the set that can owe an edit. Without this
+  /// the mark would never appear at all once online.
   List<LocalRecordingEntity> _convertServerRecordings(
     List<ServerRecording> recordings,
   ) {
-    return recordings
-        .map((s) => localRecordingToEntity(serverRecordingToLocal(s)))
-        .toList();
+    final owed = _outbox;
+    return recordings.map((s) {
+      final entity = localRecordingToEntity(serverRecordingToLocal(s));
+      return owed == null ? entity : _withOutbox(entity, owed);
+    }).toList();
   }
 
   Future<List<LocalRecordingEntity>?> _loadLocal(String projectId) async {

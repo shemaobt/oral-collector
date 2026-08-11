@@ -1,5 +1,6 @@
 import '../../../core/database/app_database.dart';
 import '../domain/entities/local_recording_entity.dart';
+import '../domain/entities/pending_metadata_field.dart';
 import '../domain/entities/review_flag.dart';
 
 /// Single source of truth for the Drift row → domain entity projection. The
@@ -37,5 +38,7 @@ LocalRecordingEntity localRecordingToEntity(LocalRecording row) {
     splitIndex: row.splitIndex,
     splitSegmentCount: row.splitSegmentCount,
     reviewFlags: decodeReviewFlags(row.reviewFlagsJson),
+    metadataSyncStatus: row.metadataSyncStatus,
+    pendingMetadataFields: decodePendingMetadataFields(row.pendingMetadataJson),
   );
 }

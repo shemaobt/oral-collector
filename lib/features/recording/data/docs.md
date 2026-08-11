@@ -73,6 +73,19 @@ Path: @/lib/features/recording/data
   `StreamProvider.family<LocalRecordingEntity?, String>` backed by
   `LocalRecordingRepository.watchRecordingEntityById` (the former row stream
   `watchRecordingById` was deleted with the detail tree's row→entity migration).
+  `metadataOutboxProvider` (ENG-405) is the second stream here: a
+  non-family `StreamProvider<Map<String, MetadataOutboxEntry>>` over
+  `LocalRecordingRepository.watchMetadataOutbox`, carrying every recording that
+  still owes the server a metadata write, keyed by **both** the local id and
+  the server id so a caller can look one up whichever it holds. One stream for
+  the whole list rather than one per card — the answer is almost always an
+  empty map, and a subscription per row would pay a Drift query each. The entry
+  is a record of two `String`s (`status`, `fieldsJson`) rather than a decoded
+  `Set`, because a `Set` inside a record compares by identity and the stream
+  dedups on `==`; `watchMetadataOutbox` needs that dedup, since a Drift `watch`
+  over `localRecordings` re-runs on every unrelated write to the table, an
+  upload's byte counter included. `RecordingsListNotifier` is its consumer
+  ([../presentation/docs.md](../presentation/docs.md)).
   `RecordingDetailNotifier`
   ([../presentation/notifiers/docs.md](../presentation/notifiers/docs.md))
   listens to it (native only, ENG-194) so any write through
@@ -90,6 +103,12 @@ Path: @/lib/features/recording/data
   root cause. As of ENG-374 it also carries `reviewFlags`, JSON-encoding the
   list into the `reviewFlagsJson` column via `encodeReviewFlags`
   ([../domain/entities/review_flag.dart](../domain/entities/review_flag.dart)).
+  As of ENG-403 it also sets the four metadata-outbox columns to their
+  synced defaults (`metadataSyncStatus: 'synced'`, `pendingMetadataJson:
+  '[]'`, `metadataRetryCount: 0`) — a recording projected straight from the
+  server owes it nothing, by construction; this mapper never reads or writes
+  a pre-existing local row, so any real pendency stays wherever that row
+  already is.
 - `local_recording_to_entity.dart` exposes `localRecordingToEntity(row)`, the
   single mapper from the Drift `LocalRecording` row to the domain
   `LocalRecordingEntity`
@@ -384,10 +403,13 @@ Path: @/lib/features/recording/data
   [/test/features/recording/data/](../../../../test/features/recording/data/).
   The checklist is reproduced at the bottom of
   [/docs/recording-split-semantics.md](../../../../docs/recording-split-semantics.md).
-  `reviewFlagsJson` (ENG-374) is not this kind of column — it is
-  server-owned advisory state with a non-null default, not device-entered
-  metadata, so it is exempt from healing and from split propagation (a split
-  child resets it to `'[]'` — see the propagation table in that doc).
+  `reviewFlagsJson` (ENG-374) and the four ENG-403 metadata-outbox columns
+  are not this kind of column — they are server-owned advisory state or
+  device-sync bookkeeping, not device-entered metadata, so both are exempt
+  from healing and from split propagation (a split child gets the Drift
+  defaults on the outbox columns — `synced`, no owed fields — the same way
+  it resets `reviewFlagsJson` to `'[]'`; see the propagation table in that
+  doc).
 - **The header probe exists to survive the web player's 5 MB cap.** On web
   the player slices only the first 5 MB; progressive phone recorders
   (Samsung/Android) write the MP4/M4A `moov` index at the END of the file, so

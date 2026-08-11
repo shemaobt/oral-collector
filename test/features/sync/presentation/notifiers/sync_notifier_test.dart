@@ -58,6 +58,10 @@ LocalRecording makeRecording({
 }) => LocalRecording(
   id: id,
   reviewFlagsJson: '[]',
+  // The metadata outbox defaults (ENG-403): this row owes the server no edit.
+  metadataSyncStatus: 'synced',
+  pendingMetadataJson: '[]',
+  metadataRetryCount: 0,
   projectId: 'proj-1',
   genreId: 'genre-1',
   subcategoryId: null,
@@ -109,6 +113,9 @@ void main() {
         maxConcurrency: any(named: 'maxConcurrency'),
         onProgress: any(named: 'onProgress'),
       ),
+    ).thenAnswer((_) async {});
+    when(
+      () => mockSyncEngine.processPendingMetadata(),
     ).thenAnswer((_) async {});
 
     container = ProviderContainer(
@@ -1080,6 +1087,42 @@ void main() {
         container.read(syncNotifierProvider).blockReason,
         SyncBlockReason.wifiOnly,
       );
+    });
+
+    // ENG-403: the gate returns before the engine is ever asked, so the
+    // metadata outbox would have inherited a wait meant for audio. The
+    // preference is about mobile data spent on recordings; an edit is a few
+    // hundred bytes and goes up as soon as there is a connection.
+    test('still carries the metadata outbox', () async {
+      container.read(syncNotifierProvider);
+      await Future<void>.delayed(Duration.zero);
+
+      await container.read(syncNotifierProvider.notifier).syncAll();
+
+      verify(() => mockSyncEngine.processPendingMetadata()).called(1);
+      verifyNever(
+        () => mockSyncEngine.processQueue(
+          deleteAfterUpload: any(named: 'deleteAfterUpload'),
+          wifiOnly: any(named: 'wifiOnly'),
+          maxConcurrency: any(named: 'maxConcurrency'),
+          onProgress: any(named: 'onProgress'),
+        ),
+      );
+    });
+
+    test('keeps blaming Wi-Fi for the uploads it did hold back', () async {
+      // The edit went up, the audio did not. "Waiting for Wi-Fi" is about the
+      // uploads and stays true; draining the outbox must not read as the queue
+      // having run.
+      container.read(syncNotifierProvider);
+      await Future<void>.delayed(Duration.zero);
+
+      await container.read(syncNotifierProvider.notifier).syncAll();
+
+      final state = container.read(syncNotifierProvider);
+      expect(state.blockReason, SyncBlockReason.wifiOnly);
+      expect(state.lastSyncAt, isNull);
+      expect(state.syncProgress, 0);
     });
 
     test('does not keep blaming Wi-Fi once the device is offline', () async {

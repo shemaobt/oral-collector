@@ -579,7 +579,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recording_savedOnDeviceOnly =>
-      'Saved on this device only — the server did not get this change. Reconnect and make it again to update the server.';
+      'Saved on this device — the server has not got this change yet. It will be sent on its own when the connection comes back.';
 
   @override
   String get recording_updateNoPermission =>
@@ -719,6 +719,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recording_statusFileMissing => 'Audio file missing';
+
+  @override
+  String get recording_metadataSyncPending => 'Edit waiting to be sent';
+
+  @override
+  String get recording_metadataSyncForbidden =>
+      'Edit refused: you cannot change this recording';
+
+  @override
+  String get recording_metadataSyncConflict =>
+      'Edit refused: another recording has this title';
+
+  @override
+  String get recording_metadataSyncExhausted =>
+      'Edit not sent — edit again to retry';
 
   @override
   String get recording_uploadExhaustedMessage =>
@@ -1823,6 +1838,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get detail_cleaning => 'Cleaning';
+
+  @override
+  String get detail_metadataSync => 'Edits';
 
   @override
   String get detail_recorded => 'Recorded';
