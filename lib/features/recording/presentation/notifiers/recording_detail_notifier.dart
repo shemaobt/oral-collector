@@ -196,7 +196,7 @@ class RecordingDetailNotifier
     } catch (e) {
       final erasable =
           isRecordingNotFound(e) &&
-          canEraseAsDeletedOnServer(
+          serverHasRecording(
             serverId: current.serverId,
             uploadStatus: current.uploadStatus,
           );

@@ -459,7 +459,7 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
   /// listing can be stale or mis-windowed, a 404 for one id cannot.
   ///
   /// Only what the server acknowledged is a candidate at all
-  /// ([canEraseAsDeletedOnServer]), and since ENG-399 that gate no longer means
+  /// ([serverHasRecording]), and since ENG-399 that gate no longer means
   /// the row is a redundant copy: a metadata edit made offline lives in the
   /// local row, and until the outbox drains it (ENG-403) this device holds the
   /// only copy of it — so a false positive costs the user's edits outright and
@@ -476,7 +476,7 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
   }) async {
     final erasable = candidates
         .where(
-          (r) => canEraseAsDeletedOnServer(
+          (r) => serverHasRecording(
             serverId: r.serverId,
             uploadStatus: r.uploadStatus,
           ),
