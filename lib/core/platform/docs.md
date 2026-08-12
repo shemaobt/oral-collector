@@ -9,6 +9,8 @@ Path: @/lib/core/platform
   conditional-import facade (`disk_space.dart`, `file_ops.dart`,
   `ffmpeg_ops.dart`, `file_source.dart`, `web_file_picker.dart`), so feature
   code imports one symbol and the right implementation is linked per target.
+- [./web_file_store.dart](web_file_store.dart) is durable IndexedDB-backed
+  byte storage for the web build, used by `file_ops_web.dart` (ENG-421).
 - Also hosts cross-feature process-state primitives that are not a
   native/web split: `recording_active_flag.dart` and
   [./foreground_service_arbiter.dart](foreground_service_arbiter.dart).
@@ -55,6 +57,19 @@ Path: @/lib/core/platform
   loading it whole. The container-header parsers under
   [/lib/features/recording/data/services/audio_metadata/](../../features/recording/data/services/audio_metadata/)
   depend on this to probe arbitrarily large imports cheaply.
+- `file_ops.dart` (facade over `file_ops_native.dart` / `file_ops_web.dart`)
+  is the file-IO surface every feature imports for reading, writing, and
+  probing recording audio: `fileExists`, `fileLength`, `readFileBytes`,
+  `writeFileBytes`, `deleteFile`, `copyFile`, `readFileChunk`, plus
+  `createDir`/`dirExists` and the `isAndroidPlatform`/`isIOSPlatform` flags.
+  The native variant is a thin wrapper over `dart:io`'s `File`/`Directory`.
+  The web variant (ENG-421) delegates to `WebFileStore`
+  ([./web_file_store.dart](web_file_store.dart)), a small IndexedDB-backed
+  key-value store (database `oral_collector_files`, object store `files`,
+  separate from the Drift database — see
+  [/lib/core/database/docs.md](../database/docs.md)) that keys bytes by the
+  same path string the caller already uses as an id. `createDir`/`dirExists`
+  are no-ops/`true` on web since there is no directory concept to model.
 - `ffmpeg_ops.dart` (facade over `ffmpeg_ops_native.dart` /
   `ffmpeg_ops_web.dart`) exposes `compressToM4a(input, output)` — the WAV→M4A
   transcode the finalization and file-import paths run before deleting the
@@ -82,6 +97,57 @@ Path: @/lib/core/platform
 
 ### Things to Know
 
+- **`file_ops`'s web and native variants share a signature but not
+  edge-case semantics for a missing path, and the divergence is
+  deliberate (ENG-421).** Native's `readFileBytes` and `fileLength` throw
+  `dart:io`'s `PathNotFoundException` for a path that never existed (only
+  `fileExists` answers `false`). Web's `readFileBytes` returns
+  `Uint8List(0)`, `fileLength`
+  returns `0`, and `fileExists` returns `false` for the same case — an empty
+  file and a missing file are only distinguishable via `fileExists`, never
+  via `readFileBytes` alone. This was preserved on purpose when
+  `file_ops_web.dart` was rewritten onto `WebFileStore`: callers like
+  [/lib/features/recording/presentation/widgets/confirmation_step.dart](../../features/recording/presentation/widgets/confirmation_step.dart)
+  branch on `bytes.isEmpty` for both the player load and the save path, so
+  making the web variant throw would break that production caller.
+  `readFileChunk` on web truncates at the end of the stored bytes instead of
+  throwing `RangeError` for an offset/length past the end, matching how a
+  native `RandomAccessFile.read` past EOF behaves.
+- **Known gap: abandoned web bytes have nothing pointing at them (ENG-421
+  follow-up).** On web the `LocalRecordings` row is written only *after* the
+  upload succeeds, so two paths leave bytes in `oral_collector_files` with no
+  handle: someone records, reaches the confirmation step and reloads before
+  saving; or the upload fails and they close the tab. Nothing sweeps keys
+  without a matching row. These orphans are not purely a new defect — they are
+  the side effect of the very thing this storage exists to guarantee, that the
+  audio outlives a reload. What is missing is not the persistence but a surface
+  that finds those bytes again and a sweeper that collects the abandoned ones.
+  That is its own slice, and it has the same shape as ENG-420 on device: a
+  durable artifact with nothing pointing at it. The two paths that *do* have a
+  handle are cleaned: `ConfirmationStep` deletes after a successful upload and
+  on discard, and the export temp key is deleted after the share.
+- **`WebFileStore`'s `IdbFactory` is the only test seam for the web file
+  path.** Production wires `idbFactoryNative` from `idb_shim`, which throws
+  where IndexedDB is unavailable (private browsing, storage blocked by
+  policy) rather than silently falling back to memory —
+  `idbFactoryBrowser` was deliberately not used because a silent in-memory
+  fallback recreates the exact defect ENG-421 fixed: audio that looks saved
+  and disappears on reload. Tests inject `idb_shim`'s
+  `newIdbFactoryMemory()`, a complete implementation of the same API that
+  runs on the plain Dart VM, so
+  [/test/core/platform/web_file_store_test.dart](../../../test/core/platform/web_file_store_test.dart)
+  exercises the real storage logic without a browser. This is also why
+  [/test/core/platform/file_ops_native_test.dart](../../../test/core/platform/file_ops_native_test.dart)
+  is named for native only — `flutter test` runs on the Dart VM, so
+  `file_ops.dart`'s conditional export always resolves to
+  `file_ops_native.dart` there; a web-named test in that file would have
+  been exercising the wrong implementation. There is no browser test
+  infrastructure in this project's CI
+  ([/.github/workflows/test.yml](../../../.github/workflows/test.yml) runs
+  `flutter test` without `--platform chrome`), so the VM-backed in-memory
+  IndexedDB proves the storage logic, not the real browser IndexedDB or the
+  compiled js_interop glue — `flutter build web` is the only automated gate
+  on that.
 - **`FileSource.readRange` is a true ranged read, not a slice of a
   preloaded buffer** (except for the in-memory variant, which already holds
   the bytes). Web goes through `Blob.slice`, native through a seeked

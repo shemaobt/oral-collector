@@ -503,6 +503,25 @@ Path: @/lib/features/recording/presentation/widgets
   [../../data/services/segmented_recorder.dart](../../data/services/segmented_recorder.dart),
   which subscribes to the platform `interruptionEventStream` and
   re-activates the session itself.
+- **`ConfirmationStep._saveWebDirect` deletes the uploaded recording's bytes
+  from browser storage once the upload succeeds (ENG-421).** On web the
+  captured/imported audio bytes are read via `file_ops.readFileBytes` from
+  the durable IndexedDB store in
+  [/lib/core/platform/web_file_store.dart](../../../../core/platform/web_file_store.dart)
+  (see [/lib/core/platform/docs.md](../../../../core/platform/docs.md)); once
+  `DirectRecordingUploader.upload` returns a `serverId`, those bytes are
+  redundant with the server's copy and `file_ops.deleteFile` removes them.
+  This is a deliberate leak-prevention step, not cleanup of a bug: before the
+  bytes were made durable the module-level map that held them died with the
+  tab, capping the leak; persisting them (the ENG-421 fix) turned an
+  already-small leak into an unbounded one that would grow with every saved
+  recording and never be collected without this delete. The delete is wrapped
+  in its own try/catch with `_log.warning` so a cleanup failure is never
+  reported to the user as a failed upload — the upload already succeeded by
+  that point. It runs after the local row is written, matching how the rest of
+  the codebase deletes only once the database is consistent. The paths that do
+  *not* end in a successful upload still leave bytes behind — see the known gap
+  in [/lib/core/platform/docs.md](../../../../core/platform/docs.md).
 - **`ConfirmationStep` cancels its own preview-player stream subscriptions
   on dispose (ENG-140 F16).** Its inline `AudioPlayer` preview subscribes to
   `playerStateStream` / `positionStream` / `durationStream`; those handles are

@@ -425,6 +425,10 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
           suggestedName: suggestedName,
           sharePositionOrigin: _shareAnchorRect(),
         );
+        // The download key carries a timestamp, so on web every export used to
+        // leave a whole extra copy behind. That died with the tab before the
+        // bytes became durable (ENG-421); now it would never be collected.
+        await file_ops.deleteFile(tempPath);
         if (mounted) Navigator.of(context).pop();
         if (!result.success && mounted) {
           // O motivo de AudioExporter é técnico/inglês (já registrado em log);

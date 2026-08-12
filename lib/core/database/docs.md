@@ -185,6 +185,20 @@ Path: @/lib/core/database
   were reconstructed, the migration test's job is to prove the migration code
   reproduces the current reference from each reconstructed starting point — not
   to trust the snapshots blindly.
+- **This is not the only IndexedDB database on web.** `WebDatabase`
+  (`oral_collector`, drift over `sql.js`/WASM) holds recording *metadata*,
+  i.e. the row in `LocalRecordings`. Recorded/imported audio *bytes* live in
+  a second, separate IndexedDB database, `oral_collector_files`, owned by
+  [/lib/core/platform/web_file_store.dart](../platform/web_file_store.dart)
+  and used through [/lib/core/platform/file_ops.dart](../platform/file_ops.dart)
+  (see [/lib/core/platform/docs.md](../platform/docs.md)). Audio bytes were
+  never put in Drift: they do not fit a relational row cleanly, and this
+  database's schema-migration machinery (above) exists to evolve typed
+  columns, not to version an opaque blob store with its own capacity/eviction
+  concerns. Before ENG-421 the bytes were not persisted anywhere on web — a
+  module-level `Map` in `file_ops_web.dart` held them in memory only, so a
+  page reload destroyed the audio while the Drift row (already durable via
+  `WebDatabase`) survived, leaving a recording whose audio existed nowhere.
 - **On web the sql.js engine is self-hosted, not loaded from a CDN (ENG-130).**
   The `.js` loader and `.wasm` binary live in the repo's `web/` directory and
   are served same-origin. This is a security boundary: a CDN compromise could

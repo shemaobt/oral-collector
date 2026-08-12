@@ -67,6 +67,32 @@ void main() {
     );
   });
 
+  testWidgets('storage refusing the audio is not blamed on reading it', (
+    tester,
+  ) async {
+    await pumpOverlay(tester, FinalizationErrorKind.storageUnavailable);
+
+    expect(
+      find.text('The audio was recorded but could not be read back.'),
+      findsNothing,
+      reason:
+          'the read succeeded and the write was refused; this copy sends the '
+          'person looking in the wrong place',
+    );
+    expect(
+      find.text(
+        "We couldn't finish processing this recording. It is kept in your "
+        'unsaved recordings.',
+      ),
+      findsNothing,
+      reason: 'nothing was kept — the write is what failed',
+    );
+    expect(
+      find.text('Something went wrong. Please try again later.'),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('the browser producing no audio at all says so', (tester) async {
     await pumpOverlay(tester, FinalizationErrorKind.noAudio);
 

@@ -512,6 +512,17 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
         );
       } catch (_) {}
 
+      // The bytes are on the server and the local row is written, and on web
+      // they live in IndexedDB, which outlives the tab (ENG-421). Without this
+      // they would pile up there for every recording and never be collected.
+      // Cleanup that fails must not be reported as a failed upload, so it is
+      // caught here rather than left to the outer handler.
+      try {
+        await file_ops.deleteFile(widget.result.filePath);
+      } catch (e, st) {
+        _log.warning('Failed to drop uploaded audio', e, st);
+      }
+
       if (mounted) {
         unawaited(HapticFeedback.mediumImpact());
         ScaffoldMessenger.of(
