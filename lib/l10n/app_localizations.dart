@@ -2048,6 +2048,18 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{Local cache cleared. 1 recording was kept because it has not been uploaded yet.} other{Local cache cleared. {count} recordings were kept because they have not been uploaded yet.}}'**
   String profile_cacheClearedKept(int count);
 
+  /// Pairs with profile_cacheNotFreed. Says the same as profile_cacheClearedKept without claiming the cache was cleared, which would contradict a delete that failed.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 recording was kept because it has not been uploaded yet.} other{{count} recordings were kept because they have not been uploaded yet.}}'**
+  String profile_cacheKeptUnsent(int count);
+
+  /// Shown when the clear kept a recording because its file would not delete, which is space the user asked for and did not get.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 recording could not be deleted, so that space was not freed.} other{{count} recordings could not be deleted, so that space was not freed.}}'**
+  String profile_cacheNotFreed(int count);
+
   /// No description provided for @profile_joinedSuccess.
   ///
   /// In en, this message translates to:

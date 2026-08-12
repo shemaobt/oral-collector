@@ -177,24 +177,29 @@ void main() {
     }
   });
 
-  test('returns how many recordings stayed on the device', () async {
+  test('reports how many recordings stayed on the device', () async {
     await seed('a', uploadStatus: 'failed');
     await seed('b', uploadStatus: 'local');
     await seed('c', uploadStatus: 'verified', serverId: 'srv-c');
 
-    final count = await (await notifier()).clearLocalCache();
+    final outcome = await (await notifier()).clearLocalCache();
 
-    expect(count, 2);
-    expect(count, (await repo.getAllLocalRecordings()).length);
+    expect(outcome.keptUnsent, 2);
+    expect(outcome.keptUndeletable, 0);
+    expect(
+      outcome.keptUnsent + outcome.keptUndeletable,
+      (await repo.getAllLocalRecordings()).length,
+    );
   });
 
-  test('returns zero when the server already had everything', () async {
+  test('reports nothing kept when the server already had everything', () async {
     await seed('a', uploadStatus: 'verified', serverId: 'srv-a');
     await seed('b', uploadStatus: 'uploaded', serverId: 'srv-b');
 
-    final count = await (await notifier()).clearLocalCache();
+    final outcome = await (await notifier()).clearLocalCache();
 
-    expect(count, 0);
+    expect(outcome.keptUnsent, 0);
+    expect(outcome.keptUndeletable, 0);
     expect(await repo.getAllLocalRecordings(), isEmpty);
   });
 
@@ -202,9 +207,10 @@ void main() {
     final a = await seed('a', uploadStatus: 'local');
     final b = await seed('b', uploadStatus: 'failed_exhausted');
 
-    final count = await (await notifier()).clearLocalCache();
+    final outcome = await (await notifier()).clearLocalCache();
 
-    expect(count, 2);
+    expect(outcome.keptUnsent, 2);
+    expect(outcome.keptUndeletable, 0);
     await expectSurvived(a);
     await expectSurvived(b);
   });
@@ -242,11 +248,15 @@ void main() {
 
       final n = failing.read(syncNotifierProvider.notifier);
       await Future<void>.delayed(Duration.zero);
-      final count = await n.clearLocalCache();
+      final outcome = await n.clearLocalCache();
 
       await expectSurvived(stuck);
       await expectDiscarded(fine);
-      expect(count, 1);
+      // The server has this recording, so nothing about it is unsent: what kept
+      // it is the delete that failed, and that is the half the screen has to
+      // report as space it did not free (ENG-417).
+      expect(outcome.keptUndeletable, 1);
+      expect(outcome.keptUnsent, 0);
     },
   );
 
@@ -267,11 +277,12 @@ void main() {
       serverId: 'srv-nothing',
     );
 
-    final count = await (await notifier()).clearLocalCache();
+    final outcome = await (await notifier()).clearLocalCache();
 
     await expectSurvived(owesEdit);
     await expectDiscarded(owesNothing);
-    expect(count, 1);
+    expect(outcome.keptUnsent, 1);
+    expect(outcome.keptUndeletable, 0);
   });
 
   test(
@@ -290,10 +301,11 @@ void main() {
         owes: {PendingMetadataField.title},
       );
 
-      final count = await (await notifier()).clearLocalCache();
+      final outcome = await (await notifier()).clearLocalCache();
 
       await expectDiscarded(forbidden);
-      expect(count, 0);
+      expect(outcome.keptUnsent, 0);
+      expect(outcome.keptUndeletable, 0);
     },
   );
 
@@ -316,11 +328,12 @@ void main() {
       owes: {PendingMetadataField.description},
     );
 
-    final count = await (await notifier()).clearLocalCache();
+    final outcome = await (await notifier()).clearLocalCache();
 
     await expectSurvived(conflict);
     await expectSurvived(exhausted);
-    expect(count, 2);
+    expect(outcome.keptUnsent, 2);
+    expect(outcome.keptUndeletable, 0);
   });
 
   test('the pending count reflects what stayed behind', () async {

@@ -49,6 +49,14 @@ bool _wouldLoseAnUnsentEdit(String metadataSyncStatus) => const {
   MetadataSyncStatus.failedExhausted,
 }.contains(metadataSyncStatus);
 
+/// What a cache clear left behind, by reason.
+///
+/// [keptUnsent] is the reassuring half: the server does not have this recording,
+/// or does not have an edit to it, so the copy is the only one there is.
+/// [keptUndeletable] is the other half: the server has it and the delete failed
+/// anyway, which is space the clear promised and did not free.
+typedef ClearCacheOutcome = ({int keptUnsent, int keptUndeletable});
+
 final syncNotifierProvider = NotifierProvider<SyncNotifier, SyncState>(
   SyncNotifier.new,
 );
@@ -249,8 +257,8 @@ class SyncNotifier extends Notifier<SyncState> {
     );
   }
 
-  /// Drops the local copies the server already has and returns how many
-  /// recordings stayed on the device.
+  /// Drops the local copies the server already has and reports what stayed on
+  /// the device, split by why it stayed.
   ///
   /// A recording the server never received exists nowhere else, so it is kept —
   /// clearing the cache used to delete it and an hour-long story was lost that
@@ -263,8 +271,13 @@ class SyncNotifier extends Notifier<SyncState> {
   /// rows — so dropping it after a failed delete would strand the audio on disk
   /// for good and report space that was never freed. A kept row with its file
   /// is consistent, and the next clear retries it.
-  Future<int> clearLocalCache() async {
-    if (kIsWeb) return 0;
+  ///
+  /// The two reasons are reported apart because they are different news
+  /// (ENG-417). "The server does not have this yet" reassures; "I could not
+  /// delete this" is space the user asked for and did not get. A single total
+  /// says one of them and hides the other.
+  Future<ClearCacheOutcome> clearLocalCache() async {
+    if (kIsWeb) return (keptUnsent: 0, keptUndeletable: 0);
 
     final all = await _recordingRepo.getAllLocalRecordings();
     final discardable = all
@@ -288,7 +301,10 @@ class SyncNotifier extends Notifier<SyncState> {
     await _recordingRepo.deleteRecordingsByIds(removableIds);
 
     await _refreshPendingCount();
-    return all.length - removableIds.length;
+    return (
+      keptUnsent: all.length - discardable.length,
+      keptUndeletable: discardable.length - removableIds.length,
+    );
   }
 
   /// Deletes [path], reporting and swallowing any failure. Returns whether the
@@ -449,6 +465,12 @@ class SyncNotifier extends Notifier<SyncState> {
   /// the "how much is left to transfer" figure, and a metadata PATCH is a few
   /// hundred bytes — adding the audio size of a recording the server already
   /// holds would inflate it by a file that is never going up.
+  ///
+  /// [SyncState.pendingUploadCount] is the uploads counted on their own, for the
+  /// upload-queue sheet, which shows a number directly above the list it
+  /// describes (ENG-422). It comes from this same query rather than a second
+  /// one, so the number and the rows cannot disagree about what a pending
+  /// upload is.
   Future<void> _refreshPendingCount() async {
     final (pending, owingEdits) = await (
       _recordingRepo.getPendingUploads(),
@@ -458,6 +480,7 @@ class SyncNotifier extends Notifier<SyncState> {
     final owing = {...pending.map((r) => r.id), ...owingEdits.map((r) => r.id)};
     state = state.copyWith(
       pendingCount: owing.length,
+      pendingUploadCount: pending.length,
       totalQueueSizeBytes: totalBytes,
     );
   }

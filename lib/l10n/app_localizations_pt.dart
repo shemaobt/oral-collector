@@ -1159,6 +1159,30 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String profile_cacheKeptUnsent(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count gravações foram mantidas porque ainda não foram enviadas.',
+      one: '1 gravação foi mantida porque ainda não foi enviada.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String profile_cacheNotFreed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count gravações não puderam ser excluídas, então esse espaço não foi liberado.',
+      one:
+          '1 gravação não pôde ser excluída, então esse espaço não foi liberado.',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String profile_joinedSuccess(String name) {
     return 'Entrou em \"$name\" com sucesso';
   }

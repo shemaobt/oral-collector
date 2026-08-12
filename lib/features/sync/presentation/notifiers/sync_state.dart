@@ -7,6 +7,12 @@ enum SyncBlockReason { wifiOnly }
 class SyncState {
   final bool isOnline;
   final int pendingCount;
+
+  /// The uploads alone, for the one surface that shows a number beside the list
+  /// it counts (ENG-422). [pendingCount] is every kind of outstanding work and
+  /// is what the header chip and the profile card read; the upload-queue sheet
+  /// lists uploads, so its number has to be uploads too.
+  final int pendingUploadCount;
   final String? uploadingId;
   final int syncProgress;
   final DateTime? lastSyncAt;
@@ -21,6 +27,7 @@ class SyncState {
   const SyncState({
     this.isOnline = false,
     this.pendingCount = 0,
+    this.pendingUploadCount = 0,
     this.uploadingId,
     this.syncProgress = 0,
     this.lastSyncAt,
@@ -43,6 +50,7 @@ class SyncState {
   SyncState copyWith({
     bool? isOnline,
     int? pendingCount,
+    int? pendingUploadCount,
     String? uploadingId,
     int? syncProgress,
     DateTime? lastSyncAt,
@@ -61,6 +69,7 @@ class SyncState {
     return SyncState(
       isOnline: isOnline ?? this.isOnline,
       pendingCount: pendingCount ?? this.pendingCount,
+      pendingUploadCount: pendingUploadCount ?? this.pendingUploadCount,
       uploadingId: clearUploadingId ? null : (uploadingId ?? this.uploadingId),
       syncProgress: syncProgress ?? this.syncProgress,
       lastSyncAt: clearLastSyncAt ? null : (lastSyncAt ?? this.lastSyncAt),

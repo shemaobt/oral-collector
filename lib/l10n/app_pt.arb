@@ -401,6 +401,8 @@
   "profile_clearCacheMessage": "Isso excluirá as gravações armazenadas localmente que o servidor já tem. As gravações que ainda não foram enviadas serão mantidas neste aparelho.",
   "profile_cacheCleared": "Cache local limpo",
   "profile_cacheClearedKept": "{count, plural, =1{Cache local limpo. 1 gravação foi mantida porque ainda não foi enviada.} other{Cache local limpo. {count} gravações foram mantidas porque ainda não foram enviadas.}}",
+  "profile_cacheKeptUnsent": "{count, plural, =1{1 gravação foi mantida porque ainda não foi enviada.} other{{count} gravações foram mantidas porque ainda não foram enviadas.}}",
+  "profile_cacheNotFreed": "{count, plural, =1{1 gravação não pôde ser excluída, então esse espaço não foi liberado.} other{{count} gravações não puderam ser excluídas, então esse espaço não foi liberado.}}",
   "profile_joinedSuccess": "Entrou em \"{name}\" com sucesso",
   "profile_inviteDeclined": "Convite recusado",
   "profile_language": "Idioma",
