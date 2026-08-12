@@ -183,4 +183,36 @@ void main() {
       expect(segments[2].endSeconds, closeTo(60.0, 0.001));
     });
   });
+
+  // ENG-66. The waveform gestures and the screen's "split at the playhead"
+  // button all enforce the floor through this one function, so the rule is
+  // pinned here rather than four times over.
+  group('minSplitGapFraction', () {
+    test('is the same amount of time whatever the recording lasts', () {
+      const short = Duration(seconds: 33);
+      const long = Duration(minutes: 3);
+
+      double asSeconds(Duration total) =>
+          minSplitGapFraction(total) * total.inMilliseconds / 1000.0;
+
+      expect(asSeconds(short), closeTo(asSeconds(long), 0.001));
+      expect(
+        asSeconds(long),
+        closeTo(kMinTrimSegment.inMilliseconds / 1000.0, 0.001),
+      );
+    });
+
+    test('leaves no legal cut on a recording shorter than two floors', () {
+      // A gap of 0.5 or more makes `fraction <= gap || fraction >= 1 - gap`
+      // true for every fraction, so no cut anywhere is accepted.
+      expect(
+        minSplitGapFraction(const Duration(milliseconds: 400)),
+        greaterThanOrEqualTo(0.5),
+      );
+    });
+
+    test('refuses every cut when the duration is unknown', () {
+      expect(minSplitGapFraction(Duration.zero), greaterThanOrEqualTo(0.5));
+    });
+  });
 }

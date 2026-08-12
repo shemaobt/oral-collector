@@ -31,6 +31,7 @@ Widget _harness({double width = 400}) {
           child: TrimWaveformPanel(
             waveformBars: List<double>.filled(12, 0.5),
             splitPoints: const [0.33, 0.66],
+            totalDuration: const Duration(seconds: 60),
             onSplitPointsChanged: (_) {},
             playingSegment: 0,
             excludedSegments: const {1},
