@@ -96,6 +96,17 @@ void main() {
     if (docs.existsSync()) docs.deleteSync(recursive: true);
   });
 
+  Future<RecordingSession> waitForSegments(String id, int count) async {
+    for (var attempt = 0; attempt < 300; attempt++) {
+      final session = await repo.getById(id);
+      if (session != null && repo.decodeSegmentPaths(session).length >= count) {
+        return session;
+      }
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+    }
+    fail('$id never reached $count finalized segments');
+  }
+
   test(
     'ENG-408: a recording killed mid-session comes back whole — the rotating '
     'segment is repaired and attached, not lost',
@@ -120,10 +131,16 @@ void main() {
         await Future<void>.delayed(Duration.zero);
       }
 
+      // Each rotation finalizes through SegmentedRecorder's internal chain —
+      // an async sink close plus a SQLite append. Reading the row the instant
+      // the loop ends races that chain: the third rotation is often still in
+      // flight, and the test would be asserting how fast the machine is.
+      // Wait for the three to land, so "killed after three rotations" is the
+      // precondition rather than the coin flip.
+      final duringDeath = await waitForSegments('killed', 3);
+
       // Process death: no finish(), no discard(). The session row stays
       // 'active' and the in-flight WAV keeps its zeroed header placeholders.
-      final duringDeath = await repo.getById('killed');
-      expect(repo.decodeSegmentPaths(duringDeath!).length, 3);
       expect(duringDeath.lastSegmentIndex, 2);
 
       // Next launch.
