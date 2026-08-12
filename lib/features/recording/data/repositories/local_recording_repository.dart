@@ -509,6 +509,7 @@ class LocalRecordingRepository {
       row.secondaryRegisterId,
     ),
     PendingMetadataField.cleaningStatus => row.cleaningStatus,
+    PendingMetadataField.audio => (row.durationSeconds, row.fileSizeBytes),
   };
 
   /// Writes what is left owed after a clear.
@@ -782,6 +783,41 @@ class LocalRecordingRepository {
           ),
         );
     return rows > 0;
+  }
+
+  /// [replaceAudio], plus the outbox entry that tells the server the audio it
+  /// already holds has changed shape (ENG-402).
+  ///
+  /// One transaction, because the two halves are one intent: the row alone puts
+  /// the new audio in the upload queue, and the upload is confirmed against the
+  /// `duration_seconds`/`file_size_bytes` the server still holds — so a row
+  /// re-queued without the owed facts uploads bytes the server then refuses.
+  /// The drain runs ahead of the uploads in the same pass, which is what makes
+  /// the pair arrive in that order.
+  ///
+  /// Nothing is owed when the server does not have the recording: there is
+  /// nothing to correct, and a mark the outbox never selects (it requires a
+  /// `serverId`) would leave the row wearing "edit not yet sent" forever.
+  Future<bool> replaceAudioAndQueueResend({
+    required String recordingId,
+    required String newFilePath,
+    required double newDurationSeconds,
+    required int newFileSizeBytes,
+  }) async {
+    return _db.transaction(() async {
+      final row = await getRecordingById(recordingId);
+      if (row == null) return false;
+      await replaceAudio(
+        recordingId: recordingId,
+        newFilePath: newFilePath,
+        newDurationSeconds: newDurationSeconds,
+        newFileSizeBytes: newFileSizeBytes,
+      );
+      if (row.serverId != null && row.serverId!.isNotEmpty) {
+        await markMetadataPending(recordingId, {PendingMetadataField.audio});
+      }
+      return true;
+    });
   }
 
   /// Defense in depth: throws [SegmentClassificationCollisionException] when a

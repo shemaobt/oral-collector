@@ -57,7 +57,7 @@ Path: @/lib/features/recording/presentation/notifiers
   does no navigation or snackbars. It depends on the recording data
   layer through injectable seams under
   [../../data/services/](../../data/services/) (the per-segment ffmpeg
-  exporter and the split persister factory) plus `fileExistsProvider` /
+  exporter and the split and boost persister factories) plus `fileExistsProvider` /
   `waveformLoaderProvider` in [../../data/](../../data/), reads sync
   state from
   [/lib/features/sync/presentation/notifiers/sync_notifier.dart](../../../sync/presentation/notifiers/sync_notifier.dart)
@@ -275,13 +275,24 @@ Path: @/lib/features/recording/presentation/notifiers
     segment through the `LocalSegmentExporter` seam — wrapping the source
     path, the `SegmentExportSpec`s, gain, boost-only flag, title, and parent
     genre id in a single `ExportLocalSegmentsRequest` value object (ENG-209;
-    see [../../data/docs.md](../../data/docs.md)) — and hands the resulting
-    specs plus the entity `parent` to a `RecordingSplitPersister` built from
+    see [../../data/docs.md](../../data/docs.md)) — then `_saveLocally`
+    branches on `TrimEditDecision.mode` (ENG-402, `TrimSaveMode` in
+    [../trim_edit_decision.dart](../trim_edit_decision.dart)): a `boostOnly`
+    save (no cut points) hands its single spec to a `RecordingBoostPersister`
+    built from `recordingBoostPersisterProvider`, which calls
+    `LocalRecordingRepository.replaceAudioAndQueueResend` and never touches
+    the server directly; every other save hands the specs plus the entity
+    `parent` to a `RecordingSplitPersister` built from
     `recordingSplitPersisterProvider` (the persister and the repository's
     `splitRecordingReplacingParent` consume the entity as the parent as of
     ENG-198 — see [../../data/repositories/docs.md](../../data/repositories/docs.md);
     see Things to Know for why every dependency is captured before the
-    first `await`).
+    first `await`). The two persisters are deliberately separate types, not
+    one mode-branching class — see
+    [../../data/docs.md](../../data/docs.md) and
+    [/docs/recording-split-semantics.md](../../../../../docs/recording-split-semantics.md#what-counts-as-a-split)
+    for why a boost must never call the split persister's best-effort remote
+    delete.
 - `RecordingsListNotifier` (`recordings_list_notifier.dart`) owns the
   paginated list. As of ENG-197 the state holds `List<LocalRecordingEntity>`
   (see [./recordings_list_state.dart](recordings_list_state.dart)), not the
@@ -529,9 +540,10 @@ Path: @/lib/features/recording/presentation/notifiers
   (recording null, or `decision.canSave` false) is a no-op. This keeps
   the orchestration unit-testable without pumping a widget.
 - **The native split captures every dependency before the first `await`
-  (ENG-193).** `_saveLocally` reads the exporter, the persister factory,
-  both repositories, and the sync `processQueue` tear-off into locals
-  *before* awaiting the ffmpeg export. The notifier is `autoDispose`, so
+  (ENG-193).** `_saveLocally` reads the exporter, **both** persister
+  factories (the split one and, since ENG-402, the boost one), both
+  repositories, and the sync `processQueue` tear-off into locals *before*
+  awaiting the ffmpeg export. The notifier is `autoDispose`, so
   if the user navigates away mid-export the family entry can be torn
   down; reading `ref` after the suspension could throw "Cannot use Ref
   after it has been disposed", yet the split must still commit. Capturing

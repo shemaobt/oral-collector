@@ -145,12 +145,20 @@ Path: @/lib/features/recording/presentation
   waveform peaks (`waveformLoaderProvider`) or synthesizes bars, and
   finishes the load by calling the notifier's `completeLoad` /
   `setUnavailable` / `loadFailed`. On save, the notifier exports the
-  segments (native) or calls the server (web), runs the
+  segments (native) or calls the server (web), then branches on whether the
+  edit made any cut points (ENG-402): a gain-only edit runs the
+  [../data/services/recording_boost_persister.dart](../data/services/recording_boost_persister.dart)
+  pipeline (points the same row at the re-encoded audio, archives the file it
+  replaced, kicks the upload queue — the recording's identity and its
+  server-side copy are both kept), while an actual split runs the
   [../data/services/recording_split_persister.dart](../data/services/recording_split_persister.dart)
   pipeline (which writes the children, archives the parent, deletes it
   locally and best-effort remotely, and kicks `SyncNotifier.processQueue`
-  so the new children start uploading), and returns a `TrimSaveOutcome`
-  the screen `switch`es on to show the snackbar and navigate.
+  so the new children start uploading). Either way the notifier returns a
+  `TrimSaveOutcome` the screen `switch`es on to show the snackbar and
+  navigate. See
+  [/docs/recording-split-semantics.md](../../../../docs/recording-split-semantics.md#what-counts-as-a-split)
+  for why only the cut-points case counts as a split.
 - The detail screen's audio playback is owned by
   `RecordingPlayerNotifier` at
   [./notifiers/recording_player_notifier.dart](notifiers/recording_player_notifier.dart).

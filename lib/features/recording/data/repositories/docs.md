@@ -32,7 +32,8 @@ Path: @/lib/features/recording/data/repositories
   - The recording presentation layer — increasingly through the feature's
     notifiers rather than from screens directly: `RecordingDetailNotifier` (the
     typed classification/metadata writes, ENG-194), `TrimEditorNotifier`
-    (`splitRecordingReplacingParent`, ENG-193), and `RecordingsListNotifier`
+    (`splitRecordingReplacingParent`, ENG-193; `replaceAudioAndQueueResend` via
+    `RecordingBoostPersister`, ENG-402), and `RecordingsListNotifier`
     (`getAllRecordings`, the hard delete) under
     [../../presentation/notifiers/](../../presentation/notifiers/), plus the
     screens still calling it directly
@@ -284,6 +285,21 @@ Path: @/lib/features/recording/data/repositories
   to swap the file and reset upload state (`md5Hash`, `uploadedBytes`,
   `resumableSessionUri`, `retryCount` → defaults; `uploadStatus` →
   `'local'`).
+- `replaceAudioAndQueueResend({recordingId, newFilePath, newDurationSeconds,
+  newFileSizeBytes})` (ENG-402) is `replaceAudio` plus, in the **same**
+  transaction, `markMetadataPending({PendingMetadataField.audio})` when the
+  row already has a `serverId`. It backs the trim editor's gain-only
+  ("boost") save path
+  ([../services/recording_boost_persister.dart](../services/recording_boost_persister.dart))
+  rather than the detail screen's manual replace-audio flow, which uses the
+  plain `replaceAudio` and its own `resetAndRetry` call instead. The two
+  writes are one intent: the server confirms an uploaded blob against the
+  `duration_seconds`/`file_size_bytes` it already has on file, so a row
+  re-queued for upload without also owing the new duration/size would upload
+  bytes the server then refuses. Nothing is marked pending for a recording the
+  server has never seen — there is nothing on the server to correct, and the
+  outbox drain only selects rows with a `serverId` anyway (see
+  [/lib/features/sync/docs.md](../../../sync/docs.md)).
 - `deleteRecording(id)` is a plain physical row delete (a single Drift
   `delete().go()`); there is no tombstone column. It only removes the
   Drift row — it does **not** delete the audio file or call the server.

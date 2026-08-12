@@ -72,7 +72,13 @@ Path: @/lib/features/recording/domain
   off the row at send time instead of replaying a stored payload, which is
   what makes two offline edits to the same field collapse into one write.
   `secondary` names all three secondary-classification columns as one token
-  because the wire contract only ever clears them together.
+  because the wire contract only ever clears them together. `audio` (ENG-402)
+  names the `duration_seconds`/`file_size_bytes` pair the server verifies an
+  uploaded blob against; it is owed after a trim-editor gain-only ("boost")
+  save re-encodes the file, and it is set by
+  `LocalRecordingRepository.replaceAudioAndQueueResend`
+  ([../data/repositories/docs.md](../data/repositories/docs.md)), not by the
+  detail screen's metadata mutations that own the other tokens.
   `encodePendingMetadataFields`/`decodePendingMetadataFields` are the
   JSON-text codec for the Drift column (`pendingMetadataJson`), mirroring
   `decodeReviewFlags`'s tolerance of an unknown token or invalid JSON — a

@@ -243,6 +243,22 @@ Path: @/lib/features/recording/data
   failure never strands a trashed file), then runs the best-effort remote
   delete and `triggerUpload()` **outside** the transaction. See Things to Know
   and [./repositories/docs.md](repositories/docs.md).
+- `services/recording_boost_persister.dart` (`RecordingBoostPersister`) is the
+  sibling pipeline for a trim-editor save with **no cut points** — a gain-only
+  edit (ENG-402). It is a deliberately separate class, not a mode inside
+  `RecordingSplitPersister`: a boost keeps the recording's identity (same
+  local id, same `serverId`), so it points the row at the re-encoded audio and
+  queues a resend via `LocalRecordingRepository.replaceAudioAndQueueResend`
+  ([./repositories/docs.md](repositories/docs.md)), archives the file it
+  replaced (`trashPrevious`, run after the write commits, same rollback
+  reasoning as `trashParent` below), then kicks the upload queue. It holds no
+  `RecordingApiRepository` — unlike the split persister, it has nothing to
+  retire on the server, which is the fix: a `boostOnly` save that went through
+  the split persister deleted the local row and best-effort deleted the
+  server's copy, and that remote delete swallows its failure and fails every
+  time offline, so the server ended up holding both recordings. See
+  [/docs/recording-split-semantics.md](../../../../docs/recording-split-semantics.md#what-counts-as-a-split)
+  for the full boost-vs-split contract.
 - **The trim editor's injectable seams (ENG-193).** The trim editor's
   editing + split orchestration moved into `TrimEditorNotifier` (see
   [../presentation/notifiers/docs.md](../presentation/notifiers/docs.md)),
@@ -255,7 +271,13 @@ Path: @/lib/features/recording/data
     variants — boost-only (re-encode the whole file with a volume
     filter), trim+gain (seek/trim + volume, re-encode to aac), or a
     plain `-c copy` stream trim — then reads the output file length and
-    returns `List<SplitSegmentSpec>` ready for `RecordingSplitPersister`.
+    returns `List<SplitSegmentSpec>`. The exporter itself does not branch on
+    `boostOnly` vs a real split — that decision is the caller's, in
+    `TrimEditorNotifier._saveLocally`
+    ([../presentation/notifiers/docs.md](../presentation/notifiers/docs.md)),
+    which sends the single resulting spec to `RecordingBoostPersister` when
+    there were no cut points and to `RecordingSplitPersister` otherwise
+    (ENG-402).
     Its per-call data inputs (source path, the `SegmentExportSpec`s, gain,
     boost-only flag, original title, parent genre id) are grouped into a
     single `ExportLocalSegmentsRequest` value object passed as the lone
@@ -278,6 +300,9 @@ Path: @/lib/features/recording/data
     `RecordingSplitPersisterFactory` typedef + `recordingSplitPersisterProvider`
     so the notifier hands off to a fake persister in tests. The persister
     pipeline itself is unchanged — only the factory seam is new.
+    `services/recording_boost_persister.dart` mirrors this exactly:
+    `RecordingBoostPersisterFactory` typedef + `recordingBoostPersisterProvider`
+    (ENG-402), used the same way for the boost-only save path.
 - **The detail screen's injectable IO seams (ENG-194).** The detail screen's
   orchestration moved into `RecordingDetailNotifier` (see
   [../presentation/notifiers/docs.md](../presentation/notifiers/docs.md)), and
