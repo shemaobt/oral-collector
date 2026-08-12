@@ -775,19 +775,9 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
       return null;
     }
 
+    final Uint8List bytes;
     try {
-      final bytes = await http.readBytes(Uri.parse(url));
-      // Web records with a fixed Opus encoder (see _startWeb); record_web
-      // packages Opus into a WebM container, so the format is always 'webm'.
-      const format = 'webm';
-      final fullKey = '$pendingKey.$format';
-      await file_ops.writeFileBytes(fullKey, bytes);
-      state = const RecordingState();
-      return RecordingResult(
-        filePath: fullKey,
-        durationSeconds: fallbackElapsed.inMilliseconds / 1000.0,
-        format: format,
-      );
+      bytes = await http.readBytes(Uri.parse(url));
     } catch (e, st) {
       _log.severe('[stopWeb] download failed', e, st);
       state = state.copyWith(
@@ -796,6 +786,31 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
       );
       return null;
     }
+
+    // Web records with a fixed Opus encoder (see _startWeb); record_web
+    // packages Opus into a WebM container, so the format is always 'webm'.
+    const format = 'webm';
+    final fullKey = '$pendingKey.$format';
+    // Kept out of the download's catch: browser storage can refuse the write
+    // (private browsing, storage blocked, quota) and reporting that as a
+    // failed read sends the person looking in the wrong place (ENG-421).
+    try {
+      await file_ops.writeFileBytes(fullKey, bytes);
+    } catch (e, st) {
+      _log.severe('[stopWeb] browser storage refused the audio', e, st);
+      state = state.copyWith(
+        finalizationStage: FinalizationStage.idle,
+        finalizationErrorKind: FinalizationErrorKind.storageUnavailable,
+      );
+      return null;
+    }
+
+    state = const RecordingState();
+    return RecordingResult(
+      filePath: fullKey,
+      durationSeconds: fallbackElapsed.inMilliseconds / 1000.0,
+      format: format,
+    );
   }
 
   Future<void> discardRecording() async {

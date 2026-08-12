@@ -173,6 +173,11 @@ String _errorBody(AppLocalizations l10n, FinalizationErrorKind? kind) {
       return l10n.recording_finalizationFailedBodyNoAudio;
     case FinalizationErrorKind.downloadFailed:
       return l10n.recording_finalizationFailedBodyDownload;
+    // Deliberately the generic line: every specific body here would be false
+    // for a refused write — the read worked, and nothing was kept anywhere.
+    // Generic and true beats specific and wrong (ENG-408, ENG-421).
+    case FinalizationErrorKind.storageUnavailable:
+      return l10n.error_generic;
     case FinalizationErrorKind.captureInterrupted:
       return l10n.recording_finalizationFailedBodyCaptureInterrupted;
     case FinalizationErrorKind.finalizationFailed:
