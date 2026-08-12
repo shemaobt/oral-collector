@@ -71,6 +71,7 @@ void main() {
     String title = 'Story',
     String cleaningStatus = 'none',
     String genreId = 'genre-1',
+    String? storytellerId,
   }) async {
     await repo.insertRecording(
       LocalRecordingsCompanion(
@@ -80,6 +81,7 @@ void main() {
         subcategoryId: const Value('sub-1'),
         registerId: const Value('reg-1'),
         serverId: Value(serverId),
+        storytellerId: Value(storytellerId),
         title: Value(title),
         description: const Value('a description with enough substance'),
         durationSeconds: const Value(30),
@@ -231,6 +233,75 @@ void main() {
         (await row()).reviewFlagsJson,
         contains('insufficient_description'),
       );
+      client.close();
+    });
+  });
+
+  /// ENG-411: the storyteller is the sixth field the drain carries.
+  group('the drain carries a change of storyteller', () {
+    test('an offline change goes up on its own, alone', () async {
+      await seedVerified(storytellerId: 'st-9');
+      await repo.markMetadataPending('rec-1', {
+        PendingMetadataField.storyteller,
+      });
+
+      final (client, log) = patchClient();
+      await buildEngine(client).processQueue();
+
+      expect(log.count, 1);
+      expect(log.paths.single, '/api/oc/recordings/srv-1');
+      expect(log.only, {'storyteller_id': 'st-9'});
+      expect((await row()).metadataSyncStatus, MetadataSyncStatus.synced);
+      client.close();
+    });
+
+    test('a removed storyteller goes up as a clear', () async {
+      // A null column would be omitted from the body, and the PATCH would say
+      // nothing at all — the server would keep the storyteller the user removed.
+      await seedVerified();
+      await repo.markMetadataPending('rec-1', {
+        PendingMetadataField.storyteller,
+      });
+
+      final (client, log) = patchClient();
+      await buildEngine(client).processQueue();
+
+      expect(log.only, {'storyteller_id': ''});
+      client.close();
+    });
+
+    test('an expired session costs the change no budget', () async {
+      await seedVerified(storytellerId: 'st-9');
+      await repo.markMetadataPending('rec-1', {
+        PendingMetadataField.storyteller,
+      });
+
+      final (client, _) = patchClient(status: 401);
+      await buildEngine(client).processQueue();
+
+      final r = await row();
+      expect(r.metadataSyncStatus, MetadataSyncStatus.pending);
+      expect(r.metadataRetryCount, 0);
+      expect(await repo.getPendingMetadataSyncs(), hasLength(1));
+      client.close();
+    });
+
+    test('and goes up once the session recovers', () async {
+      await seedVerified(storytellerId: 'st-9');
+      await repo.markMetadataPending('rec-1', {
+        PendingMetadataField.storyteller,
+      });
+
+      final (client, log) = patchClient(
+        statusByCall: (call) => call == 1 ? 401 : 200,
+      );
+      final engine = buildEngine(client);
+      await engine.processQueue();
+      await engine.processQueue();
+
+      expect(log.count, 2);
+      expect(log.bodies.last, {'storyteller_id': 'st-9'});
+      expect((await row()).metadataSyncStatus, MetadataSyncStatus.synced);
       client.close();
     });
   });

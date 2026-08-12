@@ -510,6 +510,7 @@ class LocalRecordingRepository {
     ),
     PendingMetadataField.cleaningStatus => row.cleaningStatus,
     PendingMetadataField.audio => (row.durationSeconds, row.fileSizeBytes),
+    PendingMetadataField.storyteller => row.storytellerId,
   };
 
   /// Writes what is left owed after a clear.

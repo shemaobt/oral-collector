@@ -47,6 +47,14 @@ UpdateRecordingRequest buildPendingMetadataRequest(
       PendingMetadataField.cleaningStatus,
       row.cleaningStatus,
     ),
+    // A removed storyteller leaves a null column, and the wire says "nobody"
+    // with an empty id: a null would be omitted from the body and the server
+    // would keep the storyteller the user removed. The online path words the
+    // clear the same way (ENG-411).
+    storytellerId: owed(
+      PendingMetadataField.storyteller,
+      row.storytellerId ?? '',
+    ),
     // The two audio facts travel as one unit: an audio replacement writes both,
     // and the server verifies the uploaded blob against both (ENG-402).
     durationSeconds: owed(PendingMetadataField.audio, row.durationSeconds),

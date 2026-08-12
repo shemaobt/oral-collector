@@ -165,6 +165,7 @@ Path: @/lib/features/recording/presentation/notifiers
     `LocalRecordingRepository` write (native only), refreshes genre stats /
     kicks the sync queue where the screen did, then `await load()`s.
     `toggleCleaningStatus`/`moveCategory`/`classify`/`saveSecondary` (ENG-399)
+    and `setStoryteller` (ENG-411)
     route the server call through the shared `_pushMetadata`/`_refusal` pair,
     which classifies the outcome as accepted, rejected (a non-200 response, or
     403 → `ForbiddenException`), or unreachable (offline, or any other thrown
@@ -200,14 +201,12 @@ Path: @/lib/features/recording/presentation/notifiers
     puts the recording back in the queue instead of leaving it stuck. Unlike the
     rename there is no server-side second refusal to guard against — the
     description is only sent at create time — so the requeue is unconditional.
-  - **Each of the five metadata-mutation entry points also settles the
+  - **Every metadata-mutation entry point also settles the
     metadata outbox (ENG-403), through the shared `_settleOutbox` helper.**
     `saveDetails` calls it once for `title` and once for `description`, right
-    after each half's write; `toggleCleaningStatus` gates it behind the same
-    `serverKnown` (`uploadStatus` in `{'uploaded', 'verified'}`) check that
-    decides whether to call the server at all; `classify`/`saveSecondary`
-    gate it behind `hasServerId`, matching the gate that decides whether
-    *they* call the server. `moveCategory` is the odd one: it calls the
+    after each half's write; `toggleCleaningStatus`, `classify`, `saveSecondary`
+    and, since ENG-411, `setStoryteller` gate it behind `hasServerId`, matching
+    the gate that decides whether *they* call the server. `moveCategory` is the odd one: it calls the
     server unconditionally, without checking for a server copy first (see
     [../../domain/docs.md](../../domain/docs.md)), so its outbox gate is new
     and different from the rest — a non-empty `serverId` check that exists
@@ -220,10 +219,12 @@ Path: @/lib/features/recording/presentation/notifiers
     `LocalRecordingRepository.markMetadataPending`/`clearPendingMetadataFields`
     ([../../data/repositories/docs.md](../../data/repositories/docs.md)), so
     an edit that finally lands also clears whatever an earlier offline edit
-    to the same field left owed. `setStoryteller` does not call
-    `_settleOutbox` at all — its own error handling swallows every exception
-    without telling "unreachable" apart from "refused", so it cannot decide
-    which case the outbox contract needs.
+    to the same field left owed. `setStoryteller` was the last holdout: until
+    ENG-411 it swallowed every exception without telling "unreachable" apart
+    from "refused", so it could not decide which case the outbox contract
+    needed — offline the assignment landed on the row with nothing owed and
+    never went up, and on a 403 the row was written anyway, asserting a
+    storyteller the server had rejected.
   - **Audio mutations** behind the IO seams: `downloadAndCache` (GCS download +
     `cacheDownloadedAudio`, throws on failure so the widget dismisses its
     progress dialog and shows the error), `downloadForExport` (temp download for
