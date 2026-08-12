@@ -56,12 +56,33 @@ void main() {
       expect(state.segmentEnd(1), const Duration(seconds: 10));
     });
 
-    test('segment signature is the midpoint to three decimals', () {
+    test('segment signature is the midpoint to six decimals', () {
       const state = TrimEditorState();
-      expect(state.sigForSegment(0), '0.500');
+      expect(state.sigForSegment(0), '0.500000');
       const split = TrimEditorState(splitPoints: [0.4]);
-      expect(split.sigForSegment(0), '0.200');
-      expect(split.sigForSegment(1), '0.700');
+      expect(split.sigForSegment(0), '0.200000');
+      expect(split.sigForSegment(1), '0.700000');
+    });
+
+    test('neighbouring minimum-length segments do not share a signature', () {
+      // ENG-66 dropped the floor to 250 ms, so on a long recording two
+      // adjacent segments can be far closer than the old 3% apart. Three
+      // decimals collided here and one segment's taxonomy override leaked
+      // onto its neighbour.
+      const total = Duration(minutes: 30);
+      final gap = 0.25 / total.inSeconds;
+      final state = TrimEditorState(
+        totalDuration: total,
+        splitPoints: [0.5, 0.5 + gap, 0.5 + gap * 2],
+      );
+
+      final sigs = {
+        state.sigForSegment(1),
+        state.sigForSegment(2),
+        state.sigForSegment(3),
+      };
+
+      expect(sigs, hasLength(3));
     });
   });
 
@@ -126,9 +147,9 @@ void main() {
       final recording = await seedParent();
       final state = TrimEditorState(
         recording: recording,
-        segGenreBySig: const {'0.500': 'gX'},
-        segSubcatBySig: const {'0.500': 'subX'},
-        segRegisterBySig: const {'0.500': 'regX'},
+        segGenreBySig: const {'0.500000': 'gX'},
+        segSubcatBySig: const {'0.500000': 'subX'},
+        segRegisterBySig: const {'0.500000': 'regX'},
       );
       expect(state.effectiveGenre(0), 'gX');
       expect(state.effectiveSubcategory(0), 'subX');
@@ -140,9 +161,9 @@ void main() {
       final recording = await seedParent();
       final state = TrimEditorState(
         recording: recording,
-        segGenreBySig: const {'0.500': null},
-        segSubcatBySig: const {'0.500': null},
-        segRegisterBySig: const {'0.500': null},
+        segGenreBySig: const {'0.500000': null},
+        segSubcatBySig: const {'0.500000': null},
+        segRegisterBySig: const {'0.500000': null},
       );
       expect(state.effectiveGenre(0), 'g0');
       expect(state.effectiveSubcategory(0), isNull);
@@ -153,18 +174,18 @@ void main() {
   group('remapTaxonomyBySig', () {
     test('keeps an override whose segment midpoint barely moves', () {
       final result = remapTaxonomyBySig(
-        const {'0.200': 'gA'},
+        const {'0.200000': 'gA'},
         const [0.0, 0.4, 1.0],
         const [0.0, 0.41, 1.0],
       );
       // New segment 0 midpoint 0.205 is within 0.02 of old 0.200.
-      expect(result, {'0.205': 'gA'});
+      expect(result, {'0.205000': 'gA'});
     });
 
     test('drops an override whose nearest segment midpoint moves beyond the '
         'threshold', () {
       final result = remapTaxonomyBySig(
-        const {'0.500': 'gA'},
+        const {'0.500000': 'gA'},
         const [0.0, 1.0],
         const [0.0, 0.5, 1.0],
       );
@@ -172,13 +193,28 @@ void main() {
       expect(result, isEmpty);
     });
 
+    test('a re-split does not carry an override past its own segment', () {
+      // ENG-66: minimum-length segments on a 3-minute recording are 0.00139
+      // wide. Shifting the segmentation by five of those moves every midpoint
+      // well under the flat 0.02, which used to carry the override five
+      // segments away from where the user set it.
+      const gap = 0.25 / 180;
+      final result = remapTaxonomyBySig(
+        {(0.5 + gap / 2).toStringAsFixed(6): 'gA'},
+        const [0.0, 0.5, 0.5 + gap, 1.0],
+        const [0.0, 0.5 + gap * 5, 0.5 + gap * 6, 1.0],
+      );
+
+      expect(result, isEmpty);
+    });
+
     test('an override on an unchanged segmentation survives', () {
       final result = remapTaxonomyBySig(
-        const {'0.500': 'gA'},
+        const {'0.500000': 'gA'},
         const [0.0, 1.0],
         const [0.0, 1.0],
       );
-      expect(result, {'0.500': 'gA'});
+      expect(result, {'0.500000': 'gA'});
     });
   });
 }
