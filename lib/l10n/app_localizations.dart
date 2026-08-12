@@ -3854,6 +3854,36 @@ abstract class AppLocalizations {
   /// **'We tried to recover the audio but no segments were available.'**
   String get recording_finalizationFailedBody;
 
+  /// No description provided for @recording_finalizationFailedBodyNoAudio.
+  ///
+  /// In en, this message translates to:
+  /// **'No audio came back from the recorder.'**
+  String get recording_finalizationFailedBodyNoAudio;
+
+  /// No description provided for @recording_finalizationFailedBodyDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'The audio was recorded but could not be read back.'**
+  String get recording_finalizationFailedBodyDownload;
+
+  /// No description provided for @recording_finalizationFailedBodyCaptureInterrupted.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording stopped before you pressed stop, so no audio was kept.'**
+  String get recording_finalizationFailedBodyCaptureInterrupted;
+
+  /// No description provided for @recording_finalizationFailedBodyPipeline.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t finish processing this recording. It is kept in your unsaved recordings.'**
+  String get recording_finalizationFailedBodyPipeline;
+
+  /// No description provided for @recording_finalizationErrorBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get recording_finalizationErrorBack;
+
   /// No description provided for @recording_discardAndReturn.
   ///
   /// In en, this message translates to:

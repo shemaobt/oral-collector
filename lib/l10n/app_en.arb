@@ -1053,6 +1053,11 @@
   "recording_finalizationDegradedHint": "Audio quality may be reduced.",
   "recording_finalizationFailed": "Couldn't save this recording",
   "recording_finalizationFailedBody": "We tried to recover the audio but no segments were available.",
+  "recording_finalizationFailedBodyNoAudio": "No audio came back from the recorder.",
+  "recording_finalizationFailedBodyDownload": "The audio was recorded but could not be read back.",
+  "recording_finalizationFailedBodyCaptureInterrupted": "Recording stopped before you pressed stop, so no audio was kept.",
+  "recording_finalizationFailedBodyPipeline": "We couldn't finish processing this recording. It is kept in your unsaved recordings.",
+  "recording_finalizationErrorBack": "Back",
   "recording_discardAndReturn": "Discard and return",
   "recording_savingRecording": "Saving recording…",
   "@recording_savingRecording": {

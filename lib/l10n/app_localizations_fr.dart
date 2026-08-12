@@ -2176,6 +2176,25 @@ class AppLocalizationsFr extends AppLocalizations {
       'Nous avons essayé de récupérer l\'audio mais aucun segment n\'était disponible.';
 
   @override
+  String get recording_finalizationFailedBodyNoAudio =>
+      'Aucun audio n\'est revenu de l\'enregistreur.';
+
+  @override
+  String get recording_finalizationFailedBodyDownload =>
+      'L\'audio a été enregistré, mais il n\'a pas pu être relu.';
+
+  @override
+  String get recording_finalizationFailedBodyCaptureInterrupted =>
+      'L\'enregistrement s\'est arrêté avant que vous appuyiez sur arrêter, donc aucun audio n\'a été conservé.';
+
+  @override
+  String get recording_finalizationFailedBodyPipeline =>
+      'Nous n\'avons pas pu terminer le traitement de cet enregistrement. Il est conservé dans vos enregistrements non sauvegardés.';
+
+  @override
+  String get recording_finalizationErrorBack => 'Retour';
+
+  @override
   String get recording_discardAndReturn => 'Ignorer et revenir';
 
   @override

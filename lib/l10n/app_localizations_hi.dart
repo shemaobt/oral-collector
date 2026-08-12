@@ -2152,6 +2152,25 @@ class AppLocalizationsHi extends AppLocalizations {
       'हमने ऑडियो पुनर्प्राप्त करने का प्रयास किया लेकिन कोई खंड उपलब्ध नहीं था।';
 
   @override
+  String get recording_finalizationFailedBodyNoAudio =>
+      'रिकॉर्डर से कोई ऑडियो नहीं आया।';
+
+  @override
+  String get recording_finalizationFailedBodyDownload =>
+      'ऑडियो रिकॉर्ड हुआ, लेकिन उसे दोबारा पढ़ा नहीं जा सका।';
+
+  @override
+  String get recording_finalizationFailedBodyCaptureInterrupted =>
+      'आपके रोकने से पहले ही रिकॉर्डिंग रुक गई, इसलिए कोई ऑडियो सहेजा नहीं गया।';
+
+  @override
+  String get recording_finalizationFailedBodyPipeline =>
+      'हम इस रिकॉर्डिंग की प्रोसेसिंग पूरी नहीं कर सके। यह आपकी बिना सहेजी रिकॉर्डिंग में रखी है।';
+
+  @override
+  String get recording_finalizationErrorBack => 'वापस';
+
+  @override
   String get recording_discardAndReturn => 'त्यागें और लौटें';
 
   @override

@@ -2134,6 +2134,25 @@ class AppLocalizationsTpi extends AppLocalizations {
       'Mipela traim long kisim bek audio tasol i nogat ol hap.';
 
   @override
+  String get recording_finalizationFailedBodyNoAudio =>
+      'I nogat audio i kam bek long rekoda.';
+
+  @override
+  String get recording_finalizationFailedBodyDownload =>
+      'Em i rekodim audio, tasol i no inap ritim gen.';
+
+  @override
+  String get recording_finalizationFailedBodyCaptureInterrupted =>
+      'Rekoding i pinis paslain long yu putim stop, olsem na i nogat audio i stap.';
+
+  @override
+  String get recording_finalizationFailedBodyPipeline =>
+      'Mipela i no inap pinisim wok long dispela rekoding. Em i stap long ol rekoding yu no bin sevim.';
+
+  @override
+  String get recording_finalizationErrorBack => 'Go bek';
+
+  @override
   String get recording_discardAndReturn => 'Lusim na go bek';
 
   @override

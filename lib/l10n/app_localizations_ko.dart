@@ -2081,6 +2081,25 @@ class AppLocalizationsKo extends AppLocalizations {
       '오디오 복구를 시도했지만 사용 가능한 구간이 없었습니다.';
 
   @override
+  String get recording_finalizationFailedBodyNoAudio =>
+      '녹음기에서 오디오가 돌아오지 않았습니다.';
+
+  @override
+  String get recording_finalizationFailedBodyDownload =>
+      '오디오는 녹음되었지만 다시 읽을 수 없었습니다.';
+
+  @override
+  String get recording_finalizationFailedBodyCaptureInterrupted =>
+      '정지를 누르기 전에 녹음이 멈춰서 오디오가 저장되지 않았습니다.';
+
+  @override
+  String get recording_finalizationFailedBodyPipeline =>
+      '이 녹음의 처리를 끝내지 못했습니다. 저장되지 않은 녹음에 보관되어 있습니다.';
+
+  @override
+  String get recording_finalizationErrorBack => '뒤로';
+
+  @override
   String get recording_discardAndReturn => '버리고 돌아가기';
 
   @override

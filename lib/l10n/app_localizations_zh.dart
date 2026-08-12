@@ -2067,6 +2067,23 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recording_finalizationFailedBody => '我们尝试恢复音频，但没有可用的片段。';
 
   @override
+  String get recording_finalizationFailedBodyNoAudio => '录音器没有返回音频。';
+
+  @override
+  String get recording_finalizationFailedBodyDownload => '音频已录制，但无法重新读取。';
+
+  @override
+  String get recording_finalizationFailedBodyCaptureInterrupted =>
+      '在您按下停止之前录音就已停止，因此没有保存音频。';
+
+  @override
+  String get recording_finalizationFailedBodyPipeline =>
+      '我们无法完成此录音的处理。它保存在您的未保存录音中。';
+
+  @override
+  String get recording_finalizationErrorBack => '返回';
+
+  @override
   String get recording_discardAndReturn => '放弃并返回';
 
   @override

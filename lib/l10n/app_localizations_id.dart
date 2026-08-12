@@ -2153,6 +2153,25 @@ class AppLocalizationsId extends AppLocalizations {
       'Kami mencoba memulihkan audio tetapi tidak ada segmen yang tersedia.';
 
   @override
+  String get recording_finalizationFailedBodyNoAudio =>
+      'Tidak ada audio yang kembali dari perekam.';
+
+  @override
+  String get recording_finalizationFailedBodyDownload =>
+      'Audio terekam, tetapi tidak dapat dibaca kembali.';
+
+  @override
+  String get recording_finalizationFailedBodyCaptureInterrupted =>
+      'Perekaman berhenti sebelum Anda menekan berhenti, jadi tidak ada audio yang disimpan.';
+
+  @override
+  String get recording_finalizationFailedBodyPipeline =>
+      'Kami tidak dapat menyelesaikan pemrosesan rekaman ini. Rekaman disimpan di rekaman yang belum tersimpan.';
+
+  @override
+  String get recording_finalizationErrorBack => 'Kembali';
+
+  @override
   String get recording_discardAndReturn => 'Buang dan kembali';
 
   @override
