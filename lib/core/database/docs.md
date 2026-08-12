@@ -32,6 +32,10 @@ Path: @/lib/core/database
   row is marked completed) and why the migration does no back-fill is documented
   where the columns are written, not here — see
   [../../features/recording/data/repositories/docs.md](../../features/recording/data/repositories/docs.md).
+  Slice 2 gave the columns their first reader: the crash-recovery sweep in
+  [RecoveryCoordinator](../../features/recording/data/services/recovery_coordinator.dart)
+  stats the anchored file to decide whether a finished session still owes the
+  user a recovery offer — see the same repositories doc.
 
 ### How it fits into the larger codebase
 
