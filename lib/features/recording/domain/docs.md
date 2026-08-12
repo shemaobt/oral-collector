@@ -79,6 +79,12 @@ Path: @/lib/features/recording/domain
   `LocalRecordingRepository.replaceAudioAndQueueResend`
   ([../data/repositories/docs.md](../data/repositories/docs.md)), not by the
   detail screen's metadata mutations that own the other tokens.
+  `storyteller` (ENG-411) names which storyteller the recording is assigned
+  to, not the storyteller record itself — that entity has its own table and
+  its own queue. It is the one token whose cleared state the wire cannot say
+  with a null: an unassigned storyteller goes up as an empty id, because a
+  null would be omitted from the PATCH body and leave the server's copy
+  standing.
   `encodePendingMetadataFields`/`decodePendingMetadataFields` are the
   JSON-text codec for the Drift column (`pendingMetadataJson`), mirroring
   `decodeReviewFlags`'s tolerance of an unknown token or invalid JSON — a
