@@ -47,5 +47,9 @@ UpdateRecordingRequest buildPendingMetadataRequest(
       PendingMetadataField.cleaningStatus,
       row.cleaningStatus,
     ),
+    // The two audio facts travel as one unit: an audio replacement writes both,
+    // and the server verifies the uploaded blob against both (ENG-402).
+    durationSeconds: owed(PendingMetadataField.audio, row.durationSeconds),
+    fileSizeBytes: owed(PendingMetadataField.audio, row.fileSizeBytes),
   );
 }

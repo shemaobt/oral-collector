@@ -20,7 +20,8 @@ enum PendingMetadataField {
   subcategory('subcategory'),
   register('register'),
   secondary('secondary'),
-  cleaningStatus('cleaning_status');
+  cleaningStatus('cleaning_status'),
+  audio('audio');
 
   const PendingMetadataField(this.wireName);
 
