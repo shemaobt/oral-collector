@@ -66,6 +66,7 @@ class RecoveryConfirmScreen extends ConsumerWidget {
           notifier.confirmRecovery(
             pending.sessionId,
             keepPath: pending.result.filePath,
+            durationSeconds: pending.result.durationSeconds,
           );
           clearPending();
           context.go('/recordings');

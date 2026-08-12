@@ -54,6 +54,11 @@ class InterruptedSessionsNotifier extends Notifier<void> {
       for (final p in paths) {
         await _deleteFileSafe(p);
       }
+      // Since ENG-420 slice 2 a session can reach the banner on the strength
+      // of its finalized audio alone, so discarding one has to take that file
+      // too — the segments it was built from may already be gone.
+      final finalized = session.finalizedAudioPath;
+      if (finalized != null) await _deleteFileSafe(finalized);
       await _cleanupOrphanedSegments(session.id, -1);
       await sessionRepo.markDiscarded(session.id);
     }
@@ -116,6 +121,7 @@ class InterruptedSessionsNotifier extends Notifier<void> {
   Future<void> confirmRecovery(
     String sessionId, {
     required String keepPath,
+    required double durationSeconds,
   }) async {
     final sessionRepo = ref.read(recordingSessionRepositoryProvider);
     final session = await sessionRepo.getById(sessionId);
@@ -124,7 +130,14 @@ class InterruptedSessionsNotifier extends Notifier<void> {
         if (p != keepPath) await _deleteFileSafe(p);
       }
     }
-    await sessionRepo.markRecovered(sessionId);
+    // [keepPath] is the finalized recording, so the row can point at it
+    // (ENG-420) instead of leaving a recovered session that finished with
+    // audio look identical to one that never finalized.
+    await sessionRepo.recoverWithFinalizedAudio(
+      sessionId,
+      filePath: keepPath,
+      durationSeconds: durationSeconds,
+    );
     await ref.read(recoveryCoordinatorProvider).refresh();
   }
 

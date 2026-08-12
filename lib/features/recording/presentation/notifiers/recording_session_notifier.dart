@@ -567,7 +567,14 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
         );
         if (result != null) {
           await _cleanupOrphanedSegments(pendingSessionId, -1);
-          await sessionRepo.markRecovered(pendingSessionId);
+          // Same reason as the normal stop path (ENG-420): this produced real
+          // finalized audio, so the row has to point at it before the status
+          // says the session is done with.
+          await sessionRepo.recoverWithFinalizedAudio(
+            pendingSessionId,
+            filePath: result.filePath,
+            durationSeconds: result.durationSeconds,
+          );
           await ref.read(recoveryCoordinatorProvider).refresh();
           state = const RecordingState();
         }
