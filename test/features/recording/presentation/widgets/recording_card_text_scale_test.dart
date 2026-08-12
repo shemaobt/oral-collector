@@ -14,6 +14,21 @@
 /// case tested a card wider than any card that ships; and 320dp joins 390dp,
 /// because the narrowest phone is where the footer runs out of room first.
 ///
+/// ENG-384 closed the last hole in that matrix. It used to run four widths
+/// short of the phones that ship and, worse, it demanded a clean frame only at
+/// 390dp: everywhere else a local helper read the render tree and failed only
+/// when the overflowing node belonged to the footer, so an overflow of the
+/// title line was found and swallowed on purpose. That exemption is gone —
+/// every case now asserts `expectNoOverflow`, nothing swallows an overflow,
+/// and 360dp and 375dp join the two widths that were already here.
+///
+/// Overflow is only half of what the title line can get wrong, so the matrix
+/// also pins how the line is *divided*. The date is capped at a share of the
+/// row and, past that share, moves to a line of its own instead of clipping —
+/// which is what keeps the title from being rationed down to its ellipsis at
+/// 2.0x. Two groups below assert the two ends of that: the title owns the
+/// majority of its line at 2.0x, and at 1.0x the date is still beside it.
+///
 /// ENG-382 also put the duration back in the footer, ranked below the pendency
 /// chip: it renders only when the chip can keep its whole label, so the
 /// assertions below are about which of the two yields, not about overflow
@@ -21,6 +36,13 @@
 /// outranks the duration too — on a phone the row now has no spare width, so
 /// the duration is in practice gone. The ranking is still what decides it, and
 /// the test at the bottom pins both ends of that.
+///
+/// One caveat the assertions are written around: no font is loaded in
+/// `flutter_test`, so every glyph measures one em. That overstates real text
+/// by roughly 1.7x, which makes the gate conservative rather than lax — but it
+/// also means the date crosses its share far earlier here than on a device, so
+/// nothing below asserts that the date is *present* at a given width. Where it
+/// renders, it is asserted on; where it does not, the case says nothing.
 library;
 
 import 'package:flutter/material.dart';
@@ -32,11 +54,14 @@ import 'package:oral_collector/features/recording/presentation/widgets/recording
 import 'package:oral_collector/features/sync/presentation/notifiers/sync_notifier.dart';
 import 'package:oral_collector/features/sync/presentation/notifiers/sync_state.dart';
 import 'package:oral_collector/l10n/app_localizations.dart';
+import 'package:oral_collector/shared/utils/format.dart';
 
 import '../../../../support/text_scale.dart';
 
 const _longTitle =
     'Enregistrement de la veillée de Noël chez la grand-mère Amélie en 1998';
+const _longArabicTitle =
+    'تسجيل سهرة عيد الميلاد في بيت الجدة أميلي سنة ١٩٩٨ في القرية القديمة';
 const _longDescription =
     'La grand-mère raconte comment le village a survécu à la grande sécheresse '
     'et ce que les anciens ont décidé cette année-là';
@@ -46,9 +71,19 @@ const _longSubcategory = 'Origine du village et de ses familles';
 /// The horizontal padding `recordings_list_screen.dart` wraps every card in.
 const _listPadding = EdgeInsets.symmetric(horizontal: 16);
 
-/// The narrowest phone the app supports, and the roomier one the rest of the
-/// suite assumes.
-const _narrowPhone = Size(320, 844);
+/// Every phone width the app has to hold, narrowest first: the floor it
+/// supports, the two ordinary Android and iPhone widths, and `kPhoneSize`, the
+/// roomier one the rest of the suite assumes.
+const _phoneSizes = [
+  Size(320, 844),
+  Size(360, 844),
+  Size(375, 844),
+  kPhoneSize,
+];
+
+/// When the card was recorded — the instant `_recording` carries, and what the
+/// date column is asked to render.
+final _recordedAt = DateTime(2024, 12, 24, 22, 15, 43);
 
 class _FakeSyncNotifier extends SyncNotifier {
   _FakeSyncNotifier(this._initial);
@@ -61,13 +96,14 @@ class _FakeSyncNotifier extends SyncNotifier {
 LocalRecordingEntity _recording({
   String? storytellerId,
   String? registerId = 'reg-1',
+  String title = _longTitle,
 }) => LocalRecordingEntity(
   id: 'rec-1',
   projectId: 'proj-1',
   genreId: 'genre-1',
   registerId: registerId,
   secondaryGenreId: 'genre-2',
-  title: _longTitle,
+  title: title,
   description: _longDescription,
   storytellerId: storytellerId,
   durationSeconds: 3900,
@@ -77,7 +113,7 @@ LocalRecordingEntity _recording({
   uploadStatus: 'uploading',
   serverId: null,
   cleaningStatus: 'none',
-  recordedAt: DateTime(2024, 12, 24, 22, 15, 43),
+  recordedAt: _recordedAt,
   createdAt: DateTime(2024, 12, 24),
   retryCount: 0,
   uploadedBytes: 0,
@@ -119,37 +155,23 @@ Future<void> _pump(
   await tester.pump();
 }
 
-/// Fails if any row the footer owns reported an overflow in the frame just
-/// pumped, and swallows the one overflow that is not the footer's.
+/// The date string the card is asked to paint for [locale].
 ///
-/// At 320dp above 1.0x the title row overflows on the date column, which
-/// predates ENG-382 and is tracked on its own issue — so this matrix cannot
-/// simply demand a clean frame at that width without also asserting a defect
-/// it does not own. The render tree is read rather than `takeException`
-/// because that reports only the first overflow, and the first one here
-/// belongs to the title.
-void _expectFooterFits(WidgetTester tester) {
-  final lines = tester
-      .renderObject(find.byType(RecordingCard))
-      .toStringDeep()
-      .split('\n');
-  for (var i = 0; i < lines.length; i++) {
-    if (!lines[i].contains('OVERFLOWING')) continue;
-    final node = lines
-        .skip(i + 1)
-        .takeWhile((line) => !line.contains('parentData:'))
-        .join();
-    expect(
-      node,
-      isNot(contains('_FooterRow')),
-      reason: 'a row inside the footer overflowed: $node',
-    );
-  }
-  tester.takeException();
-}
+/// The formatter is the production one so the finder tracks whatever the card
+/// renders; nothing here asserts on the shape of the string itself.
+Future<String> _dateText(Locale locale) async => formatRecordingDate(
+  _recordedAt,
+  locale.languageCode,
+  l10n: await AppLocalizations.delegate.load(locale),
+);
+
+/// The width the card's content column has, measured off the description line
+/// — the one row that always spans the whole of it.
+double _contentWidth(WidgetTester tester) =>
+    tester.getSize(find.byType(RecordingDescriptionLine)).width;
 
 void main() {
-  for (final size in const [kPhoneSize, _narrowPhone]) {
+  for (final size in _phoneSizes) {
     for (final locale in const [Locale('en'), Locale('fr'), Locale('ar')]) {
       for (final scale in const [1.0, 1.5, 2.0]) {
         final where =
@@ -159,8 +181,7 @@ void main() {
           tester,
         ) async {
           await _pump(tester, scale: scale, locale: locale, size: size);
-          if (size == kPhoneSize) expectNoOverflow(tester);
-          _expectFooterFits(tester);
+          expectNoOverflow(tester);
         });
 
         testWidgets('the counted pendency chip does not overflow at $where', (
@@ -175,8 +196,7 @@ void main() {
             // than the shorter named one.
             recording: _recording(registerId: null),
           );
-          if (size == kPhoneSize) expectNoOverflow(tester);
-          _expectFooterFits(tester);
+          expectNoOverflow(tester);
 
           final duration = find.text('1:05:00');
           if (duration.evaluate().isEmpty) return;
@@ -207,6 +227,71 @@ void main() {
       }
     }
   }
+
+  for (final size in _phoneSizes) {
+    final width = size.width.toInt();
+
+    testWidgets('the title keeps the majority of its line at 2.0x in ar on '
+        '${width}dp', (tester) async {
+      await _pump(
+        tester,
+        scale: 2.0,
+        locale: const Locale('ar'),
+        size: size,
+        recording: _recording(title: _longArabicTitle),
+      );
+
+      final title = tester.getSize(find.text(_longArabicTitle));
+      expect(
+        title.width,
+        greaterThan(_contentWidth(tester) / 2),
+        reason:
+            'the title is what says which recording this is, so at the '
+            'largest scale the app allows it owns most of the line it is on '
+            '— a title rationed below that renders as its ellipsis and '
+            'nothing else',
+      );
+    });
+
+    testWidgets('nothing on the title line is lost at 1.0x in en on '
+        '${width}dp', (tester) async {
+      await _pump(tester, scale: 1.0, locale: const Locale('en'), size: size);
+
+      final date = find.text(await _dateText(const Locale('en')));
+      expect(
+        tester.renderObject<RenderParagraph>(date).didExceedMaxLines,
+        isFalse,
+        reason:
+            'a date cut mid-string names a day that is not the recording\'s '
+            '— at the scale most users read at it keeps its whole label, '
+            'wherever the line it ends up on is',
+      );
+      final card = tester.getRect(find.byType(RecordingCard));
+      for (final rect in [
+        tester.getRect(find.text(_longTitle)),
+        tester.getRect(date),
+      ]) {
+        expect(card.expandToInclude(rect), card);
+      }
+    });
+  }
+
+  testWidgets('the date shares the title line at 1.0x on the reference phone', (
+    tester,
+  ) async {
+    await _pump(tester, scale: 1.0, locale: const Locale('en'));
+
+    expect(
+      tester.getRect(find.text(await _dateText(const Locale('en')))).center.dy,
+      moreOrLessEquals(
+        tester.getRect(find.text(_longTitle)).center.dy,
+        epsilon: 1,
+      ),
+      reason:
+          'the title line is one line at the size most users read at — the '
+          'reflow is what the date needs, not what the scale says',
+    );
+  });
 
   testWidgets(
     'the chip gets the room the duration used to take at 2.0x in fr',
