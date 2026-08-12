@@ -581,7 +581,7 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get recording_savedOnDeviceOnly =>
-      'Saved on this device — the server has not got this change yet. It will be sent on its own when the connection comes back.';
+      'Imehifadhiwa kwenye kifaa hiki — seva bado haijapata badiliko hili. Litatumwa lenyewe muunganisho utakaporudi.';
 
   @override
   String get recording_updateNoPermission =>
@@ -724,19 +724,19 @@ class AppLocalizationsSw extends AppLocalizations {
   String get recording_statusFileMissing => 'Faili ya sauti haipatikani';
 
   @override
-  String get recording_metadataSyncPending => 'Edit waiting to be sent';
+  String get recording_metadataSyncPending => 'Uhariri unasubiri kutumwa';
 
   @override
   String get recording_metadataSyncForbidden =>
-      'Edit refused: you cannot change this recording';
+      'Uhariri umekataliwa: huwezi kubadilisha rekodi hii';
 
   @override
   String get recording_metadataSyncConflict =>
-      'Edit refused: another recording has this title';
+      'Uhariri umekataliwa: rekodi nyingine ina kichwa hiki';
 
   @override
   String get recording_metadataSyncExhausted =>
-      'Edit not sent — edit again to retry';
+      'Uhariri haujatumwa — hariri tena ili kujaribu upya';
 
   @override
   String get recording_uploadExhaustedMessage =>
@@ -755,22 +755,23 @@ class AppLocalizationsSw extends AppLocalizations {
   }
 
   @override
-  String get recordings_retryFailedUploads => 'Retry uploads';
+  String get recordings_retryFailedUploads => 'Jaribu kupakia tena';
 
   @override
   String recordings_retryQueuedCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count recordings back in the upload queue',
-      one: '1 recording back in the upload queue',
-      zero: 'No uploads to retry',
+      other: 'Rekodi $count zimerudi kwenye foleni ya kupakia',
+      one: 'Rekodi 1 imerudi kwenye foleni ya kupakia',
+      zero: 'Hakuna upakiaji wa kujaribu tena',
     );
     return '$_temp0';
   }
 
   @override
-  String get recordings_retryFailed => 'Could not queue the uploads again';
+  String get recordings_retryFailed =>
+      'Haikuwezekana kurudisha upakiaji kwenye foleni';
 
   @override
   String get trim_title => 'Hariri Rekodi';
@@ -1067,7 +1068,7 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get sync_waitingForWifi =>
-      'Uploads are waiting for Wi-Fi. Turn off \"Upload on Wi-Fi only\" to send over cellular data.';
+      'Upakiaji unasubiri Wi-Fi. Zima \"Pakia kupitia Wi-Fi pekee\" ili kutuma kwa data ya simu.';
 
   @override
   String get profile_photoUpdated => 'Picha ya wasifu imesasishwa';
@@ -1127,7 +1128,7 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get profile_clearCacheMessage =>
-      'Hii itafuta rekodi zote zilizohifadhiwa ndani. Rekodi zilizopakiwa kwenye seva hazitaathiriwa.';
+      'Hii itafuta rekodi zilizohifadhiwa ndani ambazo seva tayari inazo. Rekodi ambazo bado hazijapakiwa zitabaki kwenye kifaa hiki.';
 
   @override
   String get profile_cacheCleared => 'Akiba ya ndani imefutwa';
@@ -1138,9 +1139,9 @@ class AppLocalizationsSw extends AppLocalizations {
       count,
       locale: localeName,
       other:
-          'Local cache cleared. $count recordings were kept because they have not been uploaded yet.',
+          'Akiba ya ndani imefutwa. Rekodi $count zimebaki kwa sababu bado hazijapakiwa.',
       one:
-          'Local cache cleared. 1 recording was kept because it has not been uploaded yet.',
+          'Akiba ya ndani imefutwa. Rekodi 1 imebaki kwa sababu bado haijapakiwa.',
     );
     return '$_temp0';
   }
@@ -1150,9 +1151,8 @@ class AppLocalizationsSw extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other:
-          '$count recordings were kept because they have not been uploaded yet.',
-      one: '1 recording was kept because it has not been uploaded yet.',
+      other: 'Rekodi $count zimebaki kwa sababu bado hazijapakiwa.',
+      one: 'Rekodi 1 imebaki kwa sababu bado haijapakiwa.',
     );
     return '$_temp0';
   }
@@ -1163,8 +1163,8 @@ class AppLocalizationsSw extends AppLocalizations {
       count,
       locale: localeName,
       other:
-          '$count recordings could not be deleted, so that space was not freed.',
-      one: '1 recording could not be deleted, so that space was not freed.',
+          'Rekodi $count hazikuweza kufutwa, kwa hivyo nafasi hiyo haikupatikana.',
+      one: 'Rekodi 1 haikuweza kufutwa, kwa hivyo nafasi hiyo haikupatikana.',
     );
     return '$_temp0';
   }
@@ -1225,7 +1225,7 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get profile_clearCacheSubtitle =>
-      'Futa rekodi zote zilizohifadhiwa ndani';
+      'Futa nakala za ndani ambazo seva tayari inazo';
 
   @override
   String get profile_invitations => 'Mialiko';
@@ -1866,7 +1866,7 @@ class AppLocalizationsSw extends AppLocalizations {
   String get detail_cleaning => 'Usafishaji';
 
   @override
-  String get detail_metadataSync => 'Edits';
+  String get detail_metadataSync => 'Uhariri';
 
   @override
   String get detail_recorded => 'Imerekodwa';
@@ -2531,7 +2531,7 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get a11y_minimapScrubber =>
-      'Audio overview. Tap or drag to navigate to a position.';
+      'Muhtasari wa sauti. Gusa au buruta ili kwenda mahali fulani.';
 
   @override
   String a11y_tabLabel(String label) {

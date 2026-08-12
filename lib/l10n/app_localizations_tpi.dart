@@ -580,7 +580,7 @@ class AppLocalizationsTpi extends AppLocalizations {
 
   @override
   String get recording_savedOnDeviceOnly =>
-      'Saved on this device — the server has not got this change yet. It will be sent on its own when the connection comes back.';
+      'I stap long dispela masin — seva i no kisim dispela senis yet. Em bai go em yet taim koneksen i kam bek.';
 
   @override
   String get recording_updateNoPermission =>
@@ -722,19 +722,19 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get recording_statusFileMissing => 'Odio fail i lus';
 
   @override
-  String get recording_metadataSyncPending => 'Edit waiting to be sent';
+  String get recording_metadataSyncPending => 'Senis i wet long go';
 
   @override
   String get recording_metadataSyncForbidden =>
-      'Edit refused: you cannot change this recording';
+      'Senis i no orait: yu no inap senisim dispela rekoding';
 
   @override
   String get recording_metadataSyncConflict =>
-      'Edit refused: another recording has this title';
+      'Senis i no orait: narapela rekoding i gat dispela nem pinis';
 
   @override
   String get recording_metadataSyncExhausted =>
-      'Edit not sent — edit again to retry';
+      'Senis i no go — senisim gen bilong traim gen';
 
   @override
   String get recording_uploadExhaustedMessage =>
@@ -753,22 +753,23 @@ class AppLocalizationsTpi extends AppLocalizations {
   }
 
   @override
-  String get recordings_retryFailedUploads => 'Retry uploads';
+  String get recordings_retryFailedUploads => 'Traim salim gen';
 
   @override
   String recordings_retryQueuedCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count recordings back in the upload queue',
-      one: '1 recording back in the upload queue',
-      zero: 'No uploads to retry',
+      other: '$count rekoding i go bek long lain bilong salim',
+      one: '1 rekoding i go bek long lain bilong salim',
+      zero: 'I nogat samting bilong traim gen',
     );
     return '$_temp0';
   }
 
   @override
-  String get recordings_retryFailed => 'Could not queue the uploads again';
+  String get recordings_retryFailed =>
+      'I no inap putim ol samting bek long lain bilong salim';
 
   @override
   String get trim_title => 'Stretim Rekoding';
@@ -1065,7 +1066,7 @@ class AppLocalizationsTpi extends AppLocalizations {
 
   @override
   String get sync_waitingForWifi =>
-      'Uploads are waiting for Wi-Fi. Turn off \"Upload on Wi-Fi only\" to send over cellular data.';
+      'Ol samting i wet long Wi-Fi. Rausim \"Salim long Wi-Fi tasol\" bilong salim wantaim mobail data.';
 
   @override
   String get profile_photoUpdated => 'Profail foto i apdet pinis';
@@ -1126,7 +1127,7 @@ class AppLocalizationsTpi extends AppLocalizations {
 
   @override
   String get profile_clearCacheMessage =>
-      'Dispela bai rausim olgeta rekoding i stap long lokal. Ol rekoding i go antap pinis long seva bai i stap.';
+      'Dispela bai rausim ol rekoding i stap long lokal we seva i gat pinis. Ol rekoding i no go antap yet bai i stap long dispela masin.';
 
   @override
   String get profile_cacheCleared => 'Lokal kes i klin pinis';
@@ -1137,9 +1138,9 @@ class AppLocalizationsTpi extends AppLocalizations {
       count,
       locale: localeName,
       other:
-          'Local cache cleared. $count recordings were kept because they have not been uploaded yet.',
+          'Lokal kes i klin pinis. $count rekoding i stap yet, long wanem ol i no go antap yet.',
       one:
-          'Local cache cleared. 1 recording was kept because it has not been uploaded yet.',
+          'Lokal kes i klin pinis. 1 rekoding i stap yet, long wanem em i no go antap yet.',
     );
     return '$_temp0';
   }
@@ -1149,9 +1150,8 @@ class AppLocalizationsTpi extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other:
-          '$count recordings were kept because they have not been uploaded yet.',
-      one: '1 recording was kept because it has not been uploaded yet.',
+      other: '$count rekoding i stap yet, long wanem ol i no go antap yet.',
+      one: '1 rekoding i stap yet, long wanem em i no go antap yet.',
     );
     return '$_temp0';
   }
@@ -1162,8 +1162,8 @@ class AppLocalizationsTpi extends AppLocalizations {
       count,
       locale: localeName,
       other:
-          '$count recordings could not be deleted, so that space was not freed.',
-      one: '1 recording could not be deleted, so that space was not freed.',
+          '$count rekoding i no inap rausim, olsem na dispela spes i no kamap fri.',
+      one: '1 rekoding i no inap rausim, olsem na dispela spes i no kamap fri.',
     );
     return '$_temp0';
   }
@@ -1223,7 +1223,8 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get profile_clearCache => 'Klinim lokal kes';
 
   @override
-  String get profile_clearCacheSubtitle => 'Rausim olgeta lokal rekoding';
+  String get profile_clearCacheSubtitle =>
+      'Rausim ol lokal kopi we seva i gat pinis';
 
   @override
   String get profile_invitations => 'Ol Invitesen';
@@ -1862,7 +1863,7 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get detail_cleaning => 'Klining';
 
   @override
-  String get detail_metadataSync => 'Edits';
+  String get detail_metadataSync => 'Ol senis';
 
   @override
   String get detail_recorded => 'Rekodim long';
@@ -2525,7 +2526,7 @@ class AppLocalizationsTpi extends AppLocalizations {
 
   @override
   String get a11y_minimapScrubber =>
-      'Audio overview. Tap or drag to navigate to a position.';
+      'Piksa bilong olgeta sat. Klikim o pulim bilong go long wanpela hap.';
 
   @override
   String a11y_tabLabel(String label) {

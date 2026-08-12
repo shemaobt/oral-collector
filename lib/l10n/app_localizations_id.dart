@@ -583,7 +583,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get recording_savedOnDeviceOnly =>
-      'Saved on this device — the server has not got this change yet. It will be sent on its own when the connection comes back.';
+      'Disimpan di perangkat ini — server belum menerima perubahan ini. Perubahan akan terkirim sendiri saat koneksi kembali.';
 
   @override
   String get recording_updateNoPermission =>
@@ -725,19 +725,19 @@ class AppLocalizationsId extends AppLocalizations {
   String get recording_statusFileMissing => 'Berkas audio hilang';
 
   @override
-  String get recording_metadataSyncPending => 'Edit waiting to be sent';
+  String get recording_metadataSyncPending => 'Suntingan menunggu dikirim';
 
   @override
   String get recording_metadataSyncForbidden =>
-      'Edit refused: you cannot change this recording';
+      'Suntingan ditolak: Anda tidak dapat mengubah rekaman ini';
 
   @override
   String get recording_metadataSyncConflict =>
-      'Edit refused: another recording has this title';
+      'Suntingan ditolak: rekaman lain sudah memakai judul ini';
 
   @override
   String get recording_metadataSyncExhausted =>
-      'Edit not sent — edit again to retry';
+      'Suntingan tidak terkirim — sunting lagi untuk mencoba kembali';
 
   @override
   String get recording_uploadExhaustedMessage =>
@@ -756,22 +756,22 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String get recordings_retryFailedUploads => 'Retry uploads';
+  String get recordings_retryFailedUploads => 'Coba unggah lagi';
 
   @override
   String recordings_retryQueuedCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count recordings back in the upload queue',
-      one: '1 recording back in the upload queue',
-      zero: 'No uploads to retry',
+      other: '$count rekaman kembali ke antrean unggah',
+      one: '1 rekaman kembali ke antrean unggah',
+      zero: 'Tidak ada unggahan untuk dicoba lagi',
     );
     return '$_temp0';
   }
 
   @override
-  String get recordings_retryFailed => 'Could not queue the uploads again';
+  String get recordings_retryFailed => 'Tidak dapat mengantrekan unggahan lagi';
 
   @override
   String get trim_title => 'Edit Rekaman';
@@ -1071,7 +1071,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get sync_waitingForWifi =>
-      'Uploads are waiting for Wi-Fi. Turn off \"Upload on Wi-Fi only\" to send over cellular data.';
+      'Unggahan menunggu Wi-Fi. Matikan \"Unggah hanya melalui Wi-Fi\" untuk mengirim lewat data seluler.';
 
   @override
   String get profile_photoUpdated => 'Foto profil diperbarui';
@@ -1132,7 +1132,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get profile_clearCacheMessage =>
-      'Ini akan menghapus semua rekaman yang tersimpan secara lokal. Rekaman yang telah diunggah ke server tidak akan terpengaruh.';
+      'Ini akan menghapus rekaman tersimpan lokal yang sudah ada di server. Rekaman yang belum diunggah tetap disimpan di perangkat ini.';
 
   @override
   String get profile_cacheCleared => 'Cache lokal dibersihkan';
@@ -1143,9 +1143,9 @@ class AppLocalizationsId extends AppLocalizations {
       count,
       locale: localeName,
       other:
-          'Local cache cleared. $count recordings were kept because they have not been uploaded yet.',
+          'Cache lokal dibersihkan. $count rekaman tetap disimpan karena belum diunggah.',
       one:
-          'Local cache cleared. 1 recording was kept because it has not been uploaded yet.',
+          'Cache lokal dibersihkan. 1 rekaman tetap disimpan karena belum diunggah.',
     );
     return '$_temp0';
   }
@@ -1155,9 +1155,8 @@ class AppLocalizationsId extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other:
-          '$count recordings were kept because they have not been uploaded yet.',
-      one: '1 recording was kept because it has not been uploaded yet.',
+      other: '$count rekaman tetap disimpan karena belum diunggah.',
+      one: '1 rekaman tetap disimpan karena belum diunggah.',
     );
     return '$_temp0';
   }
@@ -1168,8 +1167,8 @@ class AppLocalizationsId extends AppLocalizations {
       count,
       locale: localeName,
       other:
-          '$count recordings could not be deleted, so that space was not freed.',
-      one: '1 recording could not be deleted, so that space was not freed.',
+          '$count rekaman tidak dapat dihapus, jadi ruang itu tidak dibebaskan.',
+      one: '1 rekaman tidak dapat dihapus, jadi ruang itu tidak dibebaskan.',
     );
     return '$_temp0';
   }
@@ -1231,7 +1230,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get profile_clearCacheSubtitle =>
-      'Hapus semua rekaman yang tersimpan secara lokal';
+      'Hapus salinan lokal yang sudah ada di server';
 
   @override
   String get profile_invitations => 'Undangan';
@@ -1879,7 +1878,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get detail_cleaning => 'Pembersihan';
 
   @override
-  String get detail_metadataSync => 'Edits';
+  String get detail_metadataSync => 'Suntingan';
 
   @override
   String get detail_recorded => 'Direkam';
@@ -2546,7 +2545,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get a11y_minimapScrubber =>
-      'Audio overview. Tap or drag to navigate to a position.';
+      'Ikhtisar audio. Ketuk atau seret untuk menuju suatu posisi.';
 
   @override
   String a11y_tabLabel(String label) {

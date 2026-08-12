@@ -567,8 +567,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recording_cleaningStatusFailed => '更新服务器清理状态失败';
 
   @override
-  String get recording_savedOnDeviceOnly =>
-      'Saved on this device — the server has not got this change yet. It will be sent on its own when the connection comes back.';
+  String get recording_savedOnDeviceOnly => '已保存在本设备上 — 服务器尚未收到此更改。连接恢复后会自动发送。';
 
   @override
   String get recording_updateNoPermission => '您没有权限更新此录音';
@@ -701,19 +700,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recording_statusFileMissing => '音频文件丢失';
 
   @override
-  String get recording_metadataSyncPending => 'Edit waiting to be sent';
+  String get recording_metadataSyncPending => '编辑等待发送';
 
   @override
-  String get recording_metadataSyncForbidden =>
-      'Edit refused: you cannot change this recording';
+  String get recording_metadataSyncForbidden => '编辑被拒绝：您无法更改此录音';
 
   @override
-  String get recording_metadataSyncConflict =>
-      'Edit refused: another recording has this title';
+  String get recording_metadataSyncConflict => '编辑被拒绝：已有其他录音使用此标题';
 
   @override
-  String get recording_metadataSyncExhausted =>
-      'Edit not sent — edit again to retry';
+  String get recording_metadataSyncExhausted => '编辑未发送 — 再次编辑以重试';
 
   @override
   String get recording_uploadExhaustedMessage => '多次尝试后上传已停止。你可以重试。';
@@ -730,22 +726,22 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get recordings_retryFailedUploads => 'Retry uploads';
+  String get recordings_retryFailedUploads => '重试上传';
 
   @override
   String recordings_retryQueuedCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count recordings back in the upload queue',
-      one: '1 recording back in the upload queue',
-      zero: 'No uploads to retry',
+      other: '$count 条录音已重新加入上传队列',
+      one: '1 条录音已重新加入上传队列',
+      zero: '没有可重试的上传',
     );
     return '$_temp0';
   }
 
   @override
-  String get recordings_retryFailed => 'Could not queue the uploads again';
+  String get recordings_retryFailed => '无法将上传重新加入队列';
 
   @override
   String get trim_title => '编辑录音';
@@ -1035,7 +1031,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get sync_waitingForWifi =>
-      'Uploads are waiting for Wi-Fi. Turn off \"Upload on Wi-Fi only\" to send over cellular data.';
+      '上传正在等待 Wi-Fi。关闭\"仅在 Wi-Fi 下上传\"即可通过移动数据发送。';
 
   @override
   String get profile_photoUpdated => '头像已更新';
@@ -1093,7 +1089,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get profile_clearCacheTitle => '清除本地缓存？';
 
   @override
-  String get profile_clearCacheMessage => '此操作将删除所有本地存储的录音。服务器上已上传的录音不会受到影响。';
+  String get profile_clearCacheMessage => '此操作将删除服务器已有的本地存储录音。尚未上传的录音会保留在本设备上。';
 
   @override
   String get profile_cacheCleared => '本地缓存已清除';
@@ -1103,10 +1099,8 @@ class AppLocalizationsZh extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other:
-          'Local cache cleared. $count recordings were kept because they have not been uploaded yet.',
-      one:
-          'Local cache cleared. 1 recording was kept because it has not been uploaded yet.',
+      other: '本地缓存已清除。有 $count 条录音因尚未上传而被保留。',
+      one: '本地缓存已清除。有 1 条录音因尚未上传而被保留。',
     );
     return '$_temp0';
   }
@@ -1116,9 +1110,8 @@ class AppLocalizationsZh extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other:
-          '$count recordings were kept because they have not been uploaded yet.',
-      one: '1 recording was kept because it has not been uploaded yet.',
+      other: '有 $count 条录音因尚未上传而被保留。',
+      one: '有 1 条录音因尚未上传而被保留。',
     );
     return '$_temp0';
   }
@@ -1128,9 +1121,8 @@ class AppLocalizationsZh extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other:
-          '$count recordings could not be deleted, so that space was not freed.',
-      one: '1 recording could not be deleted, so that space was not freed.',
+      other: '有 $count 条录音无法删除，因此该空间未被释放。',
+      one: '有 1 条录音无法删除，因此该空间未被释放。',
     );
     return '$_temp0';
   }
@@ -1189,7 +1181,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get profile_clearCache => '清除本地缓存';
 
   @override
-  String get profile_clearCacheSubtitle => '删除所有本地存储的录音';
+  String get profile_clearCacheSubtitle => '删除服务器已有的本地副本';
 
   @override
   String get profile_invitations => '邀请';
@@ -1806,7 +1798,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get detail_cleaning => '清理';
 
   @override
-  String get detail_metadataSync => 'Edits';
+  String get detail_metadataSync => '编辑';
 
   @override
   String get detail_recorded => '录制时间';
@@ -2436,8 +2428,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get a11y_splitWaveform => '分割波形。点击添加分割标记。拖动重新定位。捏合缩放。长按移除。';
 
   @override
-  String get a11y_minimapScrubber =>
-      'Audio overview. Tap or drag to navigate to a position.';
+  String get a11y_minimapScrubber => '音频概览。点击或拖动以跳转到某个位置。';
 
   @override
   String a11y_tabLabel(String label) {

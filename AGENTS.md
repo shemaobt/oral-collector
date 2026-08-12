@@ -277,6 +277,7 @@ lib/
 - [ ] Build: Flutter CLI on host; document env and platform steps.
 - [ ] Secrets: never bundle `.env` or ship secrets in the client (no secrets in `--dart-define`); non-secret config via `String.fromEnvironment`; flutter_secure_storage for tokens.
 - [ ] Do not commit unless the user explicitly asks; when committing use semantic messages (`type(scope): description`).
+- [ ] Localization: a new or rewritten user-facing string lands in every supported language in the same PR (see section 16).
 
 ---
 
@@ -309,6 +310,26 @@ and `obt/.claude/quality-gates-plan.md`.
 
 The existing `flutter analyze --no-fatal-infos` / ADR-0007 lint baseline is unchanged; these gates
 are additive.
+
+---
+
+## 16. Localization (l10n)
+
+User-facing strings live in the ARB catalogues under `lib/l10n/`, one per language in
+`supportedLocales` (`lib/core/l10n/supported_locales.dart`), with `app_en.arb` as the template.
+
+- **Every key ships in every language, in the same PR that introduces it.** Editing only
+  `app_en.arb` and `app_pt.arb` and declaring the gap is not an option: `flutter gen-l10n` fills a
+  missing key with the English text and leaves no trace, so the gap is invisible in the running app.
+- **`test/l10n/arb_completeness_test.dart` is the gate** and fails per language, naming the missing
+  keys. It has no allowlist, and adding one would restore the silence it exists to remove.
+- **When behaviour changes, rewrite the string in all languages, not just English.** A stale
+  translation is complete and passes the gate while describing something the app no longer does.
+- Run `fvm flutter gen-l10n` after editing an ARB and commit the regenerated Dart alongside it.
+- ICU placeholders and plural branches are code: `{count}` and the branch names must survive
+  translation intact. Arabic has six plural categories — do not copy the English structure into it.
+
+See `lib/l10n/docs.md` for the full context.
 
 ---
 

@@ -516,11 +516,11 @@ Path: @/lib/features/recording/presentation
   drain and its error taxonomy. The `recording_savedOnDeviceOnly` snackbar
   was rewritten to match (ENG-403): it said the change stopped at this device
   and asked the user to **redo it online**, which is now wasted work, and says
-  instead that it will be sent on its own when the connection comes back. Only
-  `app_en.arb` and `app_pt.arb` were edited; the other nine locales never had
-  a translation of their own for this key and inline the English source, so
-  `gen-l10n` carried the new wording into all of them — none is left holding
-  the ENG-399 redo instruction.
+  instead that it will be sent on its own when the connection comes back.
+  ENG-403 edited only `app_en.arb` and `app_pt.arb`, and the other nine
+  locales inlined the English source until ENG-410 gave the key a translation
+  of its own in each of them; none is left holding the ENG-399 redo
+  instruction.
   **ENG-405 gives the pending state a mark, on the list card and on the detail
   screen's status card.** `MetadataSyncStyle.forStatus`
   (`widgets/metadata_sync_mark.dart`) is the single mapping from
