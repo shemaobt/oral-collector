@@ -1,5 +1,17 @@
 name: Lint
 
+# The bare `dart` below is correct HERE and wrong on your machine. This runner
+# has no FVM: subosito/flutter-action puts the pinned 3.41.5 SDK straight on the
+# PATH. Locally the project's SDK is pinned by FVM, so a bare `dart` resolves to
+# FVM's `stable` channel instead — it rewrites .dart_tool/package_config.json
+# and downgrades the packages the Flutter SDK pins in pubspec.lock (characters,
+# matcher, material_color_utilities, test_api). The dirty lock is the mild half:
+# the downgraded `matcher` also breaks compilation inside a test run that is
+# already in flight, which reads as a bug in `semantics.dart` and is not one.
+#
+# So: copy these steps locally as `fvm dart …`, never `dart …`. `scripts/
+# check_metrics.sh` picks the right one by itself and needs no prefix.
+
 on:
   pull_request:
     branches: [main, dev]

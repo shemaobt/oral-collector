@@ -1,5 +1,16 @@
 name: Codegen
 
+# The bare `dart` below is correct HERE and wrong on your machine. This runner
+# has no FVM: subosito/flutter-action puts the pinned 3.41.5 SDK straight on the
+# PATH. Locally the project's SDK is pinned by FVM, so a bare `dart` resolves to
+# FVM's `stable` channel instead — it rewrites .dart_tool/package_config.json
+# and downgrades the packages the Flutter SDK pins in pubspec.lock (characters,
+# matcher, material_color_utilities, test_api). That matters twice as much in
+# this workflow: the gate below fails on a dirty pubspec.lock, so running these
+# commands locally without the prefix produces the very diff it is checking for.
+#
+# So: copy these steps locally as `fvm dart …`, never `dart …`.
+
 on:
   pull_request:
     branches: [main, dev]
@@ -32,6 +43,6 @@ jobs:
       - name: Fail if codegen or lockfile is out of date
         run: |
           if ! git diff --exit-code -- '*.g.dart' 'lib/core/database/schema_versions.dart' 'test/core/database/generated/' pubspec.lock; then
-            echo "::error::Generated code is stale. Run 'dart run drift_dev schema steps drift_schemas/ lib/core/database/schema_versions.dart', 'dart run build_runner build --delete-conflicting-outputs' and 'dart run drift_dev schema generate --data-classes --companions drift_schemas/ test/core/database/generated/', then commit the result."
+            echo "::error::Generated code is stale. Locally these need the fvm prefix — a bare 'dart' is FVM's stable channel and will downgrade pubspec.lock, which this same gate then fails on. Run 'fvm dart run drift_dev schema steps drift_schemas/ lib/core/database/schema_versions.dart', 'fvm dart run build_runner build --delete-conflicting-outputs' and 'fvm dart run drift_dev schema generate --data-classes --companions drift_schemas/ test/core/database/generated/', then commit the result."
             exit 1
           fi
