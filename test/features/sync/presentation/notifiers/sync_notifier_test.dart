@@ -108,6 +108,9 @@ void main() {
       () => mockRecordingRepo.getPendingUploads(),
     ).thenAnswer((_) async => []);
     when(
+      () => mockRecordingRepo.getPendingMetadataSyncs(),
+    ).thenAnswer((_) async => []);
+    when(
       () => mockSyncEngine.processQueue(
         deleteAfterUpload: any(named: 'deleteAfterUpload'),
         wifiOnly: any(named: 'wifiOnly'),

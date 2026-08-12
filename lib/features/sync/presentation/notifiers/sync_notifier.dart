@@ -12,6 +12,7 @@ import '../../../../core/platform/file_ops.dart' as file_ops;
 import '../../../../l10n/app_localizations.dart';
 import '../../../recording/data/providers.dart';
 import '../../../recording/data/repositories/local_recording_repository.dart';
+import '../../../recording/domain/entities/pending_metadata_field.dart';
 import '../../../recording/domain/server_deletion_policy.dart';
 import '../../data/providers.dart';
 import '../../data/services/upload_foreground_service.dart';
@@ -21,6 +22,32 @@ import 'sync_state.dart';
 
 const _kAutoUploadWifiOnlyKey = 'sync_auto_upload_wifi_only';
 const _kAutoRemoveAfterUploadKey = 'sync_auto_remove_after_upload';
+
+/// Whether discarding this local copy would destroy an edit that exists nowhere
+/// else (ENG-416).
+///
+/// This is composed with [serverHasRecording] at the one call site rather than
+/// folded into it. That predicate answers a factual question — does the server
+/// hold this recording — and the heal paths pair it with a confirmed 404 before
+/// erasing a row, where owing an edit is irrelevant. The cache asks a different
+/// question that happens to share a term: does dropping this copy lose
+/// anything.
+///
+/// **`failed_forbidden` is deliberately absent, and this is not an oversight.**
+/// The other two terminal verdicts have an exit the user can reach from the
+/// phone — a rename lifts [MetadataSyncStatus.failedConflict], any fresh edit
+/// revives [MetadataSyncStatus.failedExhausted] with a new budget — so the edit
+/// can still reach the server and the clear must not destroy it first. A
+/// permission refusal has no such exit: the user cannot grant themselves
+/// permission, so from this device the edit has no destination at all, exactly
+/// like a row the server answered 404 for. Protecting it would leave a
+/// recording that clearing the cache can never discard, with no way to abandon
+/// the edit short of deleting the audio with it.
+bool _wouldLoseAnUnsentEdit(String metadataSyncStatus) => const {
+  MetadataSyncStatus.pending,
+  MetadataSyncStatus.failedConflict,
+  MetadataSyncStatus.failedExhausted,
+}.contains(metadataSyncStatus);
 
 final syncNotifierProvider = NotifierProvider<SyncNotifier, SyncState>(
   SyncNotifier.new,
@@ -227,7 +254,9 @@ class SyncNotifier extends Notifier<SyncState> {
   ///
   /// A recording the server never received exists nowhere else, so it is kept —
   /// clearing the cache used to delete it and an hour-long story was lost that
-  /// way (ENG-407).
+  /// way (ENG-407). A recording that still owes the server an edit is kept for
+  /// the same reason, even though the audio is safe: the edit exists only here
+  /// (ENG-416, see [_wouldLoseAnUnsentEdit]).
   ///
   /// A row is removed only once its file is actually gone. The row is the only
   /// handle on that file — the storage figure and every later clear walk the
@@ -240,10 +269,12 @@ class SyncNotifier extends Notifier<SyncState> {
     final all = await _recordingRepo.getAllLocalRecordings();
     final discardable = all
         .where(
-          (r) => serverHasRecording(
-            serverId: r.serverId,
-            uploadStatus: r.uploadStatus,
-          ),
+          (r) =>
+              serverHasRecording(
+                serverId: r.serverId,
+                uploadStatus: r.uploadStatus,
+              ) &&
+              !_wouldLoseAnUnsentEdit(r.metadataSyncStatus),
         )
         .toList();
 
@@ -311,10 +342,13 @@ class SyncNotifier extends Notifier<SyncState> {
       // this return is what the engine's own exemption would never be reached
       // through, so the drain is asked for explicitly here. `blockReason` still
       // says Wi-Fi, and truthfully — it describes the uploads, which really are
-      // waiting. Nothing else is written: `lastSyncAt` and `syncProgress` would
-      // report a queue run that did not happen, and `pendingCount` counts
-      // uploads, which this drain does not change.
+      // waiting. `lastSyncAt` and `syncProgress` stay untouched: they would
+      // report a queue run that did not happen. The count is refreshed after
+      // the drain because it now includes pending edits (ENG-418), and this
+      // branch is one where they really do go up — leaving the pre-gate number
+      // would keep counting an edit that just landed.
       await _syncEngine.processPendingMetadata();
+      await _refreshPendingCount();
       state = state.copyWith(blockReason: SyncBlockReason.wifiOnly);
       return;
     }
@@ -400,11 +434,30 @@ class SyncNotifier extends Notifier<SyncState> {
     );
   }
 
+  /// The header's number is every recording with work still outstanding: an
+  /// upload to send, a metadata edit to push, or both (ENG-418). The union is by
+  /// recording id, so the row that owes both — what
+  /// `replaceAudioAndQueueResend` writes — is counted once.
+  ///
+  /// Only `pending` edits count, which is exactly what the drain will pick up.
+  /// A terminal edit needs the user, not another pass, and the upload queue
+  /// already draws that line the same way: `getPendingUploads` leaves its own
+  /// terminal states out so the badge never counts work no drain can move
+  /// (ENG-377). The card's metadata mark is what surfaces those.
+  ///
+  /// [SyncState.totalQueueSizeBytes] deliberately stays the uploads' sum. It is
+  /// the "how much is left to transfer" figure, and a metadata PATCH is a few
+  /// hundred bytes — adding the audio size of a recording the server already
+  /// holds would inflate it by a file that is never going up.
   Future<void> _refreshPendingCount() async {
-    final pending = await _recordingRepo.getPendingUploads();
+    final (pending, owingEdits) = await (
+      _recordingRepo.getPendingUploads(),
+      _recordingRepo.getPendingMetadataSyncs(),
+    ).wait;
     final totalBytes = pending.fold(0, (sum, r) => sum + r.fileSizeBytes);
+    final owing = {...pending.map((r) => r.id), ...owingEdits.map((r) => r.id)};
     state = state.copyWith(
-      pendingCount: pending.length,
+      pendingCount: owing.length,
       totalQueueSizeBytes: totalBytes,
     );
   }
