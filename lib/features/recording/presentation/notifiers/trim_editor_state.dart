@@ -140,11 +140,27 @@ class TrimEditorState {
   }
 }
 
-String _sig(double midpointFraction) => midpointFraction.toStringAsFixed(3);
+/// Six decimals, not three: adjacent segments are only `kMinTrimSegment /
+/// totalDuration` apart, so from ENG-66's 250 ms floor three decimals start
+/// colliding past ~4 minutes of audio and two neighbours would share one
+/// override key. Six keeps them distinct well past any plausible recording.
+String _sig(double midpointFraction) => midpointFraction.toStringAsFixed(6);
+
+/// Ceiling on how far a segment midpoint may travel and still keep its
+/// overrides, for segmentations coarse enough that half a segment is wider.
+const double _maxRemapDistance = 0.02;
 
 /// Remaps per-segment taxonomy overrides from the old segmentation onto the new
-/// one by nearest segment midpoint (within 0.02). Used when split points change
-/// so a small edit keeps a segment's overrides while a re-split drops them.
+/// one by nearest segment midpoint. Used when split points change so a small
+/// edit keeps a segment's overrides while a re-split drops them.
+///
+/// The match tolerance is capped at half the receiving segment's own width, not
+/// only at [_maxRemapDistance]. That cap is what makes "small edit" mean
+/// anything: a tolerance wider than half a segment can pull in a midpoint that
+/// belongs to a different segment. The flat 0.02 used to satisfy this on its own
+/// because no segment could be narrower than 3% of the file — once ENG-66 let
+/// segments be 250 ms, 0.02 spanned a dozen of them on a long recording and a
+/// re-split carried overrides far from where they were set.
 Map<String, String?> remapTaxonomyBySig(
   Map<String, String?> previous,
   List<double> previousBoundaries,
@@ -160,6 +176,10 @@ Map<String, String?> remapTaxonomyBySig(
 
   for (var j = 0; j < newSegCount; j++) {
     final newMid = (newBoundaries[j] + newBoundaries[j + 1]) / 2.0;
+    final halfWidth = (newBoundaries[j + 1] - newBoundaries[j]) / 2.0;
+    final tolerance = halfWidth < _maxRemapDistance
+        ? halfWidth
+        : _maxRemapDistance;
     double bestDist = double.infinity;
     int? bestIdx;
     for (var i = 0; i < previousMids.length; i++) {
@@ -169,7 +189,7 @@ Map<String, String?> remapTaxonomyBySig(
         bestIdx = i;
       }
     }
-    if (bestIdx == null || bestDist > 0.02) continue;
+    if (bestIdx == null || bestDist > tolerance) continue;
     final oldSig = _sig(previousMids[bestIdx]);
     if (!previous.containsKey(oldSig)) continue;
     final newSig = _sig(newMid);

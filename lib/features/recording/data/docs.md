@@ -271,7 +271,21 @@ Path: @/lib/features/recording/data
     variants — boost-only (re-encode the whole file with a volume
     filter), trim+gain (seek/trim + volume, re-encode to aac), or a
     plain `-c copy` stream trim — then reads the output file length and
-    returns `List<SplitSegmentSpec>`. The exporter itself does not branch on
+    returns `List<SplitSegmentSpec>`. Which variant a plain trim (no gain
+    change) gets is decided **per segment**, not once for the whole call
+    (ENG-66): `segmentNeedsReencode` re-encodes instead of stream-copying
+    when the segment is shorter than `_minStreamCopySeconds` (1 s), because
+    `-c copy` on an AAC/m4a container can only cut on a frame boundary and
+    still carries the encoder's priming samples. This app records at 16 kHz
+    mono, where those are 64 ms and 132 ms respectively — roughly 200 ms of
+    fixed error on every stream copy, which dominates a sub-second segment and
+    can leave the output empty or badly offset. That threshold is four times
+    the trim editor's own floor, `kMinTrimSegment`
+    ([../../presentation/trim_edit_decision.dart](../../presentation/trim_edit_decision.dart),
+    see [../../presentation/docs.md](../../presentation/docs.md)), not a
+    measured failure point — before ENG-66 lowered that floor, a segment
+    this short could not be created, so the stream-copy path never needed to
+    branch. The exporter itself does not branch on
     `boostOnly` vs a real split — that decision is the caller's, in
     `TrimEditorNotifier._saveLocally`
     ([../presentation/notifiers/docs.md](../presentation/notifiers/docs.md)),

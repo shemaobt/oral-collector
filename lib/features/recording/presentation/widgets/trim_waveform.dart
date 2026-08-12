@@ -4,12 +4,14 @@ import 'package:flutter/services.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/tokens.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../trim_edit_decision.dart';
 
 class TrimWaveform extends StatefulWidget {
   const TrimWaveform({
     super.key,
     required this.bars,
     required this.splitPoints,
+    required this.totalDuration,
     required this.onSplitPointsChanged,
     this.playingSegment,
     this.excludedSegments = const {},
@@ -24,6 +26,10 @@ class TrimWaveform extends StatefulWidget {
 
   final List<double> bars;
   final List<double> splitPoints;
+
+  /// The recording's full length, used to express the minimum-segment floor in
+  /// time instead of as a fraction of the file (ENG-66).
+  final Duration totalDuration;
   final ValueChanged<List<double>> onSplitPointsChanged;
   final int? playingSegment;
   final Set<int> excludedSegments;
@@ -43,7 +49,8 @@ class _TrimWaveformState extends State<TrimWaveform> {
   static const double _waveformHeight = 160.0;
   static const double _handleRadius = 12.0;
   static const double _handleHitSlop = 24.0;
-  static const double _minSplitGap = 0.03;
+
+  double get _minSplitGap => minSplitGapFraction(widget.totalDuration);
 
   int? _draggingIndex;
   bool _draggingPlayhead = false;
@@ -82,9 +89,10 @@ class _TrimWaveformState extends State<TrimWaveform> {
   }
 
   void _addSplitAt(double fraction) {
-    if (fraction <= _minSplitGap || fraction >= 1.0 - _minSplitGap) return;
+    final minGap = _minSplitGap;
+    if (fraction <= minGap || fraction >= 1.0 - minGap) return;
     for (final p in widget.splitPoints) {
-      if ((fraction - p).abs() < _minSplitGap) return;
+      if ((fraction - p).abs() < minGap) return;
     }
     HapticFeedback.lightImpact();
     widget.onSplitPointsChanged([...widget.splitPoints, fraction]);
@@ -94,12 +102,14 @@ class _TrimWaveformState extends State<TrimWaveform> {
     final sorted = _sorted;
     final oldValue = sorted[sortedIndex];
 
-    final minVal = sortedIndex == 0
-        ? _minSplitGap
-        : sorted[sortedIndex - 1] + _minSplitGap;
+    final minGap = _minSplitGap;
+    final minVal = sortedIndex == 0 ? minGap : sorted[sortedIndex - 1] + minGap;
     final maxVal = sortedIndex == sorted.length - 1
-        ? 1.0 - _minSplitGap
-        : sorted[sortedIndex + 1] - _minSplitGap;
+        ? 1.0 - minGap
+        : sorted[sortedIndex + 1] - minGap;
+    // On a recording shorter than twice the floor there is no legal position at
+    // all, and `clamp` throws on inverted bounds. Hold the handle silently.
+    if (maxVal < minVal) return;
     final clamped = newFraction.clamp(minVal, maxVal);
 
     final updated = [...widget.splitPoints];

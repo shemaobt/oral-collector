@@ -1,3 +1,24 @@
+/// The shortest segment the trim editor lets you create or drag to (ENG-66).
+/// Expressed in time rather than as a fraction of the file, so the floor stops
+/// growing with the recording: the old 3% fraction meant ~1 s on a 33 s file and
+/// ~5.4 s on a 3-minute one.
+const Duration kMinTrimSegment = Duration(milliseconds: 250);
+
+/// [kMinTrimSegment] as a fraction of [totalDuration], for the fraction-space
+/// gesture maths. Split points are `double`s in `[0, 1]`, so every caller that
+/// enforces the floor needs it in that space.
+///
+/// A recording shorter than twice the floor yields a gap of 0.5 or more, which
+/// leaves no legal cut on either gesture path — refusing to split such a file is
+/// the honest answer, and is why this is deliberately not capped. An unknown
+/// duration refuses for the same reason: there is no time basis to convert from,
+/// and guessing a fraction would silently pick a floor unrelated to 250 ms.
+double minSplitGapFraction(Duration totalDuration) {
+  final totalMs = totalDuration.inMilliseconds;
+  if (totalMs <= 0) return 0.5;
+  return kMinTrimSegment.inMilliseconds / totalMs;
+}
+
 enum TrimSaveMode { boostOnly, split }
 
 class TrimSegment {
