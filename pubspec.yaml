@@ -19,7 +19,9 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.4.0+221
 
 environment:
-  sdk: ^3.10.3
+  # 3.11.0 is what idb_shim requires (ENG-421); below it the app no longer
+  # resolves, so declaring 3.10.3 only bought a confusing resolution error.
+  sdk: ^3.11.0
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
