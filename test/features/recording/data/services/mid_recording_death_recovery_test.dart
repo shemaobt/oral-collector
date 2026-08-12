@@ -93,7 +93,7 @@ void main() {
     } catch (_) {}
     container.dispose();
     await db.close();
-    if (docs.existsSync()) await docs.delete(recursive: true);
+    if (docs.existsSync()) docs.deleteSync(recursive: true);
   });
 
   test(

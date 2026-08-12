@@ -117,9 +117,12 @@ void main() {
       await pcm.close();
     } catch (_) {}
     await db.close();
-    if (tmpDocs.existsSync()) {
-      await tmpDocs.delete(recursive: true);
-    }
+    // finalize() deletes its sources with unawaited(); those are still in
+    // flight here. Let them land, then remove the directory synchronously —
+    // an await between the check and the delete hands the event loop back to
+    // them and the recursive walk races the files disappearing under it.
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+    if (tmpDocs.existsSync()) tmpDocs.deleteSync(recursive: true);
   });
 
   Future<void> streamAudio(Duration length) async {

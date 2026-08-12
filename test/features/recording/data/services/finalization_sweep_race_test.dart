@@ -108,7 +108,11 @@ void main() {
   tearDown(() async {
     container.dispose();
     await db.close();
-    if (docs.existsSync()) await docs.delete(recursive: true);
+    // These tests deliberately leave finalize()'s unawaited source deletions
+    // in flight. Let them land, then delete synchronously so the recursive
+    // walk cannot race them.
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+    if (docs.existsSync()) docs.deleteSync(recursive: true);
   });
 
   /// A session that recorded [segmentCount] segments and reached the stop
