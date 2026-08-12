@@ -642,6 +642,58 @@ Path: @/lib/features/recording/presentation
   retry reconciles the existing row and the resumable service resumes from
   the persisted offset (`resumableSessionUri`/`uploadedBytes`) instead of
   crashing or re-uploading what already landed.
+- **The trim editor's minimum-segment floor is time-based, not a fraction of
+  the recording (ENG-66).** `kMinTrimSegment` (250 ms) and the derived
+  `minSplitGapFraction(totalDuration)` in
+  [./trim_edit_decision.dart](trim_edit_decision.dart) are the single source
+  of the floor every split-creating and split-dragging gesture enforces.
+  Before ENG-66 each of four call sites hardcoded the same `0.03` fraction
+  directly, so the effective floor grew with the recording's length (~1 s on
+  a 33 s file, ~5.4 s on a 3-minute one) instead of staying fixed. A gesture
+  below the floor is still a silent no-op — ENG-66 moved where the floor sits,
+  it did not add feedback when you hit it. `TrimWaveform` and
+  `TrimWaveformPanel`
+  ([./widgets/trim_waveform.dart](widgets/trim_waveform.dart),
+  [./widgets/trim_waveform_panel.dart](widgets/trim_waveform_panel.dart))
+  take a `totalDuration` parameter — fed from `TrimEditorState.totalDuration`
+  in `trim_editor_screen.dart` — purely to convert the floor into fraction
+  space at the point of use; the panel's existing `*Label` fields are
+  pre-formatted strings and cannot serve this. The four consumers are
+  `TrimWaveform._addSplitAt`/`_moveSplit` (create/drag a marker) and the
+  screen's `_addSplitAtPlayhead`/`_canSplitAtPlayhead` (the "cut at
+  playhead" button). Dragging a handle guards against the floor varying with
+  `totalDuration`: on a recording shorter than two floors there is no legal
+  position at all, so the handle holds still instead of letting `clamp` throw
+  on inverted bounds. `minSplitGapFraction` is deliberately uncapped for the
+  same reason — a file too short to hold two minimum segments, or one whose
+  duration is unknown, refuses every cut rather than quietly shrinking the
+  floor below 250 ms. Two consequences worth knowing. First, per-segment
+  taxonomy in `TrimEditorState` is keyed by segment midpoint and remapped by
+  nearest midpoint when the segmentation changes; both were implicitly sized
+  against the 3% floor, so the key gained decimal places and the remap
+  tolerance became relative to the receiving segment's own width — otherwise
+  neighbouring segments shared one override key, and a re-split carried an
+  override a dozen segments away. Second, lowering the floor made short
+  segments createable, which is also why the native export path
+  ([../data/docs.md](../data/docs.md)) had to stop assuming every save
+  without a gain change can stream-copy — see that doc's exporter bullet.
+- **A second, untouched floor still blocks a short cut next to an existing
+  marker.** The handle hit-test radius (`_handleRadius` 12 + `_handleHitSlop`
+  24 = 36 logical px in `TrimWaveform._hitTestMarker`) is checked before a
+  long-press is treated as "create a split" — a long-press inside that
+  radius of an existing marker removes it instead of adding a new one. In
+  pixels-per-second terms (width × zoom ÷ duration), placing a cut half a
+  second from a marker needs width×zoom > 72×duration; on a 3-minute
+  recording that requires a zoom above `maxZoom` (16), so it is unreachable
+  at any allowed zoom, and at 1× zoom half a second is under 2px so the two
+  handles would be visually stacked anyway. A short cut at the edge of the
+  recording, or away from other markers, is unaffected — but only after
+  zooming in: at 1× on a 3-minute file one second spans about 2 px, so the
+  whole sub-floor region is under a pixel wide and the new precision is not
+  reachable by finger until the viewport is magnified. This floor was
+  deliberately left alone by ENG-66: shrinking the hit-slop would make the
+  long-press-to-remove gesture harder to land, trading one usability problem
+  for another, and belongs to its own slice.
 - **The trim loader distinguishes a failed load from a missing recording
   (ENG-140 F21).** Resolving a server-only recording (now in
   `TrimEditorNotifier.load` →
