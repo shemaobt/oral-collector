@@ -70,8 +70,11 @@ class _UploadQueueContent extends ConsumerWidget {
                     ),
                   ),
                   const Spacer(),
+                  // Uploads, not every pending thing: this number sits directly
+                  // above the list of uploads, and the two contradicting each
+                  // other is worse than either alone (ENG-422).
                   Text(
-                    l10n.sync_pending(syncState.pendingCount),
+                    l10n.sync_pending(syncState.pendingUploadCount),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: colors.foreground.withValues(alpha: 0.6),
                     ),

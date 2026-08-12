@@ -465,6 +465,12 @@ class SyncNotifier extends Notifier<SyncState> {
   /// the "how much is left to transfer" figure, and a metadata PATCH is a few
   /// hundred bytes — adding the audio size of a recording the server already
   /// holds would inflate it by a file that is never going up.
+  ///
+  /// [SyncState.pendingUploadCount] is the uploads counted on their own, for the
+  /// upload-queue sheet, which shows a number directly above the list it
+  /// describes (ENG-422). It comes from this same query rather than a second
+  /// one, so the number and the rows cannot disagree about what a pending
+  /// upload is.
   Future<void> _refreshPendingCount() async {
     final (pending, owingEdits) = await (
       _recordingRepo.getPendingUploads(),
@@ -474,6 +480,7 @@ class SyncNotifier extends Notifier<SyncState> {
     final owing = {...pending.map((r) => r.id), ...owingEdits.map((r) => r.id)};
     state = state.copyWith(
       pendingCount: owing.length,
+      pendingUploadCount: pending.length,
       totalQueueSizeBytes: totalBytes,
     );
   }
