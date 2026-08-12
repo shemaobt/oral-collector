@@ -1,5 +1,9 @@
 const String kUnclassifiedGenreId = 'unclassified';
 
+// Linha irmã da sentinela de gênero, semeada na mesma migração do servidor. O
+// literal coincide, mas são colunas diferentes: não colapse as duas constantes.
+const String kUnclassifiedSubcategoryId = 'unclassified';
+
 // "Sem gênero" significa exatamente a sentinela; um id qualquer (mesmo vazio)
 // conta como gênero. Registros não têm sentinela — só presença não-vazia.
 bool recordingHasGenre(String genreId) => genreId != kUnclassifiedGenreId;

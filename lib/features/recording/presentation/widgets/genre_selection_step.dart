@@ -88,7 +88,7 @@ class GenreSelectionStep extends StatelessWidget {
                   ),
                   const SizedBox(height: SpacingScale.s12),
                   Text(
-                    localizedGenreName(l10n, genre.name),
+                    localizedGenreName(l10n, genre.name, id: genre.id),
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),

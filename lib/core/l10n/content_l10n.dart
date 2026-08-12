@@ -1,3 +1,4 @@
+import '../../features/recording/domain/entities/classification.dart';
 import '../../l10n/app_localizations.dart';
 
 String _slugToTitleCase(String slug) {
@@ -11,7 +12,14 @@ String _slugToTitleCase(String slug) {
       .join(' ');
 }
 
-String localizedGenreName(AppLocalizations l10n, String fallback) {
+String localizedGenreName(
+  AppLocalizations l10n,
+  String fallback, {
+  required String id,
+}) {
+  // O servidor semeia a sentinela com o nome inglês "Unclassified" e é dono
+  // dessa string; só o id é estável, então é por ele que a tradução é escolhida.
+  if (id == kUnclassifiedGenreId) return l10n.recording_unclassified;
   final direct = _genreNames[fallback]?.call(l10n);
   if (direct != null) return direct;
   final titleCase = _slugToTitleCase(fallback);
@@ -22,7 +30,14 @@ String localizedGenreDescription(AppLocalizations l10n, String fallback) {
   return _genreDescriptions[fallback]?.call(l10n) ?? fallback;
 }
 
-String localizedSubcategoryName(AppLocalizations l10n, String fallback) {
+String localizedSubcategoryName(
+  AppLocalizations l10n,
+  String fallback, {
+  required String id,
+}) {
+  // Mesma sentinela do gênero, semeada na mesma migração e com o mesmo nome
+  // inglês; resolvida pelo id pelo mesmo motivo.
+  if (id == kUnclassifiedSubcategoryId) return l10n.recording_unclassified;
   final direct = _subcategoryNames[fallback]?.call(l10n);
   if (direct != null) return direct;
 

@@ -216,7 +216,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
         .where((s) => s.id == subcategoryId)
         .firstOrNull;
     if (sub == null) return null;
-    return localizedSubcategoryName(l10n, sub.name);
+    return localizedSubcategoryName(l10n, sub.name, id: sub.id);
   }
 
   String? _genreNameFor(AppLocalizations l10n, String? genreId) {
@@ -224,7 +224,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
     final genres = ref.read(genreNotifierProvider).genres;
     final genre = genres.where((g) => g.id == genreId).firstOrNull;
     if (genre == null) return null;
-    return localizedGenreName(l10n, genre.name);
+    return localizedGenreName(l10n, genre.name, id: genre.id);
   }
 
   String? _registerNameFor(AppLocalizations l10n, String? registerId) {

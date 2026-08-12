@@ -55,9 +55,15 @@ class RecoveryConfirmScreen extends ConsumerWidget {
         genreId: pending.genreId,
         subcategoryId: pending.subcategoryId,
         registerId: null,
-        genreName: genre != null ? localizedGenreName(l10n, genre.name) : null,
+        genreName: genre != null
+            ? localizedGenreName(l10n, genre.name, id: genre.id)
+            : null,
         subcategoryName: subcategory != null
-            ? localizedSubcategoryName(l10n, subcategory.name)
+            ? localizedSubcategoryName(
+                l10n,
+                subcategory.name,
+                id: subcategory.id,
+              )
             : null,
         registerName: null,
         showReRecord: false,

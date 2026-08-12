@@ -472,10 +472,18 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
                               child: RecordingCard(
                                 recording: recording,
                                 genreName: rawGenre != null
-                                    ? localizedGenreName(l10n, rawGenre)
+                                    ? localizedGenreName(
+                                        l10n,
+                                        rawGenre,
+                                        id: recording.genreId,
+                                      )
                                     : null,
                                 subcategoryName: rawSubcat != null
-                                    ? localizedSubcategoryName(l10n, rawSubcat)
+                                    ? localizedSubcategoryName(
+                                        l10n,
+                                        rawSubcat,
+                                        id: recording.subcategoryId!,
+                                      )
                                     : null,
                                 registerName: rawReg != null
                                     ? localizedRegisterName(l10n, rawReg)
