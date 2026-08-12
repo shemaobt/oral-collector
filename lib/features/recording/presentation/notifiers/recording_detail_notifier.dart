@@ -287,29 +287,59 @@ class RecordingDetailNotifier
     }
   }
 
-  Future<void> setStoryteller(
+  /// Assigns or removes the storyteller (ENG-411).
+  ///
+  /// The sixth metadata mutation to join the outbox. It used to swallow every
+  /// exception, which made a refused write and an unreachable server the same
+  /// thing: offline the change landed on the local row with nothing owed, so it
+  /// never went up; on a 403 the row was written anyway and stood there
+  /// asserting a storyteller the server had rejected.
+  Future<RecordingMutationResult> setStoryteller(
     LocalRecordingEntity recording,
     Storyteller? storyteller,
   ) async {
-    final serverId = recording.serverId ?? recording.id;
-    UpdateRecordingOutcome? outcome;
-    try {
-      outcome = await _apiRepo.updateRecording(
-        serverId,
+    // The same gate as the other mutations: a recording the server has never
+    // seen owes it nothing — the storyteller rides along on the upload's create
+    // call, and the drain skips a row without a `serverId`.
+    final hasServerId =
+        recording.serverId != null && recording.serverId!.isNotEmpty;
+
+    List<ReviewFlag>? serverFlags;
+    var localOnly = false;
+    if (kIsWeb || hasServerId) {
+      final write = await _pushMetadata(
+        recording.serverId ?? recording.id,
+        // An empty id is how the wire says "no storyteller"; a null would be
+        // omitted and leave the server's copy standing.
         UpdateRecordingRequest(storytellerId: storyteller?.id ?? ''),
       );
-    } on Exception catch (_) {}
-    if (_disposed) return;
+      final refusal = _refusal(write.status);
+      if (refusal != null) return refusal;
+      if (_disposed) return RecordingMutationResult.success;
+      serverFlags = write.reviewFlags;
+      localOnly = write.status == _ServerWrite.unreachable;
+    }
+    final saved = localOnly
+        ? RecordingMutationResult.savedLocallyOnly
+        : RecordingMutationResult.success;
+
     if (!kIsWeb) {
       await _localRepo.setStoryteller(
         recording.id,
         storytellerId: storyteller?.id,
       );
-      if (_disposed) return;
-      await _storeReviewFlags(recording.id, outcome?.reviewFlags);
-      if (_disposed) return;
+      if (_disposed) return saved;
+      await _storeReviewFlags(recording.id, serverFlags);
+      if (_disposed) return saved;
+      if (hasServerId) {
+        await _settleOutbox(recording.id, const {
+          PendingMetadataField.storyteller,
+        }, owed: localOnly);
+        if (_disposed) return saved;
+      }
     }
     await load();
+    return saved;
   }
 
   /// Saves an edited title and/or description. Title routes through the existing

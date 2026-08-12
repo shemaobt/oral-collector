@@ -7,6 +7,8 @@
 /// edit must never ride along and overwrite another device's copy of it.
 library;
 
+import 'dart:io';
+
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -34,10 +36,23 @@ import 'package:oral_collector/features/recording/presentation/notifiers/recordi
 import 'package:oral_collector/features/recording/presentation/widgets/classify_recording_dialog.dart';
 import 'package:oral_collector/features/recording/presentation/widgets/move_category_dialog.dart';
 import 'package:oral_collector/features/recording/presentation/widgets/secondary_classification_fields.dart';
+import 'package:oral_collector/features/storyteller/data/providers.dart'
+    as storyteller_providers;
+import 'package:oral_collector/features/storyteller/domain/entities/storyteller.dart';
+import 'package:oral_collector/features/storyteller/domain/repositories/storyteller_repository.dart';
 import 'package:oral_collector/features/sync/presentation/notifiers/sync_notifier.dart';
 import 'package:oral_collector/features/sync/presentation/notifiers/sync_state.dart';
 
 const recordingId = 'rec-1';
+
+Storyteller teller(String id) => Storyteller(
+  id: id,
+  projectId: 'proj',
+  name: id,
+  sex: StorytellerSex.unknown,
+  externalAcceptanceConfirmed: false,
+  createdAt: DateTime.utc(2026, 5, 1),
+);
 
 class _FakeApiRepo implements RecordingApiRepository {
   _FakeApiRepo({this.updateError});
@@ -62,6 +77,14 @@ class _FakeApiRepo implements RecordingApiRepository {
   @override
   dynamic noSuchMethod(Invocation invocation) =>
       throw UnimplementedError('${invocation.memberName} not expected');
+}
+
+/// Keeps `load()`'s storyteller lookup off the network; the notifier already
+/// treats an unavailable lookup as "show what the row says".
+class _OfflineStorytellerApi implements StorytellerRepository {
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw const SocketException('no network in tests');
 }
 
 class _SyncNotifier extends SyncNotifier {
@@ -159,6 +182,8 @@ void main() {
         roleNotifierProvider.overrideWith(_FakeRoleNotifier.new),
         statsNotifierProvider.overrideWith(_FakeStatsNotifier.new),
         recordingsListNotifierProvider.overrideWith(_FakeListNotifier.new),
+        storyteller_providers.storytellerApiRepositoryProvider
+            .overrideWithValue(_OfflineStorytellerApi()),
       ],
     );
     addTearDown(container.dispose);
@@ -363,6 +388,124 @@ void main() {
       expect(queued.map((r) => r.id), contains(recordingId));
       expect(queued.single.genreId, 'genre-2');
       expect(queued.single.subcategoryId, 'sub-2');
+    });
+  });
+
+  /// ENG-411: the sixth mutation joins the five.
+  ///
+  /// `setStoryteller` swallowed every exception without telling "server
+  /// unreachable" from "server refused", so an offline change of storyteller
+  /// wrote the local row and stopped there with nothing owed — or, on a refusal,
+  /// wrote the row anyway and left it asserting a change the server rejected.
+  group('changing the storyteller enters the outbox', () {
+    Future<String?> storedStorytellerId() async =>
+        (await repo.getRecordingById(recordingId))!.storytellerId;
+
+    test('an offline change is written and owed', () async {
+      final recording = await seed();
+      final c = makeContainer();
+
+      final result = await notifierOf(
+        c,
+      ).setStoryteller(recording, teller('t1'));
+
+      expect(result, RecordingMutationResult.savedLocallyOnly);
+      expect(await storedStorytellerId(), 't1');
+      expect(await owed(), {PendingMetadataField.storyteller});
+      expect(await outboxStatus(), MetadataSyncStatus.pending);
+    });
+
+    test('a refusal writes nothing and says why', () async {
+      // The other half of the collapsed catch: a 403 is not a connection
+      // problem, and mirroring the change locally would leave the row claiming
+      // a storyteller the server refused to accept.
+      final recording = await seed();
+      final api = _FakeApiRepo(updateError: const ForbiddenException());
+      final c = makeContainer(isOnline: true, api: api);
+
+      final result = await notifierOf(
+        c,
+      ).setStoryteller(recording, teller('t1'));
+
+      expect(result, RecordingMutationResult.forbidden);
+      expect(await storedStorytellerId(), isNull);
+      expect(await owed(), isEmpty);
+      expect(await outboxStatus(), MetadataSyncStatus.synced);
+    });
+
+    test('a server out of reach is written and owed', () async {
+      final recording = await seed();
+      final api = _FakeApiRepo(updateError: Exception('connection reset'));
+      final c = makeContainer(isOnline: true, api: api);
+
+      final result = await notifierOf(
+        c,
+      ).setStoryteller(recording, teller('t1'));
+
+      expect(result, RecordingMutationResult.savedLocallyOnly);
+      expect(await storedStorytellerId(), 't1');
+      expect(await owed(), {PendingMetadataField.storyteller});
+    });
+
+    test('an accepted change owes nothing', () async {
+      // Guards against the fix routing every path through the queue.
+      final recording = await seed();
+      final api = _FakeApiRepo();
+      final c = makeContainer(isOnline: true, api: api);
+
+      final result = await notifierOf(
+        c,
+      ).setStoryteller(recording, teller('t1'));
+
+      expect(result, RecordingMutationResult.success);
+      expect(api.updateCalls, 1);
+      expect(await storedStorytellerId(), 't1');
+      expect(await owed(), isEmpty);
+      expect(await outboxStatus(), MetadataSyncStatus.synced);
+    });
+
+    test('two offline changes collapse into the last one', () async {
+      final recording = await seed();
+      final c = makeContainer();
+
+      await notifierOf(c).setStoryteller(recording, teller('t1'));
+      final second = localRecordingToEntity(
+        (await repo.getRecordingById(recordingId))!,
+      );
+      await notifierOf(c).setStoryteller(second, teller('t2'));
+
+      expect(await owed(), {PendingMetadataField.storyteller});
+      expect(await storedStorytellerId(), 't2');
+    });
+
+    test('removing the storyteller offline is owed too', () async {
+      final recording = await seed();
+      final c = makeContainer();
+      await notifierOf(c).setStoryteller(recording, teller('t1'));
+
+      final withTeller = localRecordingToEntity(
+        (await repo.getRecordingById(recordingId))!,
+      );
+      await notifierOf(c).setStoryteller(withTeller, null);
+
+      expect(await storedStorytellerId(), isNull);
+      expect(await owed(), {PendingMetadataField.storyteller});
+    });
+
+    test('a recording the server has never seen owes it nothing', () async {
+      final recording = await seed(serverId: null, uploadStatus: 'local');
+      final api = _FakeApiRepo();
+      final c = makeContainer(isOnline: true, api: api);
+
+      final result = await notifierOf(
+        c,
+      ).setStoryteller(recording, teller('t1'));
+
+      expect(result, RecordingMutationResult.success);
+      expect(api.updateCalls, 0);
+      expect(await storedStorytellerId(), 't1');
+      expect(await owed(), isEmpty);
+      expect(await outboxStatus(), MetadataSyncStatus.synced);
     });
   });
 
