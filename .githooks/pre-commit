@@ -1,10 +1,24 @@
 #!/usr/bin/env bash
 set -e
 cd "$(git rev-parse --show-toplevel)"
-flutter pub get
+
+# This hook only ever runs on a developer machine, where the SDK is pinned by
+# FVM: an unprefixed `dart`/`flutter` is FVM's `stable` channel instead, and it
+# downgrades the packages the Flutter SDK pins in pubspec.lock — so committing
+# used to be enough to dirty the lock. Same detection as
+# scripts/check_metrics.sh; `fvm` without this project's .fvm/ is someone
+# else's pin, so both are checked and the prefix falls away when either is
+# missing.
+if [ -d .fvm ] && command -v fvm >/dev/null 2>&1; then
+  fvm=fvm
+else
+  fvm=""
+fi
+
+$fvm flutter pub get
 # Staged lints (ENG-89 / ADR-0007) report at `info`; --no-fatal-infos keeps the
 # hook green until rules are promoted. Warnings and errors still block.
-flutter analyze --no-fatal-infos
-dart format --set-exit-if-changed lib/ test/
+$fvm flutter analyze --no-fatal-infos
+$fvm dart format --set-exit-if-changed lib/ test/
 # riverpod_lint via custom_lint — blocking since ENG-158 (baseline burned down).
-dart run custom_lint
+$fvm dart run custom_lint
