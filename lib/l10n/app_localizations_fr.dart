@@ -590,7 +590,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get recording_savedOnDeviceOnly =>
-      'Saved on this device — the server has not got this change yet. It will be sent on its own when the connection comes back.';
+      'Enregistré sur cet appareil — le serveur n\'a pas encore reçu cette modification. Elle sera envoyée toute seule au retour de la connexion.';
 
   @override
   String get recording_updateNoPermission =>
@@ -734,19 +734,20 @@ class AppLocalizationsFr extends AppLocalizations {
   String get recording_statusFileMissing => 'Fichier audio introuvable';
 
   @override
-  String get recording_metadataSyncPending => 'Edit waiting to be sent';
+  String get recording_metadataSyncPending =>
+      'Modification en attente d\'envoi';
 
   @override
   String get recording_metadataSyncForbidden =>
-      'Edit refused: you cannot change this recording';
+      'Modification refusée : vous ne pouvez pas modifier cet enregistrement';
 
   @override
   String get recording_metadataSyncConflict =>
-      'Edit refused: another recording has this title';
+      'Modification refusée : un autre enregistrement porte ce titre';
 
   @override
   String get recording_metadataSyncExhausted =>
-      'Edit not sent — edit again to retry';
+      'Modification non envoyée — modifiez à nouveau pour réessayer';
 
   @override
   String get recording_uploadExhaustedMessage =>
@@ -765,22 +766,23 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get recordings_retryFailedUploads => 'Retry uploads';
+  String get recordings_retryFailedUploads => 'Relancer les téléversements';
 
   @override
   String recordings_retryQueuedCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count recordings back in the upload queue',
-      one: '1 recording back in the upload queue',
-      zero: 'No uploads to retry',
+      other: '$count enregistrements remis dans la file de téléversement',
+      one: '1 enregistrement remis dans la file de téléversement',
+      zero: 'Aucun téléversement à relancer',
     );
     return '$_temp0';
   }
 
   @override
-  String get recordings_retryFailed => 'Could not queue the uploads again';
+  String get recordings_retryFailed =>
+      'Impossible de remettre les téléversements dans la file';
 
   @override
   String get trim_title => 'Modifier l\'Enregistrement';
@@ -1086,7 +1088,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get sync_waitingForWifi =>
-      'Uploads are waiting for Wi-Fi. Turn off \"Upload on Wi-Fi only\" to send over cellular data.';
+      'Les téléversements attendent le Wi-Fi. Désactivez \"Téléverser uniquement en Wi-Fi\" pour envoyer via les données mobiles.';
 
   @override
   String get profile_photoUpdated => 'Photo de profil mise à jour';
@@ -1147,7 +1149,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get profile_clearCacheMessage =>
-      'Cela supprimera tous les enregistrements stockés localement. Les enregistrements téléversés sur le serveur ne seront pas affectés.';
+      'Cela supprimera les enregistrements stockés localement que le serveur possède déjà. Les enregistrements qui n\'ont pas encore été téléversés sont conservés sur cet appareil.';
 
   @override
   String get profile_cacheCleared => 'Cache local effacé';
@@ -1158,9 +1160,9 @@ class AppLocalizationsFr extends AppLocalizations {
       count,
       locale: localeName,
       other:
-          'Local cache cleared. $count recordings were kept because they have not been uploaded yet.',
+          'Cache local effacé. $count enregistrements ont été conservés car ils n\'ont pas encore été téléversés.',
       one:
-          'Local cache cleared. 1 recording was kept because it has not been uploaded yet.',
+          'Cache local effacé. 1 enregistrement a été conservé car il n\'a pas encore été téléversé.',
     );
     return '$_temp0';
   }
@@ -1171,8 +1173,9 @@ class AppLocalizationsFr extends AppLocalizations {
       count,
       locale: localeName,
       other:
-          '$count recordings were kept because they have not been uploaded yet.',
-      one: '1 recording was kept because it has not been uploaded yet.',
+          '$count enregistrements ont été conservés car ils n\'ont pas encore été téléversés.',
+      one:
+          '1 enregistrement a été conservé car il n\'a pas encore été téléversé.',
     );
     return '$_temp0';
   }
@@ -1183,8 +1186,9 @@ class AppLocalizationsFr extends AppLocalizations {
       count,
       locale: localeName,
       other:
-          '$count recordings could not be deleted, so that space was not freed.',
-      one: '1 recording could not be deleted, so that space was not freed.',
+          '$count enregistrements n\'ont pas pu être supprimés, cet espace n\'a donc pas été libéré.',
+      one:
+          '1 enregistrement n\'a pas pu être supprimé, cet espace n\'a donc pas été libéré.',
     );
     return '$_temp0';
   }
@@ -1247,7 +1251,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get profile_clearCacheSubtitle =>
-      'Supprimer tous les enregistrements stockés localement';
+      'Supprimer les copies locales que le serveur possède déjà';
 
   @override
   String get profile_invitations => 'Invitations';
@@ -1897,7 +1901,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get detail_cleaning => 'Nettoyage';
 
   @override
-  String get detail_metadataSync => 'Edits';
+  String get detail_metadataSync => 'Modifications';
 
   @override
   String get detail_recorded => 'Enregistré';
@@ -2570,7 +2574,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get a11y_minimapScrubber =>
-      'Audio overview. Tap or drag to navigate to a position.';
+      'Aperçu de l\'audio. Appuyez ou faites glisser pour aller à une position.';
 
   @override
   String a11y_tabLabel(String label) {

@@ -577,7 +577,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get recording_savedOnDeviceOnly =>
-      'Saved on this device — the server has not got this change yet. It will be sent on its own when the connection comes back.';
+      'تم الحفظ على هذا الجهاز — لم يستلم الخادم هذا التغيير بعد. سيُرسل تلقائيًا عند عودة الاتصال.';
 
   @override
   String get recording_updateNoPermission =>
@@ -716,19 +716,19 @@ class AppLocalizationsAr extends AppLocalizations {
   String get recording_statusFileMissing => 'ملف الصوت مفقود';
 
   @override
-  String get recording_metadataSyncPending => 'Edit waiting to be sent';
+  String get recording_metadataSyncPending => 'التعديل في انتظار الإرسال';
 
   @override
   String get recording_metadataSyncForbidden =>
-      'Edit refused: you cannot change this recording';
+      'تم رفض التعديل: لا يمكنك تغيير هذا التسجيل';
 
   @override
   String get recording_metadataSyncConflict =>
-      'Edit refused: another recording has this title';
+      'تم رفض التعديل: هناك تسجيل آخر بهذا العنوان';
 
   @override
   String get recording_metadataSyncExhausted =>
-      'Edit not sent — edit again to retry';
+      'لم يُرسل التعديل — عدّل مرة أخرى لإعادة المحاولة';
 
   @override
   String get recording_uploadExhaustedMessage =>
@@ -747,22 +747,26 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get recordings_retryFailedUploads => 'Retry uploads';
+  String get recordings_retryFailedUploads => 'إعادة محاولة الرفع';
 
   @override
   String recordings_retryQueuedCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count recordings back in the upload queue',
-      one: '1 recording back in the upload queue',
-      zero: 'No uploads to retry',
+      other: '$count تسجيل عاد إلى قائمة انتظار الرفع',
+      many: '$count تسجيلاً عاد إلى قائمة انتظار الرفع',
+      few: '$count تسجيلات عادت إلى قائمة انتظار الرفع',
+      two: 'تسجيلان عادا إلى قائمة انتظار الرفع',
+      one: 'تسجيل واحد عاد إلى قائمة انتظار الرفع',
+      zero: 'لا توجد عمليات رفع لإعادة المحاولة',
     );
     return '$_temp0';
   }
 
   @override
-  String get recordings_retryFailed => 'Could not queue the uploads again';
+  String get recordings_retryFailed =>
+      'تعذّرت إعادة عمليات الرفع إلى قائمة الانتظار';
 
   @override
   String get trim_title => 'تحرير التسجيل';
@@ -1058,7 +1062,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get sync_waitingForWifi =>
-      'Uploads are waiting for Wi-Fi. Turn off \"Upload on Wi-Fi only\" to send over cellular data.';
+      'عمليات الرفع تنتظر Wi-Fi. أوقف \"الرفع عبر Wi-Fi فقط\" للإرسال عبر بيانات الهاتف.';
 
   @override
   String get profile_photoUpdated => 'تم تحديث صورة الملف الشخصي';
@@ -1118,7 +1122,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get profile_clearCacheMessage =>
-      'سيؤدي هذا إلى حذف جميع التسجيلات المخزنة محلياً. لن تتأثر التسجيلات المرفوعة على الخادم.';
+      'سيؤدي هذا إلى حذف التسجيلات المخزنة محلياً التي يمتلكها الخادم بالفعل. أما التسجيلات التي لم تُرفع بعد فتبقى على هذا الجهاز.';
 
   @override
   String get profile_cacheCleared => 'تم مسح الذاكرة المؤقتة المحلية';
@@ -1129,9 +1133,16 @@ class AppLocalizationsAr extends AppLocalizations {
       count,
       locale: localeName,
       other:
-          'Local cache cleared. $count recordings were kept because they have not been uploaded yet.',
+          'تم مسح الذاكرة المؤقتة المحلية. تم الاحتفاظ بـ $count تسجيل لأنها لم تُرفع بعد.',
+      many:
+          'تم مسح الذاكرة المؤقتة المحلية. تم الاحتفاظ بـ $count تسجيلاً لأنها لم تُرفع بعد.',
+      few:
+          'تم مسح الذاكرة المؤقتة المحلية. تم الاحتفاظ بـ $count تسجيلات لأنها لم تُرفع بعد.',
+      two:
+          'تم مسح الذاكرة المؤقتة المحلية. تم الاحتفاظ بتسجيلين لأنهما لم يُرفعا بعد.',
       one:
-          'Local cache cleared. 1 recording was kept because it has not been uploaded yet.',
+          'تم مسح الذاكرة المؤقتة المحلية. تم الاحتفاظ بتسجيل واحد لأنه لم يُرفع بعد.',
+      zero: 'تم مسح الذاكرة المؤقتة المحلية. لم يتم الاحتفاظ بأي تسجيل.',
     );
     return '$_temp0';
   }
@@ -1141,9 +1152,12 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other:
-          '$count recordings were kept because they have not been uploaded yet.',
-      one: '1 recording was kept because it has not been uploaded yet.',
+      other: 'تم الاحتفاظ بـ $count تسجيل لأنها لم تُرفع بعد.',
+      many: 'تم الاحتفاظ بـ $count تسجيلاً لأنها لم تُرفع بعد.',
+      few: 'تم الاحتفاظ بـ $count تسجيلات لأنها لم تُرفع بعد.',
+      two: 'تم الاحتفاظ بتسجيلين لأنهما لم يُرفعا بعد.',
+      one: 'تم الاحتفاظ بتسجيل واحد لأنه لم يُرفع بعد.',
+      zero: 'لم يتم الاحتفاظ بأي تسجيل.',
     );
     return '$_temp0';
   }
@@ -1153,9 +1167,12 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other:
-          '$count recordings could not be deleted, so that space was not freed.',
-      one: '1 recording could not be deleted, so that space was not freed.',
+      other: 'تعذّر حذف $count تسجيل، لذا لم تُحرَّر تلك المساحة.',
+      many: 'تعذّر حذف $count تسجيلاً، لذا لم تُحرَّر تلك المساحة.',
+      few: 'تعذّر حذف $count تسجيلات، لذا لم تُحرَّر تلك المساحة.',
+      two: 'تعذّر حذف تسجيلين، لذا لم تُحرَّر تلك المساحة.',
+      one: 'تعذّر حذف تسجيل واحد، لذا لم تُحرَّر تلك المساحة.',
+      zero: 'لم يتعذّر حذف أي تسجيل.',
     );
     return '$_temp0';
   }
@@ -1215,7 +1232,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get profile_clearCache => 'مسح الذاكرة المؤقتة المحلية';
 
   @override
-  String get profile_clearCacheSubtitle => 'حذف جميع التسجيلات المخزنة محلياً';
+  String get profile_clearCacheSubtitle =>
+      'حذف النسخ المحلية التي يمتلكها الخادم بالفعل';
 
   @override
   String get profile_invitations => 'الدعوات';
@@ -1843,7 +1861,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get detail_cleaning => 'التنظيف';
 
   @override
-  String get detail_metadataSync => 'Edits';
+  String get detail_metadataSync => 'التعديلات';
 
   @override
   String get detail_recorded => 'تاريخ التسجيل';
@@ -2502,7 +2520,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get a11y_minimapScrubber =>
-      'Audio overview. Tap or drag to navigate to a position.';
+      'نظرة عامة على الصوت. انقر أو اسحب للانتقال إلى موضع.';
 
   @override
   String a11y_tabLabel(String label) {
