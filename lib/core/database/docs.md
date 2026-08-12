@@ -25,6 +25,13 @@ Path: @/lib/core/database
   duplicate-column footgun by construction (no conditional guard) and made the
   upgrade honor drift's `to` argument instead of always migrating to the
   current version.
+- ENG-420 (slice 1) added `finalizedAudioPath`/`finalizedDurationSeconds` to
+  `RecordingSessions` at v14 — an ordinary additive `from13To14` step, no
+  different mechanically from any other. What the columns mean (a durable
+  pointer from a session row to the audio file it produced, written before the
+  row is marked completed) and why the migration does no back-fill is documented
+  where the columns are written, not here — see
+  [../../features/recording/data/repositories/docs.md](../../features/recording/data/repositories/docs.md).
 
 ### How it fits into the larger codebase
 
@@ -59,7 +66,7 @@ Path: @/lib/core/database
 ### Core Implementation
 
 - `AppDatabase` is annotated with `@DriftDatabase(tables: [...])` and exposes
-  the current `schemaVersion` (13). `AppDatabase.forTesting(e)` takes an
+  the current `schemaVersion` (14). `AppDatabase.forTesting(e)` takes an
   explicit executor and is the entry point the migration tests and an in-memory
   `NativeDatabase.memory()` use.
 - `MigrationStrategy` has two callbacks:
@@ -104,11 +111,14 @@ Path: @/lib/core/database
     [/analysis_options.yaml](../../../analysis_options.yaml).
   - [/test/core/database/migration_test.dart](../../../test/core/database/migration_test.dart) —
     drives drift's `SchemaVerifier`. For every historical version it `startAt(k)`
-    and both `migrateAndValidate(db, 13)` (the skip-many-releases path) and
+    and both `migrateAndValidate(db, 14)` (the skip-many-releases path) and
     `migrateAndValidate(db, k + 1)` (a single step lands exactly on the next
     version, exercising that `stepByStep` honors `to`). Plus data-integrity
-    cases that seed an un-uploaded recording at the oldest version and a
-    storyteller at v6 and assert the rows and fields survive the upgrade.
+    cases that seed an un-uploaded recording at the oldest version, a
+    storyteller at v6, and (ENG-420) a `RecordingSessions` row in each of its
+    five statuses at v13, asserting the rows and fields survive the upgrade —
+    the sessions case is also what proves the new v14 anchor columns come out
+    `null` rather than guessed at.
 
 ### Things to Know
 

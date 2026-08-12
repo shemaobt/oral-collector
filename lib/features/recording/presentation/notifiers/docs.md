@@ -614,6 +614,15 @@ Path: @/lib/features/recording/presentation/notifiers
   than the former public `player` field — derived audio state already
   lives on `RecordingPlayerState`, but the player object itself (needed
   for the widget's `StreamBuilder`s) has nowhere to live but a method.
+- **A successful stop anchors the session to its audio before marking it
+  completed (ENG-420, slice 1).** In `_stopNative`, once `_finalizeOrCrash`
+  returns a result, the notifier calls
+  `RecordingSessionRepository.completeWithFinalizedAudio` instead of the bare
+  `markCompleted` — see
+  [../../data/repositories/docs.md](../../data/repositories/docs.md) for why
+  that order is load-bearing and what the anchor is (and is not) a guarantee
+  of. Nothing downstream of this notifier reads the anchor yet; a later slice
+  is what consumes it.
 - **A failed finalize keeps the recording recoverable — on both stop
   paths.** Finalization (FFmpeg concat + IO under
   [../../data/services/recording_finalization_service.dart](../../data/services/recording_finalization_service.dart))
