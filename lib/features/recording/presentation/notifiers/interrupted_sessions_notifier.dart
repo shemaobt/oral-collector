@@ -80,7 +80,13 @@ class InterruptedSessionsNotifier extends Notifier<void> {
       }
     }
     if (validPaths.isEmpty) {
-      await sessionRepo.markDiscarded(session.id);
+      // A session still holding finalized audio must not reach `discarded`:
+      // no sweep queries that status, so the row — and the recording it points
+      // at — would be unreachable from then on. Re-deriving is impossible
+      // without segments, but the offer has to survive (ENG-420).
+      if (session.finalizedAudioPath == null) {
+        await sessionRepo.markDiscarded(session.id);
+      }
       await ref.read(recoveryCoordinatorProvider).refresh();
       return null;
     }

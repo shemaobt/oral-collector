@@ -231,7 +231,12 @@ class RecoveryCoordinator {
       }
 
       if (segments.isEmpty) {
-        await repo.markDiscarded(session.id);
+        // Same invariant as the save path: a row that still points at
+        // finalized audio never goes to a status no sweep looks at, even
+        // though it has no segments to offer a recovery from (ENG-420).
+        if (session.finalizedAudioPath == null) {
+          await repo.markDiscarded(session.id);
+        }
         continue;
       }
       result.add(

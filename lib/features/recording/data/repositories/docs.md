@@ -530,13 +530,18 @@ Path: @/lib/features/recording/data/repositories
   This slice only guarantees the session is **offered**; reusing the
   already-finalized file the anchor points at instead of re-deriving it is
   deferred to a later slice.
-  **That outcome is terminal, which is why these slices ship together.**
-  `discarded` appears in no sweep query — neither `findFinishedSessions` nor
-  `findCrashedSessions` — so a row that reaches it can never be surfaced
-  again, by this sweep or a later one. A build carrying the anchor-based offer
-  without the anchor-based *reuse* therefore hands the user a button that
-  destroys the very recording the offer was advertising; the two must not be
-  released apart.
+  **A session still holding finalized audio is therefore never marked
+  `discarded`.** `discarded` appears in no sweep query — neither
+  `findFinishedSessions` nor `findCrashedSessions` — so a row that reaches it
+  can never be surfaced again, by this sweep or a later one. Both paths that
+  give up on re-deriving (`InterruptedSessionsNotifier.save` when no segment
+  survives, and `RecoveryCoordinator.refresh` when a crashed row has none)
+  skip the terminal write while `finalizedAudioPath` is set. The invariant is
+  "a session that still points at a durable artifact never reaches a state no
+  sweep looks at", and it holds regardless of whether the reuse path exists.
+  The cost is a transitional one: until the recovery reuses the anchored file,
+  accepting such an offer does nothing visible and the offer comes back. That
+  is poor to use and far better than deleting the audio.
 - **The anchored duration overstates the audio on the degraded path.** When
   both concat routes fail, `RecordingFinalizationService` returns the whole
   session's duration alongside a `filePath` that is only the first segment, so
