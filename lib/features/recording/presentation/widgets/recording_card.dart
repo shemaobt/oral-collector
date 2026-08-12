@@ -75,6 +75,13 @@ String? _visibleDescription(String? raw) => blankToNull(raw?.trim());
 /// Width the left status rail takes before the content column gets any.
 const double _railWidth = 4;
 
+/// One definition of the date's type, shared by the [Text] that paints it and
+/// by the measurement that decides which line it is painted on.
+TextStyle? _dateStyle(BuildContext context) => Theme.of(context)
+    .textTheme
+    .labelSmall
+    ?.copyWith(color: AppColors.of(context).secondary.withValues(alpha: 0.7));
+
 /// One definition of the duration's type, shared by the [Text] that paints it
 /// and by the measurement that decides whether it is painted at all.
 TextStyle? _durationStyle(BuildContext context) =>
@@ -278,14 +285,28 @@ class _TitleRow extends StatelessWidget {
 
   static const double _statusTarget = 24;
 
-  /// The most of the row the date may take.
+  /// The most of the row the date may take while it shares it with the title.
   ///
   /// The date is non-flex so that the title yields to it at ordinary sizes —
   /// a truncated title is still recognisable, a truncated date is not. That
   /// ranking has to stop somewhere: in Arabic at 2.0x the spelled-out date
-  /// plus the upload glyph outgrow the row, and without a ceiling the title
-  /// is pushed off the card rather than merely shortened.
+  /// plus the upload glyph outgrow the row, and a date served first out of a
+  /// row that narrow leaves the title nothing but its ellipsis.
   static const double _dateShare = 0.45;
+
+  /// Whether the date can keep its whole label without taking more of the row
+  /// than [_dateShare], and so stay on the title's line.
+  ///
+  /// Measured rather than flexed for the reason `_FooterRow` measures the
+  /// duration: a [Row] sizes its non-flex children at their intrinsic width
+  /// first and hands only the remainder to the flexible one, so whichever
+  /// element is left out of the flex is served first regardless of rank.
+  bool _dateSharesLine(BuildContext context, String date) {
+    final available = width;
+    if (available == null) return true;
+    return _textWidth(context, date, _dateStyle(context)) <=
+        available * _dateShare;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -295,7 +316,15 @@ class _TitleRow extends StatelessWidget {
     final locale = Localizations.localeOf(context).languageCode;
     final title = blankToNull(recording.title);
     final statusLabel = _statusLabel(recording.uploadStatus, l10n);
-    return Row(
+    final date = formatRecordingDate(recording.recordedAt, locale, l10n: l10n);
+    final sharesLine = _dateSharesLine(context, date);
+    final dateText = Text(
+      date,
+      style: _dateStyle(context),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+    );
+    final titleLine = Row(
       children: [
         Expanded(
           child: Text(
@@ -335,20 +364,16 @@ class _TitleRow extends StatelessWidget {
             ),
           ),
         ),
-        ConstrainedBox(
-          constraints: BoxConstraints(
-            maxWidth: width == null ? double.infinity : width! * _dateShare,
-          ),
-          child: Text(
-            formatRecordingDate(recording.recordedAt, locale, l10n: l10n),
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: colors.secondary.withValues(alpha: 0.7),
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
+        if (sharesLine) dateText,
       ],
+    );
+    if (sharesLine) return titleLine;
+    // Past its share the date reflows to a line of its own rather than
+    // clipping: it is the card's only anchor in time, so a date cut to
+    // `Dec 24, 2…` costs the fact it carries and the title's line both.
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [titleLine, const SizedBox(height: 2), dateText],
     );
   }
 }
