@@ -1121,6 +1121,30 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String profile_cacheKeptUnsent(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count recordings were kept because they have not been uploaded yet.',
+      one: '1 recording was kept because it has not been uploaded yet.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String profile_cacheNotFreed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count recordings could not be deleted, so that space was not freed.',
+      one: '1 recording could not be deleted, so that space was not freed.',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String profile_joinedSuccess(String name) {
     return '\"$name\"에 성공적으로 참여했습니다';
   }

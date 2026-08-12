@@ -20,7 +20,7 @@ void main() {
           onPressed: () => showClearCacheResultSnackBar(
             ScaffoldMessenger.of(context),
             AppLocalizations.of(context),
-            keptCount,
+            (keptUnsent: keptCount, keptUndeletable: 0),
           ),
           child: const Text('trigger'),
         ),

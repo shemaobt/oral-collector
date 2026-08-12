@@ -573,6 +573,24 @@
       }
     }
   },
+  "profile_cacheKeptUnsent": "{count, plural, =1{1 recording was kept because it has not been uploaded yet.} other{{count} recordings were kept because they have not been uploaded yet.}}",
+  "@profile_cacheKeptUnsent": {
+    "description": "Pairs with profile_cacheNotFreed. Says the same as profile_cacheClearedKept without claiming the cache was cleared, which would contradict a delete that failed.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "profile_cacheNotFreed": "{count, plural, =1{1 recording could not be deleted, so that space was not freed.} other{{count} recordings could not be deleted, so that space was not freed.}}",
+  "@profile_cacheNotFreed": {
+    "description": "Shown when the clear kept a recording because its file would not delete, which is space the user asked for and did not get.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "profile_joinedSuccess": "Joined \"{name}\" successfully",
   "@profile_joinedSuccess": {
     "placeholders": {

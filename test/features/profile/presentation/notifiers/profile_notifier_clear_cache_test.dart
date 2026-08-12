@@ -90,7 +90,11 @@ void main() {
         .read(profileNotifierProvider.notifier)
         .clearCacheAndRefresh();
 
-    expect(kept, (await repo.getAllLocalRecordings()).length);
-    expect(kept, 2);
+    expect(kept.keptUnsent, 2);
+    expect(kept.keptUndeletable, 0);
+    expect(
+      kept.keptUnsent + kept.keptUndeletable,
+      (await repo.getAllLocalRecordings()).length,
+    );
   });
 }

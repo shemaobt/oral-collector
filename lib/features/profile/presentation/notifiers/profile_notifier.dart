@@ -47,8 +47,8 @@ class ProfileNotifier extends Notifier<ProfileState> {
         .updateProfile(displayName: name);
   }
 
-  /// Returns how many recordings the clear kept, so the screen can say so.
-  Future<int> clearCacheAndRefresh() async {
+  /// Returns what the clear kept and why, so the screen can say so.
+  Future<ClearCacheOutcome> clearCacheAndRefresh() async {
     final kept = await ref
         .read(syncNotifierProvider.notifier)
         .clearLocalCache();
