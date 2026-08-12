@@ -282,7 +282,7 @@ class _RecordingsFilterSheetState extends ConsumerState<RecordingsFilterSheet> {
         ),
         ...genres.map(
           (g) => ChoiceChip(
-            label: Text(localizedGenreName(l10n, g.name)),
+            label: Text(localizedGenreName(l10n, g.name, id: g.id)),
             selected: _genreId == g.id,
             onSelected: (_) => _selectGenre(g.id),
           ),

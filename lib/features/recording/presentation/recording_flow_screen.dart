@@ -219,10 +219,14 @@ class _RecordingFlowScreenState extends ConsumerState<RecordingFlowScreen> {
           genreId: _selectedGenreId!,
           subcategoryId: _selectedSubcategoryId ?? '',
           genreName: genre?.name != null
-              ? localizedGenreName(l10n, genre!.name)
+              ? localizedGenreName(l10n, genre!.name, id: genre.id)
               : null,
           subcategoryName: subcategory?.name != null
-              ? localizedSubcategoryName(l10n, subcategory!.name)
+              ? localizedSubcategoryName(
+                  l10n,
+                  subcategory!.name,
+                  id: subcategory.id,
+                )
               : null,
           registerName: rawRegName != null
               ? localizedRegisterName(l10n, rawRegName)
@@ -243,10 +247,14 @@ class _RecordingFlowScreenState extends ConsumerState<RecordingFlowScreen> {
           subcategoryId: _selectedSubcategoryId,
           registerId: _selectedRegisterId,
           genreName: genre?.name != null
-              ? localizedGenreName(l10n, genre!.name)
+              ? localizedGenreName(l10n, genre!.name, id: genre.id)
               : null,
           subcategoryName: subcategory?.name != null
-              ? localizedSubcategoryName(l10n, subcategory!.name)
+              ? localizedSubcategoryName(
+                  l10n,
+                  subcategory!.name,
+                  id: subcategory.id,
+                )
               : null,
           registerName: rawRegName2 != null
               ? localizedRegisterName(l10n, rawRegName2)

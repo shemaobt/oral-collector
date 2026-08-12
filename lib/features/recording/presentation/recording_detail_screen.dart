@@ -810,10 +810,14 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     final rawRegisterName = getRegisterName(recording.registerId);
 
     final genreName = rawGenreName != null
-        ? localizedGenreName(l10n, rawGenreName)
+        ? localizedGenreName(l10n, rawGenreName, id: recording.genreId)
         : null;
     final subcategoryName = rawSubcategoryName != null
-        ? localizedSubcategoryName(l10n, rawSubcategoryName)
+        ? localizedSubcategoryName(
+            l10n,
+            rawSubcategoryName,
+            id: recording.subcategoryId!,
+          )
         : null;
     final registerName = rawRegisterName != null
         ? localizedRegisterName(l10n, rawRegisterName)
@@ -832,10 +836,18 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
       recording.secondaryRegisterId,
     );
     final secondaryGenreName = rawSecondaryGenreName != null
-        ? localizedGenreName(l10n, rawSecondaryGenreName)
+        ? localizedGenreName(
+            l10n,
+            rawSecondaryGenreName,
+            id: recording.secondaryGenreId!,
+          )
         : null;
     final secondarySubcategoryName = rawSecondarySubcategoryName != null
-        ? localizedSubcategoryName(l10n, rawSecondarySubcategoryName)
+        ? localizedSubcategoryName(
+            l10n,
+            rawSecondarySubcategoryName,
+            id: recording.secondarySubcategoryId!,
+          )
         : null;
     final secondaryRegisterName = rawSecondaryRegisterName != null
         ? localizedRegisterName(l10n, rawSecondaryRegisterName)

@@ -51,7 +51,7 @@ class AdminGenreCard extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        localizedGenreName(l10n, genre.name),
+                        localizedGenreName(l10n, genre.name, id: genre.id),
                         style: Theme.of(context).textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w600,
                         ),
@@ -111,7 +111,7 @@ class AdminGenreCard extends ConsumerWidget {
                       const SizedBox(width: SpacingScale.s8),
                       Expanded(
                         child: Text(
-                          localizedSubcategoryName(l10n, sub.name),
+                          localizedSubcategoryName(l10n, sub.name, id: sub.id),
                           style: Theme.of(context).textTheme.bodyMedium,
                         ),
                       ),
@@ -125,7 +125,7 @@ class AdminGenreCard extends ConsumerWidget {
                           context,
                           ref,
                           sub.id,
-                          localizedSubcategoryName(l10n, sub.name),
+                          localizedSubcategoryName(l10n, sub.name, id: sub.id),
                         ),
                         tooltip: l10n.admin_deleteSubcategory,
                         iconSize: 16,

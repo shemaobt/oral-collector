@@ -352,7 +352,10 @@ void main() {
     await tester.pump();
     await openSheet(tester);
 
-    await tapChip(tester, localizedGenreName(_l10n, _genres[1].name));
+    await tapChip(
+      tester,
+      localizedGenreName(_l10n, _genres[1].name, id: _genres[1].id),
+    );
     await apply(tester);
 
     final state = container.read(recordingsListNotifierProvider);

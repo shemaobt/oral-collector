@@ -59,7 +59,7 @@ class ActiveFilterChips extends ConsumerWidget {
           .where((g) => g.id == state.selectedGenreId)
           .firstOrNull;
       final label = genre != null
-          ? localizedGenreName(l10n, genre.name)
+          ? localizedGenreName(l10n, genre.name, id: genre.id)
           : l10n.filters_sectionGenre;
       chips.add(
         _buildChip(
@@ -75,7 +75,11 @@ class ActiveFilterChips extends ConsumerWidget {
           .read(genreNotifierProvider.notifier)
           .getSubcategoryName(state.selectedSubcategoryId!);
       final label = rawSubcat != null
-          ? localizedSubcategoryName(l10n, rawSubcat)
+          ? localizedSubcategoryName(
+              l10n,
+              rawSubcat,
+              id: state.selectedSubcategoryId!,
+            )
           : l10n.moveCategory_subcategory;
       chips.add(
         _buildChip(

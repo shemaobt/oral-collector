@@ -199,7 +199,11 @@ class _SegmentTaxonomySheetState extends ConsumerState<SegmentTaxonomySheet> {
                             if (g.id != hiddenGenreId)
                               (
                                 selected: _genreId == g.id,
-                                label: localizedGenreName(l10n, g.name),
+                                label: localizedGenreName(
+                                  l10n,
+                                  g.name,
+                                  id: g.id,
+                                ),
                                 onTap: () => setState(() {
                                   if (_genreId != g.id) _subcategoryId = null;
                                   _genreId = g.id;
@@ -221,7 +225,11 @@ class _SegmentTaxonomySheetState extends ConsumerState<SegmentTaxonomySheet> {
                             for (final s in subcategories)
                               (
                                 selected: _subcategoryId == s.id,
-                                label: localizedSubcategoryName(l10n, s.name),
+                                label: localizedSubcategoryName(
+                                  l10n,
+                                  s.name,
+                                  id: s.id,
+                                ),
                                 onTap: () =>
                                     setState(() => _subcategoryId = s.id),
                               ),

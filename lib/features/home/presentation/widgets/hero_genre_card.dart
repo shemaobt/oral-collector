@@ -83,7 +83,7 @@ class HeroGenreCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          localizedGenreName(l10n, genre.name),
+                          localizedGenreName(l10n, genre.name, id: genre.id),
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w800,
                           ),

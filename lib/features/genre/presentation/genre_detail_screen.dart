@@ -62,7 +62,7 @@ class GenreDetailScreen extends ConsumerWidget {
             }
           },
         ),
-        title: Text(localizedGenreName(l10n, genre.name)),
+        title: Text(localizedGenreName(l10n, genre.name, id: genre.id)),
         actions: [
           Container(
             margin: const EdgeInsets.only(right: SpacingScale.s16),
@@ -221,7 +221,11 @@ class _SubcategoryCard extends StatelessWidget {
                       children: [
                         Expanded(
                           child: Text(
-                            localizedSubcategoryName(l10n, subcategory.name),
+                            localizedSubcategoryName(
+                              l10n,
+                              subcategory.name,
+                              id: subcategory.id,
+                            ),
                             style: theme.textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),

@@ -105,7 +105,7 @@ class ClassificationField extends StatelessWidget {
                 (g) => DropdownMenuItem(
                   value: g.id,
                   child: Text(
-                    localizedGenreName(l10n, g.name),
+                    localizedGenreName(l10n, g.name, id: g.id),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -140,7 +140,7 @@ class ClassificationField extends StatelessWidget {
                 (s) => DropdownMenuItem(
                   value: s.id,
                   child: Text(
-                    localizedSubcategoryName(l10n, s.name),
+                    localizedSubcategoryName(l10n, s.name, id: s.id),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
