@@ -21,7 +21,8 @@ enum PendingMetadataField {
   register('register'),
   secondary('secondary'),
   cleaningStatus('cleaning_status'),
-  audio('audio');
+  audio('audio'),
+  storyteller('storyteller');
 
   const PendingMetadataField(this.wireName);
 

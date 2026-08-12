@@ -555,12 +555,12 @@ Path: @/lib/features/recording/presentation
   `lastSyncAt` — the list's usual refetch trigger — is deliberately not
   written. A broken outbox stream leaves the screen unmarked but is reported
   through `_reportUnexpected`, so the quiet is a decision and not a blind spot.
-  Two edits still don't ride this
-  queue: one made through `setStoryteller`, whose own error handling doesn't
-  distinguish "unreachable" from "refused"
-  ([/lib/features/sync/docs.md](../../sync/docs.md)), and one made while the
+  One kind of edit still doesn't ride this queue: one made while the
   recording is still `local`/`failed`/`uploading` — that edit never needed a
-  resend queue, since it rides the eventual create call instead.
+  resend queue, since it rides the eventual create call instead. The
+  storyteller assignment was the other exception until ENG-411 gave
+  `setStoryteller` the same "unreachable" / "refused" distinction as the rest
+  ([/lib/features/sync/docs.md](../../sync/docs.md)).
   **A 401 or a 409 landing in the generic catch and being classified as
   unreachable is a gap inherited from ENG-380, now with a wider reach.** A
   stale/expired session or a write the server refused for some other reason

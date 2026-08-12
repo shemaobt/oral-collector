@@ -89,7 +89,28 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
   Future<void> _onStorytellerChanged(Storyteller? storyteller) async {
     final recording = _state.recording;
     if (recording == null) return;
-    await _notifier.setStoryteller(recording, storyteller);
+    final result = await _notifier.setStoryteller(recording, storyteller);
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context);
+    switch (result) {
+      case RecordingMutationResult.forbidden:
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.recording_updateNoPermission),
+            backgroundColor: AppColors.of(context).warning,
+          ),
+        );
+      case RecordingMutationResult.savedLocallyOnly:
+        _showSavedOnDeviceOnly();
+      // Only a title edit can clash; elsewhere it reads as a plain failure.
+      case RecordingMutationResult.failed ||
+          RecordingMutationResult.titleConflict:
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.recording_updateFailed)));
+      case RecordingMutationResult.success:
+        break;
+    }
   }
 
   Future<void> _pickStoryteller() async {

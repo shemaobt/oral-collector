@@ -40,11 +40,22 @@ import 'package:oral_collector/features/recording/presentation/notifiers/recordi
 import 'package:oral_collector/features/recording/presentation/widgets/classify_recording_dialog.dart';
 import 'package:oral_collector/features/recording/presentation/widgets/move_category_dialog.dart';
 import 'package:oral_collector/features/recording/presentation/widgets/secondary_classification_fields.dart';
+import 'package:oral_collector/features/storyteller/data/providers.dart'
+    as storyteller_providers;
 import 'package:oral_collector/features/storyteller/domain/entities/storyteller.dart';
+import 'package:oral_collector/features/storyteller/domain/repositories/storyteller_repository.dart';
 import 'package:oral_collector/features/sync/presentation/notifiers/sync_notifier.dart';
 import 'package:oral_collector/features/sync/presentation/notifiers/sync_state.dart';
 
 const recordingId = 'rec-1';
+
+/// Keeps `load()`'s storyteller lookup off the network; the notifier already
+/// treats an unavailable lookup as "show what the row says".
+class _OfflineStorytellerApi implements StorytellerRepository {
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw const SocketException('no network in tests');
+}
 
 class _FakeApiRepo implements RecordingApiRepository {
   _FakeApiRepo({
@@ -307,6 +318,8 @@ void main() {
           ),
         if (importer != null)
           recordingFileImporterProvider.overrideWithValue(importer.call),
+        storyteller_providers.storytellerApiRepositoryProvider
+            .overrideWithValue(_OfflineStorytellerApi()),
       ],
     );
     addTearDown(container.dispose);
@@ -483,9 +496,11 @@ void main() {
 
   group('setStoryteller', () {
     test('writes the storyteller id and syncs the server', () async {
-      final recording = await seed();
+      // Needs a server copy and a connection to have a server to sync with:
+      // since ENG-411 the mutation gates on both, like the other five.
+      final recording = await seed(serverId: 'srv-1');
       final api = _FakeApiRepo();
-      final c = makeContainer(api: api);
+      final c = makeContainer(isOnline: true, api: api);
 
       await notifierOf(c).setStoryteller(
         recording,
@@ -528,7 +543,12 @@ void main() {
           ReviewFlag(code: 'missing_storyteller', origin: 'system'),
         ],
       );
-      final c = makeContainer(api: _FakeApiRepo(updateReviewFlags: const []));
+      // Online, like its siblings below: the flags come off the write response,
+      // and since ENG-411 this mutation does not write to an unreachable server.
+      final c = makeContainer(
+        isOnline: true,
+        api: _FakeApiRepo(updateReviewFlags: const []),
+      );
 
       await notifierOf(c).setStoryteller(
         recording,
