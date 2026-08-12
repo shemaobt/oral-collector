@@ -10,6 +10,7 @@ import 'package:oral_collector/core/database/app_database.dart';
 
 import 'generated/schema.dart';
 import 'generated/schema_v1.dart' as v1;
+import 'generated/schema_v13.dart' as v13;
 import 'generated/schema_v6.dart' as v6;
 
 void main() {
@@ -19,18 +20,18 @@ void main() {
     verifier = SchemaVerifier(GeneratedHelper());
   });
 
-  group('migrating a database at each historical version up to v13', () {
+  group('migrating a database at each historical version up to v14', () {
     // A user who skipped builds upgrades straight from their on-disk version to
-    // the current schema. drift runs onUpgrade(from, 13) once. The resulting
-    // schema must match the official v13 reference for every starting point —
+    // the current schema. drift runs onUpgrade(from, 14) once. The resulting
+    // schema must match the official v14 reference for every starting point —
     // indexes included, so a forgotten createIndex in onUpgrade fails here
     // (migrateAndValidate diffs indexes, not just tables and columns).
-    for (var from = 1; from < 13; from++) {
-      test('v$from -> v13 yields the expected v13 schema', () async {
+    for (var from = 1; from < 14; from++) {
+      test('v$from -> v14 yields the expected v14 schema', () async {
         final connection = await verifier.startAt(from);
         final db = AppDatabase.forTesting(connection);
         try {
-          await verifier.migrateAndValidate(db, 13);
+          await verifier.migrateAndValidate(db, 14);
         } finally {
           await db.close();
         }
@@ -43,7 +44,7 @@ void main() {
     // exactly on the next version's schema instead of running through to the
     // latest. migrateAndValidate diffs tables, columns and indexes, so every
     // single step is validated against its own snapshot in isolation.
-    for (var from = 1; from < 13; from++) {
+    for (var from = 1; from < 14; from++) {
       test(
         'v$from -> v${from + 1} yields the expected v${from + 1} schema',
         () async {
@@ -60,7 +61,7 @@ void main() {
   });
 
   test(
-    'preserves an un-uploaded recording across the full v1 -> v13 upgrade',
+    'preserves an un-uploaded recording across the full v1 -> v14 upgrade',
     () async {
       final schema = await verifier.schemaAt(1);
 
@@ -87,10 +88,10 @@ void main() {
           );
       await oldDb.close();
 
-      // Run the real migration to v13 on the app's database class.
+      // Run the real migration to v14 on the app's database class.
       final db = AppDatabase.forTesting(schema.newConnection());
       try {
-        await verifier.migrateAndValidate(db, 13);
+        await verifier.migrateAndValidate(db, 14);
 
         final rows = await db.select(db.localRecordings).get();
         expect(rows, hasLength(1));
@@ -118,7 +119,7 @@ void main() {
     },
   );
 
-  test('preserves a storyteller across the v6 -> v13 upgrade', () async {
+  test('preserves a storyteller across the v6 -> v14 upgrade', () async {
     final schema = await verifier.schemaAt(6);
 
     // Seed a storyteller at v6 — the version where local_storytellers exists
@@ -142,7 +143,7 @@ void main() {
 
     final db = AppDatabase.forTesting(schema.newConnection());
     try {
-      await verifier.migrateAndValidate(db, 13);
+      await verifier.migrateAndValidate(db, 14);
 
       final rows = await db.select(db.localStorytellers).get();
       expect(rows, hasLength(1));
@@ -159,4 +160,63 @@ void main() {
       await db.close();
     }
   });
+
+  test(
+    'preserves sessions in every state across the v13 -> v14 upgrade',
+    () async {
+      final schema = await verifier.schemaAt(13);
+
+      // The devices in the field carry sessions in all five states. v14 adds the
+      // finalized-audio anchor (ENG-420); none of these rows can be reclassified
+      // or back-filled by the migration, and the anchor must start out empty so
+      // a reader can tell "never anchored" from "anchored".
+      const states = [
+        'active',
+        'crashed',
+        'completed',
+        'recovered',
+        'discarded',
+      ];
+      final oldDb = v13.DatabaseAtV13(schema.newConnection());
+      for (final state in states) {
+        await oldDb
+            .into(oldDb.recordingSessions)
+            .insert(
+              v13.RecordingSessionsCompanion.insert(
+                id: 'sess-$state',
+                projectId: 'proj-1',
+                genreId: 'genre-1',
+                startedAt: DateTime.fromMillisecondsSinceEpoch(
+                  1700000000 * 1000,
+                ),
+                status: Value(state),
+                segmentPathsJson: const Value('["/audio/seg_0.wav"]'),
+                totalDurationSeconds: const Value(1080.0),
+                lastSegmentIndex: const Value(0),
+              ),
+            );
+      }
+      await oldDb.close();
+
+      final db = AppDatabase.forTesting(schema.newConnection());
+      try {
+        await verifier.migrateAndValidate(db, 14);
+
+        final rows = await db.select(db.recordingSessions).get();
+        expect(rows, hasLength(states.length));
+        for (final state in states) {
+          final row = rows.singleWhere((r) => r.id == 'sess-$state');
+          expect(row.status, state);
+          expect(row.startedAt.millisecondsSinceEpoch, 1700000000 * 1000);
+          expect(row.segmentPathsJson, '["/audio/seg_0.wav"]');
+          expect(row.totalDurationSeconds, 1080.0);
+          expect(row.lastSegmentIndex, 0);
+          expect(row.finalizedAudioPath, isNull);
+          expect(row.finalizedDurationSeconds, isNull);
+        }
+      } finally {
+        await db.close();
+      }
+    },
+  );
 }

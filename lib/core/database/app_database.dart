@@ -138,6 +138,20 @@ class RecordingSessions extends Table {
   BoolColumn get isPaused => boolean().withDefault(const Constant(false))();
   IntColumn get lastSegmentIndex => integer().withDefault(const Constant(-1))();
 
+  /// Where the finalized audio landed, and how long it is (ENG-420). Written
+  /// as soon as the file exists, before the session is marked completed, so
+  /// the row itself points at the artifact instead of leaving it to be found
+  /// later by matching filenames.
+  ///
+  /// Null means "never anchored" — every session that predates v14, plus any
+  /// that never finalized. It is a pointer, not a guarantee: a set value can
+  /// name a file that is already gone (discarding from the save form deletes
+  /// the audio and leaves the row untouched), and it survives a later status
+  /// change (the orphan sweep flips `completed` back to `crashed` without
+  /// clearing it), so a reader must stat the file rather than trust the row.
+  TextColumn get finalizedAudioPath => text().nullable()();
+  RealColumn get finalizedDurationSeconds => real().nullable()();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -157,7 +171,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 13;
+  int get schemaVersion => 14;
 
   @override
   MigrationStrategy get migration =>
@@ -281,6 +295,16 @@ final OnUpgrade _upgrade = stepByStep(
     await m.addColumn(
       schema.localRecordings,
       schema.localRecordings.metadataLastRetryAt,
+    );
+  },
+  from13To14: (m, schema) async {
+    await m.addColumn(
+      schema.recordingSessions,
+      schema.recordingSessions.finalizedAudioPath,
+    );
+    await m.addColumn(
+      schema.recordingSessions,
+      schema.recordingSessions.finalizedDurationSeconds,
     );
   },
 );

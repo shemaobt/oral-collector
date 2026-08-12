@@ -2414,6 +2414,225 @@ i1.GeneratedColumn<DateTime> _column_52(String aliasedName) =>
       true,
       type: i1.DriftSqlType.dateTime,
     );
+
+final class Schema14 extends i0.VersionedSchema {
+  Schema14({required super.database}) : super(version: 14);
+  @override
+  late final List<i1.DatabaseSchemaEntity> entities = [
+    localRecordings,
+    localGenres,
+    localSubcategories,
+    localStorytellers,
+    recordingSessions,
+    idxRecordingsProjectRecorded,
+    idxRecordingsStatusRecorded,
+    idxRecordingsServerId,
+    idxRecordingsStorytellerId,
+    idxStorytellersProjectId,
+  ];
+  late final Shape13 localRecordings = Shape13(
+    source: i0.VersionedTable(
+      entityName: 'local_recordings',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(id)'],
+      columns: [
+        _column_0,
+        _column_1,
+        _column_2,
+        _column_3,
+        _column_4,
+        _column_19,
+        _column_5,
+        _column_6,
+        _column_7,
+        _column_8,
+        _column_9,
+        _column_10,
+        _column_11,
+        _column_17,
+        _column_41,
+        _column_42,
+        _column_43,
+        _column_26,
+        _column_27,
+        _column_12,
+        _column_13,
+        _column_14,
+        _column_15,
+        _column_16,
+        _column_23,
+        _column_24,
+        _column_25,
+        _column_44,
+        _column_45,
+        _column_46,
+        _column_48,
+        _column_49,
+        _column_50,
+        _column_51,
+        _column_52,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape1 localGenres = Shape1(
+    source: i0.VersionedTable(
+      entityName: 'local_genres',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(id)'],
+      columns: [
+        _column_0,
+        _column_18,
+        _column_19,
+        _column_20,
+        _column_21,
+        _column_22,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape2 localSubcategories = Shape2(
+    source: i0.VersionedTable(
+      entityName: 'local_subcategories',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(id)'],
+      columns: [_column_0, _column_2, _column_18, _column_19, _column_22],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape11 localStorytellers = Shape11(
+    source: i0.VersionedTable(
+      entityName: 'local_storytellers',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(id)'],
+      columns: [
+        _column_0,
+        _column_1,
+        _column_18,
+        _column_28,
+        _column_29,
+        _column_30,
+        _column_31,
+        _column_32,
+        _column_14,
+        _column_33,
+        _column_10,
+        _column_47,
+        _column_15,
+        _column_16,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape14 recordingSessions = Shape14(
+    source: i0.VersionedTable(
+      entityName: 'recording_sessions',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(id)'],
+      columns: [
+        _column_0,
+        _column_1,
+        _column_2,
+        _column_3,
+        _column_17,
+        _column_26,
+        _column_27,
+        _column_34,
+        _column_35,
+        _column_36,
+        _column_37,
+        _column_38,
+        _column_39,
+        _column_40,
+        _column_53,
+        _column_54,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  final i1.Index idxRecordingsProjectRecorded = i1.Index(
+    'idx_recordings_project_recorded',
+    'CREATE INDEX idx_recordings_project_recorded ON local_recordings (project_id, recorded_at)',
+  );
+  final i1.Index idxRecordingsStatusRecorded = i1.Index(
+    'idx_recordings_status_recorded',
+    'CREATE INDEX idx_recordings_status_recorded ON local_recordings (upload_status, recorded_at)',
+  );
+  final i1.Index idxRecordingsServerId = i1.Index(
+    'idx_recordings_server_id',
+    'CREATE INDEX idx_recordings_server_id ON local_recordings (server_id)',
+  );
+  final i1.Index idxRecordingsStorytellerId = i1.Index(
+    'idx_recordings_storyteller_id',
+    'CREATE INDEX idx_recordings_storyteller_id ON local_recordings (storyteller_id)',
+  );
+  final i1.Index idxStorytellersProjectId = i1.Index(
+    'idx_storytellers_project_id',
+    'CREATE INDEX idx_storytellers_project_id ON local_storytellers (project_id)',
+  );
+}
+
+class Shape14 extends i0.VersionedTable {
+  Shape14({required super.source, required super.alias}) : super.aliased();
+  i1.GeneratedColumn<String> get id =>
+      columnsByName['id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get projectId =>
+      columnsByName['project_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get genreId =>
+      columnsByName['genre_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get subcategoryId =>
+      columnsByName['subcategory_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get registerId =>
+      columnsByName['register_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get storytellerId =>
+      columnsByName['storyteller_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get userId =>
+      columnsByName['user_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<DateTime> get startedAt =>
+      columnsByName['started_at']! as i1.GeneratedColumn<DateTime>;
+  i1.GeneratedColumn<DateTime> get lastCheckpointAt =>
+      columnsByName['last_checkpoint_at']! as i1.GeneratedColumn<DateTime>;
+  i1.GeneratedColumn<String> get status =>
+      columnsByName['status']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<double> get totalDurationSeconds =>
+      columnsByName['total_duration_seconds']! as i1.GeneratedColumn<double>;
+  i1.GeneratedColumn<String> get segmentPathsJson =>
+      columnsByName['segment_paths_json']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<bool> get isPaused =>
+      columnsByName['is_paused']! as i1.GeneratedColumn<bool>;
+  i1.GeneratedColumn<int> get lastSegmentIndex =>
+      columnsByName['last_segment_index']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get finalizedAudioPath =>
+      columnsByName['finalized_audio_path']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<double> get finalizedDurationSeconds =>
+      columnsByName['finalized_duration_seconds']!
+          as i1.GeneratedColumn<double>;
+}
+
+i1.GeneratedColumn<String> _column_53(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'finalized_audio_path',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.string,
+    );
+i1.GeneratedColumn<double> _column_54(String aliasedName) =>
+    i1.GeneratedColumn<double>(
+      'finalized_duration_seconds',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.double,
+    );
 i0.MigrationStepWithVersion migrationSteps({
   required Future<void> Function(i1.Migrator m, Schema2 schema) from1To2,
   required Future<void> Function(i1.Migrator m, Schema3 schema) from2To3,
@@ -2427,6 +2646,7 @@ i0.MigrationStepWithVersion migrationSteps({
   required Future<void> Function(i1.Migrator m, Schema11 schema) from10To11,
   required Future<void> Function(i1.Migrator m, Schema12 schema) from11To12,
   required Future<void> Function(i1.Migrator m, Schema13 schema) from12To13,
+  required Future<void> Function(i1.Migrator m, Schema14 schema) from13To14,
 }) {
   return (currentVersion, database) async {
     switch (currentVersion) {
@@ -2490,6 +2710,11 @@ i0.MigrationStepWithVersion migrationSteps({
         final migrator = i1.Migrator(database, schema);
         await from12To13(migrator, schema);
         return 13;
+      case 13:
+        final schema = Schema14(database: database);
+        final migrator = i1.Migrator(database, schema);
+        await from13To14(migrator, schema);
+        return 14;
       default:
         throw ArgumentError.value('Unknown migration from $currentVersion');
     }
@@ -2509,6 +2734,7 @@ i1.OnUpgrade stepByStep({
   required Future<void> Function(i1.Migrator m, Schema11 schema) from10To11,
   required Future<void> Function(i1.Migrator m, Schema12 schema) from11To12,
   required Future<void> Function(i1.Migrator m, Schema13 schema) from12To13,
+  required Future<void> Function(i1.Migrator m, Schema14 schema) from13To14,
 }) => i0.VersionedSchema.stepByStepHelper(
   step: migrationSteps(
     from1To2: from1To2,
@@ -2523,5 +2749,6 @@ i1.OnUpgrade stepByStep({
     from10To11: from10To11,
     from11To12: from11To12,
     from12To13: from12To13,
+    from13To14: from13To14,
   ),
 );
