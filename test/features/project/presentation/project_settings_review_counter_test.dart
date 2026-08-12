@@ -82,7 +82,7 @@ class _FakeSyncNotifier extends SyncNotifier {
   SyncState build() => const SyncState(isOnline: true);
 }
 
-Future<void> pumpScreen(
+Future<void> _pumpScreen(
   WidgetTester tester,
   _FakeProjectRepository repo,
 ) async {
@@ -104,7 +104,7 @@ Future<void> pumpScreen(
 
 void main() {
   testWidgets('what the server counted reaches the screen', (tester) async {
-    await pumpScreen(
+    await _pumpScreen(
       tester,
       _FakeProjectRepository(
         stats: const ProjectStats(
@@ -122,7 +122,7 @@ void main() {
   testWidgets('the screen shows recordings, not the sum of their gaps', (
     tester,
   ) async {
-    await pumpScreen(
+    await _pumpScreen(
       tester,
       _FakeProjectRepository(
         stats: const ProjectStats(
@@ -145,7 +145,7 @@ void main() {
   testWidgets('a project with nothing outstanding still renders the row', (
     tester,
   ) async {
-    await pumpScreen(
+    await _pumpScreen(
       tester,
       _FakeProjectRepository(
         stats: const ProjectStats(
@@ -161,7 +161,7 @@ void main() {
   testWidgets('a failed stats call costs the counter, not the screen', (
     tester,
   ) async {
-    await pumpScreen(tester, _FakeProjectRepository(throwOnStats: true));
+    await _pumpScreen(tester, _FakeProjectRepository(throwOnStats: true));
 
     // Best-effort: the counter is the only thing that depends on the fetch.
     expect(find.text(_l10n.projectStats_needsDetails), findsNothing);
