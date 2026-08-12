@@ -357,8 +357,9 @@ Path: @/lib/features/recording/data/repositories
   list. `SyncNotifier.clearLocalCache`
   ([../../../sync/docs.md](../../../sync/docs.md)) is the sole caller: it
   filters the local rows down to the subset `serverHasRecording`
-  ([../../domain/docs.md](../../domain/docs.md)) says the server already has,
-  then deletes exactly those rows in one pass. It replaced
+  ([../../domain/docs.md](../../domain/docs.md)) says the server already has
+  **and** that owes no unsent metadata edit (ENG-416), then deletes exactly
+  those rows in one pass. It replaced
   `deleteAllRecordings` (a bare `DELETE` over the whole table), which had
   exactly one caller — the pre-ENG-407 cache clear, which deleted every row
   regardless of upload status — and was removed once that caller started

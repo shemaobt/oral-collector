@@ -18,6 +18,7 @@ import 'package:oral_collector/core/database/app_database.dart';
 import 'package:oral_collector/core/platform/file_ops.dart' as file_ops;
 import 'package:oral_collector/features/recording/data/providers.dart';
 import 'package:oral_collector/features/recording/data/repositories/local_recording_repository.dart';
+import 'package:oral_collector/features/recording/domain/entities/pending_metadata_field.dart';
 import 'package:oral_collector/features/sync/data/providers.dart';
 import 'package:oral_collector/features/sync/domain/repositories/connectivity_service.dart';
 import 'package:oral_collector/features/sync/domain/repositories/sync_engine.dart';
@@ -71,6 +72,8 @@ void main() {
     String id, {
     required String uploadStatus,
     String? serverId,
+    String metadataSyncStatus = MetadataSyncStatus.synced,
+    Set<PendingMetadataField> owes = const {},
   }) async {
     final file = File('${dir.path}/$id.m4a')
       ..writeAsBytesSync(List.filled(8, 0));
@@ -84,6 +87,8 @@ void main() {
         uploadStatus: Value(uploadStatus),
         serverId: Value(serverId),
         recordedAt: Value(DateTime.utc(2026, 8, 1)),
+        metadataSyncStatus: Value(metadataSyncStatus),
+        pendingMetadataJson: Value(encodePendingMetadataFields(owes)),
       ),
     );
     return (id: id, file: file);
@@ -244,6 +249,79 @@ void main() {
       expect(count, 1);
     },
   );
+
+  test('a recording owing an unsent edit survives the clear', () async {
+    // ENG-416: the server has the audio, so the old criterion discarded this
+    // row — but the edit the user typed exists on this device and nowhere
+    // else, and dropping the row destroys it.
+    final owesEdit = await seed(
+      'owes-edit',
+      uploadStatus: 'verified',
+      serverId: 'srv-owes',
+      metadataSyncStatus: MetadataSyncStatus.pending,
+      owes: {PendingMetadataField.title},
+    );
+    final owesNothing = await seed(
+      'owes-nothing',
+      uploadStatus: 'verified',
+      serverId: 'srv-nothing',
+    );
+
+    final count = await (await notifier()).clearLocalCache();
+
+    await expectSurvived(owesEdit);
+    await expectDiscarded(owesNothing);
+    expect(count, 1);
+  });
+
+  test(
+    'an edit the server refused for permission does not keep the copy',
+    () async {
+      // `failed_forbidden` is the one terminal edit with no way out from this
+      // device: the user cannot grant themselves permission, so the edit has no
+      // destination — the same reason a 404 lets the heal path erase a row.
+      // Keeping the copy for it would make a recording the clear can never
+      // discard.
+      final forbidden = await seed(
+        'forbidden',
+        uploadStatus: 'verified',
+        serverId: 'srv-forbidden',
+        metadataSyncStatus: MetadataSyncStatus.failedForbidden,
+        owes: {PendingMetadataField.title},
+      );
+
+      final count = await (await notifier()).clearLocalCache();
+
+      await expectDiscarded(forbidden);
+      expect(count, 0);
+    },
+  );
+
+  test('a terminal edit the user can still push survives the clear', () async {
+    // Both of these are recoverable from the phone — a rename lifts the clash,
+    // a fresh edit revives the spent budget — so the edit can still reach the
+    // server and the clear must not destroy it first.
+    final conflict = await seed(
+      'conflict',
+      uploadStatus: 'verified',
+      serverId: 'srv-conflict',
+      metadataSyncStatus: MetadataSyncStatus.failedConflict,
+      owes: {PendingMetadataField.title},
+    );
+    final exhausted = await seed(
+      'exhausted',
+      uploadStatus: 'verified',
+      serverId: 'srv-exhausted',
+      metadataSyncStatus: MetadataSyncStatus.failedExhausted,
+      owes: {PendingMetadataField.description},
+    );
+
+    final count = await (await notifier()).clearLocalCache();
+
+    await expectSurvived(conflict);
+    await expectSurvived(exhausted);
+    expect(count, 2);
+  });
 
   test('the pending count reflects what stayed behind', () async {
     await seed('kept-failed', uploadStatus: 'failed');

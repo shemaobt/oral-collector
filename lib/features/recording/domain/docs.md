@@ -299,11 +299,12 @@ Path: @/lib/features/recording/domain
     [../presentation/notifiers/docs.md](../presentation/notifiers/docs.md)) —
     only a recording the server acknowledged can be *missing* from it.
   - **`SyncNotifier.clearLocalCache`** (ENG-407, `@/lib/features/sync/docs.md`)
-    treats it as *sufficient* on its own: no 404 confirmation, because a cache
-    clear never asks the server anything. Getting it wrong there is asymmetric
-    by design — keeping a copy the server already has costs disk space,
-    dropping one it does not costs the recording, which is why both conditions
-    are required rather than either alone.
+    asks the server nothing — no 404 confirmation — and since ENG-416 pairs it
+    with a condition of its own instead: the row must also owe no unsent
+    metadata edit. Getting it wrong there is asymmetric by design — keeping a
+    copy the server already has costs disk space, dropping one it does not
+    costs the recording, which is why the conditions are required together
+    rather than any one alone.
 
   Resist cloning this condition for a third caller. ENG-407 first shipped a
   second copy of it in `upload_status_actions.dart` and that was reverted: a
@@ -311,6 +312,20 @@ Path: @/lib/features/recording/domain
   other, and the cost of forgetting is lost audio. If a future caller needs a
   different rule, it needs a different *rule*, not a copy of this one. (PR #193
   was an earlier, abandoned attempt at the ENG-407 fix.)
+
+  **ENG-416 is the worked example of "a different rule", and of where it
+  belongs.** The cache had to start keeping a recording that owes an unsent
+  metadata edit even though the server has its audio. That condition was
+  *composed* around this predicate at the cache's call site — never folded
+  into it — because the two are different questions that share a term. This
+  one is factual and the heal paths depend on exactly its current meaning:
+  there, a confirmed 404 authorizes erasing the row, and owing an edit is
+  irrelevant, since an edit to a recording the server no longer has cannot go
+  anywhere. Widening this predicate to mean "…and owes nothing" would quietly
+  teach the heal paths to keep rows for edits that can never be sent. Note the
+  direction is the opposite of ENG-407's unification, and deliberately: ENG-407
+  found the same question written twice; ENG-416 found two questions that
+  happened to share a term.
 
 ### Things to Know
 
