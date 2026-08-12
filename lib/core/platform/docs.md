@@ -113,6 +113,19 @@ Path: @/lib/core/platform
   `readFileChunk` on web truncates at the end of the stored bytes instead of
   throwing `RangeError` for an offset/length past the end, matching how a
   native `RandomAccessFile.read` past EOF behaves.
+- **Known gap: abandoned web bytes have nothing pointing at them (ENG-421
+  follow-up).** On web the `LocalRecordings` row is written only *after* the
+  upload succeeds, so two paths leave bytes in `oral_collector_files` with no
+  handle: someone records, reaches the confirmation step and reloads before
+  saving; or the upload fails and they close the tab. Nothing sweeps keys
+  without a matching row. These orphans are not purely a new defect — they are
+  the side effect of the very thing this storage exists to guarantee, that the
+  audio outlives a reload. What is missing is not the persistence but a surface
+  that finds those bytes again and a sweeper that collects the abandoned ones.
+  That is its own slice, and it has the same shape as ENG-420 on device: a
+  durable artifact with nothing pointing at it. The two paths that *do* have a
+  handle are cleaned: `ConfirmationStep` deletes after a successful upload and
+  on discard, and the export temp key is deleted after the share.
 - **`WebFileStore`'s `IdbFactory` is the only test seam for the web file
   path.** Production wires `idbFactoryNative` from `idb_shim`, which throws
   where IndexedDB is unavailable (private browsing, storage blocked by

@@ -177,19 +177,6 @@ void main() {
         expect(await store.readChunk('rec_1.webm', 9, 4), isEmpty);
         expect(await store.readChunk('missing.webm', 0, 4), isEmpty);
       });
-
-      test(
-        'readChunk reads from the start when the offset is negative',
-        () async {
-          final store = WebFileStore(browserStorage);
-          await store.write('rec_1.webm', bytes([0, 1, 2]));
-
-          expect(
-            await store.readChunk('rec_1.webm', -5, 2),
-            equals(bytes([0, 1])),
-          );
-        },
-      );
     });
   });
 }

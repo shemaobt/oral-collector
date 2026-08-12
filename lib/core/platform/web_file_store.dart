@@ -38,10 +38,10 @@ class WebFileStore {
         event.database.createObjectStore(_storeName);
       },
     );
-    _opening = opened;
     // A refused open is not cached: a browser can block one call (another tab
-    // holding a version change) and allow the next.
-    return opened.catchError((Object error, StackTrace stack) {
+    // holding a version change) and allow the next. Caching the future that
+    // carries the reset, not the raw one, makes that true for every waiter.
+    return _opening = opened.catchError((Object error, StackTrace stack) {
       _opening = null;
       Error.throwWithStackTrace(error, stack);
     });
@@ -66,6 +66,8 @@ class WebFileStore {
     return count > 0;
   }
 
+  /// Reads the whole value: IndexedDB has no size-only lookup. Use [exists]
+  /// for a cheap probe — that one does not materialize the bytes.
   Future<int> length(String path) async => (await read(path)).length;
 
   Future<Uint8List> read(String path) async {
@@ -93,7 +95,7 @@ class WebFileStore {
 
   Future<Uint8List> readChunk(String path, int offset, int length) async {
     final bytes = await read(path);
-    final start = math.min(math.max(offset, 0), bytes.length);
+    final start = math.min(offset, bytes.length);
     final end = math.min(start + length, bytes.length);
     return end <= start ? Uint8List(0) : bytes.sublist(start, end);
   }

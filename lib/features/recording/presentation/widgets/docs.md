@@ -496,7 +496,10 @@ Path: @/lib/features/recording/presentation/widgets
   recording and never be collected without this delete. The delete is wrapped
   in its own try/catch with `_log.warning` so a cleanup failure is never
   reported to the user as a failed upload — the upload already succeeded by
-  that point.
+  that point. It runs after the local row is written, matching how the rest of
+  the codebase deletes only once the database is consistent. The paths that do
+  *not* end in a successful upload still leave bytes behind — see the known gap
+  in [/lib/core/platform/docs.md](../../../../core/platform/docs.md).
 - **`ConfirmationStep` cancels its own preview-player stream subscriptions
   on dispose (ENG-140 F16).** Its inline `AudioPlayer` preview subscribes to
   `playerStateStream` / `positionStream` / `durationStream`; those handles are
