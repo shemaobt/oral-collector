@@ -377,7 +377,7 @@
   "profile_clearCacheTitle": "로컬 캐시를 삭제하시겠습니까?",
   "profile_clearCacheMessage": "서버에 이미 있는 로컬 저장 녹음이 삭제됩니다. 아직 업로드되지 않은 녹음은 이 기기에 그대로 남습니다.",
   "profile_cacheCleared": "로컬 캐시가 삭제되었습니다",
-  "profile_cacheClearedKept": "{count, plural, =1{로컬 캐시가 삭제되었습니다. 아직 업로드되지 않은 녹음 1개는 유지했습니다.} other{로컬 캐시가 삭제되었습니다. 아직 업로드되지 않은 녹음 {count}개는 유지했습니다.}}",
+  "profile_cacheClearedKept": "{count, plural, =1{로컬 캐시가 삭제되었습니다. 아직 업로드되지 않아 녹음 1개는 유지했습니다.} other{로컬 캐시가 삭제되었습니다. 아직 업로드되지 않아 녹음 {count}개는 유지했습니다.}}",
   "profile_cacheKeptUnsent": "{count, plural, =1{아직 업로드되지 않아 녹음 1개는 유지했습니다.} other{아직 업로드되지 않아 녹음 {count}개는 유지했습니다.}}",
   "profile_cacheNotFreed": "{count, plural, =1{녹음 1개를 삭제하지 못해 그만큼의 공간이 확보되지 않았습니다.} other{녹음 {count}개를 삭제하지 못해 그만큼의 공간이 확보되지 않았습니다.}}",
   "profile_joinedSuccess": "\"{name}\"에 성공적으로 참여했습니다",

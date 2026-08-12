@@ -1109,8 +1109,8 @@ class AppLocalizationsKo extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '로컬 캐시가 삭제되었습니다. 아직 업로드되지 않은 녹음 $count개는 유지했습니다.',
-      one: '로컬 캐시가 삭제되었습니다. 아직 업로드되지 않은 녹음 1개는 유지했습니다.',
+      other: '로컬 캐시가 삭제되었습니다. 아직 업로드되지 않아 녹음 $count개는 유지했습니다.',
+      one: '로컬 캐시가 삭제되었습니다. 아직 업로드되지 않아 녹음 1개는 유지했습니다.',
     );
     return '$_temp0';
   }
