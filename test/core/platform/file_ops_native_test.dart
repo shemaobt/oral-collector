@@ -5,6 +5,10 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:oral_collector/core/platform/file_ops.dart' as file_ops;
 
+/// `flutter test` runs on the Dart VM, so the conditional export in
+/// `file_ops.dart` resolves to the native implementation here no matter what
+/// this file is called. The web implementation is covered through its storage
+/// seam in `web_file_store_test.dart`.
 void main() {
   group('file_ops (native)', () {
     test('fileExists returns false for nonexistent file', () async {
