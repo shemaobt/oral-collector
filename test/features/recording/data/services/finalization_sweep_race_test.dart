@@ -140,7 +140,8 @@ void main() {
   }
 
   /// Runs the real finalizer the way _stopNative does, then records the
-  /// success the way _stopNative does (markCompleted).
+  /// success the way _stopNative does: since ENG-420 slice 1 that means
+  /// anchoring the row to the finalized file and completing in one call.
   Future<FinalizationOutcome?> finalizeAndComplete(
     List<String> paths, {
     required DeleteFn deleteFn,
@@ -162,7 +163,13 @@ void main() {
       segmentPaths: paths,
       totalDuration: const Duration(minutes: 18),
     );
-    await repo.markCompleted(sessionId);
+    if (outcome != null) {
+      await repo.completeWithFinalizedAudio(
+        sessionId,
+        filePath: outcome.result.filePath,
+        durationSeconds: outcome.result.durationSeconds,
+      );
+    }
     return outcome;
   }
 
@@ -173,10 +180,10 @@ void main() {
     );
   }
 
-  group('ENG-408: the recovery offer for a finalized session is a race', () {
+  group('ENG-420: the recovery offer no longer races the source deletions', () {
     test(
-      'sweep re-marks a SUCCESSFULLY finalized session as crashed when it runs '
-      'before the fire-and-forget source deletions land',
+      'a successfully finalized session with no saved recording is offered '
+      'when the sweep runs BEFORE the fire-and-forget deletions land',
       () async {
         final paths = await seedRecordedSession();
         // finalize() fires the source deletions with unawaited(); this gate
@@ -201,8 +208,8 @@ void main() {
           (await repo.getById(sessionId))?.status,
           'crashed',
           reason:
-              'the recording finalized fine, yet the sweep offers it for '
-              'recovery purely because the deletions had not landed',
+              'finalized audio that nothing saved is unfinished business, so '
+              'it is offered back to the user',
         );
         expect(
           container.read(interruptedSessionsProvider).map((s) => s.sessionId),
@@ -214,9 +221,8 @@ void main() {
       },
     );
 
-    test('the confirmation-form window on its own does NOT produce the banner: '
-        'once the deletions land the sweep leaves the session alone — and the '
-        'finished audio is then unreachable', () async {
+    test('the SAME session gets the SAME classification once the deletions '
+        'have landed — same inputs, same outcome, no longer a race', () async {
       final paths = await seedRecordedSession();
       final outcome = await finalizeAndComplete(
         paths,
@@ -234,25 +240,22 @@ void main() {
 
       expect(
         (await repo.getById(sessionId))?.status,
-        'completed',
-        reason: 'same inputs, same success — opposite classification',
+        'crashed',
+        reason: 'same inputs, same success — and now the same classification',
       );
       expect(
         container.read(interruptedSessionsProvider).map((s) => s.sessionId),
-        isNot(contains(sessionId)),
+        contains(sessionId),
       );
-      // Nothing references the finalized file: no LocalRecording row (the
-      // user never got to the save form) and no recovery offer either.
-      expect(
-        File(outcome!.result.filePath).existsSync(),
-        isTrue,
-        reason: '18 minutes of audio sitting on disk that nothing points at',
-      );
+      // The 18 minutes are still on disk, and now something points at them:
+      // the session row itself, which is what put the offer back in front of
+      // the user instead of letting the audio go quiet.
+      expect(File(outcome!.result.filePath).existsSync(), isTrue);
     });
 
     test(
       'when both concat paths fail, finalize deletes NOTHING — every segment '
-      'is leaked and re-offers the session for recovery on every launch',
+      'is leaked, and the degraded result keeps being offered on every launch',
       () async {
         final paths = await seedRecordedSession();
         // A rotation cut short by a full disk leaves a truncated segment; the
@@ -287,14 +290,16 @@ void main() {
           expect(
             (await repo.getById(sessionId))?.status,
             'crashed',
-            reason: 'launch $launch still sees the leaked segments',
+            reason:
+                'launch $launch still finds audio no recording saved — the '
+                'leaked segments are no longer what decides it',
           );
         }
       },
     );
 
-    test('a source deletion that permanently fails makes the misclassification '
-        'permanent rather than racy', () async {
+    test('a source deletion that permanently fails no longer changes the '
+        'classification — the offer stands on the anchor either way', () async {
       final paths = await seedRecordedSession();
       await finalizeAndComplete(
         paths,
@@ -309,7 +314,9 @@ void main() {
         expect(
           (await repo.getById(sessionId))?.status,
           'crashed',
-          reason: 'launch $launch re-offers a recording that finalized fine',
+          reason:
+              'launch $launch offers it because the audio is there and '
+              'unsaved, not because the sources happened to survive',
         );
       }
     });
