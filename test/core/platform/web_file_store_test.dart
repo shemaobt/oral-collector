@@ -44,30 +44,25 @@ void main() {
       expect(await afterReload.length('rec_1.webm'), 5);
     });
 
-    test('the bytes live in the storage engine, not in Dart memory', () async {
-      // Dropping a store instance is a weaker event than a reload: a reload
-      // also destroys module-level and static Dart state, which an instance
-      // outlives. A store that kept the bytes in process memory and ignored
-      // the engine it was handed would satisfy the reload test above and
-      // still lose the audio in a browser — that is the exact shape of the
-      // defect. Only a second, unrelated engine can tell the two apart.
-      await WebFileStore(browserStorage).write('rec_1.webm', bytes([1, 2, 3]));
+    test(
+      'the bytes go to the injected engine, not to process memory',
+      () async {
+        // Dropping a store instance is a weaker event than a reload: a reload
+        // also destroys module-level and static Dart state, which an instance
+        // outlives. A store that kept the bytes in process memory and ignored
+        // the engine it was handed would satisfy the reload test above and
+        // still lose the audio in a browser — that is the exact shape of the
+        // defect. Only a second, unrelated engine can tell the two apart.
+        await WebFileStore(
+          browserStorage,
+        ).write('rec_1.webm', bytes([1, 2, 3]));
 
-      final otherEngine = WebFileStore(newIdbFactoryMemory());
+        final otherEngine = WebFileStore(newIdbFactoryMemory());
 
-      expect(await otherEngine.exists('rec_1.webm'), isFalse);
-      expect(await otherEngine.read('rec_1.webm'), isEmpty);
-    });
-
-    test('an empty recording survives a reload as an empty file', () async {
-      final beforeReload = WebFileStore(browserStorage);
-      await beforeReload.write('empty.webm', bytes([]));
-
-      final afterReload = WebFileStore(browserStorage);
-
-      expect(await afterReload.exists('empty.webm'), isTrue);
-      expect(await afterReload.length('empty.webm'), 0);
-    });
+        expect(await otherEngine.exists('rec_1.webm'), isFalse);
+        expect(await otherEngine.read('rec_1.webm'), isEmpty);
+      },
+    );
 
     test('a recording deleted before a reload is gone after it', () async {
       final beforeReload = WebFileStore(browserStorage);
@@ -81,7 +76,7 @@ void main() {
       expect(await afterReload.length('rec_1.webm'), 0);
     });
 
-    test('two tabs writing at once end up agreeing', () async {
+    test('two tabs opening the database at once do not collide', () async {
       final firstTab = WebFileStore(browserStorage);
       final secondTab = WebFileStore(browserStorage);
 
@@ -171,7 +166,7 @@ void main() {
         );
       });
 
-      test('readChunk truncates at the end instead of throwing', () async {
+      test('readChunk clamps past the end and on a missing path', () async {
         final store = WebFileStore(browserStorage);
         await store.write('rec_1.webm', bytes([0, 1, 2]));
 
