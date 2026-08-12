@@ -338,7 +338,12 @@ Path: @/lib/features/recording/data/repositories
   drains: it matches `metadataSyncStatus = 'pending'` **and** a non-empty
   `serverId` — the `serverId` clause is a correctness condition, not a
   defence, because a recording with no server copy has nothing to PATCH; its
-  metadata rides along on the eventual create call instead.
+  metadata rides along on the eventual create call instead. Since ENG-418 it
+  has a second caller, `SyncNotifier._refreshPendingCount`
+  ([../../../sync/docs.md](../../../sync/docs.md)), which unions it with
+  `getPendingUploads` for the header badge — sharing this query rather than
+  writing a second condition is what makes the badge count exactly the edits
+  the drain will pick up.
   `markMetadataSyncFailed` spends one retry and owns the ceiling
   (`kMaxUploadRetries`, the same constant `markAsFailed` reads), mirroring
   that method's shape; `markMetadataSyncTerminal` parks the row outside the

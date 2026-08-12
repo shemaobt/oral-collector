@@ -311,10 +311,13 @@ class SyncNotifier extends Notifier<SyncState> {
       // this return is what the engine's own exemption would never be reached
       // through, so the drain is asked for explicitly here. `blockReason` still
       // says Wi-Fi, and truthfully — it describes the uploads, which really are
-      // waiting. Nothing else is written: `lastSyncAt` and `syncProgress` would
-      // report a queue run that did not happen, and `pendingCount` counts
-      // uploads, which this drain does not change.
+      // waiting. `lastSyncAt` and `syncProgress` stay untouched: they would
+      // report a queue run that did not happen. The count is refreshed after
+      // the drain because it now includes pending edits (ENG-418), and this
+      // branch is one where they really do go up — leaving the pre-gate number
+      // would keep counting an edit that just landed.
       await _syncEngine.processPendingMetadata();
+      await _refreshPendingCount();
       state = state.copyWith(blockReason: SyncBlockReason.wifiOnly);
       return;
     }
@@ -400,11 +403,30 @@ class SyncNotifier extends Notifier<SyncState> {
     );
   }
 
+  /// The header's number is every recording with work still outstanding: an
+  /// upload to send, a metadata edit to push, or both (ENG-418). The union is by
+  /// recording id, so the row that owes both — what
+  /// `replaceAudioAndQueueResend` writes — is counted once.
+  ///
+  /// Only `pending` edits count, which is exactly what the drain will pick up.
+  /// A terminal edit needs the user, not another pass, and the upload queue
+  /// already draws that line the same way: `getPendingUploads` leaves its own
+  /// terminal states out so the badge never counts work no drain can move
+  /// (ENG-377). The card's metadata mark is what surfaces those.
+  ///
+  /// [SyncState.totalQueueSizeBytes] deliberately stays the uploads' sum. It is
+  /// the "how much is left to transfer" figure, and a metadata PATCH is a few
+  /// hundred bytes — adding the audio size of a recording the server already
+  /// holds would inflate it by a file that is never going up.
   Future<void> _refreshPendingCount() async {
-    final pending = await _recordingRepo.getPendingUploads();
+    final (pending, owingEdits) = await (
+      _recordingRepo.getPendingUploads(),
+      _recordingRepo.getPendingMetadataSyncs(),
+    ).wait;
     final totalBytes = pending.fold(0, (sum, r) => sum + r.fileSizeBytes);
+    final owing = {...pending.map((r) => r.id), ...owingEdits.map((r) => r.id)};
     state = state.copyWith(
-      pendingCount: pending.length,
+      pendingCount: owing.length,
       totalQueueSizeBytes: totalBytes,
     );
   }
