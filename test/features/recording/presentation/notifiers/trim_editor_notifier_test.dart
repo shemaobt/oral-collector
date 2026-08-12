@@ -13,6 +13,7 @@ import 'package:oral_collector/core/errors/app_exception.dart';
 import 'package:oral_collector/features/recording/data/providers.dart';
 import 'package:oral_collector/features/recording/data/repositories/local_recording_repository.dart';
 import 'package:oral_collector/features/recording/data/services/local_segment_exporter.dart';
+import 'package:oral_collector/features/recording/data/services/recording_boost_persister.dart';
 import 'package:oral_collector/features/recording/data/services/recording_split_persister.dart';
 import 'package:oral_collector/features/recording/domain/entities/local_recording_entity.dart';
 import 'package:oral_collector/features/recording/domain/entities/server_recording.dart';
@@ -26,10 +27,25 @@ import 'package:oral_collector/features/sync/presentation/notifiers/sync_state.d
 
 const recordingId = 'rec-1';
 
+/// What the exporter returns for a boost-only save: the whole clip, re-encoded.
+const boostedSpec = SplitSegmentSpec(
+  id: 'c0',
+  title: 'Story',
+  localFilePath: '/out/boosted.m4a',
+  durationSeconds: 10,
+  fileSizeBytes: 2048,
+);
+
+/// Stands in for the server, holding the set of recordings it knows about, so a
+/// test can ask what survived a save rather than which methods were called.
 class _FakeApiRepo implements RecordingApiRepository {
-  _FakeApiRepo({this.getRecordingImpl});
+  _FakeApiRepo({this.getRecordingImpl, Set<String>? serverRecordings})
+    : serverRecordings = serverRecordings ?? <String>{};
 
   final Future<ServerRecording> Function(String id)? getRecordingImpl;
+
+  /// The ids the server still has.
+  final Set<String> serverRecordings;
 
   String? splitServerId;
   List<SplitSegmentRequest>? splitSegments;
@@ -39,6 +55,10 @@ class _FakeApiRepo implements RecordingApiRepository {
       (getRecordingImpl ?? (_) => throw StateError('getRecording unexpected'))(
         id,
       );
+
+  @override
+  Future<bool> deleteRecording(String serverId) async =>
+      serverRecordings.remove(serverId);
 
   @override
   Future<List<String>> splitRecording({
@@ -160,6 +180,7 @@ void main() {
     RecordingApiRepository? api,
     _ExporterSpy? exporter,
     _FakePersister Function(_FakePersister)? capturePersister,
+    bool useRealSplitPersister = false,
   }) {
     final container = ProviderContainer(
       overrides: [
@@ -168,6 +189,29 @@ void main() {
         syncNotifierProvider.overrideWith(_FakeSyncNotifier.new),
         if (exporter != null)
           localSegmentExporterProvider.overrideWithValue(exporter.call),
+        // Both persisters run for real against the in-memory database, minus
+        // the one seam a VM test cannot have: archiving the replaced file needs
+        // the documents directory, which is a platform channel.
+        recordingBoostPersisterProvider.overrideWithValue(
+          ({required localRepo, required triggerUpload, trashPrevious}) =>
+              RecordingBoostPersister(
+                localRepo: localRepo,
+                triggerUpload: triggerUpload,
+              ),
+        ),
+        if (useRealSplitPersister)
+          recordingSplitPersisterProvider.overrideWithValue(
+            ({
+              required localRepo,
+              required apiRepo,
+              required triggerUpload,
+              trashParent,
+            }) => RecordingSplitPersister(
+              localRepo: localRepo,
+              apiRepo: apiRepo,
+              triggerUpload: triggerUpload,
+            ),
+          ),
         if (capturePersister != null)
           recordingSplitPersisterProvider.overrideWithValue(
             ({
@@ -361,6 +405,13 @@ void main() {
       notifierOf(c).setSplitPoints([0.5]);
     }
 
+    /// A gain change and no cut points — the mode the editor calls boost-only.
+    Future<void> prepareBoostOnlyState(ProviderContainer c) async {
+      await notifierOf(c).load(isWeb: false);
+      notifierOf(c).completeLoad(totalDuration: const Duration(seconds: 10));
+      notifierOf(c).setGain(3.0);
+    }
+
     test(
       'native: exports kept segments and hands them to the persister',
       () async {
@@ -427,19 +478,9 @@ void main() {
       'native boost-only: exports the whole clip as a single segment',
       () async {
         await seed();
-        final exporter = _ExporterSpy.returning(const [
-          SplitSegmentSpec(
-            id: 'c0',
-            title: 'Story',
-            localFilePath: '/out/0.m4a',
-            durationSeconds: 10,
-            fileSizeBytes: 10,
-          ),
-        ]);
-        final c = makeContainer(exporter: exporter, capturePersister: (p) => p);
-        await notifierOf(c).load(isWeb: false);
-        notifierOf(c).completeLoad(totalDuration: const Duration(seconds: 10));
-        notifierOf(c).setGain(3.0); // boost only, no splits
+        final exporter = _ExporterSpy.returning(const [boostedSpec]);
+        final c = makeContainer(exporter: exporter);
+        await prepareBoostOnlyState(c);
 
         final outcome = await notifierOf(
           c,
@@ -451,6 +492,89 @@ void main() {
         expect((outcome as TrimSaveSucceeded).mode, TrimSaveMode.boostOnly);
       },
     );
+
+    // ENG-402. A save with no cut points is not a split: it updates the story
+    // it was opened on. It used to delete that story and insert a new one, and
+    // the matching remote delete is best-effort — so an offline boost left the
+    // server holding two live recordings and the project counted the story
+    // twice.
+    group('native boost-only keeps the recording it edited', () {
+      test('one row survives, with the same id and serverId', () async {
+        await seed(serverId: 'srv-1');
+        final c = makeContainer(
+          exporter: _ExporterSpy.returning(const [boostedSpec]),
+        );
+        await prepareBoostOnlyState(c);
+
+        await notifierOf(c).saveSplit(isWeb: false, localeTag: 'en');
+
+        final all = await repo.getAllLocalRecordings();
+        expect(all, hasLength(1));
+        expect(all.single.id, recordingId);
+        expect(all.single.serverId, 'srv-1');
+      });
+
+      test('the row points at the boosted audio', () async {
+        await seed(serverId: 'srv-1');
+        final c = makeContainer(
+          exporter: _ExporterSpy.returning(const [boostedSpec]),
+        );
+        await prepareBoostOnlyState(c);
+
+        await notifierOf(c).saveSplit(isWeb: false, localeTag: 'en');
+
+        final row = (await repo.getRecordingById(recordingId))!;
+        expect(row.localFilePath, '/out/boosted.m4a');
+        expect(row.fileSizeBytes, 2048);
+      });
+
+      test('the server keeps the recording it already had', () async {
+        await seed(serverId: 'srv-1');
+        final api = _FakeApiRepo(serverRecordings: {'srv-1'});
+        final c = makeContainer(
+          api: api,
+          exporter: _ExporterSpy.returning(const [boostedSpec]),
+        );
+        await prepareBoostOnlyState(c);
+
+        await notifierOf(c).saveSplit(isWeb: false, localeTag: 'en');
+
+        expect(api.serverRecordings, {'srv-1'});
+      });
+    });
+
+    test('native with cut points is still a split: the original is replaced '
+        'by its segments', () async {
+      await seed(serverId: 'srv-1');
+      final api = _FakeApiRepo(serverRecordings: {'srv-1'});
+      final c = makeContainer(
+        api: api,
+        useRealSplitPersister: true,
+        exporter: _ExporterSpy.returning(const [
+          SplitSegmentSpec(
+            id: 'c0',
+            title: 'Story (1/2)',
+            localFilePath: '/out/0.m4a',
+            durationSeconds: 5,
+            fileSizeBytes: 10,
+          ),
+          SplitSegmentSpec(
+            id: 'c1',
+            title: 'Story (2/2)',
+            localFilePath: '/out/1.m4a',
+            durationSeconds: 5,
+            fileSizeBytes: 10,
+          ),
+        ]),
+      );
+      await prepareEditableState(c);
+
+      await notifierOf(c).saveSplit(isWeb: false, localeTag: 'en');
+
+      final all = await repo.getAllLocalRecordings();
+      expect(all.map((r) => r.id), unorderedEquals(['c0', 'c1']));
+      expect(api.serverRecordings, isEmpty);
+    });
 
     test('aborts when there is nothing to save', () async {
       await seed();
