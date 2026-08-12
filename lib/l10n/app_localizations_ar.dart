@@ -2111,6 +2111,25 @@ class AppLocalizationsAr extends AppLocalizations {
       'حاولنا استرداد الصوت لكن لم تكن هناك أجزاء متاحة.';
 
   @override
+  String get recording_finalizationFailedBodyNoAudio =>
+      'لم يرجع أي صوت من المسجل.';
+
+  @override
+  String get recording_finalizationFailedBodyDownload =>
+      'تم تسجيل الصوت لكن تعذّرت إعادة قراءته.';
+
+  @override
+  String get recording_finalizationFailedBodyCaptureInterrupted =>
+      'توقّف التسجيل قبل أن تضغط على إيقاف، لذلك لم يُحفظ أي صوت.';
+
+  @override
+  String get recording_finalizationFailedBodyPipeline =>
+      'لم نتمكن من إنهاء معالجة هذا التسجيل. إنه محفوظ ضمن تسجيلاتك غير المحفوظة.';
+
+  @override
+  String get recording_finalizationErrorBack => 'رجوع';
+
+  @override
   String get recording_discardAndReturn => 'تجاهل والعودة';
 
   @override

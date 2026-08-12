@@ -257,6 +257,7 @@ class _RecordingStepState extends ConsumerState<RecordingStep>
                     stage: recState.finalizationStage,
                     hasError: true,
                     degraded: recState.finalizationDegraded,
+                    errorKind: recState.finalizationErrorKind,
                     onDiscard: notifier.dismissFinalizationError,
                   )
                 : Column(

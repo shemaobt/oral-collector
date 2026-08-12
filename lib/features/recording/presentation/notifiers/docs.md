@@ -640,6 +640,28 @@ Path: @/lib/features/recording/presentation/notifiers
   session. The `state.isRecording`/`isFinalizing` checks alone are insufficient
   because they can both still read `true` in the window before the first call
   flips them.
+- **Nothing else in the recording screen can tell you capture died, so the
+  notifier watches the recorder itself (ENG-408).** The elapsed counter is a
+  plain `Timer.periodic` and never consults the recorder; on web the waveform is
+  fed by the microphone stream through an `AudioContext` analyser, not by the
+  `MediaRecorder`. Both keep looking healthy after capture has ended, which is
+  how someone can watch a counter climb to eighteen minutes over a recorder that
+  stopped delivering long before. `_startWeb` therefore subscribes to
+  `AudioRecorder.onStateChanged()` and treats a `RecordState.stop` that nobody
+  asked for as `FinalizationErrorKind.captureInterrupted`: it cancels the
+  elapsed timer so the counter stops lying, and surfaces the error immediately.
+  The handler bails on `_isStopping` (the stop the user asked for emits the same
+  event) and on `!state.isRecording` (that flag is already cleared by then, and
+  it also covers the event arriving after `_isStopping` is reset in its
+  `finally`). Nothing can be salvaged at that point — `record_web`'s
+  `MediaRecorderDelegate` builds the object URL in a local, completes a null
+  `_onStopCompleter`, and resets its chunks *before* the state event reaches
+  us — so warning early is the whole mitigation.
+- **`isWebPlatformProvider` and `webAudioRecorderFactoryProvider` exist so the
+  browser capture path can be driven in VM tests**, where `kIsWeb` is always
+  false. They default to `kIsWeb` and `AudioRecorder.new`; only `startRecording`
+  and `stopRecording` read the platform flag, so the rest of the notifier still
+  branches on `kIsWeb` directly.
 - **A recovered session is only resolved after the user confirms — no
   silent data loss (ENG-80).** The materialization of a `local_recording`
   row happens *only* in `ConfirmationStep._save` (see

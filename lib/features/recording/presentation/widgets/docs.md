@@ -373,6 +373,17 @@ Path: @/lib/features/recording/presentation/widgets
 
 ### Things to Know
 
+- **`FinalizingOverlay`'s error body is chosen by `FinalizationErrorKind`, and
+  its button does not discard anything (ENG-408).** The screen used to render
+  one hardcoded pair of strings for every failure, so a browser recording that
+  produced no blob was told "we tried to recover the audio but no segments were
+  available" — segments do not exist on web, and the recovery it promised
+  cannot happen there. Pass `errorKind`; `_errorBody` maps each kind to copy
+  that is true for it, and the missing-segments wording survives only under
+  `noSegments`, where it is accurate. The action is labelled
+  `recording_finalizationErrorBack`, not "Discard and return", because
+  `dismissFinalizationError` only clears state — it deletes no audio, and on a
+  `finalizationFailed` the recording is still in the unsaved list.
 - **`RecordingCard`'s room is a trade, not free space (ENG-374, card V3).**
   The description line only fits because the upload-status chip gave up its
   visible text; the duration chip and the standalone "unclassified" chip are

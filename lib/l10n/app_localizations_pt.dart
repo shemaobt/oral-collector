@@ -2160,6 +2160,25 @@ class AppLocalizationsPt extends AppLocalizations {
       'Tentamos recuperar o áudio, mas nenhum segmento estava disponível.';
 
   @override
+  String get recording_finalizationFailedBodyNoAudio =>
+      'Nenhum áudio voltou do gravador.';
+
+  @override
+  String get recording_finalizationFailedBodyDownload =>
+      'O áudio foi gravado, mas não foi possível lê-lo de volta.';
+
+  @override
+  String get recording_finalizationFailedBodyCaptureInterrupted =>
+      'A gravação parou antes de você apertar parar, então nenhum áudio foi guardado.';
+
+  @override
+  String get recording_finalizationFailedBodyPipeline =>
+      'Não foi possível terminar de processar esta gravação. Ela está guardada nas suas gravações não salvas.';
+
+  @override
+  String get recording_finalizationErrorBack => 'Voltar';
+
+  @override
   String get recording_discardAndReturn => 'Descartar e voltar';
 
   @override

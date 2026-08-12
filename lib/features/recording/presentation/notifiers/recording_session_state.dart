@@ -12,6 +12,10 @@ enum FinalizationErrorKind {
   /// Web-only: downloading the blob URL failed.
   downloadFailed,
 
+  /// Web-only: the browser ended capture before the person pressed stop, so
+  /// there was never a blob to keep.
+  captureInterrupted,
+
   /// The finalization service threw mid-pipeline (concat, compress, file IO).
   finalizationFailed,
 }

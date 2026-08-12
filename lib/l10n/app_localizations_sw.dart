@@ -2137,6 +2137,25 @@ class AppLocalizationsSw extends AppLocalizations {
       'Tulijaribu kurejesha sauti lakini hakuna sehemu zilizopatikana.';
 
   @override
+  String get recording_finalizationFailedBodyNoAudio =>
+      'Hakuna sauti iliyorudi kutoka kwa kinasa.';
+
+  @override
+  String get recording_finalizationFailedBodyDownload =>
+      'Sauti ilinaswa, lakini haikuweza kusomwa tena.';
+
+  @override
+  String get recording_finalizationFailedBodyCaptureInterrupted =>
+      'Kunasa kulisimama kabla hujabonyeza kusimamisha, kwa hivyo hakuna sauti iliyohifadhiwa.';
+
+  @override
+  String get recording_finalizationFailedBodyPipeline =>
+      'Hatukuweza kumaliza kuchakata rekodi hii. Imehifadhiwa katika rekodi zako ambazo hazijahifadhiwa.';
+
+  @override
+  String get recording_finalizationErrorBack => 'Rudi';
+
+  @override
   String get recording_discardAndReturn => 'Tupa na urudi';
 
   @override

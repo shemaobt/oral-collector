@@ -57,6 +57,17 @@ final recordingForegroundServiceProvider = Provider<RecordingForegroundService>(
   (_) => RecordingForegroundService(),
 );
 
+/// Injectable so the browser capture path can be driven in VM tests, where
+/// `kIsWeb` is always false.
+final isWebPlatformProvider = Provider<bool>((_) => kIsWeb);
+
+/// Injectable web recorder, so a browser that ends capture on its own — the
+/// microphone taken by another tab or app, the default device changing — can
+/// be reproduced without a browser.
+final webAudioRecorderFactoryProvider = Provider<AudioRecorder Function()>(
+  (_) => AudioRecorder.new,
+);
+
 final recordingSessionNotifierProvider =
     NotifierProvider<RecordingSessionNotifier, RecordingState>(
       RecordingSessionNotifier.new,
@@ -80,6 +91,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
   Timer? _toastTimer;
   StreamController<double>? _webAmplitudeController;
   StreamSubscription<Amplitude>? _webAmplitudeSub;
+  StreamSubscription<RecordState>? _webStateSub;
   bool _liveActivityActive = false;
   StreamSubscription<dynamic>? _liveActivityUrlSub;
   AppLocalizations? _cachedL10n;
@@ -245,7 +257,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
 
     final mapper = _amplitudeMapperFor(ref.read(noiseSensitivityProvider));
 
-    if (kIsWeb) {
+    if (ref.read(isWebPlatformProvider)) {
       return _startWeb(genreId, subcategoryId, mapper);
     }
 
@@ -333,7 +345,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
     AmplitudeMapper mapper,
   ) async {
     await _disposeWebRecorder();
-    final recorder = AudioRecorder();
+    final recorder = ref.read(webAudioRecorderFactoryProvider)();
     final hasPermission = await recorder.hasPermission();
     if (!hasPermission) {
       await recorder.dispose();
@@ -350,6 +362,15 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
     );
 
     _webRecorder = recorder;
+
+    // The elapsed counter is a plain Timer and the waveform is fed by the
+    // microphone stream, not by the recorder — both keep looking healthy long
+    // after capture has ended. Watching the recorder itself is the only way to
+    // tell the person now instead of at stop, when there is nothing left.
+    _webStateSub = recorder.onStateChanged().listen((recordState) {
+      if (recordState != RecordState.stop) return;
+      unawaited(_handleCaptureLost());
+    });
 
     final ctrl = StreamController<double>.broadcast();
     _webAmplitudeController = ctrl;
@@ -507,7 +528,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
       _toastTimer?.cancel();
       final elapsed = state.elapsed;
 
-      if (kIsWeb) {
+      if (ref.read(isWebPlatformProvider)) {
         return await _stopWeb(elapsed);
       }
       return await _stopNative(elapsed);
@@ -933,7 +954,30 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
     return l10n.recording_serviceNotificationBody(elapsed, genre);
   }
 
+  /// Capture ended without anyone asking. Whatever the browser had is gone by
+  /// the time this fires, so the only thing left worth doing is saying so
+  /// immediately rather than letting the counter run to eighteen minutes.
+  Future<void> _handleCaptureLost() async {
+    if (_isStopping || !state.isRecording) return;
+
+    _elapsedTimer?.cancel();
+    _toastTimer?.cancel();
+    state = state.copyWith(
+      isRecording: false,
+      isPaused: false,
+      clearAmplitudeStream: true,
+      clearSessionId: true,
+      finalizationStage: FinalizationStage.idle,
+      finalizationErrorKind: FinalizationErrorKind.captureInterrupted,
+    );
+
+    await _disposeWebRecorder();
+    await const RecordingActiveFlag().markInactive();
+  }
+
   Future<void> _disposeWebRecorder() async {
+    await _webStateSub?.cancel();
+    _webStateSub = null;
     await _webAmplitudeSub?.cancel();
     _webAmplitudeSub = null;
     await _webAmplitudeController?.close();
