@@ -102,6 +102,14 @@ directives live in a single `docker/security-headers.conf` snippet copied to
     it would break upload/playback — plus gstatic for the CanvasKit `.wasm`
     fetch and `https://fonts.gstatic.com` for CanvasKit's Noto/Roboto fallback
     fonts (fetched via XHR, so under `connect-src`, not `font-src`).
+  - `connect-src` also permits the `blob:` scheme (ENG-408). On web, stopping a
+    recording hands the app a `blob:` URL and the app reads the audio back by
+    fetching it; `fetch` is governed by `connect-src`, and `'self'` does **not**
+    cover the `blob:` scheme — it must be listed. Without it the browser refuses
+    the read and the user sees "Couldn't save this recording" right after
+    stopping. Blob URLs are minted by the page itself and are same-origin, so
+    this widens nothing an attacker can reach. `img-src`, `media-src`, and
+    `worker-src` already listed `blob:`; only `connect-src` had been missed.
   - `style-src 'self' 'unsafe-inline'` (Flutter injects inline styles),
     `media-src` permits GCS for audio playback, plus `img-src`, `worker-src`,
     and the lockdown directives `object-src 'none'`, `base-uri 'self'`,
