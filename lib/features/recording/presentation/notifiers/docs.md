@@ -433,19 +433,27 @@ Path: @/lib/features/recording/presentation/notifiers
   unsaved recording" prompt on app open by reading recovery rows from
   `RecordingSessionRepository`. It exposes a **two-phase save** plus a
   one-shot discard for resolving that prompt:
-  - `save` re-runs the finalization pipeline against the surviving
-    segments with `deleteSources: false` and returns the
-    `RecordingResult` *without* resolving the session — it does **not**
-    call `markRecovered` and does **not** clean up segments. The
-    session stays `crashed` and the produced file is the input to the
-    confirmation screen (see ENG-80 below). This is the re-derive path
-    every crashed session goes through to reach `confirmRecovery`, including
-    one the sweep offered purely because its v14 anchor pointed at surviving
-    audio — `save` re-finalizes from the **segments**, not from the anchor's
-    file, so if the segments are gone by the time the user accepts, there is
-    nothing to re-finalize and the session ends up discarded instead
-    (see [../../data/repositories/docs.md](../../data/repositories/docs.md)
-    for why this is a known, deferred gap rather than a bug).
+  - `save` produces the `RecordingResult` that feeds the confirmation
+    screen *without* resolving the session — it does **not** mark the
+    session recovered and does **not** clean up segments. The session
+    stays `crashed` (see ENG-80 below). It reaches that result by one of
+    **two** routes, tried in this order (ENG-420, slice 3):
+    1. **The finished file.** If the row's v14 anchor names audio that is
+       still on disk, that file is the result, with the anchored duration
+       and a format read off its extension. Nothing is reconcatenated. This
+       is the only route that works for the sessions the startup sweep
+       surfaces, whose source segments the fire-and-forget deletions have
+       already removed — and it spares every other session a re-concat that
+       would land on the same bytes.
+    2. **Re-deriving from the sources.** With no anchor, or an anchor whose
+       file is gone, `save` re-runs the finalization pipeline against the
+       surviving segments with `deleteSources: false`. This is the right
+       answer when the original finalization failed, and the fallback when
+       the anchor has gone stale — the anchor is a pointer, not a guarantee.
+    When neither route yields audio, `save` returns null and leaves the row
+    alone if it is still anchored; see
+    [../../data/repositories/docs.md](../../data/repositories/docs.md) for
+    why a session holding a durable artifact must never reach `discarded`.
   - `confirmRecovery(sessionId, {keepPath, durationSeconds})` is the second
     phase: it runs only after the user confirms metadata on
     [../recovery_confirm_screen.dart](../recovery_confirm_screen.dart)

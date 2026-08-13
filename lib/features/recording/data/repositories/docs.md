@@ -519,36 +519,46 @@ Path: @/lib/features/recording/data/repositories
   [`resolveRecordingPath`](../services/audio_path_resolver.dart) exists — the
   container moves on reinstall/restore, and reading a stored absolute path
   literally would declare live recordings audio-less.
-- **Detection is not reuse — a session the sweep recovers by anchor still
-  refinalizes from segments, and that can lose (ENG-420, slice 2 is a known
-  intermediate state).** Accepting an anchor-detected offer runs the same
-  `InterruptedSessionsNotifier.save` path as any other crashed session: it
-  re-finalizes from the surviving segment files, not from the anchored
-  product. A session whose anchor is the *only* thing left — its source
-  segments already deleted by the time the sweep ran — finds no valid segment
-  to re-finalize and the save path marks it discarded instead of recovered.
-  This slice only guarantees the session is **offered**; reusing the
-  already-finalized file the anchor points at instead of re-deriving it is
-  deferred to a later slice.
-  **A session still holding finalized audio is therefore never marked
-  `discarded`.** `discarded` appears in no sweep query — neither
-  `findFinishedSessions` nor `findCrashedSessions` — so a row that reaches it
-  can never be surfaced again, by this sweep or a later one. Both paths that
-  give up on re-deriving (`InterruptedSessionsNotifier.save` when no segment
-  survives, and `RecoveryCoordinator.refresh` when a crashed row has none)
-  skip the terminal write while `finalizedAudioPath` is set. The invariant is
-  "a session that still points at a durable artifact never reaches a state no
-  sweep looks at", and it holds regardless of whether the reuse path exists.
-  The cost is a transitional one: until the recovery reuses the anchored file,
-  accepting such an offer does nothing visible and the offer comes back. That
-  is poor to use and far better than deleting the audio.
+- **Accepting a recovery prefers the finished file and only then falls back to
+  the sources (ENG-420, slice 3).** `InterruptedSessionsNotifier.save` asks two
+  questions in order. First: does the row name finalized audio that is still on
+  disk? If so that file *is* the answer — it is handed over as-is, with the
+  anchored duration, and nothing is reconcatenated. Only if there is no anchor,
+  or the anchor names a file that is gone, does it fall back to re-finalizing
+  from the surviving segments, which is the path that has always existed.
+  Both halves are load-bearing and neither can be dropped:
+  - Preferring the anchor is what makes the offer useful at all. The sessions
+    the sweep newly surfaces are precisely the ones whose sources the
+    fire-and-forget deletions already removed, so re-deriving has nothing to
+    work from. It also saves reconcatenating minutes of audio into the same
+    bytes for the sessions that *do* still have their sources.
+  - Falling back to the sources is right whenever the finished file is missing
+    or was never produced — a finalization that failed leaves the sources as
+    the only real audio, and the anchor is a pointer, not a guarantee (it
+    survives the user discarding from the save form, which deletes the file and
+    never touches the row). The anchor is resolved through the same basename
+    lookup `resolveRecordingPath` uses, so a stale absolute path from a moved
+    iOS container still finds its file.
+  **A session still holding finalized audio is never marked `discarded`.**
+  `discarded` appears in no sweep query — neither `findFinishedSessions` nor
+  `findCrashedSessions` — so a row that reaches it can never be surfaced again.
+  Both paths that give up (`InterruptedSessionsNotifier.save` when neither the
+  anchor nor a segment yields audio, and `RecoveryCoordinator.refresh` when a
+  crashed row has no segments) skip the terminal write while
+  `finalizedAudioPath` is set. That guard is still reachable after slice 3:
+  it is what catches a row whose anchor names a deleted file and whose sources
+  are gone too. The invariant is "a session that still points at a durable
+  artifact never reaches a state no sweep looks at". A deliberate discard is
+  the one intended way out, and it deletes the anchored file first.
 - **The anchored duration overstates the audio on the degraded path.** When
   both concat routes fail, `RecordingFinalizationService` returns the whole
   session's duration alongside a `filePath` that is only the first segment, so
   `finalizedDurationSeconds` describes a recording longer than the file it
   names. `LocalRecordings` has carried the same overstatement since before
-  these slices; it matters here because a later slice reading the anchor as
-  truth would inherit it.
+  these slices, and slice 3 inherits it: a recovery served from the anchor
+  reports `finalizedDurationSeconds`. Re-deriving reports the same number from
+  `totalDurationSeconds`, so this is not a cost of preferring the anchor — it
+  is the pre-existing overstatement, now reached one step earlier.
 - **`splitRecordingReplacingParent` is atomic (ENG-125).** The trim/split save
   must end with the children present and the parent gone. Doing those as two
   statements (insert in a transaction, then delete) left a failure window where
