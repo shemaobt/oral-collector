@@ -92,6 +92,7 @@ for path in "/" "/app.js" "/icon.png"; do
   check "$path" '^Content-Security-Policy:.*connect-src[^;]*storage\.googleapis\.com'        "CSP connect-src allows GCS (upload/playback)"
   check "$path" '^Content-Security-Policy:.*connect-src[^;]*fonts\.gstatic\.com'             "CSP connect-src allows CanvasKit font fallback (fonts.gstatic.com)"
   check "$path" '^Content-Security-Policy:.*connect-src[^;]*tripod-backend\.shemaywam\.com'  "CSP connect-src allows backend"
+  check "$path" '^Content-Security-Policy:.*connect-src[^;]*blob:'                           "CSP connect-src allows blob: (reading the just-recorded audio)"
   check "$path" "^Content-Security-Policy:.*script-src[^;]*'wasm-unsafe-eval'"               "CSP script-src allows wasm-unsafe-eval (CanvasKit)"
   check "$path" '^X-Content-Type-Options: *nosniff'                                          "X-Content-Type-Options: nosniff"
   check "$path" '^Referrer-Policy: *strict-origin-when-cross-origin'                         "Referrer-Policy"
