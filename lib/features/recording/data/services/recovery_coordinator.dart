@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
+import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import '../../../../core/database/app_database.dart';
@@ -67,20 +68,24 @@ class RecoveryCoordinator {
     } finally {
       await const RecordingActiveFlag().markInactive();
     }
-    await _sweepCompletedWithOrphanSegments();
+    await _sweepFinishedSessionsWithUnsavedAudio();
     await refresh();
   }
 
-  /// Rescues legacy sessions marked `completed` before the markCompleted
-  /// relocation: those rows can have orphan segment files on disk and no
-  /// matching LocalRecording row, so the recovery banner never surfaces them
-  /// unless we flip them back to `crashed`.
-  Future<void> _sweepCompletedWithOrphanSegments() async {
+  /// Surfaces sessions that finished with audio the user never saved.
+  ///
+  /// The question asked is "did this session produce audio that nothing
+  /// saved?", and both halves are answered from the database, so the answer no
+  /// longer depends on whether the fire-and-forget source deletions inside
+  /// `finalize()` have landed yet (ENG-420). Sessions whose anchor names a file
+  /// that is already gone are left alone: offering a recovery that cannot
+  /// succeed is worse than offering nothing.
+  Future<void> _sweepFinishedSessionsWithUnsavedAudio() async {
     final sessionRepo = _ref.read(recordingSessionRepositoryProvider);
     final localRepo = _ref.read(localRecordingRepositoryProvider);
 
-    final completed = await sessionRepo.findCompletedSessions();
-    if (completed.isEmpty) return;
+    final finished = await sessionRepo.findFinishedSessions();
+    if (finished.isEmpty) return;
 
     Directory dir;
     try {
@@ -89,16 +94,20 @@ class RecoveryCoordinator {
       return;
     }
 
-    final List<FileSystemEntity> entries;
-    try {
-      entries = await dir.list().toList();
-    } catch (_) {
-      return;
-    }
-
     final localRecordings = await localRepo.getAllLocalRecordings();
 
-    for (final session in completed) {
+    // Only the pre-v14 fallback needs the directory listing, so a listing that
+    // fails must not suppress the rows that are decidable from the row itself.
+    List<FileSystemEntity>? entries;
+    Future<List<FileSystemEntity>> listEntries() async {
+      try {
+        return entries ??= await dir.list().toList();
+      } catch (_) {
+        return entries ??= const <FileSystemEntity>[];
+      }
+    }
+
+    for (final session in finished) {
       final dot = '_${session.id}.';
       final under = '_${session.id}_';
       final saved = localRecordings.any(
@@ -107,19 +116,47 @@ class RecoveryCoordinator {
       );
       if (saved) continue;
 
-      final prefix = SegmentPaths.prefixFor(dir.path, session.id);
-      final hasOrphans = entries.any((e) {
-        if (e is! File) return false;
-        return SegmentPaths.parseIndex(e.path, prefix) != null;
-      });
-      if (!hasOrphans) continue;
+      if (!await _hasUnsavedAudio(session, dir, listEntries)) continue;
 
       _log.info(
-        'sweep promoting orphan session ${session.id} from completed → crashed',
+        'sweep promoting session ${session.id} from ${session.status} → '
+        'crashed: finalized audio with no saved recording',
       );
       await _repairInFlightSegments(session, sessionRepo);
       await sessionRepo.markCrashed(session.id);
     }
+  }
+
+  /// An anchored session is judged by its anchor — the file has to actually be
+  /// there, because discarding from the save form deletes the audio without
+  /// touching the row. Rows without an anchor fall back to the old disk scan:
+  /// they either predate schema v14, or they reached their status before
+  /// finalization ran (`recoverSessionFromDisk` marks a row recovered up
+  /// front). That fallback can go once no supported upgrade path can still be
+  /// carrying pre-v14 sessions and no path can mark a session finished before
+  /// it has audio.
+  Future<bool> _hasUnsavedAudio(
+    RecordingSession session,
+    Directory dir,
+    Future<List<FileSystemEntity>> Function() listEntries,
+  ) async {
+    final anchor = session.finalizedAudioPath;
+    if (anchor != null) return _anchoredAudioExists(anchor, dir);
+
+    final prefix = SegmentPaths.prefixFor(dir.path, session.id);
+    return (await listEntries()).any((e) {
+      if (e is! File) return false;
+      return SegmentPaths.parseIndex(e.path, prefix) != null;
+    });
+  }
+
+  /// Same reason [resolveRecordingPath] exists: the documents container moves
+  /// on reinstall/restore, so an absolute path stored earlier stops resolving
+  /// while the file itself is still there. Reading the anchor literally would
+  /// declare every such session audio-less and drop it.
+  Future<bool> _anchoredAudioExists(String anchor, Directory dir) async {
+    if (await File(anchor).exists()) return true;
+    return File('${dir.path}/${p.basename(anchor)}').exists();
   }
 
   Future<void> _repairInFlightSegments(
@@ -194,7 +231,12 @@ class RecoveryCoordinator {
       }
 
       if (segments.isEmpty) {
-        await repo.markDiscarded(session.id);
+        // Same invariant as the save path: a row that still points at
+        // finalized audio never goes to a status no sweep looks at, even
+        // though it has no segments to offer a recovery from (ENG-420).
+        if (session.finalizedAudioPath == null) {
+          await repo.markDiscarded(session.id);
+        }
         continue;
       }
       result.add(

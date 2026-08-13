@@ -438,18 +438,28 @@ Path: @/lib/features/recording/presentation/notifiers
     `RecordingResult` *without* resolving the session — it does **not**
     call `markRecovered` and does **not** clean up segments. The
     session stays `crashed` and the produced file is the input to the
-    confirmation screen (see ENG-80 below).
-  - `confirmRecovery(sessionId, keepPath:)` is the second phase: it
-    runs only after the user confirms metadata on
-    [../recovery_confirm_screen.dart](../recovery_confirm_screen.dart),
-    marks the session recovered, and deletes every segment except
-    `keepPath`. `keepPath` is the finalized file, which in the
+    confirmation screen (see ENG-80 below). This is the re-derive path
+    every crashed session goes through to reach `confirmRecovery`, including
+    one the sweep offered purely because its v14 anchor pointed at surviving
+    audio — `save` re-finalizes from the **segments**, not from the anchor's
+    file, so if the segments are gone by the time the user accepts, there is
+    nothing to re-finalize and the session ends up discarded instead
+    (see [../../data/repositories/docs.md](../../data/repositories/docs.md)
+    for why this is a known, deferred gap rather than a bug).
+  - `confirmRecovery(sessionId, {keepPath, durationSeconds})` is the second
+    phase: it runs only after the user confirms metadata on
+    [../recovery_confirm_screen.dart](../recovery_confirm_screen.dart)
+    (which supplies `durationSeconds` from `pending.result.durationSeconds`),
+    anchors the session to `keepPath` and marks it recovered via
+    `RecordingSessionRepository.recoverWithFinalizedAudio`
+    ([../../data/repositories/docs.md](../../data/repositories/docs.md)) —
+    replacing a bare `markRecovered` (ENG-420, slice 2) — and deletes every
+    segment except `keepPath`. `keepPath` is the finalized file, which in the
     single-segment / degraded fallbacks *is itself one of the segments*
     — hence the exception rather than a blanket delete.
-  - `discardRecovered(sessionId, filePath:)` deletes the finalized file
-    then defers to `discard`, used by the confirmation screen's discard
-    action.
-  - `discard` deletes the segments and marks the session discarded.
+  - `discard` deletes the segments and marks the session discarded. It is
+    also what the confirmation screen's discard action calls: the finalized
+    file is already gone by then, deleted by the confirmation step itself.
   All paths end by calling
   [../../data/services/recovery_coordinator.dart](../../data/services/recovery_coordinator.dart)'s
   `refresh()`, which re-derives the prompt list from `findCrashedSessions()`;
@@ -615,14 +625,19 @@ Path: @/lib/features/recording/presentation/notifiers
   lives on `RecordingPlayerState`, but the player object itself (needed
   for the widget's `StreamBuilder`s) has nowhere to live but a method.
 - **A successful stop anchors the session to its audio before marking it
-  completed (ENG-420, slice 1).** In `_stopNative`, once `_finalizeOrCrash`
-  returns a result, the notifier calls
+  completed or recovered (ENG-420, slices 1 and 2).** In `_stopNative`'s normal
+  stop, once `_finalizeOrCrash` returns a result, the notifier calls
   `RecordingSessionRepository.completeWithFinalizedAudio` instead of the bare
-  `markCompleted` — see
+  `markCompleted`; on the resume-then-stop branch (`_pendingResumeSessionId` —
+  the user resumed an interrupted recording, then stopped it) it calls the
+  sibling `recoverWithFinalizedAudio` instead of the bare `markRecovered`, for
+  the same reason — see
   [../../data/repositories/docs.md](../../data/repositories/docs.md) for why
   that order is load-bearing and what the anchor is (and is not) a guarantee
-  of. Nothing downstream of this notifier reads the anchor yet; a later slice
-  is what consumes it.
+  of. As of slice 2 the anchor has a reader: the startup sweep in
+  [`RecoveryCoordinator`](../../data/services/recovery_coordinator.dart) stats
+  it to decide whether a finished session still owes the user a recovery
+  offer.
 - **A failed finalize keeps the recording recoverable — on both stop
   paths.** Finalization (FFmpeg concat + IO under
   [../../data/services/recording_finalization_service.dart](../../data/services/recording_finalization_service.dart))
@@ -694,11 +709,11 @@ Path: @/lib/features/recording/presentation/notifiers
   created. The flow now mirrors a normal recording: recovery `save`
   finalizes and parks the result, the home banner routes to
   [../recovery_confirm_screen.dart](../recovery_confirm_screen.dart),
-  and only the user's Save there (`confirmRecovery` → `markRecovered`)
-  or Discard (`discardRecovered` → `markDiscarded`) resolves the
-  session. The two preconditions that make this safe live in `save`:
-  it must **not** `markRecovered` (or the abandoned-confirmation session
-  would vanish from the banner), and it must finalize with
+  and only the user's Save there (`confirmRecovery` →
+  `recoverWithFinalizedAudio`, ENG-420 slice 2) or Discard (`discard`
+  → `markDiscarded`) resolves the session. The two preconditions that make this safe live in `save`:
+  it must **not** resolve the session itself (or the abandoned-confirmation
+  session would vanish from the banner), and it must finalize with
   `deleteSources: false` (or the segments would be gone before the user
   decides). Leaving the confirmation screen without deciding keeps the
   session `crashed` with segments intact, so it simply re-surfaces in

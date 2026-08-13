@@ -32,9 +32,12 @@ class RecordingSessionRepository {
         .get();
   }
 
-  Future<List<RecordingSession>> findCompletedSessions() {
+  /// Sessions that reached the end of a recording and may still owe the user
+  /// something: stopped normally, or ended by being recovered. Both can hold
+  /// finalized audio that was never saved (ENG-420).
+  Future<List<RecordingSession>> findFinishedSessions() {
     return (_db.select(_db.recordingSessions)
-          ..where((t) => t.status.equals('completed'))
+          ..where((t) => t.status.isIn(const ['completed', 'recovered']))
           ..orderBy([(t) => OrderingTerm.desc(t.startedAt)]))
         .get();
   }
@@ -86,6 +89,28 @@ class RecordingSessionRepository {
     required String filePath,
     required double durationSeconds,
   }) async {
+    await _anchorThen(sessionId, filePath, durationSeconds, 'completed');
+  }
+
+  /// The same, for a session that ends by being recovered rather than stopped
+  /// normally — resuming an interrupted recording and stopping it, or the user
+  /// confirming a recovery. Both produce real finalized audio, so both owe the
+  /// row a pointer; without it the sweep cannot tell them from a session that
+  /// never finalized at all.
+  Future<void> recoverWithFinalizedAudio(
+    String sessionId, {
+    required String filePath,
+    required double durationSeconds,
+  }) async {
+    await _anchorThen(sessionId, filePath, durationSeconds, 'recovered');
+  }
+
+  Future<void> _anchorThen(
+    String sessionId,
+    String filePath,
+    double durationSeconds,
+    String status,
+  ) async {
     await (_db.update(
       _db.recordingSessions,
     )..where((t) => t.id.equals(sessionId))).write(
@@ -94,7 +119,7 @@ class RecordingSessionRepository {
         finalizedDurationSeconds: Value(durationSeconds),
       ),
     );
-    await _setStatus(sessionId, 'completed');
+    await _setStatus(sessionId, status);
   }
 
   Future<void> markCompleted(String sessionId) async {
