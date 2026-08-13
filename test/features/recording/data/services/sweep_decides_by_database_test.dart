@@ -251,12 +251,12 @@ void main() {
 
     test('accepting an offer whose segments are gone must not throw the '
         'finalized audio away', () async {
-      // save() re-derives from the source segments, and the sessions this
-      // sweep newly surfaces are exactly the ones with none left. Marking the
-      // row discarded would put it in a state no sweep queries, losing the
-      // audio for good — a session still holding a durable artifact must never
-      // reach a terminal state. The recovery does not succeed yet, but the
-      // offer survives to be tried again.
+      // The sessions this sweep newly surfaces are exactly the ones with no
+      // source segments left. Marking the row discarded would put it in a
+      // state no sweep queries, losing the audio for good — a session still
+      // holding a durable artifact must never reach a terminal state. As of
+      // slice 3 the offer also pays off: accepting it hands over the finalized
+      // file itself instead of trying to re-derive from nothing.
       await seedSession(
         'sess-trap',
         status: 'completed',
@@ -268,13 +268,17 @@ void main() {
           .read(interruptedSessionsNotifierProvider.notifier)
           .save('sess-trap');
 
-      expect(result, isNull, reason: 'nothing to re-derive from yet');
+      expect(
+        result?.filePath,
+        anchorFor('sess-trap'),
+        reason: 'the finalized file is what the person gets back',
+      );
       expect((await sessions.getById('sess-trap'))?.status, isNot('discarded'));
       expect(File(anchorFor('sess-trap')).existsSync(), isTrue);
       expect(
         await offeredAfterScan(),
         contains('sess-trap'),
-        reason: 'the offer has to come back rather than vanish',
+        reason: 'the session is resolved only once the user confirms the save',
       );
     });
 

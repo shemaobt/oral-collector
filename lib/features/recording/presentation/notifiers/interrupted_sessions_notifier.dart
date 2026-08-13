@@ -5,8 +5,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
 import 'package:path_provider/path_provider.dart';
 
+import '../../../../core/database/app_database.dart';
 import '../../../../core/platform/file_ops.dart' as file_ops;
 import '../../data/providers.dart';
+import '../../data/services/audio_path_resolver.dart';
 import '../../data/services/recording_finalization_service.dart';
 import '../../data/services/recovery_coordinator.dart';
 import '../../data/services/segment_paths.dart';
@@ -72,6 +74,9 @@ class InterruptedSessionsNotifier extends Notifier<void> {
     final session = await sessionRepo.getById(sessionId);
     if (session == null) return null;
 
+    final finished = await _finishedAudio(session);
+    if (finished != null) return finished;
+
     final paths = sessionRepo.decodeSegmentPaths(session);
     final validPaths = <String>[];
     for (final p in paths) {
@@ -118,6 +123,31 @@ class InterruptedSessionsNotifier extends Notifier<void> {
     // cancelled/abandoned confirmation re-surfaces in the recovery banner
     // instead of silently losing the recording.
     return outcome.result;
+  }
+
+  /// The audio this session already finished, when the row points at a file
+  /// that is still on disk (ENG-420).
+  ///
+  /// Preferred over re-deriving because reconcatenating the sources costs
+  /// minutes and lands on the same bytes — and in the sessions the startup
+  /// sweep surfaces the sources are gone, so re-deriving cannot run at all.
+  /// The anchor is only a pointer: discarding from the save form deletes the
+  /// audio without touching the row, so a null here sends the caller back to
+  /// the sources rather than failing. Resolved by basename in the current
+  /// documents directory, because the iOS container moves on reinstall.
+  Future<RecordingResult?> _finishedAudio(RecordingSession session) async {
+    final anchor = session.finalizedAudioPath;
+    if (anchor == null) return null;
+    final resolved = await resolveRecordingPath(anchor);
+    if (resolved == null) return null;
+    return RecordingResult(
+      filePath: resolved,
+      durationSeconds:
+          session.finalizedDurationSeconds ?? session.totalDurationSeconds,
+      // A degraded finalization anchors a .wav; the format rides along to the
+      // upload's MIME type, so taking the m4a default would mislabel the file.
+      format: resolved.toLowerCase().endsWith('.wav') ? 'wav' : 'm4a',
+    );
   }
 
   /// Materializes the recovery decision after the user confirms the save on the
