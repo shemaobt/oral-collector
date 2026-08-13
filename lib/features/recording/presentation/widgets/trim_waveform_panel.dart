@@ -14,6 +14,7 @@ class TrimWaveformPanel extends StatelessWidget {
     super.key,
     required this.waveformBars,
     required this.splitPoints,
+    required this.totalDuration,
     required this.onSplitPointsChanged,
     required this.playingSegment,
     required this.excludedSegments,
@@ -34,6 +35,12 @@ class TrimWaveformPanel extends StatelessWidget {
 
   final List<double> waveformBars;
   final List<double> splitPoints;
+
+  /// Passed through to [TrimWaveform] so the minimum-segment floor can be
+  /// expressed in time rather than as a fraction of the file (ENG-66). The
+  /// `*Label` fields below are the same duration already formatted for display
+  /// and cannot serve this purpose.
+  final Duration totalDuration;
   final ValueChanged<List<double>> onSplitPointsChanged;
   final int? playingSegment;
   final Set<int> excludedSegments;
@@ -170,6 +177,7 @@ class TrimWaveformPanel extends StatelessWidget {
           TrimWaveform(
             bars: waveformBars,
             splitPoints: splitPoints,
+            totalDuration: totalDuration,
             onSplitPointsChanged: onSplitPointsChanged,
             playingSegment: playingSegment,
             excludedSegments: excludedSegments,

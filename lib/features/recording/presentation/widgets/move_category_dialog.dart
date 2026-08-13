@@ -216,7 +216,7 @@ class _MoveCategoryDialogState extends ConsumerState<MoveCategoryDialog> {
                     .map(
                       (g) => DropdownMenuItem(
                         value: g.id,
-                        child: Text(localizedGenreName(l10n, g.name)),
+                        child: Text(localizedGenreName(l10n, g.name, id: g.id)),
                       ),
                     )
                     .toList(),
@@ -234,7 +234,9 @@ class _MoveCategoryDialogState extends ConsumerState<MoveCategoryDialog> {
                       .map(
                         (s) => DropdownMenuItem(
                           value: s.id,
-                          child: Text(localizedSubcategoryName(l10n, s.name)),
+                          child: Text(
+                            localizedSubcategoryName(l10n, s.name, id: s.id),
+                          ),
                         ),
                       )
                       .toList(),

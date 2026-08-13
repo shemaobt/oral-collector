@@ -31,6 +31,7 @@ final syncEngineProvider = Provider<SyncEngine>((ref) {
     storytellerRepo: storytellerRepo,
     connectivity: connectivity,
     client: client,
+    recordingApi: ref.watch(recordingApiRepositoryProvider),
     uploadDownloader: downloader,
   );
 });

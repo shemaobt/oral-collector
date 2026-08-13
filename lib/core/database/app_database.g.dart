@@ -349,6 +349,52 @@ class $LocalRecordingsTable extends LocalRecordings
     requiredDuringInsert: false,
     defaultValue: const Constant('[]'),
   );
+  static const VerificationMeta _metadataSyncStatusMeta =
+      const VerificationMeta('metadataSyncStatus');
+  @override
+  late final GeneratedColumn<String> metadataSyncStatus =
+      GeneratedColumn<String>(
+        'metadata_sync_status',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('synced'),
+      );
+  static const VerificationMeta _pendingMetadataJsonMeta =
+      const VerificationMeta('pendingMetadataJson');
+  @override
+  late final GeneratedColumn<String> pendingMetadataJson =
+      GeneratedColumn<String>(
+        'pending_metadata_json',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('[]'),
+      );
+  static const VerificationMeta _metadataRetryCountMeta =
+      const VerificationMeta('metadataRetryCount');
+  @override
+  late final GeneratedColumn<int> metadataRetryCount = GeneratedColumn<int>(
+    'metadata_retry_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _metadataLastRetryAtMeta =
+      const VerificationMeta('metadataLastRetryAt');
+  @override
+  late final GeneratedColumn<DateTime> metadataLastRetryAt =
+      GeneratedColumn<DateTime>(
+        'metadata_last_retry_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -382,6 +428,10 @@ class $LocalRecordingsTable extends LocalRecordings
     splitIndex,
     splitSegmentCount,
     reviewFlagsJson,
+    metadataSyncStatus,
+    pendingMetadataJson,
+    metadataRetryCount,
+    metadataLastRetryAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -639,6 +689,42 @@ class $LocalRecordingsTable extends LocalRecordings
         ),
       );
     }
+    if (data.containsKey('metadata_sync_status')) {
+      context.handle(
+        _metadataSyncStatusMeta,
+        metadataSyncStatus.isAcceptableOrUnknown(
+          data['metadata_sync_status']!,
+          _metadataSyncStatusMeta,
+        ),
+      );
+    }
+    if (data.containsKey('pending_metadata_json')) {
+      context.handle(
+        _pendingMetadataJsonMeta,
+        pendingMetadataJson.isAcceptableOrUnknown(
+          data['pending_metadata_json']!,
+          _pendingMetadataJsonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('metadata_retry_count')) {
+      context.handle(
+        _metadataRetryCountMeta,
+        metadataRetryCount.isAcceptableOrUnknown(
+          data['metadata_retry_count']!,
+          _metadataRetryCountMeta,
+        ),
+      );
+    }
+    if (data.containsKey('metadata_last_retry_at')) {
+      context.handle(
+        _metadataLastRetryAtMeta,
+        metadataLastRetryAt.isAcceptableOrUnknown(
+          data['metadata_last_retry_at']!,
+          _metadataLastRetryAtMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -772,6 +858,22 @@ class $LocalRecordingsTable extends LocalRecordings
         DriftSqlType.string,
         data['${effectivePrefix}review_flags_json'],
       )!,
+      metadataSyncStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}metadata_sync_status'],
+      )!,
+      pendingMetadataJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}pending_metadata_json'],
+      )!,
+      metadataRetryCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}metadata_retry_count'],
+      )!,
+      metadataLastRetryAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}metadata_last_retry_at'],
+      ),
     );
   }
 
@@ -818,6 +920,22 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
   /// encoded as text like `RecordingSessions.segmentPathsJson` rather than
   /// through a converter, which is the existing shape for a list in this schema.
   final String reviewFlagsJson;
+
+  /// Metadata-outbox state (ENG-403): which fields this device edited while the
+  /// server was unreachable, and the retry bookkeeping for pushing them.
+  ///
+  /// Columns on the recording rather than a queue table because the relation is
+  /// 1:1 — a recording owes at most one set of fields — and because the values
+  /// are not stored here at all: the row already holds the desired state, so
+  /// [pendingMetadataJson] only names the fields the drain must read back off
+  /// it. Successive offline edits therefore collapse instead of replaying.
+  ///
+  /// [metadataRetryCount] / [metadataLastRetryAt] mirror the upload queue's
+  /// `retryCount` / `lastRetryAt` and feed the same backoff.
+  final String metadataSyncStatus;
+  final String pendingMetadataJson;
+  final int metadataRetryCount;
+  final DateTime? metadataLastRetryAt;
   const LocalRecording({
     required this.id,
     required this.projectId,
@@ -850,6 +968,10 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
     this.splitIndex,
     this.splitSegmentCount,
     required this.reviewFlagsJson,
+    required this.metadataSyncStatus,
+    required this.pendingMetadataJson,
+    required this.metadataRetryCount,
+    this.metadataLastRetryAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -921,6 +1043,12 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
       map['split_segment_count'] = Variable<int>(splitSegmentCount);
     }
     map['review_flags_json'] = Variable<String>(reviewFlagsJson);
+    map['metadata_sync_status'] = Variable<String>(metadataSyncStatus);
+    map['pending_metadata_json'] = Variable<String>(pendingMetadataJson);
+    map['metadata_retry_count'] = Variable<int>(metadataRetryCount);
+    if (!nullToAbsent || metadataLastRetryAt != null) {
+      map['metadata_last_retry_at'] = Variable<DateTime>(metadataLastRetryAt);
+    }
     return map;
   }
 
@@ -991,6 +1119,12 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
           ? const Value.absent()
           : Value(splitSegmentCount),
       reviewFlagsJson: Value(reviewFlagsJson),
+      metadataSyncStatus: Value(metadataSyncStatus),
+      pendingMetadataJson: Value(pendingMetadataJson),
+      metadataRetryCount: Value(metadataRetryCount),
+      metadataLastRetryAt: metadataLastRetryAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(metadataLastRetryAt),
     );
   }
 
@@ -1037,6 +1171,16 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
       splitIndex: serializer.fromJson<int?>(json['splitIndex']),
       splitSegmentCount: serializer.fromJson<int?>(json['splitSegmentCount']),
       reviewFlagsJson: serializer.fromJson<String>(json['reviewFlagsJson']),
+      metadataSyncStatus: serializer.fromJson<String>(
+        json['metadataSyncStatus'],
+      ),
+      pendingMetadataJson: serializer.fromJson<String>(
+        json['pendingMetadataJson'],
+      ),
+      metadataRetryCount: serializer.fromJson<int>(json['metadataRetryCount']),
+      metadataLastRetryAt: serializer.fromJson<DateTime?>(
+        json['metadataLastRetryAt'],
+      ),
     );
   }
   @override
@@ -1076,6 +1220,10 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
       'splitIndex': serializer.toJson<int?>(splitIndex),
       'splitSegmentCount': serializer.toJson<int?>(splitSegmentCount),
       'reviewFlagsJson': serializer.toJson<String>(reviewFlagsJson),
+      'metadataSyncStatus': serializer.toJson<String>(metadataSyncStatus),
+      'pendingMetadataJson': serializer.toJson<String>(pendingMetadataJson),
+      'metadataRetryCount': serializer.toJson<int>(metadataRetryCount),
+      'metadataLastRetryAt': serializer.toJson<DateTime?>(metadataLastRetryAt),
     };
   }
 
@@ -1111,6 +1259,10 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
     Value<int?> splitIndex = const Value.absent(),
     Value<int?> splitSegmentCount = const Value.absent(),
     String? reviewFlagsJson,
+    String? metadataSyncStatus,
+    String? pendingMetadataJson,
+    int? metadataRetryCount,
+    Value<DateTime?> metadataLastRetryAt = const Value.absent(),
   }) => LocalRecording(
     id: id ?? this.id,
     projectId: projectId ?? this.projectId,
@@ -1157,6 +1309,12 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
         ? splitSegmentCount.value
         : this.splitSegmentCount,
     reviewFlagsJson: reviewFlagsJson ?? this.reviewFlagsJson,
+    metadataSyncStatus: metadataSyncStatus ?? this.metadataSyncStatus,
+    pendingMetadataJson: pendingMetadataJson ?? this.pendingMetadataJson,
+    metadataRetryCount: metadataRetryCount ?? this.metadataRetryCount,
+    metadataLastRetryAt: metadataLastRetryAt.present
+        ? metadataLastRetryAt.value
+        : this.metadataLastRetryAt,
   );
   LocalRecording copyWithCompanion(LocalRecordingsCompanion data) {
     return LocalRecording(
@@ -1233,6 +1391,18 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
       reviewFlagsJson: data.reviewFlagsJson.present
           ? data.reviewFlagsJson.value
           : this.reviewFlagsJson,
+      metadataSyncStatus: data.metadataSyncStatus.present
+          ? data.metadataSyncStatus.value
+          : this.metadataSyncStatus,
+      pendingMetadataJson: data.pendingMetadataJson.present
+          ? data.pendingMetadataJson.value
+          : this.pendingMetadataJson,
+      metadataRetryCount: data.metadataRetryCount.present
+          ? data.metadataRetryCount.value
+          : this.metadataRetryCount,
+      metadataLastRetryAt: data.metadataLastRetryAt.present
+          ? data.metadataLastRetryAt.value
+          : this.metadataLastRetryAt,
     );
   }
 
@@ -1269,7 +1439,11 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
           ..write('splitFromId: $splitFromId, ')
           ..write('splitIndex: $splitIndex, ')
           ..write('splitSegmentCount: $splitSegmentCount, ')
-          ..write('reviewFlagsJson: $reviewFlagsJson')
+          ..write('reviewFlagsJson: $reviewFlagsJson, ')
+          ..write('metadataSyncStatus: $metadataSyncStatus, ')
+          ..write('pendingMetadataJson: $pendingMetadataJson, ')
+          ..write('metadataRetryCount: $metadataRetryCount, ')
+          ..write('metadataLastRetryAt: $metadataLastRetryAt')
           ..write(')'))
         .toString();
   }
@@ -1307,6 +1481,10 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
     splitIndex,
     splitSegmentCount,
     reviewFlagsJson,
+    metadataSyncStatus,
+    pendingMetadataJson,
+    metadataRetryCount,
+    metadataLastRetryAt,
   ]);
   @override
   bool operator ==(Object other) =>
@@ -1342,7 +1520,11 @@ class LocalRecording extends DataClass implements Insertable<LocalRecording> {
           other.splitFromId == this.splitFromId &&
           other.splitIndex == this.splitIndex &&
           other.splitSegmentCount == this.splitSegmentCount &&
-          other.reviewFlagsJson == this.reviewFlagsJson);
+          other.reviewFlagsJson == this.reviewFlagsJson &&
+          other.metadataSyncStatus == this.metadataSyncStatus &&
+          other.pendingMetadataJson == this.pendingMetadataJson &&
+          other.metadataRetryCount == this.metadataRetryCount &&
+          other.metadataLastRetryAt == this.metadataLastRetryAt);
 }
 
 class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
@@ -1377,6 +1559,10 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
   final Value<int?> splitIndex;
   final Value<int?> splitSegmentCount;
   final Value<String> reviewFlagsJson;
+  final Value<String> metadataSyncStatus;
+  final Value<String> pendingMetadataJson;
+  final Value<int> metadataRetryCount;
+  final Value<DateTime?> metadataLastRetryAt;
   final Value<int> rowid;
   const LocalRecordingsCompanion({
     this.id = const Value.absent(),
@@ -1410,6 +1596,10 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
     this.splitIndex = const Value.absent(),
     this.splitSegmentCount = const Value.absent(),
     this.reviewFlagsJson = const Value.absent(),
+    this.metadataSyncStatus = const Value.absent(),
+    this.pendingMetadataJson = const Value.absent(),
+    this.metadataRetryCount = const Value.absent(),
+    this.metadataLastRetryAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   LocalRecordingsCompanion.insert({
@@ -1444,6 +1634,10 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
     this.splitIndex = const Value.absent(),
     this.splitSegmentCount = const Value.absent(),
     this.reviewFlagsJson = const Value.absent(),
+    this.metadataSyncStatus = const Value.absent(),
+    this.pendingMetadataJson = const Value.absent(),
+    this.metadataRetryCount = const Value.absent(),
+    this.metadataLastRetryAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        projectId = Value(projectId),
@@ -1482,6 +1676,10 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
     Expression<int>? splitIndex,
     Expression<int>? splitSegmentCount,
     Expression<String>? reviewFlagsJson,
+    Expression<String>? metadataSyncStatus,
+    Expression<String>? pendingMetadataJson,
+    Expression<int>? metadataRetryCount,
+    Expression<DateTime>? metadataLastRetryAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1519,6 +1717,14 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
       if (splitIndex != null) 'split_index': splitIndex,
       if (splitSegmentCount != null) 'split_segment_count': splitSegmentCount,
       if (reviewFlagsJson != null) 'review_flags_json': reviewFlagsJson,
+      if (metadataSyncStatus != null)
+        'metadata_sync_status': metadataSyncStatus,
+      if (pendingMetadataJson != null)
+        'pending_metadata_json': pendingMetadataJson,
+      if (metadataRetryCount != null)
+        'metadata_retry_count': metadataRetryCount,
+      if (metadataLastRetryAt != null)
+        'metadata_last_retry_at': metadataLastRetryAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1555,6 +1761,10 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
     Value<int?>? splitIndex,
     Value<int?>? splitSegmentCount,
     Value<String>? reviewFlagsJson,
+    Value<String>? metadataSyncStatus,
+    Value<String>? pendingMetadataJson,
+    Value<int>? metadataRetryCount,
+    Value<DateTime?>? metadataLastRetryAt,
     Value<int>? rowid,
   }) {
     return LocalRecordingsCompanion(
@@ -1590,6 +1800,10 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
       splitIndex: splitIndex ?? this.splitIndex,
       splitSegmentCount: splitSegmentCount ?? this.splitSegmentCount,
       reviewFlagsJson: reviewFlagsJson ?? this.reviewFlagsJson,
+      metadataSyncStatus: metadataSyncStatus ?? this.metadataSyncStatus,
+      pendingMetadataJson: pendingMetadataJson ?? this.pendingMetadataJson,
+      metadataRetryCount: metadataRetryCount ?? this.metadataRetryCount,
+      metadataLastRetryAt: metadataLastRetryAt ?? this.metadataLastRetryAt,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1696,6 +1910,22 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
     if (reviewFlagsJson.present) {
       map['review_flags_json'] = Variable<String>(reviewFlagsJson.value);
     }
+    if (metadataSyncStatus.present) {
+      map['metadata_sync_status'] = Variable<String>(metadataSyncStatus.value);
+    }
+    if (pendingMetadataJson.present) {
+      map['pending_metadata_json'] = Variable<String>(
+        pendingMetadataJson.value,
+      );
+    }
+    if (metadataRetryCount.present) {
+      map['metadata_retry_count'] = Variable<int>(metadataRetryCount.value);
+    }
+    if (metadataLastRetryAt.present) {
+      map['metadata_last_retry_at'] = Variable<DateTime>(
+        metadataLastRetryAt.value,
+      );
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1736,6 +1966,10 @@ class LocalRecordingsCompanion extends UpdateCompanion<LocalRecording> {
           ..write('splitIndex: $splitIndex, ')
           ..write('splitSegmentCount: $splitSegmentCount, ')
           ..write('reviewFlagsJson: $reviewFlagsJson, ')
+          ..write('metadataSyncStatus: $metadataSyncStatus, ')
+          ..write('pendingMetadataJson: $pendingMetadataJson, ')
+          ..write('metadataRetryCount: $metadataRetryCount, ')
+          ..write('metadataLastRetryAt: $metadataLastRetryAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -3498,6 +3732,28 @@ class $RecordingSessionsTable extends RecordingSessions
     requiredDuringInsert: false,
     defaultValue: const Constant(-1),
   );
+  static const VerificationMeta _finalizedAudioPathMeta =
+      const VerificationMeta('finalizedAudioPath');
+  @override
+  late final GeneratedColumn<String> finalizedAudioPath =
+      GeneratedColumn<String>(
+        'finalized_audio_path',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _finalizedDurationSecondsMeta =
+      const VerificationMeta('finalizedDurationSeconds');
+  @override
+  late final GeneratedColumn<double> finalizedDurationSeconds =
+      GeneratedColumn<double>(
+        'finalized_duration_seconds',
+        aliasedName,
+        true,
+        type: DriftSqlType.double,
+        requiredDuringInsert: false,
+      );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -3514,6 +3770,8 @@ class $RecordingSessionsTable extends RecordingSessions
     segmentPathsJson,
     isPaused,
     lastSegmentIndex,
+    finalizedAudioPath,
+    finalizedDurationSeconds,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -3634,6 +3892,24 @@ class $RecordingSessionsTable extends RecordingSessions
         ),
       );
     }
+    if (data.containsKey('finalized_audio_path')) {
+      context.handle(
+        _finalizedAudioPathMeta,
+        finalizedAudioPath.isAcceptableOrUnknown(
+          data['finalized_audio_path']!,
+          _finalizedAudioPathMeta,
+        ),
+      );
+    }
+    if (data.containsKey('finalized_duration_seconds')) {
+      context.handle(
+        _finalizedDurationSecondsMeta,
+        finalizedDurationSeconds.isAcceptableOrUnknown(
+          data['finalized_duration_seconds']!,
+          _finalizedDurationSecondsMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -3699,6 +3975,14 @@ class $RecordingSessionsTable extends RecordingSessions
         DriftSqlType.int,
         data['${effectivePrefix}last_segment_index'],
       )!,
+      finalizedAudioPath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}finalized_audio_path'],
+      ),
+      finalizedDurationSeconds: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}finalized_duration_seconds'],
+      ),
     );
   }
 
@@ -3724,6 +4008,20 @@ class RecordingSession extends DataClass
   final String segmentPathsJson;
   final bool isPaused;
   final int lastSegmentIndex;
+
+  /// Where the finalized audio landed, and how long it is (ENG-420). Written
+  /// as soon as the file exists, before the session is marked completed, so
+  /// the row itself points at the artifact instead of leaving it to be found
+  /// later by matching filenames.
+  ///
+  /// Null means "never anchored" — every session that predates v14, plus any
+  /// that never finalized. It is a pointer, not a guarantee: a set value can
+  /// name a file that is already gone (discarding from the save form deletes
+  /// the audio and leaves the row untouched), and it survives a later status
+  /// change (the orphan sweep flips `completed` back to `crashed` without
+  /// clearing it), so a reader must stat the file rather than trust the row.
+  final String? finalizedAudioPath;
+  final double? finalizedDurationSeconds;
   const RecordingSession({
     required this.id,
     required this.projectId,
@@ -3739,6 +4037,8 @@ class RecordingSession extends DataClass
     required this.segmentPathsJson,
     required this.isPaused,
     required this.lastSegmentIndex,
+    this.finalizedAudioPath,
+    this.finalizedDurationSeconds,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -3767,6 +4067,14 @@ class RecordingSession extends DataClass
     map['segment_paths_json'] = Variable<String>(segmentPathsJson);
     map['is_paused'] = Variable<bool>(isPaused);
     map['last_segment_index'] = Variable<int>(lastSegmentIndex);
+    if (!nullToAbsent || finalizedAudioPath != null) {
+      map['finalized_audio_path'] = Variable<String>(finalizedAudioPath);
+    }
+    if (!nullToAbsent || finalizedDurationSeconds != null) {
+      map['finalized_duration_seconds'] = Variable<double>(
+        finalizedDurationSeconds,
+      );
+    }
     return map;
   }
 
@@ -3796,6 +4104,12 @@ class RecordingSession extends DataClass
       segmentPathsJson: Value(segmentPathsJson),
       isPaused: Value(isPaused),
       lastSegmentIndex: Value(lastSegmentIndex),
+      finalizedAudioPath: finalizedAudioPath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(finalizedAudioPath),
+      finalizedDurationSeconds: finalizedDurationSeconds == null && nullToAbsent
+          ? const Value.absent()
+          : Value(finalizedDurationSeconds),
     );
   }
 
@@ -3823,6 +4137,12 @@ class RecordingSession extends DataClass
       segmentPathsJson: serializer.fromJson<String>(json['segmentPathsJson']),
       isPaused: serializer.fromJson<bool>(json['isPaused']),
       lastSegmentIndex: serializer.fromJson<int>(json['lastSegmentIndex']),
+      finalizedAudioPath: serializer.fromJson<String?>(
+        json['finalizedAudioPath'],
+      ),
+      finalizedDurationSeconds: serializer.fromJson<double?>(
+        json['finalizedDurationSeconds'],
+      ),
     );
   }
   @override
@@ -3843,6 +4163,10 @@ class RecordingSession extends DataClass
       'segmentPathsJson': serializer.toJson<String>(segmentPathsJson),
       'isPaused': serializer.toJson<bool>(isPaused),
       'lastSegmentIndex': serializer.toJson<int>(lastSegmentIndex),
+      'finalizedAudioPath': serializer.toJson<String?>(finalizedAudioPath),
+      'finalizedDurationSeconds': serializer.toJson<double?>(
+        finalizedDurationSeconds,
+      ),
     };
   }
 
@@ -3861,6 +4185,8 @@ class RecordingSession extends DataClass
     String? segmentPathsJson,
     bool? isPaused,
     int? lastSegmentIndex,
+    Value<String?> finalizedAudioPath = const Value.absent(),
+    Value<double?> finalizedDurationSeconds = const Value.absent(),
   }) => RecordingSession(
     id: id ?? this.id,
     projectId: projectId ?? this.projectId,
@@ -3882,6 +4208,12 @@ class RecordingSession extends DataClass
     segmentPathsJson: segmentPathsJson ?? this.segmentPathsJson,
     isPaused: isPaused ?? this.isPaused,
     lastSegmentIndex: lastSegmentIndex ?? this.lastSegmentIndex,
+    finalizedAudioPath: finalizedAudioPath.present
+        ? finalizedAudioPath.value
+        : this.finalizedAudioPath,
+    finalizedDurationSeconds: finalizedDurationSeconds.present
+        ? finalizedDurationSeconds.value
+        : this.finalizedDurationSeconds,
   );
   RecordingSession copyWithCompanion(RecordingSessionsCompanion data) {
     return RecordingSession(
@@ -3913,6 +4245,12 @@ class RecordingSession extends DataClass
       lastSegmentIndex: data.lastSegmentIndex.present
           ? data.lastSegmentIndex.value
           : this.lastSegmentIndex,
+      finalizedAudioPath: data.finalizedAudioPath.present
+          ? data.finalizedAudioPath.value
+          : this.finalizedAudioPath,
+      finalizedDurationSeconds: data.finalizedDurationSeconds.present
+          ? data.finalizedDurationSeconds.value
+          : this.finalizedDurationSeconds,
     );
   }
 
@@ -3932,7 +4270,9 @@ class RecordingSession extends DataClass
           ..write('totalDurationSeconds: $totalDurationSeconds, ')
           ..write('segmentPathsJson: $segmentPathsJson, ')
           ..write('isPaused: $isPaused, ')
-          ..write('lastSegmentIndex: $lastSegmentIndex')
+          ..write('lastSegmentIndex: $lastSegmentIndex, ')
+          ..write('finalizedAudioPath: $finalizedAudioPath, ')
+          ..write('finalizedDurationSeconds: $finalizedDurationSeconds')
           ..write(')'))
         .toString();
   }
@@ -3953,6 +4293,8 @@ class RecordingSession extends DataClass
     segmentPathsJson,
     isPaused,
     lastSegmentIndex,
+    finalizedAudioPath,
+    finalizedDurationSeconds,
   );
   @override
   bool operator ==(Object other) =>
@@ -3971,7 +4313,9 @@ class RecordingSession extends DataClass
           other.totalDurationSeconds == this.totalDurationSeconds &&
           other.segmentPathsJson == this.segmentPathsJson &&
           other.isPaused == this.isPaused &&
-          other.lastSegmentIndex == this.lastSegmentIndex);
+          other.lastSegmentIndex == this.lastSegmentIndex &&
+          other.finalizedAudioPath == this.finalizedAudioPath &&
+          other.finalizedDurationSeconds == this.finalizedDurationSeconds);
 }
 
 class RecordingSessionsCompanion extends UpdateCompanion<RecordingSession> {
@@ -3989,6 +4333,8 @@ class RecordingSessionsCompanion extends UpdateCompanion<RecordingSession> {
   final Value<String> segmentPathsJson;
   final Value<bool> isPaused;
   final Value<int> lastSegmentIndex;
+  final Value<String?> finalizedAudioPath;
+  final Value<double?> finalizedDurationSeconds;
   final Value<int> rowid;
   const RecordingSessionsCompanion({
     this.id = const Value.absent(),
@@ -4005,6 +4351,8 @@ class RecordingSessionsCompanion extends UpdateCompanion<RecordingSession> {
     this.segmentPathsJson = const Value.absent(),
     this.isPaused = const Value.absent(),
     this.lastSegmentIndex = const Value.absent(),
+    this.finalizedAudioPath = const Value.absent(),
+    this.finalizedDurationSeconds = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   RecordingSessionsCompanion.insert({
@@ -4022,6 +4370,8 @@ class RecordingSessionsCompanion extends UpdateCompanion<RecordingSession> {
     this.segmentPathsJson = const Value.absent(),
     this.isPaused = const Value.absent(),
     this.lastSegmentIndex = const Value.absent(),
+    this.finalizedAudioPath = const Value.absent(),
+    this.finalizedDurationSeconds = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        projectId = Value(projectId),
@@ -4042,6 +4392,8 @@ class RecordingSessionsCompanion extends UpdateCompanion<RecordingSession> {
     Expression<String>? segmentPathsJson,
     Expression<bool>? isPaused,
     Expression<int>? lastSegmentIndex,
+    Expression<String>? finalizedAudioPath,
+    Expression<double>? finalizedDurationSeconds,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -4060,6 +4412,10 @@ class RecordingSessionsCompanion extends UpdateCompanion<RecordingSession> {
       if (segmentPathsJson != null) 'segment_paths_json': segmentPathsJson,
       if (isPaused != null) 'is_paused': isPaused,
       if (lastSegmentIndex != null) 'last_segment_index': lastSegmentIndex,
+      if (finalizedAudioPath != null)
+        'finalized_audio_path': finalizedAudioPath,
+      if (finalizedDurationSeconds != null)
+        'finalized_duration_seconds': finalizedDurationSeconds,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -4079,6 +4435,8 @@ class RecordingSessionsCompanion extends UpdateCompanion<RecordingSession> {
     Value<String>? segmentPathsJson,
     Value<bool>? isPaused,
     Value<int>? lastSegmentIndex,
+    Value<String?>? finalizedAudioPath,
+    Value<double?>? finalizedDurationSeconds,
     Value<int>? rowid,
   }) {
     return RecordingSessionsCompanion(
@@ -4096,6 +4454,9 @@ class RecordingSessionsCompanion extends UpdateCompanion<RecordingSession> {
       segmentPathsJson: segmentPathsJson ?? this.segmentPathsJson,
       isPaused: isPaused ?? this.isPaused,
       lastSegmentIndex: lastSegmentIndex ?? this.lastSegmentIndex,
+      finalizedAudioPath: finalizedAudioPath ?? this.finalizedAudioPath,
+      finalizedDurationSeconds:
+          finalizedDurationSeconds ?? this.finalizedDurationSeconds,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -4147,6 +4508,14 @@ class RecordingSessionsCompanion extends UpdateCompanion<RecordingSession> {
     if (lastSegmentIndex.present) {
       map['last_segment_index'] = Variable<int>(lastSegmentIndex.value);
     }
+    if (finalizedAudioPath.present) {
+      map['finalized_audio_path'] = Variable<String>(finalizedAudioPath.value);
+    }
+    if (finalizedDurationSeconds.present) {
+      map['finalized_duration_seconds'] = Variable<double>(
+        finalizedDurationSeconds.value,
+      );
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -4170,6 +4539,8 @@ class RecordingSessionsCompanion extends UpdateCompanion<RecordingSession> {
           ..write('segmentPathsJson: $segmentPathsJson, ')
           ..write('isPaused: $isPaused, ')
           ..write('lastSegmentIndex: $lastSegmentIndex, ')
+          ..write('finalizedAudioPath: $finalizedAudioPath, ')
+          ..write('finalizedDurationSeconds: $finalizedDurationSeconds, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -4260,6 +4631,10 @@ typedef $$LocalRecordingsTableCreateCompanionBuilder =
       Value<int?> splitIndex,
       Value<int?> splitSegmentCount,
       Value<String> reviewFlagsJson,
+      Value<String> metadataSyncStatus,
+      Value<String> pendingMetadataJson,
+      Value<int> metadataRetryCount,
+      Value<DateTime?> metadataLastRetryAt,
       Value<int> rowid,
     });
 typedef $$LocalRecordingsTableUpdateCompanionBuilder =
@@ -4295,6 +4670,10 @@ typedef $$LocalRecordingsTableUpdateCompanionBuilder =
       Value<int?> splitIndex,
       Value<int?> splitSegmentCount,
       Value<String> reviewFlagsJson,
+      Value<String> metadataSyncStatus,
+      Value<String> pendingMetadataJson,
+      Value<int> metadataRetryCount,
+      Value<DateTime?> metadataLastRetryAt,
       Value<int> rowid,
     });
 
@@ -4459,6 +4838,26 @@ class $$LocalRecordingsTableFilterComposer
 
   ColumnFilters<String> get reviewFlagsJson => $composableBuilder(
     column: $table.reviewFlagsJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get metadataSyncStatus => $composableBuilder(
+    column: $table.metadataSyncStatus,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get pendingMetadataJson => $composableBuilder(
+    column: $table.pendingMetadataJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get metadataRetryCount => $composableBuilder(
+    column: $table.metadataRetryCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get metadataLastRetryAt => $composableBuilder(
+    column: $table.metadataLastRetryAt,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -4626,6 +5025,26 @@ class $$LocalRecordingsTableOrderingComposer
     column: $table.reviewFlagsJson,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get metadataSyncStatus => $composableBuilder(
+    column: $table.metadataSyncStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get pendingMetadataJson => $composableBuilder(
+    column: $table.pendingMetadataJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get metadataRetryCount => $composableBuilder(
+    column: $table.metadataRetryCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get metadataLastRetryAt => $composableBuilder(
+    column: $table.metadataLastRetryAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$LocalRecordingsTableAnnotationComposer
@@ -4771,6 +5190,26 @@ class $$LocalRecordingsTableAnnotationComposer
     column: $table.reviewFlagsJson,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get metadataSyncStatus => $composableBuilder(
+    column: $table.metadataSyncStatus,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get pendingMetadataJson => $composableBuilder(
+    column: $table.pendingMetadataJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get metadataRetryCount => $composableBuilder(
+    column: $table.metadataRetryCount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get metadataLastRetryAt => $composableBuilder(
+    column: $table.metadataLastRetryAt,
+    builder: (column) => column,
+  );
 }
 
 class $$LocalRecordingsTableTableManager
@@ -4841,6 +5280,10 @@ class $$LocalRecordingsTableTableManager
                 Value<int?> splitIndex = const Value.absent(),
                 Value<int?> splitSegmentCount = const Value.absent(),
                 Value<String> reviewFlagsJson = const Value.absent(),
+                Value<String> metadataSyncStatus = const Value.absent(),
+                Value<String> pendingMetadataJson = const Value.absent(),
+                Value<int> metadataRetryCount = const Value.absent(),
+                Value<DateTime?> metadataLastRetryAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => LocalRecordingsCompanion(
                 id: id,
@@ -4874,6 +5317,10 @@ class $$LocalRecordingsTableTableManager
                 splitIndex: splitIndex,
                 splitSegmentCount: splitSegmentCount,
                 reviewFlagsJson: reviewFlagsJson,
+                metadataSyncStatus: metadataSyncStatus,
+                pendingMetadataJson: pendingMetadataJson,
+                metadataRetryCount: metadataRetryCount,
+                metadataLastRetryAt: metadataLastRetryAt,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -4909,6 +5356,10 @@ class $$LocalRecordingsTableTableManager
                 Value<int?> splitIndex = const Value.absent(),
                 Value<int?> splitSegmentCount = const Value.absent(),
                 Value<String> reviewFlagsJson = const Value.absent(),
+                Value<String> metadataSyncStatus = const Value.absent(),
+                Value<String> pendingMetadataJson = const Value.absent(),
+                Value<int> metadataRetryCount = const Value.absent(),
+                Value<DateTime?> metadataLastRetryAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => LocalRecordingsCompanion.insert(
                 id: id,
@@ -4942,6 +5393,10 @@ class $$LocalRecordingsTableTableManager
                 splitIndex: splitIndex,
                 splitSegmentCount: splitSegmentCount,
                 reviewFlagsJson: reviewFlagsJson,
+                metadataSyncStatus: metadataSyncStatus,
+                pendingMetadataJson: pendingMetadataJson,
+                metadataRetryCount: metadataRetryCount,
+                metadataLastRetryAt: metadataLastRetryAt,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -5813,6 +6268,8 @@ typedef $$RecordingSessionsTableCreateCompanionBuilder =
       Value<String> segmentPathsJson,
       Value<bool> isPaused,
       Value<int> lastSegmentIndex,
+      Value<String?> finalizedAudioPath,
+      Value<double?> finalizedDurationSeconds,
       Value<int> rowid,
     });
 typedef $$RecordingSessionsTableUpdateCompanionBuilder =
@@ -5831,6 +6288,8 @@ typedef $$RecordingSessionsTableUpdateCompanionBuilder =
       Value<String> segmentPathsJson,
       Value<bool> isPaused,
       Value<int> lastSegmentIndex,
+      Value<String?> finalizedAudioPath,
+      Value<double?> finalizedDurationSeconds,
       Value<int> rowid,
     });
 
@@ -5910,6 +6369,16 @@ class $$RecordingSessionsTableFilterComposer
 
   ColumnFilters<int> get lastSegmentIndex => $composableBuilder(
     column: $table.lastSegmentIndex,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get finalizedAudioPath => $composableBuilder(
+    column: $table.finalizedAudioPath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get finalizedDurationSeconds => $composableBuilder(
+    column: $table.finalizedDurationSeconds,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -5992,6 +6461,16 @@ class $$RecordingSessionsTableOrderingComposer
     column: $table.lastSegmentIndex,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get finalizedAudioPath => $composableBuilder(
+    column: $table.finalizedAudioPath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get finalizedDurationSeconds => $composableBuilder(
+    column: $table.finalizedDurationSeconds,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$RecordingSessionsTableAnnotationComposer
@@ -6058,6 +6537,16 @@ class $$RecordingSessionsTableAnnotationComposer
     column: $table.lastSegmentIndex,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get finalizedAudioPath => $composableBuilder(
+    column: $table.finalizedAudioPath,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get finalizedDurationSeconds => $composableBuilder(
+    column: $table.finalizedDurationSeconds,
+    builder: (column) => column,
+  );
 }
 
 class $$RecordingSessionsTableTableManager
@@ -6114,6 +6603,8 @@ class $$RecordingSessionsTableTableManager
                 Value<String> segmentPathsJson = const Value.absent(),
                 Value<bool> isPaused = const Value.absent(),
                 Value<int> lastSegmentIndex = const Value.absent(),
+                Value<String?> finalizedAudioPath = const Value.absent(),
+                Value<double?> finalizedDurationSeconds = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => RecordingSessionsCompanion(
                 id: id,
@@ -6130,6 +6621,8 @@ class $$RecordingSessionsTableTableManager
                 segmentPathsJson: segmentPathsJson,
                 isPaused: isPaused,
                 lastSegmentIndex: lastSegmentIndex,
+                finalizedAudioPath: finalizedAudioPath,
+                finalizedDurationSeconds: finalizedDurationSeconds,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -6148,6 +6641,8 @@ class $$RecordingSessionsTableTableManager
                 Value<String> segmentPathsJson = const Value.absent(),
                 Value<bool> isPaused = const Value.absent(),
                 Value<int> lastSegmentIndex = const Value.absent(),
+                Value<String?> finalizedAudioPath = const Value.absent(),
+                Value<double?> finalizedDurationSeconds = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => RecordingSessionsCompanion.insert(
                 id: id,
@@ -6164,6 +6659,8 @@ class $$RecordingSessionsTableTableManager
                 segmentPathsJson: segmentPathsJson,
                 isPaused: isPaused,
                 lastSegmentIndex: lastSegmentIndex,
+                finalizedAudioPath: finalizedAudioPath,
+                finalizedDurationSeconds: finalizedDurationSeconds,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

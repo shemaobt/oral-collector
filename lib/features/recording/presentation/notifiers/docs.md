@@ -57,7 +57,7 @@ Path: @/lib/features/recording/presentation/notifiers
   does no navigation or snackbars. It depends on the recording data
   layer through injectable seams under
   [../../data/services/](../../data/services/) (the per-segment ffmpeg
-  exporter and the split persister factory) plus `fileExistsProvider` /
+  exporter and the split and boost persister factories) plus `fileExistsProvider` /
   `waveformLoaderProvider` in [../../data/](../../data/), reads sync
   state from
   [/lib/features/sync/presentation/notifiers/sync_notifier.dart](../../../sync/presentation/notifiers/sync_notifier.dart)
@@ -67,8 +67,9 @@ Path: @/lib/features/recording/presentation/notifiers
   editor's injectable seams" in [../../data/docs.md](../../data/docs.md).
 - `RecordingDetailNotifier` is **headless** for the same reason: no
   `BuildContext`, no navigation, no snackbars. Its metadata mutations return a
-  `RecordingMutationResult { success, failed, forbidden, titleConflict }` the
-  widget maps to a localized snackbar (see Core Implementation). Its writes go through typed
+  `RecordingMutationResult { success, savedLocallyOnly, failed, forbidden,
+  titleConflict }` the widget maps to a localized snackbar (see Core
+  Implementation). Its writes go through typed
   repository methods on
   [../../data/repositories/local_recording_repository.dart](../../data/repositories/local_recording_repository.dart)
   (`setStoryteller`, `classify`, `moveCategory`, …) and through the
@@ -124,7 +125,17 @@ Path: @/lib/features/recording/presentation/notifiers
     `buildHealMetadataCompanion`
     ([../../data/recording_heal_companion.dart](../../data/recording_heal_companion.dart)),
     then (online, still no row) falls back to a server fetch mapped through
-    `serverRecordingToLocal`; web always fetches the server DTO. The resolved row
+    `serverRecordingToLocal`; web always fetches the server DTO. Since ENG-45,
+    if that heal call 404s for a row that `serverHasRecording`
+    ([../../domain/server_deletion_policy.dart](../../domain/server_deletion_policy.dart))
+    accepts, the row and its audio file are erased and the server-fallback
+    fetch above is skipped for this load — asking again would only re-confirm
+    what the 404 already proved. The heal branch is reachable even for a row
+    that never finished uploading, because `_needsUserRefresh` (unlike
+    `_needsGcsRefresh`) does not check `uploadStatus`: there is a real window
+    where a row has a `serverId` but is still `uploading`/`failed` (the id is
+    written before `markAsUploaded`), and `serverHasRecording`'s status
+    check is what keeps a stray 404 in that window from erasing it. The resolved row
     is mapped to the entity **exactly once at the state boundary** via
     `localRecordingToEntity`
     ([../../data/local_recording_to_entity.dart](../../data/local_recording_to_entity.dart)),
@@ -152,7 +163,31 @@ Path: @/lib/features/recording/presentation/notifiers
     `toggleCleaningStatus`, `moveCategory`, `classify`, `saveSecondary` — each
     calls the server first, mirrors to Drift through a typed
     `LocalRecordingRepository` write (native only), refreshes genre stats /
-    kicks the sync queue where the screen did, then `await load()`s. The four
+    kicks the sync queue where the screen did, then `await load()`s.
+    `toggleCleaningStatus`/`moveCategory`/`classify`/`saveSecondary` (ENG-399)
+    and `setStoryteller` (ENG-411)
+    route the server call through the shared `_pushMetadata`/`_refusal` pair,
+    which classifies the outcome as accepted, rejected (a non-200 response, or
+    403 → `ForbiddenException`), or unreachable (offline, or any other thrown
+    exception, except on web where a thrown exception is treated as rejected —
+    there is no local row to fall back to) rather than collapsing every
+    failure into one `failed`. A rejection still leaves the local row alone; an
+    unreachable server mirrors the edit to Drift anyway and the method returns
+    `RecordingMutationResult.savedLocallyOnly` instead of `success`. See the
+    "Online-first" bullet in [../docs.md](../docs.md) for the full
+    accepted/rejected/unreachable contract, why each method keeps its own
+    (deliberately inconsistent) gate for whether the edit is owed to the
+    server at all, and how the metadata outbox (ENG-403, below) resends a
+    `savedLocallyOnly` edit once the connection returns. `saveDetails`
+    gets the same fallback through the ENG-380 use-cases
+    (`saveRecordingTitle`/`saveRecordingDescription` — see
+    [../../data/docs.md](../../data/docs.md)) rather than `_pushMetadata`
+    directly, since it does not call `updateRecording` itself; it tracks a
+    single `localOnly` flag across the title and description halves — either
+    one landing local-only makes the whole edit `savedLocallyOnly` — and binds
+    both use-case results before returning, which a prior revision of this
+    method did not do for the description half (a bug fixed by ENG-399, not a
+    behavior this doc is describing as new). The four
     that can fail visibly (`toggleCleaningStatus`/`moveCategory`/`classify`/
     `saveSecondary`, plus `saveDetails`) return `RecordingMutationResult` so the
     widget picks the snackbar (see Things to Know). `titleConflict` comes only
@@ -166,6 +201,30 @@ Path: @/lib/features/recording/presentation/notifiers
     puts the recording back in the queue instead of leaving it stuck. Unlike the
     rename there is no server-side second refusal to guard against — the
     description is only sent at create time — so the requeue is unconditional.
+  - **Every metadata-mutation entry point also settles the
+    metadata outbox (ENG-403), through the shared `_settleOutbox` helper.**
+    `saveDetails` calls it once for `title` and once for `description`, right
+    after each half's write; `toggleCleaningStatus`, `classify`, `saveSecondary`
+    and, since ENG-411, `setStoryteller` gate it behind `hasServerId`, matching
+    the gate that decides whether *they* call the server. `moveCategory` is the odd one: it calls the
+    server unconditionally, without checking for a server copy first (see
+    [../../domain/docs.md](../../domain/docs.md)), so its outbox gate is new
+    and different from the rest — a non-empty `serverId` check that exists
+    purely to keep a recording the server has never seen from being marked
+    pending in a queue that only drains rows with a `serverId`
+    ([/lib/features/sync/docs.md](../../../sync/docs.md)); without it, that
+    pendency would sit forever, filtered out of every pass. `_settleOutbox`
+    marks the fields pending on the `savedLocallyOnly` branch and clears them
+    (a no-op if nothing was owed) once the write reaches the server, through
+    `LocalRecordingRepository.markMetadataPending`/`clearPendingMetadataFields`
+    ([../../data/repositories/docs.md](../../data/repositories/docs.md)), so
+    an edit that finally lands also clears whatever an earlier offline edit
+    to the same field left owed. `setStoryteller` was the last holdout: until
+    ENG-411 it swallowed every exception without telling "unreachable" apart
+    from "refused", so it could not decide which case the outbox contract
+    needed — offline the assignment landed on the row with nothing owed and
+    never went up, and on a 403 the row was written anyway, asserting a
+    storyteller the server had rejected.
   - **Audio mutations** behind the IO seams: `downloadAndCache` (GCS download +
     `cacheDownloadedAudio`, throws on failure so the widget dismisses its
     progress dialog and shows the error), `downloadForExport` (temp download for
@@ -217,13 +276,24 @@ Path: @/lib/features/recording/presentation/notifiers
     segment through the `LocalSegmentExporter` seam — wrapping the source
     path, the `SegmentExportSpec`s, gain, boost-only flag, title, and parent
     genre id in a single `ExportLocalSegmentsRequest` value object (ENG-209;
-    see [../../data/docs.md](../../data/docs.md)) — and hands the resulting
-    specs plus the entity `parent` to a `RecordingSplitPersister` built from
+    see [../../data/docs.md](../../data/docs.md)) — then `_saveLocally`
+    branches on `TrimEditDecision.mode` (ENG-402, `TrimSaveMode` in
+    [../trim_edit_decision.dart](../trim_edit_decision.dart)): a `boostOnly`
+    save (no cut points) hands its single spec to a `RecordingBoostPersister`
+    built from `recordingBoostPersisterProvider`, which calls
+    `LocalRecordingRepository.replaceAudioAndQueueResend` and never touches
+    the server directly; every other save hands the specs plus the entity
+    `parent` to a `RecordingSplitPersister` built from
     `recordingSplitPersisterProvider` (the persister and the repository's
     `splitRecordingReplacingParent` consume the entity as the parent as of
     ENG-198 — see [../../data/repositories/docs.md](../../data/repositories/docs.md);
     see Things to Know for why every dependency is captured before the
-    first `await`).
+    first `await`). The two persisters are deliberately separate types, not
+    one mode-branching class — see
+    [../../data/docs.md](../../data/docs.md) and
+    [/docs/recording-split-semantics.md](../../../../../docs/recording-split-semantics.md#what-counts-as-a-split)
+    for why a boost must never call the split persister's best-effort remote
+    delete.
 - `RecordingsListNotifier` (`recordings_list_notifier.dart`) owns the
   paginated list. As of ENG-197 the state holds `List<LocalRecordingEntity>`
   (see [./recordings_list_state.dart](recordings_list_state.dart)), not the
@@ -238,10 +308,46 @@ Path: @/lib/features/recording/presentation/notifiers
   merged with local-only entities, deduped by `serverId` — and `loadMore`
   appends later pages from the `_serverOffset` cursor; offline or on an API
   error both fall back to the full local set (see the review-flag exception
-  below). The merge/dedup logic is byte-for-byte
-  the pre-ENG-197 algorithm, just keyed off entity fields. Status / genre /
+  below). Since ENG-45 the list also reconciles a hard delete made
+  on the server, and as of ENG-400 that reconciliation spans pagination and
+  ends in a per-recording confirmation. A **sweep** is the union of the server
+  ids seen across an unfiltered pass: `_fetchAndMerge` opens it with page zero
+  (`_sweep`, stamped with its `projectId`; a filtered fetch opens none, and a
+  fetch a newer one already superseded opens none either), each `loadMore`
+  page joins it through `_advanceSweep`, and the last page — the one shorter
+  than `_pageSize` (50) — closes it. Only then are the local rows absent from
+  the union considered, and they are *candidates*, not verdicts: each is put
+  through `serverHasRecording` (see
+  [../../domain/docs.md](../../domain/docs.md)) and then confirmed with a
+  direct `getRecording(serverId)`, and only a 404 — read with the shared
+  `isRecordingNotFound` — erases the row and its audio file. Anything else the
+  server says, including an unreachable one, leaves the row alone. The union
+  decides *who gets asked about*, which is why the sweep still refuses to
+  close mid-pagination, under a filter, on another project's pages, or on an
+  empty first page: not because the answer would be unsafe (the confirmation
+  handles that) but because each of those would put most of the project on
+  trial and turn one listing into a request storm. `_advanceSweep` does not
+  re-check the filters itself, and that rests on an invariant that lives in
+  this class rather than in it: **every server-side filter setter
+  (`setUserFilter`, `setStorytellerFilter`, `setReviewFlagFilter`,
+  `clearAllFilters`) refetches**, and a fetch installs a fresh sweep — a
+  filtered one installs none at all. Break that (a filter that mutates `state`
+  without refetching) and a filtered pagination could close a sweep opened
+  unfiltered; the cost is a storm of confirmations, not lost recordings, since
+  each candidate is still confirmed individually. The confirmations themselves
+  run through `mapBounded` (`_confirmDeletedConcurrency`) and are cut short by
+  a generation change, so a refresh abandons the queued ones instead of waiting
+  them out; the deletions they authorise stay serial. A project of 50 or more
+  recordings now heals as the user pages to the end of the list, which is what
+  ENG-400 fixed — before it, only a short first page reconciled and a large
+  project never self-healed at all (see Things to Know). Status / genre /
   subcategory / search filtering is computed client-side by
-  `RecordingsListState.filteredRecordings` (`unclassified` reads the entity's
+  `RecordingsListState.filteredRecordings` (`StatusFilter.uploaded` matches
+  `uploadStatus` in `{'uploaded', 'verified'}` (ENG-376), not just
+  `'uploaded'` — a `verified` recording already shows the same
+  `recording_statusUploaded` badge on its card, so excluding it from the
+  `filter_uploaded` chip looked like a missing-recording bug rather than a
+  filter bug; `unclassified` reads the entity's
   `isUnclassified` extension; `missingDescription`, added by ENG-354, negates
   `isDescriptionSufficient` from
   [../../../../shared/utils/recording_description.dart](../../../../shared/utils/recording_description.dart)
@@ -252,7 +358,7 @@ Path: @/lib/features/recording/presentation/notifiers
   `uploadStatus='failed_description'`, so this filter is how the user finds them
   and the detail banner is how they clear them) and never refetches, so only
   `setUserFilter`, `setStorytellerFilter`, `setReviewFlagFilter`,
-  `clearAllFilters`, `clearStaleRecordings`, and
+  `clearAllFilters`, `retryFailedUploads`, and
   pull-to-refresh re-hit the server. `patchRecordingTitle` rerenders after an
   edit without a full refetch, using the entity's sentinel `copyWith(title: …)`
   rather than Drift's `Value(...)` wrapper.
@@ -306,28 +412,62 @@ Path: @/lib/features/recording/presentation/notifiers
   so the screen picks the snackbar without re-deriving it from an
   exception. See Things to Know for the web-orphan fix and the
   remote-failure semantics.
+- `retryFailedUploads()` (ENG-404) is the bulk counterpart the recordings
+  list offers over `failed`/`failed_exhausted` rows. It replaced a hard
+  delete of the same set (the former `clearStaleRecordings`), which
+  destroyed the only copy of audio the server had never received. It calls
+  `LocalRecordingRepository.requeueFailedUploads` (one `UPDATE`; see
+  [../../data/repositories/docs.md](../../data/repositories/docs.md) for the
+  scope and batch-write rationale), fires `SyncNotifier.processQueue()`
+  **unawaited** — the caller only needs the rows queued, not the uploads
+  finished — and refetches. Unlike `deleteRecording`, there is no
+  confirmation dialog and no online pre-check: requeueing destroys nothing
+  and is idempotent, so a confirmation would only cost a second tap, and the
+  write needs no network — the rows drain on their own once the device is
+  back online. The visible consequence: the home screen's total no longer
+  drops when the user runs this, because the row survives and still counts
+  toward `getLocalOnlyStats` under its new status (see
+  [/lib/features/home/presentation/notifiers/docs.md](../../../home/presentation/notifiers/docs.md)).
 - `InputDeviceNotifier` tracks the currently selected microphone for
   capture; `InterruptedSessionsNotifier` powers the "you have an
   unsaved recording" prompt on app open by reading recovery rows from
   `RecordingSessionRepository`. It exposes a **two-phase save** plus a
   one-shot discard for resolving that prompt:
-  - `save` re-runs the finalization pipeline against the surviving
-    segments with `deleteSources: false` and returns the
-    `RecordingResult` *without* resolving the session — it does **not**
-    call `markRecovered` and does **not** clean up segments. The
-    session stays `crashed` and the produced file is the input to the
-    confirmation screen (see ENG-80 below).
-  - `confirmRecovery(sessionId, keepPath:)` is the second phase: it
-    runs only after the user confirms metadata on
-    [../recovery_confirm_screen.dart](../recovery_confirm_screen.dart),
-    marks the session recovered, and deletes every segment except
-    `keepPath`. `keepPath` is the finalized file, which in the
+  - `save` produces the `RecordingResult` that feeds the confirmation
+    screen *without* resolving the session — it does **not** mark the
+    session recovered and does **not** clean up segments. The session
+    stays `crashed` (see ENG-80 below). It reaches that result by one of
+    **two** routes, tried in this order (ENG-420, slice 3):
+    1. **The finished file.** If the row's v14 anchor names audio that is
+       still on disk, that file is the result, with the anchored duration
+       and a format read off its extension. Nothing is reconcatenated. This
+       is the only route that works for the sessions the startup sweep
+       surfaces, whose source segments the fire-and-forget deletions have
+       already removed — and it spares every other session a re-concat that
+       would land on the same bytes.
+    2. **Re-deriving from the sources.** With no anchor, or an anchor whose
+       file is gone, `save` re-runs the finalization pipeline against the
+       surviving segments with `deleteSources: false`. This is the right
+       answer when the original finalization failed, and the fallback when
+       the anchor has gone stale — the anchor is a pointer, not a guarantee.
+    When neither route yields audio, `save` returns null and leaves the row
+    alone if it is still anchored; see
+    [../../data/repositories/docs.md](../../data/repositories/docs.md) for
+    why a session holding a durable artifact must never reach `discarded`.
+  - `confirmRecovery(sessionId, {keepPath, durationSeconds})` is the second
+    phase: it runs only after the user confirms metadata on
+    [../recovery_confirm_screen.dart](../recovery_confirm_screen.dart)
+    (which supplies `durationSeconds` from `pending.result.durationSeconds`),
+    anchors the session to `keepPath` and marks it recovered via
+    `RecordingSessionRepository.recoverWithFinalizedAudio`
+    ([../../data/repositories/docs.md](../../data/repositories/docs.md)) —
+    replacing a bare `markRecovered` (ENG-420, slice 2) — and deletes every
+    segment except `keepPath`. `keepPath` is the finalized file, which in the
     single-segment / degraded fallbacks *is itself one of the segments*
     — hence the exception rather than a blanket delete.
-  - `discardRecovered(sessionId, filePath:)` deletes the finalized file
-    then defers to `discard`, used by the confirmation screen's discard
-    action.
-  - `discard` deletes the segments and marks the session discarded.
+  - `discard` deletes the segments and marks the session discarded. It is
+    also what the confirmation screen's discard action calls: the finalized
+    file is already gone by then, deleted by the confirmation step itself.
   All paths end by calling
   [../../data/services/recovery_coordinator.dart](../../data/services/recovery_coordinator.dart)'s
   `refresh()`, which re-derives the prompt list from `findCrashedSessions()`;
@@ -419,9 +559,10 @@ Path: @/lib/features/recording/presentation/notifiers
   (recording null, or `decision.canSave` false) is a no-op. This keeps
   the orchestration unit-testable without pumping a widget.
 - **The native split captures every dependency before the first `await`
-  (ENG-193).** `_saveLocally` reads the exporter, the persister factory,
-  both repositories, and the sync `processQueue` tear-off into locals
-  *before* awaiting the ffmpeg export. The notifier is `autoDispose`, so
+  (ENG-193).** `_saveLocally` reads the exporter, **both** persister
+  factories (the split one and, since ENG-402, the boost one), both
+  repositories, and the sync `processQueue` tear-off into locals *before*
+  awaiting the ffmpeg export. The notifier is `autoDispose`, so
   if the user navigates away mid-export the family entry can be torn
   down; reading `ref` after the suspension could throw "Cannot use Ref
   after it has been disposed", yet the split must still commit. Capturing
@@ -439,11 +580,13 @@ Path: @/lib/features/recording/presentation/notifiers
   even after disposal.
 - **`RecordingDetailNotifier` is headless; the widget owns every snackbar
   (ENG-194).** The notifier has no `BuildContext`, so its metadata mutations
-  resolve to a `RecordingMutationResult { success, failed, forbidden,
-  titleConflict }` and the screen `switch`es on it to pick the localized message
-  and color (e.g. `forbidden` → `recording_updateNoPermission` in
-  `AppColors.of(context).warning`; `failed` → the action's generic failure;
-  `success` → the success snackbar or nothing). This is the same headless →
+  resolve to a `RecordingMutationResult { success, savedLocallyOnly, failed,
+  forbidden, titleConflict }` and the screen `switch`es on it to pick the
+  localized message and color (e.g. `forbidden` → `recording_updateNoPermission`
+  in `AppColors.of(context).warning`; `failed` → the action's generic failure;
+  `savedLocallyOnly` → `recording_savedOnDeviceOnly`, also in the warning
+  color, via the shared `_showSavedOnDeviceOnly` helper (ENG-399); `success` →
+  the success snackbar or nothing). This is the same headless →
   result → widget-owns-UI boundary as the trim editor's `TrimSaveOutcome`. The
   audio paths instead **throw** (`downloadAndCache`, `downloadForExport`) or
   return a `bool` (`replaceAudio`) because the screen wraps them in a progress
@@ -489,6 +632,20 @@ Path: @/lib/features/recording/presentation/notifiers
   than the former public `player` field — derived audio state already
   lives on `RecordingPlayerState`, but the player object itself (needed
   for the widget's `StreamBuilder`s) has nowhere to live but a method.
+- **A successful stop anchors the session to its audio before marking it
+  completed or recovered (ENG-420, slices 1 and 2).** In `_stopNative`'s normal
+  stop, once `_finalizeOrCrash` returns a result, the notifier calls
+  `RecordingSessionRepository.completeWithFinalizedAudio` instead of the bare
+  `markCompleted`; on the resume-then-stop branch (`_pendingResumeSessionId` —
+  the user resumed an interrupted recording, then stopped it) it calls the
+  sibling `recoverWithFinalizedAudio` instead of the bare `markRecovered`, for
+  the same reason — see
+  [../../data/repositories/docs.md](../../data/repositories/docs.md) for why
+  that order is load-bearing and what the anchor is (and is not) a guarantee
+  of. As of slice 2 the anchor has a reader: the startup sweep in
+  [`RecoveryCoordinator`](../../data/services/recovery_coordinator.dart) stats
+  it to decide whether a finished session still owes the user a recovery
+  offer.
 - **A failed finalize keeps the recording recoverable — on both stop
   paths.** Finalization (FFmpeg concat + IO under
   [../../data/services/recording_finalization_service.dart](../../data/services/recording_finalization_service.dart))
@@ -528,6 +685,28 @@ Path: @/lib/features/recording/presentation/notifiers
   session. The `state.isRecording`/`isFinalizing` checks alone are insufficient
   because they can both still read `true` in the window before the first call
   flips them.
+- **Nothing else in the recording screen can tell you capture died, so the
+  notifier watches the recorder itself (ENG-408).** The elapsed counter is a
+  plain `Timer.periodic` and never consults the recorder; on web the waveform is
+  fed by the microphone stream through an `AudioContext` analyser, not by the
+  `MediaRecorder`. Both keep looking healthy after capture has ended, which is
+  how someone can watch a counter climb to eighteen minutes over a recorder that
+  stopped delivering long before. `_startWeb` therefore subscribes to
+  `AudioRecorder.onStateChanged()` and treats a `RecordState.stop` that nobody
+  asked for as `FinalizationErrorKind.captureInterrupted`: it cancels the
+  elapsed timer so the counter stops lying, and surfaces the error immediately.
+  The handler bails on `_isStopping` (the stop the user asked for emits the same
+  event) and on `!state.isRecording` (that flag is already cleared by then, and
+  it also covers the event arriving after `_isStopping` is reset in its
+  `finally`). Nothing can be salvaged at that point — `record_web`'s
+  `MediaRecorderDelegate` builds the object URL in a local, completes a null
+  `_onStopCompleter`, and resets its chunks *before* the state event reaches
+  us — so warning early is the whole mitigation.
+- **`isWebPlatformProvider` and `webAudioRecorderFactoryProvider` exist so the
+  browser capture path can be driven in VM tests**, where `kIsWeb` is always
+  false. They default to `kIsWeb` and `AudioRecorder.new`; only `startRecording`
+  and `stopRecording` read the platform flag, so the rest of the notifier still
+  branches on `kIsWeb` directly.
 - **A recovered session is only resolved after the user confirms — no
   silent data loss (ENG-80).** The materialization of a `local_recording`
   row happens *only* in `ConfirmationStep._save` (see
@@ -538,11 +717,11 @@ Path: @/lib/features/recording/presentation/notifiers
   created. The flow now mirrors a normal recording: recovery `save`
   finalizes and parks the result, the home banner routes to
   [../recovery_confirm_screen.dart](../recovery_confirm_screen.dart),
-  and only the user's Save there (`confirmRecovery` → `markRecovered`)
-  or Discard (`discardRecovered` → `markDiscarded`) resolves the
-  session. The two preconditions that make this safe live in `save`:
-  it must **not** `markRecovered` (or the abandoned-confirmation session
-  would vanish from the banner), and it must finalize with
+  and only the user's Save there (`confirmRecovery` →
+  `recoverWithFinalizedAudio`, ENG-420 slice 2) or Discard (`discard`
+  → `markDiscarded`) resolves the session. The two preconditions that make this safe live in `save`:
+  it must **not** resolve the session itself (or the abandoned-confirmation
+  session would vanish from the banner), and it must finalize with
   `deleteSources: false` (or the segments would be gone before the user
   decides). Leaving the confirmation screen without deciding keeps the
   session `crashed` with segments intact, so it simply re-surfaces in
@@ -575,6 +754,43 @@ Path: @/lib/features/recording/presentation/notifiers
   a superseded `loadMore` that bails cannot leave the spinner stuck.
   `_serverOffset` is the only mutable field shared across these methods —
   everything else lives on `state` or as a local.
+- **The fetch-generation guard does not cover the ENG-45 sweep erase.** It
+  discards a stale *list* — the `state`/`_serverOffset` assignment after the
+  generation check in the caller — but the erase inside `_fetchAndMerge` has
+  already run by then, on the way to building that list. This is why
+  `_fetchAndMerge` captures `projectId` and the three filters once, before
+  the `listRecordings` await, instead of re-reading `state` afterwards:
+  re-reading let a slow filtered response outlive the user clearing the
+  filter and get judged against no filter at all, putting rows the filter had
+  merely excluded on trial rather than rows the server had actually dropped.
+  On the paginated path (ENG-400) the ordering is the other way round and the
+  check *is* load-bearing: `_advanceSweep` re-reads the generation after its
+  `_loadLocal` and before erasing anything, because `_fetchGeneration` moves
+  synchronously at the top of `fetchRecordings` while the erase runs on for a
+  local read plus one round trip per candidate. Without it a refresh that
+  starts mid-erase leaves `loadMore` bailing at its own generation check and
+  never updating `state`: the rows would be gone from Drift and still on
+  screen. Erasing is left to the next sweep instead.
+- **A sweep is a suspicion, not a verdict — neither set holds still while it
+  runs (ENG-400).** Three independent paths end with a recording absent from
+  every page of a completed sweep while the server still has it: an upload
+  that lands after page zero was read (the server sorts newest first, so the
+  row belongs to a window already consumed, and the queue only updates
+  `lastSyncAt` when it drains, which is what triggers the refetch); a delete
+  on the server between two requests, which shifts everything down one
+  position so the next `offset` window skips a live row; and a sweep left open
+  across screen visits, since the provider is not `autoDispose` and the list
+  screen reuses its `State` (tab bar, deep link, back navigation — see
+  `didUpdateWidget`), so `initState` does not refetch and the page that closes
+  a sweep can be visits away from the one that opened it. Narrowing the sweep
+  cannot fix any of them, which is why the erase confirms each candidate with
+  `getRecording` instead. Since ENG-399 a false positive is not a cache
+  eviction: a metadata edit made offline lives only on the local row until
+  the metadata outbox drains it (ENG-403 added the drain; before it, nothing
+  ever resent the edit), so `serverHasRecording` no longer implies the
+  row is a redundant copy of what the server has — an erroneous erase before
+  the drain runs would lose the edit outright, not merely evict a cache
+  entry.
 - **Delete is a hard delete on every platform — the row delete is never
   `kIsWeb`-gated (ENG-120).** Each screen previously owned a duplicated
   delete that ran the local Drift delete inside `if (!kIsWeb)`. On web
@@ -623,11 +839,30 @@ Path: @/lib/features/recording/presentation/notifiers
   not surface to the UI. `_reportUnexpected` skips `UnauthorizedException` (the
   expected token-refresh flow). Do not reintroduce a bare `catch (_)` here — a
   silently-swallowed failure on these paths is invisible to telemetry.
-- **This is a hard delete, not a tombstone.** `deleteRecording` removes
-  the row and audio outright; there is no soft-delete / tombstone marker.
-  The durable cross-device delete case (delete on device A propagating to
-  device B) is out of scope and needs a server-side delete contract
-  (`needs-api`); a synced row deleted here will reappear on a different
-  device that still lists it from the server.
+- **This is a hard delete, not a tombstone — and, as of ENG-45, the absence
+  of a tombstone is what lets a server-side delete propagate across
+  devices.** `deleteRecording` removes the row and audio outright when the
+  user asks for it, and the server row too when there is a `serverId`
+  (ENG-120); there is no soft-delete/tombstone marker anywhere. Because
+  nothing marks a deletion, device B cannot tell "the server deleted this"
+  from "this just fell off the page" by looking at a listing alone — which is
+  why, since ENG-400, it does not try to: absence from a completed sweep only
+  nominates a row, and `getRecording` is asked about that one recording before
+  anything is destroyed. A delete made on device A therefore reaches a synced
+  device B the next time B completes a sweep and the server answers 404, with
+  no server-side delete contract and no push. This is the ENG-45 fix as
+  extended by ENG-400; the remaining limits are the `uploaded`/`verified`-only
+  gate and the fact that the sweep completes only when the user pages to the
+  end of the list (the 50-recording page-size ceiling is gone), not a
+  cross-device scope carve-out.
+- **A benign race between the list sweep and downloading/caching the same
+  recording (ENG-45).** If a complete sweep runs while
+  `RecordingDetailNotifier.downloadAndCache` is mid-flight for a recording
+  the server no longer has, the sweep can erase the row while the detail
+  screen is still writing to it. It is left self-correcting rather than
+  guarded: `cacheDownloadedAudio`'s insert branch
+  ([../../data/repositories/docs.md](../../data/repositories/docs.md))
+  resurrects the row on its next write, and the following sweep erases it
+  again since the server still doesn't have it.
 
 Created and maintained by Nori.

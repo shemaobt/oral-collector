@@ -13,11 +13,16 @@ class FinalizingOverlay extends StatelessWidget {
     required this.onDiscard,
     this.hasError = false,
     this.degraded = false,
+    this.errorKind,
   });
 
   final FinalizationStage stage;
   final bool hasError;
   final bool degraded;
+
+  /// Drives the body copy. Without it the screen falls back to the
+  /// missing-segments wording, which is only true on the native path.
+  final FinalizationErrorKind? errorKind;
   final VoidCallback onDiscard;
 
   @override
@@ -27,7 +32,7 @@ class FinalizingOverlay extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
 
     final semanticsLabel = hasError
-        ? '${l10n.recording_finalizationFailed}. ${l10n.recording_finalizationFailedBody}'
+        ? '${l10n.recording_finalizationFailed}. ${_errorBody(l10n, errorKind)}'
         : _stageText(l10n, stage);
 
     return Semantics(
@@ -48,6 +53,7 @@ class FinalizingOverlay extends StatelessWidget {
                         colors: colors,
                         theme: theme,
                         l10n: l10n,
+                        errorKind: errorKind,
                         onDiscard: onDiscard,
                       )
                     : _ProgressContent(
@@ -118,12 +124,14 @@ class _ErrorContent extends StatelessWidget {
     required this.colors,
     required this.theme,
     required this.l10n,
+    required this.errorKind,
     required this.onDiscard,
   });
 
   final AppColorSet colors;
   final ThemeData theme;
   final AppLocalizations l10n;
+  final FinalizationErrorKind? errorKind;
   final VoidCallback onDiscard;
 
   @override
@@ -143,17 +151,40 @@ class _ErrorContent extends StatelessWidget {
         ),
         const SizedBox(height: SpacingScale.s8),
         Text(
-          l10n.recording_finalizationFailedBody,
+          _errorBody(l10n, errorKind),
           textAlign: TextAlign.center,
           style: theme.textTheme.bodyMedium?.copyWith(color: colors.secondary),
         ),
         const SizedBox(height: SpacingScale.s24),
         FilledButton.tonal(
           onPressed: onDiscard,
-          child: Text(l10n.recording_discardAndReturn),
+          // Dismissing clears the error and nothing else — no audio is thrown
+          // away here, so the button must not say it is.
+          child: Text(l10n.recording_finalizationErrorBack),
         ),
       ],
     );
+  }
+}
+
+String _errorBody(AppLocalizations l10n, FinalizationErrorKind? kind) {
+  switch (kind) {
+    case FinalizationErrorKind.noAudio:
+      return l10n.recording_finalizationFailedBodyNoAudio;
+    case FinalizationErrorKind.downloadFailed:
+      return l10n.recording_finalizationFailedBodyDownload;
+    // Deliberately the generic line: every specific body here would be false
+    // for a refused write — the read worked, and nothing was kept anywhere.
+    // Generic and true beats specific and wrong (ENG-408, ENG-421).
+    case FinalizationErrorKind.storageUnavailable:
+      return l10n.error_generic;
+    case FinalizationErrorKind.captureInterrupted:
+      return l10n.recording_finalizationFailedBodyCaptureInterrupted;
+    case FinalizationErrorKind.finalizationFailed:
+      return l10n.recording_finalizationFailedBodyPipeline;
+    case FinalizationErrorKind.noSegments:
+    case null:
+      return l10n.recording_finalizationFailedBody;
   }
 }
 

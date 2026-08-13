@@ -47,8 +47,12 @@ class ProfileNotifier extends Notifier<ProfileState> {
         .updateProfile(displayName: name);
   }
 
-  Future<void> clearCacheAndRefresh() async {
-    await ref.read(syncNotifierProvider.notifier).clearLocalCache();
+  /// Returns what the clear kept and why, so the screen can say so.
+  Future<ClearCacheOutcome> clearCacheAndRefresh() async {
+    final kept = await ref
+        .read(syncNotifierProvider.notifier)
+        .clearLocalCache();
     await loadStorageUsed();
+    return kept;
   }
 }

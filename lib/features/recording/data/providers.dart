@@ -6,6 +6,7 @@ import '../../../core/observability/error_reporter.dart';
 import '../../../core/platform/file_ops.dart' as file_ops;
 import '../../sync/data/services/resumable_upload_service.dart';
 import '../domain/entities/local_recording_entity.dart';
+import '../domain/entities/pending_metadata_field.dart';
 import '../domain/repositories/recording_api_repository.dart';
 import 'repositories/local_recording_repository.dart';
 import 'repositories/recording_api_repository_impl.dart';
@@ -50,6 +51,16 @@ final directRecordingUploaderProvider = Provider<DirectRecordingUploader>((
   );
 });
 
+/// Every recording that still owes the server a metadata write, keyed by local
+/// id and by server id (ENG-405).
+///
+/// One stream for the whole list rather than one per card: the answer is
+/// almost always an empty map, and a subscription per row would pay a Drift
+/// query each for it.
+final metadataOutboxProvider = StreamProvider<Map<String, MetadataOutboxEntry>>(
+  (ref) => ref.watch(localRecordingRepositoryProvider).watchMetadataOutbox(),
+);
+
 final localRecordingStreamProvider =
     StreamProvider.family<LocalRecordingEntity?, String>((ref, id) {
       final repo = ref.watch(localRecordingRepositoryProvider);
@@ -61,4 +72,11 @@ final localRecordingStreamProvider =
 /// never resolve under the fake-async test zone).
 final fileExistsProvider = Provider<Future<bool> Function(String path)>(
   (_) => file_ops.fileExists,
+);
+
+/// Injectable file delete, so a delete that *fails* can be driven in tests.
+/// The cache clear's behaviour on failure is load-bearing — it decides whether
+/// the row survives with its file or the file is orphaned (ENG-407).
+final deleteFileProvider = Provider<Future<void> Function(String path)>(
+  (_) => file_ops.deleteFile,
 );

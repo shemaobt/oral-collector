@@ -1,0 +1,544 @@
+/// ENG-403: an edit the server never saw has to be remembered as owed.
+///
+/// ENG-399 stopped these mutations from throwing the edit away — the local row
+/// now keeps it — but nothing recorded that the server was still owed it, so it
+/// never went anywhere. Each mutation must name exactly the fields it touched:
+/// the drain rebuilds the PATCH from that set, and a field this device did not
+/// edit must never ride along and overwrite another device's copy of it.
+library;
+
+import 'dart:io';
+
+import 'package:drift/drift.dart' show Value;
+import 'package:drift/native.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:oral_collector/core/database/app_database.dart';
+import 'package:oral_collector/core/database/database_provider.dart';
+import 'package:oral_collector/core/errors/api_exception.dart';
+import 'package:oral_collector/features/auth/data/providers/role_provider.dart';
+import 'package:oral_collector/features/project/presentation/notifiers/member_notifier.dart';
+import 'package:oral_collector/features/project/presentation/notifiers/member_state.dart';
+import 'package:oral_collector/features/project/presentation/notifiers/stats_notifier.dart';
+import 'package:oral_collector/features/project/presentation/notifiers/stats_state.dart';
+import 'package:oral_collector/features/recording/data/local_recording_to_entity.dart';
+import 'package:oral_collector/features/recording/data/providers.dart';
+import 'package:oral_collector/features/recording/data/repositories/local_recording_repository.dart';
+import 'package:oral_collector/features/recording/domain/entities/local_recording_entity.dart';
+import 'package:oral_collector/features/recording/domain/entities/pending_metadata_field.dart';
+import 'package:oral_collector/features/recording/domain/entities/review_flag.dart';
+import 'package:oral_collector/features/recording/domain/entities/server_recording.dart';
+import 'package:oral_collector/features/recording/domain/entities/update_recording_request.dart';
+import 'package:oral_collector/features/recording/domain/repositories/recording_api_repository.dart';
+import 'package:oral_collector/features/recording/presentation/notifiers/recording_detail_notifier.dart';
+import 'package:oral_collector/features/recording/presentation/notifiers/recordings_list_notifier.dart';
+import 'package:oral_collector/features/recording/presentation/notifiers/recordings_list_state.dart';
+import 'package:oral_collector/features/recording/presentation/widgets/classify_recording_dialog.dart';
+import 'package:oral_collector/features/recording/presentation/widgets/move_category_dialog.dart';
+import 'package:oral_collector/features/recording/presentation/widgets/secondary_classification_fields.dart';
+import 'package:oral_collector/features/storyteller/data/providers.dart'
+    as storyteller_providers;
+import 'package:oral_collector/features/storyteller/domain/entities/storyteller.dart';
+import 'package:oral_collector/features/storyteller/domain/repositories/storyteller_repository.dart';
+import 'package:oral_collector/features/sync/presentation/notifiers/sync_notifier.dart';
+import 'package:oral_collector/features/sync/presentation/notifiers/sync_state.dart';
+
+const recordingId = 'rec-1';
+
+Storyteller teller(String id) => Storyteller(
+  id: id,
+  projectId: 'proj',
+  name: id,
+  sex: StorytellerSex.unknown,
+  externalAcceptanceConfirmed: false,
+  createdAt: DateTime.utc(2026, 5, 1),
+);
+
+class _FakeApiRepo implements RecordingApiRepository {
+  _FakeApiRepo({this.updateError});
+
+  final Object? updateError;
+  int updateCalls = 0;
+
+  @override
+  Future<UpdateRecordingOutcome> updateRecording(
+    String serverId,
+    UpdateRecordingRequest request,
+  ) async {
+    updateCalls++;
+    if (updateError != null) throw updateError!;
+    return (success: true, reviewFlags: null);
+  }
+
+  @override
+  Future<ServerRecording> getRecording(String serverId) async =>
+      throw StateError('getRecording not expected');
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('${invocation.memberName} not expected');
+}
+
+/// Keeps `load()`'s storyteller lookup off the network; the notifier already
+/// treats an unavailable lookup as "show what the row says".
+class _OfflineStorytellerApi implements StorytellerRepository {
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw const SocketException('no network in tests');
+}
+
+class _SyncNotifier extends SyncNotifier {
+  _SyncNotifier(this._online);
+  final bool _online;
+
+  @override
+  SyncState build() => SyncState(isOnline: _online);
+  @override
+  Future<void> processQueue() async {}
+  @override
+  Future<void> resetAndRetry(String id) async {}
+}
+
+class _FakeMemberNotifier extends MemberNotifier {
+  @override
+  MemberState build() => const MemberState();
+  @override
+  Future<void> fetchMembers(String projectId) async {}
+}
+
+class _FakeRoleNotifier extends RoleNotifier {
+  @override
+  RoleState build() => const RoleState();
+  @override
+  Future<void> fetchRoleForProject(String projectId) async {}
+}
+
+class _FakeStatsNotifier extends StatsNotifier {
+  @override
+  StatsState build() => const StatsState();
+  @override
+  Future<void> fetchGenreStats(String projectId) async {}
+}
+
+class _FakeListNotifier extends RecordingsListNotifier {
+  @override
+  RecordingsListState build() => const RecordingsListState();
+  @override
+  void patchRecordingTitle(String recordingId, String title) {}
+}
+
+void main() {
+  late AppDatabase db;
+  late LocalRecordingRepository repo;
+
+  setUp(() {
+    db = AppDatabase.forTesting(NativeDatabase.memory());
+    repo = LocalRecordingRepository(db);
+  });
+  tearDown(() => db.close());
+
+  Future<LocalRecordingEntity> seed({
+    String? serverId = 'srv-1',
+    String uploadStatus = 'verified',
+    String cleaningStatus = 'none',
+    String? secondaryGenreId,
+    String? secondaryRegisterId,
+  }) async {
+    await repo.insertRecording(
+      LocalRecordingsCompanion(
+        id: const Value(recordingId),
+        projectId: const Value('proj'),
+        genreId: const Value('genre-1'),
+        subcategoryId: const Value('sub-1'),
+        registerId: const Value('reg-1'),
+        secondaryGenreId: Value(secondaryGenreId),
+        secondaryRegisterId: Value(secondaryRegisterId),
+        serverId: Value(serverId),
+        title: const Value('Story'),
+        description: const Value('initial'),
+        durationSeconds: const Value(30),
+        fileSizeBytes: const Value(1000),
+        localFilePath: const Value('/audio/in.m4a'),
+        uploadStatus: Value(uploadStatus),
+        cleaningStatus: Value(cleaningStatus),
+        recordedAt: Value(DateTime.utc(2026, 5, 1)),
+        reviewFlagsJson: Value(encodeReviewFlags(const [])),
+      ),
+    );
+    return localRecordingToEntity((await repo.getRecordingById(recordingId))!);
+  }
+
+  ProviderContainer makeContainer({bool isOnline = false, _FakeApiRepo? api}) {
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWithValue(db),
+        localRecordingRepositoryProvider.overrideWithValue(repo),
+        localRecordingStreamProvider(
+          recordingId,
+        ).overrideWith((ref) => const Stream<LocalRecordingEntity?>.empty()),
+        recordingApiRepositoryProvider.overrideWithValue(api ?? _FakeApiRepo()),
+        syncNotifierProvider.overrideWith(() => _SyncNotifier(isOnline)),
+        memberNotifierProvider.overrideWith(_FakeMemberNotifier.new),
+        roleNotifierProvider.overrideWith(_FakeRoleNotifier.new),
+        statsNotifierProvider.overrideWith(_FakeStatsNotifier.new),
+        recordingsListNotifierProvider.overrideWith(_FakeListNotifier.new),
+        storyteller_providers.storytellerApiRepositoryProvider
+            .overrideWithValue(_OfflineStorytellerApi()),
+      ],
+    );
+    addTearDown(container.dispose);
+    return container;
+  }
+
+  RecordingDetailNotifier notifierOf(ProviderContainer c) =>
+      c.read(recordingDetailProvider(recordingId).notifier);
+
+  Future<Set<PendingMetadataField>> owed() async => decodePendingMetadataFields(
+    (await repo.getRecordingById(recordingId))!.pendingMetadataJson,
+  );
+
+  Future<String> outboxStatus() async =>
+      (await repo.getRecordingById(recordingId))!.metadataSyncStatus;
+
+  group('an edit the server never saw becomes owed', () {
+    test('toggleCleaningStatus owes the cleaning status alone', () async {
+      final recording = await seed();
+      final c = makeContainer();
+
+      await notifierOf(c).toggleCleaningStatus(recording);
+
+      expect(await owed(), {PendingMetadataField.cleaningStatus});
+      expect(await outboxStatus(), MetadataSyncStatus.pending);
+    });
+
+    test('moveCategory owes the category it moved', () async {
+      final recording = await seed();
+      final c = makeContainer();
+
+      await notifierOf(c).moveCategory(
+        recording,
+        const MoveCategoryResult(genreId: 'genre-2', subcategoryId: 'sub-2'),
+      );
+
+      expect(await owed(), {
+        PendingMetadataField.genre,
+        PendingMetadataField.subcategory,
+        PendingMetadataField.secondary,
+      });
+    });
+
+    test('classify owes the whole classification it wrote', () async {
+      final recording = await seed();
+      final c = makeContainer();
+
+      await notifierOf(c).classify(
+        recording,
+        const ClassifyResult(
+          genreId: 'genre-2',
+          subcategoryId: 'sub-2',
+          registerId: 'reg-2',
+        ),
+      );
+
+      expect(await owed(), {
+        PendingMetadataField.genre,
+        PendingMetadataField.subcategory,
+        PendingMetadataField.register,
+        PendingMetadataField.secondary,
+      });
+    });
+
+    test('saveSecondary owes the secondary classification alone', () async {
+      final recording = await seed();
+      final c = makeContainer();
+
+      await notifierOf(c).saveSecondary(
+        recording,
+        const SecondaryValues(genreId: 'genre-3', registerId: 'reg-3'),
+      );
+
+      expect(await owed(), {PendingMetadataField.secondary});
+    });
+
+    test('saveDetails owes only the half that changed', () async {
+      final recording = await seed();
+      final c = makeContainer();
+
+      await notifierOf(
+        c,
+      ).saveDetails(recording, title: 'A New Title', description: 'initial');
+
+      // The description was not edited, so the drain must not send it — and it
+      // must not send the title's old value either.
+      expect(await owed(), {PendingMetadataField.title});
+    });
+
+    test('saveDetails owes both halves when both changed', () async {
+      final recording = await seed();
+      final c = makeContainer();
+
+      await notifierOf(
+        c,
+      ).saveDetails(recording, title: 'A New Title', description: 'a new note');
+
+      expect(await owed(), {
+        PendingMetadataField.title,
+        PendingMetadataField.description,
+      });
+    });
+
+    test('two offline edits to the same field collapse into one', () async {
+      final recording = await seed();
+      final c = makeContainer();
+
+      await notifierOf(c).toggleCleaningStatus(recording);
+      final second = localRecordingToEntity(
+        (await repo.getRecordingById(recordingId))!,
+      );
+      await notifierOf(c).toggleCleaningStatus(second);
+
+      // Storing the field rather than the payload is what makes this one entry
+      // holding the latest value, instead of two writes to replay in order.
+      expect(await owed(), {PendingMetadataField.cleaningStatus});
+      expect(
+        (await repo.getRecordingById(recordingId))!.cleaningStatus,
+        'none',
+      );
+    });
+  });
+
+  group('an edit the server took is not owed', () {
+    test('a successful write leaves nothing pending', () async {
+      final recording = await seed();
+      final api = _FakeApiRepo();
+      final c = makeContainer(isOnline: true, api: api);
+
+      await notifierOf(c).toggleCleaningStatus(recording);
+
+      expect(api.updateCalls, 1);
+      expect(await owed(), isEmpty);
+      expect(await outboxStatus(), MetadataSyncStatus.synced);
+    });
+
+    test('a later accepted write clears an earlier owed field', () async {
+      // Otherwise the row keeps advertising a pending edit the server already
+      // has, and the drain re-sends a value nobody changed.
+      final offline = await seed();
+      final c = makeContainer();
+      await notifierOf(c).toggleCleaningStatus(offline);
+      expect(await owed(), isNotEmpty);
+
+      final online = makeContainer(isOnline: true, api: _FakeApiRepo());
+      final current = localRecordingToEntity(
+        (await repo.getRecordingById(recordingId))!,
+      );
+      await notifierOf(online).toggleCleaningStatus(current);
+
+      expect(await owed(), isEmpty);
+    });
+
+    test('a refusal owes nothing, because nothing was written', () async {
+      final recording = await seed();
+      final api = _FakeApiRepo(updateError: const ForbiddenException());
+      final c = makeContainer(isOnline: true, api: api);
+
+      final result = await notifierOf(c).toggleCleaningStatus(recording);
+
+      expect(result, RecordingMutationResult.forbidden);
+      expect(await owed(), isEmpty);
+      expect(await outboxStatus(), MetadataSyncStatus.synced);
+    });
+
+    test('a recording the server has never seen owes it nothing', () async {
+      // Its metadata rides along on the upload's create call; queueing a PATCH
+      // for an id the server does not have would only fail.
+      final recording = await seed(serverId: null, uploadStatus: 'local');
+      final c = makeContainer();
+
+      await notifierOf(c).classify(
+        recording,
+        const ClassifyResult(genreId: 'genre-2', subcategoryId: 'sub-2'),
+      );
+
+      expect(await owed(), isEmpty);
+      expect(await outboxStatus(), MetadataSyncStatus.synced);
+    });
+
+    test('nor does moveCategory, which asks the server regardless', () async {
+      // moveCategory pushes without checking for a serverId, so it is the one
+      // mutation that can report "unreachable" for a recording the server was
+      // never going to have. The drain skips such a row, so marking it pending
+      // would leave a badge that nothing can ever clear.
+      final recording = await seed(serverId: null, uploadStatus: 'local');
+      final c = makeContainer();
+
+      await notifierOf(c).moveCategory(
+        recording,
+        const MoveCategoryResult(genreId: 'genre-2', subcategoryId: 'sub-2'),
+      );
+
+      expect(await owed(), isEmpty);
+      expect(await outboxStatus(), MetadataSyncStatus.synced);
+      // The snackbar promises the edit will go up on its own, and it does —
+      // through the upload queue, whose create call carries the genre and
+      // subcategory. Without this the message would promise a send that never
+      // happens for the one mutation that reports `savedLocallyOnly` without
+      // queuing anything.
+      final queued = await repo.getPendingUploads();
+      expect(queued.map((r) => r.id), contains(recordingId));
+      expect(queued.single.genreId, 'genre-2');
+      expect(queued.single.subcategoryId, 'sub-2');
+    });
+  });
+
+  /// ENG-411: the sixth mutation joins the five.
+  ///
+  /// `setStoryteller` swallowed every exception without telling "server
+  /// unreachable" from "server refused", so an offline change of storyteller
+  /// wrote the local row and stopped there with nothing owed — or, on a refusal,
+  /// wrote the row anyway and left it asserting a change the server rejected.
+  group('changing the storyteller enters the outbox', () {
+    Future<String?> storedStorytellerId() async =>
+        (await repo.getRecordingById(recordingId))!.storytellerId;
+
+    test('an offline change is written and owed', () async {
+      final recording = await seed();
+      final c = makeContainer();
+
+      final result = await notifierOf(
+        c,
+      ).setStoryteller(recording, teller('t1'));
+
+      expect(result, RecordingMutationResult.savedLocallyOnly);
+      expect(await storedStorytellerId(), 't1');
+      expect(await owed(), {PendingMetadataField.storyteller});
+      expect(await outboxStatus(), MetadataSyncStatus.pending);
+    });
+
+    test('a refusal writes nothing and says why', () async {
+      // The other half of the collapsed catch: a 403 is not a connection
+      // problem, and mirroring the change locally would leave the row claiming
+      // a storyteller the server refused to accept.
+      final recording = await seed();
+      final api = _FakeApiRepo(updateError: const ForbiddenException());
+      final c = makeContainer(isOnline: true, api: api);
+
+      final result = await notifierOf(
+        c,
+      ).setStoryteller(recording, teller('t1'));
+
+      expect(result, RecordingMutationResult.forbidden);
+      expect(await storedStorytellerId(), isNull);
+      expect(await owed(), isEmpty);
+      expect(await outboxStatus(), MetadataSyncStatus.synced);
+    });
+
+    test('a server out of reach is written and owed', () async {
+      final recording = await seed();
+      final api = _FakeApiRepo(updateError: Exception('connection reset'));
+      final c = makeContainer(isOnline: true, api: api);
+
+      final result = await notifierOf(
+        c,
+      ).setStoryteller(recording, teller('t1'));
+
+      expect(result, RecordingMutationResult.savedLocallyOnly);
+      expect(await storedStorytellerId(), 't1');
+      expect(await owed(), {PendingMetadataField.storyteller});
+    });
+
+    test('an accepted change owes nothing', () async {
+      // Guards against the fix routing every path through the queue.
+      final recording = await seed();
+      final api = _FakeApiRepo();
+      final c = makeContainer(isOnline: true, api: api);
+
+      final result = await notifierOf(
+        c,
+      ).setStoryteller(recording, teller('t1'));
+
+      expect(result, RecordingMutationResult.success);
+      expect(api.updateCalls, 1);
+      expect(await storedStorytellerId(), 't1');
+      expect(await owed(), isEmpty);
+      expect(await outboxStatus(), MetadataSyncStatus.synced);
+    });
+
+    test('two offline changes collapse into the last one', () async {
+      final recording = await seed();
+      final c = makeContainer();
+
+      await notifierOf(c).setStoryteller(recording, teller('t1'));
+      final second = localRecordingToEntity(
+        (await repo.getRecordingById(recordingId))!,
+      );
+      await notifierOf(c).setStoryteller(second, teller('t2'));
+
+      expect(await owed(), {PendingMetadataField.storyteller});
+      expect(await storedStorytellerId(), 't2');
+    });
+
+    test('removing the storyteller offline is owed too', () async {
+      final recording = await seed();
+      final c = makeContainer();
+      await notifierOf(c).setStoryteller(recording, teller('t1'));
+
+      final withTeller = localRecordingToEntity(
+        (await repo.getRecordingById(recordingId))!,
+      );
+      await notifierOf(c).setStoryteller(withTeller, null);
+
+      expect(await storedStorytellerId(), isNull);
+      expect(await owed(), {PendingMetadataField.storyteller});
+    });
+
+    test('a recording the server has never seen owes it nothing', () async {
+      final recording = await seed(serverId: null, uploadStatus: 'local');
+      final api = _FakeApiRepo();
+      final c = makeContainer(isOnline: true, api: api);
+
+      final result = await notifierOf(
+        c,
+      ).setStoryteller(recording, teller('t1'));
+
+      expect(result, RecordingMutationResult.success);
+      expect(api.updateCalls, 0);
+      expect(await storedStorytellerId(), 't1');
+      expect(await owed(), isEmpty);
+      expect(await outboxStatus(), MetadataSyncStatus.synced);
+    });
+  });
+
+  group('the gate that decides whether the server is owed anything', () {
+    test(
+      'toggleCleaningStatus keys off the server id, not the status',
+      () async {
+        // The other four mutations gate on `serverId`. This one gated on
+        // uploadStatus, which agreed only because markAsUploaded writes both in
+        // one statement. A row that has an id but is not uploaded yet skips the
+        // create on retry, so a locally-written cleaning status would never
+        // reach the server at all — it has to go through the outbox.
+        final recording = await seed(serverId: 'srv-1', uploadStatus: 'failed');
+        final c = makeContainer();
+
+        final result = await notifierOf(c).toggleCleaningStatus(recording);
+
+        expect(result, RecordingMutationResult.savedLocallyOnly);
+        expect(await owed(), {PendingMetadataField.cleaningStatus});
+        expect(await outboxStatus(), MetadataSyncStatus.pending);
+      },
+    );
+
+    test('and still leaves a server-less recording alone', () async {
+      final recording = await seed(serverId: null, uploadStatus: 'local');
+      final api = _FakeApiRepo();
+      final c = makeContainer(isOnline: true, api: api);
+
+      final result = await notifierOf(c).toggleCleaningStatus(recording);
+
+      expect(result, RecordingMutationResult.success);
+      expect(api.updateCalls, 0);
+      expect(await owed(), isEmpty);
+    });
+  });
+}

@@ -8,6 +8,7 @@ import '../../../../core/database/app_database.dart';
 import '../../../../core/errors/api_exception.dart';
 import '../../../../core/errors/app_exception.dart' show ConflictException;
 import '../../../../core/observability/error_reporter.dart';
+import '../../../../core/platform/file_ops.dart' as file_ops;
 import '../../../auth/data/providers/role_provider.dart';
 import '../../../project/presentation/notifiers/member_notifier.dart';
 import '../../../project/presentation/notifiers/stats_notifier.dart';
@@ -24,9 +25,12 @@ import '../../data/services/recording_file_importer.dart';
 import '../../data/use_cases/save_recording_description.dart';
 import '../../data/use_cases/save_recording_title.dart';
 import '../../domain/entities/local_recording_entity.dart';
+import '../../domain/entities/pending_metadata_field.dart';
 import '../../domain/entities/review_flag.dart';
 import '../../domain/entities/update_recording_request.dart';
 import '../../domain/repositories/recording_api_repository.dart';
+import '../../domain/server_deletion_policy.dart';
+import '../trim_load_error.dart';
 import '../widgets/classify_recording_dialog.dart' show ClassifyResult;
 import '../widgets/move_category_dialog.dart' show MoveCategoryResult;
 import '../widgets/secondary_classification_fields.dart' show SecondaryValues;
@@ -36,7 +40,22 @@ import 'recordings_list_notifier.dart';
 /// Outcome the headless notifier hands back to the widget for the metadata
 /// mutations (move/classify/secondary/cleaning/edit). The notifier has no
 /// BuildContext, so the widget maps each result to its own localized snackbar.
-enum RecordingMutationResult { success, failed, forbidden, titleConflict }
+enum RecordingMutationResult {
+  success,
+  savedLocallyOnly,
+  failed,
+  forbidden,
+  titleConflict,
+}
+
+/// What the server did with a metadata write, so the caller can tell a refusal
+/// apart from not having reached the server at all (ENG-399).
+enum _ServerWrite { accepted, rejected, forbidden, unreachable }
+
+typedef _ServerWriteOutcome = ({
+  _ServerWrite status,
+  List<ReviewFlag>? reviewFlags,
+});
 
 final recordingDetailProvider = NotifierProvider.autoDispose
     .family<RecordingDetailNotifier, RecordingDetailState, String>(
@@ -90,6 +109,7 @@ class RecordingDetailNotifier
     state = state.copyWith(isLoading: true);
     try {
       LocalRecording? recording;
+      var deletedOnServer = false;
       final isOnline = ref.read(syncNotifierProvider).isOnline;
 
       if (kIsWeb) {
@@ -107,21 +127,13 @@ class RecordingDetailNotifier
             current != null &&
             _hasServerId(current) &&
             (_needsGcsRefresh(current) || _needsUserRefresh(current))) {
-          try {
-            final server = await _apiRepo.getRecording(current.serverId!);
-            if (_disposed) return;
-            final updates = buildHealMetadataCompanion(
-              local: current,
-              server: server,
-            );
-            await _localRepo.updateRecording(current.id, updates);
-            if (_disposed) return;
-            recording = await _localRepo.getRecordingById(current.id);
-            if (_disposed) return;
-          } catch (_) {}
+          final healed = await _healMetadata(current);
+          if (healed == null) return;
+          recording = healed.recording;
+          deletedOnServer = healed.deletedOnServer;
         }
 
-        if (isOnline && recording == null) {
+        if (isOnline && recording == null && !deletedOnServer) {
           try {
             final server = await _apiRepo.getRecording(arg);
             if (_disposed) return;
@@ -155,6 +167,56 @@ class RecordingDetailNotifier
     } catch (_) {
       if (_disposed) return;
       state = state.copyWith(isLoading: false);
+    }
+  }
+
+  /// Refreshes [current] from the server when its stored metadata is
+  /// incomplete, and reads a 404 as "the server hard-deleted it".
+  ///
+  /// Returns null when the notifier was disposed mid-flight, which is [load]'s
+  /// signal to abandon the rest of the load. Otherwise returns the row to carry
+  /// on with — the reloaded one, [current] itself when the refresh failed for
+  /// any other reason, or null once the row has been erased. Requires a
+  /// non-empty `serverId` ([_hasServerId]).
+  Future<({LocalRecording? recording, bool deletedOnServer})?> _healMetadata(
+    LocalRecording current,
+  ) async {
+    try {
+      final server = await _apiRepo.getRecording(current.serverId!);
+      if (_disposed) return null;
+      final updates = buildHealMetadataCompanion(
+        local: current,
+        server: server,
+      );
+      await _localRepo.updateRecording(current.id, updates);
+      if (_disposed) return null;
+      final reloaded = await _localRepo.getRecordingById(current.id);
+      if (_disposed) return null;
+      return (recording: reloaded, deletedOnServer: false);
+    } catch (e) {
+      final erasable =
+          isRecordingNotFound(e) &&
+          serverHasRecording(
+            serverId: current.serverId,
+            uploadStatus: current.uploadStatus,
+          );
+      if (!erasable) return (recording: current, deletedOnServer: false);
+      await _eraseDeletedOnServer(current);
+      if (_disposed) return null;
+      return (recording: null, deletedOnServer: true);
+    }
+  }
+
+  /// The server hard-deleted this recording, so the local row and its audio are
+  /// the leftovers of something that no longer exists anywhere.
+  Future<void> _eraseDeletedOnServer(LocalRecording recording) async {
+    await _localRepo.deleteRecording(recording.id);
+    if (recording.localFilePath.isEmpty) return;
+    try {
+      await file_ops.deleteFile(recording.localFilePath);
+    } on Exception catch (e, st) {
+      // Best-effort: a missing/locked file must not abort the row delete.
+      ref.read(errorReporterProvider).reportError(e, st);
     }
   }
 
@@ -225,29 +287,59 @@ class RecordingDetailNotifier
     }
   }
 
-  Future<void> setStoryteller(
+  /// Assigns or removes the storyteller (ENG-411).
+  ///
+  /// The sixth metadata mutation to join the outbox. It used to swallow every
+  /// exception, which made a refused write and an unreachable server the same
+  /// thing: offline the change landed on the local row with nothing owed, so it
+  /// never went up; on a 403 the row was written anyway and stood there
+  /// asserting a storyteller the server had rejected.
+  Future<RecordingMutationResult> setStoryteller(
     LocalRecordingEntity recording,
     Storyteller? storyteller,
   ) async {
-    final serverId = recording.serverId ?? recording.id;
-    UpdateRecordingOutcome? outcome;
-    try {
-      outcome = await _apiRepo.updateRecording(
-        serverId,
+    // The same gate as the other mutations: a recording the server has never
+    // seen owes it nothing — the storyteller rides along on the upload's create
+    // call, and the drain skips a row without a `serverId`.
+    final hasServerId =
+        recording.serverId != null && recording.serverId!.isNotEmpty;
+
+    List<ReviewFlag>? serverFlags;
+    var localOnly = false;
+    if (kIsWeb || hasServerId) {
+      final write = await _pushMetadata(
+        recording.serverId ?? recording.id,
+        // An empty id is how the wire says "no storyteller"; a null would be
+        // omitted and leave the server's copy standing.
         UpdateRecordingRequest(storytellerId: storyteller?.id ?? ''),
       );
-    } on Exception catch (_) {}
-    if (_disposed) return;
+      final refusal = _refusal(write.status);
+      if (refusal != null) return refusal;
+      if (_disposed) return RecordingMutationResult.success;
+      serverFlags = write.reviewFlags;
+      localOnly = write.status == _ServerWrite.unreachable;
+    }
+    final saved = localOnly
+        ? RecordingMutationResult.savedLocallyOnly
+        : RecordingMutationResult.success;
+
     if (!kIsWeb) {
       await _localRepo.setStoryteller(
         recording.id,
         storytellerId: storyteller?.id,
       );
-      if (_disposed) return;
-      await _storeReviewFlags(recording.id, outcome?.reviewFlags);
-      if (_disposed) return;
+      if (_disposed) return saved;
+      await _storeReviewFlags(recording.id, serverFlags);
+      if (_disposed) return saved;
+      if (hasServerId) {
+        await _settleOutbox(recording.id, const {
+          PendingMetadataField.storyteller,
+        }, owed: localOnly);
+        if (_disposed) return saved;
+      }
     }
     await load();
+    return saved;
   }
 
   /// Saves an edited title and/or description. Title routes through the existing
@@ -264,6 +356,13 @@ class RecordingDetailNotifier
     final descriptionChanged =
         description != (recording.description ?? '').trim();
 
+    // The ENG-380 use-cases already tell a local-only save apart from one the
+    // server took; either half being local-only makes the whole edit pending.
+    var localOnly = false;
+    RecordingMutationResult saved() => localOnly
+        ? RecordingMutationResult.savedLocallyOnly
+        : RecordingMutationResult.success;
+
     if (titleChanged) {
       try {
         final titleResult = await saveRecordingTitle(
@@ -276,9 +375,18 @@ class RecordingDetailNotifier
           apiRepo: _apiRepo,
           localRepo: localRepo,
         );
-        if (_disposed) return RecordingMutationResult.success;
+        localOnly = titleResult == SaveTitleResult.savedLocallyOnly;
+        if (_disposed) return saved();
         if (titleResult == SaveTitleResult.saved ||
             titleResult == SaveTitleResult.savedLocallyOnly) {
+          // The use-case reports `saved` both for a write the server took and
+          // for one that never needed it (no server copy). Settling either way
+          // is right: the second is a no-op on a row that owes nothing, and it
+          // is what clears a title owed from an earlier offline rename.
+          await _settleOutbox(arg, const {
+            PendingMetadataField.title,
+          }, owed: localOnly);
+          if (_disposed) return saved();
           ref
               .read(recordingsListNotifierProvider.notifier)
               .patchRecordingTitle(arg, title);
@@ -289,7 +397,7 @@ class RecordingDetailNotifier
             await ref
                 .read(syncNotifierProvider.notifier)
                 .resetAndRetry(recording.id);
-            if (_disposed) return RecordingMutationResult.success;
+            if (_disposed) return saved();
           }
         }
       } on ForbiddenException {
@@ -304,7 +412,7 @@ class RecordingDetailNotifier
 
     if (descriptionChanged) {
       try {
-        await saveRecordingDescription(
+        final descriptionResult = await saveRecordingDescription(
           recordingId: arg,
           serverId: recording.serverId,
           description: description,
@@ -313,7 +421,14 @@ class RecordingDetailNotifier
           apiRepo: _apiRepo,
           localRepo: localRepo,
         );
-        if (_disposed) return RecordingMutationResult.success;
+        final descriptionLocalOnly =
+            descriptionResult == SaveDescriptionResult.savedLocallyOnly;
+        localOnly = localOnly || descriptionLocalOnly;
+        if (_disposed) return saved();
+        await _settleOutbox(arg, const {
+          PendingMetadataField.description,
+        }, owed: descriptionLocalOnly);
+        if (_disposed) return saved();
       } on ForbiddenException {
         return RecordingMutationResult.forbidden;
       }
@@ -324,15 +439,80 @@ class RecordingDetailNotifier
         await ref
             .read(syncNotifierProvider.notifier)
             .resetAndRetry(recording.id);
-        if (_disposed) return RecordingMutationResult.success;
+        if (_disposed) return saved();
       }
     }
 
     if (titleChanged || descriptionChanged) {
       await load();
     }
-    return RecordingMutationResult.success;
+    return saved();
   }
+
+  /// Sends a metadata write to the server, classifying the outcome instead of
+  /// collapsing every failure into one (ENG-399).
+  ///
+  /// A refusal (403, or a response that says it did not take) is a real error
+  /// and the caller must not write locally. Not reaching the server — offline,
+  /// or a request that never came back — is not: the caller mirrors the edit to
+  /// the local row and tells the user it stopped there. Web has no local row,
+  /// so there is nothing to fall back to and an unreachable server is simply a
+  /// failure.
+  Future<_ServerWriteOutcome> _pushMetadata(
+    String serverId,
+    UpdateRecordingRequest request,
+  ) async {
+    if (!kIsWeb && !ref.read(syncNotifierProvider).isOnline) {
+      return (status: _ServerWrite.unreachable, reviewFlags: null);
+    }
+    try {
+      final outcome = await _apiRepo.updateRecording(serverId, request);
+      return (
+        status: outcome.success ? _ServerWrite.accepted : _ServerWrite.rejected,
+        reviewFlags: outcome.reviewFlags,
+      );
+    } on ForbiddenException {
+      return (status: _ServerWrite.forbidden, reviewFlags: null);
+    } catch (_) {
+      return (
+        status: kIsWeb ? _ServerWrite.rejected : _ServerWrite.unreachable,
+        reviewFlags: null,
+      );
+    }
+  }
+
+  /// Records that the server is still owed [fields], or drops them once it has
+  /// taken them (ENG-403).
+  ///
+  /// Only the *names* are stored. The local row already holds the edited value
+  /// — every caller below writes it there first — so the drain reads the value
+  /// back off the row when it finally reaches the server. That is what makes
+  /// two offline edits to one field collapse into a single write instead of a
+  /// replay, and what keeps a field this device never touched out of the PATCH.
+  ///
+  /// Callers must only reach here when the recording actually has a server copy
+  /// to owe; without one the metadata rides along on the upload's create call
+  /// and a pendency would never be drainable.
+  Future<void> _settleOutbox(
+    String id,
+    Set<PendingMetadataField> fields, {
+    required bool owed,
+  }) async {
+    if (kIsWeb || _disposed) return;
+    if (owed) {
+      await _localRepo.markMetadataPending(id, fields);
+    } else {
+      await _localRepo.clearPendingMetadataFields(id, fields);
+    }
+  }
+
+  /// Maps a server refusal to the result the widget reports, or null when the
+  /// caller should carry on and write the local row.
+  RecordingMutationResult? _refusal(_ServerWrite status) => switch (status) {
+    _ServerWrite.forbidden => RecordingMutationResult.forbidden,
+    _ServerWrite.rejected => RecordingMutationResult.failed,
+    _ServerWrite.accepted || _ServerWrite.unreachable => null,
+  };
 
   Future<RecordingMutationResult> toggleCleaningStatus(
     LocalRecordingEntity recording,
@@ -340,57 +520,72 @@ class RecordingDetailNotifier
     final newStatus = recording.cleaningStatus == 'none'
         ? 'needs_cleaning'
         : 'none';
-    final serverId = recording.serverId ?? recording.id;
 
-    if (recording.uploadStatus == 'uploaded' || kIsWeb) {
-      try {
-        final outcome = await _apiRepo.updateRecording(
-          serverId,
-          UpdateRecordingRequest(cleaningStatus: newStatus),
-        );
-        if (_disposed) return RecordingMutationResult.success;
-        if (!outcome.success) return RecordingMutationResult.failed;
-      } on ForbiddenException {
-        return RecordingMutationResult.forbidden;
-      } catch (_) {
-        return RecordingMutationResult.failed;
-      }
+    // `serverId`, not `uploadStatus` — the same gate the other four mutations
+    // use. The two agreed only because `markAsUploaded` writes the status and
+    // the id in one statement, an undocumented invariant the outbox would have
+    // made load-bearing: were it ever to break, this would mark a pendency that
+    // `getPendingMetadataSyncs` (which requires a `serverId`) never selects,
+    // and the row would read as pending forever. It also closes a gap of its
+    // own — a row that has a `serverId` but is not yet `uploaded` skips the
+    // create on retry, so a cleaning status written only locally would never
+    // reach the server at all.
+    final hasServerId =
+        recording.serverId != null && recording.serverId!.isNotEmpty;
+
+    var localOnly = false;
+    if (kIsWeb || hasServerId) {
+      final write = await _pushMetadata(
+        recording.serverId ?? recording.id,
+        UpdateRecordingRequest(cleaningStatus: newStatus),
+      );
+      final refusal = _refusal(write.status);
+      if (refusal != null) return refusal;
+      if (_disposed) return RecordingMutationResult.success;
+      localOnly = write.status == _ServerWrite.unreachable;
     }
+    final saved = localOnly
+        ? RecordingMutationResult.savedLocallyOnly
+        : RecordingMutationResult.success;
 
     if (!kIsWeb) {
       await _localRepo.updateCleaningStatus(arg, newStatus);
-      if (_disposed) return RecordingMutationResult.success;
+      if (_disposed) return saved;
+      if (hasServerId) {
+        await _settleOutbox(arg, const {
+          PendingMetadataField.cleaningStatus,
+        }, owed: localOnly);
+        if (_disposed) return saved;
+      }
     }
     await load();
-    return RecordingMutationResult.success;
+    return saved;
   }
 
   Future<RecordingMutationResult> moveCategory(
     LocalRecordingEntity recording,
     MoveCategoryResult result,
   ) async {
-    final serverId = recording.serverId ?? recording.id;
-    List<ReviewFlag>? serverFlags;
-    try {
-      final outcome = await _apiRepo.updateRecording(
-        serverId,
-        UpdateRecordingRequest(
-          genreId: result.genreId,
-          subcategoryId: result.subcategoryId,
-          secondaryGenreId: result.secondaryGenreId,
-          secondarySubcategoryId: result.secondarySubcategoryId,
-          secondaryRegisterId: result.secondaryRegisterId,
-          clearSecondary: result.clearSecondary,
-        ),
-      );
-      if (_disposed) return RecordingMutationResult.success;
-      if (!outcome.success) return RecordingMutationResult.failed;
-      serverFlags = outcome.reviewFlags;
-    } on ForbiddenException {
-      return RecordingMutationResult.forbidden;
-    } catch (_) {
-      return RecordingMutationResult.failed;
-    }
+    final write = await _pushMetadata(
+      recording.serverId ?? recording.id,
+      UpdateRecordingRequest(
+        genreId: result.genreId,
+        subcategoryId: result.subcategoryId,
+        secondaryGenreId: result.secondaryGenreId,
+        secondarySubcategoryId: result.secondarySubcategoryId,
+        secondaryRegisterId: result.secondaryRegisterId,
+        clearSecondary: result.clearSecondary,
+      ),
+    );
+    final refusal = _refusal(write.status);
+    if (refusal != null) return refusal;
+    if (_disposed) return RecordingMutationResult.success;
+
+    final serverFlags = write.reviewFlags;
+    final localOnly = write.status == _ServerWrite.unreachable;
+    final saved = localOnly
+        ? RecordingMutationResult.savedLocallyOnly
+        : RecordingMutationResult.success;
 
     if (!kIsWeb) {
       await _localRepo.moveCategory(
@@ -402,9 +597,20 @@ class RecordingDetailNotifier
         secondarySubcategoryId: result.secondarySubcategoryId,
         secondaryRegisterId: result.secondaryRegisterId,
       );
-      if (_disposed) return RecordingMutationResult.success;
+      if (_disposed) return saved;
       await _storeReviewFlags(recording.id, serverFlags);
-      if (_disposed) return RecordingMutationResult.success;
+      if (_disposed) return saved;
+      // Unlike the other mutations this one pushes without checking for a
+      // server copy, so the "unreachable" it reports for a recording the server
+      // never had is not something the drain could ever settle.
+      if (recording.serverId != null && recording.serverId!.isNotEmpty) {
+        await _settleOutbox(recording.id, const {
+          PendingMetadataField.genre,
+          PendingMetadataField.subcategory,
+          PendingMetadataField.secondary,
+        }, owed: localOnly);
+        if (_disposed) return saved;
+      }
     }
 
     if (ref.read(syncNotifierProvider).isOnline) {
@@ -415,7 +621,7 @@ class RecordingDetailNotifier
       );
     }
     await load();
-    return RecordingMutationResult.success;
+    return saved;
   }
 
   Future<RecordingMutationResult> classify(
@@ -431,30 +637,33 @@ class RecordingDetailNotifier
         (recording.secondaryGenreId != null ||
             recording.secondaryRegisterId != null);
 
+    // The gate stays `hasServerId`, not uploadStatus: a recording the server
+    // has never seen owes it nothing, so skipping the call is not a fallback
+    // and must not be reported as a pending edit.
     List<ReviewFlag>? serverFlags;
+    var localOnly = false;
     if (hasServerId) {
-      try {
-        final outcome = await _apiRepo.updateRecording(
-          recording.serverId!,
-          UpdateRecordingRequest(
-            genreId: result.genreId,
-            subcategoryId: result.subcategoryId,
-            registerId: result.registerId,
-            secondaryGenreId: result.secondaryGenreId,
-            secondarySubcategoryId: result.secondarySubcategoryId,
-            secondaryRegisterId: result.secondaryRegisterId,
-            clearSecondary: clearSecondary,
-          ),
-        );
-        if (_disposed) return RecordingMutationResult.success;
-        if (!outcome.success) return RecordingMutationResult.failed;
-        serverFlags = outcome.reviewFlags;
-      } on ForbiddenException {
-        return RecordingMutationResult.forbidden;
-      } catch (_) {
-        return RecordingMutationResult.failed;
-      }
+      final write = await _pushMetadata(
+        recording.serverId!,
+        UpdateRecordingRequest(
+          genreId: result.genreId,
+          subcategoryId: result.subcategoryId,
+          registerId: result.registerId,
+          secondaryGenreId: result.secondaryGenreId,
+          secondarySubcategoryId: result.secondarySubcategoryId,
+          secondaryRegisterId: result.secondaryRegisterId,
+          clearSecondary: clearSecondary,
+        ),
+      );
+      final refusal = _refusal(write.status);
+      if (refusal != null) return refusal;
+      if (_disposed) return RecordingMutationResult.success;
+      serverFlags = write.reviewFlags;
+      localOnly = write.status == _ServerWrite.unreachable;
     }
+    final saved = localOnly
+        ? RecordingMutationResult.savedLocallyOnly
+        : RecordingMutationResult.success;
 
     if (!kIsWeb) {
       await _localRepo.classify(
@@ -466,9 +675,18 @@ class RecordingDetailNotifier
         secondarySubcategoryId: result.secondarySubcategoryId,
         secondaryRegisterId: result.secondaryRegisterId,
       );
-      if (_disposed) return RecordingMutationResult.success;
+      if (_disposed) return saved;
       await _storeReviewFlags(recording.id, serverFlags);
-      if (_disposed) return RecordingMutationResult.success;
+      if (_disposed) return saved;
+      if (hasServerId) {
+        await _settleOutbox(recording.id, const {
+          PendingMetadataField.genre,
+          PendingMetadataField.subcategory,
+          PendingMetadataField.register,
+          PendingMetadataField.secondary,
+        }, owed: localOnly);
+        if (_disposed) return saved;
+      }
 
       if (!hasServerId && ref.read(syncNotifierProvider).isOnline) {
         unawaited(ref.read(syncNotifierProvider.notifier).processQueue());
@@ -483,7 +701,7 @@ class RecordingDetailNotifier
       );
     }
     await load();
-    return RecordingMutationResult.success;
+    return saved;
   }
 
   /// Persists (or clears, when [values] is null) the secondary classification.
@@ -496,26 +714,26 @@ class RecordingDetailNotifier
     final clearSecondary = values == null;
 
     List<ReviewFlag>? serverFlags;
+    var localOnly = false;
     if (hasServerId) {
-      try {
-        final outcome = await _apiRepo.updateRecording(
-          recording.serverId!,
-          UpdateRecordingRequest(
-            secondaryGenreId: values?.genreId,
-            secondarySubcategoryId: values?.subcategoryId,
-            secondaryRegisterId: values?.registerId,
-            clearSecondary: clearSecondary,
-          ),
-        );
-        if (_disposed) return RecordingMutationResult.success;
-        if (!outcome.success) return RecordingMutationResult.failed;
-        serverFlags = outcome.reviewFlags;
-      } on ForbiddenException {
-        return RecordingMutationResult.forbidden;
-      } catch (_) {
-        return RecordingMutationResult.failed;
-      }
+      final write = await _pushMetadata(
+        recording.serverId!,
+        UpdateRecordingRequest(
+          secondaryGenreId: values?.genreId,
+          secondarySubcategoryId: values?.subcategoryId,
+          secondaryRegisterId: values?.registerId,
+          clearSecondary: clearSecondary,
+        ),
+      );
+      final refusal = _refusal(write.status);
+      if (refusal != null) return refusal;
+      if (_disposed) return RecordingMutationResult.success;
+      serverFlags = write.reviewFlags;
+      localOnly = write.status == _ServerWrite.unreachable;
     }
+    final saved = localOnly
+        ? RecordingMutationResult.savedLocallyOnly
+        : RecordingMutationResult.success;
 
     if (!kIsWeb) {
       await _localRepo.updateSecondaryClassification(
@@ -524,13 +742,19 @@ class RecordingDetailNotifier
         subcategoryId: values?.subcategoryId,
         registerId: values?.registerId,
       );
-      if (_disposed) return RecordingMutationResult.success;
+      if (_disposed) return saved;
       await _storeReviewFlags(recording.id, serverFlags);
-      if (_disposed) return RecordingMutationResult.success;
+      if (_disposed) return saved;
+      if (hasServerId) {
+        await _settleOutbox(recording.id, const {
+          PendingMetadataField.secondary,
+        }, owed: localOnly);
+        if (_disposed) return saved;
+      }
     }
 
     await load();
-    return RecordingMutationResult.success;
+    return saved;
   }
 
   /// Downloads the recording's audio from GCS and caches it locally, then

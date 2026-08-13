@@ -19,6 +19,8 @@ import 'package:oral_collector/features/sync/data/services/upload_downloader.dar
 import 'package:oral_collector/features/sync/domain/repositories/connectivity_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../../support/sync_engine_api.dart';
+
 class _AlwaysOkDownloader implements UploadDownloader {
   const _AlwaysOkDownloader();
 
@@ -84,6 +86,10 @@ LocalRecording makeRecording({
   return LocalRecording(
     id: id,
     reviewFlagsJson: '[]',
+    // The metadata outbox defaults (ENG-403): this row owes the server no edit.
+    metadataSyncStatus: 'synced',
+    pendingMetadataJson: '[]',
+    metadataRetryCount: 0,
     projectId: projectId,
     genreId: genreId,
     subcategoryId: subcategoryId,
@@ -144,6 +150,11 @@ void main() {
     when(
       () => mockStorytellerRepo.getPendingSyncs(),
     ).thenAnswer((_) async => <LocalStoryteller>[]);
+    // Nothing owes the server a metadata edit in these tests; the drain is
+    // covered end to end in sync_engine_metadata_outbox_test.dart (ENG-403).
+    when(
+      () => mockRepo.getPendingMetadataSyncs(),
+    ).thenAnswer((_) async => <LocalRecording>[]);
     when(
       () => mockStorytellerRepo.getRowById(any()),
     ).thenAnswer((_) async => null);
@@ -166,6 +177,7 @@ void main() {
       storytellerRepo: mockStorytellerRepo,
       connectivity: mockConnectivity,
       client: authClient,
+      recordingApi: apiRepoFor(authClient),
       uploadDownloader: downloader ?? const _AlwaysOkDownloader(),
     );
   }

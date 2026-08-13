@@ -6,6 +6,8 @@
 /// writes must preserve.
 library;
 
+import 'dart:io';
+
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,7 +16,7 @@ import 'package:oral_collector/core/database/app_database.dart';
 import 'package:oral_collector/core/database/database_provider.dart';
 import 'package:oral_collector/core/errors/api_exception.dart';
 import 'package:oral_collector/core/errors/app_exception.dart'
-    show ConflictException;
+    show ConflictException, NetworkException, ValidationException;
 import 'package:oral_collector/features/auth/data/providers/role_provider.dart';
 import 'package:oral_collector/features/project/presentation/notifiers/member_notifier.dart';
 import 'package:oral_collector/features/project/presentation/notifiers/member_state.dart';
@@ -38,17 +40,29 @@ import 'package:oral_collector/features/recording/presentation/notifiers/recordi
 import 'package:oral_collector/features/recording/presentation/widgets/classify_recording_dialog.dart';
 import 'package:oral_collector/features/recording/presentation/widgets/move_category_dialog.dart';
 import 'package:oral_collector/features/recording/presentation/widgets/secondary_classification_fields.dart';
+import 'package:oral_collector/features/storyteller/data/providers.dart'
+    as storyteller_providers;
 import 'package:oral_collector/features/storyteller/domain/entities/storyteller.dart';
+import 'package:oral_collector/features/storyteller/domain/repositories/storyteller_repository.dart';
 import 'package:oral_collector/features/sync/presentation/notifiers/sync_notifier.dart';
 import 'package:oral_collector/features/sync/presentation/notifiers/sync_state.dart';
 
 const recordingId = 'rec-1';
+
+/// Keeps `load()`'s storyteller lookup off the network; the notifier already
+/// treats an unavailable lookup as "show what the row says".
+class _OfflineStorytellerApi implements StorytellerRepository {
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw const SocketException('no network in tests');
+}
 
 class _FakeApiRepo implements RecordingApiRepository {
   _FakeApiRepo({
     this.updateResult = true,
     this.updateError,
     this.getRecordingResult,
+    this.getRecordingError,
     this.updateReviewFlags,
   });
 
@@ -56,6 +70,7 @@ class _FakeApiRepo implements RecordingApiRepository {
   List<ReviewFlag>? updateReviewFlags;
   Object? updateError;
   ServerRecording? getRecordingResult;
+  Object? getRecordingError;
 
   int updateCalls = 0;
   int getRecordingCalls = 0;
@@ -93,6 +108,7 @@ class _FakeApiRepo implements RecordingApiRepository {
   Future<ServerRecording> getRecording(String serverId) async {
     getRecordingCalls++;
     lastGetServerId = serverId;
+    if (getRecordingError != null) throw getRecordingError!;
     final result = getRecordingResult;
     if (result == null) throw StateError('getRecording not expected');
     return result;
@@ -302,6 +318,8 @@ void main() {
           ),
         if (importer != null)
           recordingFileImporterProvider.overrideWithValue(importer.call),
+        storyteller_providers.storytellerApiRepositoryProvider
+            .overrideWithValue(_OfflineStorytellerApi()),
       ],
     );
     addTearDown(container.dispose);
@@ -404,13 +422,85 @@ void main() {
         expect((await repo.getRecordingById(recordingId))!.gcsUrl, '');
       },
     );
+
+    test('a 404 on the metadata heal removes the uploaded row and its '
+        'audio file', () async {
+      final tmpDir = Directory.systemTemp.createTempSync('eng45_detail_');
+      addTearDown(() {
+        if (tmpDir.existsSync()) tmpDir.deleteSync(recursive: true);
+      });
+      final file = File('${tmpDir.path}/in.m4a')..writeAsStringSync('audio');
+      await seed(
+        serverId: 'srv-1',
+        gcsUrl: '',
+        uploadStatus: 'uploaded',
+        localFilePath: file.path,
+      );
+      final api = _FakeApiRepo(
+        getRecordingError: const ValidationException(
+          code: 'client_404',
+          statusCode: 404,
+        ),
+      );
+      final c = makeContainer(isOnline: true, api: api);
+      // The erase adds enough async turns for the autoDispose provider to be
+      // collected mid-load; a listener keeps the notifier (and its state) alive
+      // the way the screen does.
+      addTearDown(
+        c.listen(recordingDetailProvider(recordingId), (_, _) {}).close,
+      );
+
+      await notifierOf(c).load();
+
+      expect(await repo.getRecordingById(recordingId), isNull);
+      expect(file.existsSync(), isFalse);
+      expect(stateOf(c).recording, isNull);
+      expect(stateOf(c).isLoading, isFalse);
+      expect(
+        api.getRecordingCalls,
+        1,
+        reason: 'the row is gone for good; no point re-asking as a fallback',
+      );
+    });
+
+    test('a 404 does not remove a row that never finished uploading', () async {
+      // userId is what sends this row to the server, so the heal runs even
+      // though the audio may exist nowhere else (PR #193).
+      await seed(serverId: 'srv-1', userId: '', uploadStatus: 'failed');
+      final api = _FakeApiRepo(
+        getRecordingError: const ValidationException(
+          code: 'client_404',
+          statusCode: 404,
+        ),
+      );
+      final c = makeContainer(isOnline: true, api: api);
+
+      await notifierOf(c).load();
+
+      expect(api.getRecordingCalls, greaterThan(0));
+      expect(await repo.getRecordingById(recordingId), isNotNull);
+      expect(stateOf(c).recording?.id, recordingId);
+    });
+
+    test('a non-404 heal failure leaves the row alone', () async {
+      await seed(serverId: 'srv-1', gcsUrl: '', uploadStatus: 'uploaded');
+      final api = _FakeApiRepo(getRecordingError: const NetworkException());
+      final c = makeContainer(isOnline: true, api: api);
+
+      await notifierOf(c).load();
+
+      expect(await repo.getRecordingById(recordingId), isNotNull);
+      expect(stateOf(c).recording?.id, recordingId);
+    });
   });
 
   group('setStoryteller', () {
     test('writes the storyteller id and syncs the server', () async {
-      final recording = await seed();
+      // Needs a server copy and a connection to have a server to sync with:
+      // since ENG-411 the mutation gates on both, like the other five.
+      final recording = await seed(serverId: 'srv-1');
       final api = _FakeApiRepo();
-      final c = makeContainer(api: api);
+      final c = makeContainer(isOnline: true, api: api);
 
       await notifierOf(c).setStoryteller(
         recording,
@@ -453,7 +543,12 @@ void main() {
           ReviewFlag(code: 'missing_storyteller', origin: 'system'),
         ],
       );
-      final c = makeContainer(api: _FakeApiRepo(updateReviewFlags: const []));
+      // Online, like its siblings below: the flags come off the write response,
+      // and since ENG-411 this mutation does not write to an unreachable server.
+      final c = makeContainer(
+        isOnline: true,
+        api: _FakeApiRepo(updateReviewFlags: const []),
+      );
 
       await notifierOf(c).setStoryteller(
         recording,
@@ -477,7 +572,10 @@ void main() {
           ReviewFlag(code: 'missing_classification', origin: 'system'),
         ],
       );
-      final c = makeContainer(api: _FakeApiRepo(updateReviewFlags: const []));
+      final c = makeContainer(
+        isOnline: true,
+        api: _FakeApiRepo(updateReviewFlags: const []),
+      );
 
       await notifierOf(c).classify(
         recording,
@@ -498,7 +596,10 @@ void main() {
           ReviewFlag(code: 'missing_classification', origin: 'system'),
         ],
       );
-      final c = makeContainer(api: _FakeApiRepo(updateReviewFlags: const []));
+      final c = makeContainer(
+        isOnline: true,
+        api: _FakeApiRepo(updateReviewFlags: const []),
+      );
 
       await notifierOf(c).moveCategory(
         recording,
@@ -518,6 +619,7 @@ void main() {
           ],
         );
         final c = makeContainer(
+          isOnline: true,
           api: _FakeApiRepo(
             updateReviewFlags: const [
               ReviewFlag(code: 'missing_storyteller', origin: 'system'),
@@ -542,7 +644,7 @@ void main() {
           ReviewFlag(code: 'missing_storyteller', origin: 'system'),
         ],
       );
-      final c = makeContainer(api: _FakeApiRepo());
+      final c = makeContainer(isOnline: true, api: _FakeApiRepo());
 
       await notifierOf(c).classify(
         recording,
@@ -687,6 +789,56 @@ void main() {
         );
       },
     );
+
+    // ENG-399: the ENG-380 use-cases already distinguish a local-only save,
+    // but saveDetails threw that answer away and reported a clean success —
+    // so an offline rename looked like it had reached the server.
+    test('reports a rename that never left the device', () async {
+      final recording = await seed(uploadStatus: 'verified', serverId: 'srv-1');
+      final api = _FakeApiRepo();
+      final c = makeContainer(api: api);
+
+      final result = await notifierOf(
+        c,
+      ).saveDetails(recording, title: 'A New Title', description: 'initial');
+
+      expect(result, RecordingMutationResult.savedLocallyOnly);
+      expect(api.updateCalls, 0);
+      expect((await repo.getRecordingById(recordingId))!.title, 'A New Title');
+    });
+
+    test('reports a description edit that never left the device', () async {
+      final recording = await seed(uploadStatus: 'verified', serverId: 'srv-1');
+      final api = _FakeApiRepo();
+      final c = makeContainer(api: api);
+
+      final result = await notifierOf(
+        c,
+      ).saveDetails(recording, title: 'Story', description: 'a fresh note');
+
+      expect(result, RecordingMutationResult.savedLocallyOnly);
+      expect(api.updateCalls, 0);
+      expect(
+        (await repo.getRecordingById(recordingId))!.description,
+        'a fresh note',
+      );
+    });
+
+    test(
+      'a recording the server does not know yet still saves cleanly offline',
+      () async {
+        // No serverId: title and description ride along on the upload, so
+        // nothing is pending and the user must not be told otherwise.
+        final recording = await seed(serverId: null);
+        final c = makeContainer();
+
+        final result = await notifierOf(
+          c,
+        ).saveDetails(recording, title: 'A New Title', description: 'a note');
+
+        expect(result, RecordingMutationResult.success);
+      },
+    );
   });
 
   group('toggleCleaningStatus', () {
@@ -718,11 +870,92 @@ void main() {
         serverId: 'srv-1',
       );
       final api = _FakeApiRepo();
-      final c = makeContainer(api: api);
+      final c = makeContainer(isOnline: true, api: api);
 
       await notifierOf(c).toggleCleaningStatus(recording);
 
       expect(api.lastUpdate['cleaningStatus'], 'none');
+      expect(
+        (await repo.getRecordingById(recordingId))!.cleaningStatus,
+        'none',
+      );
+    });
+
+    test('calls the API when the recording was verified', () async {
+      final recording = await seed(
+        uploadStatus: 'verified',
+        cleaningStatus: 'none',
+        serverId: 'srv-1',
+      );
+      final api = _FakeApiRepo();
+      final c = makeContainer(isOnline: true, api: api);
+
+      final result = await notifierOf(c).toggleCleaningStatus(recording);
+
+      expect(result, RecordingMutationResult.success);
+      expect(api.updateCalls, 1);
+      expect(api.lastUpdate['cleaningStatus'], 'needs_cleaning');
+      expect(
+        (await repo.getRecordingById(recordingId))!.cleaningStatus,
+        'needs_cleaning',
+      );
+    });
+
+    // ENG-399: since ENG-376 counted `verified` as server-known, the common
+    // recording takes the server path — so a plain network error used to throw
+    // the edit away instead of keeping it.
+    test(
+      'keeps the edit on the device when the server is unreachable',
+      () async {
+        final recording = await seed(
+          uploadStatus: 'verified',
+          cleaningStatus: 'none',
+          serverId: 'srv-1',
+        );
+        final api = _FakeApiRepo(updateError: Exception('connection failed'));
+        final c = makeContainer(isOnline: true, api: api);
+
+        final result = await notifierOf(c).toggleCleaningStatus(recording);
+
+        expect(result, RecordingMutationResult.savedLocallyOnly);
+        expect(
+          (await repo.getRecordingById(recordingId))!.cleaningStatus,
+          'needs_cleaning',
+        );
+      },
+    );
+
+    test('writes locally without trying the server while offline', () async {
+      final recording = await seed(
+        uploadStatus: 'verified',
+        cleaningStatus: 'none',
+        serverId: 'srv-1',
+      );
+      final api = _FakeApiRepo();
+      final c = makeContainer(api: api);
+
+      final result = await notifierOf(c).toggleCleaningStatus(recording);
+
+      expect(result, RecordingMutationResult.savedLocallyOnly);
+      expect(api.updateCalls, 0);
+      expect(
+        (await repo.getRecordingById(recordingId))!.cleaningStatus,
+        'needs_cleaning',
+      );
+    });
+
+    test('returns forbidden and leaves the row untouched on 403', () async {
+      final recording = await seed(
+        uploadStatus: 'verified',
+        cleaningStatus: 'none',
+        serverId: 'srv-1',
+      );
+      final api = _FakeApiRepo(updateError: const ForbiddenException());
+      final c = makeContainer(isOnline: true, api: api);
+
+      final result = await notifierOf(c).toggleCleaningStatus(recording);
+
+      expect(result, RecordingMutationResult.forbidden);
       expect(
         (await repo.getRecordingById(recordingId))!.cleaningStatus,
         'none',
@@ -736,7 +969,7 @@ void main() {
       () async {
         final recording = await seed(secondaryGenreId: 'sg-old');
         final api = _FakeApiRepo();
-        final c = makeContainer(api: api);
+        final c = makeContainer(isOnline: true, api: api);
 
         final result = await notifierOf(c).moveCategory(
           recording,
@@ -758,7 +991,7 @@ void main() {
     test('returns forbidden and leaves the row untouched on 403', () async {
       final recording = await seed(genreId: 'genre-1');
       final api = _FakeApiRepo(updateError: const ForbiddenException());
-      final c = makeContainer(api: api);
+      final c = makeContainer(isOnline: true, api: api);
 
       final result = await notifierOf(c).moveCategory(
         recording,
@@ -776,7 +1009,7 @@ void main() {
     test('returns failed when the API reports no success', () async {
       final recording = await seed();
       final api = _FakeApiRepo(updateResult: false);
-      final c = makeContainer(api: api);
+      final c = makeContainer(isOnline: true, api: api);
 
       final result = await notifierOf(c).moveCategory(
         recording,
@@ -788,6 +1021,56 @@ void main() {
       );
 
       expect(result, RecordingMutationResult.failed);
+    });
+
+    // ENG-399: same shape as toggleCleaningStatus — a network error used to
+    // discard the move instead of keeping it on the device.
+    test(
+      'keeps the move on the device when the server is unreachable',
+      () async {
+        final recording = await seed(
+          genreId: 'genre-1',
+          uploadStatus: 'verified',
+          serverId: 'srv-1',
+        );
+        final api = _FakeApiRepo(updateError: Exception('connection failed'));
+        final c = makeContainer(isOnline: true, api: api);
+
+        final result = await notifierOf(c).moveCategory(
+          recording,
+          const MoveCategoryResult(
+            genreId: 'genre-2',
+            subcategoryId: 'sub-2',
+            clearSecondary: false,
+          ),
+        );
+
+        expect(result, RecordingMutationResult.savedLocallyOnly);
+        expect((await repo.getRecordingById(recordingId))!.genreId, 'genre-2');
+      },
+    );
+
+    test('writes locally without trying the server while offline', () async {
+      final recording = await seed(
+        genreId: 'genre-1',
+        uploadStatus: 'verified',
+        serverId: 'srv-1',
+      );
+      final api = _FakeApiRepo();
+      final c = makeContainer(api: api);
+
+      final result = await notifierOf(c).moveCategory(
+        recording,
+        const MoveCategoryResult(
+          genreId: 'genre-2',
+          subcategoryId: 'sub-2',
+          clearSecondary: false,
+        ),
+      );
+
+      expect(result, RecordingMutationResult.savedLocallyOnly);
+      expect(api.updateCalls, 0);
+      expect((await repo.getRecordingById(recordingId))!.genreId, 'genre-2');
     });
   });
 
@@ -840,6 +1123,80 @@ void main() {
         expect(spy.processQueueCalls, 0);
       },
     );
+
+    // ENG-399: classify gates the server call on having a serverId rather than
+    // on uploadStatus, but the offline hole underneath is the same one.
+    test('writes locally without trying the server while offline', () async {
+      final recording = await seed(
+        genreId: 'genre-1',
+        uploadStatus: 'verified',
+        serverId: 'srv-1',
+      );
+      final api = _FakeApiRepo();
+      final c = makeContainer(api: api);
+
+      final result = await notifierOf(c).classify(
+        recording,
+        const ClassifyResult(genreId: 'genre-2', subcategoryId: 'sub-2'),
+      );
+
+      expect(result, RecordingMutationResult.savedLocallyOnly);
+      expect(api.updateCalls, 0);
+      expect((await repo.getRecordingById(recordingId))!.genreId, 'genre-2');
+    });
+
+    test('keeps the classification when the server is unreachable', () async {
+      final recording = await seed(
+        genreId: 'genre-1',
+        uploadStatus: 'verified',
+        serverId: 'srv-1',
+      );
+      final api = _FakeApiRepo(updateError: Exception('connection failed'));
+      final c = makeContainer(isOnline: true, api: api);
+
+      final result = await notifierOf(c).classify(
+        recording,
+        const ClassifyResult(genreId: 'genre-2', subcategoryId: 'sub-2'),
+      );
+
+      expect(result, RecordingMutationResult.savedLocallyOnly);
+      expect((await repo.getRecordingById(recordingId))!.genreId, 'genre-2');
+    });
+
+    test('returns forbidden and leaves the row untouched on 403', () async {
+      final recording = await seed(genreId: 'genre-1', serverId: 'srv-1');
+      final api = _FakeApiRepo(updateError: const ForbiddenException());
+      final c = makeContainer(isOnline: true, api: api);
+
+      final result = await notifierOf(c).classify(
+        recording,
+        const ClassifyResult(genreId: 'genre-2', subcategoryId: 'sub-2'),
+      );
+
+      expect(result, RecordingMutationResult.forbidden);
+      expect((await repo.getRecordingById(recordingId))!.genreId, 'genre-1');
+    });
+
+    test(
+      'a recording the server does not know yet still saves cleanly offline',
+      () async {
+        // No serverId: there is nothing to tell the server about, the
+        // classification rides along on the eventual upload. That is not a
+        // pending edit and must not be reported as one.
+        final recording = await seed(serverId: null);
+        final api = _FakeApiRepo();
+        final c = makeContainer(api: api);
+
+        final result = await notifierOf(c).classify(
+          recording,
+          const ClassifyResult(genreId: 'genre-2', subcategoryId: 'sub-2'),
+        );
+
+        expect(result, RecordingMutationResult.success);
+        expect(api.updateCalls, 0);
+        expect((await repo.getRecordingById(recordingId))!.genreId, 'genre-2');
+      },
+    );
   });
 
   group('saveSecondary', () {
@@ -874,6 +1231,61 @@ void main() {
         );
       },
     );
+
+    test('writes locally without trying the server while offline', () async {
+      final recording = await seed(uploadStatus: 'verified', serverId: 'srv-1');
+      final api = _FakeApiRepo();
+      final c = makeContainer(api: api);
+
+      final result = await notifierOf(c).saveSecondary(
+        recording,
+        const SecondaryValues(genreId: 'sg-2', subcategoryId: 'ss-2'),
+      );
+
+      expect(result, RecordingMutationResult.savedLocallyOnly);
+      expect(api.updateCalls, 0);
+      expect(
+        (await repo.getRecordingById(recordingId))!.secondaryGenreId,
+        'sg-2',
+      );
+    });
+
+    test('keeps the secondary when the server is unreachable', () async {
+      final recording = await seed(uploadStatus: 'verified', serverId: 'srv-1');
+      final api = _FakeApiRepo(updateError: Exception('connection failed'));
+      final c = makeContainer(isOnline: true, api: api);
+
+      final result = await notifierOf(c).saveSecondary(
+        recording,
+        const SecondaryValues(genreId: 'sg-2', subcategoryId: 'ss-2'),
+      );
+
+      expect(result, RecordingMutationResult.savedLocallyOnly);
+      expect(
+        (await repo.getRecordingById(recordingId))!.secondaryGenreId,
+        'sg-2',
+      );
+    });
+
+    test('returns forbidden and leaves the row untouched on 403', () async {
+      final recording = await seed(
+        secondaryGenreId: 'sg-old',
+        serverId: 'srv-1',
+      );
+      final api = _FakeApiRepo(updateError: const ForbiddenException());
+      final c = makeContainer(isOnline: true, api: api);
+
+      final result = await notifierOf(c).saveSecondary(
+        recording,
+        const SecondaryValues(genreId: 'sg-2', subcategoryId: 'ss-2'),
+      );
+
+      expect(result, RecordingMutationResult.forbidden);
+      expect(
+        (await repo.getRecordingById(recordingId))!.secondaryGenreId,
+        'sg-old',
+      );
+    });
   });
 
   group('downloadAndCache', () {

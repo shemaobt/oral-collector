@@ -582,6 +582,10 @@ class AppLocalizationsHi extends AppLocalizations {
       'सर्वर पर सफ़ाई स्थिति अपडेट करने में विफल';
 
   @override
+  String get recording_savedOnDeviceOnly =>
+      'इस डिवाइस पर सहेजा गया — सर्वर को यह बदलाव अभी तक नहीं मिला है। कनेक्शन लौटने पर यह अपने आप भेज दिया जाएगा।';
+
+  @override
   String get recording_updateNoPermission =>
       'आपको यह रिकॉर्डिंग अपडेट करने की अनुमति नहीं है';
 
@@ -722,6 +726,22 @@ class AppLocalizationsHi extends AppLocalizations {
   String get recording_statusFileMissing => 'ऑडियो फ़ाइल नहीं मिली';
 
   @override
+  String get recording_metadataSyncPending =>
+      'संपादन भेजे जाने की प्रतीक्षा में';
+
+  @override
+  String get recording_metadataSyncForbidden =>
+      'संपादन अस्वीकृत: आप इस रिकॉर्डिंग को नहीं बदल सकते';
+
+  @override
+  String get recording_metadataSyncConflict =>
+      'संपादन अस्वीकृत: इस शीर्षक वाली दूसरी रिकॉर्डिंग पहले से मौजूद है';
+
+  @override
+  String get recording_metadataSyncExhausted =>
+      'संपादन नहीं भेजा गया — फिर से कोशिश करने के लिए दोबारा संपादित करें';
+
+  @override
   String get recording_uploadExhaustedMessage =>
       'कई प्रयासों के बाद अपलोड रुक गया। आप फिर से कोशिश कर सकते हैं।';
 
@@ -738,26 +758,23 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get recordings_clearStale => 'विफल साफ़ करें';
+  String get recordings_retryFailedUploads => 'अपलोड फिर से आज़माएँ';
 
   @override
-  String get recordings_clearStaleMessage =>
-      'यह सर्वर से विफल या अटकी हुई अपलोड स्थिति वाली सभी रिकॉर्डिंग्स को स्थायी रूप से हटा देगा। इसे पूर्ववत नहीं किया जा सकता।';
-
-  @override
-  String recordings_clearedCount(int count) {
+  String recordings_retryQueuedCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count रिकॉर्डिंग्स साफ़ की गईं',
-      one: '1 रिकॉर्डिंग साफ़ की गई',
-      zero: 'कोई पुरानी रिकॉर्डिंग नहीं मिली',
+      other: '$count रिकॉर्डिंग्स फिर से अपलोड कतार में',
+      one: '1 रिकॉर्डिंग फिर से अपलोड कतार में',
+      zero: 'फिर से आज़माने के लिए कोई अपलोड नहीं',
     );
     return '$_temp0';
   }
 
   @override
-  String get recordings_clearFailed => 'रिकॉर्डिंग्स साफ़ करने में विफल';
+  String get recordings_retryFailed =>
+      'अपलोड को फिर से कतार में नहीं डाला जा सका';
 
   @override
   String get trim_title => 'रिकॉर्डिंग संपादित करें';
@@ -1065,6 +1082,10 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
+  String get sync_waitingForWifi =>
+      'अपलोड Wi-Fi का इंतज़ार कर रहे हैं। मोबाइल डेटा से भेजने के लिए \"केवल Wi-Fi पर अपलोड करें\" बंद करें।';
+
+  @override
   String get profile_photoUpdated => 'प्रोफ़ाइल फ़ोटो अपडेट हुई';
 
   @override
@@ -1123,10 +1144,47 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get profile_clearCacheMessage =>
-      'यह सभी स्थानीय रूप से संग्रहीत रिकॉर्डिंग्स हटा देगा। सर्वर पर अपलोड की गई रिकॉर्डिंग्स प्रभावित नहीं होंगी।';
+      'इससे वे स्थानीय रूप से संग्रहीत रिकॉर्डिंग्स हट जाएँगी जो सर्वर के पास पहले से हैं। जो रिकॉर्डिंग्स अभी तक अपलोड नहीं हुई हैं, वे इस डिवाइस पर बनी रहेंगी।';
 
   @override
   String get profile_cacheCleared => 'स्थानीय कैश साफ़ हो गया';
+
+  @override
+  String profile_cacheClearedKept(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'स्थानीय कैश साफ़ हो गया। $count रिकॉर्डिंग्स रखी गईं क्योंकि वे अभी तक अपलोड नहीं हुई हैं।',
+      one:
+          'स्थानीय कैश साफ़ हो गया। 1 रिकॉर्डिंग रखी गई क्योंकि वह अभी तक अपलोड नहीं हुई है।',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String profile_cacheKeptUnsent(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count रिकॉर्डिंग्स रखी गईं क्योंकि वे अभी तक अपलोड नहीं हुई हैं।',
+      one: '1 रिकॉर्डिंग रखी गई क्योंकि वह अभी तक अपलोड नहीं हुई है।',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String profile_cacheNotFreed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count रिकॉर्डिंग्स हटाई नहीं जा सकीं, इसलिए वह जगह खाली नहीं हुई।',
+      one: '1 रिकॉर्डिंग हटाई नहीं जा सकी, इसलिए वह जगह खाली नहीं हुई।',
+    );
+    return '$_temp0';
+  }
 
   @override
   String profile_joinedSuccess(String name) {
@@ -1184,7 +1242,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get profile_clearCacheSubtitle =>
-      'सभी स्थानीय रूप से संग्रहीत रिकॉर्डिंग्स हटाएँ';
+      'सर्वर के पास पहले से मौजूद स्थानीय प्रतियाँ हटाएँ';
 
   @override
   String get profile_invitations => 'आमंत्रण';
@@ -1823,6 +1881,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get detail_cleaning => 'सफ़ाई';
 
   @override
+  String get detail_metadataSync => 'संपादन';
+
+  @override
   String get detail_recorded => 'रिकॉर्ड किया गया';
 
   @override
@@ -2115,6 +2176,25 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get recording_finalizationFailedBody =>
       'हमने ऑडियो पुनर्प्राप्त करने का प्रयास किया लेकिन कोई खंड उपलब्ध नहीं था।';
+
+  @override
+  String get recording_finalizationFailedBodyNoAudio =>
+      'रिकॉर्डर से कोई ऑडियो नहीं आया।';
+
+  @override
+  String get recording_finalizationFailedBodyDownload =>
+      'ऑडियो रिकॉर्ड हुआ, लेकिन उसे दोबारा पढ़ा नहीं जा सका।';
+
+  @override
+  String get recording_finalizationFailedBodyCaptureInterrupted =>
+      'आपके रोकने से पहले ही रिकॉर्डिंग रुक गई, इसलिए कोई ऑडियो सहेजा नहीं गया।';
+
+  @override
+  String get recording_finalizationFailedBodyPipeline =>
+      'हम इस रिकॉर्डिंग की प्रोसेसिंग पूरी नहीं कर सके। यह आपकी बिना सहेजी रिकॉर्डिंग में रखी है।';
+
+  @override
+  String get recording_finalizationErrorBack => 'वापस';
 
   @override
   String get recording_discardAndReturn => 'त्यागें और लौटें';
@@ -2466,7 +2546,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get a11y_minimapScrubber =>
-      'Audio overview. Tap or drag to navigate to a position.';
+      'ऑडियो का अवलोकन। किसी स्थान पर जाने के लिए टैप करें या खींचें।';
 
   @override
   String a11y_tabLabel(String label) {

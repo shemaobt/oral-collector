@@ -13,6 +13,7 @@ import 'package:oral_collector/features/sync/domain/repositories/connectivity_se
 import 'package:oral_collector/features/sync/domain/repositories/sync_engine.dart';
 import 'package:oral_collector/features/sync/presentation/notifiers/sync_notifier.dart';
 import 'package:oral_collector/features/sync/presentation/notifiers/sync_state.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MockConnectivity extends Mock implements ConnectivityService {}
 
@@ -54,9 +55,14 @@ LocalRecording makeRecording({
   String? title = 'Test',
   int retryCount = 0,
   String localFilePath = '/tmp/test.m4a',
+  String? serverId,
 }) => LocalRecording(
   id: id,
   reviewFlagsJson: '[]',
+  // The metadata outbox defaults (ENG-403): this row owes the server no edit.
+  metadataSyncStatus: 'synced',
+  pendingMetadataJson: '[]',
+  metadataRetryCount: 0,
   projectId: 'proj-1',
   genreId: 'genre-1',
   subcategoryId: null,
@@ -66,7 +72,7 @@ LocalRecording makeRecording({
   format: 'm4a',
   localFilePath: localFilePath,
   uploadStatus: uploadStatus,
-  serverId: null,
+  serverId: serverId,
   gcsUrl: null,
   registerId: null,
   cleaningStatus: 'none',
@@ -80,12 +86,15 @@ LocalRecording makeRecording({
 );
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   late ProviderContainer container;
   late MockConnectivity mockConnectivity;
   late MockSyncEngine mockSyncEngine;
   late MockRecordingRepo mockRecordingRepo;
 
   setUp(() {
+    SharedPreferences.setMockInitialValues({});
     mockConnectivity = MockConnectivity();
     mockSyncEngine = MockSyncEngine();
     mockRecordingRepo = MockRecordingRepo();
@@ -99,12 +108,18 @@ void main() {
       () => mockRecordingRepo.getPendingUploads(),
     ).thenAnswer((_) async => []);
     when(
+      () => mockRecordingRepo.getPendingMetadataSyncs(),
+    ).thenAnswer((_) async => []);
+    when(
       () => mockSyncEngine.processQueue(
         deleteAfterUpload: any(named: 'deleteAfterUpload'),
         wifiOnly: any(named: 'wifiOnly'),
         maxConcurrency: any(named: 'maxConcurrency'),
         onProgress: any(named: 'onProgress'),
       ),
+    ).thenAnswer((_) async {});
+    when(
+      () => mockSyncEngine.processPendingMetadata(),
     ).thenAnswer((_) async {});
 
     container = ProviderContainer(
@@ -518,6 +533,32 @@ void main() {
       );
     });
 
+    test('offline still reports the size of the queue it is not draining '
+        '(ENG-404)', () async {
+      // The list's bulk retry requeues rows and then calls processQueue, and it
+      // works offline on purpose. The drain is refused, but the badge must not
+      // keep advertising the queue as it was before the requeue: the Wi-Fi-only
+      // branch refreshes before it blocks, and being offline is no better a
+      // reason to report a wrong count.
+      when(() => mockConnectivity.isOnline).thenAnswer((_) async => false);
+      container.read(syncNotifierProvider);
+      await Future<void>.delayed(Duration.zero);
+      expect(container.read(syncNotifierProvider).pendingCount, 0);
+
+      when(() => mockRecordingRepo.getPendingUploads()).thenAnswer(
+        (_) async => [
+          makeRecording(id: 'r-1', fileSizeBytes: 100),
+          makeRecording(id: 'r-2', fileSizeBytes: 200),
+        ],
+      );
+
+      await container.read(syncNotifierProvider.notifier).processQueue();
+
+      final state = container.read(syncNotifierProvider);
+      expect(state.pendingCount, 2);
+      expect(state.totalQueueSizeBytes, 300);
+    });
+
     test('delegates to engine even when no recordings are pending '
         '(storytellers may need sync)', () async {
       when(
@@ -628,6 +669,18 @@ void main() {
       container.read(syncNotifierProvider);
       await Future<void>.delayed(Duration.zero);
 
+      // Cellular uploads have to be allowed for the queue to run at all
+      // (ENG-355); what is under test is that the network type still decides
+      // the concurrency.
+      await container
+          .read(syncNotifierProvider.notifier)
+          .updateSettings(
+            const SyncSettings(
+              autoUploadWifiOnly: false,
+              autoRemoveAfterUpload: true,
+            ),
+          );
+
       await container.read(syncNotifierProvider.notifier).processQueue();
 
       verify(
@@ -660,7 +713,7 @@ void main() {
       container.read(syncNotifierProvider);
       await Future<void>.delayed(Duration.zero);
 
-      container
+      await container
           .read(syncNotifierProvider.notifier)
           .updateSettings(
             const SyncSettings(
@@ -826,7 +879,7 @@ void main() {
       container.read(syncNotifierProvider);
       await Future<void>.delayed(Duration.zero);
 
-      container
+      await container
           .read(syncNotifierProvider.notifier)
           .updateSettings(
             const SyncSettings(
@@ -844,7 +897,7 @@ void main() {
       container.read(syncNotifierProvider);
       await Future<void>.delayed(Duration.zero);
 
-      container
+      await container
           .read(syncNotifierProvider.notifier)
           .updateSettings(
             const SyncSettings(
@@ -862,7 +915,7 @@ void main() {
       container.read(syncNotifierProvider);
       await Future<void>.delayed(Duration.zero);
 
-      container
+      await container
           .read(syncNotifierProvider.notifier)
           .updateSettings(
             const SyncSettings(
@@ -997,7 +1050,10 @@ void main() {
   });
 
   group('clearLocalCache', () {
-    test('deletes every local file and then clears the repository', () async {
+    // Only rows the server demonstrably has are discardable at all; which rows
+    // qualify is covered by sync_notifier_clear_cache_test.dart. What this pins
+    // is the order: a row that outlived its file would point at nothing.
+    test('deletes the file before the row that points at it', () async {
       final dir = Directory.systemTemp.createTempSync('sync_storage_clear');
       addTearDown(() {
         if (dir.existsSync()) dir.deleteSync(recursive: true);
@@ -1007,12 +1063,25 @@ void main() {
 
       when(() => mockRecordingRepo.getAllLocalRecordings()).thenAnswer(
         (_) async => [
-          makeRecording(id: 'a', localFilePath: a.path),
-          makeRecording(id: 'b', localFilePath: b.path),
+          makeRecording(
+            id: 'a',
+            localFilePath: a.path,
+            uploadStatus: 'verified',
+            serverId: 'srv-a',
+          ),
+          makeRecording(
+            id: 'b',
+            localFilePath: b.path,
+            uploadStatus: 'uploaded',
+            serverId: 'srv-b',
+          ),
         ],
       );
-      when(() => mockRecordingRepo.deleteAllRecordings()).thenAnswer((_) async {
-        // Ordering contract: files are deleted before the repository is cleared.
+      var rowsRemoved = false;
+      when(() => mockRecordingRepo.deleteRecordingsByIds(any())).thenAnswer((
+        _,
+      ) async {
+        rowsRemoved = true;
         expect(a.existsSync(), isFalse);
         expect(b.existsSync(), isFalse);
         return 2;
@@ -1022,9 +1091,260 @@ void main() {
       await Future<void>.delayed(Duration.zero);
       await notifier.clearLocalCache();
 
-      expect(a.existsSync(), isFalse);
-      expect(b.existsSync(), isFalse);
-      verify(() => mockRecordingRepo.deleteAllRecordings()).called(1);
+      // Without this the assertions above are unreachable — and silently so —
+      // for any implementation that removes the rows some other way.
+      expect(rowsRemoved, isTrue);
+    });
+  });
+
+  // The Wi-Fi-only gate used to be a silent return inside the engine: the
+  // notifier then wrote lastSyncAt and progress 100 for a queue that never ran,
+  // and nothing told the user why the tap did nothing. See ENG-355.
+  group('wifi-only gate', () {
+    setUp(() {
+      when(() => mockConnectivity.isOnWifi).thenAnswer((_) async => false);
+      when(
+        () => mockRecordingRepo.getPendingUploads(),
+      ).thenAnswer((_) async => [makeRecording()]);
+    });
+
+    test('does not report a sync that never ran', () async {
+      container.read(syncNotifierProvider);
+      await Future<void>.delayed(Duration.zero);
+
+      await container.read(syncNotifierProvider.notifier).syncAll();
+
+      final state = container.read(syncNotifierProvider);
+      expect(state.lastSyncAt, isNull);
+      expect(state.syncProgress, 0);
+      expect(state.pendingCount, 1);
+      // uploadingId is what hides the chip: leaving it set is the "blink" the
+      // user reported.
+      expect(state.uploadingId, isNull);
+    });
+
+    test('exposes why the queue was held back', () async {
+      container.read(syncNotifierProvider);
+      await Future<void>.delayed(Duration.zero);
+
+      await container.read(syncNotifierProvider.notifier).syncAll();
+
+      expect(
+        container.read(syncNotifierProvider).blockReason,
+        SyncBlockReason.wifiOnly,
+      );
+    });
+
+    // ENG-403: the gate returns before the engine is ever asked, so the
+    // metadata outbox would have inherited a wait meant for audio. The
+    // preference is about mobile data spent on recordings; an edit is a few
+    // hundred bytes and goes up as soon as there is a connection.
+    test('still carries the metadata outbox', () async {
+      container.read(syncNotifierProvider);
+      await Future<void>.delayed(Duration.zero);
+
+      await container.read(syncNotifierProvider.notifier).syncAll();
+
+      verify(() => mockSyncEngine.processPendingMetadata()).called(1);
+      verifyNever(
+        () => mockSyncEngine.processQueue(
+          deleteAfterUpload: any(named: 'deleteAfterUpload'),
+          wifiOnly: any(named: 'wifiOnly'),
+          maxConcurrency: any(named: 'maxConcurrency'),
+          onProgress: any(named: 'onProgress'),
+        ),
+      );
+    });
+
+    test('keeps blaming Wi-Fi for the uploads it did hold back', () async {
+      // The edit went up, the audio did not. "Waiting for Wi-Fi" is about the
+      // uploads and stays true; draining the outbox must not read as the queue
+      // having run.
+      container.read(syncNotifierProvider);
+      await Future<void>.delayed(Duration.zero);
+
+      await container.read(syncNotifierProvider.notifier).syncAll();
+
+      final state = container.read(syncNotifierProvider);
+      expect(state.blockReason, SyncBlockReason.wifiOnly);
+      expect(state.lastSyncAt, isNull);
+      expect(state.syncProgress, 0);
+    });
+
+    test('does not keep blaming Wi-Fi once the device is offline', () async {
+      final controller = StreamController<bool>();
+      when(
+        () => mockConnectivity.onConnectivityChanged,
+      ).thenAnswer((_) => controller.stream);
+      addTearDown(controller.close);
+
+      container.read(syncNotifierProvider);
+      await Future<void>.delayed(Duration.zero);
+      await container.read(syncNotifierProvider.notifier).syncAll();
+      expect(
+        container.read(syncNotifierProvider).blockReason,
+        SyncBlockReason.wifiOnly,
+      );
+
+      controller.add(false);
+      await Future<void>.delayed(Duration.zero);
+      await container.read(syncNotifierProvider.notifier).syncAll();
+
+      expect(container.read(syncNotifierProvider).blockReason, isNull);
+    });
+
+    test('does not blame Wi-Fi while an upload is in flight', () async {
+      container.read(syncNotifierProvider);
+      await Future<void>.delayed(Duration.zero);
+      await container.read(syncNotifierProvider.notifier).syncAll();
+      expect(
+        container.read(syncNotifierProvider).blockReason,
+        SyncBlockReason.wifiOnly,
+      );
+
+      // The user retries one recording from the detail screen. It takes the
+      // shared upload guard, so a tap on the chip bails out of processQueue
+      // early — and must not report the stale verdict while bytes are moving.
+      final uploadGate = Completer<void>();
+      when(
+        () => mockRecordingRepo.getRecordingById('rec-1'),
+      ).thenAnswer((_) async => makeRecording(id: 'rec-1'));
+      when(
+        () => mockSyncEngine.uploadSingle(
+          any(),
+          deleteAfterUpload: any(named: 'deleteAfterUpload'),
+          onProgress: any(named: 'onProgress'),
+        ),
+      ).thenAnswer((_) => uploadGate.future);
+
+      final inFlight = container
+          .read(syncNotifierProvider.notifier)
+          .syncOne('rec-1');
+      await container.read(syncNotifierProvider.notifier).syncAll();
+
+      expect(container.read(syncNotifierProvider).uploadingId, 'rec-1');
+      expect(container.read(syncNotifierProvider).blockReason, isNull);
+
+      uploadGate.complete();
+      await inFlight;
+    });
+
+    test('clears the block once the device is back on Wi-Fi', () async {
+      container.read(syncNotifierProvider);
+      await Future<void>.delayed(Duration.zero);
+
+      await container.read(syncNotifierProvider.notifier).syncAll();
+      expect(
+        container.read(syncNotifierProvider).blockReason,
+        SyncBlockReason.wifiOnly,
+      );
+
+      when(() => mockConnectivity.isOnWifi).thenAnswer((_) async => true);
+      await container.read(syncNotifierProvider.notifier).syncAll();
+
+      final state = container.read(syncNotifierProvider);
+      expect(state.blockReason, isNull);
+      expect(state.lastSyncAt, isNotNull);
+    });
+  });
+
+  // The Wi-Fi-only preference was state-only: turning it off lasted until the
+  // app was closed, and a device living on cellular went back to a frozen queue
+  // on every relaunch. See ENG-355.
+  group('settings persistence', () {
+    ProviderContainer relaunch() {
+      final relaunched = ProviderContainer(
+        overrides: [
+          connectivityServiceProvider.overrideWithValue(mockConnectivity),
+          syncEngineProvider.overrideWithValue(mockSyncEngine),
+          localRecordingRepositoryProvider.overrideWithValue(mockRecordingRepo),
+        ],
+      );
+      addTearDown(relaunched.dispose);
+      return relaunched;
+    }
+
+    test('wifi-only stays off after a relaunch', () async {
+      when(() => mockConnectivity.isOnWifi).thenAnswer((_) async => false);
+      when(
+        () => mockRecordingRepo.getPendingUploads(),
+      ).thenAnswer((_) async => [makeRecording()]);
+
+      await container
+          .read(syncNotifierProvider.notifier)
+          .updateSettings(
+            const SyncSettings(
+              autoUploadWifiOnly: false,
+              autoRemoveAfterUpload: true,
+            ),
+          );
+      container.dispose();
+
+      // A fresh container is a fresh notifier: whatever it knows came from
+      // storage. Asserted through the effective behaviour of the next sync,
+      // not by reading the preference key back.
+      final relaunched = relaunch();
+      relaunched.read(syncNotifierProvider);
+      await Future<void>.delayed(Duration.zero);
+      await relaunched.read(syncNotifierProvider.notifier).syncAll();
+
+      expect(relaunched.read(syncNotifierProvider).blockReason, isNull);
+      verify(
+        () => mockSyncEngine.processQueue(
+          deleteAfterUpload: any(named: 'deleteAfterUpload'),
+          wifiOnly: false,
+          maxConcurrency: any(named: 'maxConcurrency'),
+          onProgress: any(named: 'onProgress'),
+        ),
+      ).called(1);
+    });
+
+    test(
+      'a choice made while the stored value loads is not overwritten',
+      () async {
+        SharedPreferences.setMockInitialValues({
+          'sync_auto_upload_wifi_only': true,
+        });
+        // Startup already warmed the singleton (locale_provider,
+        // project_notifier). That is what puts _loadSettings' continuation
+        // *after* the user's choice instead of before it.
+        await SharedPreferences.getInstance();
+
+        final c = relaunch();
+        c.read(syncNotifierProvider);
+        await c
+            .read(syncNotifierProvider.notifier)
+            .updateSettings(
+              const SyncSettings(
+                autoUploadWifiOnly: false,
+                autoRemoveAfterUpload: true,
+              ),
+            );
+        await Future<void>.delayed(Duration.zero);
+
+        expect(c.read(syncNotifierProvider).autoUploadWifiOnly, isFalse);
+      },
+    );
+
+    test('auto-remove stays off after a relaunch', () async {
+      await container
+          .read(syncNotifierProvider.notifier)
+          .updateSettings(
+            const SyncSettings(
+              autoUploadWifiOnly: true,
+              autoRemoveAfterUpload: false,
+            ),
+          );
+      container.dispose();
+
+      final relaunched = relaunch();
+      relaunched.read(syncNotifierProvider);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(
+        relaunched.read(syncNotifierProvider).autoRemoveAfterUpload,
+        isFalse,
+      );
     });
   });
 }

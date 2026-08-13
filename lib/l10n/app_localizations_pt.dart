@@ -582,6 +582,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'Falha ao atualizar status de limpeza no servidor';
 
   @override
+  String get recording_savedOnDeviceOnly =>
+      'Salvo neste dispositivo — o servidor ainda não recebeu esta alteração. Ela será enviada sozinha quando a conexão voltar.';
+
+  @override
   String get recording_updateNoPermission =>
       'Você não tem permissão para atualizar esta gravação';
 
@@ -723,6 +727,21 @@ class AppLocalizationsPt extends AppLocalizations {
   String get recording_statusFileMissing => 'Arquivo de áudio ausente';
 
   @override
+  String get recording_metadataSyncPending => 'Edição aguardando envio';
+
+  @override
+  String get recording_metadataSyncForbidden =>
+      'Edição recusada: você não pode alterar esta gravação';
+
+  @override
+  String get recording_metadataSyncConflict =>
+      'Edição recusada: outra gravação já tem este título';
+
+  @override
+  String get recording_metadataSyncExhausted =>
+      'Edição não enviada — edite de novo para tentar';
+
+  @override
   String get recording_uploadExhaustedMessage =>
       'O envio parou após várias tentativas. Você pode tentar de novo.';
 
@@ -739,26 +758,23 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get recordings_clearStale => 'Limpar falhas';
+  String get recordings_retryFailedUploads => 'Tentar de novo';
 
   @override
-  String get recordings_clearStaleMessage =>
-      'Isto irá remover permanentemente todas as gravações com upload falhado ou travado do servidor. Esta ação não pode ser desfeita.';
-
-  @override
-  String recordings_clearedCount(int count) {
+  String recordings_retryQueuedCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count gravações removidas',
-      one: '1 gravação removida',
-      zero: 'Nenhuma gravação encontrada',
+      other: '$count gravações de volta na fila de envio',
+      one: '1 gravação de volta na fila de envio',
+      zero: 'Nenhum envio para tentar de novo',
     );
     return '$_temp0';
   }
 
   @override
-  String get recordings_clearFailed => 'Falha ao limpar gravações';
+  String get recordings_retryFailed =>
+      'Não foi possível recolocar os envios na fila';
 
   @override
   String get trim_title => 'Editar Gravação';
@@ -1062,6 +1078,10 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String get sync_waitingForWifi =>
+      'Os envios estão esperando Wi-Fi. Desative \"Enviar apenas por Wi-Fi\" para enviar por dados móveis.';
+
+  @override
   String get profile_photoUpdated => 'Foto de perfil atualizada';
 
   @override
@@ -1120,10 +1140,47 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get profile_clearCacheMessage =>
-      'Isso excluirá todas as gravações armazenadas localmente. As gravações enviadas ao servidor não serão afetadas.';
+      'Isso excluirá as gravações armazenadas localmente que o servidor já tem. As gravações que ainda não foram enviadas serão mantidas neste aparelho.';
 
   @override
   String get profile_cacheCleared => 'Cache local limpo';
+
+  @override
+  String profile_cacheClearedKept(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Cache local limpo. $count gravações foram mantidas porque ainda não foram enviadas.',
+      one:
+          'Cache local limpo. 1 gravação foi mantida porque ainda não foi enviada.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String profile_cacheKeptUnsent(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count gravações foram mantidas porque ainda não foram enviadas.',
+      one: '1 gravação foi mantida porque ainda não foi enviada.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String profile_cacheNotFreed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count gravações não puderam ser excluídas, então esse espaço não foi liberado.',
+      one:
+          '1 gravação não pôde ser excluída, então esse espaço não foi liberado.',
+    );
+    return '$_temp0';
+  }
 
   @override
   String profile_joinedSuccess(String name) {
@@ -1181,7 +1238,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get profile_clearCacheSubtitle =>
-      'Excluir todas as gravações armazenadas localmente';
+      'Excluir as cópias locais que o servidor já tem';
 
   @override
   String get profile_invitations => 'Convites';
@@ -1828,6 +1885,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get detail_cleaning => 'Limpeza';
 
   @override
+  String get detail_metadataSync => 'Edições';
+
+  @override
   String get detail_recorded => 'Gravado';
 
   @override
@@ -2122,6 +2182,25 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get recording_finalizationFailedBody =>
       'Tentamos recuperar o áudio, mas nenhum segmento estava disponível.';
+
+  @override
+  String get recording_finalizationFailedBodyNoAudio =>
+      'Nenhum áudio voltou do gravador.';
+
+  @override
+  String get recording_finalizationFailedBodyDownload =>
+      'O áudio foi gravado, mas não foi possível lê-lo de volta.';
+
+  @override
+  String get recording_finalizationFailedBodyCaptureInterrupted =>
+      'A gravação parou antes de você apertar parar, então nenhum áudio foi guardado.';
+
+  @override
+  String get recording_finalizationFailedBodyPipeline =>
+      'Não foi possível terminar de processar esta gravação. Ela está guardada nas suas gravações não salvas.';
+
+  @override
+  String get recording_finalizationErrorBack => 'Voltar';
 
   @override
   String get recording_discardAndReturn => 'Descartar e voltar';

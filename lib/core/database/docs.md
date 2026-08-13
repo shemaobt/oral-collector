@@ -25,6 +25,17 @@ Path: @/lib/core/database
   duplicate-column footgun by construction (no conditional guard) and made the
   upgrade honor drift's `to` argument instead of always migrating to the
   current version.
+- ENG-420 (slice 1) added `finalizedAudioPath`/`finalizedDurationSeconds` to
+  `RecordingSessions` at v14 — an ordinary additive `from13To14` step, no
+  different mechanically from any other. What the columns mean (a durable
+  pointer from a session row to the audio file it produced, written before the
+  row is marked completed) and why the migration does no back-fill is documented
+  where the columns are written, not here — see
+  [../../features/recording/data/repositories/docs.md](../../features/recording/data/repositories/docs.md).
+  Slice 2 gave the columns their first reader: the crash-recovery sweep in
+  [RecoveryCoordinator](../../features/recording/data/services/recovery_coordinator.dart)
+  stats the anchored file to decide whether a finished session still owes the
+  user a recovery offer — see the same repositories doc.
 
 ### How it fits into the larger codebase
 
@@ -59,7 +70,7 @@ Path: @/lib/core/database
 ### Core Implementation
 
 - `AppDatabase` is annotated with `@DriftDatabase(tables: [...])` and exposes
-  the current `schemaVersion` (12). `AppDatabase.forTesting(e)` takes an
+  the current `schemaVersion` (14). `AppDatabase.forTesting(e)` takes an
   explicit executor and is the entry point the migration tests and an in-memory
   `NativeDatabase.memory()` use.
 - `MigrationStrategy` has two callbacks:
@@ -104,11 +115,14 @@ Path: @/lib/core/database
     [/analysis_options.yaml](../../../analysis_options.yaml).
   - [/test/core/database/migration_test.dart](../../../test/core/database/migration_test.dart) —
     drives drift's `SchemaVerifier`. For every historical version it `startAt(k)`
-    and both `migrateAndValidate(db, 12)` (the skip-many-releases path) and
+    and both `migrateAndValidate(db, 14)` (the skip-many-releases path) and
     `migrateAndValidate(db, k + 1)` (a single step lands exactly on the next
     version, exercising that `stepByStep` honors `to`). Plus data-integrity
-    cases that seed an un-uploaded recording at the oldest version and a
-    storyteller at v6 and assert the rows and fields survive the upgrade.
+    cases that seed an un-uploaded recording at the oldest version, a
+    storyteller at v6, and (ENG-420) a `RecordingSessions` row in each of its
+    five statuses at v13, asserting the rows and fields survive the upgrade —
+    the sessions case is also what proves the new v14 anchor columns come out
+    `null` rather than guessed at.
 
 ### Things to Know
 
@@ -185,6 +199,20 @@ Path: @/lib/core/database
   were reconstructed, the migration test's job is to prove the migration code
   reproduces the current reference from each reconstructed starting point — not
   to trust the snapshots blindly.
+- **This is not the only IndexedDB database on web.** `WebDatabase`
+  (`oral_collector`, drift over `sql.js`/WASM) holds recording *metadata*,
+  i.e. the row in `LocalRecordings`. Recorded/imported audio *bytes* live in
+  a second, separate IndexedDB database, `oral_collector_files`, owned by
+  [/lib/core/platform/web_file_store.dart](../platform/web_file_store.dart)
+  and used through [/lib/core/platform/file_ops.dart](../platform/file_ops.dart)
+  (see [/lib/core/platform/docs.md](../platform/docs.md)). Audio bytes were
+  never put in Drift: they do not fit a relational row cleanly, and this
+  database's schema-migration machinery (above) exists to evolve typed
+  columns, not to version an opaque blob store with its own capacity/eviction
+  concerns. Before ENG-421 the bytes were not persisted anywhere on web — a
+  module-level `Map` in `file_ops_web.dart` held them in memory only, so a
+  page reload destroyed the audio while the Drift row (already durable via
+  `WebDatabase`) survived, leaving a recording whose audio existed nowhere.
 - **On web the sql.js engine is self-hosted, not loaded from a CDN (ENG-130).**
   The `.js` loader and `.wasm` binary live in the repo's `web/` directory and
   are served same-origin. This is a security boundary: a CDN compromise could

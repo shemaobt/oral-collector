@@ -14,6 +14,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../shared/preview_helpers.dart';
 import '../../../shared/utils/format.dart';
+import '../../../shared/utils/sync_now.dart';
 import '../../../shared/widgets/app_shell.dart';
 import '../../../shared/widgets/error_snack_bar.dart';
 import '../../../shared/widgets/icon_box.dart';
@@ -26,6 +27,7 @@ import '../../recording/presentation/widgets/recording_navigation_guard.dart';
 import '../../sync/presentation/notifiers/sync_notifier.dart';
 import '../../sync/presentation/notifiers/sync_state.dart';
 import 'notifiers/profile_notifier.dart';
+import 'widgets/clear_cache_snack_bar.dart';
 import 'widgets/invitations_section.dart';
 import 'widgets/profile_header.dart';
 import 'widgets/quick_stats_row.dart';
@@ -190,9 +192,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           syncState: syncState,
           theme: theme,
           colors: colors,
-          onSyncNow: () {
-            ref.read(syncNotifierProvider.notifier).syncAll();
-          },
+          onSyncNow: () => syncNowWithFeedback(context, ref),
           onWifiOnlyChanged: (value) {
             ref
                 .read(syncNotifierProvider.notifier)
@@ -470,12 +470,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
 
     if (confirmed == true && mounted) {
-      await ref.read(profileNotifierProvider.notifier).clearCacheAndRefresh();
-      if (mounted) {
-        messenger.showSnackBar(
-          SnackBar(content: Text(l10n.profile_cacheCleared)),
-        );
-      }
+      final kept = await ref
+          .read(profileNotifierProvider.notifier)
+          .clearCacheAndRefresh();
+      if (mounted) showClearCacheResultSnackBar(messenger, l10n, kept);
     }
   }
 }

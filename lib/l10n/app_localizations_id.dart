@@ -582,6 +582,10 @@ class AppLocalizationsId extends AppLocalizations {
       'Gagal memperbarui status pembersihan di server';
 
   @override
+  String get recording_savedOnDeviceOnly =>
+      'Disimpan di perangkat ini — server belum menerima perubahan ini. Perubahan akan terkirim sendiri saat koneksi kembali.';
+
+  @override
   String get recording_updateNoPermission =>
       'Anda tidak memiliki izin untuk memperbarui rekaman ini';
 
@@ -721,6 +725,21 @@ class AppLocalizationsId extends AppLocalizations {
   String get recording_statusFileMissing => 'Berkas audio hilang';
 
   @override
+  String get recording_metadataSyncPending => 'Suntingan menunggu dikirim';
+
+  @override
+  String get recording_metadataSyncForbidden =>
+      'Suntingan ditolak: Anda tidak dapat mengubah rekaman ini';
+
+  @override
+  String get recording_metadataSyncConflict =>
+      'Suntingan ditolak: rekaman lain sudah memakai judul ini';
+
+  @override
+  String get recording_metadataSyncExhausted =>
+      'Suntingan tidak terkirim — sunting lagi untuk mencoba kembali';
+
+  @override
   String get recording_uploadExhaustedMessage =>
       'Unggahan berhenti setelah beberapa percobaan. Anda dapat mencoba lagi.';
 
@@ -737,26 +756,22 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String get recordings_clearStale => 'Bersihkan yang gagal';
+  String get recordings_retryFailedUploads => 'Coba unggah lagi';
 
   @override
-  String get recordings_clearStaleMessage =>
-      'Ini akan menghapus secara permanen semua rekaman dengan status unggahan gagal atau macet dari server. Tindakan ini tidak dapat dibatalkan.';
-
-  @override
-  String recordings_clearedCount(int count) {
+  String recordings_retryQueuedCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count rekaman dibersihkan',
-      one: '1 rekaman dibersihkan',
-      zero: 'Tidak ada rekaman usang ditemukan',
+      other: '$count rekaman kembali ke antrean unggah',
+      one: '1 rekaman kembali ke antrean unggah',
+      zero: 'Tidak ada unggahan untuk dicoba lagi',
     );
     return '$_temp0';
   }
 
   @override
-  String get recordings_clearFailed => 'Gagal membersihkan rekaman';
+  String get recordings_retryFailed => 'Tidak dapat mengantrekan unggahan lagi';
 
   @override
   String get trim_title => 'Edit Rekaman';
@@ -1055,6 +1070,10 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
+  String get sync_waitingForWifi =>
+      'Unggahan menunggu Wi-Fi. Matikan \"Unggah hanya melalui Wi-Fi\" untuk mengirim lewat data seluler.';
+
+  @override
   String get profile_photoUpdated => 'Foto profil diperbarui';
 
   @override
@@ -1113,10 +1132,46 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get profile_clearCacheMessage =>
-      'Ini akan menghapus semua rekaman yang tersimpan secara lokal. Rekaman yang telah diunggah ke server tidak akan terpengaruh.';
+      'Ini akan menghapus rekaman tersimpan lokal yang sudah ada di server. Rekaman yang belum diunggah tetap disimpan di perangkat ini.';
 
   @override
   String get profile_cacheCleared => 'Cache lokal dibersihkan';
+
+  @override
+  String profile_cacheClearedKept(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Cache lokal dibersihkan. $count rekaman tetap disimpan karena belum diunggah.',
+      one:
+          'Cache lokal dibersihkan. 1 rekaman tetap disimpan karena belum diunggah.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String profile_cacheKeptUnsent(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count rekaman tetap disimpan karena belum diunggah.',
+      one: '1 rekaman tetap disimpan karena belum diunggah.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String profile_cacheNotFreed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count rekaman tidak dapat dihapus, jadi ruang itu tidak dibebaskan.',
+      one: '1 rekaman tidak dapat dihapus, jadi ruang itu tidak dibebaskan.',
+    );
+    return '$_temp0';
+  }
 
   @override
   String profile_joinedSuccess(String name) {
@@ -1175,7 +1230,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get profile_clearCacheSubtitle =>
-      'Hapus semua rekaman yang tersimpan secara lokal';
+      'Hapus salinan lokal yang sudah ada di server';
 
   @override
   String get profile_invitations => 'Undangan';
@@ -1823,6 +1878,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get detail_cleaning => 'Pembersihan';
 
   @override
+  String get detail_metadataSync => 'Suntingan';
+
+  @override
   String get detail_recorded => 'Direkam';
 
   @override
@@ -2116,6 +2174,25 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get recording_finalizationFailedBody =>
       'Kami mencoba memulihkan audio tetapi tidak ada segmen yang tersedia.';
+
+  @override
+  String get recording_finalizationFailedBodyNoAudio =>
+      'Tidak ada audio yang kembali dari perekam.';
+
+  @override
+  String get recording_finalizationFailedBodyDownload =>
+      'Audio terekam, tetapi tidak dapat dibaca kembali.';
+
+  @override
+  String get recording_finalizationFailedBodyCaptureInterrupted =>
+      'Perekaman berhenti sebelum Anda menekan berhenti, jadi tidak ada audio yang disimpan.';
+
+  @override
+  String get recording_finalizationFailedBodyPipeline =>
+      'Kami tidak dapat menyelesaikan pemrosesan rekaman ini. Rekaman disimpan di rekaman yang belum tersimpan.';
+
+  @override
+  String get recording_finalizationErrorBack => 'Kembali';
 
   @override
   String get recording_discardAndReturn => 'Buang dan kembali';
@@ -2468,7 +2545,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get a11y_minimapScrubber =>
-      'Audio overview. Tap or drag to navigate to a position.';
+      'Ikhtisar audio. Ketuk atau seret untuk menuju suatu posisi.';
 
   @override
   String a11y_tabLabel(String label) {

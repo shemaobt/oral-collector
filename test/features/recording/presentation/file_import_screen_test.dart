@@ -224,7 +224,7 @@ void main() {
     await _chooseDropdownOption(
       tester,
       find.byType(DropdownButtonFormField<String>).first,
-      localizedGenreName(l10nEn, _genre.name),
+      localizedGenreName(l10nEn, _genre.name, id: _genre.id),
     );
     await _chooseDropdownOption(
       tester,

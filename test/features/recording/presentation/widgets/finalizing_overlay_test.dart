@@ -122,7 +122,7 @@ void main() {
       expect(find.byType(CircularProgressIndicator), findsNothing);
     });
 
-    testWidgets('shows discard button when error is set', (tester) async {
+    testWidgets('shows the dismiss button when error is set', (tester) async {
       await tester.pumpWidget(
         _wrap(
           FinalizingOverlay(
@@ -132,10 +132,10 @@ void main() {
           ),
         ),
       );
-      expect(find.text('Discard and return'), findsOneWidget);
+      expect(find.text('Back'), findsOneWidget);
     });
 
-    testWidgets('tapping discard button invokes onDiscard callback', (
+    testWidgets('tapping the dismiss button invokes the callback', (
       tester,
     ) async {
       var tapped = 0;
@@ -148,12 +148,14 @@ void main() {
           ),
         ),
       );
-      await tester.tap(find.text('Discard and return'));
+      await tester.tap(find.text('Back'));
       await tester.pump();
       expect(tapped, 1);
     });
 
-    testWidgets('does not show discard button without error', (tester) async {
+    testWidgets('does not show the dismiss button without error', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _wrap(
           FinalizingOverlay(
@@ -162,7 +164,7 @@ void main() {
           ),
         ),
       );
-      expect(find.text('Discard and return'), findsNothing);
+      expect(find.text('Back'), findsNothing);
     });
   });
 }

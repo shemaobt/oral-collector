@@ -108,7 +108,9 @@ void main() {
       await exportLocalSegments(
         const ExportLocalSegmentsRequest(
           sourceFilePath: '/a.m4a',
-          segments: [SegmentExportSpec(startSeconds: 1.0, endSeconds: 2.0)],
+          // Comfortably above the re-encode floor, so this test pins the
+          // stream-copy command and not the threshold (ENG-66).
+          segments: [SegmentExportSpec(startSeconds: 1.0, endSeconds: 12.0)],
           gainDb: 0.0,
           boostOnly: false,
           originalTitle: 'X',
@@ -125,9 +127,38 @@ void main() {
 
       expect(
         commands.single,
-        '-y -i "/a.m4a" -ss 1.0 -to 2.0 -c copy "/docs/split_${ts}_0.m4a"',
+        '-y -i "/a.m4a" -ss 1.0 -to 12.0 -c copy "/docs/split_${ts}_0.m4a"',
       );
     });
+
+    test(
+      'ENG-66: a short segment without a gain change must be re-encoded',
+      () {
+        expect(
+          segmentNeedsReencode(segmentSeconds: 0.5, gainDb: 0.0),
+          isTrue,
+          reason: 'meio segundo é curto demais para -c copy num AAC/m4a',
+        );
+      },
+    );
+
+    test(
+      'ENG-66: a long segment without a gain change may be stream-copied',
+      () {
+        expect(
+          segmentNeedsReencode(segmentSeconds: 30.0, gainDb: 0.0),
+          isFalse,
+          reason: 'sem mudança de ganho, trinta segundos podem ser copiados',
+        );
+      },
+    );
+
+    test(
+      'ENG-66: a gain change forces a re-encode however long the segment',
+      () {
+        expect(segmentNeedsReencode(segmentSeconds: 30.0, gainDb: 3.0), isTrue);
+      },
+    );
 
     test('throws when the ffmpeg runner reports failure', () async {
       await expectLater(

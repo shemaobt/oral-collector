@@ -45,6 +45,30 @@ class ExportLocalSegmentsRequest {
   final String parentGenreId;
 }
 
+const double _gainDeadzoneDb = 0.01;
+
+/// Below this length a segment is re-encoded even with no gain change. This app
+/// records AAC at 16 kHz mono (see `ffmpeg_ops_native.dart`), where one frame is
+/// 1024/16000 = 64 ms and the encoder's priming is 2112/16000 = 132 ms. `-c copy`
+/// can only cut on a frame boundary and still carries that priming, so roughly
+/// 200 ms of fixed error rides on every stream copy — most of a segment at the
+/// editor's 250 ms floor (`kMinTrimSegment`), and enough to leave the output
+/// empty or badly offset.
+///
+/// One second is four times that floor. It is a margin picked to sit clear of
+/// the fixed error, **not** a measured failure threshold: nothing here was
+/// verified against real ffmpeg output.
+const double _minStreamCopySeconds = 1.0;
+
+/// Whether a kept segment has to be re-encoded rather than stream-copied.
+bool segmentNeedsReencode({
+  required double segmentSeconds,
+  required double gainDb,
+}) {
+  return gainDb.abs() > _gainDeadzoneDb ||
+      segmentSeconds < _minStreamCopySeconds;
+}
+
 /// Runs ffmpeg per kept segment and returns the [SplitSegmentSpec]s ready for
 /// `RecordingSplitPersister`. Isolated from the widget so the orchestration can
 /// be unit-tested without a device (ffmpeg/file-length/clock/documents-dir are
@@ -72,7 +96,6 @@ Future<List<SplitSegmentSpec>> exportLocalSegments(
   final dirPath = await documentsDirectoryPath();
   final now = clock();
   final keptTotal = segments.length;
-  final needReencode = gainDb.abs() > 0.01;
 
   final specs = <SplitSegmentSpec>[];
   for (var k = 0; k < keptTotal; k++) {
@@ -86,7 +109,10 @@ Future<List<SplitSegmentSpec>> exportLocalSegments(
           '-y -i "$sourceFilePath" '
           '-af "volume=${gainDb.toStringAsFixed(2)}dB" '
           '-c:a aac -b:a 128k "$outputPath"';
-    } else if (needReencode) {
+    } else if (segmentNeedsReencode(
+      segmentSeconds: segDuration,
+      gainDb: gainDb,
+    )) {
       command =
           '-y -i "$sourceFilePath" -ss ${seg.startSeconds} -to ${seg.endSeconds} '
           '-af "volume=${gainDb.toStringAsFixed(2)}dB" '

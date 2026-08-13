@@ -1202,6 +1202,12 @@ abstract class AppLocalizations {
   /// **'Failed to update cleaning status on server'**
   String get recording_cleaningStatusFailed;
 
+  /// Snackbar after a metadata edit the server could not be told about (offline or unreachable). The edit is kept locally and the metadata outbox resends it on reconnect, so the user is told to expect that rather than to redo it (ENG-403, replacing the redo instruction from ENG-399).
+  ///
+  /// In en, this message translates to:
+  /// **'Saved on this device — the server has not got this change yet. It will be sent on its own when the connection comes back.'**
+  String get recording_savedOnDeviceOnly;
+
   /// No description provided for @recording_updateNoPermission.
   ///
   /// In en, this message translates to:
@@ -1436,6 +1442,30 @@ abstract class AppLocalizations {
   /// **'Audio file missing'**
   String get recording_statusFileMissing;
 
+  /// Mark on a recording whose metadata edit is still in the outbox (ENG-405). Transitory and blameless: the person has to do nothing but reconnect, so the wording must not read as a failure. Says 'change', never 'upload', because the audio may already be safely on the server.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit waiting to be sent'**
+  String get recording_metadataSyncPending;
+
+  /// Mark on a recording whose metadata edit the server refused with a 403 (ENG-405). Terminal and not retryable from the phone; kept apart from the other two refusals because no amount of insisting grants permission.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit refused: you cannot change this recording'**
+  String get recording_metadataSyncForbidden;
+
+  /// Mark on a recording whose metadata edit the server refused with a 409 title clash (ENG-405). Terminal until the user renames, which is the one exit — hence naming the title rather than saying 'refused'.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit refused: another recording has this title'**
+  String get recording_metadataSyncConflict;
+
+  /// Mark on a recording whose metadata edit spent its whole retry budget (ENG-405). Unlike the other two refusals this one is recoverable from the phone: a fresh edit revives the row with a new budget (markMetadataPending), so the label names that exit rather than only reporting the spent budget — the same reason recording_uploadExhaustedMessage says a retry is possible.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit not sent — edit again to retry'**
+  String get recording_metadataSyncExhausted;
+
   /// No description provided for @recording_uploadExhaustedMessage.
   ///
   /// In en, this message translates to:
@@ -1460,29 +1490,23 @@ abstract class AppLocalizations {
   /// **'An audio named \"{title}\" already exists in this project. Choose another name.'**
   String recording_duplicateTitleMessage(String title);
 
-  /// No description provided for @recordings_clearStale.
+  /// No description provided for @recordings_retryFailedUploads.
   ///
   /// In en, this message translates to:
-  /// **'Clear failed'**
-  String get recordings_clearStale;
+  /// **'Retry uploads'**
+  String get recordings_retryFailedUploads;
 
-  /// No description provided for @recordings_clearStaleMessage.
+  /// No description provided for @recordings_retryQueuedCount.
   ///
   /// In en, this message translates to:
-  /// **'This will permanently delete all recordings with failed or stuck upload status from the server. This cannot be undone.'**
-  String get recordings_clearStaleMessage;
+  /// **'{count, plural, =0{No uploads to retry} =1{1 recording back in the upload queue} other{{count} recordings back in the upload queue}}'**
+  String recordings_retryQueuedCount(int count);
 
-  /// No description provided for @recordings_clearedCount.
+  /// No description provided for @recordings_retryFailed.
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, =0{No stale recordings found} =1{Cleared 1 recording} other{Cleared {count} recordings}}'**
-  String recordings_clearedCount(int count);
-
-  /// No description provided for @recordings_clearFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to clear recordings'**
-  String get recordings_clearFailed;
+  /// **'Could not queue the uploads again'**
+  String get recordings_retryFailed;
 
   /// No description provided for @trim_title.
   ///
@@ -1892,6 +1916,12 @@ abstract class AppLocalizations {
   /// **'{count} pending'**
   String sync_pending(int count);
 
+  /// No description provided for @sync_waitingForWifi.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploads are waiting for Wi-Fi. Turn off \"Upload on Wi-Fi only\" to send over cellular data.'**
+  String get sync_waitingForWifi;
+
   /// No description provided for @profile_photoUpdated.
   ///
   /// In en, this message translates to:
@@ -2003,7 +2033,7 @@ abstract class AppLocalizations {
   /// No description provided for @profile_clearCacheMessage.
   ///
   /// In en, this message translates to:
-  /// **'This will delete all locally stored recordings. Uploaded recordings on the server will not be affected.'**
+  /// **'This will delete the locally stored recordings the server already has. Recordings that have not been uploaded yet are kept on this device.'**
   String get profile_clearCacheMessage;
 
   /// No description provided for @profile_cacheCleared.
@@ -2011,6 +2041,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Local cache cleared'**
   String get profile_cacheCleared;
+
+  /// No description provided for @profile_cacheClearedKept.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Local cache cleared. 1 recording was kept because it has not been uploaded yet.} other{Local cache cleared. {count} recordings were kept because they have not been uploaded yet.}}'**
+  String profile_cacheClearedKept(int count);
+
+  /// Pairs with profile_cacheNotFreed. Says the same as profile_cacheClearedKept without claiming the cache was cleared, which would contradict a delete that failed.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 recording was kept because it has not been uploaded yet.} other{{count} recordings were kept because they have not been uploaded yet.}}'**
+  String profile_cacheKeptUnsent(int count);
+
+  /// Shown when the clear kept a recording because its file would not delete, which is space the user asked for and did not get.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 recording could not be deleted, so that space was not freed.} other{{count} recordings could not be deleted, so that space was not freed.}}'**
+  String profile_cacheNotFreed(int count);
 
   /// No description provided for @profile_joinedSuccess.
   ///
@@ -2105,7 +2153,7 @@ abstract class AppLocalizations {
   /// No description provided for @profile_clearCacheSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Delete all locally stored recordings'**
+  /// **'Delete the local copies the server already has'**
   String get profile_clearCacheSubtitle;
 
   /// No description provided for @profile_invitations.
@@ -3272,6 +3320,12 @@ abstract class AppLocalizations {
   /// **'Cleaning'**
   String get detail_cleaning;
 
+  /// Label of the detail screen's status row for the metadata outbox (ENG-405). Names the axis, not the state — the state is the row's value. Kept distinct from detail_upload because a recording can be fully uploaded and still owe an edit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edits'**
+  String get detail_metadataSync;
+
   /// No description provided for @detail_recorded.
   ///
   /// In en, this message translates to:
@@ -3811,6 +3865,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'We tried to recover the audio but no segments were available.'**
   String get recording_finalizationFailedBody;
+
+  /// No description provided for @recording_finalizationFailedBodyNoAudio.
+  ///
+  /// In en, this message translates to:
+  /// **'No audio came back from the recorder.'**
+  String get recording_finalizationFailedBodyNoAudio;
+
+  /// No description provided for @recording_finalizationFailedBodyDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'The audio was recorded but could not be read back.'**
+  String get recording_finalizationFailedBodyDownload;
+
+  /// No description provided for @recording_finalizationFailedBodyCaptureInterrupted.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording stopped before you pressed stop, so no audio was kept.'**
+  String get recording_finalizationFailedBodyCaptureInterrupted;
+
+  /// No description provided for @recording_finalizationFailedBodyPipeline.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t finish processing this recording. It is kept in your unsaved recordings.'**
+  String get recording_finalizationFailedBodyPipeline;
+
+  /// No description provided for @recording_finalizationErrorBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get recording_finalizationErrorBack;
 
   /// No description provided for @recording_discardAndReturn.
   ///

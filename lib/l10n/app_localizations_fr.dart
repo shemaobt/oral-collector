@@ -589,6 +589,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Échec de la mise à jour du statut de nettoyage sur le serveur';
 
   @override
+  String get recording_savedOnDeviceOnly =>
+      'Enregistré sur cet appareil — le serveur n\'a pas encore reçu cette modification. Elle sera envoyée toute seule au retour de la connexion.';
+
+  @override
   String get recording_updateNoPermission =>
       'Vous n\'avez pas la permission de mettre à jour cet enregistrement';
 
@@ -730,6 +734,22 @@ class AppLocalizationsFr extends AppLocalizations {
   String get recording_statusFileMissing => 'Fichier audio introuvable';
 
   @override
+  String get recording_metadataSyncPending =>
+      'Modification en attente d\'envoi';
+
+  @override
+  String get recording_metadataSyncForbidden =>
+      'Modification refusée : vous ne pouvez pas modifier cet enregistrement';
+
+  @override
+  String get recording_metadataSyncConflict =>
+      'Modification refusée : un autre enregistrement porte ce titre';
+
+  @override
+  String get recording_metadataSyncExhausted =>
+      'Modification non envoyée — modifiez à nouveau pour réessayer';
+
+  @override
   String get recording_uploadExhaustedMessage =>
       'L\'envoi s\'est arrêté après plusieurs tentatives. Vous pouvez réessayer.';
 
@@ -746,27 +766,23 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get recordings_clearStale => 'Supprimer les échecs';
+  String get recordings_retryFailedUploads => 'Relancer les téléversements';
 
   @override
-  String get recordings_clearStaleMessage =>
-      'Cela supprimera définitivement tous les enregistrements avec un statut de téléversement échoué ou bloqué du serveur. Cette action est irréversible.';
-
-  @override
-  String recordings_clearedCount(int count) {
+  String recordings_retryQueuedCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count enregistrements supprimés',
-      one: '1 enregistrement supprimé',
-      zero: 'Aucun enregistrement obsolète trouvé',
+      other: '$count enregistrements remis dans la file de téléversement',
+      one: '1 enregistrement remis dans la file de téléversement',
+      zero: 'Aucun téléversement à relancer',
     );
     return '$_temp0';
   }
 
   @override
-  String get recordings_clearFailed =>
-      'Échec de la suppression des enregistrements';
+  String get recordings_retryFailed =>
+      'Impossible de remettre les téléversements dans la file';
 
   @override
   String get trim_title => 'Modifier l\'Enregistrement';
@@ -1071,6 +1087,10 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get sync_waitingForWifi =>
+      'Les téléversements attendent le Wi-Fi. Désactivez \"Téléverser uniquement en Wi-Fi\" pour envoyer via les données mobiles.';
+
+  @override
   String get profile_photoUpdated => 'Photo de profil mise à jour';
 
   @override
@@ -1129,10 +1149,49 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get profile_clearCacheMessage =>
-      'Cela supprimera tous les enregistrements stockés localement. Les enregistrements téléversés sur le serveur ne seront pas affectés.';
+      'Cela supprimera les enregistrements stockés localement que le serveur possède déjà. Les enregistrements qui n\'ont pas encore été téléversés sont conservés sur cet appareil.';
 
   @override
   String get profile_cacheCleared => 'Cache local effacé';
+
+  @override
+  String profile_cacheClearedKept(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Cache local effacé. $count enregistrements ont été conservés car ils n\'ont pas encore été téléversés.',
+      one:
+          'Cache local effacé. 1 enregistrement a été conservé car il n\'a pas encore été téléversé.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String profile_cacheKeptUnsent(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count enregistrements ont été conservés car ils n\'ont pas encore été téléversés.',
+      one:
+          '1 enregistrement a été conservé car il n\'a pas encore été téléversé.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String profile_cacheNotFreed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count enregistrements n\'ont pas pu être supprimés, cet espace n\'a donc pas été libéré.',
+      one:
+          '1 enregistrement n\'a pas pu être supprimé, cet espace n\'a donc pas été libéré.',
+    );
+    return '$_temp0';
+  }
 
   @override
   String profile_joinedSuccess(String name) {
@@ -1192,7 +1251,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get profile_clearCacheSubtitle =>
-      'Supprimer tous les enregistrements stockés localement';
+      'Supprimer les copies locales que le serveur possède déjà';
 
   @override
   String get profile_invitations => 'Invitations';
@@ -1842,6 +1901,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get detail_cleaning => 'Nettoyage';
 
   @override
+  String get detail_metadataSync => 'Modifications';
+
+  @override
   String get detail_recorded => 'Enregistré';
 
   @override
@@ -2140,6 +2202,25 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get recording_finalizationFailedBody =>
       'Nous avons essayé de récupérer l\'audio mais aucun segment n\'était disponible.';
+
+  @override
+  String get recording_finalizationFailedBodyNoAudio =>
+      'Aucun audio n\'est revenu de l\'enregistreur.';
+
+  @override
+  String get recording_finalizationFailedBodyDownload =>
+      'L\'audio a été enregistré, mais il n\'a pas pu être relu.';
+
+  @override
+  String get recording_finalizationFailedBodyCaptureInterrupted =>
+      'L\'enregistrement s\'est arrêté avant que vous appuyiez sur arrêter, donc aucun audio n\'a été conservé.';
+
+  @override
+  String get recording_finalizationFailedBodyPipeline =>
+      'Nous n\'avons pas pu terminer le traitement de cet enregistrement. Il est conservé dans vos enregistrements non sauvegardés.';
+
+  @override
+  String get recording_finalizationErrorBack => 'Retour';
 
   @override
   String get recording_discardAndReturn => 'Ignorer et revenir';
@@ -2493,7 +2574,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get a11y_minimapScrubber =>
-      'Audio overview. Tap or drag to navigate to a position.';
+      'Aperçu de l\'audio. Appuyez ou faites glisser pour aller à une position.';
 
   @override
   String a11y_tabLabel(String label) {

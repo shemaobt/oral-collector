@@ -4,9 +4,24 @@ import '../../../../core/config/upload_retry_policy.dart';
 import '../../../../core/database/app_database.dart';
 import '../../domain/entities/classification.dart';
 import '../../domain/entities/local_recording_entity.dart';
+import '../../domain/entities/pending_metadata_field.dart';
 import '../../domain/entities/review_flag.dart';
 import '../local_recording_entity_to_companion.dart';
 import '../local_recording_to_entity.dart';
+
+/// The columns that put a row back in the upload queue.
+///
+/// All three, because the status alone leaves the row queued but refused: a
+/// stale `retryCount` is still the spent budget the drain's eligibility filter
+/// rejects, and a stale `lastRetryAt` still falls inside its backoff window.
+/// Shared by [LocalRecordingRepository.resetRetryCount] (one row, by id) and
+/// [LocalRecordingRepository.requeueFailedUploads] (a project's failures, in
+/// one write) so the two cannot drift apart.
+const _requeueCompanion = LocalRecordingsCompanion(
+  uploadStatus: Value('local'),
+  retryCount: Value(0),
+  lastRetryAt: Value(null),
+);
 
 class LocalRecordingRepository {
   final AppDatabase _db;
@@ -224,6 +239,31 @@ class LocalRecordingRepository {
         .get();
   }
 
+  /// Recordings of [projectId] the server does not have yet, counted once each.
+  ///
+  /// The home total used to add `getPendingUploads` to
+  /// [getLocalUnclassifiedStats]; those sets overlap (a `local` unclassified row
+  /// is in both) and together still miss the terminal `failed_*` states, which
+  /// are neither retryable nor unclassified. See ENG-355.
+  Future<({int count, double durationSeconds})> getLocalOnlyStats(
+    String projectId,
+  ) async {
+    final countExpr = _db.localRecordings.id.count();
+    final durationExpr = _db.localRecordings.durationSeconds.sum();
+    final query = _db.selectOnly(_db.localRecordings)
+      ..addColumns([countExpr, durationExpr])
+      ..where(
+        _db.localRecordings.projectId.equals(projectId) &
+            _db.localRecordings.uploadStatus.equals('uploaded').not() &
+            _db.localRecordings.uploadStatus.equals('verified').not(),
+      );
+    final row = await query.getSingle();
+    return (
+      count: row.read(countExpr) ?? 0,
+      durationSeconds: row.read(durationExpr) ?? 0.0,
+    );
+  }
+
   Future<({int count, double durationSeconds})> getLocalUnclassifiedStats(
     String projectId,
   ) async {
@@ -297,38 +337,53 @@ class LocalRecordingRepository {
     return result.read(sum) ?? 0.0;
   }
 
-  Future<int> deleteAllRecordings() async {
-    return _db.delete(_db.localRecordings).go();
+  /// Removes exactly [ids] in one statement, so a cache clear is a single pass
+  /// over the table instead of one round trip per row.
+  Future<int> deleteRecordingsByIds(List<String> ids) async {
+    if (ids.isEmpty) return 0;
+    return (_db.delete(_db.localRecordings)..where((t) => t.id.isIn(ids))).go();
   }
 
-  Future<int> deleteStaleRecordings(String projectId) async {
-    return (_db.delete(_db.localRecordings)..where(
+  /// Hands every retryable failure in [projectId] back to the upload queue, as
+  /// one write. Returns how many rows moved.
+  ///
+  /// This replaced a hard delete (ENG-404): a failed upload is by definition
+  /// one the server never received, so the audio exists only here and deleting
+  /// it is the one thing the action must not do.
+  ///
+  /// Writes [_requeueCompanion], the same columns [resetRetryCount] writes for
+  /// a single row. One `UPDATE` rather than a per-row loop through
+  /// `SyncNotifier.resetAndRetry`, which drains as it goes and would fan out N
+  /// passes against a guard that admits one.
+  ///
+  /// Scoped to the two statuses a bare retry can still move. `failed_conflict`
+  /// and `failed_description` would be refused identically until the user
+  /// fixes the title or the description; `failed_missing_file` has no audio
+  /// left to send. Each has its own banner leading to its own way out.
+  Future<int> requeueFailedUploads(String projectId) async {
+    return (_db.update(_db.localRecordings)..where(
           (t) =>
               t.projectId.equals(projectId) &
               (t.uploadStatus.equals('failed') |
-                  t.uploadStatus.equals('uploading')),
+                  t.uploadStatus.equals('failed_exhausted')),
         ))
-        .go();
+        .write(_requeueCompanion);
   }
 
   Future<bool> resetRetryCount(String id) async {
-    final rows =
-        await (_db.update(
-          _db.localRecordings,
-        )..where((t) => t.id.equals(id))).write(
-          const LocalRecordingsCompanion(
-            uploadStatus: Value('local'),
-            retryCount: Value(0),
-            lastRetryAt: Value(null),
-          ),
-        );
+    final rows = await (_db.update(
+      _db.localRecordings,
+    )..where((t) => t.id.equals(id))).write(_requeueCompanion);
     return rows > 0;
   }
 
   /// Hands rows orphaned in `uploading` (the app died mid-upload) back to the
   /// queue at startup. Only [uploadStatus] is rewritten — retry budget and the
   /// resumable offset survive, so the upload resumes instead of restarting.
-  /// Target `local` (not `failed`) keeps the row clear of [deleteStaleRecordings].
+  /// Target `local` (not `failed`) because a crash mid-transfer is not a
+  /// failure: `failed` would label a resumable row as one in the list and the
+  /// detail screen, and would expose it to [requeueFailedUploads], which resets
+  /// the very budget and backoff state this method preserves.
   Future<int> resetStuckUploading() async {
     return (_db.update(_db.localRecordings)
           ..where((t) => t.uploadStatus.equals('uploading')))
@@ -345,6 +400,265 @@ class LocalRecordingRepository {
       id,
       LocalRecordingsCompanion(
         reviewFlagsJson: Value(encodeReviewFlags(flags)),
+      ),
+    );
+  }
+
+  // Metadata outbox (ENG-403). An edit made while the server was unreachable is
+  // already on the local row; these remember that the server is still owed it.
+  // The stored set names fields, never values — the drain reads the values back
+  // off the row, so successive edits collapse into one write.
+
+  /// Records that [fields] were edited on this device with the server out of
+  /// reach.
+  ///
+  /// Unions with whatever is already owed, and hands the row a fresh budget: a
+  /// new edit is a new intent, so it must also lift a terminal status. That is
+  /// the exit from a title clash — the rename is what makes the row drainable
+  /// again, exactly as `resetRetryCount` is for `failed_conflict` uploads.
+  ///
+  /// Read-modify-write in one transaction so two mutations racing on the same
+  /// recording cannot drop one another's field.
+  Future<void> markMetadataPending(
+    String id,
+    Set<PendingMetadataField> fields,
+  ) async {
+    if (fields.isEmpty) return;
+    await _db.transaction(() async {
+      final row = await getRecordingById(id);
+      if (row == null) return;
+      final merged = decodePendingMetadataFields(row.pendingMetadataJson)
+        ..addAll(fields);
+      await updateRecording(
+        id,
+        LocalRecordingsCompanion(
+          pendingMetadataJson: Value(encodePendingMetadataFields(merged)),
+          metadataSyncStatus: const Value(MetadataSyncStatus.pending),
+          metadataRetryCount: const Value(0),
+          metadataLastRetryAt: const Value(null),
+        ),
+      );
+    });
+  }
+
+  /// Drops [fields] from what the row owes — the server just took them. Leaves
+  /// the row queued when something else is still outstanding, so a partial push
+  /// never looks complete.
+  Future<void> clearPendingMetadataFields(
+    String id,
+    Set<PendingMetadataField> fields,
+  ) async {
+    await _db.transaction(() async {
+      final row = await getRecordingById(id);
+      if (row == null) return;
+      await _writeRemainingPending(
+        row,
+        decodePendingMetadataFields(row.pendingMetadataJson)..removeAll(fields),
+      );
+    });
+  }
+
+  /// Compare-and-clear, for the drain: settles only the [fields] whose value on
+  /// the row is still the one that went to the wire.
+  ///
+  /// [sent] is the row the request was built from. An edit landing while the
+  /// PATCH is in flight leaves the server holding the older value and the
+  /// device showing the newer one, so clearing what was *sent* rather than what
+  /// is still *unchanged* would strand the two apart with nothing left to
+  /// reconcile them — the same silent divergence the outbox exists to end, in a
+  /// narrower window. The window is the bad one: the drain fires on reconnect,
+  /// which is exactly when the link is poor and the user is still editing.
+  ///
+  /// The comparison is per field, so a racing rename does not keep an unrelated
+  /// cleaning edit owed. It re-reads inside the transaction that does the write,
+  /// so the comparison cannot itself go stale.
+  Future<void> clearPushedMetadataFields(
+    String id,
+    Set<PendingMetadataField> fields,
+    LocalRecording sent,
+  ) async {
+    await _db.transaction(() async {
+      final row = await getRecordingById(id);
+      if (row == null) return;
+      final settled = fields
+          .where((f) => _pendingValueOf(row, f) == _pendingValueOf(sent, f))
+          .toSet();
+      await _writeRemainingPending(
+        row,
+        decodePendingMetadataFields(row.pendingMetadataJson)
+          ..removeAll(settled),
+      );
+    });
+  }
+
+  /// The value the outbox would send for [field], used to tell an edit that
+  /// landed mid-flight from one that did not. The secondary triple compares as
+  /// a record because the three columns are owed, sent and cleared together.
+  static Object? _pendingValueOf(
+    LocalRecording row,
+    PendingMetadataField field,
+  ) => switch (field) {
+    PendingMetadataField.title => row.title,
+    PendingMetadataField.description => row.description,
+    PendingMetadataField.genre => row.genreId,
+    PendingMetadataField.subcategory => row.subcategoryId,
+    PendingMetadataField.register => row.registerId,
+    PendingMetadataField.secondary => (
+      row.secondaryGenreId,
+      row.secondarySubcategoryId,
+      row.secondaryRegisterId,
+    ),
+    PendingMetadataField.cleaningStatus => row.cleaningStatus,
+    PendingMetadataField.audio => (row.durationSeconds, row.fileSizeBytes),
+    PendingMetadataField.storyteller => row.storytellerId,
+  };
+
+  /// Writes what is left owed after a clear.
+  ///
+  /// A clear is not a new intent, so it never lifts a terminal verdict: a row
+  /// retired under `failed_forbidden` that has one of its *other* fields
+  /// settled stays retired, with its reason and its spent budget intact.
+  /// Rewriting `pending` here would erase the reason and put the row back in
+  /// the queue with nothing left to spend — retired again on its first failure.
+  /// Only [markMetadataPending] revives a row, and it says so: with a fresh
+  /// budget. Leaving the status absent is what expresses that, since the row is
+  /// either already `pending` (stays) or terminal (stays).
+  ///
+  /// Nothing owed is the one case that does reset: there is no verdict left to
+  /// keep about an empty set.
+  Future<void> _writeRemainingPending(
+    LocalRecording row,
+    Set<PendingMetadataField> remaining,
+  ) async {
+    await updateRecording(
+      row.id,
+      LocalRecordingsCompanion(
+        pendingMetadataJson: Value(encodePendingMetadataFields(remaining)),
+        metadataSyncStatus: remaining.isEmpty
+            ? const Value(MetadataSyncStatus.synced)
+            : const Value.absent(),
+        metadataRetryCount: remaining.isEmpty
+            ? const Value(0)
+            : const Value.absent(),
+        metadataLastRetryAt: remaining.isEmpty
+            ? const Value(null)
+            : const Value.absent(),
+      ),
+    );
+  }
+
+  /// Watches every recording that still owes the server a metadata write, keyed
+  /// by *both* ids so a caller can look one up whichever it is holding
+  /// (ENG-405).
+  ///
+  /// The list holds the server's projection of any recording the server knows
+  /// about, and that projection is `synced` by construction — which is every
+  /// recording that can owe an edit, since the outbox requires a `serverId`. So
+  /// the list cannot read this off what it fetched; it has to read it here.
+  ///
+  /// A stream rather than a one-shot read because the point is that the mark
+  /// clears itself: the drain runs, the row returns to `synced`, and the screen
+  /// follows without a refetch to trigger it. Deduped on value, because a
+  /// `watch` over this table re-runs on every unrelated write — an upload's
+  /// byte counter among them — and each of those would otherwise rebuild the
+  /// whole list.
+  Stream<Map<String, MetadataOutboxEntry>> watchMetadataOutbox() {
+    return (_db.select(_db.localRecordings)..where(
+          (t) => t.metadataSyncStatus.equals(MetadataSyncStatus.synced).not(),
+        ))
+        .watch()
+        .map(_outboxByKey)
+        .distinct(_sameOutbox);
+  }
+
+  static Map<String, MetadataOutboxEntry> _outboxByKey(
+    List<LocalRecording> rows,
+  ) {
+    final byKey = <String, MetadataOutboxEntry>{};
+    for (final row in rows) {
+      final entry = (
+        status: row.metadataSyncStatus,
+        fieldsJson: row.pendingMetadataJson,
+      );
+      byKey[row.id] = entry;
+      final serverId = row.serverId;
+      if (serverId != null && serverId.isNotEmpty) byKey[serverId] = entry;
+    }
+    return byKey;
+  }
+
+  static bool _sameOutbox(
+    Map<String, MetadataOutboxEntry> a,
+    Map<String, MetadataOutboxEntry> b,
+  ) {
+    if (a.length != b.length) return false;
+    for (final entry in a.entries) {
+      if (b[entry.key] != entry.value) return false;
+    }
+    return true;
+  }
+
+  /// Rows the server is owed a metadata write for, oldest first.
+  ///
+  /// The `serverId` clause is the correctness condition, not a defence: without
+  /// one there is nothing to PATCH, because the recording's metadata rides along
+  /// on the upload's create call instead. Ordering matches
+  /// [getPendingUploads] — `createdAt` is enqueue time, `id` the tiebreaker.
+  Future<List<LocalRecording>> getPendingMetadataSyncs() async {
+    return (_db.select(_db.localRecordings)
+          ..where(
+            (t) =>
+                t.metadataSyncStatus.equals(MetadataSyncStatus.pending) &
+                t.serverId.isNotNull() &
+                t.serverId.equals('').not(),
+          )
+          ..orderBy([
+            (t) => OrderingTerm.asc(t.createdAt),
+            (t) => OrderingTerm.asc(t.id),
+          ]))
+        .get();
+  }
+
+  /// Spends one metadata retry, and retires the row when that was the last one.
+  ///
+  /// The ceiling is decided here for the same reason [markAsFailed] decides the
+  /// upload's: this is where the count is read, so the invariant holds whatever
+  /// threw and wherever. The owed fields are deliberately kept on a retired row
+  /// — the user still typed that edit, and the row is what the screen reads to
+  /// say what is stuck.
+  Future<void> markMetadataSyncFailed(String id) async {
+    await _db.transaction(() async {
+      final row = await getRecordingById(id);
+      if (row == null) return;
+      final spent = row.metadataRetryCount + 1;
+      await updateRecording(
+        id,
+        LocalRecordingsCompanion(
+          metadataSyncStatus: Value(
+            spent >= kMaxUploadRetries
+                ? MetadataSyncStatus.failedExhausted
+                : MetadataSyncStatus.pending,
+          ),
+          metadataRetryCount: Value(spent),
+          metadataLastRetryAt: Value(DateTime.now()),
+        ),
+      );
+    });
+  }
+
+  /// Parks the row outside the metadata queue under [status], for a refusal
+  /// that was never about the budget. Spends the budget to match, so nothing
+  /// downstream reads a retired row as having attempts left.
+  Future<void> markMetadataSyncTerminal(
+    String id, {
+    required String status,
+  }) async {
+    await updateRecording(
+      id,
+      LocalRecordingsCompanion(
+        metadataSyncStatus: Value(status),
+        metadataRetryCount: const Value(kMaxUploadRetries),
+        metadataLastRetryAt: Value(DateTime.now()),
       ),
     );
   }
@@ -470,6 +784,41 @@ class LocalRecordingRepository {
           ),
         );
     return rows > 0;
+  }
+
+  /// [replaceAudio], plus the outbox entry that tells the server the audio it
+  /// already holds has changed shape (ENG-402).
+  ///
+  /// One transaction, because the two halves are one intent: the row alone puts
+  /// the new audio in the upload queue, and the upload is confirmed against the
+  /// `duration_seconds`/`file_size_bytes` the server still holds — so a row
+  /// re-queued without the owed facts uploads bytes the server then refuses.
+  /// The drain runs ahead of the uploads in the same pass, which is what makes
+  /// the pair arrive in that order.
+  ///
+  /// Nothing is owed when the server does not have the recording: there is
+  /// nothing to correct, and a mark the outbox never selects (it requires a
+  /// `serverId`) would leave the row wearing "edit not yet sent" forever.
+  Future<bool> replaceAudioAndQueueResend({
+    required String recordingId,
+    required String newFilePath,
+    required double newDurationSeconds,
+    required int newFileSizeBytes,
+  }) async {
+    return _db.transaction(() async {
+      final row = await getRecordingById(recordingId);
+      if (row == null) return false;
+      await replaceAudio(
+        recordingId: recordingId,
+        newFilePath: newFilePath,
+        newDurationSeconds: newDurationSeconds,
+        newFileSizeBytes: newFileSizeBytes,
+      );
+      if (row.serverId != null && row.serverId!.isNotEmpty) {
+        await markMetadataPending(recordingId, {PendingMetadataField.audio});
+      }
+      return true;
+    });
   }
 
   /// Defense in depth: throws [SegmentClassificationCollisionException] when a

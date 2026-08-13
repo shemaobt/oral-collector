@@ -12,8 +12,9 @@ final homeNotifierProvider = NotifierProvider<HomeNotifier, HomeState>(
 );
 
 class HomeNotifier extends Notifier<HomeState> {
+  int _localOnlyCount = 0;
+  double _localOnlyDuration = 0;
   int _localUnclassifiedCount = 0;
-  double _localUnclassifiedDuration = 0;
 
   @override
   HomeState build() {
@@ -29,44 +30,36 @@ class HomeNotifier extends Notifier<HomeState> {
 
   Future<void> refreshAll() async {
     state = state.copyWith(isRefreshing: true);
-    await _loadLocalPending();
+    await _loadLocalStats();
     state = state.copyWith(isRefreshing: false, greeting: _computeGreeting());
   }
 
-  Future<void> _loadLocalPending() async {
+  Future<void> _loadLocalStats() async {
     final projectId = ref.read(projectNotifierProvider).activeProject?.id;
     if (projectId == null) return;
 
-    var localPendingCount = 0;
-    var localPendingDuration = 0.0;
+    _localOnlyCount = 0;
+    _localOnlyDuration = 0;
     _localUnclassifiedCount = 0;
-    _localUnclassifiedDuration = 0;
 
     if (!kIsWeb) {
       final repo = ref.read(localRecordingRepositoryProvider);
-      final pending = await repo.getPendingUploads();
-      final forProject = pending.where((r) => r.projectId == projectId);
-      localPendingCount = forProject.length;
-      localPendingDuration = forProject.fold<double>(
-        0.0,
-        (sum, r) => sum + r.durationSeconds,
-      );
+      final localOnly = await repo.getLocalOnlyStats(projectId);
+      _localOnlyCount = localOnly.count;
+      _localOnlyDuration = localOnly.durationSeconds;
 
-      final unclassifiedStats = await repo.getLocalUnclassifiedStats(projectId);
-      _localUnclassifiedCount = unclassifiedStats.count;
-      _localUnclassifiedDuration = unclassifiedStats.durationSeconds;
+      final unclassified = await repo.getLocalUnclassifiedStats(projectId);
+      _localUnclassifiedCount = unclassified.count;
     }
 
-    state = state.copyWith(
-      localPendingCount: localPendingCount,
-      localPendingDuration: localPendingDuration,
-    );
     computeTotals();
   }
 
   void computeTotals() {
-    int recordings = state.localPendingCount + _localUnclassifiedCount;
-    double duration = state.localPendingDuration + _localUnclassifiedDuration;
+    // Two addends that cannot overlap: what only this device holds, plus what
+    // the server reports. See ENG-355.
+    int recordings = _localOnlyCount;
+    double duration = _localOnlyDuration;
     final genreStats = ref.read(statsNotifierProvider).genreStats;
     for (final stat in genreStats.values) {
       recordings += stat.recordingCount;

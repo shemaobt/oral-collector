@@ -579,6 +579,10 @@ class AppLocalizationsTpi extends AppLocalizations {
       'No inap apdet klining stetas long seva';
 
   @override
+  String get recording_savedOnDeviceOnly =>
+      'I stap long dispela masin — seva i no kisim dispela senis yet. Em bai go em yet taim koneksen i kam bek.';
+
+  @override
   String get recording_updateNoPermission =>
       'Yu no gat pemisin bilong apdet dispela rekoding';
 
@@ -718,6 +722,21 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get recording_statusFileMissing => 'Odio fail i lus';
 
   @override
+  String get recording_metadataSyncPending => 'Senis i wet long go';
+
+  @override
+  String get recording_metadataSyncForbidden =>
+      'Senis i no orait: yu no inap senisim dispela rekoding';
+
+  @override
+  String get recording_metadataSyncConflict =>
+      'Senis i no orait: narapela rekoding i gat dispela nem pinis';
+
+  @override
+  String get recording_metadataSyncExhausted =>
+      'Senis i no go — senisim gen bilong traim gen';
+
+  @override
   String get recording_uploadExhaustedMessage =>
       'Salim i stop bihain long planti traim. Yu inap traim gen.';
 
@@ -734,26 +753,23 @@ class AppLocalizationsTpi extends AppLocalizations {
   }
 
   @override
-  String get recordings_clearStale => 'Klinim ol i pundaun';
+  String get recordings_retryFailedUploads => 'Traim salim gen';
 
   @override
-  String get recordings_clearStaleMessage =>
-      'Dispela bai rausim olgeta rekoding we i pundaun o i pas long salim i go antap long seva. Dispela aksen i no inap senisim bek.';
-
-  @override
-  String recordings_clearedCount(int count) {
+  String recordings_retryQueuedCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Klinim $count rekoding',
-      one: 'Klinim 1 rekoding',
-      zero: 'I no painim ol olpela rekoding',
+      other: '$count rekoding i go bek long lain bilong salim',
+      one: '1 rekoding i go bek long lain bilong salim',
+      zero: 'I nogat samting bilong traim gen',
     );
     return '$_temp0';
   }
 
   @override
-  String get recordings_clearFailed => 'No inap klinim ol rekoding';
+  String get recordings_retryFailed =>
+      'I no inap putim ol samting bek long lain bilong salim';
 
   @override
   String get trim_title => 'Stretim Rekoding';
@@ -1049,6 +1065,10 @@ class AppLocalizationsTpi extends AppLocalizations {
   }
 
   @override
+  String get sync_waitingForWifi =>
+      'Ol samting i wet long Wi-Fi. Rausim \"Salim long Wi-Fi tasol\" bilong salim wantaim mobail data.';
+
+  @override
   String get profile_photoUpdated => 'Profail foto i apdet pinis';
 
   @override
@@ -1107,10 +1127,46 @@ class AppLocalizationsTpi extends AppLocalizations {
 
   @override
   String get profile_clearCacheMessage =>
-      'Dispela bai rausim olgeta rekoding i stap long lokal. Ol rekoding i go antap pinis long seva bai i stap.';
+      'Dispela bai rausim ol rekoding i stap long lokal we seva i gat pinis. Ol rekoding i no go antap yet bai i stap long dispela masin.';
 
   @override
   String get profile_cacheCleared => 'Lokal kes i klin pinis';
+
+  @override
+  String profile_cacheClearedKept(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Lokal kes i klin pinis. $count rekoding i stap yet, long wanem ol i no go antap yet.',
+      one:
+          'Lokal kes i klin pinis. 1 rekoding i stap yet, long wanem em i no go antap yet.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String profile_cacheKeptUnsent(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count rekoding i stap yet, long wanem ol i no go antap yet.',
+      one: '1 rekoding i stap yet, long wanem em i no go antap yet.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String profile_cacheNotFreed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count rekoding i no inap rausim, olsem na dispela spes i no kamap fri.',
+      one: '1 rekoding i no inap rausim, olsem na dispela spes i no kamap fri.',
+    );
+    return '$_temp0';
+  }
 
   @override
   String profile_joinedSuccess(String name) {
@@ -1167,7 +1223,8 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get profile_clearCache => 'Klinim lokal kes';
 
   @override
-  String get profile_clearCacheSubtitle => 'Rausim olgeta lokal rekoding';
+  String get profile_clearCacheSubtitle =>
+      'Rausim ol lokal kopi we seva i gat pinis';
 
   @override
   String get profile_invitations => 'Ol Invitesen';
@@ -1806,6 +1863,9 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get detail_cleaning => 'Klining';
 
   @override
+  String get detail_metadataSync => 'Ol senis';
+
+  @override
   String get detail_recorded => 'Rekodim long';
 
   @override
@@ -2097,6 +2157,25 @@ class AppLocalizationsTpi extends AppLocalizations {
   @override
   String get recording_finalizationFailedBody =>
       'Mipela traim long kisim bek audio tasol i nogat ol hap.';
+
+  @override
+  String get recording_finalizationFailedBodyNoAudio =>
+      'I nogat audio i kam bek long rekoda.';
+
+  @override
+  String get recording_finalizationFailedBodyDownload =>
+      'Em i rekodim audio, tasol i no inap ritim gen.';
+
+  @override
+  String get recording_finalizationFailedBodyCaptureInterrupted =>
+      'Rekoding i pinis paslain long yu putim stop, olsem na i nogat audio i stap.';
+
+  @override
+  String get recording_finalizationFailedBodyPipeline =>
+      'Mipela i no inap pinisim wok long dispela rekoding. Em i stap long ol rekoding yu no bin sevim.';
+
+  @override
+  String get recording_finalizationErrorBack => 'Go bek';
 
   @override
   String get recording_discardAndReturn => 'Lusim na go bek';
@@ -2447,7 +2526,7 @@ class AppLocalizationsTpi extends AppLocalizations {
 
   @override
   String get a11y_minimapScrubber =>
-      'Audio overview. Tap or drag to navigate to a position.';
+      'Piksa bilong olgeta sat. Klikim o pulim bilong go long wanpela hap.';
 
   @override
   String a11y_tabLabel(String label) {

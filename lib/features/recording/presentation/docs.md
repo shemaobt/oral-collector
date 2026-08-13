@@ -145,12 +145,20 @@ Path: @/lib/features/recording/presentation
   waveform peaks (`waveformLoaderProvider`) or synthesizes bars, and
   finishes the load by calling the notifier's `completeLoad` /
   `setUnavailable` / `loadFailed`. On save, the notifier exports the
-  segments (native) or calls the server (web), runs the
+  segments (native) or calls the server (web), then branches on whether the
+  edit made any cut points (ENG-402): a gain-only edit runs the
+  [../data/services/recording_boost_persister.dart](../data/services/recording_boost_persister.dart)
+  pipeline (points the same row at the re-encoded audio, archives the file it
+  replaced, kicks the upload queue — the recording's identity and its
+  server-side copy are both kept), while an actual split runs the
   [../data/services/recording_split_persister.dart](../data/services/recording_split_persister.dart)
   pipeline (which writes the children, archives the parent, deletes it
   locally and best-effort remotely, and kicks `SyncNotifier.processQueue`
-  so the new children start uploading), and returns a `TrimSaveOutcome`
-  the screen `switch`es on to show the snackbar and navigate.
+  so the new children start uploading). Either way the notifier returns a
+  `TrimSaveOutcome` the screen `switch`es on to show the snackbar and
+  navigate. See
+  [/docs/recording-split-semantics.md](../../../../docs/recording-split-semantics.md#what-counts-as-a-split)
+  for why only the cut-points case counts as a split.
 - The detail screen's audio playback is owned by
   `RecordingPlayerNotifier` at
   [./notifiers/recording_player_notifier.dart](notifiers/recording_player_notifier.dart).
@@ -439,10 +447,136 @@ Path: @/lib/features/recording/presentation
   server-side check is tracked separately (ENG-81). The getter still
   short-circuits to non-editable while `RecordingDetailState.recording` is null
   (before the row resolves).
-- **Online-first then mirror locally.** Edits always call the server
-  first (now inside the notifier's mutations, ENG-194); if the server call
-  fails, the local row is not changed (so we do not generate phantom local
-  edits). The notifier hands the outcome back as a `RecordingMutationResult` and
+- **Online-first, but only once the server already knows the recording — and
+  since ENG-399, a distinction between "the server refused" and "the server
+  was never reached".** Edits call the server first (now inside the
+  notifier's mutations, ENG-194) when the recording's `uploadStatus` is one
+  the server has already seen — `{'uploaded', 'verified'}` — or on web, where
+  every recording is server-backed; a recording that is still
+  `local`/`failed`/`uploading` has nothing to correct server-side yet, so the
+  edit is written straight to Drift with no server call at all and rides
+  along on the eventual upload — this is intentional, not a fallback, and the
+  method returns `RecordingMutationResult.success`, not `savedLocallyOnly`:
+  nothing is owed to a server that has never seen the row. The gate for
+  deciding whether an edit is owed to the server is **not the same across the
+  four metadata mutations, and that inconsistency is deliberate (ENG-399),
+  not an oversight to unify**: `classify`/`saveSecondary` gate on
+  `hasServerId`, `toggleCleaningStatus` on `uploadStatus` in
+  `{'uploaded', 'verified'}` (or web), and `moveCategory` calls the server
+  unconditionally. Unifying them would touch every one of those call sites'
+  local-only semantics at once, for a benefit no bug report asked for.
+  `uploadStatus` has no client-side enum
+  (it is a loose `String` throughout this layer, tracked as `needs-api` in
+  ENG-174), so every "does the server already know this recording" gate has
+  to independently spell out both statuses; besides `toggleCleaningStatus`
+  the idiom also guards `_needsGcsRefresh` and `replaceAudio` above, and the
+  `StatusFilter.uploaded` list filter
+  ([./notifiers/docs.md](notifiers/docs.md)). Before ENG-376,
+  `toggleCleaningStatus` checked only for `'uploaded'`, so a `verified`
+  recording — most of what is listed once sync has caught up — silently
+  skipped the server call: the local row was written, `load()` re-read it,
+  and the screen reported success while the server never learned of the
+  edit. The list filter had the matching gap, hiding `verified` recordings
+  (which already carry the same `recording_statusUploaded` badge on their
+  card) from the `filter_uploaded` chip.
+  **When the call is made, ENG-399 classifies the result instead of
+  collapsing every failure into `failed`.** All four mutations route the
+  actual `updateRecording` call through the notifier's private
+  `_pushMetadata`/`_refusal` pair
+  ([./notifiers/docs.md](notifiers/docs.md)), which tells a refusal — the
+  server was reached and said no — apart from not reaching it at all. A
+  refusal is `updateRecording` throwing `ForbiddenException` (403) or
+  returning a plain non-exceptional `success: false` (any other non-200
+  status; `RecordingApiRepositoryImpl.updateRecording`, see
+  [../data/repositories/docs.md](../data/repositories/docs.md), only throws
+  on 401/403/409, so a 500 lands here); the local row is left untouched,
+  exactly as before ENG-399. Everything else — the up-front offline check
+  (`SyncNotifier.isOnline`, native only) failing, or *any* other thrown
+  exception, including `UnauthorizedException` (401) and `ConflictException`
+  (409) — is unreachable: the edit is mirrored to the local row anyway and
+  the method returns `RecordingMutationResult.savedLocallyOnly`, and the
+  screen shows a warning snackbar (`recording_savedOnDeviceOnly`) telling the
+  user the change is on this device and will be sent when the connection
+  returns. Web has no local row, so an
+  unreachable server there is treated the same as a refusal (`_pushMetadata`
+  maps any thrown exception to `rejected` under `kIsWeb`), not a
+  `savedLocallyOnly`.
+  **A `savedLocallyOnly` edit resends itself as of ENG-403 — the user no
+  longer has to repeat it online.** `getPendingUploads` (the upload queue's
+  source, see [../data/repositories/docs.md](../data/repositories/docs.md))
+  only selects `uploadStatus` in `{'local', 'failed', 'uploading'}`, and none
+  of the metadata mutations touch `uploadStatus`, so the edit was never going
+  to ride the upload queue or its counters (`SyncState.pendingCount` still
+  does not count it). What resends it instead is a second, narrower queue:
+  the mutation that took the unreachable branch also marks the fields it
+  wrote as owed (`_settleOutbox`, [./notifiers/docs.md](notifiers/docs.md)),
+  and `SyncEngine` drains that queue on every pass, rebuilding the request by
+  reading the current value back off the row rather than replaying a stored
+  payload — see [/lib/features/sync/docs.md](../../sync/docs.md) for the
+  drain and its error taxonomy. The `recording_savedOnDeviceOnly` snackbar
+  was rewritten to match (ENG-403): it said the change stopped at this device
+  and asked the user to **redo it online**, which is now wasted work, and says
+  instead that it will be sent on its own when the connection comes back.
+  ENG-403 edited only `app_en.arb` and `app_pt.arb`, and the other nine
+  locales inlined the English source until ENG-410 gave the key a translation
+  of its own in each of them; none is left holding the ENG-399 redo
+  instruction.
+  **ENG-405 gives the pending state a mark, on the list card and on the detail
+  screen's status card.** `MetadataSyncStyle.forStatus`
+  (`widgets/metadata_sync_mark.dart`) is the single mapping from
+  `metadataSyncStatus` to a glyph, a colour token and a label, in the same
+  shape `CleaningStatusStyle` uses, so the two surfaces cannot describe one row
+  differently. It returns **null** for `synced` *and* for any token this build
+  does not recognise — a row written by a newer build draws nothing rather than
+  a guessed alarm the user could not act on. The card renders
+  `RecordingMetadataSyncMark` (public, so a test can assert absence by type) as
+  a row under the footer rather than a fourth chip inside it: the footer
+  already rations width between the classification, the pendency chip and the
+  duration. The detail screen renders a `StatusRow` directly under the upload
+  row.
+  Two states, deliberately not one: `pending` takes `colors.secondary` and a
+  clock, because reconnecting is all it needs and alarm buys nothing; the three
+  `failed_*` take `colors.error` and a glyph per cause (lock / copy /
+  alertOctagon), because they never clear themselves. All four labels name the
+  *edit*, never the upload — the two axes are independent and a `verified`
+  recording can still owe one, so a mark reading "not sent" without a subject
+  would be taken for the audio. The mark's text carries **no `maxLines`**,
+  unlike every other line on the card: the cause and the way out live at the
+  end of the sentence, and a two-line ceiling measurably truncated the
+  refusals at 1.0x on a 320dp phone.
+  **The mark is read off the database, not off what the list fetched.** The
+  list shows the server's projection for every recording the server knows
+  about, and `serverRecordingToLocal` reports `synced` by construction — which
+  is every recording that can owe an edit, since the outbox requires a
+  `serverId`. So `RecordingsListNotifier` follows
+  `metadataOutboxProvider` (see [../data/docs.md](../data/docs.md)) and applies
+  it both at server-conversion time and on every stream tick; that is also what
+  makes the mark clear itself after a drain behind the Wi-Fi gate, where
+  `lastSyncAt` — the list's usual refetch trigger — is deliberately not
+  written. A broken outbox stream leaves the screen unmarked but is reported
+  through `_reportUnexpected`, so the quiet is a decision and not a blind spot.
+  One kind of edit still doesn't ride this queue: one made while the
+  recording is still `local`/`failed`/`uploading` — that edit never needed a
+  resend queue, since it rides the eventual create call instead. The
+  storyteller assignment was the other exception until ENG-411 gave
+  `setStoryteller` the same "unreachable" / "refused" distinction as the rest
+  ([/lib/features/sync/docs.md](../../sync/docs.md)).
+  **A 401 or a 409 landing in the generic catch and being classified as
+  unreachable is a gap inherited from ENG-380, now with a wider reach.** A
+  stale/expired session or a write the server refused for some other reason
+  is not the same thing as being offline, but `_pushMetadata`'s `catch (_)`
+  does not distinguish them. This already applied to `saveRecordingDescription`
+  ([../data/use_cases/save_recording_description.dart](../data/use_cases/save_recording_description.dart)),
+  whose own generic catch has the identical shape; `saveRecordingTitle`
+  ([../data/use_cases/save_recording_title.dart](../data/use_cases/save_recording_title.dart))
+  is the one exception — it special-cases `ConflictException` with its own
+  `rethrow` so a duplicate-title 409 reaches `saveDetails` as
+  `titleConflict` rather than a local-only save, but still swallows a 401
+  the same generic way. ENG-399 did not introduce this shape; it extended it
+  from those two ENG-380 use-cases to the four `_pushMetadata`-based
+  mutations, none of which carry a title-conflict-style carve-out.
+  The notifier hands the outcome back
+  as a `RecordingMutationResult` and
   the widget surfaces errors through the shared `showErrorSnackBar` helper
   ([/lib/shared/widgets/error_snack_bar.dart](../../../shared/widgets/error_snack_bar.dart)),
   which is handed the **typed** caught exception so it localizes via the type
@@ -461,6 +595,26 @@ Path: @/lib/features/recording/presentation
   delete path is the exception: it does not throw but returns a
   `DeleteRecordingResult`, and a `forbidden` result is shown in the semantic
   `warning` color (`AppColors.of(context).warning`), so it adapts to dark mode.
+- **Before ENG-399, only two of the four metadata mutations had this offline
+  fallback.** `toggleCleaningStatus`/`moveCategory`/`classify`/`saveSecondary`
+  used to have no connectivity check and turn any exception from
+  `updateRecording` — including a plain offline network error — into
+  `RecordingMutationResult.failed` with no local write at all, throwing away
+  the user's edit; that gap predated ENG-376 but only mattered for
+  already-`uploaded` recordings, and started firing for most of what is
+  listed once the server-call gate above also started covering `verified`.
+  ENG-399 landed in two commits — `toggleCleaningStatus`/`moveCategory`
+  first, then `classify`/`saveSecondary` (whose `savedLocallyOnly` handling
+  in the screen had shipped in the first commit but was unreachable dead code
+  until the second) — extracting the shared `_pushMetadata`/`_refusal`
+  classification described above. The second commit also fixed
+  `saveRecordingTitle`
+  ([../data/use_cases/save_recording_title.dart](../data/use_cases/save_recording_title.dart))
+  to agree with its sibling `saveRecordingDescription`
+  ([../data/use_cases/save_recording_description.dart](../data/use_cases/save_recording_description.dart)):
+  it used to return `SaveTitleResult.saved` when offline with a `serverId`,
+  where `saveRecordingDescription` already returned `savedLocallyOnly` in the
+  identical situation.
 - **The "download for edit" UX dialog gating.** `_ensureLocalFile` first
   asks the user for confirmation (`recording_downloadAudio`) before
   pulling the bytes. If the user cancels, no write happens; if the
@@ -488,6 +642,58 @@ Path: @/lib/features/recording/presentation
   retry reconciles the existing row and the resumable service resumes from
   the persisted offset (`resumableSessionUri`/`uploadedBytes`) instead of
   crashing or re-uploading what already landed.
+- **The trim editor's minimum-segment floor is time-based, not a fraction of
+  the recording (ENG-66).** `kMinTrimSegment` (250 ms) and the derived
+  `minSplitGapFraction(totalDuration)` in
+  [./trim_edit_decision.dart](trim_edit_decision.dart) are the single source
+  of the floor every split-creating and split-dragging gesture enforces.
+  Before ENG-66 each of four call sites hardcoded the same `0.03` fraction
+  directly, so the effective floor grew with the recording's length (~1 s on
+  a 33 s file, ~5.4 s on a 3-minute one) instead of staying fixed. A gesture
+  below the floor is still a silent no-op — ENG-66 moved where the floor sits,
+  it did not add feedback when you hit it. `TrimWaveform` and
+  `TrimWaveformPanel`
+  ([./widgets/trim_waveform.dart](widgets/trim_waveform.dart),
+  [./widgets/trim_waveform_panel.dart](widgets/trim_waveform_panel.dart))
+  take a `totalDuration` parameter — fed from `TrimEditorState.totalDuration`
+  in `trim_editor_screen.dart` — purely to convert the floor into fraction
+  space at the point of use; the panel's existing `*Label` fields are
+  pre-formatted strings and cannot serve this. The four consumers are
+  `TrimWaveform._addSplitAt`/`_moveSplit` (create/drag a marker) and the
+  screen's `_addSplitAtPlayhead`/`_canSplitAtPlayhead` (the "cut at
+  playhead" button). Dragging a handle guards against the floor varying with
+  `totalDuration`: on a recording shorter than two floors there is no legal
+  position at all, so the handle holds still instead of letting `clamp` throw
+  on inverted bounds. `minSplitGapFraction` is deliberately uncapped for the
+  same reason — a file too short to hold two minimum segments, or one whose
+  duration is unknown, refuses every cut rather than quietly shrinking the
+  floor below 250 ms. Two consequences worth knowing. First, per-segment
+  taxonomy in `TrimEditorState` is keyed by segment midpoint and remapped by
+  nearest midpoint when the segmentation changes; both were implicitly sized
+  against the 3% floor, so the key gained decimal places and the remap
+  tolerance became relative to the receiving segment's own width — otherwise
+  neighbouring segments shared one override key, and a re-split carried an
+  override a dozen segments away. Second, lowering the floor made short
+  segments createable, which is also why the native export path
+  ([../data/docs.md](../data/docs.md)) had to stop assuming every save
+  without a gain change can stream-copy — see that doc's exporter bullet.
+- **A second, untouched floor still blocks a short cut next to an existing
+  marker.** The handle hit-test radius (`_handleRadius` 12 + `_handleHitSlop`
+  24 = 36 logical px in `TrimWaveform._hitTestMarker`) is checked before a
+  long-press is treated as "create a split" — a long-press inside that
+  radius of an existing marker removes it instead of adding a new one. In
+  pixels-per-second terms (width × zoom ÷ duration), placing a cut half a
+  second from a marker needs width×zoom > 72×duration; on a 3-minute
+  recording that requires a zoom above `maxZoom` (16), so it is unreachable
+  at any allowed zoom, and at 1× zoom half a second is under 2px so the two
+  handles would be visually stacked anyway. A short cut at the edge of the
+  recording, or away from other markers, is unaffected — but only after
+  zooming in: at 1× on a 3-minute file one second spans about 2 px, so the
+  whole sub-floor region is under a pixel wide and the new precision is not
+  reachable by finger until the viewport is magnified. This floor was
+  deliberately left alone by ENG-66: shrinking the hit-slop would make the
+  long-press-to-remove gesture harder to land, trading one usability problem
+  for another, and belongs to its own slice.
 - **The trim loader distinguishes a failed load from a missing recording
   (ENG-140 F21).** Resolving a server-only recording (now in
   `TrimEditorNotifier.load` →

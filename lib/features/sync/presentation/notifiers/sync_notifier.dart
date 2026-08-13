@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/widgets.dart' show Locale, WidgetsBinding;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/l10n/locale_provider.dart';
 import '../../../../core/observability/error_reporter.dart';
@@ -11,11 +12,50 @@ import '../../../../core/platform/file_ops.dart' as file_ops;
 import '../../../../l10n/app_localizations.dart';
 import '../../../recording/data/providers.dart';
 import '../../../recording/data/repositories/local_recording_repository.dart';
+import '../../../recording/domain/entities/pending_metadata_field.dart';
+import '../../../recording/domain/server_deletion_policy.dart';
 import '../../data/providers.dart';
 import '../../data/services/upload_foreground_service.dart';
 import '../../domain/repositories/connectivity_service.dart';
 import '../../domain/repositories/sync_engine.dart';
 import 'sync_state.dart';
+
+const _kAutoUploadWifiOnlyKey = 'sync_auto_upload_wifi_only';
+const _kAutoRemoveAfterUploadKey = 'sync_auto_remove_after_upload';
+
+/// Whether discarding this local copy would destroy an edit that exists nowhere
+/// else (ENG-416).
+///
+/// This is composed with [serverHasRecording] at the one call site rather than
+/// folded into it. That predicate answers a factual question — does the server
+/// hold this recording — and the heal paths pair it with a confirmed 404 before
+/// erasing a row, where owing an edit is irrelevant. The cache asks a different
+/// question that happens to share a term: does dropping this copy lose
+/// anything.
+///
+/// **`failed_forbidden` is deliberately absent, and this is not an oversight.**
+/// The other two terminal verdicts have an exit the user can reach from the
+/// phone — a rename lifts [MetadataSyncStatus.failedConflict], any fresh edit
+/// revives [MetadataSyncStatus.failedExhausted] with a new budget — so the edit
+/// can still reach the server and the clear must not destroy it first. A
+/// permission refusal has no such exit: the user cannot grant themselves
+/// permission, so from this device the edit has no destination at all, exactly
+/// like a row the server answered 404 for. Protecting it would leave a
+/// recording that clearing the cache can never discard, with no way to abandon
+/// the edit short of deleting the audio with it.
+bool _wouldLoseAnUnsentEdit(String metadataSyncStatus) => const {
+  MetadataSyncStatus.pending,
+  MetadataSyncStatus.failedConflict,
+  MetadataSyncStatus.failedExhausted,
+}.contains(metadataSyncStatus);
+
+/// What a cache clear left behind, by reason.
+///
+/// [keptUnsent] is the reassuring half: the server does not have this recording,
+/// or does not have an edit to it, so the copy is the only one there is.
+/// [keptUndeletable] is the other half: the server has it and the delete failed
+/// anyway, which is space the clear promised and did not free.
+typedef ClearCacheOutcome = ({int keptUnsent, int keptUndeletable});
 
 final syncNotifierProvider = NotifierProvider<SyncNotifier, SyncState>(
   SyncNotifier.new,
@@ -24,6 +64,7 @@ final syncNotifierProvider = NotifierProvider<SyncNotifier, SyncState>(
 class SyncNotifier extends Notifier<SyncState> {
   StreamSubscription<bool>? _connectivitySub;
   bool _sawConnectivityEvent = false;
+  bool _settingsTouched = false;
   DateTime? _speedSampleTime;
   int _speedSampleBytes = 0;
   final Map<String, int> _fileProgress = {};
@@ -46,8 +87,23 @@ class SyncNotifier extends Notifier<SyncState> {
   @override
   SyncState build() {
     ref.onDispose(_cleanup);
+    _loadSettings();
     _initConnectivity();
     return const SyncState();
+  }
+
+  Future<void> _loadSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    // The user can reach the switches before this continuation lands (the
+    // SharedPreferences singleton is already warm from startup, so the load
+    // resolves *after* an updateSettings that came later). Their choice is
+    // newer than the disk, and updateSettings persisted it anyway — one flag
+    // covers both fields because SyncSettings always carries both.
+    if (_settingsTouched) return;
+    state = state.copyWith(
+      autoUploadWifiOnly: prefs.getBool(_kAutoUploadWifiOnlyKey),
+      autoRemoveAfterUpload: prefs.getBool(_kAutoRemoveAfterUploadKey),
+    );
   }
 
   Future<void> _initConnectivity() async {
@@ -90,7 +146,14 @@ class SyncNotifier extends Notifier<SyncState> {
     if (_isProcessing) return;
     _isProcessing = true;
     try {
-      state = state.copyWith(uploadingId: recordingId, syncProgress: 0);
+      // An upload is running, so no verdict from an earlier blocked pass is
+      // still true. processQueue bails on the shared guard without recomputing
+      // it, and that stale verdict is what the chip would report.
+      state = state.copyWith(
+        uploadingId: recordingId,
+        syncProgress: 0,
+        clearBlockReason: true,
+      );
       _fileProgress.clear();
 
       try {
@@ -143,10 +206,21 @@ class SyncNotifier extends Notifier<SyncState> {
     await syncOne(recordingId);
   }
 
-  void updateSettings(SyncSettings settings) {
+  /// Both flags are persisted: they were state-only, so a device parked on
+  /// cellular got the Wi-Fi-only default back on every relaunch and its queue
+  /// never drained (ENG-355).
+  Future<void> updateSettings(SyncSettings settings) async {
+    _settingsTouched = true;
     state = state.copyWith(
       autoUploadWifiOnly: settings.autoUploadWifiOnly,
       autoRemoveAfterUpload: settings.autoRemoveAfterUpload,
+    );
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_kAutoUploadWifiOnlyKey, settings.autoUploadWifiOnly);
+    await prefs.setBool(
+      _kAutoRemoveAfterUploadKey,
+      settings.autoRemoveAfterUpload,
     );
   }
 
@@ -183,28 +257,83 @@ class SyncNotifier extends Notifier<SyncState> {
     );
   }
 
-  Future<void> clearLocalCache() async {
-    if (kIsWeb) return;
+  /// Drops the local copies the server already has and reports what stayed on
+  /// the device, split by why it stayed.
+  ///
+  /// A recording the server never received exists nowhere else, so it is kept —
+  /// clearing the cache used to delete it and an hour-long story was lost that
+  /// way (ENG-407). A recording that still owes the server an edit is kept for
+  /// the same reason, even though the audio is safe: the edit exists only here
+  /// (ENG-416, see [_wouldLoseAnUnsentEdit]).
+  ///
+  /// A row is removed only once its file is actually gone. The row is the only
+  /// handle on that file — the storage figure and every later clear walk the
+  /// rows — so dropping it after a failed delete would strand the audio on disk
+  /// for good and report space that was never freed. A kept row with its file
+  /// is consistent, and the next clear retries it.
+  ///
+  /// The two reasons are reported apart because they are different news
+  /// (ENG-417). "The server does not have this yet" reassures; "I could not
+  /// delete this" is space the user asked for and did not get. A single total
+  /// says one of them and hides the other.
+  Future<ClearCacheOutcome> clearLocalCache() async {
+    if (kIsWeb) return (keptUnsent: 0, keptUndeletable: 0);
 
     final all = await _recordingRepo.getAllLocalRecordings();
-    await Future.wait(all.map((r) => _deleteQuietly(r.localFilePath)));
+    final discardable = all
+        .where(
+          (r) =>
+              serverHasRecording(
+                serverId: r.serverId,
+                uploadStatus: r.uploadStatus,
+              ) &&
+              !_wouldLoseAnUnsentEdit(r.metadataSyncStatus),
+        )
+        .toList();
 
-    await _recordingRepo.deleteAllRecordings();
+    final deleted = await Future.wait(
+      discardable.map((r) => _tryDeleteFile(r.localFilePath)),
+    );
+    final removableIds = [
+      for (var i = 0; i < discardable.length; i++)
+        if (deleted[i]) discardable[i].id,
+    ];
+    await _recordingRepo.deleteRecordingsByIds(removableIds);
+
     await _refreshPendingCount();
+    return (
+      keptUnsent: all.length - discardable.length,
+      keptUndeletable: discardable.length - removableIds.length,
+    );
   }
 
-  Future<void> _deleteQuietly(String path) async {
+  /// Deletes [path], reporting and swallowing any failure. Returns whether the
+  /// file is gone — an absent file is a success, since `deleteFile` checks
+  /// existence first and never throws for one.
+  Future<bool> _tryDeleteFile(String path) async {
     try {
-      await file_ops.deleteFile(path);
+      await ref.read(deleteFileProvider)(path);
+      return true;
     } on Exception catch (e, st) {
       ref.read(errorReporterProvider).reportError(e, st);
+      return false;
     }
   }
 
   bool _isProcessing = false;
 
   Future<void> processQueue() async {
-    if (!state.isOnline) return;
+    if (!state.isOnline) {
+      // Being offline is its own (already visible) condition; don't leave a
+      // stale Wi-Fi-only verdict behind to be reported instead.
+      state = state.copyWith(clearBlockReason: true);
+      // Refuse the drain, but still report the queue honestly — callers change
+      // its contents and then ask for a pass (the list's bulk retry does, and
+      // works offline by design). The Wi-Fi-only branch inside _runQueue
+      // refreshes before it blocks, for the same reason (ENG-404).
+      await _refreshPendingCount();
+      return;
+    }
     // Shared upload guard (see syncOne): bail if an upload op is already in
     // flight so concurrent runs can't stop the foreground service mid-upload.
     if (_isProcessing) return;
@@ -218,6 +347,28 @@ class SyncNotifier extends Notifier<SyncState> {
 
   Future<void> _runQueue() async {
     await _refreshPendingCount();
+
+    final isWifi = await _connectivity.isOnWifi;
+    // The engine applies this policy too, but by returning quietly — and the
+    // caller then wrote lastSyncAt for a queue that never ran. Decide here so
+    // no run is reported, no foreground service is raised, and the UI can tell
+    // the user why nothing moved (ENG-355).
+    if (state.autoUploadWifiOnly && !isWifi) {
+      // The gate holds back the uploads, not the metadata outbox (ENG-403):
+      // this return is what the engine's own exemption would never be reached
+      // through, so the drain is asked for explicitly here. `blockReason` still
+      // says Wi-Fi, and truthfully — it describes the uploads, which really are
+      // waiting. `lastSyncAt` and `syncProgress` stay untouched: they would
+      // report a queue run that did not happen. The count is refreshed after
+      // the drain because it now includes pending edits (ENG-418), and this
+      // branch is one where they really do go up — leaving the pre-gate number
+      // would keep counting an edit that just landed.
+      await _syncEngine.processPendingMetadata();
+      await _refreshPendingCount();
+      state = state.copyWith(blockReason: SyncBlockReason.wifiOnly);
+      return;
+    }
+    state = state.copyWith(clearBlockReason: true);
 
     final pending = await _recordingRepo.getPendingUploads();
     final totalBytes = pending.fold(0, (sum, r) => sum + r.fileSizeBytes);
@@ -238,7 +389,6 @@ class SyncNotifier extends Notifier<SyncState> {
     _speedSampleTime = DateTime.now();
     _speedSampleBytes = 0;
 
-    final isWifi = await _connectivity.isOnWifi;
     final concurrency = isWifi ? 3 : 1;
 
     // Keep the Android process alive while the queue runs so uploads continue
@@ -300,11 +450,37 @@ class SyncNotifier extends Notifier<SyncState> {
     );
   }
 
+  /// The header's number is every recording with work still outstanding: an
+  /// upload to send, a metadata edit to push, or both (ENG-418). The union is by
+  /// recording id, so the row that owes both — what
+  /// `replaceAudioAndQueueResend` writes — is counted once.
+  ///
+  /// Only `pending` edits count, which is exactly what the drain will pick up.
+  /// A terminal edit needs the user, not another pass, and the upload queue
+  /// already draws that line the same way: `getPendingUploads` leaves its own
+  /// terminal states out so the badge never counts work no drain can move
+  /// (ENG-377). The card's metadata mark is what surfaces those.
+  ///
+  /// [SyncState.totalQueueSizeBytes] deliberately stays the uploads' sum. It is
+  /// the "how much is left to transfer" figure, and a metadata PATCH is a few
+  /// hundred bytes — adding the audio size of a recording the server already
+  /// holds would inflate it by a file that is never going up.
+  ///
+  /// [SyncState.pendingUploadCount] is the uploads counted on their own, for the
+  /// upload-queue sheet, which shows a number directly above the list it
+  /// describes (ENG-422). It comes from this same query rather than a second
+  /// one, so the number and the rows cannot disagree about what a pending
+  /// upload is.
   Future<void> _refreshPendingCount() async {
-    final pending = await _recordingRepo.getPendingUploads();
+    final (pending, owingEdits) = await (
+      _recordingRepo.getPendingUploads(),
+      _recordingRepo.getPendingMetadataSyncs(),
+    ).wait;
     final totalBytes = pending.fold(0, (sum, r) => sum + r.fileSizeBytes);
+    final owing = {...pending.map((r) => r.id), ...owingEdits.map((r) => r.id)};
     state = state.copyWith(
-      pendingCount: pending.length,
+      pendingCount: owing.length,
+      pendingUploadCount: pending.length,
       totalQueueSizeBytes: totalBytes,
     );
   }

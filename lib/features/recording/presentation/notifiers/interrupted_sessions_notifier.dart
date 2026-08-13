@@ -5,8 +5,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
 import 'package:path_provider/path_provider.dart';
 
+import '../../../../core/database/app_database.dart';
 import '../../../../core/platform/file_ops.dart' as file_ops;
 import '../../data/providers.dart';
+import '../../data/services/audio_path_resolver.dart';
 import '../../data/services/recording_finalization_service.dart';
 import '../../data/services/recovery_coordinator.dart';
 import '../../data/services/segment_paths.dart';
@@ -54,6 +56,11 @@ class InterruptedSessionsNotifier extends Notifier<void> {
       for (final p in paths) {
         await _deleteFileSafe(p);
       }
+      // Since ENG-420 slice 2 a session can reach the banner on the strength
+      // of its finalized audio alone, so discarding one has to take that file
+      // too — the segments it was built from may already be gone.
+      final finalized = session.finalizedAudioPath;
+      if (finalized != null) await _deleteFileSafe(finalized);
       await _cleanupOrphanedSegments(session.id, -1);
       await sessionRepo.markDiscarded(session.id);
     }
@@ -67,6 +74,9 @@ class InterruptedSessionsNotifier extends Notifier<void> {
     final session = await sessionRepo.getById(sessionId);
     if (session == null) return null;
 
+    final finished = await _finishedAudio(session);
+    if (finished != null) return finished;
+
     final paths = sessionRepo.decodeSegmentPaths(session);
     final validPaths = <String>[];
     for (final p in paths) {
@@ -75,7 +85,13 @@ class InterruptedSessionsNotifier extends Notifier<void> {
       }
     }
     if (validPaths.isEmpty) {
-      await sessionRepo.markDiscarded(session.id);
+      // A session still holding finalized audio must not reach `discarded`:
+      // no sweep queries that status, so the row — and the recording it points
+      // at — would be unreachable from then on. Re-deriving is impossible
+      // without segments, but the offer has to survive (ENG-420).
+      if (session.finalizedAudioPath == null) {
+        await sessionRepo.markDiscarded(session.id);
+      }
       await ref.read(recoveryCoordinatorProvider).refresh();
       return null;
     }
@@ -109,6 +125,31 @@ class InterruptedSessionsNotifier extends Notifier<void> {
     return outcome.result;
   }
 
+  /// The audio this session already finished, when the row points at a file
+  /// that is still on disk (ENG-420).
+  ///
+  /// Preferred over re-deriving because reconcatenating the sources costs
+  /// minutes and lands on the same bytes — and in the sessions the startup
+  /// sweep surfaces the sources are gone, so re-deriving cannot run at all.
+  /// The anchor is only a pointer: discarding from the save form deletes the
+  /// audio without touching the row, so a null here sends the caller back to
+  /// the sources rather than failing. Resolved by basename in the current
+  /// documents directory, because the iOS container moves on reinstall.
+  Future<RecordingResult?> _finishedAudio(RecordingSession session) async {
+    final anchor = session.finalizedAudioPath;
+    if (anchor == null) return null;
+    final resolved = await resolveRecordingPath(anchor);
+    if (resolved == null) return null;
+    return RecordingResult(
+      filePath: resolved,
+      durationSeconds:
+          session.finalizedDurationSeconds ?? session.totalDurationSeconds,
+      // A degraded finalization anchors a .wav; the format rides along to the
+      // upload's MIME type, so taking the m4a default would mislabel the file.
+      format: resolved.toLowerCase().endsWith('.wav') ? 'wav' : 'm4a',
+    );
+  }
+
   /// Materializes the recovery decision after the user confirms the save on the
   /// confirmation screen: marks the session recovered and deletes its segment
   /// files, keeping [keepPath] (the finalized recording — which may itself be
@@ -116,6 +157,7 @@ class InterruptedSessionsNotifier extends Notifier<void> {
   Future<void> confirmRecovery(
     String sessionId, {
     required String keepPath,
+    required double durationSeconds,
   }) async {
     final sessionRepo = ref.read(recordingSessionRepositoryProvider);
     final session = await sessionRepo.getById(sessionId);
@@ -124,7 +166,14 @@ class InterruptedSessionsNotifier extends Notifier<void> {
         if (p != keepPath) await _deleteFileSafe(p);
       }
     }
-    await sessionRepo.markRecovered(sessionId);
+    // [keepPath] is the finalized recording, so the row can point at it
+    // (ENG-420) instead of leaving a recovered session that finished with
+    // audio look identical to one that never finalized.
+    await sessionRepo.recoverWithFinalizedAudio(
+      sessionId,
+      filePath: keepPath,
+      durationSeconds: durationSeconds,
+    );
     await ref.read(recoveryCoordinatorProvider).refresh();
   }
 

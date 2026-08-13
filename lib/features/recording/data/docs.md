@@ -73,6 +73,19 @@ Path: @/lib/features/recording/data
   `StreamProvider.family<LocalRecordingEntity?, String>` backed by
   `LocalRecordingRepository.watchRecordingEntityById` (the former row stream
   `watchRecordingById` was deleted with the detail tree's row→entity migration).
+  `metadataOutboxProvider` (ENG-405) is the second stream here: a
+  non-family `StreamProvider<Map<String, MetadataOutboxEntry>>` over
+  `LocalRecordingRepository.watchMetadataOutbox`, carrying every recording that
+  still owes the server a metadata write, keyed by **both** the local id and
+  the server id so a caller can look one up whichever it holds. One stream for
+  the whole list rather than one per card — the answer is almost always an
+  empty map, and a subscription per row would pay a Drift query each. The entry
+  is a record of two `String`s (`status`, `fieldsJson`) rather than a decoded
+  `Set`, because a `Set` inside a record compares by identity and the stream
+  dedups on `==`; `watchMetadataOutbox` needs that dedup, since a Drift `watch`
+  over `localRecordings` re-runs on every unrelated write to the table, an
+  upload's byte counter included. `RecordingsListNotifier` is its consumer
+  ([../presentation/docs.md](../presentation/docs.md)).
   `RecordingDetailNotifier`
   ([../presentation/notifiers/docs.md](../presentation/notifiers/docs.md))
   listens to it (native only, ENG-194) so any write through
@@ -90,6 +103,12 @@ Path: @/lib/features/recording/data
   root cause. As of ENG-374 it also carries `reviewFlags`, JSON-encoding the
   list into the `reviewFlagsJson` column via `encodeReviewFlags`
   ([../domain/entities/review_flag.dart](../domain/entities/review_flag.dart)).
+  As of ENG-403 it also sets the four metadata-outbox columns to their
+  synced defaults (`metadataSyncStatus: 'synced'`, `pendingMetadataJson:
+  '[]'`, `metadataRetryCount: 0`) — a recording projected straight from the
+  server owes it nothing, by construction; this mapper never reads or writes
+  a pre-existing local row, so any real pendency stays wherever that row
+  already is.
 - `local_recording_to_entity.dart` exposes `localRecordingToEntity(row)`, the
   single mapper from the Drift `LocalRecording` row to the domain
   `LocalRecordingEntity`
@@ -224,6 +243,22 @@ Path: @/lib/features/recording/data
   failure never strands a trashed file), then runs the best-effort remote
   delete and `triggerUpload()` **outside** the transaction. See Things to Know
   and [./repositories/docs.md](repositories/docs.md).
+- `services/recording_boost_persister.dart` (`RecordingBoostPersister`) is the
+  sibling pipeline for a trim-editor save with **no cut points** — a gain-only
+  edit (ENG-402). It is a deliberately separate class, not a mode inside
+  `RecordingSplitPersister`: a boost keeps the recording's identity (same
+  local id, same `serverId`), so it points the row at the re-encoded audio and
+  queues a resend via `LocalRecordingRepository.replaceAudioAndQueueResend`
+  ([./repositories/docs.md](repositories/docs.md)), archives the file it
+  replaced (`trashPrevious`, run after the write commits, same rollback
+  reasoning as `trashParent` below), then kicks the upload queue. It holds no
+  `RecordingApiRepository` — unlike the split persister, it has nothing to
+  retire on the server, which is the fix: a `boostOnly` save that went through
+  the split persister deleted the local row and best-effort deleted the
+  server's copy, and that remote delete swallows its failure and fails every
+  time offline, so the server ended up holding both recordings. See
+  [/docs/recording-split-semantics.md](../../../../docs/recording-split-semantics.md#what-counts-as-a-split)
+  for the full boost-vs-split contract.
 - **The trim editor's injectable seams (ENG-193).** The trim editor's
   editing + split orchestration moved into `TrimEditorNotifier` (see
   [../presentation/notifiers/docs.md](../presentation/notifiers/docs.md)),
@@ -236,7 +271,27 @@ Path: @/lib/features/recording/data
     variants — boost-only (re-encode the whole file with a volume
     filter), trim+gain (seek/trim + volume, re-encode to aac), or a
     plain `-c copy` stream trim — then reads the output file length and
-    returns `List<SplitSegmentSpec>` ready for `RecordingSplitPersister`.
+    returns `List<SplitSegmentSpec>`. Which variant a plain trim (no gain
+    change) gets is decided **per segment**, not once for the whole call
+    (ENG-66): `segmentNeedsReencode` re-encodes instead of stream-copying
+    when the segment is shorter than `_minStreamCopySeconds` (1 s), because
+    `-c copy` on an AAC/m4a container can only cut on a frame boundary and
+    still carries the encoder's priming samples. This app records at 16 kHz
+    mono, where those are 64 ms and 132 ms respectively — roughly 200 ms of
+    fixed error on every stream copy, which dominates a sub-second segment and
+    can leave the output empty or badly offset. That threshold is four times
+    the trim editor's own floor, `kMinTrimSegment`
+    ([../../presentation/trim_edit_decision.dart](../../presentation/trim_edit_decision.dart),
+    see [../../presentation/docs.md](../../presentation/docs.md)), not a
+    measured failure point — before ENG-66 lowered that floor, a segment
+    this short could not be created, so the stream-copy path never needed to
+    branch. The exporter itself does not branch on
+    `boostOnly` vs a real split — that decision is the caller's, in
+    `TrimEditorNotifier._saveLocally`
+    ([../presentation/notifiers/docs.md](../presentation/notifiers/docs.md)),
+    which sends the single resulting spec to `RecordingBoostPersister` when
+    there were no cut points and to `RecordingSplitPersister` otherwise
+    (ENG-402).
     Its per-call data inputs (source path, the `SegmentExportSpec`s, gain,
     boost-only flag, original title, parent genre id) are grouped into a
     single `ExportLocalSegmentsRequest` value object passed as the lone
@@ -259,6 +314,9 @@ Path: @/lib/features/recording/data
     `RecordingSplitPersisterFactory` typedef + `recordingSplitPersisterProvider`
     so the notifier hands off to a fake persister in tests. The persister
     pipeline itself is unchanged — only the factory seam is new.
+    `services/recording_boost_persister.dart` mirrors this exactly:
+    `RecordingBoostPersisterFactory` typedef + `recordingBoostPersisterProvider`
+    (ENG-402), used the same way for the boost-only save path.
 - **The detail screen's injectable IO seams (ENG-194).** The detail screen's
   orchestration moved into `RecordingDetailNotifier` (see
   [../presentation/notifiers/docs.md](../presentation/notifiers/docs.md)), and
@@ -384,10 +442,13 @@ Path: @/lib/features/recording/data
   [/test/features/recording/data/](../../../../test/features/recording/data/).
   The checklist is reproduced at the bottom of
   [/docs/recording-split-semantics.md](../../../../docs/recording-split-semantics.md).
-  `reviewFlagsJson` (ENG-374) is not this kind of column — it is
-  server-owned advisory state with a non-null default, not device-entered
-  metadata, so it is exempt from healing and from split propagation (a split
-  child resets it to `'[]'` — see the propagation table in that doc).
+  `reviewFlagsJson` (ENG-374) and the four ENG-403 metadata-outbox columns
+  are not this kind of column — they are server-owned advisory state or
+  device-sync bookkeeping, not device-entered metadata, so both are exempt
+  from healing and from split propagation (a split child gets the Drift
+  defaults on the outbox columns — `synced`, no owed fields — the same way
+  it resets `reviewFlagsJson` to `'[]'`; see the propagation table in that
+  doc).
 - **The header probe exists to survive the web player's 5 MB cap.** On web
   the player slices only the first 5 MB; progressive phone recorders
   (Samsung/Android) write the MP4/M4A `moov` index at the END of the file, so

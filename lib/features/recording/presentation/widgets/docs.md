@@ -207,7 +207,9 @@ Path: @/lib/features/recording/presentation/widgets
   [/test/features/recording/presentation/widgets/recordings_filter_sheet_test.dart](../../../../../test/features/recording/presentation/widgets/recordings_filter_sheet_test.dart).
 - **The card is three rows, and the design package is what makes it three.**
   Title line (title, upload glyph, date), an optional description line, and a
-  footer (tag, full classification, pendency chip, chevron). The upload glyph
+  footer (tag, full classification, pendency chip, chevron). The title line is
+  the one that can become two: past a large text scale the date reflows below
+  the title rather than clipping (ENG-384, below). The upload glyph
   moved up from the footer to the title line — it answers "is this one safe
   yet", a property of the recording the title names — and the classification
   moved down into the footer, which is what buys the ~76px/~92px heights the
@@ -233,11 +235,24 @@ Path: @/lib/features/recording/presentation/widgets
   take at most `_chipShare` (60%) of what it and the classification divide: it
   outranks the classification — it is the call to action, and its label cannot
   be guessed from an ellipsis — but a chip that takes everything leaves the card
-  unable to say which recording it is. The date is capped at `_dateShare` (45%)
-  of the title row: the date is non-flex so the title yields to it at ordinary
-  sizes (a truncated title is still recognisable, a truncated date is not), and
-  without a ceiling the Arabic spelled-out date at 2.0x pushed the title off the
-  card instead of merely shortening it.
+  unable to say which recording it is. The date may take at most `_dateShare`
+  (45%) of the title row: the date is non-flex so the title yields to it at
+  ordinary sizes (a truncated title is still recognisable, a truncated date is
+  not), and without a ceiling the Arabic spelled-out date at 2.0x pushed the
+  title off the card instead of merely shortening it. ENG-384 changed what
+  happens *at* that ceiling. It used to clamp the date, which stopped the
+  overflow but spent 45% of a narrow row on a date that was itself clipped
+  (`Dec 24, 2…`) while the title was rationed down to its ellipsis — in Arabic
+  at 2.0x on a 320dp phone the title's box was 42% of the line. Now `_TitleRow`
+  measures the date with `_textWidth` before laying the row out, exactly as
+  `_FooterRow` measures the duration, and where the whole label does not fit
+  inside the share the date **reflows to a line of its own** under the title
+  instead of clipping. Nothing is dropped: the date is the card's only anchor
+  in time, so clipping it would cost the fact it carries and the title's line
+  both, which is why this is the one ranked element on the card that moves
+  rather than yields. On a device the reflow is reached around 1.5x and above;
+  at 1.0x the date fits its share at every supported width, so the ordinary
+  card is unchanged.
 - `RecordingCard` (ENG-374, "card V3") was redesigned around one question —
   "which recordings still need me?" — which cost the duration chip (and the
   `formattedDuration` constructor param `recordings_list_screen.dart` used to
@@ -319,14 +334,21 @@ Path: @/lib/features/recording/presentation/widgets
   the footer, because the rail's `IntrinsicHeight` asks its subtree for
   intrinsic dimensions and `LayoutBuilder` throws on that query.
   `recording_card_text_scale_test.dart` pins the ranking: it pumps the card
-  inside the 16dp padding the list really applies, at 320dp as well as 390dp,
-  and asserts geometry — the chip reaches the chevron once the duration
-  yields, and wherever the duration does render the chip's paragraph is
-  uncut. (`find.text` is blind to all of this: it matches `Text.data`
-  whatever the layout did with it.) One overflow at 320dp above 1.0x is
-  neither the footer's nor ENG-382's — `_TitleRow`'s date column overflows
-  there on `dev` too, by the same 26px — so that assertion is scoped to the
-  footer's own rows until the title is fixed on its own issue.
+  inside the 16dp padding the list really applies, at every phone width the app
+  supports (320, 360, 375 and 390dp), and asserts geometry — the chip reaches
+  the chevron once the duration yields, and wherever the duration does render
+  the chip's paragraph is uncut. (`find.text` is blind to all of this: it
+  matches `Text.data` whatever the layout did with it.) Until ENG-384 that
+  matrix demanded a clean frame only at 390dp; everywhere else a local helper
+  read the render tree and failed only when the overflowing node belonged to
+  the footer, so an overflow of the title line was found and swallowed on
+  purpose. The helper is gone, every case asserts `expectNoOverflow`, and the
+  title line carries two assertions of its own: it owns the majority of its
+  line at 2.0x, and at 1.0x nothing on it is clipped. No font is loaded in
+  `flutter_test`, so every glyph measures one em — roughly 1.7x real text —
+  which makes the gate conservative but also trips the reflow far earlier than
+  a device would, so no assertion there claims the date is *present* at a given
+  width.
 - `CompleteFichaOverlay`/`CompleteFichaPill`/`CompleteFichaSheet`
   ([complete_ficha_overlay.dart](complete_ficha_overlay.dart) /
   [complete_ficha_pill.dart](complete_ficha_pill.dart) /
@@ -373,6 +395,17 @@ Path: @/lib/features/recording/presentation/widgets
 
 ### Things to Know
 
+- **`FinalizingOverlay`'s error body is chosen by `FinalizationErrorKind`, and
+  its button does not discard anything (ENG-408).** The screen used to render
+  one hardcoded pair of strings for every failure, so a browser recording that
+  produced no blob was told "we tried to recover the audio but no segments were
+  available" — segments do not exist on web, and the recovery it promised
+  cannot happen there. Pass `errorKind`; `_errorBody` maps each kind to copy
+  that is true for it, and the missing-segments wording survives only under
+  `noSegments`, where it is accurate. The action is labelled
+  `recording_finalizationErrorBack`, not "Discard and return", because
+  `dismissFinalizationError` only clears state — it deletes no audio, and on a
+  `finalizationFailed` the recording is still in the unsaved list.
 - **`RecordingCard`'s room is a trade, not free space (ENG-374, card V3).**
   The description line only fits because the upload-status chip gave up its
   visible text; the duration chip and the standalone "unclassified" chip are
@@ -470,6 +503,25 @@ Path: @/lib/features/recording/presentation/widgets
   [../../data/services/segmented_recorder.dart](../../data/services/segmented_recorder.dart),
   which subscribes to the platform `interruptionEventStream` and
   re-activates the session itself.
+- **`ConfirmationStep._saveWebDirect` deletes the uploaded recording's bytes
+  from browser storage once the upload succeeds (ENG-421).** On web the
+  captured/imported audio bytes are read via `file_ops.readFileBytes` from
+  the durable IndexedDB store in
+  [/lib/core/platform/web_file_store.dart](../../../../core/platform/web_file_store.dart)
+  (see [/lib/core/platform/docs.md](../../../../core/platform/docs.md)); once
+  `DirectRecordingUploader.upload` returns a `serverId`, those bytes are
+  redundant with the server's copy and `file_ops.deleteFile` removes them.
+  This is a deliberate leak-prevention step, not cleanup of a bug: before the
+  bytes were made durable the module-level map that held them died with the
+  tab, capping the leak; persisting them (the ENG-421 fix) turned an
+  already-small leak into an unbounded one that would grow with every saved
+  recording and never be collected without this delete. The delete is wrapped
+  in its own try/catch with `_log.warning` so a cleanup failure is never
+  reported to the user as a failed upload — the upload already succeeded by
+  that point. It runs after the local row is written, matching how the rest of
+  the codebase deletes only once the database is consistent. The paths that do
+  *not* end in a successful upload still leave bytes behind — see the known gap
+  in [/lib/core/platform/docs.md](../../../../core/platform/docs.md).
 - **`ConfirmationStep` cancels its own preview-player stream subscriptions
   on dispose (ENG-140 F16).** Its inline `AudioPlayer` preview subscribes to
   `playerStateStream` / `positionStream` / `durationStream`; those handles are

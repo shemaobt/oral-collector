@@ -1,5 +1,19 @@
 # Recording Split Semantics
 
+## What counts as a split
+
+Only a save **with cut points**. The trim editor also saves edits that just change the volume, and `TrimEditDecision.mode` calls those `boostOnly`. Nothing is divided there, so nothing in this document applies to them: no child rows, no parent disposition, no lineage.
+
+On native, a `boostOnly` save goes through `RecordingBoostPersister` instead (`lib/features/recording/data/services/recording_boost_persister.dart`). It keeps the recording — same local id, same `serverId` — points it at the re-encoded audio, archives the file it replaced, and puts the row back in the upload queue so the new audio overwrites the recording the server already has. The blob path the server signs is derived from the recording id, so re-running upload-url → PUT → confirm-upload against an existing `serverId` replaces the audio in place. Because the row is the same row, this path has nothing to retire on the server and never calls `deleteRecording`.
+
+Until ENG-402 a `boostOnly` save was persisted as a one-segment split: the original was deleted locally and, best-effort, remotely, and a new recording took its place. The remote delete fails silently — always, when the edit is made offline — so the server was left holding both, and the project's count and total duration doubled for that story. Gain **plus** cut points is still a split, and still goes through the table below.
+
+A `boostOnly` save also changes the audio's duration and size, which the server verifies the uploaded blob against. Those two facts travel as one unit in the metadata outbox (`PendingMetadataField.audio`, ENG-403), and the outbox drains ahead of the uploads in the same `processQueue` pass — so the server has the new figures before the new bytes arrive, including when the edit was made offline.
+
+The web save path (`_saveServerSide`) is unchanged: it asks the server to split, and the server marks the original `ARCHIVED_AFTER_SPLIT`, which every project count already excludes. The double count was native-only.
+
+## Field propagation
+
 When a recording is split into N child segments, every field on the child rows comes from one of three sources: **inherited from parent**, **segment-specific**, or **reset to default**. This document is the single source of truth for that mapping.
 
 Two implementations write child rows independently — the Flutter client (`_saveSplitLocally` → `LocalRecordingRepository.splitRecordingReplacingParent`, native mobile) and the backend (`persist_split_segments` in `tripod-api`, web). Both implementations must follow this table. Both test suites assert against it.
@@ -49,7 +63,7 @@ Two implementations write child rows independently — the Flutter client (`_sav
 
 This is intentionally different between the two implementations:
 
-- **Client (native)**: parent row is **deleted** from the local Drift DB; the server-side parent is also deleted via the existing `apiRepo.deleteRecording(serverId)` call.
+- **Client (native)**: parent row is **deleted** from the local Drift DB; the server-side parent is also deleted via the existing `apiRepo.deleteRecording(serverId)` call. That remote delete is best-effort and swallows its failure, so a split performed offline still leaves the parent alive on the server. A durable queue of remote deletions would close that hole; it is deliberately out of scope of ENG-402, which only stopped volume-only edits from taking this path at all.
 - **Server (web)**: parent row is **kept** and marked `splitting_status = ARCHIVED_AFTER_SPLIT`.
 
 This asymmetry pre-dates ENG-64 and is **not part of the contract this doc defines**. If you want to revisit it, file a separate ticket.
@@ -95,5 +109,7 @@ Enforcement points on the client:
 ## Upload trigger after split (client)
 
 The upload pipeline is pull-based: `SyncNotifier.processQueue` reads `getPendingUploads()` via `.get()`, not `.watch()`, so inserting rows with `uploadStatus='local'` does not by itself wake the sync engine. Every call site that creates local recordings is responsible for kicking the queue explicitly afterwards (`unawaited(syncNotifier.processQueue())`) — see `confirmation_step.dart`, `file_import_screen.dart`, and the trim editor.
+
+A `boostOnly` save is in the same position and kicks the queue the same way, from `RecordingBoostPersister` — its row goes back to `uploadStatus='local'` rather than being inserted, but the queue is just as pull-based about it.
 
 For the trim/split path, that kick is wired through `RecordingSplitPersister` (`lib/features/recording/data/services/recording_split_persister.dart`). The persister is the single place that owns the post-FFmpeg pipeline: (write children + delete parent locally, in one Drift transaction) → trash the parent's audio → best-effort delete remote parent → trigger upload. The child-insert and the local parent-delete are atomic via `LocalRecordingRepository.splitRecordingReplacingParent`, so a crash mid-split can never leave orphaned children beside a surviving parent (ENG-125). The parent's audio is trashed **after** the transaction commits (and outside it): a file move can't be rolled back, so running it post-commit means a split failure never moves the audio out from under a surviving parent row. If you add another way to create recordings, make sure it also triggers the queue, otherwise the new rows will sit unprocessed until the next connectivity transition.

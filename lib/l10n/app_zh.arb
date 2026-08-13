@@ -227,6 +227,7 @@
   "recording_deleteFailed": "删除录音失败",
   "recording_deleteFailedLocal": "从服务器删除失败。已从本地移除。",
   "recording_cleaningStatusFailed": "更新服务器清理状态失败",
+  "recording_savedOnDeviceOnly": "已保存在本设备上 — 服务器尚未收到此更改。连接恢复后会自动发送。",
   "recording_updateNoPermission": "您没有权限更新此录音",
   "recording_moveNoPermission": "您没有权限移动此录音",
   "recording_movedSuccess": "录音移动成功",
@@ -278,21 +279,17 @@
   "recording_descriptionGapMessage": "补充更长的描述后才能上传这段录音。",
   "recording_statusRetriesExhausted": "重试次数已用完",
   "recording_statusFileMissing": "音频文件丢失",
+  "recording_metadataSyncPending": "编辑等待发送",
+  "recording_metadataSyncForbidden": "编辑被拒绝：您无法更改此录音",
+  "recording_metadataSyncConflict": "编辑被拒绝：已有其他录音使用此标题",
+  "recording_metadataSyncExhausted": "编辑未发送 — 再次编辑以重试",
   "recording_uploadExhaustedMessage": "多次尝试后上传已停止。你可以重试。",
   "recording_fileMissingMessage": "这段录音的音频文件已不在本设备上，因此无法上传。",
   "recording_duplicateTitleTitle": "名称已被使用",
   "recording_duplicateTitleMessage": "此项目中已存在名为“{title}”的音频。请另选一个名称。",
-  "recordings_clearStale": "清除失败项",
-  "recordings_clearStaleMessage": "此操作将永久删除服务器上所有上传失败或卡住的录音。此操作无法撤消。",
-  "recordings_clearedCount": "{count, plural, =0{未找到过期录音} =1{已清除 1 条录音} other{已清除 {count} 条录音}}",
-  "@recordings_clearedCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "recordings_clearFailed": "清除录音失败",
+  "recordings_retryFailedUploads": "重试上传",
+  "recordings_retryQueuedCount": "{count, plural, =0{没有可重试的上传} =1{1 条录音已重新加入上传队列} other{{count} 条录音已重新加入上传队列}}",
+  "recordings_retryFailed": "无法将上传重新加入队列",
   "trim_title": "编辑录音",
   "trim_notFound": "未找到录音",
   "trim_audioUrlNotAvailable": "此录音的音频 URL 不可用。",
@@ -435,6 +432,7 @@
       }
     }
   },
+  "sync_waitingForWifi": "上传正在等待 Wi-Fi。关闭\"仅在 Wi-Fi 下上传\"即可通过移动数据发送。",
   "profile_photoUpdated": "头像已更新",
   "profile_editName": "编辑显示名称",
   "profile_nameHint": "您的姓名",
@@ -453,8 +451,11 @@
   "profile_deleteAccountWarning": "此操作是永久性的，无法撤消。您的账户将被删除，但已上传的录音将为语言项目保留。",
   "profile_typeDelete": "输入 DELETE 以确认删除账户：",
   "profile_clearCacheTitle": "清除本地缓存？",
-  "profile_clearCacheMessage": "此操作将删除所有本地存储的录音。服务器上已上传的录音不会受到影响。",
+  "profile_clearCacheMessage": "此操作将删除服务器已有的本地存储录音。尚未上传的录音会保留在本设备上。",
   "profile_cacheCleared": "本地缓存已清除",
+  "profile_cacheClearedKept": "{count, plural, =1{本地缓存已清除。有 1 条录音因尚未上传而被保留。} other{本地缓存已清除。有 {count} 条录音因尚未上传而被保留。}}",
+  "profile_cacheKeptUnsent": "{count, plural, =1{有 1 条录音因尚未上传而被保留。} other{有 {count} 条录音因尚未上传而被保留。}}",
+  "profile_cacheNotFreed": "{count, plural, =1{有 1 条录音无法删除，因此该空间未被释放。} other{有 {count} 条录音无法删除，因此该空间未被释放。}}",
   "profile_joinedSuccess": "已成功加入\"{name}\"",
   "@profile_joinedSuccess": {
     "placeholders": {
@@ -498,7 +499,7 @@
   "profile_autoRemove": "上传后自动删除",
   "profile_autoRemoveSubtitle": "上传成功后删除本地文件",
   "profile_clearCache": "清除本地缓存",
-  "profile_clearCacheSubtitle": "删除所有本地存储的录音",
+  "profile_clearCacheSubtitle": "删除服务器已有的本地副本",
   "profile_invitations": "邀请",
   "profile_refreshInvitations": "刷新邀请",
   "profile_noInvitations": "暂无待处理的邀请",
@@ -790,6 +791,7 @@
   "detail_upload": "上传",
   "detail_uploaded": "已上传",
   "detail_cleaning": "清理",
+  "detail_metadataSync": "编辑",
   "detail_recorded": "录制时间",
   "detail_retry": "重试",
   "detail_notFlagged": "未标记",
@@ -908,6 +910,11 @@
   "recording_finalizationDegradedHint": "音频质量可能会降低。",
   "recording_finalizationFailed": "无法保存此录音",
   "recording_finalizationFailedBody": "我们尝试恢复音频，但没有可用的片段。",
+  "recording_finalizationFailedBodyNoAudio": "录音器没有返回音频。",
+  "recording_finalizationFailedBodyDownload": "音频已录制，但无法重新读取。",
+  "recording_finalizationFailedBodyCaptureInterrupted": "在您按下停止之前录音就已停止，因此没有保存音频。",
+  "recording_finalizationFailedBodyPipeline": "我们无法完成此录音的处理。它保存在您的未保存录音中。",
+  "recording_finalizationErrorBack": "返回",
   "recording_discardAndReturn": "放弃并返回",
   "recording_savingRecording": "Saving recording…",
   "recording_processingYourAudio": "Processing your audio",
@@ -1061,6 +1068,7 @@
     }
   },
   "a11y_splitWaveform": "分割波形。点击添加分割标记。拖动重新定位。捏合缩放。长按移除。",
+  "a11y_minimapScrubber": "音频概览。点击或拖动以跳转到某个位置。",
   "projectSettings_offlineTitle": "您处于离线状态",
   "projectSettings_offlineDescription": "没有互联网连接无法加载项目详情。重新连接后会自动加载。",
   "recording_noAudioAvailable": "没有可用的音频",

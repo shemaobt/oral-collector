@@ -587,6 +587,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Error al actualizar el estado de limpieza en el servidor';
 
   @override
+  String get recording_savedOnDeviceOnly =>
+      'Guardado en este dispositivo — el servidor aún no ha recibido este cambio. Se enviará solo cuando vuelva la conexión.';
+
+  @override
   String get recording_updateNoPermission =>
       'No tienes permiso para actualizar esta grabación';
 
@@ -728,6 +732,21 @@ class AppLocalizationsEs extends AppLocalizations {
   String get recording_statusFileMissing => 'Falta el archivo de audio';
 
   @override
+  String get recording_metadataSyncPending => 'Edición pendiente de envío';
+
+  @override
+  String get recording_metadataSyncForbidden =>
+      'Edición rechazada: no puedes modificar esta grabación';
+
+  @override
+  String get recording_metadataSyncConflict =>
+      'Edición rechazada: otra grabación ya tiene este título';
+
+  @override
+  String get recording_metadataSyncExhausted =>
+      'Edición no enviada — edita de nuevo para reintentar';
+
+  @override
   String get recording_uploadExhaustedMessage =>
       'La subida se detuvo tras varios intentos. Puedes volver a intentarlo.';
 
@@ -744,26 +763,23 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get recordings_clearStale => 'Limpiar fallidos';
+  String get recordings_retryFailedUploads => 'Reintentar subidas';
 
   @override
-  String get recordings_clearStaleMessage =>
-      'Esto eliminará permanentemente todas las grabaciones con estado de subida fallido o atascado del servidor. Esta acción no se puede deshacer.';
-
-  @override
-  String recordings_clearedCount(int count) {
+  String recordings_retryQueuedCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Se limpiaron $count grabaciones',
-      one: 'Se limpió 1 grabación',
-      zero: 'No se encontraron grabaciones obsoletas',
+      other: '$count grabaciones de vuelta en la cola de subida',
+      one: '1 grabación de vuelta en la cola de subida',
+      zero: 'No hay subidas para reintentar',
     );
     return '$_temp0';
   }
 
   @override
-  String get recordings_clearFailed => 'Error al limpiar grabaciones';
+  String get recordings_retryFailed =>
+      'No se pudieron volver a poner las subidas en la cola';
 
   @override
   String get trim_title => 'Editar Grabación';
@@ -1067,6 +1083,10 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get sync_waitingForWifi =>
+      'Las subidas están esperando Wi-Fi. Desactiva \"Subir solo por Wi-Fi\" para enviarlas por datos móviles.';
+
+  @override
   String get profile_photoUpdated => 'Foto de perfil actualizada';
 
   @override
@@ -1125,10 +1145,46 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get profile_clearCacheMessage =>
-      'Esto eliminará todas las grabaciones almacenadas localmente. Las grabaciones subidas al servidor no se verán afectadas.';
+      'Esto eliminará las grabaciones almacenadas localmente que el servidor ya tiene. Las grabaciones que aún no se han subido se conservan en este dispositivo.';
 
   @override
   String get profile_cacheCleared => 'Caché local limpiado';
+
+  @override
+  String profile_cacheClearedKept(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Caché local limpiado. Se conservaron $count grabaciones porque aún no se han subido.',
+      one:
+          'Caché local limpiado. Se conservó 1 grabación porque aún no se ha subido.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String profile_cacheKeptUnsent(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Se conservaron $count grabaciones porque aún no se han subido.',
+      one: 'Se conservó 1 grabación porque aún no se ha subido.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String profile_cacheNotFreed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'No se pudieron eliminar $count grabaciones, así que ese espacio no se liberó.',
+      one: 'No se pudo eliminar 1 grabación, así que ese espacio no se liberó.',
+    );
+    return '$_temp0';
+  }
 
   @override
   String profile_joinedSuccess(String name) {
@@ -1186,7 +1242,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get profile_clearCacheSubtitle =>
-      'Eliminar todas las grabaciones almacenadas localmente';
+      'Eliminar las copias locales que el servidor ya tiene';
 
   @override
   String get profile_invitations => 'Invitaciones';
@@ -1834,6 +1890,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get detail_cleaning => 'Limpieza';
 
   @override
+  String get detail_metadataSync => 'Ediciones';
+
+  @override
   String get detail_recorded => 'Grabado';
 
   @override
@@ -2129,6 +2188,25 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get recording_finalizationFailedBody =>
       'Intentamos recuperar el audio pero no había segmentos disponibles.';
+
+  @override
+  String get recording_finalizationFailedBodyNoAudio =>
+      'No volvió ningún audio de la grabadora.';
+
+  @override
+  String get recording_finalizationFailedBodyDownload =>
+      'El audio se grabó, pero no se pudo volver a leer.';
+
+  @override
+  String get recording_finalizationFailedBodyCaptureInterrupted =>
+      'La grabación se detuvo antes de que pulsaras parar, así que no se guardó ningún audio.';
+
+  @override
+  String get recording_finalizationFailedBodyPipeline =>
+      'No pudimos terminar de procesar esta grabación. Queda en tus grabaciones sin guardar.';
+
+  @override
+  String get recording_finalizationErrorBack => 'Volver';
 
   @override
   String get recording_discardAndReturn => 'Descartar y volver';
@@ -2482,7 +2560,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get a11y_minimapScrubber =>
-      'Audio overview. Tap or drag to navigate to a position.';
+      'Vista general del audio. Toca o arrastra para ir a una posición.';
 
   @override
   String a11y_tabLabel(String label) {

@@ -580,6 +580,10 @@ class AppLocalizationsSw extends AppLocalizations {
       'Imeshindwa kusasisha hali ya usafishaji kwenye seva';
 
   @override
+  String get recording_savedOnDeviceOnly =>
+      'Imehifadhiwa kwenye kifaa hiki — seva bado haijapata badiliko hili. Litatumwa lenyewe muunganisho utakaporudi.';
+
+  @override
   String get recording_updateNoPermission =>
       'Huna ruhusa ya kusasisha rekodi hii';
 
@@ -720,6 +724,21 @@ class AppLocalizationsSw extends AppLocalizations {
   String get recording_statusFileMissing => 'Faili ya sauti haipatikani';
 
   @override
+  String get recording_metadataSyncPending => 'Uhariri unasubiri kutumwa';
+
+  @override
+  String get recording_metadataSyncForbidden =>
+      'Uhariri umekataliwa: huwezi kubadilisha rekodi hii';
+
+  @override
+  String get recording_metadataSyncConflict =>
+      'Uhariri umekataliwa: rekodi nyingine ina kichwa hiki';
+
+  @override
+  String get recording_metadataSyncExhausted =>
+      'Uhariri haujatumwa — hariri tena ili kujaribu upya';
+
+  @override
   String get recording_uploadExhaustedMessage =>
       'Upakiaji ulisimama baada ya majaribio kadhaa. Unaweza kujaribu tena.';
 
@@ -736,26 +755,23 @@ class AppLocalizationsSw extends AppLocalizations {
   }
 
   @override
-  String get recordings_clearStale => 'Futa zilizoshindwa';
+  String get recordings_retryFailedUploads => 'Jaribu kupakia tena';
 
   @override
-  String get recordings_clearStaleMessage =>
-      'Hii itafuta kabisa rekodi zote zenye hali ya kupakia iliyoshindwa au iliyokwama kutoka kwenye seva. Kitendo hiki hakiwezi kutenduliwa.';
-
-  @override
-  String recordings_clearedCount(int count) {
+  String recordings_retryQueuedCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Rekodi $count zimefutwa',
-      one: 'Rekodi 1 imefutwa',
-      zero: 'Hakuna rekodi za zamani zilizopatikana',
+      other: 'Rekodi $count zimerudi kwenye foleni ya kupakia',
+      one: 'Rekodi 1 imerudi kwenye foleni ya kupakia',
+      zero: 'Hakuna upakiaji wa kujaribu tena',
     );
     return '$_temp0';
   }
 
   @override
-  String get recordings_clearFailed => 'Imeshindwa kufuta rekodi';
+  String get recordings_retryFailed =>
+      'Haikuwezekana kurudisha upakiaji kwenye foleni';
 
   @override
   String get trim_title => 'Hariri Rekodi';
@@ -1051,6 +1067,10 @@ class AppLocalizationsSw extends AppLocalizations {
   }
 
   @override
+  String get sync_waitingForWifi =>
+      'Upakiaji unasubiri Wi-Fi. Zima \"Pakia kupitia Wi-Fi pekee\" ili kutuma kwa data ya simu.';
+
+  @override
   String get profile_photoUpdated => 'Picha ya wasifu imesasishwa';
 
   @override
@@ -1108,10 +1128,46 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get profile_clearCacheMessage =>
-      'Hii itafuta rekodi zote zilizohifadhiwa ndani. Rekodi zilizopakiwa kwenye seva hazitaathiriwa.';
+      'Hii itafuta rekodi zilizohifadhiwa ndani ambazo seva tayari inazo. Rekodi ambazo bado hazijapakiwa zitabaki kwenye kifaa hiki.';
 
   @override
   String get profile_cacheCleared => 'Akiba ya ndani imefutwa';
+
+  @override
+  String profile_cacheClearedKept(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Akiba ya ndani imefutwa. Rekodi $count zimebaki kwa sababu bado hazijapakiwa.',
+      one:
+          'Akiba ya ndani imefutwa. Rekodi 1 imebaki kwa sababu bado haijapakiwa.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String profile_cacheKeptUnsent(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Rekodi $count zimebaki kwa sababu bado hazijapakiwa.',
+      one: 'Rekodi 1 imebaki kwa sababu bado haijapakiwa.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String profile_cacheNotFreed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Rekodi $count hazikuweza kufutwa, kwa hivyo nafasi hiyo haikupatikana.',
+      one: 'Rekodi 1 haikuweza kufutwa, kwa hivyo nafasi hiyo haikupatikana.',
+    );
+    return '$_temp0';
+  }
 
   @override
   String profile_joinedSuccess(String name) {
@@ -1169,7 +1225,7 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get profile_clearCacheSubtitle =>
-      'Futa rekodi zote zilizohifadhiwa ndani';
+      'Futa nakala za ndani ambazo seva tayari inazo';
 
   @override
   String get profile_invitations => 'Mialiko';
@@ -1810,6 +1866,9 @@ class AppLocalizationsSw extends AppLocalizations {
   String get detail_cleaning => 'Usafishaji';
 
   @override
+  String get detail_metadataSync => 'Uhariri';
+
+  @override
   String get detail_recorded => 'Imerekodwa';
 
   @override
@@ -2100,6 +2159,25 @@ class AppLocalizationsSw extends AppLocalizations {
   @override
   String get recording_finalizationFailedBody =>
       'Tulijaribu kurejesha sauti lakini hakuna sehemu zilizopatikana.';
+
+  @override
+  String get recording_finalizationFailedBodyNoAudio =>
+      'Hakuna sauti iliyorudi kutoka kwa kinasa.';
+
+  @override
+  String get recording_finalizationFailedBodyDownload =>
+      'Sauti ilinaswa, lakini haikuweza kusomwa tena.';
+
+  @override
+  String get recording_finalizationFailedBodyCaptureInterrupted =>
+      'Kunasa kulisimama kabla hujabonyeza kusimamisha, kwa hivyo hakuna sauti iliyohifadhiwa.';
+
+  @override
+  String get recording_finalizationFailedBodyPipeline =>
+      'Hatukuweza kumaliza kuchakata rekodi hii. Imehifadhiwa katika rekodi zako ambazo hazijahifadhiwa.';
+
+  @override
+  String get recording_finalizationErrorBack => 'Rudi';
 
   @override
   String get recording_discardAndReturn => 'Tupa na urudi';
@@ -2453,7 +2531,7 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get a11y_minimapScrubber =>
-      'Audio overview. Tap or drag to navigate to a position.';
+      'Muhtasari wa sauti. Gusa au buruta ili kwenda mahali fulani.';
 
   @override
   String a11y_tabLabel(String label) {

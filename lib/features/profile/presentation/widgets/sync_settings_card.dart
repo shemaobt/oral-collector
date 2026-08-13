@@ -154,22 +154,26 @@ class SyncSettingsCard extends ConsumerWidget {
             value: syncState.autoRemoveAfterUpload,
             onChanged: onAutoRemoveChanged,
           ),
-          const Divider(height: 1),
 
-          ListTile(
-            leading: IconBox(
-              icon: LucideIcons.eraser,
-              color: colors.error,
-              alpha: 0.1,
-            ),
-            title: Text(
-              l10n.profile_clearCache,
-              style: theme.textTheme.bodyLarge?.copyWith(color: colors.error),
-            ),
-            subtitle: Text(l10n.profile_clearCacheSubtitle),
-            onTap: onClearCache,
-          ),
+          // Web has no local audio cache to clear: clearLocalCache returns
+          // straight away there, so the tile could only ever report a success
+          // that freed nothing — the same false reassurance ENG-407 exists to
+          // remove, and on web unsent recordings are exactly what is at stake.
           if (!kIsWeb) ...[
+            const Divider(height: 1),
+            ListTile(
+              leading: IconBox(
+                icon: LucideIcons.eraser,
+                color: colors.error,
+                alpha: 0.1,
+              ),
+              title: Text(
+                l10n.profile_clearCache,
+                style: theme.textTheme.bodyLarge?.copyWith(color: colors.error),
+              ),
+              subtitle: Text(l10n.profile_clearCacheSubtitle),
+              onTap: onClearCache,
+            ),
             const Divider(height: 1),
             _DeviceStorageTile(theme: theme, colors: colors),
           ],

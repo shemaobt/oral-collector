@@ -8,6 +8,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/tokens.dart';
 import '../../../../shared/utils/cleaning_status_style.dart';
 import '../../domain/entities/local_recording_entity.dart';
+import 'metadata_sync_mark.dart';
 
 class RecordingStatusSection extends StatelessWidget {
   const RecordingStatusSection({
@@ -31,6 +32,11 @@ class RecordingStatusSection extends StatelessWidget {
     final locale = Localizations.localeOf(context).languageCode;
     final cleaningStyle = CleaningStatusStyle.forStatus(
       recording.cleaningStatus,
+      colors,
+      l10n,
+    );
+    final metadataSync = MetadataSyncStyle.forStatus(
+      recording.metadataSyncStatus,
       colors,
       l10n,
     );
@@ -80,13 +86,24 @@ class RecordingStatusSection extends StatelessWidget {
             colors: colors,
             theme: theme,
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: SpacingScale.s8),
-            child: Divider(
-              height: 1,
-              color: colors.border.withValues(alpha: 0.15),
+          _divider(),
+          // Directly under the upload row, and only when there is something to
+          // say. The two axes are independent — an edit can be stuck on a
+          // recording whose audio the server verified long ago — so the row
+          // has to be adjacent enough to be read against the upload's answer,
+          // and worded so it is never read as part of it.
+          if (metadataSync != null) ...[
+            StatusRow(
+              icon: metadataSync.icon,
+              iconColor: metadataSync.color,
+              label: l10n.detail_metadataSync,
+              value: metadataSync.label,
+              valueColor: metadataSync.color,
+              colors: colors,
+              theme: theme,
             ),
-          ),
+            _divider(),
+          ],
           StatusRow(
             icon: cleaningStyle.icon,
             iconColor: cleaningStyle.color,
@@ -96,13 +113,7 @@ class RecordingStatusSection extends StatelessWidget {
             colors: colors,
             theme: theme,
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: SpacingScale.s8),
-            child: Divider(
-              height: 1,
-              color: colors.border.withValues(alpha: 0.15),
-            ),
-          ),
+          _divider(),
           StatusRow(
             icon: LucideIcons.calendar,
             iconColor: colors.secondary,
@@ -116,6 +127,11 @@ class RecordingStatusSection extends StatelessWidget {
       ),
     );
   }
+
+  Widget _divider() => Padding(
+    padding: const EdgeInsets.symmetric(vertical: SpacingScale.s8),
+    child: Divider(height: 1, color: colors.border.withValues(alpha: 0.15)),
+  );
 
   String _formatShortDate(DateTime date, String locale) {
     return intl.DateFormat.yMMMd(locale).format(date);

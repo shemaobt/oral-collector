@@ -31,6 +31,7 @@ import '../domain/entities/local_recording_entity_classification.dart';
 import '../domain/entities/register.dart';
 import '../domain/entities/review_pendency.dart';
 import '../domain/recording_edit_policy.dart';
+import '../domain/upload_status_actions.dart';
 import 'notifiers/recording_detail_notifier.dart';
 import 'notifiers/recording_detail_state.dart';
 import 'notifiers/recordings_list_notifier.dart';
@@ -88,7 +89,28 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
   Future<void> _onStorytellerChanged(Storyteller? storyteller) async {
     final recording = _state.recording;
     if (recording == null) return;
-    await _notifier.setStoryteller(recording, storyteller);
+    final result = await _notifier.setStoryteller(recording, storyteller);
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context);
+    switch (result) {
+      case RecordingMutationResult.forbidden:
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.recording_updateNoPermission),
+            backgroundColor: AppColors.of(context).warning,
+          ),
+        );
+      case RecordingMutationResult.savedLocallyOnly:
+        _showSavedOnDeviceOnly();
+      // Only a title edit can clash; elsewhere it reads as a plain failure.
+      case RecordingMutationResult.failed ||
+          RecordingMutationResult.titleConflict:
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.recording_updateFailed)));
+      case RecordingMutationResult.success:
+        break;
+    }
   }
 
   Future<void> _pickStoryteller() async {
@@ -152,6 +174,8 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
             backgroundColor: AppColors.of(context).warning,
           ),
         );
+      case RecordingMutationResult.savedLocallyOnly:
+        _showSavedOnDeviceOnly();
       // Only a title edit can clash; elsewhere it reads as a plain failure.
       case RecordingMutationResult.failed ||
           RecordingMutationResult.titleConflict:
@@ -161,6 +185,27 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
       case RecordingMutationResult.success:
         break;
     }
+  }
+
+  /// The edit is on this device and the metadata outbox will resend it on
+  /// reconnect (ENG-403), so the message says to expect that. Under ENG-399 it
+  /// asked the user to redo the edit online, which is now wasted work: every
+  /// mutation that reports `savedLocallyOnly` has a server copy to owe, and
+  /// marks the fields it touched as pending in the same breath.
+  ///
+  /// The one mutation that can report it without queuing is `moveCategory` on a
+  /// recording the server has never seen — it asks the server without checking
+  /// for a `serverId` first. The promise still holds there: that recording is
+  /// in the upload queue, and its genre and subcategory ride along on the
+  /// create call. (Reporting it as pending at all is an ENG-399 quirk, not a
+  /// lost edit.)
+  void _showSavedOnDeviceOnly() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(AppLocalizations.of(context).recording_savedOnDeviceOnly),
+        backgroundColor: AppColors.of(context).warning,
+      ),
+    );
   }
 
   Future<void> _deleteRecording() async {
@@ -380,6 +425,10 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
           suggestedName: suggestedName,
           sharePositionOrigin: _shareAnchorRect(),
         );
+        // The download key carries a timestamp, so on web every export used to
+        // leave a whole extra copy behind. That died with the tab before the
+        // bytes became durable (ENG-421); now it would never be collected.
+        await file_ops.deleteFile(tempPath);
         if (mounted) Navigator.of(context).pop();
         if (!result.success && mounted) {
           // O motivo de AudioExporter é técnico/inglês (já registrado em log);
@@ -551,6 +600,8 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
             backgroundColor: AppColors.of(context).warning,
           ),
         );
+      case RecordingMutationResult.savedLocallyOnly:
+        _showSavedOnDeviceOnly();
       // Only a title edit can clash; elsewhere it reads as a plain failure.
       case RecordingMutationResult.failed ||
           RecordingMutationResult.titleConflict:
@@ -586,6 +637,8 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
             backgroundColor: AppColors.of(context).warning,
           ),
         );
+      case RecordingMutationResult.savedLocallyOnly:
+        _showSavedOnDeviceOnly();
       // Only a title edit can clash; elsewhere it reads as a plain failure.
       case RecordingMutationResult.failed ||
           RecordingMutationResult.titleConflict:
@@ -664,6 +717,8 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
             backgroundColor: AppColors.of(context).warning,
           ),
         );
+      case RecordingMutationResult.savedLocallyOnly:
+        _showSavedOnDeviceOnly();
       // Only a title edit can clash; elsewhere it reads as a plain failure.
       case RecordingMutationResult.failed ||
           RecordingMutationResult.titleConflict:
@@ -759,10 +814,14 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     final rawRegisterName = getRegisterName(recording.registerId);
 
     final genreName = rawGenreName != null
-        ? localizedGenreName(l10n, rawGenreName)
+        ? localizedGenreName(l10n, rawGenreName, id: recording.genreId)
         : null;
     final subcategoryName = rawSubcategoryName != null
-        ? localizedSubcategoryName(l10n, rawSubcategoryName)
+        ? localizedSubcategoryName(
+            l10n,
+            rawSubcategoryName,
+            id: recording.subcategoryId!,
+          )
         : null;
     final registerName = rawRegisterName != null
         ? localizedRegisterName(l10n, rawRegisterName)
@@ -781,10 +840,18 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
       recording.secondaryRegisterId,
     );
     final secondaryGenreName = rawSecondaryGenreName != null
-        ? localizedGenreName(l10n, rawSecondaryGenreName)
+        ? localizedGenreName(
+            l10n,
+            rawSecondaryGenreName,
+            id: recording.secondaryGenreId!,
+          )
         : null;
     final secondarySubcategoryName = rawSecondarySubcategoryName != null
-        ? localizedSubcategoryName(l10n, rawSecondarySubcategoryName)
+        ? localizedSubcategoryName(
+            l10n,
+            rawSecondarySubcategoryName,
+            id: recording.secondarySubcategoryId!,
+          )
         : null;
     final secondaryRegisterName = rawSecondaryRegisterName != null
         ? localizedRegisterName(l10n, rawSecondaryRegisterName)
@@ -838,10 +905,7 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
       theme: theme,
       onToggleCleaning: _toggleCleaningStatus,
       onRetryUpload:
-          recording.uploadStatus == 'failed' ||
-              recording.uploadStatus == 'failed_exhausted' ||
-              recording.uploadStatus == 'uploading' ||
-              (recording.uploadStatus == 'local' && recording.retryCount > 0)
+          canRetryUpload(recording.uploadStatus, recording.retryCount)
           ? _retryUpload
           : null,
     );

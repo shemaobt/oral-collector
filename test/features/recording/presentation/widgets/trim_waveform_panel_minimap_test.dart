@@ -26,6 +26,7 @@ Widget _harness({
           child: TrimWaveformPanel(
             waveformBars: List<double>.filled(200, 0.5),
             splitPoints: const [],
+            totalDuration: const Duration(seconds: 60),
             onSplitPointsChanged: (_) {},
             playingSegment: null,
             excludedSegments: const {},

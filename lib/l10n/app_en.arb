@@ -236,6 +236,10 @@
   "recording_deleteFailed": "Failed to delete recording",
   "recording_deleteFailedLocal": "Failed to delete from server. Removing locally.",
   "recording_cleaningStatusFailed": "Failed to update cleaning status on server",
+  "recording_savedOnDeviceOnly": "Saved on this device — the server has not got this change yet. It will be sent on its own when the connection comes back.",
+  "@recording_savedOnDeviceOnly": {
+    "description": "Snackbar after a metadata edit the server could not be told about (offline or unreachable). The edit is kept locally and the metadata outbox resends it on reconnect, so the user is told to expect that rather than to redo it (ENG-403, replacing the redo instruction from ENG-399)."
+  },
   "recording_updateNoPermission": "You do not have permission to update this recording",
   "recording_moveNoPermission": "You do not have permission to move this recording",
   "recording_movedSuccess": "Recording moved successfully",
@@ -298,6 +302,22 @@
   "recording_descriptionGapMessage": "This recording can't be uploaded until you add a longer description.",
   "recording_statusRetriesExhausted": "Attempts used up",
   "recording_statusFileMissing": "Audio file missing",
+  "recording_metadataSyncPending": "Edit waiting to be sent",
+  "@recording_metadataSyncPending": {
+    "description": "Mark on a recording whose metadata edit is still in the outbox (ENG-405). Transitory and blameless: the person has to do nothing but reconnect, so the wording must not read as a failure. Says 'change', never 'upload', because the audio may already be safely on the server."
+  },
+  "recording_metadataSyncForbidden": "Edit refused: you cannot change this recording",
+  "@recording_metadataSyncForbidden": {
+    "description": "Mark on a recording whose metadata edit the server refused with a 403 (ENG-405). Terminal and not retryable from the phone; kept apart from the other two refusals because no amount of insisting grants permission."
+  },
+  "recording_metadataSyncConflict": "Edit refused: another recording has this title",
+  "@recording_metadataSyncConflict": {
+    "description": "Mark on a recording whose metadata edit the server refused with a 409 title clash (ENG-405). Terminal until the user renames, which is the one exit — hence naming the title rather than saying 'refused'."
+  },
+  "recording_metadataSyncExhausted": "Edit not sent — edit again to retry",
+  "@recording_metadataSyncExhausted": {
+    "description": "Mark on a recording whose metadata edit spent its whole retry budget (ENG-405). Unlike the other two refusals this one is recoverable from the phone: a fresh edit revives the row with a new budget (markMetadataPending), so the label names that exit rather than only reporting the spent budget — the same reason recording_uploadExhaustedMessage says a retry is possible."
+  },
   "recording_uploadExhaustedMessage": "The upload stopped after several attempts. You can try again.",
   "recording_fileMissingMessage": "The audio file for this recording is no longer on this device, so it can't be uploaded.",
   "recording_duplicateTitleTitle": "Name already used",
@@ -309,17 +329,16 @@
       }
     }
   },
-  "recordings_clearStale": "Clear failed",
-  "recordings_clearStaleMessage": "This will permanently delete all recordings with failed or stuck upload status from the server. This cannot be undone.",
-  "recordings_clearedCount": "{count, plural, =0{No stale recordings found} =1{Cleared 1 recording} other{Cleared {count} recordings}}",
-  "@recordings_clearedCount": {
+  "recordings_retryFailedUploads": "Retry uploads",
+  "recordings_retryQueuedCount": "{count, plural, =0{No uploads to retry} =1{1 recording back in the upload queue} other{{count} recordings back in the upload queue}}",
+  "@recordings_retryQueuedCount": {
     "placeholders": {
       "count": {
         "type": "int"
       }
     }
   },
-  "recordings_clearFailed": "Failed to clear recordings",
+  "recordings_retryFailed": "Could not queue the uploads again",
   "trim_title": "Edit Recording",
   "trim_notFound": "Recording not found",
   "trim_audioUrlNotAvailable": "Audio URL not available for this recording.",
@@ -525,6 +544,7 @@
       }
     }
   },
+  "sync_waitingForWifi": "Uploads are waiting for Wi-Fi. Turn off \"Upload on Wi-Fi only\" to send over cellular data.",
   "profile_photoUpdated": "Profile photo updated",
   "profile_editName": "Edit display name",
   "profile_nameHint": "Your name",
@@ -543,8 +563,34 @@
   "profile_deleteAccountWarning": "This action is permanent and cannot be undone. Your account will be deleted, but your uploaded recordings will be preserved for the language projects.",
   "profile_typeDelete": "Type DELETE to confirm account deletion:",
   "profile_clearCacheTitle": "Clear local cache?",
-  "profile_clearCacheMessage": "This will delete all locally stored recordings. Uploaded recordings on the server will not be affected.",
+  "profile_clearCacheMessage": "This will delete the locally stored recordings the server already has. Recordings that have not been uploaded yet are kept on this device.",
   "profile_cacheCleared": "Local cache cleared",
+  "profile_cacheClearedKept": "{count, plural, =1{Local cache cleared. 1 recording was kept because it has not been uploaded yet.} other{Local cache cleared. {count} recordings were kept because they have not been uploaded yet.}}",
+  "@profile_cacheClearedKept": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "profile_cacheKeptUnsent": "{count, plural, =1{1 recording was kept because it has not been uploaded yet.} other{{count} recordings were kept because they have not been uploaded yet.}}",
+  "@profile_cacheKeptUnsent": {
+    "description": "Pairs with profile_cacheNotFreed. Says the same as profile_cacheClearedKept without claiming the cache was cleared, which would contradict a delete that failed.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "profile_cacheNotFreed": "{count, plural, =1{1 recording could not be deleted, so that space was not freed.} other{{count} recordings could not be deleted, so that space was not freed.}}",
+  "@profile_cacheNotFreed": {
+    "description": "Shown when the clear kept a recording because its file would not delete, which is space the user asked for and did not get.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "profile_joinedSuccess": "Joined \"{name}\" successfully",
   "@profile_joinedSuccess": {
     "placeholders": {
@@ -588,7 +634,7 @@
   "profile_autoRemove": "Auto-remove after upload",
   "profile_autoRemoveSubtitle": "Delete local files after successful upload",
   "profile_clearCache": "Clear local cache",
-  "profile_clearCacheSubtitle": "Delete all locally stored recordings",
+  "profile_clearCacheSubtitle": "Delete the local copies the server already has",
   "profile_invitations": "Invitations",
   "profile_refreshInvitations": "Refresh invitations",
   "profile_noInvitations": "No pending invitations",
@@ -880,6 +926,10 @@
   "detail_upload": "Upload",
   "detail_uploaded": "Uploaded",
   "detail_cleaning": "Cleaning",
+  "detail_metadataSync": "Edits",
+  "@detail_metadataSync": {
+    "description": "Label of the detail screen's status row for the metadata outbox (ENG-405). Names the axis, not the state — the state is the row's value. Kept distinct from detail_upload because a recording can be fully uploaded and still owe an edit."
+  },
   "detail_recorded": "Recorded",
   "detail_retry": "Retry",
   "detail_notFlagged": "Not flagged",
@@ -1021,6 +1071,11 @@
   "recording_finalizationDegradedHint": "Audio quality may be reduced.",
   "recording_finalizationFailed": "Couldn't save this recording",
   "recording_finalizationFailedBody": "We tried to recover the audio but no segments were available.",
+  "recording_finalizationFailedBodyNoAudio": "No audio came back from the recorder.",
+  "recording_finalizationFailedBodyDownload": "The audio was recorded but could not be read back.",
+  "recording_finalizationFailedBodyCaptureInterrupted": "Recording stopped before you pressed stop, so no audio was kept.",
+  "recording_finalizationFailedBodyPipeline": "We couldn't finish processing this recording. It is kept in your unsaved recordings.",
+  "recording_finalizationErrorBack": "Back",
   "recording_discardAndReturn": "Discard and return",
   "recording_savingRecording": "Saving recording…",
   "@recording_savingRecording": {

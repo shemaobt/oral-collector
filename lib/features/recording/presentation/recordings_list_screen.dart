@@ -7,12 +7,14 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/l10n/content_l10n.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../core/observability/error_reporter.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../features/auth/data/providers/role_provider.dart';
 import '../../../shared/preview_helpers.dart';
 import '../../../shared/widgets/app_shell.dart';
 import '../../../shared/widgets/empty_state.dart';
+import '../../../shared/widgets/error_snack_bar.dart';
 import '../../../shared/widgets/screen_header.dart';
 import '../../../shared/widgets/status_banner.dart';
 import '../../../shared/widgets/sync_status_indicator.dart';
@@ -22,6 +24,7 @@ import '../../sync/presentation/notifiers/sync_notifier.dart';
 import '../domain/entities/local_recording_entity.dart';
 import '../domain/entities/register.dart';
 import '../domain/entities/review_pendency.dart';
+import '../domain/upload_status_actions.dart';
 import 'notifiers/recordings_list_notifier.dart';
 import 'notifiers/recordings_list_state.dart';
 import 'widgets/active_filter_chips.dart';
@@ -190,67 +193,34 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
     ref.read(syncNotifierProvider.notifier).processQueue();
   }
 
-  Future<void> _clearStaleRecordings() async {
+  /// No confirmation dialog and no online pre-check, both dropped with the
+  /// delete this replaced (ENG-404). A confirmation buys the user a chance to
+  /// back out of something irreversible; requeueing destroys nothing and is
+  /// idempotent, so the prompt would only charge a second tap and keep
+  /// signalling danger where there is none. The write is local, and useful
+  /// offline at that — the rows drain on their own once reachability returns.
+  Future<void> _retryFailedUploads() async {
     final l10n = AppLocalizations.of(context);
-    final colors = AppColors.of(context);
-
-    if (!ref.read(syncNotifierProvider).isOnline) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.error_network),
-          backgroundColor: colors.error,
-        ),
-      );
-      return;
-    }
-
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.recordings_clearStale),
-        content: Text(l10n.recordings_clearStaleMessage),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(l10n.common_cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            style: TextButton.styleFrom(foregroundColor: colors.error),
-            child: Text(l10n.recordings_clearStale),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
 
     try {
-      final deleted = await ref
+      final requeued = await ref
           .read(recordingsListNotifierProvider.notifier)
-          .clearStaleRecordings();
+          .retryFailedUploads();
       if (!mounted) return;
-      if (deleted == null) {
-        // Connectivity dropped between the dialog confirm and the API call.
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.error_network),
-            backgroundColor: colors.error,
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.recordings_clearedCount(deleted))),
-        );
-      }
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.recordings_clearFailed),
-            backgroundColor: colors.error,
-          ),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.recordings_retryQueuedCount(requeued))),
+      );
+    } on Exception catch (e, st) {
+      ref.read(errorReporterProvider).reportError(e, st);
+      if (!mounted) return;
+      // A fixed message rather than the mapped one: what can fail here is a
+      // local write, and `friendlyErrorFor` would dress it as something the
+      // user could act on. The real error goes to telemetry above.
+      showErrorSnackBar(
+        context,
+        '',
+        template: (_) => l10n.recordings_retryFailed,
+      );
     }
   }
 
@@ -393,25 +363,21 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
                         const Spacer(),
                         if ((listState.selectedFilter == StatusFilter.pending ||
                                 listState.selectedFilter == StatusFilter.all) &&
-                            filtered.any(
-                              (r) =>
-                                  r.uploadStatus == 'failed' ||
-                                  r.uploadStatus == 'uploading',
-                            ) &&
+                            hasRetryableFailedUploads(filtered) &&
                             ref
                                 .watch(roleNotifierProvider.notifier)
                                 .canManageProject(activeProject.id))
                           TextButton.icon(
-                            onPressed: _clearStaleRecordings,
+                            onPressed: _retryFailedUploads,
                             icon: Icon(
-                              LucideIcons.trash2,
+                              LucideIcons.refreshCw,
                               size: 14,
-                              color: colors.error,
+                              color: colors.primary,
                             ),
                             label: Text(
-                              l10n.recordings_clearStale,
+                              l10n.recordings_retryFailedUploads,
                               style: TextStyle(
-                                color: colors.error,
+                                color: colors.primary,
                                 fontSize: 12,
                               ),
                             ),
@@ -506,10 +472,18 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
                               child: RecordingCard(
                                 recording: recording,
                                 genreName: rawGenre != null
-                                    ? localizedGenreName(l10n, rawGenre)
+                                    ? localizedGenreName(
+                                        l10n,
+                                        rawGenre,
+                                        id: recording.genreId,
+                                      )
                                     : null,
                                 subcategoryName: rawSubcat != null
-                                    ? localizedSubcategoryName(l10n, rawSubcat)
+                                    ? localizedSubcategoryName(
+                                        l10n,
+                                        rawSubcat,
+                                        id: recording.subcategoryId!,
+                                      )
                                     : null,
                                 registerName: rawReg != null
                                     ? localizedRegisterName(l10n, rawReg)

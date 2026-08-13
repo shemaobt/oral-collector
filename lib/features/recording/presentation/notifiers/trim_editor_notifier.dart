@@ -7,6 +7,7 @@ import '../../data/providers.dart';
 import '../../data/repositories/local_recording_repository.dart';
 import '../../data/server_to_recording_entity.dart';
 import '../../data/services/local_segment_exporter.dart';
+import '../../data/services/recording_boost_persister.dart';
 import '../../data/services/recording_split_persister.dart';
 import '../../data/services/recording_trash.dart';
 import '../../domain/entities/local_recording_entity.dart';
@@ -69,6 +70,8 @@ class TrimEditorNotifier
   LocalSegmentExporter get _exporter => ref.read(localSegmentExporterProvider);
   RecordingSplitPersisterFactory get _persisterFactory =>
       ref.read(recordingSplitPersisterProvider);
+  RecordingBoostPersisterFactory get _boostPersisterFactory =>
+      ref.read(recordingBoostPersisterProvider);
 
   /// Resolves the recording only. The widget owns the player, the file-
   /// availability check and the waveform/duration, finishing the load via
@@ -322,6 +325,7 @@ class TrimEditorNotifier
     // must still commit even if the user navigates away mid-export.
     final exporter = _exporter;
     final persisterFactory = _persisterFactory;
+    final boostPersisterFactory = _boostPersisterFactory;
     final localRepo = _localRepo;
     final apiRepo = _apiRepo;
     final triggerUpload = ref.read(syncNotifierProvider.notifier).processQueue;
@@ -352,6 +356,34 @@ class TrimEditorNotifier
         parentGenreId: recording.genreId,
       ),
     );
+
+    if (boostOnly) {
+      // No cut points, so nothing was divided: the story keeps its identity and
+      // only its audio changes (ENG-402). Its own persister — a split that
+      // "sometimes isn't one" would hide the very call this path must not make,
+      // the remote delete of a parent that was never replaced.
+      final boosted = specs.single;
+      await boostPersisterFactory(
+        localRepo: localRepo,
+        triggerUpload: triggerUpload,
+        trashPrevious: (r) => RecordingTrash.putInTrash(
+          sourcePath: r.localFilePath,
+          metadata: {
+            'id': r.id,
+            'title': r.title,
+            'projectId': r.projectId,
+            'serverId': r.serverId,
+            'replacedBy': boosted.localFilePath,
+          },
+        ),
+      ).persist(
+        recording: recording,
+        newFilePath: boosted.localFilePath,
+        newDurationSeconds: boosted.durationSeconds,
+        newFileSizeBytes: boosted.fileSizeBytes,
+      );
+      return;
+    }
 
     final persister = persisterFactory(
       localRepo: localRepo,

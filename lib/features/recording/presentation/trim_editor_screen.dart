@@ -216,7 +216,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
         .where((s) => s.id == subcategoryId)
         .firstOrNull;
     if (sub == null) return null;
-    return localizedSubcategoryName(l10n, sub.name);
+    return localizedSubcategoryName(l10n, sub.name, id: sub.id);
   }
 
   String? _genreNameFor(AppLocalizations l10n, String? genreId) {
@@ -224,7 +224,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
     final genres = ref.read(genreNotifierProvider).genres;
     final genre = genres.where((g) => g.id == genreId).firstOrNull;
     if (genre == null) return null;
-    return localizedGenreName(l10n, genre.name);
+    return localizedGenreName(l10n, genre.name, id: genre.id);
   }
 
   String? _registerNameFor(AppLocalizations l10n, String? registerId) {
@@ -383,7 +383,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
       0.0,
       1.0,
     );
-    const minGap = 0.03;
+    final minGap = minSplitGapFraction(_state.totalDuration);
     if (fraction <= minGap || fraction >= 1.0 - minGap) return;
     for (final p in _state.splitPoints) {
       if ((fraction - p).abs() < minGap) return;
@@ -396,7 +396,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
     final totalMs = _state.totalDuration.inMilliseconds;
     if (totalMs <= 0) return false;
     final fraction = _transportPosition.inMilliseconds / totalMs;
-    const minGap = 0.03;
+    final minGap = minSplitGapFraction(_state.totalDuration);
     if (fraction <= minGap || fraction >= 1.0 - minGap) return false;
     for (final p in _state.splitPoints) {
       if ((fraction - p).abs() < minGap) return false;
@@ -859,6 +859,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
         TrimWaveformPanel(
           waveformBars: _waveformBars,
           splitPoints: state.splitPoints,
+          totalDuration: state.totalDuration,
           onSplitPointsChanged: _notifier.setSplitPoints,
           playingSegment: _playingSegment,
           excludedSegments: state.excludedSegments,

@@ -1,6 +1,18 @@
+/// Why the upload queue declined to run. Offline is not one of these: the app
+/// already shows an offline banner everywhere it matters. The Wi-Fi-only policy
+/// had no such signal, so a tap on "sync pending" over cellular looked like a
+/// dead button (ENG-355).
+enum SyncBlockReason { wifiOnly }
+
 class SyncState {
   final bool isOnline;
   final int pendingCount;
+
+  /// The uploads alone, for the one surface that shows a number beside the list
+  /// it counts (ENG-422). [pendingCount] is every kind of outstanding work and
+  /// is what the header chip and the profile card read; the upload-queue sheet
+  /// lists uploads, so its number has to be uploads too.
+  final int pendingUploadCount;
   final String? uploadingId;
   final int syncProgress;
   final DateTime? lastSyncAt;
@@ -10,10 +22,12 @@ class SyncState {
   final int totalUploadedBytes;
   final String? currentFileName;
   final double uploadSpeedBps;
+  final SyncBlockReason? blockReason;
 
   const SyncState({
     this.isOnline = false,
     this.pendingCount = 0,
+    this.pendingUploadCount = 0,
     this.uploadingId,
     this.syncProgress = 0,
     this.lastSyncAt,
@@ -23,6 +37,7 @@ class SyncState {
     this.totalUploadedBytes = 0,
     this.currentFileName,
     this.uploadSpeedBps = 0,
+    this.blockReason,
   });
 
   Duration? get estimatedTimeRemaining {
@@ -35,6 +50,7 @@ class SyncState {
   SyncState copyWith({
     bool? isOnline,
     int? pendingCount,
+    int? pendingUploadCount,
     String? uploadingId,
     int? syncProgress,
     DateTime? lastSyncAt,
@@ -44,13 +60,16 @@ class SyncState {
     int? totalUploadedBytes,
     String? currentFileName,
     double? uploadSpeedBps,
+    SyncBlockReason? blockReason,
     bool clearUploadingId = false,
     bool clearLastSyncAt = false,
     bool clearCurrentFileName = false,
+    bool clearBlockReason = false,
   }) {
     return SyncState(
       isOnline: isOnline ?? this.isOnline,
       pendingCount: pendingCount ?? this.pendingCount,
+      pendingUploadCount: pendingUploadCount ?? this.pendingUploadCount,
       uploadingId: clearUploadingId ? null : (uploadingId ?? this.uploadingId),
       syncProgress: syncProgress ?? this.syncProgress,
       lastSyncAt: clearLastSyncAt ? null : (lastSyncAt ?? this.lastSyncAt),
@@ -63,6 +82,7 @@ class SyncState {
           ? null
           : (currentFileName ?? this.currentFileName),
       uploadSpeedBps: uploadSpeedBps ?? this.uploadSpeedBps,
+      blockReason: clearBlockReason ? null : (blockReason ?? this.blockReason),
     );
   }
 }

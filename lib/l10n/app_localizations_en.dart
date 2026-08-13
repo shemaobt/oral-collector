@@ -578,6 +578,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Failed to update cleaning status on server';
 
   @override
+  String get recording_savedOnDeviceOnly =>
+      'Saved on this device — the server has not got this change yet. It will be sent on its own when the connection comes back.';
+
+  @override
   String get recording_updateNoPermission =>
       'You do not have permission to update this recording';
 
@@ -717,6 +721,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recording_statusFileMissing => 'Audio file missing';
 
   @override
+  String get recording_metadataSyncPending => 'Edit waiting to be sent';
+
+  @override
+  String get recording_metadataSyncForbidden =>
+      'Edit refused: you cannot change this recording';
+
+  @override
+  String get recording_metadataSyncConflict =>
+      'Edit refused: another recording has this title';
+
+  @override
+  String get recording_metadataSyncExhausted =>
+      'Edit not sent — edit again to retry';
+
+  @override
   String get recording_uploadExhaustedMessage =>
       'The upload stopped after several attempts. You can try again.';
 
@@ -733,26 +752,22 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get recordings_clearStale => 'Clear failed';
+  String get recordings_retryFailedUploads => 'Retry uploads';
 
   @override
-  String get recordings_clearStaleMessage =>
-      'This will permanently delete all recordings with failed or stuck upload status from the server. This cannot be undone.';
-
-  @override
-  String recordings_clearedCount(int count) {
+  String recordings_retryQueuedCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Cleared $count recordings',
-      one: 'Cleared 1 recording',
-      zero: 'No stale recordings found',
+      other: '$count recordings back in the upload queue',
+      one: '1 recording back in the upload queue',
+      zero: 'No uploads to retry',
     );
     return '$_temp0';
   }
 
   @override
-  String get recordings_clearFailed => 'Failed to clear recordings';
+  String get recordings_retryFailed => 'Could not queue the uploads again';
 
   @override
   String get trim_title => 'Edit Recording';
@@ -1054,6 +1069,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get sync_waitingForWifi =>
+      'Uploads are waiting for Wi-Fi. Turn off \"Upload on Wi-Fi only\" to send over cellular data.';
+
+  @override
   String get profile_photoUpdated => 'Profile photo updated';
 
   @override
@@ -1111,10 +1130,47 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profile_clearCacheMessage =>
-      'This will delete all locally stored recordings. Uploaded recordings on the server will not be affected.';
+      'This will delete the locally stored recordings the server already has. Recordings that have not been uploaded yet are kept on this device.';
 
   @override
   String get profile_cacheCleared => 'Local cache cleared';
+
+  @override
+  String profile_cacheClearedKept(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Local cache cleared. $count recordings were kept because they have not been uploaded yet.',
+      one:
+          'Local cache cleared. 1 recording was kept because it has not been uploaded yet.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String profile_cacheKeptUnsent(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count recordings were kept because they have not been uploaded yet.',
+      one: '1 recording was kept because it has not been uploaded yet.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String profile_cacheNotFreed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count recordings could not be deleted, so that space was not freed.',
+      one: '1 recording could not be deleted, so that space was not freed.',
+    );
+    return '$_temp0';
+  }
 
   @override
   String profile_joinedSuccess(String name) {
@@ -1172,7 +1228,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profile_clearCacheSubtitle =>
-      'Delete all locally stored recordings';
+      'Delete the local copies the server already has';
 
   @override
   String get profile_invitations => 'Invitations';
@@ -1817,6 +1873,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get detail_cleaning => 'Cleaning';
 
   @override
+  String get detail_metadataSync => 'Edits';
+
+  @override
   String get detail_recorded => 'Recorded';
 
   @override
@@ -2108,6 +2167,25 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get recording_finalizationFailedBody =>
       'We tried to recover the audio but no segments were available.';
+
+  @override
+  String get recording_finalizationFailedBodyNoAudio =>
+      'No audio came back from the recorder.';
+
+  @override
+  String get recording_finalizationFailedBodyDownload =>
+      'The audio was recorded but could not be read back.';
+
+  @override
+  String get recording_finalizationFailedBodyCaptureInterrupted =>
+      'Recording stopped before you pressed stop, so no audio was kept.';
+
+  @override
+  String get recording_finalizationFailedBodyPipeline =>
+      'We couldn\'t finish processing this recording. It is kept in your unsaved recordings.';
+
+  @override
+  String get recording_finalizationErrorBack => 'Back';
 
   @override
   String get recording_discardAndReturn => 'Discard and return';

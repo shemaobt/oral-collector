@@ -53,7 +53,7 @@ class SubcategorySelectionStep extends StatelessWidget {
               const SizedBox(width: SpacingScale.s12),
               Expanded(
                 child: Text(
-                  localizedGenreName(l10n, genre.name),
+                  localizedGenreName(l10n, genre.name, id: genre.id),
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -106,6 +106,7 @@ class SubcategorySelectionStep extends StatelessWidget {
                                       localizedSubcategoryName(
                                         l10n,
                                         subcategory.name,
+                                        id: subcategory.id,
                                       ),
                                       style: theme.textTheme.titleSmall
                                           ?.copyWith(

@@ -569,6 +569,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recording_cleaningStatusFailed => '서버에서 클리닝 상태를 업데이트하지 못했습니다';
 
   @override
+  String get recording_savedOnDeviceOnly =>
+      '이 기기에 저장되었습니다 — 서버는 아직 이 변경을 받지 못했습니다. 연결이 돌아오면 자동으로 전송됩니다.';
+
+  @override
   String get recording_updateNoPermission => '이 녹음을 업데이트할 권한이 없습니다';
 
   @override
@@ -702,6 +706,18 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recording_statusFileMissing => '오디오 파일 없음';
 
   @override
+  String get recording_metadataSyncPending => '전송 대기 중인 수정';
+
+  @override
+  String get recording_metadataSyncForbidden => '수정 거부됨: 이 녹음은 변경할 수 없습니다';
+
+  @override
+  String get recording_metadataSyncConflict => '수정 거부됨: 다른 녹음이 이 제목을 사용 중입니다';
+
+  @override
+  String get recording_metadataSyncExhausted => '수정이 전송되지 않음 — 다시 수정하면 재시도합니다';
+
+  @override
   String get recording_uploadExhaustedMessage =>
       '여러 번 시도한 뒤 업로드가 중단되었습니다. 다시 시도할 수 있습니다.';
 
@@ -718,26 +734,22 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get recordings_clearStale => '실패 항목 삭제';
+  String get recordings_retryFailedUploads => '업로드 다시 시도';
 
   @override
-  String get recordings_clearStaleMessage =>
-      '서버에서 업로드 실패 또는 멈춘 상태의 모든 녹음을 영구적으로 삭제합니다. 이 작업은 취소할 수 없습니다.';
-
-  @override
-  String recordings_clearedCount(int count) {
+  String recordings_retryQueuedCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '녹음 $count개 삭제됨',
-      one: '녹음 1개 삭제됨',
-      zero: '오래된 녹음이 없습니다',
+      other: '녹음 $count개가 업로드 대기열로 돌아갔습니다',
+      one: '녹음 1개가 업로드 대기열로 돌아갔습니다',
+      zero: '다시 시도할 업로드가 없습니다',
     );
     return '$_temp0';
   }
 
   @override
-  String get recordings_clearFailed => '녹음 삭제에 실패했습니다';
+  String get recordings_retryFailed => '업로드를 다시 대기열에 넣지 못했습니다';
 
   @override
   String get trim_title => '녹음 편집';
@@ -1027,6 +1039,10 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get sync_waitingForWifi =>
+      '업로드가 Wi-Fi를 기다리고 있습니다. 모바일 데이터로 보내려면 \"Wi-Fi에서만 업로드\"를 끄세요.';
+
+  @override
   String get profile_photoUpdated => '프로필 사진이 업데이트되었습니다';
 
   @override
@@ -1083,10 +1099,43 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get profile_clearCacheMessage =>
-      '로컬에 저장된 모든 녹음이 삭제됩니다. 서버에 업로드된 녹음에는 영향이 없습니다.';
+      '서버에 이미 있는 로컬 저장 녹음이 삭제됩니다. 아직 업로드되지 않은 녹음은 이 기기에 그대로 남습니다.';
 
   @override
   String get profile_cacheCleared => '로컬 캐시가 삭제되었습니다';
+
+  @override
+  String profile_cacheClearedKept(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '로컬 캐시가 삭제되었습니다. 아직 업로드되지 않아 녹음 $count개는 유지했습니다.',
+      one: '로컬 캐시가 삭제되었습니다. 아직 업로드되지 않아 녹음 1개는 유지했습니다.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String profile_cacheKeptUnsent(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '아직 업로드되지 않아 녹음 $count개는 유지했습니다.',
+      one: '아직 업로드되지 않아 녹음 1개는 유지했습니다.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String profile_cacheNotFreed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '녹음 $count개를 삭제하지 못해 그만큼의 공간이 확보되지 않았습니다.',
+      one: '녹음 1개를 삭제하지 못해 그만큼의 공간이 확보되지 않았습니다.',
+    );
+    return '$_temp0';
+  }
 
   @override
   String profile_joinedSuccess(String name) {
@@ -1142,7 +1191,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get profile_clearCache => '로컬 캐시 삭제';
 
   @override
-  String get profile_clearCacheSubtitle => '로컬에 저장된 모든 녹음 삭제';
+  String get profile_clearCacheSubtitle => '서버에 이미 있는 로컬 사본 삭제';
 
   @override
   String get profile_invitations => '초대';
@@ -1760,6 +1809,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get detail_cleaning => '클리닝';
 
   @override
+  String get detail_metadataSync => '수정';
+
+  @override
   String get detail_recorded => '녹음일';
 
   @override
@@ -2044,6 +2096,25 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get recording_finalizationFailedBody =>
       '오디오 복구를 시도했지만 사용 가능한 구간이 없었습니다.';
+
+  @override
+  String get recording_finalizationFailedBodyNoAudio =>
+      '녹음기에서 오디오가 돌아오지 않았습니다.';
+
+  @override
+  String get recording_finalizationFailedBodyDownload =>
+      '오디오는 녹음되었지만 다시 읽을 수 없었습니다.';
+
+  @override
+  String get recording_finalizationFailedBodyCaptureInterrupted =>
+      '정지를 누르기 전에 녹음이 멈춰서 오디오가 저장되지 않았습니다.';
+
+  @override
+  String get recording_finalizationFailedBodyPipeline =>
+      '이 녹음의 처리를 끝내지 못했습니다. 저장되지 않은 녹음에 보관되어 있습니다.';
+
+  @override
+  String get recording_finalizationErrorBack => '뒤로';
 
   @override
   String get recording_discardAndReturn => '버리고 돌아가기';
@@ -2378,8 +2449,7 @@ class AppLocalizationsKo extends AppLocalizations {
       '분할 파형. 탭하여 분할 마커를 추가하세요. 드래그하여 위치를 바꾸고, 핀치하여 확대하며, 길게 눌러 제거합니다.';
 
   @override
-  String get a11y_minimapScrubber =>
-      'Audio overview. Tap or drag to navigate to a position.';
+  String get a11y_minimapScrubber => '오디오 개요. 탭하거나 드래그하여 원하는 위치로 이동합니다.';
 
   @override
   String a11y_tabLabel(String label) {

@@ -576,6 +576,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'فشل في تحديث حالة التنظيف على الخادم';
 
   @override
+  String get recording_savedOnDeviceOnly =>
+      'تم الحفظ على هذا الجهاز — لم يستلم الخادم هذا التغيير بعد. سيُرسل تلقائيًا عند عودة الاتصال.';
+
+  @override
   String get recording_updateNoPermission =>
       'ليس لديك صلاحية لتحديث هذا التسجيل';
 
@@ -712,6 +716,21 @@ class AppLocalizationsAr extends AppLocalizations {
   String get recording_statusFileMissing => 'ملف الصوت مفقود';
 
   @override
+  String get recording_metadataSyncPending => 'التعديل في انتظار الإرسال';
+
+  @override
+  String get recording_metadataSyncForbidden =>
+      'تم رفض التعديل: لا يمكنك تغيير هذا التسجيل';
+
+  @override
+  String get recording_metadataSyncConflict =>
+      'تم رفض التعديل: هناك تسجيل آخر بهذا العنوان';
+
+  @override
+  String get recording_metadataSyncExhausted =>
+      'لم يُرسل التعديل — عدّل مرة أخرى لإعادة المحاولة';
+
+  @override
   String get recording_uploadExhaustedMessage =>
       'توقف الرفع بعد عدة محاولات. يمكنك إعادة المحاولة.';
 
@@ -728,26 +747,26 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get recordings_clearStale => 'مسح الفاشلة';
+  String get recordings_retryFailedUploads => 'إعادة محاولة الرفع';
 
   @override
-  String get recordings_clearStaleMessage =>
-      'سيؤدي هذا إلى حذف جميع التسجيلات ذات حالة الرفع الفاشلة أو المعلقة من الخادم نهائياً. لا يمكن التراجع عن هذا الإجراء.';
-
-  @override
-  String recordings_clearedCount(int count) {
+  String recordings_retryQueuedCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'تم مسح $count تسجيلات',
-      one: 'تم مسح تسجيل واحد',
-      zero: 'لم يتم العثور على تسجيلات قديمة',
+      other: '$count تسجيل عاد إلى قائمة انتظار الرفع',
+      many: '$count تسجيلاً عاد إلى قائمة انتظار الرفع',
+      few: '$count تسجيلات عادت إلى قائمة انتظار الرفع',
+      two: 'تسجيلان عادا إلى قائمة انتظار الرفع',
+      one: 'تسجيل واحد عاد إلى قائمة انتظار الرفع',
+      zero: 'لا توجد عمليات رفع لإعادة المحاولة',
     );
     return '$_temp0';
   }
 
   @override
-  String get recordings_clearFailed => 'فشل في مسح التسجيلات';
+  String get recordings_retryFailed =>
+      'تعذّرت إعادة عمليات الرفع إلى قائمة الانتظار';
 
   @override
   String get trim_title => 'تحرير التسجيل';
@@ -1042,6 +1061,10 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get sync_waitingForWifi =>
+      'عمليات الرفع تنتظر Wi-Fi. أوقف \"الرفع عبر Wi-Fi فقط\" للإرسال عبر بيانات الهاتف.';
+
+  @override
   String get profile_photoUpdated => 'تم تحديث صورة الملف الشخصي';
 
   @override
@@ -1099,10 +1122,60 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get profile_clearCacheMessage =>
-      'سيؤدي هذا إلى حذف جميع التسجيلات المخزنة محلياً. لن تتأثر التسجيلات المرفوعة على الخادم.';
+      'سيؤدي هذا إلى حذف التسجيلات المخزنة محلياً التي يمتلكها الخادم بالفعل. أما التسجيلات التي لم تُرفع بعد فتبقى على هذا الجهاز.';
 
   @override
   String get profile_cacheCleared => 'تم مسح الذاكرة المؤقتة المحلية';
+
+  @override
+  String profile_cacheClearedKept(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'تم مسح الذاكرة المؤقتة المحلية. تم الاحتفاظ بـ $count تسجيل لأنها لم تُرفع بعد.',
+      many:
+          'تم مسح الذاكرة المؤقتة المحلية. تم الاحتفاظ بـ $count تسجيلاً لأنها لم تُرفع بعد.',
+      few:
+          'تم مسح الذاكرة المؤقتة المحلية. تم الاحتفاظ بـ $count تسجيلات لأنها لم تُرفع بعد.',
+      two:
+          'تم مسح الذاكرة المؤقتة المحلية. تم الاحتفاظ بتسجيلين لأنهما لم يُرفعا بعد.',
+      one:
+          'تم مسح الذاكرة المؤقتة المحلية. تم الاحتفاظ بتسجيل واحد لأنه لم يُرفع بعد.',
+      zero: 'تم مسح الذاكرة المؤقتة المحلية. لم يتم الاحتفاظ بأي تسجيل.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String profile_cacheKeptUnsent(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'تم الاحتفاظ بـ $count تسجيل لأنها لم تُرفع بعد.',
+      many: 'تم الاحتفاظ بـ $count تسجيلاً لأنها لم تُرفع بعد.',
+      few: 'تم الاحتفاظ بـ $count تسجيلات لأنها لم تُرفع بعد.',
+      two: 'تم الاحتفاظ بتسجيلين لأنهما لم يُرفعا بعد.',
+      one: 'تم الاحتفاظ بتسجيل واحد لأنه لم يُرفع بعد.',
+      zero: 'لم يتم الاحتفاظ بأي تسجيل.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String profile_cacheNotFreed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'تعذّر حذف $count تسجيل، لذا لم تُحرَّر تلك المساحة.',
+      many: 'تعذّر حذف $count تسجيلاً، لذا لم تُحرَّر تلك المساحة.',
+      few: 'تعذّر حذف $count تسجيلات، لذا لم تُحرَّر تلك المساحة.',
+      two: 'تعذّر حذف تسجيلين، لذا لم تُحرَّر تلك المساحة.',
+      one: 'تعذّر حذف تسجيل واحد، لذا لم تُحرَّر تلك المساحة.',
+      zero: 'لم يتعذّر حذف أي تسجيل.',
+    );
+    return '$_temp0';
+  }
 
   @override
   String profile_joinedSuccess(String name) {
@@ -1159,7 +1232,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get profile_clearCache => 'مسح الذاكرة المؤقتة المحلية';
 
   @override
-  String get profile_clearCacheSubtitle => 'حذف جميع التسجيلات المخزنة محلياً';
+  String get profile_clearCacheSubtitle =>
+      'حذف النسخ المحلية التي يمتلكها الخادم بالفعل';
 
   @override
   String get profile_invitations => 'الدعوات';
@@ -1787,6 +1861,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get detail_cleaning => 'التنظيف';
 
   @override
+  String get detail_metadataSync => 'التعديلات';
+
+  @override
   String get detail_recorded => 'تاريخ التسجيل';
 
   @override
@@ -2074,6 +2151,25 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get recording_finalizationFailedBody =>
       'حاولنا استرداد الصوت لكن لم تكن هناك أجزاء متاحة.';
+
+  @override
+  String get recording_finalizationFailedBodyNoAudio =>
+      'لم يرجع أي صوت من المسجل.';
+
+  @override
+  String get recording_finalizationFailedBodyDownload =>
+      'تم تسجيل الصوت لكن تعذّرت إعادة قراءته.';
+
+  @override
+  String get recording_finalizationFailedBodyCaptureInterrupted =>
+      'توقّف التسجيل قبل أن تضغط على إيقاف، لذلك لم يُحفظ أي صوت.';
+
+  @override
+  String get recording_finalizationFailedBodyPipeline =>
+      'لم نتمكن من إنهاء معالجة هذا التسجيل. إنه محفوظ ضمن تسجيلاتك غير المحفوظة.';
+
+  @override
+  String get recording_finalizationErrorBack => 'رجوع';
 
   @override
   String get recording_discardAndReturn => 'تجاهل والعودة';
@@ -2424,7 +2520,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get a11y_minimapScrubber =>
-      'Audio overview. Tap or drag to navigate to a position.';
+      'نظرة عامة على الصوت. انقر أو اسحب للانتقال إلى موضع.';
 
   @override
   String a11y_tabLabel(String label) {

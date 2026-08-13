@@ -57,6 +57,17 @@ final recordingForegroundServiceProvider = Provider<RecordingForegroundService>(
   (_) => RecordingForegroundService(),
 );
 
+/// Injectable so the browser capture path can be driven in VM tests, where
+/// `kIsWeb` is always false.
+final isWebPlatformProvider = Provider<bool>((_) => kIsWeb);
+
+/// Injectable web recorder, so a browser that ends capture on its own — the
+/// microphone taken by another tab or app, the default device changing — can
+/// be reproduced without a browser.
+final webAudioRecorderFactoryProvider = Provider<AudioRecorder Function()>(
+  (_) => AudioRecorder.new,
+);
+
 final recordingSessionNotifierProvider =
     NotifierProvider<RecordingSessionNotifier, RecordingState>(
       RecordingSessionNotifier.new,
@@ -80,6 +91,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
   Timer? _toastTimer;
   StreamController<double>? _webAmplitudeController;
   StreamSubscription<Amplitude>? _webAmplitudeSub;
+  StreamSubscription<RecordState>? _webStateSub;
   bool _liveActivityActive = false;
   StreamSubscription<dynamic>? _liveActivityUrlSub;
   AppLocalizations? _cachedL10n;
@@ -245,7 +257,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
 
     final mapper = _amplitudeMapperFor(ref.read(noiseSensitivityProvider));
 
-    if (kIsWeb) {
+    if (ref.read(isWebPlatformProvider)) {
       return _startWeb(genreId, subcategoryId, mapper);
     }
 
@@ -333,7 +345,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
     AmplitudeMapper mapper,
   ) async {
     await _disposeWebRecorder();
-    final recorder = AudioRecorder();
+    final recorder = ref.read(webAudioRecorderFactoryProvider)();
     final hasPermission = await recorder.hasPermission();
     if (!hasPermission) {
       await recorder.dispose();
@@ -350,6 +362,15 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
     );
 
     _webRecorder = recorder;
+
+    // The elapsed counter is a plain Timer and the waveform is fed by the
+    // microphone stream, not by the recorder — both keep looking healthy long
+    // after capture has ended. Watching the recorder itself is the only way to
+    // tell the person now instead of at stop, when there is nothing left.
+    _webStateSub = recorder.onStateChanged().listen((recordState) {
+      if (recordState != RecordState.stop) return;
+      unawaited(_handleCaptureLost());
+    });
 
     final ctrl = StreamController<double>.broadcast();
     _webAmplitudeController = ctrl;
@@ -507,7 +528,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
       _toastTimer?.cancel();
       final elapsed = state.elapsed;
 
-      if (kIsWeb) {
+      if (ref.read(isWebPlatformProvider)) {
         return await _stopWeb(elapsed);
       }
       return await _stopNative(elapsed);
@@ -546,7 +567,14 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
         );
         if (result != null) {
           await _cleanupOrphanedSegments(pendingSessionId, -1);
-          await sessionRepo.markRecovered(pendingSessionId);
+          // Same reason as the normal stop path (ENG-420): this produced real
+          // finalized audio, so the row has to point at it before the status
+          // says the session is done with.
+          await sessionRepo.recoverWithFinalizedAudio(
+            pendingSessionId,
+            filePath: result.filePath,
+            durationSeconds: result.durationSeconds,
+          );
           await ref.read(recoveryCoordinatorProvider).refresh();
           state = const RecordingState();
         }
@@ -632,7 +660,13 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
       totalDuration: totalDuration,
     );
     if (result != null) {
-      await sessionRepo.markCompleted(sessionResult.sessionId);
+      // The file exists as soon as _finalizeOrCrash returns, and until the row
+      // points at it nothing does (ENG-420).
+      await sessionRepo.completeWithFinalizedAudio(
+        sessionResult.sessionId,
+        filePath: result.filePath,
+        durationSeconds: result.durationSeconds,
+      );
       state = const RecordingState();
     }
     return result;
@@ -754,19 +788,9 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
       return null;
     }
 
+    final Uint8List bytes;
     try {
-      final bytes = await http.readBytes(Uri.parse(url));
-      // Web records with a fixed Opus encoder (see _startWeb); record_web
-      // packages Opus into a WebM container, so the format is always 'webm'.
-      const format = 'webm';
-      final fullKey = '$pendingKey.$format';
-      await file_ops.writeFileBytes(fullKey, bytes);
-      state = const RecordingState();
-      return RecordingResult(
-        filePath: fullKey,
-        durationSeconds: fallbackElapsed.inMilliseconds / 1000.0,
-        format: format,
-      );
+      bytes = await http.readBytes(Uri.parse(url));
     } catch (e, st) {
       _log.severe('[stopWeb] download failed', e, st);
       state = state.copyWith(
@@ -775,6 +799,31 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
       );
       return null;
     }
+
+    // Web records with a fixed Opus encoder (see _startWeb); record_web
+    // packages Opus into a WebM container, so the format is always 'webm'.
+    const format = 'webm';
+    final fullKey = '$pendingKey.$format';
+    // Kept out of the download's catch: browser storage can refuse the write
+    // (private browsing, storage blocked, quota) and reporting that as a
+    // failed read sends the person looking in the wrong place (ENG-421).
+    try {
+      await file_ops.writeFileBytes(fullKey, bytes);
+    } catch (e, st) {
+      _log.severe('[stopWeb] browser storage refused the audio', e, st);
+      state = state.copyWith(
+        finalizationStage: FinalizationStage.idle,
+        finalizationErrorKind: FinalizationErrorKind.storageUnavailable,
+      );
+      return null;
+    }
+
+    state = const RecordingState();
+    return RecordingResult(
+      filePath: fullKey,
+      durationSeconds: fallbackElapsed.inMilliseconds / 1000.0,
+      format: format,
+    );
   }
 
   Future<void> discardRecording() async {
@@ -933,7 +982,30 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
     return l10n.recording_serviceNotificationBody(elapsed, genre);
   }
 
+  /// Capture ended without anyone asking. Whatever the browser had is gone by
+  /// the time this fires, so the only thing left worth doing is saying so
+  /// immediately rather than letting the counter run to eighteen minutes.
+  Future<void> _handleCaptureLost() async {
+    if (_isStopping || !state.isRecording) return;
+
+    _elapsedTimer?.cancel();
+    _toastTimer?.cancel();
+    state = state.copyWith(
+      isRecording: false,
+      isPaused: false,
+      clearAmplitudeStream: true,
+      clearSessionId: true,
+      finalizationStage: FinalizationStage.idle,
+      finalizationErrorKind: FinalizationErrorKind.captureInterrupted,
+    );
+
+    await _disposeWebRecorder();
+    await const RecordingActiveFlag().markInactive();
+  }
+
   Future<void> _disposeWebRecorder() async {
+    await _webStateSub?.cancel();
+    _webStateSub = null;
     await _webAmplitudeSub?.cancel();
     _webAmplitudeSub = null;
     await _webAmplitudeController?.close();

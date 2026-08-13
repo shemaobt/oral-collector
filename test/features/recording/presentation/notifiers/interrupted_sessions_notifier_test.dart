@@ -49,6 +49,13 @@ void main() {
     when(() => repo.getById('s1')).thenAnswer((_) async => session);
     when(() => repo.decodeSegmentPaths(session)).thenReturn([segPath]);
     when(() => repo.markRecovered(any())).thenAnswer((_) async {});
+    when(
+      () => repo.recoverWithFinalizedAudio(
+        any(),
+        filePath: any(named: 'filePath'),
+        durationSeconds: any(named: 'durationSeconds'),
+      ),
+    ).thenAnswer((_) async {});
     when(() => repo.markDiscarded(any())).thenAnswer((_) async {});
     when(() => coordinator.refresh()).thenAnswer((_) async {});
   });
@@ -99,6 +106,13 @@ void main() {
 
     await expectLater(notifier.save('s1'), completion(isNull));
     verifyNever(() => repo.markRecovered(any()));
+    verifyNever(
+      () => repo.recoverWithFinalizedAudio(
+        any(),
+        filePath: any(named: 'filePath'),
+        durationSeconds: any(named: 'durationSeconds'),
+      ),
+    );
     verifyNever(() => repo.markDiscarded(any()));
     verify(() => coordinator.refresh()).called(1);
   });
@@ -131,6 +145,13 @@ void main() {
         ),
       ).called(1);
       verifyNever(() => repo.markRecovered(any()));
+      verifyNever(
+        () => repo.recoverWithFinalizedAudio(
+          any(),
+          filePath: any(named: 'filePath'),
+          durationSeconds: any(named: 'durationSeconds'),
+        ),
+      );
     },
   );
 
@@ -145,9 +166,21 @@ void main() {
       interruptedSessionsNotifierProvider.notifier,
     );
 
-    await notifier.confirmRecovery('s1', keepPath: keep);
+    await notifier.confirmRecovery(
+      's1',
+      keepPath: keep,
+      durationSeconds: 1080.0,
+    );
 
-    verify(() => repo.markRecovered('s1')).called(1);
+    // The kept file IS the finalized recording, so confirming a recovery
+    // anchors the row to it rather than only flipping the status (ENG-420).
+    verify(
+      () => repo.recoverWithFinalizedAudio(
+        's1',
+        filePath: keep,
+        durationSeconds: 1080.0,
+      ),
+    ).called(1);
     verify(() => coordinator.refresh()).called(1);
     expect(File(segPath).existsSync(), isFalse);
     expect(File(keep).existsSync(), isTrue);
@@ -165,5 +198,12 @@ void main() {
 
     expect(await notifier.save('s1'), isNull);
     verifyNever(() => repo.markRecovered(any()));
+    verifyNever(
+      () => repo.recoverWithFinalizedAudio(
+        any(),
+        filePath: any(named: 'filePath'),
+        durationSeconds: any(named: 'durationSeconds'),
+      ),
+    );
   });
 }
