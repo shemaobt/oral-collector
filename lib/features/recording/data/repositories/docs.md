@@ -415,6 +415,12 @@ Path: @/lib/features/recording/data/repositories
   are the callers, each wrapping its update fields in the request object.
 - `RecordingSessionRepository` manages the `recording_sessions` Drift
   table used by the segmented recorder for crash recovery (ENG-49/ENG-51).
+  `completeWithFinalizedAudio(sessionId, {filePath, durationSeconds})`
+  (ENG-420, slice 1) writes the two anchor columns
+  [added in schema v14](../../../../core/database/docs.md) —
+  `finalizedAudioPath`/`finalizedDurationSeconds` — onto a session row and
+  only then marks it completed. Both are plain targeted `UPDATE`s, the same
+  shape as `_setStatus`.
 
 ### Things to Know
 
@@ -456,6 +462,33 @@ Path: @/lib/features/recording/data/repositories
   would silently break either the preserve case or the clear case. The choice
   lives in the repository now precisely so it is one auditable place, not
   re-derived at each presentation call site.
+- **`completeWithFinalizedAudio` anchors before it completes, which is why the
+  two writes live in one method (ENG-420, slice 1).** Before
+  this, a session was marked `completed` the instant the finalized audio
+  existed on disk, with nothing in the database recording where that file
+  was — the only link back to it was
+  [`RecoveryCoordinator._sweepCompletedWithOrphanSegments`](../services/recovery_coordinator.dart)
+  matching `_$sessionId.` inside a `LocalRecording.localFilePath`, which only
+  exists once the user finishes the save form, minutes later if ever. A crash
+  in that window left a finished recording nothing pointed at. The caller
+  (`RecordingSessionNotifier._stopNative`) now anchors the row to the file
+  first and flips its status second, so a `completed` row can never exist
+  without a pointer to its artifact — see
+  [../../presentation/notifiers/docs.md](../../presentation/notifiers/docs.md).
+  The column is a **pointer, not a guarantee of existence**: nothing here
+  checks the file is still on disk, before or after the write, and a reader
+  must stat it itself. Two ordinary paths leave a stale anchor behind, and
+  neither clears it: discarding from the save form deletes the finalized audio
+  while the session row keeps pointing at it, and the orphan sweep in
+  [`RecoveryCoordinator`](../services/recovery_coordinator.dart) flips a row
+  from `completed` back to `crashed` with the anchor intact — so `crashed`
+  does **not** imply "never anchored". `null` means "never anchored" — every session that
+  predates schema v14, and any session that never reached a successful
+  finalize. The v13→v14 migration does no back-fill; guessing which on-disk
+  file belongs to which old session row would be a heuristic with real risk
+  of pointing at the wrong audio. As of this slice **nothing reads the
+  column** — it is deliberately inert until a later slice replaces the
+  substring match above with it.
 - **`splitRecordingReplacingParent` is atomic (ENG-125).** The trim/split save
   must end with the children present and the parent gone. Doing those as two
   statements (insert in a transaction, then delete) left a failure window where

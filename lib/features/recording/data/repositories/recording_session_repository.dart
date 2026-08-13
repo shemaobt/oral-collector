@@ -74,6 +74,29 @@ class RecordingSessionRepository {
         .write(RecordingSessionsCompanion(isPaused: Value(paused)));
   }
 
+  /// Anchors the session to the audio it produced, then marks it completed
+  /// (ENG-420).
+  ///
+  /// The two writes live together because the order between them is the whole
+  /// point: a `completed` row must never exist without a pointer to its
+  /// artifact. Dying between them leaves the session anchored but not
+  /// completed, which is the harmless direction.
+  Future<void> completeWithFinalizedAudio(
+    String sessionId, {
+    required String filePath,
+    required double durationSeconds,
+  }) async {
+    await (_db.update(
+      _db.recordingSessions,
+    )..where((t) => t.id.equals(sessionId))).write(
+      RecordingSessionsCompanion(
+        finalizedAudioPath: Value(filePath),
+        finalizedDurationSeconds: Value(durationSeconds),
+      ),
+    );
+    await _setStatus(sessionId, 'completed');
+  }
+
   Future<void> markCompleted(String sessionId) async {
     await _setStatus(sessionId, 'completed');
   }

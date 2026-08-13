@@ -653,7 +653,13 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
       totalDuration: totalDuration,
     );
     if (result != null) {
-      await sessionRepo.markCompleted(sessionResult.sessionId);
+      // The file exists as soon as _finalizeOrCrash returns, and until the row
+      // points at it nothing does (ENG-420).
+      await sessionRepo.completeWithFinalizedAudio(
+        sessionResult.sessionId,
+        filePath: result.filePath,
+        durationSeconds: result.durationSeconds,
+      );
       state = const RecordingState();
     }
     return result;
