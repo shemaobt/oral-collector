@@ -1018,15 +1018,20 @@ class AppLocalizationsSw extends AppLocalizations {
   }
 
   @override
-  String get import_resumePromptTitle => 'Endelea upakiaji uliokatizwa';
+  String get recording_resumePromptTitle => 'Endelea upakiaji uliokatizwa';
 
   @override
-  String import_resumePromptBody(String name, String size) {
-    return '\"$name\" ($size) ilipakiwa kwa sehemu. Chagua faili ileile kabisa (bila mabadiliko) ili kuendelea.';
+  String recording_resumePromptBodyStored(String name, String size) {
+    return '\"$name\" ($size) haikumaliza kupakiwa. Endelea kutoka mahali ilipoishia.';
   }
 
   @override
-  String get import_resumeSizeMismatch =>
+  String recording_resumePromptBodyPickFile(String name, String size) {
+    return '\"$name\" ($size) haikumaliza kupakiwa. Chagua tena faili ileile ili kuendelea.';
+  }
+
+  @override
+  String get recording_resumeSizeMismatch =>
       'Hiyo ni faili tofauti. Chagua faili ileile kabisa uliyokuwa ukipakia.';
 
   @override

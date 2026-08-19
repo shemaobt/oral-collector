@@ -991,15 +991,21 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get import_resumePromptTitle => '중단된 업로드 재개';
+  String get recording_resumePromptTitle => '중단된 업로드 재개';
 
   @override
-  String import_resumePromptBody(String name, String size) {
-    return '\"$name\"($size)이(가) 부분적으로 업로드되었습니다. 계속하려면 변경되지 않은 똑같은 파일을 선택하세요.';
+  String recording_resumePromptBodyStored(String name, String size) {
+    return '\"$name\"($size) 업로드가 끝나지 않았습니다. 중단된 지점부터 이어서 올립니다.';
   }
 
   @override
-  String get import_resumeSizeMismatch => '다른 파일입니다. 업로드하던 것과 똑같은 파일을 선택하세요.';
+  String recording_resumePromptBodyPickFile(String name, String size) {
+    return '\"$name\"($size) 업로드가 끝나지 않았습니다. 계속하려면 같은 파일을 다시 선택하세요.';
+  }
+
+  @override
+  String get recording_resumeSizeMismatch =>
+      '다른 파일입니다. 업로드하던 것과 똑같은 파일을 선택하세요.';
 
   @override
   String import_largeFileWarning(String size) {

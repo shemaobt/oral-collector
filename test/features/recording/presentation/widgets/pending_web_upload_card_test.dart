@@ -38,6 +38,7 @@ void main() {
     await tester.pumpWidget(
       _harness(
         PendingWebUploadCard(
+          hasStoredAudio: false,
           recording: _entity(),
           isResuming: false,
           onResume: () {},
@@ -59,6 +60,7 @@ void main() {
     await tester.pumpWidget(
       _harness(
         PendingWebUploadCard(
+          hasStoredAudio: false,
           recording: _entity(title: null),
           isResuming: false,
           onResume: () {},
@@ -75,6 +77,7 @@ void main() {
     await tester.pumpWidget(
       _harness(
         PendingWebUploadCard(
+          hasStoredAudio: false,
           recording: _entity(uploadedBytes: 1024),
           isResuming: false,
           onResume: () {},
@@ -93,6 +96,7 @@ void main() {
     await tester.pumpWidget(
       _harness(
         PendingWebUploadCard(
+          hasStoredAudio: false,
           recording: _entity(uploadedBytes: 0),
           isResuming: false,
           onResume: () {},
@@ -111,6 +115,7 @@ void main() {
     await tester.pumpWidget(
       _harness(
         PendingWebUploadCard(
+          hasStoredAudio: false,
           recording: _entity(),
           isResuming: true,
           onResume: () {},

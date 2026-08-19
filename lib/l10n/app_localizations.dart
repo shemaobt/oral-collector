@@ -1832,23 +1832,29 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{Skipped 1 unreadable file: {names}} other{Skipped {count} unreadable files: {names}}}'**
   String import_rejectedUnreadable(int count, String names);
 
-  /// No description provided for @import_resumePromptTitle.
+  /// No description provided for @recording_resumePromptTitle.
   ///
   /// In en, this message translates to:
   /// **'Resume interrupted upload'**
-  String get import_resumePromptTitle;
+  String get recording_resumePromptTitle;
 
-  /// No description provided for @import_resumePromptBody.
+  /// No description provided for @recording_resumePromptBodyStored.
   ///
   /// In en, this message translates to:
-  /// **'\"{name}\" ({size}) was partially uploaded. Select the exact same file (unchanged) to continue.'**
-  String import_resumePromptBody(String name, String size);
+  /// **'\"{name}\" ({size}) didn\'t finish uploading. Continue from where it stopped.'**
+  String recording_resumePromptBodyStored(String name, String size);
 
-  /// No description provided for @import_resumeSizeMismatch.
+  /// No description provided for @recording_resumePromptBodyPickFile.
+  ///
+  /// In en, this message translates to:
+  /// **'\"{name}\" ({size}) didn\'t finish uploading. Pick the same file again to continue.'**
+  String recording_resumePromptBodyPickFile(String name, String size);
+
+  /// No description provided for @recording_resumeSizeMismatch.
   ///
   /// In en, this message translates to:
   /// **'That\'s a different file. Select the exact same file you were uploading.'**
-  String get import_resumeSizeMismatch;
+  String get recording_resumeSizeMismatch;
 
   /// No description provided for @import_largeFileWarning.
   ///

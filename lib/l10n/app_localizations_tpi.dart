@@ -1016,15 +1016,20 @@ class AppLocalizationsTpi extends AppLocalizations {
   }
 
   @override
-  String get import_resumePromptTitle => 'Statim gen aplotim i no pinis';
+  String get recording_resumePromptTitle => 'Statim gen aplotim i no pinis';
 
   @override
-  String import_resumePromptBody(String name, String size) {
-    return '\"$name\" ($size) i no go pinis. Makim stret wankain fail (i no senis) bilong go het.';
+  String recording_resumePromptBodyStored(String name, String size) {
+    return '\"$name\" ($size) i no pinis long aplotim. Em bai go het long ples em i bin stop.';
   }
 
   @override
-  String get import_resumeSizeMismatch =>
+  String recording_resumePromptBodyPickFile(String name, String size) {
+    return '\"$name\" ($size) i no pinis long aplotim. Makim gen wankain fail bilong go het.';
+  }
+
+  @override
+  String get recording_resumeSizeMismatch =>
       'Em narapela fail. Makim stret wankain fail yu bin aplotim.';
 
   @override

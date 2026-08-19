@@ -374,14 +374,43 @@ Path: @/lib/features/recording/presentation/widgets
 - `PendingWebUploadCard` (ENG-196) is the presentational, stateless card for
   one resumable web upload, rendered once per item by
   `PendingWebUploadsBanner` ([./pending_web_uploads_banner.dart](pending_web_uploads_banner.dart)).
-  It takes a `LocalRecordingEntity` plus an `isResuming` flag and
-  `onResume` / `onDiscard` callbacks; it owns no state and no providers.
+  It takes a `LocalRecordingEntity` plus `hasStoredAudio` / `isResuming` flags
+  and `onResume` / `onDiscard` callbacks; it owns no state and no providers.
   It was split out of the banner's inline per-item body precisely because
-  the banner is gated behind `kIsWeb` and so never renders under the CI
-  widget tests (where `kIsWeb` is always false) — extracting the card lets
-  the card's layout be exercised directly on the VM while the banner keeps
-  the platform gate, the repository read, and the resume/discard
-  orchestration.
+  the banner is gated on the platform and so never rendered under the CI
+  widget tests — extracting the card let the card's layout be exercised
+  directly on the VM while the banner kept the platform gate, the repository
+  read, and the resume/discard orchestration. `hasStoredAudio` (ENG-427)
+  picks between the two bodies: with the audio still in browser storage the
+  card says the upload will carry on from where it stopped, and without it the
+  card asks for the file again, because those are two different things to the
+  person reading. Its actions sit in an `OverflowBar`, not a `Row`: at 2.0x on
+  a 320dp phone the two labels do not fit side by side in most locales, and
+  they stack instead of running off the card
+  ([/test/features/recording/presentation/widgets/pending_web_upload_card_text_scale_test.dart](../../../../../test/features/recording/presentation/widgets/pending_web_upload_card_text_scale_test.dart)
+  holds all eleven).
+- `PendingWebUploadsBanner` is the stateful half: it reads the `web_uploading`
+  rows through `LocalRecordingRepository.getPendingWebUploads`, asks storage
+  whether each row's audio is still there, and owns resume and discard. Since
+  ENG-427 a resume takes one of two paths. When the row carries a storage
+  address **and the bytes are still under it**, the banner reads them and
+  uploads straight from them — the person presses Resume and nothing else is
+  asked of them. Otherwise it opens the file chooser exactly as before. The
+  discriminator is the address plus a live existence check, never the origin of
+  the audio: a web import's bytes come from a browser `File` and die with the
+  page, and rows written before ENG-427 carry an invented
+  `web_import_<millis>_<serverId>` name that is not distinguishable from a real
+  key by shape, so both fall out through the same "found nothing" branch. Not
+  finding the bytes is an ordinary answer, not an error. Two details are
+  load-bearing: the storage key is passed on as the `FileSource.storageKey`, so
+  an upload cut short a second time still leaves a row that leads back to the
+  bytes; and the size check stays on the chooser path only, since stored bytes
+  are the original ones and there is nothing to compare them against. After a
+  successful resume from stored bytes the bytes are deleted rather than left
+  for the 24-hour sweep (ENG-426). The banner does not resume on its own at
+  startup — resuming without asking for a *file* is not the same as resuming
+  without asking for *permission*, and pushing a large recording up an
+  expensive connection is not the app's call.
 - `RecordingUploadBanners` (ENG-377) renders every banner that explains why a
   recording is not on the server — title conflict, description gap, spent
   retry budget, missing audio file, secondary-classification collision — in a
@@ -395,6 +424,25 @@ Path: @/lib/features/recording/presentation/widgets
 
 ### Things to Know
 
+- **The resume banner's tests run on the live binding, and that is not a
+  stylistic choice (ENG-427).** `PendingWebUploadsBanner` waits on browser
+  storage, which under test is `idb_shim`'s in-memory IndexedDB — the same
+  complete implementation `WebFileStore`'s own tests use. On the default widget
+  binding the whole test runs on a fake clock, and an IndexedDB transaction
+  never completes there no matter how many frames are pumped, so
+  [/test/features/recording/presentation/widgets/pending_web_uploads_banner_test.dart](../../../../../test/features/recording/presentation/widgets/pending_web_uploads_banner_test.dart)
+  calls `LiveTestWidgetsFlutterBinding.ensureInitialized()`. The alternative was
+  swapping the store for a map, which would have made the tests pass while
+  proving nothing about the storage the feature actually runs on. Two
+  consequences for anyone editing that file: nothing there may use
+  `pumpAndSettle` — the resume button spins a `CircularProgressIndicator` that
+  never settles, so the tests pump until a stated condition holds — and the
+  banner reaches storage and the picker through providers
+  (`fileExistsProvider`, `readFileBytesProvider`, `deleteFileProvider`,
+  `audioFilePickerProvider`) and the platform gate through
+  `isWebPlatformProvider`, all of which are overridden there. The chooser is the
+  only stand-in in the file, and even it is asserted on by "was it opened",
+  never by what it returned.
 - **`FinalizingOverlay`'s error body is chosen by `FinalizationErrorKind`, and
   its button does not discard anything (ENG-408).** The screen used to render
   one hardcoded pair of strings for every failure, so a browser recording that

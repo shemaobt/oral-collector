@@ -506,9 +506,9 @@
       }
     }
   },
-  "import_resumePromptTitle": "Resume interrupted upload",
-  "import_resumePromptBody": "\"{name}\" ({size}) was partially uploaded. Select the exact same file (unchanged) to continue.",
-  "@import_resumePromptBody": {
+  "recording_resumePromptTitle": "Resume interrupted upload",
+  "recording_resumePromptBodyStored": "\"{name}\" ({size}) didn't finish uploading. Continue from where it stopped.",
+  "@recording_resumePromptBodyStored": {
     "placeholders": {
       "name": {
         "type": "String"
@@ -518,7 +518,18 @@
       }
     }
   },
-  "import_resumeSizeMismatch": "That's a different file. Select the exact same file you were uploading.",
+  "recording_resumePromptBodyPickFile": "\"{name}\" ({size}) didn't finish uploading. Pick the same file again to continue.",
+  "@recording_resumePromptBodyPickFile": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "recording_resumeSizeMismatch": "That's a different file. Select the exact same file you were uploading.",
   "import_largeFileWarning": "Large file ({size}). Keep this tab open until the upload completes.",
   "@import_largeFileWarning": {
     "placeholders": {

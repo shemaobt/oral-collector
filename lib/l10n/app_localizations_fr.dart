@@ -1037,16 +1037,21 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get import_resumePromptTitle =>
+  String get recording_resumePromptTitle =>
       'Reprendre le téléversement interrompu';
 
   @override
-  String import_resumePromptBody(String name, String size) {
-    return '« $name » ($size) a été partiellement téléversé. Sélectionnez exactement le même fichier (sans modification) pour continuer.';
+  String recording_resumePromptBodyStored(String name, String size) {
+    return '« $name » ($size) n\'a pas fini d\'être téléversé. Reprenez là où ça s\'est arrêté.';
   }
 
   @override
-  String get import_resumeSizeMismatch =>
+  String recording_resumePromptBodyPickFile(String name, String size) {
+    return '« $name » ($size) n\'a pas fini d\'être téléversé. Sélectionnez à nouveau le même fichier pour continuer.';
+  }
+
+  @override
+  String get recording_resumeSizeMismatch =>
       'C\'est un autre fichier. Sélectionnez exactement le même fichier que celui en cours de téléversement.';
 
   @override

@@ -982,15 +982,20 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get import_resumePromptTitle => '继续中断的上传';
+  String get recording_resumePromptTitle => '继续中断的上传';
 
   @override
-  String import_resumePromptBody(String name, String size) {
-    return '“$name”（$size）已部分上传。请选择完全相同（未更改）的文件以继续。';
+  String recording_resumePromptBodyStored(String name, String size) {
+    return '“$name”（$size）尚未上传完成。将从中断处继续。';
   }
 
   @override
-  String get import_resumeSizeMismatch => '这是另一个文件。请选择您正在上传的那个完全相同的文件。';
+  String recording_resumePromptBodyPickFile(String name, String size) {
+    return '“$name”（$size）尚未上传完成。请重新选择同一个文件以继续。';
+  }
+
+  @override
+  String get recording_resumeSizeMismatch => '这是另一个文件。请选择您正在上传的那个完全相同的文件。';
 
   @override
   String import_largeFileWarning(String size) {
