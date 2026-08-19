@@ -1033,15 +1033,20 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get import_resumePromptTitle => 'रुका हुआ अपलोड फिर से शुरू करें';
+  String get recording_resumePromptTitle => 'रुका हुआ अपलोड फिर से शुरू करें';
 
   @override
-  String import_resumePromptBody(String name, String size) {
-    return '\"$name\" ($size) आंशिक रूप से अपलोड हुई थी। जारी रखने के लिए ठीक वही फ़ाइल (बिना बदलाव) चुनें।';
+  String recording_resumePromptBodyStored(String name, String size) {
+    return '\"$name\" ($size) का अपलोड पूरा नहीं हुआ। जहाँ रुका था वहीं से जारी रखें।';
   }
 
   @override
-  String get import_resumeSizeMismatch =>
+  String recording_resumePromptBodyPickFile(String name, String size) {
+    return '\"$name\" ($size) का अपलोड पूरा नहीं हुआ। जारी रखने के लिए वही फ़ाइल फिर से चुनें।';
+  }
+
+  @override
+  String get recording_resumeSizeMismatch =>
       'यह एक अलग फ़ाइल है। ठीक वही फ़ाइल चुनें जिसे आप अपलोड कर रहे थे।';
 
   @override

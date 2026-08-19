@@ -1012,15 +1012,20 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get import_resumePromptTitle => 'استئناف الرفع المتوقف';
+  String get recording_resumePromptTitle => 'استئناف الرفع المتوقف';
 
   @override
-  String import_resumePromptBody(String name, String size) {
-    return 'تم رفع \"$name\" ($size) جزئيًا. اختر الملف نفسه تمامًا (دون تغيير) للمتابعة.';
+  String recording_resumePromptBodyStored(String name, String size) {
+    return 'لم يكتمل رفع \"$name\" ($size). تابع من حيث توقف.';
   }
 
   @override
-  String get import_resumeSizeMismatch =>
+  String recording_resumePromptBodyPickFile(String name, String size) {
+    return 'لم يكتمل رفع \"$name\" ($size). اختر الملف نفسه مرة أخرى للمتابعة.';
+  }
+
+  @override
+  String get recording_resumeSizeMismatch =>
       'هذا ملف مختلف. اختر الملف نفسه تمامًا الذي كنت ترفعه.';
 
   @override

@@ -1029,15 +1029,20 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get import_resumePromptTitle => 'Retomar envio interrompido';
+  String get recording_resumePromptTitle => 'Retomar envio interrompido';
 
   @override
-  String import_resumePromptBody(String name, String size) {
-    return '\"$name\" ($size) foi enviado parcialmente. Selecione exatamente o mesmo arquivo (sem alterações) para continuar.';
+  String recording_resumePromptBodyStored(String name, String size) {
+    return '\"$name\" ($size) não terminou de subir. Continue de onde parou.';
   }
 
   @override
-  String get import_resumeSizeMismatch =>
+  String recording_resumePromptBodyPickFile(String name, String size) {
+    return '\"$name\" ($size) não terminou de subir. Escolha o mesmo arquivo de novo para continuar.';
+  }
+
+  @override
+  String get recording_resumeSizeMismatch =>
       'Esse é outro arquivo. Selecione exatamente o mesmo arquivo que estava sendo enviado.';
 
   @override

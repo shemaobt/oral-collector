@@ -1020,15 +1020,20 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get import_resumePromptTitle => 'Resume interrupted upload';
+  String get recording_resumePromptTitle => 'Resume interrupted upload';
 
   @override
-  String import_resumePromptBody(String name, String size) {
-    return '\"$name\" ($size) was partially uploaded. Select the exact same file (unchanged) to continue.';
+  String recording_resumePromptBodyStored(String name, String size) {
+    return '\"$name\" ($size) didn\'t finish uploading. Continue from where it stopped.';
   }
 
   @override
-  String get import_resumeSizeMismatch =>
+  String recording_resumePromptBodyPickFile(String name, String size) {
+    return '\"$name\" ($size) didn\'t finish uploading. Pick the same file again to continue.';
+  }
+
+  @override
+  String get recording_resumeSizeMismatch =>
       'That\'s a different file. Select the exact same file you were uploading.';
 
   @override

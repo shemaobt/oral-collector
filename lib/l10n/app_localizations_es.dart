@@ -1034,15 +1034,20 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get import_resumePromptTitle => 'Reanudar subida interrumpida';
+  String get recording_resumePromptTitle => 'Reanudar subida interrumpida';
 
   @override
-  String import_resumePromptBody(String name, String size) {
-    return '\"$name\" ($size) se subió parcialmente. Selecciona exactamente el mismo archivo (sin cambios) para continuar.';
+  String recording_resumePromptBodyStored(String name, String size) {
+    return '\"$name\" ($size) no terminó de subirse. Continúa desde donde se detuvo.';
   }
 
   @override
-  String get import_resumeSizeMismatch =>
+  String recording_resumePromptBodyPickFile(String name, String size) {
+    return '\"$name\" ($size) no terminó de subirse. Vuelve a elegir el mismo archivo para continuar.';
+  }
+
+  @override
+  String get recording_resumeSizeMismatch =>
       'Ese es otro archivo. Selecciona exactamente el mismo archivo que estabas subiendo.';
 
   @override

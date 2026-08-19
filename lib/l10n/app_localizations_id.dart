@@ -1021,15 +1021,20 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String get import_resumePromptTitle => 'Lanjutkan unggahan yang terhenti';
+  String get recording_resumePromptTitle => 'Lanjutkan unggahan yang terhenti';
 
   @override
-  String import_resumePromptBody(String name, String size) {
-    return '\"$name\" ($size) terunggah sebagian. Pilih berkas yang sama persis (tanpa perubahan) untuk melanjutkan.';
+  String recording_resumePromptBodyStored(String name, String size) {
+    return '\"$name\" ($size) belum selesai diunggah. Lanjutkan dari tempat berhentinya.';
   }
 
   @override
-  String get import_resumeSizeMismatch =>
+  String recording_resumePromptBodyPickFile(String name, String size) {
+    return '\"$name\" ($size) belum selesai diunggah. Pilih lagi berkas yang sama untuk melanjutkan.';
+  }
+
+  @override
+  String get recording_resumeSizeMismatch =>
       'Itu berkas yang berbeda. Pilih berkas yang sama persis dengan yang sedang Anda unggah.';
 
   @override
