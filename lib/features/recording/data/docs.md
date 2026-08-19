@@ -186,7 +186,11 @@ Path: @/lib/features/recording/data
   `ResumableUploadService.uploadFromSource`, and for the duration of that
   upload a `web_<serverId>` shadow row (`uploadStatus='web_uploading'`)
   exists in Drift to carry resume state; it is deleted on success and left
-  in place on failure for the resume banner. That shadow row is written with
+  in place on failure for the resume banner. Its `localFilePath` holds where
+  the bytes can be read back from — `FileSource.filePath` on native,
+  `FileSource.storageKey` on web — or the empty string when the source has
+  neither, which is the row saying it does not know where the audio is
+  (ENG-427). That shadow row is written with
   `LocalRecordingRepository.upsertRecording` (not `insertRecording`) so a
   retry of a failed large import reuses the row instead of colliding on its
   primary key — see ENG-80 in Things to Know. The single-shot path computes its
@@ -571,6 +575,24 @@ Path: @/lib/features/recording/data
   `resumableSessionUri`/`uploadedBytes`, the prior resume state is kept and
   the resumable service continues from the persisted offset instead of
   restarting or throwing on the duplicate key.
+- **The shadow row's `localFilePath` is an address or nothing — never a
+  plausible-looking invention (ENG-427).** It used to be
+  `source.filePath ?? 'web_import_<millis>_<serverId>'`, and on web
+  `FileSource.filePath` is null in every implementation, so the fallback was
+  what every browser upload stored — including microphone captures that were
+  no import at all. Nothing could read those bytes back from it. It is now
+  `source.filePath ?? source.storageKey ?? ''`, which on web resolves to the
+  `WebFileStore` key the capture wrote and the confirmation step read from.
+  The empty string is load-bearing: a resume has to tell "I still have the
+  audio" from "I have to ask for the file again", and a browser `File` from a
+  picker genuinely falls in the second case because its bytes die with the
+  page — the same empty string the successful `_saveWebDirect` path already
+  writes for a row whose audio lives only on the server. Rows written by
+  earlier builds still carry the old invented name; they are left alone rather
+  than treated as corrupt, and reading them back simply finds nothing. Native
+  is untouched: `filePath` still wins there. What this does **not** yet do is
+  use any of it — making the resume banner read the bytes back is the second
+  half of ENG-427.
 - The `localRecordingStreamProvider` streams the **domain entity**
   `LocalRecordingEntity?` as of ENG-199/ENG-200 — it is backed by
   `LocalRecordingRepository.watchRecordingEntityById`

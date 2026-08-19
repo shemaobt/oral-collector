@@ -54,7 +54,16 @@ Path: @/lib/core/platform
   `Blob.slice(start, end).arrayBuffer()`, and the native variant
   (`file_source_native.dart`) as a `RandomAccessFile` seek + read, so a caller
   can read the tail or an interior box of a multi-gigabyte file without
-  loading it whole. The container-header parsers under
+  loading it whole. Alongside `filePath` (a native filesystem path, null
+  everywhere else) it carries `storageKey` (ENG-427): the durable address the
+  bytes can be read back from after a reload, which on web means a
+  `WebFileStore` key. Only the in-memory variant can answer it, and only when
+  the caller that built it knew the key — `ConfirmationStep._saveWebDirect`
+  passes the key it just read the bytes from. Every other variant answers
+  null, including the browser `File` a picker hands over, whose bytes die with
+  the page. `storageKey` is deliberately not `name`: `name` is a label to show,
+  so hanging a storage contract on it would let a cosmetic rename break a
+  resume in silence. The container-header parsers under
   [/lib/features/recording/data/services/audio_metadata/](../../features/recording/data/services/audio_metadata/)
   depend on this to probe arbitrarily large imports cheaply.
 - `file_ops.dart` (facade over `file_ops_native.dart` / `file_ops_web.dart`)
@@ -142,11 +151,29 @@ Path: @/lib/core/platform
   `RecordingTrash.pruneOldTrash` on device. It enumerates the store through
   `listStoredKeys`, keeps only keys carrying the recorder's `web_record_`
   prefix, reads each recording's start instant out of the key itself, and
-  deletes the ones older than 24 hours. No metadata and no schema was added for
-  this: the key already carries the timestamp. What is still missing is a
-  surface that offers an abandoned recording *back* to the person before the
-  cutoff collects it — that is ENG-427, and it has the same shape as ENG-420 on
+  deletes the ones older than 24 hours, skipping any key a pending upload can
+  still resume from. No metadata and no schema was added for this: the key
+  already carries the timestamp. What is still missing is a surface that offers
+  an abandoned recording *back* to the person before the cutoff collects it —
+  that is ENG-427's second half, and it has the same shape as ENG-420 on
   device.
+- **"Never collect what a pending upload needs" used to be true for free; now
+  it is enforced (ENG-427).** Until the resumable path recorded where its bytes
+  were, the promise held vacuously: an interrupted web upload's shadow row
+  carried a `web_import_<millis>_<serverId>` name that addressed nothing, so no
+  stored bytes were reachable from it and resuming meant asking the person for
+  the file again. Now the row carries the real storage key, so the sweep takes
+  a third dependency — `keysInUse`, wired in [/lib/main.dart](../../main.dart)
+  to `LocalRecordingRepository.getPendingWebUploadKeys` — and skips every key
+  it names. The set is built **once per sweep**, not queried per key, and it is
+  matched key for key: sparing the whole store because *some* upload is pending
+  would leave the sweep running and collecting nothing, which is the failure
+  mode that looks identical to working. Two tests hold the two edges apart in
+  [/test/features/recording/data/services/web_upload_resume_test.dart](../../../test/features/recording/data/services/web_upload_resume_test.dart)
+  — one where the pending row points at the swept key, one where a pending row
+  exists but points somewhere else and the abandoned bytes must still go. A key
+  in use that no longer exists in storage is not an error and does not stop the
+  sweep; the set is only ever consulted, never dereferenced.
 - **The 24-hour cutoff is also what makes the sweep safe with two tabs open.**
   A recording in progress, or one sitting on the confirmation form, is minutes
   old and never in range, so the sweeper needs no Web Locks and no

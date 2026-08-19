@@ -511,6 +511,9 @@ Path: @/lib/features/recording/presentation/widgets
   (see [/lib/core/platform/docs.md](../../../../core/platform/docs.md)); once
   `DirectRecordingUploader.upload` returns a `serverId`, those bytes are
   redundant with the server's copy and `file_ops.deleteFile` removes them.
+  The same key is handed to the uploader as the source's `storageKey`, which
+  is what lets an upload cut short before that point record where its audio
+  still is (ENG-427).
   This is a deliberate leak-prevention step, not cleanup of a bug: before the
   bytes were made durable the module-level map that held them died with the
   tab, capping the leak; persisting them (the ENG-421 fix) turned an

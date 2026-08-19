@@ -82,6 +82,14 @@ Path: @/lib/features/recording/data/repositories
   the recordings-list / detail notifiers still read raw rows through them, so
   both the row and entity reads share the same query and the same `_fromRow`
   projection.
+- `getPendingWebUploadKeys` projects the same `web_uploading` rows down to the
+  set of storage keys their audio can be resumed from, dropping the empty ones
+  (rows written before ENG-427, and web imports whose bytes were never in
+  storage — there is no key to spare). It is the whole reason the startup
+  sweep in
+  [../services/web_audio_sweeper.dart](../services/web_audio_sweeper.dart) can
+  skip audio a resume still needs, and it is one query per sweep rather than
+  one per key.
 - `getPendingUploads` / `getPendingWebUploads` define the **upload queue
   order**: they sort `createdAt ASC, id ASC`, and
   [the sync engine](../../../sync/data/repositories/sync_engine.dart) drains
