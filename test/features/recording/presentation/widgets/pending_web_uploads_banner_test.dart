@@ -271,8 +271,16 @@ void main() {
   testWidgets('says something different when the audio is still here', (
     tester,
   ) async {
-    // Same title and same size on both rows, so the only thing that can differ
-    // between the two bodies is the sentence itself.
+    // Same title and same size on every row, so the only thing that can differ
+    // between the bodies is the sentence itself.
+    //
+    // Three rows, because "the app does not have the audio" has two shapes and
+    // only one of them is an empty address. The third row carries an address
+    // that reads like a real key and has nothing under it — a row written
+    // before ENG-427, or a recording the 24-hour sweep already collected. It
+    // has to read as the same "hand me the file" as the empty one: telling
+    // someone the upload will carry on from where it stopped when the bytes are
+    // gone is the same lie as this issue's, pointed the other way.
     final key = recordingKey(2);
     await browserStorage.write(key, recordedBytes(4096));
     await pendingRow(
@@ -282,17 +290,23 @@ void main() {
       createdAt: DateTime.utc(2026, 8, 19, 10),
     );
     await pendingRow(
-      id: 'rec-gone',
+      id: 'rec-no-address',
       localFilePath: '',
       fileSizeBytes: 4096,
       createdAt: DateTime.utc(2026, 8, 19, 11),
     );
+    await pendingRow(
+      id: 'rec-dead-address',
+      localFilePath: 'web_import_1755600000000_srv-1',
+      fileSizeBytes: 4096,
+      createdAt: DateTime.utc(2026, 8, 19, 12),
+    );
 
     await pumpBanner(tester);
-    await pumpUntil(tester, () => cardCount(tester) == 2);
+    await pumpUntil(tester, () => cardCount(tester) == 3);
 
     final cards = find.byType(PendingWebUploadCard);
-    expect(cards, findsNWidgets(2));
+    expect(cards, findsNWidgets(3));
 
     String bodyOf(int card) => tester
         .widgetList<Text>(
@@ -306,12 +320,14 @@ void main() {
 
     final storedBody = bodyOf(0);
     final pickFileBody = bodyOf(1);
+    final deadAddressBody = bodyOf(2);
 
     expect(storedBody, isNot(pickFileBody));
     expect(
       find.descendant(of: cards.at(0), matching: find.text(pickFileBody)),
       findsNothing,
     );
+    expect(deadAddressBody, pickFileBody);
   });
 
   testWidgets('lets the stored audio go once the upload is through', (
