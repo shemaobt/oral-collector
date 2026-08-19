@@ -369,6 +369,29 @@ Path: @/lib/features/recording/data
   builds, and nothing but a test holds the two ends together — see
   [/lib/core/platform/docs.md](../../../core/platform/docs.md) for the cutoff's
   consequences and for why keys it cannot parse are left alone.
+- `services/confirmation_draft_store.dart` exposes `ConfirmationDraft` (title,
+  description, storyteller id) and `ConfirmationDraftStore`, which keeps what
+  was typed on the confirmation screen alive across the death of the process
+  (ENG-518, slice 1). **The key is the recording's audio path**, not a session
+  and not a single global slot: that path is the only identity the confirmation
+  form and
+  [../presentation/recovery_confirm_screen.dart](../presentation/recovery_confirm_screen.dart)
+  already share, on both platforms, and it carries the instant of creation so it
+  is never reused. A global key would survive process death just as well and be
+  strictly worse — the next recording would open wearing the previous one's
+  title, which is the failure
+  [/test/features/recording/presentation/widgets/confirmation_step_draft_test.dart](../../../../test/features/recording/presentation/widgets/confirmation_step_draft_test.dart)
+  test 3 exists to catch. It is `SharedPreferences`, not a table: a draft is
+  never queried, never synced, and dies with the recording's decision, so a
+  schema migration would buy nothing, and `shared_preferences_web` backs the
+  same API with `localStorage`, which outlives the browser tab exactly as the
+  native store outlives the process. Unreadable stored text reads back as
+  `null` rather than throwing — a disposable draft must never take the screen
+  down with it. **Drafts can be orphaned by design.** A recording that leaves
+  by any route other than save or discard (the ENG-426 web sweeper, a cache
+  clear, a file removed from outside) leaves its draft behind; there is no
+  reaper, because the cost is a few bytes of text and the key can never collide
+  with a new recording.
 - `services/audio_path_resolver.dart` exposes the pure async
   `resolveRecordingPath(storedPath)`. It returns the first existing path
   among: the stored path itself, the application documents directory

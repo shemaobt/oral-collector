@@ -636,6 +636,49 @@ Path: @/lib/features/recording/presentation/widgets
   `filters_icon_button.dart` count badge (a `Stack(clipBehavior: none)`) do not
   overflow, and `active_filter_chips.dart` already ellipsizes. Those keep a
   text-scale regression test but no production change.
+- **What the confirmation form holds survives the death of the process
+  (ENG-518, slice 1) — but leaving the screen still does not.** Title,
+  description and storyteller used to live only in `_titleController`,
+  `_descriptionController` and `_selectedStoryteller`, so a kill while the
+  form was open cost the metadata even though the audio itself had been durable
+  on both platforms since ENG-420 and ENG-421. The form was the last fragile
+  link in that chain; the field report behind ENG-401 was *"when we tried to do
+  the description outside, we lost 2 recordings because of it"*. Now every
+  user-driven change schedules a 400 ms-debounced write through
+  `ConfirmationDraftStore`
+  ([../../data/services/confirmation_draft_store.dart](../../data/services/confirmation_draft_store.dart)),
+  keyed by `widget.result.filePath`, and `_restoreDraft` reads it back on
+  mount. Details that are load-bearing:
+  - **The debounce never decides whether the text survives.** `dispose` and
+    `didChangeAppLifecycleState(paused | detached)` both flush whatever is
+    still queued, so the window is closed at the two moments the process can
+    actually end.
+  - **A late read never fights the person typing.** `_titleTouched` /
+    `_descriptionTouched` are set from the fields' `onChanged` (user input
+    only, never a programmatic assignment), and restoration skips any field
+    they mark. Restored text lands via `TextEditingValue` with the caret
+    collapsed *after* it, not at offset 0.
+  - **The storyteller is stored as an id and adopted when the list arrives.**
+    `_pendingStorytellerId` is resolved against
+    `projectStorytellersNotifierProvider` — once at restore time and again
+    from a `ref.listen` in `build`, because the fetch may still be in flight.
+    A storyteller deleted between two openings simply never matches and the
+    picker opens unselected; the save button stays disabled, which is the
+    pre-existing behaviour for "no storyteller chosen".
+  - **Cleanup runs on both outcomes.** `_closeDraft` clears the entry and
+    latches `_draftClosed`, so the flush in `dispose` cannot resurrect a draft
+    whose recording was just saved or discarded. It is called from the native
+    save, from `_saveWebDirect`, and from the confirmed branch of `_discard`.
+  - **Still out of scope:** leaving the screen. Back is still intercepted by
+    the `PopScope` and still only offers discard, which still costs the audio.
+    That affordance, and the interface decision that goes with it, is ENG-518
+    slice 2 — this slice deliberately left `PopScope`, the discard dialog and
+    every string untouched.
+  [../recovery_confirm_screen.dart](../recovery_confirm_screen.dart) needed
+  **no change at all**: it already passes the same `RecordingResult`, so the
+  same audio path keys the same draft and a crash-recovered recording now opens
+  filled in instead of always empty. Any code special to recovery would have
+  been a sign the key was wrong.
 - **`ConfirmationStep` is parameterized for the recovery reuse (ENG-80).**
   Two optional params let the recovery screen host the same widget
   without duplicating the save logic: `onSaved` runs in place of the
