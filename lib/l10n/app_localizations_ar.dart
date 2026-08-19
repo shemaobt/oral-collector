@@ -511,6 +511,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get recording_discardMessage => 'سيتم حذف هذا التسجيل نهائياً.';
 
   @override
+  String get recording_leaveTitle => 'الخروج دون حفظ؟';
+
+  @override
+  String get recording_leaveMessage =>
+      'يبقى الصوت محفوظاً — يمكنك إكماله لاحقاً من التسجيلات غير المحفوظة. حذفه الآن لا يمكن التراجع عنه.';
+
+  @override
+  String get recording_keepForLater => 'احتفظ به لاحقاً';
+
+  @override
   String get recording_saved => 'تم حفظ التسجيل';
 
   @override

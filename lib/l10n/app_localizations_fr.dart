@@ -522,6 +522,16 @@ class AppLocalizationsFr extends AppLocalizations {
       'Cet enregistrement sera définitivement supprimé.';
 
   @override
+  String get recording_leaveTitle => 'Quitter sans enregistrer ?';
+
+  @override
+  String get recording_leaveMessage =>
+      'L\'audio est conservé — vous pourrez le terminer plus tard depuis les enregistrements non sauvegardés. Le supprimer maintenant est irréversible.';
+
+  @override
+  String get recording_keepForLater => 'Garder pour plus tard';
+
+  @override
   String get recording_saved => 'Enregistrement sauvegardé';
 
   @override

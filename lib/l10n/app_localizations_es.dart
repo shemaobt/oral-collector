@@ -521,6 +521,16 @@ class AppLocalizationsEs extends AppLocalizations {
       'Esta grabación será eliminada permanentemente.';
 
   @override
+  String get recording_leaveTitle => '¿Salir sin guardar?';
+
+  @override
+  String get recording_leaveMessage =>
+      'El audio se conserva: puedes terminarlo más tarde desde las grabaciones sin guardar. Eliminarlo ahora no se puede deshacer.';
+
+  @override
+  String get recording_keepForLater => 'Guardar para después';
+
+  @override
   String get recording_saved => 'Grabación guardada';
 
   @override

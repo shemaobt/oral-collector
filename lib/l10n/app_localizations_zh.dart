@@ -505,6 +505,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recording_discardMessage => '此录音将被永久删除。';
 
   @override
+  String get recording_leaveTitle => '不保存就离开？';
+
+  @override
+  String get recording_leaveMessage => '音频会保留 — 你可以稍后从未保存的录音中继续完成。现在删除将无法恢复。';
+
+  @override
+  String get recording_keepForLater => '留待稍后';
+
+  @override
   String get recording_saved => '录音已保存';
 
   @override

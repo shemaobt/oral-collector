@@ -516,6 +516,16 @@ class AppLocalizationsId extends AppLocalizations {
       'Rekaman ini akan dihapus secara permanen.';
 
   @override
+  String get recording_leaveTitle => 'Keluar tanpa menyimpan?';
+
+  @override
+  String get recording_leaveMessage =>
+      'Audio tetap tersimpan — Anda bisa menyelesaikannya nanti dari rekaman yang belum disimpan. Menghapusnya sekarang tidak bisa dibatalkan.';
+
+  @override
+  String get recording_keepForLater => 'Simpan untuk nanti';
+
+  @override
   String get recording_saved => 'Rekaman disimpan';
 
   @override

@@ -513,6 +513,16 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get recording_discardMessage => 'Dispela rekoding bai lus olgeta.';
 
   @override
+  String get recording_leaveTitle => 'Lusim na i no seivim?';
+
+  @override
+  String get recording_leaveMessage =>
+      'Rekoding i stap yet — yu inap pinisim bihain long ol rekoding i no seiv yet. Sapos yu tromoi nau, em bai lus olgeta.';
+
+  @override
+  String get recording_keepForLater => 'Holim bilong bihain';
+
+  @override
   String get recording_saved => 'Rekoding i sev pinis';
 
   @override

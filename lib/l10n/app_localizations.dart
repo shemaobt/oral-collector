@@ -1088,6 +1088,24 @@ abstract class AppLocalizations {
   /// **'This recording will be permanently deleted.'**
   String get recording_discardMessage;
 
+  /// No description provided for @recording_leaveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave without saving?'**
+  String get recording_leaveTitle;
+
+  /// No description provided for @recording_leaveMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The audio is kept — you can finish it later from unsaved recordings. Deleting it now cannot be undone.'**
+  String get recording_leaveMessage;
+
+  /// No description provided for @recording_keepForLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep for later'**
+  String get recording_keepForLater;
+
   /// No description provided for @recording_saved.
   ///
   /// In en, this message translates to:

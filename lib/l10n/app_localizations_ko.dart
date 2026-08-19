@@ -506,6 +506,16 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recording_discardMessage => '이 녹음은 영구적으로 삭제됩니다.';
 
   @override
+  String get recording_leaveTitle => '저장하지 않고 나갈까요?';
+
+  @override
+  String get recording_leaveMessage =>
+      '오디오는 그대로 보관됩니다 — 저장되지 않은 녹음에서 나중에 마무리할 수 있습니다. 지금 삭제하면 되돌릴 수 없습니다.';
+
+  @override
+  String get recording_keepForLater => '나중에 이어하기';
+
+  @override
   String get recording_saved => '녹음이 저장되었습니다';
 
   @override
