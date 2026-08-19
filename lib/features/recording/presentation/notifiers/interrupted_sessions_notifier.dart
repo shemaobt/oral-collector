@@ -67,6 +67,28 @@ class InterruptedSessionsNotifier extends Notifier<void> {
     await ref.read(recoveryCoordinatorProvider).refresh();
   }
 
+  /// Parks a finished recording the person walked away from without saving,
+  /// so it waits for them in the unsaved-recordings list instead of being
+  /// deleted (ENG-518).
+  ///
+  /// **The status written here is `crashed`, and that is deliberate.** The name
+  /// says failure; the state does not. Every sweep and every query already
+  /// reads it as "there is anchored audio nobody saved" — which is exactly what
+  /// a deliberate exit produces, and exactly what the startup sweep would
+  /// promote this same row to on the next launch anyway. A status of its own
+  /// would mean teaching `findCrashedSessions`, the sweep and the banner about
+  /// it for no gain beyond a better name.
+  ///
+  /// The row keeps its anchor, so the invariant from ENG-420 holds: a session
+  /// still pointing at durable audio never reaches a state no sweep looks at.
+  /// The refresh is not decoration — without it the list only picks the
+  /// recording up on the next launch, and from the person's side that is
+  /// indistinguishable from having lost it.
+  Future<void> keepForLater(String sessionId) async {
+    await ref.read(recordingSessionRepositoryProvider).markCrashed(sessionId);
+    await ref.read(recoveryCoordinatorProvider).refresh();
+  }
+
   Future<RecordingResult?> save(String sessionId) async {
     if (kIsWeb) return null;
 
@@ -144,6 +166,7 @@ class InterruptedSessionsNotifier extends Notifier<void> {
       filePath: resolved,
       durationSeconds:
           session.finalizedDurationSeconds ?? session.totalDurationSeconds,
+      sessionId: session.id,
       // A degraded finalization anchors a .wav; the format rides along to the
       // upload's MIME type, so taking the m4a default would mislabel the file.
       format: resolved.toLowerCase().endsWith('.wav') ? 'wav' : 'm4a',
