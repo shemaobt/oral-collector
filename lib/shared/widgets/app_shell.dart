@@ -7,7 +7,9 @@ import '../../core/platform/file_ops.dart' as file_ops;
 import '../../core/theme/app_colors.dart';
 import '../../features/auth/data/providers/role_provider.dart';
 import '../../features/invite/presentation/notifiers/invite_notifier.dart';
+import '../../features/recording/presentation/notifiers/interrupted_sessions_notifier.dart';
 import '../../features/recording/presentation/notifiers/recording_session_notifier.dart';
+import '../../features/recording/presentation/widgets/leave_recording_dialog.dart';
 import '../../features/recording/presentation/widgets/recording_navigation_guard.dart';
 import '../../l10n/app_localizations.dart';
 import 'app_shell/floating_nav_bar.dart';
@@ -86,31 +88,27 @@ class _AppShellState extends ConsumerState<AppShell> {
     if (!canGo) return;
     if (!mounted) return;
 
+    // Switching tabs is the other way out of the confirmation form, and the
+    // field team used it as much as the back button — so it offers the same
+    // three doors (ENG-518).
     final pendingResult = ref.read(pendingRecordingDecisionProvider);
     if (pendingResult != null) {
-      final colors = AppColors.of(context);
-      final confirmed = await showDialog<bool>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          title: Text(l10n.recording_discardTitle),
-          content: Text(l10n.recording_discardMessage),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(false),
-              child: Text(l10n.common_cancel),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(true),
-              style: TextButton.styleFrom(foregroundColor: colors.error),
-              child: Text(l10n.recording_discard),
-            ),
-          ],
-        ),
+      final sessionId = pendingResult.sessionId;
+      final interrupted = ref.read(
+        interruptedSessionsNotifierProvider.notifier,
       );
-      if (confirmed != true) return;
-      try {
-        await file_ops.deleteFile(pendingResult.filePath);
-      } catch (_) {}
+      final choice = await showLeaveRecordingDialog(
+        context,
+        canKeepForLater: sessionId != null,
+      );
+      if (choice == null) return;
+      if (choice == LeaveRecordingChoice.keepForLater) {
+        await interrupted.keepForLater(sessionId!);
+      } else {
+        try {
+          await file_ops.deleteFile(pendingResult.filePath);
+        } catch (_) {}
+      }
       if (!mounted) return;
       ref.read(pendingRecordingDecisionProvider.notifier).state = null;
     }
