@@ -2,7 +2,9 @@
 /// `unclassified` and name "Unclassified" (tripod-api migration 20260415_0001),
 /// and the taxonomy endpoints hand them to the app like any other row. Their
 /// names have to reach the user translated, and the translation has to be
-/// chosen by the id — the name is the server's to change (ENG-9).
+/// chosen by the id — the name is the server's to change (ENG-9). The genre's
+/// description is the server's to change for the same reason, and reaches the
+/// reader the same way (ENG-428).
 library;
 
 import 'package:flutter_test/flutter_test.dart';
@@ -59,6 +61,58 @@ void main() {
         l10n.genre_narrative,
       );
     });
+  });
+
+  group('genre description', () {
+    test(
+      'the unclassified category description reads in the user language',
+      () {
+        final description = localizedGenreDescription(
+          l10n,
+          'Recordings pending classification',
+          id: kUnclassifiedGenreId,
+        );
+
+        expect(description, l10n.recording_unclassifiedDesc);
+        expect(description, isNot('Recordings pending classification'));
+      },
+    );
+
+    test('the unclassified description is recognised by id, not by text', () {
+      final description = localizedGenreDescription(
+        l10n,
+        'Recordings awaiting a category',
+        id: kUnclassifiedGenreId,
+      );
+
+      expect(description, l10n.recording_unclassifiedDesc);
+      expect(description, isNot('Recordings awaiting a category'));
+    });
+
+    test('a taxonomy category description is still translated by text', () {
+      expect(
+        localizedGenreDescription(
+          l10n,
+          'Laws, rituals, procedures, and instructional forms',
+          id: 'gen_instructional',
+        ),
+        l10n.genre_instructionalDesc,
+      );
+    });
+
+    test(
+      'an unknown description still falls back to the text the server sent',
+      () {
+        expect(
+          localizedGenreDescription(
+            l10n,
+            'Chronicles kept by the community',
+            id: 'gen_new',
+          ),
+          'Chronicles kept by the community',
+        );
+      },
+    );
   });
 
   group('subcategory', () {
