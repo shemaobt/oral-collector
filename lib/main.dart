@@ -24,6 +24,7 @@ import 'features/recording/data/services/recording_live_activity.dart';
 import 'features/recording/data/services/recording_notification.dart';
 import 'features/recording/data/services/recording_trash.dart';
 import 'features/recording/data/services/recovery_coordinator.dart';
+import 'features/recording/data/services/web_audio_sweeper.dart';
 import 'features/sync/data/providers.dart';
 import 'features/sync/data/services/background_upload_coordinator.dart';
 import 'features/sync/data/services/upload_progress_visualizer.dart';
@@ -128,6 +129,17 @@ class _OralCollectorAppState extends ConsumerState<OralCollectorApp> {
         unawaited(RecordingTrash.pruneOldTrash(maxAgeHours: 24));
         await ref.read(recoveryCoordinatorProvider).scanOnStartup();
         await RecordingLiveActivity.instance.endAll();
+      } else {
+        // The browser's counterpart to pruneOldTrash: recordings abandoned
+        // before upload leave bytes in storage with nothing pointing at them
+        // (ENG-426). Unawaited for the same reason — housekeeping must not
+        // stand between the person and the first screen.
+        unawaited(
+          sweepOrphanWebAudio(
+            listKeys: platform.listStoredKeys,
+            deleteKey: platform.deleteFile,
+          ),
+        );
       }
 
       await _initBackgroundSync();
