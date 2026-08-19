@@ -512,6 +512,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'This recording will be permanently deleted.';
 
   @override
+  String get recording_leaveTitle => 'Leave without saving?';
+
+  @override
+  String get recording_leaveMessage =>
+      'The audio is kept — you can finish it later from unsaved recordings. Deleting it now cannot be undone.';
+
+  @override
+  String get recording_keepForLater => 'Keep for later';
+
+  @override
   String get recording_saved => 'Recording saved';
 
   @override

@@ -388,10 +388,15 @@ Path: @/lib/features/recording/data
   native store outlives the process. Unreadable stored text reads back as
   `null` rather than throwing — a disposable draft must never take the screen
   down with it. **Drafts can be orphaned by design.** A recording that leaves
-  by any route other than save or discard (the ENG-426 web sweeper, a cache
-  clear, a file removed from outside) leaves its draft behind; there is no
+  by any route other than the confirmation form's own save or discard (the
+  ENG-426 web sweeper, a cache clear, a file removed from outside, and the
+  tab-switch discard in `AppShell`, which deletes the file without going
+  through `_closeDraft`) leaves its draft behind; there is no
   reaper, because the cost is a few bytes of text and the key can never collide
-  with a new recording.
+  with a new recording. **Keeping a recording for later (ENG-518, slice 2) is
+  the opposite case and deliberately does not clear the draft**: the person is
+  coming back to it, and it is keyed by an audio path that is still on disk, so
+  reopening from the unsaved list finds the same text.
 - `services/audio_path_resolver.dart` exposes the pure async
   `resolveRecordingPath(storedPath)`. It returns the first existing path
   among: the stored path itself, the application documents directory

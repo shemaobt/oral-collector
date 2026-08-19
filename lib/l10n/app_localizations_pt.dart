@@ -516,6 +516,16 @@ class AppLocalizationsPt extends AppLocalizations {
       'Esta gravação será excluída permanentemente.';
 
   @override
+  String get recording_leaveTitle => 'Sair sem salvar?';
+
+  @override
+  String get recording_leaveMessage =>
+      'O áudio fica guardado — você pode terminar depois em gravações não salvas. Apagar agora não tem volta.';
+
+  @override
+  String get recording_keepForLater => 'Guardar para depois';
+
+  @override
   String get recording_saved => 'Gravação salva';
 
   @override

@@ -72,6 +72,7 @@ Widget _harness(ProviderContainer container) {
           subcategoryName: null,
           onReRecord: () {},
           onDiscard: () {},
+          onKeepForLater: () {},
         ),
       ),
     ),

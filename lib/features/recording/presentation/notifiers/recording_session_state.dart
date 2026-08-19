@@ -163,10 +163,19 @@ class RecordingResult {
   final double durationSeconds;
   final String format;
 
+  /// The recording session this audio came from, when there is one (ENG-518).
+  ///
+  /// It is the thread the confirmation form pulls to park a recording the
+  /// person walks away from instead of deleting it. Null is a real answer, not
+  /// a missing value: the browser creates no session row at all, so there is
+  /// nowhere to park its audio and nothing to offer.
+  final String? sessionId;
+
   const RecordingResult({
     required this.filePath,
     required this.durationSeconds,
     this.format = 'm4a',
+    this.sessionId,
   });
 }
 

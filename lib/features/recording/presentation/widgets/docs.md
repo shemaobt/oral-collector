@@ -5,7 +5,8 @@ Path: @/lib/features/recording/presentation/widgets
 ### Overview
 
 - Shared widgets used by the recording feature screens: dialogs (move
-  category, classify, replace audio, edit details), sections of the
+  category, classify, replace audio, edit details, leave-without-saving),
+  sections of the
   detail screen (status, info grid, storyteller, quick actions,
   about, upload progress), the guided ficha-completion overlay/pill/sheet
   (`CompleteFichaOverlay`/`CompleteFichaPill`/`CompleteFichaSheet`, ENG-374),
@@ -669,16 +670,50 @@ Path: @/lib/features/recording/presentation/widgets
     latches `_draftClosed`, so the flush in `dispose` cannot resurrect a draft
     whose recording was just saved or discarded. It is called from the native
     save, from `_saveWebDirect`, and from the confirmed branch of `_discard`.
-  - **Still out of scope:** leaving the screen. Back is still intercepted by
-    the `PopScope` and still only offers discard, which still costs the audio.
-    That affordance, and the interface decision that goes with it, is ENG-518
-    slice 2 — this slice deliberately left `PopScope`, the discard dialog and
-    every string untouched.
+  - **Leaving the screen was slice 2, and it is now done** — see the entry
+    below. `_closeDraft` is called from the *discard* branch of `_leave`, never
+    from the keep-for-later branch: a parked recording keeps its draft, which
+    is the whole point of the two slices being one feature.
   [../recovery_confirm_screen.dart](../recovery_confirm_screen.dart) needed
   **no change at all**: it already passes the same `RecordingResult`, so the
   same audio path keys the same draft and a crash-recovered recording now opens
   filled in instead of always empty. Any code special to recovery would have
   been a sign the key was wrong.
+- **Leaving the confirmation form no longer costs the recording (ENG-518,
+  slice 2).** Back and tab-switch used to offer exactly two doors — stay, or
+  discard, which deletes the audio. That is how the field team lost two
+  recordings: they left to write the description in another app, and the only
+  door available deleted the file. There is now a third door, and both exits
+  share one dialog, [leave_recording_dialog.dart](leave_recording_dialog.dart):
+  `showLeaveRecordingDialog(context, canKeepForLater: ...)` returns a
+  `LeaveRecordingChoice?`, with null meaning "stayed". `ConfirmationStep._leave`
+  (renamed from `_discard`, wired to both the `PopScope` and the discard button)
+  and `_AppShellState._navigateToTab` are its two callers; the audio is deleted
+  in one branch of each and nowhere else. Load-bearing details:
+  - **The third door only appears when there is somewhere to park the audio.**
+    `RecordingResult` now carries a nullable `sessionId`, threaded from
+    `RecordingFinalizationService.finalize` (which already had the id) through
+    `_stopNative`, and from `InterruptedSessionsNotifier._finishedAudio` on the
+    recovery path. `_stopWeb` leaves it null, because the browser creates no
+    session row at all — so the browser keeps exactly today's two-door dialog
+    and today's copy, which still tells the truth there. Null is an answer, not
+    a missing value; a characterization test pins that the browser case is
+    never offered a door it cannot honour.
+  - **Keeping touches neither the file nor the draft.** It calls
+    `InterruptedSessionsNotifier.keepForLater(sessionId)` — see
+    [../notifiers/docs.md](../notifiers/docs.md) — and then the host's
+    `onKeepForLater`, a new required callback on `ConfirmationStep`. It is
+    separate from `onDiscard` because the recovery screen's `onDiscard` deletes
+    the session's segments: reusing it to *keep* a recording would delete it.
+  - **The copy is a second pair of keys, not an edit of the old one.**
+    `recording_leaveTitle`/`recording_leaveMessage` say the audio is kept;
+    `recording_discardTitle`/`recording_discardMessage` still say it is about to
+    be deleted, and are now the browser's. Rewriting the old pair would have
+    made the browser dialog promise something the browser cannot do.
+  - **Three buttons at 2.0x on 320dp.** `AlertDialog`'s `OverflowBar` stacks the
+    actions on its own; `leave_recording_dialog_text_scale_test.dart` pins it by
+    measuring each label's rect against the viewport, because an action bar that
+    clips silently reports no overflow exception.
 - **`ConfirmationStep` is parameterized for the recovery reuse (ENG-80).**
   Two optional params let the recovery screen host the same widget
   without duplicating the save logic: `onSaved` runs in place of the

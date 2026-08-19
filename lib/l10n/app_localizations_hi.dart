@@ -516,6 +516,16 @@ class AppLocalizationsHi extends AppLocalizations {
       'यह रिकॉर्डिंग स्थायी रूप से हटा दी जाएगी।';
 
   @override
+  String get recording_leaveTitle => 'बिना सहेजे बाहर जाएं?';
+
+  @override
+  String get recording_leaveMessage =>
+      'ऑडियो सुरक्षित रहता है — आप इसे बाद में बिना सहेजी गई रिकॉर्डिंग से पूरा कर सकते हैं। अभी हटाने पर वापस नहीं आएगा।';
+
+  @override
+  String get recording_keepForLater => 'बाद के लिए रखें';
+
+  @override
   String get recording_saved => 'रिकॉर्डिंग सहेजी गई';
 
   @override

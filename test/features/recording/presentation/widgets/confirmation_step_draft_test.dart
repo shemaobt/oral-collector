@@ -184,6 +184,7 @@ Widget _confirmationApp(ProviderContainer container, RecordingResult result) {
         subcategoryName: null,
         onReRecord: () {},
         onDiscard: () {},
+        onKeepForLater: () {},
         onSaved: () {},
       ),
     ),

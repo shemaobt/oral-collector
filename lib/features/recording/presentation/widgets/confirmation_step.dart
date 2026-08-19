@@ -32,8 +32,10 @@ import '../../data/services/confirmation_draft_store.dart';
 import '../../data/services/direct_recording_uploader.dart';
 import '../../domain/entities/classification.dart';
 import '../../domain/entities/local_recording_entity.dart';
+import '../notifiers/interrupted_sessions_notifier.dart';
 import '../notifiers/recording_session_notifier.dart';
 import '../notifiers/recording_session_state.dart';
+import 'leave_recording_dialog.dart';
 
 /// Matches the 30 s `_apiTimeout` the upload paths use for their own API calls.
 const _titleLookupTimeout = Duration(seconds: 30);
@@ -50,6 +52,7 @@ class ConfirmationStep extends ConsumerStatefulWidget {
     this.registerName,
     required this.onReRecord,
     required this.onDiscard,
+    required this.onKeepForLater,
     this.onSaved,
     this.showReRecord = true,
   });
@@ -63,6 +66,10 @@ class ConfirmationStep extends ConsumerStatefulWidget {
   final String? registerName;
   final VoidCallback onReRecord;
   final VoidCallback onDiscard;
+
+  /// Runs after the recording has been parked for later: the audio and the
+  /// draft both stay, so the host only has to leave the screen (ENG-518).
+  final VoidCallback onKeepForLater;
 
   /// When set, runs instead of the default `go('/home')` after a successful
   /// save (crash-recovery uses it to mark the session recovered and route to
@@ -661,37 +668,36 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep>
     }
   }
 
-  Future<void> _discard() async {
-    final colors = AppColors.of(context);
-    final l10n = AppLocalizations.of(context);
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.recording_discardTitle),
-        content: Text(l10n.recording_discardMessage),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(l10n.common_cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: TextButton.styleFrom(foregroundColor: colors.error),
-            child: Text(l10n.recording_discard),
-          ),
-        ],
-      ),
+  /// The one way out of this screen that is not saving: park the recording, or
+  /// delete it (ENG-518). Leaving used to cost the recording, because deleting
+  /// was the only door offered.
+  Future<void> _leave() async {
+    final sessionId = widget.result.sessionId;
+    // Read before the dialog awaits: `ref` must not be touched after the
+    // widget may have gone.
+    final interrupted = ref.read(interruptedSessionsNotifierProvider.notifier);
+
+    final choice = await showLeaveRecordingDialog(
+      context,
+      canKeepForLater: sessionId != null,
     );
+    if (choice == null) return;
 
-    if (confirmed == true) {
-      await _closeDraft();
-      try {
-        await file_ops.deleteFile(widget.result.filePath);
-      } catch (_) {}
+    if (choice == LeaveRecordingChoice.keepForLater) {
+      // Neither the audio nor the draft is touched: the person is coming back
+      // to both.
+      await interrupted.keepForLater(sessionId!);
+      if (mounted) widget.onKeepForLater();
+      return;
+    }
 
-      if (mounted) {
-        widget.onDiscard();
-      }
+    await _closeDraft();
+    try {
+      await file_ops.deleteFile(widget.result.filePath);
+    } catch (_) {}
+
+    if (mounted) {
+      widget.onDiscard();
     }
   }
 
@@ -717,7 +723,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep>
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
         if (didPop) return;
-        unawaited(_discard());
+        unawaited(_leave());
       },
       child: SizedBox.expand(
         child: ColoredBox(
@@ -842,7 +848,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep>
                                       _player?.stop();
                                       widget.onReRecord();
                                     },
-                              onDiscard: _isSaving ? null : _discard,
+                              onDiscard: _isSaving ? null : _leave,
                             ),
                           ],
                         ),

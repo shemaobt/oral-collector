@@ -515,6 +515,16 @@ class AppLocalizationsSw extends AppLocalizations {
   String get recording_discardMessage => 'Rekodi hii itafutwa kabisa.';
 
   @override
+  String get recording_leaveTitle => 'Ondoka bila kuhifadhi?';
+
+  @override
+  String get recording_leaveMessage =>
+      'Sauti inabaki — unaweza kuikamilisha baadaye kutoka kwa rekodi ambazo hazijahifadhiwa. Ukiifuta sasa hairudi.';
+
+  @override
+  String get recording_keepForLater => 'Weka kwa baadaye';
+
+  @override
   String get recording_saved => 'Rekodi imehifadhiwa';
 
   @override

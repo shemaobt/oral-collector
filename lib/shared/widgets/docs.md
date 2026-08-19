@@ -55,6 +55,16 @@ Path: @/lib/shared/widgets
 
 ### Things to Know
 
+- **Switching tabs away from the confirmation form is a second way out of it,
+  and it offers the same three doors (ENG-518, slice 2).**
+  `_AppShellState._navigateToTab` sees the form through
+  `pendingRecordingDecisionProvider`, and used to show its own copy of the
+  discard dialog — stay, or delete the audio. It now calls the shared
+  `showLeaveRecordingDialog`
+  ([/lib/features/recording/presentation/widgets/leave_recording_dialog.dart](/lib/features/recording/presentation/widgets/leave_recording_dialog.dart)),
+  the same one the back button uses, and keeping parks the session instead of
+  deleting the file. Fixing only the back button would have left the hole open
+  down a path people use just as much.
 - **Text-scale resilience is a contract here.** Because these widgets render on
   nearly every screen, they must survive the system `TextScaler` up to the
   app-wide **2.0× ceiling** (the global clamp in

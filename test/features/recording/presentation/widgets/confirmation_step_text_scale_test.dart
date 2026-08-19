@@ -89,6 +89,7 @@ Future<void> _pump(
                 subcategoryName: null,
                 onReRecord: _noop,
                 onDiscard: _noop,
+                onKeepForLater: _noop,
               ),
             ),
           ),
