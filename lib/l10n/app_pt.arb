@@ -671,6 +671,7 @@
   "recording_secondaryCollisionBanner": "Esta gravação tem as classificações primária e secundária iguais. Limpe a secundária ou altere a primária para sincronizar.",
   "recording_clearSecondary": "Limpar secundária",
   "recording_unclassified": "Não Classificado",
+  "recording_unclassifiedDesc": "Gravações aguardando classificação",
   "recording_inputSource": "Entrada",
   "recording_selectMicrophone": "Selecionar microfone",
   "recording_builtInMicrophone": "Padrão do sistema",

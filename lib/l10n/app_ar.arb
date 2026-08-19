@@ -647,6 +647,7 @@
   "recording_secondaryCollisionBanner": "هذا التسجيل له نفس التصنيف الأساسي والثانوي. امسح الثانوي أو غيّر الأساسي للمزامنة.",
   "recording_clearSecondary": "مسح الثانوي",
   "recording_unclassified": "غير مصنف",
+  "recording_unclassifiedDesc": "تسجيلات بانتظار التصنيف",
   "recording_inputSource": "الإدخال",
   "recording_selectMicrophone": "اختر الميكروفون",
   "recording_builtInMicrophone": "الافتراضي للنظام",

@@ -2074,6 +2074,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get recording_unclassified => 'Sin clasificar';
 
   @override
+  String get recording_unclassifiedDesc =>
+      'Grabaciones pendientes de clasificación';
+
+  @override
   String get recording_inputSource => 'Entrada';
 
   @override

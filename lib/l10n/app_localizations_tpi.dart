@@ -2044,6 +2044,10 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get recording_unclassified => 'I no makim kain yet';
 
   @override
+  String get recording_unclassifiedDesc =>
+      'Ol rekoding i wet long makim kain bilong ol';
+
+  @override
   String get recording_inputSource => 'Insait';
 
   @override

@@ -2046,6 +2046,9 @@ class AppLocalizationsSw extends AppLocalizations {
   String get recording_unclassified => 'Haijainishwa';
 
   @override
+  String get recording_unclassifiedDesc => 'Rekodi zinazosubiri kuainishwa';
+
+  @override
   String get recording_inputSource => 'Ingizo';
 
   @override

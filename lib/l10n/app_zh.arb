@@ -848,6 +848,7 @@
   "recording_secondaryCollisionBanner": "此录音的主要和次要分类相同。清除次要分类或更改主要分类以进行同步。",
   "recording_clearSecondary": "清除次要",
   "recording_unclassified": "未分类",
+  "recording_unclassifiedDesc": "等待分类的录音",
   "recording_inputSource": "输入",
   "recording_selectMicrophone": "选择麦克风",
   "recording_builtInMicrophone": "系统默认",

@@ -2055,6 +2055,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recording_unclassified => 'Unclassified';
 
   @override
+  String get recording_unclassifiedDesc => 'Recordings pending classification';
+
+  @override
   String get recording_inputSource => 'Input';
 
   @override

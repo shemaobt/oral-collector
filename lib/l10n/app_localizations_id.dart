@@ -2060,6 +2060,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get recording_unclassified => 'Belum diklasifikasi';
 
   @override
+  String get recording_unclassifiedDesc => 'Rekaman yang menunggu klasifikasi';
+
+  @override
   String get recording_inputSource => 'Input';
 
   @override
