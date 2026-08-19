@@ -1977,6 +1977,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recording_unclassified => '未分类';
 
   @override
+  String get recording_unclassifiedDesc => '等待分类的录音';
+
+  @override
   String get recording_inputSource => '输入';
 
   @override

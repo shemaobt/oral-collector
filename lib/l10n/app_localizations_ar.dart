@@ -2041,6 +2041,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get recording_unclassified => 'غير مصنف';
 
   @override
+  String get recording_unclassifiedDesc => 'تسجيلات بانتظار التصنيف';
+
+  @override
   String get recording_inputSource => 'الإدخال';
 
   @override

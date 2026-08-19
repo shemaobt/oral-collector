@@ -2062,6 +2062,10 @@ class AppLocalizationsHi extends AppLocalizations {
   String get recording_unclassified => 'अवर्गीकृत';
 
   @override
+  String get recording_unclassifiedDesc =>
+      'वर्गीकरण की प्रतीक्षा में रिकॉर्डिंग्स';
+
+  @override
   String get recording_inputSource => 'इनपुट';
 
   @override

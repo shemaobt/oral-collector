@@ -1011,6 +1011,7 @@
   "recording_secondaryCollisionBanner": "This recording's primary and secondary classifications are the same. Clear the secondary or change the primary to sync.",
   "recording_clearSecondary": "Clear secondary",
   "recording_unclassified": "Unclassified",
+  "recording_unclassifiedDesc": "Recordings pending classification",
   "recording_inputSource": "Input",
   "recording_selectMicrophone": "Select microphone",
   "recording_builtInMicrophone": "System default",

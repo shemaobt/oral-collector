@@ -647,6 +647,7 @@
   "recording_secondaryCollisionBanner": "Rekodi hii ina uainishaji msingi na wa pili sawa. Futa wa pili au badilisha msingi ili kusawazisha.",
   "recording_clearSecondary": "Futa wa pili",
   "recording_unclassified": "Haijainishwa",
+  "recording_unclassifiedDesc": "Rekodi zinazosubiri kuainishwa",
   "recording_inputSource": "Ingizo",
   "recording_selectMicrophone": "Chagua maikrofoni",
   "recording_builtInMicrophone": "Chaguomsingi cha mfumo",

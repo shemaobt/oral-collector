@@ -1989,6 +1989,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recording_unclassified => '미분류';
 
   @override
+  String get recording_unclassifiedDesc => '분류 대기 중인 녹음';
+
+  @override
   String get recording_inputSource => '입력';
 
   @override

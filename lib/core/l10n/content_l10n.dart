@@ -26,7 +26,14 @@ String localizedGenreName(
   return _genreNames[titleCase]?.call(l10n) ?? titleCase;
 }
 
-String localizedGenreDescription(AppLocalizations l10n, String fallback) {
+String localizedGenreDescription(
+  AppLocalizations l10n,
+  String fallback, {
+  required String id,
+}) {
+  // A descrição da sentinela também é do servidor, que a semeia em inglês; só o
+  // id é estável, então é por ele que a tradução é escolhida.
+  if (id == kUnclassifiedGenreId) return l10n.recording_unclassifiedDesc;
   return _genreDescriptions[fallback]?.call(l10n) ?? fallback;
 }
 

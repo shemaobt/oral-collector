@@ -2069,6 +2069,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get recording_unclassified => 'Não Classificado';
 
   @override
+  String get recording_unclassifiedDesc => 'Gravações aguardando classificação';
+
+  @override
   String get recording_inputSource => 'Entrada';
 
   @override

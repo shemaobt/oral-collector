@@ -3668,6 +3668,12 @@ abstract class AppLocalizations {
   /// **'Unclassified'**
   String get recording_unclassified;
 
+  /// No description provided for @recording_unclassifiedDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Recordings pending classification'**
+  String get recording_unclassifiedDesc;
+
   /// No description provided for @recording_inputSource.
   ///
   /// In en, this message translates to:

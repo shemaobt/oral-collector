@@ -647,6 +647,7 @@
   "recording_secondaryCollisionBanner": "Dispela rekoding i gat wankain primary na sekondari klasifikesen. Klinim sekondari o senisim primary bilong sinkronaisim.",
   "recording_clearSecondary": "Klinim sekondari",
   "recording_unclassified": "I no makim kain yet",
+  "recording_unclassifiedDesc": "Ol rekoding i wet long makim kain bilong ol",
   "recording_inputSource": "Insait",
   "recording_selectMicrophone": "Makim maikrofon",
   "recording_builtInMicrophone": "Defolt bilong sistem",
