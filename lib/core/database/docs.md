@@ -250,6 +250,10 @@ Path: @/lib/core/database
   module-level `Map` in `file_ops_web.dart` held them in memory only, so a
   page reload destroyed the audio while the Drift row (already durable via
   `WebDatabase`) survived, leaving a recording whose audio existed nowhere.
+  That second database now carries its own startup housekeeping — the 24-hour
+  sweep of bytes left behind by recordings abandoned before upload (ENG-426).
+  It enumerates `oral_collector_files` only, and only deletes keys the browser
+  recorder produced; no Drift row and no schema is involved on either side.
 - **On web the sql.js engine is self-hosted, not loaded from a CDN (ENG-130).**
   The `.js` loader and `.wasm` binary live in the repo's `web/` directory and
   are served same-origin. This is a security boundary: a CDN compromise could

@@ -62,6 +62,19 @@ Path: @/lib/core/platform
   probing recording audio: `fileExists`, `fileLength`, `readFileBytes`,
   `writeFileBytes`, `deleteFile`, `copyFile`, `readFileChunk`, plus
   `createDir`/`dirExists` and the `isAndroidPlatform`/`isIOSPlatform` flags.
+  `listStoredKeys` is the one entry that is not symmetric: it enumerates the
+  whole store and only the web variant can answer it, because only there is
+  every file in one flat keyspace. The native variant throws
+  `UnsupportedError` rather than returning an empty list — native audio is
+  spread over directories a caller lists individually, so an empty list would
+  be a false answer rather than a degenerate one. This is the same shape
+  `web_file_picker_native.dart` uses for a capability only one target has, and
+  it keeps `file_ops.dart` compiling for both targets while the single caller
+  (the startup sweep, below) stays inside a `kIsWeb` branch. It returns keys
+  and nothing else, deliberately: neither IndexedDB nor `idb_shim` can report a
+  record's size without reading the whole value, so a listing that carried
+  sizes would have to materialize every audio blob to answer. If sizes are ever
+  needed, the way there is writing the size as metadata at write time.
   The native variant is a thin wrapper over `dart:io`'s `File`/`Directory`.
   The web variant (ENG-421) delegates to `WebFileStore`
   ([./web_file_store.dart](web_file_store.dart)), a small IndexedDB-backed
@@ -113,19 +126,44 @@ Path: @/lib/core/platform
   `readFileChunk` on web truncates at the end of the stored bytes instead of
   throwing `RangeError` for an offset/length past the end, matching how a
   native `RandomAccessFile.read` past EOF behaves.
-- **Known gap: abandoned web bytes have nothing pointing at them (ENG-421
-  follow-up).** On web the `LocalRecordings` row is written only *after* the
-  upload succeeds, so two paths leave bytes in `oral_collector_files` with no
-  handle: someone records, reaches the confirmation step and reloads before
-  saving; or the upload fails and they close the tab. Nothing sweeps keys
-  without a matching row. These orphans are not purely a new defect — they are
-  the side effect of the very thing this storage exists to guarantee, that the
-  audio outlives a reload. What is missing is not the persistence but a surface
-  that finds those bytes again and a sweeper that collects the abandoned ones.
-  That is its own slice, and it has the same shape as ENG-420 on device: a
-  durable artifact with nothing pointing at it. The two paths that *do* have a
-  handle are cleaned: `ConfirmationStep` deletes after a successful upload and
-  on discard, and the export temp key is deleted after the share.
+- **Abandoned web bytes are collected at startup, not by a handle (ENG-426).**
+  On web the `LocalRecordings` row is written only *after* the upload succeeds,
+  so two paths leave bytes in `oral_collector_files` with no handle: someone
+  records, reaches the confirmation step and reloads before saving; or the
+  upload fails and they close the tab. These orphans are not purely a defect —
+  they are the side effect of the very thing this storage exists to guarantee,
+  that the audio outlives a reload. The two paths that *do* have a handle are
+  cleaned directly: `ConfirmationStep` deletes after a successful upload and on
+  discard, and the export temp key is deleted after the share. Everything else
+  is collected by `sweepOrphanWebAudio`
+  ([/lib/features/recording/data/services/web_audio_sweeper.dart](../../features/recording/data/services/web_audio_sweeper.dart)),
+  which runs unawaited in the web branch of startup in
+  [/lib/main.dart](../../main.dart) — the browser's counterpart to
+  `RecordingTrash.pruneOldTrash` on device. It enumerates the store through
+  `listStoredKeys`, keeps only keys carrying the recorder's `web_record_`
+  prefix, reads each recording's start instant out of the key itself, and
+  deletes the ones older than 24 hours. No metadata and no schema was added for
+  this: the key already carries the timestamp. What is still missing is a
+  surface that offers an abandoned recording *back* to the person before the
+  cutoff collects it — that is ENG-427, and it has the same shape as ENG-420 on
+  device.
+- **The 24-hour cutoff is also what makes the sweep safe with two tabs open.**
+  A recording in progress, or one sitting on the confirmation form, is minutes
+  old and never in range, so the sweeper needs no Web Locks and no
+  `BroadcastChannel` to avoid collecting audio another tab is still writing.
+  The cost of that choice is the far edge: someone who leaves a tab parked on
+  the confirmation form for more than a day loses those bytes from under them.
+  That is a deliberate trade (before ENG-421 the bytes died with the tab
+  anyway), not an oversight. A key that carries the prefix but whose timestamp
+  cannot be parsed is left alone rather than collected on suspicion, and a
+  timestamp in the future — a clock that moved back — is not older than the
+  cutoff either, so it stays. The whole sweep is wrapped in one catch: browser
+  storage can refuse to enumerate or to delete (quota, private browsing, a
+  database blocked by another tab), and housekeeping must never be the reason
+  for a blank first screen. Note that the sweeper's agreement with the recorder
+  on the key format is held by exactly one test — the one that drives the real
+  capture path and sweeps the key it produced. The three tests around it spell
+  keys out by hand and would stay green through a rename.
 - **`WebFileStore`'s `IdbFactory` is the only test seam for the web file
   path.** Production wires `idbFactoryNative` from `idb_shim`, which throws
   where IndexedDB is unavailable (private browsing, storage blocked by
@@ -136,7 +174,9 @@ Path: @/lib/core/platform
   `newIdbFactoryMemory()`, a complete implementation of the same API that
   runs on the plain Dart VM, so
   [/test/core/platform/web_file_store_test.dart](../../../test/core/platform/web_file_store_test.dart)
-  exercises the real storage logic without a browser. This is also why
+  exercises the real storage logic without a browser — the same factory backs
+  the sweeper's tests, so what they observe is the real store's answer, not a
+  stand-in's. This is also why
   [/test/core/platform/file_ops_native_test.dart](../../../test/core/platform/file_ops_native_test.dart)
   is named for native only — `flutter test` runs on the Dart VM, so
   `file_ops.dart`'s conditional export always resolves to

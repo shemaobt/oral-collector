@@ -341,6 +341,24 @@ Path: @/lib/features/recording/data
     `RecordingTrash` (`services/recording_trash.dart`) and invalidates its
     waveform cache via `WaveformExtractor.invalidate`
     (`services/waveform_extractor.dart`). It backs the notifier's `replaceAudio`.
+- `services/web_audio_sweeper.dart` exposes `sweepOrphanWebAudio`, the
+  browser's counterpart to `RecordingTrash.pruneOldTrash` — same 24-hour
+  window, same unawaited call from the startup microtask in
+  [/lib/main.dart](../../../main.dart), opposite side of its `kIsWeb` branch
+  (ENG-426). It exists because on web the audio is written to browser storage
+  when capture stops while the `LocalRecordings` row is only written after a
+  successful upload, so a reload on the confirmation step, a closed tab, or a
+  failed upload leaves bytes nothing will ever ask for again. It takes the
+  store's enumerate and delete as parameters (`file_ops.listStoredKeys` and
+  `file_ops.deleteFile` in production) rather than importing the web facade, so
+  it compiles on native and can be driven against a real in-memory IndexedDB in
+  a VM test. **The key format is a contract it shares with the recorder**: the
+  sweeper reads a recording's start instant out of the `web_record_<millis>`
+  key that `_startWeb` in
+  [../presentation/notifiers/recording_session_notifier.dart](../presentation/notifiers/recording_session_notifier.dart)
+  builds, and nothing but a test holds the two ends together — see
+  [/lib/core/platform/docs.md](../../../core/platform/docs.md) for the cutoff's
+  consequences and for why keys it cannot parse are left alone.
 - `services/audio_path_resolver.dart` exposes the pure async
   `resolveRecordingPath(storedPath)`. It returns the first existing path
   among: the stored path itself, the application documents directory

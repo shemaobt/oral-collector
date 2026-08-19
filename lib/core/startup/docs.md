@@ -26,7 +26,13 @@ Path: @/lib/core/startup
   **or** `error` — a restore failure falls through to the app logged-out rather
   than wedging the splash. Separately, the bootstrap microtask `await`s
   `appStartupProvider.future`, then fires `refreshSessionIfOnline()` and the rest
-  of post-boot work (orphan-upload reclaim, sync/listener init).
+  of post-boot work (orphan-upload reclaim, sync/listener init). The
+  housekeeping in that microtask splits on `kIsWeb`: trash pruning, the
+  recovery scan and Live Activity teardown on device; the sweep of recordings
+  abandoned in browser storage on web (ENG-426). The two prunes — device trash
+  and browser audio — are fired unawaited, so neither stands between the person
+  and the first screen; the recovery scan is awaited because the upload
+  listeners that come after it must not see a stale recording flag.
 - The router in [../router/app_router.dart](../router/app_router.dart) is only
   built inside `main.dart`'s `_buildApp()`, which runs after the gate resolves.
   Its redirect keys off `authNotifierProvider.isAuthenticated`; because

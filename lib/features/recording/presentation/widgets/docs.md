@@ -520,8 +520,14 @@ Path: @/lib/features/recording/presentation/widgets
   reported to the user as a failed upload — the upload already succeeded by
   that point. It runs after the local row is written, matching how the rest of
   the codebase deletes only once the database is consistent. The paths that do
-  *not* end in a successful upload still leave bytes behind — see the known gap
-  in [/lib/core/platform/docs.md](../../../../core/platform/docs.md).
+  *not* end in a successful upload — a reload on this step, a closed tab, a
+  failed upload — leave bytes behind with no handle at all; those are collected
+  at the next startup by the 24-hour sweep in
+  [/lib/features/recording/data/services/web_audio_sweeper.dart](../../data/services/web_audio_sweeper.dart)
+  (ENG-426), described in
+  [/lib/core/platform/docs.md](../../../../core/platform/docs.md). The cutoff is
+  what keeps that sweep from taking the bytes of someone standing on this step
+  right now — but a tab parked here for more than a day is past it.
 - **`ConfirmationStep` cancels its own preview-player stream subscriptions
   on dispose (ENG-140 F16).** Its inline `AudioPlayer` preview subscribes to
   `playerStateStream` / `positionStream` / `durationStream`; those handles are
