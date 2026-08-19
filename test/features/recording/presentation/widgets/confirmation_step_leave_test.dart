@@ -252,6 +252,26 @@ Widget _confirmationApp(ProviderContainer container, RecordingResult result) {
   return _app(container, Scaffold(body: _confirmationStep(result)));
 }
 
+/// `RecoveryConfirmScreen` navigates with go_router on every way out, so it can
+/// only be mounted under a router.
+Widget _recoveryApp(ProviderContainer container) {
+  final router = GoRouter(
+    initialLocation: '/recovery-confirm',
+    routes: [
+      GoRoute(
+        path: '/recovery-confirm',
+        builder: (_, _) => const RecoveryConfirmScreen(),
+      ),
+      GoRoute(
+        path: '/home',
+        builder: (_, _) =>
+            const Scaffold(body: Center(child: Text('home page'))),
+      ),
+    ],
+  );
+  return _routedApp(container, router);
+}
+
 /// The tab-switch route: the form lives inside the real [AppShell], so tapping
 /// a tab goes through the very code path the field team used.
 Widget _shellApp(ProviderContainer container, RecordingResult result) {
@@ -274,6 +294,10 @@ Widget _shellApp(ProviderContainer container, RecordingResult result) {
       ),
     ],
   );
+  return _routedApp(container, router);
+}
+
+Widget _routedApp(ProviderContainer container, GoRouter router) {
   return UncontrolledProviderScope(
     container: container,
     child: MaterialApp.router(
@@ -481,12 +505,20 @@ void main() {
         subcategoryId: session.subcategoryId,
       ),
     );
-    await tester.pumpWidget(_app(second, const RecoveryConfirmScreen()));
+    await tester.pumpWidget(_recoveryApp(second));
     await _settle(tester);
 
     expect(File(reopened.filePath).existsSync(), isTrue);
     expect(find.text(_typedTitle), findsOneWidget);
     expect(find.text(_typedDescription), findsOneWidget);
+
+    // And leaving it a second time has to be just as harmless as the first,
+    // without the recording showing up twice.
+    await _pressBack(tester);
+    await _tapDialogAction(tester, _keepForLaterLabel);
+
+    expect(File(reopened.filePath).existsSync(), isTrue);
+    expect(_unsavedList(second).map((s) => s.sessionId), [_sessionId]);
 
     await tester.pumpWidget(const SizedBox());
     await _settle(tester);
