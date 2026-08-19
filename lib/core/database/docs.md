@@ -25,6 +25,10 @@ Path: @/lib/core/database
   duplicate-column footgun by construction (no conditional guard) and made the
   upgrade honor drift's `to` argument instead of always migrating to the
   current version.
+- ENG-425 made the upgrade path atomic: the whole run of steps happens inside
+  one transaction, so a migration interrupted partway (process kill, battery,
+  OOM) is rolled back whole instead of leaving the file half-migrated and
+  permanently unopenable.
 - ENG-420 (slice 1) added `finalizedAudioPath`/`finalizedDurationSeconds` to
   `RecordingSessions` at v14 — an ordinary additive `from13To14` step, no
   different mechanically from any other. What the columns mean (a durable
@@ -78,12 +82,16 @@ Path: @/lib/core/database
   | Callback | When it runs | Effect |
   | --- | --- | --- |
   | `onCreate` | fresh install | `createAll()` builds every table at the current shape, skipping the upgrade steps entirely |
-  | `onUpgrade` (the `stepByStep` `_upgrade`) | an existing file is opened by a newer build | runs each `from(N-1)ToN` callback in order, from the on-disk version up to `to` |
+  | `onUpgrade` (`_upgrade`) | an existing file is opened by a newer build | runs each `from(N-1)ToN` callback in order, from the on-disk version up to `to`, all inside one transaction |
 
-- `onUpgrade` is the generated `stepByStep` helper (from
-  [./schema_versions.dart](schema_versions.dart)) bound to a top-level
-  `final OnUpgrade _upgrade`. It is deliberately top-level: a top-level field has
-  no `this`, so a step cannot accidentally reach the *current* table definitions.
+- `onUpgrade` is the top-level `_upgrade`, which opens a transaction and drives
+  the generated per-version steps through drift's `VersionedSchema.runMigrationSteps`
+  (the same thing the generated `stepByStep` helper does, minus the transaction —
+  see Things to Know for why the wrapper is hand-written). The step callbacks
+  themselves are passed to `migrationSteps(...)` from
+  [./schema_versions.dart](schema_versions.dart). `_upgrade` is deliberately
+  top-level: a top-level declaration has no `this`, so a step cannot accidentally
+  reach the *current* table definitions.
 - Each upgrade step is additive and applies only that one version's delta. The
   callback receives `(Migrator m, SchemaN schema)` where `schema` is the
   **destination** version's typed snapshot, so `m.addColumn`,
@@ -107,7 +115,7 @@ Path: @/lib/core/database
     reconstructed (no historical snapshots existed before ENG-123).
   - [./schema_versions.dart](schema_versions.dart) — `drift_dev`-generated from
     those snapshots (`schema steps`); holds the `SchemaN` typed snapshots and the
-    `stepByStep` factory that `_upgrade` calls. Committed and analysis-excluded
+    `migrationSteps` factory that `_upgrade` calls. Committed and analysis-excluded
     like `.g.dart` (ENG-161); `app_database.dart` imports it.
   - [/test/core/database/generated/](../../../test/core/database/generated/) —
     `drift_dev`-generated `GeneratedHelper` and per-version `DatabaseAtVN`
@@ -117,24 +125,31 @@ Path: @/lib/core/database
     drives drift's `SchemaVerifier`. For every historical version it `startAt(k)`
     and both `migrateAndValidate(db, 14)` (the skip-many-releases path) and
     `migrateAndValidate(db, k + 1)` (a single step lands exactly on the next
-    version, exercising that `stepByStep` honors `to`). Plus data-integrity
+    version, exercising that the upgrade honors `to`). Plus data-integrity
     cases that seed an un-uploaded recording at the oldest version, a
     storyteller at v6, and (ENG-420) a `RecordingSessions` row in each of its
     five statuses at v13, asserting the rows and fields survive the upgrade —
     the sessions case is also what proves the new v14 anchor columns come out
     `null` rather than guessed at.
+  - [/test/core/database/migration_interruption_test.dart](../../../test/core/database/migration_interruption_test.dart) —
+    the durability half (ENG-425). It seeds a real file at an old version, kills
+    the migration mid-flight with a `QueryInterceptor` that throws on a chosen
+    `ALTER TABLE`, then reopens the same file and asserts it opens, reaches the
+    current version, still holds the seeded recording, and still takes writes.
+    It asserts nothing about statements or transactions, so it survives a change
+    of approach.
 
 ### Things to Know
 
-- **`stepByStep` made each step see the table at its own version, removing the
-  duplicate-column footgun.** The danger is real and worth remembering: bare
+- **Step-by-step migration made each step see the table at its own version,
+  removing the duplicate-column footgun.** The danger is real and worth remembering: bare
   `createTable`/`createAll` on the *current* table definitions emit today's
   shape, so a step that created `local_storytellers` in an old release would
   build it already carrying the sync columns added later — and then
   `addColumn`-ing those same columns crashed the upgrade (the bug fixed in
   ENG-123, which needed a hand-written `from >= 6 && from < 10` guard so the
   adds ran only for databases that had the table at its older, pre-sync shape).
-  With `stepByStep` each callback gets the **destination version's** `schema`
+  With the step-by-step callbacks each step gets the **destination version's** `schema`
   snapshot: `from5To6` creates `local_storytellers` at its v6 shape (no sync
   columns) and `from9To10` adds them, so there is no duplication and the
   conditional guard no longer exists. The migration test still backs this up —
@@ -143,16 +158,38 @@ Path: @/lib/core/database
   builds them for fresh installs, but the upgrade path must create each one
   explicitly. They are created in the `from10To11` step via
   `m.create(schema.<index>)` (e.g. `schema.idxRecordingsProjectRecorded`) —
-  introduced for the v11 indexes in ENG-117 and ported onto `stepByStep` in
-  ENG-161. A forgotten upgrade index ships an un-indexed upgrade path while
+  introduced for the v11 indexes in ENG-117 and ported onto the step-by-step
+  callbacks in ENG-161. A forgotten upgrade index ships an un-indexed upgrade path while
   fresh installs look fine; the migration test catches it because
   `migrateAndValidate` diffs indexes, not just tables and columns.
-- **A failed migration is not recovered by wiping the database.** The open path
-  in [./connection/](connection/) has no `beforeOpen`, no try/catch, and no
-  delete-and-recreate. A bad migration therefore bricks the database — data is
-  stranded (un-uploaded recordings cannot be reached), not deleted — until a
-  build with a corrected migration ships. This is why the upgrade path is
-  test-guarded rather than left to recover at runtime.
+- **An *interrupted* migration recovers itself; a *wrong* one still bricks the
+  database.** These are two different failures and only the first is handled.
+  `_upgrade` runs every step inside one transaction (ENG-425), so a process
+  killed partway — the OS reclaiming memory, the battery dying, the user force-
+  quitting during a long upgrade — leaves SQLite to roll the whole run back:
+  `user_version` goes back to the on-disk value along with the DDL, and the next
+  launch migrates from scratch and succeeds. Before that, statements already
+  applied stayed on disk while `user_version` did not advance, so the next
+  launch re-ran the step and died on `duplicate column name` — forever, on every
+  subsequent launch. Progress is deliberately not kept per step: an interrupted
+  v1 → v14 upgrade restarts at v1, which is cheap because every step is additive
+  and runs in milliseconds, and a transaction per step would reopen the same
+  window between committing a step and writing `user_version`. What the
+  transaction does *not* fix is a migration that is simply wrong (a step that
+  contradicts the schema, or a missing step): that fails identically on every
+  launch, and the open path in [./connection/](connection/) has no `beforeOpen`,
+  no try/catch, and no delete-and-recreate, so the database stays unopenable —
+  data stranded, not deleted — until a build with a corrected migration ships.
+  This is why the upgrade path stays test-guarded rather than left to recover at
+  runtime. The transaction is also not a repair: a device *already* bricked by
+  an interrupted migration on an older build stays bricked, because its file is
+  half-migrated before this code ever runs.
+- **Transactions during migration work on web too.** The rollback is not a
+  native-only guarantee: drift's legacy `WebDatabase` reports the same
+  `NoTransactionDelegate` as the native executor, so `BEGIN`/`COMMIT`/`ROLLBACK`
+  are issued as ordinary statements against the sql.js engine, which is real
+  SQLite. The migration tests run native only, so this half is verified by
+  reading drift, not by a test.
 - **Adding a new schema version is a fixed multi-step process.** Skipping any
   step makes the migration test fail or, worse, lets an untested upgrade path
   ship. The commands match the `Codegen` workflow
@@ -164,7 +201,7 @@ Path: @/lib/core/database
   3. regenerate the step helper (must run **before** `build_runner`, since
      `app_database.dart` imports it):
      `fvm dart run drift_dev schema steps drift_schemas/ lib/core/database/schema_versions.dart`;
-  4. add the `from(N-1)ToN` callback to the `stepByStep` call in
+  4. add the `from(N-1)ToN` callback to the `migrationSteps` call in
      `app_database.dart` (`m.addColumn`/`m.createTable` for columns and tables,
      `m.create(schema.<index>)` for an `@TableIndex`), operating on the
      destination version's `schema`;
