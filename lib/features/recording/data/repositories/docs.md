@@ -567,6 +567,22 @@ Path: @/lib/features/recording/data/repositories
   reports `finalizedDurationSeconds`. Re-deriving reports the same number from
   `totalDurationSeconds`, so this is not a cost of preferring the anchor — it
   is the pre-existing overstatement, now reached one step earlier.
+- **`crashed` is now also reached on purpose, not only by failure (ENG-518,
+  slice 2).** `markCrashed` used to have two callers, and both meant something
+  went wrong: the startup scan finding an `active` row, and
+  `_sweepFinishedSessionsWithUnsavedAudio` finding a finished row whose audio
+  nobody saved. It has a third now —
+  `InterruptedSessionsNotifier.keepForLater`, which the confirmation form and
+  the tab bar call when the person chooses to leave without saving. The status
+  is reused rather than added to, because what it already means to every reader
+  is "there is anchored audio nobody saved", and that is precisely what a
+  deliberate exit leaves behind: the same row the sweep would promote on the
+  next launch, only promoted immediately so the banner shows it now. **Read
+  `crashed` as "unsaved", not as "the app broke"** — nothing downstream of it
+  reports a failure to anyone, and the banner's copy has always been generic.
+  The row keeps its anchor through the write, so the invariant below still
+  holds; what does *not* hold any more is the assumption that a `crashed` row
+  implies something went wrong.
 - **`splitRecordingReplacingParent` is atomic (ENG-125).** The trim/split save
   must end with the children present and the parent gone. Doing those as two
   statements (insert in a transaction, then delete) left a failure window where

@@ -472,8 +472,22 @@ Path: @/lib/features/recording/presentation/notifiers
     **opens with whatever had been typed before the crash**, not empty: the
     draft is keyed by the audio path, which `pending.result` already carries,
     so `recovery_confirm_screen.dart` needed no code of its own. See
-    [../widgets/docs.md](../widgets/docs.md). Leaving that screen still costs
-    the audio — that is slice 2.
+    [../widgets/docs.md](../widgets/docs.md).
+  - `keepForLater(sessionId)` (ENG-518, slice 2) parks a finished recording the
+    person walked away from without saving, so it waits in the unsaved list
+    instead of being deleted. It writes `crashed` and refreshes, and **both
+    halves are deliberate**. `crashed` is the status every sweep and the banner
+    already read as "there is anchored audio nobody saved" — which is exactly
+    what a deliberate exit produces, and exactly what
+    `_sweepFinishedSessionsWithUnsavedAudio` would promote the same row to on
+    the next launch anyway; a status of its own would mean teaching
+    `findCrashedSessions`, the sweep and the banner about it for no gain beyond
+    a better name. The name says failure, the state does not. The refresh is not
+    decoration: the sweep only runs at startup, so without it the recording
+    surfaces one launch late, and from the person's side a recording that is not
+    on the home screen is indistinguishable from a recording that was lost. The
+    row keeps its anchor, so ENG-420's invariant holds — a session still
+    pointing at durable audio never reaches a state no sweep looks at.
   All paths end by calling
   [../../data/services/recovery_coordinator.dart](../../data/services/recovery_coordinator.dart)'s
   `refresh()`, which re-derives the prompt list from `findCrashedSessions()`;
