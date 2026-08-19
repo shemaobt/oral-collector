@@ -30,7 +30,14 @@ const String _recordingKeyPrefix = 'web_record_';
 /// confirmation form, a closed tab, or a failed upload leaves bytes nothing
 /// will ever ask for again. The storage is reached through [listKeys] and
 /// [deleteKey] so this can run against the real store in a test without a
-/// browser; [now] is there for the same reason.
+/// browser; [keysInUse] and [now] are there for the same reason.
+///
+/// [keysInUse] names the audio an interrupted upload can still resume from
+/// (ENG-427). Until that upload's row pointed at its bytes the promise of
+/// never collecting what a pending upload needs was vacuous — nothing needed
+/// them. It is answered once per sweep and matched key for key: sparing a
+/// whole store because one upload is pending would leave the sweep on and
+/// collecting nothing.
 Future<void> sweepOrphanWebAudio({
   required Future<List<String>> Function() listKeys,
   required Future<void> Function(String key) deleteKey,
@@ -39,7 +46,9 @@ Future<void> sweepOrphanWebAudio({
 }) async {
   final cutoff = (now ?? DateTime.now()).subtract(webOrphanAudioMaxAge);
   try {
+    final inUse = await keysInUse();
     for (final key in await listKeys()) {
+      if (inUse.contains(key)) continue;
       final startedAt = _recordingStartedAt(key);
       // A key whose start cannot be read is left alone rather than collected
       // on suspicion: deleting what is not understood is how audio gets lost.
@@ -50,7 +59,9 @@ Future<void> sweepOrphanWebAudio({
     }
   } catch (error, stack) {
     // The browser's storage is a system boundary and can refuse either call
-    // (quota, a database blocked by another tab, private browsing).
+    // (quota, a database blocked by another tab, private browsing), and so can
+    // the database [keysInUse] reads — a sweep that cannot tell what is in use
+    // deletes nothing rather than guessing.
     // Housekeeping is never a reason for a blank first screen, so the sweep
     // gives up here and startup carries on.
     _log.warning('gave up sweeping abandoned browser audio', error, stack);
