@@ -34,6 +34,7 @@ const String _recordingKeyPrefix = 'web_record_';
 Future<void> sweepOrphanWebAudio({
   required Future<List<String>> Function() listKeys,
   required Future<void> Function(String key) deleteKey,
+  required Future<Set<String>> Function() keysInUse,
   DateTime? now,
 }) async {
   final cutoff = (now ?? DateTime.now()).subtract(webOrphanAudioMaxAge);

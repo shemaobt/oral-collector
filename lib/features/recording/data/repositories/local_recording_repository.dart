@@ -239,6 +239,8 @@ class LocalRecordingRepository {
         .get();
   }
 
+  Future<Set<String>> getPendingWebUploadKeys() async => <String>{};
+
   /// Recordings of [projectId] the server does not have yet, counted once each.
   ///
   /// The home total used to add `getPendingUploads` to

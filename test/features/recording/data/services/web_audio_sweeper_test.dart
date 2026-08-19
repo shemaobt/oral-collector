@@ -61,6 +61,7 @@ void main() {
   Future<void> sweep({DateTime? now}) => sweepOrphanWebAudio(
     listKeys: browserStorage.listKeys,
     deleteKey: browserStorage.delete,
+    keysInUse: () async => <String>{},
     now: now,
   );
 
@@ -174,6 +175,7 @@ void main() {
       sweepOrphanWebAudio(
         listKeys: refuseToEnumerate,
         deleteKey: browserStorage.delete,
+        keysInUse: () async => <String>{},
       ),
       completes,
     );
@@ -185,6 +187,7 @@ void main() {
       sweepOrphanWebAudio(
         listKeys: browserStorage.listKeys,
         deleteKey: refuseToDelete,
+        keysInUse: () async => <String>{},
       ),
       completes,
     );
