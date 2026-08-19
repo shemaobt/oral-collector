@@ -19,6 +19,7 @@ import 'package:oral_collector/features/storyteller/presentation/notifiers/proje
 import 'package:oral_collector/features/storyteller/presentation/widgets/storyteller_picker.dart';
 import 'package:oral_collector/l10n/app_localizations.dart';
 import 'package:oral_collector/shared/utils/format.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class _FakeProjectNotifier extends ProjectNotifier {
   @override
@@ -103,6 +104,12 @@ Future<void> _unmount(WidgetTester tester) async {
 }
 
 void main() {
+  setUp(() {
+    // ConfirmationStep reads its saved draft from SharedPreferences on mount
+    // (ENG-518); without a mock store the plugin channel throws.
+    SharedPreferences.setMockInitialValues({});
+  });
+
   testWidgets('classified recording shows duration, tag, fields and buttons', (
     tester,
   ) async {

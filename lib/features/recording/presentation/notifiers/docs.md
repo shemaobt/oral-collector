@@ -468,6 +468,12 @@ Path: @/lib/features/recording/presentation/notifiers
   - `discard` deletes the segments and marks the session discarded. It is
     also what the confirmation screen's discard action calls: the finalized
     file is already gone by then, deleted by the confirmation step itself.
+  - Since ENG-518 (slice 1) the confirmation screen the recovery flow hosts
+    **opens with whatever had been typed before the crash**, not empty: the
+    draft is keyed by the audio path, which `pending.result` already carries,
+    so `recovery_confirm_screen.dart` needed no code of its own. See
+    [../widgets/docs.md](../widgets/docs.md). Leaving that screen still costs
+    the audio — that is slice 2.
   All paths end by calling
   [../../data/services/recovery_coordinator.dart](../../data/services/recovery_coordinator.dart)'s
   `refresh()`, which re-derives the prompt list from `findCrashedSessions()`;
