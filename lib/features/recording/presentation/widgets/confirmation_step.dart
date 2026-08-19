@@ -462,6 +462,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
       final source = FileSource.fromBytes(
         bytes,
         name: widget.result.filePath,
+        storageKey: widget.result.filePath,
         mimeType: _mimeForFormat(widget.result.format),
       );
 

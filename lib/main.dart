@@ -138,6 +138,9 @@ class _OralCollectorAppState extends ConsumerState<OralCollectorApp> {
           sweepOrphanWebAudio(
             listKeys: platform.listStoredKeys,
             deleteKey: platform.deleteFile,
+            keysInUse: ref
+                .read(localRecordingRepositoryProvider)
+                .getPendingWebUploadKeys,
           ),
         );
       }
