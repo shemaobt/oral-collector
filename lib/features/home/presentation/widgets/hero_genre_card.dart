@@ -91,7 +91,11 @@ class HeroGenreCard extends StatelessWidget {
                         if (genre.description != null) ...[
                           const SizedBox(height: 2),
                           Text(
-                            localizedGenreDescription(l10n, genre.description!),
+                            localizedGenreDescription(
+                              l10n,
+                              genre.description!,
+                              id: genre.id,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: theme.textTheme.bodySmall?.copyWith(
