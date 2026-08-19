@@ -17,6 +17,7 @@ import 'package:oral_collector/features/recording/presentation/widgets/confirmat
 import 'package:oral_collector/features/storyteller/presentation/notifiers/project_storytellers_notifier.dart';
 import 'package:oral_collector/features/storyteller/presentation/notifiers/project_storytellers_state.dart';
 import 'package:oral_collector/l10n/app_localizations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../support/text_scale.dart';
 
@@ -114,6 +115,12 @@ Future<void> _unmount(WidgetTester tester, ProviderContainer container) async {
 }
 
 void main() {
+  setUp(() {
+    // ConfirmationStep reads its saved draft from SharedPreferences on mount
+    // (ENG-518); without a mock store the plugin channel throws.
+    SharedPreferences.setMockInitialValues({});
+  });
+
   for (final scale in const [1.0, 1.3, 2.0]) {
     testWidgets('confirmation has no overflow at ${scale}x', (tester) async {
       final container = _container();

@@ -28,6 +28,7 @@ import 'package:oral_collector/features/storyteller/presentation/widgets/storyte
 import 'package:oral_collector/features/sync/presentation/notifiers/sync_notifier.dart';
 import 'package:oral_collector/features/sync/presentation/notifiers/sync_state.dart';
 import 'package:oral_collector/l10n/app_localizations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class _ThrowingRecordingRepository implements LocalRecordingRepository {
   @override
@@ -129,6 +130,9 @@ Widget _harness(ProviderContainer container) {
 
 void main() {
   setUp(() {
+    // ConfirmationStep reads its saved draft from SharedPreferences on mount
+    // (ENG-518); without a mock store the plugin channel throws.
+    SharedPreferences.setMockInitialValues({});
     // ConfirmationStep plus an open bottom sheet overflows the 800x600 default
     // viewport; give it room so layout exceptions don't mask the real check.
     final binding = TestWidgetsFlutterBinding.ensureInitialized();

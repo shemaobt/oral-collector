@@ -29,6 +29,7 @@ import 'package:oral_collector/features/sync/presentation/notifiers/sync_state.d
 import 'package:oral_collector/l10n/app_localizations.dart';
 import 'package:oral_collector/l10n/app_localizations_en.dart';
 import 'package:oral_collector/shared/utils/recording_description.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 const _projectId = 'proj-1';
 const _tooShort = 'Too short';
@@ -164,6 +165,12 @@ Future<void> _tapSave(WidgetTester tester) async {
 }
 
 void main() {
+  setUp(() {
+    // ConfirmationStep reads its saved draft from SharedPreferences on mount
+    // (ENG-518); without a mock store the plugin channel throws.
+    SharedPreferences.setMockInitialValues({});
+  });
+
   final l10nEn = AppLocalizationsEn();
   final tooShortMessage = l10nEn.recording_descriptionTooShort(
     minDescriptionGraphemes,
