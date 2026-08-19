@@ -89,6 +89,7 @@ Future<void> _pump(
             registerName: registerName,
             onReRecord: () {},
             onDiscard: () {},
+            onKeepForLater: () {},
             showReRecord: showReRecord,
           ),
         ),

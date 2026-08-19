@@ -199,6 +199,7 @@ Widget _harness(ProviderContainer container) {
           subcategoryName: null,
           onReRecord: () {},
           onDiscard: () {},
+          onKeepForLater: () {},
           // Keeps a successful save from routing to /home (no GoRouter here).
           onSaved: () {},
         ),
