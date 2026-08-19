@@ -96,6 +96,12 @@ Path: @/lib/features/recording/data
   injected so the trim editor's load-path file check is driveable in
   widget tests (a real `dart:io` future never resolves under the
   fake-async test zone). See "the trim editor's injectable seams" below.
+  `deleteFileProvider` (ENG-407), `readFileBytesProvider` and
+  `audioFilePickerProvider` (both ENG-427) are the same shape: the first two
+  wrap `file_ops`, and the third wraps `web_file_picker.pickSingleAudioFile`.
+  The picker one exists for a different reason than testability alone — it is
+  a browser boundary that cannot exist on the Dart VM at all, so a flow that
+  may or may not open it can only be observed through a seam.
 - `server_to_local_recording.dart` exposes `serverRecordingToLocal(server)`,
   the single mapper from `ServerRecording` to `LocalRecording`. It exists
   precisely so callers like the detail screen and the trim editor cannot
@@ -590,9 +596,12 @@ Path: @/lib/features/recording/data
   writes for a row whose audio lives only on the server. Rows written by
   earlier builds still carry the old invented name; they are left alone rather
   than treated as corrupt, and reading them back simply finds nothing. Native
-  is untouched: `filePath` still wins there. What this does **not** yet do is
-  use any of it — making the resume banner read the bytes back is the second
-  half of ENG-427.
+  is untouched: `filePath` still wins there. The resume banner is what reads it
+  back: given an address whose bytes are still there it finishes the upload
+  from them without asking for anything, and in every other case — no address,
+  an invented one, or bytes the sweep already collected — it asks for the file
+  as before (see
+  [../presentation/widgets/docs.md](../presentation/widgets/docs.md)).
 - The `localRecordingStreamProvider` streams the **domain entity**
   `LocalRecordingEntity?` as of ENG-199/ENG-200 — it is backed by
   `LocalRecordingRepository.watchRecordingEntityById`

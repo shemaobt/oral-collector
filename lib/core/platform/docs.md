@@ -153,10 +153,14 @@ Path: @/lib/core/platform
   prefix, reads each recording's start instant out of the key itself, and
   deletes the ones older than 24 hours, skipping any key a pending upload can
   still resume from. No metadata and no schema was added for this: the key
-  already carries the timestamp. What is still missing is a surface that offers
-  an abandoned recording *back* to the person before the cutoff collects it —
-  that is ENG-427's second half, and it has the same shape as ENG-420 on
-  device.
+  already carries the timestamp. The surface that offers a recording *back* to
+  the person before the cutoff collects it is the resume banner, which since
+  ENG-427 reads the bytes out of storage and finishes the upload without asking
+  for anything (see
+  [/lib/features/recording/presentation/widgets/docs.md](../../features/recording/presentation/widgets/docs.md)).
+  It offers only what an interrupted *upload* left behind, though: audio
+  abandoned on the confirmation form has no row pointing at it, so the sweep is
+  still the only thing that ever touches those bytes.
 - **"Never collect what a pending upload needs" used to be true for free; now
   it is enforced (ENG-427).** Until the resumable path recorded where its bytes
   were, the promise held vacuously: an interrupted web upload's shadow row
