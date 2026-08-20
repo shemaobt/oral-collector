@@ -61,8 +61,20 @@ class InterruptedSessionsNotifier extends Notifier<void> {
       // Since ENG-420 slice 2 a session can reach the banner on the strength
       // of its finalized audio alone, so discarding one has to take that file
       // too — the segments it was built from may already be gone.
+      //
+      // Deleted at the address the predicate below reads it from, not at the
+      // one the row stores (ENG-528). The container moves on reinstall or
+      // restore, so a path written by an earlier run stops resolving; the
+      // delete would find nothing and not throw, while the predicate resolved
+      // the same file by basename and answered "still here". The terminal
+      // status then never got written and the person pressed discard forever
+      // with nothing happening. A null resolution means the file is gone from
+      // every place the app looks, so there is nothing to delete.
       final finalized = session.finalizedAudioPath;
-      if (finalized != null) await _deleteFileSafe(finalized);
+      final resolved = finalized == null
+          ? null
+          : await resolveRecordingPath(finalized);
+      if (resolved != null) await _deleteFileSafe(resolved);
       await _cleanupOrphanedSegments(session.id, -1);
       // The terminal status says the recording is gone, so it is written only
       // once the audio actually is. A delete that refused used to be swallowed
