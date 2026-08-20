@@ -42,6 +42,19 @@ class RecordingSessionRepository {
         .get();
   }
 
+  /// Sessions parked in the terminal `discarded` status.
+  ///
+  /// Nothing deletes session rows, so a row that reached this status while its
+  /// audio was still on disk is still here — with its path, its segments and
+  /// its metadata. That is what makes the one-shot recovery of the ENG-521 era
+  /// a query rather than a directory scan (ENG-522).
+  Future<List<RecordingSession>> findDiscardedSessions() {
+    return (_db.select(_db.recordingSessions)
+          ..where((t) => t.status.equals('discarded'))
+          ..orderBy([(t) => OrderingTerm.desc(t.startedAt)]))
+        .get();
+  }
+
   Future<void> markActive(String sessionId) async {
     await _setStatus(sessionId, 'active');
   }
