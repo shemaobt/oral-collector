@@ -414,7 +414,13 @@ Path: @/lib/features/recording/data
   writes a session's terminal `discarded` status *after* deleting files asks it
   first, which is what keeps the ENG-420 invariant true for the two session
   notifier paths that never had it and makes the terminal write depend on the
-  deletion having actually happened — see
+  deletion having actually happened. ENG-527 added the third such caller,
+  `SegmentedRecorder.discard`: the exemption it held — "it runs before any
+  anchor can exist" — described the fresh-recording flow only, and a resumed
+  recording reuses the id of a swept, anchored row. It is also the one caller
+  that can find a session still *active*, so when the answer is yes it writes
+  `crashed` (the status the unsaved list reads) instead of leaving the row
+  where no list would show it until the next cold start. See
   [repositories/docs.md](repositories/docs.md) for the invariant and why the
   question is deliberately not "is the anchor column set". `RecoveryCoordinator`
   keeps its own private variant because it answers a wider question (it also
