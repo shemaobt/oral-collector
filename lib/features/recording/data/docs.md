@@ -406,6 +406,20 @@ Path: @/lib/features/recording/data
   consumes it through `audioPathResolverProvider` and falls back to
   `gcsUrl` when resolution returns `null`. On `kIsWeb` it short-circuits
   to `null` because the playback notifier always uses URLs on web.
+- `services/session_audio.dart` exposes the pure async
+  `sessionHoldsReachableAudio(session, segmentPaths)` — the single answer to
+  "does this recording session still hold audio somebody could get back?"
+  (ENG-521). It resolves the row's v14 anchor through `resolveRecordingPath`
+  above and, failing that, stats the recorded segment paths. Every path that
+  writes a session's terminal `discarded` status *after* deleting files asks it
+  first, which is what keeps the ENG-420 invariant true for the two session
+  notifier paths that never had it and makes the terminal write depend on the
+  deletion having actually happened — see
+  [repositories/docs.md](repositories/docs.md) for the invariant and why the
+  question is deliberately not "is the anchor column set". `RecoveryCoordinator`
+  keeps its own private variant because it answers a wider question (it also
+  covers pre-v14 rows via a directory scan) behind an injected
+  `directoryResolver`.
 - `services/audio_probe.dart` exposes `AudioProbe`, the duration + codec +
   playability detector the file-import flow
   ([../presentation/file_import_screen.dart](../presentation/file_import_screen.dart))

@@ -6,12 +6,14 @@ import 'package:logging/logging.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../../../core/database/app_database.dart';
+import '../../../../core/observability/error_reporter.dart';
 import '../../../../core/platform/file_ops.dart' as file_ops;
 import '../../data/providers.dart';
 import '../../data/services/audio_path_resolver.dart';
 import '../../data/services/recording_finalization_service.dart';
 import '../../data/services/recovery_coordinator.dart';
 import '../../data/services/segment_paths.dart';
+import '../../data/services/session_audio.dart';
 import 'recording_session_notifier.dart';
 import 'recording_session_state.dart';
 
@@ -62,7 +64,14 @@ class InterruptedSessionsNotifier extends Notifier<void> {
       final finalized = session.finalizedAudioPath;
       if (finalized != null) await _deleteFileSafe(finalized);
       await _cleanupOrphanedSegments(session.id, -1);
-      await sessionRepo.markDiscarded(session.id);
+      // The terminal status says the recording is gone, so it is written only
+      // once the audio actually is. A delete that refused used to be swallowed
+      // and the row marked anyway, which left the file on disk with nothing
+      // able to reach it; now the session stays in the list and the person can
+      // ask again (ENG-521).
+      if (!await sessionHoldsReachableAudio(session, paths)) {
+        await sessionRepo.markDiscarded(session.id);
+      }
     }
     await ref.read(recoveryCoordinatorProvider).refresh();
   }
@@ -222,9 +231,14 @@ class InterruptedSessionsNotifier extends Notifier<void> {
     } catch (_) {}
   }
 
+  /// Best-effort delete: a discard must not blow up in the person's face. The
+  /// failure is not silent any more, though — it is reported, and the caller
+  /// decides what it means by asking whether the audio is still there.
   Future<void> _deleteFileSafe(String path) async {
     try {
-      await file_ops.deleteFile(path);
-    } catch (_) {}
+      await ref.read(deleteFileProvider)(path);
+    } catch (e, st) {
+      ref.read(errorReporterProvider).reportError(e, st);
+    }
   }
 }

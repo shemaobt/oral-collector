@@ -29,6 +29,7 @@ import '../../data/services/recording_notification.dart';
 import '../../data/services/recovery_coordinator.dart';
 import '../../data/services/segment_paths.dart';
 import '../../data/services/segmented_recorder.dart';
+import '../../data/services/session_audio.dart';
 import '../../data/services/session_recovery.dart';
 import '../../data/services/storage_guard.dart';
 import 'input_device_notifier.dart';
@@ -161,7 +162,13 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
       }
     }
     if (validPaths.isEmpty) {
-      await sessionRepo.markDiscarded(session.id);
+      // Same invariant as the save path: a row that still holds audio nobody
+      // saved never goes to a status no sweep queries, or the recording is out
+      // of reach for good. There is nothing to resume from, but the offer has
+      // to survive (ENG-521).
+      if (!await sessionHoldsReachableAudio(session, validPaths)) {
+        await sessionRepo.markDiscarded(session.id);
+      }
       await ref.read(recoveryCoordinatorProvider).refresh();
       return false;
     }
@@ -842,9 +849,18 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
           await _deleteFileSafe(p);
         }
         await _cleanupOrphanedSegments(pendingSessionId, -1);
-        await ref
-            .read(recordingSessionRepositoryProvider)
-            .markDiscarded(pendingSessionId);
+        // Walking away from a resumed session is not a request to delete it,
+        // and the finalized audio it may be anchored to was never touched
+        // here. The terminal status is written only once nothing is left to
+        // come back to — which also means a delete that failed above keeps the
+        // session reachable instead of stranding its file (ENG-521).
+        final sessionRepo = ref.read(recordingSessionRepositoryProvider);
+        final session = await sessionRepo.getById(pendingSessionId);
+        final stillHasAudio =
+            session != null && await sessionHoldsReachableAudio(session, paths);
+        if (!stillHasAudio) {
+          await sessionRepo.markDiscarded(pendingSessionId);
+        }
         _pendingResumeSessionId = null;
         _pendingResumeSegmentPaths = null;
         _pendingResumeDuration = null;
