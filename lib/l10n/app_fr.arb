@@ -651,6 +651,7 @@
   "recording_clearSecondary": "Effacer la secondaire",
   "recording_unclassified": "Non classifié",
   "recording_unclassifiedDesc": "Enregistrements en attente de classification",
+  "recording_unclassifiedSubcategoryDesc": "Contient les enregistrements encore en attente de classification",
   "recording_inputSource": "Entrée",
   "recording_selectMicrophone": "Sélectionner le microphone",
   "recording_builtInMicrophone": "Par défaut du système",

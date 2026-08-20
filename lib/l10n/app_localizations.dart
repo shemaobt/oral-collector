@@ -3692,6 +3692,12 @@ abstract class AppLocalizations {
   /// **'Recordings pending classification'**
   String get recording_unclassifiedDesc;
 
+  /// No description provided for @recording_unclassifiedSubcategoryDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Holds recordings still waiting to be classified'**
+  String get recording_unclassifiedSubcategoryDesc;
+
   /// No description provided for @recording_inputSource.
   ///
   /// In en, this message translates to:

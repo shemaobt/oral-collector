@@ -2101,6 +2101,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Enregistrements en attente de classification';
 
   @override
+  String get recording_unclassifiedSubcategoryDesc =>
+      'Contient les enregistrements encore en attente de classification';
+
+  @override
   String get recording_inputSource => 'Entrée';
 
   @override

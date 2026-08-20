@@ -2076,6 +2076,10 @@ class AppLocalizationsHi extends AppLocalizations {
       'वर्गीकरण की प्रतीक्षा में रिकॉर्डिंग्स';
 
   @override
+  String get recording_unclassifiedSubcategoryDesc =>
+      'उन रिकॉर्डिंग्स को रखता है जो अब भी वर्गीकरण की प्रतीक्षा में हैं';
+
+  @override
   String get recording_inputSource => 'इनपुट';
 
   @override

@@ -651,6 +651,7 @@
   "recording_clearSecondary": "Borrar secundaria",
   "recording_unclassified": "Sin clasificar",
   "recording_unclassifiedDesc": "Grabaciones pendientes de clasificación",
+  "recording_unclassifiedSubcategoryDesc": "Contiene grabaciones que aún esperan clasificación",
   "recording_inputSource": "Entrada",
   "recording_selectMicrophone": "Seleccionar micrófono",
   "recording_builtInMicrophone": "Predeterminado del sistema",

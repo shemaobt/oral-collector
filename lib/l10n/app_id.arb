@@ -651,6 +651,7 @@
   "recording_clearSecondary": "Hapus sekunder",
   "recording_unclassified": "Belum diklasifikasi",
   "recording_unclassifiedDesc": "Rekaman yang menunggu klasifikasi",
+  "recording_unclassifiedSubcategoryDesc": "Menyimpan rekaman yang masih menunggu klasifikasi",
   "recording_inputSource": "Input",
   "recording_selectMicrophone": "Pilih mikrofon",
   "recording_builtInMicrophone": "Default sistem",

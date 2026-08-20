@@ -2002,6 +2002,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recording_unclassifiedDesc => '분류 대기 중인 녹음';
 
   @override
+  String get recording_unclassifiedSubcategoryDesc => '아직 분류를 기다리는 녹음을 담고 있습니다';
+
+  @override
   String get recording_inputSource => '입력';
 
   @override

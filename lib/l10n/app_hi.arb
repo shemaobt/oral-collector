@@ -651,6 +651,7 @@
   "recording_clearSecondary": "द्वितीयक साफ करें",
   "recording_unclassified": "अवर्गीकृत",
   "recording_unclassifiedDesc": "वर्गीकरण की प्रतीक्षा में रिकॉर्डिंग्स",
+  "recording_unclassifiedSubcategoryDesc": "उन रिकॉर्डिंग्स को रखता है जो अब भी वर्गीकरण की प्रतीक्षा में हैं",
   "recording_inputSource": "इनपुट",
   "recording_selectMicrophone": "माइक्रोफ़ोन चुनें",
   "recording_builtInMicrophone": "सिस्टम डिफ़ॉल्ट",

@@ -1015,6 +1015,7 @@
   "recording_clearSecondary": "Clear secondary",
   "recording_unclassified": "Unclassified",
   "recording_unclassifiedDesc": "Recordings pending classification",
+  "recording_unclassifiedSubcategoryDesc": "Holds recordings still waiting to be classified",
   "recording_inputSource": "Input",
   "recording_selectMicrophone": "Select microphone",
   "recording_builtInMicrophone": "System default",

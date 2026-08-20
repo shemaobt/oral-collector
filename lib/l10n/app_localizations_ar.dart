@@ -2054,6 +2054,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get recording_unclassifiedDesc => 'تسجيلات بانتظار التصنيف';
 
   @override
+  String get recording_unclassifiedSubcategoryDesc =>
+      'يضم التسجيلات التي لا تزال بانتظار التصنيف';
+
+  @override
   String get recording_inputSource => 'الإدخال';
 
   @override
