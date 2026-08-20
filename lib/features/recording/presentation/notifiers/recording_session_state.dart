@@ -166,9 +166,10 @@ class RecordingResult {
   /// The recording session this audio came from, when there is one (ENG-518).
   ///
   /// It is the thread the confirmation form pulls to park a recording the
-  /// person walks away from instead of deleting it. Null is a real answer, not
-  /// a missing value: the browser creates no session row at all, so there is
-  /// nowhere to park its audio and nothing to offer.
+  /// person walks away from instead of deleting it. Since ENG-519 slice 1 the
+  /// browser fills it too — its capture opens a session row and anchors it to
+  /// the storage key. Null is still a real answer, not a missing value: a
+  /// capture that produced no durable audio has nothing to park.
   final String? sessionId;
 
   const RecordingResult({
