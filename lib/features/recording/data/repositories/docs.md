@@ -590,8 +590,20 @@ Path: @/lib/features/recording/data/repositories
     that produced the leak.
   - `InterruptedSessionsNotifier.discard`, the person's own "delete this": it
     deletes the segments and the anchored file and *then* asks the same
-    question, so it still discards — see the next bullet. *Checked against:* a
-    discard whose stored anchor path still resolves literally.
+    question, so it still discards — see the next bullet. *Checked against:*
+    both a stored anchor path that still resolves literally and one left behind
+    by a moved container. The caveat that used to sit here — that only the
+    first was verified — was the ENG-528 defect: the delete used the path the
+    row stores while the predicate resolved the same file by basename, so after
+    a reinstall or restore the delete found nothing, did not throw, and the
+    predicate answered "still here". Nothing was lost, but nothing could be
+    deleted either: the person pressed discard and the recording stayed. The
+    discard now resolves through
+    [`resolveRecordingPath`](../services/audio_path_resolver.dart) before
+    deleting, so both ends name the same file. The segments never had this
+    split — the delete and the predicate both read the recorded paths
+    literally, and `_cleanupOrphanedSegments` sweeps the *current* documents
+    directory besides.
   - `SegmentedRecorder.discard`, walking away from a recording in progress: it
     deletes the closing segment and every path it holds, then asks the same
     question, and a session that still holds audio goes back to `crashed`
@@ -624,12 +636,17 @@ Path: @/lib/features/recording/data/repositories
   is the shared predicate: it resolves the anchor through
   [`resolveRecordingPath`](../services/audio_path_resolver.dart) (a literal stat
   would declare live audio gone after the container moves on reinstall) and
-  falls through to stat'ing the recorded segment paths. Both discard paths call
+  falls through to stat'ing the recorded segment paths. Every discard path calls
   it *after* deleting rather than before, which is what makes the terminal
   status depend on the deletion having worked: a delete that throws is caught,
   reported, and leaves the file behind, so the predicate still answers yes and
   the session stays in the unsaved list for the person to try again — instead of
-  being declared finished over audio still on the disk. A characterization test
+  being declared finished over audio still on the disk. **Deleting after asking
+  is only half of it: the delete has to name the same file the question does**
+  (ENG-528). The two ends drifted apart for the anchor — stored path on the
+  delete, basename resolution in the predicate — and a moved container turned
+  "waits on the deletion" into "never discards", because a delete that finds
+  nothing does not throw either. The anchor delete now resolves first. A characterization test
   drives a refusing delete through `deleteFileProvider`
   ([../providers.dart](../providers.dart)).
 - **The terminal status has exactly one way back, it runs once per device, and
