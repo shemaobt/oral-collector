@@ -465,9 +465,19 @@ Path: @/lib/features/recording/presentation/notifiers
     segment except `keepPath`. `keepPath` is the finalized file, which in the
     single-segment / degraded fallbacks *is itself one of the segments*
     — hence the exception rather than a blanket delete.
-  - `discard` deletes the segments and marks the session discarded. It is
-    also what the confirmation screen's discard action calls: the finalized
-    file is already gone by then, deleted by the confirmation step itself.
+  - `discard` deletes the segments and the anchored file, and marks the session
+    discarded **only once none of that audio is still there** (ENG-521). The
+    delete goes through `deleteFileProvider`
+    ([../../data/providers.dart](../../data/providers.dart)) and a refusal is
+    caught and reported rather than swallowed; the terminal write then simply
+    does not happen, because
+    [`sessionHoldsReachableAudio`](../../data/services/session_audio.dart) still
+    answers yes. The session stays in the unsaved list and the person can ask
+    again — where before the failure was silent and the row was declared
+    finished over a file still on disk. It is also what the confirmation
+    screen's discard action calls: the finalized file is already gone by then,
+    deleted by the confirmation step itself, so the predicate says no and the
+    discard completes.
   - Since ENG-518 (slice 1) the confirmation screen the recovery flow hosts
     **opens with whatever had been typed before the crash**, not empty: the
     draft is keyed by the audio path, which `pending.result` already carries,
@@ -666,6 +676,28 @@ Path: @/lib/features/recording/presentation/notifiers
   [`RecoveryCoordinator`](../../data/services/recovery_coordinator.dart) stats
   it to decide whether a finished session still owes the user a recovery
   offer.
+- **Neither "resume" nor "leave" may swallow a session's audio (ENG-521).**
+  Two paths on `RecordingSessionNotifier` wrote the terminal `discarded` status
+  without ever reading the anchor, and both are reached by exactly the session
+  that has one. `loadInterruptedSession` (the unsaved list's **Resume**) marked
+  the session discarded whenever no segment file survived — but the startup
+  sweep promotes a *finished* session back to `crashed` with its anchor intact
+  precisely when the fire-and-forget deletions took its sources, so the row it
+  buried was the one holding the unsaved recording. `discardRecording`'s
+  resumed-session branch is reached from
+  [../widgets/recording_navigation_guard.dart](../widgets/recording_navigation_guard.dart)
+  — leaving the screen or switching tabs mid-recording, not a request to delete
+  anything — and it deleted the pending segments and marked the row discarded,
+  never touching the finalized file it stranded. Both now ask
+  [`sessionHoldsReachableAudio`](../../data/services/session_audio.dart) first,
+  and the criterion is that the audio is still *there*, not that the anchor
+  column is *set*: see
+  [../../data/repositories/docs.md](../../data/repositories/docs.md) for the
+  full call-site table and why the column-reading version of this guard would
+  turn the person's own discard into never-discards. Consequence worth knowing:
+  a session with an anchor and no surviving segments now stays in the unsaved
+  list, and tapping Resume on it does nothing visible — there is nothing to
+  resume from, and **Save** is the action that gets the recording back.
 - **A failed finalize keeps the recording recoverable — on both stop
   paths.** Finalization (FFmpeg concat + IO under
   [../../data/services/recording_finalization_service.dart](../../data/services/recording_finalization_service.dart))

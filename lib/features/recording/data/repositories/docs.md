@@ -547,17 +547,52 @@ Path: @/lib/features/recording/data/repositories
     never touches the row). The anchor is resolved through the same basename
     lookup `resolveRecordingPath` uses, so a stale absolute path from a moved
     iOS container still finds its file.
-  **A session still holding finalized audio is never marked `discarded`.**
+  **A session still holding audio nobody saved is never marked `discarded`.**
   `discarded` appears in no sweep query — neither `findFinishedSessions` nor
-  `findCrashedSessions` — so a row that reaches it can never be surfaced again.
-  Both paths that give up (`InterruptedSessionsNotifier.save` when neither the
-  anchor nor a segment yields audio, and `RecoveryCoordinator.refresh` when a
-  crashed row has no segments) skip the terminal write while
-  `finalizedAudioPath` is set. That guard is still reachable after slice 3:
-  it is what catches a row whose anchor names a deleted file and whose sources
-  are gone too. The invariant is "a session that still points at a durable
-  artifact never reaches a state no sweep looks at". A deliberate discard is
-  the one intended way out, and it deletes the anchored file first.
+  `findCrashedSessions` — so a row that reaches it can never be surfaced again,
+  and nothing deletes session rows, so the audio it names is out of reach for
+  good. The invariant is "a session that still holds a reachable artifact never
+  reaches a state no sweep looks at". A deliberate discard is the one intended
+  way out, and it deletes the audio first.
+  Every writer of that status is one of these, and each is deliberate:
+  - `InterruptedSessionsNotifier.save`, when neither the anchor nor a segment
+    yields audio, and `RecoveryCoordinator.refresh`, when a crashed row has no
+    segments: both skip the terminal write while `finalizedAudioPath` is set.
+    Written for slice 3, still reachable — they catch a row whose anchor names a
+    deleted file and whose sources are gone too.
+  - `RecordingSessionNotifier.loadInterruptedSession` (tapping "resume") when no
+    segment file survives, and `RecordingSessionNotifier.discardRecording` on
+    its resumed-session branch (walking away from a resumed recording): both
+    used to write the status without ever reading the anchor, and both were the
+    ENG-521 leak — the sweep promotes a *finished* session back to `crashed`
+    with its anchor intact, so precisely the row holding 18 unsaved minutes is
+    the one they swallowed. Both now ask
+    [`sessionHoldsReachableAudio`](../services/session_audio.dart) first.
+  - `InterruptedSessionsNotifier.discard`, the person's own "delete this": it
+    deletes the segments and the anchored file and *then* asks the same
+    question, so it still discards — see the next bullet.
+  - `SegmentedRecorder.discard` and `RecordingSessionNotifier._startNative`'s
+    failed-start branch need no guard: both run before any anchor can exist —
+    the row is only anchored by a successful finalize.
+- **The guard asks whether the audio is *there*, never whether the anchor
+  column is *set*, and the terminal status now waits on the delete (ENG-521).**
+  Nothing clears `finalizedAudioPath`, so a deliberate discard leaves the column
+  written over a file it just deleted. A guard reading the column would
+  therefore turn "discard" into "never discards", and since nothing else
+  removes session rows the app would accumulate dead sessions forever — trading
+  lost audio for permanent litter. `sessionHoldsReachableAudio(session,
+  segmentPaths)` in [../services/session_audio.dart](../services/session_audio.dart)
+  is the shared predicate: it resolves the anchor through
+  [`resolveRecordingPath`](../services/audio_path_resolver.dart) (a literal stat
+  would declare live audio gone after the container moves on reinstall) and
+  falls through to stat'ing the recorded segment paths. Both discard paths call
+  it *after* deleting rather than before, which is what makes the terminal
+  status depend on the deletion having worked: a delete that throws is caught,
+  reported, and leaves the file behind, so the predicate still answers yes and
+  the session stays in the unsaved list for the person to try again — instead of
+  being declared finished over audio still on the disk. A characterization test
+  drives a refusing delete through `deleteFileProvider`
+  ([../providers.dart](../providers.dart)).
 - **The anchored duration overstates the audio on the degraded path.** When
   both concat routes fail, `RecordingFinalizationService` returns the whole
   session's duration alongside a `filePath` that is only the first segment, so
