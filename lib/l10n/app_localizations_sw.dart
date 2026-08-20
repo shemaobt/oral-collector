@@ -2059,6 +2059,10 @@ class AppLocalizationsSw extends AppLocalizations {
   String get recording_unclassifiedDesc => 'Rekodi zinazosubiri kuainishwa';
 
   @override
+  String get recording_unclassifiedSubcategoryDesc =>
+      'Huhifadhi rekodi ambazo bado zinasubiri kuainishwa';
+
+  @override
   String get recording_inputSource => 'Ingizo';
 
   @override

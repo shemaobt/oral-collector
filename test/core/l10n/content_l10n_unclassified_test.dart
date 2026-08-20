@@ -4,7 +4,8 @@
 /// names have to reach the user translated, and the translation has to be
 /// chosen by the id — the name is the server's to change (ENG-9). The genre's
 /// description is the server's to change for the same reason, and reaches the
-/// reader the same way (ENG-428).
+/// reader the same way (ENG-428). The subcategory description is chosen the
+/// same way, from the id, since ENG-517.
 library;
 
 import 'package:flutter_test/flutter_test.dart';
@@ -159,6 +160,46 @@ void main() {
       expect(
         localizedSubcategoryName(l10n, 'Genealogy', id: ''),
         l10n.sub_genealogy,
+      );
+    });
+  });
+
+  group('subcategory description', () {
+    test(
+      'the unclassified subcategory description reads in the user language',
+      () {
+        final description = localizedSubcategoryDescription(
+          l10n,
+          'Unclassified',
+          id: kUnclassifiedSubcategoryId,
+        );
+
+        expect(description, l10n.recording_unclassifiedSubcategoryDesc);
+      },
+    );
+
+    test('the unclassified subcategory description is recognised by id, not by '
+        'text', () {
+      final description = localizedSubcategoryDescription(
+        l10n,
+        'Uncategorized',
+        id: kUnclassifiedSubcategoryId,
+      );
+
+      expect(description, l10n.recording_unclassifiedSubcategoryDesc);
+    });
+
+    test('a taxonomy subcategory description is still translated by text', () {
+      expect(
+        localizedSubcategoryDescription(l10n, 'Genealogy', id: 'sub_genealogy'),
+        l10n.sub_genealogyDesc,
+      );
+    });
+
+    test('an unknown subcategory still has no description at all', () {
+      expect(
+        localizedSubcategoryDescription(l10n, 'Fishing Chant', id: 'sub_new'),
+        isNull,
       );
     });
   });

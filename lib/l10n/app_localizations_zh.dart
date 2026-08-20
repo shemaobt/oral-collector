@@ -1989,6 +1989,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recording_unclassifiedDesc => '等待分类的录音';
 
   @override
+  String get recording_unclassifiedSubcategoryDesc => '存放仍在等待分类的录音';
+
+  @override
   String get recording_inputSource => '输入';
 
   @override

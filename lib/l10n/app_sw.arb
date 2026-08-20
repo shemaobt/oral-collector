@@ -651,6 +651,7 @@
   "recording_clearSecondary": "Futa wa pili",
   "recording_unclassified": "Haijainishwa",
   "recording_unclassifiedDesc": "Rekodi zinazosubiri kuainishwa",
+  "recording_unclassifiedSubcategoryDesc": "Huhifadhi rekodi ambazo bado zinasubiri kuainishwa",
   "recording_inputSource": "Ingizo",
   "recording_selectMicrophone": "Chagua maikrofoni",
   "recording_builtInMicrophone": "Chaguomsingi cha mfumo",

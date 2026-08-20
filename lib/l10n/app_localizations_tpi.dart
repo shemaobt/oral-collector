@@ -2058,6 +2058,10 @@ class AppLocalizationsTpi extends AppLocalizations {
       'Ol rekoding i wet long makim kain bilong ol';
 
   @override
+  String get recording_unclassifiedSubcategoryDesc =>
+      'I holim ol rekoding i wet yet long makim kain bilong ol';
+
+  @override
   String get recording_inputSource => 'Insait';
 
   @override

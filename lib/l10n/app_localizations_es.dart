@@ -2088,6 +2088,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Grabaciones pendientes de clasificación';
 
   @override
+  String get recording_unclassifiedSubcategoryDesc =>
+      'Contiene grabaciones que aún esperan clasificación';
+
+  @override
   String get recording_inputSource => 'Entrada';
 
   @override

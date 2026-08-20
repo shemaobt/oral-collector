@@ -651,6 +651,7 @@
   "recording_clearSecondary": "مسح الثانوي",
   "recording_unclassified": "غير مصنف",
   "recording_unclassifiedDesc": "تسجيلات بانتظار التصنيف",
+  "recording_unclassifiedSubcategoryDesc": "يضم التسجيلات التي لا تزال بانتظار التصنيف",
   "recording_inputSource": "الإدخال",
   "recording_selectMicrophone": "اختر الميكروفون",
   "recording_builtInMicrophone": "الافتراضي للنظام",

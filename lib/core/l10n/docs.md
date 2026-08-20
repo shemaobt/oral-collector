@@ -37,10 +37,11 @@ Path: @/lib/core/l10n
   `_slugToTitleCase` (which turns `oral-discourse` into `Oral Discourse`) and,
   failing that, returns the server's string unchanged. A category the app has
   never heard of therefore still renders — untranslated, but readable.
-- `localizedGenreName`, `localizedSubcategoryName` and
-  `localizedGenreDescription` are the exceptions to name-keying: each also takes
-  the row's **id**, and resolves the `unclassified` sentinel from it before
-  consulting the maps.
+- The four `unclassified`-aware functions — `localizedGenreName`,
+  `localizedSubcategoryName`, `localizedGenreDescription` and
+  `localizedSubcategoryDescription` — are the exceptions to name-keying: each
+  also takes the row's **id**, and resolves the `unclassified` sentinel from it
+  before consulting the maps.
 
 ### Things to Know
 
@@ -66,14 +67,23 @@ Path: @/lib/core/l10n
 - `l10n.yaml` sets `nullable-getter: false`, so every `AppLocalizations` getter
   returns a non-null `String` in every locale — a locale missing a key falls back
   to the English template at generation time. Callers never have to guard.
-- The **subcategory description still leaks**. The same server migration seeds
-  the sentinel subcategory with `'Default subcategory for pending
-  classification'`, and `localizedSubcategoryDescription` resolves by name only,
-  so that sentence reaches the reader in English wherever a subcategory
-  description is rendered (the subcategory selection step and the genre detail
-  screen). The genre description was closed by ENG-428 and the subcategory one
-  was deliberately left out of that slice; closing it needs its own `.arb` key,
-  because `recording_unclassifiedDesc` is worded for recordings in a category,
-  not for a subcategory.
+- **Subcategory descriptions never come from the server.** Unlike the genre
+  description, which is `genre.description` passed straight in,
+  `localizedSubcategoryDescription` is called with the subcategory's *name* and
+  keyed on it: the `description` column the taxonomy endpoint returns for a
+  subcategory is parsed into the entity and then rendered nowhere. A
+  subcategory the app has never heard of therefore shows a name and no
+  description line at all — which is why the function returns `String?` and both
+  call sites (the subcategory selection step and the genre detail screen) branch
+  on null to drop the line. Keep that return nullable: making it total would put
+  a description under every unknown subcategory.
+- The sentinel subcategory used to fall in that hole. The server seeds it with
+  `'Default subcategory for pending classification'`, but since that sentence
+  was never rendered the sentinel simply had no description; ENG-517 gave it one
+  by id, in the reader's language. It has its own key,
+  `recording_unclassifiedSubcategoryDesc`, rather than reusing
+  `recording_unclassifiedDesc`, which is worded for recordings inside a
+  category. With that closed, no sentinel string reaches the reader in English
+  any more — the register functions have no sentinel to resolve.
 
 Created and maintained by Nori.

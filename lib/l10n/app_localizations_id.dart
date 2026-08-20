@@ -2073,6 +2073,10 @@ class AppLocalizationsId extends AppLocalizations {
   String get recording_unclassifiedDesc => 'Rekaman yang menunggu klasifikasi';
 
   @override
+  String get recording_unclassifiedSubcategoryDesc =>
+      'Menyimpan rekaman yang masih menunggu klasifikasi';
+
+  @override
   String get recording_inputSource => 'Input';
 
   @override

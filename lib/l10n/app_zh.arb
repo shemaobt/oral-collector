@@ -852,6 +852,7 @@
   "recording_clearSecondary": "清除次要",
   "recording_unclassified": "未分类",
   "recording_unclassifiedDesc": "等待分类的录音",
+  "recording_unclassifiedSubcategoryDesc": "存放仍在等待分类的录音",
   "recording_inputSource": "输入",
   "recording_selectMicrophone": "选择麦克风",
   "recording_builtInMicrophone": "系统默认",
