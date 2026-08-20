@@ -32,7 +32,13 @@ Path: @/lib/core/startup
   abandoned in browser storage on web (ENG-426). The two prunes — device trash
   and browser audio — are fired unawaited, so neither stands between the person
   and the first screen; the recovery scan is awaited because the upload
-  listeners that come after it must not see a stale recording flag.
+  listeners that come after it must not see a stale recording flag. The
+  recovery scan carries one extra pass since ENG-522 — a once-per-device
+  repair that returns sessions the pre-ENG-521 defect stranded in a terminal
+  status while their audio stayed on disk. It runs inside the same awaited
+  scan, guarded so a failure reports rather than costing the refresh that
+  populates the unsaved-recordings list; see
+  [../../features/recording/data/docs.md](../../features/recording/data/docs.md).
 - The router in [../router/app_router.dart](../router/app_router.dart) is only
   built inside `main.dart`'s `_buildApp()`, which runs after the gate resolves.
   Its redirect keys off `authNotifierProvider.isAuthenticated`; because

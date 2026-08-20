@@ -435,6 +435,15 @@ Path: @/lib/features/recording/data/repositories
   replaced `findCompletedSessions()`: it matches `status IN ('completed',
   'recovered')`, because both statuses can be reached with real finalized
   audio the sweep needs to consider (see Things to Know).
+  `findDiscardedSessions()` (ENG-522) is the fourth query and the odd one out:
+  it matches the terminal `discarded` status, which by the invariant below is
+  supposed to name nothing recoverable. It exists because rows written before
+  ENG-521 can break that invariant, and nothing deletes session rows — so every
+  session the defect swallowed is still here with its path, its segments and
+  its metadata, and giving the audio back is a query rather than a directory
+  scan. Its single caller is the one-shot recovery in
+  [../services/recovery_coordinator.dart](../services/recovery_coordinator.dart);
+  see Things to Know.
 
 ### Things to Know
 
@@ -548,10 +557,12 @@ Path: @/lib/features/recording/data/repositories
     lookup `resolveRecordingPath` uses, so a stale absolute path from a moved
     iOS container still finds its file.
   **A session still holding audio nobody saved is never marked `discarded`.**
-  `discarded` appears in no sweep query — neither `findFinishedSessions` nor
-  `findCrashedSessions` — so a row that reaches it can never be surfaced again,
-  and nothing deletes session rows, so the audio it names is out of reach for
-  good. The invariant is "a session that still holds a reachable artifact never
+  `discarded` appears in no *sweep* query — neither `findFinishedSessions` nor
+  `findCrashedSessions` — so a row that reaches it is never surfaced again by
+  the ordinary startup path, and nothing deletes session rows, so the audio it
+  names is out of reach for good. (ENG-522 added the one exception:
+  `findDiscardedSessions` and a recovery that runs once per device, for the
+  rows written before these guards existed. See Things to Know.) The invariant is "a session that still holds a reachable artifact never
   reaches a state no sweep looks at". A deliberate discard is the one intended
   way out, and it deletes the audio first.
   Every writer of that status is one of these, and each is deliberate:
@@ -593,6 +604,39 @@ Path: @/lib/features/recording/data/repositories
   being declared finished over audio still on the disk. A characterization test
   drives a refusing delete through `deleteFileProvider`
   ([../providers.dart](../providers.dart)).
+- **The terminal status has exactly one way back, it runs once per device, and
+  that limit is the safety (ENG-522).** The invariant above holds from ENG-521
+  onward, but the rows the two unguarded paths already swallowed are still in
+  the database, naming audio still on the disk. `RecoveryCoordinator`'s
+  `_recoverDiscardedSessionsHoldingAudio` runs inside `scanOnStartup`, asks
+  `findDiscardedSessions()` for those rows, and promotes back to `crashed`
+  every one `sessionHoldsReachableAudio`
+  ([../services/session_audio.dart](../services/session_audio.dart)) still
+  answers yes for — the same predicate the guards use, so the recovery and the
+  discard agree on what "still holds audio" means, including the anchor's
+  basename resolution for a container that moved. Both legs count: a row
+  anchored to a finalized file, and a row with no anchor whose source segments
+  survived — the second is the shape the resumed-recording leak produced, so
+  dropping it would miss the commoner half. Sessions whose audio is really gone
+  are not touched and not offered: a recovery that cannot succeed is worse than
+  none.
+  **The once-per-device mark is not an optimization.** A deliberate discard
+  whose file outlived it is indistinguishable, from the database, from one the
+  defect swallowed. Recovering on every launch would therefore hand back
+  whatever the person discards afterwards, on the next launch, forever — they
+  could never delete anything. Of the two possible mistakes, giving back
+  something they meant to delete is the recoverable one: they discard it again,
+  and since ENG-521 the discard works. The mark is a `shared_preferences` bool
+  (`RecordingConfig.discardedAudioRecoveryDoneKey`), following the
+  `RecordingActiveFlag` precedent — no new column and no migration, because the
+  fact being remembered is about the install, not about any row. It is written
+  *after* the pass, so a run that dies half-way retries on the next launch
+  while the rows it already promoted, no longer `discarded`, are not promoted
+  twice. A characterization test mutes the mark and watches the second scan
+  hand the recording back.
+  The pre-v14 era is deliberately out of scope: those files have no session row
+  and no metadata at all, so recovering them would mean offering anonymous
+  audio to classify from scratch.
 - **The anchored duration overstates the audio on the degraded path.** When
   both concat routes fail, `RecordingFinalizationService` returns the whole
   session's duration alongside a `filePath` that is only the first segment, so
