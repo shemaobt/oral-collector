@@ -692,7 +692,8 @@ Path: @/lib/features/recording/data/repositories
   is the shared predicate: it resolves the anchor through
   [`resolveRecordingPath`](../services/audio_path_resolver.dart) (a literal stat
   would declare live audio gone after the container moves on reinstall) and
-  falls through to stat'ing the recorded segment paths. Every discard path calls
+  falls through to the recorded segment paths, resolved the same way since
+  ENG-529 (below). Every discard path calls
   it *after* deleting rather than before, which is what makes the terminal
   status depend on the deletion having worked: a delete that throws is caught,
   reported, and leaves the file behind, so the predicate still answers yes and
@@ -705,6 +706,47 @@ Path: @/lib/features/recording/data/repositories
   nothing does not throw either. The anchor delete now resolves first. A characterization test
   drives a refusing delete through `deleteFileProvider`
   ([../providers.dart](../providers.dart)).
+- **Path resolution is not the anchor's alone: the segments go through it too
+  (ENG-529).** Both places that build the list of usable segments —
+  `RecordingSessionNotifier.loadInterruptedSession` and
+  `InterruptedSessionsNotifier.save` — used to filter by the **literal** stored
+  path, and `sessionHoldsReachableAudio` stat'd them literally as well. After
+  the container moves, a session with no anchor therefore had every declared
+  segment reported missing with the files sitting right there, and all three
+  agreed on it: unlike ENG-528, where the two ends disagreed and the result was
+  a stalemate, here they agreed and agreed wrongly — the session was treated as
+  having no audio and written off. `resolveSegmentPaths`
+  ([../services/audio_path_resolver.dart](../services/audio_path_resolver.dart))
+  applies the anchor's own criterion to each segment, in recording order, and
+  drops the ones that resolve nowhere — which is how a genuine absence stays an
+  absence. It pays the documents-directory lookup **once per list**, not once
+  per segment: a long recording has dozens of them and each lookup is a trip to
+  the platform channel. Segment file names carry the session id
+  (`rec_<sessionId>_<index>.wav`, [../services/segment_paths.dart](../services/segment_paths.dart)),
+  so resolving by name cannot pick up another session's audio.
+  *Checked against:* the resume flow and the save flow over a session whose
+  stored segment paths name a container that no longer exists while the files
+  are under the current documents directory — the resume offers it and the save
+  produces the recording with all three segments in order; plus the same two
+  flows over a session whose segments are gone from everywhere, which is still
+  written off, and over a session whose stored paths resolve literally, which is
+  unchanged.
+- **Known, not fixed: the orphan sweep can delete a segment that is on the
+  valid list (ENG-529).** `_cleanupOrphanedSegments` scans the current
+  documents directory and deletes every file whose *name index* is greater than
+  the row's `lastSegmentIndex`. `RecoveryCoordinator._repairInFlightSegments`
+  attaches orphaned segments through `appendSegment`, which **increments**
+  `lastSegmentIndex` instead of taking the index from the file name — so when
+  one orphan is unrepairable and gets deleted, the ones that follow end up
+  declared with a name index above the resulting `lastSegmentIndex`, and the
+  next resume deletes them. This predates ENG-529 and is independent of it; what
+  ENG-529 changes is the exposure, in one direction: with a moved container the
+  resume used to abort before reaching the sweep, and now it gets there. The
+  common case is unaffected — with no unrepairable orphan the repair attaches in
+  order and the indices line up. *Checked against:* a probe that seeded segment
+  000 declared, 001 corrupt and 002 valid on disk, ran `scanOnStartup` (which
+  attached 002 and left `lastSegmentIndex` at 1) and then the resume, after
+  which 002 was gone from the disk while still declared in the row.
 - **The terminal status has exactly one way back, it runs once per device, and
   that limit is the safety (ENG-522).** The invariant above holds from ENG-521
   onward, but the rows the two unguarded paths already swallowed are still in
