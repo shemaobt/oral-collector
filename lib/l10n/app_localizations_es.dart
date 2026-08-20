@@ -2700,28 +2700,28 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get recovery_interruptedTitle => 'Interrupted recordings';
+  String get recovery_interruptedTitle => 'Grabaciones interrumpidas';
 
   @override
   String recovery_startedAt(String time) {
-    return 'Started at $time';
+    return 'Iniciada a las $time';
   }
 
   @override
-  String get recovery_resume => 'Resume';
+  String get recovery_resume => 'Continuar';
 
   @override
-  String get recovery_save => 'Save';
+  String get recovery_save => 'Guardar';
 
   @override
-  String get recovery_discard => 'Discard';
+  String get recovery_discard => 'Descartar';
 
   @override
-  String get recovery_confirmDiscardTitle => 'Discard recording?';
+  String get recovery_confirmDiscardTitle => '¿Descartar grabación?';
 
   @override
   String recovery_confirmDiscardBody(String duration) {
-    return '$duration of audio will be permanently deleted.';
+    return 'Se eliminarán permanentemente $duration de audio.';
   }
 
   @override
@@ -2729,8 +2729,8 @@ class AppLocalizationsEs extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count interrupted recordings — tap to resume',
-      one: '1 interrupted recording — tap to resume',
+      other: '$count grabaciones interrumpidas — toca para continuar',
+      one: '1 grabación interrumpida — toca para continuar',
     );
     return '$_temp0';
   }
@@ -2740,67 +2740,67 @@ class AppLocalizationsEs extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count unsaved recordings',
-      one: '1 unsaved recording',
+      other: '$count grabaciones sin guardar',
+      one: '1 grabación sin guardar',
     );
     return '$_temp0';
   }
 
   @override
   String recovery_latestSummary(String duration, String time) {
-    return 'Latest · $duration · $time';
+    return 'Última · $duration · $time';
   }
 
   @override
-  String get recovery_review => 'Review';
+  String get recovery_review => 'Revisar';
 
   @override
-  String get recovery_unsavedTitle => 'Unsaved recordings';
+  String get recovery_unsavedTitle => 'Grabaciones sin guardar';
 
   @override
   String recovery_unsavedSubtitle(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count recordings to review',
-      one: '1 recording to review',
+      other: '$count grabaciones para revisar',
+      one: '1 grabación para revisar',
     );
     return '$_temp0';
   }
 
   @override
-  String get recovery_discardAll => 'Discard all';
+  String get recovery_discardAll => 'Descartar todas';
 
   @override
-  String get recovery_discardAllTitle => 'Discard all recordings?';
+  String get recovery_discardAllTitle => '¿Descartar todas las grabaciones?';
 
   @override
   String recovery_discardAllBody(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count recordings will be permanently deleted.',
-      one: '1 recording will be permanently deleted.',
+      other: '$count grabaciones se eliminarán permanentemente.',
+      one: '1 grabación se eliminará permanentemente.',
     );
     return '$_temp0';
   }
 
   @override
-  String get recovery_newBadge => 'NEW';
+  String get recovery_newBadge => 'NUEVO';
 
   @override
-  String get recovery_mostRecent => 'Most recent';
+  String get recovery_mostRecent => 'Más reciente';
 
   @override
   String recovery_recordingNumbered(int number) {
-    return 'Recording $number';
+    return 'Grabación $number';
   }
 
   @override
   String get format_yesterday => 'Yesterday';
 
   @override
-  String get recovery_backToList => 'Not now';
+  String get recovery_backToList => 'Ahora no';
 
   @override
   String get upload_pausedWhileRecording =>

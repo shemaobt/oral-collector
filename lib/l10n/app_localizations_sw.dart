@@ -2671,28 +2671,28 @@ class AppLocalizationsSw extends AppLocalizations {
   }
 
   @override
-  String get recovery_interruptedTitle => 'Interrupted recordings';
+  String get recovery_interruptedTitle => 'Rekodi zilizokatizwa';
 
   @override
   String recovery_startedAt(String time) {
-    return 'Started at $time';
+    return 'Ilianza saa $time';
   }
 
   @override
-  String get recovery_resume => 'Resume';
+  String get recovery_resume => 'Endelea';
 
   @override
-  String get recovery_save => 'Save';
+  String get recovery_save => 'Hifadhi';
 
   @override
-  String get recovery_discard => 'Discard';
+  String get recovery_discard => 'Tupa';
 
   @override
-  String get recovery_confirmDiscardTitle => 'Discard recording?';
+  String get recovery_confirmDiscardTitle => 'Tupa rekodi?';
 
   @override
   String recovery_confirmDiscardBody(String duration) {
-    return '$duration of audio will be permanently deleted.';
+    return 'Sauti ya $duration itafutwa kabisa.';
   }
 
   @override
@@ -2700,8 +2700,8 @@ class AppLocalizationsSw extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count interrupted recordings — tap to resume',
-      one: '1 interrupted recording — tap to resume',
+      other: 'Rekodi $count zimekatizwa — gusa ili kuendelea',
+      one: 'Rekodi $count imekatizwa — gusa ili kuendelea',
     );
     return '$_temp0';
   }
@@ -2711,67 +2711,67 @@ class AppLocalizationsSw extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count unsaved recordings',
-      one: '1 unsaved recording',
+      other: 'Rekodi $count hazijahifadhiwa',
+      one: 'Rekodi $count haijahifadhiwa',
     );
     return '$_temp0';
   }
 
   @override
   String recovery_latestSummary(String duration, String time) {
-    return 'Latest · $duration · $time';
+    return 'Ya hivi punde · $duration · $time';
   }
 
   @override
-  String get recovery_review => 'Review';
+  String get recovery_review => 'Kagua';
 
   @override
-  String get recovery_unsavedTitle => 'Unsaved recordings';
+  String get recovery_unsavedTitle => 'Rekodi ambazo hazijahifadhiwa';
 
   @override
   String recovery_unsavedSubtitle(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count recordings to review',
-      one: '1 recording to review',
+      other: 'Rekodi $count za kukagua',
+      one: 'Rekodi $count ya kukagua',
     );
     return '$_temp0';
   }
 
   @override
-  String get recovery_discardAll => 'Discard all';
+  String get recovery_discardAll => 'Tupa zote';
 
   @override
-  String get recovery_discardAllTitle => 'Discard all recordings?';
+  String get recovery_discardAllTitle => 'Tupa rekodi zote?';
 
   @override
   String recovery_discardAllBody(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count recordings will be permanently deleted.',
-      one: '1 recording will be permanently deleted.',
+      other: 'Rekodi $count zitafutwa kabisa.',
+      one: 'Rekodi $count itafutwa kabisa.',
     );
     return '$_temp0';
   }
 
   @override
-  String get recovery_newBadge => 'NEW';
+  String get recovery_newBadge => 'MPYA';
 
   @override
-  String get recovery_mostRecent => 'Most recent';
+  String get recovery_mostRecent => 'Ya hivi punde';
 
   @override
   String recovery_recordingNumbered(int number) {
-    return 'Recording $number';
+    return 'Rekodi $number';
   }
 
   @override
   String get format_yesterday => 'Yesterday';
 
   @override
-  String get recovery_backToList => 'Not now';
+  String get recovery_backToList => 'Si sasa';
 
   @override
   String get upload_pausedWhileRecording =>

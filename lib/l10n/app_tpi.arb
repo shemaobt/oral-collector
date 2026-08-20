@@ -893,8 +893,8 @@
   "recording_splitFrom": "Brukim long {sourceId}",
   "trim_segmentRemoved": "Pisis {index} — rausim",
   "trim_segmentOfTotal": "Pisis {index} bilong {total}",
-  "recovery_interruptedTitle": "Interrupted recordings",
-  "recovery_startedAt": "Started at {time}",
+  "recovery_interruptedTitle": "Ol rekoding i bruk",
+  "recovery_startedAt": "I stat long {time}",
   "@recovery_startedAt": {
     "placeholders": {
       "time": {
@@ -902,11 +902,11 @@
       }
     }
   },
-  "recovery_resume": "Resume",
-  "recovery_save": "Save",
-  "recovery_discard": "Discard",
-  "recovery_confirmDiscardTitle": "Discard recording?",
-  "recovery_confirmDiscardBody": "{duration} of audio will be permanently deleted.",
+  "recovery_resume": "Statim gen",
+  "recovery_save": "Sevim",
+  "recovery_discard": "Rausim",
+  "recovery_confirmDiscardTitle": "Rausim rekoding?",
+  "recovery_confirmDiscardBody": "{duration} bilong audio bai lus olgeta.",
   "@recovery_confirmDiscardBody": {
     "placeholders": {
       "duration": {
@@ -914,7 +914,7 @@
       }
     }
   },
-  "recovery_homeBanner": "{count, plural, =1{1 interrupted recording — tap to resume} other{{count} interrupted recordings — tap to resume}}",
+  "recovery_homeBanner": "{count, plural, other{{count} rekoding i bruk — tasim bilong statim gen}}",
   "@recovery_homeBanner": {
     "placeholders": {
       "count": {
@@ -922,7 +922,7 @@
       }
     }
   },
-  "recovery_unsavedCount": "{count, plural, =1{1 unsaved recording} other{{count} unsaved recordings}}",
+  "recovery_unsavedCount": "{count, plural, other{{count} rekoding i no sevim yet}}",
   "@recovery_unsavedCount": {
     "placeholders": {
       "count": {
@@ -930,7 +930,7 @@
       }
     }
   },
-  "recovery_latestSummary": "Latest · {duration} · {time}",
+  "recovery_latestSummary": "Nupela tru · {duration} · {time}",
   "@recovery_latestSummary": {
     "placeholders": {
       "duration": {
@@ -941,9 +941,9 @@
       }
     }
   },
-  "recovery_review": "Review",
-  "recovery_unsavedTitle": "Unsaved recordings",
-  "recovery_unsavedSubtitle": "{count, plural, =1{1 recording to review} other{{count} recordings to review}}",
+  "recovery_review": "Skelim",
+  "recovery_unsavedTitle": "Ol rekoding i no sevim yet",
+  "recovery_unsavedSubtitle": "{count, plural, other{{count} rekoding bilong skelim}}",
   "@recovery_unsavedSubtitle": {
     "placeholders": {
       "count": {
@@ -951,9 +951,9 @@
       }
     }
   },
-  "recovery_discardAll": "Discard all",
-  "recovery_discardAllTitle": "Discard all recordings?",
-  "recovery_discardAllBody": "{count, plural, =1{1 recording will be permanently deleted.} other{{count} recordings will be permanently deleted.}}",
+  "recovery_discardAll": "Rausim olgeta",
+  "recovery_discardAllTitle": "Rausim olgeta rekoding?",
+  "recovery_discardAllBody": "{count, plural, other{{count} rekoding bai lus olgeta.}}",
   "@recovery_discardAllBody": {
     "placeholders": {
       "count": {
@@ -961,9 +961,9 @@
       }
     }
   },
-  "recovery_newBadge": "NEW",
-  "recovery_mostRecent": "Most recent",
-  "recovery_recordingNumbered": "Recording {number}",
+  "recovery_newBadge": "NUPELA",
+  "recovery_mostRecent": "Nupela tru",
+  "recovery_recordingNumbered": "Rekoding {number}",
   "@recovery_recordingNumbered": {
     "placeholders": {
       "number": {
@@ -972,7 +972,7 @@
     }
   },
   "format_yesterday": "Yesterday",
-  "recovery_backToList": "Not now",
+  "recovery_backToList": "I no nau",
   "common_discard": "Rausim",
   "common_resume": "Statim gen",
   "import_dropActive": "Lusim na imotim",

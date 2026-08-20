@@ -893,8 +893,8 @@
   "recording_splitFrom": "{sourceId}에서 분할됨",
   "trim_segmentRemoved": "세그먼트 {index} — 제거됨",
   "trim_segmentOfTotal": "{total}개 중 세그먼트 {index}",
-  "recovery_interruptedTitle": "Interrupted recordings",
-  "recovery_startedAt": "Started at {time}",
+  "recovery_interruptedTitle": "중단된 녹음",
+  "recovery_startedAt": "{time}에 시작",
   "@recovery_startedAt": {
     "placeholders": {
       "time": {
@@ -902,11 +902,11 @@
       }
     }
   },
-  "recovery_resume": "Resume",
-  "recovery_save": "Save",
-  "recovery_discard": "Discard",
-  "recovery_confirmDiscardTitle": "Discard recording?",
-  "recovery_confirmDiscardBody": "{duration} of audio will be permanently deleted.",
+  "recovery_resume": "계속",
+  "recovery_save": "저장",
+  "recovery_discard": "삭제",
+  "recovery_confirmDiscardTitle": "녹음을 삭제하시겠습니까?",
+  "recovery_confirmDiscardBody": "{duration} 분량의 오디오가 영구히 삭제됩니다.",
   "@recovery_confirmDiscardBody": {
     "placeholders": {
       "duration": {
@@ -914,7 +914,7 @@
       }
     }
   },
-  "recovery_homeBanner": "{count, plural, =1{1 interrupted recording — tap to resume} other{{count} interrupted recordings — tap to resume}}",
+  "recovery_homeBanner": "{count, plural, other{중단된 녹음 {count}개 — 눌러서 계속하기}}",
   "@recovery_homeBanner": {
     "placeholders": {
       "count": {
@@ -922,7 +922,7 @@
       }
     }
   },
-  "recovery_unsavedCount": "{count, plural, =1{1 unsaved recording} other{{count} unsaved recordings}}",
+  "recovery_unsavedCount": "{count, plural, other{저장되지 않은 녹음 {count}개}}",
   "@recovery_unsavedCount": {
     "placeholders": {
       "count": {
@@ -930,7 +930,7 @@
       }
     }
   },
-  "recovery_latestSummary": "Latest · {duration} · {time}",
+  "recovery_latestSummary": "최근 · {duration} · {time}",
   "@recovery_latestSummary": {
     "placeholders": {
       "duration": {
@@ -941,9 +941,9 @@
       }
     }
   },
-  "recovery_review": "Review",
-  "recovery_unsavedTitle": "Unsaved recordings",
-  "recovery_unsavedSubtitle": "{count, plural, =1{1 recording to review} other{{count} recordings to review}}",
+  "recovery_review": "검토",
+  "recovery_unsavedTitle": "저장되지 않은 녹음",
+  "recovery_unsavedSubtitle": "{count, plural, other{검토할 녹음 {count}개}}",
   "@recovery_unsavedSubtitle": {
     "placeholders": {
       "count": {
@@ -951,9 +951,9 @@
       }
     }
   },
-  "recovery_discardAll": "Discard all",
-  "recovery_discardAllTitle": "Discard all recordings?",
-  "recovery_discardAllBody": "{count, plural, =1{1 recording will be permanently deleted.} other{{count} recordings will be permanently deleted.}}",
+  "recovery_discardAll": "모두 삭제",
+  "recovery_discardAllTitle": "모든 녹음을 삭제하시겠습니까?",
+  "recovery_discardAllBody": "{count, plural, other{녹음 {count}개가 영구히 삭제됩니다.}}",
   "@recovery_discardAllBody": {
     "placeholders": {
       "count": {
@@ -961,9 +961,9 @@
       }
     }
   },
-  "recovery_newBadge": "NEW",
-  "recovery_mostRecent": "Most recent",
-  "recovery_recordingNumbered": "Recording {number}",
+  "recovery_newBadge": "신규",
+  "recovery_mostRecent": "가장 최근",
+  "recovery_recordingNumbered": "녹음 {number}",
   "@recovery_recordingNumbered": {
     "placeholders": {
       "number": {
@@ -972,7 +972,7 @@
     }
   },
   "format_yesterday": "Yesterday",
-  "recovery_backToList": "Not now",
+  "recovery_backToList": "나중에",
   "common_discard": "삭제",
   "common_resume": "계속",
   "import_dropActive": "가져오려면 놓으세요",

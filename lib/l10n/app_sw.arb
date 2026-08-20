@@ -893,8 +893,8 @@
   "recording_splitFrom": "Imetenganishwa kutoka {sourceId}",
   "trim_segmentRemoved": "Sehemu {index} — imeondolewa",
   "trim_segmentOfTotal": "Sehemu {index} kati ya {total}",
-  "recovery_interruptedTitle": "Interrupted recordings",
-  "recovery_startedAt": "Started at {time}",
+  "recovery_interruptedTitle": "Rekodi zilizokatizwa",
+  "recovery_startedAt": "Ilianza saa {time}",
   "@recovery_startedAt": {
     "placeholders": {
       "time": {
@@ -902,11 +902,11 @@
       }
     }
   },
-  "recovery_resume": "Resume",
-  "recovery_save": "Save",
-  "recovery_discard": "Discard",
-  "recovery_confirmDiscardTitle": "Discard recording?",
-  "recovery_confirmDiscardBody": "{duration} of audio will be permanently deleted.",
+  "recovery_resume": "Endelea",
+  "recovery_save": "Hifadhi",
+  "recovery_discard": "Tupa",
+  "recovery_confirmDiscardTitle": "Tupa rekodi?",
+  "recovery_confirmDiscardBody": "Sauti ya {duration} itafutwa kabisa.",
   "@recovery_confirmDiscardBody": {
     "placeholders": {
       "duration": {
@@ -914,7 +914,7 @@
       }
     }
   },
-  "recovery_homeBanner": "{count, plural, =1{1 interrupted recording — tap to resume} other{{count} interrupted recordings — tap to resume}}",
+  "recovery_homeBanner": "{count, plural, one{Rekodi {count} imekatizwa — gusa ili kuendelea} other{Rekodi {count} zimekatizwa — gusa ili kuendelea}}",
   "@recovery_homeBanner": {
     "placeholders": {
       "count": {
@@ -922,7 +922,7 @@
       }
     }
   },
-  "recovery_unsavedCount": "{count, plural, =1{1 unsaved recording} other{{count} unsaved recordings}}",
+  "recovery_unsavedCount": "{count, plural, one{Rekodi {count} haijahifadhiwa} other{Rekodi {count} hazijahifadhiwa}}",
   "@recovery_unsavedCount": {
     "placeholders": {
       "count": {
@@ -930,7 +930,7 @@
       }
     }
   },
-  "recovery_latestSummary": "Latest · {duration} · {time}",
+  "recovery_latestSummary": "Ya hivi punde · {duration} · {time}",
   "@recovery_latestSummary": {
     "placeholders": {
       "duration": {
@@ -941,9 +941,9 @@
       }
     }
   },
-  "recovery_review": "Review",
-  "recovery_unsavedTitle": "Unsaved recordings",
-  "recovery_unsavedSubtitle": "{count, plural, =1{1 recording to review} other{{count} recordings to review}}",
+  "recovery_review": "Kagua",
+  "recovery_unsavedTitle": "Rekodi ambazo hazijahifadhiwa",
+  "recovery_unsavedSubtitle": "{count, plural, one{Rekodi {count} ya kukagua} other{Rekodi {count} za kukagua}}",
   "@recovery_unsavedSubtitle": {
     "placeholders": {
       "count": {
@@ -951,9 +951,9 @@
       }
     }
   },
-  "recovery_discardAll": "Discard all",
-  "recovery_discardAllTitle": "Discard all recordings?",
-  "recovery_discardAllBody": "{count, plural, =1{1 recording will be permanently deleted.} other{{count} recordings will be permanently deleted.}}",
+  "recovery_discardAll": "Tupa zote",
+  "recovery_discardAllTitle": "Tupa rekodi zote?",
+  "recovery_discardAllBody": "{count, plural, one{Rekodi {count} itafutwa kabisa.} other{Rekodi {count} zitafutwa kabisa.}}",
   "@recovery_discardAllBody": {
     "placeholders": {
       "count": {
@@ -961,9 +961,9 @@
       }
     }
   },
-  "recovery_newBadge": "NEW",
-  "recovery_mostRecent": "Most recent",
-  "recovery_recordingNumbered": "Recording {number}",
+  "recovery_newBadge": "MPYA",
+  "recovery_mostRecent": "Ya hivi punde",
+  "recovery_recordingNumbered": "Rekodi {number}",
   "@recovery_recordingNumbered": {
     "placeholders": {
       "number": {
@@ -972,7 +972,7 @@
     }
   },
   "format_yesterday": "Yesterday",
-  "recovery_backToList": "Not now",
+  "recovery_backToList": "Si sasa",
   "common_discard": "Tupa",
   "common_resume": "Endelea",
   "import_dropActive": "Achia ili kuingiza",

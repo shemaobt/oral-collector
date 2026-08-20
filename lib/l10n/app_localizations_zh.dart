@@ -2561,28 +2561,28 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get recovery_interruptedTitle => 'Interrupted recordings';
+  String get recovery_interruptedTitle => '已中断的录音';
 
   @override
   String recovery_startedAt(String time) {
-    return 'Started at $time';
+    return '开始于 $time';
   }
 
   @override
-  String get recovery_resume => 'Resume';
+  String get recovery_resume => '继续';
 
   @override
-  String get recovery_save => 'Save';
+  String get recovery_save => '保存';
 
   @override
-  String get recovery_discard => 'Discard';
+  String get recovery_discard => '丢弃';
 
   @override
-  String get recovery_confirmDiscardTitle => 'Discard recording?';
+  String get recovery_confirmDiscardTitle => '丢弃录音？';
 
   @override
   String recovery_confirmDiscardBody(String duration) {
-    return '$duration of audio will be permanently deleted.';
+    return '$duration 的音频将被永久删除。';
   }
 
   @override
@@ -2590,8 +2590,7 @@ class AppLocalizationsZh extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count interrupted recordings — tap to resume',
-      one: '1 interrupted recording — tap to resume',
+      other: '$count 条录音已中断 — 点按继续',
     );
     return '$_temp0';
   }
@@ -2601,67 +2600,64 @@ class AppLocalizationsZh extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count unsaved recordings',
-      one: '1 unsaved recording',
+      other: '$count 条录音未保存',
     );
     return '$_temp0';
   }
 
   @override
   String recovery_latestSummary(String duration, String time) {
-    return 'Latest · $duration · $time';
+    return '最新 · $duration · $time';
   }
 
   @override
-  String get recovery_review => 'Review';
+  String get recovery_review => '查看';
 
   @override
-  String get recovery_unsavedTitle => 'Unsaved recordings';
+  String get recovery_unsavedTitle => '未保存的录音';
 
   @override
   String recovery_unsavedSubtitle(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count recordings to review',
-      one: '1 recording to review',
+      other: '$count 条录音待查看',
     );
     return '$_temp0';
   }
 
   @override
-  String get recovery_discardAll => 'Discard all';
+  String get recovery_discardAll => '全部丢弃';
 
   @override
-  String get recovery_discardAllTitle => 'Discard all recordings?';
+  String get recovery_discardAllTitle => '丢弃所有录音？';
 
   @override
   String recovery_discardAllBody(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count recordings will be permanently deleted.',
-      one: '1 recording will be permanently deleted.',
+      other: '将永久删除 $count 条录音。',
     );
     return '$_temp0';
   }
 
   @override
-  String get recovery_newBadge => 'NEW';
+  String get recovery_newBadge => '新';
 
   @override
-  String get recovery_mostRecent => 'Most recent';
+  String get recovery_mostRecent => '最新';
 
   @override
   String recovery_recordingNumbered(int number) {
-    return 'Recording $number';
+    return '录音 $number';
   }
 
   @override
   String get format_yesterday => 'Yesterday';
 
   @override
-  String get recovery_backToList => 'Not now';
+  String get recovery_backToList => '暂不';
 
   @override
   String get upload_pausedWhileRecording => '录音时暂停上传';

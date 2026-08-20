@@ -2687,28 +2687,28 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get recovery_interruptedTitle => 'Interrupted recordings';
+  String get recovery_interruptedTitle => 'बाधित रिकॉर्डिंग्स';
 
   @override
   String recovery_startedAt(String time) {
-    return 'Started at $time';
+    return '$time पर शुरू हुई';
   }
 
   @override
-  String get recovery_resume => 'Resume';
+  String get recovery_resume => 'जारी रखें';
 
   @override
-  String get recovery_save => 'Save';
+  String get recovery_save => 'सहेजें';
 
   @override
-  String get recovery_discard => 'Discard';
+  String get recovery_discard => 'हटाएँ';
 
   @override
-  String get recovery_confirmDiscardTitle => 'Discard recording?';
+  String get recovery_confirmDiscardTitle => 'रिकॉर्डिंग हटाएँ?';
 
   @override
   String recovery_confirmDiscardBody(String duration) {
-    return '$duration of audio will be permanently deleted.';
+    return '$duration का ऑडियो स्थायी रूप से हटा दिया जाएगा।';
   }
 
   @override
@@ -2716,8 +2716,8 @@ class AppLocalizationsHi extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count interrupted recordings — tap to resume',
-      one: '1 interrupted recording — tap to resume',
+      other: '$count रिकॉर्डिंग्स बाधित हुईं — जारी रखने के लिए टैप करें',
+      one: '$count रिकॉर्डिंग बाधित हुई — जारी रखने के लिए टैप करें',
     );
     return '$_temp0';
   }
@@ -2727,67 +2727,67 @@ class AppLocalizationsHi extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count unsaved recordings',
-      one: '1 unsaved recording',
+      other: '$count रिकॉर्डिंग्स सहेजी नहीं गईं',
+      one: '$count रिकॉर्डिंग सहेजी नहीं गई',
     );
     return '$_temp0';
   }
 
   @override
   String recovery_latestSummary(String duration, String time) {
-    return 'Latest · $duration · $time';
+    return 'नवीनतम · $duration · $time';
   }
 
   @override
-  String get recovery_review => 'Review';
+  String get recovery_review => 'समीक्षा करें';
 
   @override
-  String get recovery_unsavedTitle => 'Unsaved recordings';
+  String get recovery_unsavedTitle => 'बिना सहेजी रिकॉर्डिंग्स';
 
   @override
   String recovery_unsavedSubtitle(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count recordings to review',
-      one: '1 recording to review',
+      other: 'समीक्षा के लिए $count रिकॉर्डिंग्स',
+      one: 'समीक्षा के लिए $count रिकॉर्डिंग',
     );
     return '$_temp0';
   }
 
   @override
-  String get recovery_discardAll => 'Discard all';
+  String get recovery_discardAll => 'सभी हटाएँ';
 
   @override
-  String get recovery_discardAllTitle => 'Discard all recordings?';
+  String get recovery_discardAllTitle => 'सभी रिकॉर्डिंग्स हटाएँ?';
 
   @override
   String recovery_discardAllBody(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count recordings will be permanently deleted.',
-      one: '1 recording will be permanently deleted.',
+      other: '$count रिकॉर्डिंग्स स्थायी रूप से हटा दी जाएँगी।',
+      one: '$count रिकॉर्डिंग स्थायी रूप से हटा दी जाएगी।',
     );
     return '$_temp0';
   }
 
   @override
-  String get recovery_newBadge => 'NEW';
+  String get recovery_newBadge => 'नया';
 
   @override
-  String get recovery_mostRecent => 'Most recent';
+  String get recovery_mostRecent => 'सबसे नई';
 
   @override
   String recovery_recordingNumbered(int number) {
-    return 'Recording $number';
+    return 'रिकॉर्डिंग $number';
   }
 
   @override
   String get format_yesterday => 'Yesterday';
 
   @override
-  String get recovery_backToList => 'Not now';
+  String get recovery_backToList => 'अभी नहीं';
 
   @override
   String get upload_pausedWhileRecording =>
