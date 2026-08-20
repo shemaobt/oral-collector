@@ -88,6 +88,11 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
   SegmentedRecorder? _segRecorder;
   AudioRecorder? _webRecorder;
   String? _webPendingKey;
+
+  /// A linha de sessão aberta por [_startWeb], lida no stop para ancorá-la ao
+  /// áudio. Fica fora do estado porque o stop limpa o estado antes de os bytes
+  /// estarem escritos.
+  String? _webSessionId;
   Timer? _elapsedTimer;
   Timer? _toastTimer;
   StreamController<double>? _webAmplitudeController;
@@ -265,7 +270,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
     final mapper = _amplitudeMapperFor(ref.read(noiseSensitivityProvider));
 
     if (ref.read(isWebPlatformProvider)) {
-      return _startWeb(genreId, subcategoryId, mapper);
+      return _startWeb(genreId, subcategoryId, projectId, mapper);
     }
 
     final resolvedProjectId =
@@ -349,6 +354,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
   Future<bool> _startWeb(
     String genreId,
     String subcategoryId,
+    String? projectId,
     AmplitudeMapper mapper,
   ) async {
     await _disposeWebRecorder();
@@ -361,6 +367,27 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
 
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     _webPendingKey = 'web_record_$timestamp';
+
+    // A mesma ordem do aparelho: a linha existe antes de haver áudio, para
+    // que nenhuma captura chegue ao fim sem ter onde ser registrada (ENG-519).
+    final sessionId = _newSessionId();
+    _webSessionId = sessionId;
+    await ref
+        .read(recordingSessionRepositoryProvider)
+        .insertSession(
+          RecordingSessionsCompanion.insert(
+            id: sessionId,
+            projectId:
+                projectId ??
+                ref.read(projectNotifierProvider).activeProject?.id ??
+                '',
+            genreId: genreId,
+            subcategoryId: subcategoryId.isEmpty
+                ? const Value.absent()
+                : Value(subcategoryId),
+            startedAt: DateTime.now(),
+          ),
+        );
 
     final device = ref.read(inputDeviceNotifierProvider).selectedDevice;
     await recorder.start(
@@ -395,6 +422,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
       currentGenreId: genreId,
       currentSubcategoryId: subcategoryId,
       amplitudeStream: ctrl.stream,
+      sessionId: sessionId,
     );
 
     _startElapsedTimer();
@@ -761,7 +789,11 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
   Future<RecordingResult?> _stopWeb(Duration fallbackElapsed) async {
     final recorder = _webRecorder;
     final pendingKey = _webPendingKey;
+    final sessionId = _webSessionId;
     if (recorder == null || pendingKey == null) {
+      // Sem gravador não há captura a encerrar; uma linha aberta aqui não
+      // chegaria a lugar nenhum.
+      await _abandonWebSession(sessionId);
       await const RecordingActiveFlag().markInactive();
       state = const RecordingState();
       return null;
@@ -788,6 +820,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
     );
 
     if (url == null || url.isEmpty) {
+      await _abandonWebSession(sessionId);
       state = state.copyWith(
         finalizationStage: FinalizationStage.idle,
         finalizationErrorKind: FinalizationErrorKind.noAudio,
@@ -800,6 +833,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
       bytes = await http.readBytes(Uri.parse(url));
     } catch (e, st) {
       _log.severe('[stopWeb] download failed', e, st);
+      await _abandonWebSession(sessionId);
       state = state.copyWith(
         finalizationStage: FinalizationStage.idle,
         finalizationErrorKind: FinalizationErrorKind.downloadFailed,
@@ -818,6 +852,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
       await file_ops.writeFileBytes(fullKey, bytes);
     } catch (e, st) {
       _log.severe('[stopWeb] browser storage refused the audio', e, st);
+      await _abandonWebSession(sessionId);
       state = state.copyWith(
         finalizationStage: FinalizationStage.idle,
         finalizationErrorKind: FinalizationErrorKind.storageUnavailable,
@@ -825,12 +860,39 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
       return null;
     }
 
+    final durationSeconds = fallbackElapsed.inMilliseconds / 1000.0;
+    if (sessionId != null) {
+      // Os bytes já estão no armazenamento; só agora a linha aponta para eles,
+      // na mesma ordem que o aparelho segue (ENG-420). No navegador a âncora é
+      // a chave do armazenamento, não um caminho de arquivo.
+      await ref
+          .read(recordingSessionRepositoryProvider)
+          .completeWithFinalizedAudio(
+            sessionId,
+            filePath: fullKey,
+            durationSeconds: durationSeconds,
+          );
+    }
+    _webSessionId = null;
+
     state = const RecordingState();
     return RecordingResult(
       filePath: fullKey,
-      durationSeconds: fallbackElapsed.inMilliseconds / 1000.0,
+      durationSeconds: durationSeconds,
       format: format,
+      sessionId: sessionId,
     );
+  }
+
+  /// Fecha a linha de uma captura no navegador que não deixou áudio em lugar
+  /// nenhum: sem gravação, sem leitura da blob, ou com o armazenamento
+  /// recusando a escrita. Nenhuma delas tem endereço durável para oferecer
+  /// depois, e uma linha que ficasse de pé apareceria como gravação por
+  /// terminar.
+  Future<void> _abandonWebSession(String? sessionId) async {
+    _webSessionId = null;
+    if (sessionId == null) return;
+    await ref.read(recordingSessionRepositoryProvider).markDiscarded(sessionId);
   }
 
   Future<void> discardRecording() async {
@@ -840,6 +902,9 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
     _toastTimer?.cancel();
 
     if (kIsWeb) {
+      // Nada foi escrito no armazenamento ainda — os bytes só chegam lá no
+      // stop —, então não há áudio alcançável a preservar (ENG-521).
+      await _abandonWebSession(_webSessionId);
       await _disposeWebRecorder();
     } else {
       final pendingSessionId = _pendingResumeSessionId;
@@ -1015,6 +1080,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
       finalizationErrorKind: FinalizationErrorKind.captureInterrupted,
     );
 
+    await _abandonWebSession(_webSessionId);
     await _disposeWebRecorder();
     await const RecordingActiveFlag().markInactive();
   }

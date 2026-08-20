@@ -138,9 +138,17 @@ class _OralCollectorAppState extends ConsumerState<OralCollectorApp> {
           sweepOrphanWebAudio(
             listKeys: platform.listStoredKeys,
             deleteKey: platform.deleteFile,
-            keysInUse: ref
-                .read(localRecordingRepositoryProvider)
-                .getPendingWebUploadKeys,
+            // Duas fontes de "isto ainda serve a alguém": o que um upload
+            // interrompido pode retomar (ENG-427) e onde cada sessão viva
+            // guardou o áudio dela (ENG-519). Uma consulta cada, por varredura.
+            keysInUse: () async => {
+              ...await ref
+                  .read(localRecordingRepositoryProvider)
+                  .getPendingWebUploadKeys(),
+              ...await ref
+                  .read(recordingSessionRepositoryProvider)
+                  .getLiveAudioAnchors(),
+            },
           ),
         );
       }

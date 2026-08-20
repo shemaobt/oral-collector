@@ -209,6 +209,15 @@ void main() {
       await Future<void>.delayed(Duration.zero);
       await Future<void>.delayed(Duration.zero);
     }
+    // Fechar o segmento é uma cadeia assíncrona — o sink, o cabeçalho WAV, a
+    // linha no banco — e nada garante que ela caiba nos microtasks acima. Num
+    // runner lento (Linux, `--coverage`) ela não cabia, e o caso falhava com
+    // "nothing to erase otherwise" sem que nada estivesse errado. Esperar o
+    // segmento aparecer não muda o que se mede.
+    final deadline = DateTime.now().add(const Duration(seconds: 10));
+    while (rec.segmentPaths.isEmpty && DateTime.now().isBefore(deadline)) {
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+    }
   }
 
   group('ENG-527: discarding a resumed recording', () {

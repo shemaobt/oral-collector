@@ -178,6 +178,26 @@ Path: @/lib/core/platform
   exists but points somewhere else and the abandoned bytes must still go. A key
   in use that no longer exists in storage is not an error and does not stop the
   sweep; the set is only ever consulted, never dereferenced.
+- **A live session is the second source of "in use" (ENG-519, slice 1).**
+  Browser capture now opens a session row before recording and anchors it to
+  the storage key when it stops, so those bytes stop being abandoned the
+  moment they are written — and a sweep that did not know it would collect
+  them 24 hours later, taking with it the recording the row had just
+  registered. `keysInUse` in [/lib/main.dart](../../main.dart) is therefore the
+  union of two queries, one scan each:
+  `LocalRecordingRepository.getPendingWebUploadKeys` and
+  `RecordingSessionRepository.getLiveAudioAnchors`
+  ([/lib/features/recording/data/repositories/docs.md](../../features/recording/data/repositories/docs.md)).
+  The same "key for key, never the whole store" rule applies, and the pair of
+  tests in
+  [/test/features/recording/data/services/sweeper_spares_live_session_test.dart](../../../test/features/recording/data/services/sweeper_spares_live_session_test.dart)
+  holds the edges apart: one where a live session's audio must survive, one
+  where abandoned bytes must still go *while other live sessions exist*. A
+  session that reaches `discarded` drops out of the set and its audio becomes
+  collectable again. A session with no anchor — still recording, or a tab
+  closed mid-recording — names no key at all, so it can neither protect bytes
+  nor switch the sweep off; the browser writes to storage only at stop, so
+  that session has no bytes in the store either.
 - **The 24-hour cutoff is also what makes the sweep safe with two tabs open.**
   A recording in progress, or one sitting on the confirmation form, is minutes
   old and never in range, so the sweeper needs no Web Locks and no
