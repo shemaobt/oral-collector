@@ -676,6 +676,22 @@ Path: @/lib/features/recording/presentation/notifiers
   [`RecoveryCoordinator`](../../data/services/recovery_coordinator.dart) stats
   it to decide whether a finished session still owes the user a recovery
   offer.
+- **The orphan sweep asks the session what is hers, and both notifiers carry a
+  copy of it (ENG-531).** `_cleanupOrphanedSegments` takes a set of file names
+  to spare and deletes every other segment file of that session it finds in the
+  documents directory. It used to take an index instead and delete everything
+  above it, which erased a segment the repair had *just* attached — see
+  [../../data/repositories/docs.md](../../data/repositories/docs.md) for the
+  reproduced case and why the numbering is not worth fixing. Reading the
+  call sites is the whole story: `loadInterruptedSession` passes the row's
+  declared segment names, and the three discard paths
+  (`InterruptedSessionsNotifier.discard`,
+  `RecordingSessionNotifier.discardRecording`'s resumed branch, and the stop of
+  a pending resume) pass an empty set, which still means "erase everything" —
+  sparing the declared files there would preserve exactly what the person asked
+  to delete. The two copies are byte-identical and were left that way
+  deliberately: sharing them would mean moving the helper out of the
+  presentation layer, which is more reorganisation than this change is worth.
 - **Neither "resume" nor "leave" may swallow a session's audio (ENG-521).**
   Two paths on `RecordingSessionNotifier` wrote the terminal `discarded` status
   without ever reading the anchor, and both are reached by exactly the session

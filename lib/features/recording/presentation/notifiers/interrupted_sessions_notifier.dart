@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
+import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import '../../../../core/database/app_database.dart';
@@ -75,7 +76,7 @@ class InterruptedSessionsNotifier extends Notifier<void> {
           ? null
           : await resolveRecordingPath(finalized);
       if (resolved != null) await _deleteFileSafe(resolved);
-      await _cleanupOrphanedSegments(session.id, -1);
+      await _cleanupOrphanedSegments(session.id, const <String>{});
       // The terminal status says the recording is gone, so it is written only
       // once the audio actually is. A delete that refused used to be swallowed
       // and the row marked anyway, which left the file on disk with nothing
@@ -221,9 +222,33 @@ class InterruptedSessionsNotifier extends Notifier<void> {
     await ref.read(recoveryCoordinatorProvider).refresh();
   }
 
+  /// Deletes this session's leftover segment files, sparing every name in
+  /// [keepFileNames].
+  ///
+  /// **The criterion is the session's declared list, never the index in the
+  /// file name** (ENG-531). The old rule — delete everything above
+  /// `lastSegmentIndex` — assumed the recorded counter and the names move
+  /// together, and they do not: `_repairInFlightSegments` attaches the orphans
+  /// it finds by *incrementing* the counter rather than reading the name's
+  /// index, so a single unrepairable file in the middle leaves every later
+  /// name above the counter. The segment the repair had just accepted then
+  /// landed in the deletion range and was erased by the same flow that
+  /// accepted it. The declared list is the truth about what belongs to the
+  /// session; the index was a guess.
+  ///
+  /// Names, not paths: the sweep lists the *current* documents directory,
+  /// while the declared paths were written by an earlier run and may still
+  /// name a container that has since moved. Comparing whole paths would fail
+  /// to recognise a declared file and delete it — the same defect through
+  /// another door. The basename is stable because it is derived from the
+  /// session id and the index.
+  ///
+  /// An empty [keepFileNames] means "erase everything", which is what the
+  /// discard paths ask for: applying the spare-the-declared rule there would
+  /// preserve the very files the person asked to be rid of.
   Future<void> _cleanupOrphanedSegments(
     String sessionId,
-    int lastFinalizedIndex,
+    Set<String> keepFileNames,
   ) async {
     if (kIsWeb) return;
     try {
@@ -232,13 +257,11 @@ class InterruptedSessionsNotifier extends Notifier<void> {
       final entries = await dir.list().toList();
       for (final entry in entries) {
         if (entry is! File) continue;
-        final index = SegmentPaths.parseIndex(entry.path, prefix);
-        if (index == null) continue;
-        if (index > lastFinalizedIndex) {
-          try {
-            await entry.delete();
-          } catch (_) {}
-        }
+        if (SegmentPaths.parseIndex(entry.path, prefix) == null) continue;
+        if (keepFileNames.contains(p.basename(entry.path))) continue;
+        try {
+          await entry.delete();
+        } catch (_) {}
       }
     } catch (_) {}
   }
