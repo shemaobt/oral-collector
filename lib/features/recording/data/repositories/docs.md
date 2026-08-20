@@ -647,6 +647,40 @@ Path: @/lib/features/recording/data/repositories
     reaches it — the resume path starts its recorder in
     `_startRecorderForResume`, which writes no terminal status at all on a
     failed start.
+- **The orphan sweep decides by the session's declared list, never by the
+  index in the file name (ENG-531).** `_cleanupOrphanedSegments` — one copy in
+  each notifier — used to delete every segment file whose name carried an index
+  above the row's `lastSegmentIndex`. That assumed the counter and the names
+  move together, and `appendSegment` breaks the assumption: it *increments*
+  `lastSegmentIndex` rather than reading the index out of the name it is given.
+  `RecoveryCoordinator._repairInFlightSegments` attaches the orphans it finds
+  through that same call, so one unrepairable file in the middle leaves every
+  later name above the counter. Reproduced end to end: a session declaring
+  `[rec_x_000]` at `lastSegmentIndex = 0`, with `000` valid, `001` corrupt and
+  `002` valid on disk, comes out of the repair declaring `[rec_x_000,
+  rec_x_002]` at `lastSegmentIndex = 1` — and the next
+  `loadInterruptedSession` deletes `rec_x_002`, which the row declares as its
+  own, in the same flow that just accepted it. The declared list is the truth
+  about what belongs to a session; the index was a guess, and the numbering was
+  never corrected because a correct number would still be a guess.
+  *Checked against:* the resume flow after a repair that dropped a file
+  (the reproduced case), the resume flow on a session whose numbering never
+  diverged, and all three discard flows.
+  Two details are load-bearing:
+  - **Names, not paths.** The sweep lists the *current* documents directory
+    while the declared paths were written by an earlier run, so they can still
+    name a container that has since moved (ENG-528). Comparing whole paths
+    would fail to recognise a declared file and delete it — the same defect
+    through another door. The basename is stable because
+    [`SegmentPaths`](../services/segment_paths.dart) derives it from the
+    session id and the index.
+  - **An empty keep-set still means "erase everything", and the three discard
+    callers pass exactly that.** Applying spare-the-declared there would
+    preserve the very files the person asked to be rid of — and it is not
+    hypothetical: when the declared paths point at a moved container, the
+    discard's own per-path delete finds nothing and this sweep of the current
+    directory is the only thing that erases the audio. A characterization test
+    drives that case.
 - **The guard asks whether the audio is *there*, never whether the anchor
   column is *set*, and the terminal status now waits on the delete (ENG-521).**
   Nothing clears `finalizedAudioPath`, so a deliberate discard leaves the column
