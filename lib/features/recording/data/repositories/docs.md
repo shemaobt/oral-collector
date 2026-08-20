@@ -565,12 +565,19 @@ Path: @/lib/features/recording/data/repositories
   rows written before these guards existed. See Things to Know.) The invariant is "a session that still holds a reachable artifact never
   reaches a state no sweep looks at". A deliberate discard is the one intended
   way out, and it deletes the audio first.
-  Every writer of that status is one of these, and each is deliberate:
+  Every writer of that status is one of these. **Each entry names the flow its
+  reasoning was checked against**, because ENG-527 found that an exemption
+  stated as an absolute — "it runs before any anchor can exist" — was only ever
+  true of the fresh-recording flow, and a resumed recording walked straight
+  through it. Read a claim with no flow attached as unverified.
   - `InterruptedSessionsNotifier.save`, when neither the anchor nor a segment
     yields audio, and `RecoveryCoordinator.refresh`, when a crashed row has no
     segments: both skip the terminal write while `finalizedAudioPath` is set.
     Written for slice 3, still reachable — they catch a row whose anchor names a
-    deleted file and whose sources are gone too.
+    deleted file and whose sources are gone too. *Checked against:* the recovery
+    flow, both anchored and pre-v14. These two read the anchor **column**, not
+    the file, which is the looser test the bullet below argues against — it errs
+    toward keeping rows, so it cannot lose audio, only leave litter.
   - `RecordingSessionNotifier.loadInterruptedSession` (tapping "resume") when no
     segment file survives, and `RecordingSessionNotifier.discardRecording` on
     its resumed-session branch (walking away from a resumed recording): both
@@ -579,12 +586,33 @@ Path: @/lib/features/recording/data/repositories
     with its anchor intact, so precisely the row holding 18 unsaved minutes is
     the one they swallowed. Both now ask
     [`sessionHoldsReachableAudio`](../services/session_audio.dart) first.
+    *Checked against:* the resume flow over a swept, anchored session — the one
+    that produced the leak.
   - `InterruptedSessionsNotifier.discard`, the person's own "delete this": it
     deletes the segments and the anchored file and *then* asks the same
-    question, so it still discards — see the next bullet.
-  - `SegmentedRecorder.discard` and `RecordingSessionNotifier._startNative`'s
-    failed-start branch need no guard: both run before any anchor can exist —
-    the row is only anchored by a successful finalize.
+    question, so it still discards — see the next bullet. *Checked against:* a
+    discard whose stored anchor path still resolves literally.
+  - `SegmentedRecorder.discard`, walking away from a recording in progress: it
+    deletes the closing segment and every path it holds, then asks the same
+    question, and a session that still holds audio goes back to `crashed`
+    rather than being left `active` (ENG-527). *Checked against:* both flows —
+    a fresh recording, where there is no anchor and every segment goes, so the
+    terminal status is written exactly as before; and a resumed one, where the
+    row carries the anchor of the session the sweep promoted. **This is the
+    entry ENG-527 corrected.** It used to be exempt on the grounds that it "runs
+    before any anchor can exist", which is a property of the fresh flow only:
+    `startSession(resumeFromPaths:)` reuses the session id of a swept, anchored
+    row, so discarding a resumed recording deleted its segments and wrote the
+    terminal status over live finalized audio. Going back to `crashed` rather
+    than leaving `active` matters because the unsaved list reads `crashed`; an
+    `active` row would be invisible until the next cold start promoted it.
+  - `RecordingSessionNotifier._startNative`'s failed-start branch needs no
+    guard: it writes the status for a session id minted by `_newSessionId()` and
+    inserted three statements earlier, so the row cannot carry an anchor yet.
+    *Checked against:* the fresh-recording flow, which is the only one that
+    reaches it — the resume path starts its recorder in
+    `_startRecorderForResume`, which writes no terminal status at all on a
+    failed start.
 - **The guard asks whether the audio is *there*, never whether the anchor
   column is *set*, and the terminal status now waits on the delete (ENG-521).**
   Nothing clears `finalizedAudioPath`, so a deliberate discard leaves the column
