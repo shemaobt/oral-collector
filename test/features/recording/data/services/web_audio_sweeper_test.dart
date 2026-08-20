@@ -2,12 +2,15 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:idb_shim/idb_client_memory.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:oral_collector/core/database/app_database.dart';
+import 'package:oral_collector/core/database/database_provider.dart';
 import 'package:oral_collector/core/platform/web_file_store.dart';
 import 'package:oral_collector/features/recording/data/services/web_audio_sweeper.dart';
 import 'package:oral_collector/features/recording/presentation/notifiers/input_device_notifier.dart';
@@ -131,8 +134,14 @@ void main() {
     ).thenAnswer((_) async => 'https://recorder.invalid/captured-blob');
     when(() => recorder.dispose()).thenAnswer((_) async {});
 
+    // Desde o ENG-519 a captura no navegador abre uma linha de sessão, então
+    // este caso passa pelo banco. Em memória, como os do aparelho.
+    final db = AppDatabase.forTesting(NativeDatabase.memory());
+    addTearDown(db.close);
+
     final container = ProviderContainer(
       overrides: [
+        appDatabaseProvider.overrideWithValue(db),
         isWebPlatformProvider.overrideWithValue(true),
         webAudioRecorderFactoryProvider.overrideWithValue(() => recorder),
         inputDeviceNotifierProvider.overrideWith(_FakeInputDeviceNotifier.new),

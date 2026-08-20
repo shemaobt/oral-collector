@@ -55,6 +55,28 @@ class RecordingSessionRepository {
         .get();
   }
 
+  /// Onde cada sessão que ainda pode devolver algo guardou o áudio dela.
+  ///
+  /// No aparelho isso é um caminho de arquivo; no navegador é a chave do
+  /// armazenamento, e é o que impede a faxina do ENG-426 de recolher em 24
+  /// horas os bytes de uma gravação que acabou de ser registrada (ENG-519).
+  /// `discarded` é a única resposta final — uma sessão nesse estado não é
+  /// oferecida por consulta nenhuma, então o áudio dela volta a ser coletável.
+  ///
+  /// Uma consulta por varredura, não uma por chave.
+  Future<Set<String>> getLiveAudioAnchors() async {
+    final anchor = _db.recordingSessions.finalizedAudioPath;
+    final rows =
+        await (_db.selectOnly(_db.recordingSessions)
+              ..addColumns([anchor])
+              ..where(
+                anchor.isNotNull() &
+                    _db.recordingSessions.status.isNotValue('discarded'),
+              ))
+            .get();
+    return rows.map((row) => row.read(anchor)).whereType<String>().toSet();
+  }
+
   Future<void> markActive(String sessionId) async {
     await _setStatus(sessionId, 'active');
   }
