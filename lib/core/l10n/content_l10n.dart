@@ -60,8 +60,9 @@ String? localizedSubcategoryDescription(
   String name, {
   required String id,
 }) {
-  // A sentinela é a mesma linha do servidor, que só a descreve em inglês; o id
-  // é a metade estável do contrato, então é por ele que a tradução é escolhida.
+  // O nome pelo qual esta função procura é o do servidor, e mudá-lo é
+  // prerrogativa dele; o id é a metade estável do contrato, então é por ele que
+  // a descrição da sentinela é escolhida.
   if (id == kUnclassifiedSubcategoryId) {
     return l10n.recording_unclassifiedSubcategoryDesc;
   }
