@@ -5,11 +5,16 @@ import 'package:logging/logging.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../../../core/config/recording_config.dart';
 import '../../../../core/database/app_database.dart';
+import '../../../../core/observability/error_reporter.dart';
 import '../../../../core/platform/recording_active_flag.dart';
 import '../providers.dart';
 import '../repositories/recording_session_repository.dart';
 import 'segment_paths.dart';
+import 'session_audio.dart';
 import 'wav_header_repair.dart';
 
 class InterruptedSession {
@@ -69,7 +74,59 @@ class RecoveryCoordinator {
       await const RecordingActiveFlag().markInactive();
     }
     await _sweepFinishedSessionsWithUnsavedAudio();
+    // Reported and swallowed rather than allowed to bubble: this is a one-off
+    // repair of old rows, and letting it fail the startup scan would cost the
+    // refresh below — which is what puts today's unsaved recordings in front
+    // of the person.
+    try {
+      await _recoverDiscardedSessionsHoldingAudio();
+    } catch (e, st) {
+      _ref.read(errorReporterProvider).reportError(e, st);
+    }
     await refresh();
+  }
+
+  /// Gives back the audio of sessions that reached `discarded` while their
+  /// files were still on the disk (ENG-522).
+  ///
+  /// ENG-521 closed the two paths that could write that status over live
+  /// audio, but every row they already swallowed is still in the database with
+  /// its path, its segments and its metadata — `discarded` appears in no sweep
+  /// query, so the recording it names is simply out of reach. Promoting the
+  /// row back to `crashed` is all it takes for the unsaved list to offer it
+  /// again, metadata included.
+  ///
+  /// **It runs once per device, and that is the whole safety story.** A
+  /// deliberate discard whose file outlived it is indistinguishable, from the
+  /// database, from one the defect swallowed; recovering on every launch would
+  /// therefore hand back whatever the person discards afterwards, forever,
+  /// leaving them unable to delete anything. Of the two possible mistakes,
+  /// giving back something they meant to delete is the recoverable one — they
+  /// discard it again, and since ENG-521 the discard works.
+  ///
+  /// The mark is written last, so a run that dies half-way retries on the next
+  /// launch; the rows it already promoted are no longer `discarded`, so they
+  /// are not promoted twice.
+  Future<void> _recoverDiscardedSessionsHoldingAudio() async {
+    final prefs = await SharedPreferences.getInstance();
+    final key = RecordingConfig.discardedAudioRecoveryDoneKey;
+    if (prefs.getBool(key) ?? false) return;
+
+    final repo = _ref.read(recordingSessionRepositoryProvider);
+    for (final session in await repo.findDiscardedSessions()) {
+      // Both legs of the predicate count: the finalized recording the row is
+      // anchored to, and the source segments a session that never got to
+      // finalize was left with. The second is the shape the resumed-recording
+      // leak produced, so dropping it would miss the commoner half.
+      final segments = repo.decodeSegmentPaths(session);
+      if (!await sessionHoldsReachableAudio(session, segments)) continue;
+      _log.info(
+        'recovering discarded session ${session.id}: its audio is still here',
+      );
+      await repo.markCrashed(session.id);
+    }
+
+    await prefs.setBool(key, true);
   }
 
   /// Surfaces sessions that finished with audio the user never saved.

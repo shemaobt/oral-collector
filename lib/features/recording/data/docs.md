@@ -419,7 +419,9 @@ Path: @/lib/features/recording/data
   question is deliberately not "is the anchor column set". `RecoveryCoordinator`
   keeps its own private variant because it answers a wider question (it also
   covers pre-v14 rows via a directory scan) behind an injected
-  `directoryResolver`.
+  `directoryResolver`. Since ENG-522 the coordinator also *calls* the shared
+  predicate directly, in the one-shot recovery below — so the pass that gives
+  audio back and the discard that takes it away decide by the same question.
 - `services/audio_probe.dart` exposes `AudioProbe`, the duration + codec +
   playability detector the file-import flow
   ([../presentation/file_import_screen.dart](../presentation/file_import_screen.dart))
@@ -594,6 +596,20 @@ Path: @/lib/features/recording/data
   the earlier `!degraded`-as-derived reasoning, which mis-classified the
   single-segment source as derived. See
   [/lib/core/platform/docs.md](../../../core/platform/docs.md).
+- **`RecoveryCoordinator.scanOnStartup` gives back audio stranded by the
+  pre-ENG-521 defect, once per device (ENG-522).** After the finished-session
+  sweep and before the `refresh()` that fills the unsaved list,
+  `_recoverDiscardedSessionsHoldingAudio` reads
+  `RecordingSessionRepository.findDiscardedSessions()` and promotes back to
+  `crashed` every row `sessionHoldsReachableAudio` still answers yes for. It is
+  wrapped in a try/catch that reports and swallows — a one-off repair of old
+  rows must not cost the `refresh()` that puts *today's* unsaved recordings in
+  front of the person. The "already ran" mark is a `shared_preferences` bool
+  (`RecordingConfig.discardedAudioRecoveryDoneKey`), written after the pass, and
+  repeating the recovery instead would make every later discard come back on
+  the next launch. The full rationale — why once, why both legs of the
+  predicate, why no migration — lives with the anchor invariant in
+  [repositories/docs.md](repositories/docs.md).
 - **`RecoveryCoordinator.refresh()` never touches a torn-down ref (ENG-140
   F22).** `refresh()` reads `findCrashedSessions()` and other providers across
   several awaits, then writes the derived list to
