@@ -1,5 +1,4 @@
 import '../../../../core/database/app_database.dart';
-import '../../../../core/platform/file_ops.dart' as file_ops;
 import 'audio_path_resolver.dart';
 
 /// Whether [session] still holds audio somebody could get back — the finalized
@@ -12,17 +11,17 @@ import 'audio_path_resolver.dart';
 /// never-discards and the app would pile up dead session rows nothing cleans —
 /// trading lost audio for permanent litter (ENG-521).
 ///
-/// The anchor is resolved through [resolveRecordingPath] rather than stat'd
-/// literally, because the documents container moves on reinstall/restore and an
-/// absolute path stored in an earlier run would declare live audio gone.
+/// Both legs are resolved rather than stat'd literally, because the documents
+/// container moves on reinstall/restore and an absolute path stored in an
+/// earlier run would declare live audio gone. The anchor has been resolved
+/// since ENG-521; the segments joined it in ENG-529, and they are the leg that
+/// decides this predicate for a session that never finalized — the one whose
+/// callers write the terminal status when it answers false.
 Future<bool> sessionHoldsReachableAudio(
   RecordingSession session,
   List<String> segmentPaths,
 ) async {
   final anchor = session.finalizedAudioPath;
   if (anchor != null && await resolveRecordingPath(anchor) != null) return true;
-  for (final path in segmentPaths) {
-    if (await file_ops.fileExists(path)) return true;
-  }
-  return false;
+  return (await resolveSegmentPaths(segmentPaths)).isNotEmpty;
 }
