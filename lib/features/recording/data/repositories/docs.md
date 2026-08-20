@@ -7,8 +7,9 @@ Path: @/lib/features/recording/data/repositories
 - Houses the repositories that read and write recording-related state:
   `LocalRecordingRepository` (Drift CRUD over `LocalRecordings`),
   `RecordingApiRepositoryImpl` (HTTP client for the server's recordings
-  API), and `RecordingSessionRepository` (in-progress session rows used by
-  the segmented recorder).
+  API), and `RecordingSessionRepository` (in-progress session rows — used by
+  the segmented recorder on device and, since ENG-519 slice 1, by browser
+  capture too).
 - The local repository is the single write site for the `LocalRecordings`
   table and enforces the cache-hydration invariant established by ENG-64:
   any persisted row must carry every recording-level metadata field that
@@ -444,6 +445,27 @@ Path: @/lib/features/recording/data/repositories
   scan. Its single caller is the one-shot recovery in
   [../services/recovery_coordinator.dart](../services/recovery_coordinator.dart);
   see Things to Know.
+- **The session cycle is no longer device-only (ENG-519, slice 1).** Browser
+  capture opens a row in `_startWeb` before recording starts and closes it in
+  `_stopWeb` through the same `completeWithFinalizedAudio` the device uses —
+  so a browser recording now has the row that says what it is and where its
+  audio went. Two things differ from device, both by design and neither
+  requiring a migration: the segment columns (`segmentPathsJson`,
+  `lastSegmentIndex`) stay at their defaults, because segments are a device
+  concept; and **the anchor is a storage key, not a filesystem path** — that
+  is where the browser's audio actually lives. Readers that treat
+  `finalizedAudioPath` as a path (`sessionHoldsReachableAudio`, the recovery
+  coordinator, the unsaved list) are unchanged and still device-only: teaching
+  them the browser's semantics is slice 2, and until then **nothing offers a
+  browser recording back to the person** — no recovery, no banner, no third
+  option on the leave dialog.
+- `getLiveAudioAnchors()` (ENG-519, slice 1) answers "where did every session
+  that can still owe someone something put its audio": one scan over the
+  anchored rows whose status is not `discarded`. It is what keeps the browser
+  sweep ([../services/docs.md](../services/docs.md)) from collecting audio a
+  session has just registered. A session with no anchor — one still recording,
+  or one whose tab was closed mid-recording — names nothing here, which is why
+  an unfinished session cannot switch the sweep off forever.
 
 ### Things to Know
 
