@@ -2169,14 +2169,14 @@ class AppLocalizationsPt extends AppLocalizations {
       'Algum áudio próximo ao fim não pôde ser lido e foi ignorado.';
 
   @override
-  String get recording_blockNavTitle => 'Recording in progress';
+  String get recording_blockNavTitle => 'Gravação em andamento';
 
   @override
   String get recording_blockNavMessage =>
-      'You have a recording in progress. Discarding will permanently delete it.';
+      'Você tem uma gravação em andamento. Descartar vai apagá-la para sempre.';
 
   @override
-  String get recording_blockNavDiscardAndLeave => 'Discard and leave';
+  String get recording_blockNavDiscardAndLeave => 'Descartar e sair';
 
   @override
   String get recording_inProgressNotificationTitle => 'Gravação em andamento';

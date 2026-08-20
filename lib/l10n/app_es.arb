@@ -180,7 +180,7 @@
       }
     }
   },
-  "recording_serviceNotificationTitle": "Recording in progress",
+  "recording_serviceNotificationTitle": "Grabación en curso",
   "recording_serviceNotificationBody": "{elapsed} • {genre}",
   "@recording_serviceNotificationBody": {
     "placeholders": {
@@ -192,7 +192,7 @@
       }
     }
   },
-  "recording_serviceNotificationStopAction": "Stop",
+  "recording_serviceNotificationStopAction": "Detener",
   "recording_notFound": "Grabación no encontrada",
   "recording_unknownGenre": "Género desconocido",
   "recording_splitRecording": "Editar Grabación",
@@ -703,9 +703,9 @@
   "recording_recoverButton": "Recuperar",
   "recording_recoverDiscard": "Descartar",
   "recording_recoverFailedLastSegment": "Parte del audio cerca del final no se pudo leer y fue omitido.",
-  "recording_blockNavTitle": "Recording in progress",
-  "recording_blockNavMessage": "You have a recording in progress. Discarding will permanently delete it.",
-  "recording_blockNavDiscardAndLeave": "Discard and leave",
+  "recording_blockNavTitle": "Grabación en curso",
+  "recording_blockNavMessage": "Tienes una grabación en curso. Si la descartas, se eliminará permanentemente.",
+  "recording_blockNavDiscardAndLeave": "Descartar y salir",
   "recording_inProgressNotificationTitle": "Grabación en curso",
   "recording_inProgressNotificationBody": "Toca para volver a la app",
   "recording_finalizing": "Finalizando grabación…",
@@ -720,13 +720,13 @@
   "recording_finalizationFailedBodyPipeline": "No pudimos terminar de procesar esta grabación. Queda en tus grabaciones sin guardar.",
   "recording_finalizationErrorBack": "Volver",
   "recording_discardAndReturn": "Descartar y volver",
-  "recording_savingRecording": "Saving recording…",
-  "recording_processingYourAudio": "Processing your audio",
-  "recording_dontCloseSaveNext": "Don't close — we'll open the save screen next.",
-  "recording_stageShortFinalizing": "FINALIZING",
-  "recording_stageShortCombining": "COMBINING",
-  "recording_stageShortCompressing": "COMPRESSING",
-  "recording_savingPleaseWait": "Saving your recording — please wait a moment.",
+  "recording_savingRecording": "Guardando grabación…",
+  "recording_processingYourAudio": "Procesando tu audio",
+  "recording_dontCloseSaveNext": "No cierres — abriremos la pantalla de guardado a continuación.",
+  "recording_stageShortFinalizing": "FINALIZANDO",
+  "recording_stageShortCombining": "COMBINANDO",
+  "recording_stageShortCompressing": "COMPRIMIENDO",
+  "recording_savingPleaseWait": "Guardando tu grabación — espera un momento.",
   "profile_defaultMicrophone": "Micrófono predeterminado",
   "profile_systemDefault": "Predeterminado del sistema",
   "settings_deviceStorageTitle": "Almacenamiento del dispositivo",
@@ -879,7 +879,7 @@
   "recording_noPendingUploads": "No hay cargas pendientes",
   "recording_uploadQueue": "Cola de subida",
   "recording_uploadSpeed": "{speed}/s",
-  "recording_uploadEtaRemaining": "~{eta} remaining",
+  "recording_uploadEtaRemaining": "~{eta} restantes",
   "recording_previewSelection": "Vista previa de la selección",
   "recording_stopPreview": "Detener vista previa",
   "recording_audioLoadFailed": "Error al cargar el audio",
@@ -971,7 +971,7 @@
       }
     }
   },
-  "format_yesterday": "Yesterday",
+  "format_yesterday": "Ayer",
   "recovery_backToList": "Ahora no",
   "common_discard": "Descartar",
   "common_resume": "Continuar",

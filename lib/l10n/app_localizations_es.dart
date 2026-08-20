@@ -542,7 +542,7 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get recording_serviceNotificationTitle => 'Recording in progress';
+  String get recording_serviceNotificationTitle => 'Grabación en curso';
 
   @override
   String recording_serviceNotificationBody(String elapsed, String genre) {
@@ -550,7 +550,7 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get recording_serviceNotificationStopAction => 'Stop';
+  String get recording_serviceNotificationStopAction => 'Detener';
 
   @override
   String get recording_notFound => 'Grabación no encontrada';
@@ -2175,14 +2175,14 @@ class AppLocalizationsEs extends AppLocalizations {
       'Parte del audio cerca del final no se pudo leer y fue omitido.';
 
   @override
-  String get recording_blockNavTitle => 'Recording in progress';
+  String get recording_blockNavTitle => 'Grabación en curso';
 
   @override
   String get recording_blockNavMessage =>
-      'You have a recording in progress. Discarding will permanently delete it.';
+      'Tienes una grabación en curso. Si la descartas, se eliminará permanentemente.';
 
   @override
-  String get recording_blockNavDiscardAndLeave => 'Discard and leave';
+  String get recording_blockNavDiscardAndLeave => 'Descartar y salir';
 
   @override
   String get recording_inProgressNotificationTitle => 'Grabación en curso';
@@ -2235,27 +2235,27 @@ class AppLocalizationsEs extends AppLocalizations {
   String get recording_discardAndReturn => 'Descartar y volver';
 
   @override
-  String get recording_savingRecording => 'Saving recording…';
+  String get recording_savingRecording => 'Guardando grabación…';
 
   @override
-  String get recording_processingYourAudio => 'Processing your audio';
+  String get recording_processingYourAudio => 'Procesando tu audio';
 
   @override
   String get recording_dontCloseSaveNext =>
-      'Don\'t close — we\'ll open the save screen next.';
+      'No cierres — abriremos la pantalla de guardado a continuación.';
 
   @override
-  String get recording_stageShortFinalizing => 'FINALIZING';
+  String get recording_stageShortFinalizing => 'FINALIZANDO';
 
   @override
-  String get recording_stageShortCombining => 'COMBINING';
+  String get recording_stageShortCombining => 'COMBINANDO';
 
   @override
-  String get recording_stageShortCompressing => 'COMPRESSING';
+  String get recording_stageShortCompressing => 'COMPRIMIENDO';
 
   @override
   String get recording_savingPleaseWait =>
-      'Saving your recording — please wait a moment.';
+      'Guardando tu grabación — espera un momento.';
 
   @override
   String get profile_defaultMicrophone => 'Micrófono predeterminado';
@@ -2647,7 +2647,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String recording_uploadEtaRemaining(String eta) {
-    return '~$eta remaining';
+    return '~$eta restantes';
   }
 
   @override
@@ -2797,7 +2797,7 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get format_yesterday => 'Yesterday';
+  String get format_yesterday => 'Ayer';
 
   @override
   String get recovery_backToList => 'Ahora no';

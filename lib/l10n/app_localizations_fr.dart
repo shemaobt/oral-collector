@@ -543,7 +543,7 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get recording_serviceNotificationTitle => 'Recording in progress';
+  String get recording_serviceNotificationTitle => 'Enregistrement en cours';
 
   @override
   String recording_serviceNotificationBody(String elapsed, String genre) {
@@ -551,7 +551,7 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get recording_serviceNotificationStopAction => 'Stop';
+  String get recording_serviceNotificationStopAction => 'Arrêter';
 
   @override
   String get recording_notFound => 'Enregistrement introuvable';
@@ -2189,14 +2189,14 @@ class AppLocalizationsFr extends AppLocalizations {
       'Une partie de l\'audio près de la fin n\'a pas pu être lue et a été ignorée.';
 
   @override
-  String get recording_blockNavTitle => 'Recording in progress';
+  String get recording_blockNavTitle => 'Enregistrement en cours';
 
   @override
   String get recording_blockNavMessage =>
-      'You have a recording in progress. Discarding will permanently delete it.';
+      'Un enregistrement est en cours. L\'abandonner le supprimera définitivement.';
 
   @override
-  String get recording_blockNavDiscardAndLeave => 'Discard and leave';
+  String get recording_blockNavDiscardAndLeave => 'Abandonner et quitter';
 
   @override
   String get recording_inProgressNotificationTitle => 'Enregistrement en cours';
@@ -2249,27 +2249,27 @@ class AppLocalizationsFr extends AppLocalizations {
   String get recording_discardAndReturn => 'Ignorer et revenir';
 
   @override
-  String get recording_savingRecording => 'Saving recording…';
+  String get recording_savingRecording => 'Sauvegarde de l\'enregistrement…';
 
   @override
-  String get recording_processingYourAudio => 'Processing your audio';
+  String get recording_processingYourAudio => 'Traitement de votre audio';
 
   @override
   String get recording_dontCloseSaveNext =>
-      'Don\'t close — we\'ll open the save screen next.';
+      'Ne fermez pas — l\'écran de sauvegarde s\'ouvrira juste après.';
 
   @override
-  String get recording_stageShortFinalizing => 'FINALIZING';
+  String get recording_stageShortFinalizing => 'FINALISATION';
 
   @override
-  String get recording_stageShortCombining => 'COMBINING';
+  String get recording_stageShortCombining => 'ASSEMBLAGE';
 
   @override
-  String get recording_stageShortCompressing => 'COMPRESSING';
+  String get recording_stageShortCompressing => 'COMPRESSION';
 
   @override
   String get recording_savingPleaseWait =>
-      'Saving your recording — please wait a moment.';
+      'Sauvegarde de votre enregistrement — veuillez patienter un instant.';
 
   @override
   String get profile_defaultMicrophone => 'Microphone par défaut';
@@ -2662,7 +2662,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String recording_uploadEtaRemaining(String eta) {
-    return '~$eta remaining';
+    return '~$eta restant';
   }
 
   @override
@@ -2814,7 +2814,7 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get format_yesterday => 'Yesterday';
+  String get format_yesterday => 'Hier';
 
   @override
   String get recovery_backToList => 'Pas maintenant';

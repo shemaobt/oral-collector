@@ -120,7 +120,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get auth_emailLabel => '电子邮箱';
 
   @override
-  String get auth_emailHint => 'your@email.com';
+  String get auth_emailHint => '你的@邮箱.com';
 
   @override
   String get auth_emailRequired => '请输入您的电子邮箱';
@@ -525,7 +525,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get recording_serviceNotificationTitle => 'Recording in progress';
+  String get recording_serviceNotificationTitle => '正在录音';
 
   @override
   String recording_serviceNotificationBody(String elapsed, String genre) {
@@ -533,7 +533,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get recording_serviceNotificationStopAction => 'Stop';
+  String get recording_serviceNotificationStopAction => '停止';
 
   @override
   String get recording_notFound => '未找到录音';
@@ -794,10 +794,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get trim_addSplitsFirst => '请先添加分割点';
 
   @override
-  String get trim_applyBoost => 'Apply boost';
+  String get trim_applyBoost => '应用音量';
 
   @override
-  String get trim_boostApplied => 'Volume applied';
+  String get trim_boostApplied => '音量已应用';
 
   @override
   String trim_savedSegments(int kept, int removed) {
@@ -2069,14 +2069,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recording_recoverFailedLastSegment => '末尾附近的部分音频无法读取并已跳过。';
 
   @override
-  String get recording_blockNavTitle => 'Recording in progress';
+  String get recording_blockNavTitle => '正在录音';
 
   @override
-  String get recording_blockNavMessage =>
-      'You have a recording in progress. Discarding will permanently delete it.';
+  String get recording_blockNavMessage => '您有一段正在进行的录音。丢弃后将被永久删除。';
 
   @override
-  String get recording_blockNavDiscardAndLeave => 'Discard and leave';
+  String get recording_blockNavDiscardAndLeave => '丢弃并离开';
 
   @override
   String get recording_inProgressNotificationTitle => '正在录音';
@@ -2123,27 +2122,25 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recording_discardAndReturn => '放弃并返回';
 
   @override
-  String get recording_savingRecording => 'Saving recording…';
+  String get recording_savingRecording => '正在保存录音…';
 
   @override
-  String get recording_processingYourAudio => 'Processing your audio';
+  String get recording_processingYourAudio => '正在处理您的音频';
 
   @override
-  String get recording_dontCloseSaveNext =>
-      'Don\'t close — we\'ll open the save screen next.';
+  String get recording_dontCloseSaveNext => '请勿关闭，接下来会打开保存界面。';
 
   @override
-  String get recording_stageShortFinalizing => 'FINALIZING';
+  String get recording_stageShortFinalizing => '完成中';
 
   @override
-  String get recording_stageShortCombining => 'COMBINING';
+  String get recording_stageShortCombining => '合并中';
 
   @override
-  String get recording_stageShortCompressing => 'COMPRESSING';
+  String get recording_stageShortCompressing => '压缩中';
 
   @override
-  String get recording_savingPleaseWait =>
-      'Saving your recording — please wait a moment.';
+  String get recording_savingPleaseWait => '正在保存您的录音，请稍候。';
 
   @override
   String get profile_defaultMicrophone => '默认麦克风';
@@ -2654,7 +2651,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get format_yesterday => 'Yesterday';
+  String get format_yesterday => '昨天';
 
   @override
   String get recovery_backToList => '暂不';

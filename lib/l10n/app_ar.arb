@@ -180,7 +180,7 @@
       }
     }
   },
-  "recording_serviceNotificationTitle": "Recording in progress",
+  "recording_serviceNotificationTitle": "جارٍ التسجيل",
   "recording_serviceNotificationBody": "{elapsed} • {genre}",
   "@recording_serviceNotificationBody": {
     "placeholders": {
@@ -192,7 +192,7 @@
       }
     }
   },
-  "recording_serviceNotificationStopAction": "Stop",
+  "recording_serviceNotificationStopAction": "إيقاف",
   "recording_notFound": "التسجيل غير موجود",
   "recording_unknownGenre": "نوع غير معروف",
   "recording_splitRecording": "تحرير التسجيل",
@@ -273,8 +273,8 @@
   "trim_splitting": "جارٍ التقسيم...",
   "trim_saveSegments": "{count, plural, =1{حفظ مقطع واحد} other{حفظ {count} مقاطع}}",
   "trim_addSplitsFirst": "أضف تقسيمات أولاً",
-  "trim_applyBoost": "Apply boost",
-  "trim_boostApplied": "Volume applied",
+  "trim_applyBoost": "تطبيق مستوى الصوت",
+  "trim_boostApplied": "تم تطبيق مستوى الصوت",
   "trim_savedSegments": "تم حفظ {kept} مقطع، وإزالة {removed}",
   "trim_splitInto": "تقسيم إلى {count} تسجيلات",
   "trim_saveConfirmTitle": "حفظ التغييرات؟",
@@ -703,9 +703,9 @@
   "recording_recoverButton": "استعادة",
   "recording_recoverDiscard": "تجاهل",
   "recording_recoverFailedLastSegment": "تعذرت قراءة بعض الصوت قرب النهاية وتم تخطيه.",
-  "recording_blockNavTitle": "Recording in progress",
-  "recording_blockNavMessage": "You have a recording in progress. Discarding will permanently delete it.",
-  "recording_blockNavDiscardAndLeave": "Discard and leave",
+  "recording_blockNavTitle": "جارٍ التسجيل",
+  "recording_blockNavMessage": "لديك تسجيل قيد التنفيذ. التجاهل سيحذفه نهائيًا.",
+  "recording_blockNavDiscardAndLeave": "تجاهل واخرج",
   "recording_inProgressNotificationTitle": "جاري التسجيل",
   "recording_inProgressNotificationBody": "اضغط للعودة إلى التطبيق",
   "recording_finalizing": "إنهاء التسجيل…",
@@ -720,13 +720,13 @@
   "recording_finalizationFailedBodyPipeline": "لم نتمكن من إنهاء معالجة هذا التسجيل. إنه محفوظ ضمن تسجيلاتك غير المحفوظة.",
   "recording_finalizationErrorBack": "رجوع",
   "recording_discardAndReturn": "تجاهل والعودة",
-  "recording_savingRecording": "Saving recording…",
-  "recording_processingYourAudio": "Processing your audio",
-  "recording_dontCloseSaveNext": "Don't close — we'll open the save screen next.",
-  "recording_stageShortFinalizing": "FINALIZING",
-  "recording_stageShortCombining": "COMBINING",
-  "recording_stageShortCompressing": "COMPRESSING",
-  "recording_savingPleaseWait": "Saving your recording — please wait a moment.",
+  "recording_savingRecording": "جارٍ حفظ التسجيل…",
+  "recording_processingYourAudio": "جارٍ معالجة الصوت",
+  "recording_dontCloseSaveNext": "لا تغلق التطبيق — سنفتح شاشة الحفظ بعد قليل.",
+  "recording_stageShortFinalizing": "الإنهاء",
+  "recording_stageShortCombining": "الدمج",
+  "recording_stageShortCompressing": "الضغط",
+  "recording_savingPleaseWait": "جارٍ حفظ تسجيلك — يرجى الانتظار لحظة.",
   "profile_defaultMicrophone": "الميكروفون الافتراضي",
   "profile_systemDefault": "الافتراضي للنظام",
   "settings_deviceStorageTitle": "مساحة تخزين الجهاز",
@@ -969,7 +969,7 @@
       }
     }
   },
-  "format_yesterday": "Yesterday",
+  "format_yesterday": "أمس",
   "recovery_backToList": "ليس الآن",
   "common_discard": "تجاهل",
   "common_resume": "استئناف",

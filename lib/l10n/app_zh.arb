@@ -35,7 +35,7 @@
   "auth_signUpSubtitle": "加入我们的故事收集者社区。",
   "auth_backToSignIn": "返回登录",
   "auth_emailLabel": "电子邮箱",
-  "auth_emailHint": "your@email.com",
+  "auth_emailHint": "你的@邮箱.com",
   "auth_emailRequired": "请输入您的电子邮箱",
   "auth_emailInvalid": "请输入有效的电子邮箱",
   "auth_passwordLabel": "密码",
@@ -204,7 +204,7 @@
       }
     }
   },
-  "recording_serviceNotificationTitle": "Recording in progress",
+  "recording_serviceNotificationTitle": "正在录音",
   "recording_serviceNotificationBody": "{elapsed} • {genre}",
   "@recording_serviceNotificationBody": {
     "placeholders": {
@@ -216,7 +216,7 @@
       }
     }
   },
-  "recording_serviceNotificationStopAction": "Stop",
+  "recording_serviceNotificationStopAction": "停止",
   "recording_notFound": "未找到录音",
   "recording_unknownGenre": "未知体裁",
   "recording_splitRecording": "编辑录音",
@@ -311,8 +311,8 @@
     }
   },
   "trim_addSplitsFirst": "请先添加分割点",
-  "trim_applyBoost": "Apply boost",
-  "trim_boostApplied": "Volume applied",
+  "trim_applyBoost": "应用音量",
+  "trim_boostApplied": "音量已应用",
   "trim_savedSegments": "已保存 {kept} 个片段，移除了 {removed} 个",
   "@trim_savedSegments": {
     "placeholders": {
@@ -904,9 +904,9 @@
   "recording_recoverButton": "恢复",
   "recording_recoverDiscard": "放弃",
   "recording_recoverFailedLastSegment": "末尾附近的部分音频无法读取并已跳过。",
-  "recording_blockNavTitle": "Recording in progress",
-  "recording_blockNavMessage": "You have a recording in progress. Discarding will permanently delete it.",
-  "recording_blockNavDiscardAndLeave": "Discard and leave",
+  "recording_blockNavTitle": "正在录音",
+  "recording_blockNavMessage": "您有一段正在进行的录音。丢弃后将被永久删除。",
+  "recording_blockNavDiscardAndLeave": "丢弃并离开",
   "recording_inProgressNotificationTitle": "正在录音",
   "recording_inProgressNotificationBody": "点击返回应用",
   "recording_finalizing": "正在完成录音…",
@@ -921,13 +921,13 @@
   "recording_finalizationFailedBodyPipeline": "我们无法完成此录音的处理。它保存在您的未保存录音中。",
   "recording_finalizationErrorBack": "返回",
   "recording_discardAndReturn": "放弃并返回",
-  "recording_savingRecording": "Saving recording…",
-  "recording_processingYourAudio": "Processing your audio",
-  "recording_dontCloseSaveNext": "Don't close — we'll open the save screen next.",
-  "recording_stageShortFinalizing": "FINALIZING",
-  "recording_stageShortCombining": "COMBINING",
-  "recording_stageShortCompressing": "COMPRESSING",
-  "recording_savingPleaseWait": "Saving your recording — please wait a moment.",
+  "recording_savingRecording": "正在保存录音…",
+  "recording_processingYourAudio": "正在处理您的音频",
+  "recording_dontCloseSaveNext": "请勿关闭，接下来会打开保存界面。",
+  "recording_stageShortFinalizing": "完成中",
+  "recording_stageShortCombining": "合并中",
+  "recording_stageShortCompressing": "压缩中",
+  "recording_savingPleaseWait": "正在保存您的录音，请稍候。",
   "profile_defaultMicrophone": "默认麦克风",
   "profile_systemDefault": "系统默认",
   "settings_deviceStorageTitle": "设备存储",
@@ -1170,7 +1170,7 @@
       }
     }
   },
-  "format_yesterday": "Yesterday",
+  "format_yesterday": "昨天",
   "recovery_backToList": "暂不",
   "common_discard": "丢弃",
   "common_resume": "继续",
