@@ -84,7 +84,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get auth_oralCollector => 'Oral Collector';
 
   @override
-  String get auth_byShema => 'by Shema';
+  String get auth_byShema => 'Shema द्वारा';
 
   @override
   String get auth_heroTagline => 'आवाज़ें सहेजें।\nकहानियाँ साझा करें।';
@@ -122,7 +122,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get auth_emailLabel => 'ईमेल पता';
 
   @override
-  String get auth_emailHint => 'your@email.com';
+  String get auth_emailHint => 'आपका@ईमेल.com';
 
   @override
   String get auth_emailRequired => 'कृपया अपना ईमेल दर्ज करें';
@@ -537,7 +537,7 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get recording_serviceNotificationTitle => 'Recording in progress';
+  String get recording_serviceNotificationTitle => 'रिकॉर्डिंग चल रही है';
 
   @override
   String recording_serviceNotificationBody(String elapsed, String genre) {
@@ -545,7 +545,7 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get recording_serviceNotificationStopAction => 'Stop';
+  String get recording_serviceNotificationStopAction => 'बंद करें';
 
   @override
   String get recording_notFound => 'रिकॉर्डिंग नहीं मिली';
@@ -831,10 +831,10 @@ class AppLocalizationsHi extends AppLocalizations {
   String get trim_addSplitsFirst => 'पहले विभाजन जोड़ें';
 
   @override
-  String get trim_applyBoost => 'Apply boost';
+  String get trim_applyBoost => 'आवाज़ लागू करें';
 
   @override
-  String get trim_boostApplied => 'Volume applied';
+  String get trim_boostApplied => 'आवाज़ लागू की गई';
 
   @override
   String trim_savedSegments(int kept, int removed) {
@@ -1122,7 +1122,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get profile_appVersion => 'ऐप संस्करण';
 
   @override
-  String get profile_byShema => 'Oral Collector by Shema';
+  String get profile_byShema => 'Oral Collector, Shema द्वारा';
 
   @override
   String get profile_administration => 'प्रशासन';
@@ -2163,14 +2163,14 @@ class AppLocalizationsHi extends AppLocalizations {
       'अंत के निकट का कुछ ऑडियो पढ़ा नहीं जा सका और छोड़ दिया गया।';
 
   @override
-  String get recording_blockNavTitle => 'Recording in progress';
+  String get recording_blockNavTitle => 'रिकॉर्डिंग चल रही है';
 
   @override
   String get recording_blockNavMessage =>
-      'You have a recording in progress. Discarding will permanently delete it.';
+      'आपकी एक रिकॉर्डिंग चल रही है। छोड़ने पर वह हमेशा के लिए मिट जाएगी।';
 
   @override
-  String get recording_blockNavDiscardAndLeave => 'Discard and leave';
+  String get recording_blockNavDiscardAndLeave => 'छोड़ दें और बाहर जाएँ';
 
   @override
   String get recording_inProgressNotificationTitle => 'रिकॉर्डिंग जारी है';
@@ -2223,27 +2223,27 @@ class AppLocalizationsHi extends AppLocalizations {
   String get recording_discardAndReturn => 'त्यागें और लौटें';
 
   @override
-  String get recording_savingRecording => 'Saving recording…';
+  String get recording_savingRecording => 'रिकॉर्डिंग सहेजी जा रही है…';
 
   @override
-  String get recording_processingYourAudio => 'Processing your audio';
+  String get recording_processingYourAudio => 'आपका ऑडियो प्रोसेस हो रहा है';
 
   @override
   String get recording_dontCloseSaveNext =>
-      'Don\'t close — we\'ll open the save screen next.';
+      'बंद न करें — इसके बाद हम सहेजने की स्क्रीन खोलेंगे।';
 
   @override
-  String get recording_stageShortFinalizing => 'FINALIZING';
+  String get recording_stageShortFinalizing => 'समापन';
 
   @override
-  String get recording_stageShortCombining => 'COMBINING';
+  String get recording_stageShortCombining => 'संयोजन';
 
   @override
-  String get recording_stageShortCompressing => 'COMPRESSING';
+  String get recording_stageShortCompressing => 'संपीड़न';
 
   @override
   String get recording_savingPleaseWait =>
-      'Saving your recording — please wait a moment.';
+      'आपकी रिकॉर्डिंग सहेजी जा रही है — कृपया एक क्षण प्रतीक्षा करें।';
 
   @override
   String get profile_defaultMicrophone => 'डिफ़ॉल्ट माइक्रोफ़ोन';
@@ -2632,7 +2632,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String recording_uploadEtaRemaining(String eta) {
-    return '~$eta remaining';
+    return '~$eta शेष';
   }
 
   @override
@@ -2784,7 +2784,7 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get format_yesterday => 'Yesterday';
+  String get format_yesterday => 'कल';
 
   @override
   String get recovery_backToList => 'अभी नहीं';

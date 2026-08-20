@@ -537,7 +537,8 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String get recording_serviceNotificationTitle => 'Recording in progress';
+  String get recording_serviceNotificationTitle =>
+      'Perekaman sedang berlangsung';
 
   @override
   String recording_serviceNotificationBody(String elapsed, String genre) {
@@ -545,7 +546,7 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String get recording_serviceNotificationStopAction => 'Stop';
+  String get recording_serviceNotificationStopAction => 'Berhenti';
 
   @override
   String get recording_notFound => 'Rekaman tidak ditemukan';
@@ -829,10 +830,10 @@ class AppLocalizationsId extends AppLocalizations {
   String get trim_addSplitsFirst => 'Tambahkan pembagian terlebih dahulu';
 
   @override
-  String get trim_applyBoost => 'Apply boost';
+  String get trim_applyBoost => 'Terapkan volume';
 
   @override
-  String get trim_boostApplied => 'Volume applied';
+  String get trim_boostApplied => 'Volume diterapkan';
 
   @override
   String trim_savedSegments(int kept, int removed) {
@@ -2160,14 +2161,14 @@ class AppLocalizationsId extends AppLocalizations {
       'Sebagian audio di dekat akhir tidak dapat dibaca dan dilewati.';
 
   @override
-  String get recording_blockNavTitle => 'Recording in progress';
+  String get recording_blockNavTitle => 'Perekaman sedang berlangsung';
 
   @override
   String get recording_blockNavMessage =>
-      'You have a recording in progress. Discarding will permanently delete it.';
+      'Anda sedang merekam. Jika dibuang, rekaman akan dihapus permanen.';
 
   @override
-  String get recording_blockNavDiscardAndLeave => 'Discard and leave';
+  String get recording_blockNavDiscardAndLeave => 'Buang dan keluar';
 
   @override
   String get recording_inProgressNotificationTitle => 'Perekaman berlangsung';
@@ -2220,27 +2221,27 @@ class AppLocalizationsId extends AppLocalizations {
   String get recording_discardAndReturn => 'Buang dan kembali';
 
   @override
-  String get recording_savingRecording => 'Saving recording…';
+  String get recording_savingRecording => 'Menyimpan rekaman…';
 
   @override
-  String get recording_processingYourAudio => 'Processing your audio';
+  String get recording_processingYourAudio => 'Memproses audio Anda';
 
   @override
   String get recording_dontCloseSaveNext =>
-      'Don\'t close — we\'ll open the save screen next.';
+      'Jangan tutup — kami akan membuka layar simpan setelah ini.';
 
   @override
-  String get recording_stageShortFinalizing => 'FINALIZING';
+  String get recording_stageShortFinalizing => 'MENYELESAIKAN';
 
   @override
-  String get recording_stageShortCombining => 'COMBINING';
+  String get recording_stageShortCombining => 'MENGGABUNGKAN';
 
   @override
-  String get recording_stageShortCompressing => 'COMPRESSING';
+  String get recording_stageShortCompressing => 'MENGOMPRES';
 
   @override
   String get recording_savingPleaseWait =>
-      'Saving your recording — please wait a moment.';
+      'Menyimpan rekaman Anda — mohon tunggu sebentar.';
 
   @override
   String get profile_defaultMicrophone => 'Mikrofon default';
@@ -2630,7 +2631,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String recording_uploadEtaRemaining(String eta) {
-    return '~$eta remaining';
+    return '~$eta tersisa';
   }
 
   @override
@@ -2778,7 +2779,7 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String get format_yesterday => 'Yesterday';
+  String get format_yesterday => 'Kemarin';
 
   @override
   String get recovery_backToList => 'Nanti saja';

@@ -84,7 +84,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get auth_oralCollector => 'Oral Collector';
 
   @override
-  String get auth_byShema => 'by Shema';
+  String get auth_byShema => 'Shema 제공';
 
   @override
   String get auth_heroTagline => '목소리를 보존하고\n이야기를 나누세요.';
@@ -120,7 +120,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get auth_emailLabel => '이메일 주소';
 
   @override
-  String get auth_emailHint => 'your@email.com';
+  String get auth_emailHint => '내@이메일.com';
 
   @override
   String get auth_emailRequired => '이메일을 입력해 주세요';
@@ -527,7 +527,7 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get recording_serviceNotificationTitle => 'Recording in progress';
+  String get recording_serviceNotificationTitle => '녹음 진행 중';
 
   @override
   String recording_serviceNotificationBody(String elapsed, String genre) {
@@ -535,7 +535,7 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get recording_serviceNotificationStopAction => 'Stop';
+  String get recording_serviceNotificationStopAction => '중지';
 
   @override
   String get recording_notFound => '녹음을 찾을 수 없습니다';
@@ -803,10 +803,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get trim_addSplitsFirst => '먼저 분할 지점을 추가하세요';
 
   @override
-  String get trim_applyBoost => 'Apply boost';
+  String get trim_applyBoost => '볼륨 적용';
 
   @override
-  String get trim_boostApplied => 'Volume applied';
+  String get trim_boostApplied => '볼륨이 적용되었습니다';
 
   @override
   String trim_savedSegments(int kept, int removed) {
@@ -1080,7 +1080,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get profile_appVersion => '앱 버전';
 
   @override
-  String get profile_byShema => 'Oral Collector by Shema';
+  String get profile_byShema => 'Oral Collector, Shema 제공';
 
   @override
   String get profile_administration => '관리';
@@ -2085,14 +2085,13 @@ class AppLocalizationsKo extends AppLocalizations {
       '끝부분의 일부 오디오를 읽을 수 없어 건너뛰었습니다.';
 
   @override
-  String get recording_blockNavTitle => 'Recording in progress';
+  String get recording_blockNavTitle => '녹음 진행 중';
 
   @override
-  String get recording_blockNavMessage =>
-      'You have a recording in progress. Discarding will permanently delete it.';
+  String get recording_blockNavMessage => '녹음이 진행 중입니다. 삭제하면 영구적으로 지워집니다.';
 
   @override
-  String get recording_blockNavDiscardAndLeave => 'Discard and leave';
+  String get recording_blockNavDiscardAndLeave => '삭제하고 나가기';
 
   @override
   String get recording_inProgressNotificationTitle => '녹음 중';
@@ -2142,27 +2141,25 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recording_discardAndReturn => '버리고 돌아가기';
 
   @override
-  String get recording_savingRecording => 'Saving recording…';
+  String get recording_savingRecording => '녹음 저장 중…';
 
   @override
-  String get recording_processingYourAudio => 'Processing your audio';
+  String get recording_processingYourAudio => '오디오 처리 중';
 
   @override
-  String get recording_dontCloseSaveNext =>
-      'Don\'t close — we\'ll open the save screen next.';
+  String get recording_dontCloseSaveNext => '닫지 마세요 — 곧 저장 화면이 열립니다.';
 
   @override
-  String get recording_stageShortFinalizing => 'FINALIZING';
+  String get recording_stageShortFinalizing => '마무리 중';
 
   @override
-  String get recording_stageShortCombining => 'COMBINING';
+  String get recording_stageShortCombining => '결합 중';
 
   @override
-  String get recording_stageShortCompressing => 'COMPRESSING';
+  String get recording_stageShortCompressing => '압축 중';
 
   @override
-  String get recording_savingPleaseWait =>
-      'Saving your recording — please wait a moment.';
+  String get recording_savingPleaseWait => '녹음을 저장하는 중입니다 — 잠시만 기다려 주세요.';
 
   @override
   String get profile_defaultMicrophone => '기본 마이크';
@@ -2533,7 +2530,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String recording_uploadEtaRemaining(String eta) {
-    return '~$eta remaining';
+    return '약 $eta 남음';
   }
 
   @override
@@ -2678,7 +2675,7 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get format_yesterday => 'Yesterday';
+  String get format_yesterday => '어제';
 
   @override
   String get recovery_backToList => '나중에';

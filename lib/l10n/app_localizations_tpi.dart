@@ -534,7 +534,7 @@ class AppLocalizationsTpi extends AppLocalizations {
   }
 
   @override
-  String get recording_serviceNotificationTitle => 'Recording in progress';
+  String get recording_serviceNotificationTitle => 'Rekodim i wok yet';
 
   @override
   String recording_serviceNotificationBody(String elapsed, String genre) {
@@ -542,7 +542,7 @@ class AppLocalizationsTpi extends AppLocalizations {
   }
 
   @override
-  String get recording_serviceNotificationStopAction => 'Stop';
+  String get recording_serviceNotificationStopAction => 'Stopim';
 
   @override
   String get recording_notFound => 'Rekoding i no stap';
@@ -826,10 +826,10 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get trim_addSplitsFirst => 'Putim ol brukim pastaim';
 
   @override
-  String get trim_applyBoost => 'Apply boost';
+  String get trim_applyBoost => 'Putim volium';
 
   @override
-  String get trim_boostApplied => 'Volume applied';
+  String get trim_boostApplied => 'Volium i senis pinis';
 
   @override
   String trim_savedSegments(int kept, int removed) {
@@ -1970,7 +1970,7 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get recording_stopRecording => 'Stopim rekodim';
 
   @override
-  String get recording_stop => 'Stop';
+  String get recording_stop => 'Stopim';
 
   @override
   String get recording_resume => 'Stat gen';
@@ -2145,14 +2145,14 @@ class AppLocalizationsTpi extends AppLocalizations {
       'Sampela audio klostu long pinis ino inap rid na mipela skipim.';
 
   @override
-  String get recording_blockNavTitle => 'Recording in progress';
+  String get recording_blockNavTitle => 'Rekodim i wok yet';
 
   @override
   String get recording_blockNavMessage =>
-      'You have a recording in progress. Discarding will permanently delete it.';
+      'Yu gat wanpela rekoding i wok yet. Sapos yu tromoi, em bai lus olgeta.';
 
   @override
-  String get recording_blockNavDiscardAndLeave => 'Discard and leave';
+  String get recording_blockNavDiscardAndLeave => 'Tromoi na go';
 
   @override
   String get recording_inProgressNotificationTitle => 'Rekodim i wok';
@@ -2204,27 +2204,28 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get recording_discardAndReturn => 'Lusim na go bek';
 
   @override
-  String get recording_savingRecording => 'Saving recording…';
+  String get recording_savingRecording => 'Wok long sevim rekoding…';
 
   @override
-  String get recording_processingYourAudio => 'Processing your audio';
+  String get recording_processingYourAudio =>
+      'Wok long stretim audio bilong yu';
 
   @override
   String get recording_dontCloseSaveNext =>
-      'Don\'t close — we\'ll open the save screen next.';
+      'No ken pasim — bihain mipela bai opim skrin bilong sevim.';
 
   @override
-  String get recording_stageShortFinalizing => 'FINALIZING';
+  String get recording_stageShortFinalizing => 'PINISIM';
 
   @override
-  String get recording_stageShortCombining => 'COMBINING';
+  String get recording_stageShortCombining => 'BUNGIM';
 
   @override
-  String get recording_stageShortCompressing => 'COMPRESSING';
+  String get recording_stageShortCompressing => 'PRESIM';
 
   @override
   String get recording_savingPleaseWait =>
-      'Saving your recording — please wait a moment.';
+      'Wok long sevim rekoding bilong yu — plis wet liklik.';
 
   @override
   String get profile_defaultMicrophone => 'Defolt maikrofon';
@@ -2613,7 +2614,7 @@ class AppLocalizationsTpi extends AppLocalizations {
 
   @override
   String recording_uploadEtaRemaining(String eta) {
-    return '~$eta remaining';
+    return '~$eta i stap yet';
   }
 
   @override
@@ -2760,7 +2761,7 @@ class AppLocalizationsTpi extends AppLocalizations {
   }
 
   @override
-  String get format_yesterday => 'Yesterday';
+  String get format_yesterday => 'Asde';
 
   @override
   String get recovery_backToList => 'I no nau';

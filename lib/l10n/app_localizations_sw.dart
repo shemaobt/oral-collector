@@ -536,7 +536,7 @@ class AppLocalizationsSw extends AppLocalizations {
   }
 
   @override
-  String get recording_serviceNotificationTitle => 'Recording in progress';
+  String get recording_serviceNotificationTitle => 'Kurekodi kunaendelea';
 
   @override
   String recording_serviceNotificationBody(String elapsed, String genre) {
@@ -544,7 +544,7 @@ class AppLocalizationsSw extends AppLocalizations {
   }
 
   @override
-  String get recording_serviceNotificationStopAction => 'Stop';
+  String get recording_serviceNotificationStopAction => 'Simama';
 
   @override
   String get recording_notFound => 'Rekodi haikupatikana';
@@ -828,10 +828,10 @@ class AppLocalizationsSw extends AppLocalizations {
   String get trim_addSplitsFirst => 'Ongeza migawanyo kwanza';
 
   @override
-  String get trim_applyBoost => 'Apply boost';
+  String get trim_applyBoost => 'Weka sauti';
 
   @override
-  String get trim_boostApplied => 'Volume applied';
+  String get trim_boostApplied => 'Sauti imewekwa';
 
   @override
   String trim_savedSegments(int kept, int removed) {
@@ -2146,14 +2146,14 @@ class AppLocalizationsSw extends AppLocalizations {
       'Sauti fulani karibu na mwisho haikuweza kusomwa na ikarukwa.';
 
   @override
-  String get recording_blockNavTitle => 'Recording in progress';
+  String get recording_blockNavTitle => 'Kurekodi kunaendelea';
 
   @override
   String get recording_blockNavMessage =>
-      'You have a recording in progress. Discarding will permanently delete it.';
+      'Una rekodi inayoendelea. Ukiitupa itafutwa kabisa.';
 
   @override
-  String get recording_blockNavDiscardAndLeave => 'Discard and leave';
+  String get recording_blockNavDiscardAndLeave => 'Tupa na uondoke';
 
   @override
   String get recording_inProgressNotificationTitle => 'Inarekodi';
@@ -2205,27 +2205,27 @@ class AppLocalizationsSw extends AppLocalizations {
   String get recording_discardAndReturn => 'Tupa na urudi';
 
   @override
-  String get recording_savingRecording => 'Saving recording…';
+  String get recording_savingRecording => 'Inahifadhi rekodi…';
 
   @override
-  String get recording_processingYourAudio => 'Processing your audio';
+  String get recording_processingYourAudio => 'Inachakata sauti yako';
 
   @override
   String get recording_dontCloseSaveNext =>
-      'Don\'t close — we\'ll open the save screen next.';
+      'Usifunge — tutafungua skrini ya kuhifadhi baada ya hapa.';
 
   @override
-  String get recording_stageShortFinalizing => 'FINALIZING';
+  String get recording_stageShortFinalizing => 'KUKAMILISHA';
 
   @override
-  String get recording_stageShortCombining => 'COMBINING';
+  String get recording_stageShortCombining => 'KUUNGANISHA';
 
   @override
-  String get recording_stageShortCompressing => 'COMPRESSING';
+  String get recording_stageShortCompressing => 'KUBANA';
 
   @override
   String get recording_savingPleaseWait =>
-      'Saving your recording — please wait a moment.';
+      'Inahifadhi rekodi yako — tafadhali subiri kidogo.';
 
   @override
   String get profile_defaultMicrophone => 'Maikrofoni chaguomsingi';
@@ -2618,7 +2618,7 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String recording_uploadEtaRemaining(String eta) {
-    return '~$eta remaining';
+    return '~$eta zimesalia';
   }
 
   @override
@@ -2768,7 +2768,7 @@ class AppLocalizationsSw extends AppLocalizations {
   }
 
   @override
-  String get format_yesterday => 'Yesterday';
+  String get format_yesterday => 'Jana';
 
   @override
   String get recovery_backToList => 'Si sasa';

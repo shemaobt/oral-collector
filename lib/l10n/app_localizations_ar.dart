@@ -532,7 +532,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get recording_serviceNotificationTitle => 'Recording in progress';
+  String get recording_serviceNotificationTitle => 'جارٍ التسجيل';
 
   @override
   String recording_serviceNotificationBody(String elapsed, String genre) {
@@ -540,7 +540,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get recording_serviceNotificationStopAction => 'Stop';
+  String get recording_serviceNotificationStopAction => 'إيقاف';
 
   @override
   String get recording_notFound => 'التسجيل غير موجود';
@@ -822,10 +822,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get trim_addSplitsFirst => 'أضف تقسيمات أولاً';
 
   @override
-  String get trim_applyBoost => 'Apply boost';
+  String get trim_applyBoost => 'تطبيق مستوى الصوت';
 
   @override
-  String get trim_boostApplied => 'Volume applied';
+  String get trim_boostApplied => 'تم تطبيق مستوى الصوت';
 
   @override
   String trim_savedSegments(int kept, int removed) {
@@ -2140,14 +2140,14 @@ class AppLocalizationsAr extends AppLocalizations {
       'تعذرت قراءة بعض الصوت قرب النهاية وتم تخطيه.';
 
   @override
-  String get recording_blockNavTitle => 'Recording in progress';
+  String get recording_blockNavTitle => 'جارٍ التسجيل';
 
   @override
   String get recording_blockNavMessage =>
-      'You have a recording in progress. Discarding will permanently delete it.';
+      'لديك تسجيل قيد التنفيذ. التجاهل سيحذفه نهائيًا.';
 
   @override
-  String get recording_blockNavDiscardAndLeave => 'Discard and leave';
+  String get recording_blockNavDiscardAndLeave => 'تجاهل واخرج';
 
   @override
   String get recording_inProgressNotificationTitle => 'جاري التسجيل';
@@ -2197,27 +2197,27 @@ class AppLocalizationsAr extends AppLocalizations {
   String get recording_discardAndReturn => 'تجاهل والعودة';
 
   @override
-  String get recording_savingRecording => 'Saving recording…';
+  String get recording_savingRecording => 'جارٍ حفظ التسجيل…';
 
   @override
-  String get recording_processingYourAudio => 'Processing your audio';
+  String get recording_processingYourAudio => 'جارٍ معالجة الصوت';
 
   @override
   String get recording_dontCloseSaveNext =>
-      'Don\'t close — we\'ll open the save screen next.';
+      'لا تغلق التطبيق — سنفتح شاشة الحفظ بعد قليل.';
 
   @override
-  String get recording_stageShortFinalizing => 'FINALIZING';
+  String get recording_stageShortFinalizing => 'الإنهاء';
 
   @override
-  String get recording_stageShortCombining => 'COMBINING';
+  String get recording_stageShortCombining => 'الدمج';
 
   @override
-  String get recording_stageShortCompressing => 'COMPRESSING';
+  String get recording_stageShortCompressing => 'الضغط';
 
   @override
   String get recording_savingPleaseWait =>
-      'Saving your recording — please wait a moment.';
+      'جارٍ حفظ تسجيلك — يرجى الانتظار لحظة.';
 
   @override
   String get profile_defaultMicrophone => 'الميكروفون الافتراضي';
@@ -2772,7 +2772,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get format_yesterday => 'Yesterday';
+  String get format_yesterday => 'أمس';
 
   @override
   String get recovery_backToList => 'ليس الآن';
