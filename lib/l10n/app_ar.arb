@@ -891,8 +891,8 @@
   "recording_splitFrom": "مقسم من {sourceId}",
   "trim_segmentRemoved": "المقطع {index} — تمت إزالته",
   "trim_segmentOfTotal": "المقطع {index} من {total}",
-  "recovery_interruptedTitle": "Interrupted recordings",
-  "recovery_startedAt": "Started at {time}",
+  "recovery_interruptedTitle": "التسجيلات المتوقفة",
+  "recovery_startedAt": "بدأ في {time}",
   "@recovery_startedAt": {
     "placeholders": {
       "time": {
@@ -900,11 +900,11 @@
       }
     }
   },
-  "recovery_resume": "Resume",
-  "recovery_save": "Save",
-  "recovery_discard": "Discard",
-  "recovery_confirmDiscardTitle": "Discard recording?",
-  "recovery_confirmDiscardBody": "{duration} of audio will be permanently deleted.",
+  "recovery_resume": "استئناف",
+  "recovery_save": "حفظ",
+  "recovery_discard": "تجاهل",
+  "recovery_confirmDiscardTitle": "تجاهل التسجيل؟",
+  "recovery_confirmDiscardBody": "سيتم حذف {duration} من الصوت نهائيًا.",
   "@recovery_confirmDiscardBody": {
     "placeholders": {
       "duration": {
@@ -912,7 +912,7 @@
       }
     }
   },
-  "recovery_homeBanner": "{count, plural, =1{1 interrupted recording — tap to resume} other{{count} interrupted recordings — tap to resume}}",
+  "recovery_homeBanner": "{count, plural, zero{لا توجد تسجيلات متوقفة} one{تسجيل متوقف واحد — اضغط للمتابعة} two{تسجيلان متوقفان — اضغط للمتابعة} few{{count} تسجيلات متوقفة — اضغط للمتابعة} many{{count} تسجيلاً متوقفًا — اضغط للمتابعة} other{{count} تسجيل متوقف — اضغط للمتابعة}}",
   "@recovery_homeBanner": {
     "placeholders": {
       "count": {
@@ -920,7 +920,7 @@
       }
     }
   },
-  "recovery_unsavedCount": "{count, plural, =1{1 unsaved recording} other{{count} unsaved recordings}}",
+  "recovery_unsavedCount": "{count, plural, zero{لا توجد تسجيلات غير محفوظة} one{تسجيل واحد غير محفوظ} two{تسجيلان غير محفوظين} few{{count} تسجيلات غير محفوظة} many{{count} تسجيلاً غير محفوظ} other{{count} تسجيل غير محفوظ}}",
   "@recovery_unsavedCount": {
     "placeholders": {
       "count": {
@@ -928,7 +928,7 @@
       }
     }
   },
-  "recovery_latestSummary": "Latest · {duration} · {time}",
+  "recovery_latestSummary": "الأحدث · {duration} · {time}",
   "@recovery_latestSummary": {
     "placeholders": {
       "duration": {
@@ -939,9 +939,9 @@
       }
     }
   },
-  "recovery_review": "Review",
-  "recovery_unsavedTitle": "Unsaved recordings",
-  "recovery_unsavedSubtitle": "{count, plural, =1{1 recording to review} other{{count} recordings to review}}",
+  "recovery_review": "مراجعة",
+  "recovery_unsavedTitle": "التسجيلات غير المحفوظة",
+  "recovery_unsavedSubtitle": "{count, plural, zero{لا توجد تسجيلات للمراجعة} one{تسجيل واحد للمراجعة} two{تسجيلان للمراجعة} few{{count} تسجيلات للمراجعة} many{{count} تسجيلاً للمراجعة} other{{count} تسجيل للمراجعة}}",
   "@recovery_unsavedSubtitle": {
     "placeholders": {
       "count": {
@@ -949,9 +949,9 @@
       }
     }
   },
-  "recovery_discardAll": "Discard all",
-  "recovery_discardAllTitle": "Discard all recordings?",
-  "recovery_discardAllBody": "{count, plural, =1{1 recording will be permanently deleted.} other{{count} recordings will be permanently deleted.}}",
+  "recovery_discardAll": "تجاهل الكل",
+  "recovery_discardAllTitle": "تجاهل كل التسجيلات؟",
+  "recovery_discardAllBody": "{count, plural, zero{لن يتم حذف أي تسجيل.} one{سيتم حذف تسجيل واحد نهائيًا.} two{سيتم حذف تسجيلين نهائيًا.} few{سيتم حذف {count} تسجيلات نهائيًا.} many{سيتم حذف {count} تسجيلاً نهائيًا.} other{سيتم حذف {count} تسجيل نهائيًا.}}",
   "@recovery_discardAllBody": {
     "placeholders": {
       "count": {
@@ -959,9 +959,9 @@
       }
     }
   },
-  "recovery_newBadge": "NEW",
-  "recovery_mostRecent": "Most recent",
-  "recovery_recordingNumbered": "Recording {number}",
+  "recovery_newBadge": "جديد",
+  "recovery_mostRecent": "الأحدث",
+  "recovery_recordingNumbered": "التسجيل {number}",
   "@recovery_recordingNumbered": {
     "placeholders": {
       "number": {
@@ -970,7 +970,7 @@
     }
   },
   "format_yesterday": "Yesterday",
-  "recovery_backToList": "Not now",
+  "recovery_backToList": "ليس الآن",
   "common_discard": "تجاهل",
   "common_resume": "استئناف",
   "import_dropActive": "حرر للاستيراد",

@@ -2585,28 +2585,28 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get recovery_interruptedTitle => 'Interrupted recordings';
+  String get recovery_interruptedTitle => '중단된 녹음';
 
   @override
   String recovery_startedAt(String time) {
-    return 'Started at $time';
+    return '$time에 시작';
   }
 
   @override
-  String get recovery_resume => 'Resume';
+  String get recovery_resume => '계속';
 
   @override
-  String get recovery_save => 'Save';
+  String get recovery_save => '저장';
 
   @override
-  String get recovery_discard => 'Discard';
+  String get recovery_discard => '삭제';
 
   @override
-  String get recovery_confirmDiscardTitle => 'Discard recording?';
+  String get recovery_confirmDiscardTitle => '녹음을 삭제하시겠습니까?';
 
   @override
   String recovery_confirmDiscardBody(String duration) {
-    return '$duration of audio will be permanently deleted.';
+    return '$duration 분량의 오디오가 영구히 삭제됩니다.';
   }
 
   @override
@@ -2614,8 +2614,7 @@ class AppLocalizationsKo extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count interrupted recordings — tap to resume',
-      one: '1 interrupted recording — tap to resume',
+      other: '중단된 녹음 $count개 — 눌러서 계속하기',
     );
     return '$_temp0';
   }
@@ -2625,67 +2624,64 @@ class AppLocalizationsKo extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count unsaved recordings',
-      one: '1 unsaved recording',
+      other: '저장되지 않은 녹음 $count개',
     );
     return '$_temp0';
   }
 
   @override
   String recovery_latestSummary(String duration, String time) {
-    return 'Latest · $duration · $time';
+    return '최근 · $duration · $time';
   }
 
   @override
-  String get recovery_review => 'Review';
+  String get recovery_review => '검토';
 
   @override
-  String get recovery_unsavedTitle => 'Unsaved recordings';
+  String get recovery_unsavedTitle => '저장되지 않은 녹음';
 
   @override
   String recovery_unsavedSubtitle(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count recordings to review',
-      one: '1 recording to review',
+      other: '검토할 녹음 $count개',
     );
     return '$_temp0';
   }
 
   @override
-  String get recovery_discardAll => 'Discard all';
+  String get recovery_discardAll => '모두 삭제';
 
   @override
-  String get recovery_discardAllTitle => 'Discard all recordings?';
+  String get recovery_discardAllTitle => '모든 녹음을 삭제하시겠습니까?';
 
   @override
   String recovery_discardAllBody(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count recordings will be permanently deleted.',
-      one: '1 recording will be permanently deleted.',
+      other: '녹음 $count개가 영구히 삭제됩니다.',
     );
     return '$_temp0';
   }
 
   @override
-  String get recovery_newBadge => 'NEW';
+  String get recovery_newBadge => '신규';
 
   @override
-  String get recovery_mostRecent => 'Most recent';
+  String get recovery_mostRecent => '가장 최근';
 
   @override
   String recovery_recordingNumbered(int number) {
-    return 'Recording $number';
+    return '녹음 $number';
   }
 
   @override
   String get format_yesterday => 'Yesterday';
 
   @override
-  String get recovery_backToList => 'Not now';
+  String get recovery_backToList => '나중에';
 
   @override
   String get upload_pausedWhileRecording => '녹음 중 업로드 일시 중지됨';

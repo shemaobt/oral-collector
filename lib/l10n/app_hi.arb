@@ -893,8 +893,8 @@
   "recording_splitFrom": "{sourceId} से विभाजित",
   "trim_segmentRemoved": "खंड {index} — हटाया गया",
   "trim_segmentOfTotal": "{total} में से खंड {index}",
-  "recovery_interruptedTitle": "Interrupted recordings",
-  "recovery_startedAt": "Started at {time}",
+  "recovery_interruptedTitle": "बाधित रिकॉर्डिंग्स",
+  "recovery_startedAt": "{time} पर शुरू हुई",
   "@recovery_startedAt": {
     "placeholders": {
       "time": {
@@ -902,11 +902,11 @@
       }
     }
   },
-  "recovery_resume": "Resume",
-  "recovery_save": "Save",
-  "recovery_discard": "Discard",
-  "recovery_confirmDiscardTitle": "Discard recording?",
-  "recovery_confirmDiscardBody": "{duration} of audio will be permanently deleted.",
+  "recovery_resume": "जारी रखें",
+  "recovery_save": "सहेजें",
+  "recovery_discard": "हटाएँ",
+  "recovery_confirmDiscardTitle": "रिकॉर्डिंग हटाएँ?",
+  "recovery_confirmDiscardBody": "{duration} का ऑडियो स्थायी रूप से हटा दिया जाएगा।",
   "@recovery_confirmDiscardBody": {
     "placeholders": {
       "duration": {
@@ -914,7 +914,7 @@
       }
     }
   },
-  "recovery_homeBanner": "{count, plural, =1{1 interrupted recording — tap to resume} other{{count} interrupted recordings — tap to resume}}",
+  "recovery_homeBanner": "{count, plural, one{{count} रिकॉर्डिंग बाधित हुई — जारी रखने के लिए टैप करें} other{{count} रिकॉर्डिंग्स बाधित हुईं — जारी रखने के लिए टैप करें}}",
   "@recovery_homeBanner": {
     "placeholders": {
       "count": {
@@ -922,7 +922,7 @@
       }
     }
   },
-  "recovery_unsavedCount": "{count, plural, =1{1 unsaved recording} other{{count} unsaved recordings}}",
+  "recovery_unsavedCount": "{count, plural, one{{count} रिकॉर्डिंग सहेजी नहीं गई} other{{count} रिकॉर्डिंग्स सहेजी नहीं गईं}}",
   "@recovery_unsavedCount": {
     "placeholders": {
       "count": {
@@ -930,7 +930,7 @@
       }
     }
   },
-  "recovery_latestSummary": "Latest · {duration} · {time}",
+  "recovery_latestSummary": "नवीनतम · {duration} · {time}",
   "@recovery_latestSummary": {
     "placeholders": {
       "duration": {
@@ -941,9 +941,9 @@
       }
     }
   },
-  "recovery_review": "Review",
-  "recovery_unsavedTitle": "Unsaved recordings",
-  "recovery_unsavedSubtitle": "{count, plural, =1{1 recording to review} other{{count} recordings to review}}",
+  "recovery_review": "समीक्षा करें",
+  "recovery_unsavedTitle": "बिना सहेजी रिकॉर्डिंग्स",
+  "recovery_unsavedSubtitle": "{count, plural, one{समीक्षा के लिए {count} रिकॉर्डिंग} other{समीक्षा के लिए {count} रिकॉर्डिंग्स}}",
   "@recovery_unsavedSubtitle": {
     "placeholders": {
       "count": {
@@ -951,9 +951,9 @@
       }
     }
   },
-  "recovery_discardAll": "Discard all",
-  "recovery_discardAllTitle": "Discard all recordings?",
-  "recovery_discardAllBody": "{count, plural, =1{1 recording will be permanently deleted.} other{{count} recordings will be permanently deleted.}}",
+  "recovery_discardAll": "सभी हटाएँ",
+  "recovery_discardAllTitle": "सभी रिकॉर्डिंग्स हटाएँ?",
+  "recovery_discardAllBody": "{count, plural, one{{count} रिकॉर्डिंग स्थायी रूप से हटा दी जाएगी।} other{{count} रिकॉर्डिंग्स स्थायी रूप से हटा दी जाएँगी।}}",
   "@recovery_discardAllBody": {
     "placeholders": {
       "count": {
@@ -961,9 +961,9 @@
       }
     }
   },
-  "recovery_newBadge": "NEW",
-  "recovery_mostRecent": "Most recent",
-  "recovery_recordingNumbered": "Recording {number}",
+  "recovery_newBadge": "नया",
+  "recovery_mostRecent": "सबसे नई",
+  "recovery_recordingNumbered": "रिकॉर्डिंग {number}",
   "@recovery_recordingNumbered": {
     "placeholders": {
       "number": {
@@ -972,7 +972,7 @@
     }
   },
   "format_yesterday": "Yesterday",
-  "recovery_backToList": "Not now",
+  "recovery_backToList": "अभी नहीं",
   "common_discard": "हटाएँ",
   "common_resume": "जारी रखें",
   "import_dropActive": "आयात के लिए छोड़ें",

@@ -2659,28 +2659,28 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get recovery_interruptedTitle => 'Interrupted recordings';
+  String get recovery_interruptedTitle => 'التسجيلات المتوقفة';
 
   @override
   String recovery_startedAt(String time) {
-    return 'Started at $time';
+    return 'بدأ في $time';
   }
 
   @override
-  String get recovery_resume => 'Resume';
+  String get recovery_resume => 'استئناف';
 
   @override
-  String get recovery_save => 'Save';
+  String get recovery_save => 'حفظ';
 
   @override
-  String get recovery_discard => 'Discard';
+  String get recovery_discard => 'تجاهل';
 
   @override
-  String get recovery_confirmDiscardTitle => 'Discard recording?';
+  String get recovery_confirmDiscardTitle => 'تجاهل التسجيل؟';
 
   @override
   String recovery_confirmDiscardBody(String duration) {
-    return '$duration of audio will be permanently deleted.';
+    return 'سيتم حذف $duration من الصوت نهائيًا.';
   }
 
   @override
@@ -2688,8 +2688,12 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count interrupted recordings — tap to resume',
-      one: '1 interrupted recording — tap to resume',
+      other: '$count تسجيل متوقف — اضغط للمتابعة',
+      many: '$count تسجيلاً متوقفًا — اضغط للمتابعة',
+      few: '$count تسجيلات متوقفة — اضغط للمتابعة',
+      two: 'تسجيلان متوقفان — اضغط للمتابعة',
+      one: 'تسجيل متوقف واحد — اضغط للمتابعة',
+      zero: 'لا توجد تسجيلات متوقفة',
     );
     return '$_temp0';
   }
@@ -2699,67 +2703,79 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count unsaved recordings',
-      one: '1 unsaved recording',
+      other: '$count تسجيل غير محفوظ',
+      many: '$count تسجيلاً غير محفوظ',
+      few: '$count تسجيلات غير محفوظة',
+      two: 'تسجيلان غير محفوظين',
+      one: 'تسجيل واحد غير محفوظ',
+      zero: 'لا توجد تسجيلات غير محفوظة',
     );
     return '$_temp0';
   }
 
   @override
   String recovery_latestSummary(String duration, String time) {
-    return 'Latest · $duration · $time';
+    return 'الأحدث · $duration · $time';
   }
 
   @override
-  String get recovery_review => 'Review';
+  String get recovery_review => 'مراجعة';
 
   @override
-  String get recovery_unsavedTitle => 'Unsaved recordings';
+  String get recovery_unsavedTitle => 'التسجيلات غير المحفوظة';
 
   @override
   String recovery_unsavedSubtitle(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count recordings to review',
-      one: '1 recording to review',
+      other: '$count تسجيل للمراجعة',
+      many: '$count تسجيلاً للمراجعة',
+      few: '$count تسجيلات للمراجعة',
+      two: 'تسجيلان للمراجعة',
+      one: 'تسجيل واحد للمراجعة',
+      zero: 'لا توجد تسجيلات للمراجعة',
     );
     return '$_temp0';
   }
 
   @override
-  String get recovery_discardAll => 'Discard all';
+  String get recovery_discardAll => 'تجاهل الكل';
 
   @override
-  String get recovery_discardAllTitle => 'Discard all recordings?';
+  String get recovery_discardAllTitle => 'تجاهل كل التسجيلات؟';
 
   @override
   String recovery_discardAllBody(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count recordings will be permanently deleted.',
-      one: '1 recording will be permanently deleted.',
+      other: 'سيتم حذف $count تسجيل نهائيًا.',
+      many: 'سيتم حذف $count تسجيلاً نهائيًا.',
+      few: 'سيتم حذف $count تسجيلات نهائيًا.',
+      two: 'سيتم حذف تسجيلين نهائيًا.',
+      one: 'سيتم حذف تسجيل واحد نهائيًا.',
+      zero: 'لن يتم حذف أي تسجيل.',
     );
     return '$_temp0';
   }
 
   @override
-  String get recovery_newBadge => 'NEW';
+  String get recovery_newBadge => 'جديد';
 
   @override
-  String get recovery_mostRecent => 'Most recent';
+  String get recovery_mostRecent => 'الأحدث';
 
   @override
   String recovery_recordingNumbered(int number) {
-    return 'Recording $number';
+    return 'التسجيل $number';
   }
 
   @override
   String get format_yesterday => 'Yesterday';
 
   @override
-  String get recovery_backToList => 'Not now';
+  String get recovery_backToList => 'ليس الآن';
 
   @override
   String get upload_pausedWhileRecording =>
