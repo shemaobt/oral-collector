@@ -179,7 +179,15 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
       return false;
     }
 
-    await _cleanupOrphanedSegments(session.id, paths.map(p.basename).toSet());
+    // Os resolvidos, não os declarados (ENG-529 sobre ENG-531): um declarado
+    // que não resolve não existe nem no caminho guardado nem sob o nome no
+    // diretório atual — que é o único que esta varredura enumera —, então não
+    // há arquivo dele para poupar. O conjunto poupado é exatamente o que a
+    // retomada vai usar.
+    await _cleanupOrphanedSegments(
+      session.id,
+      validPaths.map(p.basename).toSet(),
+    );
 
     _pendingResumeSessionId = session.id;
     _pendingResumeSegmentPaths = validPaths;

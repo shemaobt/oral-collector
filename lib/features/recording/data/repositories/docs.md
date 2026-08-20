@@ -731,22 +731,16 @@ Path: @/lib/features/recording/data/repositories
   flows over a session whose segments are gone from everywhere, which is still
   written off, and over a session whose stored paths resolve literally, which is
   unchanged.
-- **Known, not fixed: the orphan sweep can delete a segment that is on the
-  valid list (ENG-529).** `_cleanupOrphanedSegments` scans the current
-  documents directory and deletes every file whose *name index* is greater than
-  the row's `lastSegmentIndex`. `RecoveryCoordinator._repairInFlightSegments`
-  attaches orphaned segments through `appendSegment`, which **increments**
-  `lastSegmentIndex` instead of taking the index from the file name — so when
-  one orphan is unrepairable and gets deleted, the ones that follow end up
-  declared with a name index above the resulting `lastSegmentIndex`, and the
-  next resume deletes them. This predates ENG-529 and is independent of it; what
-  ENG-529 changes is the exposure, in one direction: with a moved container the
-  resume used to abort before reaching the sweep, and now it gets there. The
-  common case is unaffected — with no unrepairable orphan the repair attaches in
-  order and the indices line up. *Checked against:* a probe that seeded segment
-  000 declared, 001 corrupt and 002 valid on disk, ran `scanOnStartup` (which
-  attached 002 and left `lastSegmentIndex` at 1) and then the resume, after
-  which 002 was gone from the disk while still declared in the row.
+- **What the sweep spares is the *resolved* list, not the declared one
+  (ENG-529 over ENG-531).** ENG-529 surfaced the sweep bug that ENG-531 then
+  fixed (the bullet above), and the two land on the same call: the resume passes
+  the keep-set. It passes the segments that **resolved**, which is a subset of
+  what the row declares, and the smaller set is the correct one rather than lost
+  coverage. A declared path that resolves nowhere exists neither at its stored
+  location nor under its name in the current documents directory — and that
+  directory, non-recursively, is the only place the sweep enumerates. There is
+  no file of that name for a keep-set to protect. The set spared is then exactly
+  the set the resume is about to use.
 - **The terminal status has exactly one way back, it runs once per device, and
   that limit is the safety (ENG-522).** The invariant above holds from ENG-521
   onward, but the rows the two unguarded paths already swallowed are still in
