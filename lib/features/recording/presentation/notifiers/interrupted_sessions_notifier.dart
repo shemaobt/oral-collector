@@ -8,7 +8,6 @@ import 'package:path_provider/path_provider.dart';
 
 import '../../../../core/database/app_database.dart';
 import '../../../../core/observability/error_reporter.dart';
-import '../../../../core/platform/file_ops.dart' as file_ops;
 import '../../data/providers.dart';
 import '../../data/services/audio_path_resolver.dart';
 import '../../data/services/recording_finalization_service.dart';
@@ -121,13 +120,12 @@ class InterruptedSessionsNotifier extends Notifier<void> {
     final finished = await _finishedAudio(session);
     if (finished != null) return finished;
 
-    final paths = sessionRepo.decodeSegmentPaths(session);
-    final validPaths = <String>[];
-    for (final p in paths) {
-      if (await file_ops.fileExists(p)) {
-        validPaths.add(p);
-      }
-    }
+    // Resolvidos pelo mesmo critério da âncora: depois de o contêiner mudar de
+    // lugar, o caminho guardado não existe mais e os arquivos continuam no
+    // disco sob o mesmo nome (ENG-529).
+    final validPaths = await resolveSegmentPaths(
+      sessionRepo.decodeSegmentPaths(session),
+    );
     if (validPaths.isEmpty) {
       // A session still holding finalized audio must not reach `discarded`:
       // no sweep queries that status, so the row — and the recording it points

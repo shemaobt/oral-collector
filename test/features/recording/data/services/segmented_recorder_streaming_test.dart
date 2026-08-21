@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:drift/native.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:oral_collector/core/database/app_database.dart';
@@ -59,6 +60,16 @@ void main() {
 
   setUp(() async {
     tmpDocs = await Directory.systemTemp.createTemp('eng63_streaming_');
+
+    // Desde a ENG-529 o predicado de "ainda há áudio" resolve os segmentos
+    // pelo nome no diretório de documentos atual, e não só pelo caminho
+    // literal. Ele pergunta ao path_provider, não ao docDirProvider injetado
+    // abaixo — no aparelho os dois são o mesmo diretório, e aqui também.
+    const pathProvider = MethodChannel('plugins.flutter.io/path_provider');
+    final messenger =
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    messenger.setMockMethodCallHandler(pathProvider, (_) async => tmpDocs.path);
+    addTearDown(() => messenger.setMockMethodCallHandler(pathProvider, null));
     db = AppDatabase.forTesting(NativeDatabase.memory());
     repo = RecordingSessionRepository(db);
     storageGuard = _StubStorageGuard();

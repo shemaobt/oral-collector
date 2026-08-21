@@ -22,6 +22,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/utils/format.dart' as fmt;
 import '../../../project/presentation/notifiers/project_notifier.dart';
 import '../../data/providers.dart';
+import '../../data/services/audio_path_resolver.dart';
 import '../../data/services/recording_concat_service.dart';
 import '../../data/services/recording_finalization_service.dart';
 import '../../data/services/recording_foreground_service.dart';
@@ -160,13 +161,12 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
     final session = await sessionRepo.getById(sessionId);
     if (session == null) return false;
 
-    final paths = sessionRepo.decodeSegmentPaths(session);
-    final validPaths = <String>[];
-    for (final p in paths) {
-      if (await file_ops.fileExists(p)) {
-        validPaths.add(p);
-      }
-    }
+    // Resolvidos, não conferidos literalmente: o contêiner muda de lugar numa
+    // reinstalação ou num restore, e um caminho absoluto guardado numa execução
+    // anterior declararia ausente o áudio que está ali (ENG-529).
+    final validPaths = await resolveSegmentPaths(
+      sessionRepo.decodeSegmentPaths(session),
+    );
     if (validPaths.isEmpty) {
       // Same invariant as the save path: a row that still holds audio nobody
       // saved never goes to a status no sweep queries, or the recording is out
@@ -179,7 +179,15 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
       return false;
     }
 
-    await _cleanupOrphanedSegments(session.id, paths.map(p.basename).toSet());
+    // Os resolvidos, não os declarados (ENG-529 sobre ENG-531): um declarado
+    // que não resolve não existe nem no caminho guardado nem sob o nome no
+    // diretório atual — que é o único que esta varredura enumera —, então não
+    // há arquivo dele para poupar. O conjunto poupado é exatamente o que a
+    // retomada vai usar.
+    await _cleanupOrphanedSegments(
+      session.id,
+      validPaths.map(p.basename).toSet(),
+    );
 
     _pendingResumeSessionId = session.id;
     _pendingResumeSegmentPaths = validPaths;
