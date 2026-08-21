@@ -425,7 +425,7 @@ Path: @/lib/features/recording/data
   question is deliberately not "is the anchor column set". `RecoveryCoordinator`
   keeps its own private variant because it answers a wider question (it also
   covers pre-v14 rows via a directory scan) behind an injected
-  `directoryResolver`. Since ENG-522 the coordinator also *calls* the shared
+  `RecoveryDisk` seam (see below). Since ENG-522 the coordinator also *calls* the shared
   predicate directly, in the one-shot recovery below — so the pass that gives
   audio back and the discard that takes it away decide by the same question.
 - `services/audio_probe.dart` exposes `AudioProbe`, the duration + codec +
@@ -602,6 +602,50 @@ Path: @/lib/features/recording/data
   the earlier `!degraded`-as-derived reasoning, which mis-classified the
   single-segment source as derived. See
   [/lib/core/platform/docs.md](../../../core/platform/docs.md).
+- **A recuperação vale nas duas plataformas desde a fatia 2 do ENG-519; só a
+  varredura de disco ficou do lado do aparelho.** O coordenador importava
+  `dart:io` e estava atrás de um `if (!kIsWeb)` na inicialização, então a
+  sessão que a fatia 1 passou a registrar no navegador não era lida por
+  ninguém. A maior parte do que ele faz, porém, é decisão sobre estado —
+  promover as sessões em aberto, promover as que terminaram sem que ninguém
+  salvasse, montar a lista de não salvas — e isso são consultas ao banco. O que
+  varre diretório saiu para
+  [`recovery_disk.dart`](services/recovery_disk.dart), uma fachada de
+  exportação condicional no mesmo padrão de
+  [file_ops](../../../core/platform/file_ops.dart): o lado nativo repara os
+  segmentos em voo e lista os órfãos que nunca chegaram ao banco; o lado web
+  responde "não há nenhum", que é a verdade lá — a captura no navegador é um
+  blob só, escrito de uma vez no stop, e o armazenamento é um keyspace plano
+  sem diretório para listar. Não há coordenador paralelo: um só critério decide
+  se uma sessão é recuperável, nas duas plataformas.
+  *Verificado em:* a captura no navegador do início ao fim (aparece na lista,
+  abre no áudio, descarta), a aba fechada no meio, e a sessão de aparelho com
+  segmento órfão no disco, que continua sendo encontrada pela varredura.
+  Três consequências que carregam peso:
+  - **`_hasUnsavedAudio` pergunta pelo endereço durável, não pelo arquivo.** A
+    checagem literal `File(anchor).exists()` com resíduo por basename foi
+    substituída por `durableAudioExists`
+    ([services/session_audio.dart](services/session_audio.dart)), o mesmo
+    predicado que as guardas do descarte já usavam. No aparelho ele resolve o
+    caminho (o contêiner muda de lugar); no navegador pergunta ao
+    armazenamento, porque lá a âncora **é** a chave. `resolveRecordingPath`
+    continua respondendo `null` no navegador de propósito — quem o consome é a
+    reprodução, que lá toca por URL — então a pergunta vai direto à fachada
+    `file_ops`.
+  - **A lista passa a oferecer a sessão ancorada sem segmentos.** `refresh()`
+    exigia segmentos e dava `continue` em quem não tivesse, o que excluía toda
+    gravação do navegador — ela tem âncora e nunca terá segmentos — e excluía
+    junto as sessões de aparelho da mesma forma, aquelas cujas fontes as
+    deleções em fogo-e-esquece já levaram. O critério agora é segmentos **ou**
+    âncora, que é o mesmo que o caminho de salvar já pratica desde o ENG-420.
+  - **A sessão que nunca produziu áudio é encerrada como descartada.** Sem
+    segmentos e sem âncora não há nada a oferecer, e uma linha viva ficaria
+    fora do alcance de toda varredura para sempre. É o caso da aba fechada no
+    meio da gravação, e o desfecho não é regra nova: é o mesmo ramo que já
+    fechava a sessão de aparelho sem áudio nenhum. Como
+    `getLiveAudioAnchors` ignora sessões descartadas, ela também não segura a
+    faxina.
+  Falta a terceira saída do diálogo, que é a fatia 3; nada mudou nele aqui.
 - **`RecoveryCoordinator.scanOnStartup` gives back audio stranded by the
   pre-ENG-521 defect, once per device (ENG-522).** After the finished-session
   sweep and before the `refresh()` that fills the unsaved list,

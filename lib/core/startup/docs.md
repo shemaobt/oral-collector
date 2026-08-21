@@ -29,7 +29,12 @@ Path: @/lib/core/startup
   of post-boot work (orphan-upload reclaim, sync/listener init). The
   housekeeping in that microtask splits on `kIsWeb`: trash pruning, the
   recovery scan and Live Activity teardown on device; the sweep of recordings
-  abandoned in browser storage on web (ENG-426). The two prunes — device trash
+  abandoned in browser storage on web (ENG-426) — e, desde a fatia 2 do
+  ENG-519, a varredura de recuperação também no navegador, **antes** da faxina
+  e aguardada: é ela que promove a sessão abandonada para o estado que a lista
+  de não salvas lê, e uma gravação que a lista vai oferecer precisa estar fora
+  do alcance da faxina antes de a varredura correr (a proteção é
+  `getLiveAudioAnchors`, que ignora sessões descartadas). The two prunes — device trash
   and browser audio — are fired unawaited, so neither stands between the person
   and the first screen; the recovery scan is awaited because the upload
   listeners that come after it must not see a stale recording flag. The
