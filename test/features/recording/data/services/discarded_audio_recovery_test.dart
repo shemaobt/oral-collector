@@ -19,6 +19,7 @@ import 'package:oral_collector/core/database/database_provider.dart';
 import 'package:oral_collector/features/recording/data/repositories/local_recording_repository.dart';
 import 'package:oral_collector/features/recording/data/repositories/recording_session_repository.dart';
 import 'package:oral_collector/features/recording/data/services/recovery_coordinator.dart';
+import 'package:oral_collector/features/recording/data/services/recovery_disk.dart';
 import 'package:oral_collector/features/recording/data/services/segment_paths.dart';
 import 'package:oral_collector/features/recording/presentation/notifiers/interrupted_sessions_notifier.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -52,8 +53,10 @@ void main() {
       overrides: [
         appDatabaseProvider.overrideWithValue(db),
         recoveryCoordinatorProvider.overrideWith(
-          (ref) =>
-              RecoveryCoordinator(ref, directoryResolver: () async => docs),
+          (ref) => RecoveryCoordinator(
+            ref,
+            disk: RecoveryDisk(documentsPath: () async => docs.path),
+          ),
         ),
       ],
     );

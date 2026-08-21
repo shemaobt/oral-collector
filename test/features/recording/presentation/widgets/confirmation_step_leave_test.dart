@@ -33,6 +33,7 @@ import 'package:oral_collector/features/project/presentation/notifiers/project_s
 import 'package:oral_collector/features/recording/data/providers.dart';
 import 'package:oral_collector/features/recording/data/repositories/recording_session_repository.dart';
 import 'package:oral_collector/features/recording/data/services/recovery_coordinator.dart';
+import 'package:oral_collector/features/recording/data/services/recovery_disk.dart';
 import 'package:oral_collector/features/recording/data/services/segment_paths.dart';
 import 'package:oral_collector/features/recording/domain/entities/server_recording.dart';
 import 'package:oral_collector/features/recording/domain/repositories/recording_api_repository.dart';
@@ -154,7 +155,10 @@ ProviderContainer _makeContainer({PendingRecovery? pendingRecovery}) {
     overrides: [
       appDatabaseProvider.overrideWithValue(_db),
       recoveryCoordinatorProvider.overrideWith(
-        (ref) => RecoveryCoordinator(ref, directoryResolver: () async => _docs),
+        (ref) => RecoveryCoordinator(
+          ref,
+          disk: RecoveryDisk(documentsPath: () async => _docs.path),
+        ),
       ),
       projectNotifierProvider.overrideWith(_FakeProjectNotifier.new),
       projectStorytellersNotifierProvider.overrideWith(

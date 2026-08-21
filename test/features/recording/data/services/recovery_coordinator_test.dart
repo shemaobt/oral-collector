@@ -13,6 +13,7 @@ import 'package:oral_collector/core/platform/recording_active_flag.dart';
 import 'package:oral_collector/features/recording/data/providers.dart';
 import 'package:oral_collector/features/recording/data/repositories/recording_session_repository.dart';
 import 'package:oral_collector/features/recording/data/services/recovery_coordinator.dart';
+import 'package:oral_collector/features/recording/data/services/recovery_disk.dart';
 import 'package:oral_collector/features/recording/data/services/segment_paths.dart';
 import 'package:oral_collector/features/recording/data/services/wav_header_repair.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -175,8 +176,10 @@ void main() {
             recoveryCoordinatorProvider.overrideWith(
               (ref) => RecoveryCoordinator(
                 ref,
-                wavRepair: _ThrowingWavHeaderRepair(),
-                directoryResolver: () async => tempDir,
+                disk: RecoveryDisk(
+                  wavRepair: _ThrowingWavHeaderRepair(),
+                  documentsPath: () async => tempDir.path,
+                ),
               ),
             ),
           ],
@@ -290,8 +293,10 @@ void main() {
           recoveryCoordinatorProvider.overrideWith(
             (ref) => RecoveryCoordinator(
               ref,
-              wavRepair: _FakeWavHeaderRepair(),
-              directoryResolver: () async => tempDir,
+              disk: RecoveryDisk(
+                wavRepair: _FakeWavHeaderRepair(),
+                documentsPath: () async => tempDir.path,
+              ),
             ),
           ),
         ],
