@@ -1,9 +1,5 @@
-import 'dart:io';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -12,10 +8,8 @@ import '../../../../core/database/app_database.dart';
 import '../../../../core/observability/error_reporter.dart';
 import '../../../../core/platform/recording_active_flag.dart';
 import '../providers.dart';
-import '../repositories/recording_session_repository.dart';
-import 'segment_paths.dart';
+import 'recovery_disk.dart';
 import 'session_audio.dart';
-import 'wav_header_repair.dart';
 
 class InterruptedSession {
   const InterruptedSession({
@@ -39,24 +33,19 @@ final interruptedSessionsProvider = StateProvider<List<InterruptedSession>>(
   (_) => const [],
 );
 
-typedef DirectoryResolver = Future<Directory> Function();
-
 class RecoveryCoordinator {
-  RecoveryCoordinator(
-    this._ref, {
-    WavHeaderRepair? wavRepair,
-    DirectoryResolver? directoryResolver,
-  }) : _wavRepair = wavRepair ?? const WavHeaderRepair(),
-       _directoryResolver =
-           directoryResolver ?? getApplicationDocumentsDirectory {
+  RecoveryCoordinator(this._ref, {RecoveryDisk? disk})
+    : _disk = disk ?? RecoveryDisk() {
     _ref.onDispose(() => _disposed = true);
   }
 
   static final _log = Logger('RecoveryCoordinator');
 
   final Ref _ref;
-  final WavHeaderRepair _wavRepair;
-  final DirectoryResolver _directoryResolver;
+
+  /// Tudo o que precisa de `dart:io` está atrás disto, e no navegador a
+  /// implementação responde "não há nenhum" (ENG-519, fatia 2).
+  final RecoveryDisk _disk;
   bool _disposed = false;
 
   Future<void> scanOnStartup() async {
@@ -67,7 +56,7 @@ class RecoveryCoordinator {
         _log.info('scanOnStartup found ${active.length} active session(s)');
       }
       for (final session in active) {
-        await _repairInFlightSegments(session, repo);
+        await _disk.repairInFlightSegments(session, repo);
         await repo.markCrashed(session.id);
       }
     } finally {
@@ -137,6 +126,11 @@ class RecoveryCoordinator {
   /// `finalize()` have landed yet (ENG-420). Sessions whose anchor names a file
   /// that is already gone are left alone: offering a recovery that cannot
   /// succeed is worse than offering nothing.
+  ///
+  /// It runs on both platforms since ENG-519 (fatia 2). It had to: on web a
+  /// capture that reached stop leaves exactly this shape — a finished session
+  /// anchored to storage with no saved recording — and nothing else would ever
+  /// promote it. Only the pre-v14 residue below is device-only.
   Future<void> _sweepFinishedSessionsWithUnsavedAudio() async {
     final sessionRepo = _ref.read(recordingSessionRepositoryProvider);
     final localRepo = _ref.read(localRecordingRepositoryProvider);
@@ -144,25 +138,7 @@ class RecoveryCoordinator {
     final finished = await sessionRepo.findFinishedSessions();
     if (finished.isEmpty) return;
 
-    Directory dir;
-    try {
-      dir = await _directoryResolver();
-    } catch (_) {
-      return;
-    }
-
     final localRecordings = await localRepo.getAllLocalRecordings();
-
-    // Only the pre-v14 fallback needs the directory listing, so a listing that
-    // fails must not suppress the rows that are decidable from the row itself.
-    List<FileSystemEntity>? entries;
-    Future<List<FileSystemEntity>> listEntries() async {
-      try {
-        return entries ??= await dir.list().toList();
-      } catch (_) {
-        return entries ??= const <FileSystemEntity>[];
-      }
-    }
 
     for (final session in finished) {
       final dot = '_${session.id}.';
@@ -173,94 +149,34 @@ class RecoveryCoordinator {
       );
       if (saved) continue;
 
-      if (!await _hasUnsavedAudio(session, dir, listEntries)) continue;
+      if (!await _hasUnsavedAudio(session)) continue;
 
       _log.info(
         'sweep promoting session ${session.id} from ${session.status} → '
         'crashed: finalized audio with no saved recording',
       );
-      await _repairInFlightSegments(session, sessionRepo);
+      await _disk.repairInFlightSegments(session, sessionRepo);
       await sessionRepo.markCrashed(session.id);
     }
   }
 
-  /// An anchored session is judged by its anchor — the file has to actually be
-  /// there, because discarding from the save form deletes the audio without
-  /// touching the row. Rows without an anchor fall back to the old disk scan:
-  /// they either predate schema v14, or they reached their status before
-  /// finalization ran (`recoverSessionFromDisk` marks a row recovered up
-  /// front). That fallback can go once no supported upgrade path can still be
-  /// carrying pre-v14 sessions and no path can mark a session finished before
-  /// it has audio.
-  Future<bool> _hasUnsavedAudio(
-    RecordingSession session,
-    Directory dir,
-    Future<List<FileSystemEntity>> Function() listEntries,
-  ) async {
+  /// An anchored session is judged by its anchor, through the same predicate
+  /// every other caller uses — which resolves a device path and asks the
+  /// browser's storage for a key, so one criterion covers both platforms
+  /// (ENG-519, fatia 2). It has to be the file and not the column, because
+  /// discarding from the save form deletes the audio without touching the row.
+  ///
+  /// Rows without an anchor fall back to the disk scan: they either predate
+  /// schema v14, or they reached their status before finalization ran
+  /// (`recoverSessionFromDisk` marks a row recovered up front). That fallback
+  /// is device-only and answers false on web, which is the truth there — a
+  /// browser session with no anchor never had audio anywhere. It can go once
+  /// no supported upgrade path can still be carrying pre-v14 sessions and no
+  /// path can mark a session finished before it has audio.
+  Future<bool> _hasUnsavedAudio(RecordingSession session) async {
     final anchor = session.finalizedAudioPath;
-    if (anchor != null) return _anchoredAudioExists(anchor, dir);
-
-    final prefix = SegmentPaths.prefixFor(dir.path, session.id);
-    return (await listEntries()).any((e) {
-      if (e is! File) return false;
-      return SegmentPaths.parseIndex(e.path, prefix) != null;
-    });
-  }
-
-  /// Same reason [resolveRecordingPath] exists: the documents container moves
-  /// on reinstall/restore, so an absolute path stored earlier stops resolving
-  /// while the file itself is still there. Reading the anchor literally would
-  /// declare every such session audio-less and drop it.
-  Future<bool> _anchoredAudioExists(String anchor, Directory dir) async {
-    if (await File(anchor).exists()) return true;
-    return File('${dir.path}/${p.basename(anchor)}').exists();
-  }
-
-  Future<void> _repairInFlightSegments(
-    RecordingSession session,
-    RecordingSessionRepository repo,
-  ) async {
-    Directory dir;
-    try {
-      dir = await _directoryResolver();
-    } catch (_) {
-      return;
-    }
-
-    final prefix = SegmentPaths.prefixFor(dir.path, session.id);
-    final List<FileSystemEntity> entries;
-    try {
-      entries = await dir.list().toList();
-    } catch (_) {
-      return;
-    }
-
-    final candidates = <_OrphanedFile>[];
-    for (final entry in entries) {
-      if (entry is! File) continue;
-      final index = SegmentPaths.parseIndex(entry.path, prefix);
-      if (index == null) continue;
-      if (index <= session.lastSegmentIndex) continue;
-      candidates.add(_OrphanedFile(entry, index));
-    }
-    candidates.sort((a, b) => a.index.compareTo(b.index));
-
-    if (candidates.isEmpty) return;
-
-    for (final candidate in candidates) {
-      final result = await _wavRepair.repair(candidate.file.path);
-      if (result != null && result.duration > Duration.zero) {
-        await repo.appendSegment(
-          session.id,
-          candidate.file.path,
-          result.duration.inMilliseconds / 1000.0,
-        );
-      } else {
-        try {
-          await candidate.file.delete();
-        } catch (_) {}
-      }
-    }
+    if (anchor != null) return durableAudioExists(anchor);
+    return _disk.hasOrphanSegmentFiles(session.id);
   }
 
   Future<void> refresh() async {
@@ -278,8 +194,9 @@ class RecoveryCoordinator {
       if (segments.isEmpty) {
         // Filesystem may hold orphan segments that never made it into the DB
         // (e.g. _stopNative caught a finish() exception before appendSegment
-        // ran). Repair + attach before declaring the session lost.
-        await _repairInFlightSegments(session, repo);
+        // ran). Repair + attach before declaring the session lost. On web
+        // there is nothing to scan and this answers immediately.
+        await _disk.repairInFlightSegments(session, repo);
         final reloaded = await repo.getById(session.id);
         if (reloaded != null) {
           session = reloaded;
@@ -287,13 +204,19 @@ class RecoveryCoordinator {
         }
       }
 
-      if (segments.isEmpty) {
-        // Same invariant as the save path: a row that still points at
-        // finalized audio never goes to a status no sweep looks at, even
-        // though it has no segments to offer a recovery from (ENG-420).
-        if (session.finalizedAudioPath == null) {
-          await repo.markDiscarded(session.id);
-        }
+      // Segments *or* an anchor: either one is audio the person can get back,
+      // and the save path already prefers the anchor, only falling back to
+      // re-deriving from the sources (ENG-420). Requiring segments is what
+      // dropped a browser recording — its capture is a single blob, so it has
+      // an anchor and no segments, ever — and it dropped the device sessions
+      // of that same shape too, the ones whose sources the fire-and-forget
+      // deletions already took (ENG-519, fatia 2).
+      if (segments.isEmpty && session.finalizedAudioPath == null) {
+        // Neither one means a session that never produced audio anywhere: the
+        // tab closed mid-capture, or a start that failed. There is nothing to
+        // offer, and a row left alive would sit outside every sweep's reach
+        // forever, so it is closed here.
+        await repo.markDiscarded(session.id);
         continue;
       }
       result.add(
@@ -318,9 +241,3 @@ class RecoveryCoordinator {
 final recoveryCoordinatorProvider = Provider<RecoveryCoordinator>(
   (ref) => RecoveryCoordinator(ref),
 );
-
-class _OrphanedFile {
-  const _OrphanedFile(this.file, this.index);
-  final File file;
-  final int index;
-}

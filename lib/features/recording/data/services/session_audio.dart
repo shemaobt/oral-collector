@@ -1,4 +1,7 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
+
 import '../../../../core/database/app_database.dart';
+import '../../../../core/platform/file_ops.dart' as file_ops;
 import 'audio_path_resolver.dart';
 
 /// Whether [session] still holds audio somebody could get back — the finalized
@@ -22,6 +25,23 @@ Future<bool> sessionHoldsReachableAudio(
   List<String> segmentPaths,
 ) async {
   final anchor = session.finalizedAudioPath;
-  if (anchor != null && await resolveRecordingPath(anchor) != null) return true;
+  if (anchor != null && await durableAudioExists(anchor)) return true;
   return (await resolveSegmentPaths(segmentPaths)).isNotEmpty;
+}
+
+/// O áudio que [address] nomeia ainda está lá?
+///
+/// É a mesma pergunta nas duas plataformas e tem duas respostas porque o
+/// endereço durável é coisa diferente em cada uma (ENG-519, fatia 2). No
+/// aparelho é um caminho de arquivo, que precisa ser resolvido porque o
+/// contêiner muda de lugar. No navegador é a chave do armazenamento: ou está
+/// no keyspace ou não está, e não existe outro diretório onde procurar.
+///
+/// [resolveRecordingPath] responde `null` no navegador de propósito — quem o
+/// consome é a reprodução, que lá toca por URL e não por caminho — então a
+/// pergunta vai direto à fachada [file_ops], que já é por plataforma.
+Future<bool> durableAudioExists(String address) async {
+  if (address.isEmpty) return false;
+  if (kIsWeb) return file_ops.fileExists(address);
+  return await resolveRecordingPath(address) != null;
 }

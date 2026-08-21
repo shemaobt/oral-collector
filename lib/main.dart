@@ -134,6 +134,13 @@ class _OralCollectorAppState extends ConsumerState<OralCollectorApp> {
         // before upload leave bytes in storage with nothing pointing at them
         // (ENG-426). Unawaited for the same reason — housekeeping must not
         // stand between the person and the first screen.
+        // A lista de não salvas passa a valer no navegador (ENG-519, fatia 2):
+        // o coordenador promove a sessão que ficou em aberto, promove a que
+        // terminou sem ninguém salvar, e monta a lista. Aguardado, como no
+        // aparelho, porque é ele que decide o que a faxina logo abaixo pode
+        // coletar — uma sessão que a lista vai oferecer tem de estar fora do
+        // alcance dela antes de a varredura correr.
+        await ref.read(recoveryCoordinatorProvider).scanOnStartup();
         unawaited(
           sweepOrphanWebAudio(
             listKeys: platform.listStoredKeys,
