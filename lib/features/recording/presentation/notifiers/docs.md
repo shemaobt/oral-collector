@@ -772,9 +772,38 @@ Path: @/lib/features/recording/presentation/notifiers
   us — so warning early is the whole mitigation.
 - **`isWebPlatformProvider` and `webAudioRecorderFactoryProvider` exist so the
   browser capture path can be driven in VM tests**, where `kIsWeb` is always
-  false. They default to `kIsWeb` and `AudioRecorder.new`; only `startRecording`
-  and `stopRecording` read the platform flag, so the rest of the notifier still
-  branches on `kIsWeb` directly.
+  false. They default to `kIsWeb` and `AudioRecorder.new`; `startRecording`,
+  `stopRecording` and `InterruptedSessionsNotifier.save` read the platform flag,
+  while the rest of the notifier still branches on `kIsWeb` directly.
+- **A branch decided by `kIsWeb` is a branch no VM test walks, and a test over
+  it can be green about something false (ENG-519, slice 3).** `kIsWeb` is a
+  compile-time constant: on the VM it is `false` no matter what
+  `isWebPlatformProvider` is overridden to, so a test that overrides the
+  provider and then calls into a `kIsWeb` branch quietly exercises the *device*
+  path. That is not hypothetical. `save()` opened with `if (kIsWeb) return
+  null` — in the browser the unsaved list showed a recording and would not open
+  it — while slice 2's case asserted `save()` returned the audio *and passed*,
+  because it ran the device path end to end. Reading the flag from the provider
+  is what makes the branch reachable from a test at all; it is not a style
+  preference.
+  **Before writing the next platform branch, ask which of the two you need.**
+  Conditional export (the `file_ops` / `RecoveryDisk` pattern) is what keeps
+  `dart:io` out of the web build — `kIsWeb` cannot do that, and the `flutter
+  build web` gate is what proves it. The provider is what makes a decision
+  *testable*. They answer different questions, and a branch that only needs to
+  be verified wants the provider.
+  *Checked against:* the experiment the slice ran at the end — putting the
+  decision back on bare `kIsWeb` and confirming the browser case goes red
+  (`Expected: 'webm' / Actual: 'm4a'`, the device path deducing the format from
+  the file extension). With the provider in place, mutating the browser branch
+  to return null also turns slice 2's case red, which it could not do before.
+- **What the browser answers with, and what it does when it cannot.** There are
+  no segments to re-finalize in the browser — the capture is one blob — so the
+  anchor is the only possible answer, and it is the storage key the form will
+  use. When the bytes are gone (the ENG-426 sweep collects what nobody claimed
+  within 24 hours) the recording *leaves the list* instead of being offered
+  again: the sheet does nothing with a null, so without that the person would
+  tap the item and watch nothing happen, on every launch.
 - **A recovered session is only resolved after the user confirms — no
   silent data loss (ENG-80).** The materialization of a `local_recording`
   row happens *only* in `ConfirmationStep._save` (see
