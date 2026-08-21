@@ -111,11 +111,15 @@ class InterruptedSessionsNotifier extends Notifier<void> {
   }
 
   Future<RecordingResult?> save(String sessionId) async {
-    if (kIsWeb) return null;
-
     final sessionRepo = ref.read(recordingSessionRepositoryProvider);
     final session = await sessionRepo.getById(sessionId);
     if (session == null) return null;
+
+    // Pelo provider, não por `kIsWeb`: um ramo decidido pela constante de
+    // compilação é, por construção, um ramo que nenhum teste na VM percorre —
+    // foi assim que o caso da fatia 2 ficou verde afirmando algo que no
+    // navegador era falso (ENG-519, fatia 3).
+    if (ref.read(isWebPlatformProvider)) return _saveWeb(session);
 
     final finished = await _finishedAudio(session);
     if (finished != null) return finished;
@@ -165,6 +169,44 @@ class InterruptedSessionsNotifier extends Notifier<void> {
     // cancelled/abandoned confirmation re-surfaces in the recovery banner
     // instead of silently losing the recording.
     return outcome.result;
+  }
+
+  /// A gravação que o navegador guardou, aberta a partir da âncora.
+  ///
+  /// Lá não há segmentos para re-finalizar — a captura é um blob só —, então a
+  /// âncora é a única resposta possível: ela é a chave do armazenamento, e o
+  /// próprio endereço que o formulário vai usar.
+  ///
+  /// Quando os bytes não estão mais lá (a faxina do ENG-426 leva o que ninguém
+  /// reclamou em 24 horas), a gravação sai da lista em vez de continuar sendo
+  /// oferecida. A folha não faz nada com um nulo: sem isto a pessoa tocaria no
+  /// item e nada aconteceria, hoje e em toda abertura seguinte.
+  Future<RecordingResult?> _saveWeb(RecordingSession session) async {
+    final anchor = session.finalizedAudioPath;
+    if (anchor != null && await durableAudioExists(anchor)) {
+      return RecordingResult(
+        filePath: anchor,
+        durationSeconds:
+            session.finalizedDurationSeconds ?? session.totalDurationSeconds,
+        sessionId: session.id,
+        format: _formatOfKey(anchor),
+      );
+    }
+
+    await ref
+        .read(recordingSessionRepositoryProvider)
+        .markDiscarded(session.id);
+    await ref.read(recoveryCoordinatorProvider).refresh();
+    return null;
+  }
+
+  /// O formato vem da extensão da chave, que a captura escreveu (`webm` hoje,
+  /// ver `_stopWeb`). Ele viaja até o MIME do upload, então errar aqui é
+  /// rotular o arquivo errado no servidor.
+  String _formatOfKey(String key) {
+    final extension = p.extension(key);
+    if (extension.length <= 1) return 'webm';
+    return extension.substring(1).toLowerCase();
   }
 
   /// The audio this session already finished, when the row points at a file

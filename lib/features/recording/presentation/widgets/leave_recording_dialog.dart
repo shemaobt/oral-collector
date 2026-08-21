@@ -16,10 +16,14 @@ enum LeaveRecordingChoice {
 ///
 /// Returns null when they decide to stay.
 ///
-/// [canKeepForLater] is false wherever there is nowhere to park the audio — the
-/// browser, which creates no session row at all. There the dialog is exactly
-/// what it has always been, two ways out and the copy that says the recording
-/// is about to be deleted, because that is still the truth (ENG-518).
+/// [canKeepForLater] is false wherever there is nowhere to park the audio, and
+/// the caller decides that by asking whether the recording carries a session
+/// id. The browser used to be the case that made this necessary — it created
+/// no session row at all — and since ENG-519 it does, so the third way out is
+/// offered there too, with no change here. Where the answer is still false the
+/// dialog is exactly what it has always been: two ways out and the copy that
+/// says the recording is about to be deleted, because that is still the truth
+/// (ENG-518).
 Future<LeaveRecordingChoice?> showLeaveRecordingDialog(
   BuildContext context, {
   required bool canKeepForLater,
