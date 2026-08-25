@@ -96,6 +96,12 @@ Path: @/lib/features/recording/data
   injected so the trim editor's load-path file check is driveable in
   widget tests (a real `dart:io` future never resolves under the
   fake-async test zone). See "the trim editor's injectable seams" below.
+  `deleteFileProvider` (ENG-407), `readFileBytesProvider` and
+  `audioFilePickerProvider` (both ENG-427) are the same shape: the first two
+  wrap `file_ops`, and the third wraps `web_file_picker.pickSingleAudioFile`.
+  The picker one exists for a different reason than testability alone — it is
+  a browser boundary that cannot exist on the Dart VM at all, so a flow that
+  may or may not open it can only be observed through a seam.
 - `server_to_local_recording.dart` exposes `serverRecordingToLocal(server)`,
   the single mapper from `ServerRecording` to `LocalRecording`. It exists
   precisely so callers like the detail screen and the trim editor cannot
@@ -186,7 +192,11 @@ Path: @/lib/features/recording/data
   `ResumableUploadService.uploadFromSource`, and for the duration of that
   upload a `web_<serverId>` shadow row (`uploadStatus='web_uploading'`)
   exists in Drift to carry resume state; it is deleted on success and left
-  in place on failure for the resume banner. That shadow row is written with
+  in place on failure for the resume banner. Its `localFilePath` holds where
+  the bytes can be read back from — `FileSource.filePath` on native,
+  `FileSource.storageKey` on web — or the empty string when the source has
+  neither, which is the row saying it does not know where the audio is
+  (ENG-427). That shadow row is written with
   `LocalRecordingRepository.upsertRecording` (not `insertRecording`) so a
   retry of a failed large import reuses the row instead of colliding on its
   primary key — see ENG-80 in Things to Know. The single-shot path computes its
@@ -341,6 +351,52 @@ Path: @/lib/features/recording/data
     `RecordingTrash` (`services/recording_trash.dart`) and invalidates its
     waveform cache via `WaveformExtractor.invalidate`
     (`services/waveform_extractor.dart`). It backs the notifier's `replaceAudio`.
+- `services/web_audio_sweeper.dart` exposes `sweepOrphanWebAudio`, the
+  browser's counterpart to `RecordingTrash.pruneOldTrash` — same 24-hour
+  window, same unawaited call from the startup microtask in
+  [/lib/main.dart](../../../main.dart), opposite side of its `kIsWeb` branch
+  (ENG-426). It exists because on web the audio is written to browser storage
+  when capture stops while the `LocalRecordings` row is only written after a
+  successful upload, so a reload on the confirmation step, a closed tab, or a
+  failed upload leaves bytes nothing will ever ask for again. It takes the
+  store's enumerate and delete as parameters (`file_ops.listStoredKeys` and
+  `file_ops.deleteFile` in production) rather than importing the web facade, so
+  it compiles on native and can be driven against a real in-memory IndexedDB in
+  a VM test. **The key format is a contract it shares with the recorder**: the
+  sweeper reads a recording's start instant out of the `web_record_<millis>`
+  key that `_startWeb` in
+  [../presentation/notifiers/recording_session_notifier.dart](../presentation/notifiers/recording_session_notifier.dart)
+  builds, and nothing but a test holds the two ends together — see
+  [/lib/core/platform/docs.md](../../../core/platform/docs.md) for the cutoff's
+  consequences and for why keys it cannot parse are left alone.
+- `services/confirmation_draft_store.dart` exposes `ConfirmationDraft` (title,
+  description, storyteller id) and `ConfirmationDraftStore`, which keeps what
+  was typed on the confirmation screen alive across the death of the process
+  (ENG-518, slice 1). **The key is the recording's audio path**, not a session
+  and not a single global slot: that path is the only identity the confirmation
+  form and
+  [../presentation/recovery_confirm_screen.dart](../presentation/recovery_confirm_screen.dart)
+  already share, on both platforms, and it carries the instant of creation so it
+  is never reused. A global key would survive process death just as well and be
+  strictly worse — the next recording would open wearing the previous one's
+  title, which is the failure
+  [/test/features/recording/presentation/widgets/confirmation_step_draft_test.dart](../../../../test/features/recording/presentation/widgets/confirmation_step_draft_test.dart)
+  test 3 exists to catch. It is `SharedPreferences`, not a table: a draft is
+  never queried, never synced, and dies with the recording's decision, so a
+  schema migration would buy nothing, and `shared_preferences_web` backs the
+  same API with `localStorage`, which outlives the browser tab exactly as the
+  native store outlives the process. Unreadable stored text reads back as
+  `null` rather than throwing — a disposable draft must never take the screen
+  down with it. **Drafts can be orphaned by design.** A recording that leaves
+  by any route other than the confirmation form's own save or discard (the
+  ENG-426 web sweeper, a cache clear, a file removed from outside, and the
+  tab-switch discard in `AppShell`, which deletes the file without going
+  through `_closeDraft`) leaves its draft behind; there is no
+  reaper, because the cost is a few bytes of text and the key can never collide
+  with a new recording. **Keeping a recording for later (ENG-518, slice 2) is
+  the opposite case and deliberately does not clear the draft**: the person is
+  coming back to it, and it is keyed by an audio path that is still on disk, so
+  reopening from the unsaved list finds the same text.
 - `services/audio_path_resolver.dart` exposes the pure async
   `resolveRecordingPath(storedPath)`. It returns the first existing path
   among: the stored path itself, the application documents directory
@@ -350,6 +406,28 @@ Path: @/lib/features/recording/data
   consumes it through `audioPathResolverProvider` and falls back to
   `gcsUrl` when resolution returns `null`. On `kIsWeb` it short-circuits
   to `null` because the playback notifier always uses URLs on web.
+- `services/session_audio.dart` exposes the pure async
+  `sessionHoldsReachableAudio(session, segmentPaths)` — the single answer to
+  "does this recording session still hold audio somebody could get back?"
+  (ENG-521). It resolves the row's v14 anchor through `resolveRecordingPath`
+  above and, failing that, stats the recorded segment paths. Every path that
+  writes a session's terminal `discarded` status *after* deleting files asks it
+  first, which is what keeps the ENG-420 invariant true for the two session
+  notifier paths that never had it and makes the terminal write depend on the
+  deletion having actually happened. ENG-527 added the third such caller,
+  `SegmentedRecorder.discard`: the exemption it held — "it runs before any
+  anchor can exist" — described the fresh-recording flow only, and a resumed
+  recording reuses the id of a swept, anchored row. It is also the one caller
+  that can find a session still *active*, so when the answer is yes it writes
+  `crashed` (the status the unsaved list reads) instead of leaving the row
+  where no list would show it until the next cold start. See
+  [repositories/docs.md](repositories/docs.md) for the invariant and why the
+  question is deliberately not "is the anchor column set". `RecoveryCoordinator`
+  keeps its own private variant because it answers a wider question (it also
+  covers pre-v14 rows via a directory scan) behind an injected
+  `RecoveryDisk` seam (see below). Since ENG-522 the coordinator also *calls* the shared
+  predicate directly, in the one-shot recovery below — so the pass that gives
+  audio back and the discard that takes it away decide by the same question.
 - `services/audio_probe.dart` exposes `AudioProbe`, the duration + codec +
   playability detector the file-import flow
   ([../presentation/file_import_screen.dart](../presentation/file_import_screen.dart))
@@ -524,6 +602,64 @@ Path: @/lib/features/recording/data
   the earlier `!degraded`-as-derived reasoning, which mis-classified the
   single-segment source as derived. See
   [/lib/core/platform/docs.md](../../../core/platform/docs.md).
+- **A recuperação vale nas duas plataformas desde a fatia 2 do ENG-519; só a
+  varredura de disco ficou do lado do aparelho.** O coordenador importava
+  `dart:io` e estava atrás de um `if (!kIsWeb)` na inicialização, então a
+  sessão que a fatia 1 passou a registrar no navegador não era lida por
+  ninguém. A maior parte do que ele faz, porém, é decisão sobre estado —
+  promover as sessões em aberto, promover as que terminaram sem que ninguém
+  salvasse, montar a lista de não salvas — e isso são consultas ao banco. O que
+  varre diretório saiu para
+  [`recovery_disk.dart`](services/recovery_disk.dart), uma fachada de
+  exportação condicional no mesmo padrão de
+  [file_ops](../../../core/platform/file_ops.dart): o lado nativo repara os
+  segmentos em voo e lista os órfãos que nunca chegaram ao banco; o lado web
+  responde "não há nenhum", que é a verdade lá — a captura no navegador é um
+  blob só, escrito de uma vez no stop, e o armazenamento é um keyspace plano
+  sem diretório para listar. Não há coordenador paralelo: um só critério decide
+  se uma sessão é recuperável, nas duas plataformas.
+  *Verificado em:* a captura no navegador do início ao fim (aparece na lista,
+  abre no áudio, descarta), a aba fechada no meio, e a sessão de aparelho com
+  segmento órfão no disco, que continua sendo encontrada pela varredura.
+  Três consequências que carregam peso:
+  - **`_hasUnsavedAudio` pergunta pelo endereço durável, não pelo arquivo.** A
+    checagem literal `File(anchor).exists()` com resíduo por basename foi
+    substituída por `durableAudioExists`
+    ([services/session_audio.dart](services/session_audio.dart)), o mesmo
+    predicado que as guardas do descarte já usavam. No aparelho ele resolve o
+    caminho (o contêiner muda de lugar); no navegador pergunta ao
+    armazenamento, porque lá a âncora **é** a chave. `resolveRecordingPath`
+    continua respondendo `null` no navegador de propósito — quem o consome é a
+    reprodução, que lá toca por URL — então a pergunta vai direto à fachada
+    `file_ops`.
+  - **A lista passa a oferecer a sessão ancorada sem segmentos.** `refresh()`
+    exigia segmentos e dava `continue` em quem não tivesse, o que excluía toda
+    gravação do navegador — ela tem âncora e nunca terá segmentos — e excluía
+    junto as sessões de aparelho da mesma forma, aquelas cujas fontes as
+    deleções em fogo-e-esquece já levaram. O critério agora é segmentos **ou**
+    âncora, que é o mesmo que o caminho de salvar já pratica desde o ENG-420.
+  - **A sessão que nunca produziu áudio é encerrada como descartada.** Sem
+    segmentos e sem âncora não há nada a oferecer, e uma linha viva ficaria
+    fora do alcance de toda varredura para sempre. É o caso da aba fechada no
+    meio da gravação, e o desfecho não é regra nova: é o mesmo ramo que já
+    fechava a sessão de aparelho sem áudio nenhum. Como
+    `getLiveAudioAnchors` ignora sessões descartadas, ela também não segura a
+    faxina.
+  Falta a terceira saída do diálogo, que é a fatia 3; nada mudou nele aqui.
+- **`RecoveryCoordinator.scanOnStartup` gives back audio stranded by the
+  pre-ENG-521 defect, once per device (ENG-522).** After the finished-session
+  sweep and before the `refresh()` that fills the unsaved list,
+  `_recoverDiscardedSessionsHoldingAudio` reads
+  `RecordingSessionRepository.findDiscardedSessions()` and promotes back to
+  `crashed` every row `sessionHoldsReachableAudio` still answers yes for. It is
+  wrapped in a try/catch that reports and swallows — a one-off repair of old
+  rows must not cost the `refresh()` that puts *today's* unsaved recordings in
+  front of the person. The "already ran" mark is a `shared_preferences` bool
+  (`RecordingConfig.discardedAudioRecoveryDoneKey`), written after the pass, and
+  repeating the recovery instead would make every later discard come back on
+  the next launch. The full rationale — why once, why both legs of the
+  predicate, why no migration — lives with the anchor invariant in
+  [repositories/docs.md](repositories/docs.md).
 - **`RecoveryCoordinator.refresh()` never touches a torn-down ref (ENG-140
   F22).** `refresh()` reads `findCrashedSessions()` and other providers across
   several awaits, then writes the derived list to
@@ -553,6 +689,27 @@ Path: @/lib/features/recording/data
   `resumableSessionUri`/`uploadedBytes`, the prior resume state is kept and
   the resumable service continues from the persisted offset instead of
   restarting or throwing on the duplicate key.
+- **The shadow row's `localFilePath` is an address or nothing — never a
+  plausible-looking invention (ENG-427).** It used to be
+  `source.filePath ?? 'web_import_<millis>_<serverId>'`, and on web
+  `FileSource.filePath` is null in every implementation, so the fallback was
+  what every browser upload stored — including microphone captures that were
+  no import at all. Nothing could read those bytes back from it. It is now
+  `source.filePath ?? source.storageKey ?? ''`, which on web resolves to the
+  `WebFileStore` key the capture wrote and the confirmation step read from.
+  The empty string is load-bearing: a resume has to tell "I still have the
+  audio" from "I have to ask for the file again", and a browser `File` from a
+  picker genuinely falls in the second case because its bytes die with the
+  page — the same empty string the successful `_saveWebDirect` path already
+  writes for a row whose audio lives only on the server. Rows written by
+  earlier builds still carry the old invented name; they are left alone rather
+  than treated as corrupt, and reading them back simply finds nothing. Native
+  is untouched: `filePath` still wins there. The resume banner is what reads it
+  back: given an address whose bytes are still there it finishes the upload
+  from them without asking for anything, and in every other case — no address,
+  an invented one, or bytes the sweep already collected — it asks for the file
+  as before (see
+  [../presentation/widgets/docs.md](../presentation/widgets/docs.md)).
 - The `localRecordingStreamProvider` streams the **domain entity**
   `LocalRecordingEntity?` as of ENG-199/ENG-200 — it is backed by
   `LocalRecordingRepository.watchRecordingEntityById`

@@ -23,7 +23,7 @@
   "common_untitled": "제목 없음",
   "common_loading": "로딩 중...",
   "auth_oralCollector": "Oral Collector",
-  "auth_byShema": "by Shema",
+  "auth_byShema": "Shema 제공",
   "auth_heroTagline": "목소리를 보존하고\n이야기를 나누세요.",
   "auth_welcomeBack": "다시 오신 것을\n환영합니다",
   "auth_welcome": "환영합니다 ",
@@ -35,7 +35,7 @@
   "auth_signUpSubtitle": "이야기 수집 커뮤니티에 참여하세요.",
   "auth_backToSignIn": "로그인으로 돌아가기",
   "auth_emailLabel": "이메일 주소",
-  "auth_emailHint": "your@email.com",
+  "auth_emailHint": "내@이메일.com",
   "auth_emailRequired": "이메일을 입력해 주세요",
   "auth_emailInvalid": "유효한 이메일을 입력해 주세요",
   "auth_passwordLabel": "비밀번호",
@@ -167,6 +167,9 @@
   "recording_discard": "삭제",
   "recording_discardTitle": "녹음을 삭제하시겠습니까?",
   "recording_discardMessage": "이 녹음은 영구적으로 삭제됩니다.",
+  "recording_leaveTitle": "저장하지 않고 나갈까요?",
+  "recording_leaveMessage": "오디오는 그대로 보관됩니다 — 저장되지 않은 녹음에서 나중에 마무리할 수 있습니다. 지금 삭제하면 되돌릴 수 없습니다.",
+  "recording_keepForLater": "나중에 이어하기",
   "recording_saved": "녹음이 저장되었습니다",
   "recording_uploading": "녹음 업로드 중…",
   "recording_uploadFailed": "업로드 실패: {error}",
@@ -177,7 +180,7 @@
       }
     }
   },
-  "recording_serviceNotificationTitle": "Recording in progress",
+  "recording_serviceNotificationTitle": "녹음 진행 중",
   "recording_serviceNotificationBody": "{elapsed} • {genre}",
   "@recording_serviceNotificationBody": {
     "placeholders": {
@@ -189,7 +192,7 @@
       }
     }
   },
-  "recording_serviceNotificationStopAction": "Stop",
+  "recording_serviceNotificationStopAction": "중지",
   "recording_notFound": "녹음을 찾을 수 없습니다",
   "recording_unknownGenre": "알 수 없는 장르",
   "recording_splitRecording": "녹음 편집",
@@ -270,8 +273,8 @@
   "trim_splitting": "분할 중...",
   "trim_saveSegments": "{count, plural, =1{세그먼트 1개 저장} other{세그먼트 {count}개 저장}}",
   "trim_addSplitsFirst": "먼저 분할 지점을 추가하세요",
-  "trim_applyBoost": "Apply boost",
-  "trim_boostApplied": "Volume applied",
+  "trim_applyBoost": "볼륨 적용",
+  "trim_boostApplied": "볼륨이 적용되었습니다",
   "trim_savedSegments": "세그먼트 {kept}개 저장, {removed}개 제거",
   "trim_splitInto": "{count}개 녹음으로 분할",
   "trim_saveConfirmTitle": "변경 사항을 저장하시겠습니까?",
@@ -364,7 +367,7 @@
   "profile_syncStorage": "동기화 및 저장소",
   "profile_about": "정보",
   "profile_appVersion": "앱 버전",
-  "profile_byShema": "Oral Collector by Shema",
+  "profile_byShema": "Oral Collector, Shema 제공",
   "profile_administration": "관리",
   "profile_adminDashboard": "관리자 대시보드",
   "profile_adminSubtitle": "시스템 통계, 프로젝트 및 장르 관리",
@@ -647,6 +650,8 @@
   "recording_secondaryCollisionBanner": "이 녹음의 기본 및 보조 분류가 동일합니다. 동기화하려면 보조를 지우거나 기본을 변경하세요.",
   "recording_clearSecondary": "보조 지우기",
   "recording_unclassified": "미분류",
+  "recording_unclassifiedDesc": "분류 대기 중인 녹음",
+  "recording_unclassifiedSubcategoryDesc": "아직 분류를 기다리는 녹음을 담고 있습니다",
   "recording_inputSource": "입력",
   "recording_selectMicrophone": "마이크 선택",
   "recording_builtInMicrophone": "시스템 기본값",
@@ -698,9 +703,9 @@
   "recording_recoverButton": "복구",
   "recording_recoverDiscard": "버리기",
   "recording_recoverFailedLastSegment": "끝부분의 일부 오디오를 읽을 수 없어 건너뛰었습니다.",
-  "recording_blockNavTitle": "Recording in progress",
-  "recording_blockNavMessage": "You have a recording in progress. Discarding will permanently delete it.",
-  "recording_blockNavDiscardAndLeave": "Discard and leave",
+  "recording_blockNavTitle": "녹음 진행 중",
+  "recording_blockNavMessage": "녹음이 진행 중입니다. 삭제하면 영구적으로 지워집니다.",
+  "recording_blockNavDiscardAndLeave": "삭제하고 나가기",
   "recording_inProgressNotificationTitle": "녹음 중",
   "recording_inProgressNotificationBody": "탭하여 앱으로 돌아가기",
   "recording_finalizing": "녹음 마무리 중…",
@@ -715,13 +720,13 @@
   "recording_finalizationFailedBodyPipeline": "이 녹음의 처리를 끝내지 못했습니다. 저장되지 않은 녹음에 보관되어 있습니다.",
   "recording_finalizationErrorBack": "뒤로",
   "recording_discardAndReturn": "버리고 돌아가기",
-  "recording_savingRecording": "Saving recording…",
-  "recording_processingYourAudio": "Processing your audio",
-  "recording_dontCloseSaveNext": "Don't close — we'll open the save screen next.",
-  "recording_stageShortFinalizing": "FINALIZING",
-  "recording_stageShortCombining": "COMBINING",
-  "recording_stageShortCompressing": "COMPRESSING",
-  "recording_savingPleaseWait": "Saving your recording — please wait a moment.",
+  "recording_savingRecording": "녹음 저장 중…",
+  "recording_processingYourAudio": "오디오 처리 중",
+  "recording_dontCloseSaveNext": "닫지 마세요 — 곧 저장 화면이 열립니다.",
+  "recording_stageShortFinalizing": "마무리 중",
+  "recording_stageShortCombining": "결합 중",
+  "recording_stageShortCompressing": "압축 중",
+  "recording_savingPleaseWait": "녹음을 저장하는 중입니다 — 잠시만 기다려 주세요.",
   "profile_defaultMicrophone": "기본 마이크",
   "profile_systemDefault": "시스템 기본값",
   "settings_deviceStorageTitle": "기기 저장 공간",
@@ -874,7 +879,7 @@
   "recording_noPendingUploads": "대기 중인 업로드가 없습니다",
   "recording_uploadQueue": "업로드 대기열",
   "recording_uploadSpeed": "{speed}/s",
-  "recording_uploadEtaRemaining": "~{eta} remaining",
+  "recording_uploadEtaRemaining": "약 {eta} 남음",
   "recording_previewSelection": "선택 미리 듣기",
   "recording_stopPreview": "미리 듣기 중지",
   "recording_audioLoadFailed": "오디오 로드 실패",
@@ -888,8 +893,8 @@
   "recording_splitFrom": "{sourceId}에서 분할됨",
   "trim_segmentRemoved": "세그먼트 {index} — 제거됨",
   "trim_segmentOfTotal": "{total}개 중 세그먼트 {index}",
-  "recovery_interruptedTitle": "Interrupted recordings",
-  "recovery_startedAt": "Started at {time}",
+  "recovery_interruptedTitle": "중단된 녹음",
+  "recovery_startedAt": "{time}에 시작",
   "@recovery_startedAt": {
     "placeholders": {
       "time": {
@@ -897,11 +902,11 @@
       }
     }
   },
-  "recovery_resume": "Resume",
-  "recovery_save": "Save",
-  "recovery_discard": "Discard",
-  "recovery_confirmDiscardTitle": "Discard recording?",
-  "recovery_confirmDiscardBody": "{duration} of audio will be permanently deleted.",
+  "recovery_resume": "계속",
+  "recovery_save": "저장",
+  "recovery_discard": "삭제",
+  "recovery_confirmDiscardTitle": "녹음을 삭제하시겠습니까?",
+  "recovery_confirmDiscardBody": "{duration} 분량의 오디오가 영구히 삭제됩니다.",
   "@recovery_confirmDiscardBody": {
     "placeholders": {
       "duration": {
@@ -909,7 +914,7 @@
       }
     }
   },
-  "recovery_homeBanner": "{count, plural, =1{1 interrupted recording — tap to resume} other{{count} interrupted recordings — tap to resume}}",
+  "recovery_homeBanner": "{count, plural, other{중단된 녹음 {count}개 — 눌러서 계속하기}}",
   "@recovery_homeBanner": {
     "placeholders": {
       "count": {
@@ -917,7 +922,7 @@
       }
     }
   },
-  "recovery_unsavedCount": "{count, plural, =1{1 unsaved recording} other{{count} unsaved recordings}}",
+  "recovery_unsavedCount": "{count, plural, other{저장되지 않은 녹음 {count}개}}",
   "@recovery_unsavedCount": {
     "placeholders": {
       "count": {
@@ -925,7 +930,7 @@
       }
     }
   },
-  "recovery_latestSummary": "Latest · {duration} · {time}",
+  "recovery_latestSummary": "최근 · {duration} · {time}",
   "@recovery_latestSummary": {
     "placeholders": {
       "duration": {
@@ -936,9 +941,9 @@
       }
     }
   },
-  "recovery_review": "Review",
-  "recovery_unsavedTitle": "Unsaved recordings",
-  "recovery_unsavedSubtitle": "{count, plural, =1{1 recording to review} other{{count} recordings to review}}",
+  "recovery_review": "검토",
+  "recovery_unsavedTitle": "저장되지 않은 녹음",
+  "recovery_unsavedSubtitle": "{count, plural, other{검토할 녹음 {count}개}}",
   "@recovery_unsavedSubtitle": {
     "placeholders": {
       "count": {
@@ -946,9 +951,9 @@
       }
     }
   },
-  "recovery_discardAll": "Discard all",
-  "recovery_discardAllTitle": "Discard all recordings?",
-  "recovery_discardAllBody": "{count, plural, =1{1 recording will be permanently deleted.} other{{count} recordings will be permanently deleted.}}",
+  "recovery_discardAll": "모두 삭제",
+  "recovery_discardAllTitle": "모든 녹음을 삭제하시겠습니까?",
+  "recovery_discardAllBody": "{count, plural, other{녹음 {count}개가 영구히 삭제됩니다.}}",
   "@recovery_discardAllBody": {
     "placeholders": {
       "count": {
@@ -956,9 +961,9 @@
       }
     }
   },
-  "recovery_newBadge": "NEW",
-  "recovery_mostRecent": "Most recent",
-  "recovery_recordingNumbered": "Recording {number}",
+  "recovery_newBadge": "신규",
+  "recovery_mostRecent": "가장 최근",
+  "recovery_recordingNumbered": "녹음 {number}",
   "@recovery_recordingNumbered": {
     "placeholders": {
       "number": {
@@ -966,8 +971,8 @@
       }
     }
   },
-  "format_yesterday": "Yesterday",
-  "recovery_backToList": "Not now",
+  "format_yesterday": "어제",
+  "recovery_backToList": "나중에",
   "common_discard": "삭제",
   "common_resume": "계속",
   "import_dropActive": "가져오려면 놓으세요",
@@ -976,9 +981,10 @@
   "import_rejectedTooLarge": "{count, plural, =1{10GB가 넘는 파일 1개 건너뜀: {names}} other{10GB가 넘는 파일 {count}개 건너뜀: {names}}}",
   "import_rejectedUnreadable": "{count, plural, =1{읽을 수 없는 파일 1개 건너뜀: {names}} other{읽을 수 없는 파일 {count}개 건너뜀: {names}}}",
   "import_rejectedUnsupportedCodec": "{count, plural, =1{지원되지 않는 오디오 코덱이 포함된 파일 1개 건너뜀: {names}. PCM WAV 또는 M4A로 다시 내보내세요.} other{지원되지 않는 오디오 코덱이 포함된 파일 {count}개 건너뜀: {names}. PCM WAV 또는 M4A로 다시 내보내세요.}}",
-  "import_resumePromptBody": "\"{name}\"({size})이(가) 부분적으로 업로드되었습니다. 계속하려면 변경되지 않은 똑같은 파일을 선택하세요.",
-  "import_resumePromptTitle": "중단된 업로드 재개",
-  "import_resumeSizeMismatch": "다른 파일입니다. 업로드하던 것과 똑같은 파일을 선택하세요.",
+  "recording_resumePromptTitle": "중단된 업로드 재개",
+  "recording_resumePromptBodyStored": "\"{name}\"({size}) 업로드가 끝나지 않았습니다. 중단된 지점부터 이어서 올립니다.",
+  "recording_resumePromptBodyPickFile": "\"{name}\"({size}) 업로드가 끝나지 않았습니다. 계속하려면 같은 파일을 다시 선택하세요.",
+  "recording_resumeSizeMismatch": "다른 파일입니다. 업로드하던 것과 똑같은 파일을 선택하세요.",
   "recordings_offlineFilterTitle": "오프라인에서는 볼 수 없음",
   "recordings_offlineFilterDescription": "어떤 녹음에 아직 정보가 빠져 있는지는 서버가 판단합니다. 다시 연결해 확인하거나, 필터를 지우고 이 기기의 모든 녹음을 살펴보세요.",
   "recordings_filterErrorTitle": "지금은 확인할 수 없음",

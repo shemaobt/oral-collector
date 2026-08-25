@@ -84,7 +84,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get auth_oralCollector => 'Oral Collector';
 
   @override
-  String get auth_byShema => 'by Shema';
+  String get auth_byShema => 'Shema 제공';
 
   @override
   String get auth_heroTagline => '목소리를 보존하고\n이야기를 나누세요.';
@@ -120,7 +120,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get auth_emailLabel => '이메일 주소';
 
   @override
-  String get auth_emailHint => 'your@email.com';
+  String get auth_emailHint => '내@이메일.com';
 
   @override
   String get auth_emailRequired => '이메일을 입력해 주세요';
@@ -506,6 +506,16 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recording_discardMessage => '이 녹음은 영구적으로 삭제됩니다.';
 
   @override
+  String get recording_leaveTitle => '저장하지 않고 나갈까요?';
+
+  @override
+  String get recording_leaveMessage =>
+      '오디오는 그대로 보관됩니다 — 저장되지 않은 녹음에서 나중에 마무리할 수 있습니다. 지금 삭제하면 되돌릴 수 없습니다.';
+
+  @override
+  String get recording_keepForLater => '나중에 이어하기';
+
+  @override
   String get recording_saved => '녹음이 저장되었습니다';
 
   @override
@@ -517,7 +527,7 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get recording_serviceNotificationTitle => 'Recording in progress';
+  String get recording_serviceNotificationTitle => '녹음 진행 중';
 
   @override
   String recording_serviceNotificationBody(String elapsed, String genre) {
@@ -525,7 +535,7 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get recording_serviceNotificationStopAction => 'Stop';
+  String get recording_serviceNotificationStopAction => '중지';
 
   @override
   String get recording_notFound => '녹음을 찾을 수 없습니다';
@@ -793,10 +803,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get trim_addSplitsFirst => '먼저 분할 지점을 추가하세요';
 
   @override
-  String get trim_applyBoost => 'Apply boost';
+  String get trim_applyBoost => '볼륨 적용';
 
   @override
-  String get trim_boostApplied => 'Volume applied';
+  String get trim_boostApplied => '볼륨이 적용되었습니다';
 
   @override
   String trim_savedSegments(int kept, int removed) {
@@ -991,15 +1001,21 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get import_resumePromptTitle => '중단된 업로드 재개';
+  String get recording_resumePromptTitle => '중단된 업로드 재개';
 
   @override
-  String import_resumePromptBody(String name, String size) {
-    return '\"$name\"($size)이(가) 부분적으로 업로드되었습니다. 계속하려면 변경되지 않은 똑같은 파일을 선택하세요.';
+  String recording_resumePromptBodyStored(String name, String size) {
+    return '\"$name\"($size) 업로드가 끝나지 않았습니다. 중단된 지점부터 이어서 올립니다.';
   }
 
   @override
-  String get import_resumeSizeMismatch => '다른 파일입니다. 업로드하던 것과 똑같은 파일을 선택하세요.';
+  String recording_resumePromptBodyPickFile(String name, String size) {
+    return '\"$name\"($size) 업로드가 끝나지 않았습니다. 계속하려면 같은 파일을 다시 선택하세요.';
+  }
+
+  @override
+  String get recording_resumeSizeMismatch =>
+      '다른 파일입니다. 업로드하던 것과 똑같은 파일을 선택하세요.';
 
   @override
   String import_largeFileWarning(String size) {
@@ -1064,7 +1080,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get profile_appVersion => '앱 버전';
 
   @override
-  String get profile_byShema => 'Oral Collector by Shema';
+  String get profile_byShema => 'Oral Collector, Shema 제공';
 
   @override
   String get profile_administration => '관리';
@@ -1983,6 +1999,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recording_unclassified => '미분류';
 
   @override
+  String get recording_unclassifiedDesc => '분류 대기 중인 녹음';
+
+  @override
+  String get recording_unclassifiedSubcategoryDesc => '아직 분류를 기다리는 녹음을 담고 있습니다';
+
+  @override
   String get recording_inputSource => '입력';
 
   @override
@@ -2063,14 +2085,13 @@ class AppLocalizationsKo extends AppLocalizations {
       '끝부분의 일부 오디오를 읽을 수 없어 건너뛰었습니다.';
 
   @override
-  String get recording_blockNavTitle => 'Recording in progress';
+  String get recording_blockNavTitle => '녹음 진행 중';
 
   @override
-  String get recording_blockNavMessage =>
-      'You have a recording in progress. Discarding will permanently delete it.';
+  String get recording_blockNavMessage => '녹음이 진행 중입니다. 삭제하면 영구적으로 지워집니다.';
 
   @override
-  String get recording_blockNavDiscardAndLeave => 'Discard and leave';
+  String get recording_blockNavDiscardAndLeave => '삭제하고 나가기';
 
   @override
   String get recording_inProgressNotificationTitle => '녹음 중';
@@ -2120,27 +2141,25 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recording_discardAndReturn => '버리고 돌아가기';
 
   @override
-  String get recording_savingRecording => 'Saving recording…';
+  String get recording_savingRecording => '녹음 저장 중…';
 
   @override
-  String get recording_processingYourAudio => 'Processing your audio';
+  String get recording_processingYourAudio => '오디오 처리 중';
 
   @override
-  String get recording_dontCloseSaveNext =>
-      'Don\'t close — we\'ll open the save screen next.';
+  String get recording_dontCloseSaveNext => '닫지 마세요 — 곧 저장 화면이 열립니다.';
 
   @override
-  String get recording_stageShortFinalizing => 'FINALIZING';
+  String get recording_stageShortFinalizing => '마무리 중';
 
   @override
-  String get recording_stageShortCombining => 'COMBINING';
+  String get recording_stageShortCombining => '결합 중';
 
   @override
-  String get recording_stageShortCompressing => 'COMPRESSING';
+  String get recording_stageShortCompressing => '압축 중';
 
   @override
-  String get recording_savingPleaseWait =>
-      'Saving your recording — please wait a moment.';
+  String get recording_savingPleaseWait => '녹음을 저장하는 중입니다 — 잠시만 기다려 주세요.';
 
   @override
   String get profile_defaultMicrophone => '기본 마이크';
@@ -2511,7 +2530,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String recording_uploadEtaRemaining(String eta) {
-    return '~$eta remaining';
+    return '약 $eta 남음';
   }
 
   @override
@@ -2563,28 +2582,28 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get recovery_interruptedTitle => 'Interrupted recordings';
+  String get recovery_interruptedTitle => '중단된 녹음';
 
   @override
   String recovery_startedAt(String time) {
-    return 'Started at $time';
+    return '$time에 시작';
   }
 
   @override
-  String get recovery_resume => 'Resume';
+  String get recovery_resume => '계속';
 
   @override
-  String get recovery_save => 'Save';
+  String get recovery_save => '저장';
 
   @override
-  String get recovery_discard => 'Discard';
+  String get recovery_discard => '삭제';
 
   @override
-  String get recovery_confirmDiscardTitle => 'Discard recording?';
+  String get recovery_confirmDiscardTitle => '녹음을 삭제하시겠습니까?';
 
   @override
   String recovery_confirmDiscardBody(String duration) {
-    return '$duration of audio will be permanently deleted.';
+    return '$duration 분량의 오디오가 영구히 삭제됩니다.';
   }
 
   @override
@@ -2592,8 +2611,7 @@ class AppLocalizationsKo extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count interrupted recordings — tap to resume',
-      one: '1 interrupted recording — tap to resume',
+      other: '중단된 녹음 $count개 — 눌러서 계속하기',
     );
     return '$_temp0';
   }
@@ -2603,67 +2621,64 @@ class AppLocalizationsKo extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count unsaved recordings',
-      one: '1 unsaved recording',
+      other: '저장되지 않은 녹음 $count개',
     );
     return '$_temp0';
   }
 
   @override
   String recovery_latestSummary(String duration, String time) {
-    return 'Latest · $duration · $time';
+    return '최근 · $duration · $time';
   }
 
   @override
-  String get recovery_review => 'Review';
+  String get recovery_review => '검토';
 
   @override
-  String get recovery_unsavedTitle => 'Unsaved recordings';
+  String get recovery_unsavedTitle => '저장되지 않은 녹음';
 
   @override
   String recovery_unsavedSubtitle(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count recordings to review',
-      one: '1 recording to review',
+      other: '검토할 녹음 $count개',
     );
     return '$_temp0';
   }
 
   @override
-  String get recovery_discardAll => 'Discard all';
+  String get recovery_discardAll => '모두 삭제';
 
   @override
-  String get recovery_discardAllTitle => 'Discard all recordings?';
+  String get recovery_discardAllTitle => '모든 녹음을 삭제하시겠습니까?';
 
   @override
   String recovery_discardAllBody(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count recordings will be permanently deleted.',
-      one: '1 recording will be permanently deleted.',
+      other: '녹음 $count개가 영구히 삭제됩니다.',
     );
     return '$_temp0';
   }
 
   @override
-  String get recovery_newBadge => 'NEW';
+  String get recovery_newBadge => '신규';
 
   @override
-  String get recovery_mostRecent => 'Most recent';
+  String get recovery_mostRecent => '가장 최근';
 
   @override
   String recovery_recordingNumbered(int number) {
-    return 'Recording $number';
+    return '녹음 $number';
   }
 
   @override
-  String get format_yesterday => 'Yesterday';
+  String get format_yesterday => '어제';
 
   @override
-  String get recovery_backToList => 'Not now';
+  String get recovery_backToList => '나중에';
 
   @override
   String get upload_pausedWhileRecording => '녹음 중 업로드 일시 중지됨';

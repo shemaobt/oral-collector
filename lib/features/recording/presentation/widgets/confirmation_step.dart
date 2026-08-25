@@ -28,11 +28,14 @@ import '../../../storyteller/presentation/widgets/storyteller_picker.dart';
 import '../../../sync/presentation/notifiers/sync_notifier.dart';
 import '../../data/providers.dart';
 import '../../data/services/audio_probe.dart';
+import '../../data/services/confirmation_draft_store.dart';
 import '../../data/services/direct_recording_uploader.dart';
 import '../../domain/entities/classification.dart';
 import '../../domain/entities/local_recording_entity.dart';
+import '../notifiers/interrupted_sessions_notifier.dart';
 import '../notifiers/recording_session_notifier.dart';
 import '../notifiers/recording_session_state.dart';
+import 'leave_recording_dialog.dart';
 
 /// Matches the 30 s `_apiTimeout` the upload paths use for their own API calls.
 const _titleLookupTimeout = Duration(seconds: 30);
@@ -49,6 +52,7 @@ class ConfirmationStep extends ConsumerStatefulWidget {
     this.registerName,
     required this.onReRecord,
     required this.onDiscard,
+    required this.onKeepForLater,
     this.onSaved,
     this.showReRecord = true,
   });
@@ -63,6 +67,10 @@ class ConfirmationStep extends ConsumerStatefulWidget {
   final VoidCallback onReRecord;
   final VoidCallback onDiscard;
 
+  /// Runs after the recording has been parked for later: the audio and the
+  /// draft both stay, so the host only has to leave the screen (ENG-518).
+  final VoidCallback onKeepForLater;
+
   /// When set, runs instead of the default `go('/home')` after a successful
   /// save (crash-recovery uses it to mark the session recovered and route to
   /// the recordings list). When null, the normal new-recording flow applies.
@@ -75,7 +83,8 @@ class ConfirmationStep extends ConsumerStatefulWidget {
   ConsumerState<ConfirmationStep> createState() => _ConfirmationStepState();
 }
 
-class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
+class _ConfirmationStepState extends ConsumerState<ConfirmationStep>
+    with WidgetsBindingObserver {
   static final _log = Logger('ConfirmationStep');
 
   final _descriptionController = TextEditingController();
@@ -93,6 +102,15 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
   List<String?> _existingTitles = const [];
   bool _titleConflict = false;
   String? _descriptionError;
+
+  static const _draftStore = ConfirmationDraftStore();
+  static const _draftWriteDelay = Duration(milliseconds: 400);
+  Timer? _draftWriteTimer;
+  String? _pendingStorytellerId;
+  bool _titleTouched = false;
+  bool _descriptionTouched = false;
+  bool _draftDirty = false;
+  bool _draftClosed = false;
 
   // Captured in initState so dispose() can clear the marker without touching
   // `ref` — flutter_riverpod 2.x invalidates `ref` before State.dispose runs
@@ -116,6 +134,8 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
       pendingRecordingDecisionProvider.notifier,
     );
     _descriptionController.addListener(_clearDescriptionError);
+    WidgetsBinding.instance.addObserver(this);
+    unawaited(_restoreDraft());
     _initPlayer();
     Future.microtask(_prefetchStorytellers);
     Future.microtask(_loadExistingTitles);
@@ -179,10 +199,99 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
   }
 
   void _onTitleChanged(String value) {
+    _titleTouched = true;
+    _refreshTitleConflict(value);
+    _scheduleDraftWrite();
+  }
+
+  void _refreshTitleConflict(String value) {
     final conflict = _titleTakenLocally(value);
     if (conflict != _titleConflict) {
       setState(() => _titleConflict = conflict);
     }
+  }
+
+  void _onDescriptionChanged(String value) {
+    _descriptionTouched = true;
+    _scheduleDraftWrite();
+  }
+
+  void _onStorytellerChanged(Storyteller? storyteller) {
+    _pendingStorytellerId = null;
+    setState(() => _selectedStoryteller = storyteller);
+    _scheduleDraftWrite();
+  }
+
+  ConfirmationDraft get _currentDraft => ConfirmationDraft(
+    title: _titleController.text,
+    description: _descriptionController.text,
+    storytellerId: _selectedStoryteller?.id ?? _pendingStorytellerId,
+  );
+
+  /// Coalesces keystrokes: a long description would otherwise hit the store
+  /// once per character. Every path that ends the screen — dispose, and the app
+  /// going to the background — flushes whatever is still waiting, so the delay
+  /// never decides whether the text survives.
+  void _scheduleDraftWrite() {
+    if (_draftClosed) return;
+    _draftDirty = true;
+    _draftWriteTimer?.cancel();
+    _draftWriteTimer = Timer(_draftWriteDelay, _flushDraft);
+  }
+
+  void _flushDraft() {
+    _draftWriteTimer?.cancel();
+    _draftWriteTimer = null;
+    if (_draftClosed || !_draftDirty) return;
+    unawaited(_draftStore.write(widget.result.filePath, _currentDraft));
+  }
+
+  /// The recording's fate is decided: the draft has no owner left.
+  Future<void> _closeDraft() async {
+    _draftWriteTimer?.cancel();
+    _draftWriteTimer = null;
+    _draftClosed = true;
+    _draftDirty = false;
+    await _draftStore.clear(widget.result.filePath);
+  }
+
+  Future<void> _restoreDraft() async {
+    final draft = await _draftStore.read(widget.result.filePath);
+    if (!mounted || draft == null) return;
+    // A late read must never fight the person typing: whatever they already
+    // touched wins, and what is restored puts the caret after the text rather
+    // than at the start.
+    if (!_titleTouched && draft.title.isNotEmpty) {
+      _titleController.value = _valueWithCaretAtEnd(draft.title);
+      _refreshTitleConflict(draft.title);
+    }
+    if (!_descriptionTouched && draft.description.isNotEmpty) {
+      _descriptionController.value = _valueWithCaretAtEnd(draft.description);
+    }
+    if (_selectedStoryteller == null && draft.storytellerId != null) {
+      _pendingStorytellerId = draft.storytellerId;
+      _adoptPendingStoryteller(
+        ref.read(projectStorytellersNotifierProvider).storytellers,
+      );
+    }
+  }
+
+  static TextEditingValue _valueWithCaretAtEnd(String text) => TextEditingValue(
+    text: text,
+    selection: TextSelection.collapsed(offset: text.length),
+  );
+
+  /// The storyteller list may still be in flight when the draft lands, so the
+  /// id waits for it. A storyteller deleted between two openings simply never
+  /// matches and the picker opens unselected — the save button stays disabled
+  /// until one is chosen, which is the existing behaviour.
+  void _adoptPendingStoryteller(List<Storyteller> storytellers) {
+    final id = _pendingStorytellerId;
+    if (id == null || _selectedStoryteller != null) return;
+    final match = storytellers.where((s) => s.id == id).firstOrNull;
+    if (match == null) return;
+    _pendingStorytellerId = null;
+    setState(() => _selectedStoryteller = match);
   }
 
   Future<void> _initPlayer() async {
@@ -252,8 +361,20 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
     }
   }
 
+  /// Going to the background is the last moment the process is guaranteed to
+  /// exist: flush before the system is free to kill it.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      _flushDraft();
+    }
+  }
+
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _flushDraft();
     _descriptionController.dispose();
     _titleController.dispose();
     _playerStateSub?.cancel();
@@ -409,6 +530,8 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
         ),
       );
 
+      await _closeDraft();
+
       if (isOnline) {
         unawaited(syncNotifier.processQueue());
       }
@@ -462,6 +585,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
       final source = FileSource.fromBytes(
         bytes,
         name: widget.result.filePath,
+        storageKey: widget.result.filePath,
         mimeType: _mimeForFormat(widget.result.format),
       );
 
@@ -512,6 +636,8 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
         );
       } catch (_) {}
 
+      await _closeDraft();
+
       // The bytes are on the server and the local row is written, and on web
       // they live in IndexedDB, which outlives the tab (ENG-421). Without this
       // they would pile up there for every recording and never be collected.
@@ -542,36 +668,36 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
     }
   }
 
-  Future<void> _discard() async {
-    final colors = AppColors.of(context);
-    final l10n = AppLocalizations.of(context);
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.recording_discardTitle),
-        content: Text(l10n.recording_discardMessage),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(l10n.common_cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: TextButton.styleFrom(foregroundColor: colors.error),
-            child: Text(l10n.recording_discard),
-          ),
-        ],
-      ),
+  /// The one way out of this screen that is not saving: park the recording, or
+  /// delete it (ENG-518). Leaving used to cost the recording, because deleting
+  /// was the only door offered.
+  Future<void> _leave() async {
+    final sessionId = widget.result.sessionId;
+    // Read before the dialog awaits: `ref` must not be touched after the
+    // widget may have gone.
+    final interrupted = ref.read(interruptedSessionsNotifierProvider.notifier);
+
+    final choice = await showLeaveRecordingDialog(
+      context,
+      canKeepForLater: sessionId != null,
     );
+    if (choice == null) return;
 
-    if (confirmed == true) {
-      try {
-        await file_ops.deleteFile(widget.result.filePath);
-      } catch (_) {}
+    if (choice == LeaveRecordingChoice.keepForLater) {
+      // Neither the audio nor the draft is touched: the person is coming back
+      // to both.
+      await interrupted.keepForLater(sessionId!);
+      if (mounted) widget.onKeepForLater();
+      return;
+    }
 
-      if (mounted) {
-        widget.onDiscard();
-      }
+    await _closeDraft();
+    try {
+      await file_ops.deleteFile(widget.result.filePath);
+    } catch (_) {}
+
+    if (mounted) {
+      widget.onDiscard();
     }
   }
 
@@ -579,6 +705,10 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = AppColors.of(context);
+
+    ref.listen(projectStorytellersNotifierProvider, (_, next) {
+      _adoptPendingStoryteller(next.storytellers);
+    });
 
     final seed = widget.result.durationSeconds.hashCode;
     final amplitudes = List.generate(
@@ -593,7 +723,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
         if (didPop) return;
-        unawaited(_discard());
+        unawaited(_leave());
       },
       child: SizedBox.expand(
         child: ColoredBox(
@@ -691,10 +821,10 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
                               onTitleChanged: _onTitleChanged,
                               titleConflict: _titleConflict,
                               descriptionController: _descriptionController,
+                              onDescriptionChanged: _onDescriptionChanged,
                               descriptionError: _descriptionError,
                               selectedStoryteller: _selectedStoryteller,
-                              onStorytellerChanged: (s) =>
-                                  setState(() => _selectedStoryteller = s),
+                              onStorytellerChanged: _onStorytellerChanged,
                               projectId:
                                   ref
                                       .read(projectNotifierProvider)
@@ -718,7 +848,7 @@ class _ConfirmationStepState extends ConsumerState<ConfirmationStep> {
                                       _player?.stop();
                                       widget.onReRecord();
                                     },
-                              onDiscard: _isSaving ? null : _discard,
+                              onDiscard: _isSaving ? null : _leave,
                             ),
                           ],
                         ),
@@ -868,6 +998,7 @@ class _DetailsForm extends StatelessWidget {
     required this.onTitleChanged,
     required this.titleConflict,
     required this.descriptionController,
+    required this.onDescriptionChanged,
     required this.descriptionError,
     required this.selectedStoryteller,
     required this.onStorytellerChanged,
@@ -878,6 +1009,7 @@ class _DetailsForm extends StatelessWidget {
   final ValueChanged<String> onTitleChanged;
   final bool titleConflict;
   final TextEditingController descriptionController;
+  final ValueChanged<String> onDescriptionChanged;
   final String? descriptionError;
   final Storyteller? selectedStoryteller;
   final ValueChanged<Storyteller?> onStorytellerChanged;
@@ -981,6 +1113,7 @@ class _DetailsForm extends StatelessWidget {
         const SizedBox(height: SpacingScale.s12),
         TextField(
           controller: descriptionController,
+          onChanged: onDescriptionChanged,
           minLines: 2,
           maxLines: 4,
           keyboardType: TextInputType.multiline,

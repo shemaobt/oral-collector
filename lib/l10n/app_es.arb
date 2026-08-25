@@ -167,6 +167,9 @@
   "recording_discard": "Descartar",
   "recording_discardTitle": "¿Descartar Grabación?",
   "recording_discardMessage": "Esta grabación será eliminada permanentemente.",
+  "recording_leaveTitle": "¿Salir sin guardar?",
+  "recording_leaveMessage": "El audio se conserva: puedes terminarlo más tarde desde las grabaciones sin guardar. Eliminarlo ahora no se puede deshacer.",
+  "recording_keepForLater": "Guardar para después",
   "recording_saved": "Grabación guardada",
   "recording_uploading": "Subiendo grabación…",
   "recording_uploadFailed": "Error al subir: {error}",
@@ -177,7 +180,7 @@
       }
     }
   },
-  "recording_serviceNotificationTitle": "Recording in progress",
+  "recording_serviceNotificationTitle": "Grabación en curso",
   "recording_serviceNotificationBody": "{elapsed} • {genre}",
   "@recording_serviceNotificationBody": {
     "placeholders": {
@@ -189,7 +192,7 @@
       }
     }
   },
-  "recording_serviceNotificationStopAction": "Stop",
+  "recording_serviceNotificationStopAction": "Detener",
   "recording_notFound": "Grabación no encontrada",
   "recording_unknownGenre": "Género desconocido",
   "recording_splitRecording": "Editar Grabación",
@@ -647,6 +650,8 @@
   "recording_secondaryCollisionBanner": "Esta grabación tiene la misma clasificación primaria y secundaria. Borra la secundaria o cambia la primaria para sincronizar.",
   "recording_clearSecondary": "Borrar secundaria",
   "recording_unclassified": "Sin clasificar",
+  "recording_unclassifiedDesc": "Grabaciones pendientes de clasificación",
+  "recording_unclassifiedSubcategoryDesc": "Contiene grabaciones que aún esperan clasificación",
   "recording_inputSource": "Entrada",
   "recording_selectMicrophone": "Seleccionar micrófono",
   "recording_builtInMicrophone": "Predeterminado del sistema",
@@ -698,9 +703,9 @@
   "recording_recoverButton": "Recuperar",
   "recording_recoverDiscard": "Descartar",
   "recording_recoverFailedLastSegment": "Parte del audio cerca del final no se pudo leer y fue omitido.",
-  "recording_blockNavTitle": "Recording in progress",
-  "recording_blockNavMessage": "You have a recording in progress. Discarding will permanently delete it.",
-  "recording_blockNavDiscardAndLeave": "Discard and leave",
+  "recording_blockNavTitle": "Grabación en curso",
+  "recording_blockNavMessage": "Tienes una grabación en curso. Si la descartas, se eliminará permanentemente.",
+  "recording_blockNavDiscardAndLeave": "Descartar y salir",
   "recording_inProgressNotificationTitle": "Grabación en curso",
   "recording_inProgressNotificationBody": "Toca para volver a la app",
   "recording_finalizing": "Finalizando grabación…",
@@ -715,13 +720,13 @@
   "recording_finalizationFailedBodyPipeline": "No pudimos terminar de procesar esta grabación. Queda en tus grabaciones sin guardar.",
   "recording_finalizationErrorBack": "Volver",
   "recording_discardAndReturn": "Descartar y volver",
-  "recording_savingRecording": "Saving recording…",
-  "recording_processingYourAudio": "Processing your audio",
-  "recording_dontCloseSaveNext": "Don't close — we'll open the save screen next.",
-  "recording_stageShortFinalizing": "FINALIZING",
-  "recording_stageShortCombining": "COMBINING",
-  "recording_stageShortCompressing": "COMPRESSING",
-  "recording_savingPleaseWait": "Saving your recording — please wait a moment.",
+  "recording_savingRecording": "Guardando grabación…",
+  "recording_processingYourAudio": "Procesando tu audio",
+  "recording_dontCloseSaveNext": "No cierres — abriremos la pantalla de guardado a continuación.",
+  "recording_stageShortFinalizing": "FINALIZANDO",
+  "recording_stageShortCombining": "COMBINANDO",
+  "recording_stageShortCompressing": "COMPRIMIENDO",
+  "recording_savingPleaseWait": "Guardando tu grabación — espera un momento.",
   "profile_defaultMicrophone": "Micrófono predeterminado",
   "profile_systemDefault": "Predeterminado del sistema",
   "settings_deviceStorageTitle": "Almacenamiento del dispositivo",
@@ -874,7 +879,7 @@
   "recording_noPendingUploads": "No hay cargas pendientes",
   "recording_uploadQueue": "Cola de subida",
   "recording_uploadSpeed": "{speed}/s",
-  "recording_uploadEtaRemaining": "~{eta} remaining",
+  "recording_uploadEtaRemaining": "~{eta} restantes",
   "recording_previewSelection": "Vista previa de la selección",
   "recording_stopPreview": "Detener vista previa",
   "recording_audioLoadFailed": "Error al cargar el audio",
@@ -888,8 +893,8 @@
   "recording_splitFrom": "Dividido de {sourceId}",
   "trim_segmentRemoved": "Segmento {index} — eliminado",
   "trim_segmentOfTotal": "Segmento {index} de {total}",
-  "recovery_interruptedTitle": "Interrupted recordings",
-  "recovery_startedAt": "Started at {time}",
+  "recovery_interruptedTitle": "Grabaciones interrumpidas",
+  "recovery_startedAt": "Iniciada a las {time}",
   "@recovery_startedAt": {
     "placeholders": {
       "time": {
@@ -897,11 +902,11 @@
       }
     }
   },
-  "recovery_resume": "Resume",
-  "recovery_save": "Save",
-  "recovery_discard": "Discard",
-  "recovery_confirmDiscardTitle": "Discard recording?",
-  "recovery_confirmDiscardBody": "{duration} of audio will be permanently deleted.",
+  "recovery_resume": "Continuar",
+  "recovery_save": "Guardar",
+  "recovery_discard": "Descartar",
+  "recovery_confirmDiscardTitle": "¿Descartar grabación?",
+  "recovery_confirmDiscardBody": "Se eliminarán permanentemente {duration} de audio.",
   "@recovery_confirmDiscardBody": {
     "placeholders": {
       "duration": {
@@ -909,7 +914,7 @@
       }
     }
   },
-  "recovery_homeBanner": "{count, plural, =1{1 interrupted recording — tap to resume} other{{count} interrupted recordings — tap to resume}}",
+  "recovery_homeBanner": "{count, plural, =1{1 grabación interrumpida — toca para continuar} other{{count} grabaciones interrumpidas — toca para continuar}}",
   "@recovery_homeBanner": {
     "placeholders": {
       "count": {
@@ -917,7 +922,7 @@
       }
     }
   },
-  "recovery_unsavedCount": "{count, plural, =1{1 unsaved recording} other{{count} unsaved recordings}}",
+  "recovery_unsavedCount": "{count, plural, =1{1 grabación sin guardar} other{{count} grabaciones sin guardar}}",
   "@recovery_unsavedCount": {
     "placeholders": {
       "count": {
@@ -925,7 +930,7 @@
       }
     }
   },
-  "recovery_latestSummary": "Latest · {duration} · {time}",
+  "recovery_latestSummary": "Última · {duration} · {time}",
   "@recovery_latestSummary": {
     "placeholders": {
       "duration": {
@@ -936,9 +941,9 @@
       }
     }
   },
-  "recovery_review": "Review",
-  "recovery_unsavedTitle": "Unsaved recordings",
-  "recovery_unsavedSubtitle": "{count, plural, =1{1 recording to review} other{{count} recordings to review}}",
+  "recovery_review": "Revisar",
+  "recovery_unsavedTitle": "Grabaciones sin guardar",
+  "recovery_unsavedSubtitle": "{count, plural, =1{1 grabación para revisar} other{{count} grabaciones para revisar}}",
   "@recovery_unsavedSubtitle": {
     "placeholders": {
       "count": {
@@ -946,9 +951,9 @@
       }
     }
   },
-  "recovery_discardAll": "Discard all",
-  "recovery_discardAllTitle": "Discard all recordings?",
-  "recovery_discardAllBody": "{count, plural, =1{1 recording will be permanently deleted.} other{{count} recordings will be permanently deleted.}}",
+  "recovery_discardAll": "Descartar todas",
+  "recovery_discardAllTitle": "¿Descartar todas las grabaciones?",
+  "recovery_discardAllBody": "{count, plural, =1{1 grabación se eliminará permanentemente.} other{{count} grabaciones se eliminarán permanentemente.}}",
   "@recovery_discardAllBody": {
     "placeholders": {
       "count": {
@@ -956,9 +961,9 @@
       }
     }
   },
-  "recovery_newBadge": "NEW",
-  "recovery_mostRecent": "Most recent",
-  "recovery_recordingNumbered": "Recording {number}",
+  "recovery_newBadge": "NUEVO",
+  "recovery_mostRecent": "Más reciente",
+  "recovery_recordingNumbered": "Grabación {number}",
   "@recovery_recordingNumbered": {
     "placeholders": {
       "number": {
@@ -966,8 +971,8 @@
       }
     }
   },
-  "format_yesterday": "Yesterday",
-  "recovery_backToList": "Not now",
+  "format_yesterday": "Ayer",
+  "recovery_backToList": "Ahora no",
   "common_discard": "Descartar",
   "common_resume": "Continuar",
   "import_dropActive": "Suelta para importar",
@@ -976,9 +981,10 @@
   "import_rejectedTooLarge": "{count, plural, =1{Se omitió 1 archivo de más de 10 GB: {names}} other{Se omitieron {count} archivos de más de 10 GB: {names}}}",
   "import_rejectedUnreadable": "{count, plural, =1{Se omitió 1 archivo ilegible: {names}} other{Se omitieron {count} archivos ilegibles: {names}}}",
   "import_rejectedUnsupportedCodec": "{count, plural, =1{Se omitió 1 archivo con códec de audio no compatible: {names}. Vuelve a exportarlo como PCM WAV o M4A.} other{Se omitieron {count} archivos con códecs de audio no compatibles: {names}. Vuelve a exportarlos como PCM WAV o M4A.}}",
-  "import_resumePromptBody": "\"{name}\" ({size}) se subió parcialmente. Selecciona exactamente el mismo archivo (sin cambios) para continuar.",
-  "import_resumePromptTitle": "Reanudar subida interrumpida",
-  "import_resumeSizeMismatch": "Ese es otro archivo. Selecciona exactamente el mismo archivo que estabas subiendo.",
+  "recording_resumePromptTitle": "Reanudar subida interrumpida",
+  "recording_resumePromptBodyStored": "\"{name}\" ({size}) no terminó de subirse. Continúa desde donde se detuvo.",
+  "recording_resumePromptBodyPickFile": "\"{name}\" ({size}) no terminó de subirse. Vuelve a elegir el mismo archivo para continuar.",
+  "recording_resumeSizeMismatch": "Ese es otro archivo. Selecciona exactamente el mismo archivo que estabas subiendo.",
   "recordings_offlineFilterTitle": "No disponible sin conexión",
   "recordings_offlineFilterDescription": "El servidor es quien determina qué grabaciones todavía necesitan detalles. Vuelve a conectarte para verlas o quita el filtro para ver todo lo que hay en este dispositivo.",
   "recordings_filterErrorTitle": "No se pudo comprobar ahora",

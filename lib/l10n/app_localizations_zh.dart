@@ -120,7 +120,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get auth_emailLabel => '电子邮箱';
 
   @override
-  String get auth_emailHint => 'your@email.com';
+  String get auth_emailHint => '你的@邮箱.com';
 
   @override
   String get auth_emailRequired => '请输入您的电子邮箱';
@@ -505,6 +505,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recording_discardMessage => '此录音将被永久删除。';
 
   @override
+  String get recording_leaveTitle => '不保存就离开？';
+
+  @override
+  String get recording_leaveMessage => '音频会保留 — 你可以稍后从未保存的录音中继续完成。现在删除将无法恢复。';
+
+  @override
+  String get recording_keepForLater => '留待稍后';
+
+  @override
   String get recording_saved => '录音已保存';
 
   @override
@@ -516,7 +525,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get recording_serviceNotificationTitle => 'Recording in progress';
+  String get recording_serviceNotificationTitle => '正在录音';
 
   @override
   String recording_serviceNotificationBody(String elapsed, String genre) {
@@ -524,7 +533,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get recording_serviceNotificationStopAction => 'Stop';
+  String get recording_serviceNotificationStopAction => '停止';
 
   @override
   String get recording_notFound => '未找到录音';
@@ -785,10 +794,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get trim_addSplitsFirst => '请先添加分割点';
 
   @override
-  String get trim_applyBoost => 'Apply boost';
+  String get trim_applyBoost => '应用音量';
 
   @override
-  String get trim_boostApplied => 'Volume applied';
+  String get trim_boostApplied => '音量已应用';
 
   @override
   String trim_savedSegments(int kept, int removed) {
@@ -982,15 +991,20 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get import_resumePromptTitle => '继续中断的上传';
+  String get recording_resumePromptTitle => '继续中断的上传';
 
   @override
-  String import_resumePromptBody(String name, String size) {
-    return '“$name”（$size）已部分上传。请选择完全相同（未更改）的文件以继续。';
+  String recording_resumePromptBodyStored(String name, String size) {
+    return '“$name”（$size）尚未上传完成。将从中断处继续。';
   }
 
   @override
-  String get import_resumeSizeMismatch => '这是另一个文件。请选择您正在上传的那个完全相同的文件。';
+  String recording_resumePromptBodyPickFile(String name, String size) {
+    return '“$name”（$size）尚未上传完成。请重新选择同一个文件以继续。';
+  }
+
+  @override
+  String get recording_resumeSizeMismatch => '这是另一个文件。请选择您正在上传的那个完全相同的文件。';
 
   @override
   String import_largeFileWarning(String size) {
@@ -1972,6 +1986,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recording_unclassified => '未分类';
 
   @override
+  String get recording_unclassifiedDesc => '等待分类的录音';
+
+  @override
+  String get recording_unclassifiedSubcategoryDesc => '存放仍在等待分类的录音';
+
+  @override
   String get recording_inputSource => '输入';
 
   @override
@@ -2049,14 +2069,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recording_recoverFailedLastSegment => '末尾附近的部分音频无法读取并已跳过。';
 
   @override
-  String get recording_blockNavTitle => 'Recording in progress';
+  String get recording_blockNavTitle => '正在录音';
 
   @override
-  String get recording_blockNavMessage =>
-      'You have a recording in progress. Discarding will permanently delete it.';
+  String get recording_blockNavMessage => '您有一段正在进行的录音。丢弃后将被永久删除。';
 
   @override
-  String get recording_blockNavDiscardAndLeave => 'Discard and leave';
+  String get recording_blockNavDiscardAndLeave => '丢弃并离开';
 
   @override
   String get recording_inProgressNotificationTitle => '正在录音';
@@ -2103,27 +2122,25 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recording_discardAndReturn => '放弃并返回';
 
   @override
-  String get recording_savingRecording => 'Saving recording…';
+  String get recording_savingRecording => '正在保存录音…';
 
   @override
-  String get recording_processingYourAudio => 'Processing your audio';
+  String get recording_processingYourAudio => '正在处理您的音频';
 
   @override
-  String get recording_dontCloseSaveNext =>
-      'Don\'t close — we\'ll open the save screen next.';
+  String get recording_dontCloseSaveNext => '请勿关闭，接下来会打开保存界面。';
 
   @override
-  String get recording_stageShortFinalizing => 'FINALIZING';
+  String get recording_stageShortFinalizing => '完成中';
 
   @override
-  String get recording_stageShortCombining => 'COMBINING';
+  String get recording_stageShortCombining => '合并中';
 
   @override
-  String get recording_stageShortCompressing => 'COMPRESSING';
+  String get recording_stageShortCompressing => '压缩中';
 
   @override
-  String get recording_savingPleaseWait =>
-      'Saving your recording — please wait a moment.';
+  String get recording_savingPleaseWait => '正在保存您的录音，请稍候。';
 
   @override
   String get profile_defaultMicrophone => '默认麦克风';
@@ -2541,28 +2558,28 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get recovery_interruptedTitle => 'Interrupted recordings';
+  String get recovery_interruptedTitle => '已中断的录音';
 
   @override
   String recovery_startedAt(String time) {
-    return 'Started at $time';
+    return '开始于 $time';
   }
 
   @override
-  String get recovery_resume => 'Resume';
+  String get recovery_resume => '继续';
 
   @override
-  String get recovery_save => 'Save';
+  String get recovery_save => '保存';
 
   @override
-  String get recovery_discard => 'Discard';
+  String get recovery_discard => '丢弃';
 
   @override
-  String get recovery_confirmDiscardTitle => 'Discard recording?';
+  String get recovery_confirmDiscardTitle => '丢弃录音？';
 
   @override
   String recovery_confirmDiscardBody(String duration) {
-    return '$duration of audio will be permanently deleted.';
+    return '$duration 的音频将被永久删除。';
   }
 
   @override
@@ -2570,8 +2587,7 @@ class AppLocalizationsZh extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count interrupted recordings — tap to resume',
-      one: '1 interrupted recording — tap to resume',
+      other: '$count 条录音已中断 — 点按继续',
     );
     return '$_temp0';
   }
@@ -2581,67 +2597,64 @@ class AppLocalizationsZh extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count unsaved recordings',
-      one: '1 unsaved recording',
+      other: '$count 条录音未保存',
     );
     return '$_temp0';
   }
 
   @override
   String recovery_latestSummary(String duration, String time) {
-    return 'Latest · $duration · $time';
+    return '最新 · $duration · $time';
   }
 
   @override
-  String get recovery_review => 'Review';
+  String get recovery_review => '查看';
 
   @override
-  String get recovery_unsavedTitle => 'Unsaved recordings';
+  String get recovery_unsavedTitle => '未保存的录音';
 
   @override
   String recovery_unsavedSubtitle(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count recordings to review',
-      one: '1 recording to review',
+      other: '$count 条录音待查看',
     );
     return '$_temp0';
   }
 
   @override
-  String get recovery_discardAll => 'Discard all';
+  String get recovery_discardAll => '全部丢弃';
 
   @override
-  String get recovery_discardAllTitle => 'Discard all recordings?';
+  String get recovery_discardAllTitle => '丢弃所有录音？';
 
   @override
   String recovery_discardAllBody(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count recordings will be permanently deleted.',
-      one: '1 recording will be permanently deleted.',
+      other: '将永久删除 $count 条录音。',
     );
     return '$_temp0';
   }
 
   @override
-  String get recovery_newBadge => 'NEW';
+  String get recovery_newBadge => '新';
 
   @override
-  String get recovery_mostRecent => 'Most recent';
+  String get recovery_mostRecent => '最新';
 
   @override
   String recovery_recordingNumbered(int number) {
-    return 'Recording $number';
+    return '录音 $number';
   }
 
   @override
-  String get format_yesterday => 'Yesterday';
+  String get format_yesterday => '昨天';
 
   @override
-  String get recovery_backToList => 'Not now';
+  String get recovery_backToList => '暂不';
 
   @override
   String get upload_pausedWhileRecording => '录音时暂停上传';

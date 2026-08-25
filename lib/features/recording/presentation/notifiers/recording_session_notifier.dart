@@ -9,6 +9,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
+import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 
@@ -21,6 +22,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/utils/format.dart' as fmt;
 import '../../../project/presentation/notifiers/project_notifier.dart';
 import '../../data/providers.dart';
+import '../../data/services/audio_path_resolver.dart';
 import '../../data/services/recording_concat_service.dart';
 import '../../data/services/recording_finalization_service.dart';
 import '../../data/services/recording_foreground_service.dart';
@@ -29,6 +31,7 @@ import '../../data/services/recording_notification.dart';
 import '../../data/services/recovery_coordinator.dart';
 import '../../data/services/segment_paths.dart';
 import '../../data/services/segmented_recorder.dart';
+import '../../data/services/session_audio.dart';
 import '../../data/services/session_recovery.dart';
 import '../../data/services/storage_guard.dart';
 import 'input_device_notifier.dart';
@@ -87,6 +90,11 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
   SegmentedRecorder? _segRecorder;
   AudioRecorder? _webRecorder;
   String? _webPendingKey;
+
+  /// A linha de sessão aberta por [_startWeb], lida no stop para ancorá-la ao
+  /// áudio. Fica fora do estado porque o stop limpa o estado antes de os bytes
+  /// estarem escritos.
+  String? _webSessionId;
   Timer? _elapsedTimer;
   Timer? _toastTimer;
   StreamController<double>? _webAmplitudeController;
@@ -153,20 +161,33 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
     final session = await sessionRepo.getById(sessionId);
     if (session == null) return false;
 
-    final paths = sessionRepo.decodeSegmentPaths(session);
-    final validPaths = <String>[];
-    for (final p in paths) {
-      if (await file_ops.fileExists(p)) {
-        validPaths.add(p);
-      }
-    }
+    // Resolvidos, não conferidos literalmente: o contêiner muda de lugar numa
+    // reinstalação ou num restore, e um caminho absoluto guardado numa execução
+    // anterior declararia ausente o áudio que está ali (ENG-529).
+    final validPaths = await resolveSegmentPaths(
+      sessionRepo.decodeSegmentPaths(session),
+    );
     if (validPaths.isEmpty) {
-      await sessionRepo.markDiscarded(session.id);
+      // Same invariant as the save path: a row that still holds audio nobody
+      // saved never goes to a status no sweep queries, or the recording is out
+      // of reach for good. There is nothing to resume from, but the offer has
+      // to survive (ENG-521).
+      if (!await sessionHoldsReachableAudio(session, validPaths)) {
+        await sessionRepo.markDiscarded(session.id);
+      }
       await ref.read(recoveryCoordinatorProvider).refresh();
       return false;
     }
 
-    await _cleanupOrphanedSegments(session.id, session.lastSegmentIndex);
+    // Os resolvidos, não os declarados (ENG-529 sobre ENG-531): um declarado
+    // que não resolve não existe nem no caminho guardado nem sob o nome no
+    // diretório atual — que é o único que esta varredura enumera —, então não
+    // há arquivo dele para poupar. O conjunto poupado é exatamente o que a
+    // retomada vai usar.
+    await _cleanupOrphanedSegments(
+      session.id,
+      validPaths.map(p.basename).toSet(),
+    );
 
     _pendingResumeSessionId = session.id;
     _pendingResumeSegmentPaths = validPaths;
@@ -224,9 +245,33 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
     await ref.read(recoveryCoordinatorProvider).refresh();
   }
 
+  /// Deletes this session's leftover segment files, sparing every name in
+  /// [keepFileNames].
+  ///
+  /// **The criterion is the session's declared list, never the index in the
+  /// file name** (ENG-531). The old rule — delete everything above
+  /// `lastSegmentIndex` — assumed the recorded counter and the names move
+  /// together, and they do not: `_repairInFlightSegments` attaches the orphans
+  /// it finds by *incrementing* the counter rather than reading the name's
+  /// index, so a single unrepairable file in the middle leaves every later
+  /// name above the counter. The segment the repair had just accepted then
+  /// landed in the deletion range and was erased by the same flow that
+  /// accepted it. The declared list is the truth about what belongs to the
+  /// session; the index was a guess.
+  ///
+  /// Names, not paths: the sweep lists the *current* documents directory,
+  /// while the declared paths were written by an earlier run and may still
+  /// name a container that has since moved. Comparing whole paths would fail
+  /// to recognise a declared file and delete it — the same defect through
+  /// another door. The basename is stable because it is derived from the
+  /// session id and the index.
+  ///
+  /// An empty [keepFileNames] means "erase everything", which is what the
+  /// discard paths ask for: applying the spare-the-declared rule there would
+  /// preserve the very files the person asked to be rid of.
   Future<void> _cleanupOrphanedSegments(
     String sessionId,
-    int lastFinalizedIndex,
+    Set<String> keepFileNames,
   ) async {
     if (kIsWeb) return;
     try {
@@ -235,13 +280,11 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
       final entries = await dir.list().toList();
       for (final entry in entries) {
         if (entry is! File) continue;
-        final index = SegmentPaths.parseIndex(entry.path, prefix);
-        if (index == null) continue;
-        if (index > lastFinalizedIndex) {
-          try {
-            await entry.delete();
-          } catch (_) {}
-        }
+        if (SegmentPaths.parseIndex(entry.path, prefix) == null) continue;
+        if (keepFileNames.contains(p.basename(entry.path))) continue;
+        try {
+          await entry.delete();
+        } catch (_) {}
       }
     } catch (_) {}
   }
@@ -258,7 +301,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
     final mapper = _amplitudeMapperFor(ref.read(noiseSensitivityProvider));
 
     if (ref.read(isWebPlatformProvider)) {
-      return _startWeb(genreId, subcategoryId, mapper);
+      return _startWeb(genreId, subcategoryId, projectId, mapper);
     }
 
     final resolvedProjectId =
@@ -342,6 +385,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
   Future<bool> _startWeb(
     String genreId,
     String subcategoryId,
+    String? projectId,
     AmplitudeMapper mapper,
   ) async {
     await _disposeWebRecorder();
@@ -354,6 +398,27 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
 
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     _webPendingKey = 'web_record_$timestamp';
+
+    // A mesma ordem do aparelho: a linha existe antes de haver áudio, para
+    // que nenhuma captura chegue ao fim sem ter onde ser registrada (ENG-519).
+    final sessionId = _newSessionId();
+    _webSessionId = sessionId;
+    await ref
+        .read(recordingSessionRepositoryProvider)
+        .insertSession(
+          RecordingSessionsCompanion.insert(
+            id: sessionId,
+            projectId:
+                projectId ??
+                ref.read(projectNotifierProvider).activeProject?.id ??
+                '',
+            genreId: genreId,
+            subcategoryId: subcategoryId.isEmpty
+                ? const Value.absent()
+                : Value(subcategoryId),
+            startedAt: DateTime.now(),
+          ),
+        );
 
     final device = ref.read(inputDeviceNotifierProvider).selectedDevice;
     await recorder.start(
@@ -388,6 +453,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
       currentGenreId: genreId,
       currentSubcategoryId: subcategoryId,
       amplitudeStream: ctrl.stream,
+      sessionId: sessionId,
     );
 
     _startElapsedTimer();
@@ -566,7 +632,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
           totalDuration: pendingDuration ?? fallbackElapsed,
         );
         if (result != null) {
-          await _cleanupOrphanedSegments(pendingSessionId, -1);
+          await _cleanupOrphanedSegments(pendingSessionId, const <String>{});
           // Same reason as the normal stop path (ENG-420): this produced real
           // finalized audio, so the row has to point at it before the status
           // says the session is done with.
@@ -754,7 +820,11 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
   Future<RecordingResult?> _stopWeb(Duration fallbackElapsed) async {
     final recorder = _webRecorder;
     final pendingKey = _webPendingKey;
+    final sessionId = _webSessionId;
     if (recorder == null || pendingKey == null) {
+      // Sem gravador não há captura a encerrar; uma linha aberta aqui não
+      // chegaria a lugar nenhum.
+      await _abandonWebSession(sessionId);
       await const RecordingActiveFlag().markInactive();
       state = const RecordingState();
       return null;
@@ -781,6 +851,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
     );
 
     if (url == null || url.isEmpty) {
+      await _abandonWebSession(sessionId);
       state = state.copyWith(
         finalizationStage: FinalizationStage.idle,
         finalizationErrorKind: FinalizationErrorKind.noAudio,
@@ -793,6 +864,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
       bytes = await http.readBytes(Uri.parse(url));
     } catch (e, st) {
       _log.severe('[stopWeb] download failed', e, st);
+      await _abandonWebSession(sessionId);
       state = state.copyWith(
         finalizationStage: FinalizationStage.idle,
         finalizationErrorKind: FinalizationErrorKind.downloadFailed,
@@ -811,6 +883,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
       await file_ops.writeFileBytes(fullKey, bytes);
     } catch (e, st) {
       _log.severe('[stopWeb] browser storage refused the audio', e, st);
+      await _abandonWebSession(sessionId);
       state = state.copyWith(
         finalizationStage: FinalizationStage.idle,
         finalizationErrorKind: FinalizationErrorKind.storageUnavailable,
@@ -818,12 +891,39 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
       return null;
     }
 
+    final durationSeconds = fallbackElapsed.inMilliseconds / 1000.0;
+    if (sessionId != null) {
+      // Os bytes já estão no armazenamento; só agora a linha aponta para eles,
+      // na mesma ordem que o aparelho segue (ENG-420). No navegador a âncora é
+      // a chave do armazenamento, não um caminho de arquivo.
+      await ref
+          .read(recordingSessionRepositoryProvider)
+          .completeWithFinalizedAudio(
+            sessionId,
+            filePath: fullKey,
+            durationSeconds: durationSeconds,
+          );
+    }
+    _webSessionId = null;
+
     state = const RecordingState();
     return RecordingResult(
       filePath: fullKey,
-      durationSeconds: fallbackElapsed.inMilliseconds / 1000.0,
+      durationSeconds: durationSeconds,
       format: format,
+      sessionId: sessionId,
     );
+  }
+
+  /// Fecha a linha de uma captura no navegador que não deixou áudio em lugar
+  /// nenhum: sem gravação, sem leitura da blob, ou com o armazenamento
+  /// recusando a escrita. Nenhuma delas tem endereço durável para oferecer
+  /// depois, e uma linha que ficasse de pé apareceria como gravação por
+  /// terminar.
+  Future<void> _abandonWebSession(String? sessionId) async {
+    _webSessionId = null;
+    if (sessionId == null) return;
+    await ref.read(recordingSessionRepositoryProvider).markDiscarded(sessionId);
   }
 
   Future<void> discardRecording() async {
@@ -833,6 +933,9 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
     _toastTimer?.cancel();
 
     if (kIsWeb) {
+      // Nada foi escrito no armazenamento ainda — os bytes só chegam lá no
+      // stop —, então não há áudio alcançável a preservar (ENG-521).
+      await _abandonWebSession(_webSessionId);
       await _disposeWebRecorder();
     } else {
       final pendingSessionId = _pendingResumeSessionId;
@@ -841,10 +944,19 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
         for (final p in paths) {
           await _deleteFileSafe(p);
         }
-        await _cleanupOrphanedSegments(pendingSessionId, -1);
-        await ref
-            .read(recordingSessionRepositoryProvider)
-            .markDiscarded(pendingSessionId);
+        await _cleanupOrphanedSegments(pendingSessionId, const <String>{});
+        // Walking away from a resumed session is not a request to delete it,
+        // and the finalized audio it may be anchored to was never touched
+        // here. The terminal status is written only once nothing is left to
+        // come back to — which also means a delete that failed above keeps the
+        // session reachable instead of stranding its file (ENG-521).
+        final sessionRepo = ref.read(recordingSessionRepositoryProvider);
+        final session = await sessionRepo.getById(pendingSessionId);
+        final stillHasAudio =
+            session != null && await sessionHoldsReachableAudio(session, paths);
+        if (!stillHasAudio) {
+          await sessionRepo.markDiscarded(pendingSessionId);
+        }
         _pendingResumeSessionId = null;
         _pendingResumeSegmentPaths = null;
         _pendingResumeDuration = null;
@@ -999,6 +1111,7 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
       finalizationErrorKind: FinalizationErrorKind.captureInterrupted,
     );
 
+    await _abandonWebSession(_webSessionId);
     await _disposeWebRecorder();
     await const RecordingActiveFlag().markInactive();
   }

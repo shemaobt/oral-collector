@@ -167,6 +167,9 @@
   "recording_discard": "Abandonner",
   "recording_discardTitle": "Abandonner l'Enregistrement ?",
   "recording_discardMessage": "Cet enregistrement sera définitivement supprimé.",
+  "recording_leaveTitle": "Quitter sans enregistrer ?",
+  "recording_leaveMessage": "L'audio est conservé — vous pourrez le terminer plus tard depuis les enregistrements non sauvegardés. Le supprimer maintenant est irréversible.",
+  "recording_keepForLater": "Garder pour plus tard",
   "recording_saved": "Enregistrement sauvegardé",
   "recording_uploading": "Envoi de l'enregistrement…",
   "recording_uploadFailed": "Échec de l'envoi : {error}",
@@ -177,7 +180,7 @@
       }
     }
   },
-  "recording_serviceNotificationTitle": "Recording in progress",
+  "recording_serviceNotificationTitle": "Enregistrement en cours",
   "recording_serviceNotificationBody": "{elapsed} • {genre}",
   "@recording_serviceNotificationBody": {
     "placeholders": {
@@ -189,7 +192,7 @@
       }
     }
   },
-  "recording_serviceNotificationStopAction": "Stop",
+  "recording_serviceNotificationStopAction": "Arrêter",
   "recording_notFound": "Enregistrement introuvable",
   "recording_unknownGenre": "Genre inconnu",
   "recording_splitRecording": "Modifier l'Enregistrement",
@@ -647,6 +650,8 @@
   "recording_secondaryCollisionBanner": "Cet enregistrement a les mêmes classifications primaire et secondaire. Supprimez la secondaire ou modifiez la primaire pour synchroniser.",
   "recording_clearSecondary": "Effacer la secondaire",
   "recording_unclassified": "Non classifié",
+  "recording_unclassifiedDesc": "Enregistrements en attente de classification",
+  "recording_unclassifiedSubcategoryDesc": "Contient les enregistrements encore en attente de classification",
   "recording_inputSource": "Entrée",
   "recording_selectMicrophone": "Sélectionner le microphone",
   "recording_builtInMicrophone": "Par défaut du système",
@@ -698,9 +703,9 @@
   "recording_recoverButton": "Récupérer",
   "recording_recoverDiscard": "Ignorer",
   "recording_recoverFailedLastSegment": "Une partie de l'audio près de la fin n'a pas pu être lue et a été ignorée.",
-  "recording_blockNavTitle": "Recording in progress",
-  "recording_blockNavMessage": "You have a recording in progress. Discarding will permanently delete it.",
-  "recording_blockNavDiscardAndLeave": "Discard and leave",
+  "recording_blockNavTitle": "Enregistrement en cours",
+  "recording_blockNavMessage": "Un enregistrement est en cours. L'abandonner le supprimera définitivement.",
+  "recording_blockNavDiscardAndLeave": "Abandonner et quitter",
   "recording_inProgressNotificationTitle": "Enregistrement en cours",
   "recording_inProgressNotificationBody": "Touchez pour revenir à l'application",
   "recording_finalizing": "Finalisation de l'enregistrement…",
@@ -715,13 +720,13 @@
   "recording_finalizationFailedBodyPipeline": "Nous n'avons pas pu terminer le traitement de cet enregistrement. Il est conservé dans vos enregistrements non sauvegardés.",
   "recording_finalizationErrorBack": "Retour",
   "recording_discardAndReturn": "Ignorer et revenir",
-  "recording_savingRecording": "Saving recording…",
-  "recording_processingYourAudio": "Processing your audio",
-  "recording_dontCloseSaveNext": "Don't close — we'll open the save screen next.",
-  "recording_stageShortFinalizing": "FINALIZING",
-  "recording_stageShortCombining": "COMBINING",
-  "recording_stageShortCompressing": "COMPRESSING",
-  "recording_savingPleaseWait": "Saving your recording — please wait a moment.",
+  "recording_savingRecording": "Sauvegarde de l'enregistrement…",
+  "recording_processingYourAudio": "Traitement de votre audio",
+  "recording_dontCloseSaveNext": "Ne fermez pas — l'écran de sauvegarde s'ouvrira juste après.",
+  "recording_stageShortFinalizing": "FINALISATION",
+  "recording_stageShortCombining": "ASSEMBLAGE",
+  "recording_stageShortCompressing": "COMPRESSION",
+  "recording_savingPleaseWait": "Sauvegarde de votre enregistrement — veuillez patienter un instant.",
   "profile_defaultMicrophone": "Microphone par défaut",
   "profile_systemDefault": "Par défaut du système",
   "settings_deviceStorageTitle": "Stockage de l'appareil",
@@ -874,7 +879,7 @@
   "recording_noPendingUploads": "Aucun envoi en attente",
   "recording_uploadQueue": "File d'attente d'envoi",
   "recording_uploadSpeed": "{speed}/s",
-  "recording_uploadEtaRemaining": "~{eta} remaining",
+  "recording_uploadEtaRemaining": "~{eta} restant",
   "recording_previewSelection": "Aperçu de la sélection",
   "recording_stopPreview": "Arrêter l'aperçu",
   "recording_audioLoadFailed": "Échec du chargement de l'audio",
@@ -888,8 +893,8 @@
   "recording_splitFrom": "Divisé de {sourceId}",
   "trim_segmentRemoved": "Segment {index} — supprimé",
   "trim_segmentOfTotal": "Segment {index} sur {total}",
-  "recovery_interruptedTitle": "Interrupted recordings",
-  "recovery_startedAt": "Started at {time}",
+  "recovery_interruptedTitle": "Enregistrements interrompus",
+  "recovery_startedAt": "Démarré à {time}",
   "@recovery_startedAt": {
     "placeholders": {
       "time": {
@@ -897,11 +902,11 @@
       }
     }
   },
-  "recovery_resume": "Resume",
-  "recovery_save": "Save",
-  "recovery_discard": "Discard",
-  "recovery_confirmDiscardTitle": "Discard recording?",
-  "recovery_confirmDiscardBody": "{duration} of audio will be permanently deleted.",
+  "recovery_resume": "Reprendre",
+  "recovery_save": "Enregistrer",
+  "recovery_discard": "Supprimer",
+  "recovery_confirmDiscardTitle": "Supprimer l'enregistrement ?",
+  "recovery_confirmDiscardBody": "{duration} d'audio seront définitivement supprimés.",
   "@recovery_confirmDiscardBody": {
     "placeholders": {
       "duration": {
@@ -909,7 +914,7 @@
       }
     }
   },
-  "recovery_homeBanner": "{count, plural, =1{1 interrupted recording — tap to resume} other{{count} interrupted recordings — tap to resume}}",
+  "recovery_homeBanner": "{count, plural, one{{count} enregistrement interrompu — appuyez pour reprendre} other{{count} enregistrements interrompus — appuyez pour reprendre}}",
   "@recovery_homeBanner": {
     "placeholders": {
       "count": {
@@ -917,7 +922,7 @@
       }
     }
   },
-  "recovery_unsavedCount": "{count, plural, =1{1 unsaved recording} other{{count} unsaved recordings}}",
+  "recovery_unsavedCount": "{count, plural, one{{count} enregistrement non sauvegardé} other{{count} enregistrements non sauvegardés}}",
   "@recovery_unsavedCount": {
     "placeholders": {
       "count": {
@@ -925,7 +930,7 @@
       }
     }
   },
-  "recovery_latestSummary": "Latest · {duration} · {time}",
+  "recovery_latestSummary": "Dernier · {duration} · {time}",
   "@recovery_latestSummary": {
     "placeholders": {
       "duration": {
@@ -936,9 +941,9 @@
       }
     }
   },
-  "recovery_review": "Review",
-  "recovery_unsavedTitle": "Unsaved recordings",
-  "recovery_unsavedSubtitle": "{count, plural, =1{1 recording to review} other{{count} recordings to review}}",
+  "recovery_review": "Vérifier",
+  "recovery_unsavedTitle": "Enregistrements non sauvegardés",
+  "recovery_unsavedSubtitle": "{count, plural, one{{count} enregistrement à vérifier} other{{count} enregistrements à vérifier}}",
   "@recovery_unsavedSubtitle": {
     "placeholders": {
       "count": {
@@ -946,9 +951,9 @@
       }
     }
   },
-  "recovery_discardAll": "Discard all",
-  "recovery_discardAllTitle": "Discard all recordings?",
-  "recovery_discardAllBody": "{count, plural, =1{1 recording will be permanently deleted.} other{{count} recordings will be permanently deleted.}}",
+  "recovery_discardAll": "Tout supprimer",
+  "recovery_discardAllTitle": "Supprimer tous les enregistrements ?",
+  "recovery_discardAllBody": "{count, plural, one{{count} enregistrement sera définitivement supprimé.} other{{count} enregistrements seront définitivement supprimés.}}",
   "@recovery_discardAllBody": {
     "placeholders": {
       "count": {
@@ -956,9 +961,9 @@
       }
     }
   },
-  "recovery_newBadge": "NEW",
-  "recovery_mostRecent": "Most recent",
-  "recovery_recordingNumbered": "Recording {number}",
+  "recovery_newBadge": "NOUVEAU",
+  "recovery_mostRecent": "Le plus récent",
+  "recovery_recordingNumbered": "Enregistrement {number}",
   "@recovery_recordingNumbered": {
     "placeholders": {
       "number": {
@@ -966,8 +971,8 @@
       }
     }
   },
-  "format_yesterday": "Yesterday",
-  "recovery_backToList": "Not now",
+  "format_yesterday": "Hier",
+  "recovery_backToList": "Pas maintenant",
   "common_discard": "Ignorer",
   "common_resume": "Reprendre",
   "import_dropActive": "Relâcher pour importer",
@@ -976,9 +981,10 @@
   "import_rejectedTooLarge": "{count, plural, =1{1 fichier de plus de 10 Go ignoré : {names}} other{{count} fichiers de plus de 10 Go ignorés : {names}}}",
   "import_rejectedUnreadable": "{count, plural, =1{1 fichier illisible ignoré : {names}} other{{count} fichiers illisibles ignorés : {names}}}",
   "import_rejectedUnsupportedCodec": "{count, plural, =1{1 fichier avec un codec audio non pris en charge ignoré : {names}. Réexportez-le en PCM WAV ou M4A.} other{{count} fichiers avec des codecs audio non pris en charge ignorés : {names}. Réexportez-les en PCM WAV ou M4A.}}",
-  "import_resumePromptBody": "« {name} » ({size}) a été partiellement téléversé. Sélectionnez exactement le même fichier (sans modification) pour continuer.",
-  "import_resumePromptTitle": "Reprendre le téléversement interrompu",
-  "import_resumeSizeMismatch": "C'est un autre fichier. Sélectionnez exactement le même fichier que celui en cours de téléversement.",
+  "recording_resumePromptTitle": "Reprendre le téléversement interrompu",
+  "recording_resumePromptBodyStored": "« {name} » ({size}) n'a pas fini d'être téléversé. Reprenez là où ça s'est arrêté.",
+  "recording_resumePromptBodyPickFile": "« {name} » ({size}) n'a pas fini d'être téléversé. Sélectionnez à nouveau le même fichier pour continuer.",
+  "recording_resumeSizeMismatch": "C'est un autre fichier. Sélectionnez exactement le même fichier que celui en cours de téléversement.",
   "recordings_offlineFilterTitle": "Indisponible hors ligne",
   "recordings_offlineFilterDescription": "C'est le serveur qui détermine quels enregistrements manquent encore de détails. Reconnectez-vous pour les voir, ou retirez le filtre pour parcourir tout ce qui se trouve sur cet appareil.",
   "recordings_filterErrorTitle": "Vérification impossible pour l'instant",

@@ -513,6 +513,16 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get recording_discardMessage => 'Dispela rekoding bai lus olgeta.';
 
   @override
+  String get recording_leaveTitle => 'Lusim na i no seivim?';
+
+  @override
+  String get recording_leaveMessage =>
+      'Rekoding i stap yet — yu inap pinisim bihain long ol rekoding i no seiv yet. Sapos yu tromoi nau, em bai lus olgeta.';
+
+  @override
+  String get recording_keepForLater => 'Holim bilong bihain';
+
+  @override
   String get recording_saved => 'Rekoding i sev pinis';
 
   @override
@@ -524,7 +534,7 @@ class AppLocalizationsTpi extends AppLocalizations {
   }
 
   @override
-  String get recording_serviceNotificationTitle => 'Recording in progress';
+  String get recording_serviceNotificationTitle => 'Rekodim i wok yet';
 
   @override
   String recording_serviceNotificationBody(String elapsed, String genre) {
@@ -532,7 +542,7 @@ class AppLocalizationsTpi extends AppLocalizations {
   }
 
   @override
-  String get recording_serviceNotificationStopAction => 'Stop';
+  String get recording_serviceNotificationStopAction => 'Stopim';
 
   @override
   String get recording_notFound => 'Rekoding i no stap';
@@ -816,10 +826,10 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get trim_addSplitsFirst => 'Putim ol brukim pastaim';
 
   @override
-  String get trim_applyBoost => 'Apply boost';
+  String get trim_applyBoost => 'Putim volium';
 
   @override
-  String get trim_boostApplied => 'Volume applied';
+  String get trim_boostApplied => 'Volium i senis pinis';
 
   @override
   String trim_savedSegments(int kept, int removed) {
@@ -1016,15 +1026,20 @@ class AppLocalizationsTpi extends AppLocalizations {
   }
 
   @override
-  String get import_resumePromptTitle => 'Statim gen aplotim i no pinis';
+  String get recording_resumePromptTitle => 'Statim gen aplotim i no pinis';
 
   @override
-  String import_resumePromptBody(String name, String size) {
-    return '\"$name\" ($size) i no go pinis. Makim stret wankain fail (i no senis) bilong go het.';
+  String recording_resumePromptBodyStored(String name, String size) {
+    return '\"$name\" ($size) i no pinis long aplotim. Em bai go het long ples em i bin stop.';
   }
 
   @override
-  String get import_resumeSizeMismatch =>
+  String recording_resumePromptBodyPickFile(String name, String size) {
+    return '\"$name\" ($size) i no pinis long aplotim. Makim gen wankain fail bilong go het.';
+  }
+
+  @override
+  String get recording_resumeSizeMismatch =>
       'Em narapela fail. Makim stret wankain fail yu bin aplotim.';
 
   @override
@@ -1955,7 +1970,7 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get recording_stopRecording => 'Stopim rekodim';
 
   @override
-  String get recording_stop => 'Stop';
+  String get recording_stop => 'Stopim';
 
   @override
   String get recording_resume => 'Stat gen';
@@ -2037,6 +2052,14 @@ class AppLocalizationsTpi extends AppLocalizations {
 
   @override
   String get recording_unclassified => 'I no makim kain yet';
+
+  @override
+  String get recording_unclassifiedDesc =>
+      'Ol rekoding i wet long makim kain bilong ol';
+
+  @override
+  String get recording_unclassifiedSubcategoryDesc =>
+      'I holim ol rekoding i wet yet long makim kain bilong ol';
 
   @override
   String get recording_inputSource => 'Insait';
@@ -2122,14 +2145,14 @@ class AppLocalizationsTpi extends AppLocalizations {
       'Sampela audio klostu long pinis ino inap rid na mipela skipim.';
 
   @override
-  String get recording_blockNavTitle => 'Recording in progress';
+  String get recording_blockNavTitle => 'Rekodim i wok yet';
 
   @override
   String get recording_blockNavMessage =>
-      'You have a recording in progress. Discarding will permanently delete it.';
+      'Yu gat wanpela rekoding i wok yet. Sapos yu tromoi, em bai lus olgeta.';
 
   @override
-  String get recording_blockNavDiscardAndLeave => 'Discard and leave';
+  String get recording_blockNavDiscardAndLeave => 'Tromoi na go';
 
   @override
   String get recording_inProgressNotificationTitle => 'Rekodim i wok';
@@ -2181,27 +2204,28 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get recording_discardAndReturn => 'Lusim na go bek';
 
   @override
-  String get recording_savingRecording => 'Saving recording…';
+  String get recording_savingRecording => 'Wok long sevim rekoding…';
 
   @override
-  String get recording_processingYourAudio => 'Processing your audio';
+  String get recording_processingYourAudio =>
+      'Wok long stretim audio bilong yu';
 
   @override
   String get recording_dontCloseSaveNext =>
-      'Don\'t close — we\'ll open the save screen next.';
+      'No ken pasim — bihain mipela bai opim skrin bilong sevim.';
 
   @override
-  String get recording_stageShortFinalizing => 'FINALIZING';
+  String get recording_stageShortFinalizing => 'PINISIM';
 
   @override
-  String get recording_stageShortCombining => 'COMBINING';
+  String get recording_stageShortCombining => 'BUNGIM';
 
   @override
-  String get recording_stageShortCompressing => 'COMPRESSING';
+  String get recording_stageShortCompressing => 'PRESIM';
 
   @override
   String get recording_savingPleaseWait =>
-      'Saving your recording — please wait a moment.';
+      'Wok long sevim rekoding bilong yu — plis wet liklik.';
 
   @override
   String get profile_defaultMicrophone => 'Defolt maikrofon';
@@ -2590,7 +2614,7 @@ class AppLocalizationsTpi extends AppLocalizations {
 
   @override
   String recording_uploadEtaRemaining(String eta) {
-    return '~$eta remaining';
+    return '~$eta i stap yet';
   }
 
   @override
@@ -2644,28 +2668,28 @@ class AppLocalizationsTpi extends AppLocalizations {
   }
 
   @override
-  String get recovery_interruptedTitle => 'Interrupted recordings';
+  String get recovery_interruptedTitle => 'Ol rekoding i bruk';
 
   @override
   String recovery_startedAt(String time) {
-    return 'Started at $time';
+    return 'I stat long $time';
   }
 
   @override
-  String get recovery_resume => 'Resume';
+  String get recovery_resume => 'Statim gen';
 
   @override
-  String get recovery_save => 'Save';
+  String get recovery_save => 'Sevim';
 
   @override
-  String get recovery_discard => 'Discard';
+  String get recovery_discard => 'Rausim';
 
   @override
-  String get recovery_confirmDiscardTitle => 'Discard recording?';
+  String get recovery_confirmDiscardTitle => 'Rausim rekoding?';
 
   @override
   String recovery_confirmDiscardBody(String duration) {
-    return '$duration of audio will be permanently deleted.';
+    return '$duration bilong audio bai lus olgeta.';
   }
 
   @override
@@ -2673,8 +2697,7 @@ class AppLocalizationsTpi extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count interrupted recordings — tap to resume',
-      one: '1 interrupted recording — tap to resume',
+      other: '$count rekoding i bruk — tasim bilong statim gen',
     );
     return '$_temp0';
   }
@@ -2684,67 +2707,64 @@ class AppLocalizationsTpi extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count unsaved recordings',
-      one: '1 unsaved recording',
+      other: '$count rekoding i no sevim yet',
     );
     return '$_temp0';
   }
 
   @override
   String recovery_latestSummary(String duration, String time) {
-    return 'Latest · $duration · $time';
+    return 'Nupela tru · $duration · $time';
   }
 
   @override
-  String get recovery_review => 'Review';
+  String get recovery_review => 'Skelim';
 
   @override
-  String get recovery_unsavedTitle => 'Unsaved recordings';
+  String get recovery_unsavedTitle => 'Ol rekoding i no sevim yet';
 
   @override
   String recovery_unsavedSubtitle(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count recordings to review',
-      one: '1 recording to review',
+      other: '$count rekoding bilong skelim',
     );
     return '$_temp0';
   }
 
   @override
-  String get recovery_discardAll => 'Discard all';
+  String get recovery_discardAll => 'Rausim olgeta';
 
   @override
-  String get recovery_discardAllTitle => 'Discard all recordings?';
+  String get recovery_discardAllTitle => 'Rausim olgeta rekoding?';
 
   @override
   String recovery_discardAllBody(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count recordings will be permanently deleted.',
-      one: '1 recording will be permanently deleted.',
+      other: '$count rekoding bai lus olgeta.',
     );
     return '$_temp0';
   }
 
   @override
-  String get recovery_newBadge => 'NEW';
+  String get recovery_newBadge => 'NUPELA';
 
   @override
-  String get recovery_mostRecent => 'Most recent';
+  String get recovery_mostRecent => 'Nupela tru';
 
   @override
   String recovery_recordingNumbered(int number) {
-    return 'Recording $number';
+    return 'Rekoding $number';
   }
 
   @override
-  String get format_yesterday => 'Yesterday';
+  String get format_yesterday => 'Asde';
 
   @override
-  String get recovery_backToList => 'Not now';
+  String get recovery_backToList => 'I no nau';
 
   @override
   String get upload_pausedWhileRecording => 'Aplotim i wet taim rekodim';

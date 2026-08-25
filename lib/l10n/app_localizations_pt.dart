@@ -516,6 +516,16 @@ class AppLocalizationsPt extends AppLocalizations {
       'Esta gravação será excluída permanentemente.';
 
   @override
+  String get recording_leaveTitle => 'Sair sem salvar?';
+
+  @override
+  String get recording_leaveMessage =>
+      'O áudio fica guardado — você pode terminar depois em gravações não salvas. Apagar agora não tem volta.';
+
+  @override
+  String get recording_keepForLater => 'Guardar para depois';
+
+  @override
   String get recording_saved => 'Gravação salva';
 
   @override
@@ -1029,15 +1039,20 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get import_resumePromptTitle => 'Retomar envio interrompido';
+  String get recording_resumePromptTitle => 'Retomar envio interrompido';
 
   @override
-  String import_resumePromptBody(String name, String size) {
-    return '\"$name\" ($size) foi enviado parcialmente. Selecione exatamente o mesmo arquivo (sem alterações) para continuar.';
+  String recording_resumePromptBodyStored(String name, String size) {
+    return '\"$name\" ($size) não terminou de subir. Continue de onde parou.';
   }
 
   @override
-  String get import_resumeSizeMismatch =>
+  String recording_resumePromptBodyPickFile(String name, String size) {
+    return '\"$name\" ($size) não terminou de subir. Escolha o mesmo arquivo de novo para continuar.';
+  }
+
+  @override
+  String get recording_resumeSizeMismatch =>
       'Esse é outro arquivo. Selecione exatamente o mesmo arquivo que estava sendo enviado.';
 
   @override
@@ -2064,6 +2079,13 @@ class AppLocalizationsPt extends AppLocalizations {
   String get recording_unclassified => 'Não Classificado';
 
   @override
+  String get recording_unclassifiedDesc => 'Gravações aguardando classificação';
+
+  @override
+  String get recording_unclassifiedSubcategoryDesc =>
+      'Guarda gravações ainda aguardando classificação';
+
+  @override
   String get recording_inputSource => 'Entrada';
 
   @override
@@ -2147,14 +2169,14 @@ class AppLocalizationsPt extends AppLocalizations {
       'Algum áudio próximo ao fim não pôde ser lido e foi ignorado.';
 
   @override
-  String get recording_blockNavTitle => 'Recording in progress';
+  String get recording_blockNavTitle => 'Gravação em andamento';
 
   @override
   String get recording_blockNavMessage =>
-      'You have a recording in progress. Discarding will permanently delete it.';
+      'Você tem uma gravação em andamento. Descartar vai apagá-la para sempre.';
 
   @override
-  String get recording_blockNavDiscardAndLeave => 'Discard and leave';
+  String get recording_blockNavDiscardAndLeave => 'Descartar e sair';
 
   @override
   String get recording_inProgressNotificationTitle => 'Gravação em andamento';

@@ -1,8 +1,11 @@
 import 'dart:async';
 
+import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:oral_collector/core/database/app_database.dart';
+import 'package:oral_collector/core/database/database_provider.dart';
 import 'package:oral_collector/features/recording/presentation/notifiers/input_device_notifier.dart';
 import 'package:oral_collector/features/recording/presentation/notifiers/recording_session_notifier.dart';
 import 'package:oral_collector/features/recording/presentation/notifiers/recording_session_state.dart';
@@ -32,9 +35,13 @@ void main() {
   late _MockAudioRecorder recorder;
   late StreamController<RecordState> recorderState;
   late ProviderContainer container;
+  // Desde o ENG-519 a captura no navegador abre uma linha de sessão, então
+  // estes casos passam pelo banco. Em memória, como os do aparelho.
+  late AppDatabase db;
 
   setUp(() {
     SharedPreferences.setMockInitialValues({});
+    db = AppDatabase.forTesting(NativeDatabase.memory());
     recorder = _MockAudioRecorder();
     recorderState = StreamController<RecordState>.broadcast();
 
@@ -53,6 +60,7 @@ void main() {
 
     container = ProviderContainer(
       overrides: [
+        appDatabaseProvider.overrideWithValue(db),
         isWebPlatformProvider.overrideWithValue(true),
         webAudioRecorderFactoryProvider.overrideWithValue(() => recorder),
         inputDeviceNotifierProvider.overrideWith(_FakeInputDeviceNotifier.new),
@@ -63,6 +71,7 @@ void main() {
   tearDown(() async {
     container.dispose();
     await recorderState.close();
+    await db.close();
   });
 
   RecordingState state() => container.read(recordingSessionNotifierProvider);

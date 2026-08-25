@@ -515,6 +515,16 @@ class AppLocalizationsSw extends AppLocalizations {
   String get recording_discardMessage => 'Rekodi hii itafutwa kabisa.';
 
   @override
+  String get recording_leaveTitle => 'Ondoka bila kuhifadhi?';
+
+  @override
+  String get recording_leaveMessage =>
+      'Sauti inabaki — unaweza kuikamilisha baadaye kutoka kwa rekodi ambazo hazijahifadhiwa. Ukiifuta sasa hairudi.';
+
+  @override
+  String get recording_keepForLater => 'Weka kwa baadaye';
+
+  @override
   String get recording_saved => 'Rekodi imehifadhiwa';
 
   @override
@@ -526,7 +536,7 @@ class AppLocalizationsSw extends AppLocalizations {
   }
 
   @override
-  String get recording_serviceNotificationTitle => 'Recording in progress';
+  String get recording_serviceNotificationTitle => 'Kurekodi kunaendelea';
 
   @override
   String recording_serviceNotificationBody(String elapsed, String genre) {
@@ -534,7 +544,7 @@ class AppLocalizationsSw extends AppLocalizations {
   }
 
   @override
-  String get recording_serviceNotificationStopAction => 'Stop';
+  String get recording_serviceNotificationStopAction => 'Simama';
 
   @override
   String get recording_notFound => 'Rekodi haikupatikana';
@@ -818,10 +828,10 @@ class AppLocalizationsSw extends AppLocalizations {
   String get trim_addSplitsFirst => 'Ongeza migawanyo kwanza';
 
   @override
-  String get trim_applyBoost => 'Apply boost';
+  String get trim_applyBoost => 'Weka sauti';
 
   @override
-  String get trim_boostApplied => 'Volume applied';
+  String get trim_boostApplied => 'Sauti imewekwa';
 
   @override
   String trim_savedSegments(int kept, int removed) {
@@ -1018,15 +1028,20 @@ class AppLocalizationsSw extends AppLocalizations {
   }
 
   @override
-  String get import_resumePromptTitle => 'Endelea upakiaji uliokatizwa';
+  String get recording_resumePromptTitle => 'Endelea upakiaji uliokatizwa';
 
   @override
-  String import_resumePromptBody(String name, String size) {
-    return '\"$name\" ($size) ilipakiwa kwa sehemu. Chagua faili ileile kabisa (bila mabadiliko) ili kuendelea.';
+  String recording_resumePromptBodyStored(String name, String size) {
+    return '\"$name\" ($size) haikumaliza kupakiwa. Endelea kutoka mahali ilipoishia.';
   }
 
   @override
-  String get import_resumeSizeMismatch =>
+  String recording_resumePromptBodyPickFile(String name, String size) {
+    return '\"$name\" ($size) haikumaliza kupakiwa. Chagua tena faili ileile ili kuendelea.';
+  }
+
+  @override
+  String get recording_resumeSizeMismatch =>
       'Hiyo ni faili tofauti. Chagua faili ileile kabisa uliyokuwa ukipakia.';
 
   @override
@@ -2041,6 +2056,13 @@ class AppLocalizationsSw extends AppLocalizations {
   String get recording_unclassified => 'Haijainishwa';
 
   @override
+  String get recording_unclassifiedDesc => 'Rekodi zinazosubiri kuainishwa';
+
+  @override
+  String get recording_unclassifiedSubcategoryDesc =>
+      'Huhifadhi rekodi ambazo bado zinasubiri kuainishwa';
+
+  @override
   String get recording_inputSource => 'Ingizo';
 
   @override
@@ -2124,14 +2146,14 @@ class AppLocalizationsSw extends AppLocalizations {
       'Sauti fulani karibu na mwisho haikuweza kusomwa na ikarukwa.';
 
   @override
-  String get recording_blockNavTitle => 'Recording in progress';
+  String get recording_blockNavTitle => 'Kurekodi kunaendelea';
 
   @override
   String get recording_blockNavMessage =>
-      'You have a recording in progress. Discarding will permanently delete it.';
+      'Una rekodi inayoendelea. Ukiitupa itafutwa kabisa.';
 
   @override
-  String get recording_blockNavDiscardAndLeave => 'Discard and leave';
+  String get recording_blockNavDiscardAndLeave => 'Tupa na uondoke';
 
   @override
   String get recording_inProgressNotificationTitle => 'Inarekodi';
@@ -2183,27 +2205,27 @@ class AppLocalizationsSw extends AppLocalizations {
   String get recording_discardAndReturn => 'Tupa na urudi';
 
   @override
-  String get recording_savingRecording => 'Saving recording…';
+  String get recording_savingRecording => 'Inahifadhi rekodi…';
 
   @override
-  String get recording_processingYourAudio => 'Processing your audio';
+  String get recording_processingYourAudio => 'Inachakata sauti yako';
 
   @override
   String get recording_dontCloseSaveNext =>
-      'Don\'t close — we\'ll open the save screen next.';
+      'Usifunge — tutafungua skrini ya kuhifadhi baada ya hapa.';
 
   @override
-  String get recording_stageShortFinalizing => 'FINALIZING';
+  String get recording_stageShortFinalizing => 'KUKAMILISHA';
 
   @override
-  String get recording_stageShortCombining => 'COMBINING';
+  String get recording_stageShortCombining => 'KUUNGANISHA';
 
   @override
-  String get recording_stageShortCompressing => 'COMPRESSING';
+  String get recording_stageShortCompressing => 'KUBANA';
 
   @override
   String get recording_savingPleaseWait =>
-      'Saving your recording — please wait a moment.';
+      'Inahifadhi rekodi yako — tafadhali subiri kidogo.';
 
   @override
   String get profile_defaultMicrophone => 'Maikrofoni chaguomsingi';
@@ -2596,7 +2618,7 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String recording_uploadEtaRemaining(String eta) {
-    return '~$eta remaining';
+    return '~$eta zimesalia';
   }
 
   @override
@@ -2649,28 +2671,28 @@ class AppLocalizationsSw extends AppLocalizations {
   }
 
   @override
-  String get recovery_interruptedTitle => 'Interrupted recordings';
+  String get recovery_interruptedTitle => 'Rekodi zilizokatizwa';
 
   @override
   String recovery_startedAt(String time) {
-    return 'Started at $time';
+    return 'Ilianza saa $time';
   }
 
   @override
-  String get recovery_resume => 'Resume';
+  String get recovery_resume => 'Endelea';
 
   @override
-  String get recovery_save => 'Save';
+  String get recovery_save => 'Hifadhi';
 
   @override
-  String get recovery_discard => 'Discard';
+  String get recovery_discard => 'Tupa';
 
   @override
-  String get recovery_confirmDiscardTitle => 'Discard recording?';
+  String get recovery_confirmDiscardTitle => 'Tupa rekodi?';
 
   @override
   String recovery_confirmDiscardBody(String duration) {
-    return '$duration of audio will be permanently deleted.';
+    return 'Sauti ya $duration itafutwa kabisa.';
   }
 
   @override
@@ -2678,8 +2700,8 @@ class AppLocalizationsSw extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count interrupted recordings — tap to resume',
-      one: '1 interrupted recording — tap to resume',
+      other: 'Rekodi $count zimekatizwa — gusa ili kuendelea',
+      one: 'Rekodi $count imekatizwa — gusa ili kuendelea',
     );
     return '$_temp0';
   }
@@ -2689,67 +2711,67 @@ class AppLocalizationsSw extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count unsaved recordings',
-      one: '1 unsaved recording',
+      other: 'Rekodi $count hazijahifadhiwa',
+      one: 'Rekodi $count haijahifadhiwa',
     );
     return '$_temp0';
   }
 
   @override
   String recovery_latestSummary(String duration, String time) {
-    return 'Latest · $duration · $time';
+    return 'Ya hivi punde · $duration · $time';
   }
 
   @override
-  String get recovery_review => 'Review';
+  String get recovery_review => 'Kagua';
 
   @override
-  String get recovery_unsavedTitle => 'Unsaved recordings';
+  String get recovery_unsavedTitle => 'Rekodi ambazo hazijahifadhiwa';
 
   @override
   String recovery_unsavedSubtitle(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count recordings to review',
-      one: '1 recording to review',
+      other: 'Rekodi $count za kukagua',
+      one: 'Rekodi $count ya kukagua',
     );
     return '$_temp0';
   }
 
   @override
-  String get recovery_discardAll => 'Discard all';
+  String get recovery_discardAll => 'Tupa zote';
 
   @override
-  String get recovery_discardAllTitle => 'Discard all recordings?';
+  String get recovery_discardAllTitle => 'Tupa rekodi zote?';
 
   @override
   String recovery_discardAllBody(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count recordings will be permanently deleted.',
-      one: '1 recording will be permanently deleted.',
+      other: 'Rekodi $count zitafutwa kabisa.',
+      one: 'Rekodi $count itafutwa kabisa.',
     );
     return '$_temp0';
   }
 
   @override
-  String get recovery_newBadge => 'NEW';
+  String get recovery_newBadge => 'MPYA';
 
   @override
-  String get recovery_mostRecent => 'Most recent';
+  String get recovery_mostRecent => 'Ya hivi punde';
 
   @override
   String recovery_recordingNumbered(int number) {
-    return 'Recording $number';
+    return 'Rekodi $number';
   }
 
   @override
-  String get format_yesterday => 'Yesterday';
+  String get format_yesterday => 'Jana';
 
   @override
-  String get recovery_backToList => 'Not now';
+  String get recovery_backToList => 'Si sasa';
 
   @override
   String get upload_pausedWhileRecording =>

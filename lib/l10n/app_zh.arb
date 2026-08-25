@@ -35,7 +35,7 @@
   "auth_signUpSubtitle": "加入我们的故事收集者社区。",
   "auth_backToSignIn": "返回登录",
   "auth_emailLabel": "电子邮箱",
-  "auth_emailHint": "your@email.com",
+  "auth_emailHint": "你的@邮箱.com",
   "auth_emailRequired": "请输入您的电子邮箱",
   "auth_emailInvalid": "请输入有效的电子邮箱",
   "auth_passwordLabel": "密码",
@@ -191,6 +191,9 @@
   "recording_discard": "丢弃",
   "recording_discardTitle": "丢弃录音？",
   "recording_discardMessage": "此录音将被永久删除。",
+  "recording_leaveTitle": "不保存就离开？",
+  "recording_leaveMessage": "音频会保留 — 你可以稍后从未保存的录音中继续完成。现在删除将无法恢复。",
+  "recording_keepForLater": "留待稍后",
   "recording_saved": "录音已保存",
   "recording_uploading": "正在上传录音…",
   "recording_uploadFailed": "上传失败:{error}",
@@ -201,7 +204,7 @@
       }
     }
   },
-  "recording_serviceNotificationTitle": "Recording in progress",
+  "recording_serviceNotificationTitle": "正在录音",
   "recording_serviceNotificationBody": "{elapsed} • {genre}",
   "@recording_serviceNotificationBody": {
     "placeholders": {
@@ -213,7 +216,7 @@
       }
     }
   },
-  "recording_serviceNotificationStopAction": "Stop",
+  "recording_serviceNotificationStopAction": "停止",
   "recording_notFound": "未找到录音",
   "recording_unknownGenre": "未知体裁",
   "recording_splitRecording": "编辑录音",
@@ -308,8 +311,8 @@
     }
   },
   "trim_addSplitsFirst": "请先添加分割点",
-  "trim_applyBoost": "Apply boost",
-  "trim_boostApplied": "Volume applied",
+  "trim_applyBoost": "应用音量",
+  "trim_boostApplied": "音量已应用",
   "trim_savedSegments": "已保存 {kept} 个片段，移除了 {removed} 个",
   "@trim_savedSegments": {
     "placeholders": {
@@ -848,6 +851,8 @@
   "recording_secondaryCollisionBanner": "此录音的主要和次要分类相同。清除次要分类或更改主要分类以进行同步。",
   "recording_clearSecondary": "清除次要",
   "recording_unclassified": "未分类",
+  "recording_unclassifiedDesc": "等待分类的录音",
+  "recording_unclassifiedSubcategoryDesc": "存放仍在等待分类的录音",
   "recording_inputSource": "输入",
   "recording_selectMicrophone": "选择麦克风",
   "recording_builtInMicrophone": "系统默认",
@@ -899,9 +904,9 @@
   "recording_recoverButton": "恢复",
   "recording_recoverDiscard": "放弃",
   "recording_recoverFailedLastSegment": "末尾附近的部分音频无法读取并已跳过。",
-  "recording_blockNavTitle": "Recording in progress",
-  "recording_blockNavMessage": "You have a recording in progress. Discarding will permanently delete it.",
-  "recording_blockNavDiscardAndLeave": "Discard and leave",
+  "recording_blockNavTitle": "正在录音",
+  "recording_blockNavMessage": "您有一段正在进行的录音。丢弃后将被永久删除。",
+  "recording_blockNavDiscardAndLeave": "丢弃并离开",
   "recording_inProgressNotificationTitle": "正在录音",
   "recording_inProgressNotificationBody": "点击返回应用",
   "recording_finalizing": "正在完成录音…",
@@ -916,13 +921,13 @@
   "recording_finalizationFailedBodyPipeline": "我们无法完成此录音的处理。它保存在您的未保存录音中。",
   "recording_finalizationErrorBack": "返回",
   "recording_discardAndReturn": "放弃并返回",
-  "recording_savingRecording": "Saving recording…",
-  "recording_processingYourAudio": "Processing your audio",
-  "recording_dontCloseSaveNext": "Don't close — we'll open the save screen next.",
-  "recording_stageShortFinalizing": "FINALIZING",
-  "recording_stageShortCombining": "COMBINING",
-  "recording_stageShortCompressing": "COMPRESSING",
-  "recording_savingPleaseWait": "Saving your recording — please wait a moment.",
+  "recording_savingRecording": "正在保存录音…",
+  "recording_processingYourAudio": "正在处理您的音频",
+  "recording_dontCloseSaveNext": "请勿关闭，接下来会打开保存界面。",
+  "recording_stageShortFinalizing": "完成中",
+  "recording_stageShortCombining": "合并中",
+  "recording_stageShortCompressing": "压缩中",
+  "recording_savingPleaseWait": "正在保存您的录音，请稍候。",
   "profile_defaultMicrophone": "默认麦克风",
   "profile_systemDefault": "系统默认",
   "settings_deviceStorageTitle": "设备存储",
@@ -1087,8 +1092,8 @@
   "recording_splitFrom": "从 {sourceId} 拆分",
   "trim_segmentRemoved": "片段 {index} — 已移除",
   "trim_segmentOfTotal": "片段 {index}，共 {total} 个",
-  "recovery_interruptedTitle": "Interrupted recordings",
-  "recovery_startedAt": "Started at {time}",
+  "recovery_interruptedTitle": "已中断的录音",
+  "recovery_startedAt": "开始于 {time}",
   "@recovery_startedAt": {
     "placeholders": {
       "time": {
@@ -1096,11 +1101,11 @@
       }
     }
   },
-  "recovery_resume": "Resume",
-  "recovery_save": "Save",
-  "recovery_discard": "Discard",
-  "recovery_confirmDiscardTitle": "Discard recording?",
-  "recovery_confirmDiscardBody": "{duration} of audio will be permanently deleted.",
+  "recovery_resume": "继续",
+  "recovery_save": "保存",
+  "recovery_discard": "丢弃",
+  "recovery_confirmDiscardTitle": "丢弃录音？",
+  "recovery_confirmDiscardBody": "{duration} 的音频将被永久删除。",
   "@recovery_confirmDiscardBody": {
     "placeholders": {
       "duration": {
@@ -1108,7 +1113,7 @@
       }
     }
   },
-  "recovery_homeBanner": "{count, plural, =1{1 interrupted recording — tap to resume} other{{count} interrupted recordings — tap to resume}}",
+  "recovery_homeBanner": "{count, plural, other{{count} 条录音已中断 — 点按继续}}",
   "@recovery_homeBanner": {
     "placeholders": {
       "count": {
@@ -1116,7 +1121,7 @@
       }
     }
   },
-  "recovery_unsavedCount": "{count, plural, =1{1 unsaved recording} other{{count} unsaved recordings}}",
+  "recovery_unsavedCount": "{count, plural, other{{count} 条录音未保存}}",
   "@recovery_unsavedCount": {
     "placeholders": {
       "count": {
@@ -1124,7 +1129,7 @@
       }
     }
   },
-  "recovery_latestSummary": "Latest · {duration} · {time}",
+  "recovery_latestSummary": "最新 · {duration} · {time}",
   "@recovery_latestSummary": {
     "placeholders": {
       "duration": {
@@ -1135,9 +1140,9 @@
       }
     }
   },
-  "recovery_review": "Review",
-  "recovery_unsavedTitle": "Unsaved recordings",
-  "recovery_unsavedSubtitle": "{count, plural, =1{1 recording to review} other{{count} recordings to review}}",
+  "recovery_review": "查看",
+  "recovery_unsavedTitle": "未保存的录音",
+  "recovery_unsavedSubtitle": "{count, plural, other{{count} 条录音待查看}}",
   "@recovery_unsavedSubtitle": {
     "placeholders": {
       "count": {
@@ -1145,9 +1150,9 @@
       }
     }
   },
-  "recovery_discardAll": "Discard all",
-  "recovery_discardAllTitle": "Discard all recordings?",
-  "recovery_discardAllBody": "{count, plural, =1{1 recording will be permanently deleted.} other{{count} recordings will be permanently deleted.}}",
+  "recovery_discardAll": "全部丢弃",
+  "recovery_discardAllTitle": "丢弃所有录音？",
+  "recovery_discardAllBody": "{count, plural, other{将永久删除 {count} 条录音。}}",
   "@recovery_discardAllBody": {
     "placeholders": {
       "count": {
@@ -1155,9 +1160,9 @@
       }
     }
   },
-  "recovery_newBadge": "NEW",
-  "recovery_mostRecent": "Most recent",
-  "recovery_recordingNumbered": "Recording {number}",
+  "recovery_newBadge": "新",
+  "recovery_mostRecent": "最新",
+  "recovery_recordingNumbered": "录音 {number}",
   "@recovery_recordingNumbered": {
     "placeholders": {
       "number": {
@@ -1165,8 +1170,8 @@
       }
     }
   },
-  "format_yesterday": "Yesterday",
-  "recovery_backToList": "Not now",
+  "format_yesterday": "昨天",
+  "recovery_backToList": "暂不",
   "common_discard": "丢弃",
   "common_resume": "继续",
   "import_dropActive": "释放以导入",
@@ -1175,9 +1180,10 @@
   "import_rejectedTooLarge": "{count, plural, =1{已跳过 1 个超过 10 GB 的文件：{names}} other{已跳过 {count} 个超过 10 GB 的文件：{names}}}",
   "import_rejectedUnreadable": "{count, plural, =1{已跳过 1 个无法读取的文件：{names}} other{已跳过 {count} 个无法读取的文件：{names}}}",
   "import_rejectedUnsupportedCodec": "{count, plural, =1{已跳过 1 个使用不支持的音频编解码器的文件：{names}。请重新导出为 PCM WAV 或 M4A。} other{已跳过 {count} 个使用不支持的音频编解码器的文件：{names}。请重新导出为 PCM WAV 或 M4A。}}",
-  "import_resumePromptBody": "“{name}”（{size}）已部分上传。请选择完全相同（未更改）的文件以继续。",
-  "import_resumePromptTitle": "继续中断的上传",
-  "import_resumeSizeMismatch": "这是另一个文件。请选择您正在上传的那个完全相同的文件。",
+  "recording_resumePromptTitle": "继续中断的上传",
+  "recording_resumePromptBodyStored": "“{name}”（{size}）尚未上传完成。将从中断处继续。",
+  "recording_resumePromptBodyPickFile": "“{name}”（{size}）尚未上传完成。请重新选择同一个文件以继续。",
+  "recording_resumeSizeMismatch": "这是另一个文件。请选择您正在上传的那个完全相同的文件。",
   "recordings_offlineFilterTitle": "离线时不可用",
   "recordings_offlineFilterDescription": "哪些录音还缺少信息是由服务器判定的。请重新联网查看，或清除筛选以浏览本设备上的全部录音。",
   "recordings_filterErrorTitle": "暂时无法查询",

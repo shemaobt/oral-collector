@@ -3,15 +3,17 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
+import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import '../../../../core/database/app_database.dart';
-import '../../../../core/platform/file_ops.dart' as file_ops;
+import '../../../../core/observability/error_reporter.dart';
 import '../../data/providers.dart';
 import '../../data/services/audio_path_resolver.dart';
 import '../../data/services/recording_finalization_service.dart';
 import '../../data/services/recovery_coordinator.dart';
 import '../../data/services/segment_paths.dart';
+import '../../data/services/session_audio.dart';
 import 'recording_session_notifier.dart';
 import 'recording_session_state.dart';
 
@@ -59,31 +61,75 @@ class InterruptedSessionsNotifier extends Notifier<void> {
       // Since ENG-420 slice 2 a session can reach the banner on the strength
       // of its finalized audio alone, so discarding one has to take that file
       // too — the segments it was built from may already be gone.
+      //
+      // Deleted at the address the predicate below reads it from, not at the
+      // one the row stores (ENG-528). The container moves on reinstall or
+      // restore, so a path written by an earlier run stops resolving; the
+      // delete would find nothing and not throw, while the predicate resolved
+      // the same file by basename and answered "still here". The terminal
+      // status then never got written and the person pressed discard forever
+      // with nothing happening. A null resolution means the file is gone from
+      // every place the app looks, so there is nothing to delete.
       final finalized = session.finalizedAudioPath;
-      if (finalized != null) await _deleteFileSafe(finalized);
-      await _cleanupOrphanedSegments(session.id, -1);
-      await sessionRepo.markDiscarded(session.id);
+      final resolved = finalized == null
+          ? null
+          : await resolveRecordingPath(finalized);
+      if (resolved != null) await _deleteFileSafe(resolved);
+      await _cleanupOrphanedSegments(session.id, const <String>{});
+      // The terminal status says the recording is gone, so it is written only
+      // once the audio actually is. A delete that refused used to be swallowed
+      // and the row marked anyway, which left the file on disk with nothing
+      // able to reach it; now the session stays in the list and the person can
+      // ask again (ENG-521).
+      if (!await sessionHoldsReachableAudio(session, paths)) {
+        await sessionRepo.markDiscarded(session.id);
+      }
     }
     await ref.read(recoveryCoordinatorProvider).refresh();
   }
 
-  Future<RecordingResult?> save(String sessionId) async {
-    if (kIsWeb) return null;
+  /// Parks a finished recording the person walked away from without saving,
+  /// so it waits for them in the unsaved-recordings list instead of being
+  /// deleted (ENG-518).
+  ///
+  /// **The status written here is `crashed`, and that is deliberate.** The name
+  /// says failure; the state does not. Every sweep and every query already
+  /// reads it as "there is anchored audio nobody saved" — which is exactly what
+  /// a deliberate exit produces, and exactly what the startup sweep would
+  /// promote this same row to on the next launch anyway. A status of its own
+  /// would mean teaching `findCrashedSessions`, the sweep and the banner about
+  /// it for no gain beyond a better name.
+  ///
+  /// The row keeps its anchor, so the invariant from ENG-420 holds: a session
+  /// still pointing at durable audio never reaches a state no sweep looks at.
+  /// The refresh is not decoration — without it the list only picks the
+  /// recording up on the next launch, and from the person's side that is
+  /// indistinguishable from having lost it.
+  Future<void> keepForLater(String sessionId) async {
+    await ref.read(recordingSessionRepositoryProvider).markCrashed(sessionId);
+    await ref.read(recoveryCoordinatorProvider).refresh();
+  }
 
+  Future<RecordingResult?> save(String sessionId) async {
     final sessionRepo = ref.read(recordingSessionRepositoryProvider);
     final session = await sessionRepo.getById(sessionId);
     if (session == null) return null;
 
+    // Pelo provider, não por `kIsWeb`: um ramo decidido pela constante de
+    // compilação é, por construção, um ramo que nenhum teste na VM percorre —
+    // foi assim que o caso da fatia 2 ficou verde afirmando algo que no
+    // navegador era falso (ENG-519, fatia 3).
+    if (ref.read(isWebPlatformProvider)) return _saveWeb(session);
+
     final finished = await _finishedAudio(session);
     if (finished != null) return finished;
 
-    final paths = sessionRepo.decodeSegmentPaths(session);
-    final validPaths = <String>[];
-    for (final p in paths) {
-      if (await file_ops.fileExists(p)) {
-        validPaths.add(p);
-      }
-    }
+    // Resolvidos pelo mesmo critério da âncora: depois de o contêiner mudar de
+    // lugar, o caminho guardado não existe mais e os arquivos continuam no
+    // disco sob o mesmo nome (ENG-529).
+    final validPaths = await resolveSegmentPaths(
+      sessionRepo.decodeSegmentPaths(session),
+    );
     if (validPaths.isEmpty) {
       // A session still holding finalized audio must not reach `discarded`:
       // no sweep queries that status, so the row — and the recording it points
@@ -125,6 +171,44 @@ class InterruptedSessionsNotifier extends Notifier<void> {
     return outcome.result;
   }
 
+  /// A gravação que o navegador guardou, aberta a partir da âncora.
+  ///
+  /// Lá não há segmentos para re-finalizar — a captura é um blob só —, então a
+  /// âncora é a única resposta possível: ela é a chave do armazenamento, e o
+  /// próprio endereço que o formulário vai usar.
+  ///
+  /// Quando os bytes não estão mais lá (a faxina do ENG-426 leva o que ninguém
+  /// reclamou em 24 horas), a gravação sai da lista em vez de continuar sendo
+  /// oferecida. A folha não faz nada com um nulo: sem isto a pessoa tocaria no
+  /// item e nada aconteceria, hoje e em toda abertura seguinte.
+  Future<RecordingResult?> _saveWeb(RecordingSession session) async {
+    final anchor = session.finalizedAudioPath;
+    if (anchor != null && await durableAudioExists(anchor)) {
+      return RecordingResult(
+        filePath: anchor,
+        durationSeconds:
+            session.finalizedDurationSeconds ?? session.totalDurationSeconds,
+        sessionId: session.id,
+        format: _formatOfKey(anchor),
+      );
+    }
+
+    await ref
+        .read(recordingSessionRepositoryProvider)
+        .markDiscarded(session.id);
+    await ref.read(recoveryCoordinatorProvider).refresh();
+    return null;
+  }
+
+  /// O formato vem da extensão da chave, que a captura escreveu (`webm` hoje,
+  /// ver `_stopWeb`). Ele viaja até o MIME do upload, então errar aqui é
+  /// rotular o arquivo errado no servidor.
+  String _formatOfKey(String key) {
+    final extension = p.extension(key);
+    if (extension.length <= 1) return 'webm';
+    return extension.substring(1).toLowerCase();
+  }
+
   /// The audio this session already finished, when the row points at a file
   /// that is still on disk (ENG-420).
   ///
@@ -144,6 +228,7 @@ class InterruptedSessionsNotifier extends Notifier<void> {
       filePath: resolved,
       durationSeconds:
           session.finalizedDurationSeconds ?? session.totalDurationSeconds,
+      sessionId: session.id,
       // A degraded finalization anchors a .wav; the format rides along to the
       // upload's MIME type, so taking the m4a default would mislabel the file.
       format: resolved.toLowerCase().endsWith('.wav') ? 'wav' : 'm4a',
@@ -177,9 +262,33 @@ class InterruptedSessionsNotifier extends Notifier<void> {
     await ref.read(recoveryCoordinatorProvider).refresh();
   }
 
+  /// Deletes this session's leftover segment files, sparing every name in
+  /// [keepFileNames].
+  ///
+  /// **The criterion is the session's declared list, never the index in the
+  /// file name** (ENG-531). The old rule — delete everything above
+  /// `lastSegmentIndex` — assumed the recorded counter and the names move
+  /// together, and they do not: `_repairInFlightSegments` attaches the orphans
+  /// it finds by *incrementing* the counter rather than reading the name's
+  /// index, so a single unrepairable file in the middle leaves every later
+  /// name above the counter. The segment the repair had just accepted then
+  /// landed in the deletion range and was erased by the same flow that
+  /// accepted it. The declared list is the truth about what belongs to the
+  /// session; the index was a guess.
+  ///
+  /// Names, not paths: the sweep lists the *current* documents directory,
+  /// while the declared paths were written by an earlier run and may still
+  /// name a container that has since moved. Comparing whole paths would fail
+  /// to recognise a declared file and delete it — the same defect through
+  /// another door. The basename is stable because it is derived from the
+  /// session id and the index.
+  ///
+  /// An empty [keepFileNames] means "erase everything", which is what the
+  /// discard paths ask for: applying the spare-the-declared rule there would
+  /// preserve the very files the person asked to be rid of.
   Future<void> _cleanupOrphanedSegments(
     String sessionId,
-    int lastFinalizedIndex,
+    Set<String> keepFileNames,
   ) async {
     if (kIsWeb) return;
     try {
@@ -188,20 +297,23 @@ class InterruptedSessionsNotifier extends Notifier<void> {
       final entries = await dir.list().toList();
       for (final entry in entries) {
         if (entry is! File) continue;
-        final index = SegmentPaths.parseIndex(entry.path, prefix);
-        if (index == null) continue;
-        if (index > lastFinalizedIndex) {
-          try {
-            await entry.delete();
-          } catch (_) {}
-        }
+        if (SegmentPaths.parseIndex(entry.path, prefix) == null) continue;
+        if (keepFileNames.contains(p.basename(entry.path))) continue;
+        try {
+          await entry.delete();
+        } catch (_) {}
       }
     } catch (_) {}
   }
 
+  /// Best-effort delete: a discard must not blow up in the person's face. The
+  /// failure is not silent any more, though — it is reported, and the caller
+  /// decides what it means by asking whether the audio is still there.
   Future<void> _deleteFileSafe(String path) async {
     try {
-      await file_ops.deleteFile(path);
-    } catch (_) {}
+      await ref.read(deleteFileProvider)(path);
+    } catch (e, st) {
+      ref.read(errorReporterProvider).reportError(e, st);
+    }
   }
 }

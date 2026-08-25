@@ -26,7 +26,24 @@ Path: @/lib/core/startup
   **or** `error` — a restore failure falls through to the app logged-out rather
   than wedging the splash. Separately, the bootstrap microtask `await`s
   `appStartupProvider.future`, then fires `refreshSessionIfOnline()` and the rest
-  of post-boot work (orphan-upload reclaim, sync/listener init).
+  of post-boot work (orphan-upload reclaim, sync/listener init). The
+  housekeeping in that microtask splits on `kIsWeb`: trash pruning, the
+  recovery scan and Live Activity teardown on device; the sweep of recordings
+  abandoned in browser storage on web (ENG-426) — e, desde a fatia 2 do
+  ENG-519, a varredura de recuperação também no navegador, **antes** da faxina
+  e aguardada: é ela que promove a sessão abandonada para o estado que a lista
+  de não salvas lê, e uma gravação que a lista vai oferecer precisa estar fora
+  do alcance da faxina antes de a varredura correr (a proteção é
+  `getLiveAudioAnchors`, que ignora sessões descartadas). The two prunes — device trash
+  and browser audio — are fired unawaited, so neither stands between the person
+  and the first screen; the recovery scan is awaited because the upload
+  listeners that come after it must not see a stale recording flag. The
+  recovery scan carries one extra pass since ENG-522 — a once-per-device
+  repair that returns sessions the pre-ENG-521 defect stranded in a terminal
+  status while their audio stayed on disk. It runs inside the same awaited
+  scan, guarded so a failure reports rather than costing the refresh that
+  populates the unsaved-recordings list; see
+  [../../features/recording/data/docs.md](../../features/recording/data/docs.md).
 - The router in [../router/app_router.dart](../router/app_router.dart) is only
   built inside `main.dart`'s `_buildApp()`, which runs after the gate resolves.
   Its redirect keys off `authNotifierProvider.isAuthenticated`; because

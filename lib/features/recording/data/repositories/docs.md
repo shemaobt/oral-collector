@@ -7,8 +7,9 @@ Path: @/lib/features/recording/data/repositories
 - Houses the repositories that read and write recording-related state:
   `LocalRecordingRepository` (Drift CRUD over `LocalRecordings`),
   `RecordingApiRepositoryImpl` (HTTP client for the server's recordings
-  API), and `RecordingSessionRepository` (in-progress session rows used by
-  the segmented recorder).
+  API), and `RecordingSessionRepository` (in-progress session rows — used by
+  the segmented recorder on device and, since ENG-519 slice 1, by browser
+  capture too).
 - The local repository is the single write site for the `LocalRecordings`
   table and enforces the cache-hydration invariant established by ENG-64:
   any persisted row must carry every recording-level metadata field that
@@ -82,6 +83,14 @@ Path: @/lib/features/recording/data/repositories
   the recordings-list / detail notifiers still read raw rows through them, so
   both the row and entity reads share the same query and the same `_fromRow`
   projection.
+- `getPendingWebUploadKeys` projects the same `web_uploading` rows down to the
+  set of storage keys their audio can be resumed from, dropping the empty ones
+  (rows written before ENG-427, and web imports whose bytes were never in
+  storage — there is no key to spare). It is the whole reason the startup
+  sweep in
+  [../services/web_audio_sweeper.dart](../services/web_audio_sweeper.dart) can
+  skip audio a resume still needs, and it is one query per sweep rather than
+  one per key.
 - `getPendingUploads` / `getPendingWebUploads` define the **upload queue
   order**: they sort `createdAt ASC, id ASC`, and
   [the sync engine](../../../sync/data/repositories/sync_engine.dart) drains
@@ -427,6 +436,36 @@ Path: @/lib/features/recording/data/repositories
   replaced `findCompletedSessions()`: it matches `status IN ('completed',
   'recovered')`, because both statuses can be reached with real finalized
   audio the sweep needs to consider (see Things to Know).
+  `findDiscardedSessions()` (ENG-522) is the fourth query and the odd one out:
+  it matches the terminal `discarded` status, which by the invariant below is
+  supposed to name nothing recoverable. It exists because rows written before
+  ENG-521 can break that invariant, and nothing deletes session rows — so every
+  session the defect swallowed is still here with its path, its segments and
+  its metadata, and giving the audio back is a query rather than a directory
+  scan. Its single caller is the one-shot recovery in
+  [../services/recovery_coordinator.dart](../services/recovery_coordinator.dart);
+  see Things to Know.
+- **The session cycle is no longer device-only (ENG-519, slice 1).** Browser
+  capture opens a row in `_startWeb` before recording starts and closes it in
+  `_stopWeb` through the same `completeWithFinalizedAudio` the device uses —
+  so a browser recording now has the row that says what it is and where its
+  audio went. Two things differ from device, both by design and neither
+  requiring a migration: the segment columns (`segmentPathsJson`,
+  `lastSegmentIndex`) stay at their defaults, because segments are a device
+  concept; and **the anchor is a storage key, not a filesystem path** — that
+  is where the browser's audio actually lives. Readers that treat
+  `finalizedAudioPath` as a path (`sessionHoldsReachableAudio`, the recovery
+  coordinator, the unsaved list) are unchanged and still device-only: teaching
+  them the browser's semantics is slice 2, and until then **nothing offers a
+  browser recording back to the person** — no recovery, no banner, no third
+  option on the leave dialog.
+- `getLiveAudioAnchors()` (ENG-519, slice 1) answers "where did every session
+  that can still owe someone something put its audio": one scan over the
+  anchored rows whose status is not `discarded`. It is what keeps the browser
+  sweep ([../services/docs.md](../services/docs.md)) from collecting audio a
+  session has just registered. A session with no anchor — one still recording,
+  or one whose tab was closed mid-recording — names nothing here, which is why
+  an unfinished session cannot switch the sweep off forever.
 
 ### Things to Know
 
@@ -539,17 +578,202 @@ Path: @/lib/features/recording/data/repositories
     never touches the row). The anchor is resolved through the same basename
     lookup `resolveRecordingPath` uses, so a stale absolute path from a moved
     iOS container still finds its file.
-  **A session still holding finalized audio is never marked `discarded`.**
-  `discarded` appears in no sweep query — neither `findFinishedSessions` nor
-  `findCrashedSessions` — so a row that reaches it can never be surfaced again.
-  Both paths that give up (`InterruptedSessionsNotifier.save` when neither the
-  anchor nor a segment yields audio, and `RecoveryCoordinator.refresh` when a
-  crashed row has no segments) skip the terminal write while
-  `finalizedAudioPath` is set. That guard is still reachable after slice 3:
-  it is what catches a row whose anchor names a deleted file and whose sources
-  are gone too. The invariant is "a session that still points at a durable
-  artifact never reaches a state no sweep looks at". A deliberate discard is
-  the one intended way out, and it deletes the anchored file first.
+  **A session still holding audio nobody saved is never marked `discarded`.**
+  `discarded` appears in no *sweep* query — neither `findFinishedSessions` nor
+  `findCrashedSessions` — so a row that reaches it is never surfaced again by
+  the ordinary startup path, and nothing deletes session rows, so the audio it
+  names is out of reach for good. (ENG-522 added the one exception:
+  `findDiscardedSessions` and a recovery that runs once per device, for the
+  rows written before these guards existed. See Things to Know.) The invariant is "a session that still holds a reachable artifact never
+  reaches a state no sweep looks at". A deliberate discard is the one intended
+  way out, and it deletes the audio first.
+  Every writer of that status is one of these. **Each entry names the flow its
+  reasoning was checked against**, because ENG-527 found that an exemption
+  stated as an absolute — "it runs before any anchor can exist" — was only ever
+  true of the fresh-recording flow, and a resumed recording walked straight
+  through it. Read a claim with no flow attached as unverified.
+  - `InterruptedSessionsNotifier.save`, when neither the anchor nor a segment
+    yields audio, and `RecoveryCoordinator.refresh`, when a crashed row has no
+    segments: both skip the terminal write while `finalizedAudioPath` is set.
+    Written for slice 3, still reachable — they catch a row whose anchor names a
+    deleted file and whose sources are gone too. *Checked against:* the recovery
+    flow, both anchored and pre-v14. These two read the anchor **column**, not
+    the file, which is the looser test the bullet below argues against — it errs
+    toward keeping rows, so it cannot lose audio, only leave litter.
+  - `RecordingSessionNotifier.loadInterruptedSession` (tapping "resume") when no
+    segment file survives, and `RecordingSessionNotifier.discardRecording` on
+    its resumed-session branch (walking away from a resumed recording): both
+    used to write the status without ever reading the anchor, and both were the
+    ENG-521 leak — the sweep promotes a *finished* session back to `crashed`
+    with its anchor intact, so precisely the row holding 18 unsaved minutes is
+    the one they swallowed. Both now ask
+    [`sessionHoldsReachableAudio`](../services/session_audio.dart) first.
+    *Checked against:* the resume flow over a swept, anchored session — the one
+    that produced the leak.
+  - `InterruptedSessionsNotifier.discard`, the person's own "delete this": it
+    deletes the segments and the anchored file and *then* asks the same
+    question, so it still discards — see the next bullet. *Checked against:*
+    both a stored anchor path that still resolves literally and one left behind
+    by a moved container. The caveat that used to sit here — that only the
+    first was verified — was the ENG-528 defect: the delete used the path the
+    row stores while the predicate resolved the same file by basename, so after
+    a reinstall or restore the delete found nothing, did not throw, and the
+    predicate answered "still here". Nothing was lost, but nothing could be
+    deleted either: the person pressed discard and the recording stayed. The
+    discard now resolves through
+    [`resolveRecordingPath`](../services/audio_path_resolver.dart) before
+    deleting, so both ends name the same file. The segments never had this
+    split — the delete and the predicate both read the recorded paths
+    literally, and `_cleanupOrphanedSegments` sweeps the *current* documents
+    directory besides.
+  - `SegmentedRecorder.discard`, walking away from a recording in progress: it
+    deletes the closing segment and every path it holds, then asks the same
+    question, and a session that still holds audio goes back to `crashed`
+    rather than being left `active` (ENG-527). *Checked against:* both flows —
+    a fresh recording, where there is no anchor and every segment goes, so the
+    terminal status is written exactly as before; and a resumed one, where the
+    row carries the anchor of the session the sweep promoted. **This is the
+    entry ENG-527 corrected.** It used to be exempt on the grounds that it "runs
+    before any anchor can exist", which is a property of the fresh flow only:
+    `startSession(resumeFromPaths:)` reuses the session id of a swept, anchored
+    row, so discarding a resumed recording deleted its segments and wrote the
+    terminal status over live finalized audio. Going back to `crashed` rather
+    than leaving `active` matters because the unsaved list reads `crashed`; an
+    `active` row would be invisible until the next cold start promoted it.
+  - `RecordingSessionNotifier._startNative`'s failed-start branch needs no
+    guard: it writes the status for a session id minted by `_newSessionId()` and
+    inserted three statements earlier, so the row cannot carry an anchor yet.
+    *Checked against:* the fresh-recording flow, which is the only one that
+    reaches it — the resume path starts its recorder in
+    `_startRecorderForResume`, which writes no terminal status at all on a
+    failed start.
+- **The orphan sweep decides by the session's declared list, never by the
+  index in the file name (ENG-531).** `_cleanupOrphanedSegments` — one copy in
+  each notifier — used to delete every segment file whose name carried an index
+  above the row's `lastSegmentIndex`. That assumed the counter and the names
+  move together, and `appendSegment` breaks the assumption: it *increments*
+  `lastSegmentIndex` rather than reading the index out of the name it is given.
+  `RecoveryCoordinator._repairInFlightSegments` attaches the orphans it finds
+  through that same call, so one unrepairable file in the middle leaves every
+  later name above the counter. Reproduced end to end: a session declaring
+  `[rec_x_000]` at `lastSegmentIndex = 0`, with `000` valid, `001` corrupt and
+  `002` valid on disk, comes out of the repair declaring `[rec_x_000,
+  rec_x_002]` at `lastSegmentIndex = 1` — and the next
+  `loadInterruptedSession` deletes `rec_x_002`, which the row declares as its
+  own, in the same flow that just accepted it. The declared list is the truth
+  about what belongs to a session; the index was a guess, and the numbering was
+  never corrected because a correct number would still be a guess.
+  *Checked against:* the resume flow after a repair that dropped a file
+  (the reproduced case), the resume flow on a session whose numbering never
+  diverged, and all three discard flows.
+  Two details are load-bearing:
+  - **Names, not paths.** The sweep lists the *current* documents directory
+    while the declared paths were written by an earlier run, so they can still
+    name a container that has since moved (ENG-528). Comparing whole paths
+    would fail to recognise a declared file and delete it — the same defect
+    through another door. The basename is stable because
+    [`SegmentPaths`](../services/segment_paths.dart) derives it from the
+    session id and the index.
+  - **An empty keep-set still means "erase everything", and the three discard
+    callers pass exactly that.** Applying spare-the-declared there would
+    preserve the very files the person asked to be rid of — and it is not
+    hypothetical: when the declared paths point at a moved container, the
+    discard's own per-path delete finds nothing and this sweep of the current
+    directory is the only thing that erases the audio. A characterization test
+    drives that case.
+- **The guard asks whether the audio is *there*, never whether the anchor
+  column is *set*, and the terminal status now waits on the delete (ENG-521).**
+  Nothing clears `finalizedAudioPath`, so a deliberate discard leaves the column
+  written over a file it just deleted. A guard reading the column would
+  therefore turn "discard" into "never discards", and since nothing else
+  removes session rows the app would accumulate dead sessions forever — trading
+  lost audio for permanent litter. `sessionHoldsReachableAudio(session,
+  segmentPaths)` in [../services/session_audio.dart](../services/session_audio.dart)
+  is the shared predicate: it resolves the anchor through
+  [`resolveRecordingPath`](../services/audio_path_resolver.dart) (a literal stat
+  would declare live audio gone after the container moves on reinstall) and
+  falls through to the recorded segment paths, resolved the same way since
+  ENG-529 (below). Every discard path calls
+  it *after* deleting rather than before, which is what makes the terminal
+  status depend on the deletion having worked: a delete that throws is caught,
+  reported, and leaves the file behind, so the predicate still answers yes and
+  the session stays in the unsaved list for the person to try again — instead of
+  being declared finished over audio still on the disk. **Deleting after asking
+  is only half of it: the delete has to name the same file the question does**
+  (ENG-528). The two ends drifted apart for the anchor — stored path on the
+  delete, basename resolution in the predicate — and a moved container turned
+  "waits on the deletion" into "never discards", because a delete that finds
+  nothing does not throw either. The anchor delete now resolves first. A characterization test
+  drives a refusing delete through `deleteFileProvider`
+  ([../providers.dart](../providers.dart)).
+- **Path resolution is not the anchor's alone: the segments go through it too
+  (ENG-529).** Both places that build the list of usable segments —
+  `RecordingSessionNotifier.loadInterruptedSession` and
+  `InterruptedSessionsNotifier.save` — used to filter by the **literal** stored
+  path, and `sessionHoldsReachableAudio` stat'd them literally as well. After
+  the container moves, a session with no anchor therefore had every declared
+  segment reported missing with the files sitting right there, and all three
+  agreed on it: unlike ENG-528, where the two ends disagreed and the result was
+  a stalemate, here they agreed and agreed wrongly — the session was treated as
+  having no audio and written off. `resolveSegmentPaths`
+  ([../services/audio_path_resolver.dart](../services/audio_path_resolver.dart))
+  applies the anchor's own criterion to each segment, in recording order, and
+  drops the ones that resolve nowhere — which is how a genuine absence stays an
+  absence. It pays the documents-directory lookup **once per list**, not once
+  per segment: a long recording has dozens of them and each lookup is a trip to
+  the platform channel. Segment file names carry the session id
+  (`rec_<sessionId>_<index>.wav`, [../services/segment_paths.dart](../services/segment_paths.dart)),
+  so resolving by name cannot pick up another session's audio.
+  *Checked against:* the resume flow and the save flow over a session whose
+  stored segment paths name a container that no longer exists while the files
+  are under the current documents directory — the resume offers it and the save
+  produces the recording with all three segments in order; plus the same two
+  flows over a session whose segments are gone from everywhere, which is still
+  written off, and over a session whose stored paths resolve literally, which is
+  unchanged.
+- **What the sweep spares is the *resolved* list, not the declared one
+  (ENG-529 over ENG-531).** ENG-529 surfaced the sweep bug that ENG-531 then
+  fixed (the bullet above), and the two land on the same call: the resume passes
+  the keep-set. It passes the segments that **resolved**, which is a subset of
+  what the row declares, and the smaller set is the correct one rather than lost
+  coverage. A declared path that resolves nowhere exists neither at its stored
+  location nor under its name in the current documents directory — and that
+  directory, non-recursively, is the only place the sweep enumerates. There is
+  no file of that name for a keep-set to protect. The set spared is then exactly
+  the set the resume is about to use.
+- **The terminal status has exactly one way back, it runs once per device, and
+  that limit is the safety (ENG-522).** The invariant above holds from ENG-521
+  onward, but the rows the two unguarded paths already swallowed are still in
+  the database, naming audio still on the disk. `RecoveryCoordinator`'s
+  `_recoverDiscardedSessionsHoldingAudio` runs inside `scanOnStartup`, asks
+  `findDiscardedSessions()` for those rows, and promotes back to `crashed`
+  every one `sessionHoldsReachableAudio`
+  ([../services/session_audio.dart](../services/session_audio.dart)) still
+  answers yes for — the same predicate the guards use, so the recovery and the
+  discard agree on what "still holds audio" means, including the anchor's
+  basename resolution for a container that moved. Both legs count: a row
+  anchored to a finalized file, and a row with no anchor whose source segments
+  survived — the second is the shape the resumed-recording leak produced, so
+  dropping it would miss the commoner half. Sessions whose audio is really gone
+  are not touched and not offered: a recovery that cannot succeed is worse than
+  none.
+  **The once-per-device mark is not an optimization.** A deliberate discard
+  whose file outlived it is indistinguishable, from the database, from one the
+  defect swallowed. Recovering on every launch would therefore hand back
+  whatever the person discards afterwards, on the next launch, forever — they
+  could never delete anything. Of the two possible mistakes, giving back
+  something they meant to delete is the recoverable one: they discard it again,
+  and since ENG-521 the discard works. The mark is a `shared_preferences` bool
+  (`RecordingConfig.discardedAudioRecoveryDoneKey`), following the
+  `RecordingActiveFlag` precedent — no new column and no migration, because the
+  fact being remembered is about the install, not about any row. It is written
+  *after* the pass, so a run that dies half-way retries on the next launch
+  while the rows it already promoted, no longer `discarded`, are not promoted
+  twice. A characterization test mutes the mark and watches the second scan
+  hand the recording back.
+  The pre-v14 era is deliberately out of scope: those files have no session row
+  and no metadata at all, so recovering them would mean offering anonymous
+  audio to classify from scratch.
 - **The anchored duration overstates the audio on the degraded path.** When
   both concat routes fail, `RecordingFinalizationService` returns the whole
   session's duration alongside a `filePath` that is only the first segment, so
@@ -559,6 +783,22 @@ Path: @/lib/features/recording/data/repositories
   reports `finalizedDurationSeconds`. Re-deriving reports the same number from
   `totalDurationSeconds`, so this is not a cost of preferring the anchor — it
   is the pre-existing overstatement, now reached one step earlier.
+- **`crashed` is now also reached on purpose, not only by failure (ENG-518,
+  slice 2).** `markCrashed` used to have two callers, and both meant something
+  went wrong: the startup scan finding an `active` row, and
+  `_sweepFinishedSessionsWithUnsavedAudio` finding a finished row whose audio
+  nobody saved. It has a third now —
+  `InterruptedSessionsNotifier.keepForLater`, which the confirmation form and
+  the tab bar call when the person chooses to leave without saving. The status
+  is reused rather than added to, because what it already means to every reader
+  is "there is anchored audio nobody saved", and that is precisely what a
+  deliberate exit leaves behind: the same row the sweep would promote on the
+  next launch, only promoted immediately so the banner shows it now. **Read
+  `crashed` as "unsaved", not as "the app broke"** — nothing downstream of it
+  reports a failure to anyone, and the banner's copy has always been generic.
+  The row keeps its anchor through the write, so the invariant below still
+  holds; what does *not* hold any more is the assumption that a `crashed` row
+  implies something went wrong.
 - **`splitRecordingReplacingParent` is atomic (ENG-125).** The trim/split save
   must end with the children present and the parent gone. Doing those as two
   statements (insert in a transaction, then delete) left a failure window where

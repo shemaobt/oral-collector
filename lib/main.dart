@@ -24,6 +24,7 @@ import 'features/recording/data/services/recording_live_activity.dart';
 import 'features/recording/data/services/recording_notification.dart';
 import 'features/recording/data/services/recording_trash.dart';
 import 'features/recording/data/services/recovery_coordinator.dart';
+import 'features/recording/data/services/web_audio_sweeper.dart';
 import 'features/sync/data/providers.dart';
 import 'features/sync/data/services/background_upload_coordinator.dart';
 import 'features/sync/data/services/upload_progress_visualizer.dart';
@@ -128,6 +129,35 @@ class _OralCollectorAppState extends ConsumerState<OralCollectorApp> {
         unawaited(RecordingTrash.pruneOldTrash(maxAgeHours: 24));
         await ref.read(recoveryCoordinatorProvider).scanOnStartup();
         await RecordingLiveActivity.instance.endAll();
+      } else {
+        // The browser's counterpart to pruneOldTrash: recordings abandoned
+        // before upload leave bytes in storage with nothing pointing at them
+        // (ENG-426). Unawaited for the same reason — housekeeping must not
+        // stand between the person and the first screen.
+        // A lista de não salvas passa a valer no navegador (ENG-519, fatia 2):
+        // o coordenador promove a sessão que ficou em aberto, promove a que
+        // terminou sem ninguém salvar, e monta a lista. Aguardado, como no
+        // aparelho, porque é ele que decide o que a faxina logo abaixo pode
+        // coletar — uma sessão que a lista vai oferecer tem de estar fora do
+        // alcance dela antes de a varredura correr.
+        await ref.read(recoveryCoordinatorProvider).scanOnStartup();
+        unawaited(
+          sweepOrphanWebAudio(
+            listKeys: platform.listStoredKeys,
+            deleteKey: platform.deleteFile,
+            // Duas fontes de "isto ainda serve a alguém": o que um upload
+            // interrompido pode retomar (ENG-427) e onde cada sessão viva
+            // guardou o áudio dela (ENG-519). Uma consulta cada, por varredura.
+            keysInUse: () async => {
+              ...await ref
+                  .read(localRecordingRepositoryProvider)
+                  .getPendingWebUploadKeys(),
+              ...await ref
+                  .read(recordingSessionRepositoryProvider)
+                  .getLiveAudioAnchors(),
+            },
+          ),
+        );
       }
 
       await _initBackgroundSync();

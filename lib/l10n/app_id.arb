@@ -167,6 +167,9 @@
   "recording_discard": "Buang",
   "recording_discardTitle": "Buang Rekaman?",
   "recording_discardMessage": "Rekaman ini akan dihapus secara permanen.",
+  "recording_leaveTitle": "Keluar tanpa menyimpan?",
+  "recording_leaveMessage": "Audio tetap tersimpan — Anda bisa menyelesaikannya nanti dari rekaman yang belum disimpan. Menghapusnya sekarang tidak bisa dibatalkan.",
+  "recording_keepForLater": "Simpan untuk nanti",
   "recording_saved": "Rekaman disimpan",
   "recording_uploading": "Mengunggah rekaman…",
   "recording_uploadFailed": "Pengunggahan gagal: {error}",
@@ -177,7 +180,7 @@
       }
     }
   },
-  "recording_serviceNotificationTitle": "Recording in progress",
+  "recording_serviceNotificationTitle": "Perekaman sedang berlangsung",
   "recording_serviceNotificationBody": "{elapsed} • {genre}",
   "@recording_serviceNotificationBody": {
     "placeholders": {
@@ -189,7 +192,7 @@
       }
     }
   },
-  "recording_serviceNotificationStopAction": "Stop",
+  "recording_serviceNotificationStopAction": "Berhenti",
   "recording_notFound": "Rekaman tidak ditemukan",
   "recording_unknownGenre": "Genre tidak dikenal",
   "recording_splitRecording": "Edit Rekaman",
@@ -270,8 +273,8 @@
   "trim_splitting": "Membagi...",
   "trim_saveSegments": "{count, plural, =1{Simpan 1 segmen} other{Simpan {count} segmen}}",
   "trim_addSplitsFirst": "Tambahkan pembagian terlebih dahulu",
-  "trim_applyBoost": "Apply boost",
-  "trim_boostApplied": "Volume applied",
+  "trim_applyBoost": "Terapkan volume",
+  "trim_boostApplied": "Volume diterapkan",
   "trim_savedSegments": "Tersimpan {kept} segmen, dihapus {removed}",
   "trim_splitInto": "Bagi menjadi {count} rekaman",
   "trim_saveConfirmTitle": "Simpan perubahan?",
@@ -647,6 +650,8 @@
   "recording_secondaryCollisionBanner": "Rekaman ini memiliki klasifikasi primer dan sekunder yang sama. Hapus yang sekunder atau ubah yang primer untuk sinkronisasi.",
   "recording_clearSecondary": "Hapus sekunder",
   "recording_unclassified": "Belum diklasifikasi",
+  "recording_unclassifiedDesc": "Rekaman yang menunggu klasifikasi",
+  "recording_unclassifiedSubcategoryDesc": "Menyimpan rekaman yang masih menunggu klasifikasi",
   "recording_inputSource": "Input",
   "recording_selectMicrophone": "Pilih mikrofon",
   "recording_builtInMicrophone": "Default sistem",
@@ -698,9 +703,9 @@
   "recording_recoverButton": "Pulihkan",
   "recording_recoverDiscard": "Buang",
   "recording_recoverFailedLastSegment": "Sebagian audio di dekat akhir tidak dapat dibaca dan dilewati.",
-  "recording_blockNavTitle": "Recording in progress",
-  "recording_blockNavMessage": "You have a recording in progress. Discarding will permanently delete it.",
-  "recording_blockNavDiscardAndLeave": "Discard and leave",
+  "recording_blockNavTitle": "Perekaman sedang berlangsung",
+  "recording_blockNavMessage": "Anda sedang merekam. Jika dibuang, rekaman akan dihapus permanen.",
+  "recording_blockNavDiscardAndLeave": "Buang dan keluar",
   "recording_inProgressNotificationTitle": "Perekaman berlangsung",
   "recording_inProgressNotificationBody": "Ketuk untuk kembali ke aplikasi",
   "recording_finalizing": "Menyelesaikan rekaman…",
@@ -715,13 +720,13 @@
   "recording_finalizationFailedBodyPipeline": "Kami tidak dapat menyelesaikan pemrosesan rekaman ini. Rekaman disimpan di rekaman yang belum tersimpan.",
   "recording_finalizationErrorBack": "Kembali",
   "recording_discardAndReturn": "Buang dan kembali",
-  "recording_savingRecording": "Saving recording…",
-  "recording_processingYourAudio": "Processing your audio",
-  "recording_dontCloseSaveNext": "Don't close — we'll open the save screen next.",
-  "recording_stageShortFinalizing": "FINALIZING",
-  "recording_stageShortCombining": "COMBINING",
-  "recording_stageShortCompressing": "COMPRESSING",
-  "recording_savingPleaseWait": "Saving your recording — please wait a moment.",
+  "recording_savingRecording": "Menyimpan rekaman…",
+  "recording_processingYourAudio": "Memproses audio Anda",
+  "recording_dontCloseSaveNext": "Jangan tutup — kami akan membuka layar simpan setelah ini.",
+  "recording_stageShortFinalizing": "MENYELESAIKAN",
+  "recording_stageShortCombining": "MENGGABUNGKAN",
+  "recording_stageShortCompressing": "MENGOMPRES",
+  "recording_savingPleaseWait": "Menyimpan rekaman Anda — mohon tunggu sebentar.",
   "profile_defaultMicrophone": "Mikrofon default",
   "profile_systemDefault": "Default sistem",
   "settings_deviceStorageTitle": "Penyimpanan perangkat",
@@ -874,7 +879,7 @@
   "recording_noPendingUploads": "Tidak ada unggahan tertunda",
   "recording_uploadQueue": "Antrean unggah",
   "recording_uploadSpeed": "{speed}/s",
-  "recording_uploadEtaRemaining": "~{eta} remaining",
+  "recording_uploadEtaRemaining": "~{eta} tersisa",
   "recording_previewSelection": "Pratinjau pilihan",
   "recording_stopPreview": "Hentikan pratinjau",
   "recording_audioLoadFailed": "Gagal memuat audio",
@@ -888,8 +893,8 @@
   "recording_splitFrom": "Dipisahkan dari {sourceId}",
   "trim_segmentRemoved": "Segmen {index} — dihapus",
   "trim_segmentOfTotal": "Segmen {index} dari {total}",
-  "recovery_interruptedTitle": "Interrupted recordings",
-  "recovery_startedAt": "Started at {time}",
+  "recovery_interruptedTitle": "Rekaman terhenti",
+  "recovery_startedAt": "Dimulai pukul {time}",
   "@recovery_startedAt": {
     "placeholders": {
       "time": {
@@ -897,11 +902,11 @@
       }
     }
   },
-  "recovery_resume": "Resume",
-  "recovery_save": "Save",
-  "recovery_discard": "Discard",
-  "recovery_confirmDiscardTitle": "Discard recording?",
-  "recovery_confirmDiscardBody": "{duration} of audio will be permanently deleted.",
+  "recovery_resume": "Lanjutkan",
+  "recovery_save": "Simpan",
+  "recovery_discard": "Buang",
+  "recovery_confirmDiscardTitle": "Buang rekaman?",
+  "recovery_confirmDiscardBody": "Audio {duration} akan dihapus permanen.",
   "@recovery_confirmDiscardBody": {
     "placeholders": {
       "duration": {
@@ -909,7 +914,7 @@
       }
     }
   },
-  "recovery_homeBanner": "{count, plural, =1{1 interrupted recording — tap to resume} other{{count} interrupted recordings — tap to resume}}",
+  "recovery_homeBanner": "{count, plural, other{{count} rekaman terhenti — ketuk untuk melanjutkan}}",
   "@recovery_homeBanner": {
     "placeholders": {
       "count": {
@@ -917,7 +922,7 @@
       }
     }
   },
-  "recovery_unsavedCount": "{count, plural, =1{1 unsaved recording} other{{count} unsaved recordings}}",
+  "recovery_unsavedCount": "{count, plural, other{{count} rekaman belum disimpan}}",
   "@recovery_unsavedCount": {
     "placeholders": {
       "count": {
@@ -925,7 +930,7 @@
       }
     }
   },
-  "recovery_latestSummary": "Latest · {duration} · {time}",
+  "recovery_latestSummary": "Terbaru · {duration} · {time}",
   "@recovery_latestSummary": {
     "placeholders": {
       "duration": {
@@ -936,9 +941,9 @@
       }
     }
   },
-  "recovery_review": "Review",
-  "recovery_unsavedTitle": "Unsaved recordings",
-  "recovery_unsavedSubtitle": "{count, plural, =1{1 recording to review} other{{count} recordings to review}}",
+  "recovery_review": "Tinjau",
+  "recovery_unsavedTitle": "Rekaman belum disimpan",
+  "recovery_unsavedSubtitle": "{count, plural, other{{count} rekaman untuk ditinjau}}",
   "@recovery_unsavedSubtitle": {
     "placeholders": {
       "count": {
@@ -946,9 +951,9 @@
       }
     }
   },
-  "recovery_discardAll": "Discard all",
-  "recovery_discardAllTitle": "Discard all recordings?",
-  "recovery_discardAllBody": "{count, plural, =1{1 recording will be permanently deleted.} other{{count} recordings will be permanently deleted.}}",
+  "recovery_discardAll": "Buang semua",
+  "recovery_discardAllTitle": "Buang semua rekaman?",
+  "recovery_discardAllBody": "{count, plural, other{{count} rekaman akan dihapus permanen.}}",
   "@recovery_discardAllBody": {
     "placeholders": {
       "count": {
@@ -956,9 +961,9 @@
       }
     }
   },
-  "recovery_newBadge": "NEW",
-  "recovery_mostRecent": "Most recent",
-  "recovery_recordingNumbered": "Recording {number}",
+  "recovery_newBadge": "BARU",
+  "recovery_mostRecent": "Terbaru",
+  "recovery_recordingNumbered": "Rekaman {number}",
   "@recovery_recordingNumbered": {
     "placeholders": {
       "number": {
@@ -966,8 +971,8 @@
       }
     }
   },
-  "format_yesterday": "Yesterday",
-  "recovery_backToList": "Not now",
+  "format_yesterday": "Kemarin",
+  "recovery_backToList": "Nanti saja",
   "common_discard": "Buang",
   "common_resume": "Lanjutkan",
   "import_dropActive": "Lepaskan untuk mengimpor",
@@ -976,9 +981,10 @@
   "import_rejectedTooLarge": "{count, plural, =1{1 berkas di atas 10 GB dilewati: {names}} other{{count} berkas di atas 10 GB dilewati: {names}}}",
   "import_rejectedUnreadable": "{count, plural, =1{1 berkas tak terbaca dilewati: {names}} other{{count} berkas tak terbaca dilewati: {names}}}",
   "import_rejectedUnsupportedCodec": "{count, plural, =1{1 berkas dengan codec audio tak didukung dilewati: {names}. Ekspor ulang sebagai PCM WAV atau M4A.} other{{count} berkas dengan codec audio tak didukung dilewati: {names}. Ekspor ulang sebagai PCM WAV atau M4A.}}",
-  "import_resumePromptBody": "\"{name}\" ({size}) terunggah sebagian. Pilih berkas yang sama persis (tanpa perubahan) untuk melanjutkan.",
-  "import_resumePromptTitle": "Lanjutkan unggahan yang terhenti",
-  "import_resumeSizeMismatch": "Itu berkas yang berbeda. Pilih berkas yang sama persis dengan yang sedang Anda unggah.",
+  "recording_resumePromptTitle": "Lanjutkan unggahan yang terhenti",
+  "recording_resumePromptBodyStored": "\"{name}\" ({size}) belum selesai diunggah. Lanjutkan dari tempat berhentinya.",
+  "recording_resumePromptBodyPickFile": "\"{name}\" ({size}) belum selesai diunggah. Pilih lagi berkas yang sama untuk melanjutkan.",
+  "recording_resumeSizeMismatch": "Itu berkas yang berbeda. Pilih berkas yang sama persis dengan yang sedang Anda unggah.",
   "recordings_offlineFilterTitle": "Tidak tersedia offline",
   "recordings_offlineFilterDescription": "Server yang menentukan rekaman mana yang masih memerlukan detail. Sambungkan kembali untuk melihatnya, atau hapus filter untuk menelusuri semua yang ada di perangkat ini.",
   "recordings_filterErrorTitle": "Tidak bisa memeriksa sekarang",

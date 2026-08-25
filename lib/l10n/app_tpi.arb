@@ -167,6 +167,9 @@
   "recording_discard": "Tromoi",
   "recording_discardTitle": "Tromoi Rekoding?",
   "recording_discardMessage": "Dispela rekoding bai lus olgeta.",
+  "recording_leaveTitle": "Lusim na i no seivim?",
+  "recording_leaveMessage": "Rekoding i stap yet — yu inap pinisim bihain long ol rekoding i no seiv yet. Sapos yu tromoi nau, em bai lus olgeta.",
+  "recording_keepForLater": "Holim bilong bihain",
   "recording_saved": "Rekoding i sev pinis",
   "recording_uploading": "Wok long aplotim rekoding…",
   "recording_uploadFailed": "Aplot i bagarap: {error}",
@@ -177,7 +180,7 @@
       }
     }
   },
-  "recording_serviceNotificationTitle": "Recording in progress",
+  "recording_serviceNotificationTitle": "Rekodim i wok yet",
   "recording_serviceNotificationBody": "{elapsed} • {genre}",
   "@recording_serviceNotificationBody": {
     "placeholders": {
@@ -189,7 +192,7 @@
       }
     }
   },
-  "recording_serviceNotificationStopAction": "Stop",
+  "recording_serviceNotificationStopAction": "Stopim",
   "recording_notFound": "Rekoding i no stap",
   "recording_unknownGenre": "Kain i no save",
   "recording_splitRecording": "Stretim Rekoding",
@@ -270,8 +273,8 @@
   "trim_splitting": "Brukim...",
   "trim_saveSegments": "{count, plural, =1{Sevim 1 segment} other{Sevim {count} segment}}",
   "trim_addSplitsFirst": "Putim ol brukim pastaim",
-  "trim_applyBoost": "Apply boost",
-  "trim_boostApplied": "Volume applied",
+  "trim_applyBoost": "Putim volium",
+  "trim_boostApplied": "Volium i senis pinis",
   "trim_savedSegments": "Sevim {kept} segment, rausim {removed}",
   "trim_splitInto": "Brukim i go long {count} rekoding",
   "trim_saveConfirmTitle": "Sevim senis?",
@@ -618,7 +621,7 @@
   "recording_sensitivityMed": "Namel",
   "recording_sensitivityHigh": "Antap",
   "recording_stopRecording": "Stopim rekodim",
-  "recording_stop": "Stop",
+  "recording_stop": "Stopim",
   "recording_resume": "Stat gen",
   "recording_pause": "Stopim liklik",
   "filter_unclassified": "I no makim kain yet",
@@ -647,6 +650,8 @@
   "recording_secondaryCollisionBanner": "Dispela rekoding i gat wankain primary na sekondari klasifikesen. Klinim sekondari o senisim primary bilong sinkronaisim.",
   "recording_clearSecondary": "Klinim sekondari",
   "recording_unclassified": "I no makim kain yet",
+  "recording_unclassifiedDesc": "Ol rekoding i wet long makim kain bilong ol",
+  "recording_unclassifiedSubcategoryDesc": "I holim ol rekoding i wet yet long makim kain bilong ol",
   "recording_inputSource": "Insait",
   "recording_selectMicrophone": "Makim maikrofon",
   "recording_builtInMicrophone": "Defolt bilong sistem",
@@ -698,9 +703,9 @@
   "recording_recoverButton": "Bringim bek",
   "recording_recoverDiscard": "Rausim",
   "recording_recoverFailedLastSegment": "Sampela audio klostu long pinis ino inap rid na mipela skipim.",
-  "recording_blockNavTitle": "Recording in progress",
-  "recording_blockNavMessage": "You have a recording in progress. Discarding will permanently delete it.",
-  "recording_blockNavDiscardAndLeave": "Discard and leave",
+  "recording_blockNavTitle": "Rekodim i wok yet",
+  "recording_blockNavMessage": "Yu gat wanpela rekoding i wok yet. Sapos yu tromoi, em bai lus olgeta.",
+  "recording_blockNavDiscardAndLeave": "Tromoi na go",
   "recording_inProgressNotificationTitle": "Rekodim i wok",
   "recording_inProgressNotificationBody": "Tasim bilong go bek long ap",
   "recording_finalizing": "I pinisim rekoding…",
@@ -715,13 +720,13 @@
   "recording_finalizationFailedBodyPipeline": "Mipela i no inap pinisim wok long dispela rekoding. Em i stap long ol rekoding yu no bin sevim.",
   "recording_finalizationErrorBack": "Go bek",
   "recording_discardAndReturn": "Lusim na go bek",
-  "recording_savingRecording": "Saving recording…",
-  "recording_processingYourAudio": "Processing your audio",
-  "recording_dontCloseSaveNext": "Don't close — we'll open the save screen next.",
-  "recording_stageShortFinalizing": "FINALIZING",
-  "recording_stageShortCombining": "COMBINING",
-  "recording_stageShortCompressing": "COMPRESSING",
-  "recording_savingPleaseWait": "Saving your recording — please wait a moment.",
+  "recording_savingRecording": "Wok long sevim rekoding…",
+  "recording_processingYourAudio": "Wok long stretim audio bilong yu",
+  "recording_dontCloseSaveNext": "No ken pasim — bihain mipela bai opim skrin bilong sevim.",
+  "recording_stageShortFinalizing": "PINISIM",
+  "recording_stageShortCombining": "BUNGIM",
+  "recording_stageShortCompressing": "PRESIM",
+  "recording_savingPleaseWait": "Wok long sevim rekoding bilong yu — plis wet liklik.",
   "profile_defaultMicrophone": "Defolt maikrofon",
   "profile_systemDefault": "Defolt bilong sistem",
   "settings_deviceStorageTitle": "Spes bilong divais",
@@ -874,7 +879,7 @@
   "recording_noPendingUploads": "I no gat aplot i wet",
   "recording_uploadQueue": "Lain bilong aplot",
   "recording_uploadSpeed": "{speed}/s",
-  "recording_uploadEtaRemaining": "~{eta} remaining",
+  "recording_uploadEtaRemaining": "~{eta} i stap yet",
   "recording_previewSelection": "Lukim ol makim pastaim",
   "recording_stopPreview": "Pinisim lukim pastaim",
   "recording_audioLoadFailed": "I no inap lodim sat",
@@ -888,8 +893,8 @@
   "recording_splitFrom": "Brukim long {sourceId}",
   "trim_segmentRemoved": "Pisis {index} — rausim",
   "trim_segmentOfTotal": "Pisis {index} bilong {total}",
-  "recovery_interruptedTitle": "Interrupted recordings",
-  "recovery_startedAt": "Started at {time}",
+  "recovery_interruptedTitle": "Ol rekoding i bruk",
+  "recovery_startedAt": "I stat long {time}",
   "@recovery_startedAt": {
     "placeholders": {
       "time": {
@@ -897,11 +902,11 @@
       }
     }
   },
-  "recovery_resume": "Resume",
-  "recovery_save": "Save",
-  "recovery_discard": "Discard",
-  "recovery_confirmDiscardTitle": "Discard recording?",
-  "recovery_confirmDiscardBody": "{duration} of audio will be permanently deleted.",
+  "recovery_resume": "Statim gen",
+  "recovery_save": "Sevim",
+  "recovery_discard": "Rausim",
+  "recovery_confirmDiscardTitle": "Rausim rekoding?",
+  "recovery_confirmDiscardBody": "{duration} bilong audio bai lus olgeta.",
   "@recovery_confirmDiscardBody": {
     "placeholders": {
       "duration": {
@@ -909,7 +914,7 @@
       }
     }
   },
-  "recovery_homeBanner": "{count, plural, =1{1 interrupted recording — tap to resume} other{{count} interrupted recordings — tap to resume}}",
+  "recovery_homeBanner": "{count, plural, other{{count} rekoding i bruk — tasim bilong statim gen}}",
   "@recovery_homeBanner": {
     "placeholders": {
       "count": {
@@ -917,7 +922,7 @@
       }
     }
   },
-  "recovery_unsavedCount": "{count, plural, =1{1 unsaved recording} other{{count} unsaved recordings}}",
+  "recovery_unsavedCount": "{count, plural, other{{count} rekoding i no sevim yet}}",
   "@recovery_unsavedCount": {
     "placeholders": {
       "count": {
@@ -925,7 +930,7 @@
       }
     }
   },
-  "recovery_latestSummary": "Latest · {duration} · {time}",
+  "recovery_latestSummary": "Nupela tru · {duration} · {time}",
   "@recovery_latestSummary": {
     "placeholders": {
       "duration": {
@@ -936,9 +941,9 @@
       }
     }
   },
-  "recovery_review": "Review",
-  "recovery_unsavedTitle": "Unsaved recordings",
-  "recovery_unsavedSubtitle": "{count, plural, =1{1 recording to review} other{{count} recordings to review}}",
+  "recovery_review": "Skelim",
+  "recovery_unsavedTitle": "Ol rekoding i no sevim yet",
+  "recovery_unsavedSubtitle": "{count, plural, other{{count} rekoding bilong skelim}}",
   "@recovery_unsavedSubtitle": {
     "placeholders": {
       "count": {
@@ -946,9 +951,9 @@
       }
     }
   },
-  "recovery_discardAll": "Discard all",
-  "recovery_discardAllTitle": "Discard all recordings?",
-  "recovery_discardAllBody": "{count, plural, =1{1 recording will be permanently deleted.} other{{count} recordings will be permanently deleted.}}",
+  "recovery_discardAll": "Rausim olgeta",
+  "recovery_discardAllTitle": "Rausim olgeta rekoding?",
+  "recovery_discardAllBody": "{count, plural, other{{count} rekoding bai lus olgeta.}}",
   "@recovery_discardAllBody": {
     "placeholders": {
       "count": {
@@ -956,9 +961,9 @@
       }
     }
   },
-  "recovery_newBadge": "NEW",
-  "recovery_mostRecent": "Most recent",
-  "recovery_recordingNumbered": "Recording {number}",
+  "recovery_newBadge": "NUPELA",
+  "recovery_mostRecent": "Nupela tru",
+  "recovery_recordingNumbered": "Rekoding {number}",
   "@recovery_recordingNumbered": {
     "placeholders": {
       "number": {
@@ -966,8 +971,8 @@
       }
     }
   },
-  "format_yesterday": "Yesterday",
-  "recovery_backToList": "Not now",
+  "format_yesterday": "Asde",
+  "recovery_backToList": "I no nau",
   "common_discard": "Rausim",
   "common_resume": "Statim gen",
   "import_dropActive": "Lusim na imotim",
@@ -976,9 +981,10 @@
   "import_rejectedTooLarge": "{count, plural, =1{Skipim 1 fail bikpela tumas long 10 GB: {names}} other{Skipim {count} fail bikpela tumas long 10 GB: {names}}}",
   "import_rejectedUnreadable": "{count, plural, =1{Skipim 1 fail i no inap kaunim: {names}} other{Skipim {count} fail i no inap kaunim: {names}}}",
   "import_rejectedUnsupportedCodec": "{count, plural, =1{Skipim 1 fail wantaim odio kodek i no inap: {names}. Ekspot gen olsem PCM WAV o M4A.} other{Skipim {count} fail wantaim odio kodek i no inap: {names}. Ekspot gen olsem PCM WAV o M4A.}}",
-  "import_resumePromptBody": "\"{name}\" ({size}) i no go pinis. Makim stret wankain fail (i no senis) bilong go het.",
-  "import_resumePromptTitle": "Statim gen aplotim i no pinis",
-  "import_resumeSizeMismatch": "Em narapela fail. Makim stret wankain fail yu bin aplotim.",
+  "recording_resumePromptTitle": "Statim gen aplotim i no pinis",
+  "recording_resumePromptBodyStored": "\"{name}\" ({size}) i no pinis long aplotim. Em bai go het long ples em i bin stop.",
+  "recording_resumePromptBodyPickFile": "\"{name}\" ({size}) i no pinis long aplotim. Makim gen wankain fail bilong go het.",
+  "recording_resumeSizeMismatch": "Em narapela fail. Makim stret wankain fail yu bin aplotim.",
   "recordings_offlineFilterTitle": "I no stap taim yu no gat net",
   "recordings_offlineFilterDescription": "Sever i save makim wanem ol rekoding i sot yet long ol tok. Konektim gen bilong lukim ol, o rausim filta bilong lukim olgeta samting i stap long dispela masin.",
   "recordings_filterErrorTitle": "I no inap sekim nau",

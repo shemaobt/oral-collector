@@ -465,9 +465,39 @@ Path: @/lib/features/recording/presentation/notifiers
     segment except `keepPath`. `keepPath` is the finalized file, which in the
     single-segment / degraded fallbacks *is itself one of the segments*
     — hence the exception rather than a blanket delete.
-  - `discard` deletes the segments and marks the session discarded. It is
-    also what the confirmation screen's discard action calls: the finalized
-    file is already gone by then, deleted by the confirmation step itself.
+  - `discard` deletes the segments and the anchored file, and marks the session
+    discarded **only once none of that audio is still there** (ENG-521). The
+    delete goes through `deleteFileProvider`
+    ([../../data/providers.dart](../../data/providers.dart)) and a refusal is
+    caught and reported rather than swallowed; the terminal write then simply
+    does not happen, because
+    [`sessionHoldsReachableAudio`](../../data/services/session_audio.dart) still
+    answers yes. The session stays in the unsaved list and the person can ask
+    again — where before the failure was silent and the row was declared
+    finished over a file still on disk. It is also what the confirmation
+    screen's discard action calls: the finalized file is already gone by then,
+    deleted by the confirmation step itself, so the predicate says no and the
+    discard completes.
+  - Since ENG-518 (slice 1) the confirmation screen the recovery flow hosts
+    **opens with whatever had been typed before the crash**, not empty: the
+    draft is keyed by the audio path, which `pending.result` already carries,
+    so `recovery_confirm_screen.dart` needed no code of its own. See
+    [../widgets/docs.md](../widgets/docs.md).
+  - `keepForLater(sessionId)` (ENG-518, slice 2) parks a finished recording the
+    person walked away from without saving, so it waits in the unsaved list
+    instead of being deleted. It writes `crashed` and refreshes, and **both
+    halves are deliberate**. `crashed` is the status every sweep and the banner
+    already read as "there is anchored audio nobody saved" — which is exactly
+    what a deliberate exit produces, and exactly what
+    `_sweepFinishedSessionsWithUnsavedAudio` would promote the same row to on
+    the next launch anyway; a status of its own would mean teaching
+    `findCrashedSessions`, the sweep and the banner about it for no gain beyond
+    a better name. The name says failure, the state does not. The refresh is not
+    decoration: the sweep only runs at startup, so without it the recording
+    surfaces one launch late, and from the person's side a recording that is not
+    on the home screen is indistinguishable from a recording that was lost. The
+    row keeps its anchor, so ENG-420's invariant holds — a session still
+    pointing at durable audio never reaches a state no sweep looks at.
   All paths end by calling
   [../../data/services/recovery_coordinator.dart](../../data/services/recovery_coordinator.dart)'s
   `refresh()`, which re-derives the prompt list from `findCrashedSessions()`;
@@ -646,6 +676,44 @@ Path: @/lib/features/recording/presentation/notifiers
   [`RecoveryCoordinator`](../../data/services/recovery_coordinator.dart) stats
   it to decide whether a finished session still owes the user a recovery
   offer.
+- **The orphan sweep asks the session what is hers, and both notifiers carry a
+  copy of it (ENG-531).** `_cleanupOrphanedSegments` takes a set of file names
+  to spare and deletes every other segment file of that session it finds in the
+  documents directory. It used to take an index instead and delete everything
+  above it, which erased a segment the repair had *just* attached — see
+  [../../data/repositories/docs.md](../../data/repositories/docs.md) for the
+  reproduced case and why the numbering is not worth fixing. Reading the
+  call sites is the whole story: `loadInterruptedSession` passes the row's
+  declared segment names, and the three discard paths
+  (`InterruptedSessionsNotifier.discard`,
+  `RecordingSessionNotifier.discardRecording`'s resumed branch, and the stop of
+  a pending resume) pass an empty set, which still means "erase everything" —
+  sparing the declared files there would preserve exactly what the person asked
+  to delete. The two copies are byte-identical and were left that way
+  deliberately: sharing them would mean moving the helper out of the
+  presentation layer, which is more reorganisation than this change is worth.
+- **Neither "resume" nor "leave" may swallow a session's audio (ENG-521).**
+  Two paths on `RecordingSessionNotifier` wrote the terminal `discarded` status
+  without ever reading the anchor, and both are reached by exactly the session
+  that has one. `loadInterruptedSession` (the unsaved list's **Resume**) marked
+  the session discarded whenever no segment file survived — but the startup
+  sweep promotes a *finished* session back to `crashed` with its anchor intact
+  precisely when the fire-and-forget deletions took its sources, so the row it
+  buried was the one holding the unsaved recording. `discardRecording`'s
+  resumed-session branch is reached from
+  [../widgets/recording_navigation_guard.dart](../widgets/recording_navigation_guard.dart)
+  — leaving the screen or switching tabs mid-recording, not a request to delete
+  anything — and it deleted the pending segments and marked the row discarded,
+  never touching the finalized file it stranded. Both now ask
+  [`sessionHoldsReachableAudio`](../../data/services/session_audio.dart) first,
+  and the criterion is that the audio is still *there*, not that the anchor
+  column is *set*: see
+  [../../data/repositories/docs.md](../../data/repositories/docs.md) for the
+  full call-site table and why the column-reading version of this guard would
+  turn the person's own discard into never-discards. Consequence worth knowing:
+  a session with an anchor and no surviving segments now stays in the unsaved
+  list, and tapping Resume on it does nothing visible — there is nothing to
+  resume from, and **Save** is the action that gets the recording back.
 - **A failed finalize keeps the recording recoverable — on both stop
   paths.** Finalization (FFmpeg concat + IO under
   [../../data/services/recording_finalization_service.dart](../../data/services/recording_finalization_service.dart))
@@ -704,9 +772,38 @@ Path: @/lib/features/recording/presentation/notifiers
   us — so warning early is the whole mitigation.
 - **`isWebPlatformProvider` and `webAudioRecorderFactoryProvider` exist so the
   browser capture path can be driven in VM tests**, where `kIsWeb` is always
-  false. They default to `kIsWeb` and `AudioRecorder.new`; only `startRecording`
-  and `stopRecording` read the platform flag, so the rest of the notifier still
-  branches on `kIsWeb` directly.
+  false. They default to `kIsWeb` and `AudioRecorder.new`; `startRecording`,
+  `stopRecording` and `InterruptedSessionsNotifier.save` read the platform flag,
+  while the rest of the notifier still branches on `kIsWeb` directly.
+- **A branch decided by `kIsWeb` is a branch no VM test walks, and a test over
+  it can be green about something false (ENG-519, slice 3).** `kIsWeb` is a
+  compile-time constant: on the VM it is `false` no matter what
+  `isWebPlatformProvider` is overridden to, so a test that overrides the
+  provider and then calls into a `kIsWeb` branch quietly exercises the *device*
+  path. That is not hypothetical. `save()` opened with `if (kIsWeb) return
+  null` — in the browser the unsaved list showed a recording and would not open
+  it — while slice 2's case asserted `save()` returned the audio *and passed*,
+  because it ran the device path end to end. Reading the flag from the provider
+  is what makes the branch reachable from a test at all; it is not a style
+  preference.
+  **Before writing the next platform branch, ask which of the two you need.**
+  Conditional export (the `file_ops` / `RecoveryDisk` pattern) is what keeps
+  `dart:io` out of the web build — `kIsWeb` cannot do that, and the `flutter
+  build web` gate is what proves it. The provider is what makes a decision
+  *testable*. They answer different questions, and a branch that only needs to
+  be verified wants the provider.
+  *Checked against:* the experiment the slice ran at the end — putting the
+  decision back on bare `kIsWeb` and confirming the browser case goes red
+  (`Expected: 'webm' / Actual: 'm4a'`, the device path deducing the format from
+  the file extension). With the provider in place, mutating the browser branch
+  to return null also turns slice 2's case red, which it could not do before.
+- **What the browser answers with, and what it does when it cannot.** There are
+  no segments to re-finalize in the browser — the capture is one blob — so the
+  anchor is the only possible answer, and it is the storage key the form will
+  use. When the bytes are gone (the ENG-426 sweep collects what nobody claimed
+  within 24 hours) the recording *leaves the list* instead of being offered
+  again: the sheet does nothing with a null, so without that the person would
+  tap the item and watch nothing happen, on every launch.
 - **A recovered session is only resolved after the user confirms — no
   silent data loss (ENG-80).** The materialization of a `local_recording`
   row happens *only* in `ConfirmationStep._save` (see

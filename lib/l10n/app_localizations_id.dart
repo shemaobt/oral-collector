@@ -516,6 +516,16 @@ class AppLocalizationsId extends AppLocalizations {
       'Rekaman ini akan dihapus secara permanen.';
 
   @override
+  String get recording_leaveTitle => 'Keluar tanpa menyimpan?';
+
+  @override
+  String get recording_leaveMessage =>
+      'Audio tetap tersimpan — Anda bisa menyelesaikannya nanti dari rekaman yang belum disimpan. Menghapusnya sekarang tidak bisa dibatalkan.';
+
+  @override
+  String get recording_keepForLater => 'Simpan untuk nanti';
+
+  @override
   String get recording_saved => 'Rekaman disimpan';
 
   @override
@@ -527,7 +537,8 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String get recording_serviceNotificationTitle => 'Recording in progress';
+  String get recording_serviceNotificationTitle =>
+      'Perekaman sedang berlangsung';
 
   @override
   String recording_serviceNotificationBody(String elapsed, String genre) {
@@ -535,7 +546,7 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String get recording_serviceNotificationStopAction => 'Stop';
+  String get recording_serviceNotificationStopAction => 'Berhenti';
 
   @override
   String get recording_notFound => 'Rekaman tidak ditemukan';
@@ -819,10 +830,10 @@ class AppLocalizationsId extends AppLocalizations {
   String get trim_addSplitsFirst => 'Tambahkan pembagian terlebih dahulu';
 
   @override
-  String get trim_applyBoost => 'Apply boost';
+  String get trim_applyBoost => 'Terapkan volume';
 
   @override
-  String get trim_boostApplied => 'Volume applied';
+  String get trim_boostApplied => 'Volume diterapkan';
 
   @override
   String trim_savedSegments(int kept, int removed) {
@@ -1021,15 +1032,20 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String get import_resumePromptTitle => 'Lanjutkan unggahan yang terhenti';
+  String get recording_resumePromptTitle => 'Lanjutkan unggahan yang terhenti';
 
   @override
-  String import_resumePromptBody(String name, String size) {
-    return '\"$name\" ($size) terunggah sebagian. Pilih berkas yang sama persis (tanpa perubahan) untuk melanjutkan.';
+  String recording_resumePromptBodyStored(String name, String size) {
+    return '\"$name\" ($size) belum selesai diunggah. Lanjutkan dari tempat berhentinya.';
   }
 
   @override
-  String get import_resumeSizeMismatch =>
+  String recording_resumePromptBodyPickFile(String name, String size) {
+    return '\"$name\" ($size) belum selesai diunggah. Pilih lagi berkas yang sama untuk melanjutkan.';
+  }
+
+  @override
+  String get recording_resumeSizeMismatch =>
       'Itu berkas yang berbeda. Pilih berkas yang sama persis dengan yang sedang Anda unggah.';
 
   @override
@@ -2055,6 +2071,13 @@ class AppLocalizationsId extends AppLocalizations {
   String get recording_unclassified => 'Belum diklasifikasi';
 
   @override
+  String get recording_unclassifiedDesc => 'Rekaman yang menunggu klasifikasi';
+
+  @override
+  String get recording_unclassifiedSubcategoryDesc =>
+      'Menyimpan rekaman yang masih menunggu klasifikasi';
+
+  @override
   String get recording_inputSource => 'Input';
 
   @override
@@ -2138,14 +2161,14 @@ class AppLocalizationsId extends AppLocalizations {
       'Sebagian audio di dekat akhir tidak dapat dibaca dan dilewati.';
 
   @override
-  String get recording_blockNavTitle => 'Recording in progress';
+  String get recording_blockNavTitle => 'Perekaman sedang berlangsung';
 
   @override
   String get recording_blockNavMessage =>
-      'You have a recording in progress. Discarding will permanently delete it.';
+      'Anda sedang merekam. Jika dibuang, rekaman akan dihapus permanen.';
 
   @override
-  String get recording_blockNavDiscardAndLeave => 'Discard and leave';
+  String get recording_blockNavDiscardAndLeave => 'Buang dan keluar';
 
   @override
   String get recording_inProgressNotificationTitle => 'Perekaman berlangsung';
@@ -2198,27 +2221,27 @@ class AppLocalizationsId extends AppLocalizations {
   String get recording_discardAndReturn => 'Buang dan kembali';
 
   @override
-  String get recording_savingRecording => 'Saving recording…';
+  String get recording_savingRecording => 'Menyimpan rekaman…';
 
   @override
-  String get recording_processingYourAudio => 'Processing your audio';
+  String get recording_processingYourAudio => 'Memproses audio Anda';
 
   @override
   String get recording_dontCloseSaveNext =>
-      'Don\'t close — we\'ll open the save screen next.';
+      'Jangan tutup — kami akan membuka layar simpan setelah ini.';
 
   @override
-  String get recording_stageShortFinalizing => 'FINALIZING';
+  String get recording_stageShortFinalizing => 'MENYELESAIKAN';
 
   @override
-  String get recording_stageShortCombining => 'COMBINING';
+  String get recording_stageShortCombining => 'MENGGABUNGKAN';
 
   @override
-  String get recording_stageShortCompressing => 'COMPRESSING';
+  String get recording_stageShortCompressing => 'MENGOMPRES';
 
   @override
   String get recording_savingPleaseWait =>
-      'Saving your recording — please wait a moment.';
+      'Menyimpan rekaman Anda — mohon tunggu sebentar.';
 
   @override
   String get profile_defaultMicrophone => 'Mikrofon default';
@@ -2608,7 +2631,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String recording_uploadEtaRemaining(String eta) {
-    return '~$eta remaining';
+    return '~$eta tersisa';
   }
 
   @override
@@ -2663,28 +2686,28 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String get recovery_interruptedTitle => 'Interrupted recordings';
+  String get recovery_interruptedTitle => 'Rekaman terhenti';
 
   @override
   String recovery_startedAt(String time) {
-    return 'Started at $time';
+    return 'Dimulai pukul $time';
   }
 
   @override
-  String get recovery_resume => 'Resume';
+  String get recovery_resume => 'Lanjutkan';
 
   @override
-  String get recovery_save => 'Save';
+  String get recovery_save => 'Simpan';
 
   @override
-  String get recovery_discard => 'Discard';
+  String get recovery_discard => 'Buang';
 
   @override
-  String get recovery_confirmDiscardTitle => 'Discard recording?';
+  String get recovery_confirmDiscardTitle => 'Buang rekaman?';
 
   @override
   String recovery_confirmDiscardBody(String duration) {
-    return '$duration of audio will be permanently deleted.';
+    return 'Audio $duration akan dihapus permanen.';
   }
 
   @override
@@ -2692,8 +2715,7 @@ class AppLocalizationsId extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count interrupted recordings — tap to resume',
-      one: '1 interrupted recording — tap to resume',
+      other: '$count rekaman terhenti — ketuk untuk melanjutkan',
     );
     return '$_temp0';
   }
@@ -2703,67 +2725,64 @@ class AppLocalizationsId extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count unsaved recordings',
-      one: '1 unsaved recording',
+      other: '$count rekaman belum disimpan',
     );
     return '$_temp0';
   }
 
   @override
   String recovery_latestSummary(String duration, String time) {
-    return 'Latest · $duration · $time';
+    return 'Terbaru · $duration · $time';
   }
 
   @override
-  String get recovery_review => 'Review';
+  String get recovery_review => 'Tinjau';
 
   @override
-  String get recovery_unsavedTitle => 'Unsaved recordings';
+  String get recovery_unsavedTitle => 'Rekaman belum disimpan';
 
   @override
   String recovery_unsavedSubtitle(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count recordings to review',
-      one: '1 recording to review',
+      other: '$count rekaman untuk ditinjau',
     );
     return '$_temp0';
   }
 
   @override
-  String get recovery_discardAll => 'Discard all';
+  String get recovery_discardAll => 'Buang semua';
 
   @override
-  String get recovery_discardAllTitle => 'Discard all recordings?';
+  String get recovery_discardAllTitle => 'Buang semua rekaman?';
 
   @override
   String recovery_discardAllBody(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count recordings will be permanently deleted.',
-      one: '1 recording will be permanently deleted.',
+      other: '$count rekaman akan dihapus permanen.',
     );
     return '$_temp0';
   }
 
   @override
-  String get recovery_newBadge => 'NEW';
+  String get recovery_newBadge => 'BARU';
 
   @override
-  String get recovery_mostRecent => 'Most recent';
+  String get recovery_mostRecent => 'Terbaru';
 
   @override
   String recovery_recordingNumbered(int number) {
-    return 'Recording $number';
+    return 'Rekaman $number';
   }
 
   @override
-  String get format_yesterday => 'Yesterday';
+  String get format_yesterday => 'Kemarin';
 
   @override
-  String get recovery_backToList => 'Not now';
+  String get recovery_backToList => 'Nanti saja';
 
   @override
   String get upload_pausedWhileRecording => 'Unggahan dijeda saat merekam';

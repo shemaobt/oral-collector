@@ -239,6 +239,20 @@ class LocalRecordingRepository {
         .get();
   }
 
+  /// Where the audio of every upload waiting to resume is stored.
+  ///
+  /// One query per caller, not one per key: the startup sweep asks once and
+  /// checks the whole store against the answer. Rows written before ENG-427,
+  /// and web imports whose bytes were never in storage, carry an empty path
+  /// and contribute nothing — there is no key to spare.
+  Future<Set<String>> getPendingWebUploadKeys() async {
+    final pending = await getPendingWebUploads();
+    return pending
+        .map((r) => r.localFilePath)
+        .where((path) => path.isNotEmpty)
+        .toSet();
+  }
+
   /// Recordings of [projectId] the server does not have yet, counted once each.
   ///
   /// The home total used to add `getPendingUploads` to

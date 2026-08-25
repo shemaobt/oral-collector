@@ -84,7 +84,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get auth_oralCollector => 'Oral Collector';
 
   @override
-  String get auth_byShema => 'by Shema';
+  String get auth_byShema => 'Shema द्वारा';
 
   @override
   String get auth_heroTagline => 'आवाज़ें सहेजें।\nकहानियाँ साझा करें।';
@@ -122,7 +122,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get auth_emailLabel => 'ईमेल पता';
 
   @override
-  String get auth_emailHint => 'your@email.com';
+  String get auth_emailHint => 'आपका@ईमेल.com';
 
   @override
   String get auth_emailRequired => 'कृपया अपना ईमेल दर्ज करें';
@@ -516,6 +516,16 @@ class AppLocalizationsHi extends AppLocalizations {
       'यह रिकॉर्डिंग स्थायी रूप से हटा दी जाएगी।';
 
   @override
+  String get recording_leaveTitle => 'बिना सहेजे बाहर जाएं?';
+
+  @override
+  String get recording_leaveMessage =>
+      'ऑडियो सुरक्षित रहता है — आप इसे बाद में बिना सहेजी गई रिकॉर्डिंग से पूरा कर सकते हैं। अभी हटाने पर वापस नहीं आएगा।';
+
+  @override
+  String get recording_keepForLater => 'बाद के लिए रखें';
+
+  @override
   String get recording_saved => 'रिकॉर्डिंग सहेजी गई';
 
   @override
@@ -527,7 +537,7 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get recording_serviceNotificationTitle => 'Recording in progress';
+  String get recording_serviceNotificationTitle => 'रिकॉर्डिंग चल रही है';
 
   @override
   String recording_serviceNotificationBody(String elapsed, String genre) {
@@ -535,7 +545,7 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get recording_serviceNotificationStopAction => 'Stop';
+  String get recording_serviceNotificationStopAction => 'बंद करें';
 
   @override
   String get recording_notFound => 'रिकॉर्डिंग नहीं मिली';
@@ -821,10 +831,10 @@ class AppLocalizationsHi extends AppLocalizations {
   String get trim_addSplitsFirst => 'पहले विभाजन जोड़ें';
 
   @override
-  String get trim_applyBoost => 'Apply boost';
+  String get trim_applyBoost => 'आवाज़ लागू करें';
 
   @override
-  String get trim_boostApplied => 'Volume applied';
+  String get trim_boostApplied => 'आवाज़ लागू की गई';
 
   @override
   String trim_savedSegments(int kept, int removed) {
@@ -1033,15 +1043,20 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get import_resumePromptTitle => 'रुका हुआ अपलोड फिर से शुरू करें';
+  String get recording_resumePromptTitle => 'रुका हुआ अपलोड फिर से शुरू करें';
 
   @override
-  String import_resumePromptBody(String name, String size) {
-    return '\"$name\" ($size) आंशिक रूप से अपलोड हुई थी। जारी रखने के लिए ठीक वही फ़ाइल (बिना बदलाव) चुनें।';
+  String recording_resumePromptBodyStored(String name, String size) {
+    return '\"$name\" ($size) का अपलोड पूरा नहीं हुआ। जहाँ रुका था वहीं से जारी रखें।';
   }
 
   @override
-  String get import_resumeSizeMismatch =>
+  String recording_resumePromptBodyPickFile(String name, String size) {
+    return '\"$name\" ($size) का अपलोड पूरा नहीं हुआ। जारी रखने के लिए वही फ़ाइल फिर से चुनें।';
+  }
+
+  @override
+  String get recording_resumeSizeMismatch =>
       'यह एक अलग फ़ाइल है। ठीक वही फ़ाइल चुनें जिसे आप अपलोड कर रहे थे।';
 
   @override
@@ -1107,7 +1122,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get profile_appVersion => 'ऐप संस्करण';
 
   @override
-  String get profile_byShema => 'Oral Collector by Shema';
+  String get profile_byShema => 'Oral Collector, Shema द्वारा';
 
   @override
   String get profile_administration => 'प्रशासन';
@@ -2057,6 +2072,14 @@ class AppLocalizationsHi extends AppLocalizations {
   String get recording_unclassified => 'अवर्गीकृत';
 
   @override
+  String get recording_unclassifiedDesc =>
+      'वर्गीकरण की प्रतीक्षा में रिकॉर्डिंग्स';
+
+  @override
+  String get recording_unclassifiedSubcategoryDesc =>
+      'उन रिकॉर्डिंग्स को रखता है जो अब भी वर्गीकरण की प्रतीक्षा में हैं';
+
+  @override
   String get recording_inputSource => 'इनपुट';
 
   @override
@@ -2140,14 +2163,14 @@ class AppLocalizationsHi extends AppLocalizations {
       'अंत के निकट का कुछ ऑडियो पढ़ा नहीं जा सका और छोड़ दिया गया।';
 
   @override
-  String get recording_blockNavTitle => 'Recording in progress';
+  String get recording_blockNavTitle => 'रिकॉर्डिंग चल रही है';
 
   @override
   String get recording_blockNavMessage =>
-      'You have a recording in progress. Discarding will permanently delete it.';
+      'आपकी एक रिकॉर्डिंग चल रही है। छोड़ने पर वह हमेशा के लिए मिट जाएगी।';
 
   @override
-  String get recording_blockNavDiscardAndLeave => 'Discard and leave';
+  String get recording_blockNavDiscardAndLeave => 'छोड़ दें और बाहर जाएँ';
 
   @override
   String get recording_inProgressNotificationTitle => 'रिकॉर्डिंग जारी है';
@@ -2200,27 +2223,27 @@ class AppLocalizationsHi extends AppLocalizations {
   String get recording_discardAndReturn => 'त्यागें और लौटें';
 
   @override
-  String get recording_savingRecording => 'Saving recording…';
+  String get recording_savingRecording => 'रिकॉर्डिंग सहेजी जा रही है…';
 
   @override
-  String get recording_processingYourAudio => 'Processing your audio';
+  String get recording_processingYourAudio => 'आपका ऑडियो प्रोसेस हो रहा है';
 
   @override
   String get recording_dontCloseSaveNext =>
-      'Don\'t close — we\'ll open the save screen next.';
+      'बंद न करें — इसके बाद हम सहेजने की स्क्रीन खोलेंगे।';
 
   @override
-  String get recording_stageShortFinalizing => 'FINALIZING';
+  String get recording_stageShortFinalizing => 'समापन';
 
   @override
-  String get recording_stageShortCombining => 'COMBINING';
+  String get recording_stageShortCombining => 'संयोजन';
 
   @override
-  String get recording_stageShortCompressing => 'COMPRESSING';
+  String get recording_stageShortCompressing => 'संपीड़न';
 
   @override
   String get recording_savingPleaseWait =>
-      'Saving your recording — please wait a moment.';
+      'आपकी रिकॉर्डिंग सहेजी जा रही है — कृपया एक क्षण प्रतीक्षा करें।';
 
   @override
   String get profile_defaultMicrophone => 'डिफ़ॉल्ट माइक्रोफ़ोन';
@@ -2609,7 +2632,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String recording_uploadEtaRemaining(String eta) {
-    return '~$eta remaining';
+    return '~$eta शेष';
   }
 
   @override
@@ -2664,28 +2687,28 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get recovery_interruptedTitle => 'Interrupted recordings';
+  String get recovery_interruptedTitle => 'बाधित रिकॉर्डिंग्स';
 
   @override
   String recovery_startedAt(String time) {
-    return 'Started at $time';
+    return '$time पर शुरू हुई';
   }
 
   @override
-  String get recovery_resume => 'Resume';
+  String get recovery_resume => 'जारी रखें';
 
   @override
-  String get recovery_save => 'Save';
+  String get recovery_save => 'सहेजें';
 
   @override
-  String get recovery_discard => 'Discard';
+  String get recovery_discard => 'हटाएँ';
 
   @override
-  String get recovery_confirmDiscardTitle => 'Discard recording?';
+  String get recovery_confirmDiscardTitle => 'रिकॉर्डिंग हटाएँ?';
 
   @override
   String recovery_confirmDiscardBody(String duration) {
-    return '$duration of audio will be permanently deleted.';
+    return '$duration का ऑडियो स्थायी रूप से हटा दिया जाएगा।';
   }
 
   @override
@@ -2693,8 +2716,8 @@ class AppLocalizationsHi extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count interrupted recordings — tap to resume',
-      one: '1 interrupted recording — tap to resume',
+      other: '$count रिकॉर्डिंग्स बाधित हुईं — जारी रखने के लिए टैप करें',
+      one: '$count रिकॉर्डिंग बाधित हुई — जारी रखने के लिए टैप करें',
     );
     return '$_temp0';
   }
@@ -2704,67 +2727,67 @@ class AppLocalizationsHi extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count unsaved recordings',
-      one: '1 unsaved recording',
+      other: '$count रिकॉर्डिंग्स सहेजी नहीं गईं',
+      one: '$count रिकॉर्डिंग सहेजी नहीं गई',
     );
     return '$_temp0';
   }
 
   @override
   String recovery_latestSummary(String duration, String time) {
-    return 'Latest · $duration · $time';
+    return 'नवीनतम · $duration · $time';
   }
 
   @override
-  String get recovery_review => 'Review';
+  String get recovery_review => 'समीक्षा करें';
 
   @override
-  String get recovery_unsavedTitle => 'Unsaved recordings';
+  String get recovery_unsavedTitle => 'बिना सहेजी रिकॉर्डिंग्स';
 
   @override
   String recovery_unsavedSubtitle(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count recordings to review',
-      one: '1 recording to review',
+      other: 'समीक्षा के लिए $count रिकॉर्डिंग्स',
+      one: 'समीक्षा के लिए $count रिकॉर्डिंग',
     );
     return '$_temp0';
   }
 
   @override
-  String get recovery_discardAll => 'Discard all';
+  String get recovery_discardAll => 'सभी हटाएँ';
 
   @override
-  String get recovery_discardAllTitle => 'Discard all recordings?';
+  String get recovery_discardAllTitle => 'सभी रिकॉर्डिंग्स हटाएँ?';
 
   @override
   String recovery_discardAllBody(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count recordings will be permanently deleted.',
-      one: '1 recording will be permanently deleted.',
+      other: '$count रिकॉर्डिंग्स स्थायी रूप से हटा दी जाएँगी।',
+      one: '$count रिकॉर्डिंग स्थायी रूप से हटा दी जाएगी।',
     );
     return '$_temp0';
   }
 
   @override
-  String get recovery_newBadge => 'NEW';
+  String get recovery_newBadge => 'नया';
 
   @override
-  String get recovery_mostRecent => 'Most recent';
+  String get recovery_mostRecent => 'सबसे नई';
 
   @override
   String recovery_recordingNumbered(int number) {
-    return 'Recording $number';
+    return 'रिकॉर्डिंग $number';
   }
 
   @override
-  String get format_yesterday => 'Yesterday';
+  String get format_yesterday => 'कल';
 
   @override
-  String get recovery_backToList => 'Not now';
+  String get recovery_backToList => 'अभी नहीं';
 
   @override
   String get upload_pausedWhileRecording =>
