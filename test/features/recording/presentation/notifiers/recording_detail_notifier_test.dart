@@ -1072,6 +1072,77 @@ void main() {
       expect(api.updateCalls, 0);
       expect((await repo.getRecordingById(recordingId))!.genreId, 'genre-2');
     });
+
+    test('choosing a new register on a recording classified Informal saves it '
+        'locally and sends it as register_id', () async {
+      final recording = await seed(
+        registerId: 'casual',
+        uploadStatus: 'verified',
+        serverId: 'srv-1',
+      );
+      final api = _FakeApiRepo();
+      final c = makeContainer(isOnline: true, api: api);
+
+      await notifierOf(c).moveCategory(
+        recording,
+        const MoveCategoryResult(
+          genreId: 'genre-1',
+          subcategoryId: 'sub-1',
+          registerId: 'formal',
+        ),
+      );
+
+      expect((await repo.getRecordingById(recordingId))!.registerId, 'formal');
+      expect(api.lastUpdate['registerId'], 'formal');
+    });
+
+    test('moving without touching the register keeps the current register and '
+        'sends no register_id', () async {
+      final recording = await seed(
+        registerId: 'casual',
+        uploadStatus: 'verified',
+        serverId: 'srv-1',
+      );
+      final api = _FakeApiRepo();
+      final c = makeContainer(isOnline: true, api: api);
+
+      await notifierOf(c).moveCategory(
+        recording,
+        const MoveCategoryResult(genreId: 'genre-2', subcategoryId: 'sub-2'),
+      );
+
+      expect((await repo.getRecordingById(recordingId))!.registerId, 'casual');
+      expect(api.lastUpdate['registerId'], isNull);
+    });
+
+    test(
+      'changing only the secondary classification sends no register_id',
+      () async {
+        final recording = await seed(
+          registerId: 'casual',
+          uploadStatus: 'verified',
+          serverId: 'srv-1',
+        );
+        final api = _FakeApiRepo();
+        final c = makeContainer(isOnline: true, api: api);
+
+        await notifierOf(c).moveCategory(
+          recording,
+          const MoveCategoryResult(
+            genreId: 'genre-1',
+            subcategoryId: 'sub-1',
+            secondaryGenreId: 'genre-3',
+            secondaryRegisterId: 'formal',
+          ),
+        );
+
+        expect(api.lastUpdate['registerId'], isNull);
+        expect(api.lastUpdate['genreId'], 'genre-1');
+        expect(api.lastUpdate['subcategoryId'], 'sub-1');
+        expect(api.lastUpdate['secondaryGenreId'], 'genre-3');
+        expect(api.lastUpdate['secondaryRegisterId'], 'formal');
+      },
+    );
   });
 
   group('classify', () {

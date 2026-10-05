@@ -9,11 +9,13 @@ import '../../../../core/theme/tokens.dart';
 import '../../../genre/domain/entities/genre.dart';
 import '../../../genre/presentation/notifiers/genre_notifier.dart';
 import '../../domain/entities/classification.dart';
+import '../../domain/entities/register.dart';
 import 'secondary_classification_fields.dart';
 
 class MoveCategoryResult {
   final String genreId;
   final String? subcategoryId;
+  final String? registerId;
   final String? secondaryGenreId;
   final String? secondarySubcategoryId;
   final String? secondaryRegisterId;
@@ -22,6 +24,7 @@ class MoveCategoryResult {
   const MoveCategoryResult({
     required this.genreId,
     this.subcategoryId,
+    this.registerId,
     this.secondaryGenreId,
     this.secondarySubcategoryId,
     this.secondaryRegisterId,
@@ -54,6 +57,7 @@ class MoveCategoryDialog extends ConsumerStatefulWidget {
 class _MoveCategoryDialogState extends ConsumerState<MoveCategoryDialog> {
   late String _selectedGenreId;
   String? _selectedSubcategoryId;
+  String? _selectedRegisterId;
   late bool _showSecondary;
   SecondaryValues? _secondary;
 
@@ -62,6 +66,7 @@ class _MoveCategoryDialogState extends ConsumerState<MoveCategoryDialog> {
     super.initState();
     _selectedGenreId = widget.currentGenreId;
     _selectedSubcategoryId = widget.currentSubcategoryId;
+    _selectedRegisterId = widget.currentPrimaryRegisterId;
     final hasInitialSecondary =
         (widget.currentSecondaryGenreId != null &&
             widget.currentSecondaryGenreId!.isNotEmpty) ||
@@ -112,9 +117,13 @@ class _MoveCategoryDialogState extends ConsumerState<MoveCategoryDialog> {
         : (initialSecondaryGenre != null || initialSecondaryReg != null);
   }
 
+  bool get _registerChanged =>
+      _selectedRegisterId != widget.currentPrimaryRegisterId;
+
   bool get _hasChanged =>
       _selectedGenreId != widget.currentGenreId ||
       _selectedSubcategoryId != widget.currentSubcategoryId ||
+      _registerChanged ||
       _secondaryChanged;
 
   bool get _secondaryValid =>
@@ -122,7 +131,7 @@ class _MoveCategoryDialogState extends ConsumerState<MoveCategoryDialog> {
       _secondary == null ||
       (_secondary!.isValid &&
           !secondaryEqualsPrimary(
-            primaryRegisterId: widget.currentPrimaryRegisterId,
+            primaryRegisterId: _selectedRegisterId,
             primaryGenreId: _selectedGenreId,
             primarySubcategoryId: _selectedSubcategoryId,
             secondaryRegisterId: _secondary!.registerId,
@@ -151,6 +160,12 @@ class _MoveCategoryDialogState extends ConsumerState<MoveCategoryDialog> {
     });
   }
 
+  void _onRegisterChanged(String? value) {
+    setState(() {
+      _selectedRegisterId = value;
+    });
+  }
+
   void _onSecondaryExpansionChanged(bool expanded) {
     setState(() {
       _showSecondary = expanded;
@@ -172,6 +187,7 @@ class _MoveCategoryDialogState extends ConsumerState<MoveCategoryDialog> {
       MoveCategoryResult(
         genreId: _selectedGenreId,
         subcategoryId: _selectedSubcategoryId,
+        registerId: _registerChanged ? _selectedRegisterId : null,
         secondaryGenreId: secondary?.genreId,
         secondarySubcategoryId: secondary?.subcategoryId,
         secondaryRegisterId: secondary?.registerId,
@@ -242,13 +258,18 @@ class _MoveCategoryDialogState extends ConsumerState<MoveCategoryDialog> {
                       .toList(),
                   onChanged: _onSubcategoryChanged,
                 ),
+                const SizedBox(height: SpacingScale.s16),
               ],
+              _PrimaryRegisterField(
+                value: _selectedRegisterId,
+                onChanged: _onRegisterChanged,
+              ),
               const SizedBox(height: SpacingScale.s12),
               _SecondaryExpansion(
                 expanded: _showSecondary,
                 primaryGenreId: _selectedGenreId,
                 primarySubcategoryId: _selectedSubcategoryId,
-                primaryRegisterId: widget.currentPrimaryRegisterId,
+                primaryRegisterId: _selectedRegisterId,
                 initial: _secondary,
                 onExpansionChanged: _onSecondaryExpansionChanged,
                 onChanged: _onSecondaryChanged,
@@ -318,6 +339,33 @@ class _LabeledDropdownField extends StatelessWidget {
           onChanged: onChanged,
         ),
       ],
+    );
+  }
+}
+
+class _PrimaryRegisterField extends StatelessWidget {
+  const _PrimaryRegisterField({required this.value, required this.onChanged});
+
+  final String? value;
+  final ValueChanged<String?> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return _LabeledDropdownField(
+      label: l10n.classify_register,
+      isExpanded: true,
+      hint: l10n.classify_selectRegister,
+      value: kRegisters.any((r) => r.id == value) ? value : null,
+      items: kRegisters
+          .map(
+            (r) => DropdownMenuItem(
+              value: r.id,
+              child: Text(localizedRegisterName(l10n, r.name)),
+            ),
+          )
+          .toList(),
+      onChanged: onChanged,
     );
   }
 }

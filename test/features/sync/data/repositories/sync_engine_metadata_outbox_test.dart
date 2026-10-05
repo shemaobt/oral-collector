@@ -198,6 +198,21 @@ void main() {
       client.close();
     });
 
+    test('an owed register goes up as register_id', () async {
+      await seedVerified();
+      await repo.updateRecording(
+        'rec-1',
+        const LocalRecordingsCompanion(registerId: Value('formal')),
+      );
+      await repo.markMetadataPending('rec-1', {PendingMetadataField.register});
+
+      final (client, log) = patchClient();
+      await buildEngine(client).processQueue();
+
+      expect(log.only, {'register_id': 'formal'});
+      client.close();
+    });
+
     test('stops owing it once it lands, and never resends', () async {
       await seedVerified(cleaningStatus: 'needs_cleaning');
       await repo.markMetadataPending('rec-1', {
