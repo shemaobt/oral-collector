@@ -213,6 +213,27 @@ void main() {
       client.close();
     });
 
+    test('an owed secondary with an empty subcategory goes up with an explicit '
+        'null', () async {
+      await seedVerified();
+      await repo.updateSecondaryClassification(
+        'rec-1',
+        genreId: 'genre-1',
+        registerId: 'formal',
+      );
+      await repo.markMetadataPending('rec-1', {PendingMetadataField.secondary});
+
+      final (client, log) = patchClient();
+      await buildEngine(client).processQueue();
+
+      expect(log.only, {
+        'secondary_genre_id': 'genre-1',
+        'secondary_subcategory_id': null,
+        'secondary_register_id': 'formal',
+      });
+      client.close();
+    });
+
     test('stops owing it once it lands, and never resends', () async {
       await seedVerified(cleaningStatus: 'needs_cleaning');
       await repo.markMetadataPending('rec-1', {

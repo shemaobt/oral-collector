@@ -402,8 +402,8 @@ void main() {
     );
 
     testWidgets(
-      'moving without touching the register keeps the current register and '
-      'sends no register_id',
+      'moving without touching the register leaves the register out of the '
+      'result',
       (tester) async {
         MoveCategoryResult? captured;
         await tester.pumpWidget(

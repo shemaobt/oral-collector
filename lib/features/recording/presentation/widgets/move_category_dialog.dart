@@ -289,8 +289,8 @@ class _MoveCategoryDialogState extends ConsumerState<MoveCategoryDialog> {
   }
 }
 
-/// A label above a dense [DropdownButtonFormField], shared by the genre and
-/// subcategory selectors.
+/// A label above a dense [DropdownButtonFormField], shared by the genre,
+/// subcategory and register selectors.
 class _LabeledDropdownField extends StatelessWidget {
   const _LabeledDropdownField({
     required this.label,

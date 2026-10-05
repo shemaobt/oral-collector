@@ -142,8 +142,11 @@ Path: @/lib/features/recording/domain
   (which backs `updateGenre`) and of
   [`SplitSegmentRequest`](entities/split_segment_request.dart) — no
   freezed/equatable, no `==`/`copyWith`. `toJson()` omits a null field (leaves
-  it untouched), while `clearSecondary` sends explicit nulls for the three
-  secondary-classification keys to clear them. It was extracted purely to
+  it untouched), except the secondary classification, which travels as one
+  unit: when any of its three fields is set, all three keys go up, an empty one
+  as an explicit null, because the server keeps a stored value for any key left
+  out and would otherwise rebuild a triple the user changed (ENG-1188).
+  `clearSecondary` sends explicit nulls for all three to clear them. It was extracted purely to
   collapse the thirteen named parameters `updateRecording` used to take into one
   argument (the `dart_code_linter` `number-of-parameters` gate; the threshold
   ratchet itself is ENG-208) — the JSON on the wire is byte-identical, so the
