@@ -587,5 +587,32 @@ void main() {
         expect(await offeredSecondarySubcategory(), findsNothing);
       },
     );
+
+    testWidgets('emptying the secondary classification in Mover clears it', (
+      tester,
+    ) async {
+      MoveCategoryResult? captured;
+      await tester.pumpWidget(
+        _harness(
+          currentGenreId: 'g-primary',
+          currentSubcategoryId: 'sub-A',
+          currentPrimaryRegisterId: 'casual',
+          currentSecondaryGenreId: 'g-secondary',
+          currentSecondaryRegisterId: 'formal',
+          onResult: (r) => captured = r,
+        ),
+      );
+      await _openDialog(tester);
+
+      final clear = find.text(l10n.classify_clearAlternative);
+      await tester.ensureVisible(clear);
+      await tester.pumpAndSettle();
+      await tester.tap(clear);
+      await tester.pumpAndSettle();
+
+      expect(_isMoveEnabled(tester, l10n), isTrue);
+      final result = await _tapMove(tester, l10n, () => captured);
+      expect(result?.clearSecondary, isTrue);
+    });
   });
 }

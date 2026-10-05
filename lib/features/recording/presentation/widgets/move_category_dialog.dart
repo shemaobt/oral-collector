@@ -140,7 +140,7 @@ class _MoveCategoryDialogState extends ConsumerState<MoveCategoryDialog> {
           ));
 
   bool get _shouldClearSecondary =>
-      !_showSecondary &&
+      (!_showSecondary || _secondary == null) &&
       (widget.currentSecondaryGenreId != null ||
           widget.currentSecondaryRegisterId != null);
 
