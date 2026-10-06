@@ -1,6 +1,8 @@
 /// Partial-update body for PATCH /api/oc/recordings/{id}. A null field is
-/// omitted from the wire (left untouched); [clearSecondary] sends an explicit
-/// null for the three secondary-classification keys to clear them.
+/// omitted from the wire (left untouched), except the secondary classification,
+/// which travels as one unit: when any of its three fields is set, all three
+/// keys go up, an empty one as an explicit null. [clearSecondary] sends
+/// explicit nulls for all three to clear them.
 class UpdateRecordingRequest {
   final String? title;
   final String? description;
