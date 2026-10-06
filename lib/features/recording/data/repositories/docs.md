@@ -497,6 +497,8 @@ Path: @/lib/features/recording/data/repositories
   - `classify` omits a null `registerId` (`Value.absent`, **preserve**) — a
     classify dialog that left the register blank must keep an existing
     register, not wipe it. A characterization test asserts exactly this.
+  - `moveCategory` omits a null `registerId` the same way (**preserve**) — a
+    null means the Mover dialog left the register untouched (ENG-1188).
   - `moveCategory` (when `clearSecondary` is true) and
     `updateSecondaryClassification` write the secondary fields as `Value(null)`
     (**clear**) — these flows intend to drop the secondary classification.

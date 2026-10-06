@@ -136,6 +136,7 @@ class LocalRecordingRepository {
     required String genreId,
     required String? subcategoryId,
     required bool clearSecondary,
+    String? registerId,
     String? secondaryGenreId,
     String? secondarySubcategoryId,
     String? secondaryRegisterId,
@@ -145,6 +146,9 @@ class LocalRecordingRepository {
       LocalRecordingsCompanion(
         genreId: Value(genreId),
         subcategoryId: Value(subcategoryId),
+        registerId: registerId != null
+            ? Value(registerId)
+            : const Value.absent(),
         secondaryGenreId: clearSecondary
             ? const Value(null)
             : Value(secondaryGenreId),
