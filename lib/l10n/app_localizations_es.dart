@@ -858,6 +858,25 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get trim_saveChoiceBody =>
+      'Solo \"Guardar como nueva grabación\" conserva la grabación original.';
+
+  @override
+  String get trim_keepSegmentsSeparate => 'Mantener segmentos separados';
+
+  @override
+  String get trim_saveAsNewRecording => 'Guardar como nueva grabación';
+
+  @override
+  String get trim_removeStretch => 'Eliminar fragmento';
+
+  @override
+  String get trim_savedAsNewRecording => 'Guardada como nueva grabación';
+
+  @override
+  String get trim_stretchRemoved => 'Fragmento eliminado';
+
+  @override
   String get trim_saveConfirmTitle => '¿Guardar cambios?';
 
   @override

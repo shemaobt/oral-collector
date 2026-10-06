@@ -842,6 +842,25 @@ class AppLocalizationsTpi extends AppLocalizations {
   }
 
   @override
+  String get trim_saveChoiceBody =>
+      'Long \"Seivim olsem nupela rekoding\" tasol, orijinel rekoding i stap yet.';
+
+  @override
+  String get trim_keepSegmentsSeparate => 'Holim ol hap i stap wan wan';
+
+  @override
+  String get trim_saveAsNewRecording => 'Seivim olsem nupela rekoding';
+
+  @override
+  String get trim_removeStretch => 'Rausim hap';
+
+  @override
+  String get trim_savedAsNewRecording => 'Seivim pinis olsem nupela rekoding';
+
+  @override
+  String get trim_stretchRemoved => 'Hap i raus pinis';
+
+  @override
   String get trim_saveConfirmTitle => 'Sevim senis?';
 
   @override

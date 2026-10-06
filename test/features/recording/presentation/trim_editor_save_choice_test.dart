@@ -1,11 +1,3 @@
-/// Widget-delegation tests for TrimEditorScreen (ENG-193): the screen no longer
-/// owns the save orchestration, so these pin that the action bar delegates to
-/// TrimEditorNotifier and renders the outcome. The notifier is replaced by a
-/// fake so the test exercises the widget wiring (button -> confirm -> saveSplit
-/// -> snackbar) without the real orchestration. The failure path navigates
-/// nowhere, so it needs no router.
-library;
-
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
@@ -13,7 +5,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:oral_collector/core/database/app_database.dart';
-import 'package:oral_collector/core/errors/app_exception.dart';
 import 'package:oral_collector/features/recording/data/local_recording_to_entity.dart';
 import 'package:oral_collector/features/recording/data/providers.dart';
 import 'package:oral_collector/features/recording/data/repositories/local_recording_repository.dart';
@@ -25,36 +16,34 @@ import 'package:oral_collector/features/recording/presentation/notifiers/trim_ed
 import 'package:oral_collector/features/recording/presentation/trim_edit_decision.dart';
 import 'package:oral_collector/features/recording/presentation/trim_editor_screen.dart';
 import 'package:oral_collector/l10n/app_localizations.dart';
-import 'package:oral_collector/shared/utils/error_helpers.dart';
 
 import '../../../support/text_scale.dart';
 
 const _recordingId = 'rec-1';
+const _keepSeparate = 'Manter segmentos separados';
+const _saveAsNew = 'Salvar como nova gravação';
+const _removeStretch = 'Remover trecho';
 
 class _MockPlayer extends Mock implements AudioPlayer {}
 
 class _FakeTrimEditorNotifier extends TrimEditorNotifier {
   _FakeTrimEditorNotifier({
     required LocalRecordingEntity recording,
-    required TrimSaveOutcome outcome,
-    bool isSaving = false,
+    required Set<int> excluded,
   }) : _recording = recording,
-       _outcome = outcome,
-       _isSaving = isSaving;
+       _excluded = excluded;
 
-  // Private to satisfy avoid_public_notifier_properties; read in-file by tests.
   final LocalRecordingEntity _recording;
-  final TrimSaveOutcome _outcome;
-  final bool _isSaving;
-  int _saveCalls = 0;
+  final Set<int> _excluded;
+  final List<TrimSaveMode?> _savedWith = [];
 
   @override
   TrimEditorState build(String arg) => TrimEditorState(
     recording: _recording,
     isLoading: false,
-    isSaving: _isSaving,
-    totalDuration: const Duration(seconds: 10),
-    splitPoints: const [0.5],
+    totalDuration: const Duration(seconds: 60),
+    splitPoints: const [1 / 3, 1 / 2],
+    excludedSegments: _excluded,
   );
 
   @override
@@ -70,32 +59,26 @@ class _FakeTrimEditorNotifier extends TrimEditorNotifier {
     required String localeTag,
     TrimSaveMode? mode,
   }) async {
-    _saveCalls++;
-    return _outcome;
+    _savedWith.add(mode);
+    return const TrimSaveAborted();
   }
 }
 
 void main() {
   late AppDatabase db;
-  late LocalRecordingRepository repo;
-  late _MockPlayer player;
-  late AppLocalizations l10n;
   late LocalRecordingEntity recording;
-
-  setUpAll(() async {
-    l10n = await AppLocalizations.delegate.load(const Locale('en'));
-  });
+  late _MockPlayer player;
 
   setUp(() async {
     db = AppDatabase.forTesting(NativeDatabase.memory());
-    repo = LocalRecordingRepository(db);
+    final repo = LocalRecordingRepository(db);
     await repo.insertRecording(
       LocalRecordingsCompanion(
         id: const Value(_recordingId),
         projectId: const Value('proj'),
         genreId: const Value('g0'),
         title: const Value('Story'),
-        durationSeconds: const Value(10.0),
+        durationSeconds: const Value(60.0),
         fileSizeBytes: const Value(1000),
         format: const Value('m4a'),
         localFilePath: const Value('/audio/in.m4a'),
@@ -114,8 +97,8 @@ void main() {
     when(() => player.pause()).thenAnswer((_) async {});
     when(
       () => player.setFilePath(any()),
-    ).thenAnswer((_) async => const Duration(seconds: 10));
-    when(() => player.duration).thenReturn(const Duration(seconds: 10));
+    ).thenAnswer((_) async => const Duration(seconds: 60));
+    when(() => player.duration).thenReturn(const Duration(seconds: 60));
     when(
       () => player.positionStream,
     ).thenAnswer((_) => Stream.value(Duration.zero));
@@ -126,13 +109,14 @@ void main() {
 
   tearDown(() => db.close());
 
-  Future<void> pump(WidgetTester tester, _FakeTrimEditorNotifier fake) async {
+  Future<void> pumpEditor(
+    WidgetTester tester,
+    _FakeTrimEditorNotifier fake,
+  ) async {
     await pumpAtTextScale(
       tester,
-      // A roomy canvas: the waveform panel's segment row overflows a phone
-      // width once there are splits (a pre-existing layout trait, unrelated to
-      // the delegation under test).
       size: const Size(1200, 1600),
+      locale: const Locale('pt'),
       overrides: [
         audioPlayerFactoryProvider.overrideWithValue(() => player),
         fileExistsProvider.overrideWithValue((_) async => true),
@@ -149,46 +133,74 @@ void main() {
     }
   }
 
-  testWidgets('tapping save confirms then delegates to the notifier; a failed '
-      'outcome shows the split-error snackbar', (tester) async {
-    final fake = _FakeTrimEditorNotifier(
-      recording: recording,
-      outcome: const TrimSaveFailed(ServerException(statusCode: 500)),
-    );
-    await pump(tester, fake);
+  Finder inSaveStep(String text) =>
+      find.descendant(of: find.byType(AlertDialog), matching: find.text(text));
 
-    await tester.tap(find.byType(ElevatedButton));
-    await tester.pump();
-    expect(find.text(l10n.trim_saveConfirmTitle), findsOneWidget);
-
-    await tester.tap(find.widgetWithText(FilledButton, l10n.common_save));
+  Future<void> settle(WidgetTester tester) async {
     for (var i = 0; i < 4; i++) {
       await tester.pump(const Duration(milliseconds: 20));
     }
+  }
 
-    expect(fake._saveCalls, 1);
+  testWidgets('the save step offers the three options in Portuguese when a '
+      'stretch is excluded', (tester) async {
+    final fake = _FakeTrimEditorNotifier(recording: recording, excluded: {1});
+    await pumpEditor(tester, fake);
+
+    await tester.tap(find.byType(ElevatedButton));
+    await settle(tester);
+
+    final tops = [
+      for (final label in [_keepSeparate, _saveAsNew, _removeStretch])
+        tester.getTopLeft(inSaveStep(label)).dy,
+    ];
+    expect(tops[0], lessThan(tops[1]));
+    expect(tops[1], lessThan(tops[2]));
+    expect(inSaveStep('Cancelar'), findsOneWidget);
+    expect(inSaveStep('Salvar alterações?'), findsOneWidget);
     expect(
-      find.text(
-        l10n.trim_splitError(
-          friendlyErrorFor(const ServerException(statusCode: 500), l10n),
-        ),
+      inSaveStep(
+        'A gravação original só é mantida em "Salvar como nova gravação".',
       ),
       findsOneWidget,
     );
   });
 
-  testWidgets('while saving, the action button is disabled and shows the '
-      'splitting label', (tester) async {
-    final fake = _FakeTrimEditorNotifier(
-      recording: recording,
-      outcome: const TrimSaveAborted(),
-      isSaving: true,
-    );
-    await pump(tester, fake);
+  testWidgets('each option saves with its own mode and Cancelar saves '
+      'nothing', (tester) async {
+    final picks = {
+      _keepSeparate: TrimSaveMode.split,
+      _saveAsNew: TrimSaveMode.saveAsNew,
+      _removeStretch: TrimSaveMode.removeStretch,
+    };
+    final fake = _FakeTrimEditorNotifier(recording: recording, excluded: {1});
+    await pumpEditor(tester, fake);
 
-    expect(find.text(l10n.trim_splitting), findsOneWidget);
-    final button = tester.widget<ElevatedButton>(find.byType(ElevatedButton));
-    expect(button.onPressed, isNull);
-    expect(fake._saveCalls, 0);
+    for (final label in [...picks.keys, 'Cancelar']) {
+      await tester.tap(find.byType(ElevatedButton));
+      await settle(tester);
+      await tester.tap(inSaveStep(label));
+      await settle(tester);
+    }
+
+    expect(fake._savedWith, picks.values.toList());
+  });
+
+  testWidgets('a save with split marks and nothing excluded keeps today\'s '
+      'confirm and splits', (tester) async {
+    final l10n = await AppLocalizations.delegate.load(const Locale('pt'));
+    final fake = _FakeTrimEditorNotifier(recording: recording, excluded: {});
+    await pumpEditor(tester, fake);
+
+    await tester.tap(find.byType(ElevatedButton));
+    await settle(tester);
+
+    expect(find.text(l10n.trim_saveConfirmBody(3)), findsOneWidget);
+    expect(find.text(_removeStretch), findsNothing);
+
+    await tester.tap(find.widgetWithText(FilledButton, l10n.common_save));
+    await settle(tester);
+
+    expect(fake._savedWith, [TrimSaveMode.split]);
   });
 }

@@ -846,6 +846,25 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
+  String get trim_saveChoiceBody =>
+      'Hanya \"Simpan sebagai rekaman baru\" yang mempertahankan rekaman asli.';
+
+  @override
+  String get trim_keepSegmentsSeparate => 'Biarkan segmen terpisah';
+
+  @override
+  String get trim_saveAsNewRecording => 'Simpan sebagai rekaman baru';
+
+  @override
+  String get trim_removeStretch => 'Hapus bagian';
+
+  @override
+  String get trim_savedAsNewRecording => 'Disimpan sebagai rekaman baru';
+
+  @override
+  String get trim_stretchRemoved => 'Bagian dihapus';
+
+  @override
   String get trim_saveConfirmTitle => 'Simpan perubahan?';
 
   @override

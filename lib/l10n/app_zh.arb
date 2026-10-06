@@ -332,6 +332,12 @@
       }
     }
   },
+  "trim_saveChoiceBody": "只有“另存为新录音”会保留原始录音。",
+  "trim_keepSegmentsSeparate": "保持片段分开",
+  "trim_saveAsNewRecording": "另存为新录音",
+  "trim_removeStretch": "删除片段",
+  "trim_savedAsNewRecording": "已另存为新录音",
+  "trim_stretchRemoved": "片段已删除",
   "trim_saveConfirmTitle": "保存更改？",
   "trim_saveConfirmBody": "这将用 {count} 个片段替换原始录音。此操作无法撤消。",
   "trim_inheritLabel": "继承",

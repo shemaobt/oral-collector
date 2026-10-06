@@ -277,12 +277,16 @@ Path: @/lib/features/recording/presentation/notifiers
     path, the `SegmentExportSpec`s, gain, boost-only flag, title, and parent
     genre id in a single `ExportLocalSegmentsRequest` value object (ENG-209;
     see [../../data/docs.md](../../data/docs.md)) — then `_saveLocally`
-    branches on `TrimEditDecision.mode` (ENG-402, `TrimSaveMode` in
+    branches on the mode the screen chose, else `TrimEditDecision.mode`
+    (ENG-402, ENG-1187, `TrimSaveMode` in
     [../trim_edit_decision.dart](../trim_edit_decision.dart)): a `boostOnly`
     save (no cut points) hands its single spec to a `RecordingBoostPersister`
     built from `recordingBoostPersisterProvider`, which calls
     `LocalRecordingRepository.replaceAudioAndQueueResend` and never touches
-    the server directly; every other save hands the specs plus the entity
+    the server directly; `removeStretch` and `saveAsNew` join the kept parts
+    through the `JoinedAudioExporter` seam and hand the file to that same
+    boost persister or to a `RecordingSaveAsNewPersister` (see
+    `docs/recording-split-semantics.md`); a `split` hands the specs plus the entity
     `parent` to a `RecordingSplitPersister` built from
     `recordingSplitPersisterProvider` (the persister and the repository's
     `splitRecordingReplacingParent` consume the entity as the parent as of

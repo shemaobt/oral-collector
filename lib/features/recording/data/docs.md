@@ -299,9 +299,9 @@ Path: @/lib/features/recording/data
     `boostOnly` vs a real split — that decision is the caller's, in
     `TrimEditorNotifier._saveLocally`
     ([../presentation/notifiers/docs.md](../presentation/notifiers/docs.md)),
-    which sends the single resulting spec to `RecordingBoostPersister` when
-    there were no cut points and to `RecordingSplitPersister` otherwise
-    (ENG-402).
+    which sends the single resulting spec to `RecordingBoostPersister` for a
+    gain-only save and the specs to `RecordingSplitPersister` for a split
+    (ENG-402); the two joining saves of ENG-1187 do not use this exporter.
     Its per-call data inputs (source path, the `SegmentExportSpec`s, gain,
     boost-only flag, original title, parent genre id) are grouped into a
     single `ExportLocalSegmentsRequest` value object passed as the lone

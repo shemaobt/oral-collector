@@ -846,6 +846,25 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get trim_saveChoiceBody =>
+      'Only \"Save as a new recording\" keeps the original.';
+
+  @override
+  String get trim_keepSegmentsSeparate => 'Keep segments separate';
+
+  @override
+  String get trim_saveAsNewRecording => 'Save as a new recording';
+
+  @override
+  String get trim_removeStretch => 'Remove stretch';
+
+  @override
+  String get trim_savedAsNewRecording => 'Saved as a new recording';
+
+  @override
+  String get trim_stretchRemoved => 'Stretch removed';
+
+  @override
   String get trim_saveConfirmTitle => 'Save changes?';
 
   @override

@@ -838,6 +838,25 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get trim_saveChoiceBody =>
+      'وحده خيار \"حفظ كتسجيل جديد\" يحتفظ بالتسجيل الأصلي.';
+
+  @override
+  String get trim_keepSegmentsSeparate => 'إبقاء المقاطع منفصلة';
+
+  @override
+  String get trim_saveAsNewRecording => 'حفظ كتسجيل جديد';
+
+  @override
+  String get trim_removeStretch => 'إزالة المقطع';
+
+  @override
+  String get trim_savedAsNewRecording => 'تم الحفظ كتسجيل جديد';
+
+  @override
+  String get trim_stretchRemoved => 'تمت إزالة المقطع';
+
+  @override
   String get trim_saveConfirmTitle => 'حفظ التغييرات؟';
 
   @override

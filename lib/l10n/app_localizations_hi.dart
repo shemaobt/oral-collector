@@ -859,6 +859,25 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
+  String get trim_saveChoiceBody =>
+      'केवल \"नई रिकॉर्डिंग के रूप में सहेजें\" मूल रिकॉर्डिंग को बनाए रखता है।';
+
+  @override
+  String get trim_keepSegmentsSeparate => 'खंडों को अलग रखें';
+
+  @override
+  String get trim_saveAsNewRecording => 'नई रिकॉर्डिंग के रूप में सहेजें';
+
+  @override
+  String get trim_removeStretch => 'अंश हटाएँ';
+
+  @override
+  String get trim_savedAsNewRecording => 'नई रिकॉर्डिंग के रूप में सहेजा गया';
+
+  @override
+  String get trim_stretchRemoved => 'अंश हटाया गया';
+
+  @override
   String get trim_saveConfirmTitle => 'परिवर्तन सहेजें?';
 
   @override

@@ -784,6 +784,7 @@ class LocalRecordingRepository {
     required String newFilePath,
     required double newDurationSeconds,
     required int newFileSizeBytes,
+    String? newFormat,
   }) async {
     final rows =
         await (_db.update(
@@ -793,6 +794,7 @@ class LocalRecordingRepository {
             localFilePath: Value(newFilePath),
             durationSeconds: Value(newDurationSeconds),
             fileSizeBytes: Value(newFileSizeBytes),
+            format: Value.absentIfNull(newFormat),
             uploadStatus: const Value('local'),
             md5Hash: const Value(null),
             resumableSessionUri: const Value(null),
@@ -817,22 +819,28 @@ class LocalRecordingRepository {
   /// Nothing is owed when the server does not have the recording: there is
   /// nothing to correct, and a mark the outbox never selects (it requires a
   /// `serverId`) would leave the row wearing "edit not yet sent" forever.
+  ///
+  /// A recording the server has keeps its format whatever [newFormat] says:
+  /// the server confirms the upload against the blob its stored format names.
   Future<bool> replaceAudioAndQueueResend({
     required String recordingId,
     required String newFilePath,
     required double newDurationSeconds,
     required int newFileSizeBytes,
+    String? newFormat,
   }) async {
     return _db.transaction(() async {
       final row = await getRecordingById(recordingId);
       if (row == null) return false;
+      final onServer = row.serverId != null && row.serverId!.isNotEmpty;
       await replaceAudio(
         recordingId: recordingId,
         newFilePath: newFilePath,
         newDurationSeconds: newDurationSeconds,
         newFileSizeBytes: newFileSizeBytes,
+        newFormat: onServer ? null : newFormat,
       );
-      if (row.serverId != null && row.serverId!.isNotEmpty) {
+      if (onServer) {
         await markMetadataPending(recordingId, {PendingMetadataField.audio});
       }
       return true;
@@ -887,6 +895,14 @@ class LocalRecordingRepository {
     });
   }
 
+  Future<void> insertRecordingFromEdit({
+    required LocalRecordingEntity parent,
+    required SplitSegmentSpec recording,
+  }) async {
+    _assertNoSecondaryCollision(parent, [recording]);
+    await _db.transaction(() => _insertSplitChildren(parent, [recording]));
+  }
+
   /// Inserts one child row per segment, propagating parent metadata per the
   /// contract in `docs/recording-split-semantics.md`. Runs in the caller's
   /// transaction; does not open its own.
@@ -926,7 +942,7 @@ class LocalRecordingRepository {
               description: Value(parent.description),
               durationSeconds: Value(seg.durationSeconds),
               fileSizeBytes: Value(seg.fileSizeBytes),
-              format: Value(parent.format),
+              format: Value(seg.format ?? parent.format),
               localFilePath: Value(seg.localFilePath),
               uploadStatus: const Value('local'),
               cleaningStatus: const Value('none'),
@@ -981,6 +997,7 @@ class SplitSegmentSpec {
   final String? genreOverride;
   final String? subcategoryOverride;
   final String? registerOverride;
+  final String? format;
 
   const SplitSegmentSpec({
     required this.id,
@@ -991,5 +1008,6 @@ class SplitSegmentSpec {
     this.genreOverride,
     this.subcategoryOverride,
     this.registerOverride,
+    this.format,
   });
 }

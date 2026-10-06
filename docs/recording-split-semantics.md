@@ -6,11 +6,29 @@ Only a save **with cut points**. The trim editor also saves edits that just chan
 
 On native, a `boostOnly` save goes through `RecordingBoostPersister` instead (`lib/features/recording/data/services/recording_boost_persister.dart`). It keeps the recording — same local id, same `serverId` — points it at the re-encoded audio, archives the file it replaced, and puts the row back in the upload queue so the new audio overwrites the recording the server already has. The blob path the server signs is derived from the recording id, so re-running upload-url → PUT → confirm-upload against an existing `serverId` replaces the audio in place. Because the row is the same row, this path has nothing to retire on the server and never calls `deleteRecording`.
 
-Until ENG-402 a `boostOnly` save was persisted as a one-segment split: the original was deleted locally and, best-effort, remotely, and a new recording took its place. The remote delete fails silently — always, when the edit is made offline — so the server was left holding both, and the project's count and total duration doubled for that story. Gain **plus** cut points is still a split, and still goes through the table below.
+Until ENG-402 a `boostOnly` save was persisted as a one-segment split: the original was deleted locally and, best-effort, remotely, and a new recording took its place. The remote delete fails silently — always, when the edit is made offline — so the server was left holding both, and the project's count and total duration doubled for that story. Gain **plus** cut points is a split, and goes through the table below, unless a stretch was excluded and the team picked one of the two joining options (next section).
 
 A `boostOnly` save also changes the audio's duration and size, which the server verifies the uploaded blob against. Those two facts travel as one unit in the metadata outbox (`PendingMetadataField.audio`, ENG-403), and the outbox drains ahead of the uploads in the same `processQueue` pass — so the server has the new figures before the new bytes arrive, including when the edit was made offline.
 
 The web save path (`_saveServerSide`) is unchanged: it asks the server to split, and the server marks the original `ARCHIVED_AFTER_SPLIT`, which every project count already excludes. The double count was native-only.
+
+## Joining the kept parts instead of splitting (ENG-1187)
+
+On native, a save with at least one excluded stretch asks the team to choose: **keep the segments separate** (the split this document describes, unchanged), **save as a new recording**, or **remove the stretch**. A save with cut points and nothing excluded, and a gain-only save, ask nothing and behave as above. The web never offers the choice and keeps the server split.
+
+Both joining options produce one file from one ffmpeg re-encode over the kept ranges of the source, in order (`atrim` + `concat`, AAC 128k, the gain inside the same pass). Pieces cut with `-c copy` are never concatenated: AAC frames click at the seams. Duration is the sum of the kept ranges, and the joined file is measured against it: a file with no audio, or one shorter than the kept ranges (a range past the real end of the recording), is refused and nothing is saved. Size is the output file's length.
+
+| | Remove the stretch | Save as a new recording |
+|---|---|---|
+| Persister | `RecordingBoostPersister`, as for gain only | `RecordingSaveAsNewPersister` |
+| Recording | same row: same id, title, `serverId`, classification and metadata; new audio, duration and size | one new row, inserted through the split's child insert, so every field follows the table below with N=1 |
+| Title | unchanged | `{original} (2)`, or the next free number among the project's local recordings (same exact-match rule as `isTitleTaken`) |
+| Classification | unchanged | the original's; per-segment overrides set in the editor do not apply to a join |
+| Format | unchanged when the server has the recording, because the server confirms the upload against the blob its format names; the joined file's (`m4a`) when it was never uploaded | the joined file's (`m4a`) |
+| Original | its audio is replaced | untouched: row, file and server copy |
+| Metadata outbox | owes `audio` (duration and size) when the recording has a `serverId`, then the audio re-uploads in place | nothing owed; the new row uploads as a new recording (`uploadStatus='local'`) |
+| Trash | the previous audio goes to `RecordingTrash`, with the same sidecar as every trim save, and is kept 24 h from the moment it was trashed; failing to trash it does not undo the save | nothing trashed |
+| Server | no new recording, no delete | no delete |
 
 ## Field propagation
 
