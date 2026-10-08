@@ -754,8 +754,8 @@ Path: @/lib/features/recording/presentation/notifiers
   because they can both still read `true` in the window before the first call
   flips them.
 - **Nothing else in the recording screen can tell you capture died, so the
-  notifier watches the recorder itself (ENG-408).** The elapsed counter is a
-  plain `Timer.periodic` and never consults the recorder; on web the waveform is
+  notifier watches the recorder itself (ENG-408).** On web the elapsed counter is a
+  plain `Timer.periodic` and never consults the recorder, and the waveform is
   fed by the microphone stream through an `AudioContext` analyser, not by the
   `MediaRecorder`. Both keep looking healthy after capture has ended, which is
   how someone can watch a counter climb to eighteen minutes over a recorder that
