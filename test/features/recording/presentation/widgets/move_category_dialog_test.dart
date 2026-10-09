@@ -97,6 +97,48 @@ bool _isMoveEnabled(WidgetTester tester, AppLocalizations l10n) {
   return button.onPressed != null;
 }
 
+Finder _registerPicker(AppLocalizations l10n) => find.descendant(
+  of: find
+      .ancestor(
+        of: find.text(l10n.classify_register),
+        matching: find.byType(Column),
+      )
+      .first,
+  matching: find.byType(DropdownButtonFormField<String>),
+);
+
+Finder _openMenu() => find.byType(Scrollable).last;
+
+Future<void> _openDialog(WidgetTester tester) async {
+  await tester.tap(find.text('open'));
+  await tester.pumpAndSettle();
+}
+
+Future<void> _pickRegister(
+  WidgetTester tester,
+  AppLocalizations l10n,
+  String label,
+) async {
+  await tester.ensureVisible(_registerPicker(l10n));
+  await tester.pumpAndSettle();
+  await tester.tap(_registerPicker(l10n));
+  await tester.pumpAndSettle();
+  await tester.tap(
+    find.descendant(of: _openMenu(), matching: find.text(label)),
+  );
+  await tester.pumpAndSettle();
+}
+
+Future<MoveCategoryResult?> _tapMove(
+  WidgetTester tester,
+  AppLocalizations l10n,
+  MoveCategoryResult? Function() captured,
+) async {
+  await tester.tap(find.text(l10n.common_move));
+  await tester.pumpAndSettle();
+  return captured();
+}
+
 void main() {
   final l10n = AppLocalizationsEn();
 
@@ -153,8 +195,12 @@ void main() {
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
 
-    // Open the subcategory dropdown (the second one) and pick a subcategory.
-    await tester.tap(find.byType(DropdownButtonFormField<String>).last);
+    await tester.tap(
+      find.widgetWithText(
+        DropdownButtonFormField<String>,
+        l10n.moveCategory_selectSubcategory,
+      ),
+    );
     await tester.pumpAndSettle();
     await tester.tap(find.text('Origin myth').last);
     await tester.pumpAndSettle();
@@ -286,10 +332,9 @@ void main() {
       // The secondary shares the primary genre and register but not its
       // subcategory, so the triples already differ. Move additionally needs an
       // edit to enable, which the register change below provides.
-      final registerField = find.widgetWithText(
-        DropdownButtonFormField<String>,
-        'Formal / Official',
-      );
+      final registerField = find
+          .widgetWithText(DropdownButtonFormField<String>, 'Formal / Official')
+          .last;
       await tester.ensureVisible(registerField);
       await tester.pumpAndSettle();
       await tester.tap(registerField);
@@ -307,4 +352,267 @@ void main() {
       expect(captured?.secondaryRegisterId, 'ceremonial');
     },
   );
+
+  group('the primary register changes through Mover (ENG-1188)', () {
+    testWidgets(
+      'Mover opens with the recording\'s current register selected in the '
+      'Registro picker',
+      (tester) async {
+        await tester.pumpWidget(
+          _harness(
+            currentGenreId: 'g-primary',
+            currentPrimaryRegisterId: 'casual',
+          ),
+        );
+        await _openDialog(tester);
+
+        expect(
+          find.descendant(
+            of: _registerPicker(l10n),
+            matching: find.text('Informal / Casual'),
+          ),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
+      'picking Formal / Official in the Registro picker enables Mover and the '
+      'result carries the new register',
+      (tester) async {
+        MoveCategoryResult? captured;
+        await tester.pumpWidget(
+          _harness(
+            currentGenreId: 'g-primary',
+            currentSubcategoryId: 'sub-A',
+            currentPrimaryRegisterId: 'casual',
+            onResult: (r) => captured = r,
+          ),
+        );
+        await _openDialog(tester);
+
+        await _pickRegister(tester, l10n, 'Formal / Official');
+
+        expect(_isMoveEnabled(tester, l10n), isTrue);
+        final result = await _tapMove(tester, l10n, () => captured);
+        expect(result?.registerId, 'formal');
+        expect(result?.genreId, 'g-primary');
+        expect(result?.subcategoryId, 'sub-A');
+      },
+    );
+
+    testWidgets(
+      'moving without touching the register leaves the register out of the '
+      'result',
+      (tester) async {
+        MoveCategoryResult? captured;
+        await tester.pumpWidget(
+          _harness(
+            currentGenreId: 'g-primary',
+            currentPrimaryRegisterId: 'casual',
+            onResult: (r) => captured = r,
+          ),
+        );
+        await _openDialog(tester);
+
+        await tester.tap(find.text('Folktale'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Song').last);
+        await tester.pumpAndSettle();
+
+        final result = await _tapMove(tester, l10n, () => captured);
+        expect(result?.genreId, 'g-secondary');
+        expect(result?.registerId, isNull);
+      },
+    );
+
+    testWidgets(
+      'a primary register that completes the secondary triple clears the '
+      'secondary\'s subcategory, and Mover saves',
+      (tester) async {
+        MoveCategoryResult? captured;
+        await tester.pumpWidget(
+          _harness(
+            currentGenreId: 'g-primary',
+            currentSubcategoryId: 'sub-A',
+            currentPrimaryRegisterId: 'casual',
+            currentSecondaryGenreId: 'g-primary',
+            currentSecondarySubcategoryId: 'sub-A',
+            currentSecondaryRegisterId: 'formal',
+            onResult: (r) => captured = r,
+          ),
+        );
+        await _openDialog(tester);
+
+        await _pickRegister(tester, l10n, 'Formal / Official');
+
+        expect(_isMoveEnabled(tester, l10n), isTrue);
+        final result = await _tapMove(tester, l10n, () => captured);
+        expect(result?.registerId, 'formal');
+        expect(result?.secondaryRegisterId, 'formal');
+        expect(result?.secondaryGenreId, 'g-primary');
+        expect(result?.secondarySubcategoryId, isNull);
+        expect(result?.clearSecondary, isFalse);
+      },
+    );
+
+    testWidgets(
+      'a primary register equal to the secondary register, with a different '
+      'genre or subcategory, still moves',
+      (tester) async {
+        MoveCategoryResult? captured;
+        await tester.pumpWidget(
+          _harness(
+            currentGenreId: 'g-primary',
+            currentSubcategoryId: 'sub-A',
+            currentPrimaryRegisterId: 'casual',
+            currentSecondaryGenreId: 'g-primary',
+            currentSecondarySubcategoryId: 'sub-B',
+            currentSecondaryRegisterId: 'formal',
+            onResult: (r) => captured = r,
+          ),
+        );
+        await _openDialog(tester);
+
+        await _pickRegister(tester, l10n, 'Formal / Official');
+
+        expect(_isMoveEnabled(tester, l10n), isTrue);
+        final result = await _tapMove(tester, l10n, () => captured);
+        expect(result?.registerId, 'formal');
+        expect(result?.secondaryRegisterId, 'formal');
+        expect(result?.secondaryGenreId, 'g-primary');
+        expect(result?.secondarySubcategoryId, 'sub-B');
+        expect(result?.clearSecondary, isFalse);
+      },
+    );
+
+    testWidgets(
+      'changing only the secondary classification sends no register_id',
+      (tester) async {
+        MoveCategoryResult? captured;
+        await tester.pumpWidget(
+          _harness(
+            currentGenreId: 'g-primary',
+            currentSubcategoryId: 'sub-A',
+            currentPrimaryRegisterId: 'casual',
+            currentSecondaryGenreId: 'g-secondary',
+            currentSecondaryRegisterId: 'formal',
+            onResult: (r) => captured = r,
+          ),
+        );
+        await _openDialog(tester);
+
+        final secondaryRegister = find.widgetWithText(
+          DropdownButtonFormField<String>,
+          'Formal / Official',
+        );
+        await tester.ensureVisible(secondaryRegister);
+        await tester.pumpAndSettle();
+        await tester.tap(secondaryRegister);
+        await tester.pumpAndSettle();
+        await tester.tap(
+          find.descendant(of: _openMenu(), matching: find.text('Ceremonial')),
+        );
+        await tester.pumpAndSettle();
+
+        final result = await _tapMove(tester, l10n, () => captured);
+        expect(result?.secondaryRegisterId, 'ceremonial');
+        expect(result?.registerId, isNull);
+      },
+    );
+
+    testWidgets(
+      'a register change leaves the secondary classification untouched',
+      (tester) async {
+        MoveCategoryResult? captured;
+        await tester.pumpWidget(
+          _harness(
+            currentGenreId: 'g-primary',
+            currentSubcategoryId: 'sub-A',
+            currentPrimaryRegisterId: 'casual',
+            currentSecondaryGenreId: 'g-secondary',
+            currentSecondarySubcategoryId: 'sub-S1',
+            currentSecondaryRegisterId: 'formal',
+            onResult: (r) => captured = r,
+          ),
+        );
+        await _openDialog(tester);
+
+        await _pickRegister(tester, l10n, 'Consultative');
+
+        final result = await _tapMove(tester, l10n, () => captured);
+        expect(result?.secondaryGenreId, 'g-secondary');
+        expect(result?.secondarySubcategoryId, 'sub-S1');
+        expect(result?.secondaryRegisterId, 'formal');
+        expect(result?.clearSecondary, isFalse);
+      },
+    );
+
+    testWidgets(
+      'the secondary fields hide the option that would complete the triple '
+      'with the picked register',
+      (tester) async {
+        await tester.pumpWidget(
+          _harness(
+            currentGenreId: 'g-primary',
+            currentSubcategoryId: 'sub-A',
+            currentPrimaryRegisterId: 'casual',
+            currentSecondaryGenreId: 'g-primary',
+            currentSecondaryRegisterId: 'formal',
+          ),
+        );
+        await _openDialog(tester);
+
+        final secondarySubcategory = find.widgetWithText(
+          DropdownButtonFormField<String>,
+          l10n.moveCategory_selectSubcategory,
+        );
+        Future<Finder> offeredSecondarySubcategory() async {
+          await tester.ensureVisible(secondarySubcategory);
+          await tester.pumpAndSettle();
+          await tester.tap(secondarySubcategory);
+          await tester.pumpAndSettle();
+          return find.descendant(
+            of: _openMenu(),
+            matching: find.text('Origin myth'),
+          );
+        }
+
+        expect(await offeredSecondarySubcategory(), findsOneWidget);
+        await tester.tapAt(Offset.zero);
+        await tester.pumpAndSettle();
+
+        await _pickRegister(tester, l10n, 'Formal / Official');
+
+        expect(await offeredSecondarySubcategory(), findsNothing);
+      },
+    );
+
+    testWidgets('emptying the secondary classification in Mover clears it', (
+      tester,
+    ) async {
+      MoveCategoryResult? captured;
+      await tester.pumpWidget(
+        _harness(
+          currentGenreId: 'g-primary',
+          currentSubcategoryId: 'sub-A',
+          currentPrimaryRegisterId: 'casual',
+          currentSecondaryGenreId: 'g-secondary',
+          currentSecondaryRegisterId: 'formal',
+          onResult: (r) => captured = r,
+        ),
+      );
+      await _openDialog(tester);
+
+      final clear = find.text(l10n.classify_clearAlternative);
+      await tester.ensureVisible(clear);
+      await tester.pumpAndSettle();
+      await tester.tap(clear);
+      await tester.pumpAndSettle();
+
+      expect(_isMoveEnabled(tester, l10n), isTrue);
+      final result = await _tapMove(tester, l10n, () => captured);
+      expect(result?.clearSecondary, isTrue);
+    });
+  });
 }

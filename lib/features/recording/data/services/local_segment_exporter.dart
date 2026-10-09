@@ -3,6 +3,7 @@ import 'package:path_provider/path_provider.dart';
 
 import '../../../../core/platform/ffmpeg_ops.dart' as ffmpeg;
 import '../../../../core/platform/file_ops.dart' as file_ops;
+import '../../domain/audible_gain.dart';
 import '../repositories/local_recording_repository.dart';
 
 /// One kept segment's geometry + per-child taxonomy, resolved by the caller
@@ -45,8 +46,6 @@ class ExportLocalSegmentsRequest {
   final String parentGenreId;
 }
 
-const double _gainDeadzoneDb = 0.01;
-
 /// Below this length a segment is re-encoded even with no gain change. This app
 /// records AAC at 16 kHz mono (see `ffmpeg_ops_native.dart`), where one frame is
 /// 1024/16000 = 64 ms and the encoder's priming is 2112/16000 = 132 ms. `-c copy`
@@ -65,8 +64,7 @@ bool segmentNeedsReencode({
   required double segmentSeconds,
   required double gainDb,
 }) {
-  return gainDb.abs() > _gainDeadzoneDb ||
-      segmentSeconds < _minStreamCopySeconds;
+  return isAudibleGain(gainDb) || segmentSeconds < _minStreamCopySeconds;
 }
 
 /// Runs ffmpeg per kept segment and returns the [SplitSegmentSpec]s ready for

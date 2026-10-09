@@ -13,12 +13,20 @@ class PendingWebUploadCard extends StatelessWidget {
   const PendingWebUploadCard({
     super.key,
     required this.recording,
+    required this.hasStoredAudio,
     required this.isResuming,
     required this.onResume,
     required this.onDiscard,
   });
 
   final LocalRecordingEntity recording;
+
+  /// Whether the audio is still in browser storage. The two cases are not the
+  /// same thing to read: with the audio here the app only has to carry on, and
+  /// without it there is nothing to continue from until the person hands the
+  /// file over again (ENG-427).
+  final bool hasStoredAudio;
+
   final bool isResuming;
   final VoidCallback onResume;
   final VoidCallback onDiscard;
@@ -45,7 +53,7 @@ class PendingWebUploadCard extends StatelessWidget {
                 const SizedBox(width: SpacingScale.s8),
                 Expanded(
                   child: Text(
-                    l10n.import_resumePromptTitle,
+                    l10n.recording_resumePromptTitle,
                     style: theme.textTheme.titleSmall,
                   ),
                 ),
@@ -53,7 +61,8 @@ class PendingWebUploadCard extends StatelessWidget {
             ),
             const SizedBox(height: SpacingScale.s8),
             Text(
-              l10n.import_resumePromptBody(
+              _body(
+                l10n,
                 recording.title ?? _filenameFromPath(recording.localFilePath),
                 formatFileSize(recording.fileSizeBytes),
               ),
@@ -72,14 +81,17 @@ class PendingWebUploadCard extends StatelessWidget {
               ),
             ],
             const SizedBox(height: SpacingScale.s8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+            // The two labels do not fit side by side on a narrow phone at 2.0x
+            // in most locales, so they stack instead of running off the card.
+            OverflowBar(
+              alignment: MainAxisAlignment.end,
+              overflowAlignment: OverflowBarAlignment.end,
+              spacing: SpacingScale.s8,
               children: [
                 TextButton(
                   onPressed: isResuming ? null : onDiscard,
                   child: Text(l10n.common_discard),
                 ),
-                const SizedBox(width: SpacingScale.s8),
                 FilledButton(
                   onPressed: isResuming ? null : onResume,
                   child: isResuming
@@ -97,6 +109,11 @@ class PendingWebUploadCard extends StatelessWidget {
       ),
     );
   }
+
+  String _body(AppLocalizations l10n, String name, String size) =>
+      hasStoredAudio
+      ? l10n.recording_resumePromptBodyStored(name, size)
+      : l10n.recording_resumePromptBodyPickFile(name, size);
 
   String _filenameFromPath(String path) {
     final slash = path.lastIndexOf('/');

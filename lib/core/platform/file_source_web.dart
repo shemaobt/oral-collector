@@ -28,6 +28,9 @@ class _WebFileSource implements FileSource {
   String? get filePath => null;
 
   @override
+  String? get storageKey => null;
+
+  @override
   String get name => _file.name;
 
   @override

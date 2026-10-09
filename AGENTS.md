@@ -303,6 +303,10 @@ and `obt/.claude/quality-gates-plan.md`.
   `scripts/check_metrics.sh`): cyclomatic complexity, source lines of code, nesting level, and
   number of parameters. **Hard gate.** Thresholds equal the current worst value (green now)
   and ratchet down over time. Generated code (`*.g.dart`) is excluded.
+- **Translation parity** (`scripts/check_l10n_parity.sh`, ENG-524): fails when a locale carries a
+  value identical to the English template without being on the accepted-coincidence list in
+  `tool/check_l10n_parity.dart`. **Hard gate.** A coincidence is accepted per key *and per locale*,
+  with a one-line reason — see `@/lib/l10n/docs.md`.
 - **Import cycles** (`layerlens --fail-on-cycles`): **advisory** — reported in CI, does not block.
   The codebase has known cycles documented in ADR-0009.
 - **Coverage** (`flutter test --coverage`): **advisory** — generated and uploaded in CI, not yet

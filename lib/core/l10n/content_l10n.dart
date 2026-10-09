@@ -26,7 +26,14 @@ String localizedGenreName(
   return _genreNames[titleCase]?.call(l10n) ?? titleCase;
 }
 
-String localizedGenreDescription(AppLocalizations l10n, String fallback) {
+String localizedGenreDescription(
+  AppLocalizations l10n,
+  String fallback, {
+  required String id,
+}) {
+  // A descrição da sentinela também é do servidor, que a semeia em inglês; só o
+  // id é estável, então é por ele que a tradução é escolhida.
+  if (id == kUnclassifiedGenreId) return l10n.recording_unclassifiedDesc;
   return _genreDescriptions[fallback]?.call(l10n) ?? fallback;
 }
 
@@ -48,7 +55,17 @@ String localizedSubcategoryName(
   return titleCase;
 }
 
-String? localizedSubcategoryDescription(AppLocalizations l10n, String name) {
+String? localizedSubcategoryDescription(
+  AppLocalizations l10n,
+  String name, {
+  required String id,
+}) {
+  // O nome pelo qual esta função procura é o do servidor, e mudá-lo é
+  // prerrogativa dele; o id é a metade estável do contrato, então é por ele que
+  // a descrição da sentinela é escolhida.
+  if (id == kUnclassifiedSubcategoryId) {
+    return l10n.recording_unclassifiedSubcategoryDesc;
+  }
   final direct = _subcategoryDescriptions[name]?.call(l10n);
   if (direct != null) return direct;
 

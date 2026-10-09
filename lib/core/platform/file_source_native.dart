@@ -30,6 +30,9 @@ class _NativeFileSource implements FileSource {
   String? get filePath => path;
 
   @override
+  String? get storageKey => null;
+
+  @override
   final String name;
 
   @override

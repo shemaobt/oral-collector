@@ -15,6 +15,11 @@ Future<void> deleteFile(String path) async {
   if (await f.exists()) await f.delete();
 }
 
+Future<List<String>> listStoredKeys() => throw UnsupportedError(
+  'listStoredKeys is web-only; native audio lives in directories, '
+  'list those instead',
+);
+
 Future<void> copyFile(String from, String to) =>
     File(from).copy(to).then((_) {});
 

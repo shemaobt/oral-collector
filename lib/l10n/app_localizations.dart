@@ -1088,6 +1088,24 @@ abstract class AppLocalizations {
   /// **'This recording will be permanently deleted.'**
   String get recording_discardMessage;
 
+  /// No description provided for @recording_leaveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave without saving?'**
+  String get recording_leaveTitle;
+
+  /// No description provided for @recording_leaveMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The audio is kept — you can finish it later from unsaved recordings. Deleting it now cannot be undone.'**
+  String get recording_leaveMessage;
+
+  /// No description provided for @recording_keepForLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep for later'**
+  String get recording_keepForLater;
+
   /// No description provided for @recording_saved.
   ///
   /// In en, this message translates to:
@@ -1598,6 +1616,42 @@ abstract class AppLocalizations {
   /// **'Split into {count} recordings'**
   String trim_splitInto(int count);
 
+  /// No description provided for @trim_saveChoiceBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Only \"Save as a new recording\" keeps the original.'**
+  String get trim_saveChoiceBody;
+
+  /// No description provided for @trim_keepSegmentsSeparate.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep segments separate'**
+  String get trim_keepSegmentsSeparate;
+
+  /// No description provided for @trim_saveAsNewRecording.
+  ///
+  /// In en, this message translates to:
+  /// **'Save as a new recording'**
+  String get trim_saveAsNewRecording;
+
+  /// No description provided for @trim_removeStretch.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove stretch'**
+  String get trim_removeStretch;
+
+  /// No description provided for @trim_savedAsNewRecording.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved as a new recording'**
+  String get trim_savedAsNewRecording;
+
+  /// No description provided for @trim_stretchRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Stretch removed'**
+  String get trim_stretchRemoved;
+
   /// No description provided for @trim_saveConfirmTitle.
   ///
   /// In en, this message translates to:
@@ -1832,23 +1886,29 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{Skipped 1 unreadable file: {names}} other{Skipped {count} unreadable files: {names}}}'**
   String import_rejectedUnreadable(int count, String names);
 
-  /// No description provided for @import_resumePromptTitle.
+  /// No description provided for @recording_resumePromptTitle.
   ///
   /// In en, this message translates to:
   /// **'Resume interrupted upload'**
-  String get import_resumePromptTitle;
+  String get recording_resumePromptTitle;
 
-  /// No description provided for @import_resumePromptBody.
+  /// No description provided for @recording_resumePromptBodyStored.
   ///
   /// In en, this message translates to:
-  /// **'\"{name}\" ({size}) was partially uploaded. Select the exact same file (unchanged) to continue.'**
-  String import_resumePromptBody(String name, String size);
+  /// **'\"{name}\" ({size}) didn\'t finish uploading. Continue from where it stopped.'**
+  String recording_resumePromptBodyStored(String name, String size);
 
-  /// No description provided for @import_resumeSizeMismatch.
+  /// No description provided for @recording_resumePromptBodyPickFile.
+  ///
+  /// In en, this message translates to:
+  /// **'\"{name}\" ({size}) didn\'t finish uploading. Pick the same file again to continue.'**
+  String recording_resumePromptBodyPickFile(String name, String size);
+
+  /// No description provided for @recording_resumeSizeMismatch.
   ///
   /// In en, this message translates to:
   /// **'That\'s a different file. Select the exact same file you were uploading.'**
-  String get import_resumeSizeMismatch;
+  String get recording_resumeSizeMismatch;
 
   /// No description provided for @import_largeFileWarning.
   ///
@@ -3661,6 +3721,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unclassified'**
   String get recording_unclassified;
+
+  /// No description provided for @recording_unclassifiedDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Recordings pending classification'**
+  String get recording_unclassifiedDesc;
+
+  /// No description provided for @recording_unclassifiedSubcategoryDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Holds recordings still waiting to be classified'**
+  String get recording_unclassifiedSubcategoryDesc;
 
   /// No description provided for @recording_inputSource.
   ///

@@ -2,7 +2,10 @@
 /// `unclassified` and name "Unclassified" (tripod-api migration 20260415_0001),
 /// and the taxonomy endpoints hand them to the app like any other row. Their
 /// names have to reach the user translated, and the translation has to be
-/// chosen by the id — the name is the server's to change (ENG-9).
+/// chosen by the id — the name is the server's to change (ENG-9). The genre's
+/// description is the server's to change for the same reason, and reaches the
+/// reader the same way (ENG-428). The subcategory description is chosen the
+/// same way, from the id, since ENG-517.
 library;
 
 import 'package:flutter_test/flutter_test.dart';
@@ -61,6 +64,58 @@ void main() {
     });
   });
 
+  group('genre description', () {
+    test(
+      'the unclassified category description reads in the user language',
+      () {
+        final description = localizedGenreDescription(
+          l10n,
+          'Recordings pending classification',
+          id: kUnclassifiedGenreId,
+        );
+
+        expect(description, l10n.recording_unclassifiedDesc);
+        expect(description, isNot('Recordings pending classification'));
+      },
+    );
+
+    test('the unclassified description is recognised by id, not by text', () {
+      final description = localizedGenreDescription(
+        l10n,
+        'Recordings awaiting a category',
+        id: kUnclassifiedGenreId,
+      );
+
+      expect(description, l10n.recording_unclassifiedDesc);
+      expect(description, isNot('Recordings awaiting a category'));
+    });
+
+    test('a taxonomy category description is still translated by text', () {
+      expect(
+        localizedGenreDescription(
+          l10n,
+          'Laws, rituals, procedures, and instructional forms',
+          id: 'gen_instructional',
+        ),
+        l10n.genre_instructionalDesc,
+      );
+    });
+
+    test(
+      'an unknown description still falls back to the text the server sent',
+      () {
+        expect(
+          localizedGenreDescription(
+            l10n,
+            'Chronicles kept by the community',
+            id: 'gen_new',
+          ),
+          'Chronicles kept by the community',
+        );
+      },
+    );
+  });
+
   group('subcategory', () {
     test('the unclassified subcategory reads in the user language', () {
       final name = localizedSubcategoryName(
@@ -105,6 +160,46 @@ void main() {
       expect(
         localizedSubcategoryName(l10n, 'Genealogy', id: ''),
         l10n.sub_genealogy,
+      );
+    });
+  });
+
+  group('subcategory description', () {
+    test(
+      'the unclassified subcategory description reads in the user language',
+      () {
+        final description = localizedSubcategoryDescription(
+          l10n,
+          'Unclassified',
+          id: kUnclassifiedSubcategoryId,
+        );
+
+        expect(description, l10n.recording_unclassifiedSubcategoryDesc);
+      },
+    );
+
+    test('the unclassified subcategory description is recognised by id, not by '
+        'text', () {
+      final description = localizedSubcategoryDescription(
+        l10n,
+        'Uncategorized',
+        id: kUnclassifiedSubcategoryId,
+      );
+
+      expect(description, l10n.recording_unclassifiedSubcategoryDesc);
+    });
+
+    test('a taxonomy subcategory description is still translated by text', () {
+      expect(
+        localizedSubcategoryDescription(l10n, 'Genealogy', id: 'sub_genealogy'),
+        l10n.sub_genealogyDesc,
+      );
+    });
+
+    test('an unknown subcategory still has no description at all', () {
+      expect(
+        localizedSubcategoryDescription(l10n, 'Fishing Chant', id: 'sub_new'),
+        isNull,
       );
     });
   });

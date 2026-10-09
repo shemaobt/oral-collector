@@ -78,6 +78,18 @@ class WebFileStore {
     return value == null ? Uint8List(0) : value as Uint8List;
   }
 
+  /// Every key the store currently holds. Keys only, deliberately: neither
+  /// IndexedDB nor `idb_shim` can report a record's size without reading the
+  /// whole value, so a listing that carried sizes would have to materialize
+  /// every audio blob to answer.
+  Future<List<String>> listKeys() async {
+    final keys = await _inTransaction(
+      idbModeReadOnly,
+      (store) => store.getAllKeys(),
+    );
+    return keys.cast<String>().toList();
+  }
+
   Future<void> write(String path, Uint8List bytes) =>
       _inTransaction(idbModeReadWrite, (store) => store.put(bytes, path));
 

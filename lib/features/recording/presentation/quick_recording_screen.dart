@@ -69,6 +69,7 @@ class _QuickRecordingScreenState extends ConsumerState<QuickRecordingScreen> {
                 registerName: null,
                 onReRecord: _reRecord,
                 onDiscard: () => context.go('/home'),
+                onKeepForLater: () => context.go('/home'),
               ),
       ),
     );

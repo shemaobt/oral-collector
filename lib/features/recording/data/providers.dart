@@ -1,9 +1,13 @@
+import 'dart:typed_data';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/database/database_provider.dart';
 import '../../../core/network/authenticated_client.dart';
 import '../../../core/observability/error_reporter.dart';
 import '../../../core/platform/file_ops.dart' as file_ops;
+import '../../../core/platform/file_source.dart';
+import '../../../core/platform/web_file_picker.dart' as web_picker;
 import '../../sync/data/services/resumable_upload_service.dart';
 import '../domain/entities/local_recording_entity.dart';
 import '../domain/entities/pending_metadata_field.dart';
@@ -79,4 +83,21 @@ final fileExistsProvider = Provider<Future<bool> Function(String path)>(
 /// the row survives with its file or the file is orphaned (ENG-407).
 final deleteFileProvider = Provider<Future<void> Function(String path)>(
   (_) => file_ops.deleteFile,
+);
+
+/// Injectable byte read, the counterpart of [fileExistsProvider] for the paths
+/// that go on to *use* the bytes — resuming a browser upload from the audio
+/// still in storage (ENG-427).
+final readFileBytesProvider = Provider<Future<Uint8List> Function(String path)>(
+  (_) => file_ops.readFileBytes,
+);
+
+typedef AudioFilePicker =
+    Future<FileSource?> Function({required List<String> allowedExtensions});
+
+/// The browser's file chooser, behind a provider because it is a browser
+/// boundary: it cannot exist on the Dart VM, so a flow that may or may not open
+/// it can only be driven in tests through a seam (ENG-427).
+final audioFilePickerProvider = Provider<AudioFilePicker>(
+  (_) => web_picker.pickSingleAudioFile,
 );

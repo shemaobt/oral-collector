@@ -30,6 +30,7 @@ import 'package:oral_collector/features/recording/presentation/widgets/confirmat
 import 'package:oral_collector/features/storyteller/presentation/notifiers/project_storytellers_notifier.dart';
 import 'package:oral_collector/features/storyteller/presentation/notifiers/project_storytellers_state.dart';
 import 'package:oral_collector/l10n/app_localizations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class _FakeProjectNotifier extends ProjectNotifier {
   @override
@@ -71,6 +72,7 @@ Widget _harness(ProviderContainer container) {
           subcategoryName: null,
           onReRecord: () {},
           onDiscard: () {},
+          onKeepForLater: () {},
         ),
       ),
     ),
@@ -90,6 +92,9 @@ ProviderContainer _container() {
 
 void main() {
   setUp(() {
+    // ConfirmationStep reads its saved draft from SharedPreferences on mount
+    // (ENG-518); without a mock store the plugin channel throws.
+    SharedPreferences.setMockInitialValues({});
     // ConfirmationStep renders a Column with multiple sections (waveform,
     // title field, storyteller picker, description, three buttons). At the
     // 800x600 default test viewport it overflows; we want enough vertical

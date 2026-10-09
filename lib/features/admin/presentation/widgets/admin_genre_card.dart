@@ -58,7 +58,11 @@ class AdminGenreCard extends ConsumerWidget {
                       ),
                       if (genre.description != null)
                         Text(
-                          localizedGenreDescription(l10n, genre.description!),
+                          localizedGenreDescription(
+                            l10n,
+                            genre.description!,
+                            id: genre.id,
+                          ),
                           style: Theme.of(context).textTheme.bodySmall,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,

@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:drift/internal/versioned_schema.dart';
 
 import 'connection.dart';
 import 'schema_versions.dart';
@@ -183,128 +184,150 @@ class AppDatabase extends _$AppDatabase {
 // as it existed at that version — local_storytellers is created at its pre-sync
 // v6 shape, then the sync columns are added at v10. Kept top-level so a step
 // can't reach the current database definition by mistake.
-final OnUpgrade _upgrade = stepByStep(
-  from1To2: (m, schema) async {
-    await m.addColumn(
-      schema.localRecordings,
-      schema.localRecordings.registerId,
-    );
-  },
-  from2To3: (m, schema) async {
-    await m.addColumn(
-      schema.localRecordings,
-      schema.localRecordings.resumableSessionUri,
-    );
-    await m.addColumn(
-      schema.localRecordings,
-      schema.localRecordings.uploadedBytes,
-    );
-  },
-  from3To4: (m, schema) async {
-    await m.addColumn(schema.localRecordings, schema.localRecordings.md5Hash);
-  },
-  from4To5: (m, schema) async {
-    await m.addColumn(
-      schema.localRecordings,
-      schema.localRecordings.description,
-    );
-  },
-  from5To6: (m, schema) async {
-    await m.addColumn(
-      schema.localRecordings,
-      schema.localRecordings.storytellerId,
-    );
-    await m.addColumn(schema.localRecordings, schema.localRecordings.userId);
-    await m.createTable(schema.localStorytellers);
-  },
-  from6To7: (m, schema) async {
-    await m.createTable(schema.recordingSessions);
-  },
-  from7To8: (m, schema) async {
-    await m.addColumn(
-      schema.localRecordings,
-      schema.localRecordings.secondaryGenreId,
-    );
-    await m.addColumn(
-      schema.localRecordings,
-      schema.localRecordings.secondarySubcategoryId,
-    );
-    await m.addColumn(
-      schema.localRecordings,
-      schema.localRecordings.secondaryRegisterId,
-    );
-  },
-  from8To9: (m, schema) async {
-    await m.addColumn(
-      schema.localRecordings,
-      schema.localRecordings.splitFromId,
-    );
-    await m.addColumn(
-      schema.localRecordings,
-      schema.localRecordings.splitIndex,
-    );
-    await m.addColumn(
-      schema.localRecordings,
-      schema.localRecordings.splitSegmentCount,
-    );
-  },
-  from9To10: (m, schema) async {
-    await m.addColumn(
-      schema.localStorytellers,
-      schema.localStorytellers.serverId,
-    );
-    await m.addColumn(
-      schema.localStorytellers,
-      schema.localStorytellers.syncStatus,
-    );
-    await m.addColumn(
-      schema.localStorytellers,
-      schema.localStorytellers.retryCount,
-    );
-    await m.addColumn(
-      schema.localStorytellers,
-      schema.localStorytellers.lastRetryAt,
-    );
-  },
-  from10To11: (m, schema) async {
-    await m.create(schema.idxRecordingsProjectRecorded);
-    await m.create(schema.idxRecordingsStatusRecorded);
-    await m.create(schema.idxRecordingsServerId);
-    await m.create(schema.idxRecordingsStorytellerId);
-    await m.create(schema.idxStorytellersProjectId);
-  },
-  from11To12: (m, schema) async {
-    await m.addColumn(
-      schema.localRecordings,
-      schema.localRecordings.reviewFlagsJson,
-    );
-  },
-  from12To13: (m, schema) async {
-    await m.addColumn(
-      schema.localRecordings,
-      schema.localRecordings.metadataSyncStatus,
-    );
-    await m.addColumn(
-      schema.localRecordings,
-      schema.localRecordings.pendingMetadataJson,
-    );
-    await m.addColumn(
-      schema.localRecordings,
-      schema.localRecordings.metadataRetryCount,
-    );
-    await m.addColumn(
-      schema.localRecordings,
-      schema.localRecordings.metadataLastRetryAt,
-    );
-  },
-  from13To14: (m, schema) async {
-    await m.addColumn(
-      schema.recordingSessions,
-      schema.recordingSessions.finalizedAudioPath,
-    );
-    await m.addColumn(
-      schema.recordingSessions,
-      schema.recordingSessions.finalizedDurationSeconds,
-    );
-  },
+//
+// The whole run is wrapped in one transaction (ENG-425), which is why this is a
+// hand-written OnUpgrade instead of the generated `stepByStep`: that helper
+// calls runMigrationSteps directly, and a step-by-step run has no rollback of
+// its own. Dying between two statements of the same step used to leave those
+// statements on disk with `user_version` still at the old value, so the next
+// boot re-ran the step and crashed on `duplicate column name` forever. Inside
+// a transaction the interrupted run is discarded whole and the next boot
+// migrates from scratch.
+Future<void> _upgrade(Migrator m, int from, int to) => m.database.transaction(
+  () => VersionedSchema.runMigrationSteps(
+    migrator: m,
+    from: from,
+    to: to,
+    steps: migrationSteps(
+      from1To2: (m, schema) async {
+        await m.addColumn(
+          schema.localRecordings,
+          schema.localRecordings.registerId,
+        );
+      },
+      from2To3: (m, schema) async {
+        await m.addColumn(
+          schema.localRecordings,
+          schema.localRecordings.resumableSessionUri,
+        );
+        await m.addColumn(
+          schema.localRecordings,
+          schema.localRecordings.uploadedBytes,
+        );
+      },
+      from3To4: (m, schema) async {
+        await m.addColumn(
+          schema.localRecordings,
+          schema.localRecordings.md5Hash,
+        );
+      },
+      from4To5: (m, schema) async {
+        await m.addColumn(
+          schema.localRecordings,
+          schema.localRecordings.description,
+        );
+      },
+      from5To6: (m, schema) async {
+        await m.addColumn(
+          schema.localRecordings,
+          schema.localRecordings.storytellerId,
+        );
+        await m.addColumn(
+          schema.localRecordings,
+          schema.localRecordings.userId,
+        );
+        await m.createTable(schema.localStorytellers);
+      },
+      from6To7: (m, schema) async {
+        await m.createTable(schema.recordingSessions);
+      },
+      from7To8: (m, schema) async {
+        await m.addColumn(
+          schema.localRecordings,
+          schema.localRecordings.secondaryGenreId,
+        );
+        await m.addColumn(
+          schema.localRecordings,
+          schema.localRecordings.secondarySubcategoryId,
+        );
+        await m.addColumn(
+          schema.localRecordings,
+          schema.localRecordings.secondaryRegisterId,
+        );
+      },
+      from8To9: (m, schema) async {
+        await m.addColumn(
+          schema.localRecordings,
+          schema.localRecordings.splitFromId,
+        );
+        await m.addColumn(
+          schema.localRecordings,
+          schema.localRecordings.splitIndex,
+        );
+        await m.addColumn(
+          schema.localRecordings,
+          schema.localRecordings.splitSegmentCount,
+        );
+      },
+      from9To10: (m, schema) async {
+        await m.addColumn(
+          schema.localStorytellers,
+          schema.localStorytellers.serverId,
+        );
+        await m.addColumn(
+          schema.localStorytellers,
+          schema.localStorytellers.syncStatus,
+        );
+        await m.addColumn(
+          schema.localStorytellers,
+          schema.localStorytellers.retryCount,
+        );
+        await m.addColumn(
+          schema.localStorytellers,
+          schema.localStorytellers.lastRetryAt,
+        );
+      },
+      from10To11: (m, schema) async {
+        await m.create(schema.idxRecordingsProjectRecorded);
+        await m.create(schema.idxRecordingsStatusRecorded);
+        await m.create(schema.idxRecordingsServerId);
+        await m.create(schema.idxRecordingsStorytellerId);
+        await m.create(schema.idxStorytellersProjectId);
+      },
+      from11To12: (m, schema) async {
+        await m.addColumn(
+          schema.localRecordings,
+          schema.localRecordings.reviewFlagsJson,
+        );
+      },
+      from12To13: (m, schema) async {
+        await m.addColumn(
+          schema.localRecordings,
+          schema.localRecordings.metadataSyncStatus,
+        );
+        await m.addColumn(
+          schema.localRecordings,
+          schema.localRecordings.pendingMetadataJson,
+        );
+        await m.addColumn(
+          schema.localRecordings,
+          schema.localRecordings.metadataRetryCount,
+        );
+        await m.addColumn(
+          schema.localRecordings,
+          schema.localRecordings.metadataLastRetryAt,
+        );
+      },
+      from13To14: (m, schema) async {
+        await m.addColumn(
+          schema.recordingSessions,
+          schema.recordingSessions.finalizedAudioPath,
+        );
+        await m.addColumn(
+          schema.recordingSessions,
+          schema.recordingSessions.finalizedDurationSeconds,
+        );
+      },
+    ),
+  ),
 );

@@ -15,6 +15,17 @@ abstract class FileSource {
   /// platform. Null on web and for in-memory sources.
   String? get filePath => null;
 
+  /// Durable address the bytes can be read back from after a reload, when
+  /// there is one. Null means the bytes live only for as long as this source
+  /// does — a browser `File` handed over by a picker, say — and a caller that
+  /// needs them later has to ask the person for the file again.
+  ///
+  /// Distinct from [name], which is a label to show. Every implementation but
+  /// the in-memory one answers null; the classes say so themselves because
+  /// they `implement` rather than extend, so the default here does not reach
+  /// them (ENG-427).
+  String? get storageKey => null;
+
   Future<Uint8List> readRange(int start, int end);
 
   Future<Uint8List> readHead(int maxBytes) {
@@ -49,7 +60,13 @@ abstract class FileSource {
     Uint8List bytes, {
     required String name,
     String? mimeType,
-  }) => _InMemoryFileSource(bytes: bytes, name: name, mimeType: mimeType);
+    String? storageKey,
+  }) => _InMemoryFileSource(
+    bytes: bytes,
+    name: name,
+    mimeType: mimeType,
+    storageKey: storageKey,
+  );
 }
 
 class _InMemoryFileSource implements FileSource {
@@ -57,6 +74,7 @@ class _InMemoryFileSource implements FileSource {
     required this.bytes,
     required this.name,
     required this.mimeType,
+    required this.storageKey,
   });
 
   final Uint8List bytes;
@@ -72,6 +90,9 @@ class _InMemoryFileSource implements FileSource {
 
   @override
   String? get filePath => null;
+
+  @override
+  final String? storageKey;
 
   @override
   Future<Uint8List> readRange(int start, int end) async {
@@ -107,6 +128,9 @@ class _XFileFileSource implements FileSource {
 
   @override
   String? get filePath => null;
+
+  @override
+  String? get storageKey => null;
 
   @override
   String get name => file.name;

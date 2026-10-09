@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/l10n/content_l10n.dart';
@@ -261,6 +262,9 @@ class _RecordingFlowScreenState extends ConsumerState<RecordingFlowScreen> {
               : null,
           onReRecord: _reRecord,
           onDiscard: _resetToRegister,
+          // Home, not back to the flow: the person is leaving to do something
+          // else, and home is where the unsaved-recordings banner is.
+          onKeepForLater: () => context.go('/home'),
         );
     }
   }

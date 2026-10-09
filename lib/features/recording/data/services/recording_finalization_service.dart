@@ -130,6 +130,7 @@ class RecordingFinalizationService {
           result: RecordingResult(
             filePath: m4aPath,
             durationSeconds: totalDuration.inMilliseconds / 1000.0,
+            sessionId: sessionId,
           ),
           degraded: degraded,
         );
@@ -139,6 +140,7 @@ class RecordingFinalizationService {
           filePath: sourcePath,
           durationSeconds: totalDuration.inMilliseconds / 1000.0,
           format: 'wav',
+          sessionId: sessionId,
         ),
         degraded: true,
       );
@@ -148,6 +150,7 @@ class RecordingFinalizationService {
       result: RecordingResult(
         filePath: sourcePath,
         durationSeconds: totalDuration.inMilliseconds / 1000.0,
+        sessionId: sessionId,
       ),
       degraded: degraded,
     );

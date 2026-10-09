@@ -44,6 +44,9 @@ jobs:
       - name: Code metrics gate (dart_code_linter)
         run: sh scripts/check_metrics.sh
 
+      - name: L10n parity gate (ENG-524)
+        run: sh scripts/check_l10n_parity.sh
+
       - name: Import-cycle report (layerlens, advisory)
         run: |
           dart pub global activate layerlens
