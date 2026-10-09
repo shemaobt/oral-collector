@@ -62,8 +62,11 @@ class SegmentedRecorder {
   static const int _sampleRate = 16000;
   static const int _numChannels = 1;
   static const int _bytesPerSample = 2;
+  static const int _bytesPerSecond =
+      _sampleRate * _numChannels * _bytesPerSample;
 
   void Function(Duration totalSaved)? onCheckpoint;
+  void Function(Duration audioWritten)? onAudioWritten;
   void Function(int estimatedSecondsRemaining)? onStorageCritical;
   void Function()? onStorageForceStop;
   void Function(Duration rotationLatency)? onSlowRotation;
@@ -79,6 +82,8 @@ class SegmentedRecorder {
   Duration _cumulativeFinalized = Duration.zero;
   int _bytesInCurrentSegment = 0;
   int _bytesPerSegment = 0;
+  int _bytesWritten = 0;
+  Duration _resumedFrom = Duration.zero;
   bool _isPaused = false;
   Future<void> _finalizeChain = Future<void>.value();
   InputDevice? _inputDevice;
@@ -109,6 +114,8 @@ class SegmentedRecorder {
       ..addAll(resumeFromPaths);
     _segIdx = resumeFromPaths.length - 1;
     _cumulativeFinalized = resumeFromDuration;
+    _resumedFrom = resumeFromDuration;
+    _bytesWritten = 0;
     _amplitudeMapper = amplitudeMapper;
     _inputDevice = inputDevice;
     _isPaused = false;
@@ -139,11 +146,7 @@ class SegmentedRecorder {
     }
 
     _docDirPath = await _docDirProvider();
-    _bytesPerSegment =
-        _sampleRate *
-        _numChannels *
-        _bytesPerSample *
-        segmentDuration.inSeconds;
+    _bytesPerSegment = _bytesPerSecond * segmentDuration.inSeconds;
 
     _amplitudeController = StreamController<double>.broadcast();
 
@@ -229,6 +232,11 @@ class SegmentedRecorder {
     if (_isPaused || _currentSink == null) return;
     _currentSink!.appendBytes(chunk);
     _bytesInCurrentSegment += chunk.length;
+    _bytesWritten += chunk.length;
+    onAudioWritten?.call(
+      _resumedFrom +
+          Duration(microseconds: _bytesWritten * 1000000 ~/ _bytesPerSecond),
+    );
     if (_bytesInCurrentSegment >= _bytesPerSegment) {
       _rotateSync();
     }

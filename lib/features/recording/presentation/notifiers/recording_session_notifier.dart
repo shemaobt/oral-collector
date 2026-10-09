@@ -561,6 +561,12 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
       });
     };
 
+    recorder.onAudioWritten = (audioWritten) {
+      if (!state.isRecording) return;
+      if (audioWritten.inSeconds == state.elapsed.inSeconds) return;
+      state = state.copyWith(elapsed: audioWritten);
+    };
+
     recorder.onStorageCritical = (_) {
       if (state.storageBannerSeverity != StorageBannerSeverity.forceStopped) {
         state = state.copyWith(
@@ -992,10 +998,13 @@ class RecordingSessionNotifier extends Notifier<RecordingState> {
 
   void _startElapsedTimer() {
     _elapsedTimer?.cancel();
+    final countsElapsed = ref.read(isWebPlatformProvider);
     _elapsedTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      state = state.copyWith(
-        elapsed: state.elapsed + const Duration(seconds: 1),
-      );
+      if (countsElapsed) {
+        state = state.copyWith(
+          elapsed: state.elapsed + const Duration(seconds: 1),
+        );
+      }
       _fgUpdateRunner.run();
       _liveActivityRunner.run();
     });
