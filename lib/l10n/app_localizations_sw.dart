@@ -844,6 +844,25 @@ class AppLocalizationsSw extends AppLocalizations {
   }
 
   @override
+  String get trim_saveChoiceBody =>
+      'Ni \"Hifadhi kama rekodi mpya\" pekee inayobakiza rekodi ya awali.';
+
+  @override
+  String get trim_keepSegmentsSeparate => 'Weka sehemu tofauti';
+
+  @override
+  String get trim_saveAsNewRecording => 'Hifadhi kama rekodi mpya';
+
+  @override
+  String get trim_removeStretch => 'Ondoa kipande';
+
+  @override
+  String get trim_savedAsNewRecording => 'Imehifadhiwa kama rekodi mpya';
+
+  @override
+  String get trim_stretchRemoved => 'Kipande kimeondolewa';
+
+  @override
   String get trim_saveConfirmTitle => 'Hifadhi mabadiliko?';
 
   @override

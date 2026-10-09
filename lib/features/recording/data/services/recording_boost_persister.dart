@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:logging/logging.dart';
 
 import '../../domain/entities/local_recording_entity.dart';
 import '../repositories/local_recording_repository.dart';
@@ -18,6 +19,8 @@ import '../repositories/local_recording_repository.dart';
 /// that went through it left the server holding both the original and the new
 /// recording, and the project counted the story twice.
 class RecordingBoostPersister {
+  static final _log = Logger('RecordingBoostPersister');
+
   final LocalRecordingRepository localRepo;
   final Future<void> Function() triggerUpload;
 
@@ -36,12 +39,14 @@ class RecordingBoostPersister {
     required String newFilePath,
     required double newDurationSeconds,
     required int newFileSizeBytes,
+    String? newFormat,
   }) async {
     await localRepo.replaceAudioAndQueueResend(
       recordingId: recording.id,
       newFilePath: newFilePath,
       newDurationSeconds: newDurationSeconds,
       newFileSizeBytes: newFileSizeBytes,
+      newFormat: newFormat,
     );
 
     // After the write commits, and outside it: a file move cannot be rolled
@@ -50,7 +55,11 @@ class RecordingBoostPersister {
     // the row does not, any more.
     final trash = trashPrevious;
     if (trash != null) {
-      await trash(recording);
+      try {
+        await trash(recording);
+      } on Object catch (e, st) {
+        _log.warning('could not archive the audio ${recording.id} had', e, st);
+      }
     }
 
     unawaited(triggerUpload());

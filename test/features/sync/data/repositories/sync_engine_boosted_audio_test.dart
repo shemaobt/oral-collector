@@ -46,10 +46,13 @@ class _ServerRecording {
   _ServerRecording({
     required this.durationSeconds,
     required this.fileSizeBytes,
+    this.format = 'm4a',
   });
 
   double durationSeconds;
   int fileSizeBytes;
+  final String format;
+  String? uploadedAs;
 }
 
 /// The transfer itself is not what these tests are about; the device's
@@ -141,7 +144,9 @@ void main() {
         );
         return http.Response(jsonEncode({'id': id}), 201);
       }
-      if (method == 'POST' && path == '/api/oc/recordings/upload-url') {
+      if (method == 'POST' && path.endsWith('upload-url')) {
+        final body = jsonDecode(request.body) as Map<String, dynamic>;
+        server[body['recording_id']]?.uploadedAs = body['format'] as String;
         return http.Response(
           jsonEncode({
             'upload_url': 'https://storage.googleapis.com/test',
@@ -158,6 +163,9 @@ void main() {
         // new size has to reach the server before the bytes do.
         if (record.fileSizeBytes != audioFile.lengthSync()) {
           return http.Response('size mismatch', 400);
+        }
+        if (record.uploadedAs != record.format) {
+          return http.Response('blob not found', 400);
         }
         return http.Response(
           jsonEncode({'gcs_url': 'https://storage.googleapis.com/b/$id.m4a'}),
@@ -201,7 +209,7 @@ void main() {
   }
 
   /// A story already uploaded and verified, sitting on the device.
-  Future<void> seedUploaded() async {
+  Future<void> seedUploaded({String format = 'm4a'}) async {
     await repo.insertRecording(
       LocalRecordingsCompanion(
         id: const Value('rec-1'),
@@ -213,8 +221,8 @@ void main() {
         description: const Value('a description with enough substance'),
         durationSeconds: const Value(60),
         fileSizeBytes: const Value(100000),
-        format: const Value('m4a'),
-        localFilePath: Value('${tempDir.path}/original.m4a'),
+        format: Value(format),
+        localFilePath: Value('${tempDir.path}/original.$format'),
         uploadStatus: const Value('verified'),
         cleaningStatus: const Value('none'),
         recordedAt: Value(DateTime.utc(2026, 5, 1)),
@@ -223,7 +231,7 @@ void main() {
   }
 
   /// Applies the boost the way the trim editor does on the device.
-  Future<void> applyBoostOffline() async {
+  Future<void> applyBoostOffline({String? newFormat}) async {
     final recording = localRecordingToEntity(
       (await repo.getRecordingById('rec-1'))!,
     );
@@ -235,6 +243,7 @@ void main() {
       newFilePath: audioFile.path,
       newDurationSeconds: boostedDuration,
       newFileSizeBytes: boostedSize,
+      newFormat: newFormat,
     );
   }
 
@@ -259,6 +268,26 @@ void main() {
     final row = (await repo.getRecordingById('rec-1'))!;
     expect(row.uploadStatus, 'uploaded');
     expect(row.serverId, 'srv-1');
+    client.close();
+  });
+
+  test('new m4a audio for an uploaded mp3 recording goes up as mp3, the '
+      'format its server blob is kept under', () async {
+    server['srv-1'] = _ServerRecording(
+      durationSeconds: 60,
+      fileSizeBytes: 100000,
+      format: 'mp3',
+    );
+    await seedUploaded(format: 'mp3');
+    await applyBoostOffline(newFormat: 'm4a');
+
+    setOnline(online: true);
+    final client = serverClient();
+    await buildEngine(client).processQueue();
+
+    expect(server['srv-1']!.uploadedAs, 'mp3');
+    final row = (await repo.getRecordingById('rec-1'))!;
+    expect(row.uploadStatus, 'uploaded');
     client.close();
   });
 }

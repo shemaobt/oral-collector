@@ -861,6 +861,27 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get trim_saveChoiceBody =>
+      'Seul « Enregistrer comme nouvel enregistrement » conserve l\'enregistrement original.';
+
+  @override
+  String get trim_keepSegmentsSeparate => 'Garder les segments séparés';
+
+  @override
+  String get trim_saveAsNewRecording =>
+      'Enregistrer comme nouvel enregistrement';
+
+  @override
+  String get trim_removeStretch => 'Supprimer le passage';
+
+  @override
+  String get trim_savedAsNewRecording =>
+      'Enregistré comme nouvel enregistrement';
+
+  @override
+  String get trim_stretchRemoved => 'Passage supprimé';
+
+  @override
   String get trim_saveConfirmTitle => 'Enregistrer les modifications ?';
 
   @override

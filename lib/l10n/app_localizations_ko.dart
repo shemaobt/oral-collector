@@ -819,6 +819,24 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get trim_saveChoiceBody => '\"새 녹음으로 저장\"만 원본 녹음을 유지합니다.';
+
+  @override
+  String get trim_keepSegmentsSeparate => '세그먼트를 따로 유지';
+
+  @override
+  String get trim_saveAsNewRecording => '새 녹음으로 저장';
+
+  @override
+  String get trim_removeStretch => '구간 삭제';
+
+  @override
+  String get trim_savedAsNewRecording => '새 녹음으로 저장됨';
+
+  @override
+  String get trim_stretchRemoved => '구간이 삭제됨';
+
+  @override
   String get trim_saveConfirmTitle => '변경 사항을 저장하시겠습니까?';
 
   @override

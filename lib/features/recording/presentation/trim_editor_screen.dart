@@ -28,6 +28,7 @@ import 'widgets/edit_volume_control.dart';
 import 'widgets/playback_key_handler.dart';
 import 'widgets/segment_card.dart';
 import 'widgets/segment_taxonomy_sheet.dart';
+import 'widgets/trim_save_choice_dialog.dart';
 import 'widgets/trim_waveform_panel.dart';
 
 class TrimEditorScreen extends ConsumerStatefulWidget {
@@ -461,24 +462,10 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
     if (!_state.decision.canSave) return;
 
     final l10n = AppLocalizations.of(context);
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.trim_saveConfirmTitle),
-        content: Text(l10n.trim_saveConfirmBody(_state.keptCount)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(l10n.common_cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(l10n.common_save),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
+    final chosenMode = await (_state.decision.offersJoinChoice(isWeb: kIsWeb)
+        ? showTrimSaveChoiceDialog(context)
+        : _confirmSave(l10n));
+    if (chosenMode == null || !mounted) return;
 
     // Block re-entry during the stop window before the notifier flips isSaving
     // (the original disabled the save button via setState before stopping).
@@ -491,6 +478,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
     final outcome = await _notifier.saveSplit(
       isWeb: kIsWeb,
       localeTag: localeTag,
+      mode: chosenMode,
     );
     if (!mounted) return;
 
@@ -502,11 +490,16 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
       ):
         // The local save path haptic-confirms; the server path never did.
         if (!kIsWeb) unawaited(HapticFeedback.mediumImpact());
-        final msg = mode == TrimSaveMode.boostOnly
-            ? l10n.trim_boostApplied
-            : excludedCount > 0
-            ? l10n.trim_savedSegments(keptCount, excludedCount)
-            : l10n.trim_splitInto(keptCount);
+        final msg = switch (mode) {
+          TrimSaveMode.boostOnly => l10n.trim_boostApplied,
+          TrimSaveMode.removeStretch => l10n.trim_stretchRemoved,
+          TrimSaveMode.saveAsNew => l10n.trim_savedAsNewRecording,
+          TrimSaveMode.split when excludedCount > 0 => l10n.trim_savedSegments(
+            keptCount,
+            excludedCount,
+          ),
+          TrimSaveMode.split => l10n.trim_splitInto(keptCount),
+        };
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(msg)));
@@ -524,6 +517,27 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
         break;
     }
     _saving = false;
+  }
+
+  Future<TrimSaveMode?> _confirmSave(AppLocalizations l10n) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.trim_saveConfirmTitle),
+        content: Text(l10n.trim_saveConfirmBody(_state.keptCount)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.common_cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(l10n.common_save),
+          ),
+        ],
+      ),
+    );
+    return confirmed == true ? _state.decision.mode : null;
   }
 
   String _fmt(Duration d) {

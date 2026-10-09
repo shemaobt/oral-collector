@@ -810,6 +810,24 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get trim_saveChoiceBody => '只有“另存为新录音”会保留原始录音。';
+
+  @override
+  String get trim_keepSegmentsSeparate => '保持片段分开';
+
+  @override
+  String get trim_saveAsNewRecording => '另存为新录音';
+
+  @override
+  String get trim_removeStretch => '删除片段';
+
+  @override
+  String get trim_savedAsNewRecording => '已另存为新录音';
+
+  @override
+  String get trim_stretchRemoved => '片段已删除';
+
+  @override
   String get trim_saveConfirmTitle => '保存更改？';
 
   @override

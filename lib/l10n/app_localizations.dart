@@ -1616,6 +1616,42 @@ abstract class AppLocalizations {
   /// **'Split into {count} recordings'**
   String trim_splitInto(int count);
 
+  /// No description provided for @trim_saveChoiceBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Only \"Save as a new recording\" keeps the original.'**
+  String get trim_saveChoiceBody;
+
+  /// No description provided for @trim_keepSegmentsSeparate.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep segments separate'**
+  String get trim_keepSegmentsSeparate;
+
+  /// No description provided for @trim_saveAsNewRecording.
+  ///
+  /// In en, this message translates to:
+  /// **'Save as a new recording'**
+  String get trim_saveAsNewRecording;
+
+  /// No description provided for @trim_removeStretch.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove stretch'**
+  String get trim_removeStretch;
+
+  /// No description provided for @trim_savedAsNewRecording.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved as a new recording'**
+  String get trim_savedAsNewRecording;
+
+  /// No description provided for @trim_stretchRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Stretch removed'**
+  String get trim_stretchRemoved;
+
   /// No description provided for @trim_saveConfirmTitle.
   ///
   /// In en, this message translates to:

@@ -6,10 +6,13 @@ import '../../../sync/presentation/notifiers/sync_notifier.dart';
 import '../../data/providers.dart';
 import '../../data/repositories/local_recording_repository.dart';
 import '../../data/server_to_recording_entity.dart';
+import '../../data/services/joined_audio_exporter.dart';
 import '../../data/services/local_segment_exporter.dart';
 import '../../data/services/recording_boost_persister.dart';
+import '../../data/services/recording_save_as_new_persister.dart';
 import '../../data/services/recording_split_persister.dart';
 import '../../data/services/recording_trash.dart';
+import '../../domain/audible_gain.dart';
 import '../../domain/entities/local_recording_entity.dart';
 import '../../domain/entities/split_segment_request.dart';
 import '../../domain/repositories/recording_api_repository.dart';
@@ -72,6 +75,7 @@ class TrimEditorNotifier
       ref.read(recordingSplitPersisterProvider);
   RecordingBoostPersisterFactory get _boostPersisterFactory =>
       ref.read(recordingBoostPersisterProvider);
+  JoinedAudioExporter get _joiner => ref.read(joinedAudioExporterProvider);
 
   /// Resolves the recording only. The widget owns the player, the file-
   /// availability check and the waveform/duration, finishing the load via
@@ -262,12 +266,13 @@ class TrimEditorNotifier
   Future<TrimSaveOutcome> saveSplit({
     required bool isWeb,
     required String localeTag,
+    TrimSaveMode? mode,
   }) async {
     final recording = state.recording;
     if (recording == null) return const TrimSaveAborted();
     if (!state.decision.canSave) return const TrimSaveAborted();
 
-    final mode = state.decision.mode;
+    final saveMode = isWeb ? state.decision.mode : mode ?? state.decision.mode;
     final keptCount = state.keptSegmentIndices.length;
     final excludedCount = state.excludedSegments.length;
 
@@ -276,10 +281,10 @@ class TrimEditorNotifier
       if (isWeb) {
         await _saveServerSide(recording);
       } else {
-        await _saveLocally(recording, localeTag);
+        await _saveLocally(recording, localeTag, saveMode);
       }
       return TrimSaveSucceeded(
-        mode: mode,
+        mode: saveMode,
         keptCount: keptCount,
         excludedCount: excludedCount,
       );
@@ -293,7 +298,7 @@ class TrimEditorNotifier
     final apiRepo = _apiRepo;
     final serverId = recording.serverId ?? recording.id;
     final kept = state.keptSegmentIndices;
-    final hasGain = state.gainDb.abs() > 0.01;
+    final hasGain = isAudibleGain(state.gainDb);
 
     final segments = kept.map((i) {
       final effGenre = state.effectiveGenre(i);
@@ -319,24 +324,64 @@ class TrimEditorNotifier
   Future<void> _saveLocally(
     LocalRecordingEntity recording,
     String localeTag,
+    TrimSaveMode mode,
   ) async {
     // Capture every dependency before the first await: the notifier is
-    // autoDispose, so reading ref after a suspension could throw, yet the split
+    // autoDispose, so reading ref after a suspension could throw, yet the save
     // must still commit even if the user navigates away mid-export.
-    final exporter = _exporter;
-    final persisterFactory = _persisterFactory;
-    final boostPersisterFactory = _boostPersisterFactory;
-    final localRepo = _localRepo;
-    final apiRepo = _apiRepo;
-    final triggerUpload = ref.read(syncNotifierProvider.notifier).processQueue;
+    final save = _LocalSave(
+      recording: recording,
+      originalTitle:
+          recording.title ?? defaultRecordingTitle(locale: localeTag),
+      localRepo: _localRepo,
+      triggerUpload: ref.read(syncNotifierProvider.notifier).processQueue,
+      boostPersisterFactory: _boostPersisterFactory,
+      saveAsNewPersisterFactory: ref.read(recordingSaveAsNewPersisterProvider),
+      splitPersisterFactory: _persisterFactory,
+      apiRepo: _apiRepo,
+    );
+    switch (mode) {
+      case TrimSaveMode.removeStretch:
+        final joined = await _joiner(_joinRequest(recording));
+        await save.replaceAudio(joined);
+      case TrimSaveMode.saveAsNew:
+        final joined = await _joiner(_joinRequest(recording));
+        await save.addAsNewRecording(joined);
+      case TrimSaveMode.boostOnly:
+        final boosted = await _exporter(_exportRequest(save, boostOnly: true));
+        await save.replaceAudio(
+          EditedAudio(
+            localFilePath: boosted.single.localFilePath,
+            durationSeconds: boosted.single.durationSeconds,
+            fileSizeBytes: boosted.single.fileSizeBytes,
+          ),
+        );
+      case TrimSaveMode.split:
+        final specs = await _exporter(_exportRequest(save, boostOnly: false));
+        await save.splitInto(specs);
+    }
+  }
 
-    final originalTitle =
-        recording.title ?? defaultRecordingTitle(locale: localeTag);
-    final kept = state.keptSegmentIndices;
-    final boostOnly = state.decision.mode == TrimSaveMode.boostOnly;
+  JoinKeptRangesRequest _joinRequest(LocalRecordingEntity recording) =>
+      JoinKeptRangesRequest(
+        sourceFilePath: recording.localFilePath,
+        keptRanges: [
+          for (final i in state.keptSegmentIndices)
+            KeptRange(
+              startSeconds: state.segmentStart(i).inMilliseconds / 1000.0,
+              endSeconds: state.segmentEnd(i).inMilliseconds / 1000.0,
+            ),
+        ],
+        gainDb: state.gainDb,
+      );
 
-    final exportSegments = [
-      for (final i in kept)
+  ExportLocalSegmentsRequest _exportRequest(
+    _LocalSave save, {
+    required bool boostOnly,
+  }) => ExportLocalSegmentsRequest(
+    sourceFilePath: save.recording.localFilePath,
+    segments: [
+      for (final i in state.keptSegmentIndices)
         SegmentExportSpec(
           startSeconds: state.segmentStart(i).inMilliseconds / 1000.0,
           endSeconds: state.segmentEnd(i).inMilliseconds / 1000.0,
@@ -344,75 +389,97 @@ class TrimEditorNotifier
           subcategoryOverride: state.effectiveSubcategory(i),
           registerOverride: state.effectiveRegister(i),
         ),
-    ];
+    ],
+    gainDb: state.gainDb,
+    boostOnly: boostOnly,
+    originalTitle: save.originalTitle,
+    parentGenreId: save.recording.genreId,
+  );
+}
 
-    final specs = await exporter(
-      ExportLocalSegmentsRequest(
-        sourceFilePath: recording.localFilePath,
-        segments: exportSegments,
-        gainDb: state.gainDb,
-        boostOnly: boostOnly,
-        originalTitle: originalTitle,
-        parentGenreId: recording.genreId,
-      ),
-    );
+class _LocalSave {
+  const _LocalSave({
+    required this.recording,
+    required this.originalTitle,
+    required this.localRepo,
+    required this.triggerUpload,
+    required this.boostPersisterFactory,
+    required this.saveAsNewPersisterFactory,
+    required this.splitPersisterFactory,
+    required this.apiRepo,
+  });
 
-    if (boostOnly) {
-      // No cut points, so nothing was divided: the story keeps its identity and
-      // only its audio changes (ENG-402). Its own persister — a split that
-      // "sometimes isn't one" would hide the very call this path must not make,
-      // the remote delete of a parent that was never replaced.
-      final boosted = specs.single;
-      await boostPersisterFactory(
+  final LocalRecordingEntity recording;
+  final String originalTitle;
+  final LocalRecordingRepository localRepo;
+  final Future<void> Function() triggerUpload;
+  final RecordingBoostPersisterFactory boostPersisterFactory;
+  final RecordingSaveAsNewPersisterFactory saveAsNewPersisterFactory;
+  final RecordingSplitPersisterFactory splitPersisterFactory;
+  final RecordingApiRepository apiRepo;
+
+  // The recording keeps its identity and only its audio changes (ENG-402): its
+  // own persister, never the split's, so no remote delete can reach a
+  // recording that was never replaced.
+  Future<void> replaceAudio(EditedAudio audio) =>
+      boostPersisterFactory(
         localRepo: localRepo,
         triggerUpload: triggerUpload,
         trashPrevious: (r) => RecordingTrash.putInTrash(
           sourcePath: r.localFilePath,
-          metadata: {
-            'id': r.id,
-            'title': r.title,
-            'projectId': r.projectId,
-            'serverId': r.serverId,
-            'replacedBy': boosted.localFilePath,
-          },
+          metadata: _trashMetadata(r, replacedBy: audio.localFilePath),
         ),
       ).persist(
         recording: recording,
-        newFilePath: boosted.localFilePath,
-        newDurationSeconds: boosted.durationSeconds,
-        newFileSizeBytes: boosted.fileSizeBytes,
+        newFilePath: audio.localFilePath,
+        newDurationSeconds: audio.durationSeconds,
+        newFileSizeBytes: audio.fileSizeBytes,
+        newFormat: audio.format,
       );
-      return;
-    }
 
-    final persister = persisterFactory(
-      localRepo: localRepo,
-      apiRepo: apiRepo,
-      triggerUpload: triggerUpload,
-      trashParent: (parent) => RecordingTrash.putInTrash(
-        sourcePath: parent.localFilePath,
-        metadata: {
-          'id': parent.id,
-          'title': parent.title,
-          'description': parent.description,
-          'projectId': parent.projectId,
-          'genreId': parent.genreId,
-          'subcategoryId': parent.subcategoryId,
-          'registerId': parent.registerId,
-          'secondaryGenreId': parent.secondaryGenreId,
-          'secondarySubcategoryId': parent.secondarySubcategoryId,
-          'secondaryRegisterId': parent.secondaryRegisterId,
-          'storytellerId': parent.storytellerId,
-          'userId': parent.userId,
-          'durationSeconds': parent.durationSeconds,
-          'fileSizeBytes': parent.fileSizeBytes,
-          'format': parent.format,
-          'serverId': parent.serverId,
-          'gcsUrl': parent.gcsUrl,
-          'recordedAt': parent.recordedAt.toIso8601String(),
-        },
-      ),
-    );
-    await persister.persist(parent: recording, segments: specs);
-  }
+  Future<void> splitInto(List<SplitSegmentSpec> segments) =>
+      splitPersisterFactory(
+        localRepo: localRepo,
+        apiRepo: apiRepo,
+        triggerUpload: triggerUpload,
+        trashParent: (parent) => RecordingTrash.putInTrash(
+          sourcePath: parent.localFilePath,
+          metadata: _trashMetadata(parent),
+        ),
+      ).persist(parent: recording, segments: segments);
+
+  Future<void> addAsNewRecording(EditedAudio audio) =>
+      saveAsNewPersisterFactory(
+        localRepo: localRepo,
+        triggerUpload: triggerUpload,
+      ).persist(
+        original: recording,
+        originalTitle: originalTitle,
+        audio: audio,
+      );
 }
+
+Map<String, dynamic> _trashMetadata(
+  LocalRecordingEntity r, {
+  String? replacedBy,
+}) => {
+  'id': r.id,
+  'title': r.title,
+  'description': r.description,
+  'projectId': r.projectId,
+  'genreId': r.genreId,
+  'subcategoryId': r.subcategoryId,
+  'registerId': r.registerId,
+  'secondaryGenreId': r.secondaryGenreId,
+  'secondarySubcategoryId': r.secondarySubcategoryId,
+  'secondaryRegisterId': r.secondaryRegisterId,
+  'storytellerId': r.storytellerId,
+  'userId': r.userId,
+  'durationSeconds': r.durationSeconds,
+  'fileSizeBytes': r.fileSizeBytes,
+  'format': r.format,
+  'serverId': r.serverId,
+  'gcsUrl': r.gcsUrl,
+  'recordedAt': r.recordedAt.toIso8601String(),
+  'replacedBy': ?replacedBy,
+};

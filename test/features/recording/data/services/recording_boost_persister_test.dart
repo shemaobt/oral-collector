@@ -10,6 +10,8 @@
 /// again against the recording the server already has.
 library;
 
+import 'dart:io';
+
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -179,5 +181,24 @@ void main() {
     );
 
     expect(triggerCalls, 1);
+  });
+
+  test('a trash failure after the audio was replaced still completes the save '
+      'and kicks the upload queue', () async {
+    final recording = await seed(serverId: 'srv-1');
+    var kicks = 0;
+
+    await applyBoost(
+      persisterFor(
+        triggerUpload: () async => kicks++,
+        trashPrevious: (_) async => throw const FileSystemException('busy'),
+      ),
+      recording,
+      newFilePath: '/local/boosted.m4a',
+    );
+
+    final row = (await repo.getRecordingById('rec-1'))!;
+    expect(row.localFilePath, '/local/boosted.m4a');
+    expect(kicks, 1);
   });
 }

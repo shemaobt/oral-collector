@@ -1,3 +1,5 @@
+import '../domain/audible_gain.dart';
+
 /// The shortest segment the trim editor lets you create or drag to (ENG-66).
 /// Expressed in time rather than as a fraction of the file, so the floor stops
 /// growing with the recording: the old 3% fraction meant ~1 s on a 33 s file and
@@ -19,7 +21,7 @@ double minSplitGapFraction(Duration totalDuration) {
   return kMinTrimSegment.inMilliseconds / totalMs;
 }
 
-enum TrimSaveMode { boostOnly, split }
+enum TrimSaveMode { boostOnly, split, removeStretch, saveAsNew }
 
 class TrimSegment {
   const TrimSegment({
@@ -46,11 +48,10 @@ class TrimEditDecision {
   final double gainDb;
   final Duration totalDuration;
 
-  static const double _gainDeadzoneDb = 0.01;
   static const int _minDurationMs = 200;
 
   bool get hasSplits => splitPoints.isNotEmpty;
-  bool get hasGainChange => gainDb.abs() > _gainDeadzoneDb;
+  bool get hasGainChange => isAudibleGain(gainDb);
   bool get hasEdits => hasSplits || hasGainChange;
   bool get isAudioLongEnough => totalDuration.inMilliseconds > _minDurationMs;
 
@@ -59,6 +60,9 @@ class TrimEditDecision {
 
   TrimSaveMode get mode =>
       hasSplits ? TrimSaveMode.split : TrimSaveMode.boostOnly;
+
+  bool offersJoinChoice({required bool isWeb}) =>
+      !isWeb && excludedSegments.isNotEmpty && keptCount > 0;
 
   bool get canSave {
     if (!isAudioLongEnough) return false;

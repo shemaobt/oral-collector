@@ -381,6 +381,12 @@
       }
     }
   },
+  "trim_saveChoiceBody": "Only \"Save as a new recording\" keeps the original.",
+  "trim_keepSegmentsSeparate": "Keep segments separate",
+  "trim_saveAsNewRecording": "Save as a new recording",
+  "trim_removeStretch": "Remove stretch",
+  "trim_savedAsNewRecording": "Saved as a new recording",
+  "trim_stretchRemoved": "Stretch removed",
   "trim_saveConfirmTitle": "Save changes?",
   "trim_saveConfirmBody": "This replaces the original recording with {count} segment(s). This can't be undone.",
   "@trim_saveConfirmBody": {
