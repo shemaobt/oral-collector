@@ -5054,11 +5054,17 @@ abstract class AppLocalizations {
   /// **'the audio did not reach the server'**
   String get recording_uploadRefusalObjectMissing;
 
-  /// No description provided for @recording_uploadRefusalIncomplete.
+  /// No description provided for @recording_uploadRefusalSizeMismatch.
   ///
   /// In en, this message translates to:
-  /// **'the audio arrived incomplete or different from what was sent'**
-  String get recording_uploadRefusalIncomplete;
+  /// **'the audio size does not match the recorded size'**
+  String get recording_uploadRefusalSizeMismatch;
+
+  /// No description provided for @recording_uploadRefusalChecksumMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'the audio content arrived different from what was sent'**
+  String get recording_uploadRefusalChecksumMismatch;
 }
 
 class _AppLocalizationsDelegate

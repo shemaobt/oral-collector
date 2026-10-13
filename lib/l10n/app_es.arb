@@ -1021,5 +1021,6 @@
   "recording_uploadRefusedEditNoReasonMessage": "El servidor rechazó el audio editado. El audio anterior sigue publicado.",
   "recording_uploadRefusedMessage": "Se rechazó el envío. Puedes intentarlo de nuevo.",
   "recording_uploadRefusalObjectMissing": "el audio no llegó al servidor",
-  "recording_uploadRefusalIncomplete": "el audio llegó incompleto o distinto de lo enviado"
+  "recording_uploadRefusalSizeMismatch": "el tamaño del audio no coincide con el registrado",
+  "recording_uploadRefusalChecksumMismatch": "el contenido del audio llegó distinto de lo enviado"
 }

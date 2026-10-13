@@ -1,11 +1,9 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -466,7 +464,7 @@ class SyncEngineImpl implements SyncEngine {
         _log.warning('confirm-upload refused the audio of $id');
         await _markPermanentlyFailed(
           id,
-          status: refusalStatusFor(_refusalCode(confirmResponse)),
+          status: refusalStatusFor(readErrorCode(confirmResponse)),
         );
         return _UploadOutcome.failed;
       }
@@ -720,20 +718,6 @@ class SyncEngineImpl implements SyncEngine {
   /// name what happened and offer the way out. The budget path does not come
   /// through here: [LocalRecordingRepository.markAsFailed] owns it, because it
   /// is the one that reads the count.
-  String? _refusalCode(http.Response response) {
-    final body = _tryDecodeJson(response.body);
-    final code = body is Map<String, dynamic> ? body['code'] : null;
-    return code is String ? code : null;
-  }
-
-  Object? _tryDecodeJson(String body) {
-    try {
-      return jsonDecode(body);
-    } on FormatException {
-      return null;
-    }
-  }
-
   Future<void> _markPermanentlyFailed(
     String id, {
     String status = 'failed_exhausted',

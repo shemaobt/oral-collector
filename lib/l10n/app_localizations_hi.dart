@@ -2909,6 +2909,10 @@ class AppLocalizationsHi extends AppLocalizations {
       'ऑडियो सर्वर तक नहीं पहुँचा';
 
   @override
-  String get recording_uploadRefusalIncomplete =>
-      'ऑडियो अधूरा या भेजे गए से अलग पहुँचा';
+  String get recording_uploadRefusalSizeMismatch =>
+      'ऑडियो का आकार दर्ज आकार से मेल नहीं खाता';
+
+  @override
+  String get recording_uploadRefusalChecksumMismatch =>
+      'ऑडियो की सामग्री भेजी गई सामग्री से अलग पहुँची';
 }

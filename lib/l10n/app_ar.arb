@@ -1021,5 +1021,6 @@
   "recording_uploadRefusedEditNoReasonMessage": "رفض الخادم الصوت المعدَّل. لا يزال الصوت السابق منشورًا.",
   "recording_uploadRefusedMessage": "تم رفض الرفع. يمكنك المحاولة مرة أخرى.",
   "recording_uploadRefusalObjectMissing": "لم يصل الصوت إلى الخادم",
-  "recording_uploadRefusalIncomplete": "وصل الصوت ناقصًا أو مختلفًا عمّا أُرسل"
+  "recording_uploadRefusalSizeMismatch": "حجم الصوت لا يطابق الحجم المسجَّل",
+  "recording_uploadRefusalChecksumMismatch": "وصل محتوى الصوت مختلفًا عمّا أُرسل"
 }

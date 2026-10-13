@@ -2884,6 +2884,10 @@ class AppLocalizationsTpi extends AppLocalizations {
       'audio i no kamap long server';
 
   @override
-  String get recording_uploadRefusalIncomplete =>
-      'audio i kamap liklik tasol o narapela kain long wanem i go';
+  String get recording_uploadRefusalSizeMismatch =>
+      'bikpela bilong audio i no stret long dispela i stap long rekod';
+
+  @override
+  String get recording_uploadRefusalChecksumMismatch =>
+      'samting insait long audio i kamap narapela kain long wanem i go';
 }

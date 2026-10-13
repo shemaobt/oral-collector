@@ -1222,5 +1222,6 @@
   "recording_uploadRefusedEditNoReasonMessage": "服务器拒绝了编辑后的音频。之前的音频仍保持发布。",
   "recording_uploadRefusedMessage": "上传被拒绝。您可以重试。",
   "recording_uploadRefusalObjectMissing": "音频未到达服务器",
-  "recording_uploadRefusalIncomplete": "音频不完整或与发送的不一致"
+  "recording_uploadRefusalSizeMismatch": "音频大小与记录的大小不一致",
+  "recording_uploadRefusalChecksumMismatch": "音频内容与发送的不一致"
 }

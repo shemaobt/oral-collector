@@ -2897,6 +2897,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get recording_uploadRefusalObjectMissing => 'لم يصل الصوت إلى الخادم';
 
   @override
-  String get recording_uploadRefusalIncomplete =>
-      'وصل الصوت ناقصًا أو مختلفًا عمّا أُرسل';
+  String get recording_uploadRefusalSizeMismatch =>
+      'حجم الصوت لا يطابق الحجم المسجَّل';
+
+  @override
+  String get recording_uploadRefusalChecksumMismatch =>
+      'وصل محتوى الصوت مختلفًا عمّا أُرسل';
 }

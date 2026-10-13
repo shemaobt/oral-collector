@@ -2768,5 +2768,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recording_uploadRefusalObjectMissing => '音频未到达服务器';
 
   @override
-  String get recording_uploadRefusalIncomplete => '音频不完整或与发送的不一致';
+  String get recording_uploadRefusalSizeMismatch => '音频大小与记录的大小不一致';
+
+  @override
+  String get recording_uploadRefusalChecksumMismatch => '音频内容与发送的不一致';
 }

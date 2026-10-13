@@ -2924,6 +2924,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'el audio no llegó al servidor';
 
   @override
-  String get recording_uploadRefusalIncomplete =>
-      'el audio llegó incompleto o distinto de lo enviado';
+  String get recording_uploadRefusalSizeMismatch =>
+      'el tamaño del audio no coincide con el registrado';
+
+  @override
+  String get recording_uploadRefusalChecksumMismatch =>
+      'el contenido del audio llegó distinto de lo enviado';
 }

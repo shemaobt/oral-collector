@@ -5,7 +5,9 @@ import 'upload_refusal.dart';
 ///
 /// `failed` is queued already, so a retry only skips the backoff wait and
 /// returns the budget; `failed_exhausted` left the queue and is never tried
-/// again without one. The other three failures would be refused the same way
+/// again without one. A server refusal of the audio (`failed_refused*`) also
+/// left the queue, and the local file is untouched, so a retry sends it again.
+/// The other three failures would be refused the same way
 /// on the next attempt — a duplicate title, a description under the minimum,
 /// or no audio file at all — and each has its own banner leading to its own
 /// fix, so offering a retry over them only wastes the user's tap.

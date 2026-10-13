@@ -2794,6 +2794,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recording_uploadRefusalObjectMissing => '오디오가 서버에 도착하지 않았습니다';
 
   @override
-  String get recording_uploadRefusalIncomplete =>
-      '오디오가 불완전하거나 보낸 것과 다르게 도착했습니다';
+  String get recording_uploadRefusalSizeMismatch => '오디오 크기가 기록된 크기와 일치하지 않습니다';
+
+  @override
+  String get recording_uploadRefusalChecksumMismatch =>
+      '오디오 내용이 보낸 것과 다르게 도착했습니다';
 }

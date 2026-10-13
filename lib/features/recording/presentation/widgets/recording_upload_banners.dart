@@ -51,9 +51,10 @@ class RecordingUploadBanners extends StatelessWidget {
     final reason = switch (refusalReasonOf(recording.uploadStatus)) {
       UploadRefusalReason.objectMissing =>
         l10n.recording_uploadRefusalObjectMissing,
-      UploadRefusalReason.sizeMismatch ||
+      UploadRefusalReason.sizeMismatch =>
+        l10n.recording_uploadRefusalSizeMismatch,
       UploadRefusalReason.checksumMismatch =>
-        l10n.recording_uploadRefusalIncomplete,
+        l10n.recording_uploadRefusalChecksumMismatch,
       null => null,
     };
     return reason == null

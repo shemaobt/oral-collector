@@ -37,8 +37,9 @@ enum PendingMetadataField {
 /// The vocabulary deliberately borrows the upload queue's: [failedConflict] is
 /// the same name clash with the same exit (rename), and [failedExhausted] means
 /// the same spent budget. [failedForbidden] has no upload counterpart because
-/// the upload path collapses every non-retryable refusal into `failed_exhausted`
-/// — here it must stay apart, since offering a retry for a permission refusal
+/// the upload path collapses a non-retryable failure into `failed_exhausted`
+/// (the server refusing the audio has its own `failed_refused*` statuses) —
+/// here it must stay apart, since offering a retry for a permission refusal
 /// would offer a way out that leads nowhere.
 abstract final class MetadataSyncStatus {
   static const synced = 'synced';

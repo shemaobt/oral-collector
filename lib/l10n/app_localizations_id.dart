@@ -2903,6 +2903,10 @@ class AppLocalizationsId extends AppLocalizations {
       'audio tidak sampai ke server';
 
   @override
-  String get recording_uploadRefusalIncomplete =>
-      'audio tiba tidak lengkap atau berbeda dari yang dikirim';
+  String get recording_uploadRefusalSizeMismatch =>
+      'ukuran audio tidak sesuai dengan yang tercatat';
+
+  @override
+  String get recording_uploadRefusalChecksumMismatch =>
+      'isi audio tiba berbeda dari yang dikirim';
 }

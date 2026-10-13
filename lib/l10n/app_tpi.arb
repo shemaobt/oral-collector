@@ -1021,5 +1021,6 @@
   "recording_uploadRefusedEditNoReasonMessage": "Server i no laikim edited audio. Audio bipo yet i stap pablis.",
   "recording_uploadRefusedMessage": "Server i no laikim dispela send. Yu ken traim gen.",
   "recording_uploadRefusalObjectMissing": "audio i no kamap long server",
-  "recording_uploadRefusalIncomplete": "audio i kamap liklik tasol o narapela kain long wanem i go"
+  "recording_uploadRefusalSizeMismatch": "bikpela bilong audio i no stret long dispela i stap long rekod",
+  "recording_uploadRefusalChecksumMismatch": "samting insait long audio i kamap narapela kain long wanem i go"
 }

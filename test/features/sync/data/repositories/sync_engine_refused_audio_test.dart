@@ -6,6 +6,7 @@ import 'dart:io';
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -14,12 +15,16 @@ import 'package:mocktail/mocktail.dart';
 import 'package:oral_collector/core/config/upload_retry_policy.dart';
 import 'package:oral_collector/core/database/app_database.dart';
 import 'package:oral_collector/core/network/authenticated_client.dart';
+import 'package:oral_collector/features/recording/data/providers.dart';
 import 'package:oral_collector/features/recording/data/repositories/local_recording_repository.dart';
 import 'package:oral_collector/features/recording/presentation/widgets/recording_upload_banners.dart';
 import 'package:oral_collector/features/storyteller/data/repositories/local_storyteller_repository.dart';
+import 'package:oral_collector/features/sync/data/providers.dart';
 import 'package:oral_collector/features/sync/data/repositories/sync_engine.dart';
 import 'package:oral_collector/features/sync/data/services/upload_downloader.dart';
+import 'package:oral_collector/features/sync/data/services/upload_foreground_service.dart';
 import 'package:oral_collector/features/sync/domain/repositories/connectivity_service.dart';
+import 'package:oral_collector/features/sync/presentation/notifiers/sync_notifier.dart';
 import 'package:oral_collector/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -28,6 +33,26 @@ import '../../../../support/sync_engine_api.dart';
 class _MockConnectivity extends Mock implements ConnectivityService {}
 
 class _MockSecureStorage extends Mock implements FlutterSecureStorage {}
+
+class _SilentForegroundService implements UploadForegroundService {
+  @override
+  bool get isRunning => false;
+
+  @override
+  Future<void> start({
+    required Future<String> Function() titleResolver,
+    required String body,
+  }) async {}
+
+  @override
+  Future<void> updateProgress({
+    required String title,
+    required String body,
+  }) async {}
+
+  @override
+  Future<void> stop() async {}
+}
 
 class _RecordingDownloader implements UploadDownloader {
   final sentFiles = <String>[];
@@ -72,6 +97,7 @@ void main() {
   late Directory tempDir;
   late _RecordingDownloader downloader;
   late File audio;
+  late _MockConnectivity connectivity;
 
   setUp(() {
     SharedPreferences.setMockInitialValues({});
@@ -80,6 +106,12 @@ void main() {
     tempDir = Directory.systemTemp.createTempSync('sync_engine_refused');
     audio = File('${tempDir.path}/edited.m4a')..writeAsBytesSync([0, 1, 2]);
     downloader = _RecordingDownloader();
+    connectivity = _MockConnectivity();
+    when(() => connectivity.isOnline).thenAnswer((_) async => true);
+    when(() => connectivity.isOnWifi).thenAnswer((_) async => true);
+    when(
+      () => connectivity.onConnectivityChanged,
+    ).thenAnswer((_) => const Stream.empty());
   });
 
   tearDown(() async {
@@ -114,7 +146,6 @@ void main() {
   }
 
   SyncEngineImpl buildEngine(http.Response? Function() confirm) {
-    final connectivity = _MockConnectivity();
     final storage = _MockSecureStorage();
     when(() => connectivity.isOnline).thenAnswer((_) async => true);
     when(
@@ -196,12 +227,36 @@ void main() {
         find.text(
           _refusedEditSentence.replaceFirst(
             '%s',
-            'o áudio chegou incompleto ou diferente do enviado',
+            'o tamanho do áudio não confere com o registrado',
           ),
         ),
         findsOneWidget,
       );
       expect(find.text(_retry), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'a refused edit with a checksum mismatch says the content differs',
+    (tester) async {
+      await tester.runAsync(() async {
+        await insertRecording(gcsUrl: 'https://storage.example/earlier.m4a');
+        await buildEngine(
+          () => refusal('UPLOAD_CHECKSUM_MISMATCH'),
+        ).processQueue();
+        await showBanner(tester);
+      });
+      await tester.pump();
+
+      expect(
+        find.text(
+          _refusedEditSentence.replaceFirst(
+            '%s',
+            'o conteúdo do áudio chegou diferente do enviado',
+          ),
+        ),
+        findsOneWidget,
+      );
     },
   );
 
@@ -278,7 +333,7 @@ void main() {
   );
 
   test(
-    'retrying a refused edit puts the same local file back in the queue',
+    'pressing Tentar novamente on a refused edit puts the same local file back in the queue',
     () async {
       await insertRecording(gcsUrl: 'https://storage.example/earlier.m4a');
       var answers = 0;
@@ -289,13 +344,29 @@ void main() {
             : http.Response(jsonEncode({'gcs_url': 'gs://b/new.m4a'}), 200);
       });
       await engine.processQueue();
-      expect((await repo.getPendingUploads()), isEmpty);
+      expect(await repo.getPendingUploads(), isEmpty);
 
-      await repo.resetRetryCount('rec-1');
+      final container = ProviderContainer(
+        overrides: [
+          connectivityServiceProvider.overrideWithValue(connectivity),
+          syncEngineProvider.overrideWithValue(engine),
+          localRecordingRepositoryProvider.overrideWithValue(repo),
+          uploadForegroundServiceProvider.overrideWithValue(
+            _SilentForegroundService(),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      container.read(syncNotifierProvider);
+      await Future<void>.delayed(Duration.zero);
 
-      expect((await repo.getPendingUploads()).map((r) => r.id), ['rec-1']);
-      await engine.processQueue();
+      await container
+          .read(syncNotifierProvider.notifier)
+          .resetAndRetry('rec-1');
+
       expect(downloader.sentFiles, [audio.path, audio.path]);
+      final row = (await repo.getRecordingById('rec-1'))!;
+      expect((row.uploadStatus, row.retryCount), ('uploaded', 0));
     },
   );
 }

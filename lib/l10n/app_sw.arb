@@ -1021,5 +1021,6 @@
   "recording_uploadRefusedEditNoReasonMessage": "Seva imekataa sauti iliyohaririwa. Sauti ya awali bado imechapishwa.",
   "recording_uploadRefusedMessage": "Utumaji umekataliwa. Unaweza kujaribu tena.",
   "recording_uploadRefusalObjectMissing": "sauti haikufika kwenye seva",
-  "recording_uploadRefusalIncomplete": "sauti ilifika pungufu au tofauti na iliyotumwa"
+  "recording_uploadRefusalSizeMismatch": "ukubwa wa sauti haulingani na uliorekodiwa",
+  "recording_uploadRefusalChecksumMismatch": "maudhui ya sauti yalifika tofauti na yaliyotumwa"
 }

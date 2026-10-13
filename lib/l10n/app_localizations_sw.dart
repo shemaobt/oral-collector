@@ -2892,6 +2892,10 @@ class AppLocalizationsSw extends AppLocalizations {
       'sauti haikufika kwenye seva';
 
   @override
-  String get recording_uploadRefusalIncomplete =>
-      'sauti ilifika pungufu au tofauti na iliyotumwa';
+  String get recording_uploadRefusalSizeMismatch =>
+      'ukubwa wa sauti haulingani na uliorekodiwa';
+
+  @override
+  String get recording_uploadRefusalChecksumMismatch =>
+      'maudhui ya sauti yalifika tofauti na yaliyotumwa';
 }

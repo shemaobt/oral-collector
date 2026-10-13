@@ -14,6 +14,11 @@ enum UploadRefusalReason {
 
 const refusedWithoutReasonStatus = 'failed_refused';
 
+final refusalStatuses = [
+  refusedWithoutReasonStatus,
+  for (final reason in UploadRefusalReason.values) reason.status,
+];
+
 String refusalStatusFor(String? code) {
   for (final reason in UploadRefusalReason.values) {
     if (reason.code == code) return reason.status;
@@ -29,5 +34,4 @@ UploadRefusalReason? refusalReasonOf(String uploadStatus) {
 }
 
 bool isRefusalStatus(String uploadStatus) =>
-    uploadStatus == refusedWithoutReasonStatus ||
-    refusalReasonOf(uploadStatus) != null;
+    refusalStatuses.contains(uploadStatus);
