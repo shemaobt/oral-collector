@@ -411,9 +411,8 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
   void _startExcludeRange() {
     final total = _state.totalDuration;
     if (total <= Duration.zero) return;
-    const reach = Duration(seconds: 5);
-    final before = _transportPosition - reach;
-    final after = _transportPosition + reach;
+    final before = _transportPosition - kExcludeRangeReach;
+    final after = _transportPosition + kExcludeRangeReach;
     setState(
       () => _excludeDraft = (
         start: before < Duration.zero ? Duration.zero : before,
@@ -666,8 +665,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
         ? (_transportPosition.inMilliseconds / totalMs).clamp(0.0, 1.0)
         : null;
 
-    final hasExclusion =
-        state.excludedSegments.isNotEmpty || state.excludedRanges.isNotEmpty;
+    final hasExclusion = state.decision.hasExclusion;
     final restoreAll = GestureDetector(
       onTap: () {
         HapticFeedback.lightImpact();
@@ -903,7 +901,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
           position: _transportPosition,
           duration: state.totalDuration,
           onPlayPause: _toggleTransport,
-          canSplitAtPosition: _canSplitAtPlayhead,
+          canSplitAtPosition: _canSplitAtPlayhead && _excludeDraft == null,
           onSplitAtPosition: _addSplitAtPlayhead,
           isWeb: kIsWeb,
           onExcludeRange: _excludeDraft == null ? _startExcludeRange : null,

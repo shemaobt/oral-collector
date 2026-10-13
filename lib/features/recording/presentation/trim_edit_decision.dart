@@ -55,9 +55,10 @@ class TrimEditDecision {
 
   bool get hasSplits => splitPoints.isNotEmpty;
   bool get hasGainChange => isAudibleGain(gainDb);
-  bool get hasExclusion =>
-      excludedSegments.isNotEmpty || excludedRanges.isNotEmpty;
-  bool get hasEdits => hasSplits || hasGainChange || excludedRanges.isNotEmpty;
+  bool get hasExclusion => excludedSegments.isNotEmpty || hasRanges;
+  bool get hasRanges => excludedRanges.isNotEmpty;
+  bool get hasCuts => hasSplits || hasRanges;
+  bool get hasEdits => hasCuts || hasGainChange;
   bool get isAudioLongEnough => totalDuration.inMilliseconds > _minDurationMs;
 
   int get segmentCount => splitPoints.length + 1;
@@ -68,9 +69,8 @@ class TrimEditDecision {
   );
   int get keptCount => keptParts.length;
 
-  TrimSaveMode get mode => hasSplits || excludedRanges.isNotEmpty
-      ? TrimSaveMode.split
-      : TrimSaveMode.boostOnly;
+  TrimSaveMode get mode =>
+      hasCuts ? TrimSaveMode.split : TrimSaveMode.boostOnly;
 
   bool offersJoinChoice({required bool isWeb}) =>
       !isWeb && hasExclusion && keptCount > 0;
@@ -78,9 +78,7 @@ class TrimEditDecision {
   bool get canSave {
     if (!isAudioLongEnough) return false;
     if (!hasEdits) return false;
-    if ((hasSplits || excludedRanges.isNotEmpty) && keptCount == 0) {
-      return false;
-    }
+    if (hasCuts && keptCount == 0) return false;
     return true;
   }
 

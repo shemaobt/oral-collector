@@ -194,9 +194,6 @@ class TrimEditorNotifier
     );
   }
 
-  /// Excludes the stretch between the two fractions without adding a split
-  /// mark. Same guard as [toggleExclude]: false and no mutation when nothing
-  /// would be kept.
   bool confirmExcludedRange({
     required double startFraction,
     required double endFraction,

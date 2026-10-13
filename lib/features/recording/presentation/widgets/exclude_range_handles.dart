@@ -13,6 +13,7 @@ const Key kExcludeRangeConfirmKey = Key('exclude_range_confirm');
 const Key kExcludeRangeCancelKey = Key('exclude_range_cancel');
 
 const double kExcludeRangeHandleWidth = 48.0;
+const Duration kExcludeRangeReach = Duration(seconds: 5);
 
 typedef ExcludeRangeDraft = ({Duration start, Duration end});
 

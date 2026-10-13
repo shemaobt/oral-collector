@@ -1,3 +1,5 @@
+const double _minPartFraction = 1e-6;
+
 class ExcludedRange {
   const ExcludedRange({required this.startFraction, required this.endFraction});
 
@@ -68,7 +70,7 @@ List<KeptPart> _outsideHoles(
   for (final h in holes) {
     if (h.endFraction <= cursor) continue;
     if (h.startFraction >= end) break;
-    if (h.startFraction > cursor) {
+    if (h.startFraction - cursor > _minPartFraction) {
       parts.add(
         KeptPart(
           segmentIndex: segmentIndex,
@@ -79,7 +81,7 @@ List<KeptPart> _outsideHoles(
     }
     cursor = h.endFraction;
   }
-  if (cursor < end) {
+  if (end - cursor > _minPartFraction) {
     parts.add(
       KeptPart(
         segmentIndex: segmentIndex,
