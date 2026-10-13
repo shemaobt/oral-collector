@@ -60,6 +60,15 @@ class TrimEditorState {
 
   int get keptCount => keptParts.length;
 
+  int get totalPartCount => keptPartsOf(
+    splitPoints: splitPoints,
+    excludedSegments: const {},
+    excludedRanges: excludedRanges,
+  ).length;
+
+  int get excludedStretchCount =>
+      excludedSegments.length + mergedRanges(excludedRanges).length;
+
   List<int> get keptSegmentIndices => [
     for (var i = 0; i < segmentCount; i++)
       if (!excludedSegments.contains(i)) i,

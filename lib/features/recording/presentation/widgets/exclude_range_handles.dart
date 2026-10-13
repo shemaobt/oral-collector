@@ -5,6 +5,8 @@ import 'package:flutter/services.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/tokens.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../shared/utils/format.dart';
+import '../exclude_range_draft.dart';
 import '../trim_edit_decision.dart';
 
 const Key kExcludeRangeStartHandleKey = Key('exclude_range_start_handle');
@@ -13,9 +15,6 @@ const Key kExcludeRangeConfirmKey = Key('exclude_range_confirm');
 const Key kExcludeRangeCancelKey = Key('exclude_range_cancel');
 
 const double kExcludeRangeHandleWidth = 48.0;
-const Duration kExcludeRangeReach = Duration(seconds: 5);
-
-typedef ExcludeRangeDraft = ({Duration start, Duration end});
 
 class ExcludeRangeEditing {
   const ExcludeRangeEditing({
@@ -31,21 +30,12 @@ class ExcludeRangeEditing {
   final VoidCallback onCancel;
 }
 
-String _clock(Duration d) {
-  final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
-  final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
-  final cs = (d.inMilliseconds.remainder(1000) ~/ 10).toString().padLeft(
-    2,
-    '0',
-  );
-  return '$m:$s.$cs';
-}
-
 class ExcludeRangeHandles extends StatefulWidget {
   const ExcludeRangeHandles({
     super.key,
     required this.draft,
     required this.totalDuration,
+    required this.splitPoints,
     required this.zoom,
     required this.panFraction,
     required this.onChanged,
@@ -53,6 +43,7 @@ class ExcludeRangeHandles extends StatefulWidget {
 
   final ExcludeRangeDraft draft;
   final Duration totalDuration;
+  final List<double> splitPoints;
   final double zoom;
   final double panFraction;
   final ValueChanged<ExcludeRangeDraft> onChanged;
@@ -64,16 +55,18 @@ class ExcludeRangeHandles extends StatefulWidget {
 class _ExcludeRangeHandlesState extends State<ExcludeRangeHandles> {
   double _grabOffset = 0;
 
-  double _xOf(Duration t, double width) {
-    final fraction = t.inMilliseconds / widget.totalDuration.inMilliseconds;
-    return (fraction - widget.panFraction) * widget.zoom * width;
-  }
+  double _xOf(double fraction, double width) =>
+      (fraction - widget.panFraction) * widget.zoom * width;
 
-  Duration _timeAt(double x, double width) {
-    final fraction = widget.panFraction + (x / width) / widget.zoom;
-    final ms = (fraction * widget.totalDuration.inMilliseconds).round();
-    return Duration(
-      milliseconds: ms.clamp(0, widget.totalDuration.inMilliseconds),
+  double _fractionAt(double x, double width) {
+    final fraction = (widget.panFraction + (x / width) / widget.zoom).clamp(
+      0.0,
+      1.0,
+    );
+    return snapToBoundary(
+      fraction,
+      widget.splitPoints,
+      minSplitGapFraction(widget.totalDuration),
     );
   }
 
@@ -86,21 +79,17 @@ class _ExcludeRangeHandlesState extends State<ExcludeRangeHandles> {
   }
 
   void _moveStart(Offset global, double width) {
-    final gap = kMinTrimSegment;
-    final latest = widget.draft.end - gap;
-    final t = _timeAt(_localX(global) - _grabOffset, width);
-    final start = t > latest
-        ? (latest < Duration.zero ? Duration.zero : latest)
-        : t;
+    final latest = widget.draft.end - minSplitGapFraction(widget.totalDuration);
+    final at = _fractionAt(_localX(global) - _grabOffset, width);
+    final start = at > latest ? (latest < 0 ? 0.0 : latest) : at;
     widget.onChanged((start: start, end: widget.draft.end));
   }
 
   void _moveEnd(Offset global, double width) {
-    final earliest = widget.draft.start + kMinTrimSegment;
-    final t = _timeAt(_localX(global) - _grabOffset, width);
-    final end = t < earliest
-        ? (earliest > widget.totalDuration ? widget.totalDuration : earliest)
-        : t;
+    final earliest =
+        widget.draft.start + minSplitGapFraction(widget.totalDuration);
+    final at = _fractionAt(_localX(global) - _grabOffset, width);
+    final end = at < earliest ? (earliest > 1 ? 1.0 : earliest) : at;
     widget.onChanged((start: widget.draft.start, end: end));
   }
 
@@ -127,14 +116,16 @@ class _ExcludeRangeHandlesState extends State<ExcludeRangeHandles> {
             _Handle(
               handleKey: kExcludeRangeStartHandleKey,
               x: startX,
-              time: widget.draft.start,
+              fraction: widget.draft.start,
+              totalDuration: widget.totalDuration,
               onGrab: (g) => _grab(g, startX),
               onMove: (g) => _moveStart(g, width),
             ),
             _Handle(
               handleKey: kExcludeRangeEndHandleKey,
               x: endX,
-              time: widget.draft.end,
+              fraction: widget.draft.end,
+              totalDuration: widget.totalDuration,
               onGrab: (g) => _grab(g, endX),
               onMove: (g) => _moveEnd(g, width),
             ),
@@ -149,14 +140,16 @@ class _Handle extends StatelessWidget {
   const _Handle({
     required this.handleKey,
     required this.x,
-    required this.time,
+    required this.fraction,
+    required this.totalDuration,
     required this.onGrab,
     required this.onMove,
   });
 
   final Key handleKey;
   final double x;
-  final Duration time;
+  final double fraction;
+  final Duration totalDuration;
   final ValueChanged<Offset> onGrab;
   final ValueChanged<Offset> onMove;
 
@@ -177,7 +170,12 @@ class _Handle extends StatelessWidget {
         child: Column(
           children: [
             Text(
-              _clock(time),
+              formatPositionCentis(
+                Duration(
+                  milliseconds: (fraction * totalDuration.inMilliseconds)
+                      .round(),
+                ),
+              ),
               maxLines: 1,
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
                 color: colors.error,

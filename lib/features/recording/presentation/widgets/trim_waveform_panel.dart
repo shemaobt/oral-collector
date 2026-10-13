@@ -203,6 +203,7 @@ class TrimWaveformPanel extends StatelessWidget {
                   child: ExcludeRangeHandles(
                     draft: excludeEditing!.draft,
                     totalDuration: totalDuration,
+                    splitPoints: splitPoints,
                     zoom: zoom,
                     panFraction: panFraction,
                     onChanged: excludeEditing!.onChanged,

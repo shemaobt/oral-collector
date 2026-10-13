@@ -99,6 +99,7 @@ class _TrimWaveformState extends State<TrimWaveform> {
     for (final p in widget.splitPoints) {
       if ((fraction - p).abs() < minGap) return;
     }
+    if (isNearRangeEdge(fraction, widget.excludedRanges, minGap)) return;
     HapticFeedback.lightImpact();
     widget.onSplitPointsChanged([...widget.splitPoints, fraction]);
   }
@@ -116,6 +117,7 @@ class _TrimWaveformState extends State<TrimWaveform> {
     // all, and `clamp` throws on inverted bounds. Hold the handle silently.
     if (maxVal < minVal) return;
     final clamped = newFraction.clamp(minVal, maxVal);
+    if (isNearRangeEdge(clamped, widget.excludedRanges, minGap)) return;
 
     final updated = [...widget.splitPoints];
     final idx = updated.indexOf(oldValue);

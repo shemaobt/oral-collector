@@ -1,5 +1,3 @@
-const double _minPartFraction = 1e-6;
-
 class ExcludedRange {
   const ExcludedRange({required this.startFraction, required this.endFraction});
 
@@ -19,6 +17,16 @@ class KeptPart {
   final double endFraction;
 }
 
+bool isNearRangeEdge(
+  double fraction,
+  List<ExcludedRange> ranges,
+  double minGap,
+) => ranges.any(
+  (r) =>
+      (fraction - r.startFraction).abs() < minGap ||
+      (fraction - r.endFraction).abs() < minGap,
+);
+
 List<KeptPart> keptPartsOf({
   required List<double> splitPoints,
   required Set<int> excludedSegments,
@@ -29,7 +37,7 @@ List<KeptPart> keptPartsOf({
     ...[...splitPoints]..sort(),
     1.0,
   ];
-  final holes = _mergedRanges(excludedRanges);
+  final holes = mergedRanges(excludedRanges);
   return [
     for (var i = 0; i < boundaries.length - 1; i++)
       if (!excludedSegments.contains(i))
@@ -37,7 +45,7 @@ List<KeptPart> keptPartsOf({
   ];
 }
 
-List<ExcludedRange> _mergedRanges(List<ExcludedRange> ranges) {
+List<ExcludedRange> mergedRanges(List<ExcludedRange> ranges) {
   final sorted = [...ranges]
     ..sort((a, b) => a.startFraction.compareTo(b.startFraction));
   final merged = <ExcludedRange>[];
@@ -70,7 +78,7 @@ List<KeptPart> _outsideHoles(
   for (final h in holes) {
     if (h.endFraction <= cursor) continue;
     if (h.startFraction >= end) break;
-    if (h.startFraction - cursor > _minPartFraction) {
+    if (h.startFraction > cursor) {
       parts.add(
         KeptPart(
           segmentIndex: segmentIndex,
@@ -81,7 +89,7 @@ List<KeptPart> _outsideHoles(
     }
     cursor = h.endFraction;
   }
-  if (end - cursor > _minPartFraction) {
+  if (cursor < end) {
     parts.add(
       KeptPart(
         segmentIndex: segmentIndex,

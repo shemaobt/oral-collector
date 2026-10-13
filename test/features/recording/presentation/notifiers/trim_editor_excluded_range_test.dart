@@ -179,4 +179,19 @@ void main() {
     ];
     expect(parts, [(0.0, 18.0, 'g9'), (32.0, 40.0, 'g9'), (40.0, 60.0, 'g0')]);
   });
+
+  test('Two overlapping ranges count as one excluded stretch', () async {
+    final n = await openEditor();
+    exclude(n, 10, 30);
+    exclude(n, 20, 40);
+
+    final outcome = await n.saveSplit(
+      isWeb: false,
+      localeTag: 'pt',
+      mode: TrimSaveMode.removeStretch,
+    );
+
+    expect((outcome as TrimSaveSucceeded).excludedCount, 1);
+    expect(asSeconds(joinRequest!.keptRanges), [(0.0, 10.0), (40.0, 60.0)]);
+  });
 }

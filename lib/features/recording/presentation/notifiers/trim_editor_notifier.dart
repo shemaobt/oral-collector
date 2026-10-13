@@ -292,8 +292,7 @@ class TrimEditorNotifier
 
     final saveMode = isWeb ? state.decision.mode : mode ?? state.decision.mode;
     final keptCount = state.keptCount;
-    final excludedCount =
-        state.excludedSegments.length + state.excludedRanges.length;
+    final excludedCount = state.excludedStretchCount;
 
     state = state.copyWith(isSaving: true);
     try {

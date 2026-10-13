@@ -7,6 +7,7 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:oral_collector/features/recording/presentation/excluded_range.dart';
 import 'package:oral_collector/features/recording/presentation/widgets/trim_waveform.dart';
 import 'package:oral_collector/l10n/app_localizations.dart';
 
@@ -21,6 +22,7 @@ Widget _harness({
   required List<List<double>> emissions,
   double zoom = 1.0,
   double panFraction = 0.0,
+  List<ExcludedRange> excludedRanges = const [],
 }) {
   var splits = initialSplits;
   return MaterialApp(
@@ -34,6 +36,7 @@ Widget _harness({
             builder: (context, setInner) => TrimWaveform(
               bars: List<double>.filled(64, 0.5),
               splitPoints: splits,
+              excludedRanges: excludedRanges,
               totalDuration: totalDuration,
               zoom: zoom,
               panFraction: panFraction,
@@ -270,6 +273,31 @@ void main() {
       final added = emissions.single.where((p) => p != 0.5).toList();
       expect(added, hasLength(1));
       expect(_seconds(added.single, thirtyThree), closeTo(17.0, 0.1));
+    },
+  );
+
+  testWidgets(
+    'toque longo a 100 ms da borda de um trecho excluído não cria corte',
+    (tester) async {
+      final emissions = <List<double>>[];
+      await tester.pumpWidget(
+        _harness(
+          totalDuration: const Duration(minutes: 1),
+          initialSplits: const [],
+          emissions: emissions,
+          excludedRanges: const [
+            ExcludedRange(startFraction: 0.3, endFraction: 0.5),
+          ],
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.longPressAt(
+        _atSeconds(tester, const Duration(minutes: 1), 30.1),
+      );
+      await tester.pumpAndSettle();
+
+      expect(emissions, isEmpty);
     },
   );
 }

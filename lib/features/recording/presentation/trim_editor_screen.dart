@@ -14,11 +14,14 @@ import '../../../core/l10n/content_l10n.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../shared/utils/error_helpers.dart';
+import '../../../shared/utils/format.dart';
 import '../../genre/presentation/notifiers/genre_notifier.dart';
 import '../data/providers.dart';
 import '../data/services/waveform_loader.dart';
 import '../domain/entities/classification.dart';
 import '../domain/entities/register.dart';
+import 'exclude_range_draft.dart';
+import 'excluded_range.dart';
 import 'notifiers/recording_player_notifier.dart';
 import 'notifiers/trim_editor_notifier.dart';
 import 'notifiers/trim_editor_state.dart';
@@ -381,17 +384,9 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
   }
 
   void _addSplitAtPlayhead() {
-    final totalMs = _state.totalDuration.inMilliseconds;
-    if (totalMs <= 0) return;
-    final fraction = (_transportPosition.inMilliseconds / totalMs).clamp(
-      0.0,
-      1.0,
-    );
-    final minGap = minSplitGapFraction(_state.totalDuration);
-    if (fraction <= minGap || fraction >= 1.0 - minGap) return;
-    for (final p in _state.splitPoints) {
-      if ((fraction - p).abs() < minGap) return;
-    }
+    if (!_canSplitAtPlayhead) return;
+    final fraction =
+        _transportPosition.inMilliseconds / _state.totalDuration.inMilliseconds;
     HapticFeedback.lightImpact();
     _notifier.setSplitPoints([..._state.splitPoints, fraction]);
   }
@@ -402,6 +397,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
     final fraction = _transportPosition.inMilliseconds / totalMs;
     final minGap = minSplitGapFraction(_state.totalDuration);
     if (fraction <= minGap || fraction >= 1.0 - minGap) return false;
+    if (isNearRangeEdge(fraction, _state.excludedRanges, minGap)) return false;
     for (final p in _state.splitPoints) {
       if ((fraction - p).abs() < minGap) return false;
     }
@@ -411,23 +407,21 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
   void _startExcludeRange() {
     final total = _state.totalDuration;
     if (total <= Duration.zero) return;
-    final before = _transportPosition - kExcludeRangeReach;
-    final after = _transportPosition + kExcludeRangeReach;
     setState(
-      () => _excludeDraft = (
-        start: before < Duration.zero ? Duration.zero : before,
-        end: after > total ? total : after,
+      () => _excludeDraft = initialExcludeDraft(
+        playhead: _transportPosition,
+        total: total,
+        splitPoints: _state.splitPoints,
       ),
     );
   }
 
   void _confirmExcludeRange() {
     final draft = _excludeDraft;
-    final totalMs = _state.totalDuration.inMilliseconds;
-    if (draft == null || totalMs <= 0) return;
+    if (draft == null) return;
     final accepted = _notifier.confirmExcludedRange(
-      startFraction: draft.start.inMilliseconds / totalMs,
-      endFraction: draft.end.inMilliseconds / totalMs,
+      startFraction: draft.start,
+      endFraction: draft.end,
     );
     if (accepted) {
       setState(() => _excludeDraft = null);
@@ -575,16 +569,6 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
     return confirmed == true ? _state.decision.mode : null;
   }
 
-  String _fmt(Duration d) {
-    final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
-    final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
-    final ms = (d.inMilliseconds.remainder(1000) ~/ 10).toString().padLeft(
-      2,
-      '0',
-    );
-    return '$m:$s.$ms';
-  }
-
   String _fmtShort(Duration d) {
     final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
     final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
@@ -720,8 +704,8 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
               child: SegmentCard(
                 index: i,
                 total: state.segmentCount,
-                start: _fmt(state.segmentStart(i)),
-                end: _fmt(state.segmentEnd(i)),
+                start: formatPositionCentis(state.segmentStart(i)),
+                end: formatPositionCentis(state.segmentEnd(i)),
                 duration: _fmtShort(state.segmentDuration(i)),
                 isPlaying: isPlaying,
                 isExcluded: isExcluded,
@@ -836,7 +820,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
                             child: segmentsList,
                           ),
                         ),
-                        _buildActionBar(colors, isDark, hasSplits, l10n, state),
+                        _buildActionBar(colors, isDark, l10n, state),
                       ],
                     ),
                   ),
@@ -867,7 +851,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
                     ),
                   ),
                 ),
-                _buildActionBar(colors, isDark, hasSplits, l10n, state),
+                _buildActionBar(colors, isDark, l10n, state),
               ],
             );
           },
@@ -931,9 +915,9 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
           excludedRanges: state.excludedRanges,
           excludeEditing: _excludeEditing,
           hasSplits: hasSplits,
-          keptCount: state.keptSegmentIndices.length,
-          segmentCount: state.segmentCount,
-          totalDurationLabel: _fmt(state.totalDuration),
+          keptCount: state.keptCount,
+          segmentCount: state.totalPartCount,
+          totalDurationLabel: formatPositionCentis(state.totalDuration),
           totalDurationShortLabel: _fmtShort(state.totalDuration),
           playheadFraction: playheadFraction,
           onPlayheadSeek: _seekPlayheadTo,
@@ -957,7 +941,6 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
   Widget _buildActionBar(
     AppColorSet colors,
     bool isDark,
-    bool hasSplits,
     AppLocalizations l10n,
     TrimEditorState state,
   ) {
@@ -1009,7 +992,10 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
             const SizedBox(width: SpacingScale.s12),
             Expanded(
               child: ElevatedButton.icon(
-                onPressed: (state.isSaving || !state.decision.canSave)
+                onPressed:
+                    (state.isSaving ||
+                        !state.decision.canSave ||
+                        _excludeDraft != null)
                     ? null
                     : _saveSplit,
                 icon: state.isSaving
@@ -1032,9 +1018,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
                       ? l10n.trim_splitting
                       : state.decision.mode == TrimSaveMode.boostOnly
                       ? l10n.trim_applyBoost
-                      : hasSplits
-                      ? l10n.trim_saveSegments(state.keptCount)
-                      : l10n.trim_addSplitsFirst,
+                      : l10n.trim_saveSegments(state.keptCount),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: colors.accent,

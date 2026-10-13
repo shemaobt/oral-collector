@@ -5,6 +5,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/tokens.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../shared/utils/format.dart';
 
 class EditTransportBar extends StatelessWidget {
   const EditTransportBar({
@@ -27,16 +28,6 @@ class EditTransportBar extends StatelessWidget {
   final bool canSplitAtPosition;
   final bool isWeb;
   final VoidCallback? onExcludeRange;
-
-  String _fmt(Duration d) {
-    final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
-    final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
-    final cs = (d.inMilliseconds.remainder(1000) ~/ 10).toString().padLeft(
-      2,
-      '0',
-    );
-    return '$m:$s.$cs';
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -80,76 +71,23 @@ class EditTransportBar extends StatelessWidget {
           ),
           const SizedBox(width: SpacingScale.s12),
           Expanded(
-            child: RichText(
-              text: TextSpan(
-                style: theme.textTheme.labelMedium?.copyWith(
-                  color: colors.foreground,
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                  fontWeight: FontWeight.w600,
-                ),
-                children: [
-                  TextSpan(text: _fmt(position)),
-                  TextSpan(
-                    text: ' / ${_fmt(duration)}',
-                    style: theme.textTheme.labelMedium?.copyWith(
-                      color: colors.foreground.withValues(alpha: 0.45),
-                      fontWeight: FontWeight.w500,
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                    ),
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: RichText(
+                text: TextSpan(
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: colors.foreground,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                    fontWeight: FontWeight.w600,
                   ),
-                ],
-              ),
-            ),
-          ),
-          if (!isWeb && onExcludeRange != null)
-            Tooltip(
-              message: AppLocalizations.of(context).trim_excludeRange,
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () {
-                  HapticFeedback.lightImpact();
-                  onExcludeRange!();
-                },
-                child: SizedBox(
-                  width: 40,
-                  height: 40,
-                  child: Icon(
-                    LucideIcons.eraser,
-                    size: 16,
-                    color: colors.error,
-                  ),
-                ),
-              ),
-            ),
-          if (showSplitButton)
-            GestureDetector(
-              onTap: () {
-                HapticFeedback.mediumImpact();
-                onSplitAtPosition!();
-              },
-              child: Container(
-                height: 36,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: SpacingScale.s12,
-                ),
-                decoration: BoxDecoration(
-                  color: colors.accent.withValues(alpha: 0.14),
-                  borderRadius: BorderRadius.circular(RadiusScale.r8),
-                  border: Border.all(
-                    color: colors.accent.withValues(alpha: 0.45),
-                  ),
-                ),
-                alignment: Alignment.center,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(LucideIcons.scissors, size: 14, color: colors.accent),
-                    const SizedBox(width: SpacingScale.s8),
-                    Text(
-                      _fmt(position),
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: colors.accent,
-                        fontWeight: FontWeight.w700,
+                    TextSpan(text: formatPositionCentis(position)),
+                    TextSpan(
+                      text: ' / ${formatPositionCentis(duration)}',
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: colors.foreground.withValues(alpha: 0.45),
+                        fontWeight: FontWeight.w500,
                         fontFeatures: const [FontFeature.tabularFigures()],
                       ),
                     ),
@@ -157,6 +95,93 @@ class EditTransportBar extends StatelessWidget {
                 ),
               ),
             ),
+          ),
+          Flexible(
+            flex: 3,
+            child: Wrap(
+              alignment: WrapAlignment.end,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: SpacingScale.s8,
+              runSpacing: SpacingScale.s4,
+              children: [
+                if (!isWeb && onExcludeRange != null)
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () {
+                      HapticFeedback.lightImpact();
+                      onExcludeRange!();
+                    },
+                    child: Container(
+                      height: 36,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: SpacingScale.s8,
+                      ),
+                      alignment: Alignment.center,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            LucideIcons.eraser,
+                            size: 14,
+                            color: colors.error,
+                          ),
+                          const SizedBox(width: SpacingScale.s4),
+                          Text(
+                            AppLocalizations.of(context).trim_excludeRange,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: colors.error,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                if (showSplitButton)
+                  GestureDetector(
+                    onTap: () {
+                      HapticFeedback.mediumImpact();
+                      onSplitAtPosition!();
+                    },
+                    child: Container(
+                      height: 36,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: SpacingScale.s12,
+                      ),
+                      decoration: BoxDecoration(
+                        color: colors.accent.withValues(alpha: 0.14),
+                        borderRadius: BorderRadius.circular(RadiusScale.r8),
+                        border: Border.all(
+                          color: colors.accent.withValues(alpha: 0.45),
+                        ),
+                      ),
+                      alignment: Alignment.center,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            LucideIcons.scissors,
+                            size: 14,
+                            color: colors.accent,
+                          ),
+                          const SizedBox(width: SpacingScale.s8),
+                          Text(
+                            formatPositionCentis(position),
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: colors.accent,
+                              fontWeight: FontWeight.w700,
+                              fontFeatures: const [
+                                FontFeature.tabularFigures(),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
         ],
       ),
     );

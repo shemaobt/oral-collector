@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:oral_collector/core/database/app_database.dart';
 import 'package:oral_collector/features/recording/data/providers.dart';
@@ -76,7 +77,7 @@ void main() {
 
     await pumpAtTextScale(
       tester,
-      size: const Size(390, 1600),
+      size: const Size(400, 1600),
       locale: const Locale('pt'),
       overrides: [
         audioPlayerFactoryProvider.overrideWithValue(() => player),
@@ -103,9 +104,13 @@ void main() {
     return box.localToGlobal(Offset.zero) & box.size;
   }
 
+  TrimEditorNotifier editor(WidgetTester tester) => ProviderScope.containerOf(
+    tester.element(find.byType(TrimEditorScreen)),
+  ).read(trimEditorProvider(_recordingId).notifier);
+
   Future<void> placePlayheadAt(
     WidgetTester tester,
-    int seconds,
+    num seconds,
     int total,
   ) async {
     final rect = waveformRect(tester);
@@ -116,7 +121,7 @@ void main() {
   }
 
   Future<void> pressExcludeRange(WidgetTester tester) async {
-    await tester.tap(find.byTooltip(_excludeRange));
+    await tester.tap(find.text(_excludeRange));
     await settle(tester);
   }
 
@@ -268,9 +273,121 @@ void main() {
 
     await dragHandleBy(tester, kExcludeRangeStartHandleKey, 25, 60);
 
-    final startX = tester.getCenter(handle(kExcludeRangeStartHandleKey)).dx;
-    final endX = tester.getCenter(handle(kExcludeRangeEndHandleKey)).dx;
-    expect(startX, lessThanOrEqualTo(endX));
+    expect(handleTime(kExcludeRangeStartHandleKey, '00:29.75'), findsOneWidget);
+    expect(handleTime(kExcludeRangeEndHandleKey, '00:30.00'), findsOneWidget);
+  });
+
+  testWidgets('The end handle cannot be dragged back past the start handle', (
+    tester,
+  ) async {
+    await openEditor(tester, seconds: 60);
+    await placePlayheadAt(tester, 25, 60);
+    await pressExcludeRange(tester);
+
+    await dragHandleBy(tester, kExcludeRangeEndHandleKey, -25, 60);
+
+    expect(handleTime(kExcludeRangeStartHandleKey, '00:20.00'), findsOneWidget);
+    expect(handleTime(kExcludeRangeEndHandleKey, '00:20.25'), findsOneWidget);
+  });
+
+  testWidgets('Save stays disabled while the handles are open', (tester) async {
+    await openEditor(tester, seconds: 60);
+    await placePlayheadAt(tester, 25, 60);
+    await pressExcludeRange(tester);
+    await confirm(tester);
+    await pressExcludeRange(tester);
+
+    final save = tester.widget<ElevatedButton>(find.byType(ElevatedButton));
+    expect(save.onPressed, isNull);
+  });
+
+  testWidgets('A handle dropped 120 ms past a split mark lands on the mark', (
+    tester,
+  ) async {
+    await openEditor(tester, seconds: 60);
+    editor(tester).setSplitPoints([40 / 60]);
+    await placePlayheadAt(tester, 25, 60);
+    await pressExcludeRange(tester);
+
+    await dragHandleBy(tester, kExcludeRangeEndHandleKey, 10.12, 60);
+
+    expect(handleTime(kExcludeRangeEndHandleKey, '00:40.00'), findsOneWidget);
+  });
+
+  testWidgets('With the playhead at 5.1 s the start handle sits at 0 s', (
+    tester,
+  ) async {
+    await openEditor(tester, seconds: 60);
+    await placePlayheadAt(tester, 5.1, 60);
+
+    await pressExcludeRange(tester);
+
+    expect(handleTime(kExcludeRangeStartHandleKey, '00:00.00'), findsOneWidget);
+  });
+
+  testWidgets('With a range and no split mark the save button counts the two '
+      'kept parts', (tester) async {
+    await openEditor(tester, seconds: 60);
+    await placePlayheadAt(tester, 25, 60);
+    await pressExcludeRange(tester);
+    await confirm(tester);
+
+    expect(find.text('Salvar 2 segmentos'), findsOneWidget);
+  });
+
+  testWidgets('The scissors is withheld within 250 ms of a range edge', (
+    tester,
+  ) async {
+    await openEditor(tester, seconds: 60);
+    await placePlayheadAt(tester, 25, 60);
+    await pressExcludeRange(tester);
+    await confirm(tester);
+    await placePlayheadAt(tester, 35, 60);
+    expect(find.textContaining('00:35.'), findsOneWidget);
+
+    await placePlayheadAt(tester, 30.1, 60);
+
+    expect(find.textContaining('00:30.'), findsNothing);
+  });
+
+  testWidgets('Toggling a segment card off and on beside an excluded range '
+      'keeps the split mark', (tester) async {
+    await openEditor(tester, seconds: 60);
+    editor(tester).setSplitPoints([40 / 60]);
+    await placePlayheadAt(tester, 25, 60);
+    await pressExcludeRange(tester);
+    await dragHandleBy(tester, kExcludeRangeStartHandleKey, -2, 60);
+    await dragHandleBy(tester, kExcludeRangeEndHandleKey, 2, 60);
+    await confirm(tester);
+
+    await tester.tap(find.byIcon(LucideIcons.trash2).at(1));
+    await settle(tester);
+    expect(editorState(tester).excludedSegments, {1});
+    await tester.tap(find.byIcon(LucideIcons.rotateCcw));
+    await settle(tester);
+
+    final state = editorState(tester);
+    expect(state.excludedSegments, isEmpty);
+    expect(state.splitPoints, [40 / 60]);
+    expect(state.excludedRanges, hasLength(1));
+  });
+
+  testWidgets('The segment card refuses an exclusion that would leave nothing '
+      'kept beside a range', (tester) async {
+    await openEditor(tester, seconds: 60);
+    final notifier = editor(tester);
+    notifier.setSplitPoints([40 / 60]);
+    notifier.confirmExcludedRange(startFraction: 0, endFraction: 40 / 60);
+    await settle(tester);
+
+    await tester.tap(find.byIcon(LucideIcons.trash2).at(1));
+    await settle(tester);
+
+    expect(
+      find.text('Pelo menos um segmento deve ser mantido'),
+      findsOneWidget,
+    );
+    expect(editorState(tester).excludedSegments, isEmpty);
   });
 
   testWidgets('On the web the toolbar shows no «Excluir trecho» button', (
@@ -293,9 +410,9 @@ void main() {
     );
 
     await tester.pumpWidget(bar(isWeb: false));
-    expect(find.byTooltip(_excludeRange), findsOneWidget);
+    expect(find.text(_excludeRange), findsOneWidget);
 
     await tester.pumpWidget(bar(isWeb: true));
-    expect(find.byTooltip(_excludeRange), findsNothing);
+    expect(find.text(_excludeRange), findsNothing);
   });
 }
