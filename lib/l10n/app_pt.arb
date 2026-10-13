@@ -967,5 +967,10 @@
   "recording_pendencyStoryteller": "Sem narrador",
   "recording_pendencyStorytellerContext": "Quem conta esta história.",
   "recording_pendencyCount": "{count, plural, other{{count} campos a preencher}}",
-  "trim_excludeRange": "Excluir trecho"
+  "trim_excludeRange": "Excluir trecho",
+  "recording_uploadRefusedEditMessage": "O servidor recusou o áudio editado ({reason}). O áudio anterior continua publicado.",
+  "recording_uploadRefusedEditNoReasonMessage": "O servidor recusou o áudio editado. O áudio anterior continua publicado.",
+  "recording_uploadRefusedMessage": "O envio foi recusado. Você pode tentar de novo.",
+  "recording_uploadRefusalObjectMissing": "o áudio não chegou ao servidor",
+  "recording_uploadRefusalIncomplete": "o áudio chegou incompleto ou diferente do enviado"
 }

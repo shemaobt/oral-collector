@@ -5029,6 +5029,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Exclude stretch'**
   String get trim_excludeRange;
+
+  /// No description provided for @recording_uploadRefusedEditMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The server refused the edited audio ({reason}). The earlier audio is still published.'**
+  String recording_uploadRefusedEditMessage(String reason);
+
+  /// No description provided for @recording_uploadRefusedEditNoReasonMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The server refused the edited audio. The earlier audio is still published.'**
+  String get recording_uploadRefusedEditNoReasonMessage;
+
+  /// No description provided for @recording_uploadRefusedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The upload was refused. You can try again.'**
+  String get recording_uploadRefusedMessage;
+
+  /// No description provided for @recording_uploadRefusalObjectMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'the audio did not reach the server'**
+  String get recording_uploadRefusalObjectMissing;
+
+  /// No description provided for @recording_uploadRefusalIncomplete.
+  ///
+  /// In en, this message translates to:
+  /// **'the audio arrived incomplete or different from what was sent'**
+  String get recording_uploadRefusalIncomplete;
 }
 
 class _AppLocalizationsDelegate

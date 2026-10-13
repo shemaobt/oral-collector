@@ -1016,5 +1016,10 @@
   "recording_pendencyStoryteller": "Hakuna msimulizi",
   "recording_pendencyStorytellerContext": "Ni nani anayesimulia hadithi hii.",
   "recording_pendencyCount": "{count, plural, other{Sehemu {count} za kujaza}}",
-  "trim_excludeRange": "Ondoa sehemu"
+  "trim_excludeRange": "Ondoa sehemu",
+  "recording_uploadRefusedEditMessage": "Seva imekataa sauti iliyohaririwa ({reason}). Sauti ya awali bado imechapishwa.",
+  "recording_uploadRefusedEditNoReasonMessage": "Seva imekataa sauti iliyohaririwa. Sauti ya awali bado imechapishwa.",
+  "recording_uploadRefusedMessage": "Utumaji umekataliwa. Unaweza kujaribu tena.",
+  "recording_uploadRefusalObjectMissing": "sauti haikufika kwenye seva",
+  "recording_uploadRefusalIncomplete": "sauti ilifika pungufu au tofauti na iliyotumwa"
 }

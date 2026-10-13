@@ -1016,5 +1016,10 @@
   "recording_pendencyStoryteller": "화자 없음",
   "recording_pendencyStorytellerContext": "이 이야기를 들려주는 사람입니다.",
   "recording_pendencyCount": "{count, plural, other{입력할 항목 {count}개}}",
-  "trim_excludeRange": "구간 제외"
+  "trim_excludeRange": "구간 제외",
+  "recording_uploadRefusedEditMessage": "서버가 편집된 오디오를 거부했습니다({reason}). 이전 오디오는 계속 게시되어 있습니다.",
+  "recording_uploadRefusedEditNoReasonMessage": "서버가 편집된 오디오를 거부했습니다. 이전 오디오는 계속 게시되어 있습니다.",
+  "recording_uploadRefusedMessage": "업로드가 거부되었습니다. 다시 시도할 수 있습니다.",
+  "recording_uploadRefusalObjectMissing": "오디오가 서버에 도착하지 않았습니다",
+  "recording_uploadRefusalIncomplete": "오디오가 불완전하거나 보낸 것과 다르게 도착했습니다"
 }

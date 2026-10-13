@@ -1016,5 +1016,10 @@
   "recording_pendencyStoryteller": "Belum ada pencerita",
   "recording_pendencyStorytellerContext": "Siapa yang menceritakan kisah ini.",
   "recording_pendencyCount": "{count, plural, other{{count} bidang perlu diisi}}",
-  "trim_excludeRange": "Kecualikan bagian"
+  "trim_excludeRange": "Kecualikan bagian",
+  "recording_uploadRefusedEditMessage": "Server menolak audio yang diedit ({reason}). Audio sebelumnya tetap dipublikasikan.",
+  "recording_uploadRefusedEditNoReasonMessage": "Server menolak audio yang diedit. Audio sebelumnya tetap dipublikasikan.",
+  "recording_uploadRefusedMessage": "Pengiriman ditolak. Anda dapat mencoba lagi.",
+  "recording_uploadRefusalObjectMissing": "audio tidak sampai ke server",
+  "recording_uploadRefusalIncomplete": "audio tiba tidak lengkap atau berbeda dari yang dikirim"
 }

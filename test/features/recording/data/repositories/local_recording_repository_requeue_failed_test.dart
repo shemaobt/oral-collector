@@ -77,6 +77,20 @@ void main() {
     expect((await repo.getPendingUploads()).map((r) => r.id), ['exhausted']);
   });
 
+  test('a recording the server refused is put back in the queue', () async {
+    await insert(
+      'refused',
+      'failed_refused_size_mismatch',
+      retryCount: kMaxUploadRetries,
+    );
+
+    expect(await repo.getPendingUploads(), isEmpty);
+
+    expect(await repo.requeueFailedUploads('proj-1'), 1);
+
+    expect((await repo.getPendingUploads()).map((r) => r.id), ['refused']);
+  });
+
   test('a failed recording is handed a fresh budget and no backoff', () async {
     await insert(
       'stale',

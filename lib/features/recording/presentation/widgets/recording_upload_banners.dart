@@ -5,6 +5,7 @@ import '../../../../core/theme/tokens.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/classification.dart';
 import '../../domain/entities/local_recording_entity.dart';
+import '../../domain/upload_refusal.dart';
 import 'recording_action_banner.dart';
 
 /// Everything that explains a blocked upload, stacked in a fixed order.
@@ -44,6 +45,21 @@ class RecordingUploadBanners extends StatelessWidget {
     secondaryGenreId: recording.secondaryGenreId,
     secondarySubcategoryId: recording.secondarySubcategoryId,
   );
+
+  String _refusalMessage(AppLocalizations l10n) {
+    if (recording.gcsUrl == null) return l10n.recording_uploadRefusedMessage;
+    final reason = switch (refusalReasonOf(recording.uploadStatus)) {
+      UploadRefusalReason.objectMissing =>
+        l10n.recording_uploadRefusalObjectMissing,
+      UploadRefusalReason.sizeMismatch ||
+      UploadRefusalReason.checksumMismatch =>
+        l10n.recording_uploadRefusalIncomplete,
+      null => null,
+    };
+    return reason == null
+        ? l10n.recording_uploadRefusedEditNoReasonMessage
+        : l10n.recording_uploadRefusedEditMessage(reason);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -92,6 +108,15 @@ class RecordingUploadBanners extends StatelessWidget {
         banner(
           icon: LucideIcons.alertOctagon,
           message: l10n.recording_uploadExhaustedMessage,
+          actionLabel: l10n.detail_retry,
+          onAction: onRetryUpload,
+        ),
+      // The server refused the audio at confirm-upload. The local file is
+      // untouched, so a retry sends the same bytes again.
+      if (isRefusalStatus(recording.uploadStatus))
+        banner(
+          icon: LucideIcons.alertOctagon,
+          message: _refusalMessage(l10n),
           actionLabel: l10n.detail_retry,
           onAction: onRetryUpload,
         ),

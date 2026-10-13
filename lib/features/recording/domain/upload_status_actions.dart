@@ -1,4 +1,5 @@
 import 'entities/local_recording_entity.dart';
+import 'upload_refusal.dart';
 
 /// The failure statuses a bare retry can still move.
 ///
@@ -9,7 +10,9 @@ import 'entities/local_recording_entity.dart';
 /// or no audio file at all — and each has its own banner leading to its own
 /// fix, so offering a retry over them only wastes the user's tap.
 bool isRetryableFailure(String uploadStatus) =>
-    uploadStatus == 'failed' || uploadStatus == 'failed_exhausted';
+    uploadStatus == 'failed' ||
+    uploadStatus == 'failed_exhausted' ||
+    isRefusalStatus(uploadStatus);
 
 /// Whether the detail screen's status card offers a plain "Retry".
 ///

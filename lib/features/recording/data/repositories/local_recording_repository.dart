@@ -6,6 +6,7 @@ import '../../domain/entities/classification.dart';
 import '../../domain/entities/local_recording_entity.dart';
 import '../../domain/entities/pending_metadata_field.dart';
 import '../../domain/entities/review_flag.dart';
+import '../../domain/upload_refusal.dart';
 import '../local_recording_entity_to_companion.dart';
 import '../local_recording_to_entity.dart';
 
@@ -22,6 +23,11 @@ const _requeueCompanion = LocalRecordingsCompanion(
   retryCount: Value(0),
   lastRetryAt: Value(null),
 );
+
+final _refusalStatuses = [
+  refusedWithoutReasonStatus,
+  for (final reason in UploadRefusalReason.values) reason.status,
+];
 
 class LocalRecordingRepository {
   final AppDatabase _db;
@@ -374,7 +380,7 @@ class LocalRecordingRepository {
   /// `SyncNotifier.resetAndRetry`, which drains as it goes and would fan out N
   /// passes against a guard that admits one.
   ///
-  /// Scoped to the two statuses a bare retry can still move. `failed_conflict`
+  /// Scoped to the statuses a bare retry can still move: the two budget failures and the server's refusals of the audio. `failed_conflict`
   /// and `failed_description` would be refused identically until the user
   /// fixes the title or the description; `failed_missing_file` has no audio
   /// left to send. Each has its own banner leading to its own way out.
@@ -383,7 +389,8 @@ class LocalRecordingRepository {
           (t) =>
               t.projectId.equals(projectId) &
               (t.uploadStatus.equals('failed') |
-                  t.uploadStatus.equals('failed_exhausted')),
+                  t.uploadStatus.equals('failed_exhausted') |
+                  t.uploadStatus.isIn(_refusalStatuses)),
         ))
         .write(_requeueCompanion);
   }

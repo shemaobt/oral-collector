@@ -2865,4 +2865,25 @@ class AppLocalizationsTpi extends AppLocalizations {
 
   @override
   String get trim_excludeRange => 'Rausim wanpela hap';
+
+  @override
+  String recording_uploadRefusedEditMessage(String reason) {
+    return 'Server i no laikim edited audio ($reason). Audio bipo yet i stap pablis.';
+  }
+
+  @override
+  String get recording_uploadRefusedEditNoReasonMessage =>
+      'Server i no laikim edited audio. Audio bipo yet i stap pablis.';
+
+  @override
+  String get recording_uploadRefusedMessage =>
+      'Server i no laikim dispela send. Yu ken traim gen.';
+
+  @override
+  String get recording_uploadRefusalObjectMissing =>
+      'audio i no kamap long server';
+
+  @override
+  String get recording_uploadRefusalIncomplete =>
+      'audio i kamap liklik tasol o narapela kain long wanem i go';
 }

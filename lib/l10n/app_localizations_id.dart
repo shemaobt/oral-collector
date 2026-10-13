@@ -2884,4 +2884,25 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get trim_excludeRange => 'Kecualikan bagian';
+
+  @override
+  String recording_uploadRefusedEditMessage(String reason) {
+    return 'Server menolak audio yang diedit ($reason). Audio sebelumnya tetap dipublikasikan.';
+  }
+
+  @override
+  String get recording_uploadRefusedEditNoReasonMessage =>
+      'Server menolak audio yang diedit. Audio sebelumnya tetap dipublikasikan.';
+
+  @override
+  String get recording_uploadRefusedMessage =>
+      'Pengiriman ditolak. Anda dapat mencoba lagi.';
+
+  @override
+  String get recording_uploadRefusalObjectMissing =>
+      'audio tidak sampai ke server';
+
+  @override
+  String get recording_uploadRefusalIncomplete =>
+      'audio tiba tidak lengkap atau berbeda dari yang dikirim';
 }

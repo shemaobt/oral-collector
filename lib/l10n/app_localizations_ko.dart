@@ -2777,4 +2777,23 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get trim_excludeRange => '구간 제외';
+
+  @override
+  String recording_uploadRefusedEditMessage(String reason) {
+    return '서버가 편집된 오디오를 거부했습니다($reason). 이전 오디오는 계속 게시되어 있습니다.';
+  }
+
+  @override
+  String get recording_uploadRefusedEditNoReasonMessage =>
+      '서버가 편집된 오디오를 거부했습니다. 이전 오디오는 계속 게시되어 있습니다.';
+
+  @override
+  String get recording_uploadRefusedMessage => '업로드가 거부되었습니다. 다시 시도할 수 있습니다.';
+
+  @override
+  String get recording_uploadRefusalObjectMissing => '오디오가 서버에 도착하지 않았습니다';
+
+  @override
+  String get recording_uploadRefusalIncomplete =>
+      '오디오가 불완전하거나 보낸 것과 다르게 도착했습니다';
 }

@@ -1016,5 +1016,10 @@
   "recording_pendencyStoryteller": "कोई कथाकार नहीं",
   "recording_pendencyStorytellerContext": "यह कहानी कौन सुनाता है।",
   "recording_pendencyCount": "{count, plural, other{{count} फ़ील्ड भरने हैं}}",
-  "trim_excludeRange": "अंश बाहर करें"
+  "trim_excludeRange": "अंश बाहर करें",
+  "recording_uploadRefusedEditMessage": "सर्वर ने संपादित ऑडियो अस्वीकार कर दिया ({reason})। पहले वाला ऑडियो अब भी प्रकाशित है।",
+  "recording_uploadRefusedEditNoReasonMessage": "सर्वर ने संपादित ऑडियो अस्वीकार कर दिया। पहले वाला ऑडियो अब भी प्रकाशित है।",
+  "recording_uploadRefusedMessage": "अपलोड अस्वीकार कर दिया गया। आप फिर से कोशिश कर सकते हैं।",
+  "recording_uploadRefusalObjectMissing": "ऑडियो सर्वर तक नहीं पहुँचा",
+  "recording_uploadRefusalIncomplete": "ऑडियो अधूरा या भेजे गए से अलग पहुँचा"
 }
