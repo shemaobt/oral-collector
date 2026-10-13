@@ -27,6 +27,23 @@ bool isNearRangeEdge(
       (fraction - r.endFraction).abs() < minGap,
 );
 
+double keepClearOfRangeEdges(
+  double fraction,
+  double previous,
+  List<ExcludedRange> ranges,
+  double minGap,
+) {
+  var clear = fraction;
+  for (final r in ranges) {
+    for (final edge in [r.startFraction, r.endFraction]) {
+      if ((clear - edge).abs() < minGap) {
+        clear = previous < edge ? edge - minGap : edge + minGap;
+      }
+    }
+  }
+  return clear;
+}
+
 List<KeptPart> keptPartsOf({
   required List<double> splitPoints,
   required Set<int> excludedSegments,

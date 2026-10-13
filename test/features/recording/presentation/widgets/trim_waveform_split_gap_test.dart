@@ -300,4 +300,32 @@ void main() {
       expect(emissions, isEmpty);
     },
   );
+
+  testWidgets(
+    'arrastar um corte contra a borda de um trecho excluído o segura a 250 ms',
+    (tester) async {
+      final emissions = <List<double>>[];
+      await tester.pumpWidget(
+        _harness(
+          totalDuration: const Duration(minutes: 1),
+          initialSplits: const [1 / 3],
+          emissions: emissions,
+          excludedRanges: const [
+            ExcludedRange(startFraction: 0.5, endFraction: 0.7),
+          ],
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final from = _atSeconds(tester, const Duration(minutes: 1), 20);
+      final to = _atSeconds(tester, const Duration(minutes: 1), 30.1);
+      await tester.dragFrom(from, to - from);
+      await tester.pumpAndSettle();
+
+      expect(
+        _seconds(emissions.last.single, const Duration(minutes: 1)),
+        closeTo(29.75, 0.01),
+      );
+    },
+  );
 }

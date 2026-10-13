@@ -411,7 +411,10 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
       () => _excludeDraft = initialExcludeDraft(
         playhead: _transportPosition,
         total: total,
-        splitPoints: _state.splitPoints,
+        boundaryPoints: boundaryPointsOf(
+          _state.splitPoints,
+          _state.excludedRanges,
+        ),
       ),
     );
   }

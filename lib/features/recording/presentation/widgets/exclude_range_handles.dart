@@ -35,7 +35,7 @@ class ExcludeRangeHandles extends StatefulWidget {
     super.key,
     required this.draft,
     required this.totalDuration,
-    required this.splitPoints,
+    required this.snapPoints,
     required this.zoom,
     required this.panFraction,
     required this.onChanged,
@@ -43,7 +43,7 @@ class ExcludeRangeHandles extends StatefulWidget {
 
   final ExcludeRangeDraft draft;
   final Duration totalDuration;
-  final List<double> splitPoints;
+  final List<double> snapPoints;
   final double zoom;
   final double panFraction;
   final ValueChanged<ExcludeRangeDraft> onChanged;
@@ -65,7 +65,7 @@ class _ExcludeRangeHandlesState extends State<ExcludeRangeHandles> {
     );
     return snapToBoundary(
       fraction,
-      widget.splitPoints,
+      widget.snapPoints,
       minSplitGapFraction(widget.totalDuration),
     );
   }

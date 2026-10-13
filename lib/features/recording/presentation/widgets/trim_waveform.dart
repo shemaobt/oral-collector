@@ -116,8 +116,12 @@ class _TrimWaveformState extends State<TrimWaveform> {
     // On a recording shorter than twice the floor there is no legal position at
     // all, and `clamp` throws on inverted bounds. Hold the handle silently.
     if (maxVal < minVal) return;
-    final clamped = newFraction.clamp(minVal, maxVal);
-    if (isNearRangeEdge(clamped, widget.excludedRanges, minGap)) return;
+    final clamped = keepClearOfRangeEdges(
+      newFraction.clamp(minVal, maxVal),
+      oldValue,
+      widget.excludedRanges,
+      minGap,
+    );
 
     final updated = [...widget.splitPoints];
     final idx = updated.indexOf(oldValue);

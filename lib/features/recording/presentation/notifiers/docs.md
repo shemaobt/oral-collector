@@ -263,7 +263,8 @@ Path: @/lib/features/recording/presentation/notifiers
   - **Editing mutations**: `setSplitPoints` (re-derives boundaries and
     remaps per-segment taxonomy via the top-level `remapTaxonomyBySig`
     so a small edit keeps a segment's overrides while a re-split drops
-    them), `toggleExclude` and `confirmExcludedRange` (both return `false`
+    them), `toggleExclude` and `confirmExcludedRange` (which first snaps
+    each range edge to a boundary within 250 ms; both return `false`
     when nothing would be kept, counting excluded ranges as well as excluded
     segments, so the widget surfaces the snackbar),
     `setSegmentTaxonomy`/`copyFromPrevious`, `setGain`, `clearAllSplits`

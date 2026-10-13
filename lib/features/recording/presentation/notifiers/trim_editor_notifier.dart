@@ -16,6 +16,7 @@ import '../../domain/audible_gain.dart';
 import '../../domain/entities/local_recording_entity.dart';
 import '../../domain/entities/split_segment_request.dart';
 import '../../domain/repositories/recording_api_repository.dart';
+import '../exclude_range_draft.dart';
 import '../excluded_range.dart';
 import '../trim_edit_decision.dart';
 import '../trim_load_error.dart';
@@ -197,14 +198,21 @@ class TrimEditorNotifier
   bool confirmExcludedRange({
     required double startFraction,
     required double endFraction,
-  }) => _applyIfSomethingStaysKept(
-    state.copyWith(
-      excludedRanges: [
-        ...state.excludedRanges,
-        ExcludedRange(startFraction: startFraction, endFraction: endFraction),
-      ],
-    ),
-  );
+  }) {
+    final minGap = minSplitGapFraction(state.totalDuration);
+    final points = boundaryPointsOf(state.splitPoints, state.excludedRanges);
+    final start = snapToBoundary(startFraction, points, minGap);
+    final end = snapToBoundary(endFraction, points, minGap);
+    if (end <= start) return true;
+    return _applyIfSomethingStaysKept(
+      state.copyWith(
+        excludedRanges: [
+          ...state.excludedRanges,
+          ExcludedRange(startFraction: start, endFraction: end),
+        ],
+      ),
+    );
+  }
 
   bool _applyIfSomethingStaysKept(TrimEditorState next) {
     if (next.keptParts.isEmpty) return false;

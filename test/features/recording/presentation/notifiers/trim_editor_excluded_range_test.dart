@@ -194,4 +194,55 @@ void main() {
     expect((outcome as TrimSaveSucceeded).excludedCount, 1);
     expect(asSeconds(joinRequest!.keptRanges), [(0.0, 10.0), (40.0, 60.0)]);
   });
+
+  List<(double, double)> keptSeconds(TrimEditorNotifier n) => [
+    for (final p in n.state.keptParts)
+      (
+        double.parse((p.startFraction * 60).toStringAsFixed(3)),
+        double.parse((p.endFraction * 60).toStringAsFixed(3)),
+      ),
+  ];
+
+  test('Two ranges 100 ms apart leave no kept part between them', () async {
+    final n = await openEditor();
+    exclude(n, 10, 20);
+
+    exclude(n, 20.1, 30);
+
+    expect(keptSeconds(n), [(0.0, 10.0), (30.0, 60.0)]);
+  });
+
+  test('A range ending 100 ms before the end leaves no tail', () async {
+    final n = await openEditor();
+
+    exclude(n, 20, 59.9);
+
+    expect(keptSeconds(n), [(0.0, 20.0)]);
+  });
+
+  test('A range starting 100 ms after the start leaves no head', () async {
+    final n = await openEditor();
+
+    exclude(n, 0.1, 30);
+
+    expect(keptSeconds(n), [(30.0, 60.0)]);
+  });
+
+  test('A range ending 50 ms before a split mark leaves no part beside the '
+      'mark', () async {
+    final n = await openEditor();
+    n.setSplitPoints([fraction(40)]);
+
+    exclude(n, 20, 39.95);
+
+    expect(keptSeconds(n), [(0.0, 20.0), (40.0, 60.0)]);
+  });
+
+  test('A kept part of exactly 250 ms is left alone', () async {
+    final n = await openEditor();
+
+    exclude(n, 20, 59.75);
+
+    expect(keptSeconds(n), [(0.0, 20.0), (59.75, 60.0)]);
+  });
 }

@@ -47,34 +47,33 @@ class EditTransportBar extends StatelessWidget {
         borderRadius: BorderRadius.circular(RadiusScale.r12),
         border: Border.all(color: colors.border.withValues(alpha: 0.4)),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          GestureDetector(
-            onTap: () {
-              HapticFeedback.lightImpact();
-              onPlayPause();
-            },
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: colors.accent,
-                borderRadius: BorderRadius.circular(RadiusScale.r8),
+          Row(
+            children: [
+              GestureDetector(
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  onPlayPause();
+                },
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: colors.accent,
+                    borderRadius: BorderRadius.circular(RadiusScale.r8),
+                  ),
+                  alignment: Alignment.center,
+                  child: Icon(
+                    isPlaying ? LucideIcons.pause : LucideIcons.play,
+                    size: 16,
+                    color: AppColors.white,
+                  ),
+                ),
               ),
-              alignment: Alignment.center,
-              child: Icon(
-                isPlaying ? LucideIcons.pause : LucideIcons.play,
-                size: 16,
-                color: AppColors.white,
-              ),
-            ),
-          ),
-          const SizedBox(width: SpacingScale.s12),
-          Expanded(
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.centerLeft,
-              child: RichText(
+              const SizedBox(width: SpacingScale.s12),
+              RichText(
                 text: TextSpan(
                   style: theme.textTheme.labelMedium?.copyWith(
                     color: colors.foreground,
@@ -94,11 +93,11 @@ class EditTransportBar extends StatelessWidget {
                   ],
                 ),
               ),
-            ),
+            ],
           ),
-          Flexible(
-            flex: 3,
-            child: Wrap(
+          if ((!isWeb && onExcludeRange != null) || showSplitButton) ...[
+            const SizedBox(height: SpacingScale.s8),
+            Wrap(
               alignment: WrapAlignment.end,
               crossAxisAlignment: WrapCrossAlignment.center,
               spacing: SpacingScale.s8,
@@ -126,11 +125,15 @@ class EditTransportBar extends StatelessWidget {
                             color: colors.error,
                           ),
                           const SizedBox(width: SpacingScale.s4),
-                          Text(
-                            AppLocalizations.of(context).trim_excludeRange,
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: colors.error,
-                              fontWeight: FontWeight.w700,
+                          Flexible(
+                            child: Text(
+                              AppLocalizations.of(context).trim_excludeRange,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: colors.error,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                           ),
                         ],
@@ -165,14 +168,18 @@ class EditTransportBar extends StatelessWidget {
                             color: colors.accent,
                           ),
                           const SizedBox(width: SpacingScale.s8),
-                          Text(
-                            formatPositionCentis(position),
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: colors.accent,
-                              fontWeight: FontWeight.w700,
-                              fontFeatures: const [
-                                FontFeature.tabularFigures(),
-                              ],
+                          Flexible(
+                            child: Text(
+                              formatPositionCentis(position),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: colors.accent,
+                                fontWeight: FontWeight.w700,
+                                fontFeatures: const [
+                                  FontFeature.tabularFigures(),
+                                ],
+                              ),
                             ),
                           ),
                         ],
@@ -181,7 +188,7 @@ class EditTransportBar extends StatelessWidget {
                   ),
               ],
             ),
-          ),
+          ],
         ],
       ),
     );

@@ -5,6 +5,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/tokens.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../exclude_range_draft.dart';
 import '../excluded_range.dart';
 import 'exclude_range_handles.dart';
 import 'trim_waveform.dart';
@@ -203,7 +204,7 @@ class TrimWaveformPanel extends StatelessWidget {
                   child: ExcludeRangeHandles(
                     draft: excludeEditing!.draft,
                     totalDuration: totalDuration,
-                    splitPoints: splitPoints,
+                    snapPoints: boundaryPointsOf(splitPoints, excludedRanges),
                     zoom: zoom,
                     panFraction: panFraction,
                     onChanged: excludeEditing!.onChanged,
