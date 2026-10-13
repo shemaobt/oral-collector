@@ -4,6 +4,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/tokens.dart';
+import '../../../../l10n/app_localizations.dart';
 
 class EditTransportBar extends StatelessWidget {
   const EditTransportBar({
@@ -14,6 +15,8 @@ class EditTransportBar extends StatelessWidget {
     required this.onPlayPause,
     this.onSplitAtPosition,
     this.canSplitAtPosition = false,
+    this.isWeb = false,
+    this.onExcludeRange,
   });
 
   final bool isPlaying;
@@ -22,6 +25,8 @@ class EditTransportBar extends StatelessWidget {
   final VoidCallback onPlayPause;
   final VoidCallback? onSplitAtPosition;
   final bool canSplitAtPosition;
+  final bool isWeb;
+  final VoidCallback? onExcludeRange;
 
   String _fmt(Duration d) {
     final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
@@ -96,6 +101,26 @@ class EditTransportBar extends StatelessWidget {
               ),
             ),
           ),
+          if (!isWeb && onExcludeRange != null)
+            Tooltip(
+              message: AppLocalizations.of(context).trim_excludeRange,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  onExcludeRange!();
+                },
+                child: SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: Icon(
+                    LucideIcons.eraser,
+                    size: 16,
+                    color: colors.error,
+                  ),
+                ),
+              ),
+            ),
           if (showSplitButton)
             GestureDetector(
               onTap: () {

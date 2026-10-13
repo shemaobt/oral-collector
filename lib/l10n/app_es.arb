@@ -1015,5 +1015,7 @@
   "recording_pendencyDescriptionContext": "Unas palabras sobre lo que ocurre en la grabación.",
   "recording_pendencyStoryteller": "Sin narrador",
   "recording_pendencyStorytellerContext": "Quién cuenta esta historia.",
-  "recording_pendencyCount": "{count, plural, other{{count} campos por completar}}"
+  "recording_pendencyCount": "{count, plural, other{{count} campos por completar}}",
+  "trim_excludeRange": "Excluir tramo",
+  "trim_excludeRangeConfirm": "Excluir"
 }

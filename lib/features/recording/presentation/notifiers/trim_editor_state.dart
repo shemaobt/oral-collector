@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart' show immutable;
 
 import '../../domain/entities/local_recording_entity.dart';
+import '../excluded_range.dart';
 import '../trim_edit_decision.dart';
 
 /// Editing + load state for the trim editor, extracted from the screen so the
@@ -23,6 +24,7 @@ class TrimEditorState {
     this.totalDuration = Duration.zero,
     this.splitPoints = const [],
     this.excludedSegments = const {},
+    this.excludedRanges = const [],
     this.gainDb = 0.0,
     this.segGenreBySig = const {},
     this.segSubcatBySig = const {},
@@ -42,6 +44,7 @@ class TrimEditorState {
   final Duration totalDuration;
   final List<double> splitPoints;
   final Set<int> excludedSegments;
+  final List<ExcludedRange> excludedRanges;
   final double gainDb;
   final Map<String, String?> segGenreBySig;
   final Map<String, String?> segSubcatBySig;
@@ -53,7 +56,9 @@ class TrimEditorState {
 
   int get segmentCount => boundaries.length - 1;
 
-  int get keptCount => segmentCount - excludedSegments.length;
+  List<KeptPart> get keptParts => decision.keptParts;
+
+  int get keptCount => keptParts.length;
 
   List<int> get keptSegmentIndices => [
     for (var i = 0; i < segmentCount; i++)
@@ -67,6 +72,13 @@ class TrimEditorState {
   Duration segmentEnd(int i) => Duration(
     milliseconds: (boundaries[i + 1] * totalDuration.inMilliseconds).round(),
   );
+
+  Duration partStart(KeptPart part) => _atFraction(part.startFraction);
+
+  Duration partEnd(KeptPart part) => _atFraction(part.endFraction);
+
+  Duration _atFraction(double fraction) =>
+      Duration(milliseconds: (fraction * totalDuration.inMilliseconds).round());
 
   Duration segmentDuration(int i) => segmentEnd(i) - segmentStart(i);
 
@@ -100,6 +112,7 @@ class TrimEditorState {
   TrimEditDecision get decision => TrimEditDecision(
     splitPoints: splitPoints,
     excludedSegments: excludedSegments,
+    excludedRanges: excludedRanges,
     gainDb: gainDb,
     totalDuration: totalDuration,
   );
@@ -116,6 +129,7 @@ class TrimEditorState {
     Duration? totalDuration,
     List<double>? splitPoints,
     Set<int>? excludedSegments,
+    List<ExcludedRange>? excludedRanges,
     double? gainDb,
     Map<String, String?>? segGenreBySig,
     Map<String, String?>? segSubcatBySig,
@@ -132,6 +146,7 @@ class TrimEditorState {
       totalDuration: totalDuration ?? this.totalDuration,
       splitPoints: splitPoints ?? this.splitPoints,
       excludedSegments: excludedSegments ?? this.excludedSegments,
+      excludedRanges: excludedRanges ?? this.excludedRanges,
       gainDb: gainDb ?? this.gainDb,
       segGenreBySig: segGenreBySig ?? this.segGenreBySig,
       segSubcatBySig: segSubcatBySig ?? this.segSubcatBySig,

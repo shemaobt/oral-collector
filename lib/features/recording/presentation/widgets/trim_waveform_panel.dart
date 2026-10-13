@@ -5,6 +5,8 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/tokens.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../excluded_range.dart';
+import 'exclude_range_handles.dart';
 import 'trim_waveform.dart';
 
 const Key kTrimMinimapKey = Key('trim_minimap_scrubber');
@@ -24,6 +26,8 @@ class TrimWaveformPanel extends StatelessWidget {
     required this.totalDurationLabel,
     required this.totalDurationShortLabel,
     required this.onClearAll,
+    this.excludedRanges = const [],
+    this.excludeEditing,
     this.playheadFraction,
     this.onPlayheadSeek,
     this.onSeekAndPlay,
@@ -44,6 +48,8 @@ class TrimWaveformPanel extends StatelessWidget {
   final ValueChanged<List<double>> onSplitPointsChanged;
   final int? playingSegment;
   final Set<int> excludedSegments;
+  final List<ExcludedRange> excludedRanges;
+  final ExcludeRangeEditing? excludeEditing;
   final bool hasSplits;
   final int keptCount;
   final int segmentCount;
@@ -174,20 +180,41 @@ class TrimWaveformPanel extends StatelessWidget {
                 },
               ),
             ),
-          TrimWaveform(
-            bars: waveformBars,
-            splitPoints: splitPoints,
-            totalDuration: totalDuration,
-            onSplitPointsChanged: onSplitPointsChanged,
-            playingSegment: playingSegment,
-            excludedSegments: excludedSegments,
-            playheadFraction: playheadFraction,
-            onPlayheadSeek: onPlayheadSeek,
-            onSeekAndPlay: onSeekAndPlay,
-            zoom: zoom,
-            panFraction: panFraction,
-            onZoomPanChanged: onZoomPanChanged,
+          Stack(
+            children: [
+              TrimWaveform(
+                bars: waveformBars,
+                splitPoints: splitPoints,
+                totalDuration: totalDuration,
+                onSplitPointsChanged: onSplitPointsChanged,
+                playingSegment: playingSegment,
+                excludedSegments: excludedSegments,
+                excludedRanges: excludedRanges,
+                allowSplit: excludeEditing == null,
+                playheadFraction: playheadFraction,
+                onPlayheadSeek: onPlayheadSeek,
+                onSeekAndPlay: onSeekAndPlay,
+                zoom: zoom,
+                panFraction: panFraction,
+                onZoomPanChanged: onZoomPanChanged,
+              ),
+              if (excludeEditing != null)
+                Positioned.fill(
+                  child: ExcludeRangeHandles(
+                    draft: excludeEditing!.draft,
+                    totalDuration: totalDuration,
+                    zoom: zoom,
+                    panFraction: panFraction,
+                    onChanged: excludeEditing!.onChanged,
+                  ),
+                ),
+            ],
           ),
+          if (excludeEditing != null)
+            ExcludeRangeActions(
+              onConfirm: excludeEditing!.onConfirm,
+              onCancel: excludeEditing!.onCancel,
+            ),
           const SizedBox(height: SpacingScale.s8),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,

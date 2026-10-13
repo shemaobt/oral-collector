@@ -2892,4 +2892,10 @@ class AppLocalizationsPt extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get trim_excludeRange => 'Excluir trecho';
+
+  @override
+  String get trim_excludeRangeConfirm => 'Excluir';
 }

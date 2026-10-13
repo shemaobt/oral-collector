@@ -25,6 +25,7 @@ import 'notifiers/trim_editor_state.dart';
 import 'trim_edit_decision.dart';
 import 'widgets/edit_transport_bar.dart';
 import 'widgets/edit_volume_control.dart';
+import 'widgets/exclude_range_handles.dart';
 import 'widgets/playback_key_handler.dart';
 import 'widgets/segment_card.dart';
 import 'widgets/segment_taxonomy_sheet.dart';
@@ -56,6 +57,8 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
   Duration _transportPosition = Duration.zero;
   final Stopwatch _playheadThrottle = Stopwatch()..start();
   final Stopwatch _sinceLocalSeek = Stopwatch();
+
+  ExcludeRangeDraft? _excludeDraft;
 
   double _zoom = 1.0;
   double _panFraction = 0.0;
@@ -405,6 +408,39 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
     return true;
   }
 
+  void _startExcludeRange() {
+    final total = _state.totalDuration;
+    if (total <= Duration.zero) return;
+    const reach = Duration(seconds: 5);
+    final before = _transportPosition - reach;
+    final after = _transportPosition + reach;
+    setState(
+      () => _excludeDraft = (
+        start: before < Duration.zero ? Duration.zero : before,
+        end: after > total ? total : after,
+      ),
+    );
+  }
+
+  void _confirmExcludeRange() {
+    final draft = _excludeDraft;
+    final totalMs = _state.totalDuration.inMilliseconds;
+    if (draft == null || totalMs <= 0) return;
+    final accepted = _notifier.confirmExcludedRange(
+      startFraction: draft.start.inMilliseconds / totalMs,
+      endFraction: draft.end.inMilliseconds / totalMs,
+    );
+    if (accepted) {
+      setState(() => _excludeDraft = null);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context).trim_atLeastOneSegment),
+        ),
+      );
+    }
+  }
+
   void _toggleExclude(int index) {
     HapticFeedback.lightImpact();
     if (!_notifier.toggleExclude(index)) {
@@ -630,6 +666,19 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
         ? (_transportPosition.inMilliseconds / totalMs).clamp(0.0, 1.0)
         : null;
 
+    final hasExclusion =
+        state.excludedSegments.isNotEmpty || state.excludedRanges.isNotEmpty;
+    final restoreAll = GestureDetector(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        _notifier.restoreAllExcluded();
+      },
+      child: Text(
+        l10n.trim_restoreAll,
+        style: theme.textTheme.labelSmall?.copyWith(color: colors.accent),
+      ),
+    );
+
     final segmentsList = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -644,19 +693,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
                   ),
                 ),
               ),
-              if (state.excludedSegments.isNotEmpty)
-                GestureDetector(
-                  onTap: () {
-                    HapticFeedback.lightImpact();
-                    _notifier.restoreAllExcluded();
-                  },
-                  child: Text(
-                    l10n.trim_restoreAll,
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: colors.accent,
-                    ),
-                  ),
-                ),
+              if (hasExclusion) restoreAll,
             ],
           ),
           const SizedBox(height: SpacingScale.s8),
@@ -706,7 +743,9 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
               ),
             );
           }),
-        ] else
+        ] else ...[
+          if (hasExclusion)
+            Align(alignment: Alignment.centerRight, child: restoreAll),
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(
@@ -736,6 +775,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
               ],
             ),
           ),
+        ],
       ],
     );
 
@@ -838,6 +878,17 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
     );
   }
 
+  ExcludeRangeEditing? get _excludeEditing {
+    final draft = _excludeDraft;
+    if (draft == null) return null;
+    return ExcludeRangeEditing(
+      draft: draft,
+      onChanged: (d) => setState(() => _excludeDraft = d),
+      onConfirm: _confirmExcludeRange,
+      onCancel: () => setState(() => _excludeDraft = null),
+    );
+  }
+
   Widget _buildWaveformPanel(
     AppLocalizations l10n,
     TrimEditorState state,
@@ -854,6 +905,8 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
           onPlayPause: _toggleTransport,
           canSplitAtPosition: _canSplitAtPlayhead,
           onSplitAtPosition: _addSplitAtPlayhead,
+          isWeb: kIsWeb,
+          onExcludeRange: _excludeDraft == null ? _startExcludeRange : null,
         ),
         const SizedBox(height: SpacingScale.s8),
         Padding(
@@ -877,8 +930,10 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
           onSplitPointsChanged: _notifier.setSplitPoints,
           playingSegment: _playingSegment,
           excludedSegments: state.excludedSegments,
+          excludedRanges: state.excludedRanges,
+          excludeEditing: _excludeEditing,
           hasSplits: hasSplits,
-          keptCount: state.keptCount,
+          keptCount: state.keptSegmentIndices.length,
           segmentCount: state.segmentCount,
           totalDurationLabel: _fmt(state.totalDuration),
           totalDurationShortLabel: _fmtShort(state.totalDuration),

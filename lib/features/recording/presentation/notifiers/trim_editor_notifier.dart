@@ -16,6 +16,7 @@ import '../../domain/audible_gain.dart';
 import '../../domain/entities/local_recording_entity.dart';
 import '../../domain/entities/split_segment_request.dart';
 import '../../domain/repositories/recording_api_repository.dart';
+import '../excluded_range.dart';
 import '../trim_edit_decision.dart';
 import '../trim_load_error.dart';
 import 'trim_editor_state.dart';
@@ -187,13 +188,30 @@ class TrimEditorNotifier
   /// true.
   bool toggleExclude(int index) {
     final updated = Set<int>.from(state.excludedSegments);
-    if (updated.contains(index)) {
-      updated.remove(index);
-    } else {
-      if (updated.length >= state.segmentCount - 1) return false;
-      updated.add(index);
-    }
-    state = state.copyWith(excludedSegments: updated);
+    if (!updated.remove(index)) updated.add(index);
+    return _applyIfSomethingStaysKept(
+      state.copyWith(excludedSegments: updated),
+    );
+  }
+
+  /// Excludes the stretch between the two fractions without adding a split
+  /// mark. Same guard as [toggleExclude]: false and no mutation when nothing
+  /// would be kept.
+  bool confirmExcludedRange({
+    required double startFraction,
+    required double endFraction,
+  }) => _applyIfSomethingStaysKept(
+    state.copyWith(
+      excludedRanges: [
+        ...state.excludedRanges,
+        ExcludedRange(startFraction: startFraction, endFraction: endFraction),
+      ],
+    ),
+  );
+
+  bool _applyIfSomethingStaysKept(TrimEditorState next) {
+    if (next.keptParts.isEmpty) return false;
+    state = next;
     return true;
   }
 
@@ -260,7 +278,10 @@ class TrimEditorNotifier
   }
 
   void restoreAllExcluded() {
-    state = state.copyWith(excludedSegments: const {});
+    state = state.copyWith(
+      excludedSegments: const {},
+      excludedRanges: const [],
+    );
   }
 
   Future<TrimSaveOutcome> saveSplit({
@@ -273,8 +294,9 @@ class TrimEditorNotifier
     if (!state.decision.canSave) return const TrimSaveAborted();
 
     final saveMode = isWeb ? state.decision.mode : mode ?? state.decision.mode;
-    final keptCount = state.keptSegmentIndices.length;
-    final excludedCount = state.excludedSegments.length;
+    final keptCount = state.keptCount;
+    final excludedCount =
+        state.excludedSegments.length + state.excludedRanges.length;
 
     state = state.copyWith(isSaving: true);
     try {
@@ -366,10 +388,10 @@ class TrimEditorNotifier
       JoinKeptRangesRequest(
         sourceFilePath: recording.localFilePath,
         keptRanges: [
-          for (final i in state.keptSegmentIndices)
+          for (final part in state.keptParts)
             KeptRange(
-              startSeconds: state.segmentStart(i).inMilliseconds / 1000.0,
-              endSeconds: state.segmentEnd(i).inMilliseconds / 1000.0,
+              startSeconds: state.partStart(part).inMilliseconds / 1000.0,
+              endSeconds: state.partEnd(part).inMilliseconds / 1000.0,
             ),
         ],
         gainDb: state.gainDb,
@@ -381,13 +403,13 @@ class TrimEditorNotifier
   }) => ExportLocalSegmentsRequest(
     sourceFilePath: save.recording.localFilePath,
     segments: [
-      for (final i in state.keptSegmentIndices)
+      for (final part in state.keptParts)
         SegmentExportSpec(
-          startSeconds: state.segmentStart(i).inMilliseconds / 1000.0,
-          endSeconds: state.segmentEnd(i).inMilliseconds / 1000.0,
-          genreOverride: state.effectiveGenre(i),
-          subcategoryOverride: state.effectiveSubcategory(i),
-          registerOverride: state.effectiveRegister(i),
+          startSeconds: state.partStart(part).inMilliseconds / 1000.0,
+          endSeconds: state.partEnd(part).inMilliseconds / 1000.0,
+          genreOverride: state.effectiveGenre(part.segmentIndex),
+          subcategoryOverride: state.effectiveSubcategory(part.segmentIndex),
+          registerOverride: state.effectiveRegister(part.segmentIndex),
         ),
     ],
     gainDb: state.gainDb,

@@ -2887,4 +2887,10 @@ class AppLocalizationsHi extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get trim_excludeRange => 'अंश बाहर करें';
+
+  @override
+  String get trim_excludeRangeConfirm => 'बाहर करें';
 }

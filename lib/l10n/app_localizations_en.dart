@@ -2876,4 +2876,10 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get trim_excludeRange => 'Exclude stretch';
+
+  @override
+  String get trim_excludeRangeConfirm => 'Exclude';
 }

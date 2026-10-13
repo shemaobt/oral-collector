@@ -2881,4 +2881,10 @@ class AppLocalizationsId extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get trim_excludeRange => 'Kecualikan bagian';
+
+  @override
+  String get trim_excludeRangeConfirm => 'Kecualikan';
 }
