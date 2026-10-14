@@ -33,15 +33,17 @@ double keepClearOfRangeEdges(
   List<ExcludedRange> ranges,
   double minGap,
 ) {
+  final edges = [
+    for (final r in ranges) ...[r.startFraction, r.endFraction],
+  ];
   var clear = fraction;
-  for (final r in ranges) {
-    for (final edge in [r.startFraction, r.endFraction]) {
-      if ((clear - edge).abs() < minGap) {
-        clear = previous < edge ? edge - minGap : edge + minGap;
-      }
-    }
+  for (var pass = 0; pass <= edges.length; pass++) {
+    final blocking = edges.where((e) => (clear - e).abs() < minGap - 1e-9);
+    if (blocking.isEmpty) return clear;
+    final edge = blocking.first;
+    clear = previous < edge ? edge - minGap : edge + minGap;
   }
-  return clear;
+  return previous;
 }
 
 List<KeptPart> keptPartsOf({

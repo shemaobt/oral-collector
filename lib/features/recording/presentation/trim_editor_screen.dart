@@ -32,6 +32,7 @@ import 'widgets/exclude_range_handles.dart';
 import 'widgets/playback_key_handler.dart';
 import 'widgets/segment_card.dart';
 import 'widgets/segment_taxonomy_sheet.dart';
+import 'widgets/trim_action_bar.dart';
 import 'widgets/trim_save_choice_dialog.dart';
 import 'widgets/trim_waveform_panel.dart';
 
@@ -417,6 +418,14 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
         ),
       ),
     );
+  }
+
+  void _leave() {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/recordings');
+    }
   }
 
   void _confirmExcludeRange() {
@@ -823,7 +832,16 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
                             child: segmentsList,
                           ),
                         ),
-                        _buildActionBar(colors, isDark, l10n, state),
+                        TrimActionBar(
+                          state: state,
+                          onCancel: _leave,
+                          onSave: _saveSplit,
+                          onConfirmRange: _excludeDraft == null
+                              ? null
+                              : _confirmExcludeRange,
+                          onCancelRange: () =>
+                              setState(() => _excludeDraft = null),
+                        ),
                       ],
                     ),
                   ),
@@ -854,7 +872,15 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
                     ),
                   ),
                 ),
-                _buildActionBar(colors, isDark, l10n, state),
+                TrimActionBar(
+                  state: state,
+                  onCancel: _leave,
+                  onSave: _saveSplit,
+                  onConfirmRange: _excludeDraft == null
+                      ? null
+                      : _confirmExcludeRange,
+                  onCancelRange: () => setState(() => _excludeDraft = null),
+                ),
               ],
             );
           },
@@ -869,8 +895,6 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
     return ExcludeRangeEditing(
       draft: draft,
       onChanged: (d) => setState(() => _excludeDraft = d),
-      onConfirm: _confirmExcludeRange,
-      onCancel: () => setState(() => _excludeDraft = null),
     );
   }
 
@@ -888,10 +912,6 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
           position: _transportPosition,
           duration: state.totalDuration,
           onPlayPause: _toggleTransport,
-          canSplitAtPosition: _canSplitAtPlayhead && _excludeDraft == null,
-          onSplitAtPosition: _addSplitAtPlayhead,
-          isWeb: kIsWeb,
-          onExcludeRange: _excludeDraft == null ? _startExcludeRange : null,
         ),
         const SizedBox(height: SpacingScale.s8),
         Padding(
@@ -917,6 +937,14 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
           excludedSegments: state.excludedSegments,
           excludedRanges: state.excludedRanges,
           excludeEditing: _excludeEditing,
+          playheadPosition: _transportPosition,
+          canSplitAtPosition:
+              _canSplitAtPlayhead &&
+              !_isTransportPlaying &&
+              _excludeDraft == null,
+          onSplitAtPosition: _addSplitAtPlayhead,
+          isWeb: kIsWeb,
+          onExcludeRange: _excludeDraft == null ? _startExcludeRange : null,
           hasSplits: hasSplits,
           keptCount: state.keptCount,
           segmentCount: state.totalPartCount,
@@ -938,113 +966,6 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
           onClearAll: () => _notifier.clearAllSplits(),
         ),
       ],
-    );
-  }
-
-  Widget _buildActionBar(
-    AppColorSet colors,
-    bool isDark,
-    AppLocalizations l10n,
-    TrimEditorState state,
-  ) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(
-        SpacingScale.s16,
-        SpacingScale.s12,
-        SpacingScale.s16,
-        SpacingScale.s16,
-      ),
-      decoration: BoxDecoration(
-        color: colors.card,
-        border: Border(
-          top: BorderSide(color: colors.border.withValues(alpha: 0.15)),
-        ),
-      ),
-      child: SafeArea(
-        top: false,
-        child: Row(
-          children: [
-            Expanded(
-              child: OutlinedButton(
-                onPressed: state.isSaving
-                    ? null
-                    : () {
-                        if (context.canPop()) {
-                          context.pop();
-                        } else {
-                          context.go('/recordings');
-                        }
-                      },
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: colors.foreground.withValues(
-                    alpha: isDark ? 0.8 : 0.7,
-                  ),
-                  side: BorderSide(
-                    color: colors.border.withValues(alpha: isDark ? 0.4 : 0.35),
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    vertical: SpacingScale.s16,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(RadiusScale.r12),
-                  ),
-                ),
-                child: Text(l10n.common_cancel),
-              ),
-            ),
-            const SizedBox(width: SpacingScale.s12),
-            Expanded(
-              child: ElevatedButton.icon(
-                onPressed:
-                    (state.isSaving ||
-                        !state.decision.canSave ||
-                        _excludeDraft != null)
-                    ? null
-                    : _saveSplit,
-                icon: state.isSaving
-                    ? SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: isDark ? AppColors.black : AppColors.white,
-                        ),
-                      )
-                    : Icon(
-                        state.decision.mode == TrimSaveMode.boostOnly
-                            ? LucideIcons.volume2
-                            : LucideIcons.scissors,
-                        size: 16,
-                      ),
-                label: Text(
-                  state.isSaving
-                      ? l10n.trim_splitting
-                      : state.decision.mode == TrimSaveMode.boostOnly
-                      ? l10n.trim_applyBoost
-                      : l10n.trim_saveSegments(state.keptCount),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: colors.accent,
-                  foregroundColor: isDark ? AppColors.black : AppColors.white,
-                  disabledBackgroundColor: colors.accent.withValues(
-                    alpha: 0.25,
-                  ),
-                  disabledForegroundColor: isDark
-                      ? AppColors.black.withValues(alpha: 0.3)
-                      : AppColors.white.withValues(alpha: 0.4),
-                  padding: const EdgeInsets.symmetric(
-                    vertical: SpacingScale.s16,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(RadiusScale.r12),
-                  ),
-                  elevation: 0,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

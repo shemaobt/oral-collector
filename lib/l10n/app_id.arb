@@ -1016,6 +1016,5 @@
   "recording_pendencyStoryteller": "Belum ada pencerita",
   "recording_pendencyStorytellerContext": "Siapa yang menceritakan kisah ini.",
   "recording_pendencyCount": "{count, plural, other{{count} bidang perlu diisi}}",
-  "trim_excludeRange": "Kecualikan bagian",
-  "trim_excludeRangeConfirm": "Kecualikan"
+  "trim_excludeRange": "Kecualikan bagian"
 }

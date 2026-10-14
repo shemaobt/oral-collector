@@ -2879,7 +2879,4 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get trim_excludeRange => 'استبعاد مقطع';
-
-  @override
-  String get trim_excludeRangeConfirm => 'استبعاد';
 }

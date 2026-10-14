@@ -1511,6 +1511,5 @@
       }
     }
   },
-  "trim_excludeRange": "Exclude stretch",
-  "trim_excludeRangeConfirm": "Exclude"
+  "trim_excludeRange": "Exclude stretch"
 }

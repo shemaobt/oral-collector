@@ -2777,7 +2777,4 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get trim_excludeRange => '구간 제외';
-
-  @override
-  String get trim_excludeRangeConfirm => '제외';
 }

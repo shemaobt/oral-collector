@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:oral_collector/features/recording/presentation/widgets/edit_transport_bar.dart';
 import 'package:oral_collector/l10n/app_localizations.dart';
 
-Future<void> pumpBar(WidgetTester tester, {required bool isWeb}) async {
+Future<void> pumpBar(WidgetTester tester) async {
   tester.view.physicalSize = const Size(360, 800) * 3;
   tester.view.devicePixelRatio = 3.0;
   addTearDown(() {
@@ -23,10 +23,6 @@ Future<void> pumpBar(WidgetTester tester, {required bool isWeb}) async {
             position: const Duration(seconds: 25),
             duration: const Duration(seconds: 60),
             onPlayPause: () {},
-            canSplitAtPosition: true,
-            onSplitAtPosition: () {},
-            isWeb: isWeb,
-            onExcludeRange: () {},
           ),
         ),
       ),
@@ -48,18 +44,10 @@ void expectLabelAtNaturalWidth(WidgetTester tester) {
 
 void main() {
   testWidgets('On a 360 dp phone the time label keeps its natural width beside '
-      'both buttons', (tester) async {
-    await pumpBar(tester, isWeb: false);
+      'the play button', (tester) async {
+    await pumpBar(tester);
 
     expectLabelAtNaturalWidth(tester);
     expect(tester.takeException(), isNull);
-  });
-
-  testWidgets('On the web the time label keeps its natural width', (
-    tester,
-  ) async {
-    await pumpBar(tester, isWeb: true);
-
-    expectLabelAtNaturalWidth(tester);
   });
 }

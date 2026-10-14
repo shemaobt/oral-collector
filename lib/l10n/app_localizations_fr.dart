@@ -2925,7 +2925,4 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get trim_excludeRange => 'Exclure l\'extrait';
-
-  @override
-  String get trim_excludeRangeConfirm => 'Exclure';
 }

@@ -2895,7 +2895,4 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get trim_excludeRange => 'Excluir trecho';
-
-  @override
-  String get trim_excludeRangeConfirm => 'Excluir';
 }

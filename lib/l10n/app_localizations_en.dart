@@ -2879,7 +2879,4 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get trim_excludeRange => 'Exclude stretch';
-
-  @override
-  String get trim_excludeRangeConfirm => 'Exclude';
 }

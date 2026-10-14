@@ -4,7 +4,6 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/tokens.dart';
-import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/utils/format.dart';
 
 class EditTransportBar extends StatelessWidget {
@@ -14,28 +13,17 @@ class EditTransportBar extends StatelessWidget {
     required this.position,
     required this.duration,
     required this.onPlayPause,
-    this.onSplitAtPosition,
-    this.canSplitAtPosition = false,
-    this.isWeb = false,
-    this.onExcludeRange,
   });
 
   final bool isPlaying;
   final Duration position;
   final Duration duration;
   final VoidCallback onPlayPause;
-  final VoidCallback? onSplitAtPosition;
-  final bool canSplitAtPosition;
-  final bool isWeb;
-  final VoidCallback? onExcludeRange;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = AppColors.of(context);
-
-    final showSplitButton =
-        !isPlaying && canSplitAtPosition && onSplitAtPosition != null;
 
     return Container(
       padding: const EdgeInsets.symmetric(
@@ -95,100 +83,6 @@ class EditTransportBar extends StatelessWidget {
               ),
             ],
           ),
-          if ((!isWeb && onExcludeRange != null) || showSplitButton) ...[
-            const SizedBox(height: SpacingScale.s8),
-            Wrap(
-              alignment: WrapAlignment.end,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              spacing: SpacingScale.s8,
-              runSpacing: SpacingScale.s4,
-              children: [
-                if (!isWeb && onExcludeRange != null)
-                  GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: () {
-                      HapticFeedback.lightImpact();
-                      onExcludeRange!();
-                    },
-                    child: Container(
-                      height: 36,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: SpacingScale.s8,
-                      ),
-                      alignment: Alignment.center,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            LucideIcons.eraser,
-                            size: 14,
-                            color: colors.error,
-                          ),
-                          const SizedBox(width: SpacingScale.s4),
-                          Flexible(
-                            child: Text(
-                              AppLocalizations.of(context).trim_excludeRange,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: colors.error,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                if (showSplitButton)
-                  GestureDetector(
-                    onTap: () {
-                      HapticFeedback.mediumImpact();
-                      onSplitAtPosition!();
-                    },
-                    child: Container(
-                      height: 36,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: SpacingScale.s12,
-                      ),
-                      decoration: BoxDecoration(
-                        color: colors.accent.withValues(alpha: 0.14),
-                        borderRadius: BorderRadius.circular(RadiusScale.r8),
-                        border: Border.all(
-                          color: colors.accent.withValues(alpha: 0.45),
-                        ),
-                      ),
-                      alignment: Alignment.center,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            LucideIcons.scissors,
-                            size: 14,
-                            color: colors.accent,
-                          ),
-                          const SizedBox(width: SpacingScale.s8),
-                          Flexible(
-                            child: Text(
-                              formatPositionCentis(position),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: colors.accent,
-                                fontWeight: FontWeight.w700,
-                                fontFeatures: const [
-                                  FontFeature.tabularFigures(),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ],
         ],
       ),
     );

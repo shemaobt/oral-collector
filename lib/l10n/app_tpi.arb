@@ -1016,6 +1016,5 @@
   "recording_pendencyStoryteller": "I no gat stori man",
   "recording_pendencyStorytellerContext": "Husat i tokim dispela stori.",
   "recording_pendencyCount": "{count, plural, other{{count} samting i mas pulapim}}",
-  "trim_excludeRange": "Rausim wanpela hap",
-  "trim_excludeRangeConfirm": "Rausim"
+  "trim_excludeRange": "Rausim wanpela hap"
 }

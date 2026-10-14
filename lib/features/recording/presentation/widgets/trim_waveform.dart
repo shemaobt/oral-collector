@@ -122,6 +122,7 @@ class _TrimWaveformState extends State<TrimWaveform> {
       widget.excludedRanges,
       minGap,
     );
+    if (clamped < minVal || clamped > maxVal) return;
 
     final updated = [...widget.splitPoints];
     final idx = updated.indexOf(oldValue);

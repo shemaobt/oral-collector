@@ -9,6 +9,7 @@ import '../exclude_range_draft.dart';
 import '../excluded_range.dart';
 import 'exclude_range_handles.dart';
 import 'trim_waveform.dart';
+import 'waveform_tools_row.dart';
 
 const Key kTrimMinimapKey = Key('trim_minimap_scrubber');
 
@@ -29,6 +30,11 @@ class TrimWaveformPanel extends StatelessWidget {
     required this.onClearAll,
     this.excludedRanges = const [],
     this.excludeEditing,
+    this.playheadPosition = Duration.zero,
+    this.canSplitAtPosition = false,
+    this.onSplitAtPosition,
+    this.isWeb = false,
+    this.onExcludeRange,
     this.playheadFraction,
     this.onPlayheadSeek,
     this.onSeekAndPlay,
@@ -51,6 +57,11 @@ class TrimWaveformPanel extends StatelessWidget {
   final Set<int> excludedSegments;
   final List<ExcludedRange> excludedRanges;
   final ExcludeRangeEditing? excludeEditing;
+  final Duration playheadPosition;
+  final bool canSplitAtPosition;
+  final VoidCallback? onSplitAtPosition;
+  final bool isWeb;
+  final VoidCallback? onExcludeRange;
   final bool hasSplits;
   final int keptCount;
   final int segmentCount;
@@ -181,6 +192,14 @@ class TrimWaveformPanel extends StatelessWidget {
                 },
               ),
             ),
+          WaveformToolsRow(
+            position: playheadPosition,
+            canSplitAtPosition: canSplitAtPosition,
+            onSplitAtPosition: onSplitAtPosition,
+            isWeb: isWeb,
+            onExcludeRange: onExcludeRange,
+          ),
+          const SizedBox(height: SpacingScale.s8),
           Stack(
             children: [
               TrimWaveform(
@@ -212,11 +231,6 @@ class TrimWaveformPanel extends StatelessWidget {
                 ),
             ],
           ),
-          if (excludeEditing != null)
-            ExcludeRangeActions(
-              onConfirm: excludeEditing!.onConfirm,
-              onCancel: excludeEditing!.onCancel,
-            ),
           const SizedBox(height: SpacingScale.s8),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,

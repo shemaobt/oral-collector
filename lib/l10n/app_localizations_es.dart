@@ -2905,7 +2905,4 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get trim_excludeRange => 'Excluir tramo';
-
-  @override
-  String get trim_excludeRangeConfirm => 'Excluir';
 }

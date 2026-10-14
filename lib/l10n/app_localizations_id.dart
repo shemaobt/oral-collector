@@ -2884,7 +2884,4 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get trim_excludeRange => 'Kecualikan bagian';
-
-  @override
-  String get trim_excludeRangeConfirm => 'Kecualikan';
 }

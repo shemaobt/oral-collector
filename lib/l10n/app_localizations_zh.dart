@@ -2751,7 +2751,4 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get trim_excludeRange => '排除片段';
-
-  @override
-  String get trim_excludeRangeConfirm => '排除';
 }

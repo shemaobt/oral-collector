@@ -17,6 +17,8 @@ import 'package:oral_collector/features/recording/presentation/trim_editor_scree
 import 'package:oral_collector/features/recording/presentation/widgets/edit_transport_bar.dart';
 import 'package:oral_collector/features/recording/presentation/widgets/exclude_range_handles.dart';
 import 'package:oral_collector/features/recording/presentation/widgets/trim_waveform.dart';
+import 'package:oral_collector/features/recording/presentation/widgets/trim_waveform_panel.dart';
+import 'package:oral_collector/features/recording/presentation/widgets/waveform_tools_row.dart';
 
 import 'package:oral_collector/l10n/app_localizations.dart';
 
@@ -290,15 +292,16 @@ void main() {
     expect(handleTime(kExcludeRangeEndHandleKey, '00:20.25'), findsOneWidget);
   });
 
-  testWidgets('Save stays disabled while the handles are open', (tester) async {
+  testWidgets('Save is replaced by confirm while the handles are open', (
+    tester,
+  ) async {
     await openEditor(tester, seconds: 60);
     await placePlayheadAt(tester, 25, 60);
     await pressExcludeRange(tester);
     await confirm(tester);
     await pressExcludeRange(tester);
 
-    final save = tester.widget<ElevatedButton>(find.byType(ElevatedButton));
-    expect(save.onPressed, isNull);
+    expect(find.byType(ElevatedButton), findsNothing);
   });
 
   testWidgets('A handle dropped 120 ms past a split mark lands on the mark', (
@@ -393,26 +396,134 @@ void main() {
   testWidgets('On the web the toolbar shows no «Excluir trecho» button', (
     tester,
   ) async {
-    Widget bar({required bool isWeb}) => MaterialApp(
+    Widget row({required bool isWeb}) => MaterialApp(
       locale: const Locale('pt'),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(
-        body: EditTransportBar(
-          isPlaying: false,
+        body: WaveformToolsRow(
           position: Duration.zero,
-          duration: const Duration(seconds: 60),
-          onPlayPause: () {},
+          canSplitAtPosition: false,
+          onSplitAtPosition: null,
           isWeb: isWeb,
           onExcludeRange: () {},
         ),
       ),
     );
 
-    await tester.pumpWidget(bar(isWeb: false));
+    await tester.pumpWidget(row(isWeb: false));
     expect(find.text(_excludeRange), findsOneWidget);
 
-    await tester.pumpWidget(bar(isWeb: true));
+    await tester.pumpWidget(row(isWeb: true));
     expect(find.text(_excludeRange), findsNothing);
+  });
+
+  testWidgets('The transport card shows no «Excluir trecho» and no scissors', (
+    tester,
+  ) async {
+    await openEditor(tester, seconds: 60);
+    await placePlayheadAt(tester, 25, 60);
+
+    final card = find.byType(EditTransportBar);
+    expect(
+      find.descendant(of: card, matching: find.text(_excludeRange)),
+      findsNothing,
+    );
+    expect(
+      find.descendant(of: card, matching: find.byIcon(LucideIcons.scissors)),
+      findsNothing,
+    );
+  });
+
+  testWidgets('«Excluir trecho» and the scissors sit in one row directly above '
+      'the waveform', (tester) async {
+    await openEditor(tester, seconds: 60);
+    await placePlayheadAt(tester, 25, 60);
+
+    final panel = find.byType(TrimWaveformPanel);
+    final exclude = find.descendant(
+      of: panel,
+      matching: find.widgetWithText(OutlinedButton, _excludeRange),
+    );
+    final scissors = find.descendant(
+      of: panel,
+      matching: find.widgetWithText(OutlinedButton, '00:25.00'),
+    );
+    expect(exclude, findsOneWidget);
+    expect(scissors, findsOneWidget);
+    final waveform = waveformRect(tester);
+    expect(tester.getRect(exclude).bottom, lessThanOrEqualTo(waveform.top));
+    expect(tester.getRect(scissors).bottom, lessThanOrEqualTo(waveform.top));
+    expect(
+      tester.getRect(exclude).center.dy,
+      closeTo(tester.getRect(scissors).center.dy, 1),
+    );
+  });
+
+  testWidgets('With the handles open, the bottom bar\'s buttons are «Cancelar» '
+      'and «Excluir trecho» and nothing sits between the waveform and its time '
+      'axis', (tester) async {
+    await openEditor(tester, seconds: 60);
+    await placePlayheadAt(tester, 25, 60);
+
+    await pressExcludeRange(tester);
+
+    expect(
+      find.descendant(
+        of: find.byKey(kExcludeRangeCancelKey),
+        matching: find.text('Cancelar'),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: find.byKey(kExcludeRangeConfirmKey),
+        matching: find.text(_excludeRange),
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Cancelar'), findsNWidgets(2));
+    final belowWaveform = find.descendant(
+      of: find.byType(TrimWaveformPanel),
+      matching: find.byWidgetPredicate(
+        (w) =>
+            w is ButtonStyleButton &&
+            tester.getRect(find.byWidget(w)).top >= waveformRect(tester).bottom,
+      ),
+    );
+    expect(belowWaveform, findsNothing);
+  });
+
+  testWidgets('The bottom bar\'s «Cancelar» with the handles open excludes '
+      'nothing and brings the save button back', (tester) async {
+    await openEditor(tester, seconds: 60);
+    await placePlayheadAt(tester, 25, 60);
+    await pressExcludeRange(tester);
+    expect(find.byType(ElevatedButton), findsNothing);
+
+    await tester.tap(find.byKey(kExcludeRangeCancelKey));
+    await settle(tester);
+
+    expect(editorState(tester).excludedRanges, isEmpty);
+    expect(handle(kExcludeRangeStartHandleKey), findsNothing);
+    expect(find.byType(ElevatedButton), findsOneWidget);
+  });
+
+  testWidgets('The bottom bar\'s «Excluir trecho» with the handles at 18 s and '
+      '32 s excludes that range', (tester) async {
+    await openEditor(tester, seconds: 60);
+    await placePlayheadAt(tester, 25, 60);
+    await pressExcludeRange(tester);
+    await dragHandleBy(tester, kExcludeRangeStartHandleKey, -2, 60);
+    await dragHandleBy(tester, kExcludeRangeEndHandleKey, 2, 60);
+
+    await tester.tap(find.widgetWithText(FilledButton, _excludeRange));
+    await settle(tester);
+
+    final state = editorState(tester);
+    expect(state.excludedRanges, hasLength(1));
+    expect(state.excludedRanges.single.startFraction * 60, closeTo(18, 0.01));
+    expect(state.excludedRanges.single.endFraction * 60, closeTo(32, 0.01));
+    expect(state.splitPoints, isEmpty);
   });
 }

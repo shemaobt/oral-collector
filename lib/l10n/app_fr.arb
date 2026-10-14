@@ -1016,6 +1016,5 @@
   "recording_pendencyStoryteller": "Pas de narrateur",
   "recording_pendencyStorytellerContext": "Qui raconte cette histoire.",
   "recording_pendencyCount": "{count, plural, other{{count} champs à compléter}}",
-  "trim_excludeRange": "Exclure l'extrait",
-  "trim_excludeRangeConfirm": "Exclure"
+  "trim_excludeRange": "Exclure l'extrait"
 }

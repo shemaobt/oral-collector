@@ -2873,7 +2873,4 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get trim_excludeRange => 'Ondoa sehemu';
-
-  @override
-  String get trim_excludeRangeConfirm => 'Ondoa';
 }

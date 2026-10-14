@@ -5029,12 +5029,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Exclude stretch'**
   String get trim_excludeRange;
-
-  /// No description provided for @trim_excludeRangeConfirm.
-  ///
-  /// In en, this message translates to:
-  /// **'Exclude'**
-  String get trim_excludeRangeConfirm;
 }
 
 class _AppLocalizationsDelegate

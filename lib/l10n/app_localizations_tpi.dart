@@ -2865,7 +2865,4 @@ class AppLocalizationsTpi extends AppLocalizations {
 
   @override
   String get trim_excludeRange => 'Rausim wanpela hap';
-
-  @override
-  String get trim_excludeRangeConfirm => 'Rausim';
 }

@@ -1016,6 +1016,5 @@
   "recording_pendencyStoryteller": "कोई कथाकार नहीं",
   "recording_pendencyStorytellerContext": "यह कहानी कौन सुनाता है।",
   "recording_pendencyCount": "{count, plural, other{{count} फ़ील्ड भरने हैं}}",
-  "trim_excludeRange": "अंश बाहर करें",
-  "trim_excludeRangeConfirm": "बाहर करें"
+  "trim_excludeRange": "अंश बाहर करें"
 }

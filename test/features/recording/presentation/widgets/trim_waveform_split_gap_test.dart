@@ -328,4 +328,72 @@ void main() {
       );
     },
   );
+
+  testWidgets(
+    'um corte arrastado entre dois trechos próximos nunca termina a menos de '
+    '250 ms de uma borda',
+    (tester) async {
+      const total = Duration(seconds: 10);
+      const edges = [2.5, 3.0, 3.375, 3.5];
+      final emissions = <List<double>>[];
+      await tester.pumpWidget(
+        _harness(
+          totalDuration: total,
+          initialSplits: const [0.4],
+          emissions: emissions,
+          excludedRanges: const [
+            ExcludedRange(startFraction: 0.3375, endFraction: 0.35),
+            ExcludedRange(startFraction: 0.25, endFraction: 0.30),
+          ],
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final from = _atSeconds(tester, total, 4.0);
+      final to = _atSeconds(tester, total, 3.05);
+      await tester.dragFrom(from, to - from);
+      await tester.pumpAndSettle();
+
+      final mark = _seconds(emissions.last.single, total);
+      expect(
+        mark == 4.0 || edges.every((e) => (mark - e).abs() >= 0.25 - 1e-9),
+        isTrue,
+        reason: 'mark ended at $mark s',
+      );
+    },
+  );
+
+  testWidgets(
+    'um corte arrastado para uma folga de menos de 500 ms entre dois trechos '
+    'fica onde estava',
+    (tester) async {
+      const total = Duration(seconds: 10);
+      final emissions = <List<double>>[];
+      await tester.pumpWidget(
+        _harness(
+          totalDuration: total,
+          zoom: 4.0,
+          panFraction: 0.2,
+          initialSplits: const [0.3, 0.8],
+          emissions: emissions,
+          excludedRanges: const [
+            ExcludedRange(startFraction: 0.2, endFraction: 0.3),
+            ExcludedRange(startFraction: 0.34, endFraction: 0.4),
+          ],
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final from = _atSeconds(tester, total, 3.0, zoom: 4.0, panFraction: 0.2);
+      final to = _atSeconds(tester, total, 3.2, zoom: 4.0, panFraction: 0.2);
+      await tester.dragFrom(from, to - from);
+      await tester.pumpAndSettle();
+
+      final marks = emissions.isEmpty ? [0.3, 0.8] : emissions.last;
+      expect(marks.map((m) => _seconds(m, total)), [
+        closeTo(3.0, 0.01),
+        closeTo(8.0, 0.01),
+      ]);
+    },
+  );
 }

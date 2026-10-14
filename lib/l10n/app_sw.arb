@@ -1016,6 +1016,5 @@
   "recording_pendencyStoryteller": "Hakuna msimulizi",
   "recording_pendencyStorytellerContext": "Ni nani anayesimulia hadithi hii.",
   "recording_pendencyCount": "{count, plural, other{Sehemu {count} za kujaza}}",
-  "trim_excludeRange": "Ondoa sehemu",
-  "trim_excludeRangeConfirm": "Ondoa"
+  "trim_excludeRange": "Ondoa sehemu"
 }

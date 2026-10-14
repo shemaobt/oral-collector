@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/tokens.dart';
-import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/utils/format.dart';
 import '../exclude_range_draft.dart';
 import '../trim_edit_decision.dart';
@@ -17,17 +16,10 @@ const Key kExcludeRangeCancelKey = Key('exclude_range_cancel');
 const double kExcludeRangeHandleWidth = 48.0;
 
 class ExcludeRangeEditing {
-  const ExcludeRangeEditing({
-    required this.draft,
-    required this.onChanged,
-    required this.onConfirm,
-    required this.onCancel,
-  });
+  const ExcludeRangeEditing({required this.draft, required this.onChanged});
 
   final ExcludeRangeDraft draft;
   final ValueChanged<ExcludeRangeDraft> onChanged;
-  final VoidCallback onConfirm;
-  final VoidCallback onCancel;
 }
 
 class ExcludeRangeHandles extends StatefulWidget {
@@ -198,38 +190,6 @@ class _Handle extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class ExcludeRangeActions extends StatelessWidget {
-  const ExcludeRangeActions({
-    super.key,
-    required this.onConfirm,
-    required this.onCancel,
-  });
-
-  final VoidCallback onConfirm;
-  final VoidCallback onCancel;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        TextButton(
-          key: kExcludeRangeCancelKey,
-          onPressed: onCancel,
-          child: Text(l10n.common_cancel),
-        ),
-        const SizedBox(width: SpacingScale.s8),
-        FilledButton(
-          key: kExcludeRangeConfirmKey,
-          onPressed: onConfirm,
-          child: Text(l10n.trim_excludeRangeConfirm),
-        ),
-      ],
     );
   }
 }
