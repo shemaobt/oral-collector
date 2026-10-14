@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -46,21 +48,25 @@ const _project = Project(id: 'proj-1', name: 'Test', languageId: 'en');
 const _serverId = 'srv-1';
 const _localId = 'rec-1';
 
-LocalRecordingsCompanion _publishedRow(String uploadStatus) =>
-    LocalRecordingsCompanion.insert(
-      id: _localId,
-      projectId: _project.id,
-      genreId: 'genre-1',
-      durationSeconds: const Value(30.0),
-      fileSizeBytes: const Value(1024),
-      format: const Value('m4a'),
-      localFilePath: '/tmp/rec-1.m4a',
-      recordedAt: DateTime(2026, 1, 1),
-      uploadStatus: Value(uploadStatus),
-      serverId: const Value(_serverId),
-      gcsUrl: const Value('gs://bucket/rec-1.m4a'),
-      cleaningStatus: const Value('none'),
-    );
+LocalRecordingsCompanion _publishedRow(
+  String uploadStatus, {
+  String id = _localId,
+  String serverId = _serverId,
+  String? gcsUrl = 'gs://bucket/rec-1.m4a',
+}) => LocalRecordingsCompanion.insert(
+  id: id,
+  projectId: _project.id,
+  genreId: 'genre-1',
+  durationSeconds: const Value(30.0),
+  fileSizeBytes: const Value(1024),
+  format: const Value('m4a'),
+  localFilePath: '/tmp/rec-1.m4a',
+  recordedAt: DateTime(2026, 1, 1),
+  uploadStatus: Value(uploadStatus),
+  serverId: Value(serverId),
+  gcsUrl: Value(gcsUrl),
+  cleaningStatus: const Value('none'),
+);
 
 ServerRecording _serverCopy({String id = _serverId}) => ServerRecording(
   id: id,
@@ -99,9 +105,27 @@ void main() {
     ),
   ).thenAnswer((_) async => page);
 
-  Future<void> deviceStatus(String status) =>
-      (db.update(db.localRecordings)..where((t) => t.id.equals(_localId)))
-          .write(LocalRecordingsCompanion(uploadStatus: Value(status)));
+  Future<void> deviceStatus(String status, {String id = _localId}) =>
+      (db.update(db.localRecordings)..where((t) => t.id.equals(id))).write(
+        LocalRecordingsCompanion(uploadStatus: Value(status)),
+      );
+
+  Future<void> settle() async {
+    for (var turn = 0; turn < 60; turn++) {
+      await Future<void>.delayed(Duration.zero);
+    }
+  }
+
+  List<String> filtered(StatusFilter filter) {
+    container
+        .read(recordingsListNotifierProvider.notifier)
+        .setStatusFilter(filter);
+    return container
+        .read(recordingsListNotifierProvider)
+        .filteredRecordings
+        .map((r) => r.id)
+        .toList();
+  }
 
   setUp(() {
     SharedPreferences.setMockInitialValues({});
@@ -150,6 +174,12 @@ void main() {
       .firstWhere((r) => r.serverId == serverId)
       .uploadStatus;
 
+  String statusOfId(String id) => container
+      .read(recordingsListNotifierProvider)
+      .recordings
+      .firstWhere((r) => r.id == id)
+      .uploadStatus;
+
   test(
     'a published recording whose edit was refused shows the refusal on its list card',
     () async {
@@ -157,6 +187,7 @@ void main() {
 
       await loadList();
 
+      expect(filtered(StatusFilter.uploaded), isEmpty);
       expect(statusOf(_serverId), 'failed_refused_size_mismatch');
     },
   );
@@ -225,4 +256,90 @@ void main() {
       expect(statusOf(_serverId), 'failed_refused_size_mismatch');
     },
   );
+
+  test(
+    'a device copy the server no longer lists keeps its own status when a refusal lands on another recording',
+    () async {
+      await repo.insertRecording(
+        _publishedRow(
+          'local',
+          id: 'cached-1',
+          serverId: 'cached-1',
+          gcsUrl: null,
+        ),
+      );
+      await repo.insertRecording(_publishedRow('uploaded'));
+      serverLists(0, [_serverCopy(id: 'cached-1'), _serverCopy()]);
+      await loadList();
+      serverLists(0, [_serverCopy()]);
+      await container
+          .read(recordingsListNotifierProvider.notifier)
+          .fetchRecordings();
+      expect(statusOfId('cached-1'), 'local');
+
+      await deviceStatus('failed_refused_size_mismatch');
+      await settle();
+
+      expect(statusOfId('cached-1'), 'local');
+      expect(filtered(StatusFilter.pending), contains('cached-1'));
+    },
+  );
+
+  test(
+    'a refusal that lands while the next page is loading is not undone by it',
+    () async {
+      await repo.insertRecording(_publishedRow('uploaded'));
+      await repo.insertRecording(
+        _publishedRow('uploaded', id: 'ghost', serverId: 'ghost-srv'),
+      );
+      serverLists(0, [
+        for (var i = 0; i < 50; i++) _serverCopy(id: 'other-$i'),
+      ]);
+      serverLists(50, [_serverCopy()]);
+      final asked = Completer<void>();
+      final answer = Completer<ServerRecording>();
+      when(() => api.getRecording('ghost-srv')).thenAnswer((_) {
+        asked.complete();
+        return answer.future;
+      });
+      await loadList();
+
+      final loading = container
+          .read(recordingsListNotifierProvider.notifier)
+          .loadMore();
+      await asked.future;
+      await deviceStatus('failed_refused_size_mismatch');
+      await settle();
+      answer.complete(_serverCopy(id: 'ghost-srv'));
+      await loading;
+
+      expect(statusOf(_serverId), 'failed_refused_size_mismatch');
+    },
+  );
+
+  test(
+    'a refused edit stays pending on the list while its retry is queued',
+    () async {
+      await repo.insertRecording(_publishedRow('failed_refused_size_mismatch'));
+      await loadList();
+
+      await repo.resetRetryCount(_localId);
+      await settle();
+
+      expect(filtered(StatusFilter.pending), [_serverId]);
+      expect(filtered(StatusFilter.uploaded), isEmpty);
+    },
+  );
+
+  test('a refused edit whose retry failed stays pending on the list', () async {
+    await repo.insertRecording(_publishedRow('failed_refused_size_mismatch'));
+    await loadList();
+
+    await repo.resetRetryCount(_localId);
+    await deviceStatus('failed_exhausted');
+    await settle();
+
+    expect(filtered(StatusFilter.pending), [_serverId]);
+    expect(filtered(StatusFilter.uploaded), isEmpty);
+  });
 }

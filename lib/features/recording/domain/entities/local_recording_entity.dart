@@ -58,6 +58,12 @@ class LocalRecordingEntity {
   /// to say *what* is stuck, not only that something is.
   final Set<PendingMetadataField> pendingMetadataFields;
 
+  /// The status the server itself gave this recording, set only on the
+  /// server's copies. It is what the card falls back to once the device has
+  /// nothing unsettled to say, and what tells a server copy from a device row
+  /// that merely shares its id.
+  final String? serverUploadStatus;
+
   bool get hasPendingMetadata => pendingMetadataFields.isNotEmpty;
 
   const LocalRecordingEntity({
@@ -92,6 +98,7 @@ class LocalRecordingEntity {
     this.reviewFlags = const [],
     this.metadataSyncStatus = MetadataSyncStatus.synced,
     this.pendingMetadataFields = const {},
+    this.serverUploadStatus,
   });
 
   static const Object _sentinel = Object();
@@ -137,6 +144,7 @@ class LocalRecordingEntity {
     List<ReviewFlag>? reviewFlags,
     String? metadataSyncStatus,
     Set<PendingMetadataField>? pendingMetadataFields,
+    Object? serverUploadStatus = _sentinel,
   }) {
     return LocalRecordingEntity(
       id: id ?? this.id,
@@ -180,6 +188,7 @@ class LocalRecordingEntity {
       metadataSyncStatus: metadataSyncStatus ?? this.metadataSyncStatus,
       pendingMetadataFields:
           pendingMetadataFields ?? this.pendingMetadataFields,
+      serverUploadStatus: _orKeep(serverUploadStatus, this.serverUploadStatus),
     );
   }
 
@@ -224,6 +233,7 @@ class LocalRecordingEntity {
 
   bool _sameUpload(LocalRecordingEntity other) =>
       other.uploadStatus == uploadStatus &&
+      other.serverUploadStatus == serverUploadStatus &&
       other.serverId == serverId &&
       other.gcsUrl == gcsUrl &&
       other.cleaningStatus == cleaningStatus &&
@@ -274,6 +284,7 @@ class LocalRecordingEntity {
     format,
     localFilePath,
     uploadStatus,
+    serverUploadStatus,
     serverId,
     gcsUrl,
     registerId,

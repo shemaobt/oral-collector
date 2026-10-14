@@ -588,59 +588,43 @@ class LocalRecordingRepository {
           (t) => t.metadataSyncStatus.equals(MetadataSyncStatus.synced).not(),
         ))
         .watch()
-        .map(_outboxByKey)
-        .distinct(_sameOutbox);
+        .map((rows) => _keyedByBothIds(rows, _outboxEntry))
+        .distinct(_sameEntries);
   }
 
-  /// The upload status of every recording the server refused, keyed by both
-  /// ids like [watchMetadataOutbox]: the list shows the server's copy of a
-  /// published recording, and a refusal leaves that copy untouched.
-  Stream<Map<String, String>> watchRefusedUploads() {
-    return (_db.select(_db.localRecordings)
-          ..where((t) => t.uploadStatus.isIn(refusalStatuses)))
+  /// The upload status of every published recording whose audio the server
+  /// has not confirmed again, keyed by both ids like [watchMetadataOutbox]: the
+  /// list shows the server's copy of a published recording, and a refused,
+  /// queued or failed resend leaves that copy untouched.
+  Stream<Map<String, String>> watchUnsettledUploads() {
+    return (_db.select(_db.localRecordings)..where(
+          (t) =>
+              t.gcsUrl.isNotNull() &
+              t.uploadStatus.isIn(const ['uploaded', 'verified']).not(),
+        ))
         .watch()
-        .map((rows) {
-          final byKey = <String, String>{};
-          for (final row in rows) {
-            byKey[row.id] = row.uploadStatus;
-            final serverId = row.serverId;
-            if (serverId != null && serverId.isNotEmpty) {
-              byKey[serverId] = row.uploadStatus;
-            }
-          }
-          return byKey;
-        })
-        .distinct(_sameRefusals);
+        .map((rows) => _keyedByBothIds(rows, (row) => row.uploadStatus))
+        .distinct(_sameEntries);
   }
 
-  static Map<String, MetadataOutboxEntry> _outboxByKey(
+  static Map<String, V> _keyedByBothIds<V>(
     List<LocalRecording> rows,
+    V Function(LocalRecording row) valueOf,
   ) {
-    final byKey = <String, MetadataOutboxEntry>{};
+    final byKey = <String, V>{};
     for (final row in rows) {
-      final entry = (
-        status: row.metadataSyncStatus,
-        fieldsJson: row.pendingMetadataJson,
-      );
-      byKey[row.id] = entry;
+      final value = valueOf(row);
+      byKey[row.id] = value;
       final serverId = row.serverId;
-      if (serverId != null && serverId.isNotEmpty) byKey[serverId] = entry;
+      if (serverId != null && serverId.isNotEmpty) byKey[serverId] = value;
     }
     return byKey;
   }
 
-  static bool _sameRefusals(Map<String, String> a, Map<String, String> b) {
-    if (a.length != b.length) return false;
-    for (final entry in a.entries) {
-      if (b[entry.key] != entry.value) return false;
-    }
-    return true;
-  }
+  static MetadataOutboxEntry _outboxEntry(LocalRecording row) =>
+      (status: row.metadataSyncStatus, fieldsJson: row.pendingMetadataJson);
 
-  static bool _sameOutbox(
-    Map<String, MetadataOutboxEntry> a,
-    Map<String, MetadataOutboxEntry> b,
-  ) {
+  static bool _sameEntries<V>(Map<String, V> a, Map<String, V> b) {
     if (a.length != b.length) return false;
     for (final entry in a.entries) {
       if (b[entry.key] != entry.value) return false;
