@@ -360,6 +360,21 @@ void main() {
         isTrue,
         reason: 'mark ended at $mark s',
       );
+      final parts = keptPartsOf(
+        splitPoints: emissions.last,
+        excludedSegments: const {},
+        excludedRanges: const [
+          ExcludedRange(startFraction: 0.3375, endFraction: 0.35),
+          ExcludedRange(startFraction: 0.25, endFraction: 0.30),
+        ],
+      );
+      for (final p in parts) {
+        expect(
+          _seconds(p.endFraction - p.startFraction, total),
+          greaterThanOrEqualTo(0.25 - 1e-9),
+          reason: 'kept part ${p.startFraction}-${p.endFraction}',
+        );
+      }
     },
   );
 

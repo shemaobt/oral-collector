@@ -673,6 +673,15 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
       ),
     );
 
+    final actionBar = TrimActionBar(
+      state: state,
+      onCancel: _leave,
+      onSave: _saveSplit,
+      onConfirmRange: _excludeDraft == null || state.isSaving
+          ? null
+          : _confirmExcludeRange,
+      onCancelRange: () => setState(() => _excludeDraft = null),
+    );
     final segmentsList = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -832,16 +841,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
                             child: segmentsList,
                           ),
                         ),
-                        TrimActionBar(
-                          state: state,
-                          onCancel: _leave,
-                          onSave: _saveSplit,
-                          onConfirmRange: _excludeDraft == null
-                              ? null
-                              : _confirmExcludeRange,
-                          onCancelRange: () =>
-                              setState(() => _excludeDraft = null),
-                        ),
+                        actionBar,
                       ],
                     ),
                   ),
@@ -872,15 +872,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
                     ),
                   ),
                 ),
-                TrimActionBar(
-                  state: state,
-                  onCancel: _leave,
-                  onSave: _saveSplit,
-                  onConfirmRange: _excludeDraft == null
-                      ? null
-                      : _confirmExcludeRange,
-                  onCancelRange: () => setState(() => _excludeDraft = null),
-                ),
+                actionBar,
               ],
             );
           },
@@ -941,10 +933,13 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
           canSplitAtPosition:
               _canSplitAtPlayhead &&
               !_isTransportPlaying &&
+              !state.isSaving &&
               _excludeDraft == null,
           onSplitAtPosition: _addSplitAtPlayhead,
           isWeb: kIsWeb,
-          onExcludeRange: _excludeDraft == null ? _startExcludeRange : null,
+          onExcludeRange: _excludeDraft == null && !state.isSaving
+              ? _startExcludeRange
+              : null,
           hasSplits: hasSplits,
           keptCount: state.keptCount,
           segmentCount: state.totalPartCount,

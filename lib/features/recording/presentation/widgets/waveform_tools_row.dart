@@ -35,37 +35,41 @@ class WaveformToolsRow extends StatelessWidget {
     final showSplit = canSplitAtPosition && onSplitAtPosition != null;
     final showExclude = !isWeb && onExcludeRange != null;
 
-    Widget tool(IconData icon, String label, VoidCallback onTap) =>
-        OutlinedButton(
-          onPressed: () {
-            HapticFeedback.lightImpact();
-            onTap();
-          },
-          style: OutlinedButton.styleFrom(
-            foregroundColor: colors.accent,
-            minimumSize: const Size(0, 36),
-            padding: const EdgeInsets.symmetric(horizontal: SpacingScale.s8),
-            side: BorderSide(color: colors.accent.withValues(alpha: 0.45)),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(RadiusScale.r8),
+    Widget tool(
+      IconData icon,
+      String label,
+      VoidCallback onTap,
+      Future<void> Function() haptic,
+    ) => OutlinedButton(
+      onPressed: () {
+        haptic();
+        onTap();
+      },
+      style: OutlinedButton.styleFrom(
+        foregroundColor: colors.accent,
+        minimumSize: const Size(0, 36),
+        padding: const EdgeInsets.symmetric(horizontal: SpacingScale.s8),
+        side: BorderSide(color: colors.accent.withValues(alpha: 0.45)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(RadiusScale.r8),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: colors.accent),
+          const SizedBox(width: SpacingScale.s4),
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: labelStyle,
             ),
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 14, color: colors.accent),
-              const SizedBox(width: SpacingScale.s4),
-              Flexible(
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: labelStyle,
-                ),
-              ),
-            ],
-          ),
-        );
+        ],
+      ),
+    );
 
     return Wrap(
       spacing: SpacingScale.s8,
@@ -76,12 +80,14 @@ class WaveformToolsRow extends StatelessWidget {
             LucideIcons.scissors,
             formatPositionCentis(position),
             onSplitAtPosition!,
+            HapticFeedback.mediumImpact,
           ),
         if (showExclude)
           tool(
             LucideIcons.eraser,
             AppLocalizations.of(context).trim_excludeRange,
             onExcludeRange!,
+            HapticFeedback.lightImpact,
           ),
       ],
     );

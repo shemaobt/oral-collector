@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
@@ -6,20 +8,22 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:mocktail/mocktail.dart';
+
 import 'package:oral_collector/core/database/app_database.dart';
 import 'package:oral_collector/features/recording/data/providers.dart';
 import 'package:oral_collector/features/recording/data/repositories/local_recording_repository.dart';
+import 'package:oral_collector/features/recording/data/services/joined_audio_exporter.dart';
 import 'package:oral_collector/features/recording/data/services/waveform_loader.dart';
 import 'package:oral_collector/features/recording/presentation/notifiers/recording_player_notifier.dart';
 import 'package:oral_collector/features/recording/presentation/notifiers/trim_editor_notifier.dart';
 import 'package:oral_collector/features/recording/presentation/notifiers/trim_editor_state.dart';
+import 'package:oral_collector/features/recording/presentation/trim_edit_decision.dart';
 import 'package:oral_collector/features/recording/presentation/trim_editor_screen.dart';
 import 'package:oral_collector/features/recording/presentation/widgets/edit_transport_bar.dart';
 import 'package:oral_collector/features/recording/presentation/widgets/exclude_range_handles.dart';
 import 'package:oral_collector/features/recording/presentation/widgets/trim_waveform.dart';
 import 'package:oral_collector/features/recording/presentation/widgets/trim_waveform_panel.dart';
 import 'package:oral_collector/features/recording/presentation/widgets/waveform_tools_row.dart';
-
 import 'package:oral_collector/l10n/app_localizations.dart';
 
 import '../../../support/text_scale.dart';
@@ -87,6 +91,9 @@ void main() {
           LocalRecordingRepository(db),
         ),
         fileExistsProvider.overrideWithValue((_) async => true),
+        joinedAudioExporterProvider.overrideWithValue(
+          (request) => Completer<EditedAudio>().future,
+        ),
         waveformLoaderProvider.overrideWithValue(
           (path, {required int targetCount}) async =>
               List<double>.filled(targetCount, 0.5),
@@ -525,5 +532,36 @@ void main() {
     expect(state.excludedRanges.single.startFraction * 60, closeTo(18, 0.01));
     expect(state.excludedRanges.single.endFraction * 60, closeTo(32, 0.01));
     expect(state.splitPoints, isEmpty);
+    expect(state.segmentCount, 1);
+  });
+
+  testWidgets('While saving, «Excluir trecho» cannot be opened', (
+    tester,
+  ) async {
+    await openEditor(tester, seconds: 60);
+    await placePlayheadAt(tester, 25, 60);
+    await pressExcludeRange(tester);
+    await confirm(tester);
+    final toolsScissors = find.descendant(
+      of: find.byType(WaveformToolsRow),
+      matching: find.byIcon(LucideIcons.scissors),
+    );
+    await placePlayheadAt(tester, 50, 60);
+    expect(find.text(_excludeRange), findsOneWidget);
+    expect(toolsScissors, findsOneWidget);
+
+    unawaited(
+      editor(tester).saveSplit(
+        isWeb: false,
+        localeTag: 'pt',
+        mode: TrimSaveMode.removeStretch,
+      ),
+    );
+    await settle(tester);
+
+    expect(editorState(tester).isSaving, isTrue);
+    expect(find.text(_excludeRange), findsNothing);
+    expect(toolsScissors, findsNothing);
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
   });
 }
