@@ -101,7 +101,7 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
   Map<String, MetadataOutboxEntry>? get _outbox =>
       ref.read(metadataOutboxProvider).valueOrNull;
 
-  Map<String, String> get _unsettled =>
+  Map<String, UnsettledUpload> get _unsettled =>
       ref.read(unsettledUploadsProvider).valueOrNull ?? const {};
 
   List<LocalRecordingEntity> _withDevice(List<LocalRecordingEntity> list) {
@@ -175,14 +175,33 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
   /// the server gave carries [LocalRecordingEntity.serverUploadStatus].
   static LocalRecordingEntity _withUnsettledUpload(
     LocalRecordingEntity recording,
-    Map<String, String> unsettled,
+    Map<String, UnsettledUpload> unsettled,
   ) {
     final serverStatus = recording.serverUploadStatus;
     if (serverStatus == null) return recording;
-    final status = unsettled[recording.id] ?? serverStatus;
-    return status == recording.uploadStatus
+    final resend = unsettled[recording.id];
+    if (resend == null) {
+      return serverStatus == recording.uploadStatus &&
+              recording.deviceId == null
+          ? recording
+          : recording.copyWith(
+              uploadStatus: serverStatus,
+              deviceId: null,
+              uploadedBytes: 0,
+              resumableSessionUri: null,
+            );
+    }
+    return resend.status == recording.uploadStatus &&
+            resend.deviceId == recording.deviceId &&
+            resend.uploadedBytes == recording.uploadedBytes &&
+            resend.resumableSessionUri == recording.resumableSessionUri
         ? recording
-        : recording.copyWith(uploadStatus: status);
+        : recording.copyWith(
+            uploadStatus: resend.status,
+            deviceId: resend.deviceId,
+            uploadedBytes: resend.uploadedBytes,
+            resumableSessionUri: resend.resumableSessionUri,
+          );
   }
 
   String? get _reviewFlagCode {

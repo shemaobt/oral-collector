@@ -160,11 +160,15 @@ class RecordingCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = AppColors.of(context);
     final isUploadingThis = ref.watch(
-      syncNotifierProvider.select((s) => s.uploadingId == recording.id),
+      syncNotifierProvider.select(
+        (s) => s.uploadingId == (recording.deviceId ?? recording.id),
+      ),
     );
     final uploadProgress = ref.watch(
       syncNotifierProvider.select(
-        (s) => s.uploadingId == recording.id ? s.syncProgress : 0,
+        (s) => s.uploadingId == (recording.deviceId ?? recording.id)
+            ? s.syncProgress
+            : 0,
       ),
     );
     final isRecordingActive = ref.watch(

@@ -65,9 +65,9 @@ final metadataOutboxProvider = StreamProvider<Map<String, MetadataOutboxEntry>>(
   (ref) => ref.watch(localRecordingRepositoryProvider).watchMetadataOutbox(),
 );
 
-/// Upload status of every published recording whose audio the server has not
-/// confirmed again, keyed by local id and by server id.
-final unsettledUploadsProvider = StreamProvider<Map<String, String>>(
+/// The device's resend of every recording whose new audio the server has not
+/// confirmed, keyed by local id and by server id.
+final unsettledUploadsProvider = StreamProvider<Map<String, UnsettledUpload>>(
   (ref) => ref.watch(localRecordingRepositoryProvider).watchUnsettledUploads(),
 );
 

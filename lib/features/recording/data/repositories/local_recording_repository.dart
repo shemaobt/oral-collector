@@ -592,18 +592,20 @@ class LocalRecordingRepository {
         .distinct(_sameEntries);
   }
 
-  /// The upload status of every published recording whose audio the server
-  /// has not confirmed again, keyed by both ids like [watchMetadataOutbox]: the
-  /// list shows the server's copy of a published recording, and a refused,
-  /// queued or failed resend leaves that copy untouched.
-  Stream<Map<String, String>> watchUnsettledUploads() {
+  /// What the device says about every recording the server knows whose new
+  /// audio the server has not confirmed, keyed by both ids like
+  /// [watchMetadataOutbox]. The server lists only uploaded recordings, so a row
+  /// here that matches a listed copy is a resend; a first upload in flight
+  /// matches none. The list shows the server's copy, and a refused, queued or
+  /// failed resend leaves that copy untouched.
+  Stream<Map<String, UnsettledUpload>> watchUnsettledUploads() {
     return (_db.select(_db.localRecordings)..where(
           (t) =>
-              t.gcsUrl.isNotNull() &
+              t.serverId.isNotNull() &
               t.uploadStatus.isIn(const ['uploaded', 'verified']).not(),
         ))
         .watch()
-        .map((rows) => _keyedByBothIds(rows, (row) => row.uploadStatus))
+        .map((rows) => _keyedByBothIds(rows, _unsettledUpload))
         .distinct(_sameEntries);
   }
 
@@ -620,6 +622,13 @@ class LocalRecordingRepository {
     }
     return byKey;
   }
+
+  static UnsettledUpload _unsettledUpload(LocalRecording row) => (
+    status: row.uploadStatus,
+    deviceId: row.id,
+    uploadedBytes: row.uploadedBytes,
+    resumableSessionUri: row.resumableSessionUri,
+  );
 
   static MetadataOutboxEntry _outboxEntry(LocalRecording row) =>
       (status: row.metadataSyncStatus, fieldsJson: row.pendingMetadataJson);

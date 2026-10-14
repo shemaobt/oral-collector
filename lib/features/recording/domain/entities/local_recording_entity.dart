@@ -64,6 +64,11 @@ class LocalRecordingEntity {
   /// that merely shares its id.
   final String? serverUploadStatus;
 
+  /// The id the device holds this recording under, set only on a server copy
+  /// the device is resending: the upload queue names the row it is sending by
+  /// that id, not by the copy's.
+  final String? deviceId;
+
   bool get hasPendingMetadata => pendingMetadataFields.isNotEmpty;
 
   const LocalRecordingEntity({
@@ -99,6 +104,7 @@ class LocalRecordingEntity {
     this.metadataSyncStatus = MetadataSyncStatus.synced,
     this.pendingMetadataFields = const {},
     this.serverUploadStatus,
+    this.deviceId,
   });
 
   static const Object _sentinel = Object();
@@ -145,6 +151,7 @@ class LocalRecordingEntity {
     String? metadataSyncStatus,
     Set<PendingMetadataField>? pendingMetadataFields,
     Object? serverUploadStatus = _sentinel,
+    Object? deviceId = _sentinel,
   }) {
     return LocalRecordingEntity(
       id: id ?? this.id,
@@ -189,6 +196,7 @@ class LocalRecordingEntity {
       pendingMetadataFields:
           pendingMetadataFields ?? this.pendingMetadataFields,
       serverUploadStatus: _orKeep(serverUploadStatus, this.serverUploadStatus),
+      deviceId: _orKeep(deviceId, this.deviceId),
     );
   }
 
@@ -234,6 +242,7 @@ class LocalRecordingEntity {
   bool _sameUpload(LocalRecordingEntity other) =>
       other.uploadStatus == uploadStatus &&
       other.serverUploadStatus == serverUploadStatus &&
+      other.deviceId == deviceId &&
       other.serverId == serverId &&
       other.gcsUrl == gcsUrl &&
       other.cleaningStatus == cleaningStatus &&
@@ -285,6 +294,7 @@ class LocalRecordingEntity {
     localFilePath,
     uploadStatus,
     serverUploadStatus,
+    deviceId,
     serverId,
     gcsUrl,
     registerId,

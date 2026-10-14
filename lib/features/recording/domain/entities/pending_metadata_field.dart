@@ -58,6 +58,14 @@ abstract final class MetadataSyncStatus {
 /// is the reader's job, at the point it needs the names.
 typedef MetadataOutboxEntry = ({String status, String fieldsJson});
 
+/// A resend the device holds for a recording the server already lists.
+typedef UnsettledUpload = ({
+  String status,
+  String deviceId,
+  int uploadedBytes,
+  String? resumableSessionUri,
+});
+
 /// Serializes [fields] for the Drift column, ordered by declaration so two rows
 /// owing the same fields hold byte-identical text — the recording watch stream
 /// dedups on value equality and would otherwise rebuild on a reordering.

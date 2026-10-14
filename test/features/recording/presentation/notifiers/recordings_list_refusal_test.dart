@@ -2,8 +2,10 @@ import 'dart:async';
 
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:oral_collector/core/database/app_database.dart';
 import 'package:oral_collector/core/database/database_provider.dart';
@@ -16,10 +18,12 @@ import 'package:oral_collector/features/recording/domain/entities/server_recordi
 import 'package:oral_collector/features/recording/domain/repositories/recording_api_repository.dart';
 import 'package:oral_collector/features/recording/presentation/notifiers/recordings_list_notifier.dart';
 import 'package:oral_collector/features/recording/presentation/notifiers/recordings_list_state.dart';
+import 'package:oral_collector/features/recording/presentation/widgets/recording_card.dart';
 import 'package:oral_collector/features/sync/data/providers.dart';
 import 'package:oral_collector/features/sync/domain/repositories/connectivity_service.dart';
 import 'package:oral_collector/features/sync/domain/repositories/sync_engine.dart';
 import 'package:oral_collector/features/sync/presentation/notifiers/sync_notifier.dart';
+import 'package:oral_collector/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _MockApi extends Mock implements RecordingApiRepository {}
@@ -53,6 +57,7 @@ LocalRecordingsCompanion _publishedRow(
   String id = _localId,
   String serverId = _serverId,
   String? gcsUrl = 'gs://bucket/rec-1.m4a',
+  int uploadedBytes = 0,
 }) => LocalRecordingsCompanion.insert(
   id: id,
   projectId: _project.id,
@@ -65,6 +70,7 @@ LocalRecordingsCompanion _publishedRow(
   uploadStatus: Value(uploadStatus),
   serverId: Value(serverId),
   gcsUrl: Value(gcsUrl),
+  uploadedBytes: Value(uploadedBytes),
   cleaningStatus: const Value('none'),
 );
 
@@ -180,15 +186,41 @@ void main() {
       .firstWhere((r) => r.id == id)
       .uploadStatus;
 
-  test(
+  testWidgets(
     'a published recording whose edit was refused shows the refusal on its list card',
-    () async {
-      await repo.insertRecording(_publishedRow('failed_refused_size_mismatch'));
+    (tester) async {
+      await tester.runAsync(() async {
+        await repo.insertRecording(
+          _publishedRow('failed_refused_size_mismatch'),
+        );
+        await loadList();
+      });
+      final card = container
+          .read(recordingsListNotifierProvider)
+          .recordings
+          .single;
 
-      await loadList();
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: RecordingCard(
+                recording: card,
+                genreName: 'Folktale',
+                onTap: () {},
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
 
+      expect(find.byIcon(LucideIcons.alertOctagon), findsOneWidget);
+      expect(find.byIcon(LucideIcons.checkCircle2), findsNothing);
       expect(filtered(StatusFilter.uploaded), isEmpty);
-      expect(statusOf(_serverId), 'failed_refused_size_mismatch');
     },
   );
 
@@ -342,4 +374,32 @@ void main() {
     expect(filtered(StatusFilter.pending), [_serverId]);
     expect(filtered(StatusFilter.uploaded), isEmpty);
   });
+
+  test(
+    'a recording first uploaded with no gcsUrl leaves Enviada while its new audio is unconfirmed',
+    () async {
+      await repo.insertRecording(_publishedRow('local', gcsUrl: null));
+
+      await loadList();
+
+      expect(filtered(StatusFilter.pending), [_serverId]);
+      expect(filtered(StatusFilter.uploaded), isEmpty);
+    },
+  );
+
+  test(
+    'a resent server copy carries the id and progress of the device row',
+    () async {
+      await repo.insertRecording(_publishedRow('local', uploadedBytes: 512));
+
+      await loadList();
+
+      final card = container
+          .read(recordingsListNotifierProvider)
+          .recordings
+          .single;
+      expect(card.deviceId, _localId);
+      expect(card.uploadedBytes, 512);
+    },
+  );
 }
