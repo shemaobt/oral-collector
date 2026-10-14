@@ -65,6 +65,12 @@ final metadataOutboxProvider = StreamProvider<Map<String, MetadataOutboxEntry>>(
   (ref) => ref.watch(localRecordingRepositoryProvider).watchMetadataOutbox(),
 );
 
+/// Upload status of every recording the server refused, keyed by local id and
+/// by server id.
+final refusedUploadsProvider = StreamProvider<Map<String, String>>(
+  (ref) => ref.watch(localRecordingRepositoryProvider).watchRefusedUploads(),
+);
+
 final localRecordingStreamProvider =
     StreamProvider.family<LocalRecordingEntity?, String>((ref, id) {
       final repo = ref.watch(localRecordingRepositoryProvider);

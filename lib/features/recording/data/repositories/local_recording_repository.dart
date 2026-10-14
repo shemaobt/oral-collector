@@ -592,6 +592,27 @@ class LocalRecordingRepository {
         .distinct(_sameOutbox);
   }
 
+  /// The upload status of every recording the server refused, keyed by both
+  /// ids like [watchMetadataOutbox]: the list shows the server's copy of a
+  /// published recording, and a refusal leaves that copy untouched.
+  Stream<Map<String, String>> watchRefusedUploads() {
+    return (_db.select(_db.localRecordings)
+          ..where((t) => t.uploadStatus.isIn(refusalStatuses)))
+        .watch()
+        .map((rows) {
+          final byKey = <String, String>{};
+          for (final row in rows) {
+            byKey[row.id] = row.uploadStatus;
+            final serverId = row.serverId;
+            if (serverId != null && serverId.isNotEmpty) {
+              byKey[serverId] = row.uploadStatus;
+            }
+          }
+          return byKey;
+        })
+        .distinct(_sameRefusals);
+  }
+
   static Map<String, MetadataOutboxEntry> _outboxByKey(
     List<LocalRecording> rows,
   ) {
@@ -606,6 +627,14 @@ class LocalRecordingRepository {
       if (serverId != null && serverId.isNotEmpty) byKey[serverId] = entry;
     }
     return byKey;
+  }
+
+  static bool _sameRefusals(Map<String, String> a, Map<String, String> b) {
+    if (a.length != b.length) return false;
+    for (final entry in a.entries) {
+      if (b[entry.key] != entry.value) return false;
+    }
+    return true;
   }
 
   static bool _sameOutbox(
