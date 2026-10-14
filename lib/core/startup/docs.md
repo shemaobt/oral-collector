@@ -32,16 +32,21 @@ Path: @/lib/core/startup
   Its redirect keys off `authNotifierProvider.isAuthenticated`; because
   `restoreSession` has already seeded `currentUser` by then, the **first**
   redirect decision is made on settled auth state.
-- Because it is its own `MaterialApp`, `StartupSplash` carries
-  `Directionality`/theme (`AppTheme`, [../theme/](../theme/)) before the router's
-  `MaterialApp.router` exists, so the splash can render legally during the gate.
+- `StartupSplash` builds its own `MediaQuery`/`Directionality`/`Theme`
+  (`AppTheme`, [../theme/](../theme/)) because the router's
+  `MaterialApp.router` does not exist yet during the gate. It is deliberately
+  **not** a `MaterialApp`: that app's root Navigator reports its `/` route to
+  the engine, which on web rewrites the address bar before the router reads it,
+  so every opened link — the password-reset link from the email first — was
+  lost and a logged-out user landed on `/login`
+  ([/test/core/startup/startup_splash_test.dart](../../../test/core/startup/startup_splash_test.dart)).
 
 ### Core Implementation
 
 ```
 main.build()
   └─ watch(appStartupProvider)
-       ├─ loading → StartupSplash            (own MaterialApp, themed spinner)
+       ├─ loading → StartupSplash            (themed spinner, no Navigator)
        ├─ error   → _buildApp()              (logged-out → router sends to /login)
        └─ data    → _buildApp()              (router's first redirect on settled auth)
 
@@ -54,7 +59,7 @@ main bootstrap microtask
   autoDispose `FutureProvider`); `main.dart`'s `build()` watch and the microtask
   `.future` await share that single resolution.
 - `StartupSplash` is a `const` `StatelessWidget` with no logic — a centered
-  `CircularProgressIndicator` in a `Scaffold`.
+  `CircularProgressIndicator` on a `Material` in the platform-brightness theme.
 
 ### Things to Know
 
