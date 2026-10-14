@@ -1015,5 +1015,6 @@
   "recording_pendencyDescriptionContext": "Beberapa kata tentang apa yang terjadi dalam rekaman.",
   "recording_pendencyStoryteller": "Belum ada pencerita",
   "recording_pendencyStorytellerContext": "Siapa yang menceritakan kisah ini.",
-  "recording_pendencyCount": "{count, plural, other{{count} bidang perlu diisi}}"
+  "recording_pendencyCount": "{count, plural, other{{count} bidang perlu diisi}}",
+  "trim_excludeRange": "Kecualikan bagian"
 }

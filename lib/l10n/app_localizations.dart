@@ -5023,6 +5023,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, other{{count} fields to fill}}'**
   String recording_pendencyCount(int count);
+
+  /// No description provided for @trim_excludeRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Exclude stretch'**
+  String get trim_excludeRange;
 }
 
 class _AppLocalizationsDelegate

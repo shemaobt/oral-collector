@@ -177,6 +177,16 @@ String formatDurationMinSec(double totalSeconds) {
   return '$m:$s';
 }
 
+String formatPositionCentis(Duration d) {
+  final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
+  final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
+  final cs = (d.inMilliseconds.remainder(1000) ~/ 10).toString().padLeft(
+    2,
+    '0',
+  );
+  return '$m:$s.$cs';
+}
+
 String formatPositionMS(Duration d) {
   final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
   final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');

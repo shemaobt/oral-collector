@@ -263,10 +263,13 @@ Path: @/lib/features/recording/presentation/notifiers
   - **Editing mutations**: `setSplitPoints` (re-derives boundaries and
     remaps per-segment taxonomy via the top-level `remapTaxonomyBySig`
     so a small edit keeps a segment's overrides while a re-split drops
-    them), `toggleExclude` (returns `false` when the "at least one
-    segment" guard blocks the exclusion so the widget surfaces the
-    snackbar), `setSegmentTaxonomy`/`copyFromPrevious`, `setGain`,
-    `clearAllSplits`/`restoreAllExcluded`.
+    them), `toggleExclude` and `confirmExcludedRange` (which first snaps
+    each range edge to a boundary within 250 ms; both return `false`
+    when nothing would be kept, counting excluded ranges as well as excluded
+    segments, so the widget surfaces the snackbar),
+    `setSegmentTaxonomy`/`copyFromPrevious`, `setGain`, `clearAllSplits`
+    (marks and excluded segments; excluded ranges stay) and
+    `restoreAllExcluded` (excluded segments and ranges).
   - **`saveSplit`**, which returns a sealed `TrimSaveOutcome`
     (`TrimSaveSucceeded` / `TrimSaveAborted` / `TrimSaveFailed`) so the
     **widget**, not the notifier, picks the snackbar and navigates. Its
@@ -587,8 +590,9 @@ Path: @/lib/features/recording/presentation/notifiers
 - **`saveSplit` returns an outcome; the widget owns the UI (ENG-193).**
   Because the notifier is headless, `saveSplit` resolves to a sealed
   `TrimSaveOutcome` and never touches `BuildContext`. The screen
-  `switch`es on it: `TrimSaveSucceeded` (carrying `mode` / `keptCount` /
-  `excludedCount`) drives the confirmation snackbar and navigation,
+  `switch`es on it: `TrimSaveSucceeded` (carrying `mode`, `keptCount` as the
+  number of kept parts, and `excludedCount` as the number of excluded
+  stretches) drives the confirmation snackbar and navigation,
   `TrimSaveFailed` surfaces the typed error, and `TrimSaveAborted`
   (recording null, or `decision.canSave` false) is a no-op. This keeps
   the orchestration unit-testable without pumping a widget.

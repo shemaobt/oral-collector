@@ -7,6 +7,7 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:oral_collector/features/recording/presentation/excluded_range.dart';
 import 'package:oral_collector/features/recording/presentation/widgets/trim_waveform.dart';
 import 'package:oral_collector/l10n/app_localizations.dart';
 
@@ -21,6 +22,7 @@ Widget _harness({
   required List<List<double>> emissions,
   double zoom = 1.0,
   double panFraction = 0.0,
+  List<ExcludedRange> excludedRanges = const [],
 }) {
   var splits = initialSplits;
   return MaterialApp(
@@ -34,6 +36,7 @@ Widget _harness({
             builder: (context, setInner) => TrimWaveform(
               bars: List<double>.filled(64, 0.5),
               splitPoints: splits,
+              excludedRanges: excludedRanges,
               totalDuration: totalDuration,
               zoom: zoom,
               panFraction: panFraction,
@@ -270,6 +273,142 @@ void main() {
       final added = emissions.single.where((p) => p != 0.5).toList();
       expect(added, hasLength(1));
       expect(_seconds(added.single, thirtyThree), closeTo(17.0, 0.1));
+    },
+  );
+
+  testWidgets(
+    'toque longo a 100 ms da borda de um trecho excluído não cria corte',
+    (tester) async {
+      final emissions = <List<double>>[];
+      await tester.pumpWidget(
+        _harness(
+          totalDuration: const Duration(minutes: 1),
+          initialSplits: const [],
+          emissions: emissions,
+          excludedRanges: const [
+            ExcludedRange(startFraction: 0.3, endFraction: 0.5),
+          ],
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.longPressAt(
+        _atSeconds(tester, const Duration(minutes: 1), 30.1),
+      );
+      await tester.pumpAndSettle();
+
+      expect(emissions, isEmpty);
+    },
+  );
+
+  testWidgets(
+    'arrastar um corte contra a borda de um trecho excluído o segura a 250 ms',
+    (tester) async {
+      final emissions = <List<double>>[];
+      await tester.pumpWidget(
+        _harness(
+          totalDuration: const Duration(minutes: 1),
+          initialSplits: const [1 / 3],
+          emissions: emissions,
+          excludedRanges: const [
+            ExcludedRange(startFraction: 0.5, endFraction: 0.7),
+          ],
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final from = _atSeconds(tester, const Duration(minutes: 1), 20);
+      final to = _atSeconds(tester, const Duration(minutes: 1), 30.1);
+      await tester.dragFrom(from, to - from);
+      await tester.pumpAndSettle();
+
+      expect(
+        _seconds(emissions.last.single, const Duration(minutes: 1)),
+        closeTo(29.75, 0.01),
+      );
+    },
+  );
+
+  testWidgets(
+    'um corte arrastado entre dois trechos próximos nunca termina a menos de '
+    '250 ms de uma borda',
+    (tester) async {
+      const total = Duration(seconds: 10);
+      const edges = [2.5, 3.0, 3.375, 3.5];
+      final emissions = <List<double>>[];
+      await tester.pumpWidget(
+        _harness(
+          totalDuration: total,
+          initialSplits: const [0.4],
+          emissions: emissions,
+          excludedRanges: const [
+            ExcludedRange(startFraction: 0.3375, endFraction: 0.35),
+            ExcludedRange(startFraction: 0.25, endFraction: 0.30),
+          ],
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final from = _atSeconds(tester, total, 4.0);
+      final to = _atSeconds(tester, total, 3.05);
+      await tester.dragFrom(from, to - from);
+      await tester.pumpAndSettle();
+
+      final mark = _seconds(emissions.last.single, total);
+      expect(
+        mark == 4.0 || edges.every((e) => (mark - e).abs() >= 0.25 - 1e-9),
+        isTrue,
+        reason: 'mark ended at $mark s',
+      );
+      final parts = keptPartsOf(
+        splitPoints: emissions.last,
+        excludedSegments: const {},
+        excludedRanges: const [
+          ExcludedRange(startFraction: 0.3375, endFraction: 0.35),
+          ExcludedRange(startFraction: 0.25, endFraction: 0.30),
+        ],
+      );
+      for (final p in parts) {
+        expect(
+          _seconds(p.endFraction - p.startFraction, total),
+          greaterThanOrEqualTo(0.25 - 1e-9),
+          reason: 'kept part ${p.startFraction}-${p.endFraction}',
+        );
+      }
+    },
+  );
+
+  testWidgets(
+    'um corte arrastado para uma folga de menos de 500 ms entre dois trechos '
+    'fica onde estava',
+    (tester) async {
+      const total = Duration(seconds: 10);
+      final emissions = <List<double>>[];
+      await tester.pumpWidget(
+        _harness(
+          totalDuration: total,
+          zoom: 4.0,
+          panFraction: 0.2,
+          initialSplits: const [0.3, 0.8],
+          emissions: emissions,
+          excludedRanges: const [
+            ExcludedRange(startFraction: 0.2, endFraction: 0.3),
+            ExcludedRange(startFraction: 0.34, endFraction: 0.4),
+          ],
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final from = _atSeconds(tester, total, 3.0, zoom: 4.0, panFraction: 0.2);
+      final to = _atSeconds(tester, total, 3.2, zoom: 4.0, panFraction: 0.2);
+      await tester.dragFrom(from, to - from);
+      await tester.pumpAndSettle();
+
+      final marks = emissions.isEmpty ? [0.3, 0.8] : emissions.last;
+      expect(marks.map((m) => _seconds(m, total)), [
+        closeTo(3.0, 0.01),
+        closeTo(8.0, 0.01),
+      ]);
     },
   );
 }

@@ -2862,4 +2862,7 @@ class AppLocalizationsTpi extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get trim_excludeRange => 'Rausim wanpela hap';
 }

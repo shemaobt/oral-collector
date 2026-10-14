@@ -5,7 +5,11 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/tokens.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../exclude_range_draft.dart';
+import '../excluded_range.dart';
+import 'exclude_range_handles.dart';
 import 'trim_waveform.dart';
+import 'waveform_tools_row.dart';
 
 const Key kTrimMinimapKey = Key('trim_minimap_scrubber');
 
@@ -24,6 +28,13 @@ class TrimWaveformPanel extends StatelessWidget {
     required this.totalDurationLabel,
     required this.totalDurationShortLabel,
     required this.onClearAll,
+    this.excludedRanges = const [],
+    this.excludeEditing,
+    this.playheadPosition = Duration.zero,
+    this.canSplitAtPosition = false,
+    this.onSplitAtPosition,
+    this.isWeb = false,
+    this.onExcludeRange,
     this.playheadFraction,
     this.onPlayheadSeek,
     this.onSeekAndPlay,
@@ -44,6 +55,13 @@ class TrimWaveformPanel extends StatelessWidget {
   final ValueChanged<List<double>> onSplitPointsChanged;
   final int? playingSegment;
   final Set<int> excludedSegments;
+  final List<ExcludedRange> excludedRanges;
+  final ExcludeRangeEditing? excludeEditing;
+  final Duration playheadPosition;
+  final bool canSplitAtPosition;
+  final VoidCallback? onSplitAtPosition;
+  final bool isWeb;
+  final VoidCallback? onExcludeRange;
   final bool hasSplits;
   final int keptCount;
   final int segmentCount;
@@ -174,19 +192,44 @@ class TrimWaveformPanel extends StatelessWidget {
                 },
               ),
             ),
-          TrimWaveform(
-            bars: waveformBars,
-            splitPoints: splitPoints,
-            totalDuration: totalDuration,
-            onSplitPointsChanged: onSplitPointsChanged,
-            playingSegment: playingSegment,
-            excludedSegments: excludedSegments,
-            playheadFraction: playheadFraction,
-            onPlayheadSeek: onPlayheadSeek,
-            onSeekAndPlay: onSeekAndPlay,
-            zoom: zoom,
-            panFraction: panFraction,
-            onZoomPanChanged: onZoomPanChanged,
+          WaveformToolsRow(
+            position: playheadPosition,
+            canSplitAtPosition: canSplitAtPosition,
+            onSplitAtPosition: onSplitAtPosition,
+            isWeb: isWeb,
+            onExcludeRange: onExcludeRange,
+          ),
+          const SizedBox(height: SpacingScale.s8),
+          Stack(
+            children: [
+              TrimWaveform(
+                bars: waveformBars,
+                splitPoints: splitPoints,
+                totalDuration: totalDuration,
+                onSplitPointsChanged: onSplitPointsChanged,
+                playingSegment: playingSegment,
+                excludedSegments: excludedSegments,
+                excludedRanges: excludedRanges,
+                allowSplit: excludeEditing == null,
+                playheadFraction: playheadFraction,
+                onPlayheadSeek: onPlayheadSeek,
+                onSeekAndPlay: onSeekAndPlay,
+                zoom: zoom,
+                panFraction: panFraction,
+                onZoomPanChanged: onZoomPanChanged,
+              ),
+              if (excludeEditing != null)
+                Positioned.fill(
+                  child: ExcludeRangeHandles(
+                    draft: excludeEditing!.draft,
+                    totalDuration: totalDuration,
+                    snapPoints: boundaryPointsOf(splitPoints, excludedRanges),
+                    zoom: zoom,
+                    panFraction: panFraction,
+                    onChanged: excludeEditing!.onChanged,
+                  ),
+                ),
+            ],
           ),
           const SizedBox(height: SpacingScale.s8),
           Row(

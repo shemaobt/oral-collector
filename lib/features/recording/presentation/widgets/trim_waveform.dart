@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/tokens.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../excluded_range.dart';
 import '../trim_edit_decision.dart';
 
 class TrimWaveform extends StatefulWidget {
@@ -15,6 +16,8 @@ class TrimWaveform extends StatefulWidget {
     required this.onSplitPointsChanged,
     this.playingSegment,
     this.excludedSegments = const {},
+    this.excludedRanges = const [],
+    this.allowSplit = true,
     this.playheadFraction,
     this.onPlayheadSeek,
     this.onSeekAndPlay,
@@ -33,6 +36,8 @@ class TrimWaveform extends StatefulWidget {
   final ValueChanged<List<double>> onSplitPointsChanged;
   final int? playingSegment;
   final Set<int> excludedSegments;
+  final List<ExcludedRange> excludedRanges;
+  final bool allowSplit;
   final double? playheadFraction;
   final ValueChanged<double>? onPlayheadSeek;
   final ValueChanged<double>? onSeekAndPlay;
@@ -94,6 +99,7 @@ class _TrimWaveformState extends State<TrimWaveform> {
     for (final p in widget.splitPoints) {
       if ((fraction - p).abs() < minGap) return;
     }
+    if (isNearRangeEdge(fraction, widget.excludedRanges, minGap)) return;
     HapticFeedback.lightImpact();
     widget.onSplitPointsChanged([...widget.splitPoints, fraction]);
   }
@@ -110,7 +116,13 @@ class _TrimWaveformState extends State<TrimWaveform> {
     // On a recording shorter than twice the floor there is no legal position at
     // all, and `clamp` throws on inverted bounds. Hold the handle silently.
     if (maxVal < minVal) return;
-    final clamped = newFraction.clamp(minVal, maxVal);
+    final clamped = keepClearOfRangeEdges(
+      newFraction.clamp(minVal, maxVal),
+      oldValue,
+      widget.excludedRanges,
+      minGap,
+    );
+    if (clamped < minVal || clamped > maxVal) return;
 
     final updated = [...widget.splitPoints];
     final idx = updated.indexOf(oldValue);
@@ -159,6 +171,7 @@ class _TrimWaveformState extends State<TrimWaveform> {
               }
             },
             onLongPressStart: (details) {
+              if (!widget.allowSplit) return;
               final x = details.localPosition.dx;
               final hit = _hitTestMarker(x, totalWidth);
               if (hit != null) {
@@ -240,6 +253,7 @@ class _TrimWaveformState extends State<TrimWaveform> {
                   splitPoints: _sorted,
                   playingSegment: widget.playingSegment,
                   excludedSegments: widget.excludedSegments,
+                  excludedRanges: widget.excludedRanges,
                   playheadFraction: widget.playheadFraction,
                   zoom: widget.zoom,
                   panFraction: widget.panFraction,
@@ -269,6 +283,7 @@ class _SplitWaveformPainter extends CustomPainter {
     required this.splitPoints,
     required this.playingSegment,
     required this.excludedSegments,
+    required this.excludedRanges,
     required this.playheadFraction,
     required this.zoom,
     required this.panFraction,
@@ -286,6 +301,7 @@ class _SplitWaveformPainter extends CustomPainter {
   final List<double> splitPoints;
   final int? playingSegment;
   final Set<int> excludedSegments;
+  final List<ExcludedRange> excludedRanges;
   final double? playheadFraction;
   final double zoom;
   final double panFraction;
@@ -341,27 +357,25 @@ class _SplitWaveformPainter extends CustomPainter {
 
     for (var i = 0; i < segmentCount; i++) {
       if (!excludedSegments.contains(i)) continue;
-      final left = _fullToLocal(boundaries[i], size.width);
-      final right = _fullToLocal(boundaries[i + 1], size.width);
-      if (right < 0 || left > size.width) continue;
-
-      final crossPaint = Paint()
-        ..color = errorColor.withValues(alpha: isDark ? 0.2 : 0.12)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.0;
-
-      canvas.save();
-      canvas.clipRect(Rect.fromLTRB(left, waveTop, right, waveBottom));
-      const spacing = 10.0;
-      final totalSpan = (right - left) + (waveBottom - waveTop);
-      for (var d = 0.0; d < totalSpan; d += spacing) {
-        canvas.drawLine(
-          Offset(left + d, waveTop),
-          Offset(left + d - (waveBottom - waveTop), waveBottom),
-          crossPaint,
-        );
-      }
-      canvas.restore();
+      _drawExcludedHatch(
+        canvas,
+        size,
+        waveTop,
+        waveBottom,
+        boundaries[i],
+        boundaries[i + 1],
+      );
+    }
+    for (final r in excludedRanges) {
+      _drawExcludedHatch(
+        canvas,
+        size,
+        waveTop,
+        waveBottom,
+        r.startFraction,
+        r.endFraction,
+        fill: true,
+      );
     }
 
     for (var i = 0; i < splitPoints.length; i++) {
@@ -416,6 +430,43 @@ class _SplitWaveformPainter extends CustomPainter {
         );
       }
     }
+  }
+
+  void _drawExcludedHatch(
+    Canvas canvas,
+    Size size,
+    double waveTop,
+    double waveBottom,
+    double startFraction,
+    double endFraction, {
+    bool fill = false,
+  }) {
+    final left = _fullToLocal(startFraction, size.width);
+    final right = _fullToLocal(endFraction, size.width);
+    if (right < 0 || left > size.width) return;
+
+    final tint = Paint()
+      ..color = errorColor.withValues(alpha: isDark ? 0.15 : 0.08);
+    final crossPaint = Paint()
+      ..color = errorColor.withValues(alpha: isDark ? 0.2 : 0.12)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0;
+
+    canvas.save();
+    canvas.clipRect(Rect.fromLTRB(left, waveTop, right, waveBottom));
+    if (fill) {
+      canvas.drawRect(Rect.fromLTRB(left, waveTop, right, waveBottom), tint);
+    }
+    const spacing = 10.0;
+    final totalSpan = (right - left) + (waveBottom - waveTop);
+    for (var d = 0.0; d < totalSpan; d += spacing) {
+      canvas.drawLine(
+        Offset(left + d, waveTop),
+        Offset(left + d - (waveBottom - waveTop), waveBottom),
+        crossPaint,
+      );
+    }
+    canvas.restore();
   }
 
   void _drawSegmentTints(
@@ -595,6 +646,7 @@ class _SplitWaveformPainter extends CustomPainter {
         oldDelegate.splitPoints != splitPoints ||
         oldDelegate.playingSegment != playingSegment ||
         oldDelegate.excludedSegments != excludedSegments ||
+        oldDelegate.excludedRanges != excludedRanges ||
         oldDelegate.playheadFraction != playheadFraction ||
         oldDelegate.zoom != zoom ||
         oldDelegate.panFraction != panFraction ||

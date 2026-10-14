@@ -1510,5 +1510,6 @@
         "type": "int"
       }
     }
-  }
+  },
+  "trim_excludeRange": "Exclude stretch"
 }

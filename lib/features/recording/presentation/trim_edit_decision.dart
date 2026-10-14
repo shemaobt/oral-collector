@@ -1,4 +1,5 @@
 import '../domain/audible_gain.dart';
+import 'excluded_range.dart';
 
 /// The shortest segment the trim editor lets you create or drag to (ENG-66).
 /// Expressed in time rather than as a fraction of the file, so the floor stops
@@ -41,10 +42,12 @@ class TrimEditDecision {
     required this.excludedSegments,
     required this.gainDb,
     required this.totalDuration,
+    this.excludedRanges = const [],
   });
 
   final List<double> splitPoints;
   final Set<int> excludedSegments;
+  final List<ExcludedRange> excludedRanges;
   final double gainDb;
   final Duration totalDuration;
 
@@ -52,40 +55,42 @@ class TrimEditDecision {
 
   bool get hasSplits => splitPoints.isNotEmpty;
   bool get hasGainChange => isAudibleGain(gainDb);
-  bool get hasEdits => hasSplits || hasGainChange;
+  bool get hasExclusion => excludedSegments.isNotEmpty || hasRanges;
+  bool get hasRanges => excludedRanges.isNotEmpty;
+  bool get hasCuts => hasSplits || hasRanges;
+  bool get hasEdits => hasCuts || hasGainChange;
   bool get isAudioLongEnough => totalDuration.inMilliseconds > _minDurationMs;
 
   int get segmentCount => splitPoints.length + 1;
-  int get keptCount => segmentCount - excludedSegments.length;
+  List<KeptPart> get keptParts => keptPartsOf(
+    splitPoints: splitPoints,
+    excludedSegments: excludedSegments,
+    excludedRanges: excludedRanges,
+  );
+  int get keptCount => keptParts.length;
 
   TrimSaveMode get mode =>
-      hasSplits ? TrimSaveMode.split : TrimSaveMode.boostOnly;
+      hasCuts ? TrimSaveMode.split : TrimSaveMode.boostOnly;
 
   bool offersJoinChoice({required bool isWeb}) =>
-      !isWeb && excludedSegments.isNotEmpty && keptCount > 0;
+      !isWeb && hasExclusion && keptCount > 0;
 
   bool get canSave {
     if (!isAudioLongEnough) return false;
     if (!hasEdits) return false;
-    if (hasSplits && keptCount == 0) return false;
+    if (hasCuts && keptCount == 0) return false;
     return true;
   }
 
   List<TrimSegment> get segments {
-    final sortedSplits = [...splitPoints]..sort();
-    final boundaries = [0.0, ...sortedSplits, 1.0];
     final totalMs = totalDuration.inMilliseconds;
-    final out = <TrimSegment>[];
-    for (var i = 0; i < segmentCount; i++) {
-      if (excludedSegments.contains(i)) continue;
-      out.add(
+    return [
+      for (final part in keptParts)
         TrimSegment(
-          startSeconds: (boundaries[i] * totalMs).round() / 1000.0,
-          endSeconds: (boundaries[i + 1] * totalMs).round() / 1000.0,
+          startSeconds: (part.startFraction * totalMs).round() / 1000.0,
+          endSeconds: (part.endFraction * totalMs).round() / 1000.0,
           gainDb: gainDb,
         ),
-      );
-    }
-    return out;
+    ];
   }
 }
