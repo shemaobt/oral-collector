@@ -12,19 +12,36 @@ final appStartupProvider = FutureProvider<void>((ref) async {
   await ref.read(authNotifierProvider.notifier).restoreSession();
 });
 
-/// Minimal themed splash shown while [appStartupProvider] resolves. It is its
-/// own [MaterialApp] so it has Directionality/theme before the router exists.
+/// Minimal themed splash shown while [appStartupProvider] resolves. It brings
+/// its own Directionality/theme because the router's app does not exist yet.
+///
+/// It must not be a [MaterialApp]: that app's root Navigator reports its `/`
+/// route to the engine, which on web rewrites the address bar before the router
+/// reads it, so every opened link (the password-reset link first) became `/`.
 class StartupSplash extends StatelessWidget {
   const StartupSplash({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system,
-      home: const Scaffold(body: Center(child: CircularProgressIndicator())),
+    return MediaQuery.fromView(
+      view: View.of(context),
+      child: Builder(
+        builder: (context) {
+          final dark =
+              MediaQuery.platformBrightnessOf(context) == Brightness.dark;
+          final theme = dark ? AppTheme.darkTheme : AppTheme.lightTheme;
+          return Directionality(
+            textDirection: TextDirection.ltr,
+            child: Theme(
+              data: theme,
+              child: Material(
+                color: theme.scaffoldBackgroundColor,
+                child: const Center(child: CircularProgressIndicator()),
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 }
