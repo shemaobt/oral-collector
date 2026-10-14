@@ -12,6 +12,7 @@ import '../../domain/entities/classification.dart';
 import '../../domain/entities/local_recording_entity.dart';
 import '../../domain/entities/local_recording_entity_classification.dart';
 import '../../domain/entities/review_pendency.dart';
+import '../../domain/upload_refusal.dart';
 import '../notifiers/recording_session_notifier.dart';
 import 'metadata_sync_mark.dart';
 
@@ -31,6 +32,7 @@ Color? _statusAccent(String uploadStatus, AppColorSet colors) =>
       'failed_description' ||
       'failed_exhausted' ||
       'failed_missing_file' => colors.error,
+      final status when isRefusalStatus(status) => colors.error,
       _ => null,
     };
 
@@ -50,6 +52,7 @@ IconData _statusIcon(String uploadStatus) => switch (uploadStatus) {
   'failed_description' => LucideIcons.fileText,
   'failed_exhausted' => LucideIcons.alertOctagon,
   'failed_missing_file' => LucideIcons.fileX,
+  final status when isRefusalStatus(status) => LucideIcons.alertOctagon,
   _ => LucideIcons.smartphone,
 };
 
@@ -62,6 +65,7 @@ String _statusLabel(String uploadStatus, AppLocalizations l10n) =>
       'failed_description' => l10n.recording_statusDescriptionTooShort,
       'failed_exhausted' => l10n.recording_statusRetriesExhausted,
       'failed_missing_file' => l10n.recording_statusFileMissing,
+      final status when isRefusalStatus(status) => l10n.recording_statusFailed,
       _ => l10n.recording_statusLocal,
     };
 
@@ -156,11 +160,15 @@ class RecordingCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = AppColors.of(context);
     final isUploadingThis = ref.watch(
-      syncNotifierProvider.select((s) => s.uploadingId == recording.id),
+      syncNotifierProvider.select(
+        (s) => s.uploadingId == (recording.deviceId ?? recording.id),
+      ),
     );
     final uploadProgress = ref.watch(
       syncNotifierProvider.select(
-        (s) => s.uploadingId == recording.id ? s.syncProgress : 0,
+        (s) => s.uploadingId == (recording.deviceId ?? recording.id)
+            ? s.syncProgress
+            : 0,
       ),
     );
     final isRecordingActive = ref.watch(

@@ -1016,5 +1016,11 @@
   "recording_pendencyStoryteller": "بدون راوٍ",
   "recording_pendencyStorytellerContext": "من يروي هذه القصة.",
   "recording_pendencyCount": "{count, plural, two{حقلان بحاجة إلى تعبئة} few{{count} حقول بحاجة إلى تعبئة} many{{count} حقلاً بحاجة إلى تعبئة} other{{count} حقل بحاجة إلى تعبئة}}",
-  "trim_excludeRange": "استبعاد مقطع"
+  "trim_excludeRange": "استبعاد مقطع",
+  "recording_uploadRefusedEditMessage": "رفض الخادم الصوت المعدَّل ({reason}). لا يزال الصوت السابق منشورًا.",
+  "recording_uploadRefusedEditNoReasonMessage": "رفض الخادم الصوت المعدَّل. لا يزال الصوت السابق منشورًا.",
+  "recording_uploadRefusedMessage": "تم رفض الرفع. يمكنك المحاولة مرة أخرى.",
+  "recording_uploadRefusalObjectMissing": "لم يصل الصوت إلى الخادم",
+  "recording_uploadRefusalSizeMismatch": "حجم الصوت لا يطابق الحجم المسجَّل",
+  "recording_uploadRefusalChecksumMismatch": "وصل محتوى الصوت مختلفًا عمّا أُرسل"
 }

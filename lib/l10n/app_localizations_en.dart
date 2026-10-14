@@ -2879,4 +2879,29 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get trim_excludeRange => 'Exclude stretch';
+
+  @override
+  String recording_uploadRefusedEditMessage(String reason) {
+    return 'The server refused the edited audio ($reason). The earlier audio is still published.';
+  }
+
+  @override
+  String get recording_uploadRefusedEditNoReasonMessage =>
+      'The server refused the edited audio. The earlier audio is still published.';
+
+  @override
+  String get recording_uploadRefusedMessage =>
+      'The upload was refused. You can try again.';
+
+  @override
+  String get recording_uploadRefusalObjectMissing =>
+      'the audio did not reach the server';
+
+  @override
+  String get recording_uploadRefusalSizeMismatch =>
+      'the audio size does not match the recorded size';
+
+  @override
+  String get recording_uploadRefusalChecksumMismatch =>
+      'the audio content arrived different from what was sent';
 }

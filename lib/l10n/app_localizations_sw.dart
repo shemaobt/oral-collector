@@ -2873,4 +2873,29 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get trim_excludeRange => 'Ondoa sehemu';
+
+  @override
+  String recording_uploadRefusedEditMessage(String reason) {
+    return 'Seva imekataa sauti iliyohaririwa ($reason). Sauti ya awali bado imechapishwa.';
+  }
+
+  @override
+  String get recording_uploadRefusedEditNoReasonMessage =>
+      'Seva imekataa sauti iliyohaririwa. Sauti ya awali bado imechapishwa.';
+
+  @override
+  String get recording_uploadRefusedMessage =>
+      'Utumaji umekataliwa. Unaweza kujaribu tena.';
+
+  @override
+  String get recording_uploadRefusalObjectMissing =>
+      'sauti haikufika kwenye seva';
+
+  @override
+  String get recording_uploadRefusalSizeMismatch =>
+      'ukubwa wa sauti haulingani na uliorekodiwa';
+
+  @override
+  String get recording_uploadRefusalChecksumMismatch =>
+      'maudhui ya sauti yalifika tofauti na yaliyotumwa';
 }

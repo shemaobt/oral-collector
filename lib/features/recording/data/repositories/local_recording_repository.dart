@@ -6,6 +6,7 @@ import '../../domain/entities/classification.dart';
 import '../../domain/entities/local_recording_entity.dart';
 import '../../domain/entities/pending_metadata_field.dart';
 import '../../domain/entities/review_flag.dart';
+import '../../domain/upload_refusal.dart';
 import '../local_recording_entity_to_companion.dart';
 import '../local_recording_to_entity.dart';
 
@@ -374,7 +375,8 @@ class LocalRecordingRepository {
   /// `SyncNotifier.resetAndRetry`, which drains as it goes and would fan out N
   /// passes against a guard that admits one.
   ///
-  /// Scoped to the two statuses a bare retry can still move. `failed_conflict`
+  /// Scoped to the statuses a bare retry can still move: the two budget
+  /// failures and the server's refusals of the audio. `failed_conflict`
   /// and `failed_description` would be refused identically until the user
   /// fixes the title or the description; `failed_missing_file` has no audio
   /// left to send. Each has its own banner leading to its own way out.
@@ -383,7 +385,8 @@ class LocalRecordingRepository {
           (t) =>
               t.projectId.equals(projectId) &
               (t.uploadStatus.equals('failed') |
-                  t.uploadStatus.equals('failed_exhausted')),
+                  t.uploadStatus.equals('failed_exhausted') |
+                  t.uploadStatus.isIn(refusalStatuses)),
         ))
         .write(_requeueCompanion);
   }
@@ -585,30 +588,52 @@ class LocalRecordingRepository {
           (t) => t.metadataSyncStatus.equals(MetadataSyncStatus.synced).not(),
         ))
         .watch()
-        .map(_outboxByKey)
-        .distinct(_sameOutbox);
+        .map((rows) => _keyedByBothIds(rows, _outboxEntry))
+        .distinct(_sameEntries);
   }
 
-  static Map<String, MetadataOutboxEntry> _outboxByKey(
+  /// What the device says about every recording the server knows whose new
+  /// audio the server has not confirmed, keyed by both ids like
+  /// [watchMetadataOutbox]. The server lists only uploaded recordings, so a row
+  /// here that matches a listed copy is a resend; a first upload in flight
+  /// matches none. The list shows the server's copy, and a refused, queued or
+  /// failed resend leaves that copy untouched.
+  Stream<Map<String, UnsettledUpload>> watchUnsettledUploads() {
+    return (_db.select(_db.localRecordings)..where(
+          (t) =>
+              t.serverId.isNotNull() &
+              t.uploadStatus.isIn(const ['uploaded', 'verified']).not(),
+        ))
+        .watch()
+        .map((rows) => _keyedByBothIds(rows, _unsettledUpload))
+        .distinct(_sameEntries);
+  }
+
+  static Map<String, V> _keyedByBothIds<V>(
     List<LocalRecording> rows,
+    V Function(LocalRecording row) valueOf,
   ) {
-    final byKey = <String, MetadataOutboxEntry>{};
+    final byKey = <String, V>{};
     for (final row in rows) {
-      final entry = (
-        status: row.metadataSyncStatus,
-        fieldsJson: row.pendingMetadataJson,
-      );
-      byKey[row.id] = entry;
+      final value = valueOf(row);
+      byKey[row.id] = value;
       final serverId = row.serverId;
-      if (serverId != null && serverId.isNotEmpty) byKey[serverId] = entry;
+      if (serverId != null && serverId.isNotEmpty) byKey[serverId] = value;
     }
     return byKey;
   }
 
-  static bool _sameOutbox(
-    Map<String, MetadataOutboxEntry> a,
-    Map<String, MetadataOutboxEntry> b,
-  ) {
+  static UnsettledUpload _unsettledUpload(LocalRecording row) => (
+    status: row.uploadStatus,
+    deviceId: row.id,
+    uploadedBytes: row.uploadedBytes,
+    resumableSessionUri: row.resumableSessionUri,
+  );
+
+  static MetadataOutboxEntry _outboxEntry(LocalRecording row) =>
+      (status: row.metadataSyncStatus, fieldsJson: row.pendingMetadataJson);
+
+  static bool _sameEntries<V>(Map<String, V> a, Map<String, V> b) {
     if (a.length != b.length) return false;
     for (final entry in a.entries) {
       if (b[entry.key] != entry.value) return false;

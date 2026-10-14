@@ -2890,4 +2890,29 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get trim_excludeRange => 'अंश बाहर करें';
+
+  @override
+  String recording_uploadRefusedEditMessage(String reason) {
+    return 'सर्वर ने संपादित ऑडियो अस्वीकार कर दिया ($reason)। पहले वाला ऑडियो अब भी प्रकाशित है।';
+  }
+
+  @override
+  String get recording_uploadRefusedEditNoReasonMessage =>
+      'सर्वर ने संपादित ऑडियो अस्वीकार कर दिया। पहले वाला ऑडियो अब भी प्रकाशित है।';
+
+  @override
+  String get recording_uploadRefusedMessage =>
+      'अपलोड अस्वीकार कर दिया गया। आप फिर से कोशिश कर सकते हैं।';
+
+  @override
+  String get recording_uploadRefusalObjectMissing =>
+      'ऑडियो सर्वर तक नहीं पहुँचा';
+
+  @override
+  String get recording_uploadRefusalSizeMismatch =>
+      'ऑडियो का आकार दर्ज आकार से मेल नहीं खाता';
+
+  @override
+  String get recording_uploadRefusalChecksumMismatch =>
+      'ऑडियो की सामग्री भेजी गई सामग्री से अलग पहुँची';
 }

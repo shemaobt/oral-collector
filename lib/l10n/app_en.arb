@@ -1511,5 +1511,16 @@
       }
     }
   },
-  "trim_excludeRange": "Exclude stretch"
+  "trim_excludeRange": "Exclude stretch",
+  "recording_uploadRefusedEditMessage": "The server refused the edited audio ({reason}). The earlier audio is still published.",
+  "@recording_uploadRefusedEditMessage": {
+    "placeholders": {
+      "reason": {"type": "String"}
+    }
+  },
+  "recording_uploadRefusedEditNoReasonMessage": "The server refused the edited audio. The earlier audio is still published.",
+  "recording_uploadRefusedMessage": "The upload was refused. You can try again.",
+  "recording_uploadRefusalObjectMissing": "the audio did not reach the server",
+  "recording_uploadRefusalSizeMismatch": "the audio size does not match the recorded size",
+  "recording_uploadRefusalChecksumMismatch": "the audio content arrived different from what was sent"
 }

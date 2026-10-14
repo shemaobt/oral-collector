@@ -86,8 +86,9 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
       if (error != null) {
         _reportUnexpected(error, next.stackTrace ?? StackTrace.current);
       }
-      _remarkOutbox();
+      _remarkDevice();
     });
+    ref.listen(unsettledUploadsProvider, (_, _) => _remarkDevice());
     return const RecordingsListState();
   }
 
@@ -100,11 +101,24 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
   Map<String, MetadataOutboxEntry>? get _outbox =>
       ref.read(metadataOutboxProvider).valueOrNull;
 
-  void _remarkOutbox() {
-    if (state.recordings.isEmpty) return;
+  Map<String, UnsettledUpload> get _unsettled =>
+      ref.read(unsettledUploadsProvider).valueOrNull ?? const {};
+
+  List<LocalRecordingEntity> _withDevice(List<LocalRecordingEntity> list) {
     final owed = _outbox;
-    if (owed == null) return;
-    final remarked = [for (final r in state.recordings) _withOutbox(r, owed)];
+    final unsettled = _unsettled;
+    return [
+      for (final r in list)
+        _withUnsettledUpload(
+          owed == null ? r : _withOutbox(r, owed),
+          unsettled,
+        ),
+    ];
+  }
+
+  void _remarkDevice() {
+    if (state.recordings.isEmpty) return;
+    final remarked = _withDevice(state.recordings);
     // `RecordingsListState` compares by identity, so any write here notifies
     // and the screen rebuilds every card. A Drift `watch` re-runs on writes
     // that have nothing to do with the outbox, and while `.distinct` stops the
@@ -150,6 +164,43 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
         : recording.copyWith(
             metadataSyncStatus: status,
             pendingMetadataFields: fields,
+          );
+  }
+
+  /// The device's word on a resend put back on the server's copy of
+  /// [recording]: a refused, queued or failed resend leaves the server row
+  /// untouched, so the copy still says uploaded while the device holds an audio
+  /// the server has not taken. The server's own status returns only once the
+  /// device has nothing unsettled. A device row is never touched: only a copy
+  /// the server gave carries [LocalRecordingEntity.serverUploadStatus].
+  static LocalRecordingEntity _withUnsettledUpload(
+    LocalRecordingEntity recording,
+    Map<String, UnsettledUpload> unsettled,
+  ) {
+    final serverStatus = recording.serverUploadStatus;
+    if (serverStatus == null) return recording;
+    final resend = unsettled[recording.id];
+    if (resend == null) {
+      return serverStatus == recording.uploadStatus &&
+              recording.deviceId == null
+          ? recording
+          : recording.copyWith(
+              uploadStatus: serverStatus,
+              deviceId: null,
+              uploadedBytes: 0,
+              resumableSessionUri: null,
+            );
+    }
+    return resend.status == recording.uploadStatus &&
+            resend.deviceId == recording.deviceId &&
+            resend.uploadedBytes == recording.uploadedBytes &&
+            resend.resumableSessionUri == recording.resumableSessionUri
+        ? recording
+        : recording.copyWith(
+            uploadStatus: resend.status,
+            deviceId: resend.deviceId,
+            uploadedBytes: resend.uploadedBytes,
+            resumableSessionUri: resend.resumableSessionUri,
           );
   }
 
@@ -266,7 +317,7 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
       currentRecordings.removeWhere((r) => erased.contains(r.id));
 
       state = state.copyWith(
-        recordings: currentRecordings,
+        recordings: _withDevice(currentRecordings),
         isLoadingMore: false,
         hasMore: hasMore,
       );
@@ -551,11 +602,12 @@ class RecordingsListNotifier extends Notifier<RecordingsListState> {
   List<LocalRecordingEntity> _convertServerRecordings(
     List<ServerRecording> recordings,
   ) {
-    final owed = _outbox;
-    return recordings.map((s) {
-      final entity = localRecordingToEntity(serverRecordingToLocal(s));
-      return owed == null ? entity : _withOutbox(entity, owed);
-    }).toList();
+    return _withDevice([
+      for (final s in recordings)
+        localRecordingToEntity(
+          serverRecordingToLocal(s),
+        ).copyWith(serverUploadStatus: s.uploadStatus),
+    ]);
   }
 
   Future<List<LocalRecordingEntity>?> _loadLocal(String projectId) async {

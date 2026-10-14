@@ -2879,4 +2879,28 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get trim_excludeRange => 'استبعاد مقطع';
+
+  @override
+  String recording_uploadRefusedEditMessage(String reason) {
+    return 'رفض الخادم الصوت المعدَّل ($reason). لا يزال الصوت السابق منشورًا.';
+  }
+
+  @override
+  String get recording_uploadRefusedEditNoReasonMessage =>
+      'رفض الخادم الصوت المعدَّل. لا يزال الصوت السابق منشورًا.';
+
+  @override
+  String get recording_uploadRefusedMessage =>
+      'تم رفض الرفع. يمكنك المحاولة مرة أخرى.';
+
+  @override
+  String get recording_uploadRefusalObjectMissing => 'لم يصل الصوت إلى الخادم';
+
+  @override
+  String get recording_uploadRefusalSizeMismatch =>
+      'حجم الصوت لا يطابق الحجم المسجَّل';
+
+  @override
+  String get recording_uploadRefusalChecksumMismatch =>
+      'وصل محتوى الصوت مختلفًا عمّا أُرسل';
 }

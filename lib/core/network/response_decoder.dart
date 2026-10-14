@@ -32,3 +32,15 @@ List<dynamic> decodeList(http.Response response) {
   if (decoded is List) return decoded;
   throw ParseException(field: '<root>', expected: 'List', cause: decoded);
 }
+
+/// The `code` of an error response's JSON envelope, or null when the body is
+/// not a JSON object carrying a string `code`.
+String? readErrorCode(http.Response response) {
+  try {
+    final decoded = jsonDecode(response.body);
+    final code = decoded is Map<String, dynamic> ? decoded['code'] : null;
+    return code is String ? code : null;
+  } on FormatException {
+    return null;
+  }
+}

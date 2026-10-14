@@ -1016,5 +1016,11 @@
   "recording_pendencyStoryteller": "Pas de narrateur",
   "recording_pendencyStorytellerContext": "Qui raconte cette histoire.",
   "recording_pendencyCount": "{count, plural, other{{count} champs à compléter}}",
-  "trim_excludeRange": "Exclure l'extrait"
+  "trim_excludeRange": "Exclure l'extrait",
+  "recording_uploadRefusedEditMessage": "Le serveur a refusé l'audio modifié ({reason}). L'audio précédent reste publié.",
+  "recording_uploadRefusedEditNoReasonMessage": "Le serveur a refusé l'audio modifié. L'audio précédent reste publié.",
+  "recording_uploadRefusedMessage": "L'envoi a été refusé. Vous pouvez réessayer.",
+  "recording_uploadRefusalObjectMissing": "l'audio n'est pas arrivé sur le serveur",
+  "recording_uploadRefusalSizeMismatch": "la taille de l'audio ne correspond pas à celle enregistrée",
+  "recording_uploadRefusalChecksumMismatch": "le contenu de l'audio est arrivé différent de celui envoyé"
 }

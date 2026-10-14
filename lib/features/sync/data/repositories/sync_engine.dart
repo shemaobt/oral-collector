@@ -25,6 +25,7 @@ import '../../../recording/data/repositories/local_recording_repository.dart';
 import '../../../recording/domain/entities/pending_metadata_field.dart';
 import '../../../recording/domain/entities/review_flag.dart';
 import '../../../recording/domain/repositories/recording_api_repository.dart';
+import '../../../recording/domain/upload_refusal.dart';
 import '../../../storyteller/data/repositories/local_storyteller_repository.dart';
 import '../../domain/repositories/connectivity_service.dart';
 import '../../domain/repositories/sync_engine.dart';
@@ -458,6 +459,15 @@ class SyncEngineImpl implements SyncEngine {
             body: confirmBody,
           )
           .timeout(_apiTimeout);
+
+      if (confirmResponse.statusCode == 400) {
+        _log.warning('confirm-upload refused the audio of $id');
+        await _markPermanentlyFailed(
+          id,
+          status: refusalStatusFor(readErrorCode(confirmResponse)),
+        );
+        return _UploadOutcome.failed;
+      }
 
       final confirmData = decodeObject(confirmResponse);
       final gcsUrl = readStringOrNull(confirmData, 'gcs_url');

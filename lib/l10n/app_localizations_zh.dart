@@ -2751,4 +2751,25 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get trim_excludeRange => '排除片段';
+
+  @override
+  String recording_uploadRefusedEditMessage(String reason) {
+    return '服务器拒绝了编辑后的音频（$reason）。之前的音频仍保持发布。';
+  }
+
+  @override
+  String get recording_uploadRefusedEditNoReasonMessage =>
+      '服务器拒绝了编辑后的音频。之前的音频仍保持发布。';
+
+  @override
+  String get recording_uploadRefusedMessage => '上传被拒绝。您可以重试。';
+
+  @override
+  String get recording_uploadRefusalObjectMissing => '音频未到达服务器';
+
+  @override
+  String get recording_uploadRefusalSizeMismatch => '音频大小与记录的大小不一致';
+
+  @override
+  String get recording_uploadRefusalChecksumMismatch => '音频内容与发送的不一致';
 }
