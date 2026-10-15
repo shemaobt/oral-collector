@@ -116,6 +116,7 @@ class SubcategorySelectionStep extends StatelessWidget {
                                     if (localizedSubcategoryDescription(
                                           l10n,
                                           subcategory.name,
+                                          id: subcategory.id,
                                         )
                                         case final desc?) ...[
                                       const SizedBox(height: SpacingScale.s4),

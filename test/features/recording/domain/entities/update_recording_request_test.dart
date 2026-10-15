@@ -43,12 +43,18 @@ void main() {
       });
     });
 
-    test('omits the secondary keys that are individually null', () {
+    test('sends the secondary as one unit, with explicit nulls for its empty '
+        'fields', () {
       final json = const UpdateRecordingRequest(
         secondaryGenreId: 'g-2',
+        secondaryRegisterId: 'r-2',
       ).toJson();
 
-      expect(json, {'secondary_genre_id': 'g-2'});
+      expect(json, {
+        'secondary_genre_id': 'g-2',
+        'secondary_subcategory_id': null,
+        'secondary_register_id': 'r-2',
+      });
     });
 
     test(

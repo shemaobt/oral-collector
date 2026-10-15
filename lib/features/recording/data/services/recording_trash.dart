@@ -38,6 +38,7 @@ class RecordingTrash {
       await source.copy(trashedPath);
       await source.delete();
     }
+    await File(trashedPath).setLastModified(DateTime.now());
 
     final meta = {
       ...metadata,

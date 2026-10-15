@@ -24,6 +24,15 @@ Future<void> writeFileBytes(String path, Uint8List bytes) async =>
 
 Future<void> deleteFile(String path) async => _store.delete(path);
 
+/// Web-only, and the native variant throws rather than answering: enumerating
+/// the whole store is a question only the browser build can answer, because
+/// only there is every file in one flat keyspace. Native audio is spread over
+/// directories a caller lists individually, so an empty list would be a false
+/// answer, not a degenerate one — `web_file_picker_native.dart` refuses a
+/// web-only capability the same way. The startup sweep for recordings
+/// abandoned before upload (ENG-426) is the one caller.
+Future<List<String>> listStoredKeys() async => _store.listKeys();
+
 Future<void> copyFile(String from, String to) async => _store.copy(from, to);
 
 Future<void> createDir(String path) async {}

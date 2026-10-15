@@ -20,8 +20,10 @@ LocalRecordingEntity _makeRecording({
   String id = 'rec-1',
   String uploadStatus = 'uploading',
   String? secondaryGenreId,
+  String? deviceId,
 }) => LocalRecordingEntity(
   id: id,
+  deviceId: deviceId,
   projectId: 'proj-1',
   genreId: 'genre-1',
   subcategoryId: null,
@@ -96,6 +98,22 @@ void main() {
 
     expect(find.byType(LinearProgressIndicator), findsNothing);
   });
+
+  testWidgets(
+    'a server copy the device is resending shows the progress of the device row',
+    (tester) async {
+      await tester.pumpWidget(
+        _harness(
+          recording: _makeRecording(id: 'srv-1', deviceId: 'rec-1'),
+          state: const SyncState(uploadingId: 'rec-1', syncProgress: 42),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(LinearProgressIndicator), findsOneWidget);
+      expect(find.text('42%'), findsOneWidget);
+    },
+  );
 
   testWidgets(
     'shows progress bar and percent when this recording is uploading',

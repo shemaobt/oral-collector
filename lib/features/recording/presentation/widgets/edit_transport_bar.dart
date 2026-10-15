@@ -4,6 +4,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/tokens.dart';
+import '../../../../shared/utils/format.dart';
 
 class EditTransportBar extends StatelessWidget {
   const EditTransportBar({
@@ -12,34 +13,17 @@ class EditTransportBar extends StatelessWidget {
     required this.position,
     required this.duration,
     required this.onPlayPause,
-    this.onSplitAtPosition,
-    this.canSplitAtPosition = false,
   });
 
   final bool isPlaying;
   final Duration position;
   final Duration duration;
   final VoidCallback onPlayPause;
-  final VoidCallback? onSplitAtPosition;
-  final bool canSplitAtPosition;
-
-  String _fmt(Duration d) {
-    final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
-    final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
-    final cs = (d.inMilliseconds.remainder(1000) ~/ 10).toString().padLeft(
-      2,
-      '0',
-    );
-    return '$m:$s.$cs';
-  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = AppColors.of(context);
-
-    final showSplitButton =
-        !isPlaying && canSplitAtPosition && onSplitAtPosition != null;
 
     return Container(
       padding: const EdgeInsets.symmetric(
@@ -51,87 +35,54 @@ class EditTransportBar extends StatelessWidget {
         borderRadius: BorderRadius.circular(RadiusScale.r12),
         border: Border.all(color: colors.border.withValues(alpha: 0.4)),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          GestureDetector(
-            onTap: () {
-              HapticFeedback.lightImpact();
-              onPlayPause();
-            },
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: colors.accent,
-                borderRadius: BorderRadius.circular(RadiusScale.r8),
-              ),
-              alignment: Alignment.center,
-              child: Icon(
-                isPlaying ? LucideIcons.pause : LucideIcons.play,
-                size: 16,
-                color: AppColors.white,
-              ),
-            ),
-          ),
-          const SizedBox(width: SpacingScale.s12),
-          Expanded(
-            child: RichText(
-              text: TextSpan(
-                style: theme.textTheme.labelMedium?.copyWith(
-                  color: colors.foreground,
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                  fontWeight: FontWeight.w600,
-                ),
-                children: [
-                  TextSpan(text: _fmt(position)),
-                  TextSpan(
-                    text: ' / ${_fmt(duration)}',
-                    style: theme.textTheme.labelMedium?.copyWith(
-                      color: colors.foreground.withValues(alpha: 0.45),
-                      fontWeight: FontWeight.w500,
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                    ),
+          Row(
+            children: [
+              GestureDetector(
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  onPlayPause();
+                },
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: colors.accent,
+                    borderRadius: BorderRadius.circular(RadiusScale.r8),
                   ),
-                ],
-              ),
-            ),
-          ),
-          if (showSplitButton)
-            GestureDetector(
-              onTap: () {
-                HapticFeedback.mediumImpact();
-                onSplitAtPosition!();
-              },
-              child: Container(
-                height: 36,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: SpacingScale.s12,
-                ),
-                decoration: BoxDecoration(
-                  color: colors.accent.withValues(alpha: 0.14),
-                  borderRadius: BorderRadius.circular(RadiusScale.r8),
-                  border: Border.all(
-                    color: colors.accent.withValues(alpha: 0.45),
+                  alignment: Alignment.center,
+                  child: Icon(
+                    isPlaying ? LucideIcons.pause : LucideIcons.play,
+                    size: 16,
+                    color: AppColors.white,
                   ),
                 ),
-                alignment: Alignment.center,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
+              ),
+              const SizedBox(width: SpacingScale.s12),
+              RichText(
+                text: TextSpan(
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: colors.foreground,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                    fontWeight: FontWeight.w600,
+                  ),
                   children: [
-                    Icon(LucideIcons.scissors, size: 14, color: colors.accent),
-                    const SizedBox(width: SpacingScale.s8),
-                    Text(
-                      _fmt(position),
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: colors.accent,
-                        fontWeight: FontWeight.w700,
+                    TextSpan(text: formatPositionCentis(position)),
+                    TextSpan(
+                      text: ' / ${formatPositionCentis(duration)}',
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: colors.foreground.withValues(alpha: 0.45),
+                        fontWeight: FontWeight.w500,
                         fontFeatures: const [FontFeature.tabularFigures()],
                       ),
                     ),
                   ],
                 ),
               ),
-            ),
+            ],
+          ),
         ],
       ),
     );

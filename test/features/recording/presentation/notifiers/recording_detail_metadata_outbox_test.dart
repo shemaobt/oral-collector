@@ -227,6 +227,29 @@ void main() {
       });
     });
 
+    test('offline, a new register is written locally and owed in the edit '
+        'outbox, so the drain sends it when the connection returns', () async {
+      final recording = await seed();
+      final c = makeContainer();
+
+      await notifierOf(c).moveCategory(
+        recording,
+        const MoveCategoryResult(
+          genreId: 'genre-1',
+          subcategoryId: 'sub-1',
+          registerId: 'formal',
+        ),
+      );
+
+      expect((await repo.getRecordingById(recordingId))!.registerId, 'formal');
+      expect(await owed(), {
+        PendingMetadataField.genre,
+        PendingMetadataField.subcategory,
+        PendingMetadataField.register,
+        PendingMetadataField.secondary,
+      });
+    });
+
     test('classify owes the whole classification it wrote', () async {
       final recording = await seed();
       final c = makeContainer();

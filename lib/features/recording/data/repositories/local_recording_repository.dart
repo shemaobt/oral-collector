@@ -6,6 +6,7 @@ import '../../domain/entities/classification.dart';
 import '../../domain/entities/local_recording_entity.dart';
 import '../../domain/entities/pending_metadata_field.dart';
 import '../../domain/entities/review_flag.dart';
+import '../../domain/upload_refusal.dart';
 import '../local_recording_entity_to_companion.dart';
 import '../local_recording_to_entity.dart';
 
@@ -136,6 +137,7 @@ class LocalRecordingRepository {
     required String genreId,
     required String? subcategoryId,
     required bool clearSecondary,
+    String? registerId,
     String? secondaryGenreId,
     String? secondarySubcategoryId,
     String? secondaryRegisterId,
@@ -145,6 +147,9 @@ class LocalRecordingRepository {
       LocalRecordingsCompanion(
         genreId: Value(genreId),
         subcategoryId: Value(subcategoryId),
+        registerId: registerId != null
+            ? Value(registerId)
+            : const Value.absent(),
         secondaryGenreId: clearSecondary
             ? const Value(null)
             : Value(secondaryGenreId),
@@ -237,6 +242,20 @@ class LocalRecordingRepository {
             (t) => OrderingTerm.asc(t.id),
           ]))
         .get();
+  }
+
+  /// Where the audio of every upload waiting to resume is stored.
+  ///
+  /// One query per caller, not one per key: the startup sweep asks once and
+  /// checks the whole store against the answer. Rows written before ENG-427,
+  /// and web imports whose bytes were never in storage, carry an empty path
+  /// and contribute nothing — there is no key to spare.
+  Future<Set<String>> getPendingWebUploadKeys() async {
+    final pending = await getPendingWebUploads();
+    return pending
+        .map((r) => r.localFilePath)
+        .where((path) => path.isNotEmpty)
+        .toSet();
   }
 
   /// Recordings of [projectId] the server does not have yet, counted once each.
@@ -356,7 +375,8 @@ class LocalRecordingRepository {
   /// `SyncNotifier.resetAndRetry`, which drains as it goes and would fan out N
   /// passes against a guard that admits one.
   ///
-  /// Scoped to the two statuses a bare retry can still move. `failed_conflict`
+  /// Scoped to the statuses a bare retry can still move: the two budget
+  /// failures and the server's refusals of the audio. `failed_conflict`
   /// and `failed_description` would be refused identically until the user
   /// fixes the title or the description; `failed_missing_file` has no audio
   /// left to send. Each has its own banner leading to its own way out.
@@ -365,7 +385,8 @@ class LocalRecordingRepository {
           (t) =>
               t.projectId.equals(projectId) &
               (t.uploadStatus.equals('failed') |
-                  t.uploadStatus.equals('failed_exhausted')),
+                  t.uploadStatus.equals('failed_exhausted') |
+                  t.uploadStatus.isIn(refusalStatuses)),
         ))
         .write(_requeueCompanion);
   }
@@ -567,30 +588,52 @@ class LocalRecordingRepository {
           (t) => t.metadataSyncStatus.equals(MetadataSyncStatus.synced).not(),
         ))
         .watch()
-        .map(_outboxByKey)
-        .distinct(_sameOutbox);
+        .map((rows) => _keyedByBothIds(rows, _outboxEntry))
+        .distinct(_sameEntries);
   }
 
-  static Map<String, MetadataOutboxEntry> _outboxByKey(
+  /// What the device says about every recording the server knows whose new
+  /// audio the server has not confirmed, keyed by both ids like
+  /// [watchMetadataOutbox]. The server lists only uploaded recordings, so a row
+  /// here that matches a listed copy is a resend; a first upload in flight
+  /// matches none. The list shows the server's copy, and a refused, queued or
+  /// failed resend leaves that copy untouched.
+  Stream<Map<String, UnsettledUpload>> watchUnsettledUploads() {
+    return (_db.select(_db.localRecordings)..where(
+          (t) =>
+              t.serverId.isNotNull() &
+              t.uploadStatus.isIn(const ['uploaded', 'verified']).not(),
+        ))
+        .watch()
+        .map((rows) => _keyedByBothIds(rows, _unsettledUpload))
+        .distinct(_sameEntries);
+  }
+
+  static Map<String, V> _keyedByBothIds<V>(
     List<LocalRecording> rows,
+    V Function(LocalRecording row) valueOf,
   ) {
-    final byKey = <String, MetadataOutboxEntry>{};
+    final byKey = <String, V>{};
     for (final row in rows) {
-      final entry = (
-        status: row.metadataSyncStatus,
-        fieldsJson: row.pendingMetadataJson,
-      );
-      byKey[row.id] = entry;
+      final value = valueOf(row);
+      byKey[row.id] = value;
       final serverId = row.serverId;
-      if (serverId != null && serverId.isNotEmpty) byKey[serverId] = entry;
+      if (serverId != null && serverId.isNotEmpty) byKey[serverId] = value;
     }
     return byKey;
   }
 
-  static bool _sameOutbox(
-    Map<String, MetadataOutboxEntry> a,
-    Map<String, MetadataOutboxEntry> b,
-  ) {
+  static UnsettledUpload _unsettledUpload(LocalRecording row) => (
+    status: row.uploadStatus,
+    deviceId: row.id,
+    uploadedBytes: row.uploadedBytes,
+    resumableSessionUri: row.resumableSessionUri,
+  );
+
+  static MetadataOutboxEntry _outboxEntry(LocalRecording row) =>
+      (status: row.metadataSyncStatus, fieldsJson: row.pendingMetadataJson);
+
+  static bool _sameEntries<V>(Map<String, V> a, Map<String, V> b) {
     if (a.length != b.length) return false;
     for (final entry in a.entries) {
       if (b[entry.key] != entry.value) return false;
@@ -766,6 +809,7 @@ class LocalRecordingRepository {
     required String newFilePath,
     required double newDurationSeconds,
     required int newFileSizeBytes,
+    String? newFormat,
   }) async {
     final rows =
         await (_db.update(
@@ -775,6 +819,7 @@ class LocalRecordingRepository {
             localFilePath: Value(newFilePath),
             durationSeconds: Value(newDurationSeconds),
             fileSizeBytes: Value(newFileSizeBytes),
+            format: Value.absentIfNull(newFormat),
             uploadStatus: const Value('local'),
             md5Hash: const Value(null),
             resumableSessionUri: const Value(null),
@@ -799,22 +844,28 @@ class LocalRecordingRepository {
   /// Nothing is owed when the server does not have the recording: there is
   /// nothing to correct, and a mark the outbox never selects (it requires a
   /// `serverId`) would leave the row wearing "edit not yet sent" forever.
+  ///
+  /// A recording the server has keeps its format whatever [newFormat] says:
+  /// the server confirms the upload against the blob its stored format names.
   Future<bool> replaceAudioAndQueueResend({
     required String recordingId,
     required String newFilePath,
     required double newDurationSeconds,
     required int newFileSizeBytes,
+    String? newFormat,
   }) async {
     return _db.transaction(() async {
       final row = await getRecordingById(recordingId);
       if (row == null) return false;
+      final onServer = row.serverId != null && row.serverId!.isNotEmpty;
       await replaceAudio(
         recordingId: recordingId,
         newFilePath: newFilePath,
         newDurationSeconds: newDurationSeconds,
         newFileSizeBytes: newFileSizeBytes,
+        newFormat: onServer ? null : newFormat,
       );
-      if (row.serverId != null && row.serverId!.isNotEmpty) {
+      if (onServer) {
         await markMetadataPending(recordingId, {PendingMetadataField.audio});
       }
       return true;
@@ -869,6 +920,14 @@ class LocalRecordingRepository {
     });
   }
 
+  Future<void> insertRecordingFromEdit({
+    required LocalRecordingEntity parent,
+    required SplitSegmentSpec recording,
+  }) async {
+    _assertNoSecondaryCollision(parent, [recording]);
+    await _db.transaction(() => _insertSplitChildren(parent, [recording]));
+  }
+
   /// Inserts one child row per segment, propagating parent metadata per the
   /// contract in `docs/recording-split-semantics.md`. Runs in the caller's
   /// transaction; does not open its own.
@@ -908,7 +967,7 @@ class LocalRecordingRepository {
               description: Value(parent.description),
               durationSeconds: Value(seg.durationSeconds),
               fileSizeBytes: Value(seg.fileSizeBytes),
-              format: Value(parent.format),
+              format: Value(seg.format ?? parent.format),
               localFilePath: Value(seg.localFilePath),
               uploadStatus: const Value('local'),
               cleaningStatus: const Value('none'),
@@ -963,6 +1022,7 @@ class SplitSegmentSpec {
   final String? genreOverride;
   final String? subcategoryOverride;
   final String? registerOverride;
+  final String? format;
 
   const SplitSegmentSpec({
     required this.id,
@@ -973,5 +1033,6 @@ class SplitSegmentSpec {
     this.genreOverride,
     this.subcategoryOverride,
     this.registerOverride,
+    this.format,
   });
 }

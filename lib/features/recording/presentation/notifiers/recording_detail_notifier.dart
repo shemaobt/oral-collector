@@ -571,6 +571,7 @@ class RecordingDetailNotifier
       UpdateRecordingRequest(
         genreId: result.genreId,
         subcategoryId: result.subcategoryId,
+        registerId: result.registerId,
         secondaryGenreId: result.secondaryGenreId,
         secondarySubcategoryId: result.secondarySubcategoryId,
         secondaryRegisterId: result.secondaryRegisterId,
@@ -592,6 +593,7 @@ class RecordingDetailNotifier
         recording.id,
         genreId: result.genreId,
         subcategoryId: result.subcategoryId,
+        registerId: result.registerId,
         clearSecondary: result.clearSecondary,
         secondaryGenreId: result.secondaryGenreId,
         secondarySubcategoryId: result.secondarySubcategoryId,
@@ -604,9 +606,10 @@ class RecordingDetailNotifier
       // server copy, so the "unreachable" it reports for a recording the server
       // never had is not something the drain could ever settle.
       if (recording.serverId != null && recording.serverId!.isNotEmpty) {
-        await _settleOutbox(recording.id, const {
+        await _settleOutbox(recording.id, {
           PendingMetadataField.genre,
           PendingMetadataField.subcategory,
+          if (result.registerId != null) PendingMetadataField.register,
           PendingMetadataField.secondary,
         }, owed: localOnly);
         if (_disposed) return saved;

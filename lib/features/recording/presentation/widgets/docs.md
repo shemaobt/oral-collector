@@ -5,7 +5,8 @@ Path: @/lib/features/recording/presentation/widgets
 ### Overview
 
 - Shared widgets used by the recording feature screens: dialogs (move
-  category, classify, replace audio, edit details), sections of the
+  category, classify, replace audio, edit details, leave-without-saving),
+  sections of the
   detail screen (status, info grid, storyteller, quick actions,
   about, upload progress), the guided ficha-completion overlay/pill/sheet
   (`CompleteFichaOverlay`/`CompleteFichaPill`/`CompleteFichaSheet`, ENG-374),
@@ -374,14 +375,43 @@ Path: @/lib/features/recording/presentation/widgets
 - `PendingWebUploadCard` (ENG-196) is the presentational, stateless card for
   one resumable web upload, rendered once per item by
   `PendingWebUploadsBanner` ([./pending_web_uploads_banner.dart](pending_web_uploads_banner.dart)).
-  It takes a `LocalRecordingEntity` plus an `isResuming` flag and
-  `onResume` / `onDiscard` callbacks; it owns no state and no providers.
+  It takes a `LocalRecordingEntity` plus `hasStoredAudio` / `isResuming` flags
+  and `onResume` / `onDiscard` callbacks; it owns no state and no providers.
   It was split out of the banner's inline per-item body precisely because
-  the banner is gated behind `kIsWeb` and so never renders under the CI
-  widget tests (where `kIsWeb` is always false) — extracting the card lets
-  the card's layout be exercised directly on the VM while the banner keeps
-  the platform gate, the repository read, and the resume/discard
-  orchestration.
+  the banner is gated on the platform and so never rendered under the CI
+  widget tests — extracting the card let the card's layout be exercised
+  directly on the VM while the banner kept the platform gate, the repository
+  read, and the resume/discard orchestration. `hasStoredAudio` (ENG-427)
+  picks between the two bodies: with the audio still in browser storage the
+  card says the upload will carry on from where it stopped, and without it the
+  card asks for the file again, because those are two different things to the
+  person reading. Its actions sit in an `OverflowBar`, not a `Row`: at 2.0x on
+  a 320dp phone the two labels do not fit side by side in most locales, and
+  they stack instead of running off the card
+  ([/test/features/recording/presentation/widgets/pending_web_upload_card_text_scale_test.dart](../../../../../test/features/recording/presentation/widgets/pending_web_upload_card_text_scale_test.dart)
+  holds all eleven).
+- `PendingWebUploadsBanner` is the stateful half: it reads the `web_uploading`
+  rows through `LocalRecordingRepository.getPendingWebUploads`, asks storage
+  whether each row's audio is still there, and owns resume and discard. Since
+  ENG-427 a resume takes one of two paths. When the row carries a storage
+  address **and the bytes are still under it**, the banner reads them and
+  uploads straight from them — the person presses Resume and nothing else is
+  asked of them. Otherwise it opens the file chooser exactly as before. The
+  discriminator is the address plus a live existence check, never the origin of
+  the audio: a web import's bytes come from a browser `File` and die with the
+  page, and rows written before ENG-427 carry an invented
+  `web_import_<millis>_<serverId>` name that is not distinguishable from a real
+  key by shape, so both fall out through the same "found nothing" branch. Not
+  finding the bytes is an ordinary answer, not an error. Two details are
+  load-bearing: the storage key is passed on as the `FileSource.storageKey`, so
+  an upload cut short a second time still leaves a row that leads back to the
+  bytes; and the size check stays on the chooser path only, since stored bytes
+  are the original ones and there is nothing to compare them against. After a
+  successful resume from stored bytes the bytes are deleted rather than left
+  for the 24-hour sweep (ENG-426). The banner does not resume on its own at
+  startup — resuming without asking for a *file* is not the same as resuming
+  without asking for *permission*, and pushing a large recording up an
+  expensive connection is not the app's call.
 - `RecordingUploadBanners` (ENG-377) renders every banner that explains why a
   recording is not on the server — title conflict, description gap, spent
   retry budget, missing audio file, secondary-classification collision — in a
@@ -395,6 +425,25 @@ Path: @/lib/features/recording/presentation/widgets
 
 ### Things to Know
 
+- **The resume banner's tests run on the live binding, and that is not a
+  stylistic choice (ENG-427).** `PendingWebUploadsBanner` waits on browser
+  storage, which under test is `idb_shim`'s in-memory IndexedDB — the same
+  complete implementation `WebFileStore`'s own tests use. On the default widget
+  binding the whole test runs on a fake clock, and an IndexedDB transaction
+  never completes there no matter how many frames are pumped, so
+  [/test/features/recording/presentation/widgets/pending_web_uploads_banner_test.dart](../../../../../test/features/recording/presentation/widgets/pending_web_uploads_banner_test.dart)
+  calls `LiveTestWidgetsFlutterBinding.ensureInitialized()`. The alternative was
+  swapping the store for a map, which would have made the tests pass while
+  proving nothing about the storage the feature actually runs on. Two
+  consequences for anyone editing that file: nothing there may use
+  `pumpAndSettle` — the resume button spins a `CircularProgressIndicator` that
+  never settles, so the tests pump until a stated condition holds — and the
+  banner reaches storage and the picker through providers
+  (`fileExistsProvider`, `readFileBytesProvider`, `deleteFileProvider`,
+  `audioFilePickerProvider`) and the platform gate through
+  `isWebPlatformProvider`, all of which are overridden there. The chooser is the
+  only stand-in in the file, and even it is asserted on by "was it opened",
+  never by what it returned.
 - **`FinalizingOverlay`'s error body is chosen by `FinalizationErrorKind`, and
   its button does not discard anything (ENG-408).** The screen used to render
   one hardcoded pair of strings for every failure, so a browser recording that
@@ -511,6 +560,9 @@ Path: @/lib/features/recording/presentation/widgets
   (see [/lib/core/platform/docs.md](../../../../core/platform/docs.md)); once
   `DirectRecordingUploader.upload` returns a `serverId`, those bytes are
   redundant with the server's copy and `file_ops.deleteFile` removes them.
+  The same key is handed to the uploader as the source's `storageKey`, which
+  is what lets an upload cut short before that point record where its audio
+  still is (ENG-427).
   This is a deliberate leak-prevention step, not cleanup of a bug: before the
   bytes were made durable the module-level map that held them died with the
   tab, capping the leak; persisting them (the ENG-421 fix) turned an
@@ -520,8 +572,14 @@ Path: @/lib/features/recording/presentation/widgets
   reported to the user as a failed upload — the upload already succeeded by
   that point. It runs after the local row is written, matching how the rest of
   the codebase deletes only once the database is consistent. The paths that do
-  *not* end in a successful upload still leave bytes behind — see the known gap
-  in [/lib/core/platform/docs.md](../../../../core/platform/docs.md).
+  *not* end in a successful upload — a reload on this step, a closed tab, a
+  failed upload — leave bytes behind with no handle at all; those are collected
+  at the next startup by the 24-hour sweep in
+  [/lib/features/recording/data/services/web_audio_sweeper.dart](../../data/services/web_audio_sweeper.dart)
+  (ENG-426), described in
+  [/lib/core/platform/docs.md](../../../../core/platform/docs.md). The cutoff is
+  what keeps that sweep from taking the bytes of someone standing on this step
+  right now — but a tab parked here for more than a day is past it.
 - **`ConfirmationStep` cancels its own preview-player stream subscriptions
   on dispose (ENG-140 F16).** Its inline `AudioPlayer` preview subscribes to
   `playerStateStream` / `positionStream` / `durationStream`; those handles are
@@ -579,6 +637,83 @@ Path: @/lib/features/recording/presentation/widgets
   `filters_icon_button.dart` count badge (a `Stack(clipBehavior: none)`) do not
   overflow, and `active_filter_chips.dart` already ellipsizes. Those keep a
   text-scale regression test but no production change.
+- **What the confirmation form holds survives the death of the process
+  (ENG-518, slice 1) — but leaving the screen still does not.** Title,
+  description and storyteller used to live only in `_titleController`,
+  `_descriptionController` and `_selectedStoryteller`, so a kill while the
+  form was open cost the metadata even though the audio itself had been durable
+  on both platforms since ENG-420 and ENG-421. The form was the last fragile
+  link in that chain; the field report behind ENG-401 was *"when we tried to do
+  the description outside, we lost 2 recordings because of it"*. Now every
+  user-driven change schedules a 400 ms-debounced write through
+  `ConfirmationDraftStore`
+  ([../../data/services/confirmation_draft_store.dart](../../data/services/confirmation_draft_store.dart)),
+  keyed by `widget.result.filePath`, and `_restoreDraft` reads it back on
+  mount. Details that are load-bearing:
+  - **The debounce never decides whether the text survives.** `dispose` and
+    `didChangeAppLifecycleState(paused | detached)` both flush whatever is
+    still queued, so the window is closed at the two moments the process can
+    actually end.
+  - **A late read never fights the person typing.** `_titleTouched` /
+    `_descriptionTouched` are set from the fields' `onChanged` (user input
+    only, never a programmatic assignment), and restoration skips any field
+    they mark. Restored text lands via `TextEditingValue` with the caret
+    collapsed *after* it, not at offset 0.
+  - **The storyteller is stored as an id and adopted when the list arrives.**
+    `_pendingStorytellerId` is resolved against
+    `projectStorytellersNotifierProvider` — once at restore time and again
+    from a `ref.listen` in `build`, because the fetch may still be in flight.
+    A storyteller deleted between two openings simply never matches and the
+    picker opens unselected; the save button stays disabled, which is the
+    pre-existing behaviour for "no storyteller chosen".
+  - **Cleanup runs on both outcomes.** `_closeDraft` clears the entry and
+    latches `_draftClosed`, so the flush in `dispose` cannot resurrect a draft
+    whose recording was just saved or discarded. It is called from the native
+    save, from `_saveWebDirect`, and from the confirmed branch of `_discard`.
+  - **Leaving the screen was slice 2, and it is now done** — see the entry
+    below. `_closeDraft` is called from the *discard* branch of `_leave`, never
+    from the keep-for-later branch: a parked recording keeps its draft, which
+    is the whole point of the two slices being one feature.
+  [../recovery_confirm_screen.dart](../recovery_confirm_screen.dart) needed
+  **no change at all**: it already passes the same `RecordingResult`, so the
+  same audio path keys the same draft and a crash-recovered recording now opens
+  filled in instead of always empty. Any code special to recovery would have
+  been a sign the key was wrong.
+- **Leaving the confirmation form no longer costs the recording (ENG-518,
+  slice 2).** Back and tab-switch used to offer exactly two doors — stay, or
+  discard, which deletes the audio. That is how the field team lost two
+  recordings: they left to write the description in another app, and the only
+  door available deleted the file. There is now a third door, and both exits
+  share one dialog, [leave_recording_dialog.dart](leave_recording_dialog.dart):
+  `showLeaveRecordingDialog(context, canKeepForLater: ...)` returns a
+  `LeaveRecordingChoice?`, with null meaning "stayed". `ConfirmationStep._leave`
+  (renamed from `_discard`, wired to both the `PopScope` and the discard button)
+  and `_AppShellState._navigateToTab` are its two callers; the audio is deleted
+  in one branch of each and nowhere else. Load-bearing details:
+  - **The third door only appears when there is somewhere to park the audio.**
+    `RecordingResult` now carries a nullable `sessionId`, threaded from
+    `RecordingFinalizationService.finalize` (which already had the id) through
+    `_stopNative`, and from `InterruptedSessionsNotifier._finishedAudio` on the
+    recovery path. `_stopWeb` leaves it null, because the browser creates no
+    session row at all — so the browser keeps exactly today's two-door dialog
+    and today's copy, which still tells the truth there. Null is an answer, not
+    a missing value; a characterization test pins that the browser case is
+    never offered a door it cannot honour.
+  - **Keeping touches neither the file nor the draft.** It calls
+    `InterruptedSessionsNotifier.keepForLater(sessionId)` — see
+    [../notifiers/docs.md](../notifiers/docs.md) — and then the host's
+    `onKeepForLater`, a new required callback on `ConfirmationStep`. It is
+    separate from `onDiscard` because the recovery screen's `onDiscard` deletes
+    the session's segments: reusing it to *keep* a recording would delete it.
+  - **The copy is a second pair of keys, not an edit of the old one.**
+    `recording_leaveTitle`/`recording_leaveMessage` say the audio is kept;
+    `recording_discardTitle`/`recording_discardMessage` still say it is about to
+    be deleted, and are now the browser's. Rewriting the old pair would have
+    made the browser dialog promise something the browser cannot do.
+  - **Three buttons at 2.0x on 320dp.** `AlertDialog`'s `OverflowBar` stacks the
+    actions on its own; `leave_recording_dialog_text_scale_test.dart` pins it by
+    measuring each label's rect against the viewport, because an action bar that
+    clips silently reports no overflow exception.
 - **`ConfirmationStep` is parameterized for the recovery reuse (ENG-80).**
   Two optional params let the recovery screen host the same widget
   without duplicating the save logic: `onSaved` runs in place of the

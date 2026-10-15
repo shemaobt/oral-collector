@@ -512,6 +512,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'This recording will be permanently deleted.';
 
   @override
+  String get recording_leaveTitle => 'Leave without saving?';
+
+  @override
+  String get recording_leaveMessage =>
+      'The audio is kept — you can finish it later from unsaved recordings. Deleting it now cannot be undone.';
+
+  @override
+  String get recording_keepForLater => 'Keep for later';
+
+  @override
   String get recording_saved => 'Recording saved';
 
   @override
@@ -836,6 +846,25 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get trim_saveChoiceBody =>
+      'Only \"Save as a new recording\" keeps the original.';
+
+  @override
+  String get trim_keepSegmentsSeparate => 'Keep segments separate';
+
+  @override
+  String get trim_saveAsNewRecording => 'Save as a new recording';
+
+  @override
+  String get trim_removeStretch => 'Remove stretch';
+
+  @override
+  String get trim_savedAsNewRecording => 'Saved as a new recording';
+
+  @override
+  String get trim_stretchRemoved => 'Stretch removed';
+
+  @override
   String get trim_saveConfirmTitle => 'Save changes?';
 
   @override
@@ -1020,15 +1049,20 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get import_resumePromptTitle => 'Resume interrupted upload';
+  String get recording_resumePromptTitle => 'Resume interrupted upload';
 
   @override
-  String import_resumePromptBody(String name, String size) {
-    return '\"$name\" ($size) was partially uploaded. Select the exact same file (unchanged) to continue.';
+  String recording_resumePromptBodyStored(String name, String size) {
+    return '\"$name\" ($size) didn\'t finish uploading. Continue from where it stopped.';
   }
 
   @override
-  String get import_resumeSizeMismatch =>
+  String recording_resumePromptBodyPickFile(String name, String size) {
+    return '\"$name\" ($size) didn\'t finish uploading. Pick the same file again to continue.';
+  }
+
+  @override
+  String get recording_resumeSizeMismatch =>
       'That\'s a different file. Select the exact same file you were uploading.';
 
   @override
@@ -2050,6 +2084,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recording_unclassified => 'Unclassified';
 
   @override
+  String get recording_unclassifiedDesc => 'Recordings pending classification';
+
+  @override
+  String get recording_unclassifiedSubcategoryDesc =>
+      'Holds recordings still waiting to be classified';
+
+  @override
   String get recording_inputSource => 'Input';
 
   @override
@@ -2835,4 +2876,32 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get trim_excludeRange => 'Exclude stretch';
+
+  @override
+  String recording_uploadRefusedEditMessage(String reason) {
+    return 'The server refused the edited audio ($reason). The earlier audio is still published.';
+  }
+
+  @override
+  String get recording_uploadRefusedEditNoReasonMessage =>
+      'The server refused the edited audio. The earlier audio is still published.';
+
+  @override
+  String get recording_uploadRefusedMessage =>
+      'The upload was refused. You can try again.';
+
+  @override
+  String get recording_uploadRefusalObjectMissing =>
+      'the audio did not reach the server';
+
+  @override
+  String get recording_uploadRefusalSizeMismatch =>
+      'the audio size does not match the recorded size';
+
+  @override
+  String get recording_uploadRefusalChecksumMismatch =>
+      'the audio content arrived different from what was sent';
 }

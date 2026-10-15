@@ -14,8 +14,8 @@ import '../../recording/domain/entities/update_recording_request.dart';
 /// touched here must not ride along.
 ///
 /// Each field is reproduced exactly as the mutation that owed it would have
-/// sent it, including the two places `UpdateRecordingRequest` cannot express a
-/// single explicit null (a null `subcategoryId` is omitted, not cleared). That
+/// sent it, including where `UpdateRecordingRequest` cannot express an explicit
+/// null (a null primary `subcategoryId` is omitted, not cleared). That
 /// limitation is the online path's too; matching it keeps the drained write and
 /// the direct write from disagreeing.
 UpdateRecordingRequest buildPendingMetadataRequest(

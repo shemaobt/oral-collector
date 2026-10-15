@@ -19,3 +19,11 @@ String resolveRecordingTitle(String? input, {String? locale}) {
 // so trimming or case-folding here would disagree with the server's 409.
 bool isTitleTaken(Iterable<String?> existing, String candidate) =>
     existing.contains(candidate);
+
+String nextNumberedTitle(Iterable<String?> existing, String original) {
+  var n = 2;
+  while (isTitleTaken(existing, '$original ($n)')) {
+    n++;
+  }
+  return '$original ($n)';
+}

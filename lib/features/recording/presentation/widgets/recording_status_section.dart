@@ -8,6 +8,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/tokens.dart';
 import '../../../../shared/utils/cleaning_status_style.dart';
 import '../../domain/entities/local_recording_entity.dart';
+import '../../domain/upload_refusal.dart';
 import 'metadata_sync_mark.dart';
 
 class RecordingStatusSection extends StatelessWidget {
@@ -154,6 +155,9 @@ class RecordingStatusSection extends StatelessWidget {
       case 'failed_description':
         return LucideIcons.alertCircle;
       default:
+        if (isRefusalStatus(recording.uploadStatus)) {
+          return LucideIcons.alertOctagon;
+        }
         return LucideIcons.smartphone;
     }
   }
@@ -172,6 +176,7 @@ class RecordingStatusSection extends StatelessWidget {
       case 'failed_description':
         return colors.error;
       default:
+        if (isRefusalStatus(recording.uploadStatus)) return colors.error;
         return colors.secondary;
     }
   }
@@ -205,6 +210,9 @@ class RecordingStatusSection extends StatelessWidget {
       case 'failed_description':
         return l10n.recording_statusDescriptionTooShort;
       default:
+        if (isRefusalStatus(recording.uploadStatus)) {
+          return l10n.detail_uploadFailed;
+        }
         if (recording.retryCount > 0) return l10n.detail_pendingRetried;
         return l10n.detail_notSynced;
     }

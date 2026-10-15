@@ -58,6 +58,17 @@ class LocalRecordingEntity {
   /// to say *what* is stuck, not only that something is.
   final Set<PendingMetadataField> pendingMetadataFields;
 
+  /// The status the server itself gave this recording, set only on the
+  /// server's copies. It is what the card falls back to once the device has
+  /// nothing unsettled to say, and what tells a server copy from a device row
+  /// that merely shares its id.
+  final String? serverUploadStatus;
+
+  /// The id the device holds this recording under, set only on a server copy
+  /// the device is resending: the upload queue names the row it is sending by
+  /// that id, not by the copy's.
+  final String? deviceId;
+
   bool get hasPendingMetadata => pendingMetadataFields.isNotEmpty;
 
   const LocalRecordingEntity({
@@ -92,6 +103,8 @@ class LocalRecordingEntity {
     this.reviewFlags = const [],
     this.metadataSyncStatus = MetadataSyncStatus.synced,
     this.pendingMetadataFields = const {},
+    this.serverUploadStatus,
+    this.deviceId,
   });
 
   static const Object _sentinel = Object();
@@ -137,6 +150,8 @@ class LocalRecordingEntity {
     List<ReviewFlag>? reviewFlags,
     String? metadataSyncStatus,
     Set<PendingMetadataField>? pendingMetadataFields,
+    Object? serverUploadStatus = _sentinel,
+    Object? deviceId = _sentinel,
   }) {
     return LocalRecordingEntity(
       id: id ?? this.id,
@@ -180,6 +195,8 @@ class LocalRecordingEntity {
       metadataSyncStatus: metadataSyncStatus ?? this.metadataSyncStatus,
       pendingMetadataFields:
           pendingMetadataFields ?? this.pendingMetadataFields,
+      serverUploadStatus: _orKeep(serverUploadStatus, this.serverUploadStatus),
+      deviceId: _orKeep(deviceId, this.deviceId),
     );
   }
 
@@ -224,6 +241,8 @@ class LocalRecordingEntity {
 
   bool _sameUpload(LocalRecordingEntity other) =>
       other.uploadStatus == uploadStatus &&
+      other.serverUploadStatus == serverUploadStatus &&
+      other.deviceId == deviceId &&
       other.serverId == serverId &&
       other.gcsUrl == gcsUrl &&
       other.cleaningStatus == cleaningStatus &&
@@ -274,6 +293,8 @@ class LocalRecordingEntity {
     format,
     localFilePath,
     uploadStatus,
+    serverUploadStatus,
+    deviceId,
     serverId,
     gcsUrl,
     registerId,

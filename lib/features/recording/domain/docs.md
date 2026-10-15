@@ -142,8 +142,11 @@ Path: @/lib/features/recording/domain
   (which backs `updateGenre`) and of
   [`SplitSegmentRequest`](entities/split_segment_request.dart) — no
   freezed/equatable, no `==`/`copyWith`. `toJson()` omits a null field (leaves
-  it untouched), while `clearSecondary` sends explicit nulls for the three
-  secondary-classification keys to clear them. It was extracted purely to
+  it untouched), except the secondary classification, which travels as one
+  unit: when any of its three fields is set, all three keys go up, an empty one
+  as an explicit null, because the server keeps a stored value for any key left
+  out and would otherwise rebuild a triple the user changed (ENG-1188).
+  `clearSecondary` sends explicit nulls for all three to clear them. It was extracted purely to
   collapse the thirteen named parameters `updateRecording` used to take into one
   argument (the `dart_code_linter` `number-of-parameters` gate; the threshold
   ratchet itself is ENG-208) — the JSON on the wire is byte-identical, so the
@@ -260,10 +263,12 @@ Path: @/lib/features/recording/domain
   `RoleNotifier` so the policy carries no Riverpod/network dependency —
   the caller resolves the role boolean and passes it in. This is the
   seam that makes the rule unit-testable without a container.
-- `isRetryableFailure(uploadStatus)` (ENG-404) is true for `failed` and
-  `failed_exhausted` — the two failures a bare retry can still move, because
-  `failed` is still inside the queue (a retry just skips the backoff wait)
-  and `failed_exhausted` only needs its budget handed back.
+- `isRetryableFailure(uploadStatus)` (ENG-404) is true for `failed`,
+  `failed_exhausted` and the `failed_refused*` statuses (ENG-1505) — the
+  failures a bare retry can still move, because `failed` is still inside the
+  queue (a retry just skips the backoff wait), `failed_exhausted` only needs
+  its budget handed back, and a refusal leaves the local audio untouched so a
+  retry sends the same file again.
   `failed_conflict`, `failed_description`, and `failed_missing_file` are
   excluded: each would be refused the same way on the next attempt (a
   duplicate title, a description under the minimum, or no audio file at

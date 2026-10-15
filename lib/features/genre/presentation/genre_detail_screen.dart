@@ -163,7 +163,11 @@ class _SubcategoryCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final color = parseHexColor(genreColor, colors.primary);
 
-    final description = localizedSubcategoryDescription(l10n, subcategory.name);
+    final description = localizedSubcategoryDescription(
+      l10n,
+      subcategory.name,
+      id: subcategory.id,
+    );
     final recordingCount = subcategoryStat?.recordingCount ?? 0;
     final totalDurationSeconds = (subcategoryStat?.totalDurationSeconds ?? 0)
         .toDouble();

@@ -10,6 +10,7 @@ import 'package:record/record.dart';
 import '../../../../core/platform/file_ops.dart' as file_ops;
 import '../repositories/recording_session_repository.dart';
 import 'segment_paths.dart';
+import 'session_audio.dart';
 import 'storage_guard.dart';
 import 'wav_segment_sink.dart';
 
@@ -28,6 +29,7 @@ class SegmentedRecordingResult {
 typedef AmplitudeMapper = double Function(double dB);
 typedef AudioRecorderFactory = AudioRecorder Function();
 typedef DocDirProvider = Future<String> Function();
+typedef FileDeleter = Future<void> Function(String path);
 
 class SegmentedRecorder {
   SegmentedRecorder({
@@ -37,13 +39,15 @@ class SegmentedRecorder {
     @visibleForTesting AudioRecorderFactory? recorderFactory,
     @visibleForTesting DocDirProvider? docDirProvider,
     @visibleForTesting bool configureAudioSession = true,
+    @visibleForTesting FileDeleter? fileDeleter,
   }) : _sessionRepo = sessionRepo,
        _storageGuard = storageGuard,
        _recorderFactory = recorderFactory ?? AudioRecorder.new,
        _docDirProvider =
            docDirProvider ??
            (() async => (await getApplicationDocumentsDirectory()).path),
-       _configureAudioSession = configureAudioSession;
+       _configureAudioSession = configureAudioSession,
+       _deleteFile = fileDeleter ?? file_ops.deleteFile;
 
   final RecordingSessionRepository _sessionRepo;
   final StorageGuard _storageGuard;
@@ -51,14 +55,18 @@ class SegmentedRecorder {
   final AudioRecorderFactory _recorderFactory;
   final DocDirProvider _docDirProvider;
   final bool _configureAudioSession;
+  final FileDeleter _deleteFile;
 
   static final _log = Logger('SegmentedRecorder');
 
   static const int _sampleRate = 16000;
   static const int _numChannels = 1;
   static const int _bytesPerSample = 2;
+  static const int _bytesPerSecond =
+      _sampleRate * _numChannels * _bytesPerSample;
 
   void Function(Duration totalSaved)? onCheckpoint;
+  void Function(Duration audioWritten)? onAudioWritten;
   void Function(int estimatedSecondsRemaining)? onStorageCritical;
   void Function()? onStorageForceStop;
   void Function(Duration rotationLatency)? onSlowRotation;
@@ -74,6 +82,8 @@ class SegmentedRecorder {
   Duration _cumulativeFinalized = Duration.zero;
   int _bytesInCurrentSegment = 0;
   int _bytesPerSegment = 0;
+  int _bytesWritten = 0;
+  Duration _resumedFrom = Duration.zero;
   bool _isPaused = false;
   Future<void> _finalizeChain = Future<void>.value();
   InputDevice? _inputDevice;
@@ -104,6 +114,8 @@ class SegmentedRecorder {
       ..addAll(resumeFromPaths);
     _segIdx = resumeFromPaths.length - 1;
     _cumulativeFinalized = resumeFromDuration;
+    _resumedFrom = resumeFromDuration;
+    _bytesWritten = 0;
     _amplitudeMapper = amplitudeMapper;
     _inputDevice = inputDevice;
     _isPaused = false;
@@ -134,11 +146,7 @@ class SegmentedRecorder {
     }
 
     _docDirPath = await _docDirProvider();
-    _bytesPerSegment =
-        _sampleRate *
-        _numChannels *
-        _bytesPerSample *
-        segmentDuration.inSeconds;
+    _bytesPerSegment = _bytesPerSecond * segmentDuration.inSeconds;
 
     _amplitudeController = StreamController<double>.broadcast();
 
@@ -224,6 +232,11 @@ class SegmentedRecorder {
     if (_isPaused || _currentSink == null) return;
     _currentSink!.appendBytes(chunk);
     _bytesInCurrentSegment += chunk.length;
+    _bytesWritten += chunk.length;
+    onAudioWritten?.call(
+      _resumedFrom +
+          Duration(microseconds: _bytesWritten * 1000000 ~/ _bytesPerSecond),
+    );
     if (_bytesInCurrentSegment >= _bytesPerSegment) {
       _rotateSync();
     }
@@ -429,17 +442,17 @@ class SegmentedRecorder {
     }
     if (closingPath != null) {
       try {
-        await file_ops.deleteFile(closingPath);
+        await _deleteFile(closingPath);
       } catch (_) {}
     }
 
     for (final path in _paths) {
       try {
-        await file_ops.deleteFile(path);
+        await _deleteFile(path);
       } catch (_) {}
     }
 
-    await _sessionRepo.markDiscarded(sessionId);
+    await _closeDiscardedSession(sessionId);
 
     await _amplitudeController?.close();
     _amplitudeController = null;
@@ -453,6 +466,41 @@ class SegmentedRecorder {
     _segIdx = -1;
     _cumulativeFinalized = Duration.zero;
     _bytesInCurrentSegment = 0;
+  }
+
+  /// Writes the session's ending, once every file this recorder could delete
+  /// is gone.
+  ///
+  /// This discard was exempted from the ENG-521 guard because "it runs before
+  /// any anchor can exist". That holds for a fresh recording and **not for a
+  /// resumed one** (ENG-527): the startup sweep promotes a finished session
+  /// back to the status the unsaved list reads with its anchor intact, and
+  /// that is exactly the session a resume picks up. Walking away from the
+  /// resumed recording deleted its segments and wrote the terminal status
+  /// without ever looking at the anchor, leaving the finalized audio on the
+  /// disk with nothing able to reach it.
+  ///
+  /// The question is asked *after* deleting, like the two sibling paths, so
+  /// the terminal status depends on the deletion having actually happened — a
+  /// delete that throws, or that silently does nothing, leaves the file and so
+  /// leaves the session reachable.
+  ///
+  /// A session that still holds audio goes back to `crashed` rather than being
+  /// left `active`: since ENG-518 that status means "audio nobody saved",
+  /// which is precisely what this is, and an `active` row would stay hidden
+  /// until the next cold start promoted it.
+  Future<void> _closeDiscardedSession(String sessionId) async {
+    final session = await _sessionRepo.getById(sessionId);
+    if (session == null) return;
+    final held = await sessionHoldsReachableAudio(
+      session,
+      _sessionRepo.decodeSegmentPaths(session),
+    );
+    if (held) {
+      await _sessionRepo.markCrashed(sessionId);
+    } else {
+      await _sessionRepo.markDiscarded(sessionId);
+    }
   }
 
   Future<void> dispose() async {

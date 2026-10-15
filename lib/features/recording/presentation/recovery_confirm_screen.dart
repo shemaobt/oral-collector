@@ -77,6 +77,12 @@ class RecoveryConfirmScreen extends ConsumerWidget {
           clearPending();
           context.go('/recordings');
         },
+        // The session is already the banner's; parking it again is a no-op
+        // beyond leaving the screen, and the segments stay untouched.
+        onKeepForLater: () {
+          clearPending();
+          context.go('/home');
+        },
         onDiscard: () {
           // ConfirmationStep already deleted the finalized file; discard() just
           // clears the kept segments and marks the session discarded.

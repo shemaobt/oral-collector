@@ -38,6 +38,8 @@ void main() {
       (status: 'uploading', retryCount: 0, expected: false),
       (status: 'failed', retryCount: 0, expected: true),
       (status: 'failed_exhausted', retryCount: 5, expected: true),
+      (status: 'failed_refused', retryCount: 5, expected: true),
+      (status: 'failed_refused_size_mismatch', retryCount: 5, expected: true),
       (status: 'local', retryCount: 0, expected: false),
       (status: 'local', retryCount: 1, expected: true),
       (status: 'uploaded', retryCount: 0, expected: false),
@@ -51,7 +53,14 @@ void main() {
   });
 
   group('hasRetryableFailedUploads', () {
-    const offered = ['failed', 'failed_exhausted'];
+    const offered = [
+      'failed',
+      'failed_exhausted',
+      'failed_refused',
+      'failed_refused_object_missing',
+      'failed_refused_size_mismatch',
+      'failed_refused_checksum_mismatch',
+    ];
     const withheld = [
       'uploading',
       'local',

@@ -22,6 +22,7 @@ import 'package:oral_collector/features/recording/domain/entities/local_recordin
 import 'package:oral_collector/features/recording/presentation/notifiers/recording_player_notifier.dart';
 import 'package:oral_collector/features/recording/presentation/notifiers/trim_editor_notifier.dart';
 import 'package:oral_collector/features/recording/presentation/notifiers/trim_editor_state.dart';
+import 'package:oral_collector/features/recording/presentation/trim_edit_decision.dart';
 import 'package:oral_collector/features/recording/presentation/trim_editor_screen.dart';
 import 'package:oral_collector/l10n/app_localizations.dart';
 import 'package:oral_collector/shared/utils/error_helpers.dart';
@@ -67,6 +68,7 @@ class _FakeTrimEditorNotifier extends TrimEditorNotifier {
   Future<TrimSaveOutcome> saveSplit({
     required bool isWeb,
     required String localeTag,
+    TrimSaveMode? mode,
   }) async {
     _saveCalls++;
     return _outcome;

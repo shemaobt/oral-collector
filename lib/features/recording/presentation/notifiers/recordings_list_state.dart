@@ -2,6 +2,7 @@ import '../../../../shared/utils/recording_description.dart';
 import '../../domain/entities/local_recording_entity.dart';
 import '../../domain/entities/local_recording_entity_classification.dart';
 import '../../domain/entities/review_pendency.dart';
+import '../../domain/upload_refusal.dart';
 
 enum StatusFilter {
   all,
@@ -159,6 +160,7 @@ class RecordingsListState {
                   // on — the audio is still on the device.
                   r.uploadStatus == 'failed_exhausted' ||
                   r.uploadStatus == 'failed_missing_file' ||
+                  isRefusalStatus(r.uploadStatus) ||
                   r.uploadStatus == 'uploading',
             )
             .toList();

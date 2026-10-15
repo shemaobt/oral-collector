@@ -14,20 +14,26 @@ import '../../../core/l10n/content_l10n.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../shared/utils/error_helpers.dart';
+import '../../../shared/utils/format.dart';
 import '../../genre/presentation/notifiers/genre_notifier.dart';
 import '../data/providers.dart';
 import '../data/services/waveform_loader.dart';
 import '../domain/entities/classification.dart';
 import '../domain/entities/register.dart';
+import 'exclude_range_draft.dart';
+import 'excluded_range.dart';
 import 'notifiers/recording_player_notifier.dart';
 import 'notifiers/trim_editor_notifier.dart';
 import 'notifiers/trim_editor_state.dart';
 import 'trim_edit_decision.dart';
 import 'widgets/edit_transport_bar.dart';
 import 'widgets/edit_volume_control.dart';
+import 'widgets/exclude_range_handles.dart';
 import 'widgets/playback_key_handler.dart';
 import 'widgets/segment_card.dart';
 import 'widgets/segment_taxonomy_sheet.dart';
+import 'widgets/trim_action_bar.dart';
+import 'widgets/trim_save_choice_dialog.dart';
 import 'widgets/trim_waveform_panel.dart';
 
 class TrimEditorScreen extends ConsumerStatefulWidget {
@@ -55,6 +61,8 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
   Duration _transportPosition = Duration.zero;
   final Stopwatch _playheadThrottle = Stopwatch()..start();
   final Stopwatch _sinceLocalSeek = Stopwatch();
+
+  ExcludeRangeDraft? _excludeDraft;
 
   double _zoom = 1.0;
   double _panFraction = 0.0;
@@ -377,17 +385,9 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
   }
 
   void _addSplitAtPlayhead() {
-    final totalMs = _state.totalDuration.inMilliseconds;
-    if (totalMs <= 0) return;
-    final fraction = (_transportPosition.inMilliseconds / totalMs).clamp(
-      0.0,
-      1.0,
-    );
-    final minGap = minSplitGapFraction(_state.totalDuration);
-    if (fraction <= minGap || fraction >= 1.0 - minGap) return;
-    for (final p in _state.splitPoints) {
-      if ((fraction - p).abs() < minGap) return;
-    }
+    if (!_canSplitAtPlayhead) return;
+    final fraction =
+        _transportPosition.inMilliseconds / _state.totalDuration.inMilliseconds;
     HapticFeedback.lightImpact();
     _notifier.setSplitPoints([..._state.splitPoints, fraction]);
   }
@@ -398,10 +398,52 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
     final fraction = _transportPosition.inMilliseconds / totalMs;
     final minGap = minSplitGapFraction(_state.totalDuration);
     if (fraction <= minGap || fraction >= 1.0 - minGap) return false;
+    if (isNearRangeEdge(fraction, _state.excludedRanges, minGap)) return false;
     for (final p in _state.splitPoints) {
       if ((fraction - p).abs() < minGap) return false;
     }
     return true;
+  }
+
+  void _startExcludeRange() {
+    final total = _state.totalDuration;
+    if (total <= Duration.zero) return;
+    setState(
+      () => _excludeDraft = initialExcludeDraft(
+        playhead: _transportPosition,
+        total: total,
+        boundaryPoints: boundaryPointsOf(
+          _state.splitPoints,
+          _state.excludedRanges,
+        ),
+      ),
+    );
+  }
+
+  void _leave() {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/recordings');
+    }
+  }
+
+  void _confirmExcludeRange() {
+    final draft = _excludeDraft;
+    if (draft == null) return;
+    final accepted = _notifier.confirmExcludedRange(
+      startFraction: draft.start,
+      endFraction: draft.end,
+    );
+    if (accepted) {
+      setState(() => _excludeDraft = null);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context).trim_atLeastOneSegment),
+        ),
+      );
+    }
   }
 
   void _toggleExclude(int index) {
@@ -461,24 +503,10 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
     if (!_state.decision.canSave) return;
 
     final l10n = AppLocalizations.of(context);
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.trim_saveConfirmTitle),
-        content: Text(l10n.trim_saveConfirmBody(_state.keptCount)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(l10n.common_cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(l10n.common_save),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
+    final chosenMode = await (_state.decision.offersJoinChoice(isWeb: kIsWeb)
+        ? showTrimSaveChoiceDialog(context)
+        : _confirmSave(l10n));
+    if (chosenMode == null || !mounted) return;
 
     // Block re-entry during the stop window before the notifier flips isSaving
     // (the original disabled the save button via setState before stopping).
@@ -491,6 +519,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
     final outcome = await _notifier.saveSplit(
       isWeb: kIsWeb,
       localeTag: localeTag,
+      mode: chosenMode,
     );
     if (!mounted) return;
 
@@ -502,11 +531,16 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
       ):
         // The local save path haptic-confirms; the server path never did.
         if (!kIsWeb) unawaited(HapticFeedback.mediumImpact());
-        final msg = mode == TrimSaveMode.boostOnly
-            ? l10n.trim_boostApplied
-            : excludedCount > 0
-            ? l10n.trim_savedSegments(keptCount, excludedCount)
-            : l10n.trim_splitInto(keptCount);
+        final msg = switch (mode) {
+          TrimSaveMode.boostOnly => l10n.trim_boostApplied,
+          TrimSaveMode.removeStretch => l10n.trim_stretchRemoved,
+          TrimSaveMode.saveAsNew => l10n.trim_savedAsNewRecording,
+          TrimSaveMode.split when excludedCount > 0 => l10n.trim_savedSegments(
+            keptCount,
+            excludedCount,
+          ),
+          TrimSaveMode.split => l10n.trim_splitInto(keptCount),
+        };
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(msg)));
@@ -526,14 +560,25 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
     _saving = false;
   }
 
-  String _fmt(Duration d) {
-    final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
-    final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
-    final ms = (d.inMilliseconds.remainder(1000) ~/ 10).toString().padLeft(
-      2,
-      '0',
+  Future<TrimSaveMode?> _confirmSave(AppLocalizations l10n) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.trim_saveConfirmTitle),
+        content: Text(l10n.trim_saveConfirmBody(_state.keptCount)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.common_cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(l10n.common_save),
+          ),
+        ],
+      ),
     );
-    return '$m:$s.$ms';
+    return confirmed == true ? _state.decision.mode : null;
   }
 
   String _fmtShort(Duration d) {
@@ -616,6 +661,27 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
         ? (_transportPosition.inMilliseconds / totalMs).clamp(0.0, 1.0)
         : null;
 
+    final hasExclusion = state.decision.hasExclusion;
+    final restoreAll = GestureDetector(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        _notifier.restoreAllExcluded();
+      },
+      child: Text(
+        l10n.trim_restoreAll,
+        style: theme.textTheme.labelSmall?.copyWith(color: colors.accent),
+      ),
+    );
+
+    final actionBar = TrimActionBar(
+      state: state,
+      onCancel: _leave,
+      onSave: _saveSplit,
+      onConfirmRange: _excludeDraft == null || state.isSaving
+          ? null
+          : _confirmExcludeRange,
+      onCancelRange: () => setState(() => _excludeDraft = null),
+    );
     final segmentsList = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -630,19 +696,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
                   ),
                 ),
               ),
-              if (state.excludedSegments.isNotEmpty)
-                GestureDetector(
-                  onTap: () {
-                    HapticFeedback.lightImpact();
-                    _notifier.restoreAllExcluded();
-                  },
-                  child: Text(
-                    l10n.trim_restoreAll,
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: colors.accent,
-                    ),
-                  ),
-                ),
+              if (hasExclusion) restoreAll,
             ],
           ),
           const SizedBox(height: SpacingScale.s8),
@@ -671,8 +725,8 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
               child: SegmentCard(
                 index: i,
                 total: state.segmentCount,
-                start: _fmt(state.segmentStart(i)),
-                end: _fmt(state.segmentEnd(i)),
+                start: formatPositionCentis(state.segmentStart(i)),
+                end: formatPositionCentis(state.segmentEnd(i)),
                 duration: _fmtShort(state.segmentDuration(i)),
                 isPlaying: isPlaying,
                 isExcluded: isExcluded,
@@ -692,7 +746,9 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
               ),
             );
           }),
-        ] else
+        ] else ...[
+          if (hasExclusion)
+            Align(alignment: Alignment.centerRight, child: restoreAll),
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(
@@ -722,6 +778,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
               ],
             ),
           ),
+        ],
       ],
     );
 
@@ -784,7 +841,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
                             child: segmentsList,
                           ),
                         ),
-                        _buildActionBar(colors, isDark, hasSplits, l10n, state),
+                        actionBar,
                       ],
                     ),
                   ),
@@ -815,12 +872,21 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
                     ),
                   ),
                 ),
-                _buildActionBar(colors, isDark, hasSplits, l10n, state),
+                actionBar,
               ],
             );
           },
         ),
       ),
+    );
+  }
+
+  ExcludeRangeEditing? get _excludeEditing {
+    final draft = _excludeDraft;
+    if (draft == null) return null;
+    return ExcludeRangeEditing(
+      draft: draft,
+      onChanged: (d) => setState(() => _excludeDraft = d),
     );
   }
 
@@ -838,8 +904,6 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
           position: _transportPosition,
           duration: state.totalDuration,
           onPlayPause: _toggleTransport,
-          canSplitAtPosition: _canSplitAtPlayhead,
-          onSplitAtPosition: _addSplitAtPlayhead,
         ),
         const SizedBox(height: SpacingScale.s8),
         Padding(
@@ -863,10 +927,23 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
           onSplitPointsChanged: _notifier.setSplitPoints,
           playingSegment: _playingSegment,
           excludedSegments: state.excludedSegments,
+          excludedRanges: state.excludedRanges,
+          excludeEditing: _excludeEditing,
+          playheadPosition: _transportPosition,
+          canSplitAtPosition:
+              _canSplitAtPlayhead &&
+              !_isTransportPlaying &&
+              !state.isSaving &&
+              _excludeDraft == null,
+          onSplitAtPosition: _addSplitAtPlayhead,
+          isWeb: kIsWeb,
+          onExcludeRange: _excludeDraft == null && !state.isSaving
+              ? _startExcludeRange
+              : null,
           hasSplits: hasSplits,
           keptCount: state.keptCount,
-          segmentCount: state.segmentCount,
-          totalDurationLabel: _fmt(state.totalDuration),
+          segmentCount: state.totalPartCount,
+          totalDurationLabel: formatPositionCentis(state.totalDuration),
           totalDurationShortLabel: _fmtShort(state.totalDuration),
           playheadFraction: playheadFraction,
           onPlayheadSeek: _seekPlayheadTo,
@@ -884,113 +961,6 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
           onClearAll: () => _notifier.clearAllSplits(),
         ),
       ],
-    );
-  }
-
-  Widget _buildActionBar(
-    AppColorSet colors,
-    bool isDark,
-    bool hasSplits,
-    AppLocalizations l10n,
-    TrimEditorState state,
-  ) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(
-        SpacingScale.s16,
-        SpacingScale.s12,
-        SpacingScale.s16,
-        SpacingScale.s16,
-      ),
-      decoration: BoxDecoration(
-        color: colors.card,
-        border: Border(
-          top: BorderSide(color: colors.border.withValues(alpha: 0.15)),
-        ),
-      ),
-      child: SafeArea(
-        top: false,
-        child: Row(
-          children: [
-            Expanded(
-              child: OutlinedButton(
-                onPressed: state.isSaving
-                    ? null
-                    : () {
-                        if (context.canPop()) {
-                          context.pop();
-                        } else {
-                          context.go('/recordings');
-                        }
-                      },
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: colors.foreground.withValues(
-                    alpha: isDark ? 0.8 : 0.7,
-                  ),
-                  side: BorderSide(
-                    color: colors.border.withValues(alpha: isDark ? 0.4 : 0.35),
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    vertical: SpacingScale.s16,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(RadiusScale.r12),
-                  ),
-                ),
-                child: Text(l10n.common_cancel),
-              ),
-            ),
-            const SizedBox(width: SpacingScale.s12),
-            Expanded(
-              child: ElevatedButton.icon(
-                onPressed: (state.isSaving || !state.decision.canSave)
-                    ? null
-                    : _saveSplit,
-                icon: state.isSaving
-                    ? SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: isDark ? AppColors.black : AppColors.white,
-                        ),
-                      )
-                    : Icon(
-                        state.decision.mode == TrimSaveMode.boostOnly
-                            ? LucideIcons.volume2
-                            : LucideIcons.scissors,
-                        size: 16,
-                      ),
-                label: Text(
-                  state.isSaving
-                      ? l10n.trim_splitting
-                      : state.decision.mode == TrimSaveMode.boostOnly
-                      ? l10n.trim_applyBoost
-                      : hasSplits
-                      ? l10n.trim_saveSegments(state.keptCount)
-                      : l10n.trim_addSplitsFirst,
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: colors.accent,
-                  foregroundColor: isDark ? AppColors.black : AppColors.white,
-                  disabledBackgroundColor: colors.accent.withValues(
-                    alpha: 0.25,
-                  ),
-                  disabledForegroundColor: isDark
-                      ? AppColors.black.withValues(alpha: 0.3)
-                      : AppColors.white.withValues(alpha: 0.4),
-                  padding: const EdgeInsets.symmetric(
-                    vertical: SpacingScale.s16,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(RadiusScale.r12),
-                  ),
-                  elevation: 0,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

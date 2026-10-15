@@ -37,9 +37,11 @@ Path: @/lib/core/l10n
   `_slugToTitleCase` (which turns `oral-discourse` into `Oral Discourse`) and,
   failing that, returns the server's string unchanged. A category the app has
   never heard of therefore still renders — untranslated, but readable.
-- `localizedGenreName` and `localizedSubcategoryName` are the exceptions to
-  name-keying: each also takes the row's **id**, and resolves the `unclassified`
-  sentinel from it before consulting the maps.
+- The four `unclassified`-aware functions — `localizedGenreName`,
+  `localizedSubcategoryName`, `localizedGenreDescription` and
+  `localizedSubcategoryDescription` — are the exceptions to name-keying: each
+  also takes the row's **id**, and resolves the `unclassified` sentinel from it
+  before consulting the maps.
 
 ### Things to Know
 
@@ -56,20 +58,32 @@ Path: @/lib/core/l10n
   were on the string. The id is the stable half of the contract and already has
   a constant, `kUnclassifiedGenreId` in
   [/lib/features/recording/domain/entities/classification.dart](/lib/features/recording/domain/entities/classification.dart).
-  The translation reuses the existing `recording_unclassified` key rather than
-  adding a genre-specific one.
+  The name reuses the existing `recording_unclassified` key rather than adding a
+  genre-specific one; the genre description, which had no string to reuse, has
+  its own `recording_unclassifiedDesc`.
 - The `id` argument is **required** for exactly that reason: an optional one
   would let a new call site silently fall back to the English name. If you add a
   caller, the compiler will make you supply the id.
 - `l10n.yaml` sets `nullable-getter: false`, so every `AppLocalizations` getter
   returns a non-null `String` in every locale — a locale missing a key falls back
   to the English template at generation time. Callers never have to guard.
-- The **descriptions** are not fixed. The seeded genre carries
-  `'Recordings pending classification'`, and `localizedGenreDescription` still
-  resolves by name only, so that sentence still reaches the reader in English
-  wherever a genre description is rendered (the admin genre list, and the home
-  hero card if the sentinel is ever the first genre). Closing that needs a new
-  `.arb` key — there is no existing string to reuse — which is why ENG-9 left it
-  alone.
+- **Subcategory descriptions never come from the server.** Unlike the genre
+  description, which is `genre.description` passed straight in,
+  `localizedSubcategoryDescription` is called with the subcategory's *name* and
+  keyed on it: the `description` column the taxonomy endpoint returns for a
+  subcategory is parsed into the entity and then rendered nowhere. A
+  subcategory the app has never heard of therefore shows a name and no
+  description line at all — which is why the function returns `String?` and both
+  call sites (the subcategory selection step and the genre detail screen) branch
+  on null to drop the line. Keep that return nullable: making it total would put
+  a description under every unknown subcategory.
+- The sentinel subcategory used to fall in that hole. The server seeds it with
+  `'Default subcategory for pending classification'`, but since that sentence
+  was never rendered the sentinel simply had no description; ENG-517 gave it one
+  by id, in the reader's language. It has its own key,
+  `recording_unclassifiedSubcategoryDesc`, rather than reusing
+  `recording_unclassifiedDesc`, which is worded for recordings inside a
+  category. With that closed, no sentinel string reaches the reader in English
+  any more — the register functions have no sentinel to resolve.
 
 Created and maintained by Nori.

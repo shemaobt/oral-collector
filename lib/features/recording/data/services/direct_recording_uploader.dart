@@ -190,9 +190,13 @@ class DirectRecordingUploader {
     void Function(int sent, int total)? onProgress,
   }) async {
     final shadowId = 'web_$serverId';
-    final synthPath =
-        source.filePath ??
-        'web_import_${DateTime.now().millisecondsSinceEpoch}_$serverId';
+    // Where the bytes can be read back from if this upload is cut short. On
+    // native that is the file itself; on web the key capture wrote them under.
+    // Empty when the source has neither — a file the browser handed over from
+    // a picker dies with the page, and the row saying so is what lets a resume
+    // tell "I still have the audio" from "I have to ask for it again". A made
+    // up path would look like the first and behave like the second (ENG-427).
+    final storedAt = source.filePath ?? source.storageKey ?? '';
 
     await _recordingRepo.upsertRecording(
       LocalRecordingsCompanion(
@@ -217,7 +221,7 @@ class DirectRecordingUploader {
         durationSeconds: Value(meta.durationSeconds),
         fileSizeBytes: Value(meta.fileSizeBytes),
         format: Value(meta.format),
-        localFilePath: Value(synthPath),
+        localFilePath: Value(storedAt),
         serverId: Value(serverId),
         uploadStatus: const Value('web_uploading'),
         recordedAt: Value(meta.recordedAt),
