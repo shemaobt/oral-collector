@@ -31,12 +31,30 @@ class FakeProjectCache implements ProjectCache {
     return cached;
   }
 
+  List<Project>? written;
+
   @override
-  Future<void> write(List<Project> projects, List<Language> languages) async {}
+  Future<void> write(List<Project> projects, List<Language> languages) async {
+    written = projects;
+  }
 }
 
 Project _project(String id) =>
     Project(id: id, name: 'name-$id', languageId: 'lang-$id');
+
+Project _projectWithStorytellers() => Project(
+  id: 'p1',
+  name: 'Kaingang stories',
+  languageId: 'l1',
+  description: 'Stories told by elders',
+  memberCount: 3,
+  recordingCount: 6,
+  totalDurationSeconds: 125.5,
+  storytellerCount: 4,
+  createdAt: DateTime.utc(2026, 11, 1, 9, 30),
+);
+
+const _kaingang = Language(id: 'l1', name: 'Kaingang', code: 'kgp');
 
 void main() {
   late MockProjectRepository repo;
@@ -117,6 +135,64 @@ void main() {
     expect(state.projects.map((p) => p.id).toList(), ['cached-1', 'cached-2']);
     expect(state.lastFetched, isNull);
   });
+
+  test(
+    'a project with storytellers keeps every field when its language name is filled in',
+    () async {
+      final fetched = _projectWithStorytellers();
+      when(() => repo.listProjects()).thenAnswer((_) async => [fetched]);
+      when(() => repo.listLanguages()).thenAnswer((_) async => [_kaingang]);
+      final container = makeContainer(FakeProjectCache());
+
+      await container.read(projectNotifierProvider.notifier).fetchProjects();
+
+      final project = container.read(projectNotifierProvider).projects.single;
+      expect(project.storytellerCount, 4, reason: 'the card showed 0');
+      expect(
+        project.toJson(),
+        {
+          ...fetched.toJson(),
+          'language_name': 'Kaingang',
+          'language_code': 'kgp',
+        },
+        reason: 'the rebuild copied fields by hand and dropped one',
+      );
+    },
+  );
+
+  test('the active project Home reads keeps its storyteller count', () async {
+    when(
+      () => repo.listProjects(),
+    ).thenAnswer((_) async => [_projectWithStorytellers()]);
+    when(() => repo.listLanguages()).thenAnswer((_) async => [_kaingang]);
+    final container = makeContainer(FakeProjectCache());
+
+    await container.read(projectNotifierProvider.notifier).fetchProjects();
+
+    final active = container.read(projectNotifierProvider).activeProject;
+    expect(active?.id, 'p1');
+    expect(active?.storytellerCount, 4, reason: 'the Home tile showed 0');
+  });
+
+  test(
+    'the cache is written with the storyteller count the server sent',
+    () async {
+      when(
+        () => repo.listProjects(),
+      ).thenAnswer((_) async => [_projectWithStorytellers()]);
+      when(() => repo.listLanguages()).thenAnswer((_) async => [_kaingang]);
+      final cache = FakeProjectCache();
+      final container = makeContainer(cache);
+
+      await container.read(projectNotifierProvider.notifier).fetchProjects();
+
+      expect(
+        cache.written?.single.storytellerCount,
+        4,
+        reason: 'the cache kept 0',
+      );
+    },
+  );
 
   test('empty cache leaves state empty', () async {
     final cache = FakeProjectCache(cached: null);
