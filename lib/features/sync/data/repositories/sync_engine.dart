@@ -27,6 +27,7 @@ import '../../../recording/domain/entities/review_flag.dart';
 import '../../../recording/domain/repositories/recording_api_repository.dart';
 import '../../../recording/domain/upload_refusal.dart';
 import '../../../storyteller/data/repositories/local_storyteller_repository.dart';
+import '../../../storyteller/domain/entities/storyteller.dart';
 import '../../domain/repositories/connectivity_service.dart';
 import '../../domain/repositories/sync_engine.dart';
 import '../pending_metadata_request.dart';
@@ -362,15 +363,15 @@ class SyncEngineImpl implements SyncEngine {
           'recorded_at': recording.recordedAt.toUtc().toIso8601String(),
         };
         _addOptionalCreateFields(createBody, recording);
-        if (recording.storytellerId != null &&
-            recording.storytellerId!.isNotEmpty) {
+        final storytellerId = await _withoutLostTemporaryStoryteller(recording);
+        if (storytellerId != null && storytellerId.isNotEmpty) {
           final resolvedStorytellerId = await _resolveStorytellerServerId(
-            recording.storytellerId!,
+            storytellerId,
           );
           if (resolvedStorytellerId == null) {
             _log.info(
               'skipping recording $id, referenced storyteller '
-              '${recording.storytellerId} is not yet synced',
+              '$storytellerId is not yet synced',
             );
             // Undo the optimistic markAsUploading so the row stays drain-eligible
             // once the storyteller syncs. Without this the uploading-skip in
@@ -680,6 +681,19 @@ class SyncEngineImpl implements SyncEngine {
       await _recordingRepo.markMetadataSyncFailed(row.id);
     }
     return false;
+  }
+
+  Future<String?> _withoutLostTemporaryStoryteller(
+    LocalRecording recording,
+  ) async {
+    final storytellerId = recording.storytellerId;
+    if (storytellerId == null ||
+        !storytellerId.startsWith(localStorytellerIdPrefix) ||
+        await _storytellerRepo.getRowById(storytellerId) != null) {
+      return storytellerId;
+    }
+    await _recordingRepo.setStoryteller(recording.id, storytellerId: null);
+    return null;
   }
 
   Future<String?> _resolveStorytellerServerId(String referencedId) async {

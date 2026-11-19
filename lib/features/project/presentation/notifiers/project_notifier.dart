@@ -175,6 +175,7 @@ class ProjectNotifier extends Notifier<ProjectState> {
           memberCount: p.memberCount,
           recordingCount: p.recordingCount,
           totalDurationSeconds: p.totalDurationSeconds,
+          storytellerCount: p.storytellerCount,
           createdAt: p.createdAt,
         );
       }

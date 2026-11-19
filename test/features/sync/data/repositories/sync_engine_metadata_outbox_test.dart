@@ -26,6 +26,7 @@ import 'package:oral_collector/core/network/authenticated_client.dart';
 import 'package:oral_collector/features/recording/data/repositories/local_recording_repository.dart';
 import 'package:oral_collector/features/recording/domain/entities/pending_metadata_field.dart';
 import 'package:oral_collector/features/storyteller/data/repositories/local_storyteller_repository.dart';
+import 'package:oral_collector/features/storyteller/domain/entities/storyteller.dart';
 import 'package:oral_collector/features/sync/data/repositories/sync_engine.dart';
 import 'package:oral_collector/features/sync/domain/repositories/connectivity_service.dart';
 
@@ -338,6 +339,40 @@ void main() {
       expect(log.count, 2);
       expect(log.bodies.last, {'storyteller_id': 'st-9'});
       expect((await row()).metadataSyncStatus, MetadataSyncStatus.synced);
+      client.close();
+    });
+
+    test('a change to a storyteller created on the phone goes up with the id '
+        'the server gave it, once the storytellers refresh', () async {
+      const temporaryId = 'stl_1795065034097_b202a0';
+      const serverId = '4c038139-9d2e-4f6a-b1c4-7e2f0a9d3b51';
+      Storyteller leilani(String id) => Storyteller(
+        id: id,
+        projectId: 'proj',
+        name: 'Leilani Kahale',
+        sex: StorytellerSex.female,
+        externalAcceptanceConfirmed: true,
+        createdAt: DateTime(2026, 11, 18),
+      );
+      final storytellers = LocalStorytellerRepository(db);
+      await storytellers.insertLocal(leilani(temporaryId));
+      await storytellers.markUploaded(temporaryId, serverId);
+      await seedVerified(storytellerId: temporaryId);
+      await repo.markMetadataPending('rec-1', {
+        PendingMetadataField.storyteller,
+      });
+      await storytellers.upsertAll([leilani(serverId)], 'proj');
+
+      final (client, log) = patchClient();
+      await buildEngine(client).processQueue();
+
+      expect(
+        log.only,
+        {'storyteller_id': serverId},
+        reason:
+            'the drain sent the temporary id, which the server refuses '
+            'with a 404',
+      );
       client.close();
     });
   });

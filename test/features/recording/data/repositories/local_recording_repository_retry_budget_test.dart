@@ -17,6 +17,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:oral_collector/core/config/upload_retry_policy.dart';
 import 'package:oral_collector/core/database/app_database.dart';
 import 'package:oral_collector/features/recording/data/repositories/local_recording_repository.dart';
+import 'package:oral_collector/features/storyteller/data/repositories/local_storyteller_repository.dart';
+import 'package:oral_collector/features/storyteller/domain/entities/storyteller.dart';
 
 void main() {
   late AppDatabase db;
@@ -31,7 +33,12 @@ void main() {
     await db.close();
   });
 
-  Future<void> insert(String id, String uploadStatus, {int retryCount = 0}) {
+  Future<void> insert(
+    String id,
+    String uploadStatus, {
+    int retryCount = 0,
+    String? storytellerId,
+  }) {
     return repo.insertRecording(
       LocalRecordingsCompanion(
         id: Value(id),
@@ -40,6 +47,7 @@ void main() {
         localFilePath: Value('/tmp/$id.m4a'),
         uploadStatus: Value(uploadStatus),
         retryCount: Value(retryCount),
+        storytellerId: Value(storytellerId),
         recordedAt: Value(DateTime.utc(2026, 5, 1)),
       ),
     );
@@ -126,5 +134,58 @@ void main() {
         'failed',
       );
     });
+  });
+
+  group('requeueUploadsWithLostStoryteller', () {
+    test(
+      'a part retired for a temporary storyteller the phone forgot goes back '
+      'to the queue, and nothing else does',
+      () async {
+        await LocalStorytellerRepository(db).insertLocal(
+          Storyteller(
+            id: 'stl_1795070000000_c0ffee',
+            projectId: 'proj-1',
+            name: 'Kaleo Akana',
+            sex: StorytellerSex.male,
+            externalAcceptanceConfirmed: true,
+            createdAt: DateTime(2026, 11, 18),
+          ),
+        );
+        await insert(
+          'lost',
+          'failed_exhausted',
+          retryCount: kMaxUploadRetries,
+          storytellerId: 'stl_1795065034097_b202a0',
+        );
+        await insert(
+          'still-waiting',
+          'failed_exhausted',
+          retryCount: kMaxUploadRetries,
+          storytellerId: 'stl_1795070000000_c0ffee',
+        );
+        await insert(
+          'server-storyteller',
+          'failed_exhausted',
+          retryCount: kMaxUploadRetries,
+          storytellerId: '4c038139-9d2e-4f6a-b1c4-7e2f0a9d3b51',
+        );
+        await insert(
+          'no-storyteller',
+          'failed_exhausted',
+          retryCount: kMaxUploadRetries,
+        );
+
+        await repo.requeueUploadsWithLostStoryteller();
+
+        expect(
+          (await repo.getPendingUploads()).map((r) => r.id),
+          ['lost'],
+          reason:
+              'the part sat at «Attempts used up» until the collector pressed '
+              'Retry, and only then went up',
+        );
+        expect((await repo.getRecordingById('lost'))!.retryCount, 0);
+      },
+    );
   });
 }

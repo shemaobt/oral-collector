@@ -1,5 +1,7 @@
 import '../../../../core/serialization/safe_read.dart';
 
+const localStorytellerIdPrefix = 'stl_';
+
 enum StorytellerSex {
   male('male'),
   female('female'),
