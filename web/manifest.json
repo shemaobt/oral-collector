@@ -1,11 +1,11 @@
 {
-    "name": "oral_collector",
-    "short_name": "oral_collector",
+    "name": "Oral Collector",
+    "short_name": "Oral Collector",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#F5F0E6",
-    "theme_color": "#2563EB",
-    "description": "A new Flutter project.",
+    "background_color": "#F6F5EB",
+    "theme_color": "#BE4A01",
+    "description": "Oral Collector is a mobile and web app for collecting monolingual audio data.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
