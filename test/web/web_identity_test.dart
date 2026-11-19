@@ -8,6 +8,7 @@ const appSentence =
 
 void main() {
   final indexHtml = File('web/index.html').readAsStringSync();
+  final pubspec = File('pubspec.yaml').readAsStringSync();
   final manifest =
       jsonDecode(File('web/manifest.json').readAsStringSync())
           as Map<String, dynamic>;
@@ -48,4 +49,16 @@ void main() {
     expect(manifest['background_color'], '#F6F5EB');
     expect(manifest['theme_color'], '#BE4A01');
   });
+
+  test('the package describes Oral Collector, not a new Flutter project', () {
+    expect(pubspec, contains('\ndescription: "$appSentence"\n'));
+  });
+
+  test(
+    'regenerating the web icons keeps the palette colours of the manifest',
+    () {
+      expect(pubspec, contains("\n    background_color: '#F6F5EB'\n"));
+      expect(pubspec, contains("\n    theme_color: '#BE4A01'\n"));
+    },
+  );
 }
