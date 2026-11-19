@@ -120,6 +120,9 @@ class _OralCollectorAppState extends ConsumerState<OralCollectorApp> {
       await ref
           .read(localRecordingRepositoryProvider)
           .normalizeExhaustedUploads();
+      await ref
+          .read(localRecordingRepositoryProvider)
+          .requeueUploadsWithLostStoryteller();
 
       // Crash-recovery must clear any stale RecordingActiveFlag from a
       // previous run BEFORE the upload listeners go live. Otherwise the very
