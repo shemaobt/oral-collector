@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../sync/presentation/notifiers/sync_notifier.dart';
 import '../../data/providers.dart';
 import '../../domain/entities/project_stats.dart';
 
@@ -9,7 +10,8 @@ import '../../domain/entities/project_stats.dart';
 /// every writer of these numbers is on the server. Callers that cannot show a
 /// number are expected to show none — the counters are best-effort and a screen
 /// that works offline must not go blank because the aggregate did not answer.
-final projectStatsProvider = FutureProvider.family<ProjectStats, String>(
-  (ref, projectId) =>
-      ref.read(projectRepositoryProvider).getProjectStats(projectId),
-);
+final projectStatsProvider = FutureProvider.autoDispose
+    .family<ProjectStats, String>((ref, projectId) {
+      ref.watch(syncNotifierProvider.select((s) => s.lastSyncAt));
+      return ref.read(projectRepositoryProvider).getProjectStats(projectId);
+    });

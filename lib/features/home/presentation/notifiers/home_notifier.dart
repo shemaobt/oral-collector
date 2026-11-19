@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -5,6 +7,7 @@ import '../../../project/presentation/notifiers/project_notifier.dart';
 import '../../../project/presentation/notifiers/stats_notifier.dart';
 import '../../../recording/data/providers.dart';
 import '../../../recording/domain/entities/classification.dart';
+import '../../../sync/presentation/notifiers/sync_notifier.dart';
 import 'home_state.dart';
 
 final homeNotifierProvider = NotifierProvider<HomeNotifier, HomeState>(
@@ -18,7 +21,18 @@ class HomeNotifier extends Notifier<HomeState> {
 
   @override
   HomeState build() {
+    ref.listen(syncNotifierProvider.select((s) => s.lastSyncAt), (_, _) {
+      final projectId = ref.read(projectNotifierProvider).activeProject?.id;
+      if (projectId == null) return;
+      unawaited(_refreshAfterSync(projectId));
+    });
     return HomeState(greeting: _computeGreeting());
+  }
+
+  Future<void> _refreshAfterSync(String projectId) async {
+    await _loadLocalStats();
+    await ref.read(statsNotifierProvider.notifier).fetchGenreStats(projectId);
+    computeTotals();
   }
 
   GreetingPeriod _computeGreeting() {
