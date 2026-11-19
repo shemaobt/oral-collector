@@ -1,5 +1,5 @@
 name: oral_collector
-description: "A new Flutter project."
+description: "Oral Collector is a mobile and web app for collecting monolingual audio data."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -103,8 +103,8 @@ flutter_launcher_icons:
   remove_alpha_ios: true
   web:
     generate: true
-    background_color: '#F5F0E6'
-    theme_color: '#2563EB'
+    background_color: '#F6F5EB'
+    theme_color: '#BE4A01'
   image_path: 'assets/app_icon.png'
 
 # For information on the generic Dart part of this file, see the
