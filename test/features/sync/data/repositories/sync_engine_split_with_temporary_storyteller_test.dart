@@ -222,4 +222,36 @@ void main() {
       );
     }
   });
+
+  test(
+    'parts whose temporary storyteller the phone already forgot go up without '
+    'a storyteller, instead of being refused for good',
+    () async {
+      await storytellersRefreshedFromTheServer();
+      await seedUploadedParent();
+      await splitTheParent();
+
+      final sent = <String?>[];
+      final client = serverThatKnowsOnly(serverId, sent);
+      await buildEngine(client).processQueue();
+
+      expect(
+        sent,
+        [null, null],
+        reason:
+            'the dead temporary id went up, the server answered 404 and the '
+            'part was retired at «Attempts used up»',
+      );
+      for (final id in ['part-1', 'part-2']) {
+        final row = await recordingRepo.getRecordingById(id);
+        expect(row!.uploadStatus, 'uploaded');
+        expect(
+          row.storytellerId,
+          isNull,
+          reason: 'the part kept an id nothing resolves: «Unknown storyteller»',
+        );
+      }
+      client.close();
+    },
+  );
 }
