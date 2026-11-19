@@ -54,10 +54,28 @@ void main() {
     expect(local.gcsUrl, 'https://gcs.example/r-1.m4a');
     expect(local.uploadStatus, 'verified');
     expect(local.cleaningStatus, 'cleaned');
-    expect(local.recordedAt, DateTime.utc(2026, 5, 1, 10));
+    expect(
+      local.recordedAt,
+      DateTime.fromMillisecondsSinceEpoch(1777629600000),
+    );
     expect(local.splitFromId, 'parent-X');
     expect(local.splitIndex, 2);
     expect(local.splitSegmentCount, 3);
+  });
+
+  test('a recording from the server is dated in the phone\'s time, like the '
+      'ones made on the phone, so the list and the page show one day', () {
+    final local = serverRecordingToLocal(fullServerRecording());
+
+    expect(
+      local.recordedAt.isUtc,
+      isFalse,
+      reason:
+          'a lista mostrava o dia do servidor em UTC e a página o do aparelho',
+    );
+    expect(local.recordedAt.millisecondsSinceEpoch, 1777629600000);
+    expect(local.createdAt.isUtc, isFalse);
+    expect(local.createdAt.millisecondsSinceEpoch, 1777629600000);
   });
 
   test('serverId is set from server.id and localFilePath is empty (file is '
