@@ -21,6 +21,8 @@ import 'package:oral_collector/features/project/presentation/notifiers/stats_sta
 import 'package:oral_collector/features/recording/data/providers.dart';
 import 'package:oral_collector/features/recording/data/repositories/local_recording_repository.dart';
 import 'package:oral_collector/features/recording/domain/entities/classification.dart';
+import 'package:oral_collector/features/sync/presentation/notifiers/sync_notifier.dart';
+import 'package:oral_collector/features/sync/presentation/notifiers/sync_state.dart';
 
 class _FakeProjectNotifier extends ProjectNotifier {
   _FakeProjectNotifier(this._state);
@@ -38,6 +40,11 @@ class _FakeStatsNotifier extends StatsNotifier {
 
   @override
   StatsState build() => _state;
+}
+
+class _QuietSync extends SyncNotifier {
+  @override
+  SyncState build() => const SyncState(isOnline: true);
 }
 
 void main() {
@@ -96,6 +103,7 @@ void main() {
         statsNotifierProvider.overrideWith(
           () => _FakeStatsNotifier(StatsState(genreStats: genreStats)),
         ),
+        syncNotifierProvider.overrideWith(_QuietSync.new),
       ],
     );
     addTearDown(container.dispose);
