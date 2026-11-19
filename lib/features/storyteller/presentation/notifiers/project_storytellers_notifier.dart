@@ -129,10 +129,7 @@ class ProjectStorytellersNotifier extends Notifier<ProjectStorytellersState> {
             ..sort(
               (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
             );
-      final pid = state.projectId;
-      if (pid != null) {
-        await _local.upsertAll(next, pid);
-      }
+      await _local.insertLocal(updated, syncStatus: 'synced');
       state = state.copyWith(storytellers: next, isMutating: false);
       return updated;
     } on Exception catch (e, st) {
