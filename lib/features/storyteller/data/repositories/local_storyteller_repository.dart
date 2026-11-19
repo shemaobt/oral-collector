@@ -12,7 +12,22 @@ class LocalStorytellerRepository {
   LocalStorytellerRepository(this._db);
 
   Future<void> upsertAll(List<Storyteller> items, String projectId) async {
+    final synced =
+        await (_db.select(_db.localStorytellers)..where(
+              (tbl) =>
+                  tbl.projectId.equals(projectId) &
+                  tbl.syncStatus.isNotIn(_pendingStatuses) &
+                  tbl.serverId.isNotNull(),
+            ))
+            .get();
     await _db.batch((batch) {
+      for (final row in synced) {
+        batch.update(
+          _db.localRecordings,
+          LocalRecordingsCompanion(storytellerId: Value(row.serverId)),
+          where: (tbl) => tbl.storytellerId.equals(row.id),
+        );
+      }
       batch.deleteWhere(
         _db.localStorytellers,
         (tbl) =>

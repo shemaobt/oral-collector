@@ -103,7 +103,7 @@ class ProjectStorytellersNotifier extends Notifier<ProjectStorytellersState> {
         .nextInt(0xFFFFFF)
         .toRadixString(16)
         .padLeft(6, '0');
-    return 'stl_${millis}_$rand';
+    return '$localStorytellerIdPrefix${millis}_$rand';
   }
 
   Future<Storyteller?> update(

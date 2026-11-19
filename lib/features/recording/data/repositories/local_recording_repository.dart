@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 
 import '../../../../core/config/upload_retry_policy.dart';
 import '../../../../core/database/app_database.dart';
+import '../../../storyteller/domain/entities/storyteller.dart';
 import '../../domain/entities/classification.dart';
 import '../../domain/entities/local_recording_entity.dart';
 import '../../domain/entities/pending_metadata_field.dart';
@@ -730,6 +731,20 @@ class LocalRecordingRepository {
             uploadStatus: Value('failed_exhausted'),
           ),
         );
+  }
+
+  Future<int> requeueUploadsWithLostStoryteller() async {
+    final knownStorytellers = _db.selectOnly(_db.localStorytellers)
+      ..addColumns([_db.localStorytellers.id]);
+    return (_db.update(_db.localRecordings)..where(
+          (t) =>
+              t.uploadStatus.equals('failed_exhausted') &
+              t.storytellerId
+                  .substr(1, localStorytellerIdPrefix.length)
+                  .equals(localStorytellerIdPrefix) &
+              t.storytellerId.isNotInQuery(knownStorytellers),
+        ))
+        .write(_requeueCompanion);
   }
 
   /// Persists a freshly-downloaded audio file alongside its full metadata.
