@@ -24,11 +24,15 @@ class HomeNotifier extends Notifier<HomeState> {
     ref.listen(syncNotifierProvider.select((s) => s.lastSyncAt), (_, _) {
       final projectId = ref.read(projectNotifierProvider).activeProject?.id;
       if (projectId == null) return;
-      unawaited(
-        ref.read(statsNotifierProvider.notifier).fetchGenreStats(projectId),
-      );
+      unawaited(_refreshAfterSync(projectId));
     });
     return HomeState(greeting: _computeGreeting());
+  }
+
+  Future<void> _refreshAfterSync(String projectId) async {
+    await _loadLocalStats();
+    await ref.read(statsNotifierProvider.notifier).fetchGenreStats(projectId);
+    computeTotals();
   }
 
   GreetingPeriod _computeGreeting() {

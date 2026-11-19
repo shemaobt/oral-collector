@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -42,17 +43,17 @@ class _FakeSync extends SyncNotifier {
 
 void main() {
   late AppDatabase db;
+  late LocalRecordingRepository local;
   late _ServerStats server;
   late ProviderContainer container;
 
   setUp(() {
     db = AppDatabase.forTesting(NativeDatabase.memory());
+    local = LocalRecordingRepository(db);
     server = _ServerStats();
     container = ProviderContainer(
       overrides: [
-        localRecordingRepositoryProvider.overrideWithValue(
-          LocalRecordingRepository(db),
-        ),
+        localRecordingRepositoryProvider.overrideWithValue(local),
         statsRepositoryProvider.overrideWithValue(server),
         projectNotifierProvider.overrideWith(_FakeProjectNotifier.new),
         syncNotifierProvider.overrideWith(_FakeSync.new),
@@ -88,6 +89,45 @@ void main() {
           ?.recordingCount,
       1,
       reason: 'o cartão do gênero seguia no número antigo depois do envio',
+    );
+  });
+
+  test('a recording that just uploaded is counted once, by the server, and '
+      'not again as a recording only this phone holds', () async {
+    await local.insertRecording(
+      LocalRecordingsCompanion(
+        id: const Value('r1'),
+        projectId: const Value('proj-1'),
+        genreId: const Value('genre-1'),
+        localFilePath: const Value('/tmp/r1.m4a'),
+        uploadStatus: const Value('local'),
+        durationSeconds: const Value(60),
+        recordedAt: Value(DateTime.utc(2026, 5, 1)),
+        createdAt: Value(DateTime.utc(2026, 5, 1)),
+      ),
+    );
+    await container.read(homeNotifierProvider.notifier).refreshAll();
+    expect(container.read(homeNotifierProvider).totalRecordings, 1);
+
+    await local.updateRecording(
+      'r1',
+      const LocalRecordingsCompanion(uploadStatus: Value('uploaded')),
+    );
+    server.answer = const {
+      'genre-1': GenreStat(
+        genreId: 'genre-1',
+        totalDurationSeconds: 120,
+        recordingCount: 2,
+      ),
+    };
+    (container.read(syncNotifierProvider.notifier) as _FakeSync).syncFinished();
+    await settle();
+
+    expect(
+      container.read(homeNotifierProvider).totalRecordings,
+      2,
+      reason:
+          'a gravação enviada contava uma vez no aparelho e outra no servidor',
     );
   });
 }
