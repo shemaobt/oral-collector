@@ -76,13 +76,13 @@ class _FakeProjectNotifier extends ProjectNotifier {
 
 /// Answers the aggregate, or refuses to — the field's offline case.
 class _StatsRepo implements ProjectRepository {
-  _StatsRepo(this._stats);
+  _StatsRepo(this.stats);
 
-  final ProjectStats? _stats;
+  ProjectStats? stats;
 
   @override
   Future<ProjectStats> getProjectStats(String projectId) async {
-    final stats = _stats;
+    final stats = this.stats;
     if (stats == null) throw Exception('no network');
     return stats;
   }
@@ -98,6 +98,8 @@ class _SyncNotifierAt extends SyncNotifier {
 
   @override
   Future<void> processQueue() async {}
+
+  void syncFinished() => state = state.copyWith(lastSyncAt: DateTime.now());
 }
 
 void main() {
@@ -111,13 +113,14 @@ void main() {
     WidgetTester tester, {
     ProjectStats? stats,
     PendencyKind? initial,
+    _StatsRepo? repo,
   }) async {
     await pumpAtTextScale(
       tester,
       overrides: [
         recordingApiRepositoryProvider.overrideWithValue(api),
         localRecordingRepositoryProvider.overrideWithValue(_FakeLocal()),
-        projectRepositoryProvider.overrideWithValue(_StatsRepo(stats)),
+        projectRepositoryProvider.overrideWithValue(repo ?? _StatsRepo(stats)),
         projectNotifierProvider.overrideWith(_FakeProjectNotifier.new),
         syncNotifierProvider.overrideWith(_SyncNotifierAt.new),
       ],
@@ -272,6 +275,34 @@ void main() {
         matching: find.text('0'),
       ),
       findsOne,
+    );
+  });
+
+  testWidgets('a finished sync makes the chip count what the server now has', (
+    tester,
+  ) async {
+    final repo = _StatsRepo(const ProjectStats(reviewFlagCounts: {}));
+    final container = await pumpRow(tester, repo: repo);
+    final classification = find.widgetWithText(
+      ChoiceChip,
+      _l10n.recording_pendencyClassification,
+    );
+    expect(
+      find.descendant(of: classification, matching: find.text('0')),
+      findsOne,
+    );
+
+    repo.stats = const ProjectStats(
+      reviewFlagCounts: {'missing_classification': 1},
+    );
+    (container.read(syncNotifierProvider.notifier) as _SyncNotifierAt)
+        .syncFinished();
+    await tester.pumpAndSettle();
+
+    expect(
+      find.descendant(of: classification, matching: find.text('1')),
+      findsOne,
+      reason: 'o chip seguia em 0 com a gravação já no servidor',
     );
   });
 
