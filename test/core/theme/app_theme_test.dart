@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:oral_collector/core/theme/app_colors.dart';
 import 'package:oral_collector/core/theme/app_opacity.dart';
 import 'package:oral_collector/core/theme/app_radii.dart';
 import 'package:oral_collector/core/theme/app_spacing.dart';
@@ -10,9 +11,6 @@ import 'package:oral_collector/core/theme/app_theme.dart';
 
 BorderRadiusGeometry? _radiusOf(ShapeBorder? shape) =>
     (shape as RoundedRectangleBorder?)?.borderRadius;
-
-OutlinedBorder? _buttonShape(ButtonStyle? style) =>
-    style?.shape?.resolve(<WidgetState>{});
 
 EdgeInsetsGeometry? _buttonPadding(ButtonStyle? style) =>
     style?.padding?.resolve(<WidgetState>{});
@@ -25,18 +23,6 @@ void _expectComponentRadiiFromTokens(ThemeData theme) {
   expect(
     _radiusOf(theme.floatingActionButtonTheme.shape),
     BorderRadius.circular(RadiusScale.r16),
-  );
-  expect(
-    _radiusOf(_buttonShape(theme.elevatedButtonTheme.style)),
-    BorderRadius.circular(RadiusScale.r12),
-  );
-  expect(
-    _radiusOf(_buttonShape(theme.filledButtonTheme.style)),
-    BorderRadius.circular(RadiusScale.r12),
-  );
-  expect(
-    _radiusOf(_buttonShape(theme.outlinedButtonTheme.style)),
-    BorderRadius.circular(RadiusScale.r12),
   );
   expect(
     (theme.inputDecorationTheme.border! as OutlineInputBorder).borderRadius,
@@ -53,10 +39,7 @@ void _expectComponentRadiiFromTokens(ThemeData theme) {
 }
 
 void _expectPaddingFromTokens(ThemeData theme) {
-  const buttonPadding = EdgeInsets.symmetric(
-    horizontal: SpacingScale.s28,
-    vertical: 14,
-  );
+  const buttonPadding = EdgeInsets.symmetric(horizontal: SpacingScale.s20);
   expect(_buttonPadding(theme.elevatedButtonTheme.style), buttonPadding);
   expect(_buttonPadding(theme.filledButtonTheme.style), buttonPadding);
   expect(
@@ -133,11 +116,81 @@ void _expectBrushTitles(ThemeData theme) {
   }
 }
 
+T? _on<T>(WidgetStateProperty<T>? p, [Set<WidgetState> s = const {}]) =>
+    p?.resolve(s);
+
+void _expectButtons(ThemeData theme) {
+  final c = theme.extension<AppColorSet>()!;
+  const stadium = StadiumBorder();
+  final filled = theme.filledButtonTheme.style!;
+  final elevated = theme.elevatedButtonTheme.style!;
+  final outlined = theme.outlinedButtonTheme.style!;
+  final icon = theme.iconButtonTheme.style!;
+
+  for (final style in [filled, elevated]) {
+    expect(_on(style.shape), stadium);
+    expect(_on(style.minimumSize), const Size(0, 46));
+    expect(_on(style.backgroundColor), c.accent);
+    expect(_on(style.backgroundColor, {WidgetState.disabled}), c.surfaceAlt);
+  }
+
+  expect(_on(outlined.shape), stadium);
+  expect(_on(outlined.minimumSize), const Size(0, 46));
+  expect(_on(outlined.foregroundColor), c.primary);
+  expect(_on(outlined.side), BorderSide(color: c.border, width: 1.5));
+
+  expect(_on(icon.shape), const CircleBorder());
+  expect(_on(icon.fixedSize), const Size(44, 44));
+  expect(_on(icon.side), BorderSide(color: c.border, width: 1.5));
+}
+
 void main() {
   for (final (name, theme) in [
     ('lightTheme', AppTheme.lightTheme),
     ('darkTheme', AppTheme.darkTheme),
   ]) {
+    group('$name buttons', () {
+      test('read as the design pills and round icon buttons', () {
+        _expectButtons(theme);
+      });
+
+      testWidgets('filled button label reads in the labelLarge role', (
+        tester,
+      ) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: theme,
+            home: FilledButton(onPressed: () {}, child: const Text('Go')),
+          ),
+        );
+        final style = DefaultTextStyle.of(
+          tester.element(find.text('Go')),
+        ).style;
+        expect(style.fontFamily, theme.textTheme.labelLarge!.fontFamily);
+        expect(style.fontSize, theme.textTheme.labelLarge!.fontSize);
+        expect(style.fontWeight, theme.textTheme.labelLarge!.fontWeight);
+      });
+
+      testWidgets('danger style reads the error colour', (tester) async {
+        late ButtonStyle danger;
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: theme,
+            home: Builder(
+              builder: (context) {
+                danger = AppButtonStyles.danger(context);
+                return const SizedBox.shrink();
+              },
+            ),
+          ),
+        );
+        final c = theme.extension<AppColorSet>()!;
+        expect(_on(danger.backgroundColor), c.error);
+        expect(_on(danger.shape), const StadiumBorder());
+        expect(_on(danger.minimumSize), const Size(0, 46));
+      });
+    });
+
     group('$name typography', () {
       test('titles read in the brush and the rest in Montserrat', () {
         _expectTypography(theme);
@@ -168,12 +221,9 @@ void main() {
       _expectComponentRadiiFromTokens(theme);
     });
 
-    test(
-      'button and input padding map to SpacingScale, keeping off-grid 14',
-      () {
-        _expectPaddingFromTokens(theme);
-      },
-    );
+    test('button and input padding map to SpacingScale', () {
+      _expectPaddingFromTokens(theme);
+    });
 
     test('bottom sheet top radius maps to RadiusScale.r20', () {
       final shape = theme.bottomSheetTheme.shape! as RoundedRectangleBorder;
@@ -195,12 +245,9 @@ void main() {
       _expectComponentRadiiFromTokens(theme);
     });
 
-    test(
-      'button and input padding map to SpacingScale, keeping off-grid 14',
-      () {
-        _expectPaddingFromTokens(theme);
-      },
-    );
+    test('button and input padding map to SpacingScale', () {
+      _expectPaddingFromTokens(theme);
+    });
 
     test('representative resolved opacity maps to OpacityScale', () {
       expect(theme.dividerTheme.color!.a, closeTo(OpacityScale.o30, 0.001));
