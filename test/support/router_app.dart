@@ -149,6 +149,8 @@ class FakeMemberNotifier extends MemberNotifier {
 Future<ProviderContainer> pumpApp(
   WidgetTester tester, {
   required String at,
+  List<Override> overrides = const [],
+  bool settled = true,
 }) async {
   tester.view.physicalSize = kPhoneSize * 3.0;
   tester.view.devicePixelRatio = 3.0;
@@ -172,6 +174,7 @@ Future<ProviderContainer> pumpApp(
       localRecordingStreamProvider(
         recordingId,
       ).overrideWith((ref) => const Stream<LocalRecordingEntity?>.empty()),
+      ...overrides,
     ],
   );
   addTearDown(container.dispose);
@@ -193,7 +196,7 @@ Future<ProviderContainer> pumpApp(
       ),
     ),
   );
-  await settle(tester);
+  await (settled ? settle(tester) : tester.pump());
   return container;
 }
 

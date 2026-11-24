@@ -58,8 +58,9 @@ Path: @/lib/core/router
 - **Every route is declared exactly once conceptually, but appears twice in
   the file.** `/genre/:id`, `/recording/:id`, `/recording/:id/trim`,
   `/import-file`, `/project/:id/settings`, the storyteller routes, and
-  `/admin` are each declared under `if (!kIsWeb)` **outside** the
-  `ShellRoute`, and again under `if (kIsWeb)` **inside** it. (`/record-flow`
+  `/admin` are each declared under `if (!isWeb)` **outside** the
+  `ShellRoute`, and again under `if (isWeb)` **inside** it, where `isWeb` is
+  `isWebPlatformProvider` (so a test can run the web table). (`/record-flow`
   is *not* one of these: it is the device-only top-level twin of `/record`,
   which lives in the shell on every platform — same screen, different path
   and different Navigator, so grepping for the screen finds both.)
@@ -79,10 +80,12 @@ Path: @/lib/core/router
   will silently change behaviour on only one platform.
 - Routes that need an active project (`/record`, `/record-flow`,
   `/quick-record`, `/recovery-confirm`, and the device-side `/import-file`)
-  repeat the same `redirect` body — read
-  `projectNotifierProvider.activeProject`, fall back to `/home` if null —
-  inline at each declaration rather than as a shared helper. The web
-  `/import-file` inside the shell carries no such guard.
+  share `_requireActiveProject`: no active project, back to `/home`. The web
+  `/import-file` carries it too.
+- **On the web a screen opens with `go`, so its address is its own.**
+  `openScreen` (`go` on the web, `push` on a phone) and `popOrGo` (pop when
+  something can, else `go` to the parent) live in `navigation.dart`; a back
+  button that only calls `Navigator.pop` is dead after a refresh or a `go`.
 
 ### Things to Know
 
