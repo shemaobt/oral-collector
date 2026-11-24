@@ -6,6 +6,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/auth/auth_notifier.dart';
 import '../../../core/l10n/locale_provider.dart';
+import '../../../core/router/navigation.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../shared/preview_helpers.dart';
@@ -321,8 +322,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 child: HeroGenreCard(
                   genre: genreState.genres.first,
                   genreStat: statsState.genreStats[genreState.genres.first.id],
-                  onTap: () =>
-                      context.push('/genre/${genreState.genres.first.id}'),
+                  onTap: () => openScreen<void>(
+                    context,
+                    ref,
+                    '/genre/${genreState.genres.first.id}',
+                  ),
                 ),
               ),
 
@@ -350,7 +354,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         genre: genre,
                         genreStat: stat,
                         colorIndex: realIndex,
-                        onTap: () => context.push('/genre/${genre.id}'),
+                        onTap: () => openScreen<void>(
+                          context,
+                          ref,
+                          '/genre/${genre.id}',
+                        ),
                       );
                     }, childCount: genreState.genres.length - 1),
                   ),

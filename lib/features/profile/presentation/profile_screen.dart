@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -10,6 +9,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../core/auth/auth_notifier.dart';
 import '../../../core/l10n/locale_provider.dart';
 import '../../../core/l10n/supported_locales.dart';
+import '../../../core/router/navigation.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../shared/preview_helpers.dart';
@@ -23,6 +23,7 @@ import '../../../shared/widgets/section_header.dart';
 import '../../auth/data/providers/role_provider.dart';
 import '../../invite/presentation/notifiers/invite_notifier.dart';
 import '../../project/presentation/notifiers/project_notifier.dart';
+import '../../recording/presentation/notifiers/recording_session_notifier.dart';
 import '../../recording/presentation/widgets/recording_navigation_guard.dart';
 import '../../sync/presentation/notifiers/sync_notifier.dart';
 import '../../sync/presentation/notifiers/sync_state.dart';
@@ -218,7 +219,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       ],
     );
 
-    final showAdmin = kIsWeb && ref.read(isPlatformAdminProvider);
+    final showAdmin =
+        ref.read(isWebPlatformProvider) && ref.read(isPlatformAdminProvider);
 
     final accountSection = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -597,11 +599,11 @@ class _AboutSection extends StatelessWidget {
   }
 }
 
-class _AdminSection extends StatelessWidget {
+class _AdminSection extends ConsumerWidget {
   const _AdminSection();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final colors = AppColors.of(context);
     return Column(
@@ -625,7 +627,7 @@ class _AdminSection extends StatelessWidget {
               size: 18,
               color: colors.secondary,
             ),
-            onTap: () => context.push('/admin'),
+            onTap: () => openScreen<void>(context, ref, '/admin'),
           ),
         ),
       ],

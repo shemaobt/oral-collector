@@ -2,8 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:lucide_icons/lucide_icons.dart';
+import 'package:oral_collector/core/auth/auth_notifier.dart';
+import 'package:oral_collector/core/auth/auth_state.dart';
 import 'package:oral_collector/core/database/app_database.dart';
 import 'package:oral_collector/core/router/app_router.dart';
+import 'package:oral_collector/features/admin/presentation/admin_dashboard_screen.dart';
+import 'package:oral_collector/features/auth/domain/entities/user.dart';
+import 'package:oral_collector/features/genre/domain/entities/genre.dart';
+import 'package:oral_collector/features/genre/presentation/genre_detail_screen.dart';
+import 'package:oral_collector/features/genre/presentation/notifiers/genre_notifier.dart';
+import 'package:oral_collector/features/genre/presentation/notifiers/genre_state.dart';
+import 'package:oral_collector/features/home/presentation/widgets/hero_genre_card.dart';
 import 'package:oral_collector/features/project/domain/entities/project.dart';
 import 'package:oral_collector/features/project/presentation/notifiers/project_notifier.dart';
 import 'package:oral_collector/features/project/presentation/notifiers/project_state.dart';
@@ -20,6 +30,19 @@ import '../../support/router_app.dart';
 class _WebLocal extends FakeLocal {
   @override
   Future<List<LocalRecording>> getPendingWebUploads() async => const [];
+
+  @override
+  Future<List<LocalRecording>> getAllLocalRecordings() async => const [];
+
+  @override
+  Future<({int count, double durationSeconds})> getLocalOnlyStats(
+    String _,
+  ) async => (count: 0, durationSeconds: 0.0);
+
+  @override
+  Future<({int count, double durationSeconds})> getLocalUnclassifiedStats(
+    String _,
+  ) async => (count: 0, durationSeconds: 0.0);
 }
 
 class _NoProject extends FakeProjectNotifier {
@@ -61,6 +84,24 @@ Future<ProviderContainer> _pumpWeb(
     ...overrides,
   ],
 );
+
+class _Admin extends FakeAuthNotifier {
+  @override
+  AuthState build() => const AuthState(
+    currentUser: User(id: 'u1', email: 'a@b.c', isPlatformAdmin: true),
+  );
+}
+
+class _OneGenre extends FakeGenreNotifier {
+  @override
+  GenreState build() => const GenreState(
+    genres: [
+      Genre(id: 'g1', name: 'Folk Tale', sortOrder: 1, subcategories: []),
+    ],
+  );
+}
+
+final _asAdmin = authNotifierProvider.overrideWith(_Admin.new);
 
 void main() {
   testWidgets('opening a recording from the list sets its address', (
@@ -124,5 +165,54 @@ void main() {
     );
 
     expect(addressOf(app), '/home');
+  });
+
+  testWidgets('a genre opens from Home at its own address, back returns', (
+    tester,
+  ) async {
+    final app = await _pumpWeb(
+      tester,
+      at: '/home',
+      settled: false,
+      overrides: [genreNotifierProvider.overrideWith(_OneGenre.new)],
+    );
+    await tester.pump();
+
+    await tester.tap(find.byType(HeroGenreCard));
+    await tester.pump();
+    await tester.pump();
+    expect(addressOf(app), '/genre/g1');
+    expect(find.byType(GenreDetailScreen), findsOneWidget);
+
+    await tester.tap(find.byType(BackButton));
+    await tester.pump();
+    expect(addressOf(app), '/home');
+  });
+
+  testWidgets('the admin opens from Profile at its own address, back returns', (
+    tester,
+  ) async {
+    final app = await _pumpWeb(
+      tester,
+      at: '/profile',
+      settled: false,
+      overrides: [_asAdmin],
+    );
+    await tester.pump();
+    await tester.drag(find.byType(Scrollable).first, const Offset(0, -2000));
+    await tester.pump();
+
+    await tester.tap(find.text('Admin Dashboard'));
+    await tester.pump();
+    await tester.pump();
+    expect(addressOf(app), '/admin');
+    expect(find.byType(AdminDashboardScreen), findsOneWidget);
+
+    tester.view.devicePixelRatio = 1.0;
+    tester.view.physicalSize = const Size(1200, 900);
+    await tester.pump();
+    await tester.tap(find.byIcon(LucideIcons.arrowLeft));
+    await tester.pump();
+    expect(addressOf(app), '/profile');
   });
 }

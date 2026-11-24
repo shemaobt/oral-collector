@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../core/router/navigation.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../shared/preview_helpers.dart';
@@ -41,11 +41,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
             context,
             AppLocalizations.of(context).admin_accessRequired,
           );
-          if (context.canPop()) {
-            context.pop();
-          } else {
-            context.go('/profile');
-          }
+          popOrGo(context, '/profile');
         }
         return;
       }
@@ -112,13 +108,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
         appBar: AppBar(
           leading: IconButton(
             icon: const Icon(LucideIcons.arrowLeft),
-            onPressed: () {
-              if (context.canPop()) {
-                context.pop();
-              } else {
-                context.go('/profile');
-              }
-            },
+            onPressed: () => popOrGo(context, '/profile'),
           ),
           title: Text(l10n.admin_title),
         ),
