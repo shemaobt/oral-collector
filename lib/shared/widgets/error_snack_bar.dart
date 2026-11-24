@@ -26,13 +26,13 @@ void showErrorSnackBar(
             Container(
               padding: const EdgeInsets.all(SpacingScale.s8),
               decoration: BoxDecoration(
-                color: AppColors.white.withValues(alpha: 0.15),
+                color: colors.background.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(RadiusScale.r8),
               ),
-              child: const Icon(
+              child: Icon(
                 LucideIcons.alertTriangle,
                 size: 18,
-                color: AppColors.white,
+                color: colors.background,
               ),
             ),
             const SizedBox(width: SpacingScale.s12),
@@ -40,7 +40,7 @@ void showErrorSnackBar(
               child: Text(
                 message,
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: AppColors.white,
+                  color: colors.background,
                   fontWeight: FontWeight.w500,
                   height: 1.3,
                 ),
