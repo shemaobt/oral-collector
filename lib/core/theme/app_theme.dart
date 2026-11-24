@@ -488,7 +488,7 @@ abstract class AppTheme {
         onPrimary: Colors.white,
         secondary: AppColors.darkSuccess,
         onSecondary: Colors.white,
-        error: AppColors.error,
+        error: AppColors.darkError,
         onError: Colors.white,
         surface: AppColors.darkBackground,
         onSurface: AppColors.darkForeground,

@@ -207,24 +207,24 @@ class AppColorSet extends ThemeExtension<AppColorSet> {
 
 abstract class AppColors {
   static const Color brandBranco = Color(0xFFF6F5EB);
-  static const Color brandAreia = Color(0xFFC5C29F);
+  static const Color brandAreia = Color(0xFFC5BF9E);
   static const Color brandAzul = Color(0xFF89AAA3);
+  static const Color brandPonte = Color(0xFF3F6862);
   static const Color brandTelha = Color(0xFFBE4A01);
   static const Color brandVerdeClaro = Color(0xFF777D45);
   static const Color brandVerde = Color(0xFF3F3E20);
-  static const Color brandPreto = Color(0xFF0A0703);
 
   static const Color primary = brandVerde;
   static const Color accent = brandTelha;
   static const Color background = brandBranco;
-  static const Color foreground = brandPreto;
-  static const Color card = Color(0xFFFDFCF3);
-  static const Color surfaceAlt = Color(0xFFEDE9D5);
-  static const Color secondary = Color(0xFF4A4830);
-  static const Color info = brandAzul;
-  static const Color infoText = Color(0xFF4D6F68);
+  static const Color foreground = Color(0xFF2A2913);
+  static const Color card = Color(0xFFFFFDF7);
+  static const Color surfaceAlt = Color(0xFFEEECE1);
+  static const Color secondary = Color(0xFF5C5843);
+  static const Color info = brandPonte;
+  static const Color infoText = brandPonte;
   static const Color success = brandVerdeClaro;
-  static const Color successText = Color(0xFF5D6233);
+  static const Color successText = brandVerde;
 
   /// Text and icons drawn on top of [primary]. The off-white brand tone, not
   /// pure white: `colorScheme.onPrimary` is #FFFFFF and reads colder than the
@@ -235,11 +235,11 @@ abstract class AppColors {
   /// Backing for a small informational chip — quieter than [surfaceAlt], which
   /// reads as a panel. Themed rather than reusing the fixed surfaceContainer
   /// constants, which stay light and would strand dark text in dark mode.
-  static const Color chipSurface = surfaceContainerHigh;
+  static const Color chipSurface = surfaceAlt;
   static const Color darkChipSurface = darkSurfaceAlt;
-  static const Color warning = Color(0xFFFFA000);
+  static const Color warning = Color(0xFFC7A268);
   static const Color border = brandAreia;
-  static const Color error = Color(0xFFB91C1C);
+  static const Color error = Color(0xFF8C2B26);
 
   static const Color surfaceContainerLowest = Color(0xFFFDFCF3);
   static const Color surfaceContainerLow = Color(0xFFFAF8EC);
@@ -249,32 +249,33 @@ abstract class AppColors {
   static const Color outlineVariant = Color(0xFFE3DFC4);
   static const Color switchThumbUnselected = Color(0xFF8B8863);
 
-  static const Color darkPrimary = Color(0xFFD4D1A8);
-  static const Color darkAccent = Color(0xFFF09045);
-  static const Color darkBackground = Color(0xFF1C1A14);
-  static const Color darkForeground = Color(0xFFF2EFE4);
-  static const Color darkSurface = Color(0xFF262318);
-  static const Color darkSurfaceAlt = Color(0xFF302D22);
-  static const Color darkSecondary = Color(0xFF9E9C7A);
-  static const Color darkInfo = Color(0xFF4EC4AD);
-  static const Color darkInfoText = Color(0xFF9FD4C6);
-  static const Color darkSuccess = Color(0xFF9DC044);
-  static const Color darkSuccessText = Color(0xFFB4C976);
-  static const Color darkWarning = Color(0xFFE0A458);
-  static const Color darkBorder = Color(0xFF5A5440);
+  static const Color darkPrimary = Color(0xFFF2EDE1);
+  static const Color darkAccent = Color(0xFFE36A1E);
+  static const Color darkBackground = Color(0xFF14100B);
+  static const Color darkForeground = Color(0xFFF2EDE1);
+  static const Color darkSurface = Color(0xFF1E1A13);
+  static const Color darkSurfaceAlt = Color(0xFF29241B);
+  static const Color darkSecondary = Color(0xFFBFB8A5);
+  static const Color darkInfo = brandAzul;
+  static const Color darkInfoText = brandAzul;
+  static const Color darkSuccess = Color(0xFFA9AF6F);
+  static const Color darkSuccessText = darkForeground;
+  static const Color darkWarning = Color(0xFFE2C08F);
+  static const Color darkBorder = Color(0xFF554C3B);
+  static const Color darkError = Color(0xFFD9756A);
 
   // Neutral anchors. Pure white/black/transparent differ from the off-white
-  // (brandBranco) and near-black (brandPreto) brand tokens, so they stand alone
+  // (brandBranco) brand token, so they stand alone
   // (ENG-183); migrated 1:1 from Colors.white/black/transparent call sites.
   static const Color white = Color(0xFFFFFFFF);
   static const Color black = Color(0xFF000000);
   static const Color transparent = Color(0x00000000);
 
   // Long-tail semantic tokens migrated from inline literals (ENG-183).
-  static const Color meterWarning = Color(0xFFE0A526); // volume meter caution
-  static const Color warningContainer = Color(0xFFFFEDCC); // storage banner bg
+  static const Color meterWarning = Color(0xFFC7A268); // volume meter caution
+  static const Color warningContainer = Color(0xFFF4E3BF); // storage banner bg
   static const Color onWarningContainer = Color(
-    0xFF8A5A00,
+    0xFF6E4F1C,
   ); // storage banner fg
   static const Color authHeroAccent = Color(0xFFFFB380); // signup hero accent
 
@@ -328,7 +329,7 @@ abstract class AppColors {
     chipSurface: darkChipSurface,
     warning: darkWarning,
     border: darkBorder,
-    error: error,
+    error: darkError,
     wash: Color(0xFF383124),
     deep: Color(0xFFF2955A),
     soft: Color(0xFF3A2416),
