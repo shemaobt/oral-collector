@@ -168,6 +168,38 @@ void _expectOverlays(ThemeData theme) {
   expect(theme.dividerTheme.color, c.wash);
 }
 
+void _expectControls(ThemeData theme) {
+  final c = theme.extension<AppColorSet>()!;
+  final chip = theme.chipTheme;
+  expect(chip.selectedColor, c.primary);
+  final label = chip.labelStyle!.color! as WidgetStateColor;
+  expect(label.resolve({WidgetState.selected}), c.onPrimary);
+  expect(label.resolve({}), c.foreground);
+  expect(chip.secondaryLabelStyle!.color, c.onPrimary);
+  expect(chip.backgroundColor, Colors.transparent);
+  expect(chip.side, BorderSide(color: c.border, width: 1.5));
+
+  final tabs = theme.tabBarTheme;
+  expect(tabs.indicatorColor, c.accent);
+  final indicator = tabs.indicator! as UnderlineTabIndicator;
+  expect(indicator.borderSide, BorderSide(color: c.accent, width: 3));
+  expect(tabs.dividerColor, Colors.transparent);
+
+  final switchTrack = theme.switchTheme.trackColor!;
+  expect(_on(switchTrack, {WidgetState.selected}), c.accent);
+  expect(_on(switchTrack), c.border);
+
+  expect(_on(theme.checkboxTheme.fillColor!, {WidgetState.selected}), c.accent);
+
+  final progress = theme.progressIndicatorTheme;
+  expect(progress.color, c.accent);
+  expect(progress.linearTrackColor, c.surfaceAlt);
+  expect(progress.circularTrackColor, c.surfaceAlt);
+
+  expect(theme.sliderTheme.activeTrackColor, c.accent);
+  expect(theme.sliderTheme.inactiveTrackColor, c.border);
+}
+
 void main() {
   for (final (name, theme) in [
     ('lightTheme', AppTheme.lightTheme),
@@ -244,6 +276,13 @@ void main() {
     test('$name dialogs, sheets, notices and menus read as the design', () {
       _expectOverlays(theme);
     });
+
+    test(
+      '$name chips, tabs, switches, checkboxes, sliders and progress read as the design',
+      () {
+        _expectControls(theme);
+      },
+    );
 
     group('$name typography', () {
       test('titles read in the brush and the rest in Montserrat', () {
