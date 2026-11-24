@@ -74,7 +74,6 @@ void main() {
       });
     }
   });
-  });
 
   group('StatTile', () {
     Text number(WidgetTester tester) => tester.widget<Text>(find.text('128'));
