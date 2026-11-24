@@ -718,6 +718,18 @@ class AppLocalizationsSw extends AppLocalizations {
   String get recording_statusLocal => 'Ya Ndani';
 
   @override
+  String get sendState_onDevice => 'Kwenye kifaa';
+
+  @override
+  String get sendState_sending => 'Inatumwa';
+
+  @override
+  String get sendState_sent => 'Imetumwa';
+
+  @override
+  String get sendState_needsYou => 'Inakuhitaji';
+
+  @override
   String get recording_statusNameConflict => 'Mgongano wa jina';
 
   @override

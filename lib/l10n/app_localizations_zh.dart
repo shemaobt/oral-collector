@@ -694,6 +694,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recording_statusLocal => '本地';
 
   @override
+  String get sendState_onDevice => '在设备上';
+
+  @override
+  String get sendState_sending => '发送中';
+
+  @override
+  String get sendState_sent => '已发送';
+
+  @override
+  String get sendState_needsYou => '需要你处理';
+
+  @override
   String get recording_statusNameConflict => '名称冲突';
 
   @override
