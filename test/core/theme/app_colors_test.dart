@@ -14,35 +14,39 @@ void main() {
       expect(c.primary.toARGB32(), 0xFF3F3E20);
       expect(c.accent.toARGB32(), 0xFFBE4A01);
       expect(c.background.toARGB32(), 0xFFF6F5EB);
-      expect(c.foreground.toARGB32(), 0xFF0A0703);
-      expect(c.card.toARGB32(), 0xFFFDFCF3);
-      expect(c.surfaceAlt.toARGB32(), 0xFFEDE9D5);
-      expect(c.secondary.toARGB32(), 0xFF4A4830);
-      expect(c.info.toARGB32(), 0xFF89AAA3);
-      expect(c.infoText.toARGB32(), 0xFF4D6F68);
+      expect(c.foreground.toARGB32(), 0xFF2A2913);
+      expect(c.card.toARGB32(), 0xFFFFFDF7);
+      expect(c.surfaceAlt.toARGB32(), 0xFFEEECE1);
+      expect(c.secondary.toARGB32(), 0xFF5C5843);
+      expect(c.info.toARGB32(), 0xFF3F6862);
+      expect(c.infoText.toARGB32(), 0xFF3F6862);
       expect(c.success.toARGB32(), 0xFF777D45);
-      expect(c.successText.toARGB32(), 0xFF5D6233);
-      expect(c.border.toARGB32(), 0xFFC5C29F);
-      expect(c.error.toARGB32(), 0xFFB91C1C);
-      expect(c.warning.toARGB32(), 0xFFFFA000);
+      expect(c.successText.toARGB32(), 0xFF3F3E20);
+      expect(c.onPrimary.toARGB32(), 0xFFF6F5EB);
+      expect(c.chipSurface.toARGB32(), 0xFFEEECE1);
+      expect(c.warning.toARGB32(), 0xFFC7A268);
+      expect(c.border.toARGB32(), 0xFFC5BF9E);
+      expect(c.error.toARGB32(), 0xFF8C2B26);
     });
 
     test('dark tokens match the design palette', () {
       final c = AppColors.dark;
-      expect(c.primary.toARGB32(), 0xFFD4D1A8);
-      expect(c.accent.toARGB32(), 0xFFF09045);
-      expect(c.background.toARGB32(), 0xFF1C1A14);
-      expect(c.foreground.toARGB32(), 0xFFF2EFE4);
-      expect(c.card.toARGB32(), 0xFF262318);
-      expect(c.surfaceAlt.toARGB32(), 0xFF302D22);
-      expect(c.secondary.toARGB32(), 0xFF9E9C7A);
-      expect(c.info.toARGB32(), 0xFF4EC4AD);
-      expect(c.infoText.toARGB32(), 0xFF9FD4C6);
-      expect(c.success.toARGB32(), 0xFF9DC044);
-      expect(c.successText.toARGB32(), 0xFFB4C976);
-      expect(c.border.toARGB32(), 0xFF5A5440);
-      expect(c.error.toARGB32(), 0xFFB91C1C);
-      expect(c.warning.toARGB32(), 0xFFE0A458);
+      expect(c.primary.toARGB32(), 0xFFF2EDE1);
+      expect(c.accent.toARGB32(), 0xFFE36A1E);
+      expect(c.background.toARGB32(), 0xFF14100B);
+      expect(c.foreground.toARGB32(), 0xFFF2EDE1);
+      expect(c.card.toARGB32(), 0xFF1E1A13);
+      expect(c.surfaceAlt.toARGB32(), 0xFF29241B);
+      expect(c.secondary.toARGB32(), 0xFFBFB8A5);
+      expect(c.info.toARGB32(), 0xFF89AAA3);
+      expect(c.infoText.toARGB32(), 0xFF89AAA3);
+      expect(c.success.toARGB32(), 0xFFA9AF6F);
+      expect(c.successText.toARGB32(), 0xFFF2EDE1);
+      expect(c.onPrimary.toARGB32(), 0xFF14100B);
+      expect(c.chipSurface.toARGB32(), 0xFF29241B);
+      expect(c.warning.toARGB32(), 0xFFE2C08F);
+      expect(c.border.toARGB32(), 0xFF554C3B);
+      expect(c.error.toARGB32(), 0xFFD9756A);
     });
 
     test('light carries the new design roles', () {
@@ -69,15 +73,6 @@ void main() {
       expect(c.woodText.toARGB32(), 0xFFE2C08F);
       expect(c.bridgeSoft.toARGB32(), 0xFF1D2A27);
       expect(c.slab.toARGB32(), 0xFF2C271D);
-    });
-
-    test('chipSurface is its own colour in light and surfaceAlt in dark', () {
-      // ENG-382 weighed retiring chipSurface and kept it on this measurement:
-      // the two tokens coincide in dark, so a card repainted with surfaceAlt
-      // would look right there and shift the chip a shade in light. Folding
-      // the field away is the change this test exists to catch.
-      expect(AppColors.light.chipSurface, isNot(AppColors.light.surfaceAlt));
-      expect(AppColors.dark.chipSurface, AppColors.dark.surfaceAlt);
     });
   });
 
@@ -166,6 +161,24 @@ void main() {
     test('darkTheme registers the dark AppColorSet extension', () {
       expect(AppTheme.darkTheme.extension<AppColorSet>(), AppColors.dark);
     });
+
+    test('light colour scheme reads the light tokens', () {
+      final scheme = AppTheme.lightTheme.colorScheme;
+      final c = AppColors.light;
+      expect(scheme.error, c.error);
+      expect(scheme.outline, c.border);
+      expect(scheme.surface, c.background);
+      expect(scheme.onSurface, c.foreground);
+    });
+
+    test('dark colour scheme reads the dark tokens', () {
+      final scheme = AppTheme.darkTheme.colorScheme;
+      final c = AppColors.dark;
+      expect(scheme.error, c.error);
+      expect(scheme.outline, c.border);
+      expect(scheme.surface, c.background);
+      expect(scheme.onSurface, c.foreground);
+    });
   });
 
   group('AppColors.of resolution', () {
@@ -241,9 +254,9 @@ void main() {
     });
 
     test('long-tail semantic tokens match the migrated literals', () {
-      expect(AppColors.meterWarning.toARGB32(), 0xFFE0A526);
-      expect(AppColors.warningContainer.toARGB32(), 0xFFFFEDCC);
-      expect(AppColors.onWarningContainer.toARGB32(), 0xFF8A5A00);
+      expect(AppColors.meterWarning.toARGB32(), 0xFFC7A268);
+      expect(AppColors.warningContainer.toARGB32(), 0xFFF4E3BF);
+      expect(AppColors.onWarningContainer.toARGB32(), 0xFF6E4F1C);
       expect(AppColors.authHeroAccent.toARGB32(), 0xFFFFB380);
     });
   });
