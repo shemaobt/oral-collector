@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../core/auth/auth_notifier.dart';
+import '../../../core/router/navigation.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../l10n/app_localizations.dart';
@@ -102,20 +102,17 @@ class _StorytellersListScreenState
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(LucideIcons.arrowLeft),
-          onPressed: () {
-            if (context.canPop()) {
-              context.pop();
-            } else {
-              context.go('/projects');
-            }
-          },
+          onPressed: () => popOrGo(context, '/projects'),
         ),
         title: Text(l10n.storyteller_title),
         actions: [
           IconButton(
             tooltip: l10n.storyteller_addNew,
-            onPressed: () =>
-                context.push('/project/${widget.projectId}/storytellers/new'),
+            onPressed: () => openScreen<void>(
+              context,
+              ref,
+              '/project/${widget.projectId}/storytellers/new',
+            ),
             icon: const Icon(LucideIcons.plus),
           ),
         ],
@@ -154,7 +151,9 @@ class _StorytellersListScreenState
           final tile = StorytellerTile(
             storyteller: st,
             onTap: canEdit
-                ? () => context.push(
+                ? () => openScreen<void>(
+                    context,
+                    ref,
                     '/project/${widget.projectId}/storytellers/${st.id}/edit',
                   )
                 : null,

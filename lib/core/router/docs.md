@@ -86,6 +86,11 @@ Path: @/lib/core/router
   `openScreen` (`go` on the web, `push` on a phone) and `popOrGo` (pop when
   something can, else `go` to the parent) live in `navigation.dart`; a back
   button that only calls `Navigator.pop` is dead after a refresh or a `go`.
+- **The storyteller picker's «new storyteller» row stays a `push`.** It only
+  shows inside a task in progress (the recording's save step, the
+  classification field), whose take lives in the flow screen's state; a `go`
+  would drop it. The form opened that way keeps the address of the screen under
+  it.
 
 ### Things to Know
 
