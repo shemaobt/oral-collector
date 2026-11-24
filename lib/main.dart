@@ -18,6 +18,7 @@ import 'core/observability/error_reporter.dart';
 import 'core/platform/file_ops.dart' as platform;
 import 'core/router/app_router.dart';
 import 'core/startup/app_startup.dart';
+import 'core/startup/font_licenses.dart';
 import 'core/theme/app_theme.dart';
 import 'features/recording/data/providers.dart';
 import 'features/recording/data/services/recording_live_activity.dart';
@@ -49,6 +50,7 @@ void main() {
 
       installGlobalErrorHandlers(reporter);
       installLogging(reporter: reporter);
+      registerFontLicenses();
 
       if (!kIsWeb && platform.isAndroidPlatform) {
         try {
