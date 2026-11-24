@@ -728,6 +728,18 @@ class AppLocalizationsFr extends AppLocalizations {
   String get recording_statusLocal => 'Local';
 
   @override
+  String get sendState_onDevice => 'Sur l\'appareil';
+
+  @override
+  String get sendState_sending => 'Envoi en cours';
+
+  @override
+  String get sendState_sent => 'Envoyée';
+
+  @override
+  String get sendState_needsYou => 'Besoin de vous';
+
+  @override
   String get recording_statusNameConflict => 'Conflit de nom';
 
   @override

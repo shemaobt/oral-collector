@@ -720,6 +720,18 @@ class AppLocalizationsHi extends AppLocalizations {
   String get recording_statusLocal => 'स्थानीय';
 
   @override
+  String get sendState_onDevice => 'डिवाइस पर';
+
+  @override
+  String get sendState_sending => 'भेजा जा रहा है';
+
+  @override
+  String get sendState_sent => 'भेजी गई';
+
+  @override
+  String get sendState_needsYou => 'आपकी ज़रूरत है';
+
+  @override
   String get recording_statusNameConflict => 'नाम विरोध';
 
   @override

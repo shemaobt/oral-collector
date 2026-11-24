@@ -720,6 +720,18 @@ class AppLocalizationsId extends AppLocalizations {
   String get recording_statusLocal => 'Lokal';
 
   @override
+  String get sendState_onDevice => 'Di perangkat';
+
+  @override
+  String get sendState_sending => 'Mengirim';
+
+  @override
+  String get sendState_sent => 'Terkirim';
+
+  @override
+  String get sendState_needsYou => 'Perlu Anda';
+
+  @override
   String get recording_statusNameConflict => 'Konflik nama';
 
   @override

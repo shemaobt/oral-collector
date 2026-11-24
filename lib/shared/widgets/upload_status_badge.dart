@@ -65,8 +65,6 @@ class _UploadStatusBadgeState extends State<UploadStatusBadge>
     // `null` keeps labelSmall's native 11 (== the old compact size); only the
     // off-token 13 stays as an explicit override (ENG-114 convention).
     final double? fontSize = widget.compact ? null : 13.0;
-    final hPad = widget.compact ? 6.0 : 8.0;
-    final vPad = widget.compact ? 2.0 : 3.0;
 
     final IconData icon;
     final Color color;
@@ -75,28 +73,23 @@ class _UploadStatusBadgeState extends State<UploadStatusBadge>
     switch (widget.status) {
       case 'uploaded':
         icon = LucideIcons.checkCircle;
-        color = colors.success;
-        label = l10n.recording_statusUploaded;
+        color = colors.infoText;
+        label = l10n.sendState_sent;
         break;
       case 'uploading':
         icon = LucideIcons.upload;
         color = colors.accent;
-        label = l10n.recording_statusUploading;
+        label = l10n.sendState_sending;
         break;
       case 'failed':
-        icon = LucideIcons.cloudOff;
+        icon = LucideIcons.alertCircle;
         color = colors.error;
-        label = l10n.recording_statusFailed;
-        break;
-      case 'pending':
-        icon = LucideIcons.clock;
-        color = colors.border;
-        label = l10n.filter_pending;
+        label = l10n.sendState_needsYou;
         break;
       default:
         icon = LucideIcons.smartphone;
-        color = colors.border;
-        label = l10n.detail_notSynced;
+        color = colors.secondary;
+        label = l10n.sendState_onDevice;
     }
 
     Widget iconWidget = Icon(icon, size: iconSize, color: color);
@@ -111,31 +104,17 @@ class _UploadStatusBadgeState extends State<UploadStatusBadge>
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
+        iconWidget,
+        const SizedBox(width: SpacingScale.s4),
         Flexible(
-          child: Container(
-            padding: EdgeInsets.symmetric(horizontal: hPad, vertical: vPad),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(RadiusScale.r8),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                iconWidget,
-                const SizedBox(width: SpacingScale.s4),
-                Flexible(
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      fontSize: fontSize,
-                      color: color,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              fontSize: fontSize,
+              color: color,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ),

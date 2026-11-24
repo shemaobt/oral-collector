@@ -716,6 +716,18 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get recording_statusLocal => 'Lokal';
 
   @override
+  String get sendState_onDevice => 'Long fon';
+
+  @override
+  String get sendState_sending => 'I salim nau';
+
+  @override
+  String get sendState_sent => 'Salim pinis';
+
+  @override
+  String get sendState_needsYou => 'Yu mas mekim';
+
+  @override
   String get recording_statusNameConflict => 'Nem i pait';
 
   @override

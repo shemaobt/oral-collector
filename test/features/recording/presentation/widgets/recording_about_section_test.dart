@@ -24,6 +24,15 @@ const _testColors = AppColorSet(
   border: Color(0xFFCCCCCC),
   error: Color(0xFFAA0000),
   warning: Color(0xFFFFAA00),
+  wash: Color(0xFF000000),
+  deep: Color(0xFF000000),
+  soft: Color(0xFF000000),
+  brickSoft: Color(0xFF000000),
+  wood: Color(0xFF000000),
+  woodSoft: Color(0xFF000000),
+  woodText: Color(0xFF000000),
+  bridgeSoft: Color(0xFF000000),
+  slab: Color(0xFF000000),
 );
 
 Widget _wrap(Widget child) {

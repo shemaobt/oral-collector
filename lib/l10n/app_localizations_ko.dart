@@ -700,6 +700,18 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recording_statusLocal => '로컬';
 
   @override
+  String get sendState_onDevice => '기기에 있음';
+
+  @override
+  String get sendState_sending => '보내는 중';
+
+  @override
+  String get sendState_sent => '보냄';
+
+  @override
+  String get sendState_needsYou => '확인 필요';
+
+  @override
   String get recording_statusNameConflict => '이름 충돌';
 
   @override

@@ -1430,6 +1430,30 @@ abstract class AppLocalizations {
   /// **'Local'**
   String get recording_statusLocal;
 
+  /// No description provided for @sendState_onDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'On the device'**
+  String get sendState_onDevice;
+
+  /// No description provided for @sendState_sending.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending'**
+  String get sendState_sending;
+
+  /// No description provided for @sendState_sent.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent'**
+  String get sendState_sent;
+
+  /// No description provided for @sendState_needsYou.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs you'**
+  String get sendState_needsYou;
+
   /// No description provided for @recording_statusNameConflict.
   ///
   /// In en, this message translates to:
