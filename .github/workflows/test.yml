@@ -32,3 +32,14 @@ jobs:
         with:
           name: coverage
           path: coverage/lcov.info
+
+  web-headers:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify security headers
+        run: docker/verify-security-headers.sh
+
+      - name: Verify cache headers
+        run: docker/verify-cache-headers.sh
