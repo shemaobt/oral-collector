@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_shadows.dart';
 import '../../core/theme/tokens.dart';
 import '../../l10n/app_localizations.dart';
 
@@ -15,6 +16,8 @@ class RecordButton extends StatefulWidget {
     this.onLongPress,
   });
 
+  static const double diameter = 88;
+
   final RecordButtonState state;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
@@ -25,6 +28,10 @@ class RecordButton extends StatefulWidget {
 
 class _RecordButtonState extends State<RecordButton>
     with SingleTickerProviderStateMixin {
+  static const double _gap = 6;
+  static const double _ring = 3;
+  static const double _icon = 34;
+
   late final AnimationController _pulseController;
   late final Animation<double> _pulseAnimation;
 
@@ -66,7 +73,7 @@ class _RecordButtonState extends State<RecordButton>
 
   @override
   Widget build(BuildContext context) {
-    const double size = 80.0;
+    const double size = RecordButton.diameter;
 
     return SizedBox(
       width: size,
@@ -88,8 +95,10 @@ class _RecordButtonState extends State<RecordButton>
     final colors = AppColors.of(context);
     final isRecording = widget.state == RecordButtonState.recording;
     final isPaused = widget.state == RecordButtonState.paused;
-
-    final buttonColor = colors.accent;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final dropShadow = isDark
+        ? ShadowTints.dark.slab
+        : colors.error.withValues(alpha: 0.75);
 
     final l10n = AppLocalizations.of(context);
     final String semanticLabel;
@@ -116,30 +125,26 @@ class _RecordButtonState extends State<RecordButton>
             height: size,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: buttonColor,
-              border: isRecording
-                  ? Border.all(color: colors.error, width: 3.0)
-                  : null,
+              color: colors.error,
               boxShadow: [
                 BoxShadow(
-                  color: buttonColor.withValues(alpha: 0.3),
-                  blurRadius: 16,
-                  offset: const Offset(0, 4),
+                  color: dropShadow,
+                  blurRadius: 34,
+                  spreadRadius: -14,
+                  offset: const Offset(0, 20),
                 ),
+                BoxShadow(color: colors.error, spreadRadius: _gap + _ring),
+                BoxShadow(color: colors.background, spreadRadius: _gap),
               ],
             ),
             child: Center(
               child: isPaused
-                  ? const Icon(
+                  ? Icon(
                       LucideIcons.pause,
-                      color: AppColors.white,
-                      size: 34,
+                      color: colors.onPrimary,
+                      size: _icon,
                     )
-                  : const Icon(
-                      LucideIcons.mic,
-                      color: AppColors.white,
-                      size: 34,
-                    ),
+                  : Icon(LucideIcons.mic, color: colors.onPrimary, size: _icon),
             ),
           ),
         ),
