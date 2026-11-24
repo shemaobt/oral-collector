@@ -155,6 +155,78 @@ abstract class AppTheme {
     );
   }
 
+  static const _noTint = Colors.transparent;
+
+  static DialogThemeData _dialogTheme(AppColorSet c, TextTheme text) {
+    return DialogThemeData(
+      titleTextStyle: text.headlineLarge,
+      backgroundColor: c.card,
+      surfaceTintColor: _noTint,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(RadiusScale.r24),
+      ),
+    );
+  }
+
+  static BottomSheetThemeData _bottomSheetTheme(AppColorSet c) {
+    return BottomSheetThemeData(
+      backgroundColor: c.card,
+      modalBackgroundColor: c.card,
+      surfaceTintColor: _noTint,
+      showDragHandle: true,
+      dragHandleColor: c.border,
+      dragHandleSize: const Size(40, 4),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(RadiusScale.r28),
+        ),
+      ),
+    );
+  }
+
+  static SnackBarThemeData _snackBarTheme(AppColorSet c, Color onSlab) {
+    return SnackBarThemeData(
+      backgroundColor: c.slab,
+      actionTextColor: c.wood,
+      contentTextStyle: TextStyle(
+        fontFamily: _fontFamily,
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+        color: onSlab,
+      ),
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(RadiusScale.r16),
+      ),
+    );
+  }
+
+  static final _menuShape = RoundedRectangleBorder(
+    borderRadius: BorderRadius.circular(RadiusScale.r16),
+  );
+
+  static PopupMenuThemeData _popupMenuTheme(AppColorSet c) {
+    return PopupMenuThemeData(
+      color: c.card,
+      surfaceTintColor: _noTint,
+      shape: _menuShape,
+    );
+  }
+
+  static MenuThemeData _menuTheme(AppColorSet c) {
+    return MenuThemeData(
+      style: MenuStyle(
+        backgroundColor: WidgetStateProperty.all(c.card),
+        surfaceTintColor: WidgetStateProperty.all(_noTint),
+        shape: WidgetStateProperty.all(_menuShape),
+      ),
+    );
+  }
+
+  static DividerThemeData _dividerTheme(AppColorSet c) {
+    return DividerThemeData(color: c.wash, thickness: 1);
+  }
+
   static ThemeData get lightTheme {
     final textTheme = _buildTextTheme(
       ThemeData.light().textTheme.apply(fontFamily: _fontFamily),
@@ -257,10 +329,7 @@ abstract class AppTheme {
         ),
         indicatorColor: AppColors.accent.withValues(alpha: OpacityScale.o12),
       ),
-      dividerTheme: DividerThemeData(
-        color: AppColors.border.withValues(alpha: OpacityScale.o40),
-        thickness: 1,
-      ),
+      dividerTheme: _dividerTheme(AppColors.light),
       listTileTheme: const ListTileThemeData(
         titleTextStyle: TextStyle(
           fontFamily: _fontFamily,
@@ -284,65 +353,13 @@ abstract class AppTheme {
           borderRadius: BorderRadius.circular(RadiusScale.r20),
         ),
       ),
-      dialogTheme: DialogThemeData(
-        titleTextStyle: textTheme.headlineLarge,
-        backgroundColor: AppColors.card,
-        surfaceTintColor: Colors.transparent,
-        elevation: 3,
-        shadowColor: AppColors.brandVerde.withValues(alpha: OpacityScale.o08),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(RadiusScale.r20),
-        ),
-      ),
-      bottomSheetTheme: BottomSheetThemeData(
-        backgroundColor: AppColors.card,
-        surfaceTintColor: Colors.transparent,
-        modalBackgroundColor: AppColors.card,
-        elevation: 3,
-        modalElevation: 3,
-        shadowColor: AppColors.brandVerde.withValues(alpha: OpacityScale.o08),
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(
-            top: Radius.circular(RadiusScale.r20),
-          ),
-        ),
-      ),
-      menuTheme: MenuThemeData(
-        style: MenuStyle(
-          backgroundColor: WidgetStateProperty.all(AppColors.card),
-          surfaceTintColor: WidgetStateProperty.all(Colors.transparent),
-          elevation: WidgetStateProperty.all(3),
-          shadowColor: WidgetStateProperty.all(
-            AppColors.brandVerde.withValues(alpha: OpacityScale.o08),
-          ),
-          shape: WidgetStateProperty.all(
-            RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(RadiusScale.r12),
-            ),
-          ),
-        ),
-      ),
-      popupMenuTheme: PopupMenuThemeData(
-        color: AppColors.card,
-        surfaceTintColor: Colors.transparent,
-        elevation: 3,
-        shadowColor: AppColors.brandVerde.withValues(alpha: OpacityScale.o08),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(RadiusScale.r12),
-        ),
-      ),
-      snackBarTheme: SnackBarThemeData(
-        backgroundColor: AppColors.surfaceContainerHighest,
-        contentTextStyle: const TextStyle(
-          fontFamily: _fontFamily,
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
-          color: AppColors.foreground,
-        ),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(RadiusScale.r12),
-        ),
+      dialogTheme: _dialogTheme(AppColors.light, textTheme),
+      bottomSheetTheme: _bottomSheetTheme(AppColors.light),
+      menuTheme: _menuTheme(AppColors.light),
+      popupMenuTheme: _popupMenuTheme(AppColors.light),
+      snackBarTheme: _snackBarTheme(
+        AppColors.light,
+        AppColors.light.background,
       ),
       tabBarTheme: TabBarThemeData(
         labelColor: AppColors.accent,
@@ -486,10 +503,7 @@ abstract class AppTheme {
           alpha: OpacityScale.o10,
         ),
       ),
-      dividerTheme: DividerThemeData(
-        color: AppColors.darkBorder.withValues(alpha: OpacityScale.o30),
-        thickness: 1,
-      ),
+      dividerTheme: _dividerTheme(AppColors.dark),
       listTileTheme: const ListTileThemeData(
         titleTextStyle: TextStyle(
           fontFamily: _fontFamily,
@@ -511,19 +525,11 @@ abstract class AppTheme {
           borderRadius: BorderRadius.circular(RadiusScale.r20),
         ),
       ),
-      dialogTheme: DialogThemeData(
-        titleTextStyle: textTheme.headlineLarge,
-        backgroundColor: AppColors.darkSurface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(RadiusScale.r20),
-        ),
-      ),
-      snackBarTheme: SnackBarThemeData(
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(RadiusScale.r12),
-        ),
-      ),
+      dialogTheme: _dialogTheme(AppColors.dark, textTheme),
+      bottomSheetTheme: _bottomSheetTheme(AppColors.dark),
+      menuTheme: _menuTheme(AppColors.dark),
+      popupMenuTheme: _popupMenuTheme(AppColors.dark),
+      snackBarTheme: _snackBarTheme(AppColors.dark, AppColors.dark.foreground),
       tabBarTheme: TabBarThemeData(
         labelColor: AppColors.darkPrimary,
         unselectedLabelColor: AppColors.darkForeground.withValues(

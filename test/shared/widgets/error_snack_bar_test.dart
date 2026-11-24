@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:oral_collector/core/errors/app_exception.dart';
+import 'package:oral_collector/core/theme/app_colors.dart';
+import 'package:oral_collector/core/theme/app_theme.dart';
 import 'package:oral_collector/l10n/app_localizations.dart';
 import 'package:oral_collector/l10n/app_localizations_en.dart';
 import 'package:oral_collector/shared/widgets/error_snack_bar.dart';
@@ -16,10 +18,12 @@ void main() {
 
   Future<void> pumpTrigger(
     WidgetTester tester,
-    void Function(BuildContext context) onPressed,
-  ) async {
+    void Function(BuildContext context) onPressed, {
+    ThemeData? theme,
+  }) async {
     await pumpAtTextScale(
       tester,
+      theme: theme,
       child: Builder(
         builder: (context) => ElevatedButton(
           onPressed: () => onPressed(context),
@@ -106,4 +110,26 @@ void main() {
       expect(find.text(l10n.recording_exportShareFailed), findsOneWidget);
     },
   );
+
+  for (final (name, theme, colors) in [
+    ('light', AppTheme.lightTheme, AppColors.light),
+    ('dark', AppTheme.darkTheme, AppColors.dark),
+  ]) {
+    testWidgets('$name: the error notice reads the error colour', (
+      tester,
+    ) async {
+      await pumpTrigger(
+        tester,
+        (context) => showErrorSnackBar(context, const ForbiddenException()),
+        theme: theme,
+      );
+
+      await tapAndSettle(tester);
+
+      final snack = tester.widget<SnackBar>(find.byType(SnackBar));
+      expect(snack.backgroundColor, colors.error);
+      final text = tester.widget<Text>(find.text(l10n.error_noPermission));
+      expect(text.style?.color, colors.background);
+    });
+  }
 }

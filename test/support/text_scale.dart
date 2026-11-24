@@ -21,6 +21,7 @@ Future<void> pumpAtTextScale(
   Size size = kPhoneSize,
   double devicePixelRatio = 3.0,
   Locale locale = const Locale('en'),
+  ThemeData? theme,
 }) async {
   tester.view.physicalSize = size * devicePixelRatio;
   tester.view.devicePixelRatio = devicePixelRatio;
@@ -33,6 +34,7 @@ Future<void> pumpAtTextScale(
     ProviderScope(
       overrides: overrides,
       child: MaterialApp(
+        theme: theme,
         locale: locale,
         supportedLocales: AppLocalizations.supportedLocales,
         localizationsDelegates: const [

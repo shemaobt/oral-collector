@@ -32,10 +32,6 @@ void _expectComponentRadiiFromTokens(ThemeData theme) {
     _radiusOf(theme.chipTheme.shape),
     BorderRadius.circular(RadiusScale.r20),
   );
-  expect(
-    _radiusOf(theme.dialogTheme.shape),
-    BorderRadius.circular(RadiusScale.r20),
-  );
 }
 
 void _expectPaddingFromTokens(ThemeData theme) {
@@ -144,6 +140,34 @@ void _expectButtons(ThemeData theme) {
   expect(_on(icon.side), BorderSide(color: c.border, width: 1.5));
 }
 
+void _expectOverlays(ThemeData theme) {
+  final c = theme.extension<AppColorSet>()!;
+  final dialog = theme.dialogTheme;
+  expect(dialog.backgroundColor, c.card);
+  expect(_radiusOf(dialog.shape), BorderRadius.circular(RadiusScale.r24));
+
+  final sheet = theme.bottomSheetTheme;
+  expect(sheet.backgroundColor, c.card);
+  expect(sheet.modalBackgroundColor, c.card);
+  expect(
+    _radiusOf(sheet.shape),
+    const BorderRadius.vertical(top: Radius.circular(RadiusScale.r28)),
+  );
+  expect(sheet.showDragHandle, isTrue);
+  expect(sheet.dragHandleSize, const Size(40, 4));
+  expect(sheet.dragHandleColor, c.border);
+
+  final snack = theme.snackBarTheme;
+  expect(snack.backgroundColor, c.slab);
+  expect(snack.actionTextColor, c.wood);
+  expect(_radiusOf(snack.shape), BorderRadius.circular(RadiusScale.r16));
+
+  expect(theme.popupMenuTheme.color, c.card);
+  expect(_on(theme.menuTheme.style!.backgroundColor), c.card);
+
+  expect(theme.dividerTheme.color, c.wash);
+}
+
 void main() {
   for (final (name, theme) in [
     ('lightTheme', AppTheme.lightTheme),
@@ -217,6 +241,10 @@ void main() {
       });
     });
 
+    test('$name dialogs, sheets, notices and menus read as the design', () {
+      _expectOverlays(theme);
+    });
+
     group('$name typography', () {
       test('titles read in the brush and the rest in Montserrat', () {
         _expectTypography(theme);
@@ -251,16 +279,8 @@ void main() {
       _expectPaddingFromTokens(theme);
     });
 
-    test('bottom sheet top radius maps to RadiusScale.r20', () {
-      final shape = theme.bottomSheetTheme.shape! as RoundedRectangleBorder;
-      expect(
-        shape.borderRadius,
-        const BorderRadius.vertical(top: Radius.circular(RadiusScale.r20)),
-      );
-    });
-
     test('representative resolved opacity maps to OpacityScale', () {
-      expect(theme.dividerTheme.color!.a, closeTo(OpacityScale.o40, 0.001));
+      expect(theme.cardTheme.shadowColor!.a, closeTo(OpacityScale.o06, 0.001));
     });
   });
 
@@ -276,7 +296,7 @@ void main() {
     });
 
     test('representative resolved opacity maps to OpacityScale', () {
-      expect(theme.dividerTheme.color!.a, closeTo(OpacityScale.o30, 0.001));
+      expect(theme.cardTheme.shadowColor!.a, closeTo(OpacityScale.o40, 0.001));
     });
   });
 
