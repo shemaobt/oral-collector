@@ -1,5 +1,4 @@
 import 'package:cross_file/cross_file.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -17,6 +16,7 @@ import '../../features/project/presentation/project_settings_screen.dart';
 import '../../features/project/presentation/projects_screen.dart';
 import '../../features/recording/domain/entities/review_pendency.dart';
 import '../../features/recording/presentation/file_import_screen.dart';
+import '../../features/recording/presentation/notifiers/recording_session_notifier.dart';
 import '../../features/recording/presentation/quick_recording_screen.dart';
 import '../../features/recording/presentation/recording_detail_screen.dart';
 import '../../features/recording/presentation/recording_flow_screen.dart';
@@ -71,13 +71,18 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (isLoggedIn && isAuthRoute) return '/home';
       return null;
     },
-    routes: _routesFor(ref),
+    routes: _routesFor(ref, isWeb: ref.read(isWebPlatformProvider)),
   );
 
   return router;
 });
 
-List<RouteBase> _routesFor(Ref ref) => [
+GoRouterRedirect _requireActiveProject(Ref ref) =>
+    (context, state) => ref.read(projectNotifierProvider).activeProject != null
+    ? null
+    : '/home';
+
+List<RouteBase> _routesFor(Ref ref, {required bool isWeb}) => [
   GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
   GoRoute(path: '/signup', builder: (context, state) => const SignupScreen()),
   GoRoute(
@@ -90,7 +95,7 @@ List<RouteBase> _routesFor(Ref ref) => [
         ResetPasswordScreen(token: state.uri.queryParameters['token']),
   ),
 
-  if (!kIsWeb) ...[
+  if (!isWeb) ...[
     GoRoute(
       path: '/genre/:id',
       builder: (context, state) =>
@@ -98,11 +103,7 @@ List<RouteBase> _routesFor(Ref ref) => [
     ),
     GoRoute(
       path: '/record-flow',
-      redirect: (context, state) {
-        final hasProject =
-            ref.read(projectNotifierProvider).activeProject != null;
-        return hasProject ? null : '/home';
-      },
+      redirect: _requireActiveProject(ref),
       builder: (context, state) => RecordingFlowScreen(
         genreId: state.uri.queryParameters['genreId'],
         subcategoryId: state.uri.queryParameters['subcategoryId'],
@@ -120,11 +121,7 @@ List<RouteBase> _routesFor(Ref ref) => [
     ),
     GoRoute(
       path: '/import-file',
-      redirect: (context, state) {
-        final hasProject =
-            ref.read(projectNotifierProvider).activeProject != null;
-        return hasProject ? null : '/home';
-      },
+      redirect: _requireActiveProject(ref),
       builder: (context, state) {
         final extra = state.extra;
         return FileImportScreen(
@@ -169,11 +166,7 @@ List<RouteBase> _routesFor(Ref ref) => [
       GoRoute(path: '/home', builder: (context, state) => const HomeScreen()),
       GoRoute(
         path: '/record',
-        redirect: (context, state) {
-          final hasProject =
-              ref.read(projectNotifierProvider).activeProject != null;
-          return hasProject ? null : '/home';
-        },
+        redirect: _requireActiveProject(ref),
         builder: (context, state) => RecordingFlowScreen(
           genreId: state.uri.queryParameters['genreId'],
           subcategoryId: state.uri.queryParameters['subcategoryId'],
@@ -181,20 +174,12 @@ List<RouteBase> _routesFor(Ref ref) => [
       ),
       GoRoute(
         path: '/quick-record',
-        redirect: (context, state) {
-          final hasProject =
-              ref.read(projectNotifierProvider).activeProject != null;
-          return hasProject ? null : '/home';
-        },
+        redirect: _requireActiveProject(ref),
         builder: (context, state) => const QuickRecordingScreen(),
       ),
       GoRoute(
         path: '/recovery-confirm',
-        redirect: (context, state) {
-          final hasProject =
-              ref.read(projectNotifierProvider).activeProject != null;
-          return hasProject ? null : '/home';
-        },
+        redirect: _requireActiveProject(ref),
         builder: (context, state) => const RecoveryConfirmScreen(),
       ),
       GoRoute(
@@ -219,9 +204,10 @@ List<RouteBase> _routesFor(Ref ref) => [
         builder: (context, state) => const ProfileScreen(),
       ),
 
-      if (kIsWeb) ...[
+      if (isWeb) ...[
         GoRoute(
           path: '/import-file',
+          redirect: _requireActiveProject(ref),
           builder: (context, state) {
             final extra = state.extra;
             return FileImportScreen(
