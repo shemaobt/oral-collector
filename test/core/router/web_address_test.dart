@@ -17,6 +17,7 @@ import 'package:oral_collector/features/home/presentation/widgets/hero_genre_car
 import 'package:oral_collector/features/project/domain/entities/project.dart';
 import 'package:oral_collector/features/project/presentation/notifiers/project_notifier.dart';
 import 'package:oral_collector/features/project/presentation/notifiers/project_state.dart';
+import 'package:oral_collector/features/project/presentation/project_settings_screen.dart';
 import 'package:oral_collector/features/recording/data/providers.dart';
 import 'package:oral_collector/features/recording/domain/entities/server_recording.dart';
 import 'package:oral_collector/features/recording/presentation/notifiers/recording_session_notifier.dart';
@@ -24,6 +25,10 @@ import 'package:oral_collector/features/recording/presentation/recording_detail_
 import 'package:oral_collector/features/recording/presentation/recordings_list_screen.dart';
 import 'package:oral_collector/features/recording/presentation/trim_editor_screen.dart';
 import 'package:oral_collector/features/recording/presentation/widgets/recording_card.dart';
+import 'package:oral_collector/features/storyteller/domain/entities/storyteller.dart';
+import 'package:oral_collector/features/storyteller/presentation/notifiers/project_storytellers_notifier.dart';
+import 'package:oral_collector/features/storyteller/presentation/notifiers/project_storytellers_state.dart';
+import 'package:oral_collector/features/storyteller/presentation/storyteller_form_screen.dart';
 
 import '../../support/router_app.dart';
 
@@ -84,6 +89,38 @@ Future<ProviderContainer> _pumpWeb(
     ...overrides,
   ],
 );
+
+Storyteller _storyteller(String id, String name) => Storyteller(
+  id: id,
+  projectId: 'p1',
+  name: name,
+  sex: StorytellerSex.female,
+  externalAcceptanceConfirmed: true,
+  createdByUserId: 'u1',
+  createdAt: DateTime(2026, 1, 1),
+);
+
+class _Server extends ProjectStorytellersNotifier {
+  final stored = [_storyteller('s1', 'Ana Mbala')];
+
+  @override
+  Future<void> fetch(String projectId) async => state =
+      ProjectStorytellersState(projectId: projectId, storytellers: [...stored]);
+
+  @override
+  Future<Storyteller?> create({
+    required String projectId,
+    required String name,
+    required StorytellerSex sex,
+    int? age,
+    String? location,
+    String? dialect,
+    required bool externalAcceptanceConfirmed,
+  }) async {
+    stored.add(_storyteller('new', name));
+    return null;
+  }
+}
 
 class _Admin extends FakeAuthNotifier {
   @override
@@ -187,6 +224,76 @@ void main() {
     await tester.tap(find.byType(BackButton));
     await tester.pump();
     expect(addressOf(app), '/home');
+  });
+
+  testWidgets(
+    'a project opens from Projects at its own address, back returns',
+    (tester) async {
+      final app = await _pumpWeb(tester, at: '/projects');
+
+      await tester.tap(find.text(project.name));
+      await tester.pump();
+      await tester.pump();
+      expect(addressOf(app), '/project/p1/settings');
+      expect(find.byType(ProjectSettingsScreen), findsOneWidget);
+
+      await tester.tap(find.byIcon(LucideIcons.arrowLeft));
+      await tester.pump();
+      expect(addressOf(app), '/projects');
+    },
+  );
+
+  testWidgets('the storytellers and their form each keep an address', (
+    tester,
+  ) async {
+    final app = await _pumpWeb(
+      tester,
+      at: '/project/p1/storytellers',
+      overrides: [
+        projectStorytellersNotifierProvider.overrideWith(_Server.new),
+      ],
+    );
+
+    await tester.tap(find.byIcon(LucideIcons.plus));
+    await settle(tester);
+    expect(addressOf(app), '/project/p1/storytellers/new');
+    expect(find.byType(StorytellerFormScreen), findsOneWidget);
+
+    await tester.tap(find.byIcon(LucideIcons.arrowLeft));
+    await settle(tester);
+    expect(addressOf(app), '/project/p1/storytellers');
+
+    await tester.tap(find.text('Ana Mbala'));
+    await settle(tester);
+    expect(addressOf(app), '/project/p1/storytellers/s1/edit');
+
+    await tester.tap(find.byIcon(LucideIcons.arrowLeft));
+    await settle(tester);
+    await tester.tap(find.byIcon(LucideIcons.arrowLeft));
+    await settle(tester);
+    expect(addressOf(app), '/projects');
+  });
+
+  testWidgets('a saved storyteller is in the list, with no refresh', (
+    tester,
+  ) async {
+    final app = await _pumpWeb(
+      tester,
+      at: '/project/p1/storytellers/new',
+      overrides: [
+        projectStorytellersNotifierProvider.overrideWith(_Server.new),
+      ],
+    );
+    await tester.enterText(find.byType(TextFormField).first, 'Beto Nzinga');
+    await tester.tap(find.text('Male'));
+    await tester.tap(find.byType(CheckboxListTile));
+    tester.view.physicalSize = const Size(1170, 4500);
+    await tester.pump();
+    await tester.tap(find.byType(ElevatedButton));
+    await settle(tester);
+
+    expect(addressOf(app), '/project/p1/storytellers');
+    expect(find.text('Beto Nzinga'), findsOneWidget);
   });
 
   testWidgets('the admin opens from Profile at its own address, back returns', (

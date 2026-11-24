@@ -7,6 +7,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/observability/error_reporter.dart';
+import '../../../core/router/navigation.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../shared/widgets/empty_state.dart';
@@ -327,13 +328,7 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
         appBar: AppBar(
           leading: IconButton(
             icon: const Icon(LucideIcons.arrowLeft),
-            onPressed: () {
-              if (context.canPop()) {
-                context.pop();
-              } else {
-                context.go('/projects');
-              }
-            },
+            onPressed: () => popOrGo(context, '/projects'),
           ),
           title: Text(l10n.projectSettings_title),
         ),
@@ -452,8 +447,11 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
         ),
         const SizedBox(height: SpacingScale.s16),
         OutlinedButton.icon(
-          onPressed: () =>
-              context.push('/project/${widget.projectId}/storytellers'),
+          onPressed: () => openScreen<void>(
+            context,
+            ref,
+            '/project/${widget.projectId}/storytellers',
+          ),
           icon: const Icon(LucideIcons.users, size: 16),
           label: Text(l10n.storyteller_manageAction),
           style: OutlinedButton.styleFrom(
@@ -471,13 +469,7 @@ class _ProjectSettingsScreenState extends ConsumerState<ProjectSettingsScreen> {
             ProjectSettingsHeader(
               project: _project!,
               memberCount: memberCount,
-              onBack: () {
-                if (context.canPop()) {
-                  context.pop();
-                } else {
-                  context.go('/projects');
-                }
-              },
+              onBack: () => popOrGo(context, '/projects'),
             ),
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(

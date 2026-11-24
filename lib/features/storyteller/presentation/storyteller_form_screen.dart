@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import '../../../core/router/navigation.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../l10n/app_localizations.dart';
@@ -134,7 +134,7 @@ class _StorytellerFormScreenState extends ConsumerState<StorytellerFormScreen> {
       if (error != null) {
         showErrorSnackBar(context, error);
       } else {
-        context.pop();
+        popOrGo(context, '/project/${widget.projectId}/storytellers');
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -150,13 +150,8 @@ class _StorytellerFormScreenState extends ConsumerState<StorytellerFormScreen> {
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(LucideIcons.arrowLeft),
-          onPressed: () {
-            if (context.canPop()) {
-              context.pop();
-            } else {
-              context.go('/project/${widget.projectId}/storytellers');
-            }
-          },
+          onPressed: () =>
+              popOrGo(context, '/project/${widget.projectId}/storytellers'),
         ),
         title: Text(
           widget.isEdit

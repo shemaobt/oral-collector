@@ -2,10 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../core/router/navigation.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../shared/preview_helpers.dart';
@@ -139,7 +139,11 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                 return ProjectCard(
                   project: project,
                   isActive: project.id == activeId,
-                  onTap: () => context.push('/project/${project.id}/settings'),
+                  onTap: () => openScreen<void>(
+                    context,
+                    ref,
+                    '/project/${project.id}/settings',
+                  ),
                 );
               },
             );
@@ -158,7 +162,11 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
               return ProjectCard(
                 project: project,
                 isActive: project.id == activeId,
-                onTap: () => context.push('/project/${project.id}/settings'),
+                onTap: () => openScreen<void>(
+                  context,
+                  ref,
+                  '/project/${project.id}/settings',
+                ),
               );
             },
           );
