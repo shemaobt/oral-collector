@@ -101,11 +101,14 @@ Storyteller _storyteller(String id, String name) => Storyteller(
 );
 
 class _Server extends ProjectStorytellersNotifier {
-  final stored = [_storyteller('s1', 'Ana Mbala')];
+  final _stored = [_storyteller('s1', 'Ana Mbala')];
 
   @override
-  Future<void> fetch(String projectId) async => state =
-      ProjectStorytellersState(projectId: projectId, storytellers: [...stored]);
+  Future<void> fetch(String projectId) async =>
+      state = ProjectStorytellersState(
+        projectId: projectId,
+        storytellers: [..._stored],
+      );
 
   @override
   Future<Storyteller?> create({
@@ -117,7 +120,7 @@ class _Server extends ProjectStorytellersNotifier {
     String? dialect,
     required bool externalAcceptanceConfirmed,
   }) async {
-    stored.add(_storyteller('new', name));
+    _stored.add(_storyteller('new', name));
     return null;
   }
 }
