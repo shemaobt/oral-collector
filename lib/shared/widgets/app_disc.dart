@@ -6,7 +6,8 @@ import '../../core/theme/genre_colors.dart';
 enum DiscSize {
   small(36),
   medium(44),
-  large(56);
+  large(56),
+  empty(72);
 
   const DiscSize(this.diameter);
 
