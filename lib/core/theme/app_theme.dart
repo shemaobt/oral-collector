@@ -4,116 +4,62 @@ import 'app_colors.dart';
 import 'genre_colors.dart';
 import 'tokens.dart';
 
-const _fontFamily = 'PlusJakartaSans';
+const _fontFamily = 'Montserrat';
+const _brushFamily = 'CaveatBrush';
 
 abstract class AppTheme {
+  static TextStyle _brushStyle(double size, double height, Color fg) {
+    return TextStyle(
+      fontFamily: _brushFamily,
+      fontFamilyFallback: const [_fontFamily],
+      fontWeight: FontWeight.w400,
+      fontStyle: FontStyle.normal,
+      fontSize: size,
+      letterSpacing: 0,
+      height: height,
+      color: fg,
+    );
+  }
+
+  static TextStyle _sansStyle(
+    double size,
+    FontWeight weight,
+    double height,
+    Color fg,
+  ) {
+    return TextStyle(
+      fontFamily: _fontFamily,
+      fontWeight: weight,
+      fontStyle: FontStyle.normal,
+      fontSize: size,
+      letterSpacing: 0,
+      height: height,
+      color: fg,
+    );
+  }
+
   static TextTheme _buildTextTheme(TextTheme base, Color fg) {
+    TextStyle? brush(TextStyle? s, double size, double height) =>
+        s?.merge(_brushStyle(size, height, fg));
+    TextStyle? sans(TextStyle? s, double size, FontWeight w, double height) =>
+        s?.merge(_sansStyle(size, w, height, fg));
+
     return base.copyWith(
-      displayLarge: base.displayLarge?.copyWith(
-        fontWeight: FontWeight.w800,
-        fontSize: 36,
-        letterSpacing: -0.5,
-        height: 1.15,
-        color: fg,
-      ),
-      displayMedium: base.displayMedium?.copyWith(
-        fontWeight: FontWeight.w800,
-        fontSize: 28,
-        letterSpacing: -0.4,
-        height: 1.18,
-        color: fg,
-      ),
-      displaySmall: base.displaySmall?.copyWith(
-        fontWeight: FontWeight.w700,
-        fontSize: 22,
-        letterSpacing: -0.3,
-        height: 1.22,
-        color: fg,
-      ),
-      headlineLarge: base.headlineLarge?.copyWith(
-        fontWeight: FontWeight.w800,
-        fontSize: 28,
-        letterSpacing: -0.4,
-        height: 1.18,
-        color: fg,
-      ),
-      headlineMedium: base.headlineMedium?.copyWith(
-        fontWeight: FontWeight.w700,
-        fontSize: 22,
-        letterSpacing: -0.3,
-        height: 1.22,
-        color: fg,
-      ),
-      headlineSmall: base.headlineSmall?.copyWith(
-        fontWeight: FontWeight.w700,
-        fontSize: 20,
-        letterSpacing: -0.2,
-        height: 1.25,
-        color: fg,
-      ),
-      titleLarge: base.titleLarge?.copyWith(
-        fontWeight: FontWeight.w700,
-        fontSize: 20,
-        letterSpacing: -0.2,
-        height: 1.25,
-        color: fg,
-      ),
-      titleMedium: base.titleMedium?.copyWith(
-        fontWeight: FontWeight.w600,
-        fontSize: 16,
-        letterSpacing: 0,
-        height: 1.31,
-        color: fg,
-      ),
-      titleSmall: base.titleSmall?.copyWith(
-        fontWeight: FontWeight.w600,
-        fontSize: 15,
-        letterSpacing: 0,
-        height: 1.33,
-        color: fg,
-      ),
-      bodyLarge: base.bodyLarge?.copyWith(
-        fontWeight: FontWeight.w400,
-        fontSize: 17,
-        letterSpacing: 0,
-        height: 1.29,
-        color: fg,
-      ),
-      bodyMedium: base.bodyMedium?.copyWith(
-        fontWeight: FontWeight.w400,
-        fontSize: 15,
-        letterSpacing: 0,
-        height: 1.33,
-        color: fg,
-      ),
-      bodySmall: base.bodySmall?.copyWith(
-        fontWeight: FontWeight.w400,
-        fontSize: 13,
-        letterSpacing: 0,
-        height: 1.38,
-        color: fg,
-      ),
-      labelLarge: base.labelLarge?.copyWith(
-        fontWeight: FontWeight.w700,
-        fontSize: 15,
-        letterSpacing: 0,
-        height: 1.33,
-        color: fg,
-      ),
-      labelMedium: base.labelMedium?.copyWith(
-        fontWeight: FontWeight.w600,
-        fontSize: 12,
-        letterSpacing: 0,
-        height: 1.33,
-        color: fg,
-      ),
-      labelSmall: base.labelSmall?.copyWith(
-        fontWeight: FontWeight.w600,
-        fontSize: 11,
-        letterSpacing: 0.1,
-        height: 1.18,
-        color: fg,
-      ),
+      displayLarge: brush(base.displayLarge, 44, 0.92),
+      displayMedium: brush(base.displayMedium, 36, 0.92),
+      displaySmall: brush(base.displaySmall, 28, 1),
+      headlineLarge: brush(base.headlineLarge, 28, 1),
+      headlineMedium: brush(base.headlineMedium, 23, 1),
+      headlineSmall: sans(base.headlineSmall, 16, FontWeight.w700, 1.25),
+      titleLarge: sans(base.titleLarge, 16, FontWeight.w700, 1.25),
+      titleMedium: sans(base.titleMedium, 14, FontWeight.w700, 1.25),
+      titleSmall: sans(base.titleSmall, 14, FontWeight.w600, 1.3),
+      bodyLarge: sans(base.bodyLarge, 16, FontWeight.w500, 1.5),
+      bodyMedium: sans(base.bodyMedium, 14, FontWeight.w500, 1.5),
+      bodySmall: sans(base.bodySmall, 13, FontWeight.w500, 1.4),
+      labelLarge: sans(base.labelLarge, 14, FontWeight.w700, 1.3),
+      labelMedium: sans(base.labelMedium, 12, FontWeight.w700, 1.3),
+      labelSmall: sans(base.labelSmall, 11, FontWeight.w700, 1.25),
     );
   }
 
@@ -277,12 +223,7 @@ abstract class AppTheme {
         elevation: 0,
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
-        titleTextStyle: const TextStyle(
-          fontFamily: _fontFamily,
-          fontSize: 18,
-          fontWeight: FontWeight.w700,
-          color: AppColors.foreground,
-        ),
+        titleTextStyle: textTheme.headlineLarge,
         shape: Border(
           bottom: BorderSide(
             color: AppColors.border.withValues(alpha: OpacityScale.o50),
@@ -359,6 +300,7 @@ abstract class AppTheme {
         ),
       ),
       dialogTheme: DialogThemeData(
+        titleTextStyle: textTheme.headlineLarge,
         backgroundColor: AppColors.card,
         surfaceTintColor: Colors.transparent,
         elevation: 3,
@@ -508,12 +450,7 @@ abstract class AppTheme {
         foregroundColor: AppColors.darkForeground,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
-        titleTextStyle: const TextStyle(
-          fontFamily: _fontFamily,
-          fontSize: 18,
-          fontWeight: FontWeight.w700,
-          color: AppColors.darkForeground,
-        ),
+        titleTextStyle: textTheme.headlineLarge,
         shape: Border(
           bottom: BorderSide(
             color: AppColors.darkBorder.withValues(alpha: OpacityScale.o40),
@@ -649,6 +586,7 @@ abstract class AppTheme {
         ),
       ),
       dialogTheme: DialogThemeData(
+        titleTextStyle: textTheme.headlineLarge,
         backgroundColor: AppColors.darkSurface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(RadiusScale.r20),

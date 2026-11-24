@@ -105,7 +105,7 @@ This document defines engineering standards and behaviors for LLM agents working
 - **Local storage**: **flutter_secure_storage** for tokens/credentials; **path_provider** for files; **shared_preferences** for simple key-value when appropriate
 - **Env / config**: compile-time `--dart-define` / `--dart-define-from-file=.env` read via `String.fromEnvironment` (see `core/config/env.dart`); never bundle `.env` as a Flutter asset; never ship secrets in the client
 - **Icons**: **lucide_icons** or **cupertino_icons**; prefer one icon set per project
-- **Fonts**: **google_fonts** for theme text styles
+- **Fonts**: bundled in `assets/fonts/` and declared in `pubspec.yaml` (no google_fonts): Caveat Brush for screen, section and dialog titles and big numbers, Montserrat for everything else; no italics
 - **Linting**: **flutter_lints** + **custom_lint** / **riverpod_lint** in `dev_dependencies`; respect `analysis_options.yaml`. Strict rules are staged at `info` and analysis runs with `--no-fatal-infos` — see [ADR-0007](docs/adr/ADR-0007-lint-baseline.md)
 
 Use only these stack choices unless the project already uses something else. Do not introduce GetX, Bloc, or a second state/navigation system.
@@ -184,7 +184,7 @@ lib/
 - **Centralized theme**: Define `AppTheme.lightTheme` (and dark if needed) in `core/theme/app_theme.dart`. Use `ThemeData` with `colorScheme`, `textTheme`, `appBarTheme`, `cardTheme`, `elevatedButtonTheme`, `inputDecorationTheme` as appropriate.
 - **Colors**: Define semantic colors in `core/theme/app_colors.dart` (e.g. `primary`, `background`, `foreground`, `card`, `border`, `error`) and use them in `ColorScheme` and in widgets via `AppColors.primary` or `Theme.of(context).colorScheme.primary`.
 - **Spacing, radii & durations**: Use the design tokens in `core/theme/` instead of hardcoded numbers. The `const` scales `SpacingScale.s16` / `RadiusScale.r12` / `DurationScale.ms200` are the source of truth (preserve `const`: `const EdgeInsets.all(SpacingScale.s16)`); `context.spacing.s16` / `context.radii.r12` / `context.durations.ms200` are the theme-aware accessors for dynamic code. Only on-grid (4px) values are tokenized. See ADR-0002.
-- **Typography**: Use `google_fonts` in theme (e.g. `GoogleFonts.outfitTextTheme().apply(...)`). Prefer theme over hardcoded font names in widgets.
+- **Typography**: Families are set once in the theme's text roles; widgets read `Theme.of(context).textTheme` and never name a font.
 - **Consistency**: Use theme and `AppColors` instead of raw `Colors.blue` or arbitrary hex in widget code.
 
 **Examples:**
@@ -271,7 +271,7 @@ lib/
 - [ ] Thin client: app consumes APIs and presents data; business logic lives on the backend; local persistence only when a feature justifies it (offline, credentials, preferences, caching).
 - [ ] Respect clean architecture: domain independent of Flutter and data; presentation and data depend on domain.
 - [ ] Prefer existing methods and abstractions; avoid overengineering.
-- [ ] Use only the stack above: Flutter, Dart 3, Riverpod, go_router (or MaterialApp.home), http/dio, flutter_secure_storage, env via `--dart-define`/`String.fromEnvironment`, lucide/cupertino icons, google_fonts, flutter_lints.
+- [ ] Use only the stack above: Flutter, Dart 3, Riverpod, go_router (or MaterialApp.home), http/dio, flutter_secure_storage, env via `--dart-define`/`String.fromEnvironment`, lucide/cupertino icons, bundled fonts, flutter_lints.
 - [ ] Structure: Feature-based `lib/features/<name>/data|domain|presentation`; core for config, theme, router.
 - [ ] State: Riverpod only; one provider per logical state; screens watch and call notifiers; no duplicate state in widgets.
 - [ ] Build: Flutter CLI on host; document env and platform steps.
