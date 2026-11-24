@@ -7,6 +7,13 @@ import 'tokens.dart';
 const _fontFamily = 'Montserrat';
 const _brushFamily = 'CaveatBrush';
 
+abstract class AppButtonStyles {
+  static ButtonStyle danger(BuildContext context) {
+    final c = AppColors.of(context);
+    return AppTheme._filledStyle(c, c.error);
+  }
+}
+
 abstract class AppTheme {
   static TextStyle _brushStyle(double size, double height, Color fg) {
     return TextStyle(
@@ -63,67 +70,46 @@ abstract class AppTheme {
     );
   }
 
-  static ElevatedButtonThemeData _lightElevatedButtonTheme() {
-    return ElevatedButtonThemeData(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        minimumSize: const Size(0, 52),
-        padding: const EdgeInsets.symmetric(
-          horizontal: SpacingScale.s28,
-          vertical: 14,
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(RadiusScale.r12),
-        ),
-        textStyle: const TextStyle(
-          fontFamily: _fontFamily,
-          fontSize: 15,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
+  static const _buttonHeight = 46.0;
+  static const _buttonBorder = 1.5;
+  static const _iconButtonSize = 44.0;
+  static const _buttonPadding = EdgeInsets.symmetric(
+    horizontal: SpacingScale.s20,
+  );
+
+  static ButtonStyle _filledStyle(AppColorSet c, Color fill) {
+    return FilledButton.styleFrom(
+      foregroundColor: c.background,
+      disabledBackgroundColor: c.surfaceAlt,
+      disabledForegroundColor: c.secondary,
+      minimumSize: const Size(0, _buttonHeight),
+      padding: _buttonPadding,
+      shape: const StadiumBorder(),
+      elevation: 0,
+    ).copyWith(backgroundColor: _fill(c, fill));
+  }
+
+  static WidgetStateProperty<Color> _fill(AppColorSet c, Color fill) {
+    return WidgetStateProperty.resolveWith(
+      (states) => states.contains(WidgetState.disabled) ? c.surfaceAlt : fill,
     );
   }
 
-  static FilledButtonThemeData _lightFilledButtonTheme() {
-    return FilledButtonThemeData(
-      style: FilledButton.styleFrom(
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        minimumSize: const Size(0, 52),
-        padding: const EdgeInsets.symmetric(
-          horizontal: SpacingScale.s28,
-          vertical: 14,
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(RadiusScale.r12),
-        ),
-        textStyle: const TextStyle(
-          fontFamily: _fontFamily,
-          fontSize: 15,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
+  static ButtonStyle _outlinedStyle(AppColorSet c) {
+    return OutlinedButton.styleFrom(
+      foregroundColor: c.primary,
+      minimumSize: const Size(0, _buttonHeight),
+      padding: _buttonPadding,
+      side: BorderSide(color: c.border, width: _buttonBorder),
+      shape: const StadiumBorder(),
     );
   }
 
-  static OutlinedButtonThemeData _lightOutlinedButtonTheme() {
-    return OutlinedButtonThemeData(
-      style: OutlinedButton.styleFrom(
-        foregroundColor: AppColors.primary,
-        minimumSize: const Size(0, 52),
-        side: BorderSide(
-          color: AppColors.primary.withValues(alpha: OpacityScale.o60),
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(RadiusScale.r12),
-        ),
-        textStyle: const TextStyle(
-          fontFamily: _fontFamily,
-          fontSize: 15,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
+  static ButtonStyle _iconStyle(AppColorSet c) {
+    return IconButton.styleFrom(
+      fixedSize: const Size.square(_iconButtonSize),
+      side: BorderSide(color: c.border, width: _buttonBorder),
+      shape: const CircleBorder(),
     );
   }
 
@@ -244,9 +230,16 @@ abstract class AppTheme {
           ),
         ),
       ),
-      elevatedButtonTheme: _lightElevatedButtonTheme(),
-      filledButtonTheme: _lightFilledButtonTheme(),
-      outlinedButtonTheme: _lightOutlinedButtonTheme(),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: _filledStyle(AppColors.light, AppColors.light.accent),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: _filledStyle(AppColors.light, AppColors.light.accent),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: _outlinedStyle(AppColors.light),
+      ),
+      iconButtonTheme: IconButtonThemeData(style: _iconStyle(AppColors.light)),
       textButtonTheme: _lightTextButtonTheme(),
       inputDecorationTheme: _lightInputDecorationTheme(),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
@@ -467,48 +460,15 @@ abstract class AppTheme {
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.darkAccent,
-          foregroundColor: Colors.white,
-          minimumSize: const Size(0, 52),
-          padding: const EdgeInsets.symmetric(
-            horizontal: SpacingScale.s28,
-            vertical: 14,
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(RadiusScale.r12),
-          ),
-          textStyle: const TextStyle(
-            fontFamily: _fontFamily,
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        style: _filledStyle(AppColors.dark, AppColors.dark.accent),
       ),
       filledButtonTheme: FilledButtonThemeData(
-        style: FilledButton.styleFrom(
-          backgroundColor: AppColors.darkAccent,
-          foregroundColor: Colors.white,
-          minimumSize: const Size(0, 52),
-          padding: const EdgeInsets.symmetric(
-            horizontal: SpacingScale.s28,
-            vertical: 14,
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(RadiusScale.r12),
-          ),
-        ),
+        style: _filledStyle(AppColors.dark, AppColors.dark.accent),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
-        style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.darkPrimary,
-          minimumSize: const Size(0, 52),
-          side: const BorderSide(color: AppColors.darkPrimary),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(RadiusScale.r12),
-          ),
-        ),
+        style: _outlinedStyle(AppColors.dark),
       ),
+      iconButtonTheme: IconButtonThemeData(style: _iconStyle(AppColors.dark)),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: AppColors.darkPrimary,
