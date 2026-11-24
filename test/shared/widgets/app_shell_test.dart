@@ -18,6 +18,7 @@ import 'package:oral_collector/l10n/app_localizations.dart';
 import 'package:oral_collector/l10n/app_localizations_en.dart';
 import 'package:oral_collector/shared/widgets/app_shell.dart';
 import 'package:oral_collector/shared/widgets/app_shell/floating_nav_bar.dart';
+import 'package:oral_collector/shared/widgets/app_shell/web_sidebar.dart';
 
 class _FakeRecordingSessionNotifier extends RecordingSessionNotifier {
   _FakeRecordingSessionNotifier(this._initial);
@@ -301,6 +302,55 @@ void main() {
           )
           .map((i) => i.color);
       expect(icons, contains(colors.secondary));
+    });
+  });
+
+  group('web side menu look (ENG-2866)', () {
+    final colors = AppColors.light;
+
+    Future<void> pumpWide(WidgetTester tester) =>
+        _pumpAtTextScale(tester, size: const Size(1024, 800), scale: 1.0);
+
+    testWidgets(
+      'open item is a 46 high pill in primary with an onPrimary label',
+      (tester) async {
+        await pumpWide(tester);
+        final pill = tester
+            .widgetList<AnimatedContainer>(
+              find.descendant(
+                of: find.byType(WebSidebar),
+                matching: find.byType(AnimatedContainer),
+              ),
+            )
+            .firstWhere(
+              (c) => (c.decoration as BoxDecoration?)?.color == colors.primary,
+            );
+        expect(pill.constraints!.minHeight, 46);
+        final label = tester.widget<Text>(
+          find.descendant(
+            of: find.byType(WebSidebar),
+            matching: find.text('Home'),
+          ),
+        );
+        expect(label.style!.color, colors.onPrimary);
+      },
+    );
+
+    testWidgets('expanded is 232 wide, collapsed is a 72 rail of icons', (
+      tester,
+    ) async {
+      await pumpWide(tester);
+      expect(tester.getSize(find.byType(WebSidebar)).width, 232);
+      await tester.tap(find.byIcon(LucideIcons.panelLeftClose));
+      await tester.pumpAndSettle();
+      expect(tester.getSize(find.byType(WebSidebar)).width, 72);
+      expect(
+        find.descendant(
+          of: find.byType(WebSidebar),
+          matching: find.text('Home'),
+        ),
+        findsNothing,
+      );
     });
   });
 

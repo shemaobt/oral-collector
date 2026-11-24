@@ -26,14 +26,10 @@ void _expectComponentRadiiFromTokens(ThemeData theme) {
   );
   expect(
     (theme.inputDecorationTheme.border! as OutlineInputBorder).borderRadius,
-    BorderRadius.circular(RadiusScale.r12),
+    BorderRadius.circular(RadiusScale.r16),
   );
   expect(
     _radiusOf(theme.chipTheme.shape),
-    BorderRadius.circular(RadiusScale.r20),
-  );
-  expect(
-    _radiusOf(theme.dialogTheme.shape),
     BorderRadius.circular(RadiusScale.r20),
   );
 }
@@ -144,6 +140,66 @@ void _expectButtons(ThemeData theme) {
   expect(_on(icon.side), BorderSide(color: c.border, width: 1.5));
 }
 
+void _expectOverlays(ThemeData theme) {
+  final c = theme.extension<AppColorSet>()!;
+  final dialog = theme.dialogTheme;
+  expect(dialog.backgroundColor, c.card);
+  expect(_radiusOf(dialog.shape), BorderRadius.circular(RadiusScale.r24));
+
+  final sheet = theme.bottomSheetTheme;
+  expect(sheet.backgroundColor, c.card);
+  expect(sheet.modalBackgroundColor, c.card);
+  expect(
+    _radiusOf(sheet.shape),
+    const BorderRadius.vertical(top: Radius.circular(RadiusScale.r28)),
+  );
+  expect(sheet.showDragHandle, isTrue);
+  expect(sheet.dragHandleSize, const Size(40, 4));
+  expect(sheet.dragHandleColor, c.border);
+
+  final snack = theme.snackBarTheme;
+  expect(snack.backgroundColor, c.slab);
+  expect(snack.actionTextColor, c.wood);
+  expect(_radiusOf(snack.shape), BorderRadius.circular(RadiusScale.r16));
+
+  expect(theme.popupMenuTheme.color, c.card);
+  expect(_on(theme.menuTheme.style!.backgroundColor), c.card);
+
+  expect(theme.dividerTheme.color, c.wash);
+}
+
+void _expectControls(ThemeData theme) {
+  final c = theme.extension<AppColorSet>()!;
+  final chip = theme.chipTheme;
+  expect(chip.selectedColor, c.primary);
+  final label = chip.labelStyle!.color! as WidgetStateColor;
+  expect(label.resolve({WidgetState.selected}), c.onPrimary);
+  expect(label.resolve({}), c.foreground);
+  expect(chip.secondaryLabelStyle!.color, c.onPrimary);
+  expect(chip.backgroundColor, Colors.transparent);
+  expect(chip.side, BorderSide(color: c.border, width: 1.5));
+
+  final tabs = theme.tabBarTheme;
+  expect(tabs.indicatorColor, c.accent);
+  final indicator = tabs.indicator! as UnderlineTabIndicator;
+  expect(indicator.borderSide, BorderSide(color: c.accent, width: 3));
+  expect(tabs.dividerColor, Colors.transparent);
+
+  final switchTrack = theme.switchTheme.trackColor!;
+  expect(_on(switchTrack, {WidgetState.selected}), c.accent);
+  expect(_on(switchTrack), c.border);
+
+  expect(_on(theme.checkboxTheme.fillColor!, {WidgetState.selected}), c.accent);
+
+  final progress = theme.progressIndicatorTheme;
+  expect(progress.color, c.accent);
+  expect(progress.linearTrackColor, c.surfaceAlt);
+  expect(progress.circularTrackColor, c.surfaceAlt);
+
+  expect(theme.sliderTheme.activeTrackColor, c.accent);
+  expect(theme.sliderTheme.inactiveTrackColor, c.border);
+}
+
 void main() {
   for (final (name, theme) in [
     ('lightTheme', AppTheme.lightTheme),
@@ -191,6 +247,43 @@ void main() {
       });
     });
 
+    group('$name fields', () {
+      test('read as the design field', () {
+        final c = theme.extension<AppColorSet>()!;
+        final input = theme.inputDecorationTheme;
+        BorderSide side(InputBorder? b) =>
+            (b! as OutlineInputBorder).borderSide;
+        expect(input.filled, isTrue);
+        expect(WidgetStateProperty.resolveAs(input.fillColor!, {}), c.card);
+        expect(
+          WidgetStateProperty.resolveAs(input.fillColor!, {
+            WidgetState.disabled,
+          }),
+          c.surfaceAlt,
+        );
+        expect(
+          side(input.enabledBorder),
+          BorderSide(color: c.border, width: 1.5),
+        );
+        expect(side(input.errorBorder), BorderSide(color: c.error, width: 1.5));
+        expect(
+          side(input.focusedErrorBorder),
+          BorderSide(color: c.error, width: 1.5),
+        );
+      });
+    });
+
+    test('$name dialogs, sheets, notices and menus read as the design', () {
+      _expectOverlays(theme);
+    });
+
+    test(
+      '$name chips, tabs, switches, checkboxes, sliders and progress read as the design',
+      () {
+        _expectControls(theme);
+      },
+    );
+
     group('$name typography', () {
       test('titles read in the brush and the rest in Montserrat', () {
         _expectTypography(theme);
@@ -225,16 +318,8 @@ void main() {
       _expectPaddingFromTokens(theme);
     });
 
-    test('bottom sheet top radius maps to RadiusScale.r20', () {
-      final shape = theme.bottomSheetTheme.shape! as RoundedRectangleBorder;
-      expect(
-        shape.borderRadius,
-        const BorderRadius.vertical(top: Radius.circular(RadiusScale.r20)),
-      );
-    });
-
     test('representative resolved opacity maps to OpacityScale', () {
-      expect(theme.dividerTheme.color!.a, closeTo(OpacityScale.o40, 0.001));
+      expect(theme.cardTheme.shadowColor!.a, closeTo(OpacityScale.o06, 0.001));
     });
   });
 
@@ -250,7 +335,7 @@ void main() {
     });
 
     test('representative resolved opacity maps to OpacityScale', () {
-      expect(theme.dividerTheme.color!.a, closeTo(OpacityScale.o30, 0.001));
+      expect(theme.cardTheme.shadowColor!.a, closeTo(OpacityScale.o40, 0.001));
     });
   });
 

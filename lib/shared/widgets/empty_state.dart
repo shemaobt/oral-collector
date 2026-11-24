@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/tokens.dart';
+import 'app_disc.dart';
 
 class EmptyState extends StatelessWidget {
   const EmptyState({
@@ -32,18 +33,9 @@ class EmptyState extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Container(
-                    width: 96,
-                    height: 96,
-                    decoration: BoxDecoration(
-                      color: colors.accent.withValues(alpha: 0.08),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      icon,
-                      size: 40,
-                      color: colors.accent.withValues(alpha: 0.6),
-                    ),
+                  AppDisc(
+                    size: DiscSize.empty,
+                    child: Icon(icon, size: 30, color: colors.secondary),
                   ),
                   const SizedBox(height: SpacingScale.s20),
                   Text(

@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:oral_collector/shared/widgets/app_disc.dart';
 import 'package:oral_collector/shared/widgets/empty_state.dart';
 
 import '../../support/text_scale.dart';
@@ -41,5 +42,11 @@ void main() {
     await _pump(tester, 2.0);
     expect(find.text(_title), findsOneWidget);
     expect(find.text(_description), findsOneWidget);
+  });
+
+  testWidgets('disc is 72 with a 30 icon', (tester) async {
+    await _pump(tester, 1.0);
+    expect(tester.getSize(find.byType(AppDisc)), const Size.square(72));
+    expect(tester.widget<Icon>(find.byType(Icon)).size, 30);
   });
 }

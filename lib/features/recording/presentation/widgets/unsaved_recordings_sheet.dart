@@ -27,6 +27,7 @@ class UnsavedRecordingsSheet extends ConsumerWidget {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      showDragHandle: false,
       backgroundColor: AppColors.transparent,
       builder: (_) =>
           UnsavedRecordingsSheet(onSessionResumed: onSessionResumed),

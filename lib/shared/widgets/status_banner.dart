@@ -5,7 +5,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/tokens.dart';
 import '../../l10n/app_localizations.dart';
 
-enum StatusBannerVariant { warning, info }
+enum StatusBannerVariant { plain, warn, error, hot, info }
 
 class StatusBanner extends StatelessWidget {
   const StatusBanner({
@@ -13,7 +13,7 @@ class StatusBanner extends StatelessWidget {
     required this.icon,
     required this.title,
     this.subtitle,
-    this.variant = StatusBannerVariant.warning,
+    this.variant = StatusBannerVariant.plain,
   });
 
   final IconData icon;
@@ -27,7 +27,7 @@ class StatusBanner extends StatelessWidget {
         icon: LucideIcons.wifiOff,
         title: l10n.projectSettings_offlineTitle,
         subtitle: l10n.status_offlineSubtitle,
-        variant: StatusBannerVariant.warning,
+        variant: StatusBannerVariant.hot,
       );
 
   factory StatusBanner.noProject(AppLocalizations l10n, {Key? key}) =>
@@ -44,13 +44,13 @@ class StatusBanner extends StatelessWidget {
     final colors = AppColors.of(context);
     final theme = Theme.of(context);
 
-    final Color tint;
-    switch (variant) {
-      case StatusBannerVariant.warning:
-        tint = colors.accent;
-      case StatusBannerVariant.info:
-        tint = colors.info;
-    }
+    final (background, foreground) = switch (variant) {
+      StatusBannerVariant.plain => (colors.surfaceAlt, colors.foreground),
+      StatusBannerVariant.warn => (colors.woodSoft, colors.woodText),
+      StatusBannerVariant.error => (colors.brickSoft, colors.error),
+      StatusBannerVariant.hot => (colors.soft, colors.deep),
+      StatusBannerVariant.info => (colors.bridgeSoft, colors.infoText),
+    };
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(
@@ -60,16 +60,18 @@ class StatusBanner extends StatelessWidget {
         0,
       ),
       child: Container(
-        padding: const EdgeInsets.all(SpacingScale.s16),
+        padding: const EdgeInsets.symmetric(
+          horizontal: SpacingScale.s16,
+          vertical: SpacingScale.s12,
+        ),
         decoration: BoxDecoration(
-          color: tint.withValues(alpha: 0.08),
+          color: background,
           borderRadius: BorderRadius.circular(RadiusScale.r16),
-          border: Border.all(color: tint.withValues(alpha: 0.25)),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, size: 20, color: tint),
+            Icon(icon, size: 18, color: foreground),
             const SizedBox(width: SpacingScale.s12),
             Expanded(
               child: Column(
@@ -77,9 +79,9 @@ class StatusBanner extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: theme.textTheme.bodyMedium?.copyWith(
+                    style: theme.textTheme.bodySmall?.copyWith(
                       fontWeight: FontWeight.w700,
-                      color: tint,
+                      color: foreground,
                     ),
                   ),
                   if (subtitle != null) ...[
@@ -87,7 +89,7 @@ class StatusBanner extends StatelessWidget {
                     Text(
                       subtitle!,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: colors.secondary,
+                        color: foreground,
                         height: 1.4,
                       ),
                     ),

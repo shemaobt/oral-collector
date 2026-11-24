@@ -127,39 +127,192 @@ abstract class AppTheme {
     );
   }
 
-  static InputDecorationTheme _lightInputDecorationTheme() {
+  static const _fieldBorder = 1.5;
+
+  static InputDecorationTheme _inputDecorationTheme(AppColorSet c) {
+    OutlineInputBorder outline(Color color) => OutlineInputBorder(
+      borderRadius: BorderRadius.circular(RadiusScale.r16),
+      borderSide: BorderSide(color: color, width: _fieldBorder),
+    );
     return InputDecorationTheme(
       filled: true,
-      fillColor: AppColors.card,
+      fillColor: WidgetStateColor.resolveWith(
+        (states) =>
+            states.contains(WidgetState.disabled) ? c.surfaceAlt : c.card,
+      ),
       floatingLabelBehavior: FloatingLabelBehavior.auto,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(RadiusScale.r12),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(RadiusScale.r12),
-        borderSide: BorderSide(
-          color: AppColors.border.withValues(alpha: OpacityScale.o70),
-        ),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(RadiusScale.r12),
-        borderSide: const BorderSide(color: AppColors.primary, width: 2),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(RadiusScale.r12),
-        borderSide: const BorderSide(color: AppColors.error),
-      ),
-      focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(RadiusScale.r12),
-        borderSide: const BorderSide(color: AppColors.error, width: 2),
-      ),
-      hintStyle: TextStyle(
-        color: AppColors.secondary.withValues(alpha: OpacityScale.o60),
-      ),
+      border: outline(c.border),
+      enabledBorder: outline(c.border),
+      disabledBorder: outline(c.border),
+      focusedBorder: outline(c.primary),
+      errorBorder: outline(c.error),
+      focusedErrorBorder: outline(c.error),
+      hintStyle: TextStyle(color: c.secondary),
       contentPadding: const EdgeInsets.symmetric(
         horizontal: SpacingScale.s16,
         vertical: SpacingScale.s16,
       ),
+    );
+  }
+
+  static const _noTint = Colors.transparent;
+
+  static DialogThemeData _dialogTheme(AppColorSet c, TextTheme text) {
+    return DialogThemeData(
+      titleTextStyle: text.headlineLarge,
+      backgroundColor: c.card,
+      surfaceTintColor: _noTint,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(RadiusScale.r24),
+      ),
+    );
+  }
+
+  static BottomSheetThemeData _bottomSheetTheme(AppColorSet c) {
+    return BottomSheetThemeData(
+      backgroundColor: c.card,
+      modalBackgroundColor: c.card,
+      surfaceTintColor: _noTint,
+      showDragHandle: true,
+      dragHandleColor: c.border,
+      dragHandleSize: const Size(40, 4),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(RadiusScale.r28),
+        ),
+      ),
+    );
+  }
+
+  static SnackBarThemeData _snackBarTheme(AppColorSet c, Color onSlab) {
+    return SnackBarThemeData(
+      backgroundColor: c.slab,
+      actionTextColor: c.wood,
+      contentTextStyle: TextStyle(
+        fontFamily: _fontFamily,
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+        color: onSlab,
+      ),
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(RadiusScale.r16),
+      ),
+    );
+  }
+
+  static final _menuShape = RoundedRectangleBorder(
+    borderRadius: BorderRadius.circular(RadiusScale.r16),
+  );
+
+  static PopupMenuThemeData _popupMenuTheme(AppColorSet c) {
+    return PopupMenuThemeData(
+      color: c.card,
+      surfaceTintColor: _noTint,
+      shape: _menuShape,
+    );
+  }
+
+  static MenuThemeData _menuTheme(AppColorSet c) {
+    return MenuThemeData(
+      style: MenuStyle(
+        backgroundColor: WidgetStateProperty.all(c.card),
+        surfaceTintColor: WidgetStateProperty.all(_noTint),
+        shape: WidgetStateProperty.all(_menuShape),
+      ),
+    );
+  }
+
+  static DividerThemeData _dividerTheme(AppColorSet c) {
+    return DividerThemeData(color: c.wash, thickness: 1);
+  }
+
+  static ChipThemeData _chipTheme(AppColorSet c) {
+    return ChipThemeData(
+      backgroundColor: Colors.transparent,
+      selectedColor: c.primary,
+      checkmarkColor: c.onPrimary,
+      labelStyle: TextStyle(
+        fontFamily: _fontFamily,
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
+        color: WidgetStateColor.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? c.onPrimary
+              : c.foreground,
+        ),
+      ),
+      secondaryLabelStyle: TextStyle(
+        fontFamily: _fontFamily,
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
+        color: c.onPrimary,
+      ),
+      side: BorderSide(color: c.border, width: _buttonBorder),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(RadiusScale.r20),
+      ),
+    );
+  }
+
+  static TabBarThemeData _tabBarTheme(AppColorSet c) {
+    return TabBarThemeData(
+      labelColor: c.accent,
+      unselectedLabelColor: c.secondary,
+      indicatorColor: c.accent,
+      indicator: UnderlineTabIndicator(
+        borderSide: BorderSide(color: c.accent, width: 3),
+      ),
+      dividerColor: Colors.transparent,
+      labelStyle: const TextStyle(
+        fontFamily: _fontFamily,
+        fontSize: 14,
+        fontWeight: FontWeight.w700,
+      ),
+      unselectedLabelStyle: const TextStyle(
+        fontFamily: _fontFamily,
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+      ),
+    );
+  }
+
+  static SwitchThemeData _switchTheme(AppColorSet c) {
+    return SwitchThemeData(
+      thumbColor: WidgetStateProperty.all(Colors.white),
+      trackColor: WidgetStateProperty.resolveWith(
+        (states) => states.contains(WidgetState.selected) ? c.accent : c.border,
+      ),
+      trackOutlineColor: WidgetStateProperty.all(Colors.transparent),
+    );
+  }
+
+  static CheckboxThemeData _checkboxTheme(AppColorSet c) {
+    return CheckboxThemeData(
+      checkColor: WidgetStateProperty.all(Colors.white),
+      fillColor: WidgetStateProperty.resolveWith(
+        (states) => states.contains(WidgetState.selected)
+            ? c.accent
+            : Colors.transparent,
+      ),
+      side: BorderSide(color: c.border, width: _buttonBorder),
+    );
+  }
+
+  static ProgressIndicatorThemeData _progressTheme(AppColorSet c) {
+    return ProgressIndicatorThemeData(
+      color: c.accent,
+      linearTrackColor: c.surfaceAlt,
+      circularTrackColor: c.surfaceAlt,
+    );
+  }
+
+  static SliderThemeData _sliderTheme(AppColorSet c) {
+    return SliderThemeData(
+      activeTrackColor: c.accent,
+      inactiveTrackColor: c.border,
+      thumbColor: c.card,
+      overlayColor: c.accent.withValues(alpha: OpacityScale.o15),
     );
   }
 
@@ -241,7 +394,7 @@ abstract class AppTheme {
       ),
       iconButtonTheme: IconButtonThemeData(style: _iconStyle(AppColors.light)),
       textButtonTheme: _lightTextButtonTheme(),
-      inputDecorationTheme: _lightInputDecorationTheme(),
+      inputDecorationTheme: _inputDecorationTheme(AppColors.light),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: AppColors.card,
         selectedItemColor: AppColors.accent,
@@ -265,10 +418,7 @@ abstract class AppTheme {
         ),
         indicatorColor: AppColors.accent.withValues(alpha: OpacityScale.o12),
       ),
-      dividerTheme: DividerThemeData(
-        color: AppColors.border.withValues(alpha: OpacityScale.o40),
-        thickness: 1,
-      ),
+      dividerTheme: _dividerTheme(AppColors.light),
       listTileTheme: const ListTileThemeData(
         titleTextStyle: TextStyle(
           fontFamily: _fontFamily,
@@ -283,112 +433,20 @@ abstract class AppTheme {
           color: AppColors.secondary,
         ),
       ),
-      chipTheme: ChipThemeData(
-        backgroundColor: AppColors.card,
-        side: BorderSide(
-          color: AppColors.border.withValues(alpha: OpacityScale.o55),
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(RadiusScale.r20),
-        ),
+      chipTheme: _chipTheme(AppColors.light),
+      dialogTheme: _dialogTheme(AppColors.light, textTheme),
+      bottomSheetTheme: _bottomSheetTheme(AppColors.light),
+      menuTheme: _menuTheme(AppColors.light),
+      popupMenuTheme: _popupMenuTheme(AppColors.light),
+      snackBarTheme: _snackBarTheme(
+        AppColors.light,
+        AppColors.light.background,
       ),
-      dialogTheme: DialogThemeData(
-        titleTextStyle: textTheme.headlineLarge,
-        backgroundColor: AppColors.card,
-        surfaceTintColor: Colors.transparent,
-        elevation: 3,
-        shadowColor: AppColors.brandVerde.withValues(alpha: OpacityScale.o08),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(RadiusScale.r20),
-        ),
-      ),
-      bottomSheetTheme: BottomSheetThemeData(
-        backgroundColor: AppColors.card,
-        surfaceTintColor: Colors.transparent,
-        modalBackgroundColor: AppColors.card,
-        elevation: 3,
-        modalElevation: 3,
-        shadowColor: AppColors.brandVerde.withValues(alpha: OpacityScale.o08),
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(
-            top: Radius.circular(RadiusScale.r20),
-          ),
-        ),
-      ),
-      menuTheme: MenuThemeData(
-        style: MenuStyle(
-          backgroundColor: WidgetStateProperty.all(AppColors.card),
-          surfaceTintColor: WidgetStateProperty.all(Colors.transparent),
-          elevation: WidgetStateProperty.all(3),
-          shadowColor: WidgetStateProperty.all(
-            AppColors.brandVerde.withValues(alpha: OpacityScale.o08),
-          ),
-          shape: WidgetStateProperty.all(
-            RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(RadiusScale.r12),
-            ),
-          ),
-        ),
-      ),
-      popupMenuTheme: PopupMenuThemeData(
-        color: AppColors.card,
-        surfaceTintColor: Colors.transparent,
-        elevation: 3,
-        shadowColor: AppColors.brandVerde.withValues(alpha: OpacityScale.o08),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(RadiusScale.r12),
-        ),
-      ),
-      snackBarTheme: SnackBarThemeData(
-        backgroundColor: AppColors.surfaceContainerHighest,
-        contentTextStyle: const TextStyle(
-          fontFamily: _fontFamily,
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
-          color: AppColors.foreground,
-        ),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(RadiusScale.r12),
-        ),
-      ),
-      tabBarTheme: TabBarThemeData(
-        labelColor: AppColors.accent,
-        unselectedLabelColor: AppColors.foreground.withValues(
-          alpha: OpacityScale.o40,
-        ),
-        indicatorColor: AppColors.accent,
-        labelStyle: const TextStyle(
-          fontFamily: _fontFamily,
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-        ),
-        unselectedLabelStyle: const TextStyle(
-          fontFamily: _fontFamily,
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-      sliderTheme: SliderThemeData(
-        activeTrackColor: AppColors.primary,
-        inactiveTrackColor: AppColors.border.withValues(
-          alpha: OpacityScale.o40,
-        ),
-        thumbColor: AppColors.primary,
-        overlayColor: AppColors.primary.withValues(alpha: OpacityScale.o15),
-      ),
-      switchTheme: SwitchThemeData(
-        thumbColor: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.selected)) return AppColors.primary;
-          return AppColors.switchThumbUnselected;
-        }),
-        trackColor: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.selected)) {
-            return AppColors.primary.withValues(alpha: OpacityScale.o40);
-          }
-          return AppColors.border.withValues(alpha: OpacityScale.o30);
-        }),
-      ),
+      tabBarTheme: _tabBarTheme(AppColors.light),
+      sliderTheme: _sliderTheme(AppColors.light),
+      switchTheme: _switchTheme(AppColors.light),
+      checkboxTheme: _checkboxTheme(AppColors.light),
+      progressIndicatorTheme: _progressTheme(AppColors.light),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: AppColors.accent,
         foregroundColor: Colors.white,
@@ -475,33 +533,7 @@ abstract class AppTheme {
           minimumSize: const Size(0, 48),
         ),
       ),
-      inputDecorationTheme: InputDecorationTheme(
-        filled: true,
-        fillColor: AppColors.darkSurfaceAlt,
-        floatingLabelBehavior: FloatingLabelBehavior.auto,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(RadiusScale.r12),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(RadiusScale.r12),
-          borderSide: BorderSide(
-            color: AppColors.darkBorder.withValues(alpha: OpacityScale.o60),
-          ),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(RadiusScale.r12),
-          borderSide: const BorderSide(color: AppColors.darkPrimary, width: 2),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(RadiusScale.r12),
-          borderSide: const BorderSide(color: AppColors.error),
-        ),
-        hintStyle: const TextStyle(color: AppColors.darkBorder),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: SpacingScale.s16,
-          vertical: SpacingScale.s16,
-        ),
-      ),
+      inputDecorationTheme: _inputDecorationTheme(AppColors.dark),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: AppColors.darkSurface,
         selectedItemColor: AppColors.darkPrimary,
@@ -520,10 +552,7 @@ abstract class AppTheme {
           alpha: OpacityScale.o10,
         ),
       ),
-      dividerTheme: DividerThemeData(
-        color: AppColors.darkBorder.withValues(alpha: OpacityScale.o30),
-        thickness: 1,
-      ),
+      dividerTheme: _dividerTheme(AppColors.dark),
       listTileTheme: const ListTileThemeData(
         titleTextStyle: TextStyle(
           fontFamily: _fontFamily,
@@ -538,39 +567,17 @@ abstract class AppTheme {
           color: AppColors.darkSecondary,
         ),
       ),
-      chipTheme: ChipThemeData(
-        backgroundColor: AppColors.darkSurfaceAlt,
-        side: BorderSide.none,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(RadiusScale.r20),
-        ),
-      ),
-      dialogTheme: DialogThemeData(
-        titleTextStyle: textTheme.headlineLarge,
-        backgroundColor: AppColors.darkSurface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(RadiusScale.r20),
-        ),
-      ),
-      snackBarTheme: SnackBarThemeData(
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(RadiusScale.r12),
-        ),
-      ),
-      tabBarTheme: TabBarThemeData(
-        labelColor: AppColors.darkPrimary,
-        unselectedLabelColor: AppColors.darkForeground.withValues(
-          alpha: OpacityScale.o40,
-        ),
-        indicatorColor: AppColors.darkPrimary,
-      ),
-      sliderTheme: SliderThemeData(
-        activeTrackColor: AppColors.darkPrimary,
-        inactiveTrackColor: AppColors.darkBorder,
-        thumbColor: AppColors.darkPrimary,
-        overlayColor: AppColors.darkPrimary.withValues(alpha: OpacityScale.o15),
-      ),
+      chipTheme: _chipTheme(AppColors.dark),
+      dialogTheme: _dialogTheme(AppColors.dark, textTheme),
+      bottomSheetTheme: _bottomSheetTheme(AppColors.dark),
+      menuTheme: _menuTheme(AppColors.dark),
+      popupMenuTheme: _popupMenuTheme(AppColors.dark),
+      snackBarTheme: _snackBarTheme(AppColors.dark, AppColors.dark.foreground),
+      tabBarTheme: _tabBarTheme(AppColors.dark),
+      sliderTheme: _sliderTheme(AppColors.dark),
+      switchTheme: _switchTheme(AppColors.dark),
+      checkboxTheme: _checkboxTheme(AppColors.dark),
+      progressIndicatorTheme: _progressTheme(AppColors.dark),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: AppColors.darkAccent,
         foregroundColor: Colors.white,
