@@ -5,6 +5,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/l10n/content_l10n.dart';
+import '../../../core/router/navigation.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/color_hex.dart';
 import '../../../core/theme/tokens.dart';
@@ -36,15 +37,7 @@ class GenreDetailScreen extends ConsumerWidget {
     if (genre == null) {
       return Scaffold(
         appBar: AppBar(
-          leading: BackButton(
-            onPressed: () {
-              if (context.canPop()) {
-                context.pop();
-              } else {
-                context.go('/home');
-              }
-            },
-          ),
+          leading: BackButton(onPressed: () => popOrGo(context, '/home')),
           title: Text(l10n.genre_title),
         ),
         body: Center(child: Text(l10n.genre_notFound)),
@@ -53,15 +46,7 @@ class GenreDetailScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        leading: BackButton(
-          onPressed: () {
-            if (context.canPop()) {
-              context.pop();
-            } else {
-              context.go('/home');
-            }
-          },
-        ),
+        leading: BackButton(onPressed: () => popOrGo(context, '/home')),
         title: Text(localizedGenreName(l10n, genre.name, id: genre.id)),
         actions: [
           Container(
