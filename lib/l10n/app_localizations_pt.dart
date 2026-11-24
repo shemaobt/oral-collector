@@ -721,6 +721,18 @@ class AppLocalizationsPt extends AppLocalizations {
   String get recording_statusLocal => 'Local';
 
   @override
+  String get sendState_onDevice => 'No aparelho';
+
+  @override
+  String get sendState_sending => 'Enviando';
+
+  @override
+  String get sendState_sent => 'Enviada';
+
+  @override
+  String get sendState_needsYou => 'Precisa de você';
+
+  @override
   String get recording_statusNameConflict => 'Conflito de nome';
 
   @override

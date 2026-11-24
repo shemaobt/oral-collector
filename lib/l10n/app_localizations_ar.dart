@@ -710,6 +710,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get recording_statusLocal => 'محلي';
 
   @override
+  String get sendState_onDevice => 'على الجهاز';
+
+  @override
+  String get sendState_sending => 'جارٍ الإرسال';
+
+  @override
+  String get sendState_sent => 'تم الإرسال';
+
+  @override
+  String get sendState_needsYou => 'يحتاج إليك';
+
+  @override
   String get recording_statusNameConflict => 'تعارض في الاسم';
 
   @override

@@ -3,6 +3,7 @@
 // overflow; the failed+retry variant must also render fully at scale.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:oral_collector/core/theme/app_colors.dart';
 import 'package:oral_collector/shared/widgets/upload_status_badge.dart';
 
 import '../../support/text_scale.dart';
@@ -41,7 +42,7 @@ void main() {
 
   testWidgets('full label stays in the tree at 2.0x', (tester) async {
     await _pump(tester);
-    expect(find.text('Uploaded'), findsOneWidget);
+    expect(find.text('Sent'), findsOneWidget);
   });
 
   testWidgets('failed state shows label and retry without overflow at 2.0x', (
@@ -55,8 +56,32 @@ void main() {
       ),
     );
     await tester.pump();
-    expect(find.text('Failed'), findsOneWidget);
+    expect(find.text('Needs you'), findsOneWidget);
     expect(find.text('Retry'), findsOneWidget);
     expectNoOverflow(tester);
+  });
+
+  group('four send states', () {
+    final cases = <String, (String, Color Function(AppColorSet))>{
+      'local': ('On the device', (c) => c.secondary),
+      'uploading': ('Sending', (c) => c.accent),
+      'uploaded': ('Sent', (c) => c.infoText),
+      'failed': ('Needs you', (c) => c.error),
+    };
+    for (final entry in cases.entries) {
+      testWidgets('${entry.key} reads ${entry.value.$1} in its colour', (
+        tester,
+      ) async {
+        await pumpAtTextScale(
+          tester,
+          child: Center(child: UploadStatusBadge(status: entry.key)),
+        );
+        final colors = AppColors.of(
+          tester.element(find.byType(UploadStatusBadge)),
+        );
+        final text = tester.widget<Text>(find.text(entry.value.$1));
+        expect(text.style?.color, entry.value.$2(colors));
+      });
+    }
   });
 }

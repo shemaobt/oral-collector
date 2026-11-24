@@ -725,6 +725,18 @@ class AppLocalizationsEs extends AppLocalizations {
   String get recording_statusLocal => 'Local';
 
   @override
+  String get sendState_onDevice => 'En el dispositivo';
+
+  @override
+  String get sendState_sending => 'Enviando';
+
+  @override
+  String get sendState_sent => 'Enviada';
+
+  @override
+  String get sendState_needsYou => 'Te necesita';
+
+  @override
   String get recording_statusNameConflict => 'Conflicto de nombre';
 
   @override
