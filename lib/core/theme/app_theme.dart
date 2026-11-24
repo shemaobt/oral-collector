@@ -127,35 +127,27 @@ abstract class AppTheme {
     );
   }
 
-  static InputDecorationTheme _lightInputDecorationTheme() {
+  static const _fieldBorder = 1.5;
+
+  static InputDecorationTheme _inputDecorationTheme(AppColorSet c) {
+    OutlineInputBorder outline(Color color) => OutlineInputBorder(
+      borderRadius: BorderRadius.circular(RadiusScale.r16),
+      borderSide: BorderSide(color: color, width: _fieldBorder),
+    );
     return InputDecorationTheme(
       filled: true,
-      fillColor: AppColors.card,
+      fillColor: WidgetStateColor.resolveWith(
+        (states) =>
+            states.contains(WidgetState.disabled) ? c.surfaceAlt : c.card,
+      ),
       floatingLabelBehavior: FloatingLabelBehavior.auto,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(RadiusScale.r12),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(RadiusScale.r12),
-        borderSide: BorderSide(
-          color: AppColors.border.withValues(alpha: OpacityScale.o70),
-        ),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(RadiusScale.r12),
-        borderSide: const BorderSide(color: AppColors.primary, width: 2),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(RadiusScale.r12),
-        borderSide: const BorderSide(color: AppColors.error),
-      ),
-      focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(RadiusScale.r12),
-        borderSide: const BorderSide(color: AppColors.error, width: 2),
-      ),
-      hintStyle: TextStyle(
-        color: AppColors.secondary.withValues(alpha: OpacityScale.o60),
-      ),
+      border: outline(c.border),
+      enabledBorder: outline(c.border),
+      disabledBorder: outline(c.border),
+      focusedBorder: outline(c.primary),
+      errorBorder: outline(c.error),
+      focusedErrorBorder: outline(c.error),
+      hintStyle: TextStyle(color: c.secondary),
       contentPadding: const EdgeInsets.symmetric(
         horizontal: SpacingScale.s16,
         vertical: SpacingScale.s16,
@@ -241,7 +233,7 @@ abstract class AppTheme {
       ),
       iconButtonTheme: IconButtonThemeData(style: _iconStyle(AppColors.light)),
       textButtonTheme: _lightTextButtonTheme(),
-      inputDecorationTheme: _lightInputDecorationTheme(),
+      inputDecorationTheme: _inputDecorationTheme(AppColors.light),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: AppColors.card,
         selectedItemColor: AppColors.accent,
@@ -475,33 +467,7 @@ abstract class AppTheme {
           minimumSize: const Size(0, 48),
         ),
       ),
-      inputDecorationTheme: InputDecorationTheme(
-        filled: true,
-        fillColor: AppColors.darkSurfaceAlt,
-        floatingLabelBehavior: FloatingLabelBehavior.auto,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(RadiusScale.r12),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(RadiusScale.r12),
-          borderSide: BorderSide(
-            color: AppColors.darkBorder.withValues(alpha: OpacityScale.o60),
-          ),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(RadiusScale.r12),
-          borderSide: const BorderSide(color: AppColors.darkPrimary, width: 2),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(RadiusScale.r12),
-          borderSide: const BorderSide(color: AppColors.error),
-        ),
-        hintStyle: const TextStyle(color: AppColors.darkBorder),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: SpacingScale.s16,
-          vertical: SpacingScale.s16,
-        ),
-      ),
+      inputDecorationTheme: _inputDecorationTheme(AppColors.dark),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: AppColors.darkSurface,
         selectedItemColor: AppColors.darkPrimary,

@@ -26,7 +26,7 @@ void _expectComponentRadiiFromTokens(ThemeData theme) {
   );
   expect(
     (theme.inputDecorationTheme.border! as OutlineInputBorder).borderRadius,
-    BorderRadius.circular(RadiusScale.r12),
+    BorderRadius.circular(RadiusScale.r16),
   );
   expect(
     _radiusOf(theme.chipTheme.shape),
@@ -188,6 +188,32 @@ void main() {
         expect(_on(danger.backgroundColor), c.error);
         expect(_on(danger.shape), const StadiumBorder());
         expect(_on(danger.minimumSize), const Size(0, 46));
+      });
+    });
+
+    group('$name fields', () {
+      test('read as the design field', () {
+        final c = theme.extension<AppColorSet>()!;
+        final input = theme.inputDecorationTheme;
+        BorderSide side(InputBorder? b) =>
+            (b! as OutlineInputBorder).borderSide;
+        expect(input.filled, isTrue);
+        expect(WidgetStateProperty.resolveAs(input.fillColor!, {}), c.card);
+        expect(
+          WidgetStateProperty.resolveAs(input.fillColor!, {
+            WidgetState.disabled,
+          }),
+          c.surfaceAlt,
+        );
+        expect(
+          side(input.enabledBorder),
+          BorderSide(color: c.border, width: 1.5),
+        );
+        expect(side(input.errorBorder), BorderSide(color: c.error, width: 1.5));
+        expect(
+          side(input.focusedErrorBorder),
+          BorderSide(color: c.error, width: 1.5),
+        );
       });
     });
 
