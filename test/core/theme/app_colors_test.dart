@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:oral_collector/core/theme/app_colors.dart';
+import 'package:oral_collector/core/theme/app_shadows.dart';
 import 'package:oral_collector/core/theme/app_theme.dart';
 
 void main() {
@@ -42,6 +43,32 @@ void main() {
       expect(c.border.toARGB32(), 0xFF5A5440);
       expect(c.error.toARGB32(), 0xFFB91C1C);
       expect(c.warning.toARGB32(), 0xFFE0A458);
+    });
+
+    test('light carries the new design roles', () {
+      final c = AppColors.light;
+      expect(c.wash.toARGB32(), 0xFFE3DFCA);
+      expect(c.deep.toARGB32(), 0xFFA63B00);
+      expect(c.soft.toARGB32(), 0xFFF9DAC4);
+      expect(c.brickSoft.toARGB32(), 0xFFF6D7D2);
+      expect(c.wood.toARGB32(), 0xFFC7A268);
+      expect(c.woodSoft.toARGB32(), 0xFFF4E3BF);
+      expect(c.woodText.toARGB32(), 0xFF6E4F1C);
+      expect(c.bridgeSoft.toARGB32(), 0xFFD3E6E0);
+      expect(c.slab.toARGB32(), 0xFF34331A);
+    });
+
+    test('dark carries the new design roles', () {
+      final c = AppColors.dark;
+      expect(c.wash.toARGB32(), 0xFF383124);
+      expect(c.deep.toARGB32(), 0xFFF2955A);
+      expect(c.soft.toARGB32(), 0xFF3A2416);
+      expect(c.brickSoft.toARGB32(), 0xFF3A1F1B);
+      expect(c.wood.toARGB32(), 0xFFE2C08F);
+      expect(c.woodSoft.toARGB32(), 0xFF332A1B);
+      expect(c.woodText.toARGB32(), 0xFFE2C08F);
+      expect(c.bridgeSoft.toARGB32(), 0xFF1D2A27);
+      expect(c.slab.toARGB32(), 0xFF2C271D);
     });
 
     test('chipSurface is its own colour in light and surfaceAlt in dark', () {
@@ -102,7 +129,27 @@ void main() {
           border: Color.lerp(light.border, dark.border, 0.5)!,
           error: Color.lerp(light.error, dark.error, 0.5)!,
           warning: Color.lerp(light.warning, dark.warning, 0.5)!,
+          wash: Color.lerp(light.wash, dark.wash, 0.5)!,
+          deep: Color.lerp(light.deep, dark.deep, 0.5)!,
+          soft: Color.lerp(light.soft, dark.soft, 0.5)!,
+          brickSoft: Color.lerp(light.brickSoft, dark.brickSoft, 0.5)!,
+          wood: Color.lerp(light.wood, dark.wood, 0.5)!,
+          woodSoft: Color.lerp(light.woodSoft, dark.woodSoft, 0.5)!,
+          woodText: Color.lerp(light.woodText, dark.woodText, 0.5)!,
+          bridgeSoft: Color.lerp(light.bridgeSoft, dark.bridgeSoft, 0.5)!,
+          slab: Color.lerp(light.slab, dark.slab, 0.5)!,
         ),
+      );
+    });
+
+    test('lerp at t=0.5 lands on the midpoint of each new role', () {
+      final mid = AppColors.light.lerp(AppColors.dark, 0.5);
+
+      expect(mid.wash.toARGB32(), isNot(AppColors.light.wash.toARGB32()));
+      expect(mid.slab.toARGB32(), isNot(AppColors.dark.slab.toARGB32()));
+      expect(
+        mid.woodText,
+        Color.lerp(AppColors.light.woodText, AppColors.dark.woodText, 0.5),
       );
     });
 
@@ -198,6 +245,34 @@ void main() {
       expect(AppColors.warningContainer.toARGB32(), 0xFFFFEDCC);
       expect(AppColors.onWarningContainer.toARGB32(), 0xFF8A5A00);
       expect(AppColors.authHeroAccent.toARGB32(), 0xFFFFB380);
+    });
+  });
+
+  group('ShadowTints', () {
+    test('light shadows are olive and dark shadows are black', () {
+      expect(ShadowTints.light.card, const Color.fromRGBO(63, 62, 32, 0.45));
+      expect(ShadowTints.light.slab, const Color.fromRGBO(52, 51, 26, 0.7));
+      expect(ShadowTints.dark.card, const Color.fromRGBO(0, 0, 0, 0.45));
+      expect(ShadowTints.dark.slab, const Color.fromRGBO(0, 0, 0, 0.7));
+    });
+
+    testWidgets('of(context) follows the theme brightness', (tester) async {
+      late ShadowTints resolved;
+      Widget app(ThemeData theme) => MaterialApp(
+        theme: theme,
+        home: Builder(
+          builder: (context) {
+            resolved = ShadowTints.of(context);
+            return const SizedBox();
+          },
+        ),
+      );
+
+      await tester.pumpWidget(app(ThemeData.light()));
+      expect(resolved, same(ShadowTints.light));
+      await tester.pumpWidget(app(ThemeData.dark()));
+      await tester.pumpAndSettle();
+      expect(resolved, same(ShadowTints.dark));
     });
   });
 }
