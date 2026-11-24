@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
@@ -29,14 +27,6 @@ class FloatingNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final navBg = (isDark ? colors.card : colors.surfaceAlt).withValues(
-      alpha: isDark ? 0.65 : 0.80,
-    );
-    final itemBg = (isDark ? colors.surfaceAlt : colors.card).withValues(
-      alpha: 0.90,
-    );
-    final iconColor = colors.foreground.withValues(alpha: 0.55);
-
     return Padding(
       padding: EdgeInsets.fromLTRB(
         SpacingScale.s16,
@@ -45,8 +35,12 @@ class FloatingNavBar extends StatelessWidget {
         bottomPadding > 16 ? bottomPadding - 16 : 2,
       ),
       child: Container(
+        height: 70,
+        padding: const EdgeInsets.all(SpacingScale.s8),
         decoration: BoxDecoration(
+          color: colors.card,
           borderRadius: BorderRadius.circular(RadiusScale.r32),
+          border: Border.all(color: colors.border, width: 1.5),
           boxShadow: [
             BoxShadow(
               color: AppColors.black.withValues(alpha: isDark ? 0.30 : 0.10),
@@ -55,89 +49,66 @@ class FloatingNavBar extends StatelessWidget {
             ),
           ],
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(RadiusScale.r32),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 28, sigmaY: 28),
-            child: Container(
-              height: 68,
-              padding: const EdgeInsets.all(SpacingScale.s8),
-              decoration: BoxDecoration(
-                color: navBg,
-                borderRadius: BorderRadius.circular(RadiusScale.r32),
-                border: Border.all(
-                  color: (isDark ? AppColors.white : colors.border).withValues(
-                    alpha: isDark ? 0.08 : 0.25,
-                  ),
-                ),
-              ),
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final totalWidth = constraints.maxWidth;
-                  const spacing = 4.0;
-                  final count = tabs.length;
-                  final totalSpacing = spacing * (count - 1);
-                  final usableWidth = totalWidth - totalSpacing;
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final totalWidth = constraints.maxWidth;
+            const spacing = 4.0;
+            final count = tabs.length;
+            final totalSpacing = spacing * (count - 1);
+            final usableWidth = totalWidth - totalSpacing;
 
-                  final unselectedWidth = usableWidth / (count + 1);
-                  final selectedWidth = unselectedWidth * 2;
+            final unselectedWidth = usableWidth / (count + 1);
+            final selectedWidth = unselectedWidth * 2;
 
-                  return Row(
-                    children: List.generate(count, (i) {
-                      final isSelected = i == selectedIndex;
-                      final tab = tabs[i];
-                      final hasBadge =
-                          tab.path == '/profile' && pendingInvites > 0;
+            return Row(
+              children: List.generate(count, (i) {
+                final isSelected = i == selectedIndex;
+                final tab = tabs[i];
+                final hasBadge = tab.path == '/profile' && pendingInvites > 0;
 
-                      return Padding(
-                        padding: EdgeInsets.only(
-                          right: i < count - 1 ? spacing : 0,
-                        ),
-                        child: Semantics(
-                          label: AppLocalizations.of(
-                            context,
-                          ).a11y_tabLabel(tab.label),
-                          selected: isSelected,
-                          child: Material(
-                            color: AppColors.transparent,
-                            child: InkWell(
-                              onTap: () => onTabTapped(i),
-                              borderRadius: BorderRadius.circular(
-                                RadiusScale.r24,
-                              ),
-                              child: AnimatedContainer(
-                                duration: DurationScale.ms300,
-                                curve: Curves.easeInOut,
-                                width: isSelected
-                                    ? selectedWidth
-                                    : unselectedWidth,
-                                height: 52,
-                                decoration: BoxDecoration(
-                                  color: isSelected ? colors.accent : itemBg,
-                                  borderRadius: BorderRadius.circular(
-                                    RadiusScale.r24,
-                                  ),
-                                ),
-                                child: _NavItemContent(
-                                  icon: tab.icon,
-                                  label: tab.label,
-                                  isSelected: isSelected,
-                                  iconColor: iconColor,
-                                  hasBadge: hasBadge,
-                                  badgeCount: pendingInvites,
-                                  accentColor: colors.accent,
-                                ),
-                              ),
+                return Padding(
+                  padding: EdgeInsets.only(right: i < count - 1 ? spacing : 0),
+                  child: Semantics(
+                    label: AppLocalizations.of(
+                      context,
+                    ).a11y_tabLabel(tab.label),
+                    selected: isSelected,
+                    child: Material(
+                      color: AppColors.transparent,
+                      child: InkWell(
+                        onTap: () => onTabTapped(i),
+                        borderRadius: BorderRadius.circular(RadiusScale.r24),
+                        child: AnimatedContainer(
+                          duration: DurationScale.ms300,
+                          curve: Curves.easeInOut,
+                          width: isSelected ? selectedWidth : unselectedWidth,
+                          height: 54,
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? colors.surfaceAlt
+                                : AppColors.transparent,
+                            borderRadius: BorderRadius.circular(
+                              RadiusScale.r24,
                             ),
                           ),
+                          child: _NavItemContent(
+                            icon: tab.icon,
+                            label: tab.label,
+                            isSelected: isSelected,
+                            iconColor: colors.secondary,
+                            selectedColor: colors.primary,
+                            hasBadge: hasBadge,
+                            badgeCount: pendingInvites,
+                            accentColor: colors.accent,
+                          ),
                         ),
-                      );
-                    }),
-                  );
-                },
-              ),
-            ),
-          ),
+                      ),
+                    ),
+                  ),
+                );
+              }),
+            );
+          },
         ),
       ),
     );
@@ -150,6 +121,7 @@ class _NavItemContent extends StatelessWidget {
     required this.label,
     required this.isSelected,
     required this.iconColor,
+    required this.selectedColor,
     required this.hasBadge,
     required this.badgeCount,
     required this.accentColor,
@@ -159,6 +131,7 @@ class _NavItemContent extends StatelessWidget {
   final String label;
   final bool isSelected;
   final Color iconColor;
+  final Color selectedColor;
   final bool hasBadge;
   final int badgeCount;
   final Color accentColor;
@@ -169,7 +142,7 @@ class _NavItemContent extends StatelessWidget {
     final iconWidget = Icon(
       icon,
       size: 20,
-      color: isSelected ? theme.colorScheme.onPrimary : iconColor,
+      color: isSelected ? selectedColor : iconColor,
     );
 
     final displayIcon = hasBadge
@@ -181,9 +154,7 @@ class _NavItemContent extends StatelessWidget {
                 color: theme.colorScheme.onPrimary,
               ),
             ),
-            backgroundColor: isSelected
-                ? theme.colorScheme.onPrimary
-                : accentColor,
+            backgroundColor: accentColor,
             child: iconWidget,
           )
         : iconWidget;
@@ -204,7 +175,7 @@ class _NavItemContent extends StatelessWidget {
                     label,
                     style: theme.textTheme.labelMedium?.copyWith(
                       fontWeight: FontWeight.w700,
-                      color: theme.colorScheme.onPrimary,
+                      color: selectedColor,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,

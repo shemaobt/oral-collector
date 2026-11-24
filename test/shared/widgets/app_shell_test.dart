@@ -7,6 +7,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import 'package:oral_collector/core/auth/auth_notifier.dart';
 import 'package:oral_collector/core/auth/auth_state.dart';
+import 'package:oral_collector/core/theme/app_colors.dart';
 import 'package:oral_collector/features/auth/data/providers/role_provider.dart';
 import 'package:oral_collector/features/auth/domain/entities/user.dart';
 import 'package:oral_collector/features/invite/presentation/notifiers/invite_notifier.dart';
@@ -16,6 +17,7 @@ import 'package:oral_collector/features/recording/presentation/notifiers/recordi
 import 'package:oral_collector/l10n/app_localizations.dart';
 import 'package:oral_collector/l10n/app_localizations_en.dart';
 import 'package:oral_collector/shared/widgets/app_shell.dart';
+import 'package:oral_collector/shared/widgets/app_shell/floating_nav_bar.dart';
 
 class _FakeRecordingSessionNotifier extends RecordingSessionNotifier {
   _FakeRecordingSessionNotifier(this._initial);
@@ -236,6 +238,69 @@ void main() {
       await _pumpAtTextScale(tester, size: const Size(400, 800), scale: 2.0);
       expect(find.bySemanticsLabel('Record tab'), findsOneWidget);
       expect(tester.takeException(), isNull);
+    });
+  });
+
+  group('phone bottom bar look (ENG-2838)', () {
+    final colors = AppColors.light;
+
+    Future<void> pumpPhone(WidgetTester tester) =>
+        _pumpAtTextScale(tester, size: const Size(400, 800), scale: 1.0);
+
+    BoxDecoration? decorationWhere(bool Function(BoxDecoration) test) {
+      for (final box
+          in find
+              .byType(Container)
+              .evaluate()
+              .map((e) => (e.widget as Container).decoration)) {
+        if (box is BoxDecoration && test(box)) return box;
+      }
+      return null;
+    }
+
+    testWidgets('bar reads card with a 1.5 border in the border colour', (
+      tester,
+    ) async {
+      await pumpPhone(tester);
+      final bar = decorationWhere((d) => d.color == colors.card);
+      expect(bar, isNotNull);
+      expect(bar!.border!.top.color, colors.border);
+      expect(bar.border!.top.width, 1.5);
+      expect(
+        tester.getSize(find.byType(FloatingNavBar)).height,
+        greaterThanOrEqualTo(70),
+      );
+    });
+
+    testWidgets('selected item reads surfaceAlt with a primary label', (
+      tester,
+    ) async {
+      await pumpPhone(tester);
+      final selected = tester
+          .widgetList<AnimatedContainer>(find.byType(AnimatedContainer))
+          .map((c) => (c.decoration as BoxDecoration).color)
+          .whereType<Color>();
+      expect(selected, contains(colors.surfaceAlt));
+      final label = tester.widget<Text>(
+        find.descendant(
+          of: find.byType(FloatingNavBar),
+          matching: find.text('Home'),
+        ),
+      );
+      expect(label.style!.color, colors.primary);
+    });
+
+    testWidgets('unselected items read secondary', (tester) async {
+      await pumpPhone(tester);
+      final icons = tester
+          .widgetList<Icon>(
+            find.descendant(
+              of: find.byType(FloatingNavBar),
+              matching: find.byType(Icon),
+            ),
+          )
+          .map((i) => i.color);
+      expect(icons, contains(colors.secondary));
     });
   });
 
