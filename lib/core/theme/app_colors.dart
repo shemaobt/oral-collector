@@ -17,6 +17,15 @@ class AppColorSet extends ThemeExtension<AppColorSet> {
   final Color warning;
   final Color border;
   final Color error;
+  final Color wash;
+  final Color deep;
+  final Color soft;
+  final Color brickSoft;
+  final Color wood;
+  final Color woodSoft;
+  final Color woodText;
+  final Color bridgeSoft;
+  final Color slab;
 
   const AppColorSet({
     required this.primary,
@@ -35,6 +44,15 @@ class AppColorSet extends ThemeExtension<AppColorSet> {
     required this.warning,
     required this.border,
     required this.error,
+    required this.wash,
+    required this.deep,
+    required this.soft,
+    required this.brickSoft,
+    required this.wood,
+    required this.woodSoft,
+    required this.woodText,
+    required this.bridgeSoft,
+    required this.slab,
   });
 
   @override
@@ -55,6 +73,15 @@ class AppColorSet extends ThemeExtension<AppColorSet> {
     Color? warning,
     Color? border,
     Color? error,
+    Color? wash,
+    Color? deep,
+    Color? soft,
+    Color? brickSoft,
+    Color? wood,
+    Color? woodSoft,
+    Color? woodText,
+    Color? bridgeSoft,
+    Color? slab,
   }) {
     return AppColorSet(
       primary: primary ?? this.primary,
@@ -73,6 +100,15 @@ class AppColorSet extends ThemeExtension<AppColorSet> {
       warning: warning ?? this.warning,
       border: border ?? this.border,
       error: error ?? this.error,
+      wash: wash ?? this.wash,
+      deep: deep ?? this.deep,
+      soft: soft ?? this.soft,
+      brickSoft: brickSoft ?? this.brickSoft,
+      wood: wood ?? this.wood,
+      woodSoft: woodSoft ?? this.woodSoft,
+      woodText: woodText ?? this.woodText,
+      bridgeSoft: bridgeSoft ?? this.bridgeSoft,
+      slab: slab ?? this.slab,
     );
   }
 
@@ -96,6 +132,15 @@ class AppColorSet extends ThemeExtension<AppColorSet> {
       warning: Color.lerp(warning, other.warning, t)!,
       border: Color.lerp(border, other.border, t)!,
       error: Color.lerp(error, other.error, t)!,
+      wash: Color.lerp(wash, other.wash, t)!,
+      deep: Color.lerp(deep, other.deep, t)!,
+      soft: Color.lerp(soft, other.soft, t)!,
+      brickSoft: Color.lerp(brickSoft, other.brickSoft, t)!,
+      wood: Color.lerp(wood, other.wood, t)!,
+      woodSoft: Color.lerp(woodSoft, other.woodSoft, t)!,
+      woodText: Color.lerp(woodText, other.woodText, t)!,
+      bridgeSoft: Color.lerp(bridgeSoft, other.bridgeSoft, t)!,
+      slab: Color.lerp(slab, other.slab, t)!,
     );
   }
 
@@ -118,11 +163,20 @@ class AppColorSet extends ThemeExtension<AppColorSet> {
         other.chipSurface == chipSurface &&
         other.warning == warning &&
         other.border == border &&
-        other.error == error;
+        other.error == error &&
+        other.wash == wash &&
+        other.deep == deep &&
+        other.soft == soft &&
+        other.brickSoft == brickSoft &&
+        other.wood == wood &&
+        other.woodSoft == woodSoft &&
+        other.woodText == woodText &&
+        other.bridgeSoft == bridgeSoft &&
+        other.slab == slab;
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     primary,
     accent,
     background,
@@ -139,7 +193,16 @@ class AppColorSet extends ThemeExtension<AppColorSet> {
     warning,
     border,
     error,
-  );
+    wash,
+    deep,
+    soft,
+    brickSoft,
+    wood,
+    woodSoft,
+    woodText,
+    bridgeSoft,
+    slab,
+  ]);
 }
 
 abstract class AppColors {
@@ -238,6 +301,15 @@ abstract class AppColors {
     warning: warning,
     border: border,
     error: error,
+    wash: Color(0xFFE3DFCA),
+    deep: Color(0xFFA63B00),
+    soft: Color(0xFFF9DAC4),
+    brickSoft: Color(0xFFF6D7D2),
+    wood: Color(0xFFC7A268),
+    woodSoft: Color(0xFFF4E3BF),
+    woodText: Color(0xFF6E4F1C),
+    bridgeSoft: Color(0xFFD3E6E0),
+    slab: Color(0xFF34331A),
   );
 
   static const dark = AppColorSet(
@@ -257,5 +329,14 @@ abstract class AppColors {
     warning: darkWarning,
     border: darkBorder,
     error: error,
+    wash: Color(0xFF383124),
+    deep: Color(0xFFF2955A),
+    soft: Color(0xFF3A2416),
+    brickSoft: Color(0xFF3A1F1B),
+    wood: Color(0xFFE2C08F),
+    woodSoft: Color(0xFF332A1B),
+    woodText: Color(0xFFE2C08F),
+    bridgeSoft: Color(0xFF1D2A27),
+    slab: Color(0xFF2C271D),
   );
 }
