@@ -38,7 +38,7 @@ class AppDisc extends StatelessWidget {
       DiscTone.g2 => (genres[1].disc, genres[1].onDisc),
       DiscTone.g3 => (genres[2].disc, genres[2].onDisc),
       DiscTone.g4 => (genres[3].disc, genres[3].onDisc),
-      DiscTone.none => (Colors.transparent, colors.secondary),
+      DiscTone.none => (AppColors.transparent, colors.secondary),
     };
     return Container(
       width: size.diameter,
