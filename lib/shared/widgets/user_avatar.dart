@@ -40,27 +40,38 @@ class UserAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final diameter = radius * 2;
 
-    if (_isRasterUrl) {
-      return CircleAvatar(
-        radius: radius,
-        backgroundImage: NetworkImage(avatarUrl!),
-        backgroundColor: colors.accent.withValues(alpha: 0.15),
-        onBackgroundImageError: (_, _) {},
-      );
-    }
-
-    return CircleAvatar(
-      radius: radius,
-      backgroundColor: colors.accent.withValues(alpha: 0.15),
-      child: Text(
-        _initials,
-        style: TextStyle(
-          fontSize: radius * 0.65,
-          fontWeight: FontWeight.w800,
-          color: colors.accent,
-        ),
+    return Container(
+      width: diameter,
+      height: diameter,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: colors.wood,
+        image: _isRasterUrl
+            ? DecorationImage(
+                image: NetworkImage(avatarUrl!),
+                fit: BoxFit.cover,
+                onError: (_, _) {},
+              )
+            : null,
+        boxShadow: [
+          BoxShadow(color: colors.wood, spreadRadius: 4.5),
+          BoxShadow(color: colors.background, spreadRadius: 3),
+        ],
       ),
+      child: _isRasterUrl
+          ? null
+          : Text(
+              _initials,
+              style: TextStyle(
+                fontFamily: 'CaveatBrush',
+                fontSize: diameter * 0.41,
+                color: dark ? colors.background : colors.slab,
+              ),
+            ),
     );
   }
 }
