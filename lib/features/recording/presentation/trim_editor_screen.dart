@@ -11,6 +11,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/l10n/content_l10n.dart';
+import '../../../core/router/navigation.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../shared/utils/error_helpers.dart';
@@ -420,13 +421,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
     );
   }
 
-  void _leave() {
-    if (context.canPop()) {
-      context.pop();
-    } else {
-      context.go('/recordings');
-    }
-  }
+  void _leave() => popOrGo(context, '/recording/${widget.recordingId}');
 
   void _confirmExcludeRange() {
     final draft = _excludeDraft;
@@ -596,7 +591,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
     if (state.isLoading) {
       return Scaffold(
         appBar: AppBar(
-          leading: const BackButton(),
+          leading: BackButton(onPressed: _leave),
           title: Text(l10n.trim_title),
         ),
         body: const Center(child: CircularProgressIndicator()),
@@ -613,7 +608,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
     if (errorText != null) {
       return Scaffold(
         appBar: AppBar(
-          leading: const BackButton(),
+          leading: BackButton(onPressed: _leave),
           title: Text(l10n.trim_title),
         ),
         body: Center(
@@ -643,7 +638,7 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
     if (state.recording == null) {
       return Scaffold(
         appBar: AppBar(
-          leading: const BackButton(),
+          leading: BackButton(onPressed: _leave),
           title: Text(l10n.trim_title),
         ),
         body: Center(child: Text(l10n.trim_notFound)),
@@ -784,17 +779,11 @@ class _TrimEditorScreenState extends ConsumerState<TrimEditorScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        leading: const BackButton(),
+        leading: BackButton(onPressed: _leave),
         title: Text(l10n.trim_title),
         actions: [
           TextButton(
-            onPressed: () {
-              if (context.canPop()) {
-                context.pop();
-              } else {
-                context.go('/recordings');
-              }
-            },
+            onPressed: _leave,
             child: Text(
               l10n.common_cancel,
               style: theme.textTheme.bodyMedium?.copyWith(

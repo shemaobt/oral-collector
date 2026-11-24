@@ -13,6 +13,7 @@ import '../../../../core/l10n/content_l10n.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/auth/auth_notifier.dart';
 import '../../../core/platform/file_ops.dart' as file_ops;
+import '../../../core/router/navigation.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../shared/utils/format.dart';
@@ -360,7 +361,11 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     if (kIsWeb && recording.serverId != null) {
       if (!mounted) return;
       unawaited(
-        context.push('/recording/${recording.serverId ?? recording.id}/trim'),
+        openScreen<void>(
+          context,
+          ref,
+          '/recording/${recording.serverId ?? recording.id}/trim',
+        ),
       );
       return;
     }
@@ -377,7 +382,9 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     }
 
     if (!mounted) return;
-    final result = await context.push<bool>(
+    final result = await openScreen<bool>(
+      context,
+      ref,
       '/recording/${widget.recordingId}/trim',
     );
     if (result == true) {
@@ -793,7 +800,9 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
 
     if (state.isLoading) {
       return Scaffold(
-        appBar: AppBar(leading: const BackButton()),
+        appBar: AppBar(
+          leading: BackButton(onPressed: () => popOrGo(context, '/recordings')),
+        ),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
@@ -801,7 +810,9 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
     final recording = state.recording;
     if (recording == null) {
       return Scaffold(
-        appBar: AppBar(leading: const BackButton()),
+        appBar: AppBar(
+          leading: BackButton(onPressed: () => popOrGo(context, '/recordings')),
+        ),
         body: Center(child: Text(l10n.recording_notFound)),
       );
     }
@@ -977,7 +988,12 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
               if (constraints.maxWidth >= 700) {
                 return Column(
                   children: [
-                    AppBar(leading: const BackButton(), actions: [?menuButton]),
+                    AppBar(
+                      leading: BackButton(
+                        onPressed: () => popOrGo(context, '/recordings'),
+                      ),
+                      actions: [?menuButton],
+                    ),
                     Expanded(
                       child: SingleChildScrollView(
                         padding: const EdgeInsets.all(SpacingScale.s24),
@@ -1039,7 +1055,10 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
                         color: colors.card.withValues(alpha: 0.6),
                         shape: const CircleBorder(),
                         clipBehavior: Clip.antiAlias,
-                        child: BackButton(color: colors.foreground),
+                        child: BackButton(
+                          color: colors.foreground,
+                          onPressed: () => popOrGo(context, '/recordings'),
+                        ),
                       ),
                     ),
                     actions: [

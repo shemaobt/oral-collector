@@ -18,6 +18,7 @@ import '../../../core/platform/ffmpeg_ops.dart' as ffmpeg_ops;
 import '../../../core/platform/file_ops.dart' as file_ops;
 import '../../../core/platform/file_source.dart';
 import '../../../core/platform/web_file_picker.dart' as web_picker;
+import '../../../core/router/navigation.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../shared/widgets/error_snack_bar.dart';
@@ -116,7 +117,7 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
         );
         if (sources.isEmpty) {
           if (mounted && _entries.isEmpty) {
-            unawaited(Navigator.of(context).maybePop());
+            popOrGo(context, '/recordings');
           }
           return;
         }
@@ -132,7 +133,7 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
         );
         if (result == null || result.files.isEmpty) {
           if (mounted && _entries.isEmpty) {
-            unawaited(Navigator.of(context).maybePop());
+            popOrGo(context, '/recordings');
           }
           return;
         }
@@ -155,7 +156,7 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
         final l10n = AppLocalizations.of(context);
         showErrorSnackBar(context, e, template: l10n.import_pickError);
         if (_entries.isEmpty) {
-          unawaited(Navigator.of(context).maybePop());
+          popOrGo(context, '/recordings');
         }
       }
     }
@@ -178,7 +179,7 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
         final l10n = AppLocalizations.of(context);
         showErrorSnackBar(context, e, template: l10n.import_pickError);
         if (_entries.isEmpty) {
-          unawaited(Navigator.of(context).maybePop());
+          popOrGo(context, '/recordings');
         }
       }
     }
@@ -270,7 +271,7 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
     if (newEntries.isEmpty) {
       _showRejectedSnack(rejected);
       if (_entries.isEmpty) {
-        unawaited(Navigator.of(context).maybePop());
+        popOrGo(context, '/recordings');
       } else {
         setState(() => _isAnalyzing = false);
       }
@@ -355,7 +356,7 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
       _errorKeys.remove(id);
     });
     if (_entries.isEmpty && mounted) {
-      Navigator.of(context).maybePop();
+      popOrGo(context, '/recordings');
     }
   }
 
@@ -482,7 +483,7 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
       );
 
       if (mounted) {
-        unawaited(Navigator.of(context).maybePop());
+        popOrGo(context, '/recordings');
       }
     } catch (e) {
       if (mounted) {
@@ -625,7 +626,7 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        leading: BackButton(onPressed: () => Navigator.of(context).maybePop()),
+        leading: BackButton(onPressed: () => popOrGo(context, '/recordings')),
         title: Text(l10n.import_title),
       ),
       body: ImportDropZone(
@@ -669,7 +670,7 @@ class _FileImportScreenState extends ConsumerState<FileImportScreen> {
                 hasWavFiles: _hasWavFiles,
                 compressWav: _compressWav,
                 onCompressWavChanged: (v) => setState(() => _compressWav = v),
-                onCancel: () => Navigator.of(context).maybePop(),
+                onCancel: () => popOrGo(context, '/recordings'),
                 onSave: _onSavePressed,
                 showFormatsBanner: !_formatsBannerDismissed,
                 onDismissFormatsBanner: () =>

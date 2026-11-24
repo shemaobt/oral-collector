@@ -8,6 +8,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/l10n/content_l10n.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/observability/error_reporter.dart';
+import '../../../core/router/navigation.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../features/auth/data/providers/role_provider.dart';
@@ -490,7 +491,9 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
                                     : null,
                                 onDelete: () => _deleteRecording(recording),
                                 onTap: () async {
-                                  await context.push(
+                                  await openScreen<void>(
+                                    context,
+                                    ref,
                                     '/recording/${recording.id}',
                                   );
                                   unawaited(
@@ -527,11 +530,11 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
   }
 }
 
-class _ImportFab extends StatelessWidget {
+class _ImportFab extends ConsumerWidget {
   const _ImportFab();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final colors = AppColors.of(context);
     return Semantics(
@@ -541,7 +544,7 @@ class _ImportFab extends StatelessWidget {
         color: AppColors.transparent,
         shape: const CircleBorder(),
         child: InkWell(
-          onTap: () => context.push('/import-file'),
+          onTap: () => openScreen<void>(context, ref, '/import-file'),
           customBorder: const CircleBorder(),
           child: Container(
             width: 62,
