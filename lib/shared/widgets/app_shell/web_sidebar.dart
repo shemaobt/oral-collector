@@ -52,7 +52,6 @@ class _WebSidebarState extends ConsumerState<WebSidebar> {
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final authState = ref.watch(authNotifierProvider);
     final user = authState.currentUser;
     final l10n = AppLocalizations.of(context);
@@ -60,14 +59,10 @@ class _WebSidebarState extends ConsumerState<WebSidebar> {
     return AnimatedContainer(
       duration: DurationScale.ms200,
       curve: Curves.easeInOut,
-      width: _expanded ? 220 : 72,
+      width: _expanded ? 232 : 72,
       decoration: BoxDecoration(
-        color: colors.card,
-        border: Border(
-          right: BorderSide(
-            color: colors.border.withValues(alpha: isDark ? 0.15 : 0.2),
-          ),
-        ),
+        color: colors.background,
+        border: Border(right: BorderSide(color: colors.border)),
       ),
       child: Column(
         children: [
@@ -144,6 +139,8 @@ class _WebSidebarState extends ConsumerState<WebSidebar> {
   }
 }
 
+const double _pillHeight = 46;
+
 class _SidebarNavItem extends StatelessWidget {
   const _SidebarNavItem({
     required this.icon,
@@ -172,7 +169,7 @@ class _SidebarNavItem extends StatelessWidget {
     final iconWidget = Icon(
       icon,
       size: 20,
-      color: isSelected ? colors.accent : colors.secondary,
+      color: isSelected ? colors.onPrimary : colors.secondary,
     );
 
     final displayIcon = hasBadge
@@ -196,18 +193,15 @@ class _SidebarNavItem extends StatelessWidget {
         color: AppColors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(RadiusScale.r8),
+          borderRadius: BorderRadius.circular(_pillHeight),
           child: AnimatedContainer(
             duration: DurationScale.ms200,
-            padding: EdgeInsets.symmetric(
-              horizontal: expanded ? 12 : 0,
-              vertical: SpacingScale.s8,
-            ),
+            constraints: const BoxConstraints(minHeight: _pillHeight),
+            alignment: Alignment.center,
+            padding: EdgeInsets.symmetric(horizontal: expanded ? 16 : 0),
             decoration: BoxDecoration(
-              color: isSelected
-                  ? colors.accent.withValues(alpha: 0.1)
-                  : AppColors.transparent,
-              borderRadius: BorderRadius.circular(RadiusScale.r8),
+              color: isSelected ? colors.primary : AppColors.transparent,
+              borderRadius: BorderRadius.circular(_pillHeight),
             ),
             child: expanded
                 ? Row(
@@ -219,7 +213,7 @@ class _SidebarNavItem extends StatelessWidget {
                           label,
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: isSelected
-                                ? colors.accent
+                                ? colors.onPrimary
                                 : colors.secondary,
                             fontWeight: isSelected
                                 ? FontWeight.w700
