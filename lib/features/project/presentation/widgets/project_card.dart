@@ -3,7 +3,6 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_palettes.dart';
 import '../../../../core/theme/tokens.dart';
 import '../../../../shared/utils/format.dart';
 import '../../domain/entities/project.dart';
@@ -15,13 +14,11 @@ class ProjectCard extends StatelessWidget {
     required this.project,
     required this.onTap,
     required this.isActive,
-    required this.colorIndex,
   });
 
   final Project project;
   final VoidCallback onTap;
   final bool isActive;
-  final int colorIndex;
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +26,6 @@ class ProjectCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = AppColors.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final cardAccent = AppPalettes.projectAccent(colorIndex);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: SpacingScale.s16),
@@ -60,14 +56,6 @@ class ProjectCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  height: 4,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [cardAccent, cardAccent.withValues(alpha: 0.3)],
-                    ),
-                  ),
-                ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(
                     SpacingScale.s20,
@@ -85,7 +73,7 @@ class ProjectCard extends StatelessWidget {
                             width: 44,
                             height: 44,
                             decoration: BoxDecoration(
-                              color: cardAccent.withValues(alpha: 0.15),
+                              color: colors.primary,
                               borderRadius: BorderRadius.circular(
                                 RadiusScale.r12,
                               ),
@@ -96,7 +84,7 @@ class ProjectCard extends StatelessWidget {
                                     ? project.name[0].toUpperCase()
                                     : '?',
                                 style: theme.textTheme.titleLarge?.copyWith(
-                                  color: cardAccent,
+                                  color: colors.onPrimary,
                                   fontWeight: FontWeight.w800,
                                 ),
                               ),

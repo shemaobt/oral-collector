@@ -139,7 +139,6 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
                 return ProjectCard(
                   project: project,
                   isActive: project.id == activeId,
-                  colorIndex: index,
                   onTap: () => context.push('/project/${project.id}/settings'),
                 );
               },
@@ -159,7 +158,6 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
               return ProjectCard(
                 project: project,
                 isActive: project.id == activeId,
-                colorIndex: index,
                 onTap: () => context.push('/project/${project.id}/settings'),
               );
             },

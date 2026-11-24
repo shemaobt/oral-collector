@@ -14,8 +14,8 @@ Path: @/lib/core/theme
   [tokens.dart](tokens.dart)).
 - This directory is the **single source of all `Color` construction** in the
   app. Alongside the themed palette it also holds the non-themed color machinery:
-  the categorical/index-addressed decorative accent palettes
-  ([app_palettes.dart](app_palettes.dart)) and the runtime hex-string parser
+  the genre colours
+  ([genre_colors.dart](genre_colors.dart)) and the runtime hex-string parser
   ([color_hex.dart](color_hex.dart)). Both live here because the `obt_lints`
   rules forbid raw `Color(...)` everywhere outside this folder.
 - All token families follow one **hybrid** pattern: a source-of-truth scale
@@ -121,9 +121,8 @@ Path: @/lib/core/theme
   neutral anchors `white`/`black`/`transparent` (pure primitives, distinct from
   the off-white `brandBranco` / near-black `brandPreto` brand tokens) plus a few
   long-tail semantic tokens (`meterWarning`, the `warningContainer` /
-  `onWarningContainer` storage-banner pair, `authHeroAccent`); the categorical
-  decorative accents moved to `AppPalettes` ([app_palettes.dart](app_palettes.dart),
-  ENG-116) and the runtime hex parser to [color_hex.dart](color_hex.dart).
+  `onWarningContainer` storage-banner pair, `authHeroAccent`); the genre
+  accents live in `GenreColors` ([genre_colors.dart](genre_colors.dart)) and the runtime hex parser to [color_hex.dart](color_hex.dart).
 - Token values and contracts are pinned by tests under
   [/test/core/theme/](/test/core/theme) (colors in `app_colors_test.dart`;
   spacing/radii/durations/opacity, the `context.*` accessor, the resolved
@@ -160,17 +159,11 @@ SpacingScale/RadiusScale/DurationScale/OpacityScale ─► AppSpacing/AppRadii/A
   spacing/radii/opacity, `lerpDuration` for motion) guarded with `if (other is!
   T) return this;`. [app_theme.dart](app_theme.dart) also builds the typography
   and the component themes.
-- **`AppPalettes`** ([app_palettes.dart](app_palettes.dart)) holds the
-  categorical accent palettes that were previously inline `Color(0x…)` arrays in
-  feature widgets — the genre-card and project-card accent lists plus the hero
-  genre-card accent and the default scrolling-waveform cursor. It exposes the
-  two `const List<Color>` palettes and pure helpers `genreAccent(int)` /
-  `projectAccent(int)` that pick by list position, cycling via `index % length`.
-  These are addressed by *index*, not by a `ColorScheme` role, so they are
-  non-semantic and do not belong in `AppColorSet`. Deliberately a plain
-  `abstract class` of `static const` — **not** a `ThemeExtension` — because the
-  palettes are single-theme and fixed (value-identical), so `lerp`/`copyWith`
-  would be dead weight.
+- **`GenreColors`** ([genre_colors.dart](genre_colors.dart)) is a
+  `ThemeExtension` with the four genre brand colours (g1–g4) per mode, each with
+  a tinted card background. `forGenre(index, id)` picks by list position, cycling
+  every four, and returns `null` for the unclassified genre, which has no colour.
+  Read it through `GenreColors.of(context)`.
 - **`parseHexColor`** ([color_hex.dart](color_hex.dart)) turns a `#RRGGBB` /
   `RRGGBB` string into an opaque `Color`, returning a fallback (`AppColors.primary`
   by default) on null/malformed input. It lives here, not with the genre helpers,

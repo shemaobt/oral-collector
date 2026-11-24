@@ -4,12 +4,13 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/l10n/content_l10n.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_palettes.dart';
+import '../../../../core/theme/genre_colors.dart';
 import '../../../../core/theme/tokens.dart';
 import '../../../../shared/utils/format.dart';
 import '../../../../shared/utils/genre_helpers.dart';
 import '../../../genre/domain/entities/genre.dart';
 import '../../../project/domain/entities/stats.dart';
+import 'genre_disc.dart';
 import 'mini_stat_badge.dart';
 
 class HeroGenreCard extends StatelessWidget {
@@ -24,23 +25,16 @@ class HeroGenreCard extends StatelessWidget {
   final GenreStat? genreStat;
   final VoidCallback onTap;
 
-  static const _heroColor = AppPalettes.heroGenreAccent;
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = AppColors.of(context);
     final l10n = AppLocalizations.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final tone = GenreColors.of(context).forGenre(0, genre.id);
     final icon = mapGenreIcon(genre.icon);
     final count = genreStat?.recordingCount ?? 0;
     final dur = genreStat?.totalDurationSeconds ?? 0;
-
-    final bg = Color.lerp(
-      isDark ? colors.card : AppColors.white,
-      _heroColor,
-      isDark ? 0.22 : 0.22,
-    )!;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(
@@ -50,15 +44,9 @@ class HeroGenreCard extends StatelessWidget {
         SpacingScale.s12,
       ),
       child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(RadiusScale.r24),
-          border: isDark
-              ? null
-              : Border.all(color: _heroColor.withValues(alpha: 0.18)),
-        ),
+        decoration: genreCardDecoration(colors, tone, RadiusScale.r24),
         child: Material(
-          color: bg,
-          borderRadius: BorderRadius.circular(RadiusScale.r24),
+          color: AppColors.transparent,
           child: InkWell(
             onTap: onTap,
             borderRadius: BorderRadius.circular(RadiusScale.r24),
@@ -66,16 +54,7 @@ class HeroGenreCard extends StatelessWidget {
               padding: const EdgeInsets.all(SpacingScale.s20),
               child: Row(
                 children: [
-                  Container(
-                    width: 58,
-                    height: 58,
-                    decoration: BoxDecoration(
-                      color: (isDark ? colors.card : AppColors.white)
-                          .withValues(alpha: 0.75),
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    child: Icon(icon, size: 28, color: _heroColor),
-                  ),
+                  GenreDisc(tone: tone, icon: icon, size: 58, iconSize: 28),
                   const SizedBox(width: 18),
 
                   Expanded(
@@ -110,17 +89,17 @@ class HeroGenreCard extends StatelessWidget {
                             MiniStatBadge(
                               icon: LucideIcons.mic,
                               text: '$count',
-                              color: _heroColor,
+                              color: colors.secondary,
                               isDark: isDark,
-                              bgBase: isDark ? colors.card : AppColors.white,
+                              bgBase: colors.card,
                             ),
                             const SizedBox(width: SpacingScale.s8),
                             MiniStatBadge(
                               icon: LucideIcons.clock,
                               text: formatDurationCompact(dur),
-                              color: _heroColor,
+                              color: colors.secondary,
                               isDark: isDark,
-                              bgBase: isDark ? colors.card : AppColors.white,
+                              bgBase: colors.card,
                             ),
                           ],
                         ),
