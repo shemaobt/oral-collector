@@ -28,12 +28,7 @@ Future<void> _pump(WidgetTester tester, double scale) async {
   await pumpAtTextScale(
     tester,
     scale: scale,
-    child: ProjectCard(
-      project: _project,
-      onTap: () {},
-      isActive: true,
-      colorIndex: 0,
-    ),
+    child: ProjectCard(project: _project, onTap: () {}, isActive: true),
   );
   await tester.pump();
 }

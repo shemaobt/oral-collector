@@ -4,12 +4,13 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/l10n/content_l10n.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_palettes.dart';
+import '../../../../core/theme/genre_colors.dart';
 import '../../../../core/theme/tokens.dart';
 import '../../../../shared/utils/format.dart';
 import '../../../../shared/utils/genre_helpers.dart';
 import '../../../genre/domain/entities/genre.dart';
 import '../../../project/domain/entities/stats.dart';
+import 'genre_disc.dart';
 
 class GenreCard extends StatelessWidget {
   const GenreCard({
@@ -30,28 +31,15 @@ class GenreCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = AppColors.of(context);
     final l10n = AppLocalizations.of(context);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final icon = mapGenreIcon(genre.icon);
-    final accent = AppPalettes.genreAccent(colorIndex);
+    final tone = GenreColors.of(context).forGenre(colorIndex, genre.id);
     final count = genreStat?.recordingCount ?? 0;
     final dur = genreStat?.totalDurationSeconds ?? 0;
 
-    final cardBg = Color.lerp(
-      isDark ? colors.card : AppColors.white,
-      accent,
-      isDark ? 0.18 : 0.22,
-    )!;
-
     return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(RadiusScale.r20),
-        border: isDark
-            ? null
-            : Border.all(color: accent.withValues(alpha: 0.18)),
-      ),
+      decoration: genreCardDecoration(colors, tone, RadiusScale.r20),
       child: Material(
-        color: cardBg,
-        borderRadius: BorderRadius.circular(RadiusScale.r20),
+        color: AppColors.transparent,
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(RadiusScale.r20),
@@ -60,17 +48,7 @@ class GenreCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: (isDark ? colors.card : AppColors.white).withValues(
-                      alpha: 0.80,
-                    ),
-                    borderRadius: BorderRadius.circular(RadiusScale.r16),
-                  ),
-                  child: Icon(icon, size: 20, color: accent),
-                ),
+                GenreDisc(tone: tone, icon: icon, size: 44, iconSize: 20),
                 const SizedBox(height: SpacingScale.s12),
 
                 Text(
