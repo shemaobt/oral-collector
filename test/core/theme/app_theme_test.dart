@@ -110,6 +110,10 @@ void _expectBrushTitles(ThemeData theme) {
     expect(style?.fontSize, 28);
     expect(style?.fontFamilyFallback, [_sans]);
   }
+  expect(theme.appBarTheme.toolbarHeight, 64);
+  final line = (theme.appBarTheme.shape! as Border).bottom;
+  expect(line.width, 1.5);
+  expect(line.color, theme.extension<AppColorSet>()!.wash);
 }
 
 T? _on<T>(WidgetStateProperty<T>? p, [Set<WidgetState> s = const {}]) =>

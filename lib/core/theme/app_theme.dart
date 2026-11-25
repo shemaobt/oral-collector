@@ -156,6 +156,24 @@ abstract class AppTheme {
   }
 
   static const _noTint = Colors.transparent;
+  static const _topBarHeight = 64.0;
+  static const _topBarLine = 1.5;
+
+  static AppBarTheme _appBarTheme(AppColorSet c, TextTheme text) {
+    return AppBarTheme(
+      toolbarHeight: _topBarHeight,
+      backgroundColor: c.background,
+      foregroundColor: c.foreground,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      surfaceTintColor: _noTint,
+      centerTitle: false,
+      titleTextStyle: text.headlineLarge,
+      shape: Border(
+        bottom: BorderSide(color: c.wash, width: _topBarLine),
+      ),
+    );
+  }
 
   static DialogThemeData _dialogTheme(AppColorSet c, TextTheme text) {
     return DialogThemeData(
@@ -356,20 +374,7 @@ abstract class AppTheme {
       ),
       scaffoldBackgroundColor: AppColors.background,
       textTheme: textTheme,
-      appBarTheme: AppBarTheme(
-        backgroundColor: AppColors.background,
-        foregroundColor: AppColors.foreground,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        titleTextStyle: textTheme.headlineLarge,
-        shape: Border(
-          bottom: BorderSide(
-            color: AppColors.border.withValues(alpha: OpacityScale.o50),
-            width: 1,
-          ),
-        ),
-      ),
+      appBarTheme: _appBarTheme(AppColors.light, textTheme),
       cardTheme: CardThemeData(
         color: AppColors.card,
         elevation: 0,
@@ -496,19 +501,7 @@ abstract class AppTheme {
       ),
       scaffoldBackgroundColor: AppColors.darkBackground,
       textTheme: textTheme,
-      appBarTheme: AppBarTheme(
-        backgroundColor: AppColors.darkSurface,
-        foregroundColor: AppColors.darkForeground,
-        elevation: 0,
-        surfaceTintColor: Colors.transparent,
-        titleTextStyle: textTheme.headlineLarge,
-        shape: Border(
-          bottom: BorderSide(
-            color: AppColors.darkBorder.withValues(alpha: OpacityScale.o40),
-            width: 1,
-          ),
-        ),
-      ),
+      appBarTheme: _appBarTheme(AppColors.dark, textTheme),
       cardTheme: CardThemeData(
         color: AppColors.darkSurface,
         elevation: 1,

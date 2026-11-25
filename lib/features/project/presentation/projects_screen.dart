@@ -77,7 +77,6 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
       appBar: ScreenHeader(
         title: l10n.project_projects,
         subtitle: l10n.project_subtitle,
-        icon: LucideIcons.folderOpen,
         actions: const [SyncStatusIndicator()],
       ),
       floatingActionButton: canCreate

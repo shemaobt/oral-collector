@@ -8,7 +8,7 @@ Path: @/lib/shared/widgets
   the app chrome (`app_shell.dart`'s responsive nav scaffold, composed from the
   mobile bottom bar / web sidebar sub-widgets in
   [app_shell/](app_shell), and
-  [screen_header.dart](screen_header.dart)'s gradient `AppBar`/`SliverAppBar`),
+  [screen_header.dart](screen_header.dart)'s flat `AppBar`/`SliverAppBar`),
   list/section affordances ([empty_state.dart](empty_state.dart),
   `section_header.dart`, `status_banner.dart`), status chips
   ([cleaning_status_badge.dart](cleaning_status_badge.dart),

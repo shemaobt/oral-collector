@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/l10n/content_l10n.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -148,21 +147,6 @@ class _RecordingFlowScreenState extends ConsumerState<RecordingFlowScreen> {
     }
   }
 
-  IconData get _icon {
-    switch (_currentStep) {
-      case _FlowStep.genre:
-        return LucideIcons.music;
-      case _FlowStep.subcategory:
-        return LucideIcons.layers;
-      case _FlowStep.register:
-        return LucideIcons.volume2;
-      case _FlowStep.recording:
-        return LucideIcons.mic;
-      case _FlowStep.confirmation:
-        return LucideIcons.checkCircle2;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -170,11 +154,7 @@ class _RecordingFlowScreenState extends ConsumerState<RecordingFlowScreen> {
 
     return RecordingNavigationGuard(
       child: Scaffold(
-        appBar: ScreenHeader(
-          title: _title(l10n),
-          subtitle: _subtitle(l10n),
-          icon: _icon,
-        ),
+        appBar: ScreenHeader(title: _title(l10n), subtitle: _subtitle(l10n)),
         body: genreState.isLoading && genreState.genres.isEmpty
             ? const Center(child: CircularProgressIndicator())
             : _buildStep(genreState, l10n),

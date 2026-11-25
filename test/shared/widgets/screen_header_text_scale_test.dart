@@ -1,9 +1,8 @@
 // ENG-178: the shared ScreenHeader / ScreenHeaderSliver must keep the title and
-// subtitle inside the fixed 96px toolbar under large system fonts without
+// subtitle inside the fixed 96px header under large system fonts without
 // overflowing. Rendered on a realistic phone viewport via pumpAtTextScale.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 import 'package:oral_collector/shared/widgets/screen_header.dart';
 
 import '../../support/text_scale.dart';
@@ -18,11 +17,7 @@ void main() {
         tester,
         scale: scale,
         child: const Scaffold(
-          appBar: ScreenHeader(
-            title: _title,
-            subtitle: _subtitle,
-            icon: LucideIcons.listMusic,
-          ),
+          appBar: ScreenHeader(title: _title, subtitle: _subtitle),
           body: SizedBox.expand(),
         ),
       );
@@ -49,11 +44,7 @@ void main() {
         scale: scale,
         child: const CustomScrollView(
           slivers: [
-            ScreenHeaderSliver(
-              title: _title,
-              subtitle: _subtitle,
-              icon: LucideIcons.listMusic,
-            ),
+            ScreenHeaderSliver(title: _title, subtitle: _subtitle),
             SliverFillRemaining(child: SizedBox()),
           ],
         ),

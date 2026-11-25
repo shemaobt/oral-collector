@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/l10n/content_l10n.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -48,7 +47,6 @@ class RecoveryConfirmScreen extends ConsumerWidget {
       appBar: ScreenHeader(
         title: l10n.recording_saveRecording,
         subtitle: l10n.quickRecord_subtitle,
-        icon: LucideIcons.save,
       ),
       body: ConfirmationStep(
         result: pending.result,

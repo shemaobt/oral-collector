@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../shared/widgets/screen_header.dart';
@@ -48,7 +47,6 @@ class _QuickRecordingScreenState extends ConsumerState<QuickRecordingScreen> {
         appBar: ScreenHeader(
           title: l10n.quickRecord_title,
           subtitle: l10n.quickRecord_subtitle,
-          icon: LucideIcons.zap,
         ),
         body: _currentStep == _QuickStep.recording
             ? RecordingStep(
