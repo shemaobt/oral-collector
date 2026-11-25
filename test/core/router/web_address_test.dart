@@ -251,7 +251,9 @@ void main() {
       tester,
       at: '/genre/g1',
       settled: false,
-      overrides: [genreNotifierProvider.overrideWith(_GenreWithSubcategory.new)],
+      overrides: [
+        genreNotifierProvider.overrideWith(_GenreWithSubcategory.new),
+      ],
     );
     await tester.pump();
 
