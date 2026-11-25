@@ -22,6 +22,7 @@ import 'package:oral_collector/features/recording/data/providers.dart';
 import 'package:oral_collector/features/recording/domain/entities/server_recording.dart';
 import 'package:oral_collector/features/recording/presentation/notifiers/recording_session_notifier.dart';
 import 'package:oral_collector/features/recording/presentation/recording_detail_screen.dart';
+import 'package:oral_collector/features/recording/presentation/recording_flow_screen.dart';
 import 'package:oral_collector/features/recording/presentation/recordings_list_screen.dart';
 import 'package:oral_collector/features/recording/presentation/trim_editor_screen.dart';
 import 'package:oral_collector/features/recording/presentation/widgets/recording_card.dart';
@@ -141,6 +142,20 @@ class _OneGenre extends FakeGenreNotifier {
   );
 }
 
+class _GenreWithSubcategory extends FakeGenreNotifier {
+  @override
+  GenreState build() => const GenreState(
+    genres: [
+      Genre(
+        id: 'g1',
+        name: 'Folk Tale',
+        sortOrder: 1,
+        subcategories: [Subcategory(id: 's1', genreId: 'g1', name: 'Fable')],
+      ),
+    ],
+  );
+}
+
 final _asAdmin = authNotifierProvider.overrideWith(_Admin.new);
 
 void main() {
@@ -227,6 +242,35 @@ void main() {
     await tester.tap(find.byType(BackButton));
     await tester.pump();
     expect(addressOf(app), '/home');
+  });
+
+  testWidgets('the microphone on a subcategory opens the flow at its address', (
+    tester,
+  ) async {
+    final app = await _pumpWeb(
+      tester,
+      at: '/genre/g1',
+      settled: false,
+      overrides: [
+        genreNotifierProvider.overrideWith(_GenreWithSubcategory.new),
+      ],
+    );
+    await tester.pump();
+
+    await tester.tap(
+      find.descendant(
+        of: find.byType(IconButton),
+        matching: find.byIcon(LucideIcons.mic),
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+
+    expect(addressOf(app), '/record?genreId=g1&subcategoryId=s1');
+    final flow = tester.widget<RecordingFlowScreen>(
+      find.byType(RecordingFlowScreen),
+    );
+    expect((flow.genreId, flow.subcategoryId), ('g1', 's1'));
   });
 
   testWidgets(

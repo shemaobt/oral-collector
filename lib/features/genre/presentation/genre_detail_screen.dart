@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -13,6 +15,7 @@ import '../../../shared/utils/format.dart';
 import '../../../shared/widgets/status_banner.dart';
 import '../../project/domain/entities/stats.dart';
 import '../../project/presentation/notifiers/stats_notifier.dart';
+import '../../recording/presentation/notifiers/recording_session_notifier.dart';
 import '../../sync/presentation/notifiers/sync_notifier.dart';
 import '../domain/entities/genre.dart';
 import 'notifiers/genre_notifier.dart';
@@ -128,7 +131,7 @@ class GenreDetailScreen extends ConsumerWidget {
   }
 }
 
-class _SubcategoryCard extends StatelessWidget {
+class _SubcategoryCard extends ConsumerWidget {
   const _SubcategoryCard({
     required this.subcategory,
     required this.genreId,
@@ -142,10 +145,13 @@ class _SubcategoryCard extends StatelessWidget {
   final SubcategoryStat? subcategoryStat;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colors = AppColors.of(context);
     final l10n = AppLocalizations.of(context);
+    final recordPath = ref.watch(isWebPlatformProvider)
+        ? '/record'
+        : '/record-flow';
     final color = parseHexColor(genreColor, colors.primary);
 
     final description = localizedSubcategoryDescription(
@@ -226,8 +232,12 @@ class _SubcategoryCard extends StatelessWidget {
                           height: SpacingScale.s40,
                           child: IconButton(
                             onPressed: () {
-                              context.push(
-                                '/record-flow?genreId=$genreId&subcategoryId=${subcategory.id}',
+                              unawaited(
+                                openScreen<void>(
+                                  context,
+                                  ref,
+                                  '$recordPath?genreId=$genreId&subcategoryId=${subcategory.id}',
+                                ),
                               );
                             },
                             icon: Icon(LucideIcons.mic, size: 18, color: color),
