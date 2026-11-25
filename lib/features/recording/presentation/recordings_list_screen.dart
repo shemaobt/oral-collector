@@ -288,7 +288,6 @@ class _RecordingsListScreenState extends ConsumerState<RecordingsListScreen>
                 ScreenHeaderSliver(
                   title: l10n.recordings_title,
                   subtitle: l10n.recordings_subtitle,
-                  icon: LucideIcons.mic,
                   actions: [
                     const SyncStatusIndicator(),
                     FiltersIconButton(
