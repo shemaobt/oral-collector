@@ -257,15 +257,11 @@ abstract class AppColors {
   static const Color success = brandVerdeClaro;
   static const Color successText = brandVerde;
 
-  /// Text and icons drawn on top of [primary]. The off-white page tone, not
-  /// pure white: `colorScheme.onPrimary` is #FFFFFF and reads colder than the
-  /// palette everywhere primary is used as a filled surface.
+  /// Text and icons drawn on top of [primary]: the page tone, not pure white.
   static const Color onPrimary = background;
   static const Color darkOnPrimary = darkBackground;
 
-  /// Backing for a small informational chip — quieter than [surfaceAlt], which
-  /// reads as a panel. Themed rather than reusing the fixed surfaceContainer
-  /// constants, which stay light and would strand dark text in dark mode.
+  /// Backing for a small informational chip.
   static const Color chipSurface = surfaceAlt;
   static const Color darkChipSurface = darkSurfaceAlt;
   static const Color warning = Color(0xFFC7A268);
@@ -290,9 +286,8 @@ abstract class AppColors {
   static const Color darkError = Color(0xFFE9C3A6);
   static const Color darkPale = Color(0xFF4B4A31);
 
-  // Neutral anchors. Pure white/black/transparent differ from the off-white
-  // (brandBranco) brand token, so they stand alone
-  // (ENG-183); migrated 1:1 from Colors.white/black/transparent call sites.
+  // Neutral anchors: pure white/black/transparent, migrated 1:1 from
+  // Colors.white/black/transparent call sites (ENG-183).
   static const Color white = Color(0xFFFFFFFF);
   static const Color black = Color(0xFF000000);
   static const Color transparent = Color(0x00000000);
