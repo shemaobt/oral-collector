@@ -20,26 +20,29 @@ class SyncStatusIndicator extends ConsumerWidget {
       return const SizedBox.shrink();
     }
 
-    return InkWell(
-      onTap: () => syncNowWithFeedback(context, ref),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 44),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 6),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              BrushSign(Sign.offline, size: 18, color: colors.secondary),
-              const SizedBox(width: 10),
-              Text(
-                l10n.sync_pending(syncState.pendingCount),
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
-                  color: colors.secondary,
+    return Semantics(
+      button: true,
+      child: InkWell(
+        onTap: () => syncNowWithFeedback(context, ref),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 44),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                BrushSign(Sign.offline, size: 18, color: colors.secondary),
+                const SizedBox(width: 10),
+                Text(
+                  l10n.sync_pending(syncState.pendingCount),
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                    color: colors.secondary,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

@@ -56,7 +56,7 @@ void main() {
     await tester.pumpWidget(_harness(const SyncState()));
     await tester.pumpAndSettle();
 
-    expect(find.byType(InkWell), findsNothing);
+    expect(tester.getSize(find.byType(SyncStatusIndicator)), Size.zero);
   });
 
   testWidgets('hidden when actively uploading (cards take over)', (
@@ -67,7 +67,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.byType(InkWell), findsNothing);
+    expect(tester.getSize(find.byType(SyncStatusIndicator)), Size.zero);
   });
 
   testWidgets('visible with pending count when offline queue is non-empty', (
@@ -76,7 +76,19 @@ void main() {
     await tester.pumpWidget(_harness(const SyncState(pendingCount: 4)));
     await tester.pumpAndSettle();
 
-    expect(find.byType(InkWell), findsOneWidget);
+    final handle = tester.ensureSemantics();
+    expect(tester.getSize(find.byType(SyncStatusIndicator)).height, 44);
+    expect(
+      tester.getSemantics(find.byType(SyncStatusIndicator)),
+      matchesSemantics(
+        isButton: true,
+        hasTapAction: true,
+        isFocusable: true,
+        hasFocusAction: true,
+        label: AppLocalizationsEn().sync_pending(4),
+      ),
+    );
+    handle.dispose();
     expect(find.textContaining('4'), findsOneWidget);
     expect(find.byType(CircularProgressIndicator), findsNothing);
   });
@@ -87,7 +99,7 @@ void main() {
     final AppLocalizations l10n = AppLocalizationsEn();
 
     Future<void> tapChip(WidgetTester tester) async {
-      await tester.tap(find.byType(InkWell));
+      await tester.tap(find.byType(SyncStatusIndicator));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 400));
     }
