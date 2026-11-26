@@ -753,26 +753,23 @@ class _StorageBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(
         horizontal: SpacingScale.s16,
         vertical: SpacingScale.s8,
       ),
-      color: AppColors.warningContainer,
+      color: colors.wood,
       child: Row(
         children: [
-          const Icon(
-            LucideIcons.alertTriangle,
-            size: 16,
-            color: AppColors.onWarningContainer,
-          ),
+          Icon(LucideIcons.alertTriangle, size: 16, color: colors.foreground),
           const SizedBox(width: SpacingScale.s8),
           Expanded(
             child: Text(
               message,
-              style: const TextStyle(
-                color: AppColors.onWarningContainer,
+              style: TextStyle(
+                color: colors.foreground,
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
               ),

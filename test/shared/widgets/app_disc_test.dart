@@ -86,7 +86,7 @@ void main() {
         expect(d.boxShadow!.last.color, colors.background);
         final text = tester.widget<Text>(find.text('MS'));
         expect(text.style!.fontFamily, 'CaveatBrush');
-        expect(text.style!.color, dark ? colors.background : colors.slab);
+        expect(text.style!.color, colors.primary);
       });
     });
   }

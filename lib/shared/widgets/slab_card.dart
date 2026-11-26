@@ -17,13 +17,11 @@ class SlabCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    final textColor = dark ? colors.foreground : colors.background;
+    final textColor = colors.onPrimary;
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: dark ? colors.card : colors.slab,
+        color: colors.primary,
         borderRadius: BorderRadius.circular(RadiusScale.r24),
-        border: dark ? Border.all(color: colors.wash, width: 1.5) : null,
       ),
       child: Padding(
         padding: padding,

@@ -49,7 +49,7 @@ BoxDecoration genreCardDecoration(
   borderRadius: BorderRadius.circular(radius),
   border: Border.all(
     color: tone == null
-        ? colors.wash
+        ? colors.border
         : tone.disc.withValues(alpha: tone.ringAlpha),
     width: 1.5,
   ),

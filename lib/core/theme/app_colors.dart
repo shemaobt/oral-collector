@@ -10,23 +10,14 @@ class AppColorSet extends ThemeExtension<AppColorSet> {
   final Color surfaceAlt;
   final Color secondary;
   final Color info;
-  final Color infoText;
   final Color success;
-  final Color successText;
   final Color onPrimary;
-  final Color chipSurface;
   final Color warning;
   final Color border;
   final Color error;
-  final Color wash;
   final Color deep;
   final Color soft;
-  final Color brickSoft;
   final Color wood;
-  final Color woodSoft;
-  final Color woodText;
-  final Color bridgeSoft;
-  final Color slab;
   final Color pale;
   final Color tint;
   final Color mic;
@@ -46,23 +37,14 @@ class AppColorSet extends ThemeExtension<AppColorSet> {
     required this.surfaceAlt,
     required this.secondary,
     required this.info,
-    required this.infoText,
     required this.success,
-    required this.successText,
     required this.onPrimary,
-    required this.chipSurface,
     required this.warning,
     required this.border,
     required this.error,
-    required this.wash,
     required this.deep,
     required this.soft,
-    required this.brickSoft,
     required this.wood,
-    required this.woodSoft,
-    required this.woodText,
-    required this.bridgeSoft,
-    required this.slab,
     required this.pale,
     required this.tint,
     required this.mic,
@@ -86,23 +68,14 @@ class AppColorSet extends ThemeExtension<AppColorSet> {
     Color? surfaceAlt,
     Color? secondary,
     Color? info,
-    Color? infoText,
     Color? success,
-    Color? successText,
     Color? onPrimary,
-    Color? chipSurface,
     Color? warning,
     Color? border,
     Color? error,
-    Color? wash,
     Color? deep,
     Color? soft,
-    Color? brickSoft,
     Color? wood,
-    Color? woodSoft,
-    Color? woodText,
-    Color? bridgeSoft,
-    Color? slab,
     Color? pale,
     Color? tint,
     Color? mic,
@@ -122,23 +95,14 @@ class AppColorSet extends ThemeExtension<AppColorSet> {
       surfaceAlt: _keep(surfaceAlt, this.surfaceAlt),
       secondary: _keep(secondary, this.secondary),
       info: _keep(info, this.info),
-      infoText: _keep(infoText, this.infoText),
       success: _keep(success, this.success),
-      successText: _keep(successText, this.successText),
       onPrimary: _keep(onPrimary, this.onPrimary),
-      chipSurface: _keep(chipSurface, this.chipSurface),
       warning: _keep(warning, this.warning),
       border: _keep(border, this.border),
       error: _keep(error, this.error),
-      wash: _keep(wash, this.wash),
       deep: _keep(deep, this.deep),
       soft: _keep(soft, this.soft),
-      brickSoft: _keep(brickSoft, this.brickSoft),
       wood: _keep(wood, this.wood),
-      woodSoft: _keep(woodSoft, this.woodSoft),
-      woodText: _keep(woodText, this.woodText),
-      bridgeSoft: _keep(bridgeSoft, this.bridgeSoft),
-      slab: _keep(slab, this.slab),
       pale: _keep(pale, this.pale),
       tint: _keep(tint, this.tint),
       mic: _keep(mic, this.mic),
@@ -163,23 +127,14 @@ class AppColorSet extends ThemeExtension<AppColorSet> {
       surfaceAlt: Color.lerp(surfaceAlt, other.surfaceAlt, t)!,
       secondary: Color.lerp(secondary, other.secondary, t)!,
       info: Color.lerp(info, other.info, t)!,
-      infoText: Color.lerp(infoText, other.infoText, t)!,
       success: Color.lerp(success, other.success, t)!,
-      successText: Color.lerp(successText, other.successText, t)!,
       onPrimary: Color.lerp(onPrimary, other.onPrimary, t)!,
-      chipSurface: Color.lerp(chipSurface, other.chipSurface, t)!,
       warning: Color.lerp(warning, other.warning, t)!,
       border: Color.lerp(border, other.border, t)!,
       error: Color.lerp(error, other.error, t)!,
-      wash: Color.lerp(wash, other.wash, t)!,
       deep: Color.lerp(deep, other.deep, t)!,
       soft: Color.lerp(soft, other.soft, t)!,
-      brickSoft: Color.lerp(brickSoft, other.brickSoft, t)!,
       wood: Color.lerp(wood, other.wood, t)!,
-      woodSoft: Color.lerp(woodSoft, other.woodSoft, t)!,
-      woodText: Color.lerp(woodText, other.woodText, t)!,
-      bridgeSoft: Color.lerp(bridgeSoft, other.bridgeSoft, t)!,
-      slab: Color.lerp(slab, other.slab, t)!,
       pale: Color.lerp(pale, other.pale, t)!,
       tint: Color.lerp(tint, other.tint, t)!,
       mic: Color.lerp(mic, other.mic, t)!,
@@ -201,23 +156,14 @@ class AppColorSet extends ThemeExtension<AppColorSet> {
     surfaceAlt,
     secondary,
     info,
-    infoText,
     success,
-    successText,
     onPrimary,
-    chipSurface,
     warning,
     border,
     error,
-    wash,
     deep,
     soft,
-    brickSoft,
     wood,
-    woodSoft,
-    woodText,
-    bridgeSoft,
-    slab,
     pale,
     tint,
     mic,
@@ -253,17 +199,12 @@ abstract class AppColors {
   static const Color surfaceAlt = Color(0xFFF0EDE5);
   static const Color secondary = Color(0xFF5A5A3E);
   static const Color info = brandPonte;
-  static const Color infoText = brandPonte;
   static const Color success = brandVerdeClaro;
-  static const Color successText = brandVerde;
 
   /// Text and icons drawn on top of [primary]: the page tone, not pure white.
   static const Color onPrimary = background;
   static const Color darkOnPrimary = darkBackground;
 
-  /// Backing for a small informational chip.
-  static const Color chipSurface = surfaceAlt;
-  static const Color darkChipSurface = darkSurfaceAlt;
   static const Color warning = Color(0xFFC7A268);
   static const Color border = Color.fromRGBO(63, 62, 32, 0.16);
   static const Color error = Color(0xFF872F00);
@@ -278,9 +219,7 @@ abstract class AppColors {
   static const Color darkSurfaceAlt = Color(0xFF424129);
   static const Color darkSecondary = Color(0xFFBDB9A0);
   static const Color darkInfo = Color(0xFFA3C0B9);
-  static const Color darkInfoText = darkInfo;
   static const Color darkSuccess = Color(0xFFA9AF6F);
-  static const Color darkSuccessText = darkForeground;
   static const Color darkWarning = Color(0xFFE2C08F);
   static const Color darkBorder = Color.fromRGBO(243, 239, 226, 0.15);
   static const Color darkError = Color(0xFFE9C3A6);
@@ -293,11 +232,6 @@ abstract class AppColors {
   static const Color transparent = Color(0x00000000);
 
   // Long-tail semantic tokens migrated from inline literals (ENG-183).
-  static const Color meterWarning = Color(0xFFC7A268); // volume meter caution
-  static const Color warningContainer = Color(0xFFF4E3BF); // storage banner bg
-  static const Color onWarningContainer = Color(
-    0xFF6E4F1C,
-  ); // storage banner fg
   static const Color authHeroAccent = Color(0xFFFFB380); // signup hero accent
 
   static AppColorSet of(BuildContext context) {
@@ -315,23 +249,14 @@ abstract class AppColors {
     surfaceAlt: surfaceAlt,
     secondary: secondary,
     info: info,
-    infoText: infoText,
     success: success,
-    successText: successText,
     onPrimary: onPrimary,
-    chipSurface: chipSurface,
     warning: warning,
     border: border,
     error: error,
-    wash: Color(0xFFE3DFCA),
     deep: Color(0xFFA63B00),
     soft: Color(0xFFF2D8C2),
-    brickSoft: Color(0xFFF6D7D2),
     wood: Color(0xFFF0E2C8),
-    woodSoft: Color(0xFFF4E3BF),
-    woodText: Color(0xFF6E4F1C),
-    bridgeSoft: Color(0xFFD3E6E0),
-    slab: Color(0xFF34331A),
     pale: pale,
     tint: Color.fromRGBO(63, 62, 32, 0.08),
     mic: mic,
@@ -352,23 +277,14 @@ abstract class AppColors {
     surfaceAlt: darkSurfaceAlt,
     secondary: darkSecondary,
     info: darkInfo,
-    infoText: darkInfoText,
     success: darkSuccess,
-    successText: darkSuccessText,
     onPrimary: darkOnPrimary,
-    chipSurface: darkChipSurface,
     warning: darkWarning,
     border: darkBorder,
     error: darkError,
-    wash: Color(0xFF383124),
     deep: Color(0xFFEBA573),
     soft: Color(0xFFE9C3A6),
-    brickSoft: Color(0xFF3A1F1B),
     wood: Color(0xFF4A4028),
-    woodSoft: Color(0xFF332A1B),
-    woodText: Color(0xFFE2C08F),
-    bridgeSoft: Color(0xFF1D2A27),
-    slab: Color(0xFF2C271D),
     pale: darkPale,
     tint: Color.fromRGBO(243, 239, 226, 0.08),
     mic: Color(0xFFC4584E),

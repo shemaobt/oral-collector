@@ -54,10 +54,8 @@ Path: @/lib/core/theme
   `AppColors.of(context)`, which resolves the registered `AppColorSet`. This
   folder is an upstream dependency of nearly every presentation layer but depends
   only on Flutter `material`.
-- The semantic state tokens are `info`/`infoText`, `success`/`successText`,
-  `warning`, and `error`. `info` and `success` carry a darker `*Text` companion
-  for legible text-on-tint; `warning` and `error` are single tokens with no text
-  pair (callers tint both icon and label with the one color). `warning` is the
+- The semantic state tokens are `info`, `success`, `warning`, and `error`. They are
+  single tokens with no text pair (callers tint both icon and label with the one color). `warning` is the
   caution/attention color (amber/orange): it backs the unclassified affordances
   (FABs, badges, breadcrumbs), `ForbiddenException`
   permission snackbars, and the `needs_cleaning` cleaning state via
@@ -123,8 +121,7 @@ Path: @/lib/core/theme
   `info`→`warning` (ADR-0007). To absorb that migration `AppColors` gained the
   neutral anchors `white`/`black`/`transparent` (pure primitives, distinct from
   the off-white `brandBranco` / near-black `brandPreto` brand tokens) plus a few
-  long-tail semantic tokens (`meterWarning`, the `warningContainer` /
-  `onWarningContainer` storage-banner pair, `authHeroAccent`); the genre
+  long-tail semantic tokens (`authHeroAccent`); the genre
   accents live in `GenreColors` ([genre_colors.dart](genre_colors.dart)) and the runtime hex parser to [color_hex.dart](color_hex.dart).
 - Token values and contracts are pinned by tests under
   [/test/core/theme/](/test/core/theme) (colors in `app_colors_test.dart`;

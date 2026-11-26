@@ -41,7 +41,7 @@ class RoundButton extends StatelessWidget {
     final (fill, foreground) = switch (tone) {
       RoundButtonTone.accent => (colors.accent, colors.onPrimary),
       RoundButtonTone.control => (colors.card, colors.primary),
-      RoundButtonTone.soft => (colors.brickSoft, colors.error),
+      RoundButtonTone.soft => (colors.soft, colors.onSoft),
     };
     final target = math.max(size.diameter, minTouchTarget);
 
