@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/widgets.dart';
 
+import '../../core/theme/app_colors.dart';
 import 'brush_signs.dart';
 
 export 'brush_signs.dart' show Sign;
@@ -36,7 +37,7 @@ class BrushSign extends StatelessWidget {
       child: CustomPaint(
         painter: _SignPainter(
           sign,
-          color ?? theme.color ?? const Color(0xFF000000),
+          color ?? theme.color ?? AppColors.of(context).foreground,
           flip,
           turns,
         ),
