@@ -72,15 +72,11 @@ class RecordingApiRepositoryImpl implements RecordingApiRepository {
   }
 
   @override
-  Future<bool> deleteRecording(String serverId) async {
+  Future<void> deleteRecording(String serverId) async {
     final response = await _client.delete('/api/oc/recordings/$serverId');
-    guardResponse(response);
-    if (response.statusCode == 403) {
-      throw const ForbiddenException();
-    }
-    return response.statusCode == 200 ||
-        response.statusCode == 204 ||
-        response.statusCode == 404;
+    final status = response.statusCode;
+    if (status == 200 || status == 204 || status == 404) return;
+    throwForResponse(response);
   }
 
   @override

@@ -29,7 +29,7 @@ abstract class RecordingApiRepository {
     String? title,
     String? reviewFlag,
   });
-  Future<bool> deleteRecording(String serverId);
+  Future<void> deleteRecording(String serverId);
   Future<UpdateRecordingOutcome> updateRecording(
     String serverId,
     UpdateRecordingRequest request,

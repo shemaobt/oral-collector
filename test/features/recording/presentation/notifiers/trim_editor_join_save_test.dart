@@ -45,9 +45,8 @@ class _ServerCallLog implements RecordingApiRepository {
   );
 
   @override
-  Future<bool> deleteRecording(String serverId) async {
+  Future<void> deleteRecording(String serverId) async {
     calls.add('deleteRecording');
-    return true;
   }
 
   @override

@@ -1,19 +1,23 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
 import 'package:mocktail/mocktail.dart';
 import 'package:oral_collector/core/database/app_database.dart';
 import 'package:oral_collector/core/errors/app_exception.dart';
+import 'package:oral_collector/core/network/authenticated_client.dart';
 import 'package:oral_collector/core/observability/error_reporter.dart';
 import 'package:oral_collector/features/project/domain/entities/project.dart';
 import 'package:oral_collector/features/project/presentation/notifiers/project_notifier.dart';
 import 'package:oral_collector/features/project/presentation/notifiers/project_state.dart';
 import 'package:oral_collector/features/recording/data/providers.dart';
 import 'package:oral_collector/features/recording/data/repositories/local_recording_repository.dart';
+import 'package:oral_collector/features/recording/data/repositories/recording_api_repository_impl.dart';
 import 'package:oral_collector/features/recording/domain/entities/server_recording.dart';
 import 'package:oral_collector/features/recording/domain/repositories/recording_api_repository.dart';
 import 'package:oral_collector/features/recording/presentation/notifiers/recordings_list_notifier.dart';
@@ -23,6 +27,8 @@ import 'package:oral_collector/features/sync/presentation/notifiers/sync_state.d
 class _MockApi extends Mock implements RecordingApiRepository {}
 
 class _MockLocal extends Mock implements LocalRecordingRepository {}
+
+class _MockClient extends Mock implements AuthenticatedClient {}
 
 class _RecordingReporter implements ErrorReporter {
   final List<Object> reported = [];
@@ -763,20 +769,22 @@ void main() {
     // Real Drift repo (in-memory) + mock API: exercises the actual row lookup
     // and delete, so an id/serverId mismatch surfaces instead of being mocked
     // away.
-    ProviderContainer realContainer() => ProviderContainer(
-      overrides: [
-        recordingApiRepositoryProvider.overrideWithValue(api),
-        localRecordingRepositoryProvider.overrideWithValue(realLocal),
-        projectNotifierProvider.overrideWith(
-          () =>
-              _FakeProjectNotifier(ProjectState(activeProject: activeProject)),
-        ),
-        syncNotifierProvider.overrideWith(
-          () => _FakeSyncNotifier(initialOnline: true),
-        ),
-        errorReporterProvider.overrideWithValue(reporter),
-      ],
-    );
+    ProviderContainer realContainer({RecordingApiRepository? apiRepo}) =>
+        ProviderContainer(
+          overrides: [
+            recordingApiRepositoryProvider.overrideWithValue(apiRepo ?? api),
+            localRecordingRepositoryProvider.overrideWithValue(realLocal),
+            projectNotifierProvider.overrideWith(
+              () => _FakeProjectNotifier(
+                ProjectState(activeProject: activeProject),
+              ),
+            ),
+            syncNotifierProvider.overrideWith(
+              () => _FakeSyncNotifier(initialOnline: true),
+            ),
+            errorReporterProvider.overrideWithValue(reporter),
+          ],
+        );
 
     File seedFile(String name) =>
         File('${tmpDir.path}/$name')..writeAsStringSync('audio-bytes');
@@ -830,7 +838,7 @@ void main() {
           serverId: 'srv-1',
           localFilePath: file.path,
         );
-        when(() => api.deleteRecording('srv-1')).thenAnswer((_) async => true);
+        when(() => api.deleteRecording('srv-1')).thenAnswer((_) async {});
 
         final container = realContainer();
         addTearDown(container.dispose);
@@ -944,6 +952,62 @@ void main() {
         expect(reporter.reported, contains(netErr));
       },
     );
+
+    test('server answers 500: failed, and the row, the file and the list item '
+        'are kept', () async {
+      final file = seedFile('rec.m4a');
+      await insertRow(id: 'srv-6', serverId: 'srv-6', localFilePath: file.path);
+      final client = _MockClient();
+      when(() => client.get(any())).thenAnswer(
+        (_) async => http.Response(
+          jsonEncode([
+            {
+              'id': 'srv-6',
+              'project_id': 'proj-1',
+              'genre_id': 'genre-1',
+              'title': 'Server srv-6',
+              'duration_seconds': 30.0,
+              'file_size_bytes': 2048,
+              'format': 'm4a',
+              'upload_status': 'uploaded',
+              'cleaning_status': 'none',
+              'recorded_at': '2026-02-01T00:00:00Z',
+            },
+          ]),
+          200,
+        ),
+      );
+      when(
+        () => client.delete('/api/oc/recordings/srv-6'),
+      ).thenAnswer((_) async => http.Response('', 500));
+
+      final container = realContainer(
+        apiRepo: RecordingApiRepositoryImpl(
+          client: client,
+          reporter: const NoopErrorReporter(),
+        ),
+      );
+      addTearDown(container.dispose);
+      final notifier = container.read(recordingsListNotifierProvider.notifier);
+      await notifier.fetchRecordings();
+      final listed = container
+          .read(recordingsListNotifierProvider)
+          .recordings
+          .single;
+
+      final result = await notifier.deleteRecording(listed);
+
+      expect(result, DeleteRecordingResult.failed);
+      expect(file.existsSync(), isTrue);
+      expect(await realLocal.getRecordingByServerId('srv-6'), isNotNull);
+      expect(
+        container
+            .read(recordingsListNotifierProvider)
+            .recordings
+            .map((r) => r.id),
+        ['srv-6'],
+      );
+    });
 
     test(
       'missing audio file path: the file delete is a no-op, the row is still '
