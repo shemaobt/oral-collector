@@ -72,14 +72,14 @@ Path: @/lib/core/theme
   `primary`-filled surface, e.g. the recording detail screen's
   `CompleteFichaPill`/`CompleteFichaSheet`
   ([/lib/features/recording/presentation/widgets/complete_ficha_pill.dart](/lib/features/recording/presentation/widgets/complete_ficha_pill.dart)).
-  It is deliberately a different token from
-  `Theme.of(context).colorScheme.onPrimary` (the Material `ColorScheme` field
-  set in [app_theme.dart](app_theme.dart), still pure `Colors.white` in both
-  themes — see the typography bullet below): `AppColorSet.onPrimary` is the
-  off-white brand tone `brandBranco` (`darkOnPrimary` in dark mode is
-  `darkBackground`), because pure white reads colder than the rest of the
-  palette wherever `primary` is used as a filled app surface rather than the
-  `ColorScheme`'s own chrome.
+  The Material `ColorScheme.onPrimary` reads the same pair in both themes (the
+  page tone in light, `darkBackground` in dark), never pure white on cream.
+- The kit's own roles (ENG-3004): `pale` (rest on a card), `tint` (switched-off
+  button, selector track), `mic` (brick; the microphone and the record disc
+  only, never a failure), `clay`, `sand`, `onColor` (sign on brick, tile and the
+  two dark genre colours), `knob`, `count` (time of who is recording: brick in
+  light, cream in dark) and `onSoft` (the sign on `soft`, the same terracotta in
+  both themes). `error` is the terracotta of what failed, not brick.
 - `chipSurface` (ENG-374, card V3) backs the recording list card's pendency
   chip
   ([/lib/features/recording/presentation/widgets/recording_card.dart](/lib/features/recording/presentation/widgets/recording_card.dart)).

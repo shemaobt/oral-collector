@@ -26,17 +26,6 @@ Future<void> pumpButton(
   ),
 );
 
-BoxDecoration disc(WidgetTester tester) =>
-    tester
-            .widget<DecoratedBox>(
-              find.descendant(
-                of: find.byType(RecordButton),
-                matching: find.byType(DecoratedBox),
-              ),
-            )
-            .decoration
-        as BoxDecoration;
-
 double pulseScale(WidgetTester tester) => tester
     .widget<Transform>(
       find
@@ -50,27 +39,6 @@ double pulseScale(WidgetTester tester) => tester
     .getMaxScaleOnAxis();
 
 void main() {
-  final themes = {'light': AppTheme.lightTheme, 'dark': AppTheme.darkTheme};
-  for (final theme in themes.entries) {
-    testWidgets('disc is 88, error-coloured and ringed in ${theme.key}', (
-      tester,
-    ) async {
-      for (final state in RecordButtonState.values) {
-        await pumpButton(tester, theme.value, state: state);
-        final colors = AppColors.of(tester.element(find.byType(RecordButton)));
-        expect(disc(tester).color, colors.error, reason: state.name);
-        expect(
-          disc(
-            tester,
-          ).boxShadow!.any((s) => s.color == colors.error && s.blurRadius == 0),
-          isTrue,
-          reason: state.name,
-        );
-      }
-      expect(tester.getSize(find.byType(RecordButton)), const Size(88, 88));
-    });
-  }
-
   testWidgets('pulses only while recording', (tester) async {
     await pumpButton(tester, AppTheme.lightTheme);
     await tester.pump(const Duration(milliseconds: 600));

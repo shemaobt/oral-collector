@@ -26,6 +26,15 @@ class AppColorSet extends ThemeExtension<AppColorSet> {
   final Color woodText;
   final Color bridgeSoft;
   final Color slab;
+  final Color pale;
+  final Color tint;
+  final Color mic;
+  final Color clay;
+  final Color sand;
+  final Color onColor;
+  final Color knob;
+  final Color count;
+  final Color onSoft;
 
   const AppColorSet({
     required this.primary,
@@ -53,6 +62,15 @@ class AppColorSet extends ThemeExtension<AppColorSet> {
     required this.woodText,
     required this.bridgeSoft,
     required this.slab,
+    required this.pale,
+    required this.tint,
+    required this.mic,
+    required this.clay,
+    required this.sand,
+    required this.onColor,
+    required this.knob,
+    required this.count,
+    required this.onSoft,
   });
 
   @override
@@ -82,6 +100,15 @@ class AppColorSet extends ThemeExtension<AppColorSet> {
     Color? woodText,
     Color? bridgeSoft,
     Color? slab,
+    Color? pale,
+    Color? tint,
+    Color? mic,
+    Color? clay,
+    Color? sand,
+    Color? onColor,
+    Color? knob,
+    Color? count,
+    Color? onSoft,
   }) {
     return AppColorSet(
       primary: primary ?? this.primary,
@@ -109,6 +136,15 @@ class AppColorSet extends ThemeExtension<AppColorSet> {
       woodText: woodText ?? this.woodText,
       bridgeSoft: bridgeSoft ?? this.bridgeSoft,
       slab: slab ?? this.slab,
+      pale: pale ?? this.pale,
+      tint: tint ?? this.tint,
+      mic: mic ?? this.mic,
+      clay: clay ?? this.clay,
+      sand: sand ?? this.sand,
+      onColor: onColor ?? this.onColor,
+      knob: knob ?? this.knob,
+      count: count ?? this.count,
+      onSoft: onSoft ?? this.onSoft,
     );
   }
 
@@ -141,6 +177,15 @@ class AppColorSet extends ThemeExtension<AppColorSet> {
       woodText: Color.lerp(woodText, other.woodText, t)!,
       bridgeSoft: Color.lerp(bridgeSoft, other.bridgeSoft, t)!,
       slab: Color.lerp(slab, other.slab, t)!,
+      pale: Color.lerp(pale, other.pale, t)!,
+      tint: Color.lerp(tint, other.tint, t)!,
+      mic: Color.lerp(mic, other.mic, t)!,
+      clay: Color.lerp(clay, other.clay, t)!,
+      sand: Color.lerp(sand, other.sand, t)!,
+      onColor: Color.lerp(onColor, other.onColor, t)!,
+      knob: Color.lerp(knob, other.knob, t)!,
+      count: Color.lerp(count, other.count, t)!,
+      onSoft: Color.lerp(onSoft, other.onSoft, t)!,
     );
   }
 
@@ -172,7 +217,16 @@ class AppColorSet extends ThemeExtension<AppColorSet> {
         other.woodSoft == woodSoft &&
         other.woodText == woodText &&
         other.bridgeSoft == bridgeSoft &&
-        other.slab == slab;
+        other.slab == slab &&
+        other.pale == pale &&
+        other.tint == tint &&
+        other.mic == mic &&
+        other.clay == clay &&
+        other.sand == sand &&
+        other.onColor == onColor &&
+        other.knob == knob &&
+        other.count == count &&
+        other.onSoft == onSoft;
   }
 
   @override
@@ -202,13 +256,19 @@ class AppColorSet extends ThemeExtension<AppColorSet> {
     woodText,
     bridgeSoft,
     slab,
+    pale,
+    tint,
+    mic,
+    clay,
+    sand,
+    onColor,
+    knob,
+    count,
+    onSoft,
   ]);
 }
 
 abstract class AppColors {
-  static const Color brandBranco = Color(0xFFF6F5EB);
-  static const Color brandAreia = Color(0xFFC5BF9E);
-  static const Color brandAzul = Color(0xFF89AAA3);
   static const Color brandPonte = Color(0xFF3F6862);
   static const Color brandTelha = Color(0xFFBE4A01);
   static const Color brandVerdeClaro = Color(0xFF777D45);
@@ -216,20 +276,20 @@ abstract class AppColors {
 
   static const Color primary = brandVerde;
   static const Color accent = brandTelha;
-  static const Color background = brandBranco;
-  static const Color foreground = Color(0xFF2A2913);
-  static const Color card = Color(0xFFFFFDF7);
-  static const Color surfaceAlt = Color(0xFFEEECE1);
-  static const Color secondary = Color(0xFF5C5843);
+  static const Color background = Color(0xFFF7F4EE);
+  static const Color foreground = brandVerde;
+  static const Color card = Color(0xFFFFFFFF);
+  static const Color surfaceAlt = Color(0xFFF0EDE5);
+  static const Color secondary = Color(0xFF5A5A3E);
   static const Color info = brandPonte;
   static const Color infoText = brandPonte;
   static const Color success = brandVerdeClaro;
   static const Color successText = brandVerde;
 
-  /// Text and icons drawn on top of [primary]. The off-white brand tone, not
+  /// Text and icons drawn on top of [primary]. The off-white page tone, not
   /// pure white: `colorScheme.onPrimary` is #FFFFFF and reads colder than the
   /// palette everywhere primary is used as a filled surface.
-  static const Color onPrimary = brandBranco;
+  static const Color onPrimary = background;
   static const Color darkOnPrimary = darkBackground;
 
   /// Backing for a small informational chip — quieter than [surfaceAlt], which
@@ -238,31 +298,26 @@ abstract class AppColors {
   static const Color chipSurface = surfaceAlt;
   static const Color darkChipSurface = darkSurfaceAlt;
   static const Color warning = Color(0xFFC7A268);
-  static const Color border = brandAreia;
-  static const Color error = Color(0xFF8C2B26);
+  static const Color border = Color.fromRGBO(63, 62, 32, 0.16);
+  static const Color error = Color(0xFF872F00);
+  static const Color pale = Color(0xFFE9E5DA);
+  static const Color mic = Color(0xFF8C2B26);
 
-  static const Color surfaceContainerLowest = Color(0xFFFDFCF3);
-  static const Color surfaceContainerLow = Color(0xFFFAF8EC);
-  static const Color surfaceContainer = Color(0xFFF6F5EB);
-  static const Color surfaceContainerHigh = Color(0xFFF1EEDE);
-  static const Color surfaceContainerHighest = Color(0xFFEDE9D5);
-  static const Color outlineVariant = Color(0xFFE3DFC4);
-  static const Color switchThumbUnselected = Color(0xFF8B8863);
-
-  static const Color darkPrimary = Color(0xFFF2EDE1);
-  static const Color darkAccent = Color(0xFFE36A1E);
-  static const Color darkBackground = Color(0xFF14100B);
-  static const Color darkForeground = Color(0xFFF2EDE1);
-  static const Color darkSurface = Color(0xFF1E1A13);
-  static const Color darkSurfaceAlt = Color(0xFF29241B);
-  static const Color darkSecondary = Color(0xFFBFB8A5);
-  static const Color darkInfo = brandAzul;
-  static const Color darkInfoText = brandAzul;
+  static const Color darkPrimary = Color(0xFFF3EFE2);
+  static const Color darkAccent = Color(0xFFE08A52);
+  static const Color darkBackground = Color(0xFF2A2A1C);
+  static const Color darkForeground = Color(0xFFF3EFE2);
+  static const Color darkSurface = Color(0xFF373724);
+  static const Color darkSurfaceAlt = Color(0xFF424129);
+  static const Color darkSecondary = Color(0xFFBDB9A0);
+  static const Color darkInfo = Color(0xFFA3C0B9);
+  static const Color darkInfoText = darkInfo;
   static const Color darkSuccess = Color(0xFFA9AF6F);
   static const Color darkSuccessText = darkForeground;
   static const Color darkWarning = Color(0xFFE2C08F);
-  static const Color darkBorder = Color(0xFF554C3B);
-  static const Color darkError = Color(0xFFD9756A);
+  static const Color darkBorder = Color.fromRGBO(243, 239, 226, 0.15);
+  static const Color darkError = Color(0xFFE9C3A6);
+  static const Color darkPale = Color(0xFF4B4A31);
 
   // Neutral anchors. Pure white/black/transparent differ from the off-white
   // (brandBranco) brand token, so they stand alone
@@ -304,13 +359,22 @@ abstract class AppColors {
     error: error,
     wash: Color(0xFFE3DFCA),
     deep: Color(0xFFA63B00),
-    soft: Color(0xFFF9DAC4),
+    soft: Color(0xFFF2D8C2),
     brickSoft: Color(0xFFF6D7D2),
-    wood: Color(0xFFC7A268),
+    wood: Color(0xFFF0E2C8),
     woodSoft: Color(0xFFF4E3BF),
     woodText: Color(0xFF6E4F1C),
     bridgeSoft: Color(0xFFD3E6E0),
     slab: Color(0xFF34331A),
+    pale: pale,
+    tint: Color.fromRGBO(63, 62, 32, 0.08),
+    mic: mic,
+    clay: Color(0xFFB9A990),
+    sand: Color(0xFFC5C29F),
+    onColor: Color(0xFFFFFFFF),
+    knob: Color(0xFFFFFFFF),
+    count: mic,
+    onSoft: error,
   );
 
   static const dark = AppColorSet(
@@ -331,13 +395,22 @@ abstract class AppColors {
     border: darkBorder,
     error: darkError,
     wash: Color(0xFF383124),
-    deep: Color(0xFFF2955A),
-    soft: Color(0xFF3A2416),
+    deep: Color(0xFFEBA573),
+    soft: Color(0xFFE9C3A6),
     brickSoft: Color(0xFF3A1F1B),
-    wood: Color(0xFFE2C08F),
+    wood: Color(0xFF4A4028),
     woodSoft: Color(0xFF332A1B),
     woodText: Color(0xFFE2C08F),
     bridgeSoft: Color(0xFF1D2A27),
     slab: Color(0xFF2C271D),
+    pale: darkPale,
+    tint: Color.fromRGBO(243, 239, 226, 0.08),
+    mic: Color(0xFFC4584E),
+    clay: Color(0xFF9C8F76),
+    sand: Color(0xFFC5C29F),
+    onColor: Color(0xFFFBF8EF),
+    knob: darkSecondary,
+    count: darkForeground,
+    onSoft: Color(0xFF872F00),
   );
 }

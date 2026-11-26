@@ -97,13 +97,13 @@ class GenreColors extends ThemeExtension<GenreColors> {
         ringAlpha: 0.55,
       ),
       GenreTone(
-        disc: Color(0xFF9EA562),
+        disc: Color(0xFF98A05C),
         soft: Color(0xFF232518),
         onDisc: AppColors.darkBackground,
         ringAlpha: 0.40,
       ),
       GenreTone(
-        disc: Color(0xFFC77D60),
+        disc: Color(0xFFBD7559),
         soft: Color(0xFF2E1E17),
         onDisc: AppColors.darkBackground,
         ringAlpha: 0.30,
