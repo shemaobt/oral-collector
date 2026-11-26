@@ -340,7 +340,6 @@ void main() {
   testWidgets(
     'tapping a tab while finalizing shows snackbar and does not navigate',
     (tester) async {
-      // Mobile layout (< 600px) so the bottom nav is used.
       tester.view.physicalSize = const Size(400, 800);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.reset);

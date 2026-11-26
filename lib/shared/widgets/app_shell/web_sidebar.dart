@@ -264,7 +264,7 @@ class _SidebarBrand extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
+      padding: const EdgeInsetsDirectional.fromSTEB(
         SpacingScale.s12 + 10,
         0,
         SpacingScale.s12,
