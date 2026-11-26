@@ -57,8 +57,9 @@ class _FakeApiRepo implements RecordingApiRepository {
       );
 
   @override
-  Future<bool> deleteRecording(String serverId) async =>
-      serverRecordings.remove(serverId);
+  Future<void> deleteRecording(String serverId) async {
+    serverRecordings.remove(serverId);
+  }
 
   @override
   Future<List<String>> splitRecording({

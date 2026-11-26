@@ -280,10 +280,9 @@ class _FakeApiRepo implements RecordingApiRepository {
   final List<String> deleteCalls = [];
 
   @override
-  Future<bool> deleteRecording(String serverId) async {
+  Future<void> deleteRecording(String serverId) async {
     deleteCalls.add(serverId);
     if (deleteThrows) throw Exception('remote delete failed');
-    return true;
   }
 
   @override

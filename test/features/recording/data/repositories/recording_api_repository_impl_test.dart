@@ -165,4 +165,42 @@ void main() {
       );
     });
   });
+
+  group('deleteRecording', () {
+    void stubDelete(int status) {
+      when(
+        () => client.delete('/api/oc/recordings/s-1'),
+      ).thenAnswer((_) async => http.Response('', status));
+    }
+
+    test('throws ServerException when the server answers 500', () async {
+      stubDelete(500);
+
+      await expectLater(
+        repo.deleteRecording('s-1'),
+        throwsA(
+          isA<ServerException>().having((e) => e.statusCode, 'status', 500),
+        ),
+      );
+    });
+
+    test('throws ValidationException when the server answers 422', () async {
+      stubDelete(422);
+
+      await expectLater(
+        repo.deleteRecording('s-1'),
+        throwsA(
+          isA<ValidationException>().having((e) => e.statusCode, 'status', 422),
+        ),
+      );
+    });
+
+    for (final status in [204, 404]) {
+      test('completes when the server answers $status', () async {
+        stubDelete(status);
+
+        await expectLater(repo.deleteRecording('s-1'), completes);
+      });
+    }
+  });
 }
