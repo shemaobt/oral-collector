@@ -42,11 +42,11 @@ Path: @/lib/shared/widgets
 
 ### Core Implementation
 
-- Stateless composition is the norm; stateful widgets exist only to drive a
-  `RotationTransition` while a status is in-flight (the badges' "cleaning" /
-  "uploading" spinners create/dispose an `AnimationController` in
-  `didUpdateWidget`) or to track collapse state in the web sidebar
-  ([app_shell/web_sidebar.dart](app_shell/web_sidebar.dart)).
+- Stateless composition is the norm; stateful widgets exist only to own an
+  animation: a `RotationTransition` while a status is in-flight (the badges'
+  "cleaning" / "uploading" spinners create/dispose an `AnimationController` in
+  `didUpdateWidget`), `LeavingRow`'s fade and height, or the web sidebar's
+  collapse state ([app_shell/web_sidebar.dart](app_shell/web_sidebar.dart)).
 - All color and spacing come from theme tokens, never raw literals (enforced by
   the `obt_lints` plugin outside `lib/core/theme/**`); strings come from
   `AppLocalizations.of(context)`.
@@ -114,7 +114,14 @@ Path: @/lib/shared/widgets
   the row in the list it builds and flips `gone`; the row fades and slides
   (`fast`, `leave`), then its height closes (`base`, `enter`); `gone: false`
   opens the height, then fades the row in rising. The `gap` between rows lives
-  inside the helper so it closes with the row. A row built gone takes no
-  space; under `context.motion` with less motion asked, gone and back are cuts.
+  inside the helper so it closes with the row. The row stays mounted at zero
+  height while gone, so its child keeps its state through leave and return; it
+  takes no taps, focus or semantics, and on the way back takes taps only once
+  whole. Turning back mid-flight continues from the current frame. Under
+  `context.motion` with less motion asked, gone and back are cuts in one frame.
+  Caller contract: give every item's row a key (`ValueKey(item.id)`), or after a
+  drop the next row inherits the collapsed state and plays the come-back; flip
+  `gone` before any `await`, so the row leaves while the work runs; dropping the
+  item from the list mid-leave snaps the row out: the list shortens in one frame.
 
 Created and maintained by Nori.
