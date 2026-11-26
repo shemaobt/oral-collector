@@ -31,8 +31,8 @@ class BrushNumber extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     assert(
-      text.split('').every(_glyphs.containsKey),
-      'BrushNumber draws only digits and a colon: "$text"',
+      text.isNotEmpty && text.split('').every(_glyphs.containsKey),
+      'BrushNumber draws a non-empty run of digits and colons: "$text"',
     );
     final h = MediaQuery.textScalerOf(context).scale(height);
     final glyphs = [for (final c in text.split('')) _glyphs[c]!];
@@ -44,26 +44,27 @@ class BrushNumber extends StatelessWidget {
       child: SizedBox(
         width: width,
         height: h,
-        child: CustomPaint(painter: _NumberPainter(glyphs, paint)),
+        child: CustomPaint(painter: _NumberPainter(glyphs, paint, h)),
       ),
     );
   }
 }
 
-double _width(List<Glyph> glyphs, double h) {
-  final advances = glyphs.fold<double>(0, (sum, g) => sum + g.width);
-  return advances / _box * h + _gap * h * (glyphs.length - 1);
-}
+double _pitch(Glyph g, double h) => (g.width / _box + _gap) * h;
+
+double _width(List<Glyph> glyphs, double h) =>
+    glyphs.fold<double>(0, (sum, g) => sum + _pitch(g, h)) - _gap * h;
 
 class _NumberPainter extends CustomPainter {
-  const _NumberPainter(this.glyphs, this.color);
+  const _NumberPainter(this.glyphs, this.color, this.height);
 
   final List<Glyph> glyphs;
   final Color color;
+  final double height;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final scale = size.height / _box;
+    final scale = height / _box;
     final paint = Paint()..color = color;
     var x = 0.0;
     for (final g in glyphs) {
@@ -73,11 +74,11 @@ class _NumberPainter extends CustomPainter {
       canvas.translate(-g.left, 0);
       canvas.drawPath(_outline(g), paint);
       canvas.restore();
-      x += (g.width / _box + _gap) * size.height;
+      x += _pitch(g, height);
     }
   }
 
   @override
   bool shouldRepaint(_NumberPainter old) =>
-      old.color != color || !listEquals(old.glyphs, glyphs);
+      old.color != color || old.height != height || !listEquals(old.glyphs, glyphs);
 }
