@@ -248,9 +248,8 @@ SpacingScale/RadiusScale/DurationScale/OpacityScale ─► AppSpacing/AppRadii/A
   `errorStyle` must `copyWith(color: …error)` to preserve its meaning. (This is
   the same reason styles used on a colored chrome — e.g. nav items / badges on the
   primary surface — `copyWith(color: colorScheme.onPrimary)`; `onPrimary` is the
-  one token that is pure white in both light and dark, so it preserves a former
-  `Colors.white` literal value-for-value. This is the `ColorScheme` field, not
-  the `AppColorSet.onPrimary` semantic token added in ENG-374 — see above.)
+  page tone in light and `darkBackground` in dark, the same pair as the
+  `AppColorSet.onPrimary` semantic token added in ENG-374 — see above.)
 - **`DurationScale` is motion-only.** I/O timeouts, logic timers, and
   snackbar/feedback display durations are excluded and remain raw `Duration`s.
 - **Two migration passes, two contracts.** The *value-identical* passes
