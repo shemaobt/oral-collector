@@ -17,6 +17,7 @@ import 'core/observability/app_logger.dart';
 import 'core/observability/error_reporter.dart';
 import 'core/platform/file_ops.dart' as platform;
 import 'core/router/app_router.dart';
+import 'core/startup/app_frame.dart';
 import 'core/startup/app_startup.dart';
 import 'core/startup/font_licenses.dart';
 import 'core/theme/app_theme.dart';
@@ -227,10 +228,7 @@ class _OralCollectorAppState extends ConsumerState<OralCollectorApp> {
         GlobalCupertinoLocalizations.delegate,
       ],
       routerConfig: router,
-      // High ceiling only: never lowers the floor, so low-vision users keep
-      // full up-scaling; bounds pathological OS settings (>2x) app-wide.
-      builder: (context, child) =>
-          MediaQuery.withClampedTextScaling(maxScaleFactor: 2.0, child: child!),
+      builder: (context, child) => AppFrame(child: child!),
     );
   }
 }

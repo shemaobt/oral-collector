@@ -58,6 +58,14 @@ Path: @/lib/core/startup
   lost and a logged-out user landed on `/login`
   ([/test/core/startup/startup_splash_test.dart](../../../test/core/startup/startup_splash_test.dart)).
 
+- `AppFrame` ([./app_frame.dart](app_frame.dart)) wraps the router's
+  `MaterialApp` through its `builder` (ENG-3048). It keeps the app-wide text
+  ceiling of 2.0 and turns `MediaQuery.disableAnimations` on when the phone's
+  «Reduce Motion» (`accessibilityFeatures.reduceMotion`, which Flutter itself
+  ignores) or the browser's `prefers-reduced-motion`
+  ([../web/docs.md](../web/docs.md)) asks for less, so `context.motion` reads
+  zero. Both are followed live. `StartupSplash` sits outside it.
+
 ### Core Implementation
 
 ```
