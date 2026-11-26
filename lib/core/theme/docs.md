@@ -80,19 +80,6 @@ Path: @/lib/core/theme
   two dark genre colours), `knob`, `count` (time of who is recording: brick in
   light, cream in dark) and `onSoft` (the sign on `soft`, the same terracotta in
   both themes). `error` is the terracotta of what failed, not brick.
-- `chipSurface` (ENG-374, card V3) backs the recording list card's pendency
-  chip
-  ([/lib/features/recording/presentation/widgets/recording_card.dart](/lib/features/recording/presentation/widgets/recording_card.dart)).
-  It is its own token rather than a reuse of `surfaceAlt` because the design's
-  color reads as quieter than that panel tone; before this it was a fixed
-  light constant living outside `AppColorSet`, which would have stayed light
-  in dark mode. Its dark value is the existing `darkSurfaceAlt`, not a new
-  constant — no separate dark tone was specified. ENG-382 weighed retiring the
-  token and kept it on that asymmetry, which
-  [/test/core/theme/app_colors_test.dart](/test/core/theme/app_colors_test.dart)
-  now pins: coinciding with `surfaceAlt` in dark and differing from it in
-  light is the whole reason the field exists, and a dark-mode check alone
-  would pass on a card that had swapped the token away.
 - Spacing/radii/motion/opacity consumers reference the `const` scale directly
   (e.g. `SpacingScale.s16`, `RadiusScale.r12`, `DurationScale.ms200`,
   `MotionScale.base`, `OpacityScale.o40`) or the `context.spacing` / `.radii` /
