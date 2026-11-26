@@ -49,6 +49,14 @@ Path: @/lib/shared/widgets
   image for screen readers; with none it is skipped. `turns` rotates it («close»
   is `plus` at 0.125, «open list» is `next` at 0.25). `back` and `next` mirror
   under a right-to-left locale.
+- [brush_number.dart](brush_number.dart) writes a count or the recording time
+  in the kit's ten brush numbers and a colon (`Glyph`, held in
+  `brush_signs.dart` and generated from `ia/n-*.svg`). `height` is multiplied
+  by the text scale; width follows from each character's own width plus 0.04 of
+  the height between two. Colour defaults to the text colour around it. The
+  screen reader says the text, or `label` when given. Only digits and `:`
+  (asserted in debug); a duration, date or size in a list stays in the text
+  typeface.
 - Stateless composition is the norm; stateful widgets exist only to own an
   animation: a `RotationTransition` while a status is in-flight (the badges'
   "cleaning" / "uploading" spinners create/dispose an `AnimationController` in
