@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class AppColorSet extends ThemeExtension<AppColorSet> {
@@ -189,48 +190,7 @@ class AppColorSet extends ThemeExtension<AppColorSet> {
     );
   }
 
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    return other is AppColorSet &&
-        other.primary == primary &&
-        other.accent == accent &&
-        other.background == background &&
-        other.foreground == foreground &&
-        other.card == card &&
-        other.surfaceAlt == surfaceAlt &&
-        other.secondary == secondary &&
-        other.info == info &&
-        other.infoText == infoText &&
-        other.success == success &&
-        other.successText == successText &&
-        other.onPrimary == onPrimary &&
-        other.chipSurface == chipSurface &&
-        other.warning == warning &&
-        other.border == border &&
-        other.error == error &&
-        other.wash == wash &&
-        other.deep == deep &&
-        other.soft == soft &&
-        other.brickSoft == brickSoft &&
-        other.wood == wood &&
-        other.woodSoft == woodSoft &&
-        other.woodText == woodText &&
-        other.bridgeSoft == bridgeSoft &&
-        other.slab == slab &&
-        other.pale == pale &&
-        other.tint == tint &&
-        other.mic == mic &&
-        other.clay == clay &&
-        other.sand == sand &&
-        other.onColor == onColor &&
-        other.knob == knob &&
-        other.count == count &&
-        other.onSoft == onSoft;
-  }
-
-  @override
-  int get hashCode => Object.hashAll([
+  List<Color> get _roles => [
     primary,
     accent,
     background,
@@ -265,7 +225,16 @@ class AppColorSet extends ThemeExtension<AppColorSet> {
     knob,
     count,
     onSoft,
-  ]);
+  ];
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is AppColorSet && listEquals(other._roles, _roles);
+  }
+
+  @override
+  int get hashCode => Object.hashAll(_roles);
 }
 
 abstract class AppColors {
