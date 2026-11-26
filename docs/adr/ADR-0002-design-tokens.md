@@ -3,7 +3,7 @@
 - Status: Accepted
 - Date: 2026-06-05
 - Epic: E2 (Design System & UI Componentization)
-- Related: ENG-106, ENG-115, ENG-162, ENG-163, ENG-76, ENG-159, ENG-183, ENG-116, ENG-90, ADR-0000, ADR-0007
+- Related: ENG-106, ENG-115, ENG-162, ENG-163, ENG-76, ENG-159, ENG-183, ENG-116, ENG-90, ADR-0000, ADR-0007, ADR-0012
 - Update (2026-11-26, ENG-3045): motion joins the token families as
   `MotionScale` (const scale), `AppMotion` (`ThemeExtension`, registered in both
   themes) and `context.motion`, named by meaning: the layer item 3 left for

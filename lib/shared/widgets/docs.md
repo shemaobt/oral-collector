@@ -14,6 +14,9 @@ Path: @/lib/shared/widgets
   ([cleaning_status_badge.dart](cleaning_status_badge.dart),
   [upload_status_badge.dart](upload_status_badge.dart),
   `sync_status_indicator.dart`), and dialogs/sheets/inputs.
+- A screen is built only from these pieces and the tokens, and a new piece
+  enters here before any screen uses it:
+  [ADR-0012](/docs/adr/ADR-0012-screens-use-only-kit-pieces.md).
 - Presentation-only: these widgets read design tokens from
   [/lib/core/theme](/lib/core/theme) (`AppColors.of(context)`, the `const`
   scales) and localized strings from [/lib/l10n](/lib/l10n), and surface
