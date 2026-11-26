@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:oral_collector/core/theme/app_colors.dart';
 import 'package:oral_collector/core/theme/app_theme.dart';
 import 'package:oral_collector/l10n/app_localizations.dart';
 import 'package:oral_collector/shared/widgets/record_button.dart';
