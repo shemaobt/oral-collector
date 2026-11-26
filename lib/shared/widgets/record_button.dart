@@ -98,7 +98,7 @@ class _RecordButtonState extends State<RecordButton>
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final dropShadow = isDark
         ? ShadowTints.dark.slab
-        : colors.error.withValues(alpha: 0.75);
+        : colors.mic.withValues(alpha: 0.75);
 
     final l10n = AppLocalizations.of(context);
     final String semanticLabel;
@@ -125,7 +125,7 @@ class _RecordButtonState extends State<RecordButton>
             height: size,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: colors.error,
+              color: colors.mic,
               boxShadow: [
                 BoxShadow(
                   color: dropShadow,
@@ -133,7 +133,7 @@ class _RecordButtonState extends State<RecordButton>
                   spreadRadius: -14,
                   offset: const Offset(0, 20),
                 ),
-                BoxShadow(color: colors.error, spreadRadius: _gap + _ring),
+                BoxShadow(color: colors.mic, spreadRadius: _gap + _ring),
                 BoxShadow(color: colors.background, spreadRadius: _gap),
               ],
             ),

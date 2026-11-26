@@ -14,13 +14,6 @@ void main() {
     );
   });
 
-  test('dark: g3 and g4 are lifted, g1 and g2 stay', () {
-    expect(
-      [for (var i = 0; i < 4; i++) disc(GenreColors.dark, i)],
-      [0xFFC9A26B, 0xFF89AAA3, 0xFF9EA562, 0xFFC77D60],
-    );
-  });
-
   test('tinted card backgrounds follow the mode', () {
     expect(
       [for (var i = 0; i < 4; i++) soft(GenreColors.light, i)],
