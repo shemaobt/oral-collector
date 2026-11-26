@@ -52,18 +52,25 @@ final _paths = <Sign, Path>{};
 Path _outline(Sign sign) =>
     _paths.putIfAbsent(sign, () => parseOutline(sign.outline));
 
+final _command = RegExp(r'([MLQZ])([^MLQZ]*)');
+
 Path parseOutline(String d) {
   final path = Path();
-  for (final subpath in d.split('Z')) {
-    if (subpath.isEmpty) continue;
-    final points = subpath.substring(1).split('L');
-    for (var i = 0; i < points.length; i++) {
-      final xy = points[i].split(' ');
-      final x = double.parse(xy[0]);
-      final y = double.parse(xy[1]);
-      i == 0 ? path.moveTo(x, y) : path.lineTo(x, y);
+  for (final match in _command.allMatches(d)) {
+    final n = [
+      for (final t in match[2]!.split(' '))
+        if (t.isNotEmpty) double.parse(t),
+    ];
+    switch (match[1]) {
+      case 'M':
+        path.moveTo(n[0], n[1]);
+      case 'L':
+        path.lineTo(n[0], n[1]);
+      case 'Q':
+        path.quadraticBezierTo(n[0], n[1], n[2], n[3]);
+      case 'Z':
+        path.close();
     }
-    path.close();
   }
   return path;
 }
