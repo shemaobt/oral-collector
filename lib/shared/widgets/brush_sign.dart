@@ -50,9 +50,9 @@ class BrushSign extends StatelessWidget {
 final _paths = <Sign, Path>{};
 
 Path _outline(Sign sign) =>
-    _paths.putIfAbsent(sign, () => _parse(sign.outline));
+    _paths.putIfAbsent(sign, () => parseOutline(sign.outline));
 
-Path _parse(String d) {
+Path parseOutline(String d) {
   final path = Path();
   for (final subpath in d.split('Z')) {
     if (subpath.isEmpty) continue;
