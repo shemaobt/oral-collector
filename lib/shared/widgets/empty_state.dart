@@ -33,10 +33,7 @@ class EmptyState extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  AppDisc(
-                    size: DiscSize.empty,
-                    child: Icon(icon, size: 30, color: colors.secondary),
-                  ),
+                  AppDisc(size: DiscSize.empty, child: Icon(icon)),
                   const SizedBox(height: SpacingScale.s20),
                   Text(
                     title,
