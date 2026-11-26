@@ -163,104 +163,126 @@ List<RouteBase> _routesFor(Ref ref, {required bool isWeb}) => [
   ShellRoute(
     builder: (context, state, child) => AppShell(child: child),
     routes: [
-      GoRoute(path: '/home', builder: (context, state) => const HomeScreen()),
-      GoRoute(
-        path: '/record',
-        redirect: _requireActiveProject(ref),
-        builder: (context, state) => RecordingFlowScreen(
-          genreId: state.uri.queryParameters['genreId'],
-          subcategoryId: state.uri.queryParameters['subcategoryId'],
-        ),
-      ),
-      GoRoute(
-        path: '/quick-record',
-        redirect: _requireActiveProject(ref),
-        builder: (context, state) => const QuickRecordingScreen(),
-      ),
-      GoRoute(
-        path: '/recovery-confirm',
-        redirect: _requireActiveProject(ref),
-        builder: (context, state) => const RecoveryConfirmScreen(),
-      ),
-      GoRoute(
-        path: '/recordings',
-        builder: (context, state) => RecordingsListScreen(
-          initialGenreId: state.uri.queryParameters['genreId'],
-          initialSubcategoryId: state.uri.queryParameters['subcategoryId'],
-          // Resolved here, not passed on as a raw string: an unknown code
-          // answers null and the list simply opens unfiltered, rather than
-          // sending the server something it would refuse with a 422.
-          initialReviewFlag: pendencyKindForCode(
-            state.uri.queryParameters['reviewFlag'] ?? '',
-          ),
-        ),
-      ),
-      GoRoute(
-        path: '/projects',
-        builder: (context, state) => const ProjectsScreen(),
-      ),
-      GoRoute(
-        path: '/profile',
-        builder: (context, state) => const ProfileScreen(),
-      ),
-
-      if (isWeb) ...[
-        GoRoute(
-          path: '/import-file',
-          redirect: _requireActiveProject(ref),
-          builder: (context, state) {
-            final extra = state.extra;
-            return FileImportScreen(
-              initialFiles: extra is List<XFile> ? extra : null,
-            );
-          },
-        ),
-        GoRoute(
-          path: '/genre/:id',
-          builder: (context, state) =>
-              GenreDetailScreen(genreId: state.pathParameters['id'] ?? ''),
-        ),
-        GoRoute(
-          path: '/recording/:id',
-          builder: (context, state) => RecordingDetailScreen(
-            recordingId: state.pathParameters['id'] ?? '',
-          ),
-        ),
-        GoRoute(
-          path: '/recording/:id/trim',
-          builder: (context, state) =>
-              TrimEditorScreen(recordingId: state.pathParameters['id'] ?? ''),
-        ),
-        GoRoute(
-          path: '/project/:id/settings',
-          builder: (context, state) => ProjectSettingsScreen(
-            projectId: state.pathParameters['id'] ?? '',
-          ),
-        ),
-        GoRoute(
-          path: '/project/:projectId/storytellers',
-          builder: (context, state) => StorytellersListScreen(
-            projectId: state.pathParameters['projectId'] ?? '',
-          ),
-        ),
-        GoRoute(
-          path: '/project/:projectId/storytellers/new',
-          builder: (context, state) => StorytellerFormScreen(
-            projectId: state.pathParameters['projectId'] ?? '',
-          ),
-        ),
-        GoRoute(
-          path: '/project/:projectId/storytellers/:storytellerId/edit',
-          builder: (context, state) => StorytellerFormScreen(
-            projectId: state.pathParameters['projectId'] ?? '',
-            storytellerId: state.pathParameters['storytellerId'],
-          ),
-        ),
-        GoRoute(
-          path: '/admin',
-          builder: (context, state) => const AdminDashboardScreen(),
-        ),
-      ],
+      ..._homeRoutes(isWeb: isWeb),
+      ..._recordRoutes(ref),
+      ..._recordingsRoutes(ref, isWeb: isWeb),
+      ..._projectsRoutes(isWeb: isWeb),
+      ..._profileRoutes(),
+      if (isWeb) ..._adminRoutes(),
     ],
+  ),
+];
+
+List<RouteBase> _homeRoutes({required bool isWeb}) => [
+  GoRoute(path: '/home', builder: (context, state) => const HomeScreen()),
+  if (isWeb) ...[
+    GoRoute(
+      path: '/genre/:id',
+      builder: (context, state) =>
+          GenreDetailScreen(genreId: state.pathParameters['id'] ?? ''),
+    ),
+  ],
+];
+
+List<RouteBase> _recordRoutes(Ref ref) => [
+  GoRoute(
+    path: '/record',
+    redirect: _requireActiveProject(ref),
+    builder: (context, state) => RecordingFlowScreen(
+      genreId: state.uri.queryParameters['genreId'],
+      subcategoryId: state.uri.queryParameters['subcategoryId'],
+    ),
+  ),
+  GoRoute(
+    path: '/quick-record',
+    redirect: _requireActiveProject(ref),
+    builder: (context, state) => const QuickRecordingScreen(),
+  ),
+  GoRoute(
+    path: '/recovery-confirm',
+    redirect: _requireActiveProject(ref),
+    builder: (context, state) => const RecoveryConfirmScreen(),
+  ),
+];
+
+List<RouteBase> _recordingsRoutes(Ref ref, {required bool isWeb}) => [
+  GoRoute(
+    path: '/recordings',
+    builder: (context, state) => RecordingsListScreen(
+      initialGenreId: state.uri.queryParameters['genreId'],
+      initialSubcategoryId: state.uri.queryParameters['subcategoryId'],
+      // Resolved here, not passed on as a raw string: an unknown code
+      // answers null and the list simply opens unfiltered, rather than
+      // sending the server something it would refuse with a 422.
+      initialReviewFlag: pendencyKindForCode(
+        state.uri.queryParameters['reviewFlag'] ?? '',
+      ),
+    ),
+  ),
+  if (isWeb) ...[
+    GoRoute(
+      path: '/import-file',
+      redirect: _requireActiveProject(ref),
+      builder: (context, state) {
+        final extra = state.extra;
+        return FileImportScreen(
+          initialFiles: extra is List<XFile> ? extra : null,
+        );
+      },
+    ),
+    GoRoute(
+      path: '/recording/:id',
+      builder: (context, state) =>
+          RecordingDetailScreen(recordingId: state.pathParameters['id'] ?? ''),
+    ),
+    GoRoute(
+      path: '/recording/:id/trim',
+      builder: (context, state) =>
+          TrimEditorScreen(recordingId: state.pathParameters['id'] ?? ''),
+    ),
+  ],
+];
+
+List<RouteBase> _projectsRoutes({required bool isWeb}) => [
+  GoRoute(
+    path: '/projects',
+    builder: (context, state) => const ProjectsScreen(),
+  ),
+  if (isWeb) ...[
+    GoRoute(
+      path: '/project/:id/settings',
+      builder: (context, state) =>
+          ProjectSettingsScreen(projectId: state.pathParameters['id'] ?? ''),
+    ),
+    GoRoute(
+      path: '/project/:projectId/storytellers',
+      builder: (context, state) => StorytellersListScreen(
+        projectId: state.pathParameters['projectId'] ?? '',
+      ),
+    ),
+    GoRoute(
+      path: '/project/:projectId/storytellers/new',
+      builder: (context, state) => StorytellerFormScreen(
+        projectId: state.pathParameters['projectId'] ?? '',
+      ),
+    ),
+    GoRoute(
+      path: '/project/:projectId/storytellers/:storytellerId/edit',
+      builder: (context, state) => StorytellerFormScreen(
+        projectId: state.pathParameters['projectId'] ?? '',
+        storytellerId: state.pathParameters['storytellerId'],
+      ),
+    ),
+  ],
+];
+
+List<RouteBase> _profileRoutes() => [
+  GoRoute(path: '/profile', builder: (context, state) => const ProfileScreen()),
+];
+
+List<RouteBase> _adminRoutes() => [
+  GoRoute(
+    path: '/admin',
+    builder: (context, state) => const AdminDashboardScreen(),
   ),
 ];

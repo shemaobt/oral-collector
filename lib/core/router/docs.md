@@ -78,6 +78,9 @@ Path: @/lib/core/router
   onto, and that Navigator placement is exactly what governs system-back
   behaviour (below). A reader who edits one branch without checking `kIsWeb`
   will silently change behaviour on only one platform.
+- **The shell's routes are one list per tab** (home, record, recordings,
+  projects, profile, and on the web admin), spread into the `ShellRoute`. A
+  web-only route sits in the list of the tab it belongs to, under `isWeb`.
 - Routes that need an active project (`/record`, `/record-flow`,
   `/quick-record`, `/recovery-confirm`, and the device-side `/import-file`)
   share `_requireActiveProject`: no active project, back to `/home`. The web
