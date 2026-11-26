@@ -54,10 +54,8 @@ Path: @/lib/core/theme
   `AppColors.of(context)`, which resolves the registered `AppColorSet`. This
   folder is an upstream dependency of nearly every presentation layer but depends
   only on Flutter `material`.
-- The semantic state tokens are `info`/`infoText`, `success`/`successText`,
-  `warning`, and `error`. `info` and `success` carry a darker `*Text` companion
-  for legible text-on-tint; `warning` and `error` are single tokens with no text
-  pair (callers tint both icon and label with the one color). `warning` is the
+- The semantic state tokens are `info`, `success`, `warning`, and `error`. They are
+  single tokens with no text pair (callers tint both icon and label with the one color). `warning` is the
   caution/attention color (amber/orange): it backs the unclassified affordances
   (FABs, badges, breadcrumbs), `ForbiddenException`
   permission snackbars, and the `needs_cleaning` cleaning state via
@@ -82,19 +80,6 @@ Path: @/lib/core/theme
   two dark genre colours), `knob`, `count` (time of who is recording: brick in
   light, cream in dark) and `onSoft` (the sign on `soft`, the same terracotta in
   both themes). `error` is the terracotta of what failed, not brick.
-- `chipSurface` (ENG-374, card V3) backs the recording list card's pendency
-  chip
-  ([/lib/features/recording/presentation/widgets/recording_card.dart](/lib/features/recording/presentation/widgets/recording_card.dart)).
-  It is its own token rather than a reuse of `surfaceAlt` because the design's
-  color reads as quieter than that panel tone; before this it was a fixed
-  light constant living outside `AppColorSet`, which would have stayed light
-  in dark mode. Its dark value is the existing `darkSurfaceAlt`, not a new
-  constant — no separate dark tone was specified. ENG-382 weighed retiring the
-  token and kept it on that asymmetry, which
-  [/test/core/theme/app_colors_test.dart](/test/core/theme/app_colors_test.dart)
-  now pins: coinciding with `surfaceAlt` in dark and differing from it in
-  light is the whole reason the field exists, and a dark-mode check alone
-  would pass on a card that had swapped the token away.
 - Spacing/radii/motion/opacity consumers reference the `const` scale directly
   (e.g. `SpacingScale.s16`, `RadiusScale.r12`, `DurationScale.ms200`,
   `MotionScale.base`, `OpacityScale.o40`) or the `context.spacing` / `.radii` /
@@ -123,8 +108,7 @@ Path: @/lib/core/theme
   `info`→`warning` (ADR-0007). To absorb that migration `AppColors` gained the
   neutral anchors `white`/`black`/`transparent` (pure primitives, distinct from
   the off-white `brandBranco` / near-black `brandPreto` brand tokens) plus a few
-  long-tail semantic tokens (`meterWarning`, the `warningContainer` /
-  `onWarningContainer` storage-banner pair, `authHeroAccent`); the genre
+  long-tail semantic tokens (`authHeroAccent`); the genre
   accents live in `GenreColors` ([genre_colors.dart](genre_colors.dart)) and the runtime hex parser to [color_hex.dart](color_hex.dart).
 - Token values and contracts are pinned by tests under
   [/test/core/theme/](/test/core/theme) (colors in `app_colors_test.dart`;

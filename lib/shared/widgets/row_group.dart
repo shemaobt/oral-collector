@@ -13,7 +13,7 @@ class RowGroup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final wash = AppColors.of(context).wash;
+    final line = AppColors.of(context).border;
     return AppTile(
       padding: const EdgeInsets.symmetric(
         horizontal: SpacingScale.s16,
@@ -23,7 +23,7 @@ class RowGroup extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           for (var i = 0; i < children.length; i++) ...[
-            if (i > 0) Divider(height: 1, thickness: 1, color: wash),
+            if (i > 0) Divider(height: 1, thickness: 1, color: line),
             ConstrainedBox(
               constraints: const BoxConstraints(minHeight: _rowMinHeight),
               child: Align(

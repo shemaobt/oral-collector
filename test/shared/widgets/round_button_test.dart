@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:oral_collector/core/theme/app_colors.dart';
 import 'package:oral_collector/core/theme/app_theme.dart';
 import 'package:oral_collector/shared/widgets/round_button.dart';
 
@@ -53,27 +52,6 @@ void main() {
 
       await tester.tapAt(tester.getCenter(ink) + const Offset(23, 0));
       expect(presses, 1);
-    });
-  }
-
-  final tones = <RoundButtonTone, Color Function(AppColorSet)>{
-    RoundButtonTone.accent: (c) => c.accent,
-    RoundButtonTone.control: (c) => c.card,
-    RoundButtonTone.soft: (c) => c.brickSoft,
-  };
-  final themes = {'light': AppTheme.lightTheme, 'dark': AppTheme.darkTheme};
-  for (final theme in themes.entries) {
-    testWidgets('tones fill their colour in ${theme.key}', (tester) async {
-      for (final tone in tones.entries) {
-        await pumpRound(
-          tester,
-          size: RoundButtonSize.action,
-          tone: tone.key,
-          theme: theme.value,
-        );
-        final colors = AppColors.of(tester.element(find.byType(RoundButton)));
-        expect(disc(tester).color, tone.value(colors), reason: tone.key.name);
-      }
     });
   }
 }

@@ -113,7 +113,7 @@ void _expectBrushTitles(ThemeData theme) {
   expect(theme.appBarTheme.toolbarHeight, 64);
   final line = (theme.appBarTheme.shape! as Border).bottom;
   expect(line.width, 1.5);
-  expect(line.color, theme.extension<AppColorSet>()!.wash);
+  expect(line.color, theme.extension<AppColorSet>()!.border);
 }
 
 T? _on<T>(WidgetStateProperty<T>? p, [Set<WidgetState> s = const {}]) =>
@@ -162,14 +162,14 @@ void _expectOverlays(ThemeData theme) {
   expect(sheet.dragHandleColor, c.border);
 
   final snack = theme.snackBarTheme;
-  expect(snack.backgroundColor, c.slab);
+  expect(snack.backgroundColor, c.primary);
   expect(snack.actionTextColor, c.wood);
   expect(_radiusOf(snack.shape), BorderRadius.circular(RadiusScale.r16));
 
   expect(theme.popupMenuTheme.color, c.card);
   expect(_on(theme.menuTheme.style!.backgroundColor), c.card);
 
-  expect(theme.dividerTheme.color, c.wash);
+  expect(theme.dividerTheme.color, c.border);
 }
 
 void _expectControls(ThemeData theme) {

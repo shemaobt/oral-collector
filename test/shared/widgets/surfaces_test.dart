@@ -5,7 +5,6 @@ import 'package:oral_collector/core/theme/app_radii.dart';
 import 'package:oral_collector/core/theme/app_theme.dart';
 import 'package:oral_collector/shared/widgets/app_tile.dart';
 import 'package:oral_collector/shared/widgets/row_group.dart';
-import 'package:oral_collector/shared/widgets/slab_card.dart';
 import 'package:oral_collector/shared/widgets/stat_tile.dart';
 
 Future<void> _pump(
@@ -39,15 +38,13 @@ BoxDecoration _surface(WidgetTester tester, Finder within) {
 
 void main() {
   group('AppTile', () {
-    testWidgets('draws card fill, 1.5 wash border and radius 24', (
-      tester,
-    ) async {
+    testWidgets('draws card fill, 1.5 border and radius 24', (tester) async {
       await _pump(tester, const AppTile(child: Text('x')));
       final decoration = _surface(tester, find.byType(AppTile));
       expect(decoration.color, AppColors.light.card);
       expect(
         decoration.border,
-        Border.all(color: AppColors.light.wash, width: 1.5),
+        Border.all(color: AppColors.light.border, width: 1.5),
       );
       expect(decoration.borderRadius, BorderRadius.circular(RadiusScale.r24));
     });
@@ -96,32 +93,6 @@ void main() {
         const StatTile(value: '128', label: 'recordings', hot: true),
       );
       expect(number(tester).style!.color, AppColors.light.accent);
-    });
-  });
-
-  group('SlabCard', () {
-    testWidgets('light: slab fill, text in the background colour', (
-      tester,
-    ) async {
-      await _pump(tester, const SlabCard(child: Text('x')));
-      expect(
-        _surface(tester, find.byType(SlabCard)).color,
-        AppColors.light.slab,
-      );
-      final style = DefaultTextStyle.of(tester.element(find.text('x'))).style;
-      expect(style.color, AppColors.light.background);
-    });
-
-    testWidgets('dark: card fill', (tester) async {
-      await _pump(
-        tester,
-        const SlabCard(child: Text('x')),
-        theme: AppTheme.darkTheme,
-      );
-      expect(
-        _surface(tester, find.byType(SlabCard)).color,
-        AppColors.dark.card,
-      );
     });
   });
 

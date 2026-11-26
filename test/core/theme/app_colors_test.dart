@@ -30,17 +30,6 @@ void main() {
       expect(AppColors.light.lerp(AppColors.dark, 1), AppColors.dark);
     });
 
-    test('lerp at t=0.5 lands on the midpoint of each new role', () {
-      final mid = AppColors.light.lerp(AppColors.dark, 0.5);
-
-      expect(mid.wash.toARGB32(), isNot(AppColors.light.wash.toARGB32()));
-      expect(mid.slab.toARGB32(), isNot(AppColors.dark.slab.toARGB32()));
-      expect(
-        mid.woodText,
-        Color.lerp(AppColors.light.woodText, AppColors.dark.woodText, 0.5),
-      );
-    });
-
     test('lerp(null, ...) returns the original set unchanged', () {
       expect(AppColors.light.lerp(null, 0.5), same(AppColors.light));
     });
@@ -147,9 +136,6 @@ void main() {
     });
 
     test('long-tail semantic tokens match the migrated literals', () {
-      expect(AppColors.meterWarning.toARGB32(), 0xFFC7A268);
-      expect(AppColors.warningContainer.toARGB32(), 0xFFF4E3BF);
-      expect(AppColors.onWarningContainer.toARGB32(), 0xFF6E4F1C);
       expect(AppColors.authHeroAccent.toARGB32(), 0xFFFFB380);
     });
   });

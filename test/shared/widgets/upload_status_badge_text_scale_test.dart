@@ -65,7 +65,7 @@ void main() {
     final cases = <String, (String, Color Function(AppColorSet))>{
       'local': ('On the device', (c) => c.secondary),
       'uploading': ('Sending', (c) => c.accent),
-      'uploaded': ('Sent', (c) => c.infoText),
+      'uploaded': ('Sent', (c) => c.info),
       'failed': ('Needs you', (c) => c.error),
     };
     for (final entry in cases.entries) {

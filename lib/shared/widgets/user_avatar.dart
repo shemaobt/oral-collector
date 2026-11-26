@@ -40,7 +40,6 @@ class UserAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    final dark = Theme.of(context).brightness == Brightness.dark;
     final diameter = radius * 2;
 
     return Container(
@@ -69,7 +68,7 @@ class UserAvatar extends StatelessWidget {
               style: TextStyle(
                 fontFamily: 'CaveatBrush',
                 fontSize: diameter * 0.41,
-                color: dark ? colors.background : colors.slab,
+                color: colors.primary,
               ),
             ),
     );

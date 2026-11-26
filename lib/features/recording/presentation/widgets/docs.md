@@ -305,12 +305,8 @@ Path: @/lib/features/recording/presentation/widgets
   colour of its own; each caller picks its own fallback instead of the two
   comparing colour values to infer which state produced them — the rail falls
   back to `colors.border`, the icon to `colors.secondary`. The chip's
-  background is the themed `colors.chipSurface`
-  (ENG-374; see [/lib/core/theme/docs.md](/lib/core/theme/docs.md)). ENG-382
-  weighed retiring that token and kept it: it is not interchangeable with
-  `surfaceAlt`, which coincides in dark (`0xFF302D22`) but differs in light
-  (`0xFFF1EEDE` against `0xFFEDE9D5`), so the field is carrying a real
-  distinction rather than costing one for nothing. ENG-382 did put
+  background is `colors.surfaceAlt`; the dedicated `chipSurface` token
+  was retired by ENG-3005. ENG-382 did put
   the duration back in `_FooterRow`, between the chip and the chevron, which
   amends the ENG-374 trade rule that had banned it — the description keeps the
   room it won, and the duration is the element ranked below it. It uses

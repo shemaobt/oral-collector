@@ -46,10 +46,10 @@ class StatusBanner extends StatelessWidget {
 
     final (background, foreground) = switch (variant) {
       StatusBannerVariant.plain => (colors.surfaceAlt, colors.foreground),
-      StatusBannerVariant.warn => (colors.woodSoft, colors.woodText),
-      StatusBannerVariant.error => (colors.brickSoft, colors.error),
-      StatusBannerVariant.hot => (colors.soft, colors.deep),
-      StatusBannerVariant.info => (colors.bridgeSoft, colors.infoText),
+      StatusBannerVariant.warn => (colors.wood, colors.foreground),
+      StatusBannerVariant.error => (colors.soft, colors.onSoft),
+      StatusBannerVariant.hot => (colors.soft, colors.onSoft),
+      StatusBannerVariant.info => (colors.pale, colors.info),
     };
 
     return Padding(

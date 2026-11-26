@@ -73,7 +73,7 @@ class _UploadStatusBadgeState extends State<UploadStatusBadge>
     switch (widget.status) {
       case 'uploaded':
         icon = LucideIcons.checkCircle;
-        color = colors.infoText;
+        color = colors.info;
         label = l10n.sendState_sent;
         break;
       case 'uploading':

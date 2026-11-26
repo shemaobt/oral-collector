@@ -705,7 +705,7 @@ class _PendencyChip extends StatelessWidget {
         vertical: 3,
       ),
       decoration: BoxDecoration(
-        color: colors.chipSurface,
+        color: colors.surfaceAlt,
         borderRadius: BorderRadius.circular(RadiusScale.r8),
       ),
       child: Row(

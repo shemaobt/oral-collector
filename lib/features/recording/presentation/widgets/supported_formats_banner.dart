@@ -31,7 +31,7 @@ class SupportedFormatsBanner extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(LucideIcons.info, size: dense ? 16 : 18, color: colors.infoText),
+          Icon(LucideIcons.info, size: dense ? 16 : 18, color: colors.info),
           SizedBox(width: dense ? 8 : 12),
           Expanded(
             child: Text(
@@ -40,7 +40,7 @@ class SupportedFormatsBanner extends StatelessWidget {
                   (dense
                           ? theme.textTheme.bodySmall
                           : theme.textTheme.bodyMedium)
-                      ?.copyWith(color: colors.infoText, height: 1.3),
+                      ?.copyWith(color: colors.info, height: 1.3),
             ),
           ),
           if (onDismiss != null) ...[
@@ -53,7 +53,7 @@ class SupportedFormatsBanner extends StatelessWidget {
                 child: Icon(
                   LucideIcons.x,
                   size: dense ? 14 : 16,
-                  color: colors.infoText.withValues(alpha: 0.7),
+                  color: colors.info.withValues(alpha: 0.7),
                 ),
               ),
             ),

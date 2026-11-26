@@ -170,7 +170,7 @@ abstract class AppTheme {
       centerTitle: false,
       titleTextStyle: text.headlineLarge,
       shape: Border(
-        bottom: BorderSide(color: c.wash, width: _topBarLine),
+        bottom: BorderSide(color: c.border, width: _topBarLine),
       ),
     );
   }
@@ -202,15 +202,15 @@ abstract class AppTheme {
     );
   }
 
-  static SnackBarThemeData _snackBarTheme(AppColorSet c, Color onSlab) {
+  static SnackBarThemeData _snackBarTheme(AppColorSet c) {
     return SnackBarThemeData(
-      backgroundColor: c.slab,
+      backgroundColor: c.primary,
       actionTextColor: c.wood,
       contentTextStyle: TextStyle(
         fontFamily: _fontFamily,
         fontSize: 14,
         fontWeight: FontWeight.w500,
-        color: onSlab,
+        color: c.onPrimary,
       ),
       behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(
@@ -242,7 +242,7 @@ abstract class AppTheme {
   }
 
   static DividerThemeData _dividerTheme(AppColorSet c) {
-    return DividerThemeData(color: c.wash, thickness: 1);
+    return DividerThemeData(color: c.border, thickness: 1);
   }
 
   static ChipThemeData _chipTheme(AppColorSet c) {
@@ -444,10 +444,7 @@ abstract class AppTheme {
       bottomSheetTheme: _bottomSheetTheme(AppColors.light),
       menuTheme: _menuTheme(AppColors.light),
       popupMenuTheme: _popupMenuTheme(AppColors.light),
-      snackBarTheme: _snackBarTheme(
-        AppColors.light,
-        AppColors.light.background,
-      ),
+      snackBarTheme: _snackBarTheme(AppColors.light),
       tabBarTheme: _tabBarTheme(AppColors.light),
       sliderTheme: _sliderTheme(AppColors.light),
       switchTheme: _switchTheme(AppColors.light),
@@ -571,7 +568,7 @@ abstract class AppTheme {
       bottomSheetTheme: _bottomSheetTheme(AppColors.dark),
       menuTheme: _menuTheme(AppColors.dark),
       popupMenuTheme: _popupMenuTheme(AppColors.dark),
-      snackBarTheme: _snackBarTheme(AppColors.dark, AppColors.dark.foreground),
+      snackBarTheme: _snackBarTheme(AppColors.dark),
       tabBarTheme: _tabBarTheme(AppColors.dark),
       sliderTheme: _sliderTheme(AppColors.dark),
       switchTheme: _switchTheme(AppColors.dark),
