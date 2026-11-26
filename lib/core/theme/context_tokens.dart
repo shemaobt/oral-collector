@@ -25,7 +25,15 @@ extension TokenContext on BuildContext {
     final AppMotion set =
         Theme.of(this).extension<AppMotion>() ?? AppMotion.fallback;
     return MediaQuery.maybeDisableAnimationsOf(this) ?? false
-        ? set.stilled()
+        ? set.copyWith(
+            fast: Duration.zero,
+            base: Duration.zero,
+            slow: Duration.zero,
+            pressIn: Duration.zero,
+            pressOut: Duration.zero,
+            stagger: Duration.zero,
+            still: true,
+          )
         : set;
   }
 

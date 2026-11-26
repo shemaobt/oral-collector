@@ -90,16 +90,6 @@ class AppMotion extends ThemeExtension<AppMotion> {
     );
   }
 
-  AppMotion stilled() => copyWith(
-    fast: Duration.zero,
-    base: Duration.zero,
-    slow: Duration.zero,
-    pressIn: Duration.zero,
-    pressOut: Duration.zero,
-    stagger: Duration.zero,
-    still: true,
-  );
-
   /// Curves and flags cannot blend: this set's below the middle, the other's
   /// from the middle on.
   @override
