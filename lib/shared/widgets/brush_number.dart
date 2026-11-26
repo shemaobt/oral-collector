@@ -44,7 +44,9 @@ class BrushNumber extends StatelessWidget {
       child: SizedBox(
         width: width,
         height: h,
-        child: CustomPaint(painter: _NumberPainter(glyphs, paint, h)),
+        child: ClipRect(
+          child: CustomPaint(painter: _NumberPainter(glyphs, paint, h)),
+        ),
       ),
     );
   }
@@ -80,5 +82,7 @@ class _NumberPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_NumberPainter old) =>
-      old.color != color || old.height != height || !listEquals(old.glyphs, glyphs);
+      old.color != color ||
+      old.height != height ||
+      !listEquals(old.glyphs, glyphs);
 }
