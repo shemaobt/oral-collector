@@ -42,6 +42,13 @@ Path: @/lib/shared/widgets
 
 ### Core Implementation
 
+- [brush_sign.dart](brush_sign.dart) draws the kit's 47 brush signs (`Sign`)
+  from outlines held as text in `brush_signs.dart`, which is generated from the
+  kit's `ia/s-*.svg` and never edited by hand. A `BrushSign` stands where an
+  `Icon` stood: size and colour default to the `IconTheme`. `label` makes it an
+  image for screen readers; with none it is skipped. `turns` rotates it («close»
+  is `plus` at 0.125, «open list» is `next` at 0.25). `back` and `next` mirror
+  under a right-to-left locale.
 - Stateless composition is the norm; stateful widgets exist only to own an
   animation: a `RotationTransition` while a status is in-flight (the badges'
   "cleaning" / "uploading" spinners create/dispose an `AnimationController` in
@@ -105,6 +112,14 @@ Path: @/lib/shared/widgets
   `CleaningStatusBadge` is intended for the recording status section (per its
   style's doc comment) and `UploadStatusBadge` has no call sites yet; both were
   hardened as shared-library hygiene so they are safe when wired up.
+- **`HandCutRectPainter`** ([hand_cut_rect.dart](hand_cut_rect.dart)) is the
+  kit's rectangle cut by hand: outline wobbles per axis by 0.012 × the short side
+  (at least 0.35, at most 1.1 from a short side of 92); the combined shift of a
+  point can exceed 1.1 (1.21 at 200×100, inherited from `sheetOutline`). The
+  seed derives from the size (stable across rebuilds). With a `shadow` colour it paints the
+  same shape shifted by `shadowOffset` (default 3 right, 4 down; 2 and 3 for
+  small pieces), no blur, in physical directions so RTL does not flip it. Colours
+  come from the caller; only pressable pieces pass a shadow.
 - **Regression coverage** lives in
   [/test/shared/widgets](/test/shared/widgets), pumping each widget at the
   ceiling via [/test/support/text_scale.dart](/test/support/text_scale.dart)

@@ -32,6 +32,15 @@ const _testColors = AppColorSet(
   woodText: Color(0xFF000000),
   bridgeSoft: Color(0xFF000000),
   slab: Color(0xFF000000),
+  pale: Color(0xFF000000),
+  tint: Color(0xFF000000),
+  mic: Color(0xFF000000),
+  clay: Color(0xFF000000),
+  sand: Color(0xFF000000),
+  onColor: Color(0xFF000000),
+  knob: Color(0xFF000000),
+  count: Color(0xFF000000),
+  onSoft: Color(0xFF000000),
 );
 
 Widget _wrap(Widget child) => MaterialApp(
