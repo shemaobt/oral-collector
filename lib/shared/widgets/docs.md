@@ -110,4 +110,11 @@ Path: @/lib/shared/widgets
   ceiling via [/test/support/text_scale.dart](/test/support/text_scale.dart)
   (`pumpAtTextScale` / `expectNoOverflow`) on a realistic phone viewport.
 
+- **`LeavingRow` is a switch on a row, not an `AnimatedList`.** The caller keeps
+  the row in the list it builds and flips `gone`; the row fades and slides
+  (`fast`, `leave`), then its height closes (`base`, `enter`); `gone: false`
+  opens the height, then fades the row in rising. The `gap` between rows lives
+  inside the helper so it closes with the row. A row built gone takes no
+  space; under `context.motion` with less motion asked, gone and back are cuts.
+
 Created and maintained by Nori.
