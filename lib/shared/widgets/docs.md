@@ -42,6 +42,13 @@ Path: @/lib/shared/widgets
 
 ### Core Implementation
 
+- [brush_sign.dart](brush_sign.dart) draws the kit's 47 brush signs (`Sign`)
+  from outlines held as text in `brush_signs.dart`, which is generated from the
+  kit's `ia/s-*.svg` and never edited by hand. A `BrushSign` stands where an
+  `Icon` stood: size and colour default to the `IconTheme`. `label` makes it an
+  image for screen readers; with none it is skipped. `turns` rotates it («close»
+  is `plus` at 0.125, «open list» is `next` at 0.25). `back` and `next` mirror
+  under a right-to-left locale.
 - Stateless composition is the norm; stateful widgets exist only to drive a
   `RotationTransition` while a status is in-flight (the badges' "cleaning" /
   "uploading" spinners create/dispose an `AnimationController` in
