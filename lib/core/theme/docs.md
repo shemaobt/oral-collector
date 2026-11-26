@@ -20,11 +20,11 @@ Path: @/lib/core/theme
   rules forbid raw `Color(...)` everywhere outside this folder.
 - All token families follow one **hybrid** pattern: a source-of-truth scale
   (semantic color constants assembled into `AppColorSet`; `const` scales
-  `SpacingScale` / `RadiusScale` / `DurationScale` / `OpacityScale`), a thin
+  `SpacingScale` / `RadiusScale` / `DurationScale` / `MotionScale` / `OpacityScale`), a thin
   `ThemeExtension` that carries it and makes it theme-aware, and a resolver that
   reads the registered extension with a fallback.
 - `AppColorSet` is the first `ThemeExtension`; `AppSpacing` / `AppRadii` /
-  `AppDurations` / `AppOpacity` follow the same contract. Conventions, grid
+  `AppDurations` / `AppMotion` / `AppOpacity` follow the same contract. Conventions, grid
   policy, and scope are governed by
   [ADR-0002](/docs/adr/ADR-0002-design-tokens.md).
 
@@ -141,11 +141,15 @@ SpacingScale/RadiusScale/DurationScale/OpacityScale ─► AppSpacing/AppRadii/A
 
 - **Registration.** `lightTheme` registers `AppColors.light`; `darkTheme`
   registers `AppColors.dark`; both register `AppSpacing.fallback`,
-  `AppRadii.fallback`, `AppDurations.fallback`, `AppOpacity.fallback` — in a
+  `AppRadii.fallback`, `AppDurations.fallback`, `AppMotion.fallback`,
+  `AppOpacity.fallback` — in a
   single `const <ThemeExtension<dynamic>>[...]` list per theme.
 - **`AppColors.of(context)`** reads `Theme.of(context)`, prefers
   `extension<AppColorSet>()`, and only falls back to a brightness check when no
   extension is registered (bare `ThemeData` in tests/previews).
+- **`context.motion`** reads `extension<AppMotion>() ?? AppMotion.fallback`;
+  under `MediaQuery.maybeDisableAnimationsOf` it zeroes the six times and sets
+  `still`. Curves, distances and `pressScale` do not change.
 - **`context.spacing/radii/durations/opacity`** ([context_tokens.dart](context_tokens.dart))
   read `Theme.of(context).extension<T>() ?? T.fallback`, so tokens still resolve
   under a bare `MaterialApp`.
