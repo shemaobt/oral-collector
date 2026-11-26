@@ -49,11 +49,11 @@ Path: @/lib/shared/widgets
   image for screen readers; with none it is skipped. `turns` rotates it («close»
   is `plus` at 0.125, «open list» is `next` at 0.25). `back` and `next` mirror
   under a right-to-left locale.
-- Stateless composition is the norm; stateful widgets exist only to drive a
-  `RotationTransition` while a status is in-flight (the badges' "cleaning" /
-  "uploading" spinners create/dispose an `AnimationController` in
-  `didUpdateWidget`) or to track collapse state in the web sidebar
-  ([app_shell/web_sidebar.dart](app_shell/web_sidebar.dart)).
+- Stateless composition is the norm; stateful widgets exist only to own an
+  animation: a `RotationTransition` while a status is in-flight (the badges'
+  "cleaning" / "uploading" spinners create/dispose an `AnimationController` in
+  `didUpdateWidget`), `LeavingRow`'s fade and height, or the web sidebar's
+  collapse state ([app_shell/web_sidebar.dart](app_shell/web_sidebar.dart)).
 - All color and spacing come from theme tokens, never raw literals (enforced by
   the `obt_lints` plugin outside `lib/core/theme/**`); strings come from
   `AppLocalizations.of(context)`.
@@ -124,5 +124,19 @@ Path: @/lib/shared/widgets
   [/test/shared/widgets](/test/shared/widgets), pumping each widget at the
   ceiling via [/test/support/text_scale.dart](/test/support/text_scale.dart)
   (`pumpAtTextScale` / `expectNoOverflow`) on a realistic phone viewport.
+
+- **`LeavingRow` is a switch on a row, not an `AnimatedList`.** The caller keeps
+  the row in the list it builds and flips `gone`; the row fades and slides
+  (`fast`, `leave`), then its height closes (`base`, `enter`); `gone: false`
+  opens the height, then fades the row in rising. The `gap` between rows lives
+  inside the helper so it closes with the row. The row stays mounted at zero
+  height while gone, so its child keeps its state through leave and return; it
+  takes no taps, focus or semantics, and on the way back takes taps only once
+  whole. Turning back mid-flight continues from the current frame. Under
+  `context.motion` with less motion asked, gone and back are cuts in one frame.
+  Caller contract: give every item's row a key (`ValueKey(item.id)`), or after a
+  drop the next row inherits the collapsed state and plays the come-back; flip
+  `gone` before any `await`, so the row leaves while the work runs; dropping the
+  item from the list mid-leave snaps the row out: the list shortens in one frame.
 
 Created and maintained by Nori.
