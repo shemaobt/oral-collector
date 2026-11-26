@@ -15,6 +15,12 @@ Path: @/lib/core/web
   (`cleanedLocationWithout(href, key)`); [./url_history.dart](url_history.dart)
   is the facade (`stripUrlQueryParam(key)`) that performs the side effect.
 
+- [./reduced_motion.dart](reduced_motion.dart) is a second facade of the same
+  kind: `prefersReducedMotion()` reads the browser's
+  `prefers-reduced-motion` synchronously and `watchPrefersReducedMotion()`
+  streams each later change; the non-web stub answers `false` and never emits. Its only reader is `AppFrame`
+  ([../startup/docs.md](../startup/docs.md)).
+
 ### How it fits into the larger codebase
 
 - This is the OS/browser side of the transport-hardening story whose narrative
