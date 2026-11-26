@@ -34,12 +34,7 @@ class BrushSign extends StatelessWidget {
     final drawing = SizedBox.square(
       dimension: side,
       child: CustomPaint(
-        painter: _SignPainter(
-          sign,
-          color ?? theme.color!,
-          flip,
-          turns,
-        ),
+        painter: _SignPainter(sign, color ?? theme.color!, flip, turns),
       ),
     );
     if (label == null) return ExcludeSemantics(child: drawing);
