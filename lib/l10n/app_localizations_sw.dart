@@ -30,9 +30,6 @@ class AppLocalizationsSw extends AppLocalizations {
   String get nav_admin => 'Msimamizi';
 
   @override
-  String get nav_collapse => 'Kunja';
-
-  @override
   String get common_cancel => 'Ghairi';
 
   @override

@@ -30,9 +30,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get nav_admin => 'المشرف';
 
   @override
-  String get nav_collapse => 'طي';
-
-  @override
   String get common_cancel => 'إلغاء';
 
   @override

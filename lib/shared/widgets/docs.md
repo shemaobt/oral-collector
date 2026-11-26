@@ -52,8 +52,7 @@ Path: @/lib/shared/widgets
 - Stateless composition is the norm; stateful widgets exist only to own an
   animation: a `RotationTransition` while a status is in-flight (the badges'
   "cleaning" / "uploading" spinners create/dispose an `AnimationController` in
-  `didUpdateWidget`), `LeavingRow`'s fade and height, or the web sidebar's
-  collapse state ([app_shell/web_sidebar.dart](app_shell/web_sidebar.dart)).
+  `didUpdateWidget`) and `LeavingRow`'s fade and height.
 - All color and spacing come from theme tokens, never raw literals (enforced by
   the `obt_lints` plugin outside `lib/core/theme/**`); strings come from
   `AppLocalizations.of(context)`.
@@ -85,10 +84,9 @@ Path: @/lib/shared/widgets
     → IntrinsicHeight`, so it stays centered when it fits and scrolls instead of
     overflowing when large fonts make it taller than the viewport.
   - **`Flexible` + `maxLines: 1` + `TextOverflow.ellipsis`** for labels under
-    width pressure: the status-badge labels and the web sidebar's collapse-toggle
-    label (in [app_shell/web_sidebar.dart](app_shell/web_sidebar.dart)) degrade by
-    ellipsizing rather than overflowing. The collapse toggle was the only
-    unprotected text in the sidebar and the single real overflow found.
+    width pressure: the status-badge labels and the web sidebar's brand name
+    (in [app_shell/web_sidebar.dart](app_shell/web_sidebar.dart)) degrade by
+    ellipsizing rather than overflowing.
   - **Fixed nav-chrome heights are intentionally preserved** (the mobile bottom
     bar / nav item in
     [app_shell/floating_nav_bar.dart](app_shell/floating_nav_bar.dart), the 96px

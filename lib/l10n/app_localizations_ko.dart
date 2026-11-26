@@ -30,9 +30,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get nav_admin => '관리';
 
   @override
-  String get nav_collapse => '접기';
-
-  @override
   String get common_cancel => '취소';
 
   @override

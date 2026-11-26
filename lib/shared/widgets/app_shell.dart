@@ -22,15 +22,16 @@ class AppShell extends ConsumerStatefulWidget {
   final Widget child;
 
   static const double scrollBottomPadding = 120;
+  static const double wideBreakpoint = 1024;
 
   static double scrollPaddingFor(BuildContext context) {
-    return MediaQuery.of(context).size.width >= 600
+    return MediaQuery.of(context).size.width >= wideBreakpoint
         ? 40.0
         : scrollBottomPadding;
   }
 
   static double fabBottomOffset(BuildContext context) {
-    if (MediaQuery.of(context).size.width >= 600) return 70.0;
+    if (MediaQuery.of(context).size.width >= wideBreakpoint) return 70.0;
     final safePadding = MediaQuery.of(context).padding.bottom;
     return 68.0 + 6 + (safePadding > 0 ? safePadding - 16 : 2) + 16;
   }
@@ -136,8 +137,7 @@ class _AppShellState extends ConsumerState<AppShell> {
     final colors = AppColors.of(context);
     final l10n = AppLocalizations.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
-    final isWide = screenWidth >= 600;
-    final isDesktop = screenWidth >= 1024;
+    final isWide = screenWidth >= AppShell.wideBreakpoint;
     final pendingInvites = ref.watch(inviteNotifierProvider).pendingCount;
 
     ref.watch(roleNotifierProvider);
@@ -155,7 +155,6 @@ class _AppShellState extends ConsumerState<AppShell> {
               selectedIndex: selectedIndex,
               onTabTapped: (index) => _navigateToTab(tabs[index].path),
               pendingInvites: pendingInvites,
-              startExpanded: isDesktop,
             ),
             Expanded(child: widget.child),
           ],

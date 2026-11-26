@@ -158,12 +158,6 @@ abstract class AppLocalizations {
   /// **'Admin'**
   String get nav_admin;
 
-  /// No description provided for @nav_collapse.
-  ///
-  /// In en, this message translates to:
-  /// **'Collapse'**
-  String get nav_collapse;
-
   /// No description provided for @common_cancel.
   ///
   /// In en, this message translates to:

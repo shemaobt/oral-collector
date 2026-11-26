@@ -335,23 +335,6 @@ void main() {
         expect(label.style!.color, colors.onPrimary);
       },
     );
-
-    testWidgets('expanded is 232 wide, collapsed is a 72 rail of icons', (
-      tester,
-    ) async {
-      await pumpWide(tester);
-      expect(tester.getSize(find.byType(WebSidebar)).width, 232);
-      await tester.tap(find.byIcon(LucideIcons.panelLeftClose));
-      await tester.pumpAndSettle();
-      expect(tester.getSize(find.byType(WebSidebar)).width, 72);
-      expect(
-        find.descendant(
-          of: find.byType(WebSidebar),
-          matching: find.text('Home'),
-        ),
-        findsNothing,
-      );
-    });
   });
 
   testWidgets(
