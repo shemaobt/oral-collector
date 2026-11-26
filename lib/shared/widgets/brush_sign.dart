@@ -2,7 +2,6 @@ import 'dart:math' as math;
 
 import 'package:flutter/widgets.dart';
 
-import '../../core/theme/app_colors.dart';
 import 'brush_signs.dart';
 
 export 'brush_signs.dart' show Sign;
@@ -29,7 +28,7 @@ class BrushSign extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = IconTheme.of(context);
-    final side = size ?? theme.size ?? 24;
+    final side = size ?? theme.size!;
     final flip =
         sign.mirrorsInRtl && Directionality.of(context) == TextDirection.rtl;
     final drawing = SizedBox.square(
@@ -37,7 +36,7 @@ class BrushSign extends StatelessWidget {
       child: CustomPaint(
         painter: _SignPainter(
           sign,
-          color ?? theme.color ?? AppColors.of(context).foreground,
+          color ?? theme.color!,
           flip,
           turns,
         ),
