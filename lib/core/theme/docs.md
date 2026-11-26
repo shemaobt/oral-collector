@@ -97,8 +97,9 @@ Path: @/lib/core/theme
   would pass on a card that had swapped the token away.
 - Spacing/radii/motion/opacity consumers reference the `const` scale directly
   (e.g. `SpacingScale.s16`, `RadiusScale.r12`, `DurationScale.ms200`,
-  `MotionScale.base`, `OpacityScale.o40`) or the `context.spacing` / `.radii` / `.durations` /
-  `.motion` / `.opacity` accessor. The spacing/radii call-site migration is now app-wide
+  `MotionScale.base`, `OpacityScale.o40`) or the `context.spacing` / `.radii` /
+  `.durations` / `.motion` / `.opacity` accessor. The spacing/radii call-site
+  migration is now app-wide
   across [/lib/features](/lib/features) and [/lib/shared/widgets](/lib/shared/widgets):
   ENG-106 seeded the on-grid swaps on the densest screens and app chrome, ENG-163
   finished the value-identical long tail, and ENG-162 then ran the
@@ -163,8 +164,10 @@ SpacingScale/RadiusScale/DurationScale/MotionScale/OpacityScale ─► AppSpacin
   (e.g. `const EdgeInsets.all(SpacingScale.s16)`).
 - Each `ThemeExtension` has a `const` constructor, `copyWith`, value `==` /
   `hashCode`, and a `lerp` (`Color.lerp` for colors, `lerpDouble` for
-  spacing/radii/opacity, `lerpDuration` for motion) guarded with `if (other is!
-  T) return this;`. [app_theme.dart](app_theme.dart) also builds the typography
+  spacing/radii/opacity) guarded with `if (other is! T) return this;`.
+  `AppMotion.lerp` interpolates the durations with `lerpDuration` and `rise`,
+  `slide` and `pressScale` with `lerpDouble`; the curves and `still` switch
+  from `this` to `other` at `t = 0.5`. [app_theme.dart](app_theme.dart) also builds the typography
   and the component themes.
 - **`GenreColors`** ([genre_colors.dart](genre_colors.dart)) is a
   `ThemeExtension` with the four genre brand colours (g1–g4) per mode, each with
