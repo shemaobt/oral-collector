@@ -8,11 +8,13 @@ class AppFrame extends StatefulWidget {
   const AppFrame({
     super.key,
     required this.child,
-    this.browserReducedMotion = watchPrefersReducedMotion,
+    this.browserReducedMotion = prefersReducedMotion,
+    this.watchBrowserReducedMotion = watchPrefersReducedMotion,
   });
 
   final Widget child;
-  final Stream<bool> Function() browserReducedMotion;
+  final bool Function() browserReducedMotion;
+  final Stream<bool> Function() watchBrowserReducedMotion;
 
   @override
   State<AppFrame> createState() => _AppFrameState();
@@ -22,13 +24,14 @@ class _AppFrameState extends State<AppFrame> with WidgetsBindingObserver {
   static const double _maxTextScale = 2.0;
 
   StreamSubscription<bool>? _browser;
-  bool _browserReduces = false;
+  late bool _browserReduces;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _browser = widget.browserReducedMotion().listen((reduces) {
+    _browserReduces = widget.browserReducedMotion();
+    _browser = widget.watchBrowserReducedMotion().listen((reduces) {
       setState(() => _browserReduces = reduces);
     });
   }

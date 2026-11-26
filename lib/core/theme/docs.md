@@ -37,8 +37,8 @@ Path: @/lib/core/theme
   system` selects between them. This is the single registration point, so every
   screen inherits the palette and all token extensions.
 - The same `MaterialApp` is also the single registration point for the app-wide
-  **text-scale ceiling**: its `builder` wraps the whole tree in
-  `MediaQuery.withClampedTextScaling(maxScaleFactor: 2.0)` (ENG-171, foundation
+  **text-scale ceiling**: its `builder` wraps the whole tree in `AppFrame`, which
+  applies `MediaQuery.withClampedTextScaling(maxScaleFactor: 2.0)` (ENG-171, foundation
   of the ENG-177 a11y program). This bounds the OS `textScaler` every screen
   reads, so pathological system font settings (>2×) cannot break layouts
   app-wide. Per-screen responsive layout (e.g. the Quick Recording ready state
@@ -190,7 +190,7 @@ SpacingScale/RadiusScale/DurationScale/MotionScale/OpacityScale ─► AppSpacin
   defaults / falls back to it, so widgets resolve tokens even under bare
   `ThemeData` (tests, previews).
 - **Text-scale invariant: high ceiling only, never a floor.** The
-  [../../main.dart](../../main.dart) `builder` clamp uses
+  `AppFrame` clamp (installed by the `builder` in [../../main.dart](../../main.dart)) uses
   `withClampedTextScaling(maxScaleFactor: 2.0)` with no `minScaleFactor`, so it
   only *lowers* extreme up-scaling and never raises the floor — low-vision users
   keep full up-scaling up to 2×. A symmetric/low clamp was explicitly rejected

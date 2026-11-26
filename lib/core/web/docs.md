@@ -16,9 +16,9 @@ Path: @/lib/core/web
   is the facade (`stripUrlQueryParam(key)`) that performs the side effect.
 
 - [./reduced_motion.dart](reduced_motion.dart) is a second facade of the same
-  kind: `watchPrefersReducedMotion()` streams the browser's
-  `prefers-reduced-motion` (current value, then each change); the non-web stub
-  emits `false`. Its only reader is `AppFrame`
+  kind: `prefersReducedMotion()` reads the browser's
+  `prefers-reduced-motion` synchronously and `watchPrefersReducedMotion()`
+  streams each later change; the non-web stub answers `false` and never emits. Its only reader is `AppFrame`
   ([../startup/docs.md](../startup/docs.md)).
 
 ### How it fits into the larger codebase

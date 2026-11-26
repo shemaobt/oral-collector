@@ -1,3 +1,5 @@
 import 'dart:async';
 
-Stream<bool> watchPrefersReducedMotion() => Stream.value(false);
+bool prefersReducedMotion() => false;
+
+Stream<bool> watchPrefersReducedMotion() => const Stream<bool>.empty();
