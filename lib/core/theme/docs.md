@@ -9,7 +9,8 @@ Path: @/lib/core/theme
   Material 3 `ThemeData` builders that style every widget
   ([app_theme.dart](app_theme.dart)), and the spacing/radii/motion/opacity
   design-token system (`app_spacing.dart` / `app_radii.dart` /
-  `app_durations.dart` / [app_opacity.dart](app_opacity.dart) /
+  `app_durations.dart` / [app_motion.dart](app_motion.dart) /
+  [app_opacity.dart](app_opacity.dart) /
   [context_tokens.dart](context_tokens.dart), re-exported by
   [tokens.dart](tokens.dart)).
 - This directory is the **single source of all `Color` construction** in the
@@ -20,12 +21,13 @@ Path: @/lib/core/theme
   rules forbid raw `Color(...)` everywhere outside this folder.
 - All token families follow one **hybrid** pattern: a source-of-truth scale
   (semantic color constants assembled into `AppColorSet`; `const` scales
-  `SpacingScale` / `RadiusScale` / `DurationScale` / `OpacityScale`), a thin
-  `ThemeExtension` that carries it and makes it theme-aware, and a resolver that
-  reads the registered extension with a fallback.
+  `SpacingScale` / `RadiusScale` / `DurationScale` / `MotionScale` /
+  `OpacityScale`), a thin `ThemeExtension` that carries it and makes it
+  theme-aware, and a resolver that reads the registered extension with a
+  fallback.
 - `AppColorSet` is the first `ThemeExtension`; `AppSpacing` / `AppRadii` /
-  `AppDurations` / `AppOpacity` follow the same contract. Conventions, grid
-  policy, and scope are governed by
+  `AppDurations` / `AppMotion` / `AppOpacity` follow the same contract.
+  Conventions, grid policy, and scope are governed by
   [ADR-0002](/docs/adr/ADR-0002-design-tokens.md).
 
 ### How it fits into the larger codebase
@@ -95,8 +97,9 @@ Path: @/lib/core/theme
   would pass on a card that had swapped the token away.
 - Spacing/radii/motion/opacity consumers reference the `const` scale directly
   (e.g. `SpacingScale.s16`, `RadiusScale.r12`, `DurationScale.ms200`,
-  `OpacityScale.o40`) or the `context.spacing` / `.radii` / `.durations` /
-  `.opacity` accessor. The spacing/radii call-site migration is now app-wide
+  `MotionScale.base`, `OpacityScale.o40`) or the `context.spacing` / `.radii` /
+  `.durations` / `.motion` / `.opacity` accessor. The spacing/radii call-site
+  migration is now app-wide
   across [/lib/features](/lib/features) and [/lib/shared/widgets](/lib/shared/widgets):
   ENG-106 seeded the on-grid swaps on the densest screens and app chrome, ENG-163
   finished the value-identical long tail, and ENG-162 then ran the
@@ -135,29 +138,36 @@ Path: @/lib/core/theme
 source of truth                       ThemeExtension (const fallback)        resolver
 ─────────────────────────────────────────────────────────────────────────────────────
 AppColors raw consts ─► AppColorSet light/dark ─► ThemeData.extensions ─► AppColors.of(context)
-SpacingScale/RadiusScale/DurationScale/OpacityScale ─► AppSpacing/AppRadii/AppDurations/AppOpacity ─► context.spacing/.radii/.durations/.opacity
+SpacingScale/RadiusScale/DurationScale/MotionScale/OpacityScale ─► AppSpacing/AppRadii/AppDurations/AppMotion/AppOpacity ─► context.spacing/.radii/.durations/.motion/.opacity
                                                 = Theme.of(context).extension<T>() ?? T.fallback
 ```
 
 - **Registration.** `lightTheme` registers `AppColors.light`; `darkTheme`
   registers `AppColors.dark`; both register `AppSpacing.fallback`,
-  `AppRadii.fallback`, `AppDurations.fallback`, `AppOpacity.fallback` — in a
+  `AppRadii.fallback`, `AppDurations.fallback`, `AppMotion.fallback`,
+  `AppOpacity.fallback` — in a
   single `const <ThemeExtension<dynamic>>[...]` list per theme.
 - **`AppColors.of(context)`** reads `Theme.of(context)`, prefers
   `extension<AppColorSet>()`, and only falls back to a brightness check when no
   extension is registered (bare `ThemeData` in tests/previews).
+- **`context.motion`** reads `extension<AppMotion>() ?? AppMotion.fallback`;
+  under `MediaQuery.maybeDisableAnimationsOf` it zeroes the six times and sets
+  `still`. Curves, distances and `pressScale` do not change.
 - **`context.spacing/radii/durations/opacity`** ([context_tokens.dart](context_tokens.dart))
   read `Theme.of(context).extension<T>() ?? T.fallback`, so tokens still resolve
   under a bare `MaterialApp`.
 - The `const` scales ([app_spacing.dart](app_spacing.dart),
   [app_radii.dart](app_radii.dart), [app_durations.dart](app_durations.dart),
+  [app_motion.dart](app_motion.dart),
   [app_opacity.dart](app_opacity.dart)) are `abstract final class`es of `static
   const` values; being `const` they let migrated sites keep their const-ness
   (e.g. `const EdgeInsets.all(SpacingScale.s16)`).
 - Each `ThemeExtension` has a `const` constructor, `copyWith`, value `==` /
   `hashCode`, and a `lerp` (`Color.lerp` for colors, `lerpDouble` for
-  spacing/radii/opacity, `lerpDuration` for motion) guarded with `if (other is!
-  T) return this;`. [app_theme.dart](app_theme.dart) also builds the typography
+  spacing/radii/opacity) guarded with `if (other is! T) return this;`.
+  `AppMotion.lerp` interpolates the durations with `lerpDuration` and `rise`,
+  `slide` and `pressScale` with `lerpDouble`; the curves and `still` switch
+  from `this` to `other` at `t = 0.5`. [app_theme.dart](app_theme.dart) also builds the typography
   and the component themes.
 - **`GenreColors`** ([genre_colors.dart](genre_colors.dart)) is a
   `ThemeExtension` with the four genre brand colours (g1–g4) per mode, each with
@@ -280,7 +290,8 @@ SpacingScale/RadiusScale/DurationScale/OpacityScale ─► AppSpacing/AppRadii/A
   (not shipped); `analyzer` is a pinned dev_dependency for it. The completeness
   guarantee that no in-policy off-grid literal survives is the codemod's
   `--verify`, not a unit test.
-- **Naming.** Colors are semantic; spacing/radii/durations/opacity are
+- **Naming.** Colors and motion are semantic (motion is named by meaning:
+  `fast` / `base` / `slow`, `enter` / `leave`); spacing/radii/durations/opacity are
   value-encoded (`sN` / `rN` / `msN` = the literal px or ms; `oNN` = the alpha's
   two decimal digits, e.g. `o40` = 0.4, `o06` = 0.06); no `md`/`lg` aliases
   (YAGNI).

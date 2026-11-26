@@ -4,6 +4,13 @@
 - Date: 2026-06-05
 - Epic: E2 (Design System & UI Componentization)
 - Related: ENG-106, ENG-115, ENG-162, ENG-163, ENG-76, ENG-159, ENG-183, ENG-116, ENG-90, ADR-0000, ADR-0007
+- Update (2026-11-26, ENG-3045): motion joins the token families as
+  `MotionScale` (const scale), `AppMotion` (`ThemeExtension`, registered in both
+  themes) and `context.motion`, named by meaning: the layer item 3 left for
+  later. The reader, not the extension, turns its six times to zero and sets
+  `still` when the person asks for less motion. A value one moment needs is a
+  constant of `MotionScale`, not a field of `AppMotion`: the cyclomatic gate
+  counts each `??` of `copyWith` and each `&&` of `==`.
 - Update (2026-06-15, ENG-159): the deferred `Color(0x…)`/`Colors.*` lint rule
   from item 7 shipped as the `obt_lints` plugin (`avoid_hardcoded_color` +
   `avoid_material_colors`), staged at `info`/non-blocking, exempting

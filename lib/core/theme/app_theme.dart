@@ -349,6 +349,7 @@ abstract class AppTheme {
         AppSpacing.fallback,
         AppRadii.fallback,
         AppDurations.fallback,
+        AppMotion.fallback,
         AppOpacity.fallback,
       ],
       colorScheme: const ColorScheme(
@@ -481,6 +482,7 @@ abstract class AppTheme {
         AppSpacing.fallback,
         AppRadii.fallback,
         AppDurations.fallback,
+        AppMotion.fallback,
         AppOpacity.fallback,
       ],
       colorScheme: const ColorScheme(
