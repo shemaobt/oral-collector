@@ -79,13 +79,20 @@ Path: @/lib/core/auth
 ### Core Implementation
 
 - **Single-flight refresh (ENG-136).** `_tryRefresh` is deliberately **not**
-  `async`: it assigns `_inFlightRefresh ??= _doTryRefresh().whenComplete(...)`
-  before any `await`, so N concurrent callers share one in-flight `Future<bool>`
-  and trigger exactly one token rotation. The slot clears on completion (success,
-  `false`, or throw) to allow the next refresh. The real logic is in
+  `async`: it fills `_inFlightRefresh` before any `await`, so N concurrent
+  callers share one in-flight `Future<bool>` and trigger exactly one token
+  rotation. The slot clears on completion (success, `false`, or throw) only if
+  it still holds that same refresh, and `logout` drops it, so a refresh from
+  before «Sair» is never joined by the next session. The real logic is in
   `_doTryRefresh`. Every refresh path funnels through `_tryRefresh`: the
   `AuthenticatedClient` callback, the three feature notifiers, and
   `refreshSessionIfOnline` (the network half of `tryAutoLogin`).
+- **A request from before «Sair» never touches the next session (ENG-3086).**
+  Every method that awaits and then writes tokens, the user or the state captures
+  the session counter before its first `await` and writes only while it is still
+  current. `logout` bumps the counter once the device is cleared, and no session
+  is current while a sign-out is clearing it, so neither a request started
+  before «Sair» nor one started during the clear can sign the person back in.
 - **Why single-flight.** The backend rotates the refresh token on first use and
   invalidates the old one. Concurrent 401s previously each launched their own
   refresh reading the same (soon-stale) refresh token; the first won and the rest

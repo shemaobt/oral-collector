@@ -28,6 +28,9 @@ class AuthNotifier extends Notifier<AuthState> {
 
   Future<bool>? _inFlightRefresh;
   int _session = 0;
+  int _signingOut = 0;
+
+  bool _isCurrent(int session) => session == _session && _signingOut == 0;
 
   @override
   AuthState build() {
@@ -61,7 +64,7 @@ class AuthNotifier extends Notifier<AuthState> {
     if (accessToken == null) return;
 
     final online = await ref.read(connectivityServiceProvider).isOnline;
-    if (!online || session != _session) return;
+    if (!online || !_isCurrent(session)) return;
 
     if (state.currentUser == null) {
       state = state.copyWith(isLoading: true, clearError: true);
@@ -69,13 +72,13 @@ class AuthNotifier extends Notifier<AuthState> {
 
     try {
       final user = await _repo.getMe(accessToken);
-      if (session != _session) return;
+      if (!_isCurrent(session)) return;
       await _storeUser(user);
       state = state.copyWith(currentUser: user, isLoading: false);
     } on UnauthorizedException {
       try {
         final refreshed = await _tryRefresh();
-        if (!refreshed && session == _session) {
+        if (!refreshed && _isCurrent(session)) {
           await _clearTokens();
           state = const AuthState();
         }
@@ -134,12 +137,12 @@ class AuthNotifier extends Notifier<AuthState> {
       if (accessToken == null) throw Exception('Not authenticated');
 
       final user = await _repo.updateMe(accessToken, displayName: displayName);
-      if (session != _session) return;
+      if (!_isCurrent(session)) return;
       await _storeUser(user);
       state = state.copyWith(currentUser: user, isLoading: false);
     } on Exception catch (e, st) {
       ref.read(errorReporterProvider).reportError(e, st);
-      if (session == _session) {
+      if (_isCurrent(session)) {
         state = state.copyWith(isLoading: false, error: e);
       }
     }
@@ -155,12 +158,12 @@ class AuthNotifier extends Notifier<AuthState> {
 
       final imageUrl = await _repo.uploadImage(accessToken, filePath);
       final user = await _repo.updateMe(accessToken, avatarUrl: imageUrl);
-      if (session != _session) return;
+      if (!_isCurrent(session)) return;
       await _storeUser(user);
       state = state.copyWith(currentUser: user, isLoading: false);
     } on Exception catch (e, st) {
       ref.read(errorReporterProvider).reportError(e, st);
-      if (session == _session) {
+      if (_isCurrent(session)) {
         state = state.copyWith(isLoading: false, error: e);
       }
       rethrow;
@@ -170,7 +173,7 @@ class AuthNotifier extends Notifier<AuthState> {
   Future<bool> handleUnauthorized() async {
     final session = _session;
     final refreshed = await _tryRefresh();
-    if (!refreshed && session == _session) {
+    if (!refreshed && _isCurrent(session)) {
       await _clearTokens();
       state = const AuthState();
     }
@@ -194,12 +197,18 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 
   Future<void> logout() async {
-    _session++;
-    _inFlightRefresh = null;
-    final refreshToken = await _storage
-        .read(key: _refreshTokenKey)
-        .onError<PlatformException>((_, _) => null);
-    await _clearTokens();
+    _signingOut++;
+    final String? refreshToken;
+    try {
+      refreshToken = await _storage
+          .read(key: _refreshTokenKey)
+          .onError<PlatformException>((_, _) => null);
+      await _clearTokens();
+    } finally {
+      _signingOut--;
+      _session++;
+      _inFlightRefresh = null;
+    }
     state = const AuthState();
     if (refreshToken == null) return;
     try {
@@ -276,11 +285,11 @@ class AuthNotifier extends Notifier<AuthState> {
       if (refreshToken == null) return false;
 
       final tokens = await _repo.refreshToken(refreshToken);
-      if (session != _session) return false;
+      if (!_isCurrent(session)) return false;
       await _storeTokens(tokens.accessToken, tokens.refreshToken);
 
       final user = await _repo.getMe(tokens.accessToken);
-      if (session != _session) return false;
+      if (!_isCurrent(session)) return false;
       await _storeUser(user);
       state = state.copyWith(currentUser: user, isLoading: false);
       return true;

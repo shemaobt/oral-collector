@@ -32,6 +32,27 @@ class _UnreadableStorage extends FlutterSecureStorage {
   }) async => throw PlatformException(code: 'errSecInteractionNotAllowed');
 }
 
+class _LateRefreshTokenRead extends FlutterSecureStorage {
+  Completer<void>? held;
+
+  @override
+  Future<String?> read({
+    required String key,
+    AppleOptions? iOptions,
+    AndroidOptions? aOptions,
+    LinuxOptions? lOptions,
+    WebOptions? webOptions,
+    AppleOptions? mOptions,
+    WindowsOptions? wOptions,
+  }) async {
+    final gate = key == 'refresh_token' ? held : null;
+    if (gate != null) held = null;
+    final value = await super.read(key: key);
+    await gate?.future;
+    return value;
+  }
+}
+
 class _MockReporter extends Mock implements ErrorReporter {}
 
 void main() {
@@ -208,6 +229,47 @@ void main() {
         expectSignedOutOnDevice();
       });
     }
+  });
+
+  group('a refresh racing «Sair» signs nobody in again:', () {
+    setUp(() {
+      when(
+        () => repo.refreshToken('r1'),
+      ).thenAnswer((_) async => (accessToken: 'a2', refreshToken: 'r1'));
+      when(() => repo.getMe('a2')).thenAnswer((_) async => user);
+    });
+
+    final races = <String, Future<void> Function()>{
+      'a 401 right after «Sair»': () async {
+        final signOut = notifier().logout();
+        await notifier().handleUnauthorized();
+        await signOut;
+      },
+      'a 401 right before «Sair»': () async {
+        final refresh = notifier().handleUnauthorized();
+        await notifier().logout();
+        await refresh;
+      },
+    };
+    for (final MapEntry(key: name, value: race) in races.entries) {
+      test(name, () async {
+        await race();
+
+        expectSignedOutOnDevice();
+      });
+    }
+
+    test('a 401 whose token read answers after «Sair»', () async {
+      final storage = _LateRefreshTokenRead();
+      await signIn(storage);
+      final gate = storage.held = Completer<void>();
+      final refresh = notifier().handleUnauthorized();
+      await notifier().logout();
+      gate.complete();
+      await refresh;
+
+      expectSignedOutOnDevice();
+    });
   });
 
   group('a refresh left over from before «Sair» does not sign out the next '
