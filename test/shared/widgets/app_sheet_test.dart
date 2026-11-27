@@ -11,6 +11,7 @@ void main() {
     bool still = false,
     bool root = false,
     BoxConstraints? constraints,
+    bool settle = true,
   }) async {
     t.platformDispatcher.accessibilityFeaturesTestValue =
         FakeAccessibilityFeatures(disableAnimations: still);
@@ -40,9 +41,8 @@ void main() {
     );
     await t.tap(find.text('open'));
     await t.pump();
-    if (!still) await t.pumpAndSettle();
+    if (!still && settle) await t.pumpAndSettle();
   }
-
   for (final bool dismissible in [true, false]) {
     final gestures = <String, Future<void> Function(WidgetTester)>{
       'drag': (t) => t.fling(find.text('body'), const Offset(0, 400), 2000),
@@ -57,26 +57,26 @@ void main() {
       });
     }
   }
-
-  testWidgets('a slow drag moves the sheet as far as the finger', (t) async {
-    await open(t);
-    double top() => t.getTopLeft(find.text('body')).dy;
-    final double rest = top();
-    final finger = await t.startGesture(t.getCenter(find.text('body')));
-    await finger.moveBy(const Offset(0, 21));
-    double moved = 0;
-    for (final double step in [0, 60, 89]) {
-      await t.pump(const Duration(milliseconds: 16));
-      await finger.moveBy(Offset(0, step));
-      await t.pump(const Duration(milliseconds: 16));
-      expect(top() - rest, closeTo(moved += step, 1));
-    }
-  });
-
+  for (final int grabAtMs in [0, 100]) {
+    testWidgets('slow drag at ${grabAtMs}ms follows the finger', (t) async {
+      await open(t, settle: grabAtMs == 0);
+      await t.pump(Duration(milliseconds: grabAtMs));
+      double top() => t.getTopLeft(find.text('body')).dy;
+      final double start = top();
+      final finger = await t.startGesture(t.getCenter(find.text('body')));
+      await finger.moveBy(const Offset(0, 21));
+      double moved = 0;
+      for (final double step in [0, 60, 89]) {
+        await t.pump(const Duration(milliseconds: 16));
+        await finger.moveBy(Offset(0, step));
+        await t.pump(const Duration(milliseconds: 16));
+        expect(top() - start, closeTo(moved += step, 1));
+      }
+    });
+  }
   testWidgets('less motion: whole at once, gone at once', (t) async {
     await open(t, still: true);
     expect(t.getTopLeft(find.text('body')).dy, 300);
-
     await t.tapAt(const Offset(10, 10));
     await t.pump();
     expect(find.text('body'), findsNothing);
@@ -93,6 +93,7 @@ void main() {
 
   testWidgets('useRootNavigator pushes above the nested navigator', (t) async {
     await open(t, root: true);
+    expect(find.text('body'), findsOneWidget);
     expect(
       find.descendant(of: find.byKey(nested), matching: find.text('body')),
       findsNothing,
