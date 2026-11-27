@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../shared/widgets/app_question.dart';
 
 /// What the person chose on the way out of the confirmation form.
 enum LeaveRecordingChoice {
@@ -30,36 +31,30 @@ Future<LeaveRecordingChoice?> showLeaveRecordingDialog(
 }) {
   final l10n = AppLocalizations.of(context);
   final colors = AppColors.of(context);
-  return showDialog<LeaveRecordingChoice>(
+  return showAppQuestion<LeaveRecordingChoice>(
     context: context,
-    builder: (ctx) => AlertDialog(
-      title: Text(
-        canKeepForLater
-            ? l10n.recording_leaveTitle
-            : l10n.recording_discardTitle,
+    title: canKeepForLater
+        ? l10n.recording_leaveTitle
+        : l10n.recording_discardTitle,
+    message: canKeepForLater
+        ? l10n.recording_leaveMessage
+        : l10n.recording_discardMessage,
+    actionsBuilder: (ctx) => [
+      TextButton(
+        onPressed: () => Navigator.of(ctx).pop(),
+        child: Text(l10n.common_cancel),
       ),
-      content: Text(
-        canKeepForLater
-            ? l10n.recording_leaveMessage
-            : l10n.recording_discardMessage,
+      if (canKeepForLater)
+        TextButton(
+          onPressed: () =>
+              Navigator.of(ctx).pop(LeaveRecordingChoice.keepForLater),
+          child: Text(l10n.recording_keepForLater),
+        ),
+      TextButton(
+        onPressed: () => Navigator.of(ctx).pop(LeaveRecordingChoice.discard),
+        style: TextButton.styleFrom(foregroundColor: colors.error),
+        child: Text(l10n.recording_discard),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(ctx).pop(),
-          child: Text(l10n.common_cancel),
-        ),
-        if (canKeepForLater)
-          TextButton(
-            onPressed: () =>
-                Navigator.of(ctx).pop(LeaveRecordingChoice.keepForLater),
-            child: Text(l10n.recording_keepForLater),
-          ),
-        TextButton(
-          onPressed: () => Navigator.of(ctx).pop(LeaveRecordingChoice.discard),
-          style: TextButton.styleFrom(foregroundColor: colors.error),
-          child: Text(l10n.recording_discard),
-        ),
-      ],
-    ),
+    ],
   );
 }
