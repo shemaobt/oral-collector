@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
+import 'name_and_state.dart';
 
 enum AppRowKind {
   recording(height: 44, leadWidth: 44, pad: 11),
@@ -47,27 +48,25 @@ class AppRow extends StatelessWidget {
     final colors = AppColors.of(context);
     final text = Theme.of(context).textTheme;
     final ink = destructive ? colors.error : colors.foreground;
-    final row = LayoutBuilder(
-      builder: (context, box) => Row(
-        spacing: _gap,
-        children: [
-          if (lead != null)
-            SizedBox(
-              width: kind.leadWidth,
-              child: IconTheme.merge(
-                data: IconThemeData(color: ink),
-                child: lead!,
-              ),
+    final row = Row(
+      spacing: _gap,
+      children: [
+        if (lead != null)
+          SizedBox(
+            width: kind.leadWidth,
+            child: IconTheme.merge(
+              data: IconThemeData(color: ink),
+              child: lead!,
             ),
-          Expanded(
-            child: Column(
+          ),
+        Expanded(
+          child: NameAndState(
+            name: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                   style: text.bodyLarge?.copyWith(
                     color: ink,
                     fontSize: 17,
@@ -77,20 +76,14 @@ class AppRow extends StatelessWidget {
                 if (detail != null)
                   Text(
                     detail!,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                     style: text.bodySmall?.copyWith(color: colors.secondary),
                   ),
               ],
             ),
+            state: state,
           ),
-          if (state != null)
-            ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: box.maxWidth * 0.4),
-              child: state,
-            ),
-        ],
-      ),
+        ),
+      ],
     );
     return Padding(
       padding: EdgeInsetsDirectional.only(
@@ -102,7 +95,11 @@ class AppRow extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ConstrainedBox(
-            constraints: BoxConstraints(minHeight: kind.height),
+            constraints: BoxConstraints(
+              minHeight: below == null
+                  ? kind.height
+                  : kind.height + kind.pad - _padBottomWithBelow,
+            ),
             child: row,
           ),
           if (below != null)
