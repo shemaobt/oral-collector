@@ -17,7 +17,6 @@ import '../../../core/router/navigation.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../shared/utils/format.dart';
-import '../../../shared/widgets/app_shell.dart';
 import '../../../shared/widgets/error_snack_bar.dart';
 import '../../auth/data/providers/role_provider.dart';
 import '../../genre/presentation/notifiers/genre_notifier.dart';
@@ -1026,28 +1025,22 @@ class _RecordingDetailScreenState extends ConsumerState<RecordingDetailScreen> {
                       ),
                     ),
 
-                    Padding(
+                    Container(
                       padding: EdgeInsets.only(
-                        bottom:
-                            MediaQuery.sizeOf(context).width >=
-                                AppShell.wideBreakpoint
-                            ? 0
-                            : MediaQuery.paddingOf(context).bottom,
+                        bottom: MediaQuery.paddingOf(context).bottom,
                       ),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: colors.card,
-                          border: Border(
-                            top: BorderSide(
-                              color: colors.border.withValues(alpha: 0.15),
-                            ),
+                      decoration: BoxDecoration(
+                        color: colors.card,
+                        border: Border(
+                          top: BorderSide(
+                            color: colors.border.withValues(alpha: 0.15),
                           ),
                         ),
-                        child: RecordingHeroPlayer(
-                          recording: recording,
-                          colors: colors,
-                          theme: theme,
-                        ),
+                      ),
+                      child: RecordingHeroPlayer(
+                        recording: recording,
+                        colors: colors,
+                        theme: theme,
                       ),
                     ),
                   ],
