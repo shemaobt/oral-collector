@@ -34,6 +34,7 @@ const _testColors = AppColorSet(
   count: Color(0xFF000000),
   onSoft: Color(0xFF000000),
   noteInk: Color(0xFF000000),
+  stretch: Color(0xFF000000),
 );
 
 Widget _wrap(Widget child) {

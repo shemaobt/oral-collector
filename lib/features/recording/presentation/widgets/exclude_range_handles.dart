@@ -3,8 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/tokens.dart';
 import '../../../../shared/utils/format.dart';
+import '../../../../shared/widgets/brush_sign.dart';
+import '../../../../shared/widgets/hand_cut_disc.dart';
+import '../../../../shared/widgets/hand_cut_rect.dart';
 import '../exclude_range_draft.dart';
 import '../trim_edit_decision.dart';
 
@@ -14,6 +18,11 @@ const Key kExcludeRangeConfirmKey = Key('exclude_range_confirm');
 const Key kExcludeRangeCancelKey = Key('exclude_range_cancel');
 
 const double kExcludeRangeHandleWidth = 48.0;
+const double kExcludeRangeDiscReach = 26.0;
+
+const double _lineWidth = 3.0;
+const double _discSize = 28.0;
+const double _touchSize = 44.0;
 
 class ExcludeRangeEditing {
   const ExcludeRangeEditing({required this.draft, required this.onChanged});
@@ -100,13 +109,19 @@ class _ExcludeRangeHandlesState extends State<ExcludeRangeHandles> {
               left: startX,
               width: (endX - startX).clamp(0.0, double.infinity),
               top: 0,
-              bottom: 0,
+              bottom: kExcludeRangeDiscReach,
               child: IgnorePointer(
-                child: ColoredBox(color: colors.error.withValues(alpha: 0.18)),
+                child: CustomPaint(
+                  painter: HandCutRectPainter(
+                    fill: colors.stretch,
+                    radius: RadiusScale.r8,
+                  ),
+                ),
               ),
             ),
             _Handle(
               handleKey: kExcludeRangeStartHandleKey,
+              turns: 0.5,
               x: startX,
               fraction: widget.draft.start,
               totalDuration: widget.totalDuration,
@@ -115,6 +130,7 @@ class _ExcludeRangeHandlesState extends State<ExcludeRangeHandles> {
             ),
             _Handle(
               handleKey: kExcludeRangeEndHandleKey,
+              turns: 0,
               x: endX,
               fraction: widget.draft.end,
               totalDuration: widget.totalDuration,
@@ -131,6 +147,7 @@ class _ExcludeRangeHandlesState extends State<ExcludeRangeHandles> {
 class _Handle extends StatelessWidget {
   const _Handle({
     required this.handleKey,
+    required this.turns,
     required this.x,
     required this.fraction,
     required this.totalDuration,
@@ -139,6 +156,7 @@ class _Handle extends StatelessWidget {
   });
 
   final Key handleKey;
+  final double turns;
   final double x;
   final double fraction;
   final Duration totalDuration;
@@ -159,30 +177,55 @@ class _Handle extends StatelessWidget {
         dragStartBehavior: DragStartBehavior.down,
         onHorizontalDragStart: (d) => onGrab(d.globalPosition),
         onHorizontalDragUpdate: (d) => onMove(d.globalPosition),
-        child: Column(
+        child: Stack(
           children: [
-            Text(
-              formatPositionCentis(
-                Duration(
-                  milliseconds: (fraction * totalDuration.inMilliseconds)
-                      .round(),
-                ),
-              ),
-              maxLines: 1,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: colors.error,
-                fontWeight: FontWeight.w700,
-                fontSize: 10,
-                fontFeatures: const [FontFeature.tabularFigures()],
-              ),
-            ),
-            Expanded(
-              child: Center(
-                child: Container(
-                  width: 4,
-                  decoration: BoxDecoration(
+            Column(
+              children: [
+                Text(
+                  formatPositionCentis(
+                    Duration(
+                      milliseconds: (fraction * totalDuration.inMilliseconds)
+                          .round(),
+                    ),
+                  ),
+                  maxLines: 1,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
                     color: colors.error,
-                    borderRadius: BorderRadius.circular(RadiusScale.r8),
+                    fontWeight: FontWeight.w700,
+                    fontSize: 10,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+                Expanded(
+                  child: Center(
+                    child: ColoredBox(
+                      color: colors.accent,
+                      child: const SizedBox(width: _lineWidth),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: kExcludeRangeDiscReach - 4),
+              ],
+            ),
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              height: _touchSize,
+              child: Center(
+                child: CustomPaint(
+                  size: const Size.square(_discSize),
+                  painter: HandCutDiscPainter(
+                    fill: colors.accent,
+                    shadow: PrintedShadows.of(context).tile,
+                  ),
+                  child: Center(
+                    child: BrushSign(
+                      Sign.next,
+                      size: _discSize * 0.46,
+                      color: colors.card,
+                      turns: turns,
+                    ),
                   ),
                 ),
               ),

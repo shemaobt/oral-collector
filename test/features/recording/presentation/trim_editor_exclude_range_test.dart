@@ -187,6 +187,24 @@ void main() {
     expect(handle(kExcludeRangeStartHandleKey), findsNothing);
   });
 
+  testWidgets('Dragging from the disc under the wave moves the start handle '
+      'from 20 s to 18 s', (tester) async {
+    await openEditor(tester, seconds: 60);
+    await placePlayheadAt(tester, 25, 60);
+    await pressExcludeRange(tester);
+    final wave = waveformRect(tester);
+    final pxPerSecond = wave.width / 60;
+    final disc = Offset(
+      tester.getCenter(handle(kExcludeRangeStartHandleKey)).dx,
+      wave.bottom + 10,
+    );
+
+    await tester.dragFrom(disc, Offset(-2 * pxPerSecond, 0));
+    await settle(tester);
+
+    expect(handleTime(kExcludeRangeStartHandleKey, '00:18.00'), findsOneWidget);
+  });
+
   testWidgets('Saving after confirming an excluded range offers the three '
       'options', (tester) async {
     await openEditor(tester, seconds: 60);
