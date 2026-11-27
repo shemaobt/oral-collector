@@ -66,6 +66,8 @@ Future<T> guard<T>(Future<T> Function() body) async {
     rethrow;
   } on SocketException catch (e, st) {
     Error.throwWithStackTrace(NetworkException(cause: e.runtimeType), st);
+  } on http.ClientException catch (e, st) {
+    Error.throwWithStackTrace(NetworkException(cause: e.runtimeType), st);
   } on async.TimeoutException catch (e, st) {
     Error.throwWithStackTrace(TimeoutException(cause: e.runtimeType), st);
   }
