@@ -7,7 +7,6 @@ import '../../core/theme/tokens.dart';
 import 'brush_sign.dart';
 import 'hand_cut_rect.dart';
 
-const double _innerPadding = 16;
 const double _lift = 10;
 const double _minHeight = 52;
 const double _signGap = 10;
@@ -35,9 +34,10 @@ void showQuickNotice(
       ink: colors.onPrimary,
       motion: motion,
       onGone: () {
+        if (_live[overlay] != entry) return;
+        _live[overlay] = null;
         entry.remove();
         entry.dispose();
-        if (_live[overlay] == entry) _live[overlay] = null;
       },
     ),
   );
@@ -146,7 +146,7 @@ class _QuickNoticeState extends State<_QuickNotice>
               constraints: const BoxConstraints(minHeight: _minHeight),
               child: Padding(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: _innerPadding,
+                  horizontal: SpacingScale.s16,
                   vertical: SpacingScale.s12,
                 ),
                 child: Row(

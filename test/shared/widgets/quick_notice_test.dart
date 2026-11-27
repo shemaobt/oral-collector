@@ -1,18 +1,12 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:oral_collector/core/theme/app_motion.dart';
 import 'package:oral_collector/shared/widgets/quick_notice.dart';
 
-const _step = Duration(milliseconds: 100);
 const _heldFor = Duration(milliseconds: 2900);
-
-Future<void> _pumpFor(WidgetTester tester, Duration total) async {
-  for (var left = total; left > Duration.zero; left -= _step) {
-    await tester.pump(_step);
-  }
-}
 
 Future<void> _pump(WidgetTester tester, {bool still = false}) async {
   tester.platformDispatcher.accessibilityFeaturesTestValue =
@@ -46,7 +40,9 @@ void main() {
       await _pump(tester, still: still);
 
       await _show(tester);
-      await _pumpFor(tester, _heldFor);
+      for (var i = 0; i < 29; i++) {
+        await tester.pump(_heldFor ~/ 29);
+      }
       expect(find.text('Saved 1'), findsOneWidget);
 
       await tester.pump(MotionScale.noticeStay - _heldFor);
@@ -55,20 +51,31 @@ void main() {
     });
   }
 
-  testWidgets('a second notice takes the first one\'s place at once', (
+  testWidgets('a new notice replaces the one on screen, even as it leaves', (
     tester,
   ) async {
-    await _pump(tester);
-    await _show(tester);
-    expect(find.text('Saved 1'), findsOneWidget);
+    final live = <Object>{};
+    void track(ObjectEvent e) =>
+        e is ObjectCreated ? live.add(e.object) : live.remove(e.object);
 
+    await _pump(tester);
+    FlutterMemoryAllocations.instance.addListener(track);
+    addTearDown(() => FlutterMemoryAllocations.instance.removeListener(track));
+    await _show(tester);
     await _show(tester);
     expect(find.text('Saved 1'), findsNothing);
     expect(find.text('Saved 2'), findsOneWidget);
 
     await tester.pump(MotionScale.noticeStay);
+    await tester.pump(MotionScale.fast - const Duration(milliseconds: 1));
+    await tester.tap(find.text('show'));
+    await tester.pump(const Duration(milliseconds: 2));
+    expect(find.text('Saved 3'), findsOneWidget);
+
     await tester.pumpAndSettle();
-    expect(find.text('Saved 2'), findsNothing);
+    await tester.pump(MotionScale.noticeStay);
+    await tester.pumpAndSettle();
+    expect(live.whereType<OverlayEntry>(), isEmpty);
   });
 
   testWidgets(
