@@ -104,25 +104,20 @@ class _RecordButtonState extends State<RecordButton>
     return Semantics(
       label: semanticLabel,
       button: true,
-      child: Stack(
-        children: [
-          AppDisc(
+      child: Material(
+        color: AppColors.transparent,
+        shape: const CircleBorder(),
+        child: InkWell(
+          onTap: widget.onTap,
+          onLongPress: widget.onLongPress,
+          customBorder: const CircleBorder(),
+          child: AppDisc(
             size: widget.size,
             tone: DiscTone.record,
             pressable: true,
             child: Icon(isPaused ? LucideIcons.pause : LucideIcons.mic),
           ),
-          Positioned.fill(
-            child: Material(
-              color: AppColors.transparent,
-              child: InkWell(
-                onTap: widget.onTap,
-                onLongPress: widget.onLongPress,
-                customBorder: const CircleBorder(),
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
