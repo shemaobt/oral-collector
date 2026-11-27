@@ -16,6 +16,14 @@ const double _actionEnd = 6;
 
 enum QuickNoticeTone { calm, failed }
 
+class QuickNoticeAction {
+  const QuickNoticeAction(String this.word, this.onTap);
+  const QuickNoticeAction.undo(this.onTap) : word = null;
+
+  final String? word;
+  final VoidCallback onTap;
+}
+
 final _live = Expando<OverlayEntry>('quickNotice');
 
 void showQuickNotice(
@@ -23,7 +31,7 @@ void showQuickNotice(
   String sentence, {
   QuickNoticeTone tone = QuickNoticeTone.calm,
   Sign? sign,
-  VoidCallback? onUndo,
+  QuickNoticeAction? action,
 }) {
   final overlay = Overlay.of(context, rootOverlay: true);
   final colors = AppColors.of(context);
@@ -35,9 +43,9 @@ void showQuickNotice(
       : failed
       ? colors.onPrimary
       : colors.sand;
-  final undoWord = onUndo == null
+  final word = action == null
       ? null
-      : AppLocalizations.of(context).common_undo;
+      : action.word ?? AppLocalizations.of(context).common_undo;
   late final OverlayEntry entry;
   entry = OverlayEntry(
     builder: (_) => _QuickNotice(
@@ -46,8 +54,8 @@ void showQuickNotice(
       fill: failed ? colors.error : colors.primary,
       ink: colors.onPrimary,
       actionInk: actionInk,
-      undoWord: undoWord,
-      onUndo: onUndo,
+      word: word,
+      onAct: action?.onTap,
       motion: motion,
       onGone: () {
         if (_live[overlay] != entry) return;
@@ -71,8 +79,8 @@ class _QuickNotice extends StatefulWidget {
     required this.fill,
     required this.ink,
     required this.actionInk,
-    required this.undoWord,
-    required this.onUndo,
+    required this.word,
+    required this.onAct,
     required this.motion,
     required this.onGone,
   });
@@ -82,8 +90,8 @@ class _QuickNotice extends StatefulWidget {
   final Color fill;
   final Color ink;
   final Color actionInk;
-  final String? undoWord;
-  final VoidCallback? onUndo;
+  final String? word;
+  final VoidCallback? onAct;
   final AppMotion motion;
   final VoidCallback onGone;
 
@@ -100,6 +108,7 @@ class _QuickNoticeState extends State<_QuickNotice>
   );
   Timer? _stay;
   bool _leaving = false;
+  double _drag = 0;
 
   @override
   void initState() {
@@ -111,9 +120,9 @@ class _QuickNoticeState extends State<_QuickNotice>
   void _onStatus(AnimationStatus status) {
     if (status == AnimationStatus.completed) {
       _stay = Timer(
-        widget.onUndo == null
+        widget.onAct == null
             ? MotionScale.noticeStay
-            : MotionScale.noticeStayUndo,
+            : MotionScale.noticeStayAction,
         _leave,
       );
     } else if (status == AnimationStatus.dismissed) {
@@ -128,10 +137,10 @@ class _QuickNoticeState extends State<_QuickNotice>
     _controller.reverse();
   }
 
-  void _undo() {
+  void _act() {
     if (_leaving) return;
     _leave();
-    widget.onUndo!();
+    widget.onAct!();
   }
 
   @override
@@ -171,8 +180,11 @@ class _QuickNoticeState extends State<_QuickNotice>
           );
         },
         child: GestureDetector(
+          onVerticalDragStart: (_) => _drag = 0,
+          onVerticalDragUpdate: (details) => _drag += details.delta.dy,
           onVerticalDragEnd: (details) {
-            if ((details.primaryVelocity ?? 0) > 0) _leave();
+            final velocity = details.primaryVelocity ?? 0;
+            if (velocity > 0 || (velocity == 0 && _drag > 0)) _leave();
           },
           child: CustomPaint(
             painter: HandCutRectPainter(
@@ -182,32 +194,35 @@ class _QuickNoticeState extends State<_QuickNotice>
             child: ConstrainedBox(
               constraints: const BoxConstraints(minHeight: _minHeight),
               child: Padding(
-                padding: EdgeInsets.fromLTRB(
-                  SpacingScale.s16,
-                  SpacingScale.s12,
-                  widget.undoWord == null ? SpacingScale.s16 : _actionEnd,
-                  SpacingScale.s12,
+                padding: EdgeInsetsDirectional.only(
+                  start: SpacingScale.s16,
+                  end: widget.word == null ? SpacingScale.s16 : _actionEnd,
                 ),
                 child: Row(
                   children: [
                     BrushSign(widget.sign, size: 18, color: widget.ink),
                     const SizedBox(width: _signGap),
                     Expanded(
-                      child: Semantics(
-                        liveRegion: true,
-                        label: widget.sentence,
-                        excludeSemantics: true,
-                        child: Text(widget.sentence, style: style),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: SpacingScale.s12,
+                        ),
+                        child: Semantics(
+                          liveRegion: true,
+                          label: widget.sentence,
+                          excludeSemantics: true,
+                          child: Text(widget.sentence, style: style),
+                        ),
                       ),
                     ),
-                    if (widget.undoWord case final word?)
+                    if (widget.word case final word?)
                       _Action(
                         word: word,
                         style: style.copyWith(
                           color: widget.actionInk,
                           fontWeight: FontWeight.w600,
                         ),
-                        onTap: _undo,
+                        onTap: _act,
                       ),
                   ],
                 ),
@@ -229,6 +244,7 @@ class _Action extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Semantics(
+    container: true,
     button: true,
     child: GestureDetector(
       behavior: HitTestBehavior.opaque,

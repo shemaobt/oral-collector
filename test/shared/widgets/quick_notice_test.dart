@@ -11,8 +11,6 @@ import 'package:oral_collector/shared/widgets/quick_notice.dart';
 
 const _heldFor = Duration(milliseconds: 2900);
 
-const _undoStay = Duration(milliseconds: 6000);
-
 MaterialApp _app({required Widget home, Brightness? brightness}) => MaterialApp(
   locale: const Locale('pt'),
   supportedLocales: AppLocalizations.supportedLocales,
@@ -30,6 +28,7 @@ Future<void> _pump(
   WidgetTester tester, {
   bool still = false,
   ValueChanged<int>? onUndo,
+  String? word,
   QuickNoticeTone tone = QuickNoticeTone.calm,
   Brightness? brightness,
 }) async {
@@ -48,7 +47,11 @@ Future<void> _pump(
               context,
               'Saved $n',
               tone: tone,
-              onUndo: onUndo == null ? null : () => onUndo(n),
+              action: switch ((onUndo, word)) {
+                (null, _) => null,
+                (final f?, null) => QuickNoticeAction.undo(() => f(n)),
+                (final f?, final w?) => QuickNoticeAction(w, () => f(n)),
+              },
             );
           },
           child: const Text('show'),
@@ -142,15 +145,15 @@ void main() {
     },
   );
 
-  testWidgets('a tap on «Desfazer» calls undo once and the notice leaves', (
+  testWidgets('a tap on the action calls it once and the notice leaves', (
     tester,
   ) async {
     final undone = <int>[];
-    await _pump(tester, onUndo: undone.add);
+    await _pump(tester, onUndo: undone.add, word: 'Ver');
     await _show(tester);
 
-    await tester.tap(find.text('Desfazer'));
-    await tester.tap(find.text('Desfazer'), warnIfMissed: false);
+    await tester.tap(find.text('Ver'));
+    await tester.tap(find.text('Ver'), warnIfMissed: false);
     await tester.pumpAndSettle();
 
     expect(undone, [1]);
@@ -191,15 +194,20 @@ void main() {
     expect(find.text('Saved 2'), findsNothing);
   });
 
-  testWidgets('a downward swipe sends the notice away at once', (tester) async {
-    await _pump(tester);
-    await _show(tester);
+  for (final ms in [100, 1500]) {
+    testWidgets('a downward swipe over $ms ms sends the notice away', (
+      tester,
+    ) async {
+      await _pump(tester);
+      await _show(tester);
 
-    await tester.fling(find.text('Saved 1'), const Offset(0, 120), 1000);
-    await tester.pumpAndSettle(const Duration(milliseconds: 10));
+      final swipe = Duration(milliseconds: ms);
+      await tester.timedDrag(find.text('Saved 1'), const Offset(0, 70), swipe);
+      await tester.pumpAndSettle(const Duration(milliseconds: 10));
 
-    expect(find.text('Saved 1'), findsNothing);
-  });
+      expect(find.text('Saved 1'), findsNothing);
+    });
+  }
 
   group('the action reads in the kit colours', () {
     final cases = {
@@ -226,21 +234,35 @@ void main() {
     };
     for (final MapEntry(key: name, value: (brightness, tone, color))
         in cases.entries) {
-      testWidgets('$name, 15 at weight 600, 44 high', (tester) async {
-        await _pump(tester, onUndo: (_) {}, tone: tone, brightness: brightness);
-        await _show(tester);
+      testWidgets(
+        '$name, 15 at weight 600, its own button 44 high in a bar 52 high',
+        (tester) async {
+          final semantics = tester.ensureSemantics();
+          await _pump(
+            tester,
+            onUndo: (_) {},
+            tone: tone,
+            brightness: brightness,
+          );
+          await _show(tester);
 
-        final style = tester.widget<Text>(find.text('Desfazer')).style!;
-        expect(style.color, color);
-        expect(style.fontSize, 15);
-        expect(style.fontWeight, FontWeight.w600);
-        expect(
-          tester.getSemantics(find.text('Desfazer')).rect.height,
-          greaterThanOrEqualTo(44),
-        );
-        await tester.pump(_undoStay);
-        await tester.pumpAndSettle();
-      });
+          final style = tester.widget<Text>(find.text('Desfazer')).style!;
+          expect(style.color, color);
+          expect(style.fontSize, 15);
+          expect(style.fontWeight, FontWeight.w600);
+          final action = tester.getSemantics(find.text('Desfazer'));
+          expect(action.flagsCollection.isButton, isTrue);
+          expect(action.rect.height, 44);
+          final bar = find.ancestor(
+            of: find.text('Saved 1'),
+            matching: find.byType(CustomPaint),
+          );
+          expect(tester.getSize(bar.first).height, 52);
+          await tester.pump(MotionScale.noticeStayAction);
+          await tester.pumpAndSettle();
+          semantics.dispose();
+        },
+      );
     }
   });
 
