@@ -27,7 +27,6 @@ class AuthNotifier extends Notifier<AuthState> {
   AuthRepository get _repo => ref.read(authRepositoryProvider);
 
   Future<bool>? _inFlightRefresh;
-  int _session = 0;
 
   @override
   AuthState build() {
@@ -66,16 +65,14 @@ class AuthNotifier extends Notifier<AuthState> {
       state = state.copyWith(isLoading: true, clearError: true);
     }
 
-    final session = _session;
     try {
       final user = await _repo.getMe(accessToken);
-      if (session != _session) return;
       await _storeUser(user);
       state = state.copyWith(currentUser: user, isLoading: false);
     } on UnauthorizedException {
       try {
         final refreshed = await _tryRefresh();
-        if (!refreshed && session == _session) {
+        if (!refreshed) {
           await _clearTokens();
           state = const AuthState();
         }
@@ -127,14 +124,12 @@ class AuthNotifier extends Notifier<AuthState> {
 
   Future<void> updateProfile({String? displayName}) async {
     state = state.copyWith(isLoading: true, clearError: true);
-    final session = _session;
 
     try {
       final accessToken = await _storage.read(key: _accessTokenKey);
       if (accessToken == null) throw Exception('Not authenticated');
 
       final user = await _repo.updateMe(accessToken, displayName: displayName);
-      if (session != _session) return;
       await _storeUser(user);
       state = state.copyWith(currentUser: user, isLoading: false);
     } on Exception catch (e, st) {
@@ -145,7 +140,6 @@ class AuthNotifier extends Notifier<AuthState> {
 
   Future<void> uploadAvatar(String filePath) async {
     state = state.copyWith(isLoading: true, clearError: true);
-    final session = _session;
 
     try {
       final accessToken = await _storage.read(key: _accessTokenKey);
@@ -153,7 +147,6 @@ class AuthNotifier extends Notifier<AuthState> {
 
       final imageUrl = await _repo.uploadImage(accessToken, filePath);
       final user = await _repo.updateMe(accessToken, avatarUrl: imageUrl);
-      if (session != _session) return;
       await _storeUser(user);
       state = state.copyWith(currentUser: user, isLoading: false);
     } on Exception catch (e, st) {
@@ -164,9 +157,8 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 
   Future<bool> handleUnauthorized() async {
-    final session = _session;
     final refreshed = await _tryRefresh();
-    if (!refreshed && session == _session) {
+    if (!refreshed) {
       await _clearTokens();
       state = const AuthState();
     }
@@ -190,7 +182,6 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 
   Future<void> logout() async {
-    _session++;
     final refreshToken = await _storage
         .read(key: _refreshTokenKey)
         .onError<PlatformException>((_, _) => null);
@@ -261,17 +252,14 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 
   Future<bool> _doTryRefresh() async {
-    final session = _session;
     try {
       final refreshToken = await _storage.read(key: _refreshTokenKey);
       if (refreshToken == null) return false;
 
       final tokens = await _repo.refreshToken(refreshToken);
-      if (session != _session) return false;
       await _storeTokens(tokens.accessToken, tokens.refreshToken);
 
       final user = await _repo.getMe(tokens.accessToken);
-      if (session != _session) return false;
       await _storeUser(user);
       state = state.copyWith(currentUser: user, isLoading: false);
       return true;
