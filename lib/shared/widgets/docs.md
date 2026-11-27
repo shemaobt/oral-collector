@@ -198,4 +198,19 @@ Path: @/lib/shared/widgets
   answer). A ground tap pops null unless `isDismissible` is false. It enters in
   `base` rising `rise`, leaves in `fast` in place, and scrolls if it overflows.
 
+- **`ProgressBeads`** ([progress_beads.dart](progress_beads.dart)) shows an
+  upload as ten hand-cut beads in a 140 × 10 strip, one every 14, whole beads
+  only: `percent ~/ 10` are lit (`accent`), the rest `pale`; clamped to 0–10.
+  Lit beads start at the leading edge, so at the right under right-to-left.
+  A bead lights at once, with no animation. Decoration beside a word the
+  caller writes («Enviando 42%»): left out of semantics.
+- **`TodoMark`** ([todo_mark.dart](todo_mark.dart)) is what is still to do: a
+  dashed circle of 13 (stroke 1.5, no fill), 6 apart, then the caller's `label`
+  at 13, weight 500, all in `foreground`; no fill and no outline around the
+  word.
+- **`ClayBar`** ([clay_bar.dart](clay_bar.dart)) is a still bar of clay where
+  content will arrive: hand-cut, `clay` at 40%, `height` 14 by default, as wide
+  as `width` or as the space it is given. It never animates. Left out of
+  semantics: the screen labels a group of bars («Carregando»).
+
 Created and maintained by Nori.
