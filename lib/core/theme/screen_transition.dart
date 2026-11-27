@@ -145,8 +145,9 @@ class _StepState extends State<_Step> {
                   MotionScale.leave.transform(
                     math.min(elapsed / _leaveShare, 1),
                   );
-        final away =
-            widget.slides ? (isTop ? 1 : -1) * side * MotionScale.slide : 0.0;
+        final away = widget.slides
+            ? (isTop ? 1 : -1) * side * MotionScale.slide
+            : 0.0;
         return Opacity(
           opacity: shown,
           child: Transform.translate(
