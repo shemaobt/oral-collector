@@ -154,4 +154,11 @@ Path: @/lib/shared/widgets
   `gone` before any `await`, so the row leaves while the work runs; dropping the
   item from the list mid-leave snaps the row out: the list shortens in one frame.
 
+- **`NameAndState`** ([name_and_state.dart](name_and_state.dart)) lays out a
+  row's name and its end state: the state keeps its natural width on one line,
+  the name takes the rest with its ellipsis, and only when the name would fall
+  below 48 px does the state end in an ellipsis. It owns its intrinsics and dry
+  layout, so it works inside `IntrinsicHeight` and dialogs where a
+  `LayoutBuilder` throws.
+
 Created and maintained by Nori.
