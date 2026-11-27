@@ -30,9 +30,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get nav_admin => 'Admin';
 
   @override
-  String get nav_collapse => 'Ciutkan';
-
-  @override
   String get common_cancel => 'Batal';
 
   @override

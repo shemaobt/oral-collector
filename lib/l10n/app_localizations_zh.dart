@@ -30,9 +30,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get nav_admin => '管理';
 
   @override
-  String get nav_collapse => '折叠';
-
-  @override
   String get common_cancel => '取消';
 
   @override

@@ -116,6 +116,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/app_icon.png
+    - assets/logo.png
     - assets/hero_heart.png
     - assets/hero_wide.png
     - assets/hero_hands.png

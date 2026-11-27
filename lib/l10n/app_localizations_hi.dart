@@ -30,9 +30,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get nav_admin => 'एडमिन';
 
   @override
-  String get nav_collapse => 'संक्षिप्त करें';
-
-  @override
   String get common_cancel => 'रद्द करें';
 
   @override

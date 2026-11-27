@@ -30,9 +30,6 @@ class AppLocalizationsTpi extends AppLocalizations {
   String get nav_admin => 'Admin';
 
   @override
-  String get nav_collapse => 'Pasim';
-
-  @override
   String get common_cancel => 'Lusim';
 
   @override

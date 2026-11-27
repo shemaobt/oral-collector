@@ -30,9 +30,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get nav_admin => 'Admin';
 
   @override
-  String get nav_collapse => 'Collapse';
-
-  @override
   String get common_cancel => 'Cancel';
 
   @override
