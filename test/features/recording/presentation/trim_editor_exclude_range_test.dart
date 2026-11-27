@@ -25,6 +25,7 @@ import 'package:oral_collector/features/recording/presentation/widgets/trim_wave
 import 'package:oral_collector/features/recording/presentation/widgets/trim_waveform_panel.dart';
 import 'package:oral_collector/features/recording/presentation/widgets/waveform_tools_row.dart';
 import 'package:oral_collector/l10n/app_localizations.dart';
+import 'package:oral_collector/shared/widgets/brush_sign.dart';
 
 import '../../../support/text_scale.dart';
 
@@ -47,7 +48,11 @@ void main() {
 
   tearDown(() => db.close());
 
-  Future<void> openEditor(WidgetTester tester, {required int seconds}) async {
+  Future<void> openEditor(
+    WidgetTester tester, {
+    required int seconds,
+    Locale locale = const Locale('pt'),
+  }) async {
     db = AppDatabase.forTesting(NativeDatabase.memory());
     await LocalRecordingRepository(db).insertRecording(
       LocalRecordingsCompanion(
@@ -84,7 +89,7 @@ void main() {
     await pumpAtTextScale(
       tester,
       size: const Size(400, 1600),
-      locale: const Locale('pt'),
+      locale: locale,
       overrides: [
         audioPlayerFactoryProvider.overrideWithValue(() => player),
         localRecordingRepositoryProvider.overrideWithValue(
@@ -129,8 +134,11 @@ void main() {
     await settle(tester);
   }
 
-  Future<void> pressExcludeRange(WidgetTester tester) async {
-    await tester.tap(find.text(_excludeRange));
+  Future<void> pressExcludeRange(
+    WidgetTester tester, {
+    String label = _excludeRange,
+  }) async {
+    await tester.tap(find.text(label));
     await settle(tester);
   }
 
@@ -203,6 +211,72 @@ void main() {
     await settle(tester);
 
     expect(handleTime(kExcludeRangeStartHandleKey, '00:18.00'), findsOneWidget);
+  });
+
+  testWidgets('The field sits below the wave and spans exactly its height', (
+    tester,
+  ) async {
+    await openEditor(tester, seconds: 60);
+    await placePlayheadAt(tester, 25, 60);
+    await pressExcludeRange(tester);
+
+    final wave = waveformRect(tester);
+    final field = tester.getRect(find.byKey(kExcludeRangeFieldKey));
+    expect(field.top, wave.top + kTrimWaveformTop);
+    expect(field.bottom, wave.bottom);
+    final stack = tester.widget<Stack>(
+      find
+          .ancestor(
+            of: find.byType(ExcludeRangeField),
+            matching: find.byType(Stack),
+          )
+          .first,
+    );
+    final order = stack.children
+        .map((w) => w is Positioned ? w.child.runtimeType : w.runtimeType)
+        .toList();
+    expect(order.indexOf(ExcludeRangeField), lessThan(order.indexOf(Padding)));
+  });
+
+  testWidgets('Each disc is 28 dp across and each line is 3 dp wide down the '
+      'handle', (tester) async {
+    await openEditor(tester, seconds: 60);
+    await placePlayheadAt(tester, 25, 60);
+    await pressExcludeRange(tester);
+
+    final disc = tester.getSize(
+      find.descendant(
+        of: handle(kExcludeRangeStartHandleKey),
+        matching: find.byKey(kExcludeRangeDiscKey),
+      ),
+    );
+    final line = tester.getSize(
+      find.descendant(
+        of: handle(kExcludeRangeStartHandleKey),
+        matching: find.byKey(kExcludeRangeLineKey),
+      ),
+    );
+    expect(disc, const Size(28, 28));
+    expect(line.width, 3);
+    expect(line.height, greaterThan(100));
+  });
+
+  testWidgets('In Arabic the chevrons still read left to right, so each points '
+      'away from the stretch', (tester) async {
+    await openEditor(tester, seconds: 60, locale: const Locale('ar'));
+    await placePlayheadAt(tester, 25, 60);
+    await pressExcludeRange(tester, label: 'استبعاد مقطع');
+
+    for (final key in [
+      kExcludeRangeStartHandleKey,
+      kExcludeRangeEndHandleKey,
+    ]) {
+      final sign = find.descendant(
+        of: handle(key),
+        matching: find.byType(BrushSign),
+      );
+      expect(Directionality.of(tester.element(sign)), TextDirection.ltr);
+    }
   });
 
   testWidgets('Saving after confirming an excluded range offers the three '

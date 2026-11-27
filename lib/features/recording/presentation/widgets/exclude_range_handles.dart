@@ -11,11 +11,15 @@ import '../../../../shared/widgets/hand_cut_disc.dart';
 import '../../../../shared/widgets/hand_cut_rect.dart';
 import '../exclude_range_draft.dart';
 import '../trim_edit_decision.dart';
+import 'trim_waveform.dart' show kTrimWaveformTop;
 
 const Key kExcludeRangeStartHandleKey = Key('exclude_range_start_handle');
 const Key kExcludeRangeEndHandleKey = Key('exclude_range_end_handle');
 const Key kExcludeRangeConfirmKey = Key('exclude_range_confirm');
 const Key kExcludeRangeCancelKey = Key('exclude_range_cancel');
+const Key kExcludeRangeFieldKey = Key('exclude_range_field');
+const Key kExcludeRangeLineKey = Key('exclude_range_line');
+const Key kExcludeRangeDiscKey = Key('exclude_range_disc');
 
 const double kExcludeRangeHandleWidth = 48.0;
 const double kExcludeRangeDiscReach = 26.0;
@@ -29,6 +33,51 @@ class ExcludeRangeEditing {
 
   final ExcludeRangeDraft draft;
   final ValueChanged<ExcludeRangeDraft> onChanged;
+}
+
+class ExcludeRangeField extends StatelessWidget {
+  const ExcludeRangeField({
+    super.key,
+    required this.draft,
+    required this.zoom,
+    required this.panFraction,
+  });
+
+  final ExcludeRangeDraft draft;
+  final double zoom;
+  final double panFraction;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        double xOf(double f) => (f - panFraction) * zoom * width;
+        final startX = xOf(draft.start);
+        return Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Positioned(
+              left: startX,
+              width: (xOf(draft.end) - startX).clamp(0.0, double.infinity),
+              top: kTrimWaveformTop,
+              bottom: kExcludeRangeDiscReach,
+              child: IgnorePointer(
+                child: CustomPaint(
+                  key: kExcludeRangeFieldKey,
+                  painter: HandCutRectPainter(
+                    fill: colors.stretch,
+                    radius: RadiusScale.r8,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
 }
 
 class ExcludeRangeHandles extends StatefulWidget {
@@ -96,7 +145,6 @@ class _ExcludeRangeHandlesState extends State<ExcludeRangeHandles> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.maxWidth;
@@ -105,20 +153,6 @@ class _ExcludeRangeHandlesState extends State<ExcludeRangeHandles> {
         return Stack(
           clipBehavior: Clip.none,
           children: [
-            Positioned(
-              left: startX,
-              width: (endX - startX).clamp(0.0, double.infinity),
-              top: 0,
-              bottom: kExcludeRangeDiscReach,
-              child: IgnorePointer(
-                child: CustomPaint(
-                  painter: HandCutRectPainter(
-                    fill: colors.stretch,
-                    radius: RadiusScale.r8,
-                  ),
-                ),
-              ),
-            ),
             _Handle(
               handleKey: kExcludeRangeStartHandleKey,
               turns: 0.5,
@@ -198,9 +232,13 @@ class _Handle extends StatelessWidget {
                 ),
                 Expanded(
                   child: Center(
-                    child: ColoredBox(
-                      color: colors.accent,
-                      child: const SizedBox(width: _lineWidth),
+                    child: SizedBox(
+                      width: _lineWidth,
+                      height: double.infinity,
+                      child: ColoredBox(
+                        key: kExcludeRangeLineKey,
+                        color: colors.accent,
+                      ),
                     ),
                   ),
                 ),
@@ -213,18 +251,24 @@ class _Handle extends StatelessWidget {
               bottom: 0,
               height: _touchSize,
               child: Center(
-                child: CustomPaint(
-                  size: const Size.square(_discSize),
-                  painter: HandCutDiscPainter(
-                    fill: colors.accent,
-                    shadow: PrintedShadows.of(context).tile,
-                  ),
-                  child: Center(
-                    child: BrushSign(
-                      Sign.next,
-                      size: _discSize * 0.46,
-                      color: colors.card,
-                      turns: turns,
+                child: SizedBox.square(
+                  key: kExcludeRangeDiscKey,
+                  dimension: _discSize,
+                  child: CustomPaint(
+                    painter: HandCutDiscPainter(
+                      fill: colors.accent,
+                      shadow: PrintedShadows.of(context).tile,
+                    ),
+                    child: Center(
+                      child: Directionality(
+                        textDirection: TextDirection.ltr,
+                        child: BrushSign(
+                          Sign.next,
+                          size: _discSize * 0.46,
+                          color: colors.card,
+                          turns: turns,
+                        ),
+                      ),
                     ),
                   ),
                 ),

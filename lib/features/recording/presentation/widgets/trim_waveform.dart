@@ -7,6 +7,8 @@ import '../../../../l10n/app_localizations.dart';
 import '../excluded_range.dart';
 import '../trim_edit_decision.dart';
 
+const double kTrimWaveformTop = 28.0;
+
 class TrimWaveform extends StatefulWidget {
   const TrimWaveform({
     super.key,
@@ -150,7 +152,7 @@ class _TrimWaveformState extends State<TrimWaveform> {
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final totalHeight = _waveformHeight + _handleRadius * 2 + 4;
+    final totalHeight = _waveformHeight + kTrimWaveformTop;
 
     return Semantics(
       label: AppLocalizations.of(context).a11y_splitWaveform,
@@ -322,8 +324,7 @@ class _SplitWaveformPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (bars.isEmpty) return;
 
-    final handleDiameter = handleRadius * 2;
-    final waveTop = handleDiameter + 4;
+    const waveTop = kTrimWaveformTop;
     final waveBottom = waveTop + waveformHeight;
     final boundaries = [0.0, ...splitPoints, 1.0];
     final segmentCount = boundaries.length - 1;
