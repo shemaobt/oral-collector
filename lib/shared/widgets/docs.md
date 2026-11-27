@@ -176,6 +176,18 @@ Path: @/lib/shared/widgets
   leaves the top 24 free. The keyboard's insets are never read. `constraints`
   caps the sheet's width; `useRootNavigator` pushes it on the root navigator.
 
+- **`AppOption`** ([app_option.dart](app_option.dart)) is one choice among
+  several, with a title and an optional explanation: hand-cut, `card` at rest,
+  `primary` with the `check` sign at the end when chosen. It paints its own
+  printed shadow and puts a `PrintedShadowScope` around its content. The caller
+  owns the selection and the gap between options; a screen reader hears each as
+  one choice of a group, with title and explanation.
+- **`AppSelector`** ([app_selector.dart](app_selector.dart)) switches between up
+  to three views of one list (asserted): a `tint` track, equal parts, the chosen
+  part hand-cut (`card`, `pale` in dark). Labels wrap rather than clip; a count
+  is part of the label the caller passes. The choice changes at once, with no
+  slide.
+
 - **`showAppQuestion`** ([app_question.dart](app_question.dart)) opens a question
   on its own route: a title, one line, the caller's buttons (they pop the
   answer). A ground tap pops null unless `isDismissible` is false. It enters in
