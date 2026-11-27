@@ -6,7 +6,6 @@ import '../../core/theme/context_tokens.dart';
 
 const double _corner = 26;
 const double _grabTop = 10;
-const Size _grab = Size(36, 5);
 
 Future<T?> showAppSheet<T>({
   required BuildContext context,
@@ -14,13 +13,8 @@ Future<T?> showAppSheet<T>({
   bool isDismissible = true,
   bool isScrollControlled = false,
   bool useSafeArea = false,
-  bool useRootNavigator = false,
-  BoxConstraints? constraints,
 }) {
-  final NavigatorState navigator = Navigator.of(
-    context,
-    rootNavigator: useRootNavigator,
-  );
+  final NavigatorState navigator = Navigator.of(context);
   return navigator.push(
     _AppSheetRoute<T>(
       builder: builder,
@@ -30,7 +24,6 @@ Future<T?> showAppSheet<T>({
       isDismissible: isDismissible,
       isScrollControlled: isScrollControlled,
       useSafeArea: useSafeArea,
-      constraints: constraints,
     ),
   );
 }
@@ -44,7 +37,6 @@ class _AppSheetRoute<T> extends PopupRoute<T> {
     required this.isDismissible,
     required this.isScrollControlled,
     required this.useSafeArea,
-    required this.constraints,
   });
 
   final WidgetBuilder builder;
@@ -53,7 +45,6 @@ class _AppSheetRoute<T> extends PopupRoute<T> {
   final bool isDismissible;
   final bool isScrollControlled;
   final bool useSafeArea;
-  final BoxConstraints? constraints;
 
   @override
   final String barrierLabel;
@@ -78,31 +69,34 @@ class _AppSheetRoute<T> extends PopupRoute<T> {
     Animation<double> animation,
     Animation<double> secondaryAnimation,
   ) {
-    return themes.wrap(
-      _AppSheetBody(
-        route: this,
-        child: Builder(builder: builder),
-      ),
-    );
+    return themes.wrap(_AppSheetBody(route: this));
   }
 }
 
 class _AppSheetBody extends StatefulWidget {
-  const _AppSheetBody({required this.route, required this.child});
+  const _AppSheetBody({required this.route});
 
   final _AppSheetRoute<dynamic> route;
-  final Widget child;
 
   @override
   State<_AppSheetBody> createState() => _AppSheetBodyState();
 }
 
+typedef _Run = ({Curve rise, Curve fade});
+
 class _AppSheetBodyState extends State<_AppSheetBody> {
-  Curve? _held;
+  _Run? _run;
 
   _AppSheetRoute<dynamic> get _route => widget.route;
 
-  bool get _leaving => _route.animation!.status == AnimationStatus.reverse;
+  late final _Run _enter = (
+    rise: MotionScale.sheetRise,
+    fade: _route.motion.enter,
+  );
+  late final _Run _leave = (
+    rise: _route.motion.leave.flipped,
+    fade: _route.motion.leave.flipped,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -119,13 +113,18 @@ class _AppSheetBodyState extends State<_AppSheetBody> {
       elevation: 0,
       showDragHandle: false,
       clipBehavior: Clip.antiAlias,
-      constraints: _route.constraints,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(_corner)),
       ),
-      onDragStart: (_) => _held = Curves.linear,
-      onDragEnd: (_, {bool? isClosing}) =>
-          _held = Split(_route.animation!.value, endCurve: motion.enter),
+      onDragStart: (_) {
+        final double shown = (_run ?? _enter).rise.transform(_route.drag.value);
+        _route.drag.value = shown.clamp(0.0, 1.0);
+        _run = (rise: Curves.linear, fade: motion.enter);
+      },
+      onDragEnd: (_, {bool? isClosing}) => _run = (
+        rise: Split(_route.drag.value, endCurve: motion.enter),
+        fade: motion.enter,
+      ),
       builder: (context) => Stack(
         children: [
           _route.builder(context),
@@ -134,13 +133,12 @@ class _AppSheetBodyState extends State<_AppSheetBody> {
             left: 0,
             right: 0,
             child: Center(
-              child: SizedBox.fromSize(
-                size: _grab,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: colors.sand,
-                    borderRadius: BorderRadius.circular(3),
-                  ),
+              child: Container(
+                width: 36,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: colors.sand,
+                  borderRadius: BorderRadius.circular(3),
                 ),
               ),
             ),
@@ -163,16 +161,17 @@ class _AppSheetBodyState extends State<_AppSheetBody> {
         child: sized,
         builder: (context, child) {
           final double v = _route.animation!.value;
-          final Curve rise =
-              _held ??
-              (_leaving ? motion.leave.flipped : MotionScale.sheetRise);
-          final Curve fade = _leaving ? motion.leave.flipped : motion.enter;
+          final AnimationStatus status = _route.animation!.status;
+          _run = status.isAnimating
+              ? _run ?? (status == AnimationStatus.reverse ? _leave : _enter)
+              : null;
+          final _Run run = _run ?? _enter;
           return Stack(
             fit: StackFit.expand,
             children: [
               IgnorePointer(
                 child: Opacity(
-                  opacity: fade.transform(v),
+                  opacity: run.fade.transform(v),
                   child: const ColoredBox(color: MotionScale.scrim),
                 ),
               ),
@@ -187,7 +186,7 @@ class _AppSheetBodyState extends State<_AppSheetBody> {
                   child: Align(
                     alignment: Alignment.bottomCenter,
                     child: FractionalTranslation(
-                      translation: Offset(0, 1 - rise.transform(v)),
+                      translation: Offset(0, 1 - run.rise.transform(v)),
                       child: child,
                     ),
                   ),
