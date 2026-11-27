@@ -38,9 +38,9 @@ class SeekWave extends StatelessWidget {
 
   void _seekTo(double fraction) {
     if (duration == Duration.zero) return;
-    final ms = (fraction.clamp(0.0, 1.0) * duration.inMilliseconds).round();
-    if (ms == (_fraction * duration.inMilliseconds).round()) return;
-    onSeek(Duration(milliseconds: ms));
+    final clamped = fraction.clamp(0.0, 1.0);
+    if (clamped != fraction && clamped == _fraction) return;
+    onSeek(Duration(milliseconds: (clamped * duration.inMilliseconds).round()));
   }
 
   KeyEventResult _onKey(KeyEvent event, double step, bool rtl) {
@@ -86,7 +86,7 @@ class SeekWave extends StatelessWidget {
       excludeSemantics: true,
       child: Focus(
         canRequestFocus: enabled,
-        onKeyEvent: enabled ? (_, event) => _onKey(event, step, rtl) : null,
+        onKeyEvent: (_, event) => _onKey(event, step, rtl),
         child: LayoutBuilder(
           builder: (context, constraints) {
             if (!constraints.hasBoundedWidth) {

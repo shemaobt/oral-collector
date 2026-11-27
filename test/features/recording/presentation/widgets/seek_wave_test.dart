@@ -46,25 +46,19 @@ SemanticsData _semantics(WidgetTester tester) =>
     tester.getSemantics(find.byType(SeekWave)).getSemanticsData();
 
 void main() {
-  for (final (direction, fraction, expected) in [
-    (TextDirection.ltr, 0.5, const Duration(minutes: 6)),
-    (TextDirection.ltr, 0.25, const Duration(minutes: 3)),
-    (TextDirection.rtl, 0.25, const Duration(minutes: 9)),
+  for (final (direction, fraction, top, expected) in [
+    (TextDirection.ltr, 0.5, 32.0, const Duration(minutes: 6)),
+    (TextDirection.ltr, 0.25, 32.0, const Duration(minutes: 3)),
+    (TextDirection.rtl, 0.25, 32.0, const Duration(minutes: 9)),
+    (TextDirection.ltr, 0.5, 2.0, const Duration(minutes: 6)),
+    (TextDirection.ltr, 0.0, 32.0, Duration.zero),
   ]) {
-    testWidgets('a tap at $fraction in $direction asks for $expected', (
-      tester,
-    ) async {
-      final asked = await _pump(tester, direction: direction);
-      await tester.tapAt(_at(tester, fraction));
+    testWidgets('tap $fraction/$top $direction asks $expected', (t) async {
+      final asked = await _pump(t, direction: direction);
+      await t.tapAt(_at(t, fraction, top: top));
       expect(asked, [expected]);
     });
   }
-
-  testWidgets('the tap target is as tall as the parent allows', (tester) async {
-    final asked = await _pump(tester);
-    await tester.tapAt(_at(tester, 0.5, top: 2));
-    expect(asked, [const Duration(minutes: 6)]);
-  });
 
   testWidgets('a horizontal drag asks for nothing', (tester) async {
     final asked = await _pump(tester);
@@ -72,67 +66,94 @@ void main() {
     expect(asked, isEmpty);
   });
 
-  testWidgets('the slider is its own node under a labelled ancestor', (
-    tester,
-  ) async {
+  for (final (position, action) in [
+    (Duration.zero, SemanticsAction.decrease),
+    (_twelveMinutes, SemanticsAction.increase),
+  ]) {
+    testWidgets('the reader asks nothing at $position', (tester) async {
+      final handle = tester.ensureSemantics();
+      final asked = await _pump(tester, position: position);
+      tester.semantics.performAction(find.semantics.byAction(action), action);
+      expect(asked, isEmpty);
+      handle.dispose();
+    });
+  }
+
+  for (final (platform, direction, step) in [
+    (TargetPlatform.iOS, TextDirection.ltr, 0.1),
+    (TargetPlatform.macOS, TextDirection.rtl, 0.1),
+    (TargetPlatform.android, TextDirection.ltr, 0.05),
+    (TargetPlatform.android, TextDirection.rtl, 0.05),
+  ]) {
+    testWidgets('steps, keys, label on $platform $direction', (tester) async {
+      final handle = tester.ensureSemantics();
+      final asked = await _pump(
+        tester,
+        position: const Duration(minutes: 6),
+        direction: direction,
+        wrap: (wave) => Semantics(
+          label: 'Tocador',
+          child: Theme(
+            data: ThemeData(platform: platform),
+            child: wave,
+          ),
+        ),
+      );
+      expect(_semantics(tester).value, '50%');
+      expect(_semantics(tester).label, isEmpty);
+      for (final action in [
+        SemanticsAction.increase,
+        SemanticsAction.decrease,
+      ]) {
+        tester.semantics.performAction(find.semantics.byAction(action), action);
+      }
+      Focus.of(tester.element(find.byType(LayoutBuilder))).requestFocus();
+      await tester.pump();
+      final ltr = direction == TextDirection.ltr;
+      for (final key in [
+        ltr ? LogicalKeyboardKey.arrowRight : LogicalKeyboardKey.arrowLeft,
+        ltr ? LogicalKeyboardKey.arrowLeft : LogicalKeyboardKey.arrowRight,
+        LogicalKeyboardKey.arrowUp,
+        LogicalKeyboardKey.arrowDown,
+      ]) {
+        await tester.sendKeyEvent(key);
+      }
+      final delta = _twelveMinutes * step;
+      const six = Duration(minutes: 6);
+      expect(asked, [
+        for (var i = 0; i < 3; i++) ...[six + delta, six - delta],
+      ]);
+      handle.dispose();
+    });
+  }
+
+  testWidgets('a zero duration is disabled, keys pass', (tester) async {
     final handle = tester.ensureSemantics();
-    await _pump(
+    final received = <LogicalKeyboardKey>[];
+    final asked = await _pump(
       tester,
-      position: const Duration(minutes: 6),
-      wrap: (wave) => Semantics(label: 'Tocador', child: wave),
-    );
-    final data = _semantics(tester);
-    expect(data.value, '50%');
-    expect(data.label, isEmpty);
-    handle.dispose();
-  });
-
-  testWidgets('the screen reader asks for nothing at the edges', (
-    tester,
-  ) async {
-    final handle = tester.ensureSemantics();
-    final asked = await _pump(tester);
-    tester.semantics.decrease(
-      find.semantics.byAction(SemanticsAction.decrease),
-    );
-    asked.addAll(await _pump(tester, position: _twelveMinutes));
-    tester.semantics.increase(
-      find.semantics.byAction(SemanticsAction.increase),
-    );
-    expect(asked, isEmpty);
-    handle.dispose();
-  });
-
-  testWidgets('a zero duration is disabled and takes no focus', (tester) async {
-    final handle = tester.ensureSemantics();
-    final asked = await _pump(tester, duration: Duration.zero);
-    expect(_semantics(tester).flagsCollection.isEnabled, Tristate.isFalse);
-    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
-    await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
-    final inner = tester.element(
-      find.descendant(
-        of: find.byType(SeekWave),
-        matching: find.byType(LayoutBuilder),
+      duration: Duration.zero,
+      wrap: (wave) => Focus(
+        autofocus: true,
+        onKeyEvent: (_, event) {
+          received.add(event.logicalKey);
+          return KeyEventResult.ignored;
+        },
+        child: wave,
       ),
     );
-    expect(Focus.of(inner).canRequestFocus, isFalse);
+    expect(_semantics(tester).flagsCollection.isEnabled, Tristate.isFalse);
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+    expect(received, contains(LogicalKeyboardKey.arrowRight));
     expect(asked, isEmpty);
     handle.dispose();
   });
 
   testWidgets('an unbounded width fails loudly', (tester) async {
-    await tester.pumpWidget(
-      Directionality(
-        textDirection: TextDirection.ltr,
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: SeekWave(
-            position: Duration.zero,
-            duration: _twelveMinutes,
-            onSeek: (_) {},
-          ),
-        ),
-      ),
+    await _pump(
+      tester,
+      wrap: (wave) =>
+          SingleChildScrollView(scrollDirection: Axis.horizontal, child: wave),
     );
     expect(tester.takeException(), isA<FlutterError>());
   });
