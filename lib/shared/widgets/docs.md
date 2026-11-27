@@ -56,6 +56,8 @@ Path: @/lib/shared/widgets
   screen reader says the text, or `label` when given. Only digits and `:`
   (asserted in debug); a duration, date or size in a list stays in the text
   typeface.
+- [app_tile.dart](app_tile.dart) is the flat card, [row_group.dart](row_group.dart)
+  stacks [app_row.dart](app_row.dart) and [app_data_row.dart](app_data_row.dart) in it.
 - Stateless composition is the norm; stateful widgets exist only to own an
   animation: a `RotationTransition` while a status is in-flight (the upload badge's
   spinner creates/disposes an `AnimationController` in
