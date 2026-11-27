@@ -3,10 +3,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:oral_collector/shared/widgets/app_sheet.dart';
 
 void main() {
+  final nested = GlobalKey<NavigatorState>();
+
   Future<void> open(
     WidgetTester t, {
     bool isDismissible = true,
     bool still = false,
+    bool root = false,
+    BoxConstraints? constraints,
     bool settle = true,
   }) async {
     t.platformDispatcher.accessibilityFeaturesTestValue =
@@ -14,18 +18,23 @@ void main() {
     addTearDown(t.platformDispatcher.clearAccessibilityFeaturesTestValue);
     await t.pumpWidget(
       MaterialApp(
-        home: Builder(
-          builder: (c) => TextButton(
-            onPressed: () => showAppSheet<void>(
-              context: c,
-              isDismissible: isDismissible,
-              builder: (_) => const SizedBox(
-                width: double.infinity,
-                height: 300,
-                child: Text('body'),
+        home: Navigator(
+          key: nested,
+          onGenerateRoute: (_) => MaterialPageRoute<void>(
+            builder: (c) => TextButton(
+              onPressed: () => showAppSheet<void>(
+                context: c,
+                isDismissible: isDismissible,
+                useRootNavigator: root,
+                constraints: constraints,
+                builder: (_) => const SizedBox(
+                  width: double.infinity,
+                  height: 300,
+                  child: Text('body'),
+                ),
               ),
+              child: const Text('open'),
             ),
-            child: const Text('open'),
           ),
         ),
       ),
@@ -72,5 +81,30 @@ void main() {
     await t.tapAt(const Offset(10, 10));
     await t.pump();
     expect(find.text('body'), findsNothing);
+  });
+
+  testWidgets('constraints cap the sheet width', (t) async {
+    await open(t, constraints: const BoxConstraints(maxWidth: 600));
+    final sheet = find.ancestor(
+      of: find.text('body'),
+      matching: find.byType(Material),
+    );
+    expect(t.getSize(sheet.first).width, 600);
+  });
+
+  testWidgets('useRootNavigator pushes above the nested navigator', (t) async {
+    await open(t, root: true);
+    expect(find.text('body'), findsOneWidget);
+    expect(
+      find.descendant(of: find.byKey(nested), matching: find.text('body')),
+      findsNothing,
+    );
+  });
+
+  testWidgets('the route is named for assistive tech', (t) async {
+    final handle = t.ensureSemantics();
+    await open(t);
+    expect(find.bySemanticsLabel('Dialog'), findsOneWidget);
+    handle.dispose();
   });
 }
