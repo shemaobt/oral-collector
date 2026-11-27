@@ -117,6 +117,7 @@ class _AppSheetBodyState extends State<_AppSheetBody> {
       enableDrag: _route.isDismissible,
       backgroundColor: colors.card,
       elevation: 0,
+      showDragHandle: false,
       clipBehavior: Clip.antiAlias,
       constraints: _route.constraints,
       shape: const RoundedRectangleBorder(
