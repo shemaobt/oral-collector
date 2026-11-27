@@ -107,7 +107,7 @@ class _AppSheetBodyState extends State<_AppSheetBody> {
     final Widget sheet = BottomSheet(
       animationController: _route.drag,
       onClosing: () {
-        if (_route.isCurrent) Navigator.pop(context);
+        if (_route.isCurrent && _route.isDismissible) Navigator.pop(context);
       },
       enableDrag: _route.isDismissible,
       backgroundColor: colors.card,
@@ -127,7 +127,7 @@ class _AppSheetBodyState extends State<_AppSheetBody> {
         _dragging = false;
         _run = (
           rise: Split(_route.drag.value, endCurve: motion.enter),
-          fade: motion.enter,
+          fade: isClosing == true ? _leave.fade : motion.enter,
         );
       },
       builder: (context) => Stack(

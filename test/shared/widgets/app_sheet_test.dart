@@ -7,6 +7,7 @@ void main() {
     WidgetTester t, {
     bool isDismissible = true,
     bool still = false,
+    bool settle = true,
   }) async {
     t.platformDispatcher.accessibilityFeaturesTestValue =
         FakeAccessibilityFeatures(disableAnimations: still);
@@ -31,7 +32,7 @@ void main() {
     );
     await t.tap(find.text('open'));
     await t.pump();
-    if (!still) await t.pumpAndSettle();
+    if (!still && settle) await t.pumpAndSettle();
   }
 
   for (final bool dismissible in [true, false]) {
@@ -49,20 +50,25 @@ void main() {
     }
   }
 
-  testWidgets('a slow drag moves the sheet as far as the finger', (t) async {
-    await open(t);
-    double top() => t.getTopLeft(find.text('body')).dy;
-    final double rest = top();
-    final finger = await t.startGesture(t.getCenter(find.text('body')));
-    await finger.moveBy(const Offset(0, 21));
-    double moved = 0;
-    for (final double step in [0, 60, 89]) {
-      await t.pump(const Duration(milliseconds: 16));
-      await finger.moveBy(Offset(0, step));
-      await t.pump(const Duration(milliseconds: 16));
-      expect(top() - rest, closeTo(moved += step, 1));
-    }
-  });
+  for (final int grabAtMs in [0, 100]) {
+    testWidgets('a slow drag grabbed at ${grabAtMs}ms follows the finger', (
+      t,
+    ) async {
+      await open(t, settle: grabAtMs == 0);
+      if (grabAtMs > 0) await t.pump(Duration(milliseconds: grabAtMs));
+      double top() => t.getTopLeft(find.text('body')).dy;
+      final double start = top();
+      final finger = await t.startGesture(t.getCenter(find.text('body')));
+      await finger.moveBy(const Offset(0, 21));
+      double moved = 0;
+      for (final double step in [0, 60, 89]) {
+        await t.pump(const Duration(milliseconds: 16));
+        await finger.moveBy(Offset(0, step));
+        await t.pump(const Duration(milliseconds: 16));
+        expect(top() - start, closeTo(moved += step, 1));
+      }
+    });
+  }
 
   testWidgets('less motion: whole at once, gone at once', (t) async {
     await open(t, still: true);
