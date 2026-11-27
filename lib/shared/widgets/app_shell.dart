@@ -15,6 +15,7 @@ import '../../l10n/app_localizations.dart';
 import 'app_shell/floating_nav_bar.dart';
 import 'app_shell/tab_item.dart';
 import 'app_shell/web_sidebar.dart';
+import 'quick_notice.dart';
 
 class AppShell extends ConsumerStatefulWidget {
   const AppShell({super.key, required this.child});
@@ -164,7 +165,7 @@ class _AppShellState extends ConsumerState<AppShell> {
 
     return Scaffold(
       extendBody: true,
-      body: widget.child,
+      body: QuickNoticeFloor(child: widget.child),
       bottomNavigationBar: FloatingNavBar(
         tabs: mobileTabs,
         selectedIndex: _currentIndexFrom(context, mobileTabs),
