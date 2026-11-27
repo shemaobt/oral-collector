@@ -21,12 +21,14 @@ import 'core/startup/app_frame.dart';
 import 'core/startup/app_startup.dart';
 import 'core/startup/font_licenses.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/screen_transition.dart';
 import 'features/recording/data/providers.dart';
 import 'features/recording/data/services/recording_live_activity.dart';
 import 'features/recording/data/services/recording_notification.dart';
 import 'features/recording/data/services/recording_trash.dart';
 import 'features/recording/data/services/recovery_coordinator.dart';
 import 'features/recording/data/services/web_audio_sweeper.dart';
+import 'features/recording/presentation/notifiers/recording_session_notifier.dart';
 import 'features/sync/data/providers.dart';
 import 'features/sync/data/services/background_upload_coordinator.dart';
 import 'features/sync/data/services/upload_progress_visualizer.dart';
@@ -212,11 +214,12 @@ class _OralCollectorAppState extends ConsumerState<OralCollectorApp> {
   Widget _buildApp() {
     final router = ref.watch(routerProvider);
     final locale = ref.watch(localeProvider);
+    final isWeb = ref.watch(isWebPlatformProvider);
 
     return MaterialApp.router(
       title: 'Oral Collector',
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
+      theme: ScreenTransition.pick(AppTheme.lightTheme, isWeb: isWeb),
+      darkTheme: ScreenTransition.pick(AppTheme.darkTheme, isWeb: isWeb),
       themeMode: ThemeMode.system,
       themeAnimationDuration: Duration.zero,
       locale: locale,
