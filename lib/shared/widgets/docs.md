@@ -162,6 +162,10 @@ Path: @/lib/shared/widgets
   `gone` before any `await`, so the row leaves while the work runs; dropping the
   item from the list mid-leave snaps the row out: the list shortens in one frame.
 
+- **`NameAndState`** ([name_and_state.dart](name_and_state.dart)) lays out a
+  row's name and end state: the state shows whole on one line, the name gives
+  way with an ellipsis, and only below 48 px of name does the state end in one.
+
 - **`UpdatingLine`** ([updating_line.dart](updating_line.dart)) wraps a whole
   `Scaffold` and takes one switch, `checking`. A 3-high line is drawn over the
   content, below the status bar, only after the check lasted 250 ms (an
